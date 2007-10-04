@@ -26,8 +26,7 @@ import java.util.*;
 
 import javax.jmi.model.*;
 
-import net.sf.farrago.util.*;
-
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
@@ -93,7 +92,7 @@ class MedMdrJoinRule
         // on right side, must join to reference field which refers to
         // left side type
         List<StructuralFeature> features =
-            JmiUtil.getFeatures(
+            JmiObjUtil.getFeatures(
                 rightRel.mdrClassExtent.refClass,
                 StructuralFeature.class,
                 false);

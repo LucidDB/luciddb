@@ -25,22 +25,35 @@ package net.sf.farrago.ddl.gen;
 import java.lang.reflect.*;
 
 import java.util.*;
+import java.io.*;
+
+import javax.jmi.reflect.*;
+import javax.jmi.model.*;
 
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.jmi.*;
 
 
 /**
  * Base class for DDL generators which use the visitor pattern to generate DDL
- * given a catalog object. Escape rules: 1. In a SET SCHEMA command, apostrophes
- * (') and quotes (") enclose the schema name, like this: '"Foo"'. In this
- * context, apostrophes and quotes must be escaped. 2. CREATE and DROP commands
- * use quotes (") to enclose the object name. Only quotes are escaped.
+ * given a catalog object.
+ *
+ * <p>Escape rules:<ol>
+ *
+ * <li>In a SET SCHEMA command, apostrophes
+ *     (') and quotes (") enclose the schema name, like this: '"Foo"'. In this
+ *     context, apostrophes and quotes must be escaped.</li>
+ *
+ * <li>CREATE and DROP commands
+ *     use quotes (") to enclose the object name. Only quotes are escaped.</li>
+ * </ol>
  *
  * @author Jason Ouellette
  * @version $Id$
@@ -55,6 +68,8 @@ public abstract class DdlGenerator
     protected static final String SEP = ";" + NL + NL;
 
     //~ Methods ----------------------------------------------------------------
+
+    protected abstract JmiModelView getModelView();
 
     public void generateSetSchema(GeneratedDdlStmt stmt, String schemaName)
     {
@@ -156,14 +171,91 @@ public abstract class DdlGenerator
     /**
      * Converts a set of elements to a string using this generator.
      *
-     * @param exportList List of elements to export
+     * <p>If <code>sort</code> is specified, sorts list first so that dependent
+     * elements are created after their dependencies.
      *
+     * @param exportList List of elements to export
+     * @param sort Whether to sort list in dependency order
      * @return DDL script
      */
-    public String getExportText(List<CwmModelElement> exportList)
+    public String getExportText(
+        List<CwmModelElement> exportList, boolean sort)
     {
         StringBuilder outBuf = new StringBuilder();
         GeneratedDdlStmt stmt = new GeneratedDdlStmt();
+
+        if (sort) {
+            final JmiModelView modelView = getModelView();
+            final JmiModelGraph modelGraph = modelView.getModelGraph();
+            boolean debug = false;
+            if (debug) {
+                PrintWriter pw = new PrintWriter(System.out);
+                JmiObjUtil.dumpGraph(modelView, pw);
+                pw.flush();
+            }
+
+            // Mapping rules as per farrago/examples/dmv/schemaDependencies.xml
+            JmiDependencyMappedTransform transform =
+                new JmiDependencyMappedTransform(
+                    modelView, false);
+            transform.setTieBreaker(new MyComparator());
+
+            transform.setAllByAggregation(
+                AggregationKindEnum.COMPOSITE,
+                JmiAssocMapping.HIERARCHY);
+
+            transform.setAllByAggregation(
+                AggregationKindEnum.NONE,
+                JmiAssocMapping.COPY);
+
+            transform.setByRefAssoc(
+                lookupAssoc("DependencyClient", modelGraph),
+                JmiAssocMapping.CONTRACTION);
+
+            transform.setByRefAssoc(
+                lookupAssoc("DependencySupplier", modelGraph),
+                JmiAssocMapping.COPY);
+
+            // ignore ownership of views: their dependencies are more important
+            transform.setByRefAssocRefined(
+                lookupAssoc("ElementOwnership", modelGraph),
+                JmiAssocMapping.REMOVAL,
+                null,
+                lookupClass("LocalView", modelGraph));
+
+            // create schemas before the objects contained in them
+            transform.setByRefAssocRefined(
+                lookupAssoc("ElementOwnership", modelGraph),
+                JmiAssocMapping.COPY,
+                lookupClass("LocalSchema", modelGraph),
+                null);
+
+            // create method implementations after the operations which specify
+            // their interface
+            transform.setByRefAssoc(
+                lookupAssoc("OperationMethod", modelGraph),
+                JmiAssocMapping.COPY);
+
+            JmiDependencyGraph dependencyGraph =
+                new JmiDependencyGraph(
+                    (Collection) exportList,
+                    transform);
+
+            if (debug) {
+                PrintWriter pw = new PrintWriter(System.out);
+                JmiObjUtil.dumpGraph(dependencyGraph, pw, new NamerImpl());
+                pw.flush();
+            }
+
+            exportList = new ArrayList<CwmModelElement>();
+            JmiDependencyIterator vertexIter =
+                new JmiDependencyIterator(dependencyGraph);
+            while (vertexIter.hasNext()) {
+                JmiDependencyVertex vertex = vertexIter.next();
+                exportList.addAll(
+                    (Collection) vertex.getElementSet());
+            }
+        }
         for (CwmModelElement elem : exportList) {
             // proceed if a catalog object has an ddlgen error
             try {
@@ -184,6 +276,200 @@ public abstract class DdlGenerator
             }
         }
         return outBuf.toString();
+    }
+
+    /**
+     * Looks up a named class in the model, fails if not found.
+     *
+     * @param className Association name
+     * @param modelGraph Model graph
+     * @return Class, never null
+     */
+    private RefClass lookupClass(
+        String className,
+        JmiModelGraph modelGraph)
+    {
+        JmiClassVertex classVertex =
+            modelGraph.getVertexForClassName(className);
+        if (classVertex == null) {
+            throw new IllegalArgumentException("unknown class " + className);
+        }
+        return classVertex.getRefClass();
+    }
+
+    /**
+     * Looks up a named association in the model, fails if not found.
+     *
+     * @param assocName Association name
+     * @param modelGraph Model graph
+     * @return Association, never null
+     */
+    private RefAssociation lookupAssoc(
+        String assocName,
+        JmiModelGraph modelGraph)
+    {
+        JmiAssocEdge edge =
+            modelGraph.getEdgeForAssocName(assocName);
+        if (edge == null) {
+            throw new IllegalArgumentException(
+                "unknown association " + assocName);
+        }
+        return edge.getRefAssoc();
+    }
+
+    /**
+     * Returns whether an object type supports <code>CREATE OR REPLACE</code>
+     * operation.
+     *
+     * @param typeName Name of object type, e.g. "CLUSTERED INDEX"
+     * @return whether type supports REPLACE
+     */
+    protected abstract boolean typeSupportsReplace(String typeName);
+
+    /**
+     * Gathers a list of elements in a schema, optionally including elements
+     * which don't belong to any schema.
+     *
+     * @param list List to populate
+     * @param schemaName Name of schema
+     * @param includeNonSchemaElements Whether to include elements which do not
+     * @param catalog
+     */
+    public abstract void gatherElements(
+        List<CwmModelElement> list,
+        String schemaName,
+        boolean includeNonSchemaElements,
+        CwmCatalog catalog);
+
+    /**
+     * Implementation of {@link org.eigenbase.jmi.JmiObjUtil.Namer} which
+     * generates names for objects based on their position in the CWM
+     * catalog-schema-object hierarchy.
+     *
+     * <p>For example, a table's name might be
+     * "CATALOG.SALES.EMP (LocalTable)".
+     */
+    private static class NamerImpl implements JmiObjUtil.Namer
+    {
+        public String getName(RefObject o)
+        {
+            StringBuilder buf = new StringBuilder();
+            if (o instanceof CwmModelElement) {
+                CwmModelElement modelElement = (CwmModelElement) o;
+                yy(modelElement, buf);
+            } else {
+                buf.append(o.toString());
+            }
+            buf.append('(');
+            buf.append(JmiObjUtil.getTypeName(o));
+            buf.append(')');
+            return buf.toString();
+        }
+
+        private void yy(CwmModelElement modelElement, StringBuilder buf)
+        {
+            CwmNamespace namespace = modelElement.getNamespace();
+            if (namespace != null) {
+                yy(namespace, buf);
+                buf.append('.');
+            }
+            buf.append(modelElement.getName());
+        }
+    }
+
+    /**
+     * Comparator for schema elements to ensure that export file occurs in
+     * an intuitive order.
+     */
+    private static class MyComparator implements Comparator<RefBaseObject>
+    {
+        // Priority order of classes.
+        private final Class[] classes = {
+            // data wrappers first
+            FemDataWrapper.class,
+            // data server before schema
+            FemDataServer.class,
+            // next functions and procedures
+            CwmProcedure.class,
+            // schema after non-schema objects
+            CwmSchema.class,
+            // index before a view on the same table
+            FemLocalIndex.class,
+            CwmTable.class,
+        };
+
+        public int compare(RefBaseObject o1, RefBaseObject o2)
+        {
+            // First compare classes. An object sorts earlier if
+            // its class is higher in the pecking order.
+            int c = compareClass(o1, o2);
+            if (c != 0) {
+                return c;
+            }
+            // Next, for objects of the same type, sort by package
+            // and name. B.C sorts before B.D but after A.D.
+            if (o1 instanceof CwmModelElement
+                && o2 instanceof CwmModelElement)
+            {
+                return compareModelElements(
+                    (CwmModelElement) o1,
+                    (CwmModelElement) o2);
+            }
+            // Lastly compare by MofId.
+            return o1.refMofId().compareTo(o2.refMofId());
+        }
+
+        /**
+         * Compares objects by their class. An object sorts earlier
+         * if its class is higher in the pecking order.
+         */
+        private int compareClass(Object o1, Object o2)
+        {
+            if (o1.getClass() != o2.getClass()) {
+                int i1 = findClass(o1);
+                int i2 = findClass(o2);
+                if (i1 != i2) {
+                    return i1 - i2;
+                }
+            }
+            return o1.getClass().getName().compareTo(
+                o2.getClass().getName());
+        }
+
+        /**
+         * Returns the ordinal of an object's class in the pecking
+         * order, or {@link Integer#MAX_VALUE} if not found.
+         */
+        private int findClass(Object o)
+        {
+            for (int i = 0; i < classes.length; i++) {
+                if (classes[i].isInstance(o)) {
+                    return i;
+                }
+            }
+            return Integer.MAX_VALUE;
+        }
+
+        /**
+         * Compares two model elements of the same type by their
+         * position in the hierarchy.
+         */
+        private int compareModelElements(
+            CwmModelElement me1,
+            CwmModelElement me2)
+        {
+            CwmNamespace ns1 = me1.getNamespace();
+            CwmNamespace ns2 = me2.getNamespace();
+            if (ns1 == ns2) {
+                return me1.getName().compareTo(me2.getName());
+            } else if (ns1 == null) {
+                return -1;
+            } else if (ns2 == null) {
+                return 1;
+            } else {
+                return compareModelElements(ns1, ns2);
+            }
+        }
     }
 }
 

@@ -46,6 +46,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.sql.*;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
@@ -345,9 +346,9 @@ public abstract class FarragoTestCase
         try {
             reposTxn.beginReadTxn();
             savedFarragoConfig =
-                JmiUtil.getAttributeValues(repos.getCurrentConfig());
+                JmiObjUtil.getAttributeValues(repos.getCurrentConfig());
             savedFennelConfig =
-                JmiUtil.getAttributeValues(
+                JmiObjUtil.getAttributeValues(
                     repos.getCurrentConfig().getFennelConfig());
 
             // NOTE jvs 15-Mar-2007:  special case for these parameters
@@ -366,10 +367,10 @@ public abstract class FarragoTestCase
         FarragoReposTxnContext reposTxn = repos.newTxnContext();
         try {
             reposTxn.beginWriteTxn();
-            JmiUtil.setAttributeValues(
+            JmiObjUtil.setAttributeValues(
                 repos.getCurrentConfig(),
                 savedFarragoConfig);
-            JmiUtil.setAttributeValues(
+            JmiObjUtil.setAttributeValues(
                 repos.getCurrentConfig().getFennelConfig(),
                 savedFennelConfig);
         } finally {
@@ -534,6 +535,13 @@ public abstract class FarragoTestCase
     protected void runSqlLineTest(String sqlFile)
         throws Exception
     {
+        runSqlLineTest(sqlFile, shouldDiff());
+    }
+
+    protected void runSqlLineTest(
+        String sqlFile, boolean shouldDiff)
+        throws Exception
+    {
         tracer.finer("runSqlLineTest: Starting " + sqlFile);
         FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();
         assert (sqlFile.endsWith(".sql"));
@@ -580,7 +588,7 @@ public abstract class FarragoTestCase
             System.setProperty("sqlline.system.exit", "true");
             SqlLine.mainWithInputRedirection(args, sequenceStream);
             printStream.close();
-            if (shouldDiff()) {
+            if (shouldDiff) {
                 diffTestLog();
 
                 // Execute any '##COMPARE <filename>' commands in the .sql file

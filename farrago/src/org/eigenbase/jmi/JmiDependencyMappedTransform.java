@@ -98,10 +98,9 @@ public class JmiDependencyMappedTransform
         JmiClassVertex targetClassVertex =
             modelView.getModelGraph().getVertexForRefClass(refClass);
         for (
-            Object assocEdgeObj
+            JmiAssocEdge assocEdge
             : modelView.getAllIncomingAssocEdges(targetClassVertex))
         {
-            JmiAssocEdge assocEdge = (JmiAssocEdge) assocEdgeObj;
             List<AssocRule> rules = map.get(assocEdge);
             if (rules == null) {
                 continue;

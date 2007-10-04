@@ -49,6 +49,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
+import org.eigenbase.jmi.JmiObjUtil;
 
 
 /**
@@ -610,8 +611,8 @@ public class FarragoRuntimeContext
         boolean success = false;
         FennelStreamGraph newStreamGraph = null;
         try {
-            Collection collection =
-                JmiUtil.importFromXmiString(
+            Collection<RefBaseObject> collection =
+                JmiObjUtil.importFromXmiString(
                     repos.getTransientFarragoPackage(),
                     xmiFennelPlan);
             assert (collection.size() == 1);

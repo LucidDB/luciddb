@@ -34,8 +34,8 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -321,7 +321,7 @@ public abstract class DdlHandler
         if (typeFamily == SqlTypeFamily.CHARACTER) {
             // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
-            if (JmiUtil.isBlank(element.getCharacterSetName())) {
+            if (JmiObjUtil.isBlank(element.getCharacterSetName())) {
                 // NOTE: don't leave character set name implicit, since if the
                 // default ever changed, that would invalidate existing data
                 element.setCharacterSetName(

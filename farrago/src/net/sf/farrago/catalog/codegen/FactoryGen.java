@@ -31,11 +31,10 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.util.*;
 
-import org.netbeans.api.mdr.*;
 import org.netbeans.lib.jmi.util.*;
 
 
@@ -152,9 +151,8 @@ public class FactoryGen
         if (iface.isInstance(refPackage)) {
             return refPackage;
         }
-        Iterator iter = refPackage.refAllPackages().iterator();
-        while (iter.hasNext()) {
-            RefPackage p = (RefPackage) iter.next();
+        Collection<RefPackage> allPackages = refPackage.refAllPackages();
+        for (RefPackage p : allPackages) {
             RefPackage f = findPackage(p, iface);
             if (f != null) {
                 return f;
@@ -172,7 +170,8 @@ public class FactoryGen
         TagProvider tagProvider = new TagProvider();
 
         // first generate accessor for package
-        Class pkgInterface = JmiUtil.getJavaInterfaceForRefPackage(refPackage);
+        Class pkgInterface =
+            JmiObjUtil.getJavaInterfaceForRefPackage(refPackage);
         pw.print("    public ");
         pw.print(pkgInterface.getName());
         pw.print(" get");
@@ -186,15 +185,14 @@ public class FactoryGen
         pw.println();
 
         // then generate factory methods for all classes in package
-        Iterator iter = refPackage.refAllClasses().iterator();
-        while (iter.hasNext()) {
-            RefClass refClass = (RefClass) iter.next();
+        Collection<RefClass> allClasses = refPackage.refAllClasses();
+        for (RefClass refClass : allClasses) {
             MofClass mofClass = (MofClass) refClass.refMetaObject();
             if (mofClass.isAbstract()) {
                 continue;
             }
             Class classInterface =
-                JmiUtil.getJavaInterfaceForRefObject(refClass);
+                JmiObjUtil.getJavaInterfaceForRefObject(refClass);
             String unqualifiedInterfaceName =
                 ReflectUtil.getUnqualifiedClassName(classInterface);
             pw.print("    public ");
@@ -213,9 +211,8 @@ public class FactoryGen
             pw.println("    }");
             pw.println();
         }
-        iter = refPackage.refAllPackages().iterator();
-        while (iter.hasNext()) {
-            RefPackage refSubPackage = (RefPackage) iter.next();
+        Collection<RefPackage> allPackages = refPackage.refAllPackages();
+        for (RefPackage refSubPackage : allPackages) {
             MofPackage mofSubPackage =
                 (MofPackage) refSubPackage.refMetaObject();
 
@@ -226,9 +223,8 @@ public class FactoryGen
             Package javaPackage = refPackage.getClass().getPackage();
             Package childJavaPackage = refSubPackage.getClass().getPackage();
             if (!childJavaPackage.getName().equals(
-                    javaPackage.getName() + "."
-                    + subPackageName.toLowerCase()))
-            {
+                javaPackage.getName() + "."
+                    + subPackageName.toLowerCase())) {
                 continue;
             }
 

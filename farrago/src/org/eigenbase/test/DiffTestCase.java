@@ -397,6 +397,12 @@ public abstract class DiffTestCase
             lastStackTraceElement.getMethodName().equals("main")) {
             return true;
         }
+        // Application launched from IntelliJ 6.0
+        if (lastStackTraceElement.getClassName().equals(
+            "com.intellij.rt.execution.application.AppMain") &&
+            lastStackTraceElement.getMethodName().equals("main")) {
+            return true;
+        }
         return false;
     }
 

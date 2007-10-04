@@ -33,8 +33,8 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.util.*;
 
 
@@ -173,7 +173,7 @@ public class ProxyGen
     {
         Collection<RefClass> allRefClasses = refPackage.refAllClasses();
         for (RefClass refClass : allRefClasses) {
-            Class clazz = JmiUtil.getJavaInterfaceForRefObject(refClass);
+            Class clazz = JmiObjUtil.getJavaInterfaceForRefObject(refClass);
             genInterfaces.add(clazz);
             javaToJmiMap.put(clazz, refClass);
         }
@@ -190,7 +190,7 @@ public class ProxyGen
     {
         Collection<RefClass> allRefClasses = refPackage.refAllClasses();
         for (RefClass refClass : allRefClasses) {
-            Class clazz = JmiUtil.getJavaInterfaceForRefObject(refClass);
+            Class clazz = JmiObjUtil.getJavaInterfaceForRefObject(refClass);
             baseInterfaces.add(clazz);
             javaToJmiMap.put(clazz, refClass);
         }
@@ -536,7 +536,7 @@ public class ProxyGen
     {
         String [] sourcePackageNames = qualifiedName.split("\\.");
         RefPackage sourcePackage =
-            JmiUtil.getSubPackage(
+            JmiObjUtil.getSubPackage(
                 rootPackage,
                 sourcePackageNames,
                 sourcePackageNames.length);

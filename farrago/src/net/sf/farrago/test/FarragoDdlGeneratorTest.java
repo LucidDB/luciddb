@@ -23,15 +23,16 @@
 package net.sf.farrago.test;
 
 import java.util.*;
+import java.io.*;
 
 import junit.framework.*;
 
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.fem.med.*;
 
 import org.eigenbase.test.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -55,7 +56,7 @@ public class FarragoDdlGeneratorTest
 
     protected DdlGenerator newDdlGenerator()
     {
-        return new FarragoDdlGenerator();
+        return new FarragoDdlGenerator(repos.getModelView());
     }
 
     protected DiffRepository getDiffRepos()
@@ -90,53 +91,12 @@ public class FarragoDdlGeneratorTest
     {
         DdlGenerator ddlGen = newDdlGenerator();
         List<CwmModelElement> list = new ArrayList<CwmModelElement>();
-        gatherElements(list, schemaName, includeNonSchemaElements);
-        return ddlGen.getExportText(list);
+        ddlGen.gatherElements(
+            list, schemaName, includeNonSchemaElements,
+            repos.getSelfAsCatalog());
+        return ddlGen.getExportText(list, true);
     }
 
-    /**
-     * Gathers a list of elements in a schema, optionally including elements
-     * which don't belong to any schema.
-     *
-     * @param list List to populate
-     * @param schemaName Name of schema
-     * @param includeNonSchemaElements Whether to include elements which do not
-     * belong to a schema
-     */
-    protected void gatherElements(
-        List<CwmModelElement> list,
-        String schemaName,
-        boolean includeNonSchemaElements)
-    {
-        CwmCatalog catalog = repos.getSelfAsCatalog();
-        for (CwmModelElement element : catalog.getOwnedElement()) {
-            if (element instanceof CwmSchema) {
-                CwmSchema schema = (CwmSchema) element;
-                if (schema.getName().equals(schemaName)) {
-                    list.add(schema);
-                    for (CwmModelElement element2 : schema.getOwnedElement()) {
-                        list.add(element2);
-                    }
-                }
-            } else if (includeNonSchemaElements) {
-                list.add(element);
-            }
-        }
-        if (includeNonSchemaElements) {
-            for (
-                FemDataServer dataServer : repos.allOfType(FemDataServer.class))
-            {
-                list.add(dataServer);
-            }
-            for (
-                FemDataWrapper dataWrapper
-                : repos.allOfType(FemDataWrapper.class))
-            {
-                list.add(dataWrapper);
-            }
-        }
-    }
-    
     /**
      * Test DDL generation for objects that don't have all the optional
      * clauses.
@@ -205,6 +165,43 @@ public class FarragoDdlGeneratorTest
             sb.append(s);
         }
         sb.append("\n\n");
+    }
+
+    public void testCustomSchema() throws Exception
+    {
+        // Run the script to create the objects.
+        runSqlLineTest("unitsql/ddl/ddlgen.sql");
+
+        // Export the schema and compare with expected output.
+        String output = exportSchema("DDLGEN", true);
+        final String guidRegex = 
+            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+        String outputMasked = output.replaceAll(guidRegex, "{guid}");
+        getDiffRepos().assertEquals("output", "${output}", outputMasked);
+
+        // Write to temp file and run it, to make sure it is valid SQL. If the
+        // DDL is invalid, we will find out next step.
+        final File tempFile = File.createTempFile("allTypes", ".sql");
+        final FileWriter fw = new FileWriter(tempFile);
+        fw.write("DROP SCHEMA ddlgen CASCADE;");
+        fw.write(TestUtil.NL);
+        fw.write("SET SCHEMA 'ddlgen';");
+        fw.write(TestUtil.NL);
+        fw.write("SET PATH 'ddlgen';");
+        fw.write(TestUtil.NL);
+        fw.write(output);
+        fw.close();
+        runSqlLineTest(tempFile.getAbsolutePath(), false);
+
+        // Export the schema again and make sure the output is the same as last
+        // time.
+        String output2 = exportSchema("DDLGEN", true);
+        String output2Masked = output2.replaceAll(guidRegex, "{guid}");
+        TestUtil.assertEqualsVerbose(outputMasked, output2Masked);
+
+        // If successful, delete temp file and log
+        tempFile.delete();
+        new File(tempFile.getAbsolutePath().replace(".sql", ".log")).delete();
     }
 }
 

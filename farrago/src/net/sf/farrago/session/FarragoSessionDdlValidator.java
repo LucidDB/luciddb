@@ -152,10 +152,19 @@ public interface FarragoSessionDdlValidator
     /**
      * Sets the parser offset for the body of a given object.
      *
+     * <p>If the body text has preceding whitespace, trims the whitespace and
+     * advances the position by the number of whitespace characters removed.
+     * Returns the trimmed body.
+     *
      * @param obj object being defined
      * @param pos parser offset
+     * @param body text of body
+     * @return body text with preceding whitespace removed
      */
-    public void setParserOffset(RefObject obj, SqlParserPos pos);
+    public String setParserOffset(
+        RefObject obj,
+        SqlParserPos pos,
+        String body);
 
     /**
      * Retrieves the parser offset for the body of a given object.
