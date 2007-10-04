@@ -211,7 +211,9 @@ supports the SQL:2003 standard MERGE statement for implementing
 upsert.  All DML operations (including DELETE) are fully recoverable
 via table-level locking and page-level logging; for efficiency, no
 record-level logging or locking is needed.  Errors due to constraint
-violations can be written to a reject file without aborting the load.
+violations <a target="_top"
+href="http://docs.eigenbase.org/LucidDbErrorHandling"> can be written
+to a reject file</a> without aborting the load.
 
 <li>Read/write concurrency with snapshot consistency:  readers 
 (e.g. report execution) are never locked out by bulk load,
