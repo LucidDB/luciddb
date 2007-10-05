@@ -120,14 +120,17 @@ CREATE TABLE "TEMPS" (
 CREATE INDEX "EMPS_UX" ON "EMPS" ("NAME");
 
 CREATE OR REPLACE VIEW "EMPSVIEW" AS
+
 select empno, name from emps;
 
 CREATE OR REPLACE VIEW "JOINVIEW" AS
+
 select depts.name as dname,emps.name as ename
 from emps inner join depts
 on emps.deptno=depts.deptno;
 
 CREATE OR REPLACE VIEW "TEMPSVIEW" AS
+
 select empno, name from temps;
 
 ]]>
