@@ -589,7 +589,7 @@ public abstract class FarragoTestCase
             SqlLine.mainWithInputRedirection(args, sequenceStream);
             printStream.close();
             if (shouldDiff) {
-                addDiffMask("\\$Id$");
+                addDiffMask("\\$" + "Id: .*$");
                 diffTestLog();
 
                 // Execute any '##COMPARE <filename>' commands in the .sql file
