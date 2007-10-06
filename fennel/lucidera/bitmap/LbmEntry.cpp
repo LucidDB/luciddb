@@ -684,6 +684,13 @@ uint LbmEntry::getMergeSpaceRequired(TupleData const &inputTuple)
         mergeSpaceRequired = inputSegDescLength + inputSegLength;
     }
 
+    // If the currentEntry is a singleton, then add a couple of bytes to
+    // account for the segment byte and descriptor that haven't yet been
+    // explicitly created
+    if (isSingleton()) {
+        mergeSpaceRequired += 2;
+    }
+
     return mergeSpaceRequired;
 }
 
@@ -919,6 +926,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
         inputStartRID >= roundToByteBoundary(endRID))
     {
         if (adjustEntry(inputTuple)) {
+            assert(currentEntrySize <= scratchBufferSize);
             return true;
         }
     }
@@ -930,7 +938,9 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      */
     if (inputStartRID <= endRID) {
         assert(isSingleton(inputTuple));
-        return spliceSingleton(inputTuple);
+        bool rc = spliceSingleton(inputTuple);
+        assert(currentEntrySize <= scratchBufferSize);
+        return rc;
     }
 
     uint mergeSpaceRequired = getMergeSpaceRequired(inputTuple);
@@ -949,7 +959,9 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      * If the new inputTuple is a singleton, use the setRID interface.
      */
     if (isSingleton(inputTuple)) { 
-        return setRID(inputStartRID);
+        bool rc = setRID(inputStartRID);
+        assert(currentEntrySize <= scratchBufferSize);
+        return rc;
     }
 
     /*
@@ -988,6 +1000,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
            inputTuple[inputTuple.size() - 1].pData,
            inputSegLength);
     currentEntrySize += inputSegLength;
+    assert(currentEntrySize <= scratchBufferSize);
     return true;
 }
 

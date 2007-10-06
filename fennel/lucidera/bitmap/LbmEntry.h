@@ -421,6 +421,15 @@ class LbmEntry : public LbmSegment
         uint nSegBytes);
 
     /**
+     * Determines the amount of space required to merge an input tuple
+     *
+     * @param [in] inputTuple the input tuple
+     * 
+     * @return the amount of space required for the merge
+     */
+    uint getMergeSpaceRequired(TupleData const &inputTuple);
+
+    /**
      ** STATIC MEMBERS AND METHODS
      **/
 
@@ -480,15 +489,6 @@ class LbmEntry : public LbmSegment
      */
     static string dumpBitmapRID(PBuffer seg, uint segBytes, 
                                 string prefix, LcsRid srid);
-
-    /**
-     * Determines the amount of space required to merge an input tuple
-     *
-     * @param [in] inputTuple the input tuple
-     * 
-     * @return the amount of space required for the merge
-     */
-    static uint getMergeSpaceRequired(TupleData const &inputTuple);
 
     /**
      * Generate a vector of the RIDs contained in a bitmap segment
