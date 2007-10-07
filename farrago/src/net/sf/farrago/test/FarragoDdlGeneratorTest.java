@@ -167,7 +167,7 @@ public class FarragoDdlGeneratorTest
         sb.append("\n\n");
     }
 
-    public void testCustomSchema() throws Exception
+    public void _testCustomSchema() throws Exception
     {
         // Run the script to create the objects.
         runSqlLineTest("unitsql/ddl/ddlgen.sql");
