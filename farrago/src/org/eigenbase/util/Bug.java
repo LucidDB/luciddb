@@ -127,6 +127,12 @@ public abstract class Bug
     // hersker
 
     // jack
+    /**
+     * Window Rank functions are supported through the validator but
+     * not implenmented by calculator.  Disable tests and modified
+     * SqlRankFunction to return "Unknown Function". 
+     */
+    public static final boolean Dt1446Fixed = false;
 
     // jhyde
 
