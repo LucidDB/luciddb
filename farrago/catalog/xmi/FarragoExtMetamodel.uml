@@ -129,7 +129,7 @@
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Sep 25 11:20:08 PDT 2007'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Mon Oct 08 11:52:57 PDT 2007'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -4552,6 +4552,21 @@
                       </UML:StructuralFeature.multiplicity>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1--69d99809:11580e4054b:-8000:0000000000000E23'
+                      name = 'connectionTimeoutMillis' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--69d99809:11580e4054b:-8000:0000000000000E29'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--69d99809:11580e4054b:-8000:0000000000000E28'
+                              lower = '0' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd6'/>
                       </UML:StructuralFeature.type>
                     </UML:Attribute>
                   </UML:Classifier.feature>
@@ -9884,7 +9899,7 @@
       name="FarragoFennelConfig"
 >
   <group name="Fig0"
-       description="org.argouml.uml.diagram.static_structure.ui.FigClass[144, 200, 204, 148]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[144, 200, 204, 161]pathVisible=false;operationsVisible=false;attributesVisible=true"
        href="Ilsmmsmmsmm4fe91emf85207efd8mm7e31"
        fill="1"
        fillcolor="white"
@@ -9898,7 +9913,7 @@
       x="144"
       y="200"
       width="204"
-      height="148"
+      height="161"
       fill="1"
       fillcolor="white"
       stroke="0"
@@ -9937,7 +9952,7 @@
       textsize="10"
     >FarragoConfig</text>
     <group name="Fig0.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[145, 339, 203, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[145, 352, 203, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -9949,7 +9964,7 @@
       
       <rectangle name="Fig0.3.0"
         x="145"
-        y="339"
+        y="352"
         width="203"
         height="20"
         fill="1"
@@ -9967,13 +9982,13 @@
         visibility="0"
       >
         <moveto x="145"
-                y="339" />
+                y="352" />
         <lineto x="348"
-                y="339" />
+                y="352" />
       </path>
     </group>
     <group name="Fig0.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[145, 223, 203, 125]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[145, 223, 203, 138]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -9986,7 +10001,7 @@
         x="145"
         y="223"
         width="203"
-        height="125"
+        height="138"
         fill="1"
         fillcolor="white"
         stroke="0"
@@ -10013,7 +10028,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >name : String</text>
+      >name : String { frozen }</text>
       <text name="Fig0.4.3"
         x="145"
         y="237"
@@ -10094,12 +10109,22 @@
         font="Dialog"
         textsize="10"
       >javaCompilerClassName : String</text>
+      <text name="Fig0.4.11"
+        x="145"
+        y="341"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >connectionTimeoutMillis [0..1] : Long</text>
     </group>
     <rectangle name="Fig0.5"
       x="144"
       y="200"
       width="204"
-      height="148"
+      height="161"
       fill="0"
       fillcolor="white"
       stroke="1"
@@ -11342,7 +11367,7 @@
       textsize="10"
     >CmdVerifyIndex</text>
     <group name="Fig7.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[609, 944, 148, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[609, 944, 183, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -11355,7 +11380,7 @@
       <rectangle name="Fig7.3.0"
         x="609"
         y="944"
-        width="148"
+        width="183"
         height="20"
         fill="1"
         fillcolor="white"
@@ -11373,7 +11398,7 @@
       >
         <moveto x="609"
                 y="944" />
-        <lineto x="757"
+        <lineto x="792"
                 y="944" />
       </path>
     </group>
@@ -11438,7 +11463,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >resultPageCount [0..1] : Long</text>
+      >resultPageCount : Long</text>
       <text name="Fig7.4.5"
         x="609"
         y="927"
@@ -11448,7 +11473,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >resultUniqueKeyCount [0..1] : Long</text>
+      >resultUniqueKeyCount : Long</text>
     </group>
     <rectangle name="Fig7.5"
       x="608"

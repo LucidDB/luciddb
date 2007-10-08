@@ -31,6 +31,7 @@ import java.sql.*;
 
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.engine.*;
 
 
@@ -97,11 +98,13 @@ public class FarragoVjdbcServer
         // way the VJdbcConfiguration singleton works.
         VJdbcConfiguration.init(vjdbcConfig);
         vjdbcConfig = VJdbcConfiguration.singleton();
-
-        // Set default timeout to 1 day (finite to avoid accumulation in
-        // long-running servers, but not too low; avoid hassle when connection
-        // pools aren't being used in clients).
-        vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(86400000);
+        if (connectionTimeoutMillis == -1) {
+            // -1 means never timeout, so set OCCT checking period to 0
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+            vjdbcConfig.getOcctConfiguration().setCheckingPeriodInMillis(0);
+        } else {
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(connectionTimeoutMillis);
+        }
 
         RmiConfiguration rmiConfig = new RmiConfiguration();
         vjdbcConfig.setRmiConfiguration(rmiConfig);

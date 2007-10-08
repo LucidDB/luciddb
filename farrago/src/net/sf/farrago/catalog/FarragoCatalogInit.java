@@ -57,6 +57,11 @@ public class FarragoCatalogInit
      * intentionally lower-case to match the SQL Server convention.
      */
     public static final String SA_USER_NAME = "sa";
+    
+    /** 
+     * Default jdbc connection timeout in milliseconds
+     */
+    public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 86400000;
 
     //~ Constructors -----------------------------------------------------------
 

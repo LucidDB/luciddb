@@ -19,6 +19,17 @@ external name
 
 call update_system_objects();
 
+-- update dangling system parameters
+create or replace procedure update_configuration()
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoUpdateCatalogUDR.updateConfiguration';
+
+call update_configuration();
+
+
 -- create wrapper for access to MDR repositories
 create or replace foreign data wrapper sys_mdr
 library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
