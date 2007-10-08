@@ -6,7 +6,7 @@ BASE_JAVA_ARGS="-ea -esa -cp `cat classpath.gen` \
   -Dnet.sf.farrago.home=. \
   -Djava.util.logging.config.file=trace/FarragoTrace.properties"
 
-SERVER_JAVA_ARGS="-server -Xss768K ${BASE_JAVA_ARGS}"
+SERVER_JAVA_ARGS="-Xss768K ${BASE_JAVA_ARGS}"
 
 # TODO:  trim this
 CLIENT_JAVA_ARGS=${BASE_JAVA_ARGS}
