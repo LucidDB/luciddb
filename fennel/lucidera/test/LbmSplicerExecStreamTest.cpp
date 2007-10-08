@@ -481,11 +481,43 @@ void LbmSplicerExecStreamTest::testLER5968()
     } while (true);
 
     // Now, create the actual second entry with a rid count based the count
-    // determined above, but with the last rid in a contiguous segment.  We
-    // don't want this entry to be full, but rather almost full.  That way,
-    // when it's spliced with the earlier singleton, an overflow should occur
-    // because the startRid for this entry has been chosen such that it's 2
-    // zero-length bytes away from the first entry.
+    // determined above, but with two fewer, so this entry can be spliced with
+    // the first.  Note that its startRID is 2 zero-length bytes away from the
+    // initial singleton.
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    for (int i = 0; i < numRids - 2; i++) {
+        rid += 16;
+        bool rc = lbmEntry.setRID(LcsRid(rid));
+        BOOST_REQUIRE(rc);
+        rids.push_back(rid);
+    }
+    tupleData = lbmEntry.produceEntryTuple();
+    tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
+    bufferSize += tupleAccessor.getCurrentByteCount();
+
+    // Create the third entry, again a singleton.
+    rid = 10000;
+    rids.push_back(rid);
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    tupleData = lbmEntry.produceEntryTuple();
+    tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
+    bufferSize += tupleAccessor.getCurrentByteCount();
+
+    // Create the fourth entry with a rid count based the count determined
+    // above, but with the last rid in a contiguous segment.  This entry,
+    // when spliced with the singleton, should result in, an overflow.
+    rid = 16984;
+    rids.push_back(rid);
     tupleData[1].pData = (PConstBuffer) &rid;
     tupleData[2].pData = NULL;
     tupleData[2].cbData = 0;
@@ -505,8 +537,10 @@ void LbmSplicerExecStreamTest::testLER5968()
     tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
     bufferSize += tupleAccessor.getCurrentByteCount();
 
-    // Splice the two entries.  The splice of the first entry should overflow
-    // the first entry, so two btree entries should be created, not one.
+    // Splice the four entries.  The splice of the first two entries should
+    // fit, creating a combined entry.  Then, a singleton should be created.
+    // An attempt to splice the fourth entry into the singleton will overflow
+    // and therefore create a third entry.
     spliceInput(
         buffer,
         bufferSize,
@@ -516,7 +550,7 @@ void LbmSplicerExecStreamTest::testLER5968()
 
     // Read the btree bitmap entries and confirm that they contain all 
     // of the rids that were inserted.  Explicitly make sure there are
-    // two btree entries.
+    // three btree entries.
     BTreeReader reader(bTreeDesc);
     rc = reader.searchFirst();
     BOOST_REQUIRE(rc);
@@ -536,7 +570,7 @@ void LbmSplicerExecStreamTest::testLER5968()
         rc = reader.searchNext();
     }
     BOOST_CHECK_EQUAL(currIdx, rids.size());
-    BOOST_REQUIRE(numEntries == 2);
+    BOOST_REQUIRE(numEntries == 3);
 }
 
 void LbmSplicerExecStreamTest::testLER6473()

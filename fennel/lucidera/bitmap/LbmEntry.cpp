@@ -926,7 +926,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
         inputStartRID >= roundToByteBoundary(endRID))
     {
         if (adjustEntry(inputTuple)) {
-            assert(currentEntrySize <= scratchBufferSize);
+            permAssert(currentEntrySize <= scratchBufferSize);
             return true;
         }
     }
@@ -937,9 +937,9 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      * to merge in a singleton.
      */
     if (inputStartRID <= endRID) {
-        assert(isSingleton(inputTuple));
+        permAssert(isSingleton(inputTuple));
         bool rc = spliceSingleton(inputTuple);
-        assert(currentEntrySize <= scratchBufferSize);
+        permAssert(currentEntrySize <= scratchBufferSize);
         return rc;
     }
 
@@ -960,7 +960,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      */
     if (isSingleton(inputTuple)) { 
         bool rc = setRID(inputStartRID);
-        assert(currentEntrySize <= scratchBufferSize);
+        permAssert(currentEntrySize <= scratchBufferSize);
         return rc;
     }
 
@@ -1000,7 +1000,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
            inputTuple[inputTuple.size() - 1].pData,
            inputSegLength);
     currentEntrySize += inputSegLength;
-    assert(currentEntrySize <= scratchBufferSize);
+    permAssert(currentEntrySize <= scratchBufferSize);
     return true;
 }
 
