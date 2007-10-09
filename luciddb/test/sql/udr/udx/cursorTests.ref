@@ -33,6 +33,7 @@
 | calcVirtualMachine        | 12       | VARCHAR      |
 | checkpointInterval        | 4        | INTEGER      |
 | codeCacheMaxBytes         | -5       | BIGINT       |
+| connectionTimeoutMillis   | -5       | BIGINT       |
 | fennelDisabled            | 16       | BOOLEAN      |
 | javaCompilerClassName     | 12       | VARCHAR      |
 | mofClassName              | 12       | VARCHAR      |

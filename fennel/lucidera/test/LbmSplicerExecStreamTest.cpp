@@ -193,6 +193,7 @@ public:
             LbmSplicerExecStreamTest, testMultipleSpliceWithKeysSmallSpread);
         FENNEL_UNIT_TEST_CASE(
             LbmSplicerExecStreamTest, testMultipleSpliceWithKeysLargeSpread);
+        FENNEL_UNIT_TEST_CASE(LbmSplicerExecStreamTest, testLER5968);
         FENNEL_UNIT_TEST_CASE(LbmSplicerExecStreamTest, testLER6473);
     }
 
@@ -206,6 +207,7 @@ public:
     void testSpliceWithKeysLargeSpread();
     void testMultipleSpliceWithKeysSmallSpread();
     void testMultipleSpliceWithKeysLargeSpread();
+    void testLER5968();
     void testLER6473();
 };
 
@@ -416,6 +418,159 @@ void LbmSplicerExecStreamTest::testSpliceWithKeys(
         rc = reader.searchNext();
     }
     BOOST_CHECK_EQUAL(currIdx, numRows);
+}
+
+void LbmSplicerExecStreamTest::testLER5968()
+{
+    TupleDescriptor tupleDesc;
+    initBTreeTupleDesc(tupleDesc, 1);
+
+    // Create the btree that the splicer will write into
+    BTreeDescriptor bTreeDesc;
+    createBTree(bTreeDesc, 1);
+
+    TupleAccessor tupleAccessor;
+    tupleAccessor.compute(tupleDesc);
+
+    // Key values are fixed
+    uint64_t keyVal = 1;
+    TupleData tupleData;
+    tupleData.compute(bTreeDesc.tupleDescriptor);
+    tupleData[0].pData = (PConstBuffer) &keyVal;
+
+    LbmEntry lbmEntry;
+    boost::scoped_array<FixedBuffer> entryBuf;
+    uint entryBufSize = tupleDesc[2].cbStorage + 8 + 8;
+    entryBuf.reset(new FixedBuffer[entryBufSize]);
+    lbmEntry.init(entryBuf.get(), NULL, entryBufSize, tupleDesc);
+
+    std::vector<uint64_t> rids;
+
+    // First create a singleton entry
+    uint64_t rid = 0;
+    rids.push_back(rid);
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    tupleData = lbmEntry.produceEntryTuple();
+    boost::shared_array<FixedBuffer> buffer;
+    buffer.reset(new FixedBuffer[1024]);
+    uint bufferSize = 0;
+    tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
+    bufferSize += tupleAccessor.getCurrentByteCount();
+
+    // Next figure out how many rids are needed to create a full entry
+    rid = 5984;
+    rids.push_back(rid);
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    uint numRids = 1;
+    do {
+        bool rc = lbmEntry.setRID(LcsRid(rid + numRids * 16));
+        if (!rc) {
+            break;
+        }
+        numRids++;
+    } while (true);
+
+    // Now, create the actual second entry with a rid count based the count
+    // determined above, but with two fewer, so this entry can be spliced with
+    // the first.  Note that its startRID is 2 zero-length bytes away from the
+    // initial singleton.
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    for (int i = 0; i < numRids - 2; i++) {
+        rid += 16;
+        bool rc = lbmEntry.setRID(LcsRid(rid));
+        BOOST_REQUIRE(rc);
+        rids.push_back(rid);
+    }
+    tupleData = lbmEntry.produceEntryTuple();
+    tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
+    bufferSize += tupleAccessor.getCurrentByteCount();
+
+    // Create the third entry, again a singleton.
+    rid = 10000;
+    rids.push_back(rid);
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    tupleData = lbmEntry.produceEntryTuple();
+    tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
+    bufferSize += tupleAccessor.getCurrentByteCount();
+
+    // Create the fourth entry with a rid count based the count determined
+    // above, but with the last rid in a contiguous segment.  This entry,
+    // when spliced with the singleton, should result in, an overflow.
+    rid = 16984;
+    rids.push_back(rid);
+    tupleData[1].pData = (PConstBuffer) &rid;
+    tupleData[2].pData = NULL;
+    tupleData[2].cbData = 0;
+    tupleData[3].pData = NULL;
+    tupleData[3].cbData = 0;
+    lbmEntry.setEntryTuple(tupleData);
+    for (int i = 0; i < numRids - 1; i++) {
+        rid += 16;
+        bool rc = lbmEntry.setRID(LcsRid(rid));
+        BOOST_REQUIRE(rc);
+        rids.push_back(rid);
+    }
+    rid += 8;
+    bool rc = lbmEntry.setRID(LcsRid(rid));
+    rids.push_back(rid);
+    tupleData = lbmEntry.produceEntryTuple();
+    tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
+    bufferSize += tupleAccessor.getCurrentByteCount();
+
+    // Splice the four entries.  The splice of the first two entries should
+    // fit, creating a combined entry.  Then, a singleton should be created.
+    // An attempt to splice the fourth entry into the singleton will overflow
+    // and therefore create a third entry.
+    spliceInput(
+        buffer,
+        bufferSize,
+        rids.size(),
+        bTreeDesc);
+    resetExecStreamTest();
+
+    // Read the btree bitmap entries and confirm that they contain all 
+    // of the rids that were inserted.  Explicitly make sure there are
+    // three btree entries.
+    BTreeReader reader(bTreeDesc);
+    rc = reader.searchFirst();
+    BOOST_REQUIRE(rc);
+    uint currIdx = 0;
+    uint numEntries = 0;
+    while (rc) {
+        numEntries++;
+        reader.getTupleAccessorForRead().unmarshal(tupleData);
+        std::vector<LcsRid> ridsRead;
+        LbmEntry::generateRIDs(tupleData, ridsRead);
+        for (uint i = 0; i < ridsRead.size(); i++) {
+            BOOST_CHECK_EQUAL(
+                opaqueToInt(ridsRead[i]),
+                opaqueToInt(rids[currIdx]));
+            currIdx++;
+        }
+        rc = reader.searchNext();
+    }
+    BOOST_CHECK_EQUAL(currIdx, rids.size());
+    BOOST_REQUIRE(numEntries == 3);
 }
 
 void LbmSplicerExecStreamTest::testLER6473()

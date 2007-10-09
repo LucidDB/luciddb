@@ -22,12 +22,9 @@
 package net.sf.farrago.server;
 
 import java.io.*;
-
-import java.rmi.*;
 import java.rmi.registry.*;
 
-import java.util.*;
-
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.jdbc.engine.*;
@@ -57,6 +54,8 @@ public abstract class FarragoAbstractServer
     protected int rmiRegistryPort;
 
     protected int singleListenerPort;
+    
+    protected long connectionTimeoutMillis;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -91,6 +90,10 @@ public abstract class FarragoAbstractServer
         rmiRegistryPort = config.getServerRmiRegistryPort();
 
         singleListenerPort = config.getServerSingleListenerPort();
+        
+        Long longObjValue = config.getConnectionTimeoutMillis();
+        connectionTimeoutMillis = (longObjValue == null ? 
+            FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS : longObjValue.longValue());
 
         if (rmiRegistryPort == -1) {
             rmiRegistryPort = releaseProps.jdbcUrlPortDefault.get();
