@@ -123,6 +123,16 @@ class MedJdbcNameDirectory
             if (map != null) {
                 schemaName = (String) map.get(foreignName);
             }
+            // table mapping
+            map = (HashMap) server.tableMaps.get(schemaName);
+            if (map != null) {
+                MedJdbcDataServer.Source sources =
+                    (MedJdbcDataServer.Source) map.get(foreignName);
+                if (sources != null) {
+                    schemaName = sources.getSchema();
+                    foreignName = sources.getTable();
+                }
+            }
             if (server.catalogName != null) {
                 foreignQualifiedName =
                     new String[] {
@@ -130,8 +140,8 @@ class MedJdbcNameDirectory
                     };
             } else {
                 foreignQualifiedName = new String[] {
-                        schemaName, foreignName
-                    };
+                    schemaName, foreignName
+                };
             }
         }
         RelDataType origRowType = null;
@@ -396,62 +406,63 @@ class MedJdbcNameDirectory
         int nTablesReturned = 0;
 
         String [] schemaPatterns = getSchemaPattern();
-        String tablePattern =
-            getFilterPattern(
-                query,
-                FarragoMedMetadataQuery.OTN_TABLE);
 
-        ResultSet resultSet;
+        ResultSet resultSet = null;
         boolean noResults = true;
-        for (int i = 0; i < schemaPatterns.length; i++) {
-            String schemaPattern = schemaPatterns[i];
-            try {
-                resultSet =
-                    server.databaseMetaData.getTables(
-                        server.catalogName,
-                        schemaPattern,
-                        tablePattern,
-                        server.tableTypes);
-                if (resultSet == null) {
-                    if (noResults && ((i + 1) == schemaPatterns.length)) {
+        try {
+            for (String schemaPattern : schemaPatterns) {
+                String [] tablePatterns = getTablePattern(
+                    query, FarragoMedMetadataQuery.OTN_TABLE, schemaPattern);
+                for (String tablePattern : tablePatterns) {
+                    try {
+                        resultSet =
+                            server.databaseMetaData.getTables(
+                                server.catalogName,
+                                schemaPattern,
+                                tablePattern,
+                                server.tableTypes);
+                    } catch (Throwable ex) {
+                        // assume unsupported
                         return false;
                     }
-                    continue;
-                }
-                noResults = false;
-            } catch (Throwable ex) {
-                // assume unsupported
-                return false;
-            }
-
-            Properties props = new Properties();
-            try {
-                while (resultSet.next()) {
-                    ++nTablesReturned;
-                    String schemaName = resultSet.getString(2);
-                    if (!matchSchema(schemaPattern, schemaName)) {
+                    if (resultSet == null) {
                         continue;
                     }
-                    String tableName = resultSet.getString(3);
-                    String remarks = resultSet.getString(5);
-                    if (schemaName != null) {
-                        props.put(
-                            MedJdbcDataServer.PROP_SCHEMA_NAME,
-                            schemaName);
-                    }
-                    props.put(MedJdbcDataServer.PROP_TABLE_NAME,
-                        tableName);
-                    boolean include =
-                        sink.writeObjectDescriptor(
-                            tableName,
-                            FarragoMedMetadataQuery.OTN_TABLE,
-                            remarks,
-                            props);
-                    if (include) {
-                        tableListActual.add(tableName);
+                    noResults = false;
+
+                    Properties props = new Properties();
+                    while (resultSet.next()) {
+                        ++nTablesReturned;
+                        String schemaName = resultSet.getString(2);
+                        if (!matchSchema(schemaPattern, schemaName)) {
+                            continue;
+                        }
+                        String tableName = resultSet.getString(3);
+                        String remarks = resultSet.getString(5);
+                        if (schemaName != null) {
+                            props.put(
+                                MedJdbcDataServer.PROP_SCHEMA_NAME,
+                                schemaName);
+                        }
+                        props.put(MedJdbcDataServer.PROP_TABLE_NAME,
+                            tableName);
+                        // table mapping
+                        tableName = getMappedTableName(
+                            schemaName, tableName, this.schemaName);
+                        boolean include =
+                            sink.writeObjectDescriptor(
+                                tableName,
+                                FarragoMedMetadataQuery.OTN_TABLE,
+                                remarks,
+                                props);
+                        if (include) {
+                            tableListActual.add(tableName);
+                        }
                     }
                 }
-            } finally {
+            }
+        } finally {
+            if (resultSet != null) {
                 resultSet.close();
             }
         }
@@ -470,7 +481,7 @@ class MedJdbcNameDirectory
             tableListOptimized.addAll(tableListActual);
         }
 
-        return true;
+        return !noResults;
     }
 
     private boolean queryColumns(
@@ -520,36 +531,33 @@ class MedJdbcNameDirectory
                 query,
                 FarragoMedMetadataQuery.OTN_COLUMN);
 
-        ResultSet resultSet;
+        ResultSet resultSet = null;
         boolean noResults = true;
-        for (int i = 0; i < schemaPatterns.length; i++) {
-            String schemaPattern = schemaPatterns[i];
-            try {
-                resultSet =
-                    server.databaseMetaData.getColumns(
-                        server.catalogName,
-                        schemaPattern,
-                        tablePattern,
-                        columnPattern);
+        try {
+            for (String schemaPattern : schemaPatterns) {
+                try {
+                    resultSet =
+                        server.databaseMetaData.getColumns(
+                            server.catalogName,
+                            schemaPattern,
+                            tablePattern,
+                            columnPattern);
+                } catch (Throwable ex) {
+                    // assume unsupported
+                    return false;
+                }
                 if (resultSet == null) {
-                    if (noResults && ((i + 1) == schemaPatterns.length)) {
-                        return false;
-                    }
                     continue;
                 }
                 noResults = false;
-            } catch (Throwable ex) {
-                // assume unsupported
-                return false;
-            }
-
-            try {
                 while (resultSet.next()) {
                     String schemaName = resultSet.getString(2);
                     if (!matchSchema(schemaPattern, schemaName)) {
                         continue;
                     }
                     String returnedTableName = resultSet.getString(3);
+                    returnedTableName = getMappedTableName(
+                        schemaName, returnedTableName, this.schemaName);
                     if (tableSet != null) {
                         if (!tableSet.contains(returnedTableName)) {
                             continue;
@@ -575,11 +583,13 @@ class MedJdbcNameDirectory
                         defaultValue,
                         new Properties());
                 }
-            } finally {
+            }
+        } finally {
+            if (resultSet != null) {
                 resultSet.close();
             }
         }
-        return true;
+        return !noResults;
     }
 
     private String [] getSchemaPattern()
@@ -592,28 +602,83 @@ class MedJdbcNameDirectory
         }
 
         ArrayList allSchemas = new ArrayList();
+
+        // schema mapping
         String mapping =
             server.getProperties().getProperty(
                 MedJdbcDataServer.PROP_SCHEMA_MAPPING);
-        if (mapping == null) {
-            return new String[] { schemaName };
-        }
-        String [] allMapping = mapping.split(";");
-        for (String map : allMapping) {
-            String [] oneMap = map.split(":");
-            if (oneMap.length != 2) {
-                continue;
+        if (mapping != null) {
+            String [] allMapping = mapping.split(";");
+            for (String map : allMapping) {
+                String [] oneMap = map.split(":");
+                if (oneMap.length != 2) {
+                    continue;
+                }
+                if (schemaName.equals(oneMap[1].trim())) {
+                    allSchemas.add(oneMap[0]);
+                }
             }
-            if (schemaName.equals(oneMap[1].trim())) {
-                allSchemas.add(oneMap[0]);
+            if (allSchemas.size() > 0) {
+                return (String []) allSchemas.toArray(
+                    new String[allSchemas.size()]);
+            } else {
+                return new String[] { schemaName };
             }
-        }
-        if (allSchemas.size() > 0) {
-            return (String []) allSchemas.toArray(
-                new String[allSchemas.size()]);
         } else {
-            return new String[] { schemaName };
+            // table mapping
+            mapping = server.getProperties().getProperty(
+                MedJdbcDataServer.PROP_TABLE_MAPPING);
+            if (mapping != null) {
+                HashMap map = (HashMap) server.tableMaps.get(schemaName);
+                if (map == null) {
+                    return new String[] { schemaName };
+                }
+                for (Iterator i = map.values().iterator(); i.hasNext();) {
+                    String sch =
+                        ((MedJdbcDataServer.Source) i.next()).getSchema();
+                    if (!allSchemas.contains(sch)) {
+                        allSchemas.add(sch);
+                    }
+                }
+                if (allSchemas.size() > 0) {
+                    return (String []) allSchemas.toArray(
+                        new String[allSchemas.size()]);
+                } else {
+                    return new String[] { schemaName };
+                }
+            } else {
+                // no mapping
+                return new String[] { schemaName };
+            }
         }
+    }
+
+    private String [] getTablePattern(
+        FarragoMedMetadataQuery query,
+        String typeName,
+        String schema)
+    {
+        ArrayList allTables = new ArrayList();
+        String mapping = server.getProperties().getProperty(
+            MedJdbcDataServer.PROP_TABLE_MAPPING);
+        if (mapping != null) {
+            HashMap map = (HashMap) server.tableMaps.get(schemaName);
+            if (map != null) {
+                for (Iterator i = map.values().iterator(); i.hasNext();) {
+                    MedJdbcDataServer.Source value =
+                        (MedJdbcDataServer.Source) i.next();
+                    String sch = value.getSchema();
+                    if (sch.equals(schema)) {
+                        allTables.add(value.getTable());
+                    }
+                }
+            }
+        }
+        if (allTables.size() == 0) {
+            return new String[] {getFilterPattern(query, typeName)};
+        }
+        return (String []) allTables.toArray(
+            new String[allTables.size()]);
     }
 
     private String getFilterPattern(
@@ -629,6 +694,52 @@ class MedJdbcNameDirectory
             }
         }
         return pattern;
+    }
+
+    private String getMappedTableName(
+        String schema, String table, String origSchema)
+    {
+        String mapping = server.getProperties().getProperty(
+            MedJdbcDataServer.PROP_TABLE_MAPPING);
+
+        if (mapping != null) {
+            String [] allMapping = mapping.split(";");
+
+            for (String s : allMapping) {
+                String [] map = s.split(":");
+
+                // not a valid mapping
+                if (map.length != 2) {
+                    continue;
+                }
+                String source = map[0].trim();
+                String target = map[1].trim();
+
+                map = source.split("\\.");
+                // not a valid mapping
+                if (map.length != 2) {
+                    continue;
+                }
+                String src_schema = map[0].trim();
+                String src_table = map[1].trim();
+
+                if (src_schema.equals(schema) &&
+                    src_table.equals(table)) {
+                    map = target.split("\\.");
+                    // not a valid mapping
+                    if (map.length != 2) {
+                        continue;
+                    }
+                    String target_schema = map[0].trim();
+                    if (!target_schema.equals(origSchema)) {
+                        continue;
+                    }
+                    String target_table = map[1].trim();
+                    return target_table;
+                }
+            }
+        }
+        return table;
     }
 
     private boolean matchSchema(String s1, String s2)
@@ -650,7 +761,6 @@ class MedJdbcNameDirectory
         // ie. all upper-case and lose whitespace
         String key = map[0].trim().toUpperCase().replaceAll("\\s", "");
         String value = map[1].trim().toUpperCase().replaceAll("\\s", "");
-        ;
 
         if (!key.equals("") && !value.equals("")) {
             this.typeMapping.setProperty(key, value);

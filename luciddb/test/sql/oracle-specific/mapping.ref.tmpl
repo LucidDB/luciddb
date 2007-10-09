@@ -1,4 +1,6 @@
 0: jdbc:luciddb:> -- use default ORACLE wrapper
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- SCHEMA_MAPPING TESTS --
 0: jdbc:luciddb:> create server ORCL_SERVER_SCHEMA_MAPPING
 . . . . . . . . > foreign data wrapper ORACLE
 . . . . . . . . > options(
@@ -49,7 +51,6 @@
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema apps;
-0: jdbc:luciddb:> set schema 'apps';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- import tables from different schemas to one local schema
 0: jdbc:luciddb:> import foreign schema X LIMIT TO (@DATATYPE_TABLE@, ADDR) from server ORCL_SERVER_SCHEMA_MAPPING into apps;
@@ -75,5 +76,141 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema apps cascade;
 0: jdbc:luciddb:> drop server ORCL_SERVER_SCHEMA_MAPPING cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TABLE_MAPPING TESTS --
+0: jdbc:luciddb:> create server ORCL_SERVER_TABLE_MAPPING
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     table_mapping 'SCHOI.BILL:DEFAULT.T1;SCHOI.DATATYPES:DEFAULT.T2;SCOTT.ADDR:DEFAULT.T3;SCOTT.ADDR:BLAH.T1'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_SERVER_TABLE_MAPPING.SCHOI.DATATYPES order by 1,2,3,4,5,6;
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|                        |                        | 99999.0          |                   | varchar     |          |          |
+|                        |                        | 99999.0          |                   | varchar     | 123      |          |
+|                        |                        | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |          |          |
+| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |          |          |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> select * from ORCL_SERVER_TABLE_MAPPING.SCOTT.ADDR order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- query directly using mapped schema.table
+0: jdbc:luciddb:> select * from ORCL_SERVER_TABLE_MAPPING."DEFAULT".T2 order by 1,2,3,4,5,6;
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|                        |                        | 99999.0          |                   | varchar     |          |          |
+|                        |                        | 99999.0          |                   | varchar     | 123      |          |
+|                        |                        | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |          |          |
+| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |          |          |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> select * from ORCL_SERVER_TABLE_MAPPING."DEFAULT".T3 order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_SERVER_TABLE_MAPPING.BLAH.T1 order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- import foreign schema
+0: jdbc:luciddb:> create schema testing;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema "DEFAULT" from server ORCL_SERVER_TABLE_MAPPING into testing;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from testing.T1 order by 1;
++----+
+| I  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:luciddb:> select * from testing.T2 order by 1,2,3,4,5,6;
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|                        |                        | 99999.0          |                   | varchar     |          |          |
+|                        |                        | 99999.0          |                   | varchar     | 123      |          |
+|                        |                        | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |          |          |
+| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |          |          |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> select * from testing.T3 order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema testing2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema "BLAH" from server ORCL_SERVER_TABLE_MAPPING into testing2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from testing2.T1 order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- import foreign schema limit to
+0: jdbc:luciddb:> create schema testing3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema "DEFAULT" LIMIT TO (T2, T3) from server ORCL_SERVER_TABLE_MAPPING into testing3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from testing3.T1;
+Error: From line 1, column 15 to line 1, column 25: Table 'TESTING3.T1' not found (state=,code=0)
+0: jdbc:luciddb:> select * from testing3.T2 order by 1,2,3,4,5,6;
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|                        |                        | 99999.0          |                   | varchar     |          |          |
+|                        |                        | 99999.0          |                   | varchar     | 123      |          |
+|                        |                        | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |          |          |
+| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |          |          |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> select * from testing3.T3 order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema testing cascade;
+0: jdbc:luciddb:> drop schema testing2 cascade;
+0: jdbc:luciddb:> drop schema testing3 cascade;
+0: jdbc:luciddb:> drop server ORCL_SERVER_TABLE_MAPPING cascade;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -81,6 +81,7 @@ public class MedJdbcDataServer
     public static final String PROP_DISABLED_PUSHDOWN_REL_PATTERN =
         "DISABLED_PUSHDOWN_REL_PATTERN";
     public static final String PROP_SCHEMA_MAPPING = "SCHEMA_MAPPING";
+    public static final String PROP_TABLE_MAPPING = "TABLE_MAPPING";
 
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
@@ -117,6 +118,7 @@ public class MedJdbcDataServer
     private int fetchSize;
     private boolean autocommit;
     protected HashMap schemaMaps;
+    protected HashMap tableMaps;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -143,6 +145,7 @@ public class MedJdbcDataServer
         loginTimeout = props.getProperty(PROP_LOGIN_TIMEOUT);
         validationQuery = props.getProperty(PROP_VALIDATION_QUERY);
         schemaMaps = new HashMap<String, HashMap>();
+        tableMaps = new HashMap<String, HashMap>();
 
         if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
             connectProps = (Properties) props.clone();
@@ -192,6 +195,12 @@ public class MedJdbcDataServer
         String schemaMapping = props.getProperty(PROP_SCHEMA_MAPPING);
         if (schemaMapping != null) {
             createSchemaMaps(schemaMapping);
+        }
+
+        // table mapping
+        String tableMapping = props.getProperty(PROP_TABLE_MAPPING);
+        if (tableMapping != null) {
+            createTableMaps(tableMapping);
         }
     }
 
@@ -289,6 +298,7 @@ public class MedJdbcDataServer
         props.remove(PROP_FETCH_SIZE);
         props.remove(PROP_AUTOCOMMIT);
         props.remove(PROP_SCHEMA_MAPPING);
+        props.remove(PROP_TABLE_MAPPING);
     }
 
     // implement FarragoMedDataServer
@@ -558,6 +568,69 @@ public class MedJdbcDataServer
             }
         }
     }
+
+    private void createTableMaps(String mapping)
+        throws SQLException
+    {
+        String [] allMapping = mapping.split(";");
+
+        for (String s : allMapping) {
+            String [] map = s.split(":");
+
+            // not a valid mapping
+            if (map.length != 2) {
+                continue;
+            }
+            String source = map[0].trim();
+            String target = map[1].trim();
+
+            map = source.split("\\.");
+            // not a valid mapping
+            if (map.length != 2) {
+                continue;
+            }
+            String src_schema = map[0].trim();
+            String src_table = map[1].trim();
+
+            map = target.split("\\.");
+            // not a valid mapping
+            if (map.length != 2) {
+                continue;
+            }
+            String target_schema = map[0].trim();
+            String target_table = map[1].trim();
+
+            HashMap h = new HashMap();
+            if (tableMaps.get(target_schema) != null) {
+                h = (HashMap) tableMaps.get(target_schema);
+            }
+            h.put(target_table, new Source(src_schema, src_table));
+            tableMaps.put(target_schema, h);
+        }
+    }
+
+    public static class Source
+    {
+        String schema;
+        String table;
+
+        Source(String sch, String tab)
+        {
+            this.schema = sch;
+            this.table = tab;
+        }
+
+        public String getSchema()
+        {
+            return this.schema;
+        }
+
+        public String getTable()
+        {
+            return this.table;
+        }
+    }
+
 }
 
 // End MedJdbcDataServer.java
