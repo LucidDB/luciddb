@@ -58,14 +58,14 @@ public:
     virtual void endSnapshot() = 0;
     
     /**
-     * Writes one uint counter.  This is called from a StatsSource
+     * Writes one int counter.  This is called from a StatsSource
      * implementation in response to writeStats().
      *
      * @param name name of counter
      *
      * @param value snapshot value
      */
-    virtual void writeCounter(std::string name,uint value) = 0;
+    virtual void writeCounter(std::string name,int64_t value) = 0;
 };
 
 FENNEL_END_NAMESPACE

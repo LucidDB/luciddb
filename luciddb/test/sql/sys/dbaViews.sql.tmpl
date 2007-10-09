@@ -186,4 +186,8 @@ select * from sys_root.dba_performance_counters where false;
 select * from sys_root.dba_system_info where false;
 select * from sys_root.user_session_parameters where false;
 
-
+-- check if number of temp allocated pages is 0
+alter system deallocate old;
+select counter_name, counter_value
+from sys_root.dba_performance_counters
+where counter_name = 'TempPagesAllocatedAfterReclaim';

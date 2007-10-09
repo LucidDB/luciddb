@@ -118,6 +118,16 @@ class Database
      */
     uint nCheckpoints;
 
+    /**
+     * Counter for number of data pages allocated
+     */
+    int64_t nDataPagesAllocated;
+
+    /**
+     * Counter for number of temporary pages allocated
+     */
+    int64_t nTempPagesAllocated;
+
     explicit Database(
         SharedCache pCache,
         ConfigMap const &configMap,

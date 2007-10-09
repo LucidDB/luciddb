@@ -54,7 +54,7 @@ void FileStatsTarget::endSnapshot()
     snapshotStream.close();
 }
 
-void FileStatsTarget::writeCounter(std::string name,uint value)
+void FileStatsTarget::writeCounter(std::string name,int64_t value)
 {
     snapshotStream << name << ' ' << value << std::endl;
 }
