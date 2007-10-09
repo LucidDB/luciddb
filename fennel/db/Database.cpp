@@ -184,6 +184,11 @@ void Database::prepareForRecovery()
 
 void Database::openSegments()
 {
+#ifdef NDEBUG
+    FENNEL_TRACE(TRACE_INFO, "Fennel build:  --with-optimization");
+#else
+    FENNEL_TRACE(TRACE_INFO, "Fennel build:  --without-optimization");
+#endif
     FENNEL_TRACE(TRACE_INFO, "opening database; process ID = " << getpid());
     
     pCheckpointThread = SharedCheckpointThread(
