@@ -8,6 +8,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> analyze table bench10k estimate statistics for all columns;
 0: jdbc:luciddb:> analyze table bench1m estimate statistics for all columns;
+0: jdbc:luciddb:> analyze table index_est estimate statistics for all columns;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select
 . . . . . . . . >   table_name,
@@ -48,6 +49,11 @@
 | BENCH1M     | k5           | 5                     | true                               | 1.0              | 10000        |
 | BENCH1M     | k500k        | 340201                | true                               | 1.0              | 10000        |
 | BENCH1M     | kseq         | 1000000               | false                              | 1.0              | 10000        |
+| INDEX_EST   | k10          | 10                    | false                              | 25.0             | 250          |
+| INDEX_EST   | k1k          | 559                   | true                               | 25.0             | 250          |
+| INDEX_EST   | kseq         | 1000                  | false                              | 25.0             | 250          |
+| INDEX_EST   | kuniq        | 1000                  | false                              | 25.0             | 250          |
+| INDEX_EST   | kuniq_null   | 902                   | false                              | 25.0             | 250          |
 +-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select table_name, column_name, ordinal, start_value, value_count
@@ -709,5 +715,31 @@
 | BENCH10K    | k1k          | 98       | 982          | 7            |
 | BENCH10K    | k1k          | 99       | 995          | 5            |
 +-------------+--------------+----------+--------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- delete rows from the index_est table and recompute the stats
+0: jdbc:luciddb:> delete from index_est where mod("kseq", 3) = 0;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 
+0: jdbc:luciddb:> analyze table index_est estimate statistics for all columns sample 25 percent;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select
+. . . . . . . . >   table_name,
+. . . . . . . . >   column_name,
+. . . . . . . . >   distinct_value_count,
+. . . . . . . . >   is_distinct_value_count_estimated,
+. . . . . . . . >   percent_sampled,
+. . . . . . . . >   sample_size
+. . . . . . . . > from sys_root.dba_column_stats
+. . . . . . . . > where schema_name = 'ANALYZETEST' and table_name = 'INDEX_EST'
+. . . . . . . . > order by column_name;
++-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
+| TABLE_NAME  | COLUMN_NAME  | DISTINCT_VALUE_COUNT  | IS_DISTINCT_VALUE_COUNT_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
++-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
+| INDEX_EST   | k10          | 10                    | true                               | 25.0             | 170          |
+| INDEX_EST   | k1k          | 476                   | true                               | 25.0             | 170          |
+| INDEX_EST   | kseq         | 667                   | false                              | 25.0             | 170          |
+| INDEX_EST   | kuniq        | 667                   | false                              | 25.0             | 170          |
+| INDEX_EST   | kuniq_null   | 601                   | true                               | 25.0             | 170          |
++-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

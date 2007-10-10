@@ -765,6 +765,15 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 | 2  |
 +----+
 > 
+> -- incur the same unique constraint violation multiple times
+> -- error logging has already been enabled above
+> create table u(a int unique);
+> insert into u values(1);
+> insert into u values(1);
+Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see testlog/Summary.log for details (state=,code=0)
+> insert into u values(1);
+Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see testlog/Summary.log for details (state=,code=0)
+> 
 > -- cleanup
 > drop server test_data cascade;
 > 

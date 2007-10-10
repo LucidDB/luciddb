@@ -54,3 +54,12 @@ create table BENCH1K (
 create table CONCURRENT_SIM (
 "kseq" bigint primary key,
 "k100" bigint);
+
+create table INDEX_EST (
+"kseq" bigint primary key,
+"kuniq" bigint unique not null,
+"kuniq_null" bigint unique,
+"k10" bigint not null,
+"k1k" bigint not null);
+
+create index INDEX_EST_IDX on INDEX_EST("k10", "k1k");

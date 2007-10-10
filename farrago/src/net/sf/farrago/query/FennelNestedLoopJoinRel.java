@@ -41,7 +41,7 @@ import org.eigenbase.util.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-class FennelNestedLoopJoinRel
+public class FennelNestedLoopJoinRel
     extends FennelMultipleRel
 {
 

@@ -1,0 +1,9 @@
+9.0
+7
+1 SQLVARCHAR 0 100 ","  1 kseq ""
+2 SQLVARCHAR 0 100 ","  2 k2   ""
+3 SQLVARCHAR 0 100 ","  3 k10  ""
+4 SQLVARCHAR 0 100 ","  4 k25  ""
+5 SQLVARCHAR 0 100 ","  5 k50  ""
+6 SQLVARCHAR 0 100 ","  6 k100 ""
+7 SQLVARCHAR 0 100 ","  7 k200 ""

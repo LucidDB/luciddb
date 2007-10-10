@@ -47,3 +47,14 @@ insert into concurrent_sim
   select "kseq", "k100" from bench1m where "kseq" <= 100;
 
 select count(*) from concurrent_sim;
+
+insert into index_est ("kseq", "kuniq", "kuniq_null", "k10", "k1k")
+    select
+        "kseq",
+        2 * "kseq" + 1,
+        case "kseq" < 100 when true then null else "kseq" end,
+        "k10",
+        "k1k"
+    from bench1k;
+
+select count(*) from index_est;

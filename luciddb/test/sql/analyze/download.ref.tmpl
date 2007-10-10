@@ -68,4 +68,20 @@
 | 100     |
 +---------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into index_est ("kseq", "kuniq", "kuniq_null", "k10", "k1k")
+. . . . . . . . >     select
+. . . . . . . . >         "kseq",
+. . . . . . . . >         2 * "kseq" + 1,
+. . . . . . . . >         case "kseq" < 100 when true then null else "kseq" end,
+. . . . . . . . >         "k10",
+. . . . . . . . >         "k1k"
+. . . . . . . . >     from bench1k;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from index_est;
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
