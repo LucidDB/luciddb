@@ -658,6 +658,9 @@ ${farrago.test.jvmargs}
       <then>
         <jar jarfile="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar"
           filesetmanifest="merge">
+          <manifest>
+            <attribute name="Class-Path" value="LucidDbClient.jar"/>
+          </manifest>
           <zipgroupfileset dir="${farrago.plugin.dir}">
             <include name="FarragoMedJdbc.jar"/>
           </zipgroupfileset>

@@ -169,6 +169,7 @@ public class LucidDbSqlTest extends FarragoTestCase
                 || name.equals("SQL SERVER")
                 || name.equals("FLAT FILE")
                 || name.equals("LUCIDDB LOCAL")
+                || name.equals("LUCIDDB REMOTE")
                 || name.equals("SALESFORCE")
                 || name.contains("NETSUITE")
                 || super.isBlessedWrapper(wrapper);

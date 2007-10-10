@@ -42,3 +42,13 @@ options(
   driver_class 'com.lucidera.jdbc.LucidDbLocalDriver',
   url 'jdbc:luciddb:'
 );
+
+-- create luciddb remote wrapper with browse connect
+create or replace foreign data wrapper "LUCIDDB REMOTE"
+library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
+language java
+options(
+  browse_connect_description 'LucidDb Connection',
+  driver_class 'com.lucidera.jdbc.LucidDbRmiDriver',
+  url 'jdbc:luciddb:rmi:'
+);
