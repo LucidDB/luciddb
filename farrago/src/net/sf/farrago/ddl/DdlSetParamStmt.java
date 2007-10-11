@@ -142,10 +142,12 @@ public abstract class DdlSetParamStmt
         String newValueAsString = paramValue.toValue();
 
         // TODO:  use a generic type conversion facility.  Also, this assumes
-        // parameters are never optional.
+        // optional parameters are always String.
         Object newValue;
         try {
-            if (oldValue instanceof RefEnum) {
+            if (oldValue == null) {
+                newValue = newValueAsString;
+            } else if (oldValue instanceof RefEnum) {
                 Method method =
                     oldValue.getClass().getMethod(
                         "forName",

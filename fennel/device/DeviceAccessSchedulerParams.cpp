@@ -24,12 +24,17 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/device/DeviceAccessSchedulerParams.h"
 #include "fennel/common/ConfigMap.h"
+#include "fennel/common/FennelExcn.h"
+#include "fennel/common/FennelResource.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-ParamName DeviceAccessSchedulerParams::paramSchedulerType = "schedType";
-ParamName DeviceAccessSchedulerParams::paramThreadCount = "schedThreadCount";
-ParamName DeviceAccessSchedulerParams::paramMaxRequests = "schedMaxRequests";
+ParamName DeviceAccessSchedulerParams::paramSchedulerType =
+    "deviceSchedulerType";
+ParamName DeviceAccessSchedulerParams::paramThreadCount =
+    "deviceSchedulerThreadCount";
+ParamName DeviceAccessSchedulerParams::paramMaxRequests =
+    "deviceSchedulerMaxRequests";
 
 ParamVal DeviceAccessSchedulerParams::valThreadPoolScheduler = "threadPool";
 ParamVal DeviceAccessSchedulerParams::valIoCompletionPortScheduler =
@@ -65,7 +70,7 @@ void DeviceAccessSchedulerParams::readConfig(ConfigMap const &configMap)
     } else if (s == valIoCompletionPortScheduler) {
         schedulerType = IO_COMPLETION_PORT_SCHEDULER;
     } else {
-        assert(s == "");
+        // treat unrecognized as default
     }
     nThreads = configMap.getIntParam(
         paramThreadCount,nThreads);
