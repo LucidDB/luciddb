@@ -273,11 +273,11 @@ class MondrianReplicator implements ClosableAllocation
         if (primaryKeyColumns.isEmpty()) {
             primaryKeyColumns = null;
         }
-        FarragoDdlGenerator ddlGen = new FarragoDdlGenerator();
+        FarragoDdlGenerator ddlGen = new FarragoDdlGenerator(null);
         StringBuilder sb = new StringBuilder();
         ddlGen.generateColumnsAndKeys(
             sb,
-            Util.cast(foreignTable.getFeature(), CwmColumn.class).iterator(),
+            Util.cast(foreignTable.getFeature(), CwmColumn.class),
             true,
             false,
             primaryKeyColumns);

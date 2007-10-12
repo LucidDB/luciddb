@@ -708,7 +708,7 @@ public class FarragoDdlGenerator
      * (enclosed in parentheses unless there are no columns).
      *
      * @param sb receives generated string
-     * @param columns iterator over column definitions to generate
+     * @param columns list of column definitions to generate
      * @param skipDefaults whether to omit default value definitions
      * @param skipNullable whether to omit NOT NULL constraint definitions
      * @param imposedPrimaryKey if not null, use as PRIMARY KEY
