@@ -31,6 +31,7 @@
 #include "fennel/cache/CacheParams.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/FennelExcn.h"
+#include "fennel/common/FennelResource.h"
 #include "fennel/common/InvalidParamExcn.h"
 #include "fennel/common/Backtrace.h"
 #include "fennel/btree/BTreeBuilder.h"
@@ -176,7 +177,12 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 
     CacheParams cacheParams;
     cacheParams.readConfig(configMap);
-    SharedCache pCache = Cache::newCache(cacheParams);
+    SharedCache pCache;
+    try {
+        pCache = Cache::newCache(cacheParams);
+    } catch(std::exception &excn) {
+        handleCacheAllocException(excn);
+    }
 
     JniUtilParams jniUtilParams;
     jniUtilParams.readConfig(configMap);
@@ -240,6 +246,24 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
             scratchAccessor);
         pDb->recover(recoveryFactory);
     }
+
+    // Cache initialization may have been unable to allocate the requested
+    // number of pages -- check for this case and report it in the log.
+    if (pCache->getMaxAllocatedPageCount() != cacheParams.nMemPagesMax ||
+        pCache->getAllocatedPageCount() != cacheParams.nMemPagesInit)
+    {
+        FENNEL_DELEGATE_TRACE(
+            TRACE_WARNING, 
+            pDb,
+            "Unable to allocate "
+            << cacheParams.nMemPagesInit 
+            << " (of "
+            << cacheParams.nMemPagesMax
+            << " max) cache pages; allocated "
+            << pCache->getAllocatedPageCount()
+            << " cache pages.");
+    }
+
     setDbHandle(cmd.getResultHandle(),pDbHandle.release());
 }
     
@@ -273,17 +297,36 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
         if (pageCount <= 0 || pageCount > pCache->getMaxAllocatedPageCount()) {
             throw InvalidParamExcn("1", "'cachePagesMax'");
         }
-        ExecStreamResourceQuantity available;
-        available.nCachePages = pageCount;
-        if (!pDbHandle->pResourceGovernor->setResourceAvailability(
-            available, EXEC_RESOURCE_CACHE_PAGES))
-        {
-            throw InvalidParamExcn(
-                "the number of pages currently assigned (plus reserve)",
-                "'cachePagesMax'");
-        }
-        pCache->setAllocatedPageCount(pageCount);
 
+        bool decreasingPageCount = pageCount < pCache->getAllocatedPageCount();
+        if (decreasingPageCount) {
+            // Let governor veto a page count decrease
+            ExecStreamResourceQuantity available;
+            available.nCachePages = pageCount;
+            if (!pDbHandle->pResourceGovernor->setResourceAvailability(
+                    available, EXEC_RESOURCE_CACHE_PAGES))
+            {
+                throw InvalidParamExcn(
+                    "the number of pages currently assigned (plus reserve)",
+                    "'cachePagesMax'");
+            }
+        }
+
+        try {
+            pCache->setAllocatedPageCount(pageCount);
+        } catch(std::exception &excn) {
+            handleCacheAllocException(excn);
+        }
+
+        if (!decreasingPageCount) {
+            // Notify governor of increased page count
+            ExecStreamResourceQuantity available;
+            available.nCachePages = pageCount;
+            bool result =
+                pDbHandle->pResourceGovernor->setResourceAvailability(
+                    available, EXEC_RESOURCE_CACHE_PAGES);
+            assert(result);
+        }
     } else if (paramName.compare("expectedConcurrentStatements") == 0) {
         int nStatements = boost::lexical_cast<int>(pParam->getValue());
         SharedCache pCache = pDbHandle->pDb->getCache();
@@ -700,6 +743,24 @@ void CmdInterpreter::visit(ProxyCmdVersionIndexRoot &cmd)
     pSnapshotSegment->versionPage(
         PageId(cmd.getOldRootPageId()),
         PageId(cmd.getNewRootPageId()));
+}
+
+void CmdInterpreter::handleCacheAllocException(const std::exception &excn)
+    throw(FennelExcn)
+{
+    const std::bad_alloc *badAllocExcn = 
+        dynamic_cast<const std::bad_alloc *>(&excn);
+    if (badAllocExcn != NULL) {
+        // Convert bad_alloc's terrible error mesage into something fit for
+        // human consumption.
+        throw FennelExcn(
+            FennelResource::instance().cacheAllocFailed(
+                "malloc failed"));
+    }
+
+    throw FennelExcn(
+        FennelResource::instance().cacheAllocFailed(
+            excn.what()));
 }
 
 FENNEL_END_CPPFILE("$Id$");

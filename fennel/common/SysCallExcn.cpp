@@ -34,35 +34,52 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 SysCallExcn::SysCallExcn(std::string msgInit)
-    : FennelExcn(msgInit)
+    : FennelExcn(msgInit), errCode(getCurrentErrorCode())
 {
-#ifdef __MINGW32__
-    DWORD dwErr = GetLastError();
-#endif
+    init();
+}
+
+SysCallExcn::SysCallExcn(std::string msgInit, int errCodeInit)
+    : FennelExcn(msgInit), errCode(errCodeInit)
+{
+    init();
+}
+
+void SysCallExcn::init()
+{
     std::ostringstream oss;
     oss << msg;
     oss << ": ";
+
 #ifdef __MINGW32__
     oss << "GetLastError() = ";
-    oss << dwErr;
-    errCode = dwErr;
+    oss << errCode;
 #else
-    char *pMsg = strerror(errno);
+    char *pMsg = strerror(errCode);
     if (pMsg) {
         oss << pMsg;
     } else {
         oss << "errno = ";
-        oss << errno;
+        oss << errCode;
     }
-    errCode = errno;
 #endif
     msg = oss.str();
     msg = FennelResource::instance().sysCallFailed(msg);
 }
 
+
 int SysCallExcn::getErrorCode()
 {
     return errCode;
+}
+
+int SysCallExcn::getCurrentErrorCode()
+{
+#ifdef __MING32__
+    return GetLastError();
+#else
+    return errno;
+#endif
 }
 
 FENNEL_END_CPPFILE("$Id$");

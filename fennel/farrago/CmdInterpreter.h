@@ -201,6 +201,10 @@ public:
 
     static SharedErrorTarget newErrorTarget(
         jobject fennelJavaErrorTarget);
+
+private:
+    void handleCacheAllocException(const std::exception &excn) 
+        throw(FennelExcn);
 };
 
 inline jobject CmdInterpreter::getObjectFromLong(jlong jHandle)

@@ -986,6 +986,26 @@ public class FarragoDatabase
                 getCodeCacheMaxBytes(systemRepos.getCurrentConfig()));
         }
 
+        // Prevent negative values.  Fennel uses an unsigned 32-bit int for
+        // these parameters and will convert negative values into large
+        // positive values.  Prevent this for sanity.  (Could switch catalog to
+        // use longs to provide access to the full Fennel range of values.)
+        if (paramName.equals("cachePagesMax")
+            || paramName.equals("cachePagesInit"))
+        {
+            int cachePagesMax = ddlStmt.getParamValue().intValue(false);
+
+            String upperBound = 
+                paramName.equals("cachePagesMax")
+                ? String.valueOf(Integer.MAX_VALUE)
+                : "'cachePagesMax'";
+
+            if (cachePagesMax <= 0) {
+                throw FarragoResource.instance().InvalidParam.ex(
+                    "1", upperBound);
+            }
+        }
+
         if (paramName.equals("cachePagesInit")
             || paramName.equals("expectedConcurrentStatements")
             || paramName.equals("cacheReservePercentage"))

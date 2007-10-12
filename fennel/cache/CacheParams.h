@@ -41,6 +41,11 @@ public:
     static ParamName paramPageSize;
     static ParamName paramIdleFlushInterval;
 
+    static uint defaultMemPagesMax;
+    static uint defaultMemPagesInit;
+    static uint defaultPageSize;
+    static uint defaultIdleFlushInterval;
+
     /**
      * Parameters for instantiating DeviceAccessScheduler.
      */

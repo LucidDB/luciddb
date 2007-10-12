@@ -16,6 +16,15 @@ alter system set "calcVirtualMachine" = 'CALCVM_AUTO';
 -- should work
 alter system set "cachePagesMax" = 1001;
 
+-- should fail: invalid param
+alter system set "cachePagesMax" = 0;
+
+-- should fail: invalid param
+alter system set "cachePagesMax" = -1;
+
+-- should fail: type mismatch
+alter system set "cachePagesMax" = 4294967295;
+
 -- should fail:  type mismatch
 alter system set "cachePagesMax" = 'a bunch';
 
