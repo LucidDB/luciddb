@@ -110,7 +110,7 @@ create or replace view dba_column_histograms as
     cast(table_name as varchar(128)) as table_name,
     cast(column_name as varchar(128)) as column_name,
     ordinal,
-    start_value,
+    cast(start_value as varchar(128)) as start_value,
     value_count
   from
     sys_boot.mgmt.histogram_bars_view
