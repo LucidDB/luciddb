@@ -74,8 +74,27 @@ select * from testing3.T1;
 select * from testing3.T2 order by 1,2,3,4,5,6;
 select * from testing3.T3 order by 1,2,3;
 
+create server ORCL_SERVER_TABLE_MAPPING2
+foreign data wrapper ORACLE
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    table_mapping 'SCHOI.BILL:DEFAULT.BILL2;SCHOI.BILL2:DEFAULT.BILL;SCOTT.ADDR:DEFAULT.ADDR'
+);
+
+create schema testing4;
+
+import foreign schema "DEFAULT" from server ORCL_SERVER_TABLE_MAPPING2 into testing4;
+
+select * from testing4.BILL2 order by 1;
+select * from testing4.BILL order by 1,2,3;
+select * from testing4.ADDR order by 1,2,3;
+
 drop schema testing cascade;
 drop schema testing2 cascade;
 drop schema testing3 cascade;
+drop schema testing4 cascade;
 drop server ORCL_SERVER_TABLE_MAPPING cascade;
 

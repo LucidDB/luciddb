@@ -321,6 +321,7 @@ class MedJdbcNameDirectory
                 query.getResultObjectTypes().contains(
                     FarragoMedMetadataQuery.OTN_COLUMN);
             List tableListActual = new ArrayList();
+            List schemaListActual = new ArrayList();
             List tableListOptimized = new ArrayList();
 
             // FRG-137: Since we rely on queryTable to populate the lists, we
@@ -330,6 +331,7 @@ class MedJdbcNameDirectory
                         query,
                         sink,
                         tableListActual,
+                        schemaListActual,
                         tableListOptimized))
                 {
                     return false;
@@ -340,6 +342,7 @@ class MedJdbcNameDirectory
                         query,
                         sink,
                         tableListActual,
+                        schemaListActual,
                         tableListOptimized))
                 {
                     return false;
@@ -394,6 +397,7 @@ class MedJdbcNameDirectory
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
         List tableListActual,
+        List schemaListActual,
         List tableListOptimized)
         throws SQLException
     {
@@ -447,16 +451,17 @@ class MedJdbcNameDirectory
                         props.put(MedJdbcDataServer.PROP_TABLE_NAME,
                             tableName);
                         // table mapping
-                        tableName = getMappedTableName(
+                        String mappedTableName = getMappedTableName(
                             schemaName, tableName, this.schemaName);
                         boolean include =
                             sink.writeObjectDescriptor(
-                                tableName,
+                                mappedTableName,
                                 FarragoMedMetadataQuery.OTN_TABLE,
                                 remarks,
                                 props);
                         if (include) {
                             tableListActual.add(tableName);
+                            schemaListActual.add(schemaPattern);
                         }
                     }
                 }
@@ -472,7 +477,8 @@ class MedJdbcNameDirectory
 
         // +1:  avoid division by zero
         double dReturned = (double) nTablesReturned + 1;
-        if ((dMatching / dReturned) > 0.3) {
+        if ((dMatching / dReturned) > 0.3 &&
+            server.tableMaps.get(this.schemaName) == null) {
             // a significant portion of the tables returned are matches,
             // so just scan all columns at once and post-filter them,
             // rather than making repeated single-table metadata calls
@@ -488,6 +494,7 @@ class MedJdbcNameDirectory
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
         List tableListActual,
+        List schemaListActual,
         List tableListOptimized)
         throws SQLException
     {
@@ -496,12 +503,16 @@ class MedJdbcNameDirectory
                 query,
                 sink,
                 null,
+                null,
                 new HashSet(tableListActual));
         } else {
             Iterator iter = tableListOptimized.iterator();
+            Iterator iter2 = schemaListActual.iterator();
             while (iter.hasNext()) {
                 String tableName = (String) iter.next();
-                if (!queryColumnsImpl(query, sink, tableName, null)) {
+                String actualSchemaName = (String) iter2.next();
+                if (!queryColumnsImpl(
+                        query, sink, tableName, actualSchemaName, null)) {
                     return false;
                 }
             }
@@ -513,6 +524,7 @@ class MedJdbcNameDirectory
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
         String tableName,
+        String actualSchemaName,
         Set tableSet)
         throws SQLException
     {
@@ -535,6 +547,10 @@ class MedJdbcNameDirectory
         boolean noResults = true;
         try {
             for (String schemaPattern : schemaPatterns) {
+                if ((actualSchemaName != null) &&
+                    !schemaPattern.equals(actualSchemaName)) {
+                    continue;
+                }
                 try {
                     resultSet =
                         server.databaseMetaData.getColumns(

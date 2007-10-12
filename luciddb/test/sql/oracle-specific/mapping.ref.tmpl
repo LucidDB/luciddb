@@ -207,9 +207,46 @@ Error: From line 1, column 15 to line 1, column 25: Table 'TESTING3.T1' not foun
 | 4th St  | San Francisco  | CA     |
 +---------+----------------+--------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ORCL_SERVER_TABLE_MAPPING2
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     table_mapping 'SCHOI.BILL:DEFAULT.BILL2;SCHOI.BILL2:DEFAULT.BILL;SCOTT.ADDR:DEFAULT.ADDR'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema testing4;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema "DEFAULT" from server ORCL_SERVER_TABLE_MAPPING2 into testing4;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from testing4.BILL2 order by 1;
++----+
+| I  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:luciddb:> select * from testing4.BILL order by 1,2,3;
++----+----+--------+
+| I  | J  |   V    |
++----+----+--------+
+| 1  | 2  | world  |
++----+----+--------+
+0: jdbc:luciddb:> select * from testing4.ADDR order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema testing cascade;
 0: jdbc:luciddb:> drop schema testing2 cascade;
 0: jdbc:luciddb:> drop schema testing3 cascade;
+0: jdbc:luciddb:> drop schema testing4 cascade;
 0: jdbc:luciddb:> drop server ORCL_SERVER_TABLE_MAPPING cascade;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
