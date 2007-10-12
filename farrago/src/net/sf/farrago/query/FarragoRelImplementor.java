@@ -30,12 +30,12 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.type.runtime.*;
-import net.sf.farrago.util.*;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
@@ -428,7 +428,7 @@ public class FarragoRelImplementor
         }
 
         // make sure stream names are globally unique
-        streamName = streamName + ":" + JmiUtil.getObjectId(streamDef);
+        streamName = streamName + ":" + JmiObjUtil.getObjectId(streamDef);
         return streamName;
     }
 

@@ -275,7 +275,7 @@ inline void maybe_raise_fe_exception( TProgramCounter pc )
     /* leave this last because it occurs in conjunction with other
         flags */
     else if ( fe & FE_INEXACT ) {
-        throw CalcMessage( S_INEX, pc );
+/*		throw CalcMessage( S_INEX, pc ); */
         }
 }
 
@@ -288,7 +288,6 @@ inline void maybe_raise_fe_exception( TProgramCounter pc )
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = left + right;                                                  \
     maybe_raise_fe_exception( pc );                                         \
-    assert( result == (left+right) );                                       \
     return result;                                                          \
     }
 
@@ -301,7 +300,6 @@ inline void maybe_raise_fe_exception( TProgramCounter pc )
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = left - right;                                                  \
     maybe_raise_fe_exception( pc );                                         \
-    assert( result == (left-right) );                                       \
     return result;                                                          \
     }
 
@@ -314,7 +312,6 @@ inline void maybe_raise_fe_exception( TProgramCounter pc )
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = left * right;                                                  \
     maybe_raise_fe_exception( pc );                                         \
-    assert( result == (left*right) );                                       \
     return result;                                                          \
     }
 
@@ -327,7 +324,6 @@ inline void maybe_raise_fe_exception( TProgramCounter pc )
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = left / right;                                                  \
     maybe_raise_fe_exception( pc );                                         \
-    assert( result == (left/right) );                                       \
     return result;                                                          \
     }
 
@@ -339,7 +335,6 @@ inline void maybe_raise_fe_exception( TProgramCounter pc )
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = (-right);                                                      \
     maybe_raise_fe_exception( pc );                                         \
-    assert( result == (-right) );                                           \
     return result;                                                          \
     }
 

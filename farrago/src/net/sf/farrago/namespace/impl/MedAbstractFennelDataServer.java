@@ -25,12 +25,13 @@ import java.sql.*;
 
 import java.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
-import net.sf.farrago.util.*;
 
 
 /**
@@ -170,7 +171,7 @@ public abstract class MedAbstractFennelDataServer
     {
         cmd.setTxnHandle(txnContext.getTxnHandle());
         cmd.setSegmentId(getIndexSegmentId(index));
-        cmd.setIndexId(JmiUtil.getObjectId(index));
+        cmd.setIndexId(JmiObjUtil.getObjectId(index));
         prepareIndexCmd(cmd, index);
     }
 

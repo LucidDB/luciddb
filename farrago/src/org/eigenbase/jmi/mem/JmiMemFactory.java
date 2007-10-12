@@ -648,9 +648,9 @@ public abstract class JmiMemFactory
 
         protected String proxyRefMofId()
         {
-            // Radix 16 is important: see JmiUtil.getObjectId(), which converts
-            // the id back into a long.  If someone then reproduces the
-            // String and does a lookup it won't work if the radix doesn't
+            // Radix 16 is important: see JmiObjUtil.getObjectId(), which
+            // converts the id back into a long.  If someone then reproduces
+            // the String and does a lookup it won't work if the radix doesn't
             // match.
             return "x:" + Long.toString(id, 16);
         }

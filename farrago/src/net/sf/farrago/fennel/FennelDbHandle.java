@@ -36,6 +36,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.util.*;
 
 
@@ -155,7 +156,7 @@ public class FennelDbHandle
     {
         if (tracer.isLoggable(Level.FINE)) {
             String xmiInput =
-                JmiUtil.exportToXmiString(Collections.singleton(tupleDesc));
+                JmiObjUtil.exportToXmiString(Collections.singleton(tupleDesc));
             tracer.fine(xmiInput);
         }
         String xmiOutput =
@@ -231,7 +232,7 @@ public class FennelDbHandle
             }
         }
         if (exportList != null) {
-            String xmiString = JmiUtil.exportToXmiString(exportList);
+            String xmiString = JmiObjUtil.exportToXmiString(exportList);
             tracer.fine(xmiString);
         }
         long resultHandleLong;

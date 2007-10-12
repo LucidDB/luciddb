@@ -32,11 +32,9 @@ import javax.jmi.reflect.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.relopt.*;
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -86,7 +84,7 @@ class MedMdrNameDirectory
             }
             return rootPackage;
         }
-        return JmiUtil.getSubPackage(rootPackage, names, prefix);
+        return JmiObjUtil.getSubPackage(rootPackage, names, prefix);
     }
 
     /**
@@ -176,7 +174,7 @@ class MedMdrNameDirectory
         RefClass refClass)
     {
         List<StructuralFeature> features =
-            JmiUtil.getFeatures(refClass, StructuralFeature.class, false);
+            JmiObjUtil.getFeatures(refClass, StructuralFeature.class, false);
         int n = features.size();
         RelDataType [] types = new RelDataType[n + 2];
         String [] fieldNames = new String[n + 2];

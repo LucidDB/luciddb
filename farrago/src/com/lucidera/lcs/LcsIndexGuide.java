@@ -23,7 +23,6 @@ package com.lucidera.lcs;
 import com.lucidera.farrago.*;
 
 import java.math.*;
-
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -37,8 +36,8 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -1124,7 +1123,7 @@ public class LcsIndexGuide
         indexAccessor.setSegmentId(
             LcsDataServer.getIndexSegmentId(index));
 
-        long indexId = JmiUtil.getObjectId(index);
+        long indexId = JmiObjUtil.getObjectId(index);
 
         indexAccessor.setIndexId(indexId);
 
@@ -1199,7 +1198,7 @@ public class LcsIndexGuide
         clusterScan.setRootPageIdParamId(0);
 
         clusterScan.setSegmentId(LcsDataServer.getIndexSegmentId(index));
-        clusterScan.setIndexId(JmiUtil.getObjectId(index));
+        clusterScan.setIndexId(JmiObjUtil.getObjectId(index));
 
         clusterScan.setTupleDesc(
             createClusteredBTreeTupleDesc());
@@ -1633,4 +1632,4 @@ public class LcsIndexGuide
     }
 }
 
-//End LcsIndexGuide.java
+// End LcsIndexGuide.java

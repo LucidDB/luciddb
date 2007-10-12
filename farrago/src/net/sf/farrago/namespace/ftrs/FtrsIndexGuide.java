@@ -33,8 +33,8 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
@@ -362,7 +362,7 @@ class FtrsIndexGuide
         }
         indexWriter.setRootPageIdParamId(0);
         indexWriter.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
-        indexWriter.setIndexId(JmiUtil.getObjectId(index));
+        indexWriter.setIndexId(JmiObjUtil.getObjectId(index));
         indexWriter.setTupleDesc(
             getCoverageTupleDescriptor(index));
         indexWriter.setKeyProj(

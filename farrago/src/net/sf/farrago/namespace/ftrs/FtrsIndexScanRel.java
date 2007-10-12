@@ -30,10 +30,10 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
 
 import openjava.ptree.Literal;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
@@ -278,7 +278,7 @@ class FtrsIndexScanRel
         }
         scanStream.setRootPageIdParamId(0);
         scanStream.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
-        scanStream.setIndexId(JmiUtil.getObjectId(index));
+        scanStream.setIndexId(JmiObjUtil.getObjectId(index));
 
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
 

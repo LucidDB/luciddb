@@ -34,6 +34,7 @@ import javax.jmi.xmi.*;
 import net.sf.farrago.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.*;
@@ -366,7 +367,7 @@ public abstract class FarragoReposUtil
                     subPackageFound = true;
                     return new XMIReferenceProvider.XMIReference(
                         "SUBMODEL",
-                        Long.toString(JmiUtil.getObjectId(obj)));
+                        Long.toString(JmiObjUtil.getObjectId(obj)));
                 }
                 parent = (RefObject) parent.refImmediateComposite();
             } while (parent != null);

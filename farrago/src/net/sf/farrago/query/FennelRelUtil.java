@@ -30,6 +30,8 @@ import java.nio.*;
 
 import java.util.*;
 
+import javax.jmi.reflect.RefBaseObject;
+
 import net.sf.farrago.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
@@ -47,6 +49,7 @@ import org.eigenbase.sarg.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.jmi.JmiObjUtil;
 
 
 /**
@@ -88,8 +91,8 @@ public abstract class FennelRelUtil
         } else {
             transientFarragoPackage = repos.getRootPackage();
         }
-        Collection c =
-            JmiUtil.importFromXmiString(
+        Collection<RefBaseObject> c =
+            JmiObjUtil.importFromXmiString(
                 transientFarragoPackage,
                 tupleAccessorXmiString);
         assert (c.size() == 1);

@@ -49,6 +49,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
@@ -451,7 +452,7 @@ public class FarragoDatabase
         FemFennelConfig fennelConfig =
             systemRepos.getCurrentConfig().getFennelConfig();
         SortedMap<String, Object> configMap =
-            JmiUtil.getAttributeValues(fennelConfig);
+            JmiObjUtil.getAttributeValues(fennelConfig);
 
         // Copy config into a properties object, then tell the session mgr
         // about them. Note that some of the properties may be non-Strings.

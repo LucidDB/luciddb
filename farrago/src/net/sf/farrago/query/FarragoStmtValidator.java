@@ -876,7 +876,7 @@ public class FarragoStmtValidator
         }
         if (typeFamily == SqlTypeFamily.CHARACTER) {
             String charsetName = dataType.getCharSetName();
-            if (JmiUtil.isBlank(charsetName)) {
+            if (JmiObjUtil.isBlank(charsetName)) {
                 charsetName = repos.getDefaultCharsetName();
             } else {
                 if (!Charset.isSupported(charsetName)) {
@@ -890,7 +890,7 @@ public class FarragoStmtValidator
                 throw Util.needToImplement(charSet);
             }
         } else {
-            if (!JmiUtil.isBlank(dataType.getCharSetName())) {
+            if (!JmiObjUtil.isBlank(dataType.getCharSetName())) {
                 throw res.ValidatorCharsetUnexpected.ex(
                     repos.getLocalizedObjectName(type));
             }
