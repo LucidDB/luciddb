@@ -27,6 +27,8 @@
 #include "fennel/device/ThreadPoolScheduler.h"
 #include "fennel/device/RandomAccessDevice.h"
 #include "fennel/device/RandomAccessRequest.h"
+#include "fennel/common/FennelExcn.h"
+#include "fennel/common/FennelResource.h"
 
 #ifdef __MINGW32__
 #include "fennel/device/IoCompletionPortScheduler.h"
@@ -85,8 +87,9 @@ DeviceAccessScheduler::newScheduler(
             if (pScheduler) {
                 return pScheduler;
             } else {
-                // if dynamic load fails, use ThreadPoolScheduler as a fallback
-                return new ThreadPoolScheduler(params);
+                // if dynamic load fails, fall through to use
+                // ThreadPoolScheduler as a fallback
+                break;
             }
         }
 #endif
@@ -99,8 +102,10 @@ DeviceAccessScheduler::newScheduler(
 #endif
         
     default:
-        permAssert(false);
+        // fall through to use ThreadPoolScheduler as a fallback
+        break;
     }
+    return new ThreadPoolScheduler(params);
 }
 
 DeviceAccessScheduler::~DeviceAccessScheduler()

@@ -454,6 +454,16 @@ public class FarragoDatabase
         SortedMap<String, Object> configMap =
             JmiObjUtil.getAttributeValues(fennelConfig);
 
+        // Filter out null values.
+        Iterator<Map.Entry<String,Object>> configMapIter =
+            configMap.entrySet().iterator();
+        while (configMapIter.hasNext()) {
+            Map.Entry<String,Object> entry = configMapIter.next();
+            if (entry.getValue() == null) {
+                configMapIter.remove();
+            }
+        }
+
         // Copy config into a properties object, then tell the session mgr
         // about them. Note that some of the properties may be non-Strings.
         Properties properties = new Properties();
@@ -975,6 +985,26 @@ public class FarragoDatabase
         if (setCodeCacheSize) {
             codeCache.setMaxBytes(
                 getCodeCacheMaxBytes(systemRepos.getCurrentConfig()));
+        }
+
+        // Prevent negative values.  Fennel uses an unsigned 32-bit int for
+        // these parameters and will convert negative values into large
+        // positive values.  Prevent this for sanity.  (Could switch catalog to
+        // use longs to provide access to the full Fennel range of values.)
+        if (paramName.equals("cachePagesMax")
+            || paramName.equals("cachePagesInit"))
+        {
+            int cachePagesMax = ddlStmt.getParamValue().intValue(false);
+
+            String upperBound = 
+                paramName.equals("cachePagesMax")
+                ? String.valueOf(Integer.MAX_VALUE)
+                : "'cachePagesMax'";
+
+            if (cachePagesMax <= 0) {
+                throw FarragoResource.instance().InvalidParam.ex(
+                    "1", upperBound);
+            }
         }
 
         if (paramName.equals("cachePagesInit")

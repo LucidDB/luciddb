@@ -976,6 +976,14 @@ public class DdlAnalyzeStmt
                     double rate = 
                         (double)indexDistinctValues / 
                         (double)(deletedRowCount + rowCount);
+                    if (rate > 1.0) {
+                        // REVIEW: SWZ 2-OCT-2007: One (or both) of the row 
+                        // counts is incorrect.  For now clamp the rate to 1.0,
+                        // but perhaps we should consider emitting some type
+                        // of warning.
+                        rate = 1.0;
+                    }
+
                     long estDistinctValues = 
                         Math.round(rate * (double)rowCount);
                     

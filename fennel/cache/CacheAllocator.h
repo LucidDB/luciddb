@@ -38,7 +38,7 @@ public:
     /**
      * Allocates a chunk of memory of size determined by the constructor.
      *
-     * @return the allocated chunk
+     * @return the allocated chunk; NULL if memory cannot be allocated
      */
     virtual void *allocate() = 0;
 
@@ -46,8 +46,10 @@ public:
      * Deallocates a chunk of memory.
      *
      * @param pMem the allocated memory
+     *
+     * @return 0 on success; -1 if memory cannot be deallocated
      */
-    virtual void deallocate(void *pMem) = 0;
+    virtual int deallocate(void *pMem) = 0;
 
     /**
      * @return number of bytes currently allocated
@@ -63,8 +65,20 @@ public:
      *
      * @param readOnly true for read-only; false for read-write
      * (TODO jvs 7-Feb-2006:  support no-access as well)
+     *
+     * @return 0 on success; -1 if memory cannot be deallocated
      */
-    virtual void setProtection(void *pMem, uint cb, bool readOnly) = 0;
+    virtual int setProtection(void *pMem, uint cb, bool readOnly) = 0;
+
+    /**
+     * Retrieve the OS error code for the last failed method call on this
+     * CacheAllocator.  The return value of this function is only valid
+     * until the next call to another function in this class.  In particular, 
+     * this value is invalid after calls that return success.
+     *
+     * @return OS error code for the last failure encountered
+     */
+    virtual int getLastErrorCode() const = 0;
 };
 
 FENNEL_END_NAMESPACE

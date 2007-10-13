@@ -32,12 +32,17 @@ ParamName CacheParams::paramPagesInit = "cachePagesInit";
 ParamName CacheParams::paramPageSize = "cachePageSize";
 ParamName CacheParams::paramIdleFlushInterval = "cacheIdleFlushInterval";
 
+uint CacheParams::defaultMemPagesMax = 1024;
+uint CacheParams::defaultMemPagesInit = MAXU;
+uint CacheParams::defaultPageSize = 4096;
+uint CacheParams::defaultIdleFlushInterval = 100;
+
 CacheParams::CacheParams()
 {
-    nMemPagesMax = 1024;
-    cbPage = 4096;
-    nMemPagesInit = MAXU;
-    idleFlushInterval = 100;
+    nMemPagesMax = defaultMemPagesMax;
+    cbPage = defaultPageSize;
+    nMemPagesInit = defaultMemPagesInit;
+    idleFlushInterval = defaultIdleFlushInterval;
 }
 
 void CacheParams::readConfig(ConfigMap const &configMap)

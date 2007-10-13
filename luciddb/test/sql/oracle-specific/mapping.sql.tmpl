@@ -1,4 +1,6 @@
 -- use default ORACLE wrapper
+
+-- SCHEMA_MAPPING TESTS --
 create server ORCL_SERVER_SCHEMA_MAPPING
 foreign data wrapper ORACLE
 options(
@@ -17,7 +19,6 @@ select numericcolzerop from orcl_server_schema_mapping.x.@DATATYPE_TABLE@ order 
 select street from orcl_server_schema_mapping.x.ADDR order by 1;
 
 create schema apps;
-set schema 'apps';
 
 -- import tables from different schemas to one local schema
 import foreign schema X LIMIT TO (@DATATYPE_TABLE@, ADDR) from server ORCL_SERVER_SCHEMA_MAPPING into apps;
@@ -27,3 +28,73 @@ select * from apps.@DATATYPE_TABLE@ order by 1,2,3,4,5,6;
 
 drop schema apps cascade;
 drop server ORCL_SERVER_SCHEMA_MAPPING cascade;
+
+
+-- TABLE_MAPPING TESTS --
+create server ORCL_SERVER_TABLE_MAPPING
+foreign data wrapper ORACLE
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    table_mapping 'SCHOI.BILL:DEFAULT.T1;SCHOI.DATATYPES:DEFAULT.T2;SCOTT.ADDR:DEFAULT.T3;SCOTT.ADDR:BLAH.T1'
+);
+
+select * from ORCL_SERVER_TABLE_MAPPING.SCHOI.DATATYPES order by 1,2,3,4,5,6;
+select * from ORCL_SERVER_TABLE_MAPPING.SCOTT.ADDR order by 1,2,3;
+
+-- query directly using mapped schema.table
+select * from ORCL_SERVER_TABLE_MAPPING."DEFAULT".T2 order by 1,2,3,4,5,6;
+select * from ORCL_SERVER_TABLE_MAPPING."DEFAULT".T3 order by 1,2,3;
+
+select * from ORCL_SERVER_TABLE_MAPPING.BLAH.T1 order by 1,2,3;
+
+-- import foreign schema
+create schema testing;
+
+import foreign schema "DEFAULT" from server ORCL_SERVER_TABLE_MAPPING into testing;
+
+select * from testing.T1 order by 1;
+select * from testing.T2 order by 1,2,3,4,5,6;
+select * from testing.T3 order by 1,2,3;
+
+create schema testing2;
+
+import foreign schema "BLAH" from server ORCL_SERVER_TABLE_MAPPING into testing2;
+
+select * from testing2.T1 order by 1,2,3;
+
+-- import foreign schema limit to
+create schema testing3;
+
+import foreign schema "DEFAULT" LIMIT TO (T2, T3) from server ORCL_SERVER_TABLE_MAPPING into testing3;
+
+select * from testing3.T1;
+select * from testing3.T2 order by 1,2,3,4,5,6;
+select * from testing3.T3 order by 1,2,3;
+
+create server ORCL_SERVER_TABLE_MAPPING2
+foreign data wrapper ORACLE
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    table_mapping 'SCHOI.BILL:DEFAULT.BILL2;SCHOI.BILL2:DEFAULT.BILL;SCOTT.ADDR:DEFAULT.ADDR'
+);
+
+create schema testing4;
+
+import foreign schema "DEFAULT" from server ORCL_SERVER_TABLE_MAPPING2 into testing4;
+
+select * from testing4.BILL2 order by 1;
+select * from testing4.BILL order by 1,2,3;
+select * from testing4.ADDR order by 1,2,3;
+
+drop schema testing cascade;
+drop schema testing2 cascade;
+drop schema testing3 cascade;
+drop schema testing4 cascade;
+drop server ORCL_SERVER_TABLE_MAPPING cascade;
+

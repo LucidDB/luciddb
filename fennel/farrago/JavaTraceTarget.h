@@ -71,7 +71,7 @@ public:
     // implement StatsTarget
     virtual void beginSnapshot();
     virtual void endSnapshot();
-    virtual void writeCounter(std::string name,uint value);
+    virtual void writeCounter(std::string name,int64_t value);
     virtual void onTimerStart();
     virtual void onTimerStop();
 };

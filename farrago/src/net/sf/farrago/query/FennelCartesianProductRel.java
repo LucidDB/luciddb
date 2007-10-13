@@ -41,7 +41,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelCartesianProductRel
+public class FennelCartesianProductRel
     extends FennelDoubleRel
 {
     //~ Instance fields --------------------------------------------------------

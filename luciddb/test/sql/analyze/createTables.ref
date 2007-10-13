@@ -55,4 +55,13 @@
 . . . . . . . . > "kseq" bigint primary key,
 . . . . . . . . > "k100" bigint);
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table INDEX_EST (
+. . . . . . . . > "kseq" bigint primary key,
+. . . . . . . . > "kuniq" bigint unique not null,
+. . . . . . . . > "kuniq_null" bigint unique,
+. . . . . . . . > "k10" bigint not null,
+. . . . . . . . > "k1k" bigint not null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index INDEX_EST_IDX on INDEX_EST("k10", "k1k");
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

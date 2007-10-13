@@ -121,6 +121,14 @@ option is only valid for servers which support schemas.  This allows for
 a single schema view of tables spanning multiple schemas.
 </td>
 </tr>
+<tr>
+<td>TABLE_MAPPING</td>
+<td>
+Semicolon-separated list of source_schema.source_table:mapped_schema.mapped_table pairs.
+This option is only valid for servers which support schemas.  This allows for
+a single schema view of the specified tables spanning multiple schemas.
+</td>
+</tr>
 <td>QUALIFYING_CATALOG_NAME</td> 
 <td>Foreign catalog name to which this server should correspond.  This
 option should only be used for servers which support multiple

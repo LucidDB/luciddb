@@ -55,7 +55,7 @@ public:
     // implement the StatsTarget interface
     virtual void beginSnapshot();
     virtual void endSnapshot();
-    virtual void writeCounter(std::string name,uint value);
+    virtual void writeCounter(std::string name,int64_t value);
 };
 
 FENNEL_END_NAMESPACE

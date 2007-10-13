@@ -290,6 +290,38 @@ language java
 contains sql
 external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_column_histogram';
 
+-- Get cardinality and selectivity for an expression.
+--
+-- example expressions for an integer column (other types work as well, but
+-- note that there's no way to escape brackets or commas in this trivial
+-- implementation):
+--   '123'      = 123
+--   '[123'     >= 123
+--   '(123'     > 123
+--   '123]'     <= 123
+--   '[10,20)'  >= 10 and < 20
+create or replace function stat_get_cardinality(
+    catalog_name varchar(2000),
+    schema_name varchar(2000),
+    table_name varchar(2000),
+    column_name varchar(2000),
+    expression varchar(2000))
+returns double
+language java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoStatsUDR.get_cardinality';
+
+create or replace function stat_get_selectivity(
+    catalog_name varchar(2000),
+    schema_name varchar(2000),
+    table_name varchar(2000),
+    column_name varchar(2000),
+    expression varchar(2000))
+returns double
+language java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoStatsUDR.get_selectivity';
+
 -- Statistics views
 create or replace view page_counts_view as
     select 

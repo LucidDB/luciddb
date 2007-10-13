@@ -39,6 +39,7 @@ VMAllocator::VMAllocator(size_t cbAllocInit,size_t nLocked)
 {
     cbAlloc = cbAllocInit;
     nAllocs = 0;
+    lastErrorCode = 0;
     if (nLocked) {
 #ifdef RLIMIT_MEMLOCK
         struct rlimit rl;
@@ -84,16 +85,17 @@ void *VMAllocator::allocate()
         NULL,cbActualAlloc,
         PROT_READ | PROT_WRITE,MAP_PRIVATE | MAP_ANONYMOUS,-1,0);
     if (v == MAP_FAILED) {
-        throw SysCallExcn("mmap failed");
+        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        return NULL;
     }
     
 #ifndef NDEBUG
     PBuffer p = static_cast<PBuffer>(v);
     memset(p, 0xFE, getpagesize());
     if (::mprotect(p, getpagesize(), PROT_NONE)) {
-        SysCallExcn excn("mprotect on pre-fence failed");
+        lastErrorCode = SysCallExcn::getCurrentErrorCode();
         ::munmap(v,cbAlloc);
-        throw excn;
+        return NULL;
     }
     p += getpagesize();
     memset(p, 0xFF, cbAlloc);
@@ -101,35 +103,37 @@ void *VMAllocator::allocate()
     p += cbAlloc;
     memset(p, 0xFE, getpagesize());
     if (::mprotect(p, getpagesize(), PROT_NONE)) {
-        SysCallExcn excn("mprotect on post-fence failed");
+        lastErrorCode = SysCallExcn::getCurrentErrorCode();
         ::munmap(v,cbAlloc);
-        throw excn;
+        return NULL;
     }
 #endif
     
     if (bLockPages) {
         if (::mlock(v,cbAlloc)) {
-            SysCallExcn excn("mlock failed");
+            lastErrorCode = SysCallExcn::getCurrentErrorCode();
             ::munmap(v,cbAlloc);
-            throw excn;
+            return NULL;
         }
     }
 #else
     void *v = malloc(cbAlloc);
     if (v == NULL) {
-        throw SysCallExcn("mmap failed");
+        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        return NULL;
     }
 #endif
     ++nAllocs;
     return v;
 }
 
-void VMAllocator::deallocate(void *p)
+int VMAllocator::deallocate(void *p)
 {
 #ifdef HAVE_MMAP
     if (bLockPages) {
         if (::munlock(p,cbAlloc)) {
-            throw SysCallExcn("munlock failed");
+            lastErrorCode = SysCallExcn::getCurrentErrorCode();
+            return -1;
         }
     }
     
@@ -141,12 +145,15 @@ void VMAllocator::deallocate(void *p)
     cbActualAlloc += 2*getpagesize();
 #endif
     if (::munmap((caddr_t)p,cbActualAlloc)) {
-        throw SysCallExcn("munmap failed");
+        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        return -1;
     }
 #else
     free(p);
 #endif
     --nAllocs;
+
+    return 0;
 }
 
 size_t VMAllocator::getBytesAllocated() const
@@ -154,7 +161,7 @@ size_t VMAllocator::getBytesAllocated() const
     return nAllocs*cbAlloc;
 }
 
-void VMAllocator::setProtection(void *pMem, uint cb, bool readOnly)
+int VMAllocator::setProtection(void *pMem, uint cb, bool readOnly)
 {
     // FIXME jvs 7-Feb-2006:  use autoconf to get HAVE_MPROTECT instead
 #ifdef HAVE_MMAP
@@ -163,9 +170,17 @@ void VMAllocator::setProtection(void *pMem, uint cb, bool readOnly)
         prot |= PROT_WRITE;
     }
     if (::mprotect(pMem, cb, prot)) {
-        throw SysCallExcn("mprotect failed");
+        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        return -1;
     }
 #endif
+
+    return 0;
+}
+
+int VMAllocator::getLastErrorCode() const
+{
+    return lastErrorCode;
 }
 
 FENNEL_END_CPPFILE("$Id$");

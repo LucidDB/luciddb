@@ -532,6 +532,13 @@ insert into t1 select * from t2;
 insert into t1 values(2);
 select * from t1 order by a;
 
+-- incur the same unique constraint violation multiple times
+-- error logging has already been enabled above
+create table u(a int unique);
+insert into u values(1);
+insert into u values(1);
+insert into u values(1);
+
 -- cleanup
 drop server test_data cascade;
 

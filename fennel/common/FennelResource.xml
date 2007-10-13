@@ -77,6 +77,10 @@
     <text>Incompatible data format encountered</text>
   </message>
 
+  <message id="440100" name="cacheAllocFailed">
+    <text>Cache memory allocation failed because ''{0}''</text>
+  </message>
+
   <!-- message id range 441000-441999 reserved for external data wrapper -->
 
   <!-- message id range 441900-441999 reserved for flatfile data wrapper -->

@@ -57,6 +57,20 @@ public abstract class LoptIterCalcRule
                                 null)
                         })
                 }));
+    
+    public static LoptIterCalcRule lcsRowScanInstance =
+        new LcsRowScanRule(
+            new RelOptRuleOperand(
+                IterCalcRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        ConverterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                LcsRowScanRel.class,
+                                null)
+                        })
+                }));
 
     public static LoptIterCalcRule jdbcQueryInstance =
         new JdbcQueryRule(
@@ -137,6 +151,34 @@ public abstract class LoptIterCalcRule
                                 null)
                         })
                 }));
+    
+    public static LoptIterCalcRule nestedLoopJoinInstance =
+        new NestedLoopJoinRule(
+            new RelOptRuleOperand(
+                IterCalcRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        ConverterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                FennelNestedLoopJoinRel.class,
+                                null)
+                        })
+                }));
+    
+    public static LoptIterCalcRule cartesianJoinInstance =
+        new CartesianJoinRule(
+            new RelOptRuleOperand(
+                IterCalcRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        ConverterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                FennelCartesianProductRel.class,
+                                null)
+                        })
+                }));
 
     public static LoptIterCalcRule defaultInstance =
         new DefaultRule(new RelOptRuleOperand(
@@ -146,12 +188,15 @@ public abstract class LoptIterCalcRule
     // index acess rule, hash rules
 
     public static final String TABLE_ACCESS_PREFIX = "Read";
+    public static final String LCS_ROWSCAN_PREFIX = "Read";
     public static final String JDBC_QUERY_PREFIX = "Jdbc";
     public static final String JAVA_UDX_PREFIX = "JavaUdx";
     public static final String TABLE_APPEND_PREFIX = "Insert";
     public static final String TABLE_MERGE_PREFIX = "Merge";
     public static final String TABLE_DELETE_PREFIX = "Delete";
     public static final String HASH_JOIN_PREFIX = "PostJoin";
+    public static final String NLJ_PREFIX = "PostJoin";
+    public static final String CARTESIAN_JOIN_PREFIX = "PostJoin";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -283,6 +328,35 @@ public abstract class LoptIterCalcRule
             String tag =
                 getTableTag(
                     TABLE_ACCESS_PREFIX,
+                    tableRel.getTable().getQualifiedName(),
+                    tableRel);
+            transformToTag(call, calc, tag);
+        }
+    }
+    
+    /**
+     * A rule for tagging a calculator on top of a column store row scan.
+     */
+    private static class LcsRowScanRule
+        extends LoptIterCalcRule
+    {
+        public LcsRowScanRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[0];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            LcsRowScanRel tableRel = (LcsRowScanRel) call.rels[2];
+            String tag =
+                getTableTag(
+                    LCS_ROWSCAN_PREFIX,
                     tableRel.getTable().getQualifiedName(),
                     tableRel);
             transformToTag(call, calc, tag);
@@ -481,7 +555,55 @@ public abstract class LoptIterCalcRule
             transformToTag(call, calc, tag);
         }
     }
+    
+    /**
+     * A rule for tagging a calculator on top of a nested loop join.
+     */
+    private static class NestedLoopJoinRule
+        extends LoptIterCalcRule
+    {
+        public NestedLoopJoinRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
 
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[0];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            String tag = NLJ_PREFIX + getDefaultTag(calc);
+            transformToTag(call, calc, tag);
+        }
+    }
+
+    /**
+     * A rule for tagging a calculator on top of a cartesian product join.
+     */
+    private static class CartesianJoinRule
+        extends LoptIterCalcRule
+    {
+        public CartesianJoinRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[0];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            String tag = CARTESIAN_JOIN_PREFIX + getDefaultTag(calc);
+            transformToTag(call, calc, tag);
+        }
+    }
+    
     /**
      * A default rule for tagging any calculator
      */

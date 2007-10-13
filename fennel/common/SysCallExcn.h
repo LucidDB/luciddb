@@ -36,6 +36,8 @@ class SysCallExcn : public FennelExcn
 private:
     int errCode;
 
+    void init();
+
 public:
     /**
      * Constructs a new SysCallExcn.  This should be called immediately after
@@ -48,9 +50,32 @@ public:
     explicit SysCallExcn(std::string msgInit);
 
     /**
+     * Constructs a new SysCallExcn.  This may be deferred until some time
+     * after the failed system call, as long as the OS error code has been
+     * saved.
+     *
+     * @param msgInit a description of the failure from the program's point of
+     * view; SysCallExcn will append additional information from the OS
+     *
+     * @param errCodeInit OS error code used to generate additional 
+     * information
+     */
+    explicit SysCallExcn(std::string msgInit, int errCodeInit);
+
+    /**
      * Returns the error code that caused this SysCallExcn.
      */
     int getErrorCode();
+
+    /**
+     * Returns the current OS error code.  This function may be used to
+     * retrieve an error code for use with the 2 argument constructor.
+     * The function should be called immediately after the failed system
+     * call in order to get the correct information from the OS.
+     *
+     * @return the current OS error code
+     */
+    static int getCurrentErrorCode();
 };
 
 FENNEL_END_NAMESPACE

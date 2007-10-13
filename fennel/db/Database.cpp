@@ -150,6 +150,7 @@ void Database::init()
     tempDeviceName = databaseDir + "/temp.dat";
 
     nCheckpoints = nCheckpointsStat = 0;
+    nDataPagesAllocated = nTempPagesAllocated = -1;
 
     pSegmentFactory = SegmentFactory::newSegmentFactory(
         configMap,getSharedTraceTarget());
@@ -184,6 +185,11 @@ void Database::prepareForRecovery()
 
 void Database::openSegments()
 {
+#ifdef NDEBUG
+    FENNEL_TRACE(TRACE_INFO, "Fennel build:  --with-optimization");
+#else
+    FENNEL_TRACE(TRACE_INFO, "Fennel build:  --without-optimization");
+#endif
     FENNEL_TRACE(TRACE_INFO, "opening database; process ID = " << getpid());
     
     pCheckpointThread = SharedCheckpointThread(
@@ -844,6 +850,10 @@ void Database::writeStats(StatsTarget &target)
         "DatabaseCheckpoints", nCheckpointsStat);
     target.writeCounter(
         "DatabaseCheckpointsSinceInit", nCheckpoints);
+    target.writeCounter(
+        "DatabasePagesAllocatedAfterReclaim", nDataPagesAllocated);
+    target.writeCounter(
+        "TempPagesAllocatedAfterReclaim", nTempPagesAllocated);
     nCheckpointsStat = 0;
 }
 
@@ -901,6 +911,8 @@ void Database::deallocateOldPages()
         requestCheckpoint(CHECKPOINT_FLUSH_ALL, false);
         oldPageSet.clear();
     } while (morePages);
+    nDataPagesAllocated = pVersionedRandomSegment->getAllocatedSizeInPages();
+    nTempPagesAllocated = pTempSegment->getAllocatedSizeInPages();
 }
 
 FENNEL_END_CPPFILE("$Id$");

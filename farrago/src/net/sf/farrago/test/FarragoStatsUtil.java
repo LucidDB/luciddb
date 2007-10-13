@@ -389,7 +389,7 @@ public class FarragoStatsUtil
         return index;
     }
 
-    private static FemAbstractColumn lookupColumn(
+    public static FemAbstractColumn lookupColumn(
         FemAbstractColumnSet columnSet,
         String columnName)
         throws SqlValidatorException

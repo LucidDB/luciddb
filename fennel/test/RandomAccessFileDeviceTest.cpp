@@ -213,6 +213,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         uint cbSector = HALF_SIZE;
         VMAllocator allocator(cbSector*n);
         void *pBuf = allocator.allocate();
+        BOOST_REQUIRE(pBuf != NULL);
         try {
             testAsyncIOImpl(
                 n, cbSector, reinterpret_cast<PBuffer>(pBuf),

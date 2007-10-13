@@ -451,6 +451,12 @@ class CacheImpl : public Cache, private TimerThreadClient
      */
     void initializeStats();
     
+    /**
+     * Handles initial allocation of pages and attempts to handle any
+     * associated out-of-memory errors.
+     */
+    void allocatePages(CacheParams const &params);
+
 // ----------------------------------------------------------------------
 // Implementation of private Cache interface (q.v.)
 // ----------------------------------------------------------------------

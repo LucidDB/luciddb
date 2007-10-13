@@ -120,7 +120,7 @@ void JavaTraceTarget::endSnapshot()
         "", TRACE_PERFCOUNTER_END_SNAPSHOT, "");
 }
 
-void JavaTraceTarget::writeCounter(std::string name, uint value)
+void JavaTraceTarget::writeCounter(std::string name, int64_t value)
 {
     std::string s = boost::lexical_cast<std::string>(value);
     notifyTrace(
