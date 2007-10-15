@@ -381,6 +381,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-only">
+    <property name="bh.log.gtlf.env.ForeignDb" value="ldb-sanity"/>
     <property name="bh.filter.knownFailures" value="false,null"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
