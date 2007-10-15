@@ -214,6 +214,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug6604.sql"/>
       </test>
 
+      <test name="bug6255" requiresSuccess="null">
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug6255.sql"/>
+      </test>
+
       <test name="bug8665" requiresSuccess="null">
         <!-- no sql file -->
         <test-metadata>

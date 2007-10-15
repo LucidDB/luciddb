@@ -2279,12 +2279,14 @@ FemUserDefinedType UserDefinedTypeDefinition() :
         typeDef = ObjectTypeDefinition()
         | typeDef = DistinctTypeDefinition()
     )
+    {
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            typeDef, qualifiedName);
+    }
     UserDefinedTypeOptions(typeDef)
     OptionalDescription(typeDef)
     MethodSpecificationList(typeDef)
     {
-        farragoParser.getDdlValidator().setSchemaObjectName(
-            typeDef, qualifiedName);
         return typeDef;
     }
 }
@@ -2371,6 +2373,7 @@ void MethodSpecificationList(FemUserDefinedType typeDef) :
 void MethodSpecification(FemUserDefinedType typeDef) :
 {
     SqlIdentifier name, returnTypeName;
+    SqlIdentifier qualifiedName;
     FemRoutine method;
 }
 {
@@ -2380,8 +2383,14 @@ void MethodSpecification(FemUserDefinedType typeDef) :
     {
         method = getRepos().newFemRoutine();
         method.setType(ProcedureTypeEnum.FUNCTION);
+        qualifiedName = new SqlIdentifier(
+            new String [] {
+                typeDef.getNamespace().getName(),
+                name.getSimple()
+            },
+            name.getParserPosition());
         farragoParser.getDdlValidator().setSchemaObjectName(
-            method, name);
+            method, qualifiedName);
         method.setInvocationName(method.getName());
         method.setCalledOnNullInput(true);
         // TODO jvs 25-Feb-2005:  mark as constructor
@@ -2685,7 +2694,7 @@ DdlImportForeignSchemaStmt ImportForeignSchemaStmt() :
     [
         (<LIMIT> <TO> | <EXCEPT> { exclude = true; })
         // TODO jvs 5-Aug-2005:  this is supposed to take compound
-        // identifiers, but it's useless because all the schema names
+        // identifiers, but it is useless because all the schema names
         // have to match foreignSchemaName
         (
             <LPAREN> roster = SimpleIdentifierCommaList() <RPAREN>
@@ -2904,7 +2913,7 @@ DdlStmt AnalyzeStmt() :
     DdlAnalyzeStmt stmt;
     CwmTable table;
     List columnNameList;
-    int percent;
+    SqlNumericLiteral percent;
 }
 {
     <TABLE> table = TableIdentifier()
@@ -2941,8 +2950,15 @@ DdlStmt AnalyzeStmt() :
         }
     )
     [
-        <SAMPLE> percent = UnsignedIntLiteral() <PERCENT>
+        <SAMPLE> percent = UnsignedNumericLiteral() <PERCENT>
         {
+            BigDecimal rate = percent.bigDecimalValue();
+            if (rate.compareTo(BigDecimal.ZERO) <= 0 ||
+                rate.compareTo(BigDecimal.valueOf(100L)) > 0)
+            {
+                throw new ParseException(
+                    EigenbaseResource.instance().InvalidSampleSize.str());
+            }
             stmt.setSamplePercent(percent);
         }
     ]

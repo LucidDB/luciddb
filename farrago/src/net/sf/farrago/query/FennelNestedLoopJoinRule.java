@@ -31,7 +31,8 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sarg.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 
 
@@ -104,61 +105,27 @@ public class FennelNestedLoopJoinRule
             condition = swappedJoinRel.getCondition();
         }
 
-        // Look for sargable predicates.  Note that sargable in this case
-        // means that instead of comparing the RHS input against
-        // literals, we're comparing the RHS against the LHS.
-        //
-        // NOTE zfong 5/30/07 - Currently, we're calling SargRexAnalyzer in
-        // simple mode, which means we'll only treat a single predicate on
-        // each column from the RHS input as sargable.  That means if you
-        // have filters like: (RHS.col > LHS.col1 and RHS.col < LHS.col2),
-        // we won't create two endpoints for the seach on RHS.col.
-        SargFactory sargFactory =
-            new SargFactory(joinRel.getCluster().getRexBuilder());
-        SargRexAnalyzer rexAnalyzer =
-            sargFactory.newRexAnalyzer(0, leftRel.getRowType().getFieldCount());
-        List<SargBinding> sargBindingList = rexAnalyzer.analyzeAll(condition);
-
-        // Find the subset of sargable predicates that will be used
-        // with the temporary index
+        // Find the subset of predicates that will be used either with
+        // the temporary index or a reshapeRel
         List<Integer> indexCols = new ArrayList<Integer>();
         List<Integer> indexOperands = new ArrayList<Integer>();
         List<CompOperatorEnum> indexOpList = new ArrayList<CompOperatorEnum>();
-        int nLeftFields = leftRel.getRowType().getFieldCount();
-        RelDataType[] castFromTypes = new RelDataType[nLeftFields];
-        RelDataTypeFactory typeFactory = joinRel.getCluster().getTypeFactory();
-        RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
-        condition = getIndexablePredicates(
-            sargBindingList,
-            nLeftFields,
-            indexCols,
-            indexOperands,
-            indexOpList,
-            castFromTypes,
-            typeFactory,
-            rexBuilder,
-            rexAnalyzer);
-        
-        // Apply the RexAnalyzer on the remaining predicates to locate 
-        // predicates that we can apply in a FennelReshapeRel
-        List<Integer> filterCols = new ArrayList<Integer>(); 
-        List<Integer> filterOperands = new ArrayList<Integer>();
+        List<Integer> filterCol = new ArrayList<Integer>(); 
+        List<Integer> filterOperand = new ArrayList<Integer>();
         List<CompOperatorEnum> filterOpList = new ArrayList<CompOperatorEnum>();
-        sargBindingList = rexAnalyzer.analyzeAll(condition);
-        RexNode residualCondition = getFilterPredicates(
-            sargBindingList,
-            nLeftFields,
-            filterCols,
-            filterOperands,
-            filterOpList,
-            castFromTypes,
-            typeFactory,
-            rexBuilder,
-            rexAnalyzer);       
-        
-        // Cast the left input, if needed
-        RelNode castedLeftRel = castLeftRel(leftRel, castFromTypes);
-        boolean castRequired = (castedLeftRel != leftRel);
+        List<Integer> outputProj = new ArrayList<Integer>();
+        RelNode [] joinInputs = new RelNode [] { leftRel, rightRel };
+        RexNode residualCondition =
+            getPredicates(
+                joinInputs,
+                condition,
+                indexCols,
+                indexOperands,
+                indexOpList,
+                filterCol,
+                filterOperand,
+                filterOpList,
+                outputProj);
         
         // Create the nested loop join rel with additional projections as
         // needed due to casting and/or swapping
@@ -169,7 +136,7 @@ public class FennelNestedLoopJoinRule
             indexOp = indexOpList.get(0);
         }
         CompOperatorEnum filterOp;
-        if (filterCols.isEmpty()) {
+        if (filterCol.isEmpty()) {
             filterOp = CompOperatorEnum.COMP_NOOP;
         } else {
             filterOp = filterOpList.get(0);
@@ -177,16 +144,16 @@ public class FennelNestedLoopJoinRule
         RelNode nestedLoopRel =
             createNestedLoopRel(
                 joinRel,
-                castedLeftRel,
-                rightRel,
+                joinInputs[0],
+                joinInputs[1],
                 swapped,
-                castRequired,
+                outputProj,
                 joinType,
                 indexCols,
                 indexOperands,
                 indexOp,
-                filterCols,
-                filterOperands,
+                filterCol,
+                filterOperand,
                 filterOp,
                 residualCondition);
             
@@ -214,17 +181,17 @@ public class FennelNestedLoopJoinRule
      * @param leftRel left input into the new join
      * @param rightRel right input into the new join
      * @param swapped true if the original inputs were swapped
-     * @param castRequired true if the left input had to be cast
+     * @param outputProj required projection of join result (post-swap, if
+     * inputs have been swapped)
      * @param joinType join type
      * @param indexCols list of column offsets from the RHS input that
      * are to be indexed
      * @param indexOperands list of column offsets from the LHS input
      * that will be used as index lookup keys
      * @param indexOp the operator to be used in the index lookup
-     * @param filterCols list of column offsets from the RHS input that can
+     * @param filterCol the column offset from the RHS input that can
      * be applied in FennelReshapeRel
-     * @param filterOperands list of the LHS input that the filterCols are
-     * compared against
+     * @param filterOperand the LHS input that filterCol is compared against
      * @param filterOp comparison operator that will be applied in
      * FennelReshapeRel
      * @param residualCondition remaining filter that must be applied in a
@@ -237,13 +204,13 @@ public class FennelNestedLoopJoinRule
         RelNode leftRel,
         RelNode rightRel,
         boolean swapped,
-        boolean castRequired,
+        List<Integer> outputProj,
         JoinRelType joinType,
         List<Integer> indexCols,
         List<Integer> indexOperands,
         CompOperatorEnum indexOp,
-        List<Integer> filterCols,
-        List<Integer> filterOperands,
+        List<Integer> filterCol,
+        List<Integer> filterOperand,
         CompOperatorEnum filterOp,
         RexNode residualCondition)
     {
@@ -264,7 +231,7 @@ public class FennelNestedLoopJoinRule
         FennelRelImplementor implementor =
             FennelRelUtil.getRelImplementor(leftRel);
         createJoinKeyParameters(implementor, indexOperands, joinKeyParamMap);
-        createJoinKeyParameters(implementor, filterOperands, joinKeyParamMap);
+        createJoinKeyParameters(implementor, filterOperand, joinKeyParamMap);
         
         // Find all references to the LHS in the residual condition.  
         // Dynamic parameters need to be created for these as well.
@@ -297,8 +264,8 @@ public class FennelNestedLoopJoinRule
                 indexOp,
                 joinKeyParamMap,
                 rootPageIdParamId,
-                filterCols,
-                filterOperands,
+                filterCol,
+                filterOperand,
                 filterOp,
                 residualRefs,
                 residualCondition);
@@ -342,29 +309,10 @@ public class FennelNestedLoopJoinRule
                 rootPageIdParamId,
                 rowCount);
         
-        // If we had to cast the LHS, then we need to cast the join result
-        // back to the original rowtype
-        RelNode finalRel;
-        RelDataType preCastRowType;
-        if (swapped) {         
-            preCastRowType =
-                JoinRel.deriveJoinRowType(
-                    origJoinRel.getRight().getRowType(),
-                    origJoinRel.getLeft().getRowType(),
-                    joinType,
-                    origJoinRel.getCluster().getTypeFactory(),
-                    null);
-        } else {
-            preCastRowType = origJoinRel.getRowType();
-        }
-        if (castRequired) {
-            finalRel = RelOptUtil.createCastRel(
-                nestedLoopRel,
-                preCastRowType,
-                true);
-        } else {
-            finalRel = nestedLoopRel;
-        }
+        // If additional projections were added, create a projection on top
+        // of the nested loop join to project out the original columns
+        RelNode finalRel =
+            RelOptUtil.createProjectJoinRel(outputProj, nestedLoopRel);
         
         // If the inputs were swapped, create a projection reflecting the
         // original input ordering
@@ -382,388 +330,175 @@ public class FennelNestedLoopJoinRule
     }
   
     /**
-     * Extracts from a list of sargable bindings the subset that can be used
-     * as lookups using a temporary index to be built on the right join input
+     * Locates from the join condition all equi-join predicates and a single
+     * range predicate for use with a temporary index and then if possible,
+     * an additional range predicate for a FennelReshapeRel
      * 
-     * @param sargBindingList original list of sargable bindings
-     * @param nLeftFields number of fields in LHS input
+     * @param joinInputs join inputs
+     * @param joinCondition the join condition
      * @param indexCols returns list of column offsets from the right
      * join input that are to be indexed
      * @param indexOperands returns list of column offsets from the left
      * join input that will be used as index lookup keys
      * @param indexOp returns the operator to be used in the index lookup
-     * @param castFromTypes stores the type that the LHS input needs to be
-     * cast from if its type doesn't match the RHS input it is being compared
-     * against
-     * @param typeFactory type factory
-     * @param rexBuilder rex builder
-     * @param rexAnalyzer rex analyzer
+     * @param filterCol returns the column offset corresponding to
+     * RHS input that can be filtered in FennelReshapeRel
+     * @param filterOperand returns the column offset corresponding
+     * to LHS input that filterCol is compared against
+     * @param filterOp returns the comparison operator that will be applied in
+     * FennelReshapeRel
      * 
-     * @return excess predicates that cannot be processed by the index
+     * @return excess predicates that cannot be processed by the index or
+     * FennelReshapeRel
      */
-    private RexNode getIndexablePredicates(
-        List<SargBinding> sargBindingList,
-        int nLeftFields,
+    private RexNode getPredicates(
+        RelNode[] joinInputs,
+        RexNode joinCondition,
         List<Integer> indexCols,
         List<Integer> indexOperands,
         List<CompOperatorEnum> indexOp,
-        RelDataType [] castFromTypes,
-        RelDataTypeFactory typeFactory,
-        RexBuilder rexBuilder,
-        SargRexAnalyzer rexAnalyzer)
-    {
-        boolean rangeFound = false;
-        Integer rangeInputRef = null;
-        SargIntervalSequence rangeSargSeq = null;
-        List<SargBinding> nonIndexBindingList = new ArrayList<SargBinding>();
-        for (SargBinding sargBinding : sargBindingList) {
-            SargIntervalSequence sargSeq =
-                FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
-            
-            if (sargSeq.isPoint()) {
-                if (checkSargIntervalTypes(
-                    typeFactory,
-                    castFromTypes,
-                    sargBinding.getInputRef(),
-                    sargSeq,
-                    true))
-                {
-                    indexCols.add(
-                        sargBinding.getInputRef().getIndex() - nLeftFields);
-                    SargEndpoint lowerBound =
-                        sargSeq.getList().get(0).getLowerBound();
-                    RexNode coordinate = lowerBound.getCoordinate();
-                    indexOperands.add(((RexInputRef) coordinate).getIndex());
-                } else {
-                    nonIndexBindingList.add(sargBinding);
-                }
-            
-            // Only one range predicate should have been found and it can't
-            // be a multi-range predicate
-            } else {
-                assert(!rangeFound);
-                if (sargSeq.getList().size() == 1 &&
-                    checkSargIntervalTypes(
-                        typeFactory,
-                        castFromTypes,
-                        sargBinding.getInputRef(),
-                        sargSeq,
-                        false))
-                {
-                    rangeFound = true;
-                    rangeInputRef =
-                        sargBinding.getInputRef().getIndex() - nLeftFields;
-                    rangeSargSeq = sargSeq;
-                } else {
-                    nonIndexBindingList.add(sargBinding);
-                }                
-            }
-        }
-        
-        // Add the range predicate to the end of our lists
-        if (!rangeFound) {
-            indexOp.add(CompOperatorEnum.COMP_EQ);
-        } else {
-            indexCols.add(rangeInputRef);
-            SargInterval sargInterval = rangeSargSeq.getList().get(0);
-            SargEndpoint lowerBound = sargInterval.getLowerBound();
-            SargEndpoint upperBound = sargInterval.getUpperBound();
-            RexNode rangeOperand = null;
-            CompOperatorEnum rangeOp = null;
-            if (upperBound.isFinite()) {
-                rangeOperand = upperBound.getCoordinate();
-                if (upperBound.getStrictness() == SargStrictness.OPEN) {
-                    rangeOp = CompOperatorEnum.COMP_LT;
-                } else {
-                    rangeOp = CompOperatorEnum.COMP_LE;
-                }
-            } else if (lowerBound.isFinite()) {
-                rangeOperand = lowerBound.getCoordinate();
-                if (lowerBound.getStrictness() == SargStrictness.OPEN) {
-                    rangeOp = CompOperatorEnum.COMP_GT;
-                } else {
-                    rangeOp = CompOperatorEnum.COMP_GE;
-                }
-            }
-            indexOperands.add(((RexInputRef) rangeOperand).getIndex());
-            indexOp.add(rangeOp);
-        }
-        return
-            getExcessPredicates(nonIndexBindingList, rexBuilder, rexAnalyzer);
-    }
-    
-    /**
-     * Retrieves the excess predicates by combining an unused sargable binding
-     * list with the non-sargable predicates
-     * 
-     * @param sargBindingList unused sarg binding list
-     * @param rexBuilder rex builder
-     * @param rexAnalyzer rex analyzer
-     * 
-     * @return combined predicate
-     */
-    private RexNode getExcessPredicates(
-        List<SargBinding> sargBindingList,
-        RexBuilder rexBuilder,
-        SargRexAnalyzer rexAnalyzer)
-    {        
-        // AND together the excess sargable predicates that can't be used
-        // along with the non-sargable predicates
-        RexNode excessSargPredicates =
-            rexAnalyzer.getSargBindingListToRexNode(sargBindingList);
-        RexNode nonSargPredicates = rexAnalyzer.getNonSargFilterRexNode();
-        if (excessSargPredicates == null) {
-            return nonSargPredicates;
-        } else {
-            return
-                RelOptUtil.andJoinFilters(
-                    rexBuilder, excessSargPredicates, nonSargPredicates);
-        }
-    }
-    
-    /**
-     * From the remainining sargable predicates that cannot be used in the
-     * index lookup, determine which can be applied in a
-     * {@link FennelReshapeRel}
-     * 
-     * @param sargBindingList remaining sargable predicates
-     * @param nLeftFields number of inputs in the LHS input
-     * @param filterCols returns the list of column offsets corresponding to
-     * RHS input that can be filtered in FennelReshapeRel
-     * @param filterOperands returns a list of the column offsets corresponding
-     * to LHS input that the filterCols are compared against
-     * @param filterOp returns the comparison operator that will be applied in
-     * FennelReshapeRel
-     * @param castFromTypes stores the type that the LHS input needs to be
-     * cast from if its type doesn't match the RHS input it is being compared
-     * against
-     * @param rexBuilder rex builder
-     * @param rexAnalyzer rex analyzer
-     * 
-     * @return excess predicates that cannot be processed by FennelReshapeRel
-     */
-    private RexNode getFilterPredicates(
-        List<SargBinding> sargBindingList,
-        int nLeftFields,
-        List<Integer> filterCols,
-        List<Integer> filterOperands,
+        List<Integer> filterCol,
+        List<Integer> filterOperand,
         List<CompOperatorEnum> filterOp,
-        RelDataType [] castFromTypes,
-        RelDataTypeFactory typeFactory,
-        RexBuilder rexBuilder,
-        SargRexAnalyzer rexAnalyzer)
-    {   
-        Map<RexInputRef, SargBinding> rex2SargBindingMap =
-            new HashMap<RexInputRef, SargBinding>();
-        for (SargBinding sargBinding : sargBindingList) {
-            rex2SargBindingMap.put(sargBinding.getInputRef(), sargBinding);
-        }
-
-        List<RexInputRef> filterRefs = new ArrayList<RexInputRef>();
-        List<RexNode> filterOperandRexs = new ArrayList<RexNode>();
-        boolean reshapeable = FennelRelUtil.extractSimplePredicates(
-            sargBindingList,
-            filterRefs,
-            filterOperandRexs,
-            filterOp);
-        if (!reshapeable) {
-            return
-                getExcessPredicates(sargBindingList, rexBuilder, rexAnalyzer);           
-        }
+        List<Integer> outputProj)
+    {
+        // First find filters that can be used with the temp index
+        List<RexNode> leftIndexKeys = new ArrayList<RexNode>();
+        List<RexNode> rightIndexKeys = new ArrayList<RexNode>();
+        List<SqlOperator> indexOpList = new ArrayList<SqlOperator>();
+        RexNode nonIndexablePreds =
+            RelOptUtil.splitJoinCondition(
+                joinInputs[0],
+                joinInputs[1],
+                joinCondition,
+                leftIndexKeys,
+                rightIndexKeys,
+                null,
+                indexOpList);
         
-        // Determine if we need to cast the left inputs that will be used
-        // in the filters.  If an input needs to be cast to multiple types or
-        // the RHS needs to be cast to the type of the LHS rather than the
-        // reverse, then leave it up to the Calc node to process that particular
-        // filter.
-        List<SargBinding> nonFilterBindingList = new ArrayList<SargBinding>();
-        ListIterator<RexNode> filterIter = filterOperandRexs.listIterator();
-        int loopIdx = 0;
-        while (filterIter.hasNext()) {
-            RexNode filterOperand = filterIter.next();
-            RexInputRef filterRef = filterRefs.get(loopIdx++);
-            int filterOpIdx = ((RexInputRef) filterOperand).getIndex();
-            assert(filterOperand instanceof RexInputRef);
-            if (filterRef.getType() != filterOperand.getType()) {
-                RelDataType castType =
-                    findCastType(
-                        typeFactory,
-                        filterOperand.getType(),
-                        filterRef.getType());
-                if (castType == null ||
-                    (castFromTypes[filterOpIdx] != null &&
-                        castFromTypes[filterOpIdx] != castType))
-                {
-                    nonFilterBindingList.add(rex2SargBindingMap.get(filterRef));
-                    filterIter.remove();
-                    continue;
-                }
-                castFromTypes[filterOpIdx] = castType;
+        // If no filters can be used with the temp index, don't bother trying
+        // to look for filters to use with FennelReshapeRel
+        if (leftIndexKeys.isEmpty()) {
+            return nonIndexablePreds;
+        }       
+        mapSqlOpToCompOp(indexOpList, indexOp);
+        
+        // Next, find the filters that can be used with a FennelReshapeRel
+        List<RexNode> leftFilterKeys = new ArrayList<RexNode>();
+        List<RexNode> rightFilterKeys = new ArrayList<RexNode>();
+        List<SqlOperator> filterOpList = new ArrayList<SqlOperator>();
+        RexNode extraPreds = null;
+        if (nonIndexablePreds != null) {
+            extraPreds =
+                RelOptUtil.splitJoinCondition(
+                    joinInputs[0],
+                    joinInputs[1],
+                    nonIndexablePreds,
+                    leftFilterKeys,
+                    rightFilterKeys,
+                    null,
+                    filterOpList);
+            if (!leftFilterKeys.isEmpty()) {
+                mapSqlOpToCompOp(filterOpList, filterOp);
             }
-            filterCols.add(filterRef.getIndex() - nLeftFields);
-            filterOperands.add(filterOpIdx);
         }
         
-        return
-            getExcessPredicates(nonFilterBindingList, rexBuilder, rexAnalyzer);
+        // Combine the keys for indexing and reshape and create the
+        // projections required to produce the join keys that were located
+        // by the two calls to splitJoinCondition
+        List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
+        List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
+        List<Integer> cols = new ArrayList<Integer>();
+        List<Integer> operands = new ArrayList<Integer>();
+        leftJoinKeys.addAll(leftIndexKeys);
+        leftJoinKeys.addAll(leftFilterKeys);
+        rightJoinKeys.addAll(rightIndexKeys);
+        rightJoinKeys.addAll(rightFilterKeys);
+        RelNode [] inputRels =
+            new RelNode[] { joinInputs[0], joinInputs[1] };
+        RelOptUtil.projectJoinInputs(
+            inputRels,
+            leftJoinKeys,
+            rightJoinKeys,
+            operands,
+            cols,
+            outputProj);
+        
+        // Now that we have the new key offsets, assign them respectively
+        // to the index and filter return parameters
+        int keyIdx;
+        for (keyIdx = 0; keyIdx < leftIndexKeys.size(); keyIdx++) {
+            indexCols.add(cols.get(keyIdx));
+            indexOperands.add(operands.get(keyIdx));
+        }
+        assert(leftFilterKeys.size() <= 1);
+        if (leftFilterKeys.size() == 1) {
+            filterCol.add(cols.get(keyIdx));
+            filterOperand.add(operands.get(keyIdx));
+        }
+        
+        // Adjust references to the right join input in the remaining
+        // filter if additional columns were added to the left join input
+        if (extraPreds != null) {
+            int nLeftFieldsOrig = joinInputs[0].getRowType().getFieldCount();
+            int nLeftFieldsNew = inputRels[0].getRowType().getFieldCount();
+            int adjustment = nLeftFieldsNew - nLeftFieldsOrig;
+            if (adjustment > 0) {
+                int nTotalFields =
+                    nLeftFieldsOrig + joinInputs[1].getRowType().getFieldCount();
+                int [] adjustments = new int[nTotalFields];
+                for (int i = nLeftFieldsOrig; i < nTotalFields; i++) {
+                    adjustments[i] = adjustment;
+                }
+                RelDataType joinRowType =
+                    JoinRelBase.createJoinType(
+                        joinInputs[0].getCluster().getTypeFactory(),
+                        joinInputs[0].getRowType(),
+                        joinInputs[1].getRowType(),
+                        null);
+                extraPreds =
+                    extraPreds.accept(
+                        new RelOptUtil.RexInputConverter(
+                            joinInputs[0].getCluster().getRexBuilder(),
+                            joinRowType.getFields(),
+                            null,
+                            adjustments));
+            }
+        }
+        
+        // Pass back the new join inputs
+        joinInputs[0] = inputRels[0];
+        joinInputs[1] = inputRels[1];
+        
+        return extraPreds;
     }
-    
-    /**
-     * Determines the type that a LHS reference should be cast to in order to
-     * compare against a RHS reference.  If the RHS has a more restrictive
-     * type than the LHS, then it's not possible to cast the LHS.
-     * 
-     * @param typeFactory type factory
-     * @param leftType type of the LHS reference
-     * @param rightType type of the RHS reference
-     * 
-     * @return type that the LHS should be cast to if casting is feasible
-     */
-    private RelDataType findCastType(
-        RelDataTypeFactory typeFactory,
-        RelDataType leftType,
-        RelDataType rightType)
+   
+    private void mapSqlOpToCompOp(
+        List<SqlOperator> sqlOpList,
+        List<CompOperatorEnum> compOpList)
     {
-        RelDataType castType = typeFactory.leastRestrictive(
-            new RelDataType [] { leftType, rightType });
-        RelDataType notNullRightType =
-            typeFactory.createTypeWithNullability(rightType, true);
-        RelDataType notNullCastType =
-            typeFactory.createTypeWithNullability(castType, true);
-        // Casting is only possible if it's the LHS that needs to be cast,
-        // not the RHS
-        if (notNullRightType != notNullCastType) {
-            return null;
+        // If no SQL operator, default to equality.  Note that when mapping,
+        // we reverse the operator because the LHS is the operand in the index
+        // lookup and the RHS is the column
+        if (sqlOpList.isEmpty()) {
+            compOpList.add(CompOperatorEnum.COMP_EQ);
         } else {
-            return castType;
-        }
-    }
-        
-    /**
-     * Creates a projection on top of the left input if the columns from the
-     * left input that will participate in filtering do not match the types of
-     * the right input columns that they will be compared to.
-     * 
-     * @param leftRel left input
-     * @param castFromTypes the types that the LHS inputs need to be cast to
-     * 
-     * @return ProjectRel that does the necessary casting if casting is
-     * required; otherwise the original left input is returned
-     */
-    private RelNode castLeftRel(RelNode leftRel, RelDataType[] castFromTypes)
-    {
-        boolean castRequired = false;
-        RelDataTypeField[] leftFields = leftRel.getRowType().getFields();
-        for (int i = 0; i < leftRel.getRowType().getFieldCount(); i++) {
-            if (castFromTypes[i] == null) {
-                castFromTypes[i] = leftFields[i].getType();
+            assert(sqlOpList.size() == 1);
+            SqlOperator sqlOp = sqlOpList.get(0);
+            if (sqlOp == SqlStdOperatorTable.greaterThanOperator) {
+                compOpList.add(CompOperatorEnum.COMP_LT);
+            } else if (sqlOp ==
+                SqlStdOperatorTable.greaterThanOrEqualOperator)
+            {
+                compOpList.add(CompOperatorEnum.COMP_LE);
+            } else if (sqlOp == SqlStdOperatorTable.lessThanOperator) {
+                compOpList.add(CompOperatorEnum.COMP_GT);
             } else {
-                castRequired = true;
+                compOpList.add(CompOperatorEnum.COMP_GE);
             }
         }
-        // If we do need to cast, create a ProjectRel on top of the existing
-        // RelNode
-        if (castRequired) {
-            return RelOptUtil.createCastRel(
-                leftRel,
-                leftRel.getCluster().getTypeFactory().createStructType(
-                    castFromTypes,
-                    RelOptUtil.getFieldNames(leftRel.getRowType())),
-                true);
-        } else {
-            return leftRel;
-        }
     }
-        
-    /**
-     * Determines if casting is required for the endpoints in a
-     * SargIntervalSequence that contain only a single sequence
-     * 
-     * @param typeFactory type factory
-     * @param castFromTypes array containing cast types
-     * @param inputRef the input that the SargIntervalSequence is being
-     * compared against
-     * @param sargIntervalSequence the SargIntervalSequence
-     * @param checkLowerBound true if we only want to check the lower bound
-     * endpoint
-     * 
-     * @return true if the endpoints can be cast; false if they cannot be
-     * because an endpoint is already being cast to another type
-     */
-    private boolean checkSargIntervalTypes(
-        RelDataTypeFactory typeFactory,
-        RelDataType [] castFromTypes,
-        RexInputRef inputRef,
-        SargIntervalSequence sargIntervalSequence,
-        boolean checkLowerBound)
-    {
-        List<SargInterval> sargIntvList = sargIntervalSequence.getList();
-        assert(sargIntvList.size() == 1);
-        SargInterval sargInterval = sargIntvList.get(0);
-        if (!checkEndpointType(
-            typeFactory,
-            castFromTypes,
-            inputRef,
-            sargInterval.getLowerBound()))
-        {
-            return false;
-        }
-        if (checkLowerBound) {
-            return true;
-        } else {
-            return checkEndpointType(
-                typeFactory,
-                castFromTypes,
-                inputRef,
-                sargInterval.getUpperBound());  
-        }
-    }
-    
-    /**
-     * If the endpoint coordinate in a SargInterval is a RexInputRef and its
-     * type doesn't match the type of the input it's being compared against,
-     * then store the type so we can later cast to that type
-     * 
-     * @param typeFactory type factory
-     * @param castFromTypes array containing the cast types
-     * @param inputRef the input that the endpoint is being compared against
-     * @param endpoint the endpoint
-     * 
-     * @return true if the endpoint can be cast to the type of the RexInputRef;
-     * false if it cannot be because the endpoint is already being cast to
-     * another type or casting isn't possible
-     */
-    private boolean checkEndpointType(
-        RelDataTypeFactory typeFactory,
-        RelDataType [] castFromTypes,
-        RexInputRef inputRef,
-        SargEndpoint endpoint)
-    {       
-        RexNode coordinate = endpoint.getCoordinate();
-        // If the coordinate is either NULL or a RexInputRef.  It cannot be
-        // a RexLiteral because the filter originates from a join condition
-        // and therefore, any predicates comparing the RHS against a constant
-        // should have been pushed out of the join condition
-        if (coordinate instanceof RexInputRef) {
-            int idx = ((RexInputRef) coordinate).getIndex();
-            if (coordinate.getType() != inputRef.getType()) {
-                RelDataType castType = 
-                    findCastType(
-                        typeFactory,
-                        coordinate.getType(),
-                        inputRef.getType());
-                if (castType == null ||
-                    (castFromTypes[idx] != null &&
-                        castFromTypes[idx] != castType))
-                {
-                    return false;
-                }
-                castFromTypes[idx] = castType;
-            }       
-        }
-        return true;
-    }
-    
+
     /**
      * Converts an input so its traits include FENNEL_EXEC_CONVENTION
      * 
@@ -852,10 +587,9 @@ public class FennelNestedLoopJoinRule
      * @param joinKeyParamMap mapping from LHS inputs to dynamic parameters
      * @param rootPageIdParamId dynamic parameter corresponding to the
      * rootPageId of the temp index
-     * @param filterCols list of column offsets from the RHS input that can
+     * @param filterCol the column offset from the RHS input that can
      * be applied in FennelReshapeRel
-     * @param filterOperands list of the LHS input that the filterCols are
-     * compared against
+     * @param filterOperand the LHS input that filterCol is compared against
      * @param filterOp comparison operator that will be applied in
      * FennelReshapeRel
      * @param residualRefs LHS inputs that must be processed in the Calc node
@@ -873,8 +607,8 @@ public class FennelNestedLoopJoinRule
         CompOperatorEnum indexOp,
         Map<Integer, FennelRelParamId> joinKeyParamMap,
         FennelRelParamId rootPageIdParamId,
-        List<Integer> filterCols,
-        List<Integer> filterOperands,
+        List<Integer> filterCol,
+        List<Integer> filterOperand,
         CompOperatorEnum filterOp,
         List<Integer> residualRefs,
         RexNode residualCondition)       
@@ -898,14 +632,14 @@ public class FennelNestedLoopJoinRule
         }
         
         Map<Integer, Integer> residualRefMap = new HashMap<Integer, Integer>();
-        if (!filterCols.isEmpty() || !residualRefs.isEmpty()) {
+        if (!filterCol.isEmpty() || !residualRefs.isEmpty()) {
             secondInput =
                 createReshapeRel(
                     leftRel,
                     secondInput,
                     joinKeyParamMap,
-                    filterCols,
-                    filterOperands,
+                    filterCol,
+                    filterOperand,
                     filterOp,
                     residualRefs,
                     residualCondition,
@@ -1113,10 +847,9 @@ public class FennelNestedLoopJoinRule
      * @param leftRel left join input
      * @param reshapeInput input into FennelReshapeRel
      * @param joinKeyParamMap mapping from LHS inputs to dynamic parameters
-     * @param filterCols list of column offsets from the RHS input that can
+     * @param filterCols the column offset from the RHS input that can
      * be applied in FennelReshapeRel
-     * @param filterOperands list of the LHS input that the filterCols are
-     * compared against
+     * @param filterOperands the LHS input that filterCol is compared against
      * @param filterOp comparison operator that will be applied in
      * FennelReshapeRel
      * @param residualRefs LHS inputs that must be processed in Calc node

@@ -149,8 +149,7 @@ public class PushProjectPastJoinRule
                 newJoinFilter,
                 joinRel.getJoinType(),
                 Collections.EMPTY_SET,
-                joinRel.isSemiJoinDone(),
-                joinRel.isMultiJoinDone());
+                joinRel.isSemiJoinDone());
 
         // put the original project on top of the join, converting it to
         // reference the modified projection list

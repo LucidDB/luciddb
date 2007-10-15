@@ -500,6 +500,11 @@ public class FarragoDefaultSessionPersonality
             return false;
         }
 
+        // Farrago doesn't automatically update row counts
+        if (feature == EigenbaseResource.instance().PersonalityManagesRowCount) {
+            return false;
+        }
+        
         // By default, support everything except the above.
         return true;
     }

@@ -3,6 +3,19 @@
 > 
 > create schema udttest;
 > 
+> -- test creation of a type without set schema (FRG-297)
+> create type udttest.poker_card as (
+>     card_suit char(1),
+>     card_rank integer
+> ) final
+> constructor method poker_card(
+>     card_suit_init char(1),card_rank_init integer)
+> returns udttest.poker_card
+> self as result
+> contains sql
+> specific poker_card
+> ;
+> 
 > set schema 'udttest';
 > 
 > set path 'udttest';

@@ -52,7 +52,91 @@ protected:
         jstring jString = reinterpret_cast<jstring>(jStringObj);
         return JniUtil::toStdString(pEnv,jString);
     }
-    
+
+    // helper for setters which take strings (returns local JNI reference)
+    jstring constructJavaString(const std::string &stringObj)
+    {
+        return pEnv->NewStringUTF(stringObj.c_str());
+    }
+
+    int32_t int32Value(jobject jIntegerObj)
+    {
+        return pEnv->CallIntMethod(jIntegerObj, JniUtil::methIntValue);
+    }
+
+    jobject constructJavaInteger(const int32_t &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classInteger, 
+            JniUtil::methIntegerValueOf, 
+            static_cast<jint>(value));
+    }
+
+    int64_t int64Value(jobject jLongObj)
+    {
+        return pEnv->CallLongMethod(jLongObj, JniUtil::methLongValue);
+    }
+
+    jobject constructJavaLong(const int64_t &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classLong, 
+            JniUtil::methLongValueOf, 
+            static_cast<jlong>(value));
+    }
+
+    int16_t int16Value(jobject jShortObj)
+    {
+        return pEnv->CallShortMethod(jShortObj, JniUtil::methShortValue);
+    }
+
+    jobject constructJavaShort(const int16_t &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classShort, 
+            JniUtil::methShortValueOf, 
+            static_cast<jshort>(value));
+    }
+
+    double doubleValue(jobject jDoubleObj)
+    {
+        return pEnv->CallDoubleMethod(jDoubleObj, JniUtil::methDoubleValue);
+    }
+
+    jobject constructJavaDouble(const double &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classDouble, 
+            JniUtil::methDoubleValueOf, 
+            static_cast<jdouble>(value));
+    }
+
+    float floatValue(jobject jFloatObj)
+    {
+        return pEnv->CallFloatMethod(jFloatObj, JniUtil::methFloatValue);
+    }
+
+    jobject constructJavaFloat(const float &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classFloat, 
+            JniUtil::methFloatValueOf, 
+            static_cast<jfloat>(value));
+    }
+
+    bool boolValue(jobject jBooleanObj)
+    {
+        return pEnv->CallBooleanMethod(jBooleanObj, JniUtil::methBooleanValue);
+    }
+
+    jobject constructJavaBoolean(const bool &value)
+    {
+        return pEnv->CallStaticObjectMethod(
+            JniUtil::classBoolean, 
+            JniUtil::methBooleanValueOf, 
+            static_cast<jboolean>(value));
+    }
+
 public:
     /**
      * The JniEnvRef for the thread in which this proxy operates.

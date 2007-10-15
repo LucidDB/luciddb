@@ -112,11 +112,12 @@ public interface FarragoMedLocalDataServer
      * @param index definition of the index to verify
      * @param rootPageId root PageId of index
      * @param estimate whether to estimate statistics for a quicker result
+     *                 (and at the cost of no unique key count)
      * @param txnContext Fennel txn context
      *
-     * @return page count for the specified index
+     * @return index statistics for the specified index
      */
-    public long computeIndexStats(
+    public FarragoMedLocalIndexStats computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
         boolean estimate,

@@ -30,7 +30,7 @@ import org.eigenbase.jmi.JmiObjUtil;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.CwmTable;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.namespace.FarragoMedLocalDataServer;
+import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
 import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.session.FarragoSessionIndexMap;
@@ -263,7 +263,7 @@ class FarragoDbSessionIndexMap
     }
 
     // implement FarragoSessionIndexMap
-    public long computeIndexStats(
+    public FarragoMedLocalIndexStats computeIndexStats(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,
         boolean estimate)

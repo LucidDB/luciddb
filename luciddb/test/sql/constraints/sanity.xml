@@ -9,7 +9,7 @@
           </test-suite-call>
         </test-suite>
         <ant dir="${open.dir}/luciddb/test/sql/constraints" 
-          target="create-db"/>
+          target="create-db-local"/>
       </init-hook>
 
       <test name="init">

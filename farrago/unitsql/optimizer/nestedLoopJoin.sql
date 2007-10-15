@@ -127,15 +127,13 @@ select xid, xactDate, currency, amount as origAmount,
     on currency = fromCurrency and toDate > xactDate and fromDate < xactDate
     order by currency, toCurrency, xactDate;
 
--- Index lookup + calc
+-- Index lookup with functional expressions as join keys
 select xid, xactDate, currency, amount as origAmount,
         toCurrency, toDate,
         cast(amount * rate as decimal(10,2)) as convertedAmount
     from xacts left outer join convRates
     on trim(currency) = trim(fromCurrency) and xactDate >= fromDate
     order by currency, toCurrency, xactDate, toDate;
-
--- Index lookup + reshape + calc
 select xid, xactDate, currency, amount as origAmount,
         toCurrency,
         cast(amount * rate as decimal(10,2)) as convertedAmount
@@ -143,13 +141,34 @@ select xid, xactDate, currency, amount as origAmount,
     on xactDate between fromDate and toDate and
         trim(currency) = trim(fromCurrency)
     order by currency, toCurrency, xactDate;
--- rerun the query
-select xid, xactDate, currency, amount as origAmount,
-        toCurrency,
+select xid, xactDate, currency, amount as origAmount, rate, toCurrency,
         cast(amount * rate as decimal(10,2)) as convertedAmount
     from xacts left outer join convRates
-    on xactDate between fromDate and toDate and
-        trim(currency) = trim(fromCurrency)
+    on trim(currency) = trim(fromCurrency) and abs(amount) < abs(rate*2)
+    order by currency, toCurrency, xactDate;
+
+-- Index lookup + calc
+select xid, xactDate, currency, amount as origAmount,
+        toCurrency, toDate,
+        cast(amount * rate as decimal(10,2)) as convertedAmount
+    from xacts left outer join convRates
+    on currency = fromCurrency and xactDate >= fromDate and
+    trim(currency) = 'EUR'
+    order by currency, toCurrency, xactDate, toDate;
+
+-- Index lookup + reshape + calc
+select xid, xactDate, currency, amount as origAmount, rate, toCurrency,
+        cast(amount * rate as decimal(10,2)) as convertedAmount
+    from xacts left outer join convRates
+    on currency = fromCurrency and xactDate between fromDate and toDate
+        and amount < rate*2
+    order by currency, toCurrency, xactDate;
+-- rerun the query
+select xid, xactDate, currency, amount as origAmount, rate, toCurrency,
+        cast(amount * rate as decimal(10,2)) as convertedAmount
+    from xacts left outer join convRates
+    on currency = fromCurrency and xactDate between fromDate and toDate
+        and amount < rate*2
     order by currency, toCurrency, xactDate;
 
 -- Calc only
@@ -299,7 +318,7 @@ select * from ints_notnullable i_nn left outer join ints_nullable i_n
     on i_nn.id = i_n.id and i_nn.a > i_n.a
     order by 1, 2, 3, 4, 5, 6, 7, 8;
 
--- casting not feasible because LHS can't be cast to RHS's type
+-- casting should be feasible because RHS can be cast to LHS's type
 select * from ints_notnullable i_nn left outer join ints_nullable i_n
     on i_nn.id = i_n.id and i_nn.a > i_n.b
     order by 1, 2, 3, 4, 5, 6, 7, 8;
@@ -325,6 +344,13 @@ select * from ints_notnullable i_nn left outer join ints_nullable i_n
     on i_nn.id > i_n.id and i_nn.a > i_n.a and i_nn.b > i_n.b and
         i_nn.c > i_n.c
     order by 1, 2, 3, 4, 5, 6, 7, 8;
+
+-- LHS of NLJ is empty
+select xid, xactDate, currency, amount as origAmount,
+    toCurrency, toDate,
+    cast(amount * rate as decimal(10,2)) as convertedAmount
+    from (select * from xacts where currency = 'CNY') left outer join convRates
+    on currency = fromCurrency and xactDate >= fromDate;
 
 ----------------------------------------
 -- explain outputs for the above queries
@@ -356,6 +382,12 @@ select xid, xactDate, currency, amount as origAmount,
         cast(amount * rate as decimal(10,2)) as convertedAmount
     from xacts left outer join convRates
     on toDate > xactDate and fromCurrency = currency;
+explain plan for
+select xid, xactDate, currency, amount as origAmount,
+    toCurrency, toDate,
+    cast(amount * rate as decimal(10,2)) as convertedAmount
+    from (select * from xacts where currency = 'CNY') left outer join convRates
+    on currency = fromCurrency and xactDate >= fromDate;
 
 -- Index lookup + reshape
 explain plan for
@@ -383,15 +415,13 @@ select xid, xactDate, currency, amount as origAmount,
     from xacts left outer join convRates
     on currency = fromCurrency and toDate > xactDate and fromDate < xactDate;
 
--- Index lookup + calc
+-- Index lookup with functional expressions as join keys
 explain plan for
 select xid, xactDate, currency, amount as origAmount,
         toCurrency, toDate,
         cast(amount * rate as decimal(10,2)) as convertedAmount
     from xacts left outer join convRates
     on trim(currency) = trim(fromCurrency) and xactDate >= fromDate;
-
--- Index lookup + reshape + calc
 explain plan for
 select xid, xactDate, currency, amount as origAmount,
         toCurrency,
@@ -399,6 +429,28 @@ select xid, xactDate, currency, amount as origAmount,
     from xacts left outer join convRates
     on xactDate between fromDate and toDate and
         trim(currency) = trim(fromCurrency);
+explain plan for
+select xid, xactDate, currency, amount as origAmount, rate, toCurrency,
+        cast(amount * rate as decimal(10,2)) as convertedAmount
+    from xacts left outer join convRates
+    on trim(currency) = trim(fromCurrency) and abs(amount) < abs(rate*2);
+
+-- Index lookup + calc
+explain plan for
+select xid, xactDate, currency, amount as origAmount,
+        toCurrency, toDate,
+        cast(amount * rate as decimal(10,2)) as convertedAmount
+    from xacts left outer join convRates
+    on currency = fromCurrency and xactDate >= fromDate and
+    trim(currency) = 'EUR';
+
+-- Index lookup + reshape + calc
+explain plan for
+select xid, xactDate, currency, amount as origAmount, rate, toCurrency,
+        cast(amount * rate as decimal(10,2)) as convertedAmount
+    from xacts left outer join convRates
+    on currency = fromCurrency and xactDate between fromDate and toDate
+        and amount < rate*2;
 
 -- Calc only
 explain plan for
@@ -513,7 +565,7 @@ explain plan for
 select * from ints_notnullable i_nn left outer join ints_nullable i_n
     on i_nn.id = i_n.id and i_nn.a > i_n.a;
 
--- casting not feasible because LHS can't be cast to RHS's type
+-- casting should be feasible because RHS can be cast to LHS's type
 explain plan for
 select * from ints_notnullable i_nn left outer join ints_nullable i_n
     on i_nn.id = i_n.id and i_nn.a > i_n.b;

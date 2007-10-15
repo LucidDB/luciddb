@@ -326,13 +326,49 @@ public class SqlToRelConverterTest
     {
         check(
             "select * from (\n"
-            + " select * from emp tablesample substitute('DATASET1') as e\n"
+            + " select * from emp as e tablesample substitute('DATASET1')\n"
             + " join dept on e.deptno = dept.deptno\n"
             + ") tablesample substitute('DATASET2')\n"
             + "where empno > 5",
             "${plan}");
     }
 
+    public void testSampleBernoulli()
+    {
+        check(
+            "select * from emp tablesample bernoulli(50) where empno > 5",
+            "${plan}");
+    }
+    
+    public void testSampleBernoulliQuery()
+    {
+        check(
+            "select * from (\n"
+            + " select * from emp as e tablesample bernoulli(10) repeatable(1)\n"
+            + " join dept on e.deptno = dept.deptno\n"
+            + ") tablesample bernoulli(50) repeatable(99)\n"
+            + "where empno > 5",
+            "${plan}");
+    }
+    
+    public void testSampleSystem()
+    {
+        check(
+            "select * from emp tablesample system(50) where empno > 5",
+            "${plan}");
+    }
+    
+    public void testSampleSystemQuery()
+    {
+        check(
+            "select * from (\n"
+            + " select * from emp as e tablesample system(10) repeatable(1)\n"
+            + " join dept on e.deptno = dept.deptno\n"
+            + ") tablesample system(50) repeatable(99)\n"
+            + "where empno > 5",
+            "${plan}");
+    }
+    
     public void testCollectionTableWithCursorParam()
     {
         check(

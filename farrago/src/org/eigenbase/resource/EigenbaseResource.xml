@@ -95,8 +95,13 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>''FROM'' near {0}, without operands preceding it is illegal</text>
 </exception>
 
-<exception id="100095" name="IllegalRowExpression">
+<exception id="100130" name="IllegalRowExpression">
     <text>ROW expression encountered in illegal context</text>
+</exception>
+    
+<exception id="100140" name="InvalidSampleSize">
+    <property name="SQLSTATE">2202H</property>
+    <text>TABLESAMPLE percentage must be between 0 and 100, inclusive</text>
 </exception>
     
 <!-- ====================================================================== -->
@@ -562,6 +567,11 @@ TBD: naming convention for extension features
     <text>Basic multiset not supported</text>
 </exception>
 
+<exception name="SQLFeature_T613">
+    <property name="FeatureDefinition">SQL:2003 Part 2 Annex F</property>
+    <text>TABLESAMPLE not supported</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Extensions -->
 <!-- ====================================================================== -->
@@ -579,6 +589,16 @@ TBD: naming convention for extension features
 <exception name="SharedStatementPlans">
     <property name="FeatureDefinition">Eigenbase-defined</property>
     <text>Sharing of cached statement plans not supported</text>
+</exception>
+
+<exception name="SQLFeatureExt_T613_Substitution">
+    <property name="FeatureDefinition">Eigenbase-defined</property>
+    <text>TABLESAMPLE SUBSTITUTE not supported</text>
+</exception>
+
+<exception name="PersonalityManagesRowCount">
+    <property name="FeatureDefinition">Eigenbase-defined</property>
+    <text>Personality does not maintain table's row count in the catalog</text>
 </exception>
 
 <!-- ====================================================================== -->

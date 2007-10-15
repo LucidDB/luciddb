@@ -219,13 +219,26 @@ public class FarragoRelImplementor
     // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel, int ordinal)
     {
-        addRelPathEntry(rel, ordinal);
-        FemExecutionStreamDef streamDef = toStreamDefImpl(rel);
-        removeRelPathEntry();
+        return visitFennelChild(rel, ordinal, true);
+    }
+    
+    // implement FennelRelImplementor
+    public FemExecutionStreamDef visitFennelChild(
+        FennelRel rel,
+        int ordinal,
+        boolean addToPathList)
+    {
+        FemExecutionStreamDef streamDef =
+            toStreamDefImpl(rel, ordinal, addToPathList);
         registerRelStreamDef(streamDef, rel, null);
         return streamDef;
     }
 
+    public List<RelPathEntry> getRelPathEntry()
+    {
+    	return currRelPathList;
+    }
+    
     /**
      * Adds a RelPathEntry corresponding to a new RelNode to the current
      * RelPathEntry list
@@ -256,19 +269,35 @@ public class FarragoRelImplementor
      * functionality.
      *
      * @param rel Relational expression
+     * @param ordinal input position of the relational expression for its
+     * parent
+     * @param addToPathList if true, add this RelNode to the pathlist that
+     * keeps track of the RelNodes that lead up to this node
      *
      * @return Plan
      */
-    protected final FemExecutionStreamDef toStreamDefImpl(FennelRel rel)
+    protected final FemExecutionStreamDef toStreamDefImpl(
+        FennelRel rel,
+        int ordinal,
+        boolean addToPathList)
     {
+        if (addToPathList) {
+            addRelPathEntry(rel, ordinal);
+        }
+        FemExecutionStreamDef result;
         try {
-            return rel.toStreamDef(this);
+            result = rel.toStreamDef(this);
         } catch (Throwable e) {
             throw Util.newInternal(
                 e,
                 "Error occurred while translating relational expression "
                 + rel + " to a plan");
         }
+        FemExecutionStreamDef streamDef = result;
+        if (addToPathList) {
+            removeRelPathEntry();
+        }
+        return streamDef;
     }
 
     /**
@@ -495,7 +524,7 @@ public class FarragoRelImplementor
      * RelPathEntry keeps track of a RelNode and its input position within
      * that node's parent RelNode in the execution stream graph.
      */
-    private static class RelPathEntry
+    public static class RelPathEntry
     {
         RelNode relNode;
         int ordinal;

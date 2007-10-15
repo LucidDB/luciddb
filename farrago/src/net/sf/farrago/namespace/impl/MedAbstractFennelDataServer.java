@@ -31,6 +31,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.*;
 
 
 /**
@@ -127,7 +128,7 @@ public abstract class MedAbstractFennelDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public long computeIndexStats(
+    public FarragoMedLocalIndexStats computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
         boolean estimate,
@@ -146,11 +147,16 @@ public abstract class MedAbstractFennelDataServer
             cmd.setRootPageId(rootPageId);
             cmd.setEstimate(estimate);
             cmd.setIncludeTuples(getIncludeTuples(index));
-            long rc = getFennelDbHandle().executeCmd(cmd);
+            getFennelDbHandle().executeCmd(cmd);
+            long pageCount = cmd.getResultPageCount();
+            long uniqueKeyCount = 
+                cmd.getResultUniqueKeyCount() == null 
+                    ? -1
+                    : cmd.getResultUniqueKeyCount().longValue();
             if (implicitTxn) {
                 txnContext.commit();
             }
-            return rc;
+            return new FarragoMedLocalIndexStats(pageCount, uniqueKeyCount);
         } finally {
             if (implicitTxn) {
                 txnContext.rollback();

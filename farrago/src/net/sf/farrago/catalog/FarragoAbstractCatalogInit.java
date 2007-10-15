@@ -22,7 +22,6 @@
 package net.sf.farrago.catalog;
 
 import java.sql.*;
-
 import java.util.*;
 import java.util.logging.*;
 
@@ -31,6 +30,7 @@ import javax.jmi.reflect.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
@@ -38,7 +38,6 @@ import net.sf.farrago.trace.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.type.*;
-
 import org.netbeans.api.mdr.events.*;
 
 
@@ -154,6 +153,16 @@ public abstract class FarragoAbstractCatalogInit
         CwmTypeAlias typeAlias = repos.newCwmTypeAlias();
         typeAlias.setName(aliasName);
         typeAlias.setType(type);
+    }
+    
+    protected void updateSystemParameters()
+    {
+        // if migrated from a catalog version where connectionTimeoutMillis 
+        // didn't exist, it will be set to null
+        FemFarragoConfig config = repos.getCurrentConfig();
+        if (config.getConnectionTimeoutMillis() == null) {
+            config.setConnectionTimeoutMillis(new Long(FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS));
+        }
     }
 
     protected void updateSystemTypes()

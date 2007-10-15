@@ -21,9 +21,10 @@
 */
 package net.sf.farrago.syslib;
 
-import java.util.*;
+import java.sql.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.config.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 
@@ -46,7 +47,34 @@ public class FarragoUpdateCatalogUDR
     }
 
     //~ Methods ----------------------------------------------------------------
+    
+    /**
+     * Updates Farrago config objects in cases where they have been set to dummy values.
+     */
+    public static void updateConfiguration()
+    {
+        tracer.info("Updating Farrago system parameters");
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoRepos repos = session.getRepos();
 
+        FarragoUpdateCatalogUDR init = null;
+        FarragoReposTxnContext txn = repos.newTxnContext();
+        try {
+            txn.beginWriteTxn();
+            init = new FarragoUpdateCatalogUDR(repos);
+            init.updateSystemParameters();
+            txn.commit();
+        } finally {
+            if (init != null) {
+                // if txn is still in progress, it means we're handling
+                // an exception, so pass rollback=true
+                init.publishObjects(txn.isTxnInProgress());
+            }
+            txn.rollback();
+        }
+        tracer.info("Update of Farrago system parameters complete");
+    }
+    
     /**
      * Updates catalogs with system objects, adding them if they don't exist
      * yet.

@@ -1,0 +1,731 @@
+0: jdbc:luciddb:> !set headerinterval 1000
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'analyzetest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Note: BERNOULLI sampling requires the use of the REPEATABLE clause
+0: jdbc:luciddb:> -- to produce repeatable results across invocations.  As of its initial
+0: jdbc:luciddb:> -- implementation, LCS SYSTEM sampling does not require the REPEATABLE clause.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Note: The results of these queries depend on the order in which rows 
+0: jdbc:luciddb:> -- are stored in the table.  If the insertion order becomes non-deterministic 
+0: jdbc:luciddb:> -- (perhaps due to some performance improvement), these tests will fail .
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Verify that sampling is handled via LCS-specific XOs
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !outputformat csv
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select * from bench10k tablesample bernoulli(0.1);
+'column0'
+'FennelToIteratorConverter'
+'  LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH10K]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH10K$k10, SYS$CLUSTERED_INDEX$BENCH10K$k100, SYS$CLUSTERED_INDEX$BENCH10K$k100k, SYS$CLUSTERED_INDEX$BENCH10K$k10k, SYS$CLUSTERED_INDEX$BENCH10K$k1k, SYS$CLUSTERED_INDEX$BENCH10K$k2, SYS$CLUSTERED_INDEX$BENCH10K$k25, SYS$CLUSTERED_INDEX$BENCH10K$k250k, SYS$CLUSTERED_INDEX$BENCH10K$k4, SYS$CLUSTERED_INDEX$BENCH10K$k40k, SYS$CLUSTERED_INDEX$BENCH10K$k5, SYS$CLUSTERED_INDEX$BENCH10K$k500k, SYS$CLUSTERED_INDEX$BENCH10K$kseq]], mode=[bernoulli], rate=[0.0010], repeatableSeed=[-])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> explain plan for select * from bench10k tablesample system(0.1);
+'column0'
+'FennelToIteratorConverter'
+'  LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH10K]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH10K$k10, SYS$CLUSTERED_INDEX$BENCH10K$k100, SYS$CLUSTERED_INDEX$BENCH10K$k100k, SYS$CLUSTERED_INDEX$BENCH10K$k10k, SYS$CLUSTERED_INDEX$BENCH10K$k1k, SYS$CLUSTERED_INDEX$BENCH10K$k2, SYS$CLUSTERED_INDEX$BENCH10K$k25, SYS$CLUSTERED_INDEX$BENCH10K$k250k, SYS$CLUSTERED_INDEX$BENCH10K$k4, SYS$CLUSTERED_INDEX$BENCH10K$k40k, SYS$CLUSTERED_INDEX$BENCH10K$k5, SYS$CLUSTERED_INDEX$BENCH10K$k500k, SYS$CLUSTERED_INDEX$BENCH10K$kseq]], mode=[system], rate=[0.0010], repeatableSeed=[-])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=['LOCALDB'], expr#2=[CAST($t1):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#3=['ANALYZETEST'], expr#4=[CAST($t3):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=['BENCH10K'], expr#6=[CAST($t5):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#7=[STAT_GET_ROW_COUNT($t2, $t4, $t6)], expr#8=[CAST($t7):BIGINT], $0=[$t8])'
+'        IterOneRowRel'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Validate that only k2 is projected, despite count(*)
+0: jdbc:luciddb:> explain plan for select "k2", count(*)
+. . . . . . . . > from bench1m tablesample bernoulli(1)
+. . . . . . . . > group by "k2"
+. . . . . . . . > order by "k2";
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelRenameRel(fieldNames=[[k2, EXPR$1]])'
+'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH1M]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH1M$k2]], mode=[bernoulli], rate=[0.01], repeatableSeed=[-])'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Validate that only k2 is projected, despite count(*)
+0: jdbc:luciddb:> explain plan for select "k2", count(*)
+. . . . . . . . > from bench1m tablesample system(1)
+. . . . . . . . > group by "k2"
+. . . . . . . . > order by "k2";
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelRenameRel(fieldNames=[[k2, EXPR$1]])'
+'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
+'        FennelRenameRel(fieldNames=[[$f0]])'
+'          LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH1M]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH1M$k2]], mode=[system], rate=[0.01], repeatableSeed=[-])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=['LOCALDB'], expr#2=[CAST($t1):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#3=['ANALYZETEST'], expr#4=[CAST($t3):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=['BENCH1M'], expr#6=[CAST($t5):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#7=[STAT_GET_ROW_COUNT($t2, $t4, $t6)], expr#8=[CAST($t7):BIGINT], $0=[$t8])'
+'                IterOneRowRel'
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !outputformat table
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "k2" from bench10k tablesample bernoulli(0.1) repeatable(19571004);
++-----+
+| k2  |
++-----+
+| 1   |
+| 1   |
+| 1   |
+| 1   |
+| 2   |
+| 2   |
+| 2   |
+| 2   |
+| 1   |
+| 2   |
+| 2   |
+| 1   |
+| 2   |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "k2" from bench10k tablesample system(0.1);
++-----+
+| k2  |
++-----+
+| 2   |
+| 2   |
+| 1   |
+| 2   |
+| 1   |
+| 1   |
+| 2   |
+| 1   |
+| 2   |
+| 1   |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "k1k" from bench10k tablesample bernoulli(0.1) repeatable(19580131);
++------+
+| k1k  |
++------+
+| 17   |
+| 375  |
+| 775  |
+| 648  |
+| 955  |
+| 966  |
+| 921  |
+| 71   |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "k1k" from bench10k tablesample system(0.1);
++------+
+| k1k  |
++------+
+| 119  |
+| 835  |
+| 78   |
+| 522  |
+| 1    |
+| 272  |
+| 221  |
+| 185  |
+| 890  |
+| 257  |
++------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "k2", count(*)
+. . . . . . . . > from bench1m tablesample bernoulli(1) repeatable(19690716)
+. . . . . . . . > group by "k2"
+. . . . . . . . > order by "k2";
++-----+---------+
+| k2  | EXPR$1  |
++-----+---------+
+| 1   | 5018    |
+| 2   | 4868    |
++-----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "k2", count(*)
+. . . . . . . . > from bench1m tablesample system(1)
+. . . . . . . . > group by "k2"
+. . . . . . . . > order by "k2";
++-----+---------+
+| k2  | EXPR$1  |
++-----+---------+
+| 1   | 5023    |
+| 2   | 4977    |
++-----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "k100", count(*) 
+. . . . . . . . > from bench1m tablesample bernoulli(1) repeatable(19721219)
+. . . . . . . . > group by "k100"
+. . . . . . . . > order by "k100";
++-------+---------+
+| k100  | EXPR$1  |
++-------+---------+
+| 1     | 98      |
+| 2     | 103     |
+| 3     | 98      |
+| 4     | 93      |
+| 5     | 95      |
+| 6     | 88      |
+| 7     | 88      |
+| 8     | 104     |
+| 9     | 113     |
+| 10    | 81      |
+| 11    | 83      |
+| 12    | 88      |
+| 13    | 88      |
+| 14    | 101     |
+| 15    | 98      |
+| 16    | 106     |
+| 17    | 94      |
+| 18    | 105     |
+| 19    | 99      |
+| 20    | 101     |
+| 21    | 104     |
+| 22    | 108     |
+| 23    | 97      |
+| 24    | 104     |
+| 25    | 90      |
+| 26    | 95      |
+| 27    | 108     |
+| 28    | 105     |
+| 29    | 94      |
+| 30    | 89      |
+| 31    | 87      |
+| 32    | 113     |
+| 33    | 101     |
+| 34    | 121     |
+| 35    | 113     |
+| 36    | 102     |
+| 37    | 95      |
+| 38    | 113     |
+| 39    | 114     |
+| 40    | 96      |
+| 41    | 111     |
+| 42    | 93      |
+| 43    | 90      |
+| 44    | 75      |
+| 45    | 100     |
+| 46    | 98      |
+| 47    | 100     |
+| 48    | 108     |
+| 49    | 117     |
+| 50    | 104     |
+| 51    | 99      |
+| 52    | 96      |
+| 53    | 102     |
+| 54    | 95      |
+| 55    | 100     |
+| 56    | 79      |
+| 57    | 102     |
+| 58    | 107     |
+| 59    | 102     |
+| 60    | 111     |
+| 61    | 102     |
+| 62    | 101     |
+| 63    | 99      |
+| 64    | 128     |
+| 65    | 112     |
+| 66    | 86      |
+| 67    | 89      |
+| 68    | 112     |
+| 69    | 112     |
+| 70    | 105     |
+| 71    | 97      |
+| 72    | 106     |
+| 73    | 95      |
+| 74    | 113     |
+| 75    | 113     |
+| 76    | 97      |
+| 77    | 108     |
+| 78    | 114     |
+| 79    | 112     |
+| 80    | 91      |
+| 81    | 120     |
+| 82    | 82      |
+| 83    | 88      |
+| 84    | 102     |
+| 85    | 98      |
+| 86    | 111     |
+| 87    | 95      |
+| 88    | 105     |
+| 89    | 94      |
+| 90    | 85      |
+| 91    | 105     |
+| 92    | 96      |
+| 93    | 102     |
+| 94    | 97      |
+| 95    | 95      |
+| 96    | 93      |
+| 97    | 104     |
+| 98    | 102     |
+| 99    | 108     |
+| 100   | 93      |
++-------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "k100", count(*) 
+. . . . . . . . > from bench1m tablesample system(1)
+. . . . . . . . > group by "k100"
+. . . . . . . . > order by "k100";
++-------+---------+
+| k100  | EXPR$1  |
++-------+---------+
+| 1     | 110     |
+| 2     | 95      |
+| 3     | 108     |
+| 4     | 97      |
+| 5     | 95      |
+| 6     | 116     |
+| 7     | 104     |
+| 8     | 100     |
+| 9     | 111     |
+| 10    | 79      |
+| 11    | 93      |
+| 12    | 88      |
+| 13    | 116     |
+| 14    | 94      |
+| 15    | 114     |
+| 16    | 122     |
+| 17    | 96      |
+| 18    | 90      |
+| 19    | 96      |
+| 20    | 93      |
+| 21    | 105     |
+| 22    | 102     |
+| 23    | 116     |
+| 24    | 92      |
+| 25    | 113     |
+| 26    | 104     |
+| 27    | 90      |
+| 28    | 107     |
+| 29    | 110     |
+| 30    | 96      |
+| 31    | 89      |
+| 32    | 104     |
+| 33    | 104     |
+| 34    | 107     |
+| 35    | 95      |
+| 36    | 108     |
+| 37    | 111     |
+| 38    | 108     |
+| 39    | 96      |
+| 40    | 88      |
+| 41    | 91      |
+| 42    | 97      |
+| 43    | 91      |
+| 44    | 91      |
+| 45    | 104     |
+| 46    | 90      |
+| 47    | 104     |
+| 48    | 84      |
+| 49    | 93      |
+| 50    | 109     |
+| 51    | 98      |
+| 52    | 98      |
+| 53    | 104     |
+| 54    | 86      |
+| 55    | 89      |
+| 56    | 107     |
+| 57    | 99      |
+| 58    | 102     |
+| 59    | 94      |
+| 60    | 100     |
+| 61    | 96      |
+| 62    | 84      |
+| 63    | 84      |
+| 64    | 112     |
+| 65    | 110     |
+| 66    | 99      |
+| 67    | 85      |
+| 68    | 118     |
+| 69    | 84      |
+| 70    | 99      |
+| 71    | 102     |
+| 72    | 92      |
+| 73    | 124     |
+| 74    | 84      |
+| 75    | 115     |
+| 76    | 108     |
+| 77    | 92      |
+| 78    | 109     |
+| 79    | 104     |
+| 80    | 110     |
+| 81    | 88      |
+| 82    | 111     |
+| 83    | 117     |
+| 84    | 105     |
+| 85    | 125     |
+| 86    | 108     |
+| 87    | 97      |
+| 88    | 92      |
+| 89    | 97      |
+| 90    | 88      |
+| 91    | 109     |
+| 92    | 85      |
+| 93    | 85      |
+| 94    | 96      |
+| 95    | 103     |
+| 96    | 95      |
+| 97    | 89      |
+| 98    | 95      |
+| 99    | 100     |
+| 100   | 111     |
++-------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select 
+. . . . . . . . >   s."k2",
+. . . . . . . . >   s."sample_k2_cnt" * 100 as "est_k2_cnt",
+. . . . . . . . >   f."full_k2_cnt" as "true_k2_cnt",
+. . . . . . . . >   ((s."sample_k2_cnt" * 100) - f."full_k2_cnt") / f."full_k2_cnt" as "err"
+. . . . . . . . > from
+. . . . . . . . >   (select "k2", count(*) as "full_k2_cnt"
+. . . . . . . . >    from bench1m
+. . . . . . . . >    group by "k2") as f,
+. . . . . . . . >   (select "k2", count(*) as "sample_k2_cnt"
+. . . . . . . . >    from bench1m tablesample bernoulli(1) repeatable(19810412)
+. . . . . . . . >    group by "k2") as s
+. . . . . . . . > where s."k2" = f."k2"
+. . . . . . . . > order by s."k2";
++-----+-------------+--------------+------------+
+| k2  | est_k2_cnt  | true_k2_cnt  |    err     |
++-----+-------------+--------------+------------+
+| 1   | 505100      | 499598       | 0.011013   |
+| 2   | 495700      | 500402       | -0.009396  |
++-----+-------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select 
+. . . . . . . . >   s."k2",
+. . . . . . . . >   s."sample_k2_cnt" * 100 as "est_k2_cnt",
+. . . . . . . . >   f."full_k2_cnt" as "true_k2_cnt",
+. . . . . . . . >   ((s."sample_k2_cnt" * 100) - f."full_k2_cnt") / f."full_k2_cnt" as "k2_err"
+. . . . . . . . > from
+. . . . . . . . >   (select "k2", count(*) as "full_k2_cnt"
+. . . . . . . . >    from bench1m
+. . . . . . . . >    group by "k2") as f,
+. . . . . . . . >   (select "k2", count(*) as "sample_k2_cnt"
+. . . . . . . . >    from bench1m tablesample system(1)
+. . . . . . . . >    group by "k2") as s
+. . . . . . . . > where s."k2" = f."k2"
+. . . . . . . . > order by s."k2";
++-----+-------------+--------------+------------+
+| k2  | est_k2_cnt  | true_k2_cnt  |   k2_err   |
++-----+-------------+--------------+------------+
+| 1   | 502300      | 499598       | 0.005408   |
+| 2   | 497700      | 500402       | -0.005400  |
++-----+-------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -------------------------------------------------------------------------------
+0: jdbc:luciddb:> -- Test tables with deleted rows
+0: jdbc:luciddb:> -------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 10 rows, each separated by 110 rows
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample system(1);
++-------+
+| kseq  |
++-------+
+| 1     |
+| 112   |
+| 223   |
+| 334   |
+| 445   |
+| 556   |
+| 667   |
+| 778   |
+| 889   |
+| 1000  |
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ~10 rows
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample bernoulli(1) repeatable(1);
++-------+
+| kseq  |
++-------+
+| 5     |
+| 197   |
+| 204   |
+| 406   |
+| 501   |
+| 530   |
+| 556   |
+| 634   |
+| 680   |
+| 887   |
+| 975   |
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- reduce bench1k to 100 rows
+0: jdbc:luciddb:> delete from bench1k where "kseq" > 50 and "kseq" < 951;
+0: jdbc:luciddb:> select count(*) from bench1k;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 10 rows, each separated by 11 rows
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample system(10);
++-------+
+| kseq  |
++-------+
+| 1     |
+| 12    |
+| 23    |
+| 34    |
+| 45    |
+| 956   |
+| 967   |
+| 978   |
+| 989   |
+| 1000  |
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ~10 rows
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample bernoulli(10) repeatable(1);
++-------+
+| kseq  |
++-------+
+| 5     |
+| 11    |
+| 29    |
+| 46    |
+| 953   |
+| 955   |
+| 958   |
+| 961   |
+| 977   |
+| 978   |
+| 990   |
+| 994   |
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- reduce bench1k to fewer than 10 rows
+0: jdbc:luciddb:> delete from bench1k where "kseq" > 5;
+0: jdbc:luciddb:> select count(*) from bench1k;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- fewer rows than clumps, should return all rows
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample system(50);
++-------+
+| kseq  |
++-------+
+| 1     |
+| 2     |
+| 3     |
+| 4     |
+| 5     |
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ~2-3 rows
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample bernoulli(50) repeatable(2);
++-------+
+| kseq  |
++-------+
+| 1     |
+| 2     |
+| 3     |
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- reduce bench1k to 0 rows
+0: jdbc:luciddb:> delete from bench1k;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- only deleted rows, no output
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample system(50);
++-------+
+| kseq  |
++-------+
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample bernoulli(50) repeatable(3);
++-------+
+| kseq  |
++-------+
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- remove deleted rows
+0: jdbc:luciddb:> truncate table bench1k;
+0: jdbc:luciddb:> alter table bench1k rebuild;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- no rows, no output
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample system(50);
++-------+
+| kseq  |
++-------+
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select "kseq" from bench1k tablesample bernoulli(50) repeatable(5);
++-------+
+| kseq  |
++-------+
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -------------------------------------------------------------------------------
+0: jdbc:luciddb:> -- Manipulate catalog row count to simulate concurrent DML/TABLESAMPLE.
+0: jdbc:luciddb:> -- Only affects TABLESAMPLE SYSTEM, so ignore BERNOULLI.
+0: jdbc:luciddb:> -------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Baseline
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(50);
++---------+
+| EXPR$0  |
++---------+
+| 50      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report zero rows where there are 100
+0: jdbc:luciddb:> -- Sampling returns all rows (rowcount == 0 => clumpSize = 1)
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 0);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(50);
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 5 rows where there are 100
+0: jdbc:luciddb:> -- Sampling returns all rows (fewer rows than clumps)
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 5);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(50);
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 50 rows where there are 100
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 50);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(50);
++---------+
+| EXPR$0  |
++---------+
+| 50      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 200 rows where there are 100
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 200);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(10);
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- reset rowcount = 100
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 100);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test with deleted rows -----------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Delete all but 4 rows
+0: jdbc:luciddb:> delete from concurrent_sim where "kseq" > 4;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 8 rows when there are 4
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 8);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(50);
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report zero rows when there are 4
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 0);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(50);
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 100 rows when there are 4
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 100);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(10);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test with small, rebuilt table ---------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter table concurrent_sim rebuild;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 8 rows when there are 4
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 8);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(50);
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report zero rows when there are 4
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 0);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(50);
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 100 rows when there are 4
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 100);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(10);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test empty table with deleted rows -----------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Delete remaining rows in table
+0: jdbc:luciddb:> delete from concurrent_sim;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 100 rows when there are 0
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 100);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(10);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 5 rows when there are 0
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 5);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(10);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test rebuilt empty table ---------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter table concurrent_sim rebuild;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 100 rows when there are 0
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 100);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(10);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Report 5 rows when there are 0
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 5);
+0: jdbc:luciddb:> select count(*) from concurrent_sim tablesample system(10);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Reset row count
+0: jdbc:luciddb:> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'ANALYZETEST', 'CONCURRENT_SIM', 0);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Drop tables destroyed by this test
+0: jdbc:luciddb:> drop table concurrent_sim;
+0: jdbc:luciddb:> drop table bench1k;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

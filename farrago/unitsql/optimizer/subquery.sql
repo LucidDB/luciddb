@@ -1,4 +1,8 @@
+-- $Id$
+-- Test plans for subqueries
+
 !set force on
+!set outputformat csv
 
 set schema 'sales';
 
@@ -466,6 +470,34 @@ select empno
 from emps
 where empno = (select min(emps.empno) from depts
                where depts.deptno = emps.deptno);
+
+-- bug with RexShuttle.visitCall() during efficient decorrelation
+-- ABS function input type is changed to integer nullable after decorrelation, so
+-- should the return type of this function.
+explain plan without implementation for
+select sum((select abs(depts.deptno) from depts where depts.deptno = emps.deptno)) from emps;
+
+explain plan for
+select sum((select abs(depts.deptno) from depts where depts.deptno = emps.deptno)) from emps;
+
+-- Without bug fix, this will result in assertion failure for setNull() method in generated
+-- java code for the cast expression.
+select sum((select abs(depts.deptno) from depts where depts.deptno = emps.deptno)) from emps;
+
+-- bug with RexShuttle.visitLiteral() during efficient decorrelation
+-- During efficient decorrelation, skip rewirting(with nullIndicator) for null literal
+-- because the end result is the same: a null literal. In fact, rewrite attempts will 
+-- result in incorrect types.
+explain plan without implementation for 
+select sum((select cast(null as integer) from depts where depts.deptno = emps.deptno)) from emps;
+
+explain plan for 
+select sum((select cast(null as integer) from depts where depts.deptno = emps.deptno)) from emps;
+
+-- Without bug fix, this will result in assertion failure for setNull() method in generated
+-- java code for the incorrect cast expression(cast(null):null).
+select sum((select cast(null as integer) from depts where depts.deptno = emps.deptno)) from emps;
+select sum((select cast(cast(null as varchar(1)) as integer) from depts where depts.deptno = emps.deptno)) from emps;
 
 -- 3.6 HAVING clause scalar subquery.
 --
@@ -1384,3 +1416,6 @@ drop table depts2;
 drop table depts3;
 drop table depts4;
 drop table depts5;
+
+-- End subquery.sql
+

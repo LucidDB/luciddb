@@ -96,9 +96,9 @@ public abstract class DiffTestCase
         compiledIgnoreMatcher = null;
         compiledDiffMatcher = null;
         gcInterval = 0;
-        if (System.getProperty(DiffTestCase.class.getName() + ".verbose", "")
-            != null)
-        {
+        String verboseVal =
+            System.getProperty(DiffTestCase.class.getName() + ".verbose");
+        if (verboseVal != null) {
             verbose = true;
         }
     }

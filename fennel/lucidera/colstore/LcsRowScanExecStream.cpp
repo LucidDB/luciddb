@@ -24,6 +24,7 @@
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/common/SearchEndpoint.h"
+#include <math.h>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -31,13 +32,14 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void LcsRowScanExecStream::prepareResidualFilters(
     LcsRowScanExecStreamParams const &params)
 {
+    nFilters = params.residualFilterCols.size();
 
     /*
      * compute the outputTupleData position of filter columns
      */
     std::vector<uint> valueCols;
     uint j, k = 0;
-    for (uint i = 0;  i < params.residualFilterCols.size(); i++) {
+    for (uint i = 0;  i < nFilters; i++) {
         for (j = 0; j < params.outputProj.size(); j++) {
             if (params.outputProj[j] == params.residualFilterCols[i]) {
                 valueCols.push_back(j);
@@ -59,14 +61,13 @@ void LcsRowScanExecStream::prepareResidualFilters(
     uint clusterStart = 0;
     uint realClusterStart = 0;
 
-    filters.reset(new 
-        PLcsResidualColumnFilters[params.residualFilterCols.size()]);
+    filters.reset(new PLcsResidualColumnFilters[nFilters]);
 
     for (uint i = 0; i < nClusters; i++) {
         uint clusterEnd = clusterStart +
             params.lcsClusterScanDefs[i].clusterTupleDesc.size() - 1;
 
-        for (uint j = 0; j < params.residualFilterCols.size(); j++) {
+        for (uint j = 0; j < nFilters; j++) {
             if (params.residualFilterCols[j] >= clusterStart &&
                 params.residualFilterCols[j] <= clusterEnd)
             {
@@ -131,10 +132,16 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
         stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
     assert(inputDesc[0] == expectedRidDesc);
 
-    assert(hasExtraFilter == (inAccessors.size() > 1));
+    if (params.samplingMode == SAMPLING_SYSTEM) {
+        assert(hasExtraFilter == (inAccessors.size() > 2));
+    } else {
+        assert(hasExtraFilter == (inAccessors.size() > 1));
+    }
 
     if (hasExtraFilter) {
         prepareResidualFilters(params);
+    } else {
+        nFilters = 0;
     }
 
     /* 
@@ -157,6 +164,39 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
     attrAccessors.resize(projDescriptor.size());
     for (uint i = 0; i < projDescriptor.size(); ++i) {
         attrAccessors[i].compute(projDescriptor[i]);
+    }
+
+    /* configure sampling */
+    samplingMode = params.samplingMode;
+
+    if (samplingMode != SAMPLING_OFF) {
+        samplingRate = params.samplingRate;
+
+        if (samplingMode == SAMPLING_BERNOULLI) {
+            isSamplingRepeatable = params.samplingIsRepeatable;
+            repeatableSeed = params.samplingRepeatableSeed;
+            samplingClumps = -1;
+
+            samplingRng.reset(new BernoulliRng(samplingRate));
+        } else {
+            assert(isFullScan);
+
+            samplingClumps = params.samplingClumps;
+            assert(samplingClumps > 0);
+            
+            isSamplingRepeatable = false;
+
+            int index = inAccessors.size() - 1;
+
+            // Set up row count input stream
+            inputRowCountTuple.compute(inAccessors[index]->getTupleDesc());
+
+            TupleDescriptor rowCountDesc = inAccessors[index]->getTupleDesc();
+            assert(rowCountDesc.size() == 1);
+            TupleAttributeDescriptor expectedRowCountDesc(
+                stdTypeFactory.newDataType(STANDARD_TYPE_INT_64), true);
+            assert(rowCountDesc[0] == expectedRowCountDesc);
+        }
     }
 }
 
@@ -182,10 +222,22 @@ void LcsRowScanExecStream::open(bool restart)
      */
     if (!restart) {
         iFilterToInitialize = 0;
-    } else if (iFilterToInitialize < inAccessors.size() - 1) {
+    } else if (iFilterToInitialize < nFilters) {
         if (!filters[iFilterToInitialize]->filterDataInitialized) {
             filters[iFilterToInitialize]->filterData.clear();
         }
+    }
+
+    if (samplingMode == SAMPLING_BERNOULLI) {
+        if (isSamplingRepeatable) {
+            samplingRng->reseed(repeatableSeed);
+        } else if (!restart) {
+            samplingRng->reseed(static_cast<uint32_t>(time(0)));
+        }
+    } else if (samplingMode == SAMPLING_SYSTEM) {
+        clumpSize = 0;
+        clumpDistance = 0;
+        clumpPos = 0;
     }
 }
 
@@ -201,7 +253,7 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
     /*
      * initialize the filters local data
      */
-    for (; iFilterToInitialize < inAccessors.size()-1; iFilterToInitialize++) {
+    for (; iFilterToInitialize < nFilters; iFilterToInitialize++) {
         SharedExecStreamBufAccessor &pInAccessor = 
             inAccessors[iFilterToInitialize + 1];
         TupleAccessor &inputAccessor = 
@@ -260,6 +312,112 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
 }
 
 
+bool LcsRowScanExecStream::initializeSystemSampling()
+{
+    if (clumpSize != 0) {
+        // already initialized
+        return true;
+    }
+
+    ExecStreamBufAccessor &inAccessor = *inAccessors[inAccessors.size() - 1];
+    switch (inAccessor.getState()) {
+    case EXECBUF_EMPTY:
+        inAccessor.requestProduction();
+        return false;
+    case EXECBUF_UNDERFLOW:
+        return false;
+    case EXECBUF_EOS:
+        // Doesn't imply no data
+    case EXECBUF_NONEMPTY:
+    case EXECBUF_OVERFLOW:
+        break;
+    default:
+        permFail("Bad state " << inAccessor.getState());
+    }
+    assert(inAccessor.isConsumptionPossible());
+
+    // Read the single row from the input buffer
+    if (!inAccessor.demandData()) {
+        return false;
+    }
+    inAccessor.unmarshalTuple(inputRowCountTuple);
+    
+    int64_t rowCount = 
+        *reinterpret_cast<int64_t const *>(inputRowCountTuple[0].pData);
+
+    inAccessor.consumeTuple();        
+
+    clumpPos = 0;
+    clumpSkipPos = 0;
+
+    if (rowCount <= 0) {
+        // Handle empty table or non-sense input.
+        clumpSize = 1;
+        clumpDistance = 0;
+        return true;
+    }
+
+    FENNEL_TRACE(TRACE_FINE, "rowCount = " << rowCount);
+    FENNEL_TRACE(
+        TRACE_FINE, "samplingRate = " << static_cast<double>(samplingRate));
+
+    // Compute clump size and distance
+    int64_t sampleSize = 
+        static_cast<uint64_t>(
+            round(
+                static_cast<double>(rowCount) * 
+                static_cast<double>(samplingRate)));
+    if (sampleSize < samplingClumps) {
+        // Read at least as many rows as there are clumps, even if sample rate
+        // is very small.
+        sampleSize = samplingClumps;
+    }
+
+    if (sampleSize > rowCount) {
+        // samplingRate should be < 1.0, but handle the case where it isn't,
+        // or where there are fewer rows than clumps.
+        sampleSize = rowCount;
+        samplingClumps = 1;
+    }
+
+    FENNEL_TRACE(TRACE_FINE, "sampleSize = " << sampleSize);
+
+    clumpSize = 
+        static_cast<uint64_t>(
+            round(
+                static_cast<double>(sampleSize) / 
+                static_cast<double>(samplingClumps)));
+    assert(sampleSize >= clumpSize);
+    assert(clumpSize >= 1);
+
+    FENNEL_TRACE(TRACE_FINE, "clumpSize = " << clumpSize);
+
+    if (samplingClumps > 1) {
+        // Arrange for the last clump to end at the end of the table.
+        clumpDistance = 
+            static_cast<uint64_t>(
+                round(
+                    static_cast<double>(rowCount - sampleSize) /
+                    static_cast<double>(samplingClumps - 1)));
+
+        // Rounding can cause us to push the final clump past the end of the
+        // table.  Avoid this when possible.
+        uint64_t rowsRequired = 
+            (clumpSize + clumpDistance) * (samplingClumps - 1) + clumpSize;
+        if (rowsRequired > rowCount && clumpDistance > 0) {
+            clumpDistance--;
+        }
+    } else {
+        // The entire sample will come from the beginning of the table.
+        clumpDistance = (rowCount - sampleSize);
+    }        
+
+    FENNEL_TRACE(TRACE_FINE, "clumpDistance = " << clumpDistance);
+
+    return true;
+}
+
+
 ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 {
     if (!isFullScan && inAccessors[0]->getState() == EXECBUF_EOS) {
@@ -270,6 +428,10 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     if (!initializeFiltersIfNeeded()) {
+        return EXECRC_BUF_UNDERFLOW;
+    }
+
+    if (samplingMode == SAMPLING_SYSTEM && !initializeSystemSampling()) {
         return EXECRC_BUF_UNDERFLOW;
     }
 
@@ -305,6 +467,60 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                     rid++;
                     readDeletedRid = true;
                     continue;
+                }
+            }
+
+            if (samplingMode != SAMPLING_OFF) {
+                if (samplingMode == SAMPLING_SYSTEM) {
+                    if (clumpSkipPos > 0) {
+                        // We need to skip clumpSkipPos RIDs, taking into
+                        // account deleted RIDs.  If all deleted RIDs have been
+                        // processed (a), we can just skip forward to the next
+                        // clump.  If we know the next deleted RID, skip to the
+                        // next clump if we can (b), else skip to the deleted
+                        // RID (c).  Processing will return here to handle the
+                        // remaining clumpSkipPos rows when we reach the next
+                        // live RID.  If we don't know the next deleted RID
+                        // (d), skip the current live RID, let the deleted RID
+                        // processing occur above and then processing will
+                        // return here to deal with the remaining clumpSkipPos
+                        // rows.
+                        if (deletedRidEos) {
+                            // (a)
+                            rid += clumpSkipPos;
+                            clumpSkipPos = 0;
+                        } else if (!readDeletedRid) {
+                            if (deletedRid > rid + clumpSkipPos) {
+                                // (b)
+                                rid += clumpSkipPos;
+                                clumpSkipPos = 0;
+                            } else {
+                                // (c)
+                                clumpSkipPos -= opaqueToInt(deletedRid - rid);
+                                rid = deletedRid;
+                                continue;
+                            }
+                        } else {
+                            // (d)
+                            clumpSkipPos--;
+                            rid++;
+                            continue;
+                        }
+                    }
+
+                    if (++clumpPos > clumpSize) {
+                        clumpPos = 0;
+                        clumpSkipPos = clumpDistance;
+                        if (clumpDistance > 0) {
+                            continue;
+                        }
+                    }
+                } else {
+                    // Bernoulli sampling
+                    if (!samplingRng->nextValue()) {
+                        rid++;
+                        continue;
+                    }
                 }
             }
 
@@ -409,7 +625,7 @@ void LcsRowScanExecStream::closeImpl()
 {
     LcsRowScanBaseExecStream::closeImpl();
 
-    for (uint i = 0; i < inAccessors.size()-1; i++) {
+    for (uint i = 0; i < nFilters; i++) {
         filters[i]->filterData.clear();
     }
 }
@@ -441,6 +657,7 @@ void LcsRowScanExecStream::buildOutputProj(TupleProjection &outputProj,
         }
     }
 }
+
 
 FENNEL_END_CPPFILE("$Id$");
 

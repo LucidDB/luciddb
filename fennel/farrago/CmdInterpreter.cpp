@@ -386,7 +386,13 @@ void CmdInterpreter::visit(ProxyCmdVerifyIndex &cmd)
     if (includeTuples) {
         pageCount += statistics.nTuples;
     }
-    resultHandle = pageCount;    
+    cmd.setResultPageCount(pageCount);
+
+    if (keys) {
+        cmd.setResultUniqueKeyCount(statistics.nUniqueKeys);
+    } else {
+        cmd.clearResultUniqueKeyCount();
+    }
 }
 
 void CmdInterpreter::dropOrTruncateIndex(

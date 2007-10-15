@@ -84,13 +84,6 @@ public class PushFilterPastJoinRule
             joinRel = (JoinRel) call.rels[1];
         }
 
-        // no need to push filters for joins that have been converted back
-        // from MultiJoinRels since filters have already been pushed to
-        // the appropriate relnodes
-        if (joinRel.isMultiJoinDone()) {
-            return;
-        }
-
         List<RexNode> joinFilters = new ArrayList<RexNode>();
         RelOptUtil.decomposeConjunction(
             joinRel.getCondition(),
@@ -210,8 +203,7 @@ public class PushFilterPastJoinRule
                 joinFilter,
                 joinRel.getJoinType(),
                 (Set<String>) Collections.EMPTY_SET,
-                joinRel.isSemiJoinDone(),
-                joinRel.isMultiJoinDone());
+                joinRel.isSemiJoinDone());
 
         // create a FilterRel on top of the join if needed
         RelNode newRel =

@@ -168,7 +168,9 @@ refers to a transaction handle, but may also refer to a savepoint handle).
 
 In most cases encountered so far, complex structures are passed from
 Java to C++ but not in the other direction.  The current code
-generation infrastructure supports read-only proxies, so the few
+generation infrastructure supports proxies with limited mutator
+support.  Mutators are only generated for attributes with simple types
+(primitives and Strings) whose names begin <tt>result</tt>. The few
 instances where the storage manager must return complex information
 are special-cased, e.g. by constructing an XMI string which is
 transformed into Java object representation via the MDR import

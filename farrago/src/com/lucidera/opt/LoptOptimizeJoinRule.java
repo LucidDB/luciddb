@@ -424,6 +424,16 @@ outerLoop:
                     factor >= 0;
                     factor = factorsToAdd.nextSetBit(factor + 1))
                 {
+                    // if the factor corresponds to a dimension table whose
+                    // join we can remove, make sure the the corresponding fact
+                    // table is in the current join tree
+                    Integer factIdx = multiJoin.getJoinRemovalFactor(factor);
+                    if (factIdx != null) {
+                        if (!factorsAdded.get(factIdx)) {
+                            continue;
+                        }
+                    }
+
                     // can't add a null-generating factor if its dependent,
                     // non-null generating factors haven't been added yet
                     if (multiJoin.isNullGenerating(factor)) {
@@ -490,6 +500,7 @@ outerLoop:
             factorsAdded.set(nextFactor);
         }
 
+        assert(filtersToAdd.size() == 0);
         return joinTree;
     }
 
@@ -541,6 +552,7 @@ outerLoop:
                 multiJoin,
                 semiJoinOpt,
                 joinTree,
+                -1,
                 factorToAdd,
                 new ArrayList<Integer>(),
                 null,
@@ -716,6 +728,7 @@ outerLoop:
                 addFilters(
                     multiJoin,
                     left,
+                    -1,
                     right,
                     filtersToAdd,
                     true);
@@ -789,6 +802,7 @@ outerLoop:
                 addFilters(
                     multiJoin,
                     joinTree,
+                    -1,
                     rightTree,
                     filtersToAdd,
                     false);
@@ -812,6 +826,9 @@ outerLoop:
      *
      * @param multiJoin join factors being optimized
      * @param leftTree left subtree of the join tree
+     * @param leftIdx if >=0, only consider filters that reference leftIdx in
+     * leftTree; otherwise, consider all filters that reference any factor in
+     * leftTree
      * @param rightTree right subtree of the join tree
      * @param filtersToAdd remaining join filters that need to be added; those
      * that are added are removed from the list
@@ -823,6 +840,7 @@ outerLoop:
     private RexNode addFilters(
         LoptMultiJoin multiJoin,
         LoptJoinTree leftTree,
+        int leftIdx,
         LoptJoinTree rightTree,
         List<RexNode> filtersToAdd,
         boolean adjust)
@@ -834,14 +852,18 @@ outerLoop:
         int nJoinFactors = multiJoin.getNumJoinFactors();
         RexBuilder rexBuilder =
             multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
+        BitSet childFactors = new BitSet(nJoinFactors);
+        if (leftIdx >= 0) {
+            childFactors.set(leftIdx);
+        } else {
+            multiJoin.getChildFactors(leftTree, childFactors);
+        }  
+        multiJoin.getChildFactors(rightTree, childFactors);
+
         while (filterIter.hasNext()) {
             RexNode joinFilter = filterIter.next();
             BitSet filterBitmap =
                 multiJoin.getFactorsRefByJoinFilter(joinFilter);
-
-            BitSet childFactors = new BitSet(nJoinFactors);
-            multiJoin.getChildFactors(leftTree, childFactors);
-            multiJoin.getChildFactors(rightTree, childFactors);
 
             // if all factors in the join filter are in the join tree,
             // AND the filter to the current join condition
@@ -1006,12 +1028,11 @@ outerLoop:
         if (factTree == null) {
             return null;
         }
+
         int factIdx = multiJoin.getJoinRemovalFactor(dimIdx);
         List<Integer> joinOrder = new ArrayList<Integer>();
         factTree.getTreeOrder(joinOrder);
-        if (!joinOrder.contains(factIdx)) {
-            return null;
-        }
+        assert(joinOrder.contains(factIdx));
 
         // figure out the position of the fact table in the current jointree
         int adjustment = 0;
@@ -1039,6 +1060,7 @@ outerLoop:
             multiJoin,
             semiJoinOpt,
             factTree,
+            factIdx,
             dimIdx,
             dimKeys,
             replacementKeys,
@@ -1052,6 +1074,9 @@ outerLoop:
      * @param multiJoin join factors being optimized
      * @param semiJoinOpt optimal semijoins for each factor
      * @param currJoinTree current join tree being added to
+     * @param leftIdx if >=0, when creating the replacement join, only
+     * consider filters that reference leftIdx in currJoinTree; otherwise,
+     * consider all filters that reference any factor in currJoinTree
      * @param factorToAdd new factor whose join can be removed
      * @param newKeys join keys that need to be replaced
      * @param replacementKeys the keys that replace the join keys; null if we're
@@ -1066,6 +1091,7 @@ outerLoop:
         LoptMultiJoin multiJoin,
         LoptSemiJoinOptimizer semiJoinOpt,
         LoptJoinTree currJoinTree,
+        int leftIdx,
         int factorToAdd,
         List<Integer> newKeys,
         Integer [] replacementKeys,
@@ -1140,15 +1166,35 @@ outerLoop:
             new LoptJoinTree(
                 semiJoinOpt.getChosenSemiJoin(factorToAdd),
                 factorToAdd);
-        addFilters(multiJoin, currJoinTree, newTree, filtersToAdd, false);
-
+        addFilters(
+            multiJoin,
+            currJoinTree,
+            leftIdx,
+            newTree,
+            filtersToAdd,
+            false);
+        
+        // Filters referencing factors other than leftIdx and factorToAdd
+        // still do need to be applied.  So, add them into a separate
+        // FilterRel placed on top off the projection created above.
+        RelNode topRelNode = projRel;
+        if (leftIdx >= 0) {
+            topRelNode = 
+                addAdditionalFilters(
+                    topRelNode,
+                    multiJoin,
+                    currJoinTree,
+                    newTree,
+                    filtersToAdd);
+        }
+        
         // finally, create a join tree consisting of the current join's join
         // tree with the newly created projection; note that in the factor
         // tree, we act as if we're joining in the new factor, even
         // though we really aren't; this is needed so we can map the columns
         // from the new factor as we go up in the join tree
         return new LoptJoinTree(
-            projRel,
+            topRelNode,
             currJoinTree.getFactorTree(),
             newTree.getFactorTree());
     }
@@ -1228,40 +1274,69 @@ outerLoop:
                 condition,
                 joinType,
                 Collections.EMPTY_SET,
-                true,
                 true);
 
         // if this is a left or right outer join, and additional filters can
         // be applied to the resulting join, then they need to be applied
         // as a filter on top of the outer join result
         if ((joinType == JoinRelType.LEFT) || (joinType == JoinRelType.RIGHT)) {
-            RexNode filterCond =
-                addFilters(
+            joinTree =
+                addAdditionalFilters(
+                    joinTree,
                     multiJoin,
                     left,
                     right,
-                    filtersToAdd,
-                    false);
-            if (!filterCond.isAlwaysTrue()) {
-                // adjust the filter to reflect the outer join output
-                int [] adjustments = new int[multiJoin.getNumTotalFields()];
-                if (needsAdjustment(multiJoin, adjustments, left, right)) {
-                    filterCond =
-                        filterCond.accept(
-                            new RelOptUtil.RexInputConverter(
-                                rexBuilder,
-                                multiJoin.getMultiJoinFields(),
-                                joinTree.getRowType().getFields(),
-                                adjustments));
-                }
-                joinTree = CalcRel.createFilter(joinTree, filterCond);
-            }
+                    filtersToAdd);
         }
 
         return new LoptJoinTree(
             joinTree,
             left.getFactorTree(),
             right.getFactorTree());
+    }
+    
+    /**
+     * Determines if any additional filters are applicable to a jointree.  If
+     * there are any, then create a filter node on top of the join tree with
+     * the additional filters
+     * 
+     * @param joinTree current join tree
+     * @param multiJoin join factors being optimized
+     * @param left left side of join tree
+     * @param right right side of join tree
+     * @param filtersToAdd remaining filters
+     * 
+     * @return a filter node if additional filters are found; otherwise,
+     * returns original joinTree
+     */
+    private RelNode addAdditionalFilters(
+        RelNode joinTree,
+        LoptMultiJoin multiJoin,
+        LoptJoinTree left,
+        LoptJoinTree right,
+        List<RexNode> filtersToAdd)      
+    {
+        RexNode filterCond =
+            addFilters(multiJoin, left, -1, right, filtersToAdd, false);
+        if (filterCond.isAlwaysTrue()) {
+            return joinTree;
+        } else {
+            // adjust the filter to reflect the outer join output
+            int [] adjustments = new int[multiJoin.getNumTotalFields()];
+            if (needsAdjustment(multiJoin, adjustments, left, right)) {
+                RexBuilder rexBuilder =
+                    multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
+                filterCond =
+                    filterCond.accept(
+                        new RelOptUtil.RexInputConverter(
+                            rexBuilder,
+                            multiJoin.getMultiJoinFields(),
+                            joinTree.getRowType().getFields(),
+                            adjustments));
+            }
+            joinTree = CalcRel.createFilter(joinTree, filterCond);
+            return joinTree;
+        }
     }
 
     /**

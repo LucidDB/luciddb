@@ -70,6 +70,13 @@ protected:
     virtual bool checkNumInputs();
 
     /**
+     * Executes any pre-processing required on the right input
+     *
+     * @return EXECRC_YIELD if pre-processing successful
+     */
+    virtual ExecStreamResult preProcessRightInput();
+
+    /**
      * Processes the left input after it has been read from the input stream
      */
     virtual void processLeftInput();

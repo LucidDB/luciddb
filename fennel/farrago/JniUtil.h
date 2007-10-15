@@ -40,7 +40,13 @@ FENNEL_BEGIN_NAMESPACE
 class JniExceptionChecker
 {
     JNIEnv *pEnv;
-    
+
+    /**
+     * Checks whether any Java exception has occurred, and if so throws
+     * it as a C++ exception.
+     */
+    void checkExceptions();
+
 public:
     explicit JniExceptionChecker(JNIEnv *pEnvInit)
     {
@@ -126,25 +132,33 @@ public:
     ~JniEnvAutoRef();
 };
 
+// TODO jvs 21-Aug-2007:  templatize and clean this up as part of
+// memory allocation cleanup (FNL-55)
+
 /**
- * JniLocalFrame is a holder for a Jni local frame. The use of a short lived
- * local frame allows Java object references to be automatically released,
- * so that Java objects can be garbage collected within Fennel code. This
- * holder class ensures that a local frame pushed onto the execution stack
- * will be paired with a call to pop the frame.
+ * Guard for deleting a local ref automatically on unwind.  Needed
+ * in places where temporary Java objects are needed inside of utility
+ * methods which may be called many times before control returns to Java.
  */
-class JniLocalFrame
+class JniLocalRefReaper
 {
     JNIEnv *pEnv;
-    bool success;
-
+    jobject obj;
+    
 public:
-    /**
-     * Creates a new local reference frame, in which at least a given number 
-     * of local references can be created.
-     */
-    JniLocalFrame(JNIEnv *pEnv, jint capacity);
-    ~JniLocalFrame();
+    JniLocalRefReaper(JniEnvRef &pEnvInit, jobject objInit)
+    {
+        pEnv = pEnvInit.get();
+        obj = objInit;
+    }
+
+    ~JniLocalRefReaper()
+    {
+        if (obj) {
+            pEnv->DeleteLocalRef(obj);
+            obj = NULL;
+        }
+    }
 };
 
 class ConfigMap;
@@ -328,6 +342,60 @@ public:
      * Java method FarragoRuntimeContext.statementClassForName.
      */
     static jmethodID methFarragoRuntimeContextStatementClassForName;
+
+    /** java.lang.Long */
+    static jclass classLong;
+
+    /** java.lang.Integer */
+    static jclass classInteger;
+
+    /** java.lang.Short */
+    static jclass classShort;
+
+    /** java.lang.Double */
+    static jclass classDouble;
+
+    /** java.lang.Float */
+    static jclass classFloat;
+
+    /** java.lang.Boolean */
+    static jclass classBoolean;
+
+    /** java.lang.Long.valueOf(long) */
+    static jmethodID methLongValueOf;
+
+    /** java.lang.Integer.valueOf(int) */
+    static jmethodID methIntegerValueOf;
+
+    /** java.lang.Short.valueOf(short) */
+    static jmethodID methShortValueOf;
+
+    /** java.lang.Double.valueOf(double) */
+    static jmethodID methDoubleValueOf;
+
+    /** java.lang.Float.valueOf(float) */
+    static jmethodID methFloatValueOf;
+
+    /** java.lang.Boolean.valueOf(boolean) */
+    static jmethodID methBooleanValueOf;
+
+    /** java.lang.Long.longValue() */
+    static jmethodID methLongValue;
+
+    /** java.lang.Integer.intValue() */
+    static jmethodID methIntValue;
+
+    /** java.lang.Short.shortValue() */
+    static jmethodID methShortValue;
+
+    /** java.lang.Double.doubleValue() */
+    static jmethodID methDoubleValue;
+
+    /** java.lang.Float.floatValue() */
+    static jmethodID methFloatValue;
+
+    /** java.lang.Boolean.booleanValue() */
+    static jmethodID methBooleanValue;
 
     /**
      * Initializes JNI debugging.

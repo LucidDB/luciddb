@@ -65,17 +65,17 @@ void JavaErrorTarget::notifyError(
 {
     JniEnvAutoRef pEnv;
 
-    // Allocate a local frame for 3 Java objects
-    //   first object: Java source name
-    //   second object: exception message
-    //   third object: data buffer for error record
-    JniLocalFrame frame(pEnv.get(), 3);
-
+    // NOTE jvs 21-Aug-2007:  use ref reapers here since this
+    // may be called over and over before control returns to Java
+    
     jstring javaSource = pEnv->NewStringUTF(source.c_str());
+    JniLocalRefReaper javaSourceReaper(pEnv, javaSource);
     jboolean javaIsWarning = (level == ROW_WARNING) ? true : false;
     jstring javaMessage = pEnv->NewStringUTF(message.c_str());
+    JniLocalRefReaper javaMessageReaper(pEnv, javaMessage);
     jobject javaByteBuffer =
         pEnv->NewDirectByteBuffer(address, capacity);
+    JniLocalRefReaper javaByteBufferReaper(pEnv, javaByteBuffer);
     jint javaIndex = index;
 
     pEnv->CallObjectMethod(

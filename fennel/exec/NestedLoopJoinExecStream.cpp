@@ -61,19 +61,17 @@ void NestedLoopJoinExecStream::open(bool restart)
     }
 }
 
-ExecStreamResult NestedLoopJoinExecStream::execute(
-    ExecStreamQuantum const &quantum)
+ExecStreamResult NestedLoopJoinExecStream::preProcessRightInput()
 {
-    // If needed, process the third input before reading the first 2 inputs
-    if (inAccessors.size() == 3 && !preProcessingDone) {
+    // Create the temporary index by requesting production on the 3rd input
+    if (!preProcessingDone && inAccessors.size() == 3) {
         if (inAccessors[2]->getState() != EXECBUF_EOS) {
             inAccessors[2]->requestProduction();
             return EXECRC_BUF_UNDERFLOW;
         }
-        preProcessingDone = true;
     }
-
-    return CartesianJoinExecStream::execute(quantum);
+    preProcessingDone = true;
+    return EXECRC_YIELD;
 }
 
 void NestedLoopJoinExecStream::processLeftInput()

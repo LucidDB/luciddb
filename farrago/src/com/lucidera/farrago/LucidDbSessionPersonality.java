@@ -163,6 +163,11 @@ public class LucidDbSessionPersonality
             return true;
         }
 
+        // LucidDB updates the catalog's row count field as DML is executed
+        if (feature == featureResource.PersonalityManagesRowCount) {
+            return true;
+        }
+        
         return super.supportsFeature(feature);
     }
 
@@ -230,14 +235,16 @@ public class LucidDbSessionPersonality
         // TODO:  loosen up once we make sure OptimizeJoinRule does
         // as well or better than the hand-coding.
         builder.addRuleByDescription("MedMdrJoinRule");
+        
+        // Convert SamplingRel/LcsRowScanRel into LcsSamplingRowScanRel
+        // early since sampling isn't compatible with index scans.  This 
+        // could come later, but MUST come before FennelBernoulliSamplingRule
+        // or else we lose system sampling.
+        builder.addRuleInstance(new LcsSamplingRowScanRule());
 
         // Eliminate AGG(DISTINCT x) now, because this transformation
         // may introduce new joins which need to be optimized further on.
         builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
-
-        // Eliminate reducible constant expression.  TODO jvs 26-May-2006: do
-        // this again later wherever more such expressions may be reintroduced.
-        builder.addRuleClass(FarragoReduceExpressionsRule.class);
 
         // Now, pull join conditions out of joins, leaving behind Cartesian
         // products.  Why?  Because PushFilterRule doesn't start from
@@ -326,6 +333,12 @@ public class LucidDbSessionPersonality
         subprogramBuilder.addRuleInstance(new MergeProjectRule(true));
         builder.addSubprogram(subprogramBuilder.createProgram());
 
+        // Eliminate reducible constant expression.  Do this after we've
+        // removed unnecessary projection expressions.
+        // TODO jvs 26-May-2006: do this again later wherever more such
+        // expressions may be reintroduced.
+        builder.addRuleClass(FarragoReduceExpressionsRule.class);
+        
         // Push projection information in the remaining projections that sit
         // on top of MultiJoinRels into the MultiJoinRels.  These aren't
         // handled by PullUpProjectsOnTopOfMultiJoinRule because these
@@ -348,6 +361,12 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new PushSemiJoinPastJoinRule());
         builder.addGroupEnd();
 
+        // Do another round of filtering pushing, in the event that
+        // LoptOptimizeJoinRule has added filters on top of join nodes.
+        // Do this after pushing semijoins, in case those interfere with
+        // filter pushdowns.
+        applyPushDownFilterRules(builder);
+        
         // Convert semijoins to physical index access.
         // Do this immediately after LopOptimizeJoinRule and the PushSemiJoin
         // rules.
@@ -486,6 +505,9 @@ public class LucidDbSessionPersonality
 
             // Requires CoerceInputsRule.
             builder.addRuleInstance(FennelUnionRule.instance);
+            
+            // Convert any left over SamplingRels.
+            builder.addRuleInstance(new FennelBernoulliSamplingRule());
         } else {
             builder.addRuleInstance(
                 new IterRules.HomogeneousUnionToIteratorRule());

@@ -369,7 +369,7 @@ public class FarragoOptRulesTest
         check(
             programBuilder.createProgram(),
             "select 1+2, d.deptno+(3+4), (5+6)+d.deptno, cast(null as integer),"
-            + " coalesce(2,null)"
+            + " coalesce(2,null), row(7+8)"
             + " from sales.depts d inner join sales.emps e"
             + " on d.deptno = e.deptno + (5-5)"
             + " where d.deptno=(7+8) and d.deptno=coalesce(2,null)");

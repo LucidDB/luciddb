@@ -688,6 +688,39 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 > 
+> -- verify that UDX no-input rowcount is 1.0
+> explain plan including all attributes for
+> select * from table(ramp(5));
+'column0'
+'FarragoJavaUdxRel(invocation=[CAST(RAMP(CAST(5):INTEGER)):RecordType(INTEGER I) NOT NULL]): rowcount = 1.0, cumulative cost = 1.0'
+> 
+> -- verify that UDX one-input rowcount propagates through to output
+> explain plan including all attributes for
+> select v
+> from table(stringify(
+>     cursor(select * from sales.depts),
+>     '|'));
+'column0'
+'FarragoJavaUdxRel(invocation=[CAST(STRINGIFY(CAST($0):CURSOR, CAST('|'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary")):RecordType(VARCHAR(65535) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" V) NOT NULL]): rowcount = 100.0, cumulative cost = 1101.0'
+'  FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 1100.0'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false]): rowcount = 100.0, cumulative cost = 1000.0'
+> 
+> -- verify that UDX multi-input rowcount gets summed like UNION ALL
+> explain plan including all attributes for
+> select v
+> from table(combineStringifyColumns(
+>     cursor(select empno, name, deptno, gender from sales.emps),
+>     row(empno, name, gender),
+>     cursor(select empno, name, deptno, city from sales.emps),
+>     row(empno, name, city),
+>     '|'));
+'column0'
+'FarragoJavaUdxRel(invocation=[CAST(COMBINESTRINGIFYCOLUMNS(CAST($0):CURSOR, CAST(COLUMN_LIST('EMPNO', 'NAME', 'GENDER')):COLUMN_LIST, CAST($1):CURSOR, CAST(COLUMN_LIST('EMPNO', 'NAME', 'CITY')):COLUMN_LIST, CAST('|'):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary")):RecordType(VARCHAR(65535) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" V) NOT NULL]): rowcount = 200.0, cumulative cost = 2201.0'
+'  FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 1100.0'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false]): rowcount = 100.0, cumulative cost = 1000.0'
+'  FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 1100.0'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false]): rowcount = 100.0, cumulative cost = 1000.0'
+> 
 > !set outputformat table
 > 
 > -- udx invocation

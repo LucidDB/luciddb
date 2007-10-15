@@ -52,76 +52,56 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 > -- group bys
 > ------------
 > 
+> !set outputformat csv
 > explain plan with type for
 > select deptno, count(distinct empno) from emps group by deptno order by 1,2;
-+---------------------------+
-|          column0          |
-+---------------------------+
-| DEPTNO INTEGER NOT NULL,  |
-| EXPR$1 BIGINT NOT NULL    |
-+---------------------------+
+'column0'
+'DEPTNO INTEGER NOT NULL,'
+'EXPR$1 BIGINT NOT NULL'
 > 
 > select deptno, count(distinct empno) from emps group by deptno order by 1,2;
-+---------+---------+
-| DEPTNO  | EXPR$1  |
-+---------+---------+
-| 10      | 1       |
-| 20      | 2       |
-| 40      | 1       |
-+---------+---------+
+'DEPTNO','EXPR$1'
+'10','1'
+'20','2'
+'40','1'
 > 
 > -- group by boolean, nullable key
 > explain plan with type for
 > select slacker, count(distinct deptno) from emps
 >  group by slacker order by slacker;
-+-------------------------+
-|         column0         |
-+-------------------------+
-| SLACKER BOOLEAN,        |
-| EXPR$1 BIGINT NOT NULL  |
-+-------------------------+
+'column0'
+'SLACKER BOOLEAN,'
+'EXPR$1 BIGINT NOT NULL'
 > 
 > select slacker, count(distinct deptno) from emps
 >  group by slacker order by slacker;
-+----------+---------+
-| SLACKER  | EXPR$1  |
-+----------+---------+
-|          | 1       |
-| false    | 1       |
-| true     | 1       |
-+----------+---------+
+'SLACKER','EXPR$1'
+'','1'
+'false','1'
+'true','1'
 > 
 > -- Test where input stream is empty
 > select deptno, count(distinct empno), count(*) from emps
 >  where deptno < 0 group by deptno order by 1,2,3;
-+---------+---------+---------+
-| DEPTNO  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-+---------+---------+---------+
+'DEPTNO','EXPR$1','EXPR$2'
 > 
 > -- group, but don't project group column
 > select count(distinct e.slacker and e.manager) from emps as e group by deptno
 > order by 1;
-+---------+
-| EXPR$0  |
-+---------+
-| 1       |
-| 1       |
-| 1       |
-+---------+
+'EXPR$0'
+'1'
+'1'
+'1'
 > 
 > -- query without any non-distinct aggs
 > select deptno, sum(distinct age), count(distinct gender)
 > from emps
 > group by deptno
 > order by 1,2,3;
-+---------+---------+---------+
-| DEPTNO  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-| 10      | 25      | 0       |
-| 20      | 130     | 2       |
-| 40      |         | 1       |
-+---------+---------+---------+
+'DEPTNO','EXPR$1','EXPR$2'
+'10','25','0'
+'20','130','2'
+'40','','1'
 > 
 > -- this is what the previous query expands to (make sure it returns the same)
 > SELECT de.deptno, adage.sum_age, adgender.count_gender
@@ -144,13 +124,10 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 >       GROUP BY deptno) AS adage
 > ON de.deptno = adage.deptno
 > order by 1,2,3;
-+---------+----------+---------------+
-| DEPTNO  | SUM_AGE  | COUNT_GENDER  |
-+---------+----------+---------------+
-| 10      | 25       | 0             |
-| 20      | 130      | 2             |
-| 40      |          | 1             |
-+---------+----------+---------------+
+'DEPTNO','SUM_AGE','COUNT_GENDER'
+'10','25','0'
+'20','130','2'
+'40','','1'
 > 
 > --------
 > -- joins
@@ -158,54 +135,39 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 > 
 > -- cartesian
 > select count(distinct emps.empno) from emps as e, emps;
-+---------+
-| EXPR$0  |
-+---------+
-| 3       |
-+---------+
+'EXPR$0'
+'3'
 > 
 > select count(distinct emps.empno + e.empno) from emps as e, emps;
-+---------+
-| EXPR$0  |
-+---------+
-| 5       |
-+---------+
+'EXPR$0'
+'5'
 > 
 > -- count of a nullable column is not null
 > explain plan with type for
 > select d.name, count(distinct e.empid), e.empid
 > from depts as d join emps as e on e.deptno = d.deptno
 > group by d.name, e.empid;
-+--------------------------------------------------------------------------------------------+
-|                                          column0                                           |
-+--------------------------------------------------------------------------------------------+
-| NAME VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL,  |
-| EXPR$1 BIGINT NOT NULL,                                                                    |
-| EMPID INTEGER NOT NULL                                                                     |
-+--------------------------------------------------------------------------------------------+
+'column0'
+'NAME VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL,'
+'EXPR$1 BIGINT NOT NULL,'
+'EMPID INTEGER NOT NULL'
 > 
 > select d.name, count(distinct e.empid), count(distinct e.gender), e.empid
 > from depts as d join emps as e on e.deptno = d.deptno
 > group by d.name, e.empid
 > order by 1,2,3,4;
-+------------+---------+---------+--------+
-|    NAME    | EXPR$1  | EXPR$2  | EMPID  |
-+------------+---------+---------+--------+
-| Marketing  | 1       | 1       | 1      |
-| Marketing  | 1       | 1       | 3      |
-| Sales      | 1       | 0       | 30     |
-+------------+---------+---------+--------+
+'NAME','EXPR$1','EXPR$2','EMPID'
+'Marketing','1','1','1'
+'Marketing','1','1','3'
+'Sales','1','0','30'
 > 
 > select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
 > from emps as e join depts as d on e.deptno = d.deptno
 > group by d.name
 > order by 1,2,3;
-+------------+---------+---------+
-|    NAME    | EXPR$1  | EXPR$2  |
-+------------+---------+---------+
-| Marketing  | 2       | 1       |
-| Sales      | 1       | 1       |
-+------------+---------+---------+
+'NAME','EXPR$1','EXPR$2'
+'Marketing','2','1'
+'Sales','1','1'
 > 
 > 
 > -- ------------
@@ -485,76 +447,56 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 > -- group bys
 > ------------
 > 
+> !set outputformat csv
 > explain plan with type for
 > select deptno, count(distinct empno) from emps group by deptno order by deptno;
-+---------------------------+
-|          column0          |
-+---------------------------+
-| DEPTNO INTEGER NOT NULL,  |
-| EXPR$1 BIGINT NOT NULL    |
-+---------------------------+
+'column0'
+'DEPTNO INTEGER NOT NULL,'
+'EXPR$1 BIGINT NOT NULL'
 > 
 > select deptno, count(distinct empno) from emps group by deptno order by deptno;
-+---------+---------+
-| DEPTNO  | EXPR$1  |
-+---------+---------+
-| 10      | 1       |
-| 20      | 2       |
-| 40      | 1       |
-+---------+---------+
+'DEPTNO','EXPR$1'
+'10','1'
+'20','2'
+'40','1'
 > 
 > -- group by boolean, nullable key
 > explain plan with type for
 > select slacker, count(distinct deptno) from emps
 >  group by slacker order by slacker;
-+-------------------------+
-|         column0         |
-+-------------------------+
-| SLACKER BOOLEAN,        |
-| EXPR$1 BIGINT NOT NULL  |
-+-------------------------+
+'column0'
+'SLACKER BOOLEAN,'
+'EXPR$1 BIGINT NOT NULL'
 > 
 > select slacker, count(distinct deptno) from emps
 >  group by slacker order by slacker;
-+----------+---------+
-| SLACKER  | EXPR$1  |
-+----------+---------+
-|          | 1       |
-| false    | 1       |
-| true     | 1       |
-+----------+---------+
+'SLACKER','EXPR$1'
+'','1'
+'false','1'
+'true','1'
 > 
 > -- Test where input stream is empty
 > select deptno, count(distinct empno), count(*) from emps
 >  where deptno < 0 group by deptno order by 1,2,3;
-+---------+---------+---------+
-| DEPTNO  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-+---------+---------+---------+
+'DEPTNO','EXPR$1','EXPR$2'
 > 
 > -- group, but don't project group column
 > select count(distinct e.slacker and e.manager) from emps as e group by deptno
 > order by 1;
-+---------+
-| EXPR$0  |
-+---------+
-| 1       |
-| 1       |
-| 1       |
-+---------+
+'EXPR$0'
+'1'
+'1'
+'1'
 > 
 > -- query without any non-distinct aggs
 > select deptno, sum(distinct age), count(distinct gender)
 > from emps
 > group by deptno
 > order by 1,2,3;
-+---------+---------+---------+
-| DEPTNO  | EXPR$1  | EXPR$2  |
-+---------+---------+---------+
-| 10      | 25      | 0       |
-| 20      | 130     | 2       |
-| 40      |         | 1       |
-+---------+---------+---------+
+'DEPTNO','EXPR$1','EXPR$2'
+'10','25','0'
+'20','130','2'
+'40','','1'
 > 
 > -- this is what the previous query expands to (make sure it returns the same)
 > SELECT de.deptno, adage.sum_age, adgender.count_gender
@@ -577,13 +519,10 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 >       GROUP BY deptno) AS adage
 > ON de.deptno = adage.deptno
 > order by 1,2,3;
-+---------+----------+---------------+
-| DEPTNO  | SUM_AGE  | COUNT_GENDER  |
-+---------+----------+---------------+
-| 10      | 25       | 0             |
-| 20      | 130      | 2             |
-| 40      |          | 1             |
-+---------+----------+---------------+
+'DEPTNO','SUM_AGE','COUNT_GENDER'
+'10','25','0'
+'20','130','2'
+'40','','1'
 > 
 > --------
 > -- joins
@@ -591,66 +530,48 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 > 
 > -- cartesian
 > select count(distinct emps.empno) from emps as e, emps;
-+---------+
-| EXPR$0  |
-+---------+
-| 3       |
-+---------+
+'EXPR$0'
+'3'
 > 
 > select count(distinct emps.empno + e.empno) from emps as e, emps;
-+---------+
-| EXPR$0  |
-+---------+
-| 5       |
-+---------+
+'EXPR$0'
+'5'
 > 
 > -- count of a nullable column is not null
 > explain plan with type for
 > select d.name, count(distinct e.empid), e.empid
 > from depts as d join emps as e on e.deptno = d.deptno
 > group by d.name, e.empid;
-+--------------------------------------------------------------------------------------------+
-|                                          column0                                           |
-+--------------------------------------------------------------------------------------------+
-| NAME VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL,  |
-| EXPR$1 BIGINT NOT NULL,                                                                    |
-| EMPID INTEGER NOT NULL                                                                     |
-+--------------------------------------------------------------------------------------------+
+'column0'
+'NAME VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL,'
+'EXPR$1 BIGINT NOT NULL,'
+'EMPID INTEGER NOT NULL'
 > 
 > select d.name, count(distinct e.empid), count(distinct e.gender), e.empid
 > from depts as d join emps as e on e.deptno = d.deptno
 > group by d.name, e.empid
 > order by 1,2,3,4;
-+------------+---------+---------+--------+
-|    NAME    | EXPR$1  | EXPR$2  | EMPID  |
-+------------+---------+---------+--------+
-| Marketing  | 1       | 1       | 1      |
-| Marketing  | 1       | 1       | 3      |
-| Sales      | 1       | 0       | 30     |
-+------------+---------+---------+--------+
+'NAME','EXPR$1','EXPR$2','EMPID'
+'Marketing','1','1','1'
+'Marketing','1','1','3'
+'Sales','1','0','30'
 > 
 > select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
 > from emps as e join depts as d on e.deptno = d.deptno
 > group by d.name
 > order by 1,2,3;
-+------------+---------+---------+
-|    NAME    | EXPR$1  | EXPR$2  |
-+------------+---------+---------+
-| Marketing  | 2       | 1       |
-| Sales      | 1       | 1       |
-+------------+---------+---------+
+'NAME','EXPR$1','EXPR$2'
+'Marketing','2','1'
+'Sales','1','1'
 > 
 > select e.name, d.deptno, sum(e.age), count(distinct d.name) 
 > from emps e, depts d where e.deptno = d.deptno
 > group by e.name, d.deptno
 > order by 1;
-+--------+---------+---------+---------+
-|  NAME  | DEPTNO  | EXPR$2  | EXPR$3  |
-+--------+---------+---------+---------+
-| Eric   | 20      | 80      | 1       |
-| Fred   | 10      | 25      | 1       |
-| Wilma  | 20      | 50      | 1       |
-+--------+---------+---------+---------+
+'NAME','DEPTNO','EXPR$2','EXPR$3'
+'Eric','20','80','1'
+'Fred','10','25','1'
+'Wilma','20','50','1'
 > 
 > -- ------------
 > -- verify plans

@@ -51,7 +51,7 @@ public class LcsTableProjectionRule
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsTableProjectionRule object.
+     * Creates a new LcsTableProjectionRule object.
      */
     public LcsTableProjectionRule()
     {
@@ -59,7 +59,7 @@ public class LcsTableProjectionRule
             new RelOptRuleOperand(
                 ProjectRel.class,
                 new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(LcsRowScanRel.class, null)
+                    new RelOptRuleOperand(LcsRowScanRelBase.class, null)
                 }));
     }
 
@@ -73,7 +73,7 @@ public class LcsTableProjectionRule
             return;
         }
 
-        LcsRowScanRel origScan = (LcsRowScanRel) call.rels[1];
+        LcsRowScanRelBase origScan = (LcsRowScanRelBase) call.rels[1];
         if (origScan.projectedColumns != null) {
             return;
         }
@@ -152,19 +152,32 @@ public class LcsTableProjectionRule
         }
 
         // REVIEW:  should cluster be from origProject or origScan?
-        RelNode projectedScan =
-            new LcsRowScanRel(
-                origProject.getCluster(),
-                origScan.getInputs(),
-                origScan.lcsTable,
-                indexList,
-                origScan.getConnection(),
-                projectedColumns,
-                origScan.isFullScan,
-                origScan.hasResidualFilter,
-                origScan.residualColumns,
-                origScan.inputSelectivity);
-
+        RelNode projectedScan;
+        if (origScan instanceof LcsRowScanRel) {
+            projectedScan =
+                new LcsRowScanRel(
+                    origProject.getCluster(),
+                    origScan.getInputs(),
+                    origScan.lcsTable,
+                    indexList,
+                    origScan.getConnection(),
+                    projectedColumns,
+                    origScan.isFullScan,
+                    origScan.hasResidualFilter,
+                    origScan.residualColumns,
+                    origScan.inputSelectivity);
+        } else {
+            projectedScan =
+                new LcsSamplingRowScanRel(
+                    origProject.getCluster(),
+                    origScan.getInputs(),
+                    origScan.lcsTable,
+                    indexList,
+                    origScan.getConnection(),
+                    projectedColumns,
+                    ((LcsSamplingRowScanRel)origScan).samplingParams);
+        }
+        
         // create new RelNodes to replace the existing ones, either
         // removing or replacing the ProjectRel and recreating the row scan
         // to read only projected columns

@@ -5798,20 +5798,22 @@ public class SqlValidatorTest
     {
         // applied to table
         check("SELECT * FROM emp TABLESAMPLE SUBSTITUTE('foo')");
+        check("SELECT * FROM emp TABLESAMPLE BERNOULLI(50)");
+        check("SELECT * FROM emp TABLESAMPLE SYSTEM(50)");
 
         // applied to query
         check(
             "SELECT * FROM ("
             + "SELECT deptno FROM emp "
             + "UNION ALL "
-            + "SELECT deptno FROM dept) TABLESAMPLE SUBSTITUTE('foo') AS x "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE SUBSTITUTE('foo') "
             + "WHERE x.deptno < 100");
 
         checkFails(
             "SELECT x.^empno^ FROM ("
             + "SELECT deptno FROM emp TABLESAMPLE SUBSTITUTE('bar') "
             + "UNION ALL "
-            + "SELECT deptno FROM dept) TABLESAMPLE SUBSTITUTE('foo') AS x "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE SUBSTITUTE('foo') "
             + "ORDER BY 1",
             "Column 'EMPNO' not found in table 'X'");
 
@@ -5820,6 +5822,48 @@ public class SqlValidatorTest
             + "    select * from emp\n"
             + "    join dept on emp.deptno = dept.deptno\n"
             + ") tablesample substitute('SMALL')");
+
+        check(
+            "SELECT * FROM ("
+            + "SELECT deptno FROM emp "
+            + "UNION ALL "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE BERNOULLI(50) "
+            + "WHERE x.deptno < 100");
+
+        checkFails(
+            "SELECT x.^empno^ FROM ("
+            + "SELECT deptno FROM emp TABLESAMPLE BERNOULLI(50) "
+            + "UNION ALL "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE BERNOULLI(10) "
+            + "ORDER BY 1",
+            "Column 'EMPNO' not found in table 'X'");
+
+        check(
+            "select * from (\n"
+            + "    select * from emp\n"
+            + "    join dept on emp.deptno = dept.deptno\n"
+            + ") tablesample bernoulli(10)");
+
+        check(
+            "SELECT * FROM ("
+            + "SELECT deptno FROM emp "
+            + "UNION ALL "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE SYSTEM(50) "
+            + "WHERE x.deptno < 100");
+
+        checkFails(
+            "SELECT x.^empno^ FROM ("
+            + "SELECT deptno FROM emp TABLESAMPLE SYSTEM(50) "
+            + "UNION ALL "
+            + "SELECT deptno FROM dept) AS x TABLESAMPLE SYSTEM(10) "
+            + "ORDER BY 1",
+            "Column 'EMPNO' not found in table 'X'");
+
+        check(
+            "select * from (\n"
+            + "    select * from emp\n"
+            + "    join dept on emp.deptno = dept.deptno\n"
+            + ") tablesample system(10)");
     }
 
     public void testRewriteWithoutIdentifierExpansion()

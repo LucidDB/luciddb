@@ -209,6 +209,7 @@ select a from t1 where (c <= 12 and c > 7 or c in (3,4,5,6,7)) and
 (a > 5 and a <= 6 or a in (7,8,9,10,11)) and (b in (6,7,8,9,10,11)) 
 or c > 2 order by 1;
 
+!set outputformat csv
 
 --
 -- Test VARCHAR with NULL

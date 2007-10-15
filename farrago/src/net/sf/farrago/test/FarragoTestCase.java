@@ -356,6 +356,7 @@ public abstract class FarragoTestCase
             // let the change be permanent (test must know what it is doing)
             savedFarragoConfig.remove("serverRmiRegistryPort");
             savedFarragoConfig.remove("serverSingleListenerPort");
+            savedFarragoConfig.remove("connectionTimeoutMillis");
             savedFennelConfig.remove("resourceDir");
         } finally {
             reposTxn.commit();

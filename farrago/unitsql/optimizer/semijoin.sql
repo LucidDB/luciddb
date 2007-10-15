@@ -25,13 +25,14 @@ insert into t values(5, null, 'ghijkl', 'no match');
 -- the table
 
 create table smalltable(
-    s1 varchar(128) not null, s2 int, s3 varchar(128) not null,
+    s1 varchar(128) not null, s2 int, s3 varchar(128),
         s4 varchar(128) not null);
 insert into smalltable values('this is row 1', 1, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 2', 2, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 3', 3, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 4', 4, 'abcdef', 'ghijkl');
 insert into smalltable values('this is row 5', 5, 'abcdef', 'ghijkl');
+insert into smalltable values('this is row 6', 6, null, 'ghijkl');
 
 -- Create fake statistics.  The stats do not match the actual data in the
 -- tables and are meant to force the optimizer to choose semijoins
@@ -587,6 +588,18 @@ explain plan for
             p.id = t.a
         order by sid;
 
+-- LER-6330
+explain plan for
+    select s1.sid, s2.sid
+        from product p1, sales s1, product p2, sales s2
+        where s1.product_id = p1.id and p1.size = 'S' and
+            s2.product_id = p2.id and p2.size = 'S';
+explain plan for
+    select s1.sid
+        from sales s1, customer c1, sales s2, customer c2
+        where s1.customer = c1.id and s2.customer = c2.id and c2.company = 'DEF'
+            and c1.id = c2.id;
+
 -- run the queries
 !set outputformat table
 select sid, p.id, s.quantity
@@ -639,6 +652,16 @@ select sid, s.quantity, t.c
     where
         s.product_id = p.id and p.size = 'S' and
         p.id = t.a
+    order by sid;
+select s1.sid s1id, s2.sid s2id
+    from product p1, sales s1, product p2, sales s2
+    where s1.product_id = p1.id and p1.size = 'S' and
+        s2.product_id = p2.id and p2.size = 'S'
+    order by s1id, s2id;
+select s1.sid
+    from sales s1, customer c1, sales s2, customer c2
+    where s1.customer = c1.id and s2.customer = c2.id and c2.company = 'DEF'
+        and c1.id = c2.id
     order by sid;
 
 -----------------------------------------

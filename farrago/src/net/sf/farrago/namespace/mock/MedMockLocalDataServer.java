@@ -105,14 +105,14 @@ class MedMockLocalDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public long computeIndexStats(
+    public FarragoMedLocalIndexStats computeIndexStats(
         FemLocalIndex index,
         long rootPageId,
         boolean estimate,
         FennelTxnContext txnContext)
         throws SQLException
     {
-        return 0;
+        return new FarragoMedLocalIndexStats(0, -1);
     }
 
     // implement FarragoMedDataServer

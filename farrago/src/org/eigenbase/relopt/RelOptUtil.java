@@ -25,10 +25,6 @@ package org.eigenbase.relopt;
 import java.io.*;
 
 import java.util.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
@@ -914,34 +910,46 @@ public abstract class RelOptUtil
     }
 
     /**
-     * Splits out the equi-join components of a join condition, and returns
-     * what's left. Projection might be required by the caller to provide join
-     * keys that are not direct field references.
+     * Splits out the equi-join (and optionally, a single non-equi) components
+     * of a join condition, and returns what's left. Projection might be
+     * required by the caller to provide join keys that are not direct field
+     * references.
      *
-     * @param joinRel join node
+     * @param leftRel left join input
+     * @param rightRel right join input
+     * @param condition join condition
      * @param leftJoinKeys The join keys from the left input which are equi-join
      * keys
      * @param rightJoinKeys The join keys from the right input which are
      * equi-join keys
      * @param filterNulls The join key positions for which null values will not
      * match. null values only match for the "is not distinct from" condition.
+     * @param rangeOp if null, only locate equi-joins; otherwise, locate a
+     * single non-equi join predicate and return its operator in this list;
+     * join keys associated with the non-equi join predicate are at the end
+     * of the key lists returned
      *
      * @return What's left
      */
     public static RexNode splitJoinCondition(
-        JoinRelBase joinRel,
+        RelNode leftRel,
+        RelNode rightRel,
+        RexNode condition,
         List<RexNode> leftJoinKeys,
         List<RexNode> rightJoinKeys,
-        List<Integer> filterNulls)
+        List<Integer> filterNulls,
+        List<SqlOperator> rangeOp)
     {
         List<RexNode> nonEquiList = new ArrayList<RexNode>();
 
         splitJoinCondition(
-            joinRel,
-            joinRel.getCondition(),
+            leftRel,
+            rightRel,
+            condition,
             leftJoinKeys,
             rightJoinKeys,
             filterNulls,
+            rangeOp,
             nonEquiList);
 
         // Convert the remainders into a list that are AND'ed together.
@@ -951,7 +959,7 @@ public abstract class RelOptUtil
         case 1:
             return nonEquiList.get(0);
         default:
-            return joinRel.getCluster().getRexBuilder().makeCall(
+            return leftRel.getCluster().getRexBuilder().makeCall(
                 SqlStdOperatorTable.andOperator,
                 nonEquiList);
         }
@@ -1014,22 +1022,23 @@ public abstract class RelOptUtil
     }
 
     private static void splitJoinCondition(
-        JoinRelBase joinRel,
+        RelNode leftRel,
+        RelNode rightRel,
         RexNode condition,
         List<RexNode> leftJoinKeys,
         List<RexNode> rightJoinKeys,
         List<Integer> filterNulls,
+        List<SqlOperator> rangeOp,
         List<RexNode> nonEquiList)
     {
-        int leftFieldCount = joinRel.getLeft().getRowType().getFieldCount();
-        int rightFieldCount = joinRel.getRight().getRowType().getFieldCount();
+        int leftFieldCount = leftRel.getRowType().getFieldCount();
+        int rightFieldCount = rightRel.getRowType().getFieldCount();
         int totalFieldCount = leftFieldCount + rightFieldCount;
 
-        RelDataTypeField [] rightFields =
-            joinRel.getRight().getRowType().getFields();
+        RelDataTypeField [] rightFields = rightRel.getRowType().getFields();
 
-        RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
-        RelDataTypeFactory typeFactory = joinRel.getCluster().getTypeFactory();
+        RexBuilder rexBuilder = leftRel.getCluster().getRexBuilder();
+        RelDataTypeFactory typeFactory = leftRel.getCluster().getTypeFactory();
 
         // adjustment array
         int [] adjustments = new int[totalFieldCount];
@@ -1045,11 +1054,13 @@ public abstract class RelOptUtil
             if (call.getOperator() == SqlStdOperatorTable.andOperator) {
                 for (RexNode operand : call.getOperands()) {
                     splitJoinCondition(
-                        joinRel,
+                        leftRel,
+                        rightRel,
                         operand,
                         leftJoinKeys,
                         rightJoinKeys,
                         filterNulls,
+                        rangeOp,
                         nonEquiList);
                 }
                 return;
@@ -1057,13 +1068,21 @@ public abstract class RelOptUtil
 
             RexNode leftKey = null;
             RexNode rightKey = null;
+            boolean reverse = false;
 
             SqlOperator operator = call.getOperator();
 
+            // Only consider range operators if we haven't already seen one
             if ((operator == SqlStdOperatorTable.equalsOperator)
                 || ((filterNulls != null)
                     && (operator
-                        == SqlStdOperatorTable.isNotDistinctFromOperator)))
+                        == SqlStdOperatorTable.isNotDistinctFromOperator))
+                || (rangeOp != null && rangeOp.isEmpty() &&
+                    (operator == SqlStdOperatorTable.greaterThanOperator ||
+                     operator ==
+                         SqlStdOperatorTable.greaterThanOrEqualOperator ||
+                     operator == SqlStdOperatorTable.lessThanOperator ||
+                     operator == SqlStdOperatorTable.lessThanOrEqualOperator)))
             {
                 final RexNode [] operands = call.getOperands();
                 RexNode op0 = operands[0];
@@ -1091,6 +1110,7 @@ public abstract class RelOptUtil
                 {
                     leftKey = op1;
                     rightKey = op0;
+                    reverse = true;
                 }
 
                 if ((leftKey != null) && (rightKey != null)) {
@@ -1125,12 +1145,13 @@ public abstract class RelOptUtil
                 }
             }
 
-            if ((leftKey == null) || (rightKey == null)) {
+            if (rangeOp == null && ((leftKey == null) || (rightKey == null))) {
                 // no equality join keys found yet:
                 // try tranforming the condition to
                 // equality "join" conditions, e.g.
                 //     f(LHS) > 0 ===> ( f(LHS) > 0 ) = TRUE,
-                // and make the RHS produce TRUE
+                // and make the RHS produce TRUE, but only if we're strictly
+                // looking for equi-joins
                 BitSet projRefs = new BitSet(totalFieldCount);
                 RelOptUtil.InputFinder inputFinder =
                     new RelOptUtil.InputFinder(projRefs);
@@ -1163,16 +1184,51 @@ public abstract class RelOptUtil
             }
 
             if ((leftKey != null) && (rightKey != null)) {
-                // found equality join keys
-                // add them to key list and mark the null filtering property
-                leftJoinKeys.add(leftKey);
-                rightJoinKeys.add(rightKey);
+                // found suitable join keys
+                // add them to key list, ensuring that if there is a
+                // non-equi join predicate, it appears at the end of the
+                // key list; also mark the null filtering property
+                addJoinKey(
+                    leftJoinKeys,
+                    leftKey,
+                    (rangeOp != null && !rangeOp.isEmpty()));
+                addJoinKey(
+                    rightJoinKeys,
+                    rightKey,
+                    (rangeOp != null && !rangeOp.isEmpty()));
                 if ((filterNulls != null)
                     && (operator == SqlStdOperatorTable.equalsOperator))
                 {
                     // nulls are considered not matching for equality comparison
                     // add the position of the most recently inserted key
                     filterNulls.add(leftJoinKeys.size() - 1);
+                }
+                if (rangeOp != null &&
+                    operator != SqlStdOperatorTable.equalsOperator &&
+                    operator != SqlStdOperatorTable.isDistinctFromOperator)
+                {
+                    if (reverse) {
+                        if (operator ==
+                            SqlStdOperatorTable.greaterThanOperator)
+                        {
+                            operator = SqlStdOperatorTable.lessThanOperator;
+                        } else if (operator ==
+                            SqlStdOperatorTable.greaterThanOrEqualOperator)
+                        {
+                            operator =
+                                SqlStdOperatorTable.lessThanOrEqualOperator;
+                        } else if (operator ==
+                            SqlStdOperatorTable.lessThanOperator)
+                        {
+                            operator = SqlStdOperatorTable.greaterThanOperator;
+                        } else if (operator ==
+                            SqlStdOperatorTable.lessThanOrEqualOperator)
+                        {
+                            operator =
+                                SqlStdOperatorTable.greaterThanOrEqualOperator;
+                        }
+                    }
+                    rangeOp.add(operator);
                 }
                 return;
             } // else fall through and add this condition as nonEqui condition
@@ -1182,6 +1238,18 @@ public abstract class RelOptUtil
         // So we fail. Fall through.
         // Add this condition to the list of non-equi-join conditions.
         nonEquiList.add(condition);
+    }
+    
+    private static void addJoinKey(
+        List<RexNode> joinKeyList,
+        RexNode key,
+        boolean preserveLastElementInList)
+    {
+        if (!joinKeyList.isEmpty() && preserveLastElementInList) {
+            joinKeyList.add(joinKeyList.size() - 1, key);
+        } else {
+            joinKeyList.add(key);
+        }
     }
 
     private static void splitCorrelatedFilterCondition(
@@ -1454,7 +1522,7 @@ public abstract class RelOptUtil
             }
         }
 
-        // added project if need to produce new keys than the origianl input
+        // added project if need to produce new keys than the original input
         // fields
         if (newLeftKeyCount > 0) {
             leftRel =
@@ -1474,6 +1542,59 @@ public abstract class RelOptUtil
 
         inputRels[0] = leftRel;
         inputRels[1] = rightRel;
+    }
+    
+    /**
+     * Creates a projection on top of a join, if the desired projection is a
+     * subset of the join columns
+     * 
+     * @param outputProj desired projection; if null, return original join node
+     * @param joinRel the join node
+     * 
+     * @return projected join node or the original join if projection is
+     * unnecessary
+     */
+    public static RelNode createProjectJoinRel(
+        List<Integer> outputProj,
+        RelNode joinRel)
+    {
+        int newProjectOutputSize = outputProj.size();
+        RelDataTypeField [] joinOutputFields = joinRel.getRowType().getFields();
+
+        // If no projection was passed in, or the number of desired projection
+        // columns is the same as the number of columns returned from the
+        // join, then no need to create a projection
+        if (newProjectOutputSize > 0 &&
+            newProjectOutputSize < joinOutputFields.length)
+        {
+            RexNode [] newProjectOutputFields =
+                new RexNode[newProjectOutputSize];
+            String [] newProjectOutputNames = new String[newProjectOutputSize];
+
+            // Create the individual projection expressions
+            RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
+            for (int i = 0; i < newProjectOutputSize; i++) {
+                int fieldIndex = outputProj.get(i);
+
+                newProjectOutputFields[i] =
+                    rexBuilder.makeInputRef(
+                        joinOutputFields[fieldIndex].getType(),
+                        fieldIndex);
+                newProjectOutputNames[i] =
+                    joinOutputFields[fieldIndex].getName();
+            }
+
+            // Create a project rel on the output of the join.
+            RelNode projectOutputRel =
+                CalcRel.createProject(
+                    joinRel,
+                    newProjectOutputFields,
+                    newProjectOutputNames);
+
+            return projectOutputRel;
+        }
+        
+        return joinRel;
     }
 
     public static void registerAbstractRels(RelOptPlanner planner)

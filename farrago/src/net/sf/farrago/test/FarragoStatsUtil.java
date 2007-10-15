@@ -68,7 +68,7 @@ public class FarragoStatsUtil
                     catalogName,
                     schemaName,
                     tableName);
-            FarragoCatalogUtil.updateRowCount(columnSet, rowCount);
+            FarragoCatalogUtil.updateRowCount(columnSet, rowCount, true, true);
 
             txn.commit();
         } finally {
@@ -251,7 +251,9 @@ public class FarragoStatsUtil
                 repos,
                 column,
                 distinctValues,
-                samplePercent,
+                false,
+                (float)samplePercent,
+                sampleRows,
                 barCount,
                 rowsPerBar,
                 rowsLastBar,

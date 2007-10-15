@@ -2,6 +2,7 @@
 -- Test EXPLAIN command.
 
 set schema 'sales';
+!set outputformat csv
 
 -- Explain logical plan brief
 explain plan excluding attributes without implementation for 

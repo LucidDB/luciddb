@@ -556,10 +556,11 @@ class MathFuncs {
 
 <li>From SQL, <code>CALL</code> the system-defined
 <code>SQLJ.INSTALL_JAR</code> routine to install the JAR into the
-DBMS.
+DBMS.  (The last parameter, which controls whether deployment descriptors
+are used, is currently ignored since these aren't supported yet.)
 
 <pre><code>
-CALL SQLJ.INSTALL_JAR('file:/home/jvs/MathFuncs.jar','MathFuncsJavaLib');
+CALL SQLJ.INSTALL_JAR('file:/home/jvs/MathFuncs.jar','MathFuncsJavaLib', 0);
 </code></pre>
 
 <li>Issue a <code>CREATE {FUNCTION|PROCEDURE}</code> statement

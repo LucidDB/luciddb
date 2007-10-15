@@ -41,7 +41,8 @@ import org.eigenbase.util.*;
 /**
  * FarragoStatsUDR implements system procedures for manipulating Farrago
  * statistics stored in the repository. The procedures are intended to be used
- * for testing purposes.
+ * for testing purposes, with the exception of get_row_count which may be
+ * used internally.
  *
  * @author John Pham
  * @version $Id$
@@ -71,6 +72,64 @@ public abstract class FarragoStatsUDR
         } catch (Throwable e) {
             throw new SQLException(e.getMessage());
         }
+    }
+
+    /**
+     * Retrieves the row count for a table
+     */
+    public static long get_row_count(
+        String catalogName, 
+        String schemaName, 
+        String tableName)
+        throws SQLException
+    {
+        try {
+            FarragoSession session = FarragoUdrRuntime.getSession();
+            
+            // eschew FarragoStatsUtil -- it's in the test package
+            FarragoRepos repos = session.getRepos();
+            if ((catalogName == null) || (catalogName.length() == 0)) {
+                catalogName = session.getSessionVariables().catalogName;
+            }
+            CwmCatalog catalog = repos.getCatalog(catalogName);
+            if (catalog == null) {
+                throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                    catalogName);
+            }
+
+            if ((schemaName == null) || (schemaName.length() == 0)) {
+                schemaName = session.getSessionVariables().schemaName;
+            }
+            FemLocalSchema schema =
+                FarragoCatalogUtil.getSchemaByName(catalog, schemaName);
+            if (schema == null) {
+                throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                    schemaName);
+            }
+            
+            FemAbstractColumnSet columnSet = null;
+            if (tableName != null) {
+                columnSet =
+                    FarragoCatalogUtil.getModelElementByNameAndType(
+                        schema.getOwnedElement(),
+                        tableName,
+                        FemAbstractColumnSet.class);
+            }
+            if (columnSet == null) {
+                throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                    tableName);
+            }
+
+            Long rowcount = columnSet.getRowCount();
+            if (rowcount == null) {
+                return 0;
+            }
+            return rowcount.longValue();
+
+        } catch (Throwable e) {
+            throw new SQLException(e.getMessage());
+        }
+        
     }
 
     /**
