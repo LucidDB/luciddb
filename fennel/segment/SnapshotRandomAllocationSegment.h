@@ -51,7 +51,7 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
      * Keeps track of the number of modifications made to the page entry and
      * extent entry corresponding to a page
      */
-    ModifiedPageEntryMap modPageEntries;
+    ModifiedPageEntryMap modPageEntriesMap;
 
     /**
      * Maintains a mapping between a pageId and the snapshot page for this
@@ -60,7 +60,7 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
     PageMap snapshotPageMap;
 
     /**
-     * Mutex that ensures only a single thread is modifying snapshotPageMap.
+     * Mutex that ensures only a single thread is modifying modPageEntriesMap.
      * It also ensures that the map is in sync with the allocations and
      * deallocations in the underlying VersionedRandomAllocationSegment.
      */
@@ -107,6 +107,9 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
     /**
      * Increments the counters that keep track of the number of modifications
      * made to a page entry as well as allocations/deallocations.
+     *
+     * <p>This method assumes that the caller has already acquired an exclusive
+     * mutex on modPageEntriesMap.
      *
      * @param pageId the pageId of the page whose counters are being
      * incremented

@@ -1131,8 +1131,9 @@ bool VersionedRandomAllocationSegment::uncommittedDeallocation(
     std::hash_set<PageId> &deallocatedPageSet)
 {
     // See if the page entry corresponding to the anchor is marked as
-    // deallocation-deferred in the temporary page entry.  If it is, then
-    // that means the txn doing the deallocation has not committed yet.
+    // deallocation-deferred with a txnId of 0 in the temporary page entry.
+    // If it is, then that means the txn doing the deallocation has not
+    // committed yet.
 
     NodeMapConstIter iter = allocationNodeMap.find(extentPageId);
     if (iter == allocationNodeMap.end()) {
@@ -1148,6 +1149,9 @@ bool VersionedRandomAllocationSegment::uncommittedDeallocation(
     VersionedPageEntry const &tempPageEntry =
         tempExtentNode.getPageEntry(iPageInExtent);
     if (!isDeallocatedPageOwnerId(tempPageEntry.ownerId)) {
+        return false;
+    }
+    if (getDeallocatedTxnId(tempPageEntry.ownerId) != TxnId(0)) {
         return false;
     }
 

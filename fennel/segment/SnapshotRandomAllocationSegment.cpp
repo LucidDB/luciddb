@@ -117,10 +117,11 @@ void SnapshotRandomAllocationSegment::incrPageUpdateCount(
     needPageFlush = true;
 
     // Add an entry into the map if it's not there yet.  Otherwise, increment
-    // the count for the existing entry.
-    ModifiedPageEntryMapIter iter = modPageEntries.find(pageId);
+    // the count for the existing entry.  This method assumes that the caller
+    // has already acquired the exclusive mutex on the map.
+    ModifiedPageEntryMapIter iter = modPageEntriesMap.find(pageId);
     SharedModifiedPageEntry pModPageEntry;
-    if (iter == modPageEntries.end()) {
+    if (iter == modPageEntriesMap.end()) {
         pModPageEntry = SharedModifiedPageEntry(new ModifiedPageEntry());
         pModPageEntry->updateCount = 0;
         pModPageEntry->allocationCount = 0;
@@ -146,7 +147,7 @@ void SnapshotRandomAllocationSegment::incrPageUpdateCount(
     // Update count corresponding to the VersionedExtentAllocationNode
     pModPageEntry->updateCount++;
 
-    modPageEntries.insert(
+    modPageEntriesMap.insert(
         ModifiedPageEntryMap::value_type(pageId, pModPageEntry));
 }
 
@@ -306,8 +307,8 @@ bool SnapshotRandomAllocationSegment::isPageNewlyAllocated(PageId pageId)
 {
     SXMutexSharedGuard mapGuard(modPageMapMutex);
 
-    ModifiedPageEntryMapIter iter = modPageEntries.find(pageId);
-    if (iter != modPageEntries.end()) {
+    ModifiedPageEntryMapIter iter = modPageEntriesMap.find(pageId);
+    if (iter != modPageEntriesMap.end()) {
         SharedModifiedPageEntry pModPageEntry = iter->second;
         if (pModPageEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
             return true;
@@ -321,11 +322,11 @@ void SnapshotRandomAllocationSegment::commitChanges(TxnId commitCsn)
     SXMutexExclusiveGuard mapGuard(modPageMapMutex);
 
     pVersionedRandomSegment->updateAllocNodes(
-        modPageEntries,
+        modPageEntriesMap,
         commitCsn,
         true,
         getTracingSegment());
-    modPageEntries.clear();
+    modPageEntriesMap.clear();
 }
 
 void SnapshotRandomAllocationSegment::rollbackChanges()
@@ -333,11 +334,11 @@ void SnapshotRandomAllocationSegment::rollbackChanges()
     SXMutexExclusiveGuard mapGuard(modPageMapMutex);
 
     pVersionedRandomSegment->updateAllocNodes(
-        modPageEntries,
+        modPageEntriesMap,
         NULL_TXN_ID,
         false,
         getTracingSegment());
-    modPageEntries.clear();
+    modPageEntriesMap.clear();
 }
 
 MappedPageListener *SnapshotRandomAllocationSegment::getMappedPageListener(
