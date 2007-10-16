@@ -36,7 +36,7 @@
 
 using namespace fennel;
 
-#define SMALL_ADDR_SPACE (128 * 1024 * 1024) // 128 MB
+#define SMALL_ADDR_SPACE (192 * 1024 * 1024) // 192 MB
 
 /**
  * CacheTest exercises the entire Cache interface in both
