@@ -523,7 +523,15 @@ void JniEnvRef::handleExcn(std::exception &ex)
     if (pFennelExcn) {
         what = pFennelExcn->getMessage();
     } else {
-        what = FennelResource::instance().internalError(ex.what());
+        std::bad_alloc *pBadAllocExcn = 
+            dynamic_cast<std::bad_alloc *>(&ex);
+        if (pBadAllocExcn) {
+            // Convert bad_alloc's terrible error mesage into something fit for
+            // human consumption.
+            what = FennelResource::instance().internalError("malloc failed");
+        } else {
+            what = FennelResource::instance().internalError(ex.what());
+        }
     }
     // TODO:  need special-case handling for out-of-memory here
     jclass classSQLException = pEnv->FindClass("java/sql/SQLException");

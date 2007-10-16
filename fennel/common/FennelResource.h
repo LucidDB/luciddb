@@ -91,11 +91,6 @@ class FennelResource : ResourceBundle
     std::string incompatibleDataFormat() const;
 
     /**
-     * <code>cacheAllocFailed</code> is 'Cache memory allocation failed because ''{0}'''
-     */
-    std::string cacheAllocFailed(const std::string &p0) const;
-
-    /**
      * <code>readDataFailed</code> is 'Could not read data file {0}'
      */
     std::string readDataFailed(const std::string &p0) const;
@@ -181,7 +176,6 @@ class FennelResource : ResourceBundle
     ResourceDefinition _scratchMemExhausted;
     ResourceDefinition _uniqueConstraintViolated;
     ResourceDefinition _incompatibleDataFormat;
-    ResourceDefinition _cacheAllocFailed;
     ResourceDefinition _readDataFailed;
     ResourceDefinition _dataTransferFailed;
     ResourceDefinition _writeLogFailed;

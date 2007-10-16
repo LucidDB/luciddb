@@ -37,7 +37,6 @@ class VMAllocator : public CacheAllocator
     size_t cbAlloc;
     size_t nAllocs;
     bool bLockPages;
-    int lastErrorCode;
 
 public:
     /**
@@ -57,11 +56,11 @@ public:
 // ----------------------------------------------------------------------
 // Implementation of CacheAllocator interface
 // ----------------------------------------------------------------------
-    virtual void *allocate();
-    virtual int deallocate(void *pMem);
-    virtual int setProtection(void *pMem, uint cb, bool readOnly);
+    virtual void *allocate(int *pErrorCode = NULL);
+    virtual int deallocate(void *pMem, int *pErrorCode = NULL);
+    virtual int setProtection(
+        void *pMem, uint cb, bool readOnly, int *pErrorCode = NULL);
     virtual size_t getBytesAllocated() const;
-    virtual int getLastErrorCode() const;
 };
 
 FENNEL_END_NAMESPACE

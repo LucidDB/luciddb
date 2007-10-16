@@ -39,7 +39,6 @@ VMAllocator::VMAllocator(size_t cbAllocInit,size_t nLocked)
 {
     cbAlloc = cbAllocInit;
     nAllocs = 0;
-    lastErrorCode = 0;
     if (nLocked) {
 #ifdef RLIMIT_MEMLOCK
         struct rlimit rl;
@@ -64,10 +63,22 @@ VMAllocator::VMAllocator(size_t cbAllocInit,size_t nLocked)
 
 VMAllocator::~VMAllocator()
 {
+    // This assertion indicates that not all allocated pages were deallocated.
+    // In relation to LER-5976: in debug builds, each allocation is divided
+    // into 3 sections (two guard pages surrounding the actual allocation).
+    // The mprotect calls in allocate(int *) can fail in low memory situations
+    // (the kernel may allocate private memory as it tracks a single mmap
+    // region being split in three).  When this occurs, subsequent munmap calls
+    // (even on different regions) in deallocate sometimes fail, leading to a
+    // failure of this assertion.  This should not occur in release builds,
+    // since no guard pages are allocated or protected. NOTE: On Ubuntu Edgy
+    // Eft (2.6.17-12-generic SMP), the munmap calls in deallocate fails three
+    // times, then inexplicably begin succeeding.  Retrying the failed calls
+    // then succeeds.
     assert(!getBytesAllocated());
 }
 
-void *VMAllocator::allocate()
+void *VMAllocator::allocate(int *pErrorCode)
 {
 #ifdef HAVE_MMAP
 
@@ -85,7 +96,9 @@ void *VMAllocator::allocate()
         NULL,cbActualAlloc,
         PROT_READ | PROT_WRITE,MAP_PRIVATE | MAP_ANONYMOUS,-1,0);
     if (v == MAP_FAILED) {
-        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
         return NULL;
     }
     
@@ -93,7 +106,9 @@ void *VMAllocator::allocate()
     PBuffer p = static_cast<PBuffer>(v);
     memset(p, 0xFE, getpagesize());
     if (::mprotect(p, getpagesize(), PROT_NONE)) {
-        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
         ::munmap(v,cbAlloc);
         return NULL;
     }
@@ -103,7 +118,9 @@ void *VMAllocator::allocate()
     p += cbAlloc;
     memset(p, 0xFE, getpagesize());
     if (::mprotect(p, getpagesize(), PROT_NONE)) {
-        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
         ::munmap(v,cbAlloc);
         return NULL;
     }
@@ -111,7 +128,9 @@ void *VMAllocator::allocate()
     
     if (bLockPages) {
         if (::mlock(v,cbAlloc)) {
-            lastErrorCode = SysCallExcn::getCurrentErrorCode();
+            if (pErrorCode != NULL) {
+                *pErrorCode = SysCallExcn::getCurrentErrorCode();
+            }
             ::munmap(v,cbAlloc);
             return NULL;
         }
@@ -119,7 +138,9 @@ void *VMAllocator::allocate()
 #else
     void *v = malloc(cbAlloc);
     if (v == NULL) {
-        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
         return NULL;
     }
 #endif
@@ -127,12 +148,14 @@ void *VMAllocator::allocate()
     return v;
 }
 
-int VMAllocator::deallocate(void *p)
+int VMAllocator::deallocate(void *p, int *pErrorCode)
 {
 #ifdef HAVE_MMAP
     if (bLockPages) {
         if (::munlock(p,cbAlloc)) {
-            lastErrorCode = SysCallExcn::getCurrentErrorCode();
+            if (pErrorCode != NULL) {
+                *pErrorCode = SysCallExcn::getCurrentErrorCode();
+            }
             return -1;
         }
     }
@@ -145,7 +168,9 @@ int VMAllocator::deallocate(void *p)
     cbActualAlloc += 2*getpagesize();
 #endif
     if (::munmap((caddr_t)p,cbActualAlloc)) {
-        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
         return -1;
     }
 #else
@@ -161,7 +186,8 @@ size_t VMAllocator::getBytesAllocated() const
     return nAllocs*cbAlloc;
 }
 
-int VMAllocator::setProtection(void *pMem, uint cb, bool readOnly)
+int VMAllocator::setProtection(
+    void *pMem, uint cb, bool readOnly, int *pErrorCode)
 {
     // FIXME jvs 7-Feb-2006:  use autoconf to get HAVE_MPROTECT instead
 #ifdef HAVE_MMAP
@@ -170,17 +196,14 @@ int VMAllocator::setProtection(void *pMem, uint cb, bool readOnly)
         prot |= PROT_WRITE;
     }
     if (::mprotect(pMem, cb, prot)) {
-        lastErrorCode = SysCallExcn::getCurrentErrorCode();
+        if (pErrorCode != NULL) {
+            *pErrorCode = SysCallExcn::getCurrentErrorCode();
+        }
         return -1;
     }
 #endif
 
     return 0;
-}
-
-int VMAllocator::getLastErrorCode() const
-{
-    return lastErrorCode;
 }
 
 FENNEL_END_CPPFILE("$Id$");
