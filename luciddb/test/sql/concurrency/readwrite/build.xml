@@ -45,6 +45,9 @@
   <property name="ffsource.dir" value="${open.dir}/thirdparty/tpch/dataMultiProcess"/>
   <property name="ff.dir" value="${rwconcurrency.dir}/ff"/>
 
+  <!-- directory of big ref files -->
+  <property name="bigrefsource.url" value="http://file01.lucidera.com/engineering/testdata/TPCH"/>
+
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
@@ -95,6 +98,28 @@
       <fileset dir="${ffsource.dir}/${datasize}-10"/>
     </copy>
 
+  </target>
+
+  <target name="copy-big-ref-files">
+    <condition property="to.download">
+      <and>
+        <http url="${bigrefsource.url}" />
+        <not>
+          <available file="${rwconcurrency.dir}/tpch-throughput-readonly.100M"/>
+        </not>
+      </and>
+    </condition>
+    <if>
+      <isset property="to.download"/>
+      <then>
+        <!-- copy raksha -> rwconcurrency.dir -->
+        <echo message="Downloading from Raksha..."/>
+        <exec dir="${rwconcurrency.dir}" executable="wget">
+          <arg line="--reject .html -q -np -nH --cut-dirs=4 ${bigrefsource.url}/tpch-throughput-readonly.100M" />
+        </exec>
+        <echo message="...download complete"/>
+      </then>
+    </if>
   </target>
 
   <target name="gen-sql">
@@ -156,6 +181,7 @@
     <delete dir="${ff.dir}"/>
     <delete file="datasize"/>
     <delete file="run.properties"/>
+    <delete file="tpch-throughput-readonly.100M"/>
   </target>
 
   <target name="clean-test">
