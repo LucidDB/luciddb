@@ -246,7 +246,7 @@ public class FarragoRelImplementor
      * @param rel the new RelNode
      * @param ordinal the input position of the RelNode
      */
-    private void addRelPathEntry(RelNode rel, int ordinal)
+    protected void addRelPathEntry(RelNode rel, int ordinal)
     {
         RelPathEntry pathEntry = new RelPathEntry(rel, ordinal);
         currRelPathList.add(0, pathEntry);
@@ -256,7 +256,7 @@ public class FarragoRelImplementor
      * Removes the RelPathEntry corresponding to the current RelNode being
      * visited from the current RelPathEntry list
      */
-    private void removeRelPathEntry()
+    protected void removeRelPathEntry()
     {
         currRelPathList.remove(0);
     }
@@ -284,16 +284,15 @@ public class FarragoRelImplementor
         if (addToPathList) {
             addRelPathEntry(rel, ordinal);
         }
-        FemExecutionStreamDef result;
+        FemExecutionStreamDef streamDef;
         try {
-            result = rel.toStreamDef(this);
+            streamDef = rel.toStreamDef(this);
         } catch (Throwable e) {
             throw Util.newInternal(
                 e,
                 "Error occurred while translating relational expression "
                 + rel + " to a plan");
         }
-        FemExecutionStreamDef streamDef = result;
         if (addToPathList) {
             removeRelPathEntry();
         }
@@ -526,8 +525,8 @@ public class FarragoRelImplementor
      */
     public static class RelPathEntry
     {
-        RelNode relNode;
-        int ordinal;
+        final RelNode relNode;
+        final int ordinal;
 
         RelPathEntry(RelNode relNode, int ordinal)
         {
@@ -548,11 +547,17 @@ public class FarragoRelImplementor
                     relPathEntry.ordinal == ordinal);
         }
 
+        public String toString()
+        {
+            return "RelPathEntry(" + ordinal + ", "
+                + "rel#" + relNode.getId() + ":"
+                + relNode.getRelTypeName() + ")";
+        }
     }
 
     private static class RelScope
     {
-        Map<FennelRelParamId, FennelDynamicParamId> paramMap;
+        final Map<FennelRelParamId, FennelDynamicParamId> paramMap;
 
         RelScope()
         {
