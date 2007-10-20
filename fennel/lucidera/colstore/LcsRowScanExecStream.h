@@ -33,8 +33,6 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-#define DEFAULT_SYSTEM_SAMPLING_CLUMPS (10)
-
 /**
  * Parameters specific to the row scan execution stream, including the type
  * of scan (full table scan versus specific rid reads) and whether residual
@@ -42,6 +40,8 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
 {
+    static int32_t defaultSystemSamplingClumps;
+
     /**
      * If true, this scan performs a full table scan.  In that case, the
      * first input into the stream will be those rids that are to be excluded
@@ -91,6 +91,14 @@ struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
      * Number of sample clumps to produce during system-mode sampling.
      */
     int32_t samplingClumps;
+
+    /**
+     * Number of rows in the table, to support system-mode sampling.  This
+     * field is NOT a count of the number of rows in the expected sample.  The
+     * term "sampling" in the field's name refers to its use as a parameter
+     * specific to sampling.
+     */
+    int64_t samplingRowCount;
 };
 
 /**
@@ -133,12 +141,6 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      */
     TupleData ridTupleData;
     
-    /**
-     * TupleData for tuple representing incoming row count (for system sampling
-     * only).
-     */
-    TupleData inputRowCountTuple;
-
     /**
      * Rid reader
      */
@@ -253,6 +255,11 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
     boost::scoped_ptr<BernoulliRng> samplingRng;
 
     /**
+     * Number of rows in the table; for system sampling only.
+     */
+    int64_t rowCount;
+
+    /**
      * Builds outputProj from params.
      *
      * @param outputProj the projection to be built
@@ -278,7 +285,10 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
     void prepareResidualFilters(LcsRowScanExecStreamParams const &params);
 
 
-    bool initializeSystemSampling();
+    /**
+     * Initializes the system sampling data structures during open time.
+     */
+    void initializeSystemSampling();
 
 public:
     virtual void prepare(LcsRowScanExecStreamParams const &params);

@@ -2,47 +2,47 @@
 
 enum AggFunction {
     AGG_FUNC_SUM,
-    AGG_FUNC_SINGLE_VALUE,
-    AGG_FUNC_MAX,
+    AGG_FUNC_COUNT,
     AGG_FUNC_MIN,
-    AGG_FUNC_COUNT
+    AGG_FUNC_MAX,
+    AGG_FUNC_SINGLE_VALUE
 };
 
-static std::string AggFunction_names[] = {"AGG_FUNC_SUM","AGG_FUNC_SINGLE_VALUE","AGG_FUNC_MAX","AGG_FUNC_MIN","AGG_FUNC_COUNT",""};
+static std::string AggFunction_names[] = {"AGG_FUNC_SUM","AGG_FUNC_COUNT","AGG_FUNC_MIN","AGG_FUNC_MAX","AGG_FUNC_SINGLE_VALUE",""};
 
 enum BarrierReturnMode {
     BARRIER_RET_FIRST_INPUT,
-    BARRIER_RET_ALL_INPUTS,
-    BARRIER_RET_ANY_INPUT
+    BARRIER_RET_ANY_INPUT,
+    BARRIER_RET_ALL_INPUTS
 };
 
-static std::string BarrierReturnMode_names[] = {"BARRIER_RET_FIRST_INPUT","BARRIER_RET_ALL_INPUTS","BARRIER_RET_ANY_INPUT",""};
+static std::string BarrierReturnMode_names[] = {"BARRIER_RET_FIRST_INPUT","BARRIER_RET_ANY_INPUT","BARRIER_RET_ALL_INPUTS",""};
 
 enum CompOperator {
     COMP_NOOP,
-    COMP_GE,
-    COMP_GT,
-    COMP_LE,
-    COMP_LT,
+    COMP_EQ,
     COMP_NE,
-    COMP_EQ
+    COMP_LT,
+    COMP_LE,
+    COMP_GT,
+    COMP_GE
 };
 
-static std::string CompOperator_names[] = {"COMP_NOOP","COMP_GE","COMP_GT","COMP_LE","COMP_LT","COMP_NE","COMP_EQ",""};
+static std::string CompOperator_names[] = {"COMP_NOOP","COMP_EQ","COMP_NE","COMP_LT","COMP_LE","COMP_GT","COMP_GE",""};
 
 enum Distinctness {
     DUP_ALLOW,
-    DUP_FAIL,
-    DUP_DISCARD
+    DUP_DISCARD,
+    DUP_FAIL
 };
 
-static std::string Distinctness_names[] = {"DUP_ALLOW","DUP_FAIL","DUP_DISCARD",""};
+static std::string Distinctness_names[] = {"DUP_ALLOW","DUP_DISCARD","DUP_FAIL",""};
 
 enum TableSamplingMode {
     SAMPLING_OFF,
-    SAMPLING_SYSTEM,
-    SAMPLING_BERNOULLI
+    SAMPLING_BERNOULLI,
+    SAMPLING_SYSTEM
 };
 
-static std::string TableSamplingMode_names[] = {"SAMPLING_OFF","SAMPLING_SYSTEM","SAMPLING_BERNOULLI",""};
+static std::string TableSamplingMode_names[] = {"SAMPLING_OFF","SAMPLING_BERNOULLI","SAMPLING_SYSTEM",""};
 

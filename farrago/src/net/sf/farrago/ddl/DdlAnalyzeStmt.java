@@ -33,6 +33,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
@@ -43,7 +44,7 @@ import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.pretty.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util14.*;
-
+import org.eigenbase.trace.*;
 
 /**
  * DdlAnalyzeStmt is a Farrago statement for computing the statistics of a
@@ -63,6 +64,7 @@ public class DdlAnalyzeStmt
     public static final String REPEATABLE_SEED = "test.estimateStatsSeed";
 
     //~ Instance fields --------------------------------------------------------
+    EigenbaseTimingTracer timingTracer;
 
     // ddl fields
     private CwmTable table;
@@ -118,6 +120,9 @@ public class DdlAnalyzeStmt
     // implement FarragoSessionDdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
+        timingTracer = ddlValidator.getStmtValidator().getTimingTracer();
+        timingTracer.traceTime("analyze: begin");
+
         // Use a reentrant session to simplify cleanup.
         FarragoSession session = ddlValidator.newReentrantSession();
         try {
@@ -185,6 +190,8 @@ public class DdlAnalyzeStmt
         
         // Obtain or compute row counts 
         long rowCount = getRowCount();
+
+        timingTracer.traceTime("analyze: end rowcount");
         
         if (estimate) {
             setSampleRepeatableSeed(ddlValidator);
@@ -195,8 +202,11 @@ public class DdlAnalyzeStmt
             }
             
             // 100% sampling means switch to calculated stats (but keep using
-            // the catalog's row count if available).
-            if (samplePercent.bigDecimalValue().doubleValue() >= 100.0) {
+            // the catalog's row count if available).  The single exception
+            // is rowCount == 0: assume the table stays empty.
+            if (samplePercent.bigDecimalValue().doubleValue() >= 100.0 &&
+                rowCount > 0L)
+            {
                 estimate = false;
                 samplePercent = null;
             }
@@ -205,11 +215,18 @@ public class DdlAnalyzeStmt
         LinkedHashMap<CwmColumn, Histogram> histograms = 
             new LinkedHashMap<CwmColumn, Histogram>();
         if (estimate) {
-            estimateStats(femColumnList, rowCount, histograms);            
+            if (rowCount == 0) {
+                estimateEmptyTableStats(femColumnList, histograms);
+            } else {
+                estimateStats(femColumnList, rowCount, histograms);
+            }
         } else {
             // Compute column histograms
             for (FemAbstractColumn column : femColumnList) {
                 computeColumnStats(histograms, column, rowCount);
+
+                timingTracer.traceTime(
+                    "analyze: end column " + column.getName());
             }
         }
         
@@ -222,6 +239,8 @@ public class DdlAnalyzeStmt
                 deletedRowCount,
                 histograms);
 
+        timingTracer.traceTime("analyze: end index page counts");
+
         // Update stats computed above
         updateStats(
             repos,
@@ -229,6 +248,8 @@ public class DdlAnalyzeStmt
             computeRowCount, 
             histograms.values(),
             indexPageCounts);
+
+        timingTracer.traceTime("analyze: end update stats");
     }
 
     /**
@@ -385,7 +406,7 @@ public class DdlAnalyzeStmt
     }
 
     /**
-     * Iterate over the given {@link FemAbstractColumn} instances compute
+     * Iterate over the given {@link FemAbstractColumn} instances and compute
      * histograms and cardinality from sampled data.  Passes information
      * about a column gleaned from its constraints to the single-column
      * estimation method.
@@ -438,6 +459,8 @@ public class DdlAnalyzeStmt
             }
         }
         
+        timingTracer.traceTime("analyze: end examine constraints");
+
         for (FemAbstractColumn column : femColumnList) {
             int ordinal = column.getOrdinal();
             boolean isUnique = singleUniqueCols.get(ordinal);
@@ -448,9 +471,11 @@ public class DdlAnalyzeStmt
                 rowCount,
                 isUnique,
                 isUniqueNullable);
+
+            timingTracer.traceTime("analyze: end column " + column.getName());
         }
     }
-
+    
     /**
      * Build sampled histogram and estimate cardinality for the given column
      * by querying it.
@@ -479,8 +504,11 @@ public class DdlAnalyzeStmt
         stmtContext.prepare(sql, true);
         checkColumnDistributionQuery();
 
+        timingTracer.traceTime("analyze: -- end prepare");
+
         stmtContext.execute();
         ResultSet resultSet = stmtContext.getResultSet();
+
         Histogram columnHistogram =
             buildEstimatedHistogram(
                 column, 
@@ -518,7 +546,7 @@ public class DdlAnalyzeStmt
         assert(estimate);
         
         FarragoCardinalityEstimator estimator = 
-            new FarragoCardinalityEstimator(tableRowCount);
+            new FarragoCardinalityEstimator(tableRowCount, isUnique);
 
         double sampleRate =
             samplePercent.bigDecimalValue().movePointLeft(2).doubleValue();
@@ -530,6 +558,8 @@ public class DdlAnalyzeStmt
 
         List<ColumnHistogramBar> bars = 
             buildBars(resultSet, rowsPerBar, estimator);
+
+        timingTracer.traceTime("analyze: -- end build bars");
 
         long sampleRowCount = estimator.getSampleSize();
 
@@ -564,6 +594,8 @@ public class DdlAnalyzeStmt
             distinctValuesEstimated = true;
         }
         
+        timingTracer.traceTime("analyze: -- end estimate cardinality");
+
         return new Histogram(
             column,
             distinctValues,
@@ -575,7 +607,31 @@ public class DdlAnalyzeStmt
             bars);
     }
     
+    /**
+     * Iterate over the given {@link FemAbstractColumn} instances and generate
+     * histograms for an empty table.
+     * 
+     * @param femColumnList list of columns to analyze
+     * @param histograms a map of columns to histograms with predictable
+     *                   iteration order
+     */
+    private void estimateEmptyTableStats(
+        List<FemAbstractColumn> femColumnList,
+        LinkedHashMap<CwmColumn, Histogram> histograms)
+    {
+        for (FemAbstractColumn column : femColumnList) {
+            List<ColumnHistogramBar> bars = Collections.emptyList();
+
+            // Set rowsPerBar and rowsLastBar to 1 to mimic the behavior
+            // of computed stats against an empty table.
+            Histogram columnHistogram = 
+                new Histogram(column, 0L, false, bars.size(), 1, 1, 0L, bars);
+            
+            histograms.put(column, columnHistogram);
+        }        
+    }
     
+
     /**
      * Build a complete histogram and calculate cardinality for the given 
      * column by querying it.
@@ -596,6 +652,8 @@ public class DdlAnalyzeStmt
         String sql = getColumnDistributionQuery(column);
         stmtContext.prepare(sql, true);
         checkColumnDistributionQuery();
+
+        timingTracer.traceTime("analyze: -- end prepare");
 
         stmtContext.execute();
         ResultSet resultSet = stmtContext.getResultSet();
@@ -629,11 +687,15 @@ public class DdlAnalyzeStmt
 
         List<ColumnHistogramBar> bars = buildBars(resultSet, rowsPerBar, null);
 
+        timingTracer.traceTime("analyze: -- end build bars");
+
         long distinctValues = 0;
         for (ColumnHistogramBar bar : bars) {
             distinctValues += bar.valueCount;
         }
         
+        timingTracer.traceTime("analyze: -- end compute cardinality");
+
         return new Histogram(
             column,
             distinctValues,

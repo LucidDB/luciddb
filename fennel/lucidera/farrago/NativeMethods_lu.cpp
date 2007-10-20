@@ -204,7 +204,9 @@ class ExecStreamSubFactory_lu
         params.samplingRate = streamDef.getSamplingRate();
         params.samplingIsRepeatable = streamDef.isSamplingRepeatable();
         params.samplingRepeatableSeed = streamDef.getSamplingRepeatableSeed();
-        params.samplingClumps = DEFAULT_SYSTEM_SAMPLING_CLUMPS;
+        params.samplingClumps = 
+            LcsRowScanExecStreamParams::defaultSystemSamplingClumps;
+        params.samplingRowCount = streamDef.getSamplingRowCount();
 
         CmdInterpreter::readTupleProjection(params.residualFilterCols,
             streamDef.getResidualFilterColumns());
