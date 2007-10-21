@@ -28,6 +28,8 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+int32_t LcsRowScanExecStreamParams::defaultSystemSamplingClumps = 10;
+
 
 void LcsRowScanExecStream::prepareResidualFilters(
     LcsRowScanExecStreamParams const &params)
@@ -132,11 +134,7 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
         stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
     assert(inputDesc[0] == expectedRidDesc);
 
-    if (params.samplingMode == SAMPLING_SYSTEM) {
-        assert(hasExtraFilter == (inAccessors.size() > 2));
-    } else {
-        assert(hasExtraFilter == (inAccessors.size() > 1));
-    }
+    assert(hasExtraFilter == (inAccessors.size() > 1));
 
     if (hasExtraFilter) {
         prepareResidualFilters(params);
@@ -186,16 +184,7 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
             
             isSamplingRepeatable = false;
 
-            int index = inAccessors.size() - 1;
-
-            // Set up row count input stream
-            inputRowCountTuple.compute(inAccessors[index]->getTupleDesc());
-
-            TupleDescriptor rowCountDesc = inAccessors[index]->getTupleDesc();
-            assert(rowCountDesc.size() == 1);
-            TupleAttributeDescriptor expectedRowCountDesc(
-                stdTypeFactory.newDataType(STANDARD_TYPE_INT_64), true);
-            assert(rowCountDesc[0] == expectedRowCountDesc);
+            rowCount = params.samplingRowCount;
         }
     }
 }
@@ -238,6 +227,8 @@ void LcsRowScanExecStream::open(bool restart)
         clumpSize = 0;
         clumpDistance = 0;
         clumpPos = 0;
+
+        initializeSystemSampling();
     }
 }
 
@@ -312,41 +303,8 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
 }
 
 
-bool LcsRowScanExecStream::initializeSystemSampling()
+void LcsRowScanExecStream::initializeSystemSampling()
 {
-    if (clumpSize != 0) {
-        // already initialized
-        return true;
-    }
-
-    ExecStreamBufAccessor &inAccessor = *inAccessors[inAccessors.size() - 1];
-    switch (inAccessor.getState()) {
-    case EXECBUF_EMPTY:
-        inAccessor.requestProduction();
-        return false;
-    case EXECBUF_UNDERFLOW:
-        return false;
-    case EXECBUF_EOS:
-        // Doesn't imply no data
-    case EXECBUF_NONEMPTY:
-    case EXECBUF_OVERFLOW:
-        break;
-    default:
-        permFail("Bad state " << inAccessor.getState());
-    }
-    assert(inAccessor.isConsumptionPossible());
-
-    // Read the single row from the input buffer
-    if (!inAccessor.demandData()) {
-        return false;
-    }
-    inAccessor.unmarshalTuple(inputRowCountTuple);
-    
-    int64_t rowCount = 
-        *reinterpret_cast<int64_t const *>(inputRowCountTuple[0].pData);
-
-    inAccessor.consumeTuple();        
-
     clumpPos = 0;
     clumpSkipPos = 0;
 
@@ -354,7 +312,6 @@ bool LcsRowScanExecStream::initializeSystemSampling()
         // Handle empty table or non-sense input.
         clumpSize = 1;
         clumpDistance = 0;
-        return true;
     }
 
     FENNEL_TRACE(TRACE_FINE, "rowCount = " << rowCount);
@@ -413,8 +370,6 @@ bool LcsRowScanExecStream::initializeSystemSampling()
     }        
 
     FENNEL_TRACE(TRACE_FINE, "clumpDistance = " << clumpDistance);
-
-    return true;
 }
 
 
@@ -428,10 +383,6 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     if (!initializeFiltersIfNeeded()) {
-        return EXECRC_BUF_UNDERFLOW;
-    }
-
-    if (samplingMode == SAMPLING_SYSTEM && !initializeSystemSampling()) {
         return EXECRC_BUF_UNDERFLOW;
     }
 

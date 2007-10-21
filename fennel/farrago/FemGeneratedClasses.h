@@ -864,6 +864,8 @@ int32_t getSamplingRepeatableSeed();
 static jmethodID meth_getSamplingRepeatableSeed;
 bool isSamplingRepeatable();
 static jmethodID meth_isSamplingRepeatable;
+int64_t getSamplingRowCount();
+static jmethodID meth_getSamplingRowCount;
 };
 
 class ProxyLbmGeneratorStreamDef

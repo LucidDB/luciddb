@@ -8,6 +8,8 @@
             <test-suite-modifier value="rwconcurrency"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/concurrency/readwrite" target="copy-big-ref-files"/>
+        <ant dir="${open.dir}/luciddb/test/sql/concurrency/readwrite" target="gen-all-sql"/>
         <ant dir="${open.dir}/luciddb/test/sql/concurrency/readwrite" target="create-db"/>
       </init-hook>
 

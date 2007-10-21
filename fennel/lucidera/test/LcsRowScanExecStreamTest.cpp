@@ -992,59 +992,25 @@ void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nCols,
     }
 
     
-    ValuesExecStreamParams rowCountParams;
-    boost::shared_array<FixedBuffer> pRowCountBuffer;
-    ExecStreamEmbryo rowCountStreamEmbryo;
-    bool useTwoInputs = false;
-    if (mode == SAMPLING_SYSTEM) {
-        // setup rowcount input
-        useTwoInputs = true;
-
-        rowCountParams.outputTupleDesc.push_back(
-            TupleAttributeDescriptor(
-                stdTypeFactory.newDataType(STANDARD_TYPE_INT_64), true));
-        
-        pRowCountBuffer.reset(new FixedBuffer[16]);
-        rowCountParams.pTupleBuffer = pRowCountBuffer;
-
-        int64_t rowCount = nRows;
-        
-        TupleData rowCountTupleData(rowCountParams.outputTupleDesc);
-        rowCountTupleData[0].pData = (PConstBuffer)&rowCount;
-        
-        TupleAccessor rowCountAccessor;
-        rowCountAccessor.compute(rowCountParams.outputTupleDesc);
-
-        rowCountAccessor.marshal(rowCountTupleData, pRowCountBuffer.get());
-
-        rowCountParams.bufSize = rowCountAccessor.getCurrentByteCount();
-
-        rowCountStreamEmbryo.init(new ValuesExecStream(), rowCountParams);
-        rowCountStreamEmbryo.getStream()->setName("RowCountExecStream");
-    }
-
     // setup sampling
     scanParams.samplingMode = mode;
     scanParams.samplingRate = rate;
     scanParams.samplingIsRepeatable = true;
     scanParams.samplingRepeatableSeed = seed;
     scanParams.samplingClumps = clumps;
+    if (mode == SAMPLING_SYSTEM) {
+        scanParams.samplingRowCount = nRows;
+    } else {
+        scanParams.samplingRowCount = 0;
+    }
 
     ExecStreamEmbryo scanStreamEmbryo;
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
     SharedExecStream pOutputStream;
 
-    if (useTwoInputs) {
-        pOutputStream =
-            prepareConfluenceGraph(
-                valuesStreamEmbryo, 
-                rowCountStreamEmbryo,
-                scanStreamEmbryo);
-    } else {
-        pOutputStream = 
-            prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
-    }
+    pOutputStream = 
+        prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
     
     // setup generators for result stream
 

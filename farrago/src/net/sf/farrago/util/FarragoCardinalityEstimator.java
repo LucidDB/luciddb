@@ -37,6 +37,13 @@ public class FarragoCardinalityEstimator
 {
     private static final int Duj2a_DIVIDER = 50;
 
+    /** 
+     * Controls whether {@link #f}, {@link #f_small}, {@link #B}, 
+     * {@link #n_small}, and {@link #dn_small} are computed.  Alters
+     * behavior of {@link #estimate()}.
+     */
+    private final boolean assumeUniqueConstraint; 
+    
     /** The full population's size. */
     private final long N;
     
@@ -88,14 +95,29 @@ public class FarragoCardinalityEstimator
     /**
      * Construct a FarragoCardinalityEstimator.
      * 
+     * <p>If the <tt>assumeUniqueConstraint</tt> flag is set, some intermediate
+     * values are not computed.  The {@link #estimate()} method will simply
+     * return either the (given) population size or the result of
+     * {@link #estimateDistinctWithNullClass()} if a null class was seen.  
+     * The methods {@link #estimateDistinctWithNullClass()}, 
+     * {@link #getSampleSize()}, and {@link #getNumSampleClasses()} continue 
+     * to work as normal. 
+     * 
      * @param populationSize the size of the full population
+     * @param assumeUniqueConstraint if true, some intermediate values are not
+     *                               calculated (see above)
      */
-    public FarragoCardinalityEstimator(long populationSize)
+    public FarragoCardinalityEstimator(
+        long populationSize, boolean assumeUniqueConstraint)
     {
         this.N = populationSize;
-        this.f = new SparseLongArray();
-        this.f_small = new SparseLongArray();
-        this.B = new ArrayList<Long>();
+        this.assumeUniqueConstraint = assumeUniqueConstraint;
+        
+        if (!assumeUniqueConstraint) {
+            this.f = new SparseLongArray();
+            this.f_small = new SparseLongArray();
+            this.B = new ArrayList<Long>();
+        }
     }
     
     /**
@@ -123,6 +145,20 @@ public class FarragoCardinalityEstimator
         
         n += classSize;
         dn++;
+        
+        if (isNullClass) {
+            if (nullClassSize != 0) {
+                throw new IllegalArgumentException(
+                    "Multiple null classes are not allowed");
+            }
+            
+            nullClassSize = classSize;
+        }
+
+        if (assumeUniqueConstraint) {
+            return;
+        }
+
         f.increment(classSize);        
         
         // REVIEW: SWZ 21-Sep-2007: If we knew, a priori, the value of n, we 
@@ -144,15 +180,6 @@ public class FarragoCardinalityEstimator
             n_small += classSize;
             dn_small++;
             f_small.increment(classSize);
-        }
-        
-        if (isNullClass) {
-            if (nullClassSize != 0) {
-                throw new IllegalArgumentException(
-                    "Multiple null classes are not allowed");
-            }
-            
-            nullClassSize = classSize;
         }
     }
     
@@ -198,6 +225,12 @@ public class FarragoCardinalityEstimator
     {
         if (n == 0) {
             return 0;
+        } else if (assumeUniqueConstraint) {
+            if (nullClassSize > 0) {
+                return estimateDistinctWithNullClass();
+            } else {
+                return N;
+            }
         }
         
         // f1 is the number of distinct values in the sample with frequency 1
@@ -536,30 +569,53 @@ public class FarragoCardinalityEstimator
 
     private static class SparseLongArray
     {
-        private final Map<Long, Long> table;
+        private final long GENERIC_THRESHOLD = 10;
+        
+        /**
+         * Storage for the first N ({@link #GENERIC_THRESHOLD}) indices.
+         */
+        private final long[] base;
+        
+        /**
+         * Generic storage for any other index;
+         */
+        private final Map<Long, Long> generic;
         
         public SparseLongArray()
         {
-            this.table = new HashMap<Long, Long>();
+            this.base = new long[(int)GENERIC_THRESHOLD];
+            this.generic = new HashMap<Long, Long>();
             
         }
         public long get(long index)
         {
-            Long value = table.get(index);
-            if (value == null) {
-                return 0;
+            if (index < GENERIC_THRESHOLD) {
+                return base[(int)index];
+            } else {
+                Long value = generic.get(index);
+                if (value == null) {
+                    return 0;
+                }
+                return value;
             }
-            return value;
         }
         
         public void set(long index, long value)
         {
-            table.put(index, value);
+            if (index < GENERIC_THRESHOLD) {
+                base[(int)index] = value;
+            } else {
+                generic.put(index, value);
+            }
         }
         
         public void increment(long index)
         {
-            set(index, get(index) + 1);
+            if (index < GENERIC_THRESHOLD) {
+                base[(int)index]++;
+            } else {
+                set(index, get(index) + 1);
+            }
         }
     }
 }

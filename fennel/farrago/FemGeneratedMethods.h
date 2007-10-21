@@ -134,6 +134,7 @@ jmethodID ProxyLcsRowScanStreamDef::meth_getSamplingMode = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_getSamplingRate = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_getSamplingRepeatableSeed = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_isSamplingRepeatable = 0;
+jmethodID ProxyLcsRowScanStreamDef::meth_getSamplingRowCount = 0;
 jmethodID ProxyLhxAggStreamDef::meth_getCndGroupByKeys = 0;
 jmethodID ProxyLhxAggStreamDef::meth_getNumRows = 0;
 jmethodID ProxyLhxJoinStreamDef::meth_getCndBuildKeys = 0;
@@ -522,6 +523,7 @@ ProxyLcsRowScanStreamDef::meth_getSamplingMode = pEnv->GetMethodID(jClass,"getSa
 ProxyLcsRowScanStreamDef::meth_getSamplingRate = pEnv->GetMethodID(jClass,"getSamplingRate","()F");
 ProxyLcsRowScanStreamDef::meth_getSamplingRepeatableSeed = pEnv->GetMethodID(jClass,"getSamplingRepeatableSeed","()I");
 ProxyLcsRowScanStreamDef::meth_isSamplingRepeatable = pEnv->GetMethodID(jClass,"isSamplingRepeatable","()Z");
+ProxyLcsRowScanStreamDef::meth_getSamplingRowCount = pEnv->GetMethodID(jClass,"getSamplingRowCount","()J");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemLhxAggStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyLhxAggStreamDef>));
@@ -1543,6 +1545,11 @@ return pEnv->CallIntMethod(jObject,meth_getSamplingRepeatableSeed);
 bool ProxyLcsRowScanStreamDef::isSamplingRepeatable()
 {
 return pEnv->CallBooleanMethod(jObject,meth_isSamplingRepeatable);
+}
+
+int64_t ProxyLcsRowScanStreamDef::getSamplingRowCount()
+{
+return pEnv->CallLongMethod(jObject,meth_getSamplingRowCount);
 }
 
 int64_t ProxyLhxAggStreamDef::getCndGroupByKeys()

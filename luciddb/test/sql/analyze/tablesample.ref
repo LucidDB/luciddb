@@ -23,9 +23,6 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH10K]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH10K$k10, SYS$CLUSTERED_INDEX$BENCH10K$k100, SYS$CLUSTERED_INDEX$BENCH10K$k100k, SYS$CLUSTERED_INDEX$BENCH10K$k10k, SYS$CLUSTERED_INDEX$BENCH10K$k1k, SYS$CLUSTERED_INDEX$BENCH10K$k2, SYS$CLUSTERED_INDEX$BENCH10K$k25, SYS$CLUSTERED_INDEX$BENCH10K$k250k, SYS$CLUSTERED_INDEX$BENCH10K$k4, SYS$CLUSTERED_INDEX$BENCH10K$k40k, SYS$CLUSTERED_INDEX$BENCH10K$k5, SYS$CLUSTERED_INDEX$BENCH10K$k500k, SYS$CLUSTERED_INDEX$BENCH10K$kseq]], mode=[system], rate=[0.0010], repeatableSeed=[-])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0=[{inputs}], expr#1=['LOCALDB'], expr#2=[CAST($t1):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#3=['ANALYZETEST'], expr#4=[CAST($t3):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=['BENCH10K'], expr#6=[CAST($t5):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#7=[STAT_GET_ROW_COUNT($t2, $t4, $t6)], expr#8=[CAST($t7):BIGINT], $0=[$t8])'
-'        IterOneRowRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Validate that only k2 is projected, despite count(*)
 0: jdbc:luciddb:> explain plan for select "k2", count(*)
@@ -52,9 +49,6 @@
 '      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
 '        FennelRenameRel(fieldNames=[[$f0]])'
 '          LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH1M]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH1M$k2]], mode=[system], rate=[0.01], repeatableSeed=[-])'
-'            IteratorToFennelConverter'
-'              IterCalcRel(expr#0=[{inputs}], expr#1=['LOCALDB'], expr#2=[CAST($t1):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#3=['ANALYZETEST'], expr#4=[CAST($t3):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=['BENCH1M'], expr#6=[CAST($t5):VARCHAR(2000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#7=[STAT_GET_ROW_COUNT($t2, $t4, $t6)], expr#8=[CAST($t7):BIGINT], $0=[$t8])'
-'                IterOneRowRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !outputformat table
 0: jdbc:luciddb:> 
@@ -594,7 +588,7 @@
 +---------+
 | EXPR$0  |
 +---------+
-| 50      |
+| 60      |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Report 200 rows where there are 100

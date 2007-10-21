@@ -54,7 +54,6 @@ FennelResource::FennelResource(Locale locale)
       _scratchMemExhausted(this, "scratchMemExhausted"),
       _uniqueConstraintViolated(this, "uniqueConstraintViolated"),
       _incompatibleDataFormat(this, "incompatibleDataFormat"),
-      _cacheAllocFailed(this, "cacheAllocFailed"),
       _readDataFailed(this, "readDataFailed"),
       _dataTransferFailed(this, "dataTransferFailed"),
       _writeLogFailed(this, "writeLogFailed"),
@@ -111,10 +110,6 @@ string FennelResource::uniqueConstraintViolated() const
 string FennelResource::incompatibleDataFormat() const
 {
     return _incompatibleDataFormat.format();
-}
-string FennelResource::cacheAllocFailed(const std::string &p0) const
-{
-    return _cacheAllocFailed.format(p0);
 }
 string FennelResource::readDataFailed(const std::string &p0) const
 {

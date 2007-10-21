@@ -320,10 +320,11 @@ public:
             return false;
         }
 #ifdef DEBUG
+        int errorCode;
         if (getCache().getAllocator().setProtection(
-                pBuffer, getCache().getPageSize(), false)) 
+                pBuffer, getCache().getPageSize(), false, &errorCode)) 
         {
-            throw SysCallExcn("memory protection failed");
+            throw SysCallExcn("memory protection failed", errorCode);
         }
 #endif
         return lock.tryUpgrade(txnId);
@@ -342,10 +343,11 @@ public:
             waitForPendingIO(pageGuard);
         }
 #ifdef DEBUG
+        int errorCode;
         if (getCache().getAllocator().setProtection(
-                pBuffer, getCache().getPageSize(), false))
+                pBuffer, getCache().getPageSize(), false, &errorCode))
         {
-            throw SysCallExcn("memory protection failed");
+            throw SysCallExcn("memory protection failed", errorCode);
         }
 #endif
         bool rc = lock.tryUpgrade(txnId);

@@ -177,12 +177,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 
     CacheParams cacheParams;
     cacheParams.readConfig(configMap);
-    SharedCache pCache;
-    try {
-        pCache = Cache::newCache(cacheParams);
-    } catch(std::exception &excn) {
-        handleCacheAllocException(excn);
-    }
+    SharedCache pCache = Cache::newCache(cacheParams);
 
     JniUtilParams jniUtilParams;
     jniUtilParams.readConfig(configMap);
@@ -312,11 +307,7 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
             }
         }
 
-        try {
-            pCache->setAllocatedPageCount(pageCount);
-        } catch(std::exception &excn) {
-            handleCacheAllocException(excn);
-        }
+        pCache->setAllocatedPageCount(pageCount);
 
         if (!decreasingPageCount) {
             // Notify governor of increased page count
@@ -743,24 +734,6 @@ void CmdInterpreter::visit(ProxyCmdVersionIndexRoot &cmd)
     pSnapshotSegment->versionPage(
         PageId(cmd.getOldRootPageId()),
         PageId(cmd.getNewRootPageId()));
-}
-
-void CmdInterpreter::handleCacheAllocException(const std::exception &excn)
-    throw(FennelExcn)
-{
-    const std::bad_alloc *badAllocExcn = 
-        dynamic_cast<const std::bad_alloc *>(&excn);
-    if (badAllocExcn != NULL) {
-        // Convert bad_alloc's terrible error mesage into something fit for
-        // human consumption.
-        throw FennelExcn(
-            FennelResource::instance().cacheAllocFailed(
-                "malloc failed"));
-    }
-
-    throw FennelExcn(
-        FennelResource::instance().cacheAllocFailed(
-            excn.what()));
 }
 
 FENNEL_END_CPPFILE("$Id$");
