@@ -41,17 +41,26 @@ public abstract class AggregateRelBase
 {
     //~ Instance fields --------------------------------------------------------
 
-    protected Call [] aggCalls;
+    protected List<AggregateCall> aggCalls;
     protected int groupCount;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates an AggregateRelBase.
+     *
+     * @param cluster Cluster
+     * @param traits Traits
+     * @param child Child
+     * @param groupCount Size of grouping key
+     * @param aggCalls Collection of calls to aggregate functions
+     */
     protected AggregateRelBase(
         RelOptCluster cluster,
         RelTraitSet traits,
         RelNode child,
         int groupCount,
-        Call [] aggCalls)
+        List<AggregateCall> aggCalls)
     {
         super(cluster, traits, child);
         Util.pre(aggCalls != null, "aggCalls != null");
@@ -64,15 +73,34 @@ public abstract class AggregateRelBase
     // implement RelNode
     public boolean isDistinct()
     {
-        return (aggCalls.length == 0)
+        return (aggCalls.size() == 0)
             && (groupCount == getChild().getRowType().getFieldList().size());
     }
 
-    public Call [] getAggCalls()
+    /**
+     * @deprecated Use {@link #getAggCallList()}; no usages in green or DT red code
+     */
+    public AggregateCall[] getAggCalls()
+    {
+        return aggCalls.toArray(new AggregateCall[aggCalls.size()]);
+    }
+
+    /**
+     * Returns a list of calls to aggregate functions.
+     *
+     * @return list of calls to aggregate functions
+     */
+    public List<AggregateCall> getAggCallList()
     {
         return aggCalls;
     }
 
+    /**
+     * Returns the number of grouping fields. These fields are the leading
+     * fields in both the input and output records.
+     *
+     * @return number of grouping fields
+     */
     public int getGroupCount()
     {
         return groupCount;
@@ -85,14 +113,19 @@ public abstract class AggregateRelBase
         names.add("child");
         names.add("groupCount");
         values.add(groupCount);
-        for (int i = 0; i < aggCalls.length; i++) {
-            names.add("agg#" + i);
-            values.add(aggCalls[i]);
+        int i = -1;
+        for (AggregateCall aggCall : aggCalls) {
+            ++i;
+            final String name;
+            if (aggCall.getName() != null) {
+                name = aggCall.getName();
+            } else {
+                name = "agg#" + i;
+            }
+            names.add(name);
+            values.add(aggCall);
         }
-        pw.explain(
-            this,
-            names.toArray(new String[names.size()]),
-            values.toArray(new Object[values.size()]));
+        pw.explain(this, names, values);
     }
 
     // implement RelNode
@@ -118,53 +151,58 @@ public abstract class AggregateRelBase
 
     protected RelDataType deriveRowType()
     {
-        final RelDataType childType = getChild().getRowType();
-        final RelDataType [] types =
-            new RelDataType[groupCount + aggCalls.length];
-        for (int i = 0; i < groupCount; i++) {
-            types[i] = childType.getFields()[i].getType();
-        }
-        for (int i = 0; i < aggCalls.length; i++) {
-            final Call aggCall = aggCalls[i];
-            assert typeMatchesInferred(aggCall, true);
-            types[groupCount + i] = aggCall.getType();
-        }
         return getCluster().getTypeFactory().createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
-                    return groupCount + aggCalls.length;
+                    return groupCount + aggCalls.size();
                 }
 
                 public String getFieldName(int index)
                 {
                     if (index < groupCount) {
-                        return childType.getFields()[index].getName();
+                        return getChild().getRowType().getFields()[index]
+                            .getName();
                     } else {
-                        return "$f" + index;
+                        final AggregateCall aggCall =
+                            aggCalls.get(index - groupCount);
+                        if (aggCall.getName() != null) {
+                            return aggCall.getName();
+                        } else {
+                            return "$f" + index;
+                        }
                     }
                 }
 
                 public RelDataType getFieldType(int index)
                 {
-                    return types[index];
+                    if (index < groupCount) {
+                       return getChild().getRowType().getFields()[index]
+                           .getType();
+                    } else {
+                        final AggregateCall aggCall =
+                            aggCalls.get(index - groupCount);
+                        assert typeMatchesInferred(aggCall, true);
+                        return aggCall.getType();
+                    }
                 }
             });
     }
 
     /**
-     * Returns whether the inferred type of a {@link Call} matches the type it
-     * was given when it was created.
+     * Returns whether the inferred type of an {@link AggregateCall} matches
+     * the type it was given when it was created.
      *
      * @param aggCall Aggregate call
      * @param fail Whether to fail if the types do not match
      *
      * @return Whether the inferred and declared types match
      */
-    private boolean typeMatchesInferred(final Call aggCall,
+    private boolean typeMatchesInferred(
+        final AggregateCall aggCall,
         final boolean fail)
     {
-        SqlAggFunction aggFunction = (SqlAggFunction) aggCall.aggregation;
+        SqlAggFunction aggFunction = (SqlAggFunction) aggCall.getAggregation();
         AggCallBinding callBinding = aggCall.createBinding(this);
         RelDataType type = aggFunction.inferReturnType(callBinding);
         RelDataType expectedType = aggCall.getType();
@@ -181,7 +219,7 @@ public abstract class AggregateRelBase
      */
     public boolean containsDistinctCall()
     {
-        for (Call call : aggCalls) {
+        for (AggregateCall call : aggCalls) {
             if (call.isDistinct()) {
                 return true;
             }
@@ -191,110 +229,48 @@ public abstract class AggregateRelBase
 
     //~ Inner Classes ----------------------------------------------------------
 
-    public static class Call
-    {
-        private final Aggregation aggregation;
+    /**
+     * @deprecated remove when lucidera code uses this
+     */
+    public static class Call extends AggregateCall {
 
-        // TODO jvs 24-Apr-2006:  make this array and its contents
-        // immutable
-        public final int [] args;
-        private final boolean distinct;
-        private final RelDataType type;
-
+        /**
+         * @deprecated
+         */
         public Call(
             Aggregation aggregation,
             boolean distinct,
-            int [] args,
+            int[] args,
             RelDataType type)
         {
-            this.type = type;
-            assert aggregation != null;
-            assert args != null;
-            assert type != null;
-            this.aggregation = aggregation;
-            this.args = args;
-            this.distinct = distinct;
-        }
-
-        public boolean isDistinct()
-        {
-            return distinct;
-        }
-
-        public Aggregation getAggregation()
-        {
-            return aggregation;
-        }
-
-        public int [] getArgs()
-        {
-            return args;
-        }
-
-        public RelDataType getType()
-        {
-            return type;
-        }
-
-        public String toString()
-        {
-            StringBuilder buf = new StringBuilder(aggregation.getName());
-            buf.append("(");
-            if (distinct) {
-                buf.append((args.length == 0) ? "DISTINCT" : "DISTINCT ");
-            }
-            for (int i = 0; i < args.length; i++) {
-                if (i > 0) {
-                    buf.append(", ");
-                }
-                buf.append(args[i]);
-            }
-            buf.append(")");
-            return buf.toString();
-        }
-
-        // override Object
-        public boolean equals(Object o)
-        {
-            if (!(o instanceof Call)) {
-                return false;
-            }
-            Call other = (Call) o;
-            return aggregation.equals(other.aggregation)
-                && (distinct == other.distinct)
-                && Arrays.equals(args, other.args);
-        }
-
-        /**
-         * Creates a binding of this call in the context of an {@link
-         * AggregateRel}, which can then be used to infer the return type.
-         */
-        public AggCallBinding createBinding(AggregateRelBase aggregateRelBase)
-        {
-            return new AggCallBinding(
-                aggregateRelBase.getCluster().getTypeFactory(),
-                (SqlAggFunction) aggregation,
-                aggregateRelBase,
-                args);
+            super(aggregation, distinct, IntList.asList(args), type, null);
         }
     }
 
     /**
      * Implementation of the {@link SqlOperatorBinding} interface for an {@link
-     * Call aggregate call} applied to a set of operands in the context of a
+     * AggregateCall aggregate call} applied to a set of operands in the context of a
      * {@link AggregateRel}.
      */
     public static class AggCallBinding
         extends SqlOperatorBinding
     {
         private final AggregateRelBase aggregateRel;
-        private final int [] operands;
+        private final List<Integer> operands;
 
+        /**
+         * Creates an AggCallBinding
+         *
+         * @param typeFactory  Type factory
+         * @param aggFunction  Aggregation function
+         * @param aggregateRel Relational expression which is context
+         * @param operands     Operand ordinals
+         */
         AggCallBinding(
             RelDataTypeFactory typeFactory,
             SqlAggFunction aggFunction,
             AggregateRelBase aggregateRel,
-            int [] operands)
+            List<Integer> operands)
         {
             super(typeFactory, aggFunction);
             this.aggregateRel = aggregateRel;
@@ -303,13 +279,13 @@ public abstract class AggregateRelBase
 
         public int getOperandCount()
         {
-            return operands.length;
+            return operands.size();
         }
 
         public RelDataType getOperandType(int ordinal)
         {
             final RelDataType childType = aggregateRel.getChild().getRowType();
-            int operand = operands[ordinal];
+            int operand = operands.get(ordinal);
             return childType.getFields()[operand].getType();
         }
     }

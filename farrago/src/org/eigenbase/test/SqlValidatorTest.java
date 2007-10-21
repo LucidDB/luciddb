@@ -1149,6 +1149,14 @@ public class SqlValidatorTest
         }
     }
 
+    public void testRow()
+    {
+        // double-nested rows can confuse validator namespace resolution
+        checkColumnType("select t.r.\"EXPR$1\".\"EXPR$2\" \n" +
+            "from (select ((1,2),(3,4,5)) r from dept) t",
+            "INTEGER NOT NULL");
+    }
+
     public void testMultiset()
     {
         checkExpType("multiset[1]", "INTEGER NOT NULL MULTISET NOT NULL");

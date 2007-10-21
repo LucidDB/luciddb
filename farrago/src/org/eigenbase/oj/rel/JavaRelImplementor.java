@@ -384,12 +384,12 @@ public class JavaRelImplementor
             }
         }
     }
-    
+
     public Object visitChildInternal(RelNode child)
     {
         return visitChildInternal(child, 0);
     }
-    
+
     public Object visitChildInternal(RelNode child, int ordinal)
     {
         final CallingConvention convention = child.getConvention();
@@ -774,7 +774,7 @@ public class JavaRelImplementor
     }
 
     public Expression implementStart(
-        AggregateRel.Call call,
+        AggregateCall call,
         JavaRel rel)
     {
         OJAggImplementor aggImplementor =
@@ -783,7 +783,7 @@ public class JavaRelImplementor
     }
 
     public Expression implementStartAndNext(
-        AggregateRel.Call call,
+        AggregateCall call,
         JavaRel rel)
     {
         OJAggImplementor aggImplementor =
@@ -792,7 +792,7 @@ public class JavaRelImplementor
     }
 
     public void implementNext(
-        AggregateRel.Call call,
+        AggregateCall call,
         JavaRel rel,
         Expression accumulator)
     {
@@ -805,7 +805,7 @@ public class JavaRelImplementor
      * Generates the expression to retrieve the result of this aggregation.
      */
     public Expression implementResult(
-        AggregateRel.Call call,
+        AggregateCall call,
         Expression accumulator)
     {
         OJAggImplementor aggImplementor =

@@ -1878,7 +1878,7 @@ public abstract class SqlOperatorTests
         getTester().checkNull("cast(null as tinyint) - cast(null as smallint)");
 
         // TODO: Fix bug
-        if (Bug.Fn25Fixed) {
+        if (Bug.Fnl25Fixed) {
             // Should throw out of range error
             getTester().checkFails(
                 "cast(100 as tinyint) - cast(-100 as tinyint)",
@@ -2015,7 +2015,7 @@ public abstract class SqlOperatorTests
         getTester().checkNull("2e-3*cast(null as integer)");
         getTester().checkNull("cast(null as tinyint) * cast(4 as smallint)");
 
-        if (Bug.Fn25Fixed) {
+        if (Bug.Fnl25Fixed) {
             // Should throw out of range error
             getTester().checkFails(
                 "cast(100 as tinyint) * cast(-2 as tinyint)",
@@ -2141,7 +2141,7 @@ public abstract class SqlOperatorTests
         getTester().checkNull("cast(null as tinyint)+1");
         getTester().checkNull("1e-2+cast(null as double)");
 
-        if (Bug.Fn25Fixed) {
+        if (Bug.Fnl25Fixed) {
             // Should throw out of range error
             getTester().checkFails(
                 "cast(100 as tinyint) + cast(100 as tinyint)",
@@ -3010,9 +3010,10 @@ public abstract class SqlOperatorTests
             "bc",
             "VARCHAR(3) NOT NULL");
 
-        //substring reg exp not yet supported
-        //getTester().checkString("substring('foobar' from '%#\"o_b#\"%' for
-        //'#')", "oob");
+        if (Bug.Frg296Fixed) {
+            // substring regexp not supported yet
+            getTester().checkString("substring('foobar' from '%#\"o_b#\"%' for'#')", "oob", "xx");
+        }
         getTester().checkNull("substring(cast(null as varchar(1)),1,2)");
     }
 

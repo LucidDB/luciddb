@@ -105,8 +105,10 @@ public class ConverterTest extends TestCase
                 SqlStdOperatorTable.instance(),
                 testContext.seeker,
                 testContext.connection.getRelOptSchema().getTypeFactory());
+        validator.setIdentifierExpansion(true);
         final SqlToRelConverter converter =
-            new SqlToRelConverter(validator,
+            new SqlToRelConverter(
+                validator,
                 testContext.connection.getRelOptSchema(), testContext.env,
                 OJPlannerFactory.threadInstance().newPlanner(),
                 testContext.connection,

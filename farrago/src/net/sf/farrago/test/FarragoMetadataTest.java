@@ -331,7 +331,6 @@ public class FarragoMetadataTest
         groupKey.set(0);
         groupKey.set(1);
         double expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, TAB_ROWCOUNT);
-        expected = RelMdUtil.numDistinctVals(expected, expected);
         checkPopulation(
             "select c0, count(*) from tab group by c0",
             groupKey,

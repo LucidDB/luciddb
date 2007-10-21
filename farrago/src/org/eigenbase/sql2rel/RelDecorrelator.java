@@ -34,7 +34,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
@@ -58,9 +57,12 @@ public class RelDecorrelator
     //~ Instance fields --------------------------------------------------------
 
     // maps built during translation
-    Map<RelNode, SortedSet<CorrelatorRel.Correlation>> mapRefRelToCorVar;
-    SortedMap<CorrelatorRel.Correlation, CorrelatorRel> mapCorVarToCorRel;
-    Map<RexFieldAccess, CorrelatorRel.Correlation> mapFieldAccessToCorVar;
+    private final Map<RelNode, SortedSet<CorrelatorRel.Correlation>>
+        mapRefRelToCorVar;
+    private final SortedMap<CorrelatorRel.Correlation, CorrelatorRel>
+        mapCorVarToCorRel;
+    private final Map<RexFieldAccess, CorrelatorRel.Correlation>
+        mapFieldAccessToCorVar;
 
     private final DecorrelateRelVisitor decorrelateVisitor;
 
@@ -70,15 +72,19 @@ public class RelDecorrelator
     private RelNode currentRel;
 
     // maps built during decorrelation
-    private Map<RelNode, RelNode> mapOldToNewRel;
+    private final Map<RelNode, RelNode> mapOldToNewRel;
 
     // map rel to all the newly created correlated variables in its output
-    private Map<RelNode, SortedMap<CorrelatorRel.Correlation, Integer>>
+    private final Map<RelNode, SortedMap<CorrelatorRel.Correlation, Integer>>
         mapNewRelToMapCorVarToOutputPos;
 
     // another map to map old input positions to new input positions
     // this is from the view point of the parent rel of a new rel.
-    private Map<RelNode, Map<Integer, Integer>> mapNewRelToMapOldToNewOutputPos;
+    private final Map<RelNode, Map<Integer, Integer>>
+        mapNewRelToMapOldToNewOutputPos;
+
+    private final HashSet<CorrelatorRel> generatedCorRels =
+        new HashSet<CorrelatorRel>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -94,6 +100,12 @@ public class RelDecorrelator
         this.mapFieldAccessToCorVar = mapFieldAccessToCorVar;
 
         decorrelateVisitor = new DecorrelateRelVisitor();
+        mapOldToNewRel = new HashMap<RelNode, RelNode>();
+        mapNewRelToMapCorVarToOutputPos =
+            new HashMap<RelNode,
+                SortedMap<CorrelatorRel.Correlation, Integer>>();
+        mapNewRelToMapOldToNewOutputPos =
+            new HashMap<RelNode, Map<Integer, Integer>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -104,7 +116,9 @@ public class RelDecorrelator
         HepProgramBuilder programBuilder = new HepProgramBuilder();
 
         programBuilder.addRuleInstance(
-            new AdjustProjectForCountAggregateRule());
+            new AdjustProjectForCountAggregateRule(false));
+        programBuilder.addRuleInstance(
+            new AdjustProjectForCountAggregateRule(true));
 
         HepPlanner planner =
             new HepPlanner(
@@ -115,14 +129,9 @@ public class RelDecorrelator
         root = planner.findBestExp();
 
         // Perform decorrelation.
-        mapOldToNewRel = new HashMap<RelNode, RelNode>();
-
-        mapNewRelToMapCorVarToOutputPos =
-            new HashMap<RelNode,
-                SortedMap<CorrelatorRel.Correlation, Integer>>();
-
-        mapNewRelToMapOldToNewOutputPos =
-            new HashMap<RelNode, Map<Integer, Integer>>();
+        mapOldToNewRel.clear();
+        mapNewRelToMapCorVarToOutputPos.clear();
+        mapNewRelToMapOldToNewOutputPos.clear();
 
         decorrelateVisitor.visit(root, 0, null);
 
@@ -437,36 +446,38 @@ public class RelDecorrelator
         }
 
         // now it's time to rewrite AggregateRel
-        List<AggregateRel.Call> newAggCalls =
-            new ArrayList<AggregateRel.Call>();
-        AggregateRel.Call [] oldAggCalls = rel.getAggCalls();
+        List<AggregateCall> newAggCalls =
+            new ArrayList<AggregateCall>();
+        List<AggregateCall> oldAggCalls = rel.getAggCallList();
 
-        AggregateRel.Call oldAggCall;
+       // AggregateRel.Call oldAggCall;
         int oldChildOutputFieldCount = oldChildRel.getRowType().getFieldCount();
         int newChildOutputFieldCount =
             newProjectRel.getRowType().getFieldCount();
 
-        for (int i = 0; i < oldAggCalls.length; i++) {
-            oldAggCall = oldAggCalls[i];
-            int [] oldAggArgs = oldAggCall.getArgs();
+        int i = -1;
+        for (AggregateCall oldAggCall : oldAggCalls) {
+            ++i;
+            List<Integer> oldAggArgs = oldAggCall.getArgList();
 
-            int [] aggArgs = new int[oldAggArgs.length];
+            List<Integer> aggArgs = new ArrayList<Integer>();
 
-            // Adjust the aggregater argument positions.
-            // Note aggregater does not change input ordering, so the child
+            // Adjust the aggregator argument positions.
+            // Note aggregator does not change input ordering, so the child
             // output position mapping can be used to derive the new positions
             // for the argument.
-            for (int k = 0; k < aggArgs.length; k++) {
-                int oldPos = oldAggArgs[k];
-                aggArgs[k] = combinedMap.get(oldPos);
+            for (int k = 0; k < oldAggArgs.size(); k++) {
+                int oldPos = oldAggArgs.get(k);
+                aggArgs.add(combinedMap.get(oldPos));
             }
 
             newAggCalls.add(
-                new AggregateRel.Call(
+                new AggregateCall(
                     oldAggCall.getAggregation(),
                     oldAggCall.isDistinct(),
                     aggArgs,
-                    oldAggCall.getType()));
+                    oldAggCall.getType(),
+                    oldAggCall.getName()));
 
             // The old to new output position mapping will be the same as that
             // of newProjectRel, plus any aggregates that the oldAgg produces.
@@ -480,7 +491,7 @@ public class RelDecorrelator
                 rel.getCluster(),
                 newProjectRel,
                 newGroupKeyCount,
-                newAggCalls.toArray(new AggregateRel.Call[0]));
+                newAggCalls);
 
         mapOldToNewRel.put(rel, newAggregateRel);
 
@@ -683,6 +694,7 @@ public class RelDecorrelator
                 if (resultRel == null) {
                     resultRel = distinctRel;
                 } else {
+                    final Set<String> variablesStopped = Collections.emptySet();
                     resultRel =
                         new JoinRel(
                             cluster,
@@ -690,7 +702,7 @@ public class RelDecorrelator
                             distinctRel,
                             cluster.getRexBuilder().makeLiteral(true),
                             JoinRelType.INNER,
-                            Collections.EMPTY_SET);
+                            variablesStopped);
                 }
             }
         }
@@ -765,6 +777,7 @@ public class RelDecorrelator
                 leftChildOutputCount,
                 mapCorVarToOutputPos);
 
+        final Set<String> variablesStopped = Collections.emptySet();
         RelNode joinRel =
             new JoinRel(
                 rel.getCluster(),
@@ -772,7 +785,7 @@ public class RelDecorrelator
                 valueGenRel,
                 rexBuilder.makeLiteral(true),
                 JoinRelType.INNER,
-                Collections.EMPTY_SET);
+                variablesStopped);
 
         mapOldToNewRel.put(oldChildRel, joinRel);
         mapNewRelToMapCorVarToOutputPos.put(joinRel, mapCorVarToOutputPos);
@@ -794,7 +807,7 @@ public class RelDecorrelator
         // Rewrite logic:
         //
         // 1. If a FilterRel references a correlated field in its filter
-        // condition, rewrite the FilterRel to be 
+        // condition, rewrite the FilterRel to be
         //   FilterRel
         //     JoinRel(cross product)
         //       OriginalFilterInput
@@ -978,6 +991,7 @@ public class RelDecorrelator
                 rightChildMapOldToNewOutputPos.get(i) + newLeftFieldCount);
         }
 
+        final Set<String> variablesStopped = Collections.emptySet();
         RelNode newRel =
             new JoinRel(
                 rel.getCluster(),
@@ -985,7 +999,7 @@ public class RelDecorrelator
                 newRightRel,
                 condition,
                 rel.getJoinType(),
-                Collections.EMPTY_SET);
+                variablesStopped);
 
         mapOldToNewRel.put(rel, newRel);
         mapNewRelToMapOldToNewOutputPos.put(newRel, mapOldToNewOutputPos);
@@ -1031,6 +1045,7 @@ public class RelDecorrelator
         SortedMap<CorrelatorRel.Correlation, Integer> mapCorVarToOutputPos =
             new TreeMap<CorrelatorRel.Correlation, Integer>();
 
+        final Set<String> variablesStopped = Collections.emptySet();
         RelNode newRel =
             new JoinRel(
                 rel.getCluster(),
@@ -1038,7 +1053,7 @@ public class RelDecorrelator
                 newRightRel,
                 decorrelateExpr(rel.getCondition()),
                 rel.getJoinType(),
-                Collections.EMPTY_SET);
+                variablesStopped);
 
         // Create the mapping between the output of the old correlation rel
         // and the new join rel
@@ -1207,7 +1222,7 @@ public class RelDecorrelator
     }
 
     /**
-     * Pull projRel above the joinRel from its RHS input. Enforce nullability
+     * Pulls projRel above the joinRel from its RHS input. Enforces nullability
      * for join output.
      *
      * @param corRel Correlator
@@ -1756,8 +1771,8 @@ public class RelDecorrelator
 
             // check singleAggRel is single_value agg
             if ((singleAggRel.getGroupCount() != 0)
-                || (singleAggRel.getAggCalls().length != 1)
-                || !(singleAggRel.getAggCalls()[0].getAggregation()
+                || (singleAggRel.getAggCallList().size() != 1)
+                || !(singleAggRel.getAggCallList().get(0).getAggregation()
                     instanceof SqlSingleValueAggFunction))
             {
                 return;
@@ -1849,8 +1864,8 @@ public class RelDecorrelator
             // check that the agg is of the following type:
             // doing a single_value() on the entire input
             if ((aggRel.getGroupCount() != 0)
-                || (aggRel.getAggCalls().length != 1)
-                || !(aggRel.getAggCalls()[0].getAggregation()
+                || (aggRel.getAggCallList().size() != 1)
+                || !(aggRel.getAggCallList().get(0).getAggregation()
                     instanceof SqlSingleValueAggFunction))
             {
                 return;
@@ -1999,6 +2014,7 @@ public class RelDecorrelator
             }
 
             // make the new join rel
+            final Set<String> variablesStopped = Collections.emptySet();
             JoinRel joinRel =
                 new JoinRel(
                     corRel.getCluster(),
@@ -2006,7 +2022,7 @@ public class RelDecorrelator
                     rightInputRel,
                     joinCond,
                     joinType,
-                    Collections.EMPTY_SET);
+                    variablesStopped);
 
             RelNode newProjRel =
                 projectJoinOutputWithNullability(
@@ -2092,18 +2108,18 @@ public class RelDecorrelator
 
             RexNode [] aggInputProjExprs = aggInputProjRel.getProjectExps();
 
-            AggregateRel.Call [] aggCalls = aggRel.getAggCalls();
+            List<AggregateCall> aggCalls = aggRel.getAggCallList();
             Set<Integer> isCountStar = new HashSet<Integer>();
 
             // mark if agg produces count(*) which needs to reference the
             // nullIndicator after the transformation.
-            for (int i = 0; i < aggCalls.length; i++) {
-                AggregateRel.Call aggCall = aggCalls[i];
-                int [] aggArgs = aggCall.getArgs();
-                if (aggCall.getAggregation() instanceof SqlCountAggFunction) {
-                    if (aggArgs.length == 0) {
-                        isCountStar.add(i);
-                    }
+            int k = -1;
+            for (AggregateCall aggCall : aggCalls) {
+                ++k;
+                if (aggCall.getAggregation() instanceof SqlCountAggFunction
+                    && aggCall.getArgList().size() == 0)
+                {
+                    isCountStar.add(k);
                 }
             }
 
@@ -2149,14 +2165,13 @@ public class RelDecorrelator
                     new ArrayList<RexFieldAccess>();
                 List<RexInputRef> correlatedInputRefJoinKeys =
                     new ArrayList<RexInputRef>();
-                for (int i = 0; i < tmpCorrelatedJoinKeys.size(); i++) {
-                    assert (tmpCorrelatedJoinKeys.get(i)
-                        instanceof RexFieldAccess);
+                for (RexNode joinKey : tmpCorrelatedJoinKeys) {
+                    assert joinKey instanceof RexFieldAccess;
                     correlatedJoinKeys.add(
-                        (RexFieldAccess) tmpCorrelatedJoinKeys.get(i));
+                        (RexFieldAccess) joinKey);
                     RexNode correlatedInputRef =
                         removeCorrelationExpr(
-                            tmpCorrelatedJoinKeys.get(i),
+                            joinKey,
                             false);
                     assert (correlatedInputRef instanceof RexInputRef);
                     correlatedInputRefJoinKeys.add(
@@ -2317,6 +2332,7 @@ public class RelDecorrelator
                     new RexNode[] { rexBuilder.makeLiteral(true) },
                     new String[] { "nullIndicator" });
 
+            final Set<String> variablesStopped = Collections.emptySet();
             JoinRel joinRel =
                 new JoinRel(
                     cluster,
@@ -2324,7 +2340,7 @@ public class RelDecorrelator
                     rightInputRel,
                     joinCond,
                     joinType,
-                    Collections.EMPTY_SET);
+                    variablesStopped);
 
             // To the consumer of joinOutputProjRel, nullIndicator is located
             // at the end
@@ -2376,34 +2392,33 @@ public class RelDecorrelator
 
             int groupbyCount = leftInputFieldCount;
 
-            AggregateRel.Call [] newAggCalls =
-                new AggregateRel.Call[aggCalls.length];
-            for (int i = 0; i < aggCalls.length; i++) {
-                AggregateRel.Call aggCall = aggCalls[i];
+            List<AggregateCall> newAggCalls =
+                new ArrayList<AggregateCall>();
+            k = -1;
+            for (AggregateCall aggCall : aggCalls) {
+                ++k;
+                final List<Integer> aggArgs = aggCall.getArgList();
+                final List<Integer> newAggArgs;
 
-                int [] aggArgs = aggCall.getArgs();
-                int [] newAggArgs;
-
-                newAggArgs = new int[aggArgs.length];
-
-                if (isCountStar.contains(i)) {
+                if (isCountStar.contains(k)) {
                     // this is a count(*), transform it to count(nullIndicator)
                     // the null indicator is located at the end
-                    newAggArgs = new int[] { nullIndicatorPos };
+                    newAggArgs = Collections.singletonList(nullIndicatorPos);
                 } else {
-                    newAggArgs = new int[aggArgs.length];
+                    newAggArgs = new ArrayList<Integer>();
 
-                    for (int j = 0; j < aggArgs.length; j++) {
-                        newAggArgs[j] = aggArgs[j] + groupbyCount;
+                    for (Integer aggArg : aggArgs) {
+                        newAggArgs.add(aggArg + groupbyCount);
                     }
                 }
 
-                newAggCalls[i] =
-                    new AggregateRel.Call(
+                newAggCalls.add(
+                    new AggregateCall(
                         aggCall.getAggregation(),
                         aggCall.isDistinct(),
                         newAggArgs,
-                        aggCall.getType());
+                        aggCall.getType(),
+                        aggCall.getName()));
             }
 
             AggregateRel newAggRel =
@@ -2442,33 +2457,86 @@ public class RelDecorrelator
         }
     }
 
+    // REVIEW: This rule is non-static, depends on the state of members in
+    // RelDecorrelator, and has side-effects in the decorrelator.  This breaks
+    // the contract of a planner rule, and the rule will not be reusable in
+    // other planners.
     private final class AdjustProjectForCountAggregateRule
         extends RelOptRule
     {
-        public AdjustProjectForCountAggregateRule()
+        final boolean flavor;
+
+        public AdjustProjectForCountAggregateRule(boolean flavor)
         {
             super(
-                new RelOptRuleOperand(
+                flavor
+                    ? new RelOptRuleOperand(
                     CorrelatorRel.class,
-                    new RelOptRuleOperand[] {
+                    new RelOptRuleOperand[]{
                         new RelOptRuleOperand(RelNode.class, null),
                         new RelOptRuleOperand(
                             ProjectRel.class,
-                            new RelOptRuleOperand[] {
+                            new RelOptRuleOperand[]{
                                 new RelOptRuleOperand(
                                     AggregateRel.class,
                                     null)
                             })
+                    })
+                    : new RelOptRuleOperand(
+                    CorrelatorRel.class,
+                    new RelOptRuleOperand[]{
+                        new RelOptRuleOperand(RelNode.class, null),
+                        new RelOptRuleOperand(
+                            AggregateRel.class,
+                            null)
                     }));
+            this.flavor = flavor;
         }
 
         public void onMatch(RelOptRuleCall call)
         {
             CorrelatorRel corRel = (CorrelatorRel) call.rels[0];
             RelNode leftInputRel = call.rels[1];
-            ProjectRel aggOutputProjRel = (ProjectRel) call.rels[2];
-            AggregateRel aggRel = (AggregateRel) call.rels[3];
+            ProjectRel aggOutputProjRel;
+            AggregateRel aggRel;
+            if (flavor) {
+                aggOutputProjRel = (ProjectRel) call.rels[2];
+                aggRel = (AggregateRel) call.rels[3];
+            } else {
+                aggRel = (AggregateRel) call.rels[2];
+                // Create identity projection
+                List<RexNode> exprList = new ArrayList<RexNode>();
+                List<String> fieldNameList = new ArrayList<String>();
+                for (RelDataTypeField field : aggRel.getRowType().getFieldList()) {
+                    exprList.add(
+                        new RexInputRef(exprList.size(), field.getType()));
+                    fieldNameList.add(field.getName());
+                }
+                aggOutputProjRel =
+                    new ProjectRel(
+                        corRel.getCluster(),
+                        aggRel,
+                        exprList.toArray(new RexNode[exprList.size()]),
+                        fieldNameList.toArray(new String[fieldNameList.size()]),
+                        ProjectRel.Flags.Boxed);
+            }
+            onMatch2(call, corRel, leftInputRel, aggOutputProjRel, aggRel);
+        }
+
+        private void onMatch2(
+            RelOptRuleCall call,
+            CorrelatorRel corRel,
+            RelNode leftInputRel,
+            ProjectRel aggOutputProjRel,
+            AggregateRel aggRel)
+        {
             RelOptCluster cluster = corRel.getCluster();
+
+            if (generatedCorRels.contains(corRel)) {
+                // This correlator was generated by a previous invocation of
+                // this rule. No further work to do.
+                return;
+            }
 
             currentRel = corRel;
 
@@ -2482,7 +2550,7 @@ public class RelDecorrelator
             //     AggregateRel (groupby (0), agg0(), agg1()...)
 
             // check aggOutputProj projects only one expression
-            RexNode [] aggOutputProjExprs = aggOutputProjRel.getProjectExps();
+            RexNode[] aggOutputProjExprs = aggOutputProjRel.getProjectExps();
             if (aggOutputProjExprs.length != 1) {
                 return;
             }
@@ -2500,12 +2568,13 @@ public class RelDecorrelator
                 return;
             }
 
-            AggregateRel.Call [] aggCalls = aggRel.getAggCalls();
+            List<AggregateCall> aggCalls = aggRel.getAggCallList();
             Set<Integer> isCount = new HashSet<Integer>();
 
             // remember the count() positions
-            for (int i = 0; i < aggCalls.length; i++) {
-                AggregateRel.Call aggCall = aggCalls[i];
+            int i = -1;
+            for (AggregateCall aggCall : aggCalls) {
+                ++i;
                 if (aggCall.getAggregation() instanceof SqlCountAggFunction) {
                     isCount.add(i);
                 }
@@ -2527,6 +2596,11 @@ public class RelDecorrelator
                     corRel.getCorrelations(),
                     corRel.getJoinType());
 
+            // remember this rel so we don't fire rule on it again
+            // REVIEW: rules should not save state; rule should recognize
+            // patterns where it does or does not need to do work
+            generatedCorRels.add(newCorRel);
+
             // need to update the mapCorVarToCorRel Update the output position
             // for the cor vars: only pass on the cor vars that are not used in
             // the join key.
@@ -2547,4 +2621,4 @@ public class RelDecorrelator
     }
 }
 
-//End RelDecorrelator.java
+// End RelDecorrelator.java

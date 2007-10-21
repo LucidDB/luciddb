@@ -124,10 +124,13 @@ class EmptyScope
         return null;
     }
 
-    public boolean isMonotonic(SqlNode expr)
+    public SqlMonotonicity getMonotonicity(SqlNode expr)
     {
-        return (expr instanceof SqlLiteral) || (expr instanceof SqlDynamicParam)
-            || (expr instanceof SqlDataTypeSpec);
+        return (expr instanceof SqlLiteral)
+            || (expr instanceof SqlDynamicParam)
+            || (expr instanceof SqlDataTypeSpec)
+            ? SqlMonotonicity.Constant
+            : SqlMonotonicity.NotMonotonic;
     }
 
     public SqlNodeList getOrderList()

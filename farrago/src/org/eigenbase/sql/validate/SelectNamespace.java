@@ -25,6 +25,7 @@ import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.parser.*;
 
 
@@ -68,6 +69,15 @@ public class SelectNamespace
     public void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList)
     {
         validator.lookupSelectHints(select, pos, hintList);
+    }
+
+    public SqlMonotonicity getMonotonicity(String columnName)
+    {
+        final RelDataType rowType = this.getRowTypeSansSystemColumns();
+        final int field = SqlTypeUtil.findField(rowType, columnName);
+        final SqlNodeList selectList = select.getSelectList();
+        final SqlNode selectItem = selectList.get(field);
+        return validator.getSelectScope(select).getMonotonicity(selectItem);
     }
 }
 

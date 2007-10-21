@@ -22,6 +22,8 @@
 */
 package org.eigenbase.util;
 
+import java.util.*;
+
 /**
  * Pair of objects.
 *
@@ -57,6 +59,26 @@ public class Pair<T1, T2>
     {
         int h1 = Util.hash(0, left);
         return Util.hash(h1, right);
+    }
+
+    /**
+     * Converts a collection of Pairs into a Map.
+     *
+     * <p>This is an obvious thing to
+     * do because Pair is similar in structure to {@link java.util.Map.Entry}.
+     *
+     * <p>The map contains a copy of the collection of Pairs; if you change the
+     * collection, the map does not change.
+     *
+     * @param pairs Collection of Pair objects
+     * @return map with the same contents as the collection
+     */
+    public static <K, V> Map<K, V> toMap(Collection<Pair<K, V>> pairs) {
+        HashMap<K, V> map = new HashMap<K, V>();
+        for (Pair<K, V> pair : pairs) {
+            map.put(pair.left, pair.right);
+        }
+        return map;
     }
 }
 

@@ -27,6 +27,9 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+import java.util.List;
+import java.util.Arrays;
+
 
 /**
  * LhxAggRel represents hash aggregation.
@@ -52,11 +55,37 @@ public class LhxAggRel
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated not used in green or red DT code
+     */
     public LhxAggRel(
         RelOptCluster cluster,
         RelNode child,
         int groupCount,
-        Call [] aggCalls,
+        AggregateCall[] aggCalls,
+        long numInputRows,
+        long cndGroupByKey)
+    {
+        this(
+            cluster, child, groupCount, Arrays.asList(aggCalls), numInputRows,
+            cndGroupByKey);
+    }
+
+    /**
+     * Creates a LhxAggRel.
+     *
+     * @param cluster Cluster
+     * @param child Child
+     * @param groupCount Size of grouping key
+     * @param aggCalls Collection of calls to aggregate functions
+     * @param numInputRows Row count of the input
+     * @param cndGroupByKey Cardinality of the grouping key
+     */
+    public LhxAggRel(
+        RelOptCluster cluster,
+        RelNode child,
+        int groupCount,
+        List<AggregateCall> aggCalls,
         long numInputRows,
         long cndGroupByKey)
     {
@@ -109,25 +138,7 @@ public class LhxAggRel
     {
         final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemLhxAggStreamDef aggStream = repos.newFemLhxAggStreamDef();
-        aggStream.setGroupingPrefixSize(groupCount);
-        for (int i = 0; i < aggCalls.length; ++i) {
-            Call call = aggCalls[i];
-            assert (!call.isDistinct());
-
-            // allow 0 for COUNT(*)
-            assert (call.args.length <= 1);
-            AggFunction func = lookupAggFunction(call);
-            FemAggInvocation aggInvocation = repos.newFemAggInvocation();
-            aggInvocation.setFunction(func);
-            if (call.args.length == 1) {
-                aggInvocation.setInputAttributeIndex(call.args[0]);
-            } else {
-                // COUNT(*) ignores input
-                aggInvocation.setInputAttributeIndex(-1);
-            }
-            aggStream.getAggInvocation().add(aggInvocation);
-        }
-
+        FennelRelUtil.defineAggStream(aggCalls, groupCount, repos, aggStream);
         aggStream.setNumRows(numInputRows);
         aggStream.setCndGroupByKeys(cndGroupByKey);
 
@@ -136,13 +147,6 @@ public class LhxAggRel
             aggStream);
 
         return aggStream;
-    }
-
-    public static AggFunction lookupAggFunction(
-        AggregateRel.Call call)
-    {
-        return AggFunctionEnum.forName(
-            "AGG_FUNC_" + call.getAggregation().getName());
     }
 }
 

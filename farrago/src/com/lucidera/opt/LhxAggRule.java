@@ -64,9 +64,8 @@ public class LhxAggRule
     {
         AggregateRel aggRel = (AggregateRel) call.rels[0];
 
-        AggregateRel.Call [] calls = aggRel.getAggCalls();
-        for (int i = 0; i < calls.length; ++i) {
-            if (calls[i].isDistinct()) {
+        for (AggregateCall aggCall : aggRel.getAggCallList()) {
+            if (aggCall.isDistinct()) {
                 // AGG(DISTINCT x) must be rewritten before this rule
                 // can apply
                 return;
@@ -76,7 +75,7 @@ public class LhxAggRule
             // whether the aggregate function is one of the builtins supported
             // by Fennel; also test whether we can handle input datatype
             try {
-                LhxAggRel.lookupAggFunction(calls[i]);
+                FennelRelUtil.lookupAggFunction(aggCall);
             } catch (IllegalArgumentException ex) {
                 return;
             }
@@ -122,7 +121,7 @@ public class LhxAggRule
                     aggRel.getCluster(),
                     fennelInput,
                     aggRel.getGroupCount(),
-                    aggRel.getAggCalls(),
+                    aggRel.getAggCallList(),
                     numInputRows.longValue(),
                     cndGroupByKey.longValue());
 
@@ -133,7 +132,7 @@ public class LhxAggRule
                     aggRel.getCluster(),
                     fennelInput,
                     aggRel.getGroupCount(),
-                    aggRel.getAggCalls());
+                    aggRel.getAggCallList());
             call.transformTo(fennelAggRel);
         }
     }

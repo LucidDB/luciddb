@@ -28,6 +28,7 @@ import net.sf.farrago.cwm.relational.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlMonotonicity;
 
 
 /**
@@ -89,9 +90,9 @@ public abstract class FarragoQueryNamedColumnSet
     }
 
     // implement SqlValidatorTable
-    public boolean isMonotonic(String columnName)
+    public SqlMonotonicity getMonotonicity(String columnName)
     {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 
     // implement SqlValidatorTable

@@ -70,12 +70,6 @@ public abstract class DelegatingScope
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Registers a relation in this scope.
-     *
-     * @param ns Namespace representing the result-columns of the relation
-     * @param alias Alias with which to reference the relation, must not be null
-     */
     public void addChild(SqlValidatorNamespace ns, String alias)
     {
         // By default, you cannot add to a scope. Derived classes can
@@ -239,9 +233,9 @@ public abstract class DelegatingScope
         return parent.lookupWindow(name);
     }
 
-    public boolean isMonotonic(SqlNode expr)
+    public SqlMonotonicity getMonotonicity(SqlNode expr)
     {
-        return parent.isMonotonic(expr);
+        return parent.getMonotonicity(expr);
     }
 
     public SqlNodeList getOrderList()

@@ -28,9 +28,7 @@ import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.rex.OJAggImplementor;
 import org.eigenbase.oj.rex.OJRexImplementorTableImpl;
-import org.eigenbase.rel.AggregateRel;
-import org.eigenbase.rel.Aggregation;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlAggFunction;
@@ -258,7 +256,7 @@ public abstract class BuiltinAggregation
             JavaRelImplementor implementor,
             JavaRel rel,
             Expression accumulator,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             aggImplementor.implementNext(
                 implementor,
@@ -270,7 +268,7 @@ public abstract class BuiltinAggregation
         public Expression implementResult(
             JavaRelImplementor implementor,
             Expression accumulator,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             return aggImplementor.implementResult(
                 implementor, accumulator, call);
@@ -279,7 +277,7 @@ public abstract class BuiltinAggregation
         public Expression implementStart(
             JavaRelImplementor implementor,
             JavaRel rel,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             return aggImplementor.implementStart(
                 implementor,
@@ -295,7 +293,7 @@ public abstract class BuiltinAggregation
         public Expression implementStartAndNext(
             JavaRelImplementor implementor,
             JavaRel rel,
-            AggregateRel.Call call)
+            AggregateCall call)
         {
             return aggImplementor.implementStartAndNext(
                 implementor,

@@ -67,11 +67,11 @@ public class RelMdColumnOrigins
         }
 
         // Aggregate columns are derived from input columns
-        AggregateRel.Call call =
-            rel.getAggCalls()[iOutputColumn - rel.getGroupCount()];
+        AggregateCall call =
+            rel.getAggCallList().get(iOutputColumn - rel.getGroupCount());
 
         Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
-        for (int iInput : call.getArgs()) {
+        for (Integer iInput : call.getArgList()) {
             Set<RelColumnOrigin> inputSet =
                 invokeGetColumnOrigins(
                     rel.getChild(),

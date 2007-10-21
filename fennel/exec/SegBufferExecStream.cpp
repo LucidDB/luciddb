@@ -128,13 +128,22 @@ ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
             pByteOutputStream = SegOutputStream::newSegOutputStream(
                 bufferSegmentAccessor);
         }
-        switch(pInAccessor->getState()) {
+        ExecStreamBufState inState = pInAccessor->getState();
+        switch (inState) {
         case EXECBUF_NONEMPTY:
         case EXECBUF_OVERFLOW:
             pByteOutputStream->consumeWritePointer(
                 pInAccessor->getConsumptionAvailable());
             pByteOutputStream->hardPageBreak();
             pInAccessor->consumeData(pInAccessor->getConsumptionEnd());
+            if (pInAccessor->getState() != EXECBUF_EOS) {
+                uint cb;
+                PBuffer pBuffer = pByteOutputStream->getWritePointer(1,&cb);
+                pInAccessor->provideBufferForProduction(
+                    pBuffer,
+                    pBuffer + cb,
+                    false);
+            }
             return EXECRC_BUF_UNDERFLOW;
         case EXECBUF_UNDERFLOW:
             return EXECRC_BUF_UNDERFLOW;
@@ -160,7 +169,7 @@ ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
             permAssert(false);
         }
     }
-    
+
     switch(pOutAccessor->getState()) {
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:

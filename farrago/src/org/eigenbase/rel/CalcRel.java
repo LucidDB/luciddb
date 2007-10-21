@@ -89,7 +89,7 @@ public final class CalcRel
     }
 
     /**
-     * Creates a relational expression which projects a set of expressions.
+     * Creates a relational expression which projects an array of expressions.
      *
      * @param child input relational expression
      * @param exprList list of expressions for the input columns
@@ -100,14 +100,34 @@ public final class CalcRel
         List<RexNode> exprList,
         List<String> fieldNameList)
     {
+        return createProject(child, exprList, fieldNameList, false);
+    }
+
+    /**
+     * Creates a relational expression which projects an array of expressions,
+     * and optionally optimizes.
+     *
+     * @param child input relational expression
+     * @param exprList list of expressions for the input columns
+     * @param fieldNameList aliases of the expressions, or null to generate
+     * @param optimize Whether to return <code>child</code> unchanged if the
+     * projections are trivial.
+     */
+    public static RelNode createProject(
+        RelNode child,
+        List<RexNode> exprList,
+        List<String> fieldNameList,
+        boolean optimize)
+    {
         RexNode [] exprs = exprList.toArray(new RexNode[exprList.size()]);
         String [] fieldNames =
             (fieldNameList == null) ? null
             : fieldNameList.toArray(new String[fieldNameList.size()]);
-        return CalcRel.createProject(
+        return createProject(
             child,
             exprs,
-            fieldNames);
+            fieldNames,
+            optimize);
     }
 
     /**
@@ -166,7 +186,7 @@ public final class CalcRel
         String [] fieldNames,
         boolean optimize)
     {
-        assert (fieldNames == null) || (fieldNames.length == exprs.length);
+        assert (fieldNames == null) || (fieldNames.length == exprs.length) : "fieldNames=" + fieldNames + ", exprs=" + exprs;
         final RelOptCluster cluster = child.getCluster();
         RexProgramBuilder builder =
             new RexProgramBuilder(

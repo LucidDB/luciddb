@@ -562,6 +562,15 @@ public class SqlValidatorTestCase
         void checkIntervalConv(
             String sql,
             String expected);
+
+        /**
+         * Given a SQL query, returns the monotonicity of the first item
+         * in the SELECT clause.
+         *
+         * @param sql SQL query
+         * @return Monotonicity
+         */
+        SqlMonotonicity getMonotonicity(String sql);
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -919,6 +928,16 @@ public class SqlValidatorTestCase
                     buildQuery(expression),
                     expectedError);
             }
+        }
+
+        public SqlMonotonicity getMonotonicity(String sql)
+        {
+            final SqlValidator validator = getValidator();
+            final SqlNode node = parseAndValidate(validator, sql);
+            final SqlSelect select = (SqlSelect) node;
+            final SqlNode selectItem0 = select.getSelectList().get(0);
+            final SqlValidatorScope scope = validator.getSelectScope(select);
+            return selectItem0.getMonotonicity(scope);
         }
     }
 }

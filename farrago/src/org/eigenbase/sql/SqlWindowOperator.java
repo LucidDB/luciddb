@@ -564,7 +564,9 @@ public class SqlWindowOperator
         scope.findAllColumnNames(null, columnNames);
         for (SqlMoniker columnName : columnNames) {
             SqlIdentifier columnId = columnName.toIdentifier();
-            if (scope.isMonotonic(columnId)) {
+            final SqlMonotonicity monotonicity =
+                scope.getMonotonicity(columnId);
+            if (monotonicity != SqlMonotonicity.NotMonotonic) {
                 return true;
             }
         }

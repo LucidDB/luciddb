@@ -68,7 +68,7 @@ public class FennelDistinctSortRule
     public void onMatch(RelOptRuleCall call)
     {
         AggregateRel agg = (AggregateRel) call.rels[0];
-        if (agg.getAggCalls().length > 0) {
+        if (agg.getAggCallList().size() > 0) {
             return;
         }
         RelNode relInput = agg.getChild();

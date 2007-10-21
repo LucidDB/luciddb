@@ -55,9 +55,11 @@ public class SqlCurrentDateFunction
         return SqlSyntax.FunctionId;
     }
 
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return true;
+        return SqlMonotonicity.Increasing;
     }
 
     // Plans referencing context variables should never be cached

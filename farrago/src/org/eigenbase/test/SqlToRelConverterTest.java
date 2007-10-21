@@ -94,7 +94,7 @@ public class SqlToRelConverterTest
     public void testGroupJustOneAgg()
     {
         // just one agg
-        check("select deptno, sum(sal) from emp group by deptno",
+        check("select deptno, sum(sal) as sum_sal from emp group by deptno",
             "${plan}");
     }
 
@@ -153,6 +153,16 @@ public class SqlToRelConverterTest
     public void testSelectDistinctGroup()
     {
         check("select distinct sum(sal) from emp group by deptno",
+            "${plan}");
+    }
+
+    /**
+     * Tests that if the clause of SELECT DISTINCT contains duplicate
+     * expressions, they are only aggregated once.
+     */
+    public void testSelectDistinctDup()
+    {
+        check("select distinct sal + 5, deptno, sal + 5 from emp where deptno < 10",
             "${plan}");
     }
 
@@ -300,6 +310,15 @@ public class SqlToRelConverterTest
             + "from emp "
             + "group by deptno "
             + "order by deptno * sum(sal) desc, min(empno)",
+            "${plan}");
+    }
+
+    public void testCountNoGroup()
+    {
+        check(
+            "select count(*), sum(sal)\n" +
+                "from emp\n" +
+                "where empno > 10",
             "${plan}");
     }
 
