@@ -94,3 +94,16 @@ explain plan for
         (select max(c1) from deltab union select min(c1) from deltab);
 
 drop server test_data cascade;
+
+-- test rejected rows at deletion
+alter system set "calcVirtualMachine"='CALCVM_JAVA';
+create schema TEST_REJECTED_ROWS;
+set schema 'TEST_REJECTED_ROWS';
+alter session set "errorMax" = 10;
+create table t(a int);
+insert into t values(100000);
+delete from t where cast(a as smallint) = 1; 
+select * from sys_boot.mgmt.session_parameters_view
+     where param_name = 'lastRowsRejected';
+drop schema TEST_REJECTED_ROWS cascade;
+

@@ -81,6 +81,8 @@ public class LucidDbSessionPersonality
     public static final String LAST_UPSERT_ROWS_INSERTED =
         "lastUpsertRowsInserted";
     public static final String LAST_UPSERT_ROWS_INSERTED_DEFAULT = null;
+    public static final String LAST_ROWS_REJECTED = "lastRowsRejected";
+    public static final String LAST_ROWS_REJECTED_DEFAULT = null;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -121,6 +123,11 @@ public class LucidDbSessionPersonality
             true,
             0,
             Long.MAX_VALUE);
+        paramValidator.registerIntParam(
+            LAST_ROWS_REJECTED,
+            true,
+            0,
+            Integer.MAX_VALUE);
         defaultLucidDb = (defaultPersonality == null);
         this.enableIndexOnlyScans = enableIndexOnlyScans;
     }
@@ -660,6 +667,9 @@ public class LucidDbSessionPersonality
         variables.setDefault(
             LAST_UPSERT_ROWS_INSERTED,
             LAST_UPSERT_ROWS_INSERTED_DEFAULT);
+        variables.setDefault(
+            LAST_ROWS_REJECTED,
+            LAST_ROWS_REJECTED_DEFAULT);
     }
 
     // implement FarragoSessionPersonality
@@ -735,7 +745,8 @@ public class LucidDbSessionPersonality
         FarragoSession session,
         List<String> tableName,
         List<Long> rowCounts,
-        TableModificationRel.Operation tableModOp)
+        TableModificationRel.Operation tableModOp,
+        FarragoSessionRuntimeContext runningContext)
     {
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         FarragoRepos repos = session.getRepos();
@@ -762,6 +773,7 @@ public class LucidDbSessionPersonality
             long insertedRowCount = 0;
             long deletedRowCount = 0;
             long violationRowCount = 0;
+            int rejectedRowCount = 0;
             int numRowCounts = rowCounts.size();
             if (tableModOp == TableModificationRel.Operation.DELETE) {
                 deletedRowCount = rowCounts.get(0);
@@ -785,6 +797,9 @@ public class LucidDbSessionPersonality
             } else {
                 assert (false);
             }
+            
+            // all kinds of DML can have rejected rows (yes, including DELETE)
+            rejectedRowCount = ((LucidDbRuntimeContext)runningContext).getTotalErrorCount();
 
             // update the rowcounts based on the operation
             if (tableModOp == TableModificationRel.Operation.INSERT) {
@@ -805,6 +820,10 @@ public class LucidDbSessionPersonality
             } else {
                 assert (false);
             }
+            
+            session.getSessionVariables().setInteger(
+                LAST_ROWS_REJECTED, 
+                rejectedRowCount);
 
             // update the catalog; don't let the rowcount go below zero; it
             // may go below zero if a crash occurred in the middle of a prior

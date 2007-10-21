@@ -75,6 +75,13 @@
 +-------------------------+--------------+
 | lastUpsertRowsInserted  |              |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -- basic merge
 > merge into emps e
@@ -119,6 +126,13 @@
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 2            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -- verify that the old rows are inserted before the new ones even
 > -- though the new rows are stored first in the source table
@@ -183,6 +197,13 @@
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 2            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > merge into emps e
 >     using (select s.empno, s.salary, t.* from salarytable s, tempemps t
 >         where t.t_empno = s.empno) t
@@ -225,6 +246,13 @@
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 2            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -- no source rows; therefore, no rows should be affected
 > merge into emps
@@ -266,6 +294,13 @@
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -- only updates, no inserts
 > merge into emps
@@ -308,6 +343,13 @@
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -- only inserts, no updates
 > delete from emps where empno >= 140;
@@ -340,6 +382,13 @@
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > merge into emps
 >     using (select * from tempemps where t_empno >= 140) on t_empno = empno
 >     when matched then
@@ -380,6 +429,13 @@
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 2            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -- more than 1 row in the source table matches the target; per SQL2003, this
 > -- should return an error; currently, we do not return an error
@@ -418,6 +474,13 @@
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 2            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > merge into emps
 >     using (select * from tempemps where t_empno = 130) on t_empno = empno
 >     when matched then
@@ -458,6 +521,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 1            |
++-------------------+--------------+
 > 
 > -- LER-2614 -- issue the same merge again, except modify the update values
 > -- so the update is not a no-op
@@ -501,6 +571,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 1            |
++-------------------+--------------+
 > 
 > delete from tempemps where t_name = 'JohnClone';
 >                 
@@ -526,6 +603,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > select * from tempemps order by t_empno;
 +----------+----------+-----------+-----------+--------------------------------------+--------+
 | T_EMPNO  |  T_NAME  | T_DEPTNO  | T_GENDER  |                T_CITY                | T_AGE  |
@@ -573,6 +657,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -- no update substatement
 > merge into emps
@@ -611,6 +702,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 1            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -- simple update via a merge
 > delete from emps where empno = 130;
@@ -645,6 +743,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 1            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > merge into emps e1
 >     using (select * from emps) e2 on e1.empno = e2.empno
 >     when matched then
@@ -680,6 +785,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -- the updates in the following merges are no-ops
 > -- verify that no updates have occurred by ensuring that the rids haven't
@@ -1301,6 +1413,13 @@ Error: Cannot update unique key column (EMPNO) (state=,code=0)
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > merge into emps2 e
 >     using tempemps t on t.t_empno = e.empno
@@ -1346,6 +1465,13 @@ Error: Cannot update unique key column (EMPNO) (state=,code=0)
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 3            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 0            |
++-------------------+--------------+
 > 
 > -------------------------------
 > -- examples from user level doc
@@ -1447,6 +1573,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 2; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 2            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 2            |
++-------------------+--------------+
 > 
 > create table villians (
 >     empid int primary key, name varchar(30), info varchar(30),
@@ -1480,6 +1613,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 1            |
++-------------------+--------------+
 > 
 > create table villians2 (
 >     empid int primary key, name varchar(30), alias varchar(30), 
@@ -1518,6 +1658,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 6; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 6            |
++-------------------+--------------+
 > 
 > truncate table villians2_stg;
 > insert into villians2_stg values
@@ -1547,6 +1694,13 @@ Warning: Statement execution encountered recoverable exceptions; errors: 3; warn
 +-------------------------+--------------+
 | lastUpsertRowsInserted  | 0            |
 +-------------------------+--------------+
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 3            |
++-------------------+--------------+
 > 
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
