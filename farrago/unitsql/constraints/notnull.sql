@@ -12,6 +12,7 @@ insert into sales.emps(name,empno) values ('wael',300);
 
 -- switch to LucidDB personality
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+alter session set "logDir" = 'testlog';
 
 -- NOT NULL row rejection, should succeed with errors
 create schema test_rejection;

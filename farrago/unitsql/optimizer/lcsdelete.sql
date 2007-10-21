@@ -97,6 +97,7 @@ drop server test_data cascade;
 
 -- test rejected rows at deletion
 alter system set "calcVirtualMachine"='CALCVM_JAVA';
+alter session set "logDir" = 'testlog';
 create schema TEST_REJECTED_ROWS;
 set schema 'TEST_REJECTED_ROWS';
 alter session set "errorMax" = 10;

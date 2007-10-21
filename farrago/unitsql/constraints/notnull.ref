@@ -14,6 +14,7 @@ Error: Target CAST($t2):INTEGER NOT NULL cannot be assigned null value (state=,c
 > 
 > -- switch to LucidDB personality
 > alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> alter session set "logDir" = 'testlog';
 > 
 > -- NOT NULL row rejection, should succeed with errors
 > create schema test_rejection;
@@ -21,7 +22,7 @@ Error: Target CAST($t2):INTEGER NOT NULL cannot be assigned null value (state=,c
 > alter session set "errorMax" = 10;
 > create table test_not_null_rejection(col1 varchar(255), col2 integer not null);
 > insert into test_not_null_rejection values ('aa', 1), ('bb', 2), ('cc', null), ('dd', 4);
-Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see /home/ogothberg/open/farrago/testlog/Summary.log for details (state=,code=0)
+Warning: Statement execution encountered recoverable exceptions; errors: 1; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > select * from sys_boot.mgmt.session_parameters_view
 >      where param_name = 'lastRowsRejected';
 +-------------------+--------------+
