@@ -99,9 +99,11 @@ public class SqlAsOperator
         return type;
     }
 
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return call.operands[0].isMonotonic(scope);
+        return call.operands[0].getMonotonicity(scope);
     }
 }
 

@@ -75,13 +75,11 @@ public abstract class Bug
      * Whether <a href="http://issues.eigenbase.org/browse/FNL-25">issue
      * FNL-25</a> is fixed. (also filed as dtbug 153)
      */
-    public static final boolean Fn25Fixed = false;
+    public static final boolean Fnl25Fixed = false;
 
     public static final boolean Dt464Fixed = false;
 
     public static final boolean Dt292Fixed = false;
-
-    public static final boolean Dt294Fixed = false;
 
     public static final boolean Dt591Fixed = false;
 
@@ -172,6 +170,13 @@ public abstract class Bug
     public static final boolean Frg140Fixed = false;
 
     /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-216">issue
+     * FRG-216: Java calc 'expression splitting' causes serious problems</a> is
+     * fixed.
+     */
+    public static final boolean Frg216Fixed = false;
+
+    /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-282">issue
      * FRG-282: Support precision in TIME and TIMESTAMP data types</a> is
      * fixed.
@@ -184,6 +189,13 @@ public abstract class Bug
      * fixed.
      */
     public static final boolean Frg283Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-296">issue
+     * FRG-296: SUBSTRING(string FROM regexp FOR regexp)</a> is
+     * fixed.
+     */
+    public static final boolean Frg296Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FNL-54">issue FNL-54:

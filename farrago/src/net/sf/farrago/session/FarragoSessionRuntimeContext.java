@@ -67,10 +67,11 @@ public interface FarragoSessionRuntimeContext
     public void checkCancel();
 
     /**
-     * Sets the state of the top-level cursor associated with this context,
-     * (after first calling checkCancel if active=true). Not called for internal
-     * cursors such as UDX inputs and cursors opened via reentrant SQL from
-     * UDR's.
+     * Sets the state of the top-level cursor associated with this context.
+     * {@link #checkCancel} is called both before the fetch request
+     * (active=true) and after the fetch (active=false).
+     * Not called for internal cursors such as UDX inputs
+     * and cursors opened via reentrant SQL from UDRs.
      *
      * @param active true if cursor is beginning a fetch request; false if
      * cursor is ending a fetch request

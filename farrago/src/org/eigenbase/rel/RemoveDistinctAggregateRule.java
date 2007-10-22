@@ -69,13 +69,13 @@ public final class RemoveDistinctAggregateRule
         // determinism.
         int nonDistinctCount = 0;
         Set<List<Integer>> argListSets = new LinkedHashSet<List<Integer>>();
-        for (AggregateRelBase.Call aggCall : aggregate.aggCalls) {
+        for (AggregateCall aggCall : aggregate.aggCalls) {
             if (!aggCall.isDistinct()) {
                 ++nonDistinctCount;
                 continue;
             }
             ArrayList<Integer> argList = new ArrayList<Integer>();
-            for (int arg : aggCall.getArgs()) {
+            for (Integer arg : aggCall.getArgList()) {
                 argList.add(arg);
             }
             argListSets.add(argList);
@@ -113,10 +113,10 @@ public final class RemoveDistinctAggregateRule
         // join.  Or make sure there are other optimizer rules available
         // to remove them later.
 
-        List<AggregateRelBase.Call> newAggCallList =
-            new ArrayList<AggregateRelBase.Call>();
+        List<AggregateCall> newAggCallList =
+            new ArrayList<AggregateCall>();
         int i = -1;
-        for (AggregateRelBase.Call aggCall : aggregate.aggCalls) {
+        for (AggregateCall aggCall : aggregate.aggCalls) {
             ++i;
             if (aggCall.isDistinct()) {
                 continue;
@@ -141,8 +141,7 @@ public final class RemoveDistinctAggregateRule
                     aggregate.getCluster(),
                     aggregate.getChild(),
                     groupCount,
-                    (AggregateRelBase.Call []) newAggCallList.toArray(
-                        new AggregateRelBase.Call[newAggCallList.size()]));
+                    newAggCallList);
         }
 
         // For each set of operands, find and rewrite all calls which have that
@@ -185,7 +184,8 @@ public final class RemoveDistinctAggregateRule
             createSelectDistinct(aggregate, argList, sourceOf);
 
         // Create an aggregate on top, with the new aggregate list.
-        final AggregateRelBase.Call [] newAggCalls = aggregate.aggCalls.clone();
+        final List<AggregateCall> newAggCalls =
+            new ArrayList<AggregateCall>(aggregate.aggCalls);
         rewriteAggCalls(newAggCalls, argList, sourceOf);
         AggregateRel newAggregate =
             new AggregateRel(
@@ -276,13 +276,13 @@ public final class RemoveDistinctAggregateRule
         //   "COUNT(DISTINCT e.sal)"
         // becomes
         //   "COUNT(distinct_e.sal)".
-        List<AggregateRelBase.Call> aggCallList =
-            new ArrayList<AggregateRelBase.Call>();
-        final AggregateRelBase.Call [] aggCalls = aggregate.getAggCalls();
+        List<AggregateCall> aggCallList =
+            new ArrayList<AggregateCall>();
+        final List<AggregateCall> aggCalls = aggregate.getAggCallList();
 
-        for (int i = 0; i < aggCalls.length; i++) {
-            final AggregateRelBase.Call aggCall = aggCalls[i];
-
+        int i = groupCount - 1;
+        for (AggregateCall aggCall : aggCalls) {
+            ++i;
             // Ignore agg calls which are not distinct or have the wrong set
             // arguments. If we're rewriting aggs whose args are {sal}, we will
             // rewrite COUNT(DISTINCT sal) and SUM(DISTINCT sal) but ignore
@@ -290,41 +290,38 @@ public final class RemoveDistinctAggregateRule
             if (!aggCall.isDistinct()) {
                 continue;
             }
-            if (!equals(
-                    aggCall.getArgs(),
-                    argList))
-            {
+            if (!aggCall.getArgList().equals(argList)) {
                 continue;
             }
 
             // Re-map arguments.
-            final int [] newArgs = aggCall.getArgs().clone();
-            for (int j = 0; j < newArgs.length; j++) {
-                newArgs[j] = sourceOf.get(newArgs[j]);
+            final int argCount = aggCall.getArgList().size();
+            final List<Integer> newArgs = new ArrayList<Integer>(argCount);
+            for (int j = 0; j < argCount; j++) {
+                final Integer arg = aggCall.getArgList().get(j);
+                newArgs.add(sourceOf.get(arg));
             }
-            final AggregateRelBase.Call newAggCall =
-                new AggregateRelBase.Call(
+            final AggregateCall newAggCall =
+                new AggregateCall(
                     aggCall.getAggregation(),
                     false,
                     newArgs,
-                    aggCall.getType());
-            assert refs[groupCount + i] == null;
-            refs[groupCount + i] =
+                    aggCall.getType(),
+                    aggCall.getName());
+            assert refs[i] == null;
+            refs[i] =
                 new RexInputRef(
                     leftFields.length + groupCount + aggCallList.size(),
                     newAggCall.getType());
             aggCallList.add(newAggCall);
         }
 
-        AggregateRelBase.Call [] newAggCalls =
-            (AggregateRelBase.Call []) aggCallList.toArray(
-                new AggregateRelBase.Call[aggCallList.size()]);
         AggregateRel distinctAgg =
             new AggregateRel(
                 aggregate.getCluster(),
                 distinct,
                 groupCount,
-                newAggCalls);
+                aggCallList);
 
         // Create the join condition. It is of the form
         //  'left.f0 = right.f0 and left.f1 = right.f1 and ...'
@@ -332,7 +329,7 @@ public final class RemoveDistinctAggregateRule
         final RelDataTypeField [] distinctFields =
             distinctAgg.getRowType().getFields();
         RexNode condition = rexBuilder.makeLiteral(true);
-        for (int i = 0; i < groupCount; ++i) {
+        for (i = 0; i < groupCount; ++i) {
             final int leftOrdinal = i;
             final int rightOrdinal = sourceOf.get(i);
 
@@ -360,6 +357,7 @@ public final class RemoveDistinctAggregateRule
         }
 
         // Join in the new 'select distinct' relation.
+        final Set<String> variablesStopped = Collections.emptySet();
         final RelNode join =
             new JoinRel(
                 aggregate.getCluster(),
@@ -367,21 +365,21 @@ public final class RemoveDistinctAggregateRule
                 distinctAgg,
                 condition,
                 JoinRelType.INNER,
-                Collections.EMPTY_SET);
+                variablesStopped);
 
         return join;
     }
 
     private static void rewriteAggCalls(
-        AggregateRelBase.Call [] newAggCalls,
+        List<AggregateCall> newAggCalls,
         List<Integer> argList,
         Map<Integer, Integer> sourceOf)
     {
         // Rewrite the agg calls. Each distinct agg becomes a non-distinct call
         // to the corresponding field from the right; for example,
         // "COUNT(DISTINCT e.sal)" becomes   "COUNT(distinct_e.sal)".
-        for (int i = 0; i < newAggCalls.length; i++) {
-            final AggregateRelBase.Call aggCall = newAggCalls[i];
+        for (int i = 0; i < newAggCalls.size(); i++) {
+            final AggregateCall aggCall = newAggCalls.get(i);
 
             // Ignore agg calls which are not distinct or have the wrong set
             // arguments. If we're rewriting aggs whose args are {sal}, we will
@@ -390,25 +388,25 @@ public final class RemoveDistinctAggregateRule
             if (!aggCall.isDistinct()) {
                 continue;
             }
-            if (!equals(
-                    aggCall.getArgs(),
-                    argList))
-            {
+            if (!aggCall.getArgList().equals(argList)) {
                 continue;
             }
 
             // Re-map arguments.
-            final int [] newArgs = aggCall.getArgs().clone();
-            for (int j = 0; j < newArgs.length; j++) {
-                newArgs[j] = sourceOf.get(newArgs[j]);
+            final int argCount = aggCall.getArgList().size();
+            final List<Integer> newArgs = new ArrayList<Integer>(argCount);
+            for (int j = 0; j < argCount; j++) {
+                final Integer arg = aggCall.getArgList().get(j);
+                newArgs.add(sourceOf.get(arg));
             }
-            final AggregateRelBase.Call newAggCall =
-                new AggregateRelBase.Call(
+            final AggregateCall newAggCall =
+                new AggregateCall(
                     aggCall.getAggregation(),
                     false,
                     newArgs,
-                    aggCall.getType());
-            newAggCalls[i] = newAggCall;
+                    aggCall.getType(),
+                    aggCall.getName());
+            newAggCalls.set(i, newAggCall);
         }
     }
 
@@ -484,15 +482,14 @@ public final class RemoveDistinctAggregateRule
 
         // Get the distinct values of the GROUP BY fields and the arguments
         // to the agg functions.
-        List<AggregateRelBase.Call> distinctAggCallList =
-            new ArrayList<AggregateRelBase.Call>();
+        List<AggregateCall> distinctAggCallList =
+            new ArrayList<AggregateCall>();
         final AggregateRel distinct =
             new AggregateRel(
                 aggregate.getCluster(),
                 project,
                 exprList.size(),
-                (AggregateRelBase.Call []) distinctAggCallList.toArray(
-                    new AggregateRelBase.Call[distinctAggCallList.size()]));
+                distinctAggCallList);
         return distinct;
     }
 

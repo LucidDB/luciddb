@@ -26,9 +26,12 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+import java.util.List;
+import java.util.Arrays;
+
 
 /**
- * An aggregate on bitmap data
+ * An aggregate on bitmap data.
  *
  * @author John Pham
  * @version $Id$
@@ -38,11 +41,31 @@ public class LcsIndexAggRel
 {
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated not used in green or DT red code
+     */
     public LcsIndexAggRel(
         RelOptCluster cluster,
         RelNode child,
         int groupCount,
-        Call [] aggCalls)
+        AggregateCall[] aggCalls)
+    {
+        this(cluster, child, groupCount, Arrays.asList(aggCalls));
+    }
+
+    /**
+     * Creates an LcsIndexAggRel.
+     *
+     * @param cluster
+     * @param child
+     * @param groupCount
+     * @param aggCalls
+     */
+    public LcsIndexAggRel(
+        RelOptCluster cluster,
+        RelNode child,
+        int groupCount,
+        List<AggregateCall> aggCalls)
     {
         super(cluster, child, groupCount, aggCalls);
     }
@@ -67,7 +90,7 @@ public class LcsIndexAggRel
     {
         FemLbmSortedAggStreamDef aggStream =
             repos.newFemLbmSortedAggStreamDef();
-        defineAggStream(aggStream);
+        FennelRelUtil.defineAggStream(aggCalls, groupCount, repos, aggStream);
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild(), 0),
             aggStream);

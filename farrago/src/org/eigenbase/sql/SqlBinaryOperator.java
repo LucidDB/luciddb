@@ -23,6 +23,7 @@
 package org.eigenbase.sql;
 
 import java.nio.charset.*;
+import java.math.BigDecimal;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
@@ -163,9 +164,42 @@ public class SqlBinaryOperator
                         resultCol);
             }
         }
-        return
-            type; //To change body of overridden methods use File | Settings |
-                  //File Templates.
+        return type;
+    }
+
+
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
+    {
+        if (getName().equals("/")) {
+            final SqlNode operand0 = call.getOperands()[0];
+            final SqlNode operand1 = call.getOperands()[1];
+            final SqlMonotonicity mono0 =
+                operand0.getMonotonicity(scope);
+            final SqlMonotonicity mono1 =
+                operand1.getMonotonicity(scope);
+            if (mono1 == SqlMonotonicity.Constant) {
+                if (operand1 instanceof SqlLiteral) {
+                    SqlLiteral literal = (SqlLiteral) operand1;
+                    switch (literal.bigDecimalValue().compareTo(
+                        BigDecimal.ZERO))
+                    {
+                    case -1:
+                        // mono / -ve constant --> reverse mono, unstrict
+                        return mono0.reverse().unstrict();
+                    case 0:
+                        // mono / zero --> constant (infinity!)
+                        return SqlMonotonicity.Constant;
+                    default:
+                        // mono / +ve constant * mono1 --> mono, unstrict
+                        return mono0.unstrict();
+                    }
+                }
+            }
+        }
+
+        return super.getMonotonicity(call, scope);
     }
 }
 

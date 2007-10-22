@@ -237,7 +237,7 @@ public class OJPlannerFactory
                 aggregate.getCluster(),
                 javaChild,
                 aggregate.getGroupCount(),
-                aggregate.getAggCalls());
+                aggregate.getAggCallList());
         }
     }
 
@@ -379,7 +379,7 @@ public class OJPlannerFactory
 
         public RelNode convert(RelNode rel)
         {
-            // REVIEW: SWZ: 3/5/2005: Might need to propagate other 
+            // REVIEW: SWZ: 3/5/2005: Might need to propagate other
             // traits fro OneRowRel to JavaOneRowRel
             final OneRowRel oneRow = (OneRowRel) rel;
             return new JavaOneRowRel(oneRow.getCluster());

@@ -24,7 +24,9 @@ package org.eigenbase.sql.validate;
 import java.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.Pair;
 
 
 /**
@@ -116,7 +118,7 @@ public class SelectScope
      *
      * @param parent Parent scope, must not be null
      * @param winParent Scope for window parent, may be null
-     * @param select
+     * @param select Select clause
      */
     SelectScope(
         SqlValidatorScope parent,
@@ -160,21 +162,31 @@ public class SelectScope
         }
     }
 
-    public boolean isMonotonic(SqlNode expr)
+    public SqlMonotonicity getMonotonicity(SqlNode expr)
     {
-        if (expr.isMonotonic(this)) {
-            return true;
+        SqlMonotonicity monotonicity = expr.getMonotonicity(this);
+        if (monotonicity != SqlMonotonicity.NotMonotonic) {
+            return monotonicity;
         }
 
         // TODO: compare fully qualified names
         final SqlNodeList orderList = getOrderList();
-        if ((orderList.size() == 1)
-            && expr.equalsDeep((SqlNode) orderList.get(0), false))
-        {
-            return true;
+        if ((orderList.size() > 0)) {
+            SqlNode order0 = (SqlNode) orderList.get(0);
+            monotonicity = SqlMonotonicity.Increasing;
+            if (order0 instanceof SqlCall &&
+                ((SqlCall) order0).getOperator()
+                    == SqlStdOperatorTable.descendingOperator)
+            {
+                monotonicity = monotonicity.reverse();
+                order0 = ((SqlCall) order0).getOperands()[0];
+            }
+            if (expr.equalsDeep(order0, false)) {
+                return monotonicity;
+            }
         }
 
-        return super.isMonotonic(expr);
+        return SqlMonotonicity.NotMonotonic;
     }
 
     public SqlNodeList getOrderList()
@@ -183,10 +195,10 @@ public class SelectScope
             // Compute on demand first call.
             orderList = new SqlNodeList(SqlParserPos.ZERO);
             if (children.size() == 1) {
-                final SqlNodeList monotonicExprs =
+                final List<Pair<SqlNode,SqlMonotonicity>> monotonicExprs =
                     children.get(0).getMonotonicExprs();
                 if (monotonicExprs.size() > 0) {
-                    orderList.add(monotonicExprs.get(0));
+                    orderList.add(monotonicExprs.get(0).left);
                 }
             }
         }

@@ -40,6 +40,13 @@ abstract class RelOptTestBase
 
     protected abstract DiffRepository getDiffRepos();
 
+    /**
+     * Checks the plan for a SQL statement before/after executing a given
+     * rule.
+     *
+     * @param rule Planner rule
+     * @param sql SQL query
+     */
     protected void checkPlanning(
         RelOptRule rule,
         String sql)
@@ -52,21 +59,90 @@ abstract class RelOptTestBase
             sql);
     }
 
+    /**
+     * Checks the plan for a SQL statement before/after executing a given
+     * program.
+     *
+     * @param program Planner program
+     * @param sql SQL query
+     */
     protected void checkPlanning(
         HepProgram program,
         String sql)
     {
-        checkPlanning(new HepPlanner(program),
+        checkPlanning(
+            new HepPlanner(program),
             sql);
     }
 
+    /**
+     * Checks the plan for a SQL statement before/after executing a given
+     * planner.
+     *
+     * @param planner Planner
+     * @param sql SQL query
+     */
     protected void checkPlanning(
+        RelOptPlanner planner,
+        String sql)
+    {
+        checkPlanning(
+            null,
+            planner,
+            sql);
+    }
+
+    /**
+     * Checks the plan for a SQL statement before/after executing a given
+     * rule, with a pre-program to prepare the tree.
+     *
+     * @param preProgram Program to execute before comparing before state
+     * @param rule Planner rule
+     * @param sql SQL query
+     */
+    protected void checkPlanning(
+        HepProgram preProgram,
+        RelOptRule rule,
+        String sql)
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(rule);
+        final HepPlanner planner =
+            new HepPlanner(programBuilder.createProgram());
+
+        checkPlanning(
+            preProgram,
+            planner,
+            sql);
+    }
+
+    /**
+     * Checks the plan for a SQL statement before/after executing a given
+     * rule, with a pre-program to prepare the tree.
+     *
+     * @param preProgram Program to execute before comparing before state
+     * @param planner Planner
+     * @param sql SQL query
+     */
+    protected void checkPlanning(
+        HepProgram preProgram,
         RelOptPlanner planner,
         String sql)
     {
         final DiffRepository diffRepos = getDiffRepos();
         String sql2 = diffRepos.expand("sql", sql);
-        RelNode relBefore = tester.convertSqlToRel(sql2);
+        RelNode relInitial = tester.convertSqlToRel(sql2);
+
+        assertTrue(relInitial != null);
+
+        RelNode relBefore;
+        if (preProgram == null) {
+            relBefore = relInitial;
+        } else {
+            HepPlanner prePlanner = new HepPlanner(preProgram);
+            prePlanner.setRoot(relInitial);
+            relBefore = prePlanner.findBestExp();
+        }
 
         assertTrue(relBefore != null);
 
@@ -78,6 +154,22 @@ abstract class RelOptTestBase
 
         String planAfter = NL + RelOptUtil.toString(relAfter);
         diffRepos.assertEquals("planAfter", "${planAfter}", planAfter);
+    }
+
+    /**
+     * Creates a program which is a sequence of rules.
+     *
+     * @param rules Sequence of rules
+     * @return Program
+     */
+    protected static HepProgram createProgram(
+        RelOptRule... rules)
+    {
+        final HepProgramBuilder builder = new HepProgramBuilder();
+        for (RelOptRule rule : rules) {
+            builder.addRuleInstance(rule);
+        }
+        return builder.createProgram();
     }
 }
 

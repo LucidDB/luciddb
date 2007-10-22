@@ -813,9 +813,15 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 throw e;
             }
 
-            Util.swallow(
-                e,
-                FarragoTrace.getTestTracer());
+            Util.swallow(e, FarragoTrace.getTestTracer());
+        } catch (SQLException e) {
+            try {
+                out.write(e.getMessage());
+                out.newLine();
+            } catch (IOException e1) {
+                assert (false) : "IOException via a StringWriter";                
+            }
+            Util.swallow(e, FarragoTrace.getTestTracer());
         } finally {
             printSeparator(out, widths);
             try {

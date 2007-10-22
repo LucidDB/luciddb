@@ -56,9 +56,11 @@ public class SqlStringContextVariable
     }
 
     // All of the string constants are monotonic.
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return true;
+        return SqlMonotonicity.Constant;
     }
 
     // Plans referencing context variables should never be cached

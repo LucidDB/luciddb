@@ -91,10 +91,12 @@ public class SqlAbstractTimeFunction
         return opBinding.getTypeFactory().createSqlType(typeName, precision);
     }
 
-    // All of the time functions are monotonic.
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    // All of the time functions are increasing. Not strictly increasing.
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return true;
+        return SqlMonotonicity.Increasing;
     }
 
     // Plans referencing context variables should never be cached

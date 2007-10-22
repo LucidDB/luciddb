@@ -491,11 +491,6 @@ public interface SqlValidator
     SqlValidatorScope getOrderScope(SqlSelect select);
 
     /**
-     * Returns the boolean result of testing the node to see if it's a constant
-     */
-    boolean isConstant(SqlNode expr);
-
-    /**
      * Declares a SELECT expression as a cursor.
      *
      * @param select select expression associated with the cursor

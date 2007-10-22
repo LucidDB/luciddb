@@ -228,13 +228,11 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelRenameRel(fieldNames=[[NAME, EXPR$0]])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
-'            FennelRenameRel(fieldNames=[[$f0]])'
-'              LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
+'          LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 > 
 > -- should still use buffering, swapping the join operands
 > explain plan for
@@ -243,13 +241,11 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelRenameRel(fieldNames=[[NAME, EXPR$0]])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
-'            FennelRenameRel(fieldNames=[[$f0]])'
-'              LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
+'          LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 > explain plan for
 > select d.*, e.name
 >     from (select min(deptno) from lcsdepts) d, lcsemps e order by 2;
@@ -260,8 +256,7 @@
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
-'            FennelRenameRel(fieldNames=[[$f0]])'
-'              LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
+'          FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
+'            LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 > 
 > !quit

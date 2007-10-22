@@ -84,6 +84,11 @@ public class SqlDynamicParam
         validator.validateDynamicParam(this);
     }
 
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
+    {
+        return SqlMonotonicity.Constant;
+    }
+
     public <R> R accept(SqlVisitor<R> visitor)
     {
         return visitor.visit(this);

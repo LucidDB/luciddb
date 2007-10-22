@@ -675,7 +675,7 @@ public class FarragoDatabase
         if (cancelOnly) {
             stmt.cancel();
         } else {
-            stmt.closeAllocation();
+            stmt.kill();
         }
     }
 

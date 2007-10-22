@@ -1550,31 +1550,6 @@ public class CalcRexImplementorTableImpl
         }
     }
 
-    static class Pair<T1, T2>
-    {
-        private final T1 o1;
-        private final T2 o2;
-
-        Pair(T1 o1, T2 o2)
-        {
-            this.o1 = o1;
-            this.o2 = o2;
-        }
-
-        public boolean equals(Object obj)
-        {
-            return (obj instanceof Pair)
-                && Util.equal(this.o1, ((Pair) obj).o1)
-                && Util.equal(this.o2, ((Pair) obj).o2);
-        }
-
-        public int hashCode()
-        {
-            int h1 = Util.hash(0, o1);
-            return Util.hash(h1, o2);
-        }
-    }
-
     static class DoubleKeyMap
         extends HashMap<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>
     {

@@ -267,18 +267,20 @@ public class FarragoMultisetSplitterRule
                 SqlStdOperatorTable.countOperator.inferReturnType(
                     rexBuilder.getTypeFactory(),
                     new RelDataType[0]);
-            final AggregateRelBase.Call countCall =
-                new AggregateRelBase.Call(
+            final List<Integer> argList = Collections.emptyList();
+            final AggregateCall countCall =
+                new AggregateCall(
                     SqlStdOperatorTable.countOperator,
                     false,
-                    new int[0],
-                    countType);
+                    argList,
+                    countType,
+                    null);
             AggregateRel aggregateRel =
                 new AggregateRel(
                     cluster,
                     uncollect,
                     1,
-                    new AggregateRel.Call[] { countCall });
+                    Collections.singletonList(countCall));
             final RexNode inputRef =
                 RexUtil.maybeCast(
                     rexBuilder,
@@ -372,18 +374,20 @@ public class FarragoMultisetSplitterRule
                 SqlStdOperatorTable.countOperator.inferReturnType(
                     rexBuilder.getTypeFactory(),
                     new RelDataType[0]);
-            final AggregateRelBase.Call countCall =
-                new AggregateRelBase.Call(
+            final List<Integer> argList = Collections.emptyList();
+            final AggregateCall countCall =
+                new AggregateCall(
                     SqlStdOperatorTable.countOperator,
                     false,
-                    new int[0],
-                    countType);
+                    argList,
+                    countType,
+                    null);
             AggregateRel aggregateRel =
                 new AggregateRel(
                     cluster,
                     uncollect,
                     1,
-                    new AggregateRel.Call[] { countCall });
+                    Collections.singletonList(countCall));
             RexNode c = RelOptUtil.createInputRef(aggregateRel, -1);
             RelNode filterRel =
                 RelOptUtil.createExistsPlan(
@@ -631,18 +635,20 @@ public class FarragoMultisetSplitterRule
 
             // TODO wael 4/26/05: need to create proper count & group by agg
             // call def.
+            final List<AggregateCall> aggCalls = Collections.emptyList();
+            final Set<String> variablesStopped = Collections.emptySet();
             AggregateRel aggregateGroupRel1 =
                 new AggregateRel(
                     cluster,
                     u1,
                     1,
-                    new AggregateRel.Call[] {});
+                    aggCalls);
             AggregateRel aggregateGroupRel2 =
                 new AggregateRel(
                     cluster,
                     u2,
                     1,
-                    new AggregateRel.Call[] {});
+                    aggCalls);
             JoinRel joinRel =
                 new JoinRel(
                     cluster,
@@ -654,7 +660,7 @@ public class FarragoMultisetSplitterRule
                         rexBuilder.makeRangeReference(u2.getRowType()), //todo get the right input ref from agg
                         true),
                     JoinRelType.LEFT,
-                    Collections.EMPTY_SET);
+                    variablesStopped);
             RelNode filterRel =
                 RelOptUtil.createExistsPlan(
                     cluster,
@@ -761,19 +767,21 @@ public class FarragoMultisetSplitterRule
             SqlStdOperatorTable.countOperator.inferReturnType(
                 rexBuilder.getTypeFactory(),
                 new RelDataType[0]);
-        final AggregateRelBase.Call countCall =
-            new AggregateRelBase.Call(
+        final List<Integer> argList = Collections.emptyList();
+        final AggregateCall countCall =
+            new AggregateCall(
                 SqlStdOperatorTable.countOperator,
                 false,
-                new int[0],
-                countType);
+                argList,
+                countType,
+                null);
         final int groupCount = child.getRowType().getFieldCount();
         AggregateRel aggregateRel =
             new AggregateRel(
                 cluster,
                 child,
                 groupCount,
-                new AggregateRel.Call[] { countCall });
+                Collections.singletonList(countCall));
         RexNode expr0 = RelOptUtil.createInputRef(aggregateRel, -1);
         RexNode [] whenThenElse =
         { // when
@@ -856,18 +864,20 @@ public class FarragoMultisetSplitterRule
             SqlStdOperatorTable.countOperator.inferReturnType(
                 cluster.getTypeFactory(),
                 new RelDataType[0]);
-        final AggregateRelBase.Call countCall =
-            new AggregateRelBase.Call(
+        final List<Integer> argList = Collections.emptyList();
+        final AggregateCall countCall =
+            new AggregateCall(
                 SqlStdOperatorTable.countOperator,
                 false,
-                new int[0],
-                countType);
+                argList,
+                countType,
+                null);
         AggregateRel aggregateRel =
             new AggregateRel(
                 cluster,
                 child,
                 1,
-                new AggregateRel.Call[] { countCall });
+                Collections.singletonList(countCall));
         SqlOperator op;
         if (neg) {
             op = SqlStdOperatorTable.equalsOperator;
@@ -875,22 +885,20 @@ public class FarragoMultisetSplitterRule
             op = SqlStdOperatorTable.greaterThanOperator;
         }
         RexNode expr0 = RelOptUtil.createInputRef(aggregateRel, -1);
-        RexNode [] whenThenElse =
-            new RexNode[] { // when
+        RexNode [] whenThenElse = {
+            // when
+            cluster.getRexBuilder().makeCall(
+                op,
+                expr0,
+                cluster.getRexBuilder().makeExactLiteral(
+                    new BigDecimal(BigInteger.ZERO))),
 
+            // then
+            cluster.getRexBuilder().makeLiteral(true),
 
-                cluster.getRexBuilder().makeCall(
-                    op,
-                    expr0,
-                    cluster.getRexBuilder().makeExactLiteral(
-                        new BigDecimal(BigInteger.ZERO))),
-
-                // then
-                cluster.getRexBuilder().makeLiteral(true),
-
-                // else
-                cluster.getRexBuilder().makeLiteral(false)
-            };
+            // else
+            cluster.getRexBuilder().makeLiteral(false)
+        };
         RexNode caseRexNode =
             cluster.getRexBuilder().makeCall(
                 SqlStdOperatorTable.caseOperator,

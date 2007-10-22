@@ -355,6 +355,13 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
+    public void kill()
+    {
+        cancel(true);
+        closeAllocation();
+    }
+
+    // implement FarragoSessionStmtContext
     public void closeResultSet()
     {
         synchronized (session) {

@@ -59,7 +59,12 @@ static std::string ExecStreamBufState_names_short[] = {
     "OVR",
     "EOS"
 };
-    
+
+inline std::ostream & operator<< (std::ostream &os, ExecStreamBufState e)
+{
+    return os << ExecStreamBufState_names[e];
+}
+
 enum ExecStreamBufProvision
 {
     BUFPROV_NONE,
@@ -91,7 +96,12 @@ static std::string ExecStreamResult_names_short[] = {
     "QNT",
     "YLD"
 };
-    
+
+inline std::ostream & operator<< (std::ostream &os, ExecStreamResult e)
+{
+    return os << ExecStreamResult_names[e];
+}
+
 /**
  * ExecStreamQuantum defines the quantum for scheduling of an ExecStream.  The
  * exact interpretation of the specified quantities is stream-dependent.  For

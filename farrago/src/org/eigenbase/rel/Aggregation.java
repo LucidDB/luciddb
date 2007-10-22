@@ -28,7 +28,7 @@ import org.eigenbase.reltype.*;
 /**
  * An <code>Aggregation</code> aggregates a set of values into one value.
  *
- * <p>It is used, via a {@link org.eigenbase.rel.AggregateRelBase.Call}, in an
+ * <p>It is used, via a {@link AggregateCall}, in an
  * {@link AggregateRel} relational operator.</p>
  *
  * @author jhyde

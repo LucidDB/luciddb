@@ -1531,9 +1531,9 @@ public class FarragoPreparingStmt
         }
 
         // implement SqlValidatorTable
-        public boolean isMonotonic(String columnName)
+        public SqlMonotonicity getMonotonicity(String columnName)
         {
-            return false;
+            return SqlMonotonicity.NotMonotonic;
         }
 
         // implement SqlValidatorTable

@@ -26,6 +26,7 @@ import java.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.Pair;
 
 
 /**
@@ -115,12 +116,12 @@ public interface SqlValidatorNamespace
      * called "TIMESTAMP", then the list would contain a {@link
      * org.eigenbase.sql.SqlIdentifier} called "TIMESTAMP".
      */
-    SqlNodeList getMonotonicExprs();
+    List<Pair<SqlNode,SqlMonotonicity>> getMonotonicExprs();
 
     /**
-     * Returns whether a given column is sorted.
+     * Returns whether and how a given column is sorted.
      */
-    boolean isMonotonic(String columnName);
+    SqlMonotonicity getMonotonicity(String columnName);
 
     /**
      * Makes all fields in this namespace nullable (typically because it is on

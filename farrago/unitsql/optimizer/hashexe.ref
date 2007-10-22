@@ -1170,10 +1170,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelRenameRel(fieldNames=[[ENAME]])'
-'      LhxAggRel(groupCount=[1])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'    LhxAggRel(groupCount=[1])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 > 
 > select ename from lhxemps group by ename order by 1;
 'ENAME'
@@ -1188,10 +1186,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelRenameRel(fieldNames=[[DEPTNO]])'
-'      LhxAggRel(groupCount=[1])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
+'    LhxAggRel(groupCount=[1])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select deptno from lhxemps group by deptno order by 1;
 'DEPTNO'
@@ -1217,10 +1213,8 @@
 > select count(deptno) from lhxemps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      FennelRenameRel(fieldNames=[[$f0]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select count(deptno) from lhxemps;
 'EXPR$0'
@@ -1232,9 +1226,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
-'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO]])'
+'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT(1)])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO]])'
 > 
 > select count(empno) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -1248,10 +1241,9 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
+'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT(1)])'
 '        LhxAggRel(groupCount=[2])'
-'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO]])'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO]])'
 > 
 > select count(distinct empno) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -1263,12 +1255,11 @@
 > select count(*) from lhxemps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
-'      IteratorToFennelConverter'
-'        IterCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'          FennelToIteratorConverter'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select count(*) from lhxemps;
 'EXPR$0'
@@ -1280,9 +1271,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
+'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select count(*) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -1297,12 +1287,11 @@
 > select count(*) from lhxemps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
-'      IteratorToFennelConverter'
-'        IterCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'          FennelToIteratorConverter'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select count(*) from lhxemps;
 'EXPR$0'
@@ -1314,9 +1303,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
+'      LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO]])'
 > 
 > select count(*) from lhxemps group by deptno order by 1;
 'EXPR$0'
@@ -1335,9 +1323,8 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0) NOT NULL])'
-'      LhxAggRel(groupCount=[1], agg#0=[MAX(1)])'
-'        FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'      LhxAggRel(groupCount=[1], EXPR$0=[MAX(1)])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[2, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 > select max(ename) from lhxemps group by deptno order by 1;
 'EXPR$0'
 'abcdef'
@@ -1352,10 +1339,8 @@
 > select empno, min(ename), max(ename) from lhxemps group by empno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EMPNO, EXPR$1, EXPR$2]])'
-'    LhxAggRel(groupCount=[1], agg#0=[MIN(1)], agg#1=[MAX(1)])'
-'      FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'  LhxAggRel(groupCount=[1], EXPR$1=[MIN(1)], EXPR$2=[MAX(1)])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
 > 
 > select empno, min(ename), max(ename) from lhxemps group by empno;
 Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ', 'abc                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             ' ] (state=,code=0)
@@ -1373,10 +1358,8 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 > explain plan for select ename1 from emps1 group by ename1;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[ENAME1]])'
-'    LhxAggRel(groupCount=[1])'
-'      FennelRenameRel(fieldNames=[[$f0]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
+'  LhxAggRel(groupCount=[1])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 > explain plan for select distinct ename1 from emps1;
 'column0'
 'FennelToIteratorConverter'
@@ -1386,24 +1369,20 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'    LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
-'      FennelRenameRel(fieldNames=[[$f0]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
+'    LhxAggRel(groupCount=[1], EXPR$0=[COUNT()])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 > explain plan for select count(ename1) from emps1 group by ename1;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'    LhxAggRel(groupCount=[1], agg#0=[COUNT(0)])'
-'      FennelRenameRel(fieldNames=[[$f0]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
+'    LhxAggRel(groupCount=[1], EXPR$0=[COUNT(0)])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 > explain plan for select count(distinct ename1) from emps1;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'      LhxAggRel(groupCount=[1])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'    LhxAggRel(groupCount=[1])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, EMPS1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS1$ENAME1]])'
 > 
 > select ename1 from emps1 group by ename1;
 'ENAME1'

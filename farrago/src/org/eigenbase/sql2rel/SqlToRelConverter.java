@@ -56,7 +56,6 @@ import org.eigenbase.util14.*;
  * @author jhyde
  * @version $Id$
  * @since Oct 10, 2003
- * @testcase
  */
 public class SqlToRelConverter
 {
@@ -430,12 +429,132 @@ public class SqlToRelConverter
         }
 
         if (select.isDistinct()) {
-            bb.setRoot(
-                RelOptUtil.createDistinctRel(bb.root),
-                false);
+            distinctify(bb, true);
         }
         convertOrder(select, bb, collationList, orderExprList);
         bb.setRoot(bb.root, true);
+    }
+
+    /**
+     * Having translated 'SELECT ... FROM ... [GROUP BY ...] [HAVING ...]',
+     * adds a relational expression to make the results unique.
+     *
+     * <p>If the SELECT clause contains duplicate expressions, adds
+     * {@link ProjectRel}s so that we are grouping on the minimal set of keys.
+     * The performance gain isn't huge, but it is difficult to detect these
+     * duplicate expressions later.
+     *
+     * @param bb Blackboard
+     * @param checkForDupExprs Check for duplicate expressions
+     */
+    private void distinctify(
+        Blackboard bb,
+        boolean checkForDupExprs)
+    {
+        // Look for duplicate expressions in the project.
+        // Say we have 'select x, y, x, z'.
+        // Then dups will be {[2, 0]}
+        // and oldToNew will be {[0, 0], [1, 1], [2, 0], [3, 2]}
+        RelNode rel = bb.root;
+        if (checkForDupExprs && rel instanceof ProjectRel) {
+            ProjectRel project = (ProjectRel) rel;
+            final RexNode[] projectExprs = project.getProjectExps();
+            List<Integer> origins = new ArrayList<Integer>();
+            int dupCount = 0;
+            for (int i = 0; i < projectExprs.length; i++) {
+                int x = findExpr(projectExprs[i], projectExprs, i);
+                if (x >= 0) {
+                    origins.add(x);
+                    ++dupCount;
+                } else {
+                    origins.add(i);
+                }
+            }
+            if (dupCount == 0) {
+                distinctify(bb, false);
+                return;
+            }
+
+            Map<Integer, Integer> squished = new HashMap<Integer, Integer>();
+            final RelDataTypeField[] fields = rel.getRowType().getFields();
+            int fieldCount =  fields.length - dupCount;
+            RexNode[] newProjectExprs = new RexNode[fieldCount];
+            String[] newFieldNames = new String[fieldCount];
+            int k = 0; // number of non-dup exprs seen so far
+            for (int i = 0; i < fields.length; i++) {
+                if (origins.get(i).intValue() == i) {
+                    newProjectExprs[k] =
+                        new RexInputRef(
+                            i,
+                            fields[i].getType());
+                    newFieldNames[k] = fields[i].getName();
+                    squished.put(i, k);
+                    ++k;
+                }
+            }
+            rel =
+                new ProjectRel(
+                    cluster,
+                    rel,
+                    newProjectExprs,
+                    newFieldNames,
+                    ProjectRel.Flags.Boxed);
+
+            bb.root = rel;
+            distinctify(bb, false);
+            rel = bb.root;
+
+            // Create the expressions to reverse the mapping.
+            // Project($0, $1, $0, $2).
+            RexNode[] undoProjectExprs = new RexNode[fields.length];
+            String[] undoFieldNames = new String[fields.length];
+            for (int i = 0; i < fields.length; i++) {
+                final Integer origin = origins.get(i);
+                undoProjectExprs[i] =
+                    new RexInputRef(
+                        squished.get(origin),
+                        fields[i].getType());
+                undoFieldNames[i] = fields[i].getName();
+            }
+
+            rel =
+                new ProjectRel(
+                    cluster,
+                    rel,
+                    undoProjectExprs,
+                    undoFieldNames,
+                    ProjectRel.Flags.Boxed);
+
+            bb.setRoot(
+                rel,
+                false);
+
+            return;
+        }
+
+        // Usual case: all of the expressions in the SELECT clause are
+        // different.
+        List<AggregateCall> aggCalls = Collections.emptyList();
+        rel =
+            createAggregate(
+                bb,
+                rel.getRowType().getFieldCount(),
+                aggCalls);
+
+        bb.setRoot(
+            rel,
+            false);
+    }
+
+    private int findExpr(RexNode seek, RexNode[] exprs, int count)
+    {
+        for (int i = 0; i < count; i++) {
+            RexNode expr = exprs[i];
+            if (expr.toString().equals(seek.toString())) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private void convertOrder(
@@ -1681,13 +1800,14 @@ public class SqlToRelConverter
             }
         }
 
+        final Set<String> variablesStopped = Collections.emptySet();
         return new JoinRel(
             cluster,
             leftRel,
             rightRel,
             joinCond,
             joinType,
-            Collections.EMPTY_SET);
+            variablesStopped);
     }
 
     private RexNode convertJoinCondition(
@@ -1762,21 +1882,38 @@ public class SqlToRelConverter
     /**
      * Converts the SELECT, GROUP BY and HAVING clauses of an aggregate query.
      *
+     * <p>This method extracts SELECT, GROUP BY and HAVING clauses, and creates
+     * an {@link AggConverter}, then delegates to {@link #createAggImpl}.
+     * Derived class may override this method to change any of those clauses or
+     * specify a different {@link AggConverter}.
+     *
      * @param bb Scope within which to resolve identifiers
      * @param select Query
      * @param orderExprList Additional expressions needed to implement ORDER BY
      */
-    private void convertAgg(
+    protected void convertAgg(
         Blackboard bb,
         SqlSelect select,
         List<SqlNode> orderExprList)
     {
         assert bb.root != null : "precondition: child != null";
-        final AggConverter aggConverter = new AggConverter(bb);
         SqlNodeList groupList = select.getGroup();
         SqlNodeList selectList = select.getSelectList();
         SqlNode having = select.getHaving();
 
+        final AggConverter aggConverter = new AggConverter(bb, select);
+        createAggImpl(
+            bb, aggConverter, selectList, groupList, having, orderExprList);
+    }
+
+    protected final void createAggImpl(
+        Blackboard bb,
+        AggConverter aggConverter,
+        SqlNodeList selectList,
+        SqlNodeList groupList,
+        SqlNode having,
+        List<SqlNode> orderExprList)
+    {
         SqlNodeList aggList = new SqlNodeList(SqlParserPos.ZERO);
 
         for (SqlNode selectNode : selectList) {
@@ -1805,8 +1942,9 @@ public class SqlToRelConverter
         Map<Integer, Integer> groupExprProjection =
             new HashMap<Integer, Integer>();
 
-        for (int i = 0; i < groupList.size(); i++) {
-            final SqlNode groupExpr = groupList.get(i);
+        int i = -1;
+        for (SqlNode groupExpr : groupList) {
+            ++i;
             final SqlNode expandedGroupExpr =
                 validator.expand(groupExpr, bb.scope);
             aggConverter.addGroupExpr(expandedGroupExpr);
@@ -1821,7 +1959,7 @@ public class SqlToRelConverter
                 String originalFieldName = expr.names[1];
 
                 int [] nsIndexes = { -1 };
-                final SqlValidatorScope [] ancestorScopes = { null };
+                final SqlValidatorScope[] ancestorScopes = { null };
                 SqlValidatorNamespace foundNs =
                     bb.scope.resolve(
                         originalRelName,
@@ -1855,11 +1993,8 @@ public class SqlToRelConverter
         }
 
         RexNode havingExpr = null;
-
-        final int selectCount = selectList.size();
-        final int orderCount = orderExprList.size();
-        RexNode [] selectExprs = new RexNode[selectCount + orderCount];
-        String [] selectNames = new String[selectCount + orderCount];
+        List<RexNode> selectExprs = new ArrayList<RexNode>();
+        List<String> selectNames = new ArrayList<String>();
 
         try {
             Util.permAssert(bb.agg == null, "already in agg mode");
@@ -1869,8 +2004,7 @@ public class SqlToRelConverter
             // agg converter knows which aggregations are required
 
             selectList.accept(aggConverter);
-            for (int i = 0; i < orderCount; i++) {
-                SqlNode expr = orderExprList.get(i);
+            for (SqlNode expr : orderExprList) {
                 expr.accept(aggConverter);
             }
             if (having != null) {
@@ -1878,14 +2012,16 @@ public class SqlToRelConverter
             }
 
             // compute inputs to the aggregator
-            RexNode [] preExprs = aggConverter.getPreExprs();
+            List<RexNode> preExprs = aggConverter.getPreExprs();
+            List<String> preNames = aggConverter.getPreNames();
 
-            if (preExprs.length == 0) {
+            if (preExprs.size() == 0) {
                 // Special case for COUNT(*), where we can end up with no inputs
                 // at all.  The rest of the system doesn't like 0-tuples, so we
                 // select a dummy constant here.
-                preExprs = new RexNode[1];
-                preExprs[0] = rexBuilder.makeLiteral(true);
+                preExprs = Collections.singletonList(
+                    (RexNode) rexBuilder.makeLiteral(true));
+                preNames = Collections.singletonList(null);
             }
 
             RelNode inputRel = bb.root;
@@ -1897,7 +2033,7 @@ public class SqlToRelConverter
                 CalcRel.createProject(
                     inputRel,
                     preExprs,
-                    null,
+                    preNames,
                     true),
                 false);
             bb.mapRootRelToFieldProjection.put(bb.root, groupExprProjection);
@@ -1911,14 +2047,19 @@ public class SqlToRelConverter
                 mapCorrelToRefRel.put(correl, bb.root);
             }
 
+            // Tell bb which of group columns are sorted.
+            bb.columnMonotonicities.clear();
+            for (SqlNode groupItem : groupList) {
+                bb.columnMonotonicities.add(
+                    bb.scope.getMonotonicity(groupItem));
+            }
+
             // Add the aggregator
-            final AggregateRel.Call [] aggCalls = aggConverter.getAggCalls();
             bb.setRoot(
-                new AggregateRel(
-                    cluster,
-                    bb.root,
+                createAggregate(
+                    bb,
                     groupList.size(),
-                    aggCalls),
+                    aggConverter.getAggCalls()),
                 false);
 
             bb.mapRootRelToFieldProjection.put(bb.root, groupExprProjection);
@@ -1940,17 +2081,15 @@ public class SqlToRelConverter
             // Now subqueries in the entire select list have been converted.
             // Convert the select expressions to get the final list to be
             // projected.
-            for (int i = 0; i < selectCount; i++) {
-                SqlNode expr = selectList.get(i);
-                selectExprs[i] = bb.convertExpression(expr);
-                selectNames[i] = validator.deriveAlias(expr, i);
+            int k = 0;
+            for (SqlNode expr : selectList) {
+                selectExprs.add(bb.convertExpression(expr));
+                selectNames.add(validator.deriveAlias(expr, k++));
             }
 
-            for (int i = 0; i < orderCount; i++) {
-                SqlNode expr = orderExprList.get(i);
-                selectExprs[selectCount + i] = bb.convertExpression(expr);
-                selectNames[selectCount + i] =
-                    validator.deriveAlias(expr, selectCount + i);
+            for (SqlNode expr : orderExprList) {
+                selectExprs.add(bb.convertExpression(expr));
+                selectNames.add(validator.deriveAlias(expr, k++));
             }
         } finally {
             bb.agg = null;
@@ -1972,6 +2111,42 @@ public class SqlToRelConverter
                 selectNames,
                 true),
             false);
+
+        // Tell bb which of group columns are sorted.
+        bb.columnMonotonicities.clear();
+        for (SqlNode selectItem : selectList) {
+            bb.columnMonotonicities.add(
+                bb.scope.getMonotonicity(selectItem));
+        }
+    }
+
+    /**
+     * Creates an AggregateRel.
+     *
+     * <p>In case the aggregate rel changes the order in which it projects
+     * fields, the <code>groupExprProjection</code> parameter is provided, and
+     * the implementation of this method may modify it.
+     *
+     * <p>The <code>sortedCount</code> parameter is the number of expressions
+     * known to be monotonic. These expressions must be on the leading edge of
+     * the grouping keys. The default implementation of this method ignores
+     * this parameter.
+     *
+     * @param bb           Blackboard
+     * @param groupCount   Number of expressions to group on
+     * @param aggCalls     Array of calls to aggregate functions
+     * @return AggregateRel
+     */
+    protected RelNode createAggregate(
+        Blackboard bb,
+        int groupCount,
+        List<AggregateCall> aggCalls)
+    {
+        return new AggregateRel(
+            cluster,
+            bb.root,
+            groupCount,
+            aggCalls);
     }
 
     public RexDynamicParam convertDynamicParam(
@@ -2666,6 +2841,7 @@ public class SqlToRelConverter
         RelNode ret = (RelNode) joinList.get(0);
         for (int i = 1; i < joinList.size(); i++) {
             RelNode relNode = (RelNode) joinList.get(i);
+            final Set<String> variablesStopped = Collections.emptySet();
             ret =
                 new JoinRel(
                     cluster,
@@ -2673,7 +2849,7 @@ public class SqlToRelConverter
                     relNode,
                     rexBuilder.makeLiteral(true),
                     JoinRelType.INNER,
-                    Collections.EMPTY_SET);
+                    variablesStopped);
         }
         return ret;
     }
@@ -2721,6 +2897,12 @@ public class SqlToRelConverter
         bb.setRoot(
             CalcRel.createProject(bb.root, exprs, fieldNames),
             false);
+
+        assert bb.columnMonotonicities.isEmpty();
+        for (SqlNode selectItem : selectList) {
+            bb.columnMonotonicities.add(
+                selectItem.getMonotonicity(bb.scope));
+        }
 
         Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(bb.root);
         correlatedVariables.removeAll(correlatedVariablesBefore);
@@ -2784,7 +2966,7 @@ public class SqlToRelConverter
         }
 
         SqlNode [] rowConstructorList = values.getOperands();
-        ArrayList<RelNode> unionRels = new ArrayList<RelNode>();
+        List<RelNode> unionRels = new ArrayList<RelNode>();
         for (int i = 0; i < rowConstructorList.length; i++) {
             SqlCall rowConstructor = (SqlCall) rowConstructorList[i];
 
@@ -2907,9 +3089,9 @@ public class SqlToRelConverter
                         return null;
                     }
 
-                    public boolean isMonotonic(String columnName)
+                    public SqlMonotonicity getMonotonicity(String columnName)
                     {
-                        return false;
+                        return SqlMonotonicity.NotMonotonic;
                     }
 
                     public SqlAccessType getAllowedAccess()
@@ -2985,6 +3167,9 @@ public class SqlToRelConverter
         private final Map<RelNode, Map<Integer, Integer>>
             mapRootRelToFieldProjection =
                 new HashMap<RelNode, Map<Integer, Integer>>();
+
+        private final List<SqlMonotonicity> columnMonotonicities =
+            new ArrayList<SqlMonotonicity>();
 
         /**
          * Creates a Blackboard.
@@ -3162,6 +3347,7 @@ public class SqlToRelConverter
             if (leaf) {
                 leaves.add(root);
             }
+            this.columnMonotonicities.clear();
         }
 
         /**
@@ -3320,7 +3506,7 @@ public class SqlToRelConverter
             return cursorArray;
         }
 
-        // implement ConvertletContext
+        // implement SqlRexContext
         public RexNode convertExpression(SqlNode expr)
         {
             // If we're in aggregation mode and this is an expression in the
@@ -3330,7 +3516,8 @@ public class SqlToRelConverter
                 RexNode rex = agg.lookupGroupExpr(expandedGroupExpr);
                 if (rex != null) {
                     return rex;
-                } else if (expr instanceof SqlCall) {
+                }
+                if (expr instanceof SqlCall) {
                     rex = agg.lookupAggregates((SqlCall) expr);
                     if (rex != null) {
                         return rex;
@@ -3462,37 +3649,37 @@ public class SqlToRelConverter
             return rex;
         }
 
-        // implement ConvertletContext
+        // implement SqlRexContext
         public RexBuilder getRexBuilder()
         {
             return rexBuilder;
         }
 
-        // implement ConvertletContext
+        // implement SqlRexContext
         public RexRangeRef getSubqueryExpr(SqlCall call)
         {
             return (RexRangeRef) mapSubqueryToExpr.get(call);
         }
 
-        // implement ConvertletContext
+        // implement SqlRexContext
         public RelDataTypeFactory getTypeFactory()
         {
             return typeFactory;
         }
 
-        // implement ConvertletContext
+        // implement SqlRexContext
         public DefaultValueFactory getDefaultValueFactory()
         {
             return defaultValueFactory;
         }
 
-        // implement ConvertletContext
+        // implement SqlRexContext
         public SqlValidator getValidator()
         {
             return validator;
         }
 
-        // implement ConvertletContext
+        // implement SqlRexContext
         public RexNode convertLiteral(SqlLiteral literal)
         {
             return exprConverter.convertLiteral(this, literal);
@@ -3599,6 +3786,11 @@ public class SqlToRelConverter
                 entry.setValue(newExpr);
             }
         }
+
+        public List<SqlMonotonicity> getColumnMonotonicities()
+        {
+            return columnMonotonicities;
+        }
     }
 
     private static class DeferredLookup
@@ -3669,10 +3861,13 @@ public class SqlToRelConverter
      * <li>aggCalls = {AggCall(SUM, {1})}</li>
      * </ul>
      */
-    class AggConverter
+    protected class AggConverter
         implements SqlVisitor<Void>
     {
         private final Blackboard bb;
+
+        private final Map<String, String> nameMap =
+            new HashMap<String, String>();
 
         /**
          * The group-by expressions, in {@link SqlNode} format.
@@ -3688,22 +3883,51 @@ public class SqlToRelConverter
          */
         private final List<RexNode> convertedInputExprs =
             new ArrayList<RexNode>();
+
+        /**
+         * Names of {@link #convertedInputExprs}, where the expressions are
+         * simple mappings to input fields.
+         */
+        private final List<String> convertedInputExprNames =
+            new ArrayList<String>();
+
         private final List<RexInputRef> inputRefs =
             new ArrayList<RexInputRef>();
-        private final List<AggregateRelBase.Call> aggCalls =
-            new ArrayList<AggregateRelBase.Call>();
+        private final List<AggregateCall> aggCalls =
+            new ArrayList<AggregateCall>();
         private final Map<SqlNode, RexNode> aggMapping =
             new HashMap<SqlNode, RexNode>();
 
         /**
-         * Input expressions required by aggregates,
+         * Creates an AggConverter.
          *
-         * @param bb
+         * <p>The <code>select</code> parameter provides enough context to
+         * name aggregate calls which are top-level select list items.
+         *
+         * @param bb Blackboard
+         * @param select Query being translated; provides context to give
+         *
          */
-
-        public AggConverter(Blackboard bb)
+        public AggConverter(Blackboard bb, SqlSelect select)
         {
             this.bb = bb;
+
+            // Collect all expressions used in the select list so that aggregate
+            // calls can be named correctly.
+            final SqlNodeList selectList = select.getSelectList();
+            for (int i = 0; i < selectList.size(); i++) {
+                SqlNode selectItem = selectList.get(i);
+                String name = null;
+                if (SqlUtil.isCallTo(selectItem, SqlStdOperatorTable.asOperator)) {
+                    final SqlNode[] operands = ((SqlCall) selectItem).getOperands();
+                    selectItem = operands[0];
+                    name = operands[1].toString();
+                }
+                if (name == null) {
+                    name = validator.deriveAlias(selectItem, i);
+                }
+                nameMap.put(selectItem.toString(), name);
+            }
         }
 
         public void addGroupExpr(SqlNode expr)
@@ -3711,9 +3935,31 @@ public class SqlToRelConverter
             RexNode convExpr = bb.convertExpression(expr);
             final int index = groupExprs.size();
             groupExprs.add(expr);
-            convertedInputExprs.add(convExpr);
+            String name = nameMap.get(expr.toString());
+            addExpr(convExpr, name);
             final RelDataType type = convExpr.getType();
             inputRefs.add((RexInputRef) rexBuilder.makeInputRef(type, index));
+        }
+
+        /**
+         * Adds an expression, deducing an appropriate name if possible.
+         *
+         * @param expr Expression
+         * @param name Suggested name
+         */
+        private void addExpr(RexNode expr, String name)
+        {
+            convertedInputExprs.add(expr);
+            if (name == null && expr instanceof RexInputRef) {
+                final int i = ((RexInputRef) expr).getIndex();
+                name = bb.root.getRowType().getFields()[i].getName();
+            }
+            if (convertedInputExprNames.contains(name)) {
+                // In case like 'SELECT ... GROUP BY x, y, x', don't add
+                // name 'x' twice.
+                name = null;
+            }
+            convertedInputExprNames.add(name);
         }
 
         // implement SqlVisitor
@@ -3759,7 +4005,7 @@ public class SqlToRelConverter
         {
             if (call.getOperator().isAggregator()) {
                 assert bb.agg == this;
-                int [] args = new int[call.operands.length];
+                List<Integer> args = new ArrayList<Integer>();
                 try {
                     // switch out of agg mode
                     bb.agg = null;
@@ -3772,7 +4018,7 @@ public class SqlToRelConverter
                             SqlIdentifier id = (SqlIdentifier) operand;
                             if (id.isStar()) {
                                 assert (call.operands.length == 1);
-                                args = new int[0];
+                                assert args.isEmpty();
                                 break;
                             }
                         }
@@ -3780,7 +4026,7 @@ public class SqlToRelConverter
                             convertedExpr = bb.convertExpression(operand);
                             assert convertedExpr != null;
                         }
-                        args[i] = lookupOrCreateGroupExpr(convertedExpr);
+                        args.add(lookupOrCreateGroupExpr(convertedExpr));
                     }
                 } finally {
                     // switch back into agg mode
@@ -3797,9 +4043,11 @@ public class SqlToRelConverter
                 {
                     distinct = true;
                 }
-                final AggregateRel.Call aggCall =
-                    new AggregateRel.Call(aggregation, distinct, args, type);
                 int index = aggCalls.size() + groupExprs.size();
+                final AggregateCall aggCall =
+                    new AggregateCall(
+                        aggregation, distinct, args, type,
+                        nameMap.get(call.toString()));
                 aggCalls.add(aggCall);
                 final RexNode rex = rexBuilder.makeInputRef(type, index);
                 aggMapping.put(call, rex);
@@ -3826,7 +4074,7 @@ public class SqlToRelConverter
 
             // not found -- add it
             int index = convertedInputExprs.size();
-            convertedInputExprs.add(expr);
+            addExpr(expr, null);
             return index;
         }
 
@@ -3854,15 +4102,19 @@ public class SqlToRelConverter
             return aggMapping.get(call);
         }
 
-        public RexNode [] getPreExprs()
+        public List<RexNode> getPreExprs()
         {
-            return convertedInputExprs.toArray(
-                new RexNode[convertedInputExprs.size()]);
+            return convertedInputExprs;
         }
 
-        public AggregateRel.Call [] getAggCalls()
+        public List<String> getPreNames()
         {
-            return aggCalls.toArray(new AggregateRel.Call[aggCalls.size()]);
+            return convertedInputExprNames;
+        }
+
+        public List<AggregateCall> getAggCalls()
+        {
+            return aggCalls;
         }
 
         public RelDataTypeFactory getTypeFactory()

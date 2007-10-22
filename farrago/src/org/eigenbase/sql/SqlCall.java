@@ -233,10 +233,10 @@ public class SqlCall
         return SqlUtil.getOperatorSignature(operator, signatureList);
     }
 
-    public boolean isMonotonic(SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
     {
         // Delegate to operator.
-        return operator.isMonotonic(this, scope);
+        return operator.getMonotonicity(this, scope);
     }
 
     /**

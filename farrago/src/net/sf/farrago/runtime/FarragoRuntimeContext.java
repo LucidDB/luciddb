@@ -745,11 +745,21 @@ public class FarragoRuntimeContext
     // implement FarragoSessionRuntimeContext
     public void cancel()
     {
+        synchronized (this) {
+            // be sure only one thread tries to close the FennelStreamGraph
+            if (isCanceled) {
+                return;
+            }
+
+            // set isCanceled before aborting streamGraph to ensure
+            // that flag is set when ResultSet sees END_OF_DATA
+            isCanceled = true;
+        }
+
         FennelStreamGraph streamGraphToAbort = streamGraph;
         if (streamGraphToAbort != null) {
             streamGraphToAbort.abort();
         }
-        isCanceled = true;
     }
 
     // implement FarragoSessionRuntimeContext
@@ -765,11 +775,15 @@ public class FarragoRuntimeContext
     {
         synchronized (cursorMonitor) {
             if (active) {
+                // check before fetch
                 checkCancel();
             }
             cursorActive = active;
             if (!cursorActive) {
                 cursorMonitor.notifyAll();
+                // check again after fetch to catch case where cancel()'s
+                // streamGraph.abort() causes END_OF_DATA during the fetch
+                checkCancel();
             }
         }
     }

@@ -481,12 +481,11 @@
 > select count(*) from multimulti where a1 = 11 and b1 = 12;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
-'        LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 1]], clustered indexes=[[MULTI_1]], residual columns=[[0, 1]])'
-'          FennelValuesRel(tuples=[[{ '[', 11, ']', 11 }]])'
-'          FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }]])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
+'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 1]], clustered indexes=[[MULTI_1]], residual columns=[[0, 1]])'
+'        FennelValuesRel(tuples=[[{ '[', 11, ']', 11 }]])'
+'        FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }]])'
 > !set outputformat table
 > select count(*) from multimulti where a1 = 11 and b1 = 12;
 +---------+
@@ -500,12 +499,11 @@
 > select count(*) from multimulti where a1 = 21 and a2 = 24;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
-'        LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 3]], clustered indexes=[[MULTI_1, MULTI_2]], residual columns=[[0, 3]])'
-'          FennelValuesRel(tuples=[[{ '[', 21, ']', 21 }]])'
-'          FennelValuesRel(tuples=[[{ '[', 24, ']', 24 }]])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
+'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 3]], clustered indexes=[[MULTI_1, MULTI_2]], residual columns=[[0, 3]])'
+'        FennelValuesRel(tuples=[[{ '[', 21, ']', 21 }]])'
+'        FennelValuesRel(tuples=[[{ '[', 24, ']', 24 }]])'
 > !set outputformat table
 > select count(*) from multimulti where a1 = 21 and a2 = 24;
 +---------+
@@ -519,12 +517,11 @@
 > select count(*) from multimulti where a1 = 31 and a3 = 37;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[EXPR$0]])'
-'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
-'        LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 6]], clustered indexes=[[MULTI_1, MULTI_3]], residual columns=[[0, 6]])'
-'          FennelValuesRel(tuples=[[{ '[', 31, ']', 31 }]])'
-'          FennelValuesRel(tuples=[[{ '[', 37, ']', 37 }]])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
+'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 6]], clustered indexes=[[MULTI_1, MULTI_3]], residual columns=[[0, 6]])'
+'        FennelValuesRel(tuples=[[{ '[', 31, ']', 31 }]])'
+'        FennelValuesRel(tuples=[[{ '[', 37, ']', 37 }]])'
 > !set outputformat table
 > select count(*) from multimulti where a1 = 31 and a3 = 37;
 +---------+
@@ -729,10 +726,8 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 > explain plan for select a, count(*) from minus group by a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[A, EXPR$1]])'
-'    LcsIndexAggRel(groupCount=[1], agg#0=[COUNT()])'
-'      FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])'
-'        LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MINUS]], index=[IMINUS], projection=[[0, 2, 3, 4]])'
+'  LhxAggRel(groupCount=[1], EXPR$1=[COUNT()])'
+'    LcsRowScanRel(table=[[LOCALDB, LBM, MINUS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$MINUS$A]])'
 > !set outputformat table
 > select a, count(*) from minus group by a;
 +----+---------+

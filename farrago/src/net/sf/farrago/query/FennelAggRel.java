@@ -27,6 +27,9 @@ import net.sf.farrago.fem.fennel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+import java.util.List;
+import java.util.Arrays;
+
 
 /**
  * FennelAggRel represents the Fennel implementation of aggregation.
@@ -44,11 +47,35 @@ public class FennelAggRel
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated todo: remove - not used in green or red DT code
+     */
     public FennelAggRel(
         RelOptCluster cluster,
         RelNode child,
         int groupCount,
-        Call [] aggCalls)
+        AggregateCall[] aggCalls)
+    {
+        this(
+            cluster,
+            child,
+            groupCount,
+            Arrays.asList(aggCalls));
+    }
+
+    /**
+     * Creates a FennelAggRel.
+     *
+     * @param cluster Cluster
+     * @param child Child
+     * @param groupCount Size of grouping key
+     * @param aggCalls Collection of calls to aggregate functions
+     */
+    public FennelAggRel(
+        RelOptCluster cluster,
+        RelNode child,
+        int groupCount,
+        List<AggregateCall> aggCalls)
     {
         super(
             cluster,
@@ -95,7 +122,7 @@ public class FennelAggRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemSortedAggStreamDef aggStream = repos.newFemSortedAggStreamDef();
-        defineAggStream(aggStream);
+        FennelRelUtil.defineAggStream(aggCalls, groupCount, repos, aggStream);
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild(), 0),
             aggStream);
@@ -103,34 +130,6 @@ public class FennelAggRel
         return aggStream;
     }
 
-    protected void defineAggStream(FemAggStreamDef aggStream)
-    {
-        aggStream.setGroupingPrefixSize(groupCount);
-        for (int i = 0; i < aggCalls.length; ++i) {
-            Call call = aggCalls[i];
-            assert (!call.isDistinct());
-
-            // allow 0 for COUNT(*)
-            assert (call.args.length <= 1);
-            AggFunction func = lookupAggFunction(call);
-            FemAggInvocation aggInvocation = repos.newFemAggInvocation();
-            aggInvocation.setFunction(func);
-            if (call.args.length == 1) {
-                aggInvocation.setInputAttributeIndex(call.args[0]);
-            } else {
-                // COUNT(*) ignores input
-                aggInvocation.setInputAttributeIndex(-1);
-            }
-            aggStream.getAggInvocation().add(aggInvocation);
-        }
-    }
-
-    public static AggFunction lookupAggFunction(
-        AggregateRel.Call call)
-    {
-        return AggFunctionEnum.forName(
-            "AGG_FUNC_" + call.getAggregation().getName());
-    }
 }
 
 // End FennelAggRel.java

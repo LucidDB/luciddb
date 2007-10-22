@@ -20,6 +20,7 @@
 package net.sf.saffron.oj.xlat;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import net.sf.saffron.core.AggregationExtender;
 import net.sf.saffron.oj.rel.BuiltinAggregation;
@@ -31,9 +32,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.AggregateRel;
-import org.eigenbase.rel.Aggregation;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.*;
@@ -62,7 +61,7 @@ class AggInternalTranslator extends InternalTranslator
 {
     List<Expression> aggInputList;
     InternalTranslator nonAggTranslator;
-    List<AggregateRel.Call> aggCallList;
+    List<AggregateCall> aggCallList;
     Expression [] groups;
 
     AggInternalTranslator(
@@ -70,7 +69,7 @@ class AggInternalTranslator extends InternalTranslator
         RelNode [] inputs,
         Expression [] groups,
         List<Expression> aggInputList,
-        List<AggregateRel.Call> aggCallList,
+        List<AggregateCall> aggCallList,
         JavaRexBuilder javaRexBuilder)
     {
         super(queryInfo, inputs, javaRexBuilder);
@@ -201,24 +200,25 @@ class AggInternalTranslator extends InternalTranslator
             Expression arg = args.get(i);
             rexArgs[i] = nonAggTranslator.go(arg);
         }
-        int [] argIndexes = new int[argCount];
+        List<Integer> argIndexes = new ArrayList<Integer>(argCount);
 outer:
         for (int i = 0; i < argCount; i++) {
             Expression arg = args.get(i);
             for (int j = 0, m = aggInputList.size(); j < m; j++) {
                 if (aggInputList.get(j).equals(arg)) {
                     // expression already exists; use that
-                    argIndexes[i] = j;
+                    argIndexes.add(j);
                     continue outer;
                 }
             }
-            argIndexes[i] = aggInputList.size();
+            argIndexes.add(aggInputList.size());
             aggInputList.add(arg);
         }
         final RelDataTypeFactory typeFactory = OJUtil.threadTypeFactory();
         RelDataType type = aggregation.getReturnType(typeFactory);
-        AggregateRel.Call aggCall =
-            new AggregateRel.Call(aggregation, false, argIndexes, type);
+        AggregateCall aggCall =
+            new AggregateCall(
+                aggregation, false, argIndexes, type, null);
 
         // create a new aggregate call, if there isn't already an
         // identical one
@@ -334,3 +334,5 @@ outer:
         }
     }
 }
+
+// End AggInternalTranslator.java
