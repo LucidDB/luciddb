@@ -318,23 +318,27 @@ void LcsRowScanExecStream::initializeSystemSampling()
     FENNEL_TRACE(
         TRACE_FINE, "samplingRate = " << static_cast<double>(samplingRate));
 
+    // Manipulate this value locally so we don't mistakenly modify our stored
+    // copy of the parameter.
+    int32_t numClumps = samplingClumps;
+
     // Compute clump size and distance
     int64_t sampleSize = 
         static_cast<uint64_t>(
             round(
                 static_cast<double>(rowCount) * 
                 static_cast<double>(samplingRate)));
-    if (sampleSize < samplingClumps) {
+    if (sampleSize < numClumps) {
         // Read at least as many rows as there are clumps, even if sample rate
         // is very small.
-        sampleSize = samplingClumps;
+        sampleSize = numClumps;
     }
 
     if (sampleSize > rowCount) {
         // samplingRate should be < 1.0, but handle the case where it isn't,
         // or where there are fewer rows than clumps.
         sampleSize = rowCount;
-        samplingClumps = 1;
+        numClumps = 1;
     }
 
     FENNEL_TRACE(TRACE_FINE, "sampleSize = " << sampleSize);
@@ -342,25 +346,25 @@ void LcsRowScanExecStream::initializeSystemSampling()
     clumpSize = 
         static_cast<uint64_t>(
             round(
-                static_cast<double>(sampleSize) / 
-                static_cast<double>(samplingClumps)));
+                static_cast<double>(sampleSize) /
+                static_cast<double>(numClumps)));
     assert(sampleSize >= clumpSize);
     assert(clumpSize >= 1);
 
     FENNEL_TRACE(TRACE_FINE, "clumpSize = " << clumpSize);
 
-    if (samplingClumps > 1) {
+    if (numClumps > 1) {
         // Arrange for the last clump to end at the end of the table.
         clumpDistance = 
             static_cast<uint64_t>(
                 round(
                     static_cast<double>(rowCount - sampleSize) /
-                    static_cast<double>(samplingClumps - 1)));
+                    static_cast<double>(numClumps - 1)));
 
         // Rounding can cause us to push the final clump past the end of the
         // table.  Avoid this when possible.
         uint64_t rowsRequired = 
-            (clumpSize + clumpDistance) * (samplingClumps - 1) + clumpSize;
+            (clumpSize + clumpDistance) * (numClumps - 1) + clumpSize;
         if (rowsRequired > rowCount && clumpDistance > 0) {
             clumpDistance--;
         }
