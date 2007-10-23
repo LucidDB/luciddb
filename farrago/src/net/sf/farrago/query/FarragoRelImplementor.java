@@ -228,13 +228,8 @@ public class FarragoRelImplementor
         int ordinal,
         boolean addToPathList)
     {
-        if (addToPathList) {
-            addRelPathEntry(rel, ordinal);
-        }
-        FemExecutionStreamDef streamDef = toStreamDefImpl(rel);
-        if (addToPathList) {
-            removeRelPathEntry();
-        }
+        FemExecutionStreamDef streamDef =
+            toStreamDefImpl(rel, ordinal, addToPathList);
         registerRelStreamDef(streamDef, rel, null);
         return streamDef;
     }
@@ -251,7 +246,7 @@ public class FarragoRelImplementor
      * @param rel the new RelNode
      * @param ordinal the input position of the RelNode
      */
-    private void addRelPathEntry(RelNode rel, int ordinal)
+    protected void addRelPathEntry(RelNode rel, int ordinal)
     {
         RelPathEntry pathEntry = new RelPathEntry(rel, ordinal);
         currRelPathList.add(0, pathEntry);
@@ -261,7 +256,7 @@ public class FarragoRelImplementor
      * Removes the RelPathEntry corresponding to the current RelNode being
      * visited from the current RelPathEntry list
      */
-    private void removeRelPathEntry()
+    protected void removeRelPathEntry()
     {
         currRelPathList.remove(0);
     }
@@ -274,19 +269,34 @@ public class FarragoRelImplementor
      * functionality.
      *
      * @param rel Relational expression
+     * @param ordinal input position of the relational expression for its
+     * parent
+     * @param addToPathList if true, add this RelNode to the pathlist that
+     * keeps track of the RelNodes that lead up to this node
      *
      * @return Plan
      */
-    protected final FemExecutionStreamDef toStreamDefImpl(FennelRel rel)
+    protected final FemExecutionStreamDef toStreamDefImpl(
+        FennelRel rel,
+        int ordinal,
+        boolean addToPathList)
     {
+        if (addToPathList) {
+            addRelPathEntry(rel, ordinal);
+        }
+        FemExecutionStreamDef streamDef;
         try {
-            return rel.toStreamDef(this);
+            streamDef = rel.toStreamDef(this);
         } catch (Throwable e) {
             throw Util.newInternal(
                 e,
                 "Error occurred while translating relational expression "
                 + rel + " to a plan");
         }
+        if (addToPathList) {
+            removeRelPathEntry();
+        }
+        return streamDef;
     }
 
     /**
@@ -515,8 +525,8 @@ public class FarragoRelImplementor
      */
     public static class RelPathEntry
     {
-        RelNode relNode;
-        int ordinal;
+        final RelNode relNode;
+        final int ordinal;
 
         RelPathEntry(RelNode relNode, int ordinal)
         {
@@ -537,11 +547,17 @@ public class FarragoRelImplementor
                     relPathEntry.ordinal == ordinal);
         }
 
+        public String toString()
+        {
+            return "RelPathEntry(" + ordinal + ", "
+                + "rel#" + relNode.getId() + ":"
+                + relNode.getRelTypeName() + ")";
+        }
     }
 
     private static class RelScope
     {
-        Map<FennelRelParamId, FennelDynamicParamId> paramMap;
+        final Map<FennelRelParamId, FennelDynamicParamId> paramMap;
 
         RelScope()
         {
