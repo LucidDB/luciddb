@@ -549,7 +549,8 @@ public class FarragoDefaultSessionPersonality
         FarragoSession session,
         List<String> tableName,
         List<Long> rowCounts,
-        TableModificationRel.Operation tableModOp)
+        TableModificationRel.Operation tableModOp,
+        FarragoSessionRuntimeContext runningContext)
     {
         long count = rowCounts.get(0);
         if (tableModOp == TableModificationRel.Operation.INSERT) {

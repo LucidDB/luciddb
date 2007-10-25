@@ -331,6 +331,7 @@ public interface FarragoSessionPersonality
      * @param rowCounts list of row counts returned by the DML statement
      * @param tableModOp table modification operation that caused the rowcounts
      * to be modified
+     * @param runningContext the currently running session context.
      *
      * @return number of rows affected by the DML operation
      */
@@ -338,7 +339,8 @@ public interface FarragoSessionPersonality
         FarragoSession session,
         List<String> tableName,
         List<Long> rowCounts,
-        TableModificationRel.Operation tableModOp);
+        TableModificationRel.Operation tableModOp,
+        FarragoSessionRuntimeContext runningContext);
 
     /**
      * Gives this personality the opportunity to reset rowcount information in

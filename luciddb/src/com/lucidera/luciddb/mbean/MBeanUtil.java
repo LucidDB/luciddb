@@ -25,7 +25,7 @@ import java.util.*;
 import javax.management.openmbean.*;
 
 import org.eigenbase.util.*;
-import com.lucidera.jdbc.LucidDbRmiDriver;
+import com.lucidera.jdbc.LucidDbLocalDriver;
 
 /**
  * Utility class for LucidDb MBean classes
@@ -115,9 +115,9 @@ public class MBeanUtil
         if (c != null && !c.isClosed()) {
             return c;
         } else {
-            Class clazz = Class.forName("com.lucidera.jdbc.LucidDbRmiDriver");
-            LucidDbRmiDriver driver = (LucidDbRmiDriver) clazz.newInstance();
-            String urlPrefix = driver.getUrlPrefix() + "localhost";
+            Class clazz = Class.forName("com.lucidera.jdbc.LucidDbLocalDriver");
+            LucidDbLocalDriver driver = (LucidDbLocalDriver) clazz.newInstance();
+            String urlPrefix = driver.getUrlPrefix();
             c = DriverManager.getConnection(urlPrefix,"sa","");
         }
         return c;
