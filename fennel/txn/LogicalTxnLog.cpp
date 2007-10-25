@@ -139,6 +139,7 @@ void LogicalTxnLog::commitTxn(SharedLogicalTxn pTxn)
             memento.logPosition);
         pTxn->pOutputStream.reset();
         pSegment->checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
+        StrictMutexGuard mutexGuard(mutex);
         committedLongLogSegments.push_back(pSegment);
     } else {
         if (!pTxn->svpt.cbLogged) {
@@ -333,6 +334,6 @@ TxnId LogicalTxnLog::getOldestActiveTxnId()
     }
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/txn/LogicalTxnLog.cpp#11 $");
 
 // End LogicalTxnLog.cpp
