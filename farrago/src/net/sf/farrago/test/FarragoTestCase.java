@@ -567,7 +567,8 @@ public abstract class FarragoTestCase
         tracer.finer("runSqlLineTest: Starting " + sqlFile);
         FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();
         String uri = getJdbcUri(driver);
-        assert (sqlFile.endsWith(".sql"));
+        assert (sqlFile.endsWith(".sql")) :
+            "\"" + sqlFile + "\" does not end with .sql";
         File sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));
         String driverName = driver.getClass().getName();
