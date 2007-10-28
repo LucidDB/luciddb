@@ -741,7 +741,7 @@ ${farrago.test.jvmargs}
         <include name="**/mbean/**/*"/>
       </fileset>
       <fileset dir="${farrago.classes.dir}">
-        <include name="com/lucidera/jdbc/LucidDbRmiDriver.class"/>
+        <include name="com/lucidera/jdbc/LucidDbLocalDriver.class"/>
       </fileset>
     </jar>
   </target>

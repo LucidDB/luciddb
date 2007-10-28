@@ -283,7 +283,11 @@ public class FarragoDbStmtContext
                     resultSet,
                     rowCounts,
                     executableStmt.getTableModOp());
+                updateCount = updateRowCounts(rowCounts, runningContext);
                 success = true;
+                if (tracer.isLoggable(Level.FINE)) {
+                    tracer.fine("Update count = " + updateCount);
+                }
             } catch (SQLException ex) {
                 throw FarragoResource.instance().DmlFailure.ex(ex);
             } finally {
@@ -299,10 +303,6 @@ public class FarragoDbStmtContext
                     }
                     clearExecutingStmtInfo();
                 }
-            }
-            updateCount = updateRowCounts(rowCounts);
-            if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("Update count = " + updateCount);
             }
         }
 
@@ -417,7 +417,9 @@ public class FarragoDbStmtContext
      *
      * @return rowcount affected by the DML operation
      */
-    private long updateRowCounts(List<Long> rowCounts)
+    private long updateRowCounts(
+        List<Long> rowCounts, 
+        FarragoSessionRuntimeContext runningContext)
     {
         TableModificationRel.Operation tableModOp =
             executableStmt.getTableModOp();
@@ -439,7 +441,8 @@ public class FarragoDbStmtContext
             session,
             targetTable,
             rowCounts,
-            executableStmt.getTableModOp());
+            executableStmt.getTableModOp(),
+            runningContext);
     }
 
     private List<String> getDmlTarget()

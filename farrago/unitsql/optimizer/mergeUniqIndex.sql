@@ -42,6 +42,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- basic merge
 merge into emps e
@@ -61,6 +63,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- verify that the old rows are inserted before the new ones even
 -- though the new rows are stored first in the source table
@@ -82,6 +86,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 merge into emps e
     using (select s.empno, s.salary, t.* from salarytable s, tempemps t
         where t.t_empno = s.empno) t
@@ -99,6 +105,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- no source rows; therefore, no rows should be affected
 merge into emps
@@ -115,6 +123,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- only updates, no inserts
 merge into emps
@@ -132,6 +142,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- only inserts, no updates
 delete from emps where empno >= 140;
@@ -141,6 +153,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 merge into emps
     using (select * from tempemps where t_empno >= 140) on t_empno = empno
     when matched then
@@ -156,6 +170,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- more than 1 row in the source table matches the target; per SQL2003, this
 -- should return an error; currently, we do not return an error
@@ -168,6 +184,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 merge into emps
     using (select * from tempemps where t_empno = 130) on t_empno = empno
     when matched then
@@ -182,6 +200,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- LER-2614 -- issue the same merge again, except modify the update values
 -- so the update is not a no-op
@@ -199,6 +219,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 delete from tempemps where t_name = 'JohnClone';
                 
@@ -209,6 +231,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 select * from tempemps order by t_empno;
 merge into emps
     using (select * from tempemps) on t_empno = empno
@@ -220,6 +244,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- no update substatement
 merge into emps
@@ -232,6 +258,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- simple update via a merge
 delete from emps where empno = 130;
@@ -241,6 +269,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 merge into emps e1
     using (select * from emps) e2 on e1.empno = e2.empno
     when matched then
@@ -251,6 +281,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -- the updates in the following merges are no-ops
 -- verify that no updates have occurred by ensuring that the rids haven't
@@ -570,6 +602,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 merge into emps2 e
     using tempemps t on t.t_empno = e.empno
@@ -588,6 +622,8 @@ select table_name, current_row_count, deleted_row_count
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 -------------------------------
 -- examples from user level doc
@@ -646,6 +682,8 @@ merge into comic tgt using comic_stg src on src.empid = tgt.empid
 select * from comic;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 create table villians (
     empid int primary key, name varchar(30), info varchar(30),
@@ -668,6 +706,8 @@ merge into villians tgt using villians_stg src on src.empid = tgt.empid
 select * from villians;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 create table villians2 (
     empid int primary key, name varchar(30), alias varchar(30), 
@@ -695,6 +735,8 @@ merge into villians2 tgt using villians2_stg src on src.empid = tgt.empid
 select * from villians2;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 truncate table villians2_stg;
 insert into villians2_stg values
@@ -713,6 +755,8 @@ merge into villians2 tgt using villians2_stg src on src.empid = tgt.empid
 select * from villians2;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
 
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
