@@ -120,7 +120,7 @@ public class FarragoTestConcurrentTest
         // mask out source control Id
         addDiffMask("\\$Id.*\\$");
 
-        runScript(getName(), newJdbcEngineDriver().getUrlPrefix());
+        runScript(getName(), getJdbcUri(newJdbcEngineDriver()));
     }
 
     //~ Inner Interfaces -------------------------------------------------------

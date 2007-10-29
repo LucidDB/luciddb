@@ -815,13 +815,27 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
             Util.swallow(e, FarragoTrace.getTestTracer());
         } catch (SQLException e) {
-            try {
-                out.write(e.getMessage());
-                out.newLine();
-            } catch (IOException e1) {
-                assert (false) : "IOException via a StringWriter";                
+            // 2007-10-23 hersker: hack to ignore timeout exceptions
+            // from other Farrago projects without being able to
+            // import/reference the actual exceptions
+            final String eClassName = e.getClass().getName();
+            if (eClassName.endsWith("TimeoutException")) {
+                if (!timeoutSet) {
+                    throw e;
+                }
+                Util.swallow(e, FarragoTrace.getTestTracer());
+            } else {
+                Util.swallow(e, FarragoTrace.getTestTracer());
+                try {
+                    out.write(e.getMessage());
+                    out.newLine();
+                } catch (IOException e1) {
+                    assert (false) : "IOException via a StringWriter";
+                }
             }
-            Util.swallow(e, FarragoTrace.getTestTracer());
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            throw e;
         } finally {
             printSeparator(out, widths);
             try {
@@ -1120,16 +1134,24 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             boolean timeoutSet = setTimeout(stmt);
 
             try {
-                int rows = stmt.executeUpdate();
-
-                if (rows != 1) {
+                boolean haveResults = stmt.execute();
+                if (haveResults) {
+                    // Farrago rewrites "call" statements as selects.
                     storeMessage(
                         executor.getThreadId(),
-                        String.valueOf(rows) + " rows affected.");
+                        "0 rows affected.");
+                    // is there anything interesting in the ResultSet?
                 } else {
-                    storeMessage(
-                        executor.getThreadId(),
-                        "1 row affected.");
+                    int rows = stmt.getUpdateCount();
+                    if (rows != 1) {
+                        storeMessage(
+                            executor.getThreadId(),
+                            String.valueOf(rows) + " rows affected.");
+                    } else {
+                        storeMessage(
+                            executor.getThreadId(),
+                            "1 row affected.");
+                    }
                 }
             } catch (AbstractIterResultSet.SqlTimeoutException e) {
                 if (!timeoutSet) {
