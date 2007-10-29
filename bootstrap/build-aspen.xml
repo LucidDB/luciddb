@@ -46,18 +46,22 @@
 	<!-- indirections from config-aspen.xml substitution targets -->
 	<target name="entry-target-aspen"
 	        depends="integration-build-and-test"
-	        description="Entry point for cruise control aspen project"/>
+	        description="Entry point for cruise control aspen project">
+	</target>
 	<target name="entry-target-aspen-opto"
 	        depends="integration-build-and-test-opto"
-	        description="Entry point for cruise control aspen-opto project"/>
+	        description="Entry point for cruise control aspen-opto project">
+	</target>
 	
 	<!-- integration-build-and-test -->
 	<target name="integration-build-and-test"
 	        depends="integration-test,integration-distbuild"
-	        description="Build and test the Aspen project and its dependencies in a clean tree"/>
+	        description="Build and test the Aspen project and its dependencies in a clean tree">
+	</target>
 	<target name="integration-build-and-test-opto"
-	        depends="integration-test-opto,integration-distbuild"
-	        description="Build and test the optimized Aspen project and its dependencies in a clean tree"/>
+	        depends="integration-test-opto,integration-distbuild-opto"
+	        description="Build and test the optimized Aspen project and its dependencies in a clean tree">
+	</target>
 
 	<!-- integration-test -->
 	<target name="integration-test" depends="integration-build">
@@ -73,7 +77,7 @@
 		<antcall target="integration-configure-tests"/>
 		<antcall target="do-cleanbuild">
 			<param name="build.home" location="${integration.build.home}"/>
-			<param name="opto" value="--without-optimization"/>
+			<param name="build.opto" value="--without-optimization"/>
 		</antcall>
 	</target>
 	<target name="integration-build-opto"
@@ -81,7 +85,7 @@
 		<antcall target="integration-configure-tests"/>
 		<antcall target="do-cleanbuild">
 			<param name="build.home" location="${integration.build.home}"/>
-			<param name="opto" value="--with-optimization"/>
+			<param name="build.opto" value="--with-optimization"/>
 		</antcall>
 	</target>
 
@@ -89,6 +93,13 @@
 	<target name="integration-distbuild">
 		<antcall target="do-distbuild">
 			<param name="build.home" location="${integration.build.home}"/>
+			<param name="build.opto" value="--without-optimization"/>
+		</antcall>
+	</target>
+	<target name="integration-distbuild-opto">
+		<antcall target="do-distbuild">
+			<param name="build.home" location="${integration.build.home}"/>
+			<param name="build.opto" value="--with-optimization"/>
 		</antcall>
 	</target>
 
@@ -195,7 +206,7 @@ saffron.opt.allowInfiniteCostConverters=true
 			<arg value="${build.home}/farrago"/>
                         <arg value="--with-tests"/>
                         <arg value="--release"/>
-                        <arg value="${opto}"/>
+                        <arg value="${build.opto}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
 		</exec>
@@ -207,6 +218,7 @@ saffron.opt.allowInfiniteCostConverters=true
 			<arg value="${build.home}/farrago"/>
                         <arg value="--skip-init-build"/>
                         <arg value="--skip-postgres"/>
+                        <arg value="${build.opto}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
 		</exec>
