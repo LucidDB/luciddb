@@ -2457,10 +2457,14 @@ public class RelDecorrelator
         }
     }
 
-    // REVIEW: This rule is non-static, depends on the state of members in
-    // RelDecorrelator, and has side-effects in the decorrelator.  This breaks
-    // the contract of a planner rule, and the rule will not be reusable in
-    // other planners.
+    // REVIEW jhyde 29-Oct-2007: This rule is non-static, depends on the state
+    // of members in RelDecorrelator, and has side-effects in the decorrelator.
+    // This breaks the contract of a planner rule, and the rule will not be
+    // reusable in other planners.
+
+    // REVIEW jvs 29-Oct-2007:  Shouldn't it also be incorporating
+    // the flavor attribute into the description?
+    
     private final class AdjustProjectForCountAggregateRule
         extends RelOptRule
     {
@@ -2597,8 +2601,9 @@ public class RelDecorrelator
                     corRel.getJoinType());
 
             // remember this rel so we don't fire rule on it again
-            // REVIEW: rules should not save state; rule should recognize
-            // patterns where it does or does not need to do work
+            // REVIEW jhyde 29-Oct-2007: rules should not save state; rule
+            // should recognize patterns where it does or does not need to do
+            // work
             generatedCorRels.add(newCorRel);
 
             // need to update the mapCorVarToCorRel Update the output position
