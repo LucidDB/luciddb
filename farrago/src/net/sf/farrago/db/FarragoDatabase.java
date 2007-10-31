@@ -451,11 +451,12 @@ public class FarragoDatabase
         FemCmdOpenDatabase cmd = systemRepos.newFemCmdOpenDatabase();
         FemFennelConfig fennelConfig =
             systemRepos.getCurrentConfig().getFennelConfig();
-        SortedMap<String, Object> configMap =
-            JmiObjUtil.getAttributeValues(fennelConfig);
-
+        
         // this comment is here to work around a Perforce integ
         // bug; please remove it
+        
+        SortedMap<String, Object> configMap =
+            JmiObjUtil.getAttributeValues(fennelConfig);
 
         // Filter out null values.
         Iterator<Map.Entry<String,Object>> configMapIter =
