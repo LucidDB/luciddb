@@ -362,6 +362,11 @@ public class SqlLiteral
         return true;
     }
 
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
+    {
+        return SqlMonotonicity.Constant;
+    }
+
     /**
      * Creates a NULL literal.
      *

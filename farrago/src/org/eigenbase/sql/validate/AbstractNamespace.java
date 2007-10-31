@@ -176,14 +176,14 @@ abstract class AbstractNamespace
         this.extra = o;
     }
 
-    public SqlNodeList getMonotonicExprs()
+    public List<Pair<SqlNode, SqlMonotonicity>> getMonotonicExprs()
     {
-        return SqlNodeList.Empty;
+        return Collections.emptyList();
     }
 
-    public boolean isMonotonic(String columnName)
+    public SqlMonotonicity getMonotonicity(String columnName)
     {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 
     public void makeNullable()

@@ -387,7 +387,7 @@ public class SqlIdentifier
         return (names.length == 1) && !names[0].equals("*");
     }
 
-    public boolean isMonotonic(SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
     {
         // First check for builtin functions which don't have parentheses,
         // like "LOCALTIME".
@@ -397,14 +397,14 @@ public class SqlIdentifier
                 validator.getOperatorTable(),
                 this);
         if (call != null) {
-            return call.isMonotonic(scope);
+            return call.getMonotonicity(scope);
         }
         final SqlIdentifier fqId = scope.fullyQualify(this);
         final SqlValidatorNamespace ns =
             SqlValidatorUtil.lookup(
                 scope,
                 Arrays.asList(fqId.names).subList(0, fqId.names.length - 1));
-        return ns.isMonotonic(fqId.names[fqId.names.length - 1]);
+        return ns.getMonotonicity(fqId.names[fqId.names.length - 1]);
     }
 
     public boolean equalsBaseName(String name)

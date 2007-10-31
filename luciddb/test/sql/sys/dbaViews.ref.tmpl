@@ -241,12 +241,11 @@
 0: jdbc:luciddb:> select catalog_name, view_name, original_text
 . . . . . . . . > from sys_root.dba_views
 . . . . . . . . > where schema_name='DBAVTEST';
-+---------------+------------+-------------------------------+
-| CATALOG_NAME  | VIEW_NAME  |         ORIGINAL_TEXT         |
-+---------------+------------+-------------------------------+
-| LOCALDB       | EMPVIEW    | 
-select * from dbavtest.emps  |
-+---------------+------------+-------------------------------+
++---------------+------------+------------------------------+
+| CATALOG_NAME  | VIEW_NAME  |        ORIGINAL_TEXT         |
++---------------+------------+------------------------------+
+| LOCALDB       | EMPVIEW    | select * from dbavtest.emps  |
++---------------+------------+------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select table_name, last_analyze_row_count, 
 . . . . . . . . >   last_analyze_timestamp > creation_timestamp

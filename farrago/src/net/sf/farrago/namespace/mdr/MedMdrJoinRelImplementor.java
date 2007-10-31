@@ -28,17 +28,16 @@ import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
@@ -393,7 +392,7 @@ class MedMdrJoinRelImplementor
             joinRel.getRightReference().getReferencedEnd().getType();
         leftKeyRefClass =
             (RefClass) rightRel.getRefObjectFromModelElement(leftKeyClassifier);
-        leftKeyClass = JmiUtil.getClassForRefClass(leftKeyRefClass);
+        leftKeyClass = JmiObjUtil.getClassForRefClass(leftKeyRefClass);
 
         boolean useAssocReflection = rightRel.useReflection;
 
@@ -453,7 +452,7 @@ class MedMdrJoinRelImplementor
         Expression collectionExpr = null;
         if (!useAssocReflection) {
             String accessorName =
-                JmiUtil.getAccessorName(
+                JmiObjUtil.getAccessorName(
                     joinRel.getRightReference().getExposedEnd());
             try {
                 // verify that the desired accessor method actually exists

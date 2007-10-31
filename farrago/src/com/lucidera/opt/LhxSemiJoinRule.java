@@ -157,7 +157,7 @@ public class LhxSemiJoinRule
             return;
         }
 
-        if (aggRel.getAggCalls().length != 0) {
+        if (aggRel.getAggCallList().size() != 0) {
             // not guaranteed to be distinct
             return;
         }

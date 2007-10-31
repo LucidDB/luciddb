@@ -23,6 +23,9 @@ package org.eigenbase.sql;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.resource.EigenbaseResource;
 
 
 /**
@@ -72,6 +75,17 @@ public class SqlRankFunction
     public boolean isAggregator()
     {
         return true;
+    }
+
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
+    {
+        final SqlParserPos pos = call.getParserPosition();
+         throw SqlUtil.newContextException(pos, EigenbaseResource.instance().FunctionUndefined.ex(
+                call.toString()));
     }
 }
 

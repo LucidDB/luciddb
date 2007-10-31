@@ -50,6 +50,7 @@ import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
@@ -538,7 +539,7 @@ public class FarragoPreparingStmt
                     cmdPrepareStream.getStreamDefs();
                 streamDefs.addAll(streamDefSet);
                 xmiFennelPlan =
-                    JmiUtil.exportToXmiString(
+                    JmiObjUtil.exportToXmiString(
                         Collections.singleton(cmdPrepareStream));
                 streamGraphTracer.fine(xmiFennelPlan);
             }
@@ -1530,9 +1531,9 @@ public class FarragoPreparingStmt
         }
 
         // implement SqlValidatorTable
-        public boolean isMonotonic(String columnName)
+        public SqlMonotonicity getMonotonicity(String columnName)
         {
-            return false;
+            return SqlMonotonicity.NotMonotonic;
         }
 
         // implement SqlValidatorTable

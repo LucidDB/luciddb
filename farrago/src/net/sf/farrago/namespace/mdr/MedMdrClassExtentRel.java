@@ -28,12 +28,11 @@ import java.util.List;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.util.*;
-
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
@@ -80,7 +79,7 @@ class MedMdrClassExtentRel
             connection);
         this.mdrClassExtent = mdrClassExtent;
 
-        rowClass = JmiUtil.getClassForRefClass(mdrClassExtent.refClass);
+        rowClass = JmiObjUtil.getClassForRefClass(mdrClassExtent.refClass);
         useReflection = (rowClass == RefObject.class);
     }
 
@@ -105,29 +104,29 @@ class MedMdrClassExtentRel
         boolean useModel = (refObject instanceof ModelElement);
 
         // determine the path from the root package to refObject
-        RefBaseObject refPackage = JmiUtil.getContainer(refObject);
+        RefBaseObject refPackage = JmiObjUtil.getContainer(refObject);
         String rootPackageName =
-            JmiUtil.getMetaObjectName(
+            JmiObjUtil.getMetaObjectName(
                 mdrClassExtent.directory.server.getExtentPackage());
         for (;;) {
-            String packageName = JmiUtil.getMetaObjectName(refPackage);
+            String packageName = JmiObjUtil.getMetaObjectName(refPackage);
             if (packageName.equals(rootPackageName)) {
                 break;
             }
 
             // we're building up the list in reverse order
             nameList.add(0, packageName);
-            refPackage = JmiUtil.getContainer(refPackage);
+            refPackage = JmiObjUtil.getContainer(refPackage);
             assert (refPackage != null);
         }
 
-        nameList.add(JmiUtil.getMetaObjectName(refObject));
+        nameList.add(JmiObjUtil.getMetaObjectName(refObject));
         String typeName;
         if (useModel) {
-            typeName = JmiUtil.getMetaObjectName(refObject.refMetaObject());
+            typeName = JmiObjUtil.getMetaObjectName(refObject.refMetaObject());
         } else {
             typeName =
-                JmiUtil.getMetaObjectName(
+                JmiObjUtil.getMetaObjectName(
                     refObject.refMetaObject().refMetaObject());
         }
         nameList.add(typeName);
@@ -223,7 +222,7 @@ class MedMdrClassExtentRel
 
         RelDataType outputRowType = getRowType();
         List<StructuralFeature> features =
-            JmiUtil.getFeatures(
+            JmiObjUtil.getFeatures(
                 mdrClassExtent.refClass,
                 StructuralFeature.class,
                 false);
@@ -241,7 +240,7 @@ class MedMdrClassExtentRel
                         new ExpressionList(
                             Literal.makeLiteral(feature.getName())));
             } else {
-                String accessorName = JmiUtil.getAccessorName(feature);
+                String accessorName = JmiObjUtil.getAccessorName(feature);
                 accessorExps[i] =
                     new MethodCall(
                         castInputRow,

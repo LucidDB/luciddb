@@ -28,8 +28,8 @@ import org.eigenbase.jmi.*;
 /**
  * Static JMI utilities.
  *
- * <p>TODO jvs 16-Nov-2005: delete this class once all callers been changed to
- * call JmiObjUtil instead.
+ * @deprecated No remaining usages in eigenbase code or in SQLstream red-zone
+ *   code; TODO: delete this class when all LucidEra usages are gone
  *
  * @author John V. Sichi
  * @version $Id$

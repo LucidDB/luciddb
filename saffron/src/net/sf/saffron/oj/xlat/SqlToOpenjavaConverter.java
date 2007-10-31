@@ -592,9 +592,9 @@ public class SqlToOpenjavaConverter
                         return list;
                     }
 
-                    public boolean isMonotonic(String columnName)
+                    public SqlMonotonicity getMonotonicity(String columnName)
                     {
-                        return false;
+                        return SqlMonotonicity.NotMonotonic;
                     }
 
                     public SqlAccessType getAllowedAccess()

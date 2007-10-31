@@ -34,7 +34,7 @@ import org.eigenbase.util.*;
 import org.netbeans.api.xmi.*;
 import org.netbeans.lib.jmi.util.*;
 import org.netbeans.mdr.handlers.*;
-
+import org.jgrapht.graph.DefaultEdge;
 
 /**
  * Static JMI utilities.
@@ -239,7 +239,7 @@ public abstract class JmiObjUtil
      *
      * @return outermost JMI objects imported
      */
-    public static Collection importFromXmiString(
+    public static Collection<RefBaseObject> importFromXmiString(
         RefPackage extent,
         String string)
     {
@@ -366,6 +366,62 @@ public abstract class JmiObjUtil
         return Long.parseLong(
             mofId.substring(colonPos + 1),
             16);
+    }
+
+    /**
+     * Returns the type name of an object. For example, "FemLocalView".
+     *
+     * @param refObject Object
+     * @return type name
+     */
+    public static String getTypeName(RefObject refObject)
+    {
+        return toString(refObject.refClass());
+    }
+
+    /**
+     * Returns the name of a class.
+     *
+     * @param refClass Class
+     * @return Name of class
+     */
+    public static String toString(RefClass refClass)
+    {
+        return refClass.refMetaObject().refGetValue("name").toString();
+    }
+
+    /**
+     * Generates a string describing an object and its attributes.
+     *
+     * <p>Useful for debugging. Typical result:
+     *
+     * <blockquote>FemDataWrapper(creationTimestamp='2007-09-02 16:57:22.252',
+     * description='null', foreign='true', language='JAVA',
+     * libraryFile='class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper',
+     * lineageId='1dacd3af-9181-47fd-94f3-64fb3a0506a4',
+     * modificationTimestamp='2007-09-02 17:21:08.846', name='SYS_MDR',
+     * visibility='vk_public')</code></blockquote>
+     *
+     * @param refObject Object
+     * @return Description of object
+     */
+    public static String toString(RefObject refObject)
+    {
+        StringBuilder buf = new StringBuilder();
+        buf.append(getTypeName(refObject)).append('(');
+        int i = -1;
+        SortedMap<String, Object> map = getAttributeValues(refObject);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (++i > 0) {
+                buf.append(", ");
+            }
+            buf.append(entry.getKey())
+                .append("='")
+                .append(entry.getValue())
+                .append("'");
+        }
+        buf.append(')');
+        return buf.toString();
     }
 
     /**
@@ -564,7 +620,7 @@ public abstract class JmiObjUtil
             if (feature.getMultiplicity().getLower() != 0) {
                 if (obj.refGetValue(feature) == null) {
                     String featureClassName = getMetaObjectName(refClass);
-                    String objectName = null;
+                    String objectName;
                     try {
                         // If it has a name attribute, use that
                         objectName = (String) obj.refGetValue("name");
@@ -616,7 +672,7 @@ public abstract class JmiObjUtil
     /**
      * Tests an attribute value to see if it is blank.
      *
-     * @param value
+     * @param value Value
      *
      * @return true if value is either null or the empty string
      */
@@ -624,6 +680,94 @@ public abstract class JmiObjUtil
     {
         return (value == null) || value.equals("");
     }
+
+    /**
+     * Prints a dependency graph to a given writer.
+     *
+     * @param graph Dependency graph
+     * @param pw Writer
+     * @param namer Maps JMI objects in the graph to a descriptive string
+     */
+    public static void dumpGraph(
+        JmiDependencyGraph graph,
+        PrintWriter pw,
+        Namer namer)
+    {
+        pw.println("Vertices:");
+        Map<JmiDependencyVertex, String> vertexIds =
+            new HashMap<JmiDependencyVertex, String>();
+        for (JmiDependencyVertex vertex : graph.vertexSet()) {
+            int vertexId = vertexIds.size();
+            RefObject first = vertex.getElementSet().iterator().next();
+            vertexIds.put(vertex, vertexId + ": " + namer.getName(first));
+            pw.println("\tVertex #" + vertexId + ":");
+            for (RefObject refObject : vertex.getElementSet()) {
+                pw.println("\t\t" + namer.getName(refObject));
+            }
+        }
+        pw.println("Edges:");
+        for (DefaultEdge edge : graph.edgeSet()) {
+            JmiDependencyVertex sourceVertex = graph.getEdgeSource(edge);
+            JmiDependencyVertex targetVertex = graph.getEdgeTarget(edge);
+            pw.println("\t"
+                + vertexIds.get(sourceVertex)
+                + " : "
+                + vertexIds.get(targetVertex));
+        }
+    }
+
+    /**
+     * Prints a model view to a given writer.
+     *
+     * @param view  Model view
+     * @param pw    Writer
+     */
+    public static void dumpGraph(
+        JmiModelView view,
+        PrintWriter pw)
+    {
+        pw.println("Vertices:");
+        final JmiModelGraph graph = view.getModelGraph();
+        Map<JmiClassVertex, String> vertexIds =
+            new HashMap<JmiClassVertex, String>();
+        for (JmiClassVertex vertex : graph.vertexSet()) {
+            int vertexId = vertexIds.size();
+            final String vertexDesc =
+                vertexId + ": " + toString(vertex.getRefClass());
+            vertexIds.put(vertex, vertexDesc);
+            pw.println("\tVertex #" + vertexDesc);
+        }
+        pw.println("Edges:");
+        for (DefaultEdge edge : graph.edgeSet()) {
+            JmiClassVertex sourceVertex = graph.getEdgeSource(edge);
+            JmiClassVertex targetVertex = graph.getEdgeTarget(edge);
+            pw.println("\t"
+                + vertexIds.get(sourceVertex)
+                + " - "
+                + vertexIds.get(targetVertex)
+                + " (" + edge + ")");
+        }
+    }
+
+    /**
+     * Generates a name for a JMI element.
+     *
+     * <p>This is an interface because the name often depends upon the details
+     * the metamodel, and different applications call for different levels of
+     * verbosity. Typically people choose to identify an object by its type
+     * and its path to the root element, for example
+     * "LocalTable(MYCATALOG.MYSCHEMA.MYTABLE)".
+     */
+    public interface Namer
+    {
+        /**
+         * Returns a string to which identifies a given element to an end-user.
+         *
+         * @param o Element
+         * @return Descriptor
+         */
+        String getName(RefObject o);
+    }
 }
 
-// End JmiUtil.java
+// End JmiObjUtil.java

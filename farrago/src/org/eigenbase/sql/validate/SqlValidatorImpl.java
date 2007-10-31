@@ -1999,12 +1999,6 @@ public class SqlValidatorImpl
         return (aggFinder.findAgg(selectNode) != null);
     }
 
-    public boolean isConstant(SqlNode expr)
-    {
-        return (expr instanceof SqlLiteral) || (expr instanceof SqlDynamicParam)
-            || (expr instanceof SqlDataTypeSpec);
-    }
-
     private void validateNodeFeature(SqlNode node)
     {
         switch (node.getKind().getOrdinal()) {
@@ -3231,6 +3225,13 @@ public class SqlValidatorImpl
                 SqlValidatorScope [] ancestorOut,
                 int [] offsetOut)
             {
+                if (dataType.isStruct()) {
+                    return lookupFieldNamespace(
+                        dataType,
+                        name,
+                        ancestorOut,
+                        offsetOut);
+                }
                 return null;
             }
 
@@ -3248,14 +3249,14 @@ public class SqlValidatorImpl
             {
             }
 
-            public SqlNodeList getMonotonicExprs()
+            public List<Pair<SqlNode, SqlMonotonicity>> getMonotonicExprs()
             {
                 return null;
             }
 
-            public boolean isMonotonic(String columnName)
+            public SqlMonotonicity getMonotonicity(String columnName)
             {
-                return false;
+                return SqlMonotonicity.NotMonotonic;
             }
 
             public void makeNullable()

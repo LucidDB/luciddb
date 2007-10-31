@@ -49,6 +49,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
@@ -450,8 +451,11 @@ public class FarragoDatabase
         FemCmdOpenDatabase cmd = systemRepos.newFemCmdOpenDatabase();
         FemFennelConfig fennelConfig =
             systemRepos.getCurrentConfig().getFennelConfig();
+        
         SortedMap<String, Object> configMap =
-            JmiUtil.getAttributeValues(fennelConfig);
+            JmiObjUtil.getAttributeValues(fennelConfig);
+
+        filterMapNullValues(configMap);
 
         // Filter out null values.
         Iterator<Map.Entry<String,Object>> configMapIter =
@@ -514,6 +518,18 @@ public class FarragoDatabase
                 cmd);
 
         tracer.config("Fennel successfully loaded");
+    }
+
+    private void filterMapNullValues(Map<String,Object> configMap)
+    {
+        Iterator<Map.Entry<String,Object>> configMapIter =
+            configMap.entrySet().iterator();
+        while (configMapIter.hasNext()) {
+            Map.Entry<String,Object> entry = configMapIter.next();
+            if (entry.getValue() == null) {
+                configMapIter.remove();
+            }
+        }
     }
 
     /**
@@ -674,7 +690,7 @@ public class FarragoDatabase
         if (cancelOnly) {
             stmt.cancel();
         } else {
-            stmt.closeAllocation();
+            stmt.kill();
         }
     }
 

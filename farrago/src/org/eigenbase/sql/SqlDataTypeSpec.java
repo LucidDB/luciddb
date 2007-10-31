@@ -130,6 +130,11 @@ public class SqlDataTypeSpec
                 pos);
     }
 
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
+    {
+        return SqlMonotonicity.Constant;
+    }
+
     public SqlIdentifier getCollectionsTypeName()
     {
         return collectionsTypeName;

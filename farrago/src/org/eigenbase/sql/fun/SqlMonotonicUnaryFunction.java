@@ -57,10 +57,12 @@ public class SqlMonotonicUnaryFunction
 
     //~ Methods ----------------------------------------------------------------
 
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
         SqlNode node = (SqlNode) call.operands[0];
-        return scope.isMonotonic(node);
+        return scope.getMonotonicity(node).unstrict();
     }
 }
 

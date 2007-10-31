@@ -301,9 +301,9 @@ public class MockCatalogReader
             return names;
         }
 
-        public boolean isMonotonic(String columnName)
+        public SqlMonotonicity getMonotonicity(String columnName)
         {
-            return false;
+            return SqlMonotonicity.NotMonotonic;
         }
 
         public SqlAccessType getAllowedAccess()

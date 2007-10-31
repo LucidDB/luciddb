@@ -35,6 +35,9 @@ import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
 
+import java.util.*;
+import java.util.List;
+
 
 /**
  * <code>ExtenderAggregation</code> is an aggregation which works by
@@ -197,7 +200,7 @@ class ExtenderAggregation implements Aggregation, OJAggImplementor
         JavaRelImplementor implementor,
         JavaRel rel,
         Expression accumulator,
-        AggregateRel.Call call)
+        AggregateCall call)
     {
         // saffron.runtime.AggAndAcc a = (saffron.runtime.AggAndAcc) acc;
         // "a.total = a.agg.next(arg..., a.total);"
@@ -211,9 +214,9 @@ class ExtenderAggregation implements Aggregation, OJAggImplementor
                     TypeName.forOJClass(Toolbox.clazzAggAndAcc),
                     accumulator)));
         ExpressionList exprList = new ExpressionList();
-        final int [] args = call.args;
-        for (int i = 0; i < args.length; i++) {
-            exprList.add(implementor.translateInputField(rel, 0, args[i]));
+        final List<Integer> args = call.getArgList();
+        for (Integer arg : args) {
+            exprList.add(implementor.translateInputField(rel, 0, arg));
         }
         exprList.add(new FieldAccess(var, "total"));
         stmtList.add(
@@ -233,7 +236,7 @@ class ExtenderAggregation implements Aggregation, OJAggImplementor
     public Expression implementResult(
         JavaRelImplementor implementor,
         Expression accumulator,
-        AggregateRel.Call call)
+        AggregateCall call)
     {
         // "((T) ((AggAndAcc) acc).agg).result(
         //     (T0) 0, (T1) null..., ((AggAndAcc) acc).total)"
@@ -263,7 +266,7 @@ class ExtenderAggregation implements Aggregation, OJAggImplementor
     public Expression implementStart(
         JavaRelImplementor implementor,
         JavaRel rel,
-        AggregateRel.Call call)
+        AggregateCall call)
     {
         Variable var = implementor.newVariable();
         StatementList stmtList = implementor.getStatementList();
@@ -297,7 +300,7 @@ class ExtenderAggregation implements Aggregation, OJAggImplementor
     public Expression implementStartAndNext(
         JavaRelImplementor implementor,
         JavaRel rel,
-        AggregateRel.Call call)
+        AggregateCall call)
     {
         Variable var_agg = implementor.newVariable();
         StatementList stmtList = implementor.getStatementList();
@@ -324,7 +327,9 @@ class ExtenderAggregation implements Aggregation, OJAggImplementor
                     TypeName.forOJClass(argTypes[i]),
                     argTypes[i].isPrimitive() ? Literal.constantZero()
                     : Literal.constantNull()));
-            nextList.add(implementor.translateInputField(rel, 0, call.args[i]));
+            nextList.add(
+                implementor.translateInputField(
+                    rel, 0, call.getArgList().get(i)));
         }
         nextList.add(
             new MethodCall(var_agg, AggregationExtender.METHOD_START, startList));
@@ -359,7 +364,7 @@ class ExtenderAggregation implements Aggregation, OJAggImplementor
             argTypes = newArgTypes;
         }
         OJMethod [] allMethods = aggClazz.getMethods();
-loop: 
+loop:
         for (int i = 0, n = allMethods.length; i < n; i++) {
             OJMethod method = allMethods[i];
             if (method.getName().equals(name)

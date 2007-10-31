@@ -189,7 +189,7 @@ public class LcsIndexAggRule
                 aggRel.getCluster(),
                 indexRename,
                 aggRel.getGroupCount(),
-                aggRel.getAggCalls());
+                aggRel.getAggCallList());
 
         call.transformTo(indexAgg);
     }

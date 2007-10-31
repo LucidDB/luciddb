@@ -336,7 +336,10 @@ public class Rex2CalcPlanTest
             + "substring('a' from 1),"
             + "substring(cast('a' as char(2)) from 1),"
             + "substring('a' from 1 for 10),"
-            + "substring('a' from 'a' for '\\' ),"
+            + (
+                Bug.Frg296Fixed 
+                    ? "substring('a' from 'a' for '\\' ),"
+                    : "")
             + "'a'||'a'||'b'"
             + " FROM emp WHERE empno > 10";
         tester.check(sql, false, false);
@@ -668,19 +671,24 @@ public class Rex2CalcPlanTest
             RelNode rootRel = convertSqlToRel(sql);
 
             RexBuilder rexBuilder = rootRel.getCluster().getRexBuilder();
-            ProjectRel project = (ProjectRel) rootRel;
-
-            AggregateRel aggregate = (AggregateRel) project.getInput(0);
+            AggregateRel aggregate;
+            if (rootRel instanceof ProjectRel) {
+                ProjectRel project = (ProjectRel) rootRel;
+                aggregate = (AggregateRel) project.getInput(0);
+            } else {
+                aggregate = (AggregateRel) rootRel;
+            }
 
             // Create a program builder, and add the project expressions.
             RelDataType inputRowType = aggregate.getInput(0).getRowType();
             final RexProgramBuilder programBuilder =
                 new RexProgramBuilder(inputRowType, rexBuilder);
-            for (int i = 0; i < aggregate.getAggCalls().length; i++) {
-                AggregateRelBase.Call aggCall = aggregate.getAggCalls()[i];
-                RexNode [] exprs = new RexNode[aggCall.getArgs().length];
-                for (int j = 0; j < aggCall.getArgs().length; j++) {
-                    int argOperand = aggCall.getArgs()[j];
+            int i = -1;
+            for (AggregateCall aggCall : aggregate.getAggCallList()) {
+                ++i;
+                RexNode [] exprs = new RexNode[aggCall.getArgList().size()];
+                for (int j = 0; j < aggCall.getArgList().size(); j++) {
+                    int argOperand = aggCall.getArgList().get(j);
                     exprs[j] =
                         rexBuilder.makeInputRef(
                             inputRowType.getFields()[argOperand].getType(),

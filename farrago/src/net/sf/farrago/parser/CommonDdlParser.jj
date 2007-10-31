@@ -658,7 +658,6 @@ FemLocalView ViewDefinition() :
     <AS>
     {
         defStart = getEndPos();
-        farragoParser.getDdlValidator().setParserOffset(view, defStart);
     }
     query = OrderedQueryOrExpr(ExprContext.ACCEPT_QUERY)
     {
@@ -671,6 +670,9 @@ FemLocalView ViewDefinition() :
         String bodyText = farragoParser.getSubstring(defStart, defEnd);
         CwmQueryExpression queryExpr = getRepos().newCwmQueryExpression();
         queryExpr.setLanguage("SQL");
+        bodyText =
+            farragoParser.getDdlValidator().setParserOffset(
+                view, defStart, bodyText);
         queryExpr.setBody(bodyText);
         view.setQueryExpression(queryExpr);
         return view;
@@ -1803,7 +1805,6 @@ FemRoutine ConstructorDefinition() :
     RightsClause(method)
     {
         defStart = getEndPos();
-        farragoParser.getDdlValidator().setParserOffset(method, defStart);
     }
     PsmBody()
     {
@@ -1811,6 +1812,9 @@ FemRoutine ConstructorDefinition() :
         String bodyText = farragoParser.getSubstring(defStart, defEnd);
         CwmProcedureExpression procedureExpr = method.getBody();
         procedureExpr.setLanguage("SQL");
+        bodyText =
+            farragoParser.getDdlValidator().setParserOffset(
+                method, defStart, bodyText);
         procedureExpr.setBody(bodyText);
         // NOTE: this is necessary to force a revalidation of the method
         method.setBody(procedureExpr);
@@ -1957,7 +1961,6 @@ void SqlFunctionBody(FemRoutine routine) :
     <RETURN>
     {
         defStart = getEndPos();
-        farragoParser.getDdlValidator().setParserOffset(routine, defStart);
 
         // TODO jvs 24-Dec-2004: eventually allow subqueries and
         // non-functional routine bodies.
@@ -1970,6 +1973,9 @@ void SqlFunctionBody(FemRoutine routine) :
         CwmProcedureExpression procedureExpr =
         getRepos().newCwmProcedureExpression();
         procedureExpr.setLanguage("SQL");
+        bodyText =
+            farragoParser.getDdlValidator().setParserOffset(
+                routine, defStart, bodyText);
         procedureExpr.setBody(
             FarragoUserDefinedRoutine.addReturnPrefix(bodyText));
         routine.setBody(procedureExpr);
@@ -2278,6 +2284,7 @@ FemUserDefinedType UserDefinedTypeDefinition() :
             typeDef, qualifiedName);
     }
     UserDefinedTypeOptions(typeDef)
+    OptionalDescription(typeDef)
     MethodSpecificationList(typeDef)
     {
         return typeDef;

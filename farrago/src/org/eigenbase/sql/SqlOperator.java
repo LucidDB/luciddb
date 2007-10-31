@@ -694,12 +694,18 @@ public abstract class SqlOperator
     }
 
     /**
-     * Method to check if call to this function is monotonic. Default
-     * implementation is to return false.
+     * Returns whether this operator is monotonic.
+     *
+     * <p>Default implementation returns {@link SqlMonotonicity#NotMonotonic}.
+     *
+     * @param call Call to this operator
+     * @param scope Scope in which the call occurs
      */
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 
     /**

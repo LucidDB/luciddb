@@ -24,6 +24,8 @@ package net.sf.farrago.ddl.gen;
 
 import java.util.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.keysindexes.*;
@@ -34,6 +36,7 @@ import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.jmi.*;
 
 
 /**
@@ -45,13 +48,107 @@ import org.eigenbase.util.*;
 public class FarragoDdlGenerator
     extends DdlGenerator
 {
+    private static final List<String> NON_REPLACEABLE_TYPE_NAMES =
+        Arrays.asList(
+            "INDEX",
+            "CLUSTERED INDEX");
+
+    protected final JmiModelView modelView;
+
     //~ Constructors -----------------------------------------------------------
 
-    public FarragoDdlGenerator()
+    /**
+     * Creates a DDL generator.
+     *
+     * <p>The <code>modelView</code> parameter can be null if you are
+     * generating DDL for a single object. A model view is required if calling
+     * {@link DdlGenerator#gatherElements} or
+     * {@link #getExportText(java.util.List, boolean)} with
+     * <code>sort=true</code>.
+     *
+     * @param modelView Model graph
+     */
+    public FarragoDdlGenerator(JmiModelView modelView)
     {
+        this.modelView = modelView;
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    private RefClass findRefClass(Class<? extends RefObject> clazz)
+    {
+        JmiClassVertex vertex =
+            modelView.getModelGraph().getVertexForJavaInterface(clazz);
+        return vertex.getRefClass();
+    }
+
+    public <T extends RefObject> Collection<T> allOfClass(Class<T> clazz)
+    {
+        RefClass refClass = findRefClass(clazz);
+        return (Collection<T>) refClass.refAllOfClass();
+    }
+
+    public <T extends RefObject> Collection<T> allOfType(Class<T> clazz)
+    {
+        RefClass refClass = findRefClass(clazz);
+        return (Collection<T>) refClass.refAllOfType();
+    }
+
+    public String getExportText(
+        List<CwmModelElement> exportList, boolean sort)
+    {
+        if (sort) {
+            assert modelView != null;
+        }
+        return super.getExportText(exportList, sort);
+    }
+
+    protected boolean typeSupportsReplace(String typeName)
+    {
+        return !NON_REPLACEABLE_TYPE_NAMES.contains(typeName);
+    }
+
+    protected JmiModelView getModelView()
+    {
+        return modelView;
+    }
+
+    public void gatherElements(
+        List<CwmModelElement> list,
+        String schemaName,
+        boolean includeNonSchemaElements,
+        CwmCatalog catalog)
+    {
+        assert modelView != null;
+        for (CwmModelElement element : catalog.getOwnedElement()) {
+            if (element instanceof CwmSchema) {
+                CwmSchema schema = (CwmSchema) element;
+                if (schema.getName().equals(schemaName)) {
+                    list.add(schema);
+                    for (CwmModelElement element2 : schema.getOwnedElement()) {
+                        list.add(element2);
+                    }
+                }
+            } else if (includeNonSchemaElements) {
+                list.add(element);
+            }
+        }
+        // Include all dependencies. We don't want to generate DDL for them,
+        // but they are necessary to ensure that views are created in the
+        // right order, among other things.
+        // NOTE: We include dependencies of all objects in all schemas. This
+        // will not produce incorrect results, but may be a performance issue.
+        for (CwmDependency dependency : allOfClass(CwmDependency.class)) {
+            list.add(dependency);
+        }
+        // Likewise operations.
+        list.addAll(allOfClass(CwmOperation.class));
+
+        if (includeNonSchemaElements) {
+            list.addAll(allOfType(FemDataServer.class));
+            list.addAll(allOfType(FemDataWrapper.class));
+        }
+    }
 
     protected void createHeader(
         StringBuilder sb,
@@ -72,7 +169,7 @@ public class FarragoDdlGenerator
         String newName)
     {
         sb.append("CREATE ");
-        if (replace) {
+        if (replace && typeSupportsReplace(typeName)) {
             sb.append("OR REPLACE ");
         }
         if (newName != null) {
@@ -94,9 +191,10 @@ public class FarragoDdlGenerator
         sb.append(quote(view.getName()));
         addDescription(sb, view);
         sb.append(" AS");
+        sb.append(NL);
         stmt.addStmt(sb.toString());
 
-        sb = new StringBuilder();
+        sb.setLength(0);
         sb.append(view.getOriginalDefinition());
         stmt.addStmt(sb.toString());
     }
@@ -121,10 +219,8 @@ public class FarragoDdlGenerator
 
         sb.append(quote(table.getName()));
         stmt.addStmt(sb.toString());
-        sb = new StringBuilder();
-        addColumns(
-            sb,
-            Util.cast(table.getFeature(), CwmColumn.class).iterator());
+        sb.setLength(0);
+        addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
         addOptions(
             sb,
             table.getStorageOptions());
@@ -141,12 +237,10 @@ public class FarragoDdlGenerator
 
         sb.append(quote(table.getName()));
         stmt.addStmt(sb.toString());
-        sb = new StringBuilder();
-        addColumns(
-            sb,
-            Util.cast(table.getFeature(), CwmColumn.class).iterator());
+        sb.setLength(0);
+        addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
         sb.append(NL);
-        sb.append(" SERVER ");
+        sb.append("SERVER ");
         FemDataServer server = table.getServer();
         if (server != null) {
             sb.append(quote(server.getName()));
@@ -167,14 +261,14 @@ public class FarragoDdlGenerator
 
         sb.append(quote(wrapper.getName()));
         stmt.addStmt(sb.toString());
-        sb = new StringBuilder();
+        sb.setLength(0);
         // "LIBRARY" clause is optional
         if (wrapper.getLibraryFile() != null) {
             sb.append(" LIBRARY ");
             sb.append(literal(wrapper.getLibraryFile()));
         }
         sb.append(NL);
-        sb.append(" LANGUAGE ");
+        sb.append("LANGUAGE ");
         sb.append(wrapper.getLanguage());
         addOptions(
             sb,
@@ -184,138 +278,291 @@ public class FarragoDdlGenerator
     }
 
     public void create(
+        CwmOperation operation,
+        GeneratedDdlStmt stmt)
+    {
+        // We don't generate any DDL for an operation. Operations need to be
+        // in the export set so that method implementations occur after type
+        // declarations (which also declare operations).
+        stmt.setTopLevel(false);
+    }
+
+    public void create(
         FemRoutine routine,
         GeneratedDdlStmt stmt)
     {
         StringBuilder sb = new StringBuilder();
-        if (routine.getType().equals(ProcedureTypeEnum.FUNCTION)) {
-            createHeader(sb, "FUNCTION", false, null);
-        } else if (routine.getType().equals(ProcedureTypeEnum.PROCEDURE)) {
-            createHeader(sb, "PROCEDURE", false, null);
+        final ProcedureType routineType = routine.getType();
+        boolean method =
+            routine.getSpecification() != null
+                && routine.getSpecification().getOwner()
+                instanceof FemUserDefinedType;
+        if (method) {
+            createHeader(sb, "SPECIFIC METHOD", stmt);
+        } else if (routineType.equals(ProcedureTypeEnum.FUNCTION)) {
+            createHeader(sb, "FUNCTION", stmt);
+        } else if (routineType.equals(ProcedureTypeEnum.PROCEDURE)) {
+            createHeader(sb, "PROCEDURE", stmt);
         }
 
         sb.append(quote(routine.getName()));
         stmt.addStmt(sb.toString());
-        sb = new StringBuilder();
+        sb.setLength(0);
 
-        sb.append(" (");
-        sb.append(NL);
-        List<CwmParameter> parameters = routine.getParameter();
-        Iterator<CwmParameter> pi = parameters.iterator();
-        if (routine.getType().equals(ProcedureTypeEnum.PROCEDURE)) {
-            while (pi.hasNext()) {
-                CwmParameter p = pi.next();
-                if (p.getKind().equals(ParameterDirectionKindEnum.PDK_IN)) {
-                    sb.append("  IN ");
-                } else if (
-                    p.getKind().equals(
-                        ParameterDirectionKindEnum.PDK_INOUT))
-                {
-                    sb.append("  INOUT ");
-                } else if (
-                    p.getKind().equals(
-                        ParameterDirectionKindEnum.PDK_OUT))
-                {
-                    sb.append("  OUT ");
-                }
-
-                //REVIEW: procedures don't have RETURNS, right?
-                sb.append(quote(p.getName()));
-                sb.append(" ");
-                CwmSqldataType type = (CwmSqldataType) p.getType();
-                SqlTypeName stn = getSqlTypeName(type);
-                sb.append(type.getName());
-
-                //REVIEW: how to get type length, precision?
-                if (pi.hasNext()) {
-                    sb.append(", ");
-                    sb.append(NL);
-                }
-            }
+        if (method) {
             sb.append(NL);
-            sb.append(" )");
-            sb.append(NL);
+            sb.append("FOR ");
+            sb.append(quote(routine.getSpecification().getOwner().getName()));
         } else {
-            List<CwmParameter> returns = new ArrayList<CwmParameter>();
-            boolean first = true;
-            while (pi.hasNext()) {
-                CwmParameter p = pi.next();
+            methodBody(routine, sb);
+        }
 
-                //REVIEW: functions can't have INOUT or OUT parameters, right?
-                if (p.getKind().equals(ParameterDirectionKindEnum.PDK_IN)) {
-                    if (!first) {
-                        sb.append(", ");
-                        sb.append(NL);
-                    } else {
-                        first = false;
-                    }
-                    sb.append("   ").append(quote(p.getName())).append(" ");
-                    CwmSqldataType type = (CwmSqldataType) p.getType();
-                    SqlTypeName stn = getSqlTypeName(type);
-                    sb.append(type.getName());
-                } else if (
-                    p.getKind().equals(
-                        ParameterDirectionKindEnum.PDK_RETURN))
-                {
-                    returns.add(p);
-                }
+        if (routine.getExternalName() == null) {
+            sb.append(NL);
+            sb.append(routine.getBody().getBody());
+        }
+
+        stmt.addStmt(sb.toString());
+    }
+
+    /**
+     * Generates a parameters, keyword list and body of a method.
+     *
+     * @param routine Routine
+     * @param sb String buffer to write to
+     */
+    private void methodBody(
+        FemRoutine routine,
+        StringBuilder sb)
+    {
+        final ProcedureType routineType = routine.getType();
+        boolean method =
+            routine.getSpecification() != null
+                && routine.getSpecification().getOwner()
+                instanceof FemUserDefinedType;
+
+        sb.append("(");
+        sb.append(NL);
+        List<CwmParameter> returns = new ArrayList<CwmParameter>();
+        int paramCount = 0;
+        for (CwmParameter parameter : routine.getParameter()) {
+            if (parameter.getKind().equals(
+                ParameterDirectionKindEnum.PDK_RETURN))
+            {
+                assert !routineType.equals(ProcedureTypeEnum.PROCEDURE);
+                returns.add(parameter);
+                continue;
             }
-            sb.append(NL);
-            sb.append(" )");
-            sb.append(NL);
-            if (returns.size() > 0) {
-                sb.append(" RETURNS");
-                Iterator<CwmParameter> ri = returns.iterator();
-                while (ri.hasNext()) {
-                    CwmParameter p = ri.next();
-                    CwmSqldataType type = (CwmSqldataType) p.getType();
-                    SqlTypeName stn = getSqlTypeName(type);
-
-                    sb.append(" ").append(type.getName());
-
-                    //REVIEW: how to get type length, precision?
-                    if (ri.hasNext()) {
-                        sb.append(", ");
-                        sb.append(NL);
-                    }
-                }
+            if (paramCount++ > 0) {
+                sb.append(",");
                 sb.append(NL);
             }
+            add((FemRoutineParameter) parameter, routineType, sb);
         }
-
-        sb.append(" LANGUAGE ");
-        sb.append(routine.getLanguage());
+        sb.append(")");
         sb.append(NL);
-
-        if (routine.getDataAccess().equals(
-                RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA))
-        {
-            sb.append(" MODIFIES SQL DATA");
-        } else if (
-            routine.getDataAccess().equals(
-                RoutineDataAccessEnum.RDA_CONTAINS_SQL))
-        {
-            sb.append(" CONTAINS SQL");
-        } else if (
-            routine.getDataAccess().equals(
-                RoutineDataAccessEnum.RDA_NO_SQL))
-        {
-            sb.append(" NO SQL");
-        } else if (
-            routine.getDataAccess().equals(
-                RoutineDataAccessEnum.RDA_READS_SQL_DATA))
-        {
-            sb.append(" READS SQL DATA");
-        }
-        sb.append(NL);
-
-        //REVIEW: where do we find "deterministic"?
-        if (routine.getExternalName() != null) {
-            sb.append(" EXTERNAL NAME ");
-            sb.append(literal(routine.getExternalName()));
+        for (CwmParameter aReturn : returns) {
+            add((FemRoutineParameter) aReturn, routineType, sb);
             sb.append(NL);
         }
 
+        if (method) {
+            sb.append("SELF AS RESULT");
+            sb.append(NL);
+        }
+
+        sb.append("SPECIFIC ");
+        sb.append(quote(routine.getName()));
+
+        sb.append(NL);
+        sb.append("LANGUAGE ");
+        sb.append(routine.getLanguage());
+
+        final RoutineDataAccess da = routine.getDataAccess();
+        if (da.equals(RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA)) {
+            sb.append(NL).append("MODIFIES SQL DATA");
+        } else if (da.equals(RoutineDataAccessEnum.RDA_CONTAINS_SQL)) {
+            sb.append(NL).append("CONTAINS SQL");
+        } else if (da.equals(RoutineDataAccessEnum.RDA_NO_SQL)) {
+            sb.append(NL).append("NO SQL");
+        } else if (da.equals(RoutineDataAccessEnum.RDA_READS_SQL_DATA)) {
+            sb.append(NL).append("READS SQL DATA");
+        }
+
+        sb.append(NL);
+        sb.append(maybeNot(routine.isDeterministic(), "DETERMINISTIC"));
+
+        // Elide STATIC DISPATCH for functions and procedures, where it is
+        // the only option.
+        if (routine.isStaticDispatch() && method) {
+            sb.append(NL);
+            sb.append("STATIC DISPATCH");
+        }
+
+        if (routine.getExternalName() != null) {
+            sb.append(NL);
+            sb.append("EXTERNAL NAME ");
+            sb.append(literal(routine.getExternalName()));
+        }
+    }
+
+    /**
+     * Generates DDL for a routine parameter.
+     *
+     * @param parameter Parameter
+     * @param routineType Type of routine parameter belongs to
+     * @param sb StringBuilder to append to
+     */
+    private void add(
+        FemRoutineParameter parameter,
+        ProcedureType routineType,
+        StringBuilder sb)
+    {
+        final ParameterDirectionKind kind = parameter.getKind();
+        boolean qualifyType = false;
+        if (kind.equals(ParameterDirectionKindEnum.PDK_IN)) {
+            if (routineType.equals(ProcedureTypeEnum.PROCEDURE)) {
+                sb.append("  IN ");
+            } else {
+                sb.append("  ");
+            }
+            sb.append(quote(parameter.getName()));
+        } else if (kind.equals(ParameterDirectionKindEnum.PDK_INOUT)) {
+            sb.append("  INOUT ");
+            sb.append(quote(parameter.getName()));
+        } else if (kind.equals(ParameterDirectionKindEnum.PDK_OUT)) {
+            sb.append("  OUT ");
+            sb.append(quote(parameter.getName()));
+        } else if (kind.equals(ParameterDirectionKindEnum.PDK_RETURN)) {
+            qualifyType = true;
+            sb.append("RETURNS");
+        }
+
+        // REVIEW: functions don't have OUT or INOUT params
+        // REVIEW: procedures don't have RETURNS
+
+        sb.append(" ");
+        appendType(
+            sb, parameter.getType(), parameter.getPrecision(),
+            parameter.getScale(), parameter.getLength(),
+            null, parameter.getDefaultValue(), qualifyType);
+    }
+
+    private void appendType(
+        StringBuilder sb,
+        CwmClassifier type,
+        Integer precision,
+        Integer scale,
+        Integer length,
+        NullableType nullable,
+        CwmExpression defaultValue,
+        boolean qualifyType)
+    {
+        if (type instanceof FemSqlobjectType && qualifyType) {
+            // Workaround FRG-297; remove qualifyType parameter when fixed
+            sb.append(type.getNamespace().getName());
+            sb.append('.');
+        }
+        sb.append(type.getName());
+
+        SqlTypeName stn = getSqlTypeName(type);
+        if ((precision != null) && stn.allowsPrec()) {
+            sb.append("(").append(precision);
+            if ((scale != null) && stn.allowsScale()) {
+                sb.append(",").append(scale);
+            }
+            sb.append(")");
+        } else {
+            if (length != null) {
+                sb.append("(").append(length).append(")");
+            }
+        }
+
+        if (defaultValue != null) {
+            String val = defaultValue.getBody();
+            if ((val != null) && !val.equals(VALUE_NULL)) {
+                sb.append(" DEFAULT ");
+
+                // we expect the setter of body to be responsible
+                // for forming a valid SQL expression given the
+                // datatype
+                sb.append(val);
+            }
+        }
+
+        if (nullable != null) {
+            if (NullableTypeEnum.COLUMN_NO_NULLS.toString().equals(
+                nullable.toString())) {
+                sb.append(" NOT NULL");
+            }
+        }
+    }
+
+    /**
+     * Generates either "s" or "NOT s", depending on <code>b</code>.
+     *
+     * @param b Condition
+     * @param s Flag string
+     * @return string containing s or not s
+     */
+    protected static String maybeNot(boolean b, String s)
+    {
+        return b ? s : ("NOT " + s);
+    }
+
+    public void create(
+        FemSqlobjectType type,
+        GeneratedDdlStmt stmt)
+    {
+        StringBuilder sb = new StringBuilder();
+        createHeader(sb, "TYPE", stmt);
+        sb.append(quote(type.getName()));
+        sb.append(" AS");
+        addColumns(sb, Util.filter(type.getFeature(), CwmColumn.class));
+        sb.append(NL);
+        sb.append(maybeNot(type.isFinal(), "FINAL"));
+        sb.append(NL);
+        sb.append(maybeNot(!type.isAbstract(), "INSTANTIABLE"));
+        addDescription(sb, type);
+
+        addOperations(sb, Util.filter(type.getFeature(), CwmOperation.class));
+        stmt.addStmt(sb.toString());
+    }
+
+    private void addOperations(
+        StringBuilder sb, List<CwmOperation> operations)
+    {
+        for (CwmOperation operation : operations) {
+            sb.append(NL);
+            sb.append("CONSTRUCTOR METHOD ");
+            sb.append(quote(operation.getName()));
+            sb.append(" ");
+
+            // REVIEW: I think there is precisely one method per operation
+            for (CwmMethod method : operation.getMethod()) {
+                methodBody((FemRoutine) method, sb);
+            }
+        }
+    }
+
+    public void create(
+        FemSqldistinguishedType type,
+        GeneratedDdlStmt stmt)
+    {
+        StringBuilder sb = new StringBuilder();
+        createHeader(sb, "TYPE", stmt);
+        sb.append(quote(type.getName()));
+        sb.append(" AS ");
+
+        appendType(
+            sb, type.getType(), type.getPrecision(), type.getScale(),
+            type.getLength(), null, null, true);
+
+        sb.append(NL);
+        sb.append(maybeNot(type.isFinal(), "FINAL"));
+        sb.append(NL);
+        sb.append(maybeNot(!type.isAbstract(), "INSTANTIABLE"));
+        addDescription(sb, type);
         stmt.addStmt(sb.toString());
     }
 
@@ -328,25 +575,36 @@ public class FarragoDdlGenerator
 
         sb.append(quote(server.getName()));
         stmt.addStmt(sb.toString());
-        sb = new StringBuilder();
+        sb.setLength(0);
         // "TYPE" clause is optional
-        if (server.getType() != null) {
+        final String type = server.getType();
+        if (type != null && !type.equals("UNKNOWN")) {
 	        sb.append(" TYPE ");
-	        sb.append(literal(server.getType()));
+	        sb.append(literal(type));
         }
         // "VERSION" clause is optional
-        if (server.getVersion() != null) {
+        final String version = server.getVersion();
+        if (version != null && !version.equals("UNKNOWN")) {
             sb.append(" VERSION ");
-            sb.append(literal(server.getVersion()));
+            sb.append(literal(version));
         }
         sb.append(NL);
-        sb.append(" FOREIGN DATA WRAPPER ");
+        sb.append("FOREIGN DATA WRAPPER ");
         sb.append(quote(server.getWrapper().getName()));
         addOptions(
             sb,
             server.getStorageOptions());
         addDescription(sb, server);
         stmt.addStmt(sb.toString());
+    }
+
+    public void create(
+        CwmDependency dependency,
+        GeneratedDdlStmt stmt)
+    {
+        // We don't generate any DDL for a dependency. Dependencies need to be
+        // in the export set to ensure that objects occur in the right order.
+        stmt.setTopLevel(false);
     }
 
     public void drop(
@@ -396,7 +654,9 @@ public class FarragoDdlGenerator
         FemLocalIndex index,
         GeneratedDdlStmt stmt)
     {
-        if (index.isClustered()) {
+        if (index.isClustered()
+            || index.getName().startsWith("SYS$CONSTRAINT_INDEX$")
+            || index.getName().startsWith("SYS$DELETION_INDEX")) {
             stmt.setTopLevel(false);
         }
         StringBuilder sb = new StringBuilder();
@@ -429,14 +689,14 @@ public class FarragoDdlGenerator
 
     protected void addColumns(
         StringBuilder sb,
-        Iterator<CwmColumn> columns)
+        List<CwmColumn> columns)
     {
         addColumns(sb, columns, false, false);
     }
 
     protected void addColumns(
         StringBuilder sb,
-        Iterator<CwmColumn> columns,
+        List<CwmColumn> columns,
         boolean skipDefaults,
         boolean skipNullable)
     {
@@ -448,15 +708,14 @@ public class FarragoDdlGenerator
      * (enclosed in parentheses unless there are no columns).
      *
      * @param sb receives generated string
-     * @param columns iterator over column definitions to generate
+     * @param columns list of column definitions to generate
      * @param skipDefaults whether to omit default value definitions
      * @param skipNullable whether to omit NOT NULL constraint definitions
      * @param imposedPrimaryKey if not null, use as PRIMARY KEY
-     * (ignoring PRIMARY KEY definition in the catalog)
      */
     public void generateColumnsAndKeys(
         StringBuilder sb,
-        Iterator<CwmColumn> columns,
+        List<CwmColumn> columns,
         boolean skipDefaults,
         boolean skipNullable,
         List<String> imposedPrimaryKey)
@@ -466,11 +725,12 @@ public class FarragoDdlGenerator
         boolean isLast = false;
         List<String> pk = imposedPrimaryKey;
 
-        if (columns.hasNext()) {
+        if (columns.size() > 0) {
             sb.append(" (");
             sb.append(NL);
-            while (columns.hasNext()) {
-                CwmColumn col = columns.next();
+            final Iterator<CwmColumn> columnIter = columns.iterator();
+            while (columnIter.hasNext()) {
+                CwmColumn col = columnIter.next();
 
                 if (imposedPrimaryKey == null) {
                     if (col instanceof FemStoredColumn) {
@@ -483,53 +743,26 @@ public class FarragoDdlGenerator
                     }
                 }
 
-                isLast = !columns.hasNext() && (pk == null);
+                isLast = !columnIter.hasNext() && (pk == null);
 
                 sb.append("   ").append(quote(col.getName()));
 
-                //TODO: handle other 2 type classes
-                CwmSqldataType type = (CwmSqldataType) col.getType();
-                SqlTypeName stn = getSqlTypeName(type);
-
-                sb.append(" ").append(type.getName());
-
-                Integer precision = col.getPrecision();
-                if ((precision != null) && stn.allowsPrec()) {
-                    sb.append("(").append(precision);
-                    Integer scale = col.getScale();
-                    if ((scale != null) && stn.allowsScale()) {
-                        sb.append(",").append(scale);
-                    }
-                    sb.append(")");
+                sb.append(" ");
+                CwmExpression e;
+                if (skipDefaults) {
+                    e = null;
                 } else {
-                    Integer length = col.getLength();
-                    if (length != null) {
-                        sb.append("(").append(length).append(")");
-                    }
+                    e = col.getInitialValue();
                 }
-
-                if (!skipDefaults) {
-                    CwmExpression e = col.getInitialValue();
-                    if (e != null) {
-                        String val = e.getBody();
-                        if ((val != null) && !val.equals(VALUE_NULL)) {
-                            sb.append(" DEFAULT ");
-
-                            // we expect the setter of body to be responsible
-                            // for forming a valid SQL expression given the
-                            // datatype
-                            sb.append(val);
-                        }
-                    }
+                final NullableType isNullable;
+                if (skipNullable) {
+                    isNullable = null;
+                } else {
+                    isNullable = col.getIsNullable();
                 }
-
-                if (!skipNullable) {
-                    if (NullableTypeEnum.COLUMN_NO_NULLS.toString().equals(
-                            col.getIsNullable().toString()))
-                    {
-                        sb.append(" NOT NULL");
-                    }
-                }
+                appendType(
+                    sb, col.getType(), col.getPrecision(), col.getScale(),
+                    col.getLength(), isNullable, e, true);
 
                 // is this a stored column?
                 if (col instanceof FemElementWithStorageOptions) {
@@ -548,7 +781,7 @@ public class FarragoDdlGenerator
             }
 
             addPrimaryKeyConstraint(sb, pk);
-            sb.append(" )");
+            sb.append(")");
         }
     }
 
@@ -571,7 +804,7 @@ public class FarragoDdlGenerator
         if (indent == 1) {
             sb.append(NL);
         }
-        sb.append(" OPTIONS (");
+        sb.append("OPTIONS (");
         sb.append(NL);
         int k = 0;
         for (FemStorageOption option : options) {
@@ -584,8 +817,6 @@ public class FarragoDdlGenerator
             }
             sb.append(NL);
         }
-        sb.append(" ");
-        indent(sb, indent);
         sb.append(")");
     }
 
@@ -623,9 +854,8 @@ public class FarragoDdlGenerator
         String desc = element.getDescription();
         if ((desc != null) && (desc.length() > 0)) {
             sb.append(NL);
-            sb.append(" DESCRIPTION ");
+            sb.append("DESCRIPTION ");
             sb.append(literal(desc));
-            sb.append(NL);
         }
     }
 

@@ -46,19 +46,17 @@ ProjectRel(EXPR$0=[1])
         </Resource>
         <Resource name="planBefore">
             <![CDATA[
-ProjectRel(DEPTNO=[$0])
-  AggregateRel(groupCount=[1])
-    ProjectRel($f0=[$0])
-      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+AggregateRel(groupCount=[1])
+  ProjectRel(DEPTNO=[$0])
+    TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
 ]]>
         </Resource>
         <Resource name="planAfter">
             <![CDATA[
-ProjectRel(DEPTNO=[$0])
-  FennelAggRel(groupCount=[1])
-    FennelSortRel(key=[[0]], discardDuplicates=[false])
-      ProjectRel($f0=[$0])
-        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+FennelAggRel(groupCount=[1])
+  FennelSortRel(key=[[0]], discardDuplicates=[false])
+    ProjectRel(DEPTNO=[$0])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
 ]]>
         </Resource>
     </TestCase>

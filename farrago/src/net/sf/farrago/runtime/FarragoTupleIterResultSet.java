@@ -139,7 +139,12 @@ public class FarragoTupleIterResultSet
             if (runtimeContext != null) {
                 // Inform context that we're done with cursor processing until
                 // next fetch call.
-                runtimeContext.setCursorState(false);
+                try {
+                    runtimeContext.setCursorState(false);
+                } catch (Exception ex) {
+                    // trace exceptions as part of JDBC API
+                    throw FarragoJdbcUtil.newSqlException(ex, jdbcTracer);
+                }
             }
         }
     }

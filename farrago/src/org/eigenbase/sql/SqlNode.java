@@ -310,11 +310,12 @@ public abstract class SqlNode
      * This property is useful because it allows to safely aggregte infinite
      * streams of values.
      *
-     * <p>The default implementation returns <code>false</code>
+     * <p>The default implementation returns
+     * {@link SqlMonotonicity#NotMonotonic}.
      */
-    public boolean isMonotonic(SqlValidatorScope scope)
+    public SqlMonotonicity getMonotonicity(SqlValidatorScope scope)
     {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 }
 

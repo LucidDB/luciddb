@@ -1149,6 +1149,14 @@ public class SqlValidatorTest
         }
     }
 
+    public void testRow()
+    {
+        // double-nested rows can confuse validator namespace resolution
+        checkColumnType("select t.r.\"EXPR$1\".\"EXPR$2\" \n" +
+            "from (select ((1,2),(3,4,5)) r from dept) t",
+            "INTEGER NOT NULL");
+    }
+
     public void testMultiset()
     {
         checkExpType("multiset[1]", "INTEGER NOT NULL MULTISET NOT NULL");
@@ -3895,67 +3903,78 @@ public class SqlValidatorTest
         // valid window functions
         checkWinFuncExpWithWinClause("sum(sal)", null);
 
-        // row_number function
-        checkWinFuncExpWithWinClause(
-            "row_number() over (order by deptno)",
-            null);
+        if (Bug.Dt1446Fixed) {
 
-        // rank function type
-        checkWinFuncExpWithWinClause("dense_rank()", null);
-        checkWinFuncExpWithWinClause("rank() over (order by empno)", null);
-        checkWinFuncExpWithWinClause(
-            "percent_rank() over (order by empno)",
-            null);
-        checkWinFuncExpWithWinClause("cume_dist() over (order by empno)", null);
+            // row_number function
+            checkWinFuncExpWithWinClause(
+                "row_number() over (order by deptno)",
+                null);
 
-        // rule 6a
-        // ORDER BY required with RANK & DENSE_RANK
-        checkWin(
-            "select rank() over ^(partition by deptno)^ from emp",
-            "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
-        checkWin(
-            "select dense_rank() over ^(partition by deptno)^ from emp ",
-            "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
-        // The following fail but it is reported as window needing OBC due to
-        // test sequence so
-        // not really failing due to 6a
-        //checkWin("select rank() over w from emp window w as ^(partition by
-        //deptno)^",
-        //    "RANK or DENSE_RANK functions require ORDER BY clause in window
-        // specification");
-        //checkWin("select dense_rank() over w from emp window w as ^(partition
-        //by deptno)^",
-        //    "RANK or DENSE_RANK functions require ORDER BY clause in window
-        // specification");
+            // rank function type
+            checkWinFuncExpWithWinClause("dense_rank()", null);
+            checkWinFuncExpWithWinClause("rank() over (order by empno)", null);
+            checkWinFuncExpWithWinClause(
+                "percent_rank() over (order by empno)",
+                null);
+            checkWinFuncExpWithWinClause("cume_dist() over (order by empno)", null);
 
-        // rule 6b
-        // Framing not allowed with RANK & DENSE_RANK functions
-        // window framing defined in window clause
-        checkWin(
-            "select rank() over w from emp window w as (order by empno ^rows^ 2 preceding )",
-            "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin(
-            "select dense_rank() over w from emp window w as (order by empno ^rows^ 2 preceding)",
-            "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin(
-            "select percent_rank() over w from emp window w as (rows 2 preceding )",
-            null);
-        checkWin(
-            "select cume_dist() over w from emp window w as (rows 2 preceding)",
-            null);
+            // rule 6a
+            // ORDER BY required with RANK & DENSE_RANK
+            checkWin(
+                "select rank() over ^(partition by deptno)^ from emp",
+                "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
+            checkWin(
+                "select dense_rank() over ^(partition by deptno)^ from emp ",
+                "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
+            // The following fail but it is reported as window needing OBC due to
+            // test sequence so
+            // not really failing due to 6a
+            //checkWin("select rank() over w from emp window w as ^(partition by
+            //deptno)^",
+            //    "RANK or DENSE_RANK functions require ORDER BY clause in window
+            // specification");
+            //checkWin("select dense_rank() over w from emp window w as ^(partition
+            //by deptno)^",
+            //    "RANK or DENSE_RANK functions require ORDER BY clause in window
+            // specification");
 
-        // window framing defined in in-line window
-        checkWin(
-            "select rank() over (order by empno ^range^ 2 preceding ) from emp ",
-            "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin(
-            "select dense_rank() over (order by empno ^rows^ 2 preceding ) from emp ",
-            "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin(
-            "select percent_rank() over (rows 2 preceding ) from emp",
-            null);
-        checkWin("select cume_dist() over (rows 2 preceding ) from emp ", null);
+            // rule 6b
+            // Framing not allowed with RANK & DENSE_RANK functions
+            // window framing defined in window clause
+            checkWin(
+                "select rank() over w from emp window w as (order by empno ^rows^ 2 preceding )",
+                "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
+            checkWin(
+                "select dense_rank() over w from emp window w as (order by empno ^rows^ 2 preceding)",
+                "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
+            checkWin(
+                "select percent_rank() over w from emp window w as (rows 2 preceding )",
+                null);
+            checkWin(
+                "select cume_dist() over w from emp window w as (rows 2 preceding)",
+                null);
 
+            // window framing defined in in-line window
+            checkWin(
+                "select rank() over (order by empno ^range^ 2 preceding ) from emp ",
+                "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
+            checkWin(
+                "select dense_rank() over (order by empno ^rows^ 2 preceding ) from emp ",
+                "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
+            checkWin(
+                "select percent_rank() over (rows 2 preceding ) from emp",
+                null);
+            checkWin("select cume_dist() over (rows 2 preceding ) from emp ", null);
+        }
+        else {
+
+            // Check for Rank function failure.
+            checkWinFuncExpWithWinClause("^dense_rank()^", "Function 'DENSE_RANK\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause("^percent_rank()^", "Function 'PERCENT_RANK\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause("^rank()^", "Function 'RANK\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause("^cume_dist()^", "Function 'CUME_DIST\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause("^row_number()^", "Function 'ROW_NUMBER\\(\\)' is not defined");
+        }
         // invalid column reference
         checkWinFuncExpWithWinClause(
             "sum(^invalidColumn^)",

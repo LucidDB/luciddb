@@ -24,9 +24,7 @@ package org.eigenbase.sql.type;
 
 import java.sql.*;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.util.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.sql.SqlLiteral;
@@ -105,6 +103,9 @@ public enum SqlTypeName
     public static final int MAX_INTERVAL_START_PRECISION = 10;
     public static final int MAX_INTERVAL_FRACTIONAL_SECOND_PRECISION = 9;
 
+    // Cached map of enum values
+    private static final Map<String, SqlTypeName> VALUES_MAP =
+        Util.enumConstants(SqlTypeName.class);
 
     /**
      * @deprecated use JDK 1.5 support for treating enumeration
@@ -465,11 +466,16 @@ public enum SqlTypeName
      */
     public static SqlTypeName get(String name)
     {
-        try {
-            return SqlTypeName.valueOf(name);
-        } catch (IllegalArgumentException e) {
-            return null;
+        if (false) {
+            // The following code works OK, but the spurious exceptions are
+            // annoying.
+            try {
+                return SqlTypeName.valueOf(name);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
         }
+        return VALUES_MAP.get(name);
     }
 
     public boolean allowsNoPrecNoScale()

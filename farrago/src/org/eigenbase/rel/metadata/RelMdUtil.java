@@ -555,7 +555,7 @@ public class RelMdUtil
         AggregateRelBase aggRel,
         BitSet childKey)
     {
-        AggregateRelBase.Call [] aggCalls = aggRel.getAggCalls();
+        List<AggregateCall> aggCalls = aggRel.getAggCallList();
         for (
             int bit = groupKey.nextSetBit(0);
             bit >= 0;
@@ -567,10 +567,10 @@ public class RelMdUtil
             } else {
                 // aggregate column -- set a bit for each argument being
                 // aggregated
-                AggregateRelBase.Call agg =
-                    aggCalls[bit - aggRel.getGroupCount()];
-                for (int i = 0; i < agg.getArgs().length; i++) {
-                    childKey.set(agg.getArgs()[i]);
+                AggregateCall agg =
+                    aggCalls.get(bit - aggRel.getGroupCount());
+                for (Integer arg : agg.getArgList()) {
+                    childKey.set(arg);
                 }
             }
         }

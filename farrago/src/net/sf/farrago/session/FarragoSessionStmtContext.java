@@ -178,6 +178,11 @@ public interface FarragoSessionStmtContext
     public void cancel();
 
     /**
+     * Cancels execution and destroys the statement.
+     */
+    public void kill();
+
+    /**
      * Releases any resources (including result sets) associated with this
      * statement context.
      */

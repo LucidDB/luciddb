@@ -1850,6 +1850,20 @@ public class Util
             + "' in this context");
     }
 
+    /**
+     * Creates a map of the values of an enumeration by name.
+     *
+     * @param clazz Enumeration class
+     * @return map of values
+     */
+    public static <T extends Enum<T>> Map<String, T> enumConstants(Class<T> clazz) {
+        HashMap<String, T> map = new HashMap<String, T>();
+        for (T t : clazz.getEnumConstants()) {
+            map.put(t.name(), t);
+        }
+        return map;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

@@ -130,14 +130,14 @@ class QueryInfo
      *        added to this list if an aggregate needs one and it is not
      *        present
      * @param aggCallVector calls to aggregates; {@link
-     *        org.eigenbase.rel.AggregateRel.Call}s are added to this list if they
+     *        AggregateCall}s are added to this list if they
      *        are needed but are not present
      */
     public RexNode convertGroupExpToInternal(
         Expression exp,
         Expression [] groups,
         List<Expression> aggInputList,
-        List<AggregateRel.Call> aggCallVector)
+        List<AggregateCall> aggCallVector)
     {
         AggInternalTranslator translator =
             new AggInternalTranslator(this, new RelNode [] { getRoot() },
@@ -328,14 +328,14 @@ class QueryInfo
 
             // "aggCallVector" is the aggregate expressions, for example
             // {sum(#1), min(#2)}.
-            ArrayList<AggregateRelBase.Call> aggCallVector =
-                new ArrayList<AggregateRelBase.Call>();
+            ArrayList<AggregateCall> aggCalls =
+                new ArrayList<AggregateCall>();
             RexNode rexWhereClause = null;
             if (whereClause != null) {
                 rexWhereClause =
                     convertGroupExpToInternal(
                         whereClause, preGroups,
-                        aggInputList, aggCallVector);
+                        aggInputList, aggCalls);
                 whereClause = removeSubqueries(whereClause);
             }
             Expression [] selects = Toolbox.toArray(queryExp.getSelectList());
@@ -346,11 +346,8 @@ class QueryInfo
                 rexSelects[i] =
                     convertGroupExpToInternal(
                         selects[i], preGroups,
-                        aggInputList, aggCallVector);
+                        aggInputList, aggCalls);
             }
-            AggregateRel.Call [] aggCalls =
-                aggCallVector.toArray(
-                    new AggregateRel.Call[aggCallVector.size()]);
             RexNode [] aggInputs =
                 (RexNode[])
                 aggInputList.toArray(

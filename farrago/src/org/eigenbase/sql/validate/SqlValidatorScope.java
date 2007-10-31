@@ -78,12 +78,14 @@ public interface SqlValidatorScope
      * org.eigenbase.sql.validate.IdentifierNamespace}, it throws {@link
      * UnsupportedOperationException}.</p>
      *
-     * @param columnName
+     * @param columnName Column name
      * @param ctx Validation context, to appear in any error thrown
      *
      * @return Table alias
      */
-    String findQualifyingTableName(String columnName, SqlNode ctx);
+    String findQualifyingTableName(
+        String columnName,
+        SqlNode ctx);
 
     /**
      * Collects the {@link SqlMoniker}s of all possible columns in this scope.
@@ -108,6 +110,12 @@ public interface SqlValidatorScope
      */
     SqlIdentifier fullyQualify(SqlIdentifier identifier);
 
+    /**
+     * Registers a relation in this scope.
+     *
+     * @param ns Namespace representing the result-columns of the relation
+     * @param alias Alias with which to reference the relation, must not be null
+     */
     void addChild(SqlValidatorNamespace ns, String alias);
 
     /**
@@ -120,7 +128,7 @@ public interface SqlValidatorScope
      * the scope has previously been sorted by columns X, Y, then X is monotonic
      * in this scope, but Y is not.
      */
-    boolean isMonotonic(SqlNode expr);
+    SqlMonotonicity getMonotonicity(SqlNode expr);
 
     /**
      * Returns the expressions by which the rows in this scope are sorted. If

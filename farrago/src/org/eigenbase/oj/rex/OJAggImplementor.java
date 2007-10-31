@@ -49,7 +49,7 @@ public interface OJAggImplementor
     Expression implementStart(
         JavaRelImplementor implementor,
         JavaRel rel,
-        AggregateRel.Call call);
+        AggregateCall call);
 
     /**
      * Generates code to create a new total and to add the first value. For
@@ -59,7 +59,7 @@ public interface OJAggImplementor
     Expression implementStartAndNext(
         JavaRelImplementor implementor,
         JavaRel rel,
-        AggregateRel.Call call);
+        AggregateCall call);
 
     /**
      * Returns whether this aggregation can merge together two accumulators.
@@ -112,7 +112,7 @@ public interface OJAggImplementor
         JavaRelImplementor implementor,
         JavaRel rel,
         Expression accumulator,
-        AggregateRel.Call call);
+        AggregateCall call);
 
     /**
      * Generates the expression which gets called when a total is complete. For
@@ -122,7 +122,7 @@ public interface OJAggImplementor
     Expression implementResult(
         JavaRelImplementor implementor,
         Expression accumulator,
-        AggregateRel.Call call);
+        AggregateCall call);
 }
 
 // End OJAggImplementor.java

@@ -30,6 +30,8 @@ import java.nio.*;
 
 import java.util.*;
 
+import javax.jmi.reflect.RefBaseObject;
+
 import net.sf.farrago.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
@@ -47,6 +49,7 @@ import org.eigenbase.sarg.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.jmi.JmiObjUtil;
 
 
 /**
@@ -88,8 +91,8 @@ public abstract class FennelRelUtil
         } else {
             transientFarragoPackage = repos.getRootPackage();
         }
-        Collection c =
-            JmiUtil.importFromXmiString(
+        Collection<RefBaseObject> c =
+            JmiObjUtil.importFromXmiString(
                 transientFarragoPackage,
                 tupleAccessorXmiString);
         assert (c.size() == 1);
@@ -830,13 +833,13 @@ public abstract class FennelRelUtil
 
         return base64;
     }
-    
+
     /**
      * Extracts from a sargable predicate represented by a SargBinding list
      * the column ordinals and operands in the individual sub-expressions,
      * provided all but one of the filters is a equality predicate.  The one
      * non-equality predicate must be a single range predicate.
-     * 
+     *
      * @param sargBindingList filter represented as a SargBinding list
      * @param filterCols returns the list of filter columns in the
      * expression
@@ -844,7 +847,7 @@ public abstract class FennelRelUtil
      * columns are compared to
      * @param op returns COMP_EQ if the predicates are all equality; otherwise,
      * returns the value of the one non-equality predicate
-     * 
+     *
      * @return true if all but one of the predicates is an equality predicate
      * with the one non-equality predicate being a single range predicate
      */
@@ -859,9 +862,9 @@ public abstract class FennelRelUtil
         RexNode rangeOperand = null;
 
         for (SargBinding sargBinding : sargBindingList) {
-            
+
             SargIntervalSequence sargSeq = sargBinding.getExpr().evaluate();
-            
+
             if (sargSeq.isPoint()) {
                 filterCols.add(sargBinding.getInputRef());
                 List<SargInterval> sargIntervalList = sargSeq.getList();
@@ -869,7 +872,7 @@ public abstract class FennelRelUtil
                 SargInterval sargInterval = sargIntervalList.get(0);
                 SargEndpoint lowerBound = sargInterval.getLowerBound();
                 filterOperands.add(lowerBound.getCoordinate());
-                
+
             } else {
                 assert(rangeRef == null);
                 // if we have a range predicate, just keep track of it for now,
@@ -903,7 +906,7 @@ public abstract class FennelRelUtil
                 rangeRef = sargBinding.getInputRef();
             }
         }
-        
+
         // if there was a range filter, add it to the end of our lists
         if (rangeRef == null) {
             if (!filterCols.isEmpty()) {
@@ -912,12 +915,12 @@ public abstract class FennelRelUtil
         } else {
             filterCols.add(rangeRef);
             filterOperands.add(rangeOperand);
-            op.add(rangeOp);          
+            op.add(rangeOp);
         }
-        
+
         return true;
     }
-    
+
     /**
      * Returns a FennelBufferRel in the case where it makes sense to buffer the
      * RHS into the cartesian product join. This is done by comparing the cost
@@ -967,11 +970,60 @@ public abstract class FennelRelUtil
         RelOptCost bufferPlanCost = bufferCost.multiplyBy(nRowsLeft);
         bufferPlanCost = bufferPlanCost.plus(rightCost);
 
-        if (bufferPlanCost.isLt(noBufferPlanCost)) {
+        if (bufferPlanCost.isLe(noBufferPlanCost)) {
             return bufRel;
         } else {
             return null;
         }
+    }
+
+    /**
+     * Helper method which sets properties of a {@link FemAggStreamDef}.
+     *
+     * @param aggCalls List of calls to aggregate functions
+     * @param groupCount Number of grouping columns =
+     * @param repos Repository
+     * @param aggStream Agg stream to configure
+     */
+    public static void defineAggStream(
+        List<AggregateCall> aggCalls,
+        int groupCount,
+        FarragoRepos repos,
+        FemAggStreamDef aggStream)
+    {
+        aggStream.setGroupingPrefixSize(groupCount);
+        for (AggregateCall call : aggCalls) {
+            assert (!call.isDistinct());
+
+            // allow 0 for COUNT(*)
+            assert (call.getArgList().size() <= 1);
+            AggFunction func = lookupAggFunction(call);
+            FemAggInvocation aggInvocation = repos.newFemAggInvocation();
+            aggInvocation.setFunction(func);
+            if (call.getArgList().size() == 1) {
+                aggInvocation.setInputAttributeIndex(call.getArgList().get(0));
+            } else {
+                // COUNT(*) ignores input
+                aggInvocation.setInputAttributeIndex(-1);
+            }
+            aggStream.getAggInvocation().add(aggInvocation);
+        }
+    }
+
+    /**
+     * Finds the definition of the aggregate function used by a given call.
+     *
+     * @param call Call
+     * @return Definition of aggregate function
+     *
+     * @throws IllegalArgumentException if aggregate is not one of the builtins
+     * supported by Fennel
+     */
+    public static AggFunction lookupAggFunction(
+        AggregateCall call)
+    {
+        return AggFunctionEnum.forName(
+            "AGG_FUNC_" + call.getAggregation().getName());
     }
 }
 

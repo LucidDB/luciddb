@@ -24,7 +24,6 @@ package net.sf.farrago.namespace.impl;
 
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
@@ -36,6 +35,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlMonotonicity;
 
 
 /**
@@ -154,9 +154,9 @@ public abstract class MedAbstractColumnSet
     }
 
     // implement SqlValidatorTable
-    public boolean isMonotonic(String columnName)
+    public SqlMonotonicity getMonotonicity(String columnName)
     {
-        return false;
+        return SqlMonotonicity.NotMonotonic;
     }
 
     // implement SqlValidatorTable

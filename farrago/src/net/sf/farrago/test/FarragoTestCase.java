@@ -45,7 +45,9 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.release.FarragoReleaseProperties;
 
+import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.sql.*;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
@@ -280,17 +282,11 @@ public abstract class FarragoTestCase
         throws Exception
     {
         FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();
-
-        // create sessionName with connection counter to help
-        // distinguish connections during debugging
-        String sessionName = ";sessionName=FarragoTestCase:" + ++connCounter;
+        String uri = getJdbcUri(driver);
         Properties props = new Properties();
         props.put("user", FarragoCatalogInit.SA_USER_NAME);
         props.put("password", "mumble");
-        Connection newConnection =
-            driver.connect(
-                driver.getUrlPrefix() + sessionName,
-                props);
+        Connection newConnection = driver.connect(uri, props);
         if (newConnection.getMetaData().supportsTransactions()) {
             newConnection.setAutoCommit(false);
         }
@@ -345,9 +341,9 @@ public abstract class FarragoTestCase
         try {
             reposTxn.beginReadTxn();
             savedFarragoConfig =
-                JmiUtil.getAttributeValues(repos.getCurrentConfig());
+                JmiObjUtil.getAttributeValues(repos.getCurrentConfig());
             savedFennelConfig =
-                JmiUtil.getAttributeValues(
+                JmiObjUtil.getAttributeValues(
                     repos.getCurrentConfig().getFennelConfig());
 
             // NOTE jvs 15-Mar-2007:  special case for these parameters
@@ -367,10 +363,10 @@ public abstract class FarragoTestCase
         FarragoReposTxnContext reposTxn = repos.newTxnContext();
         try {
             reposTxn.beginWriteTxn();
-            JmiUtil.setAttributeValues(
+            JmiObjUtil.setAttributeValues(
                 repos.getCurrentConfig(),
                 savedFarragoConfig);
-            JmiUtil.setAttributeValues(
+            JmiObjUtil.setAttributeValues(
                 repos.getCurrentConfig().getFennelConfig(),
                 savedFennelConfig);
         } finally {
@@ -532,18 +528,53 @@ public abstract class FarragoTestCase
         return (FarragoAbstractJdbcDriver) clazz.newInstance();
     }
 
+    protected static String getJdbcUri(FarragoAbstractJdbcDriver driver)
+        throws Exception
+    {
+        final StringBuilder sb = new StringBuilder();
+        sb.append(driver.getUrlPrefix());
+
+        if (driver.acceptsUrlWithHostPort()) {
+            // append host:port specification for client drivers
+            // Default to "localhost", but could also get real hostname with
+            // java.net.InetAddress.getLocalHost().getHostName().
+            // Supplying RMI port allows client-driver tests to be run against
+            // systems which use a non-default RMI port.
+            sb.append("//localhost");
+            int rmiRegistryPort =
+                FarragoReleaseProperties.instance().jdbcUrlPortDefault.get();
+            sb.append(":").append(rmiRegistryPort);
+        }
+
+        // create sessionName with connection counter to help
+        // distinguish connections during debugging
+        sb.append(";sessionName=FarragoTestCase:");
+        sb.append(++connCounter);
+        
+        return sb.toString();
+    }
+
     protected void runSqlLineTest(String sqlFile)
+        throws Exception
+    {
+        runSqlLineTest(sqlFile, shouldDiff());
+    }
+
+    protected void runSqlLineTest(
+        String sqlFile, boolean shouldDiff)
         throws Exception
     {
         tracer.finer("runSqlLineTest: Starting " + sqlFile);
         FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();
-        assert (sqlFile.endsWith(".sql"));
+        String uri = getJdbcUri(driver);
+        assert (sqlFile.endsWith(".sql")) :
+            "\"" + sqlFile + "\" does not end with .sql";
         File sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));
         String driverName = driver.getClass().getName();
         String [] args =
             new String[] {
-                "-u", driver.getUrlPrefix(), "-d",
+                "-u", uri, "-d",
                 driverName, "-n",
                 FarragoCatalogInit.SA_USER_NAME,
                 "--force=true", "--silent=true",
@@ -571,7 +602,7 @@ public abstract class FarragoTestCase
             FilterOutputStream filterStream =
                 new ReplacingOutputStream(
                     outputStream,
-                    "(0: jdbc(:[^:>]+)+:|(\\. )*\\.?)>",
+                    "(0: jdbc(:[^:>]+)+:(//.*:[0123456789]+)?|(\\. )*\\.?)>",
                     ">");
             PrintStream printStream = new PrintStream(filterStream);
             System.setOut(printStream);
@@ -581,7 +612,8 @@ public abstract class FarragoTestCase
             System.setProperty("sqlline.system.exit", "true");
             SqlLine.mainWithInputRedirection(args, sequenceStream);
             printStream.close();
-            if (shouldDiff()) {
+            if (shouldDiff) {
+                addDiffMask("\\$" + "Id: .*$");
                 diffTestLog();
 
                 // Execute any '##COMPARE <filename>' commands in the .sql file

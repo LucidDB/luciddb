@@ -44,7 +44,7 @@ public interface SqlValidatorTable
     /**
      * Returns whether a given column is monotonic.
      */
-    boolean isMonotonic(String columnName);
+    SqlMonotonicity getMonotonicity(String columnName);
 
     /**
      * Returns the access type of the table

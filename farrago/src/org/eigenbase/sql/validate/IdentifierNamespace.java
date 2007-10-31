@@ -27,6 +27,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.Pair;
 
 
 /**
@@ -52,7 +53,7 @@ public class IdentifierNamespace
     /**
      * List of monotonic expressions. Set on validate.
      */
-    private SqlNodeList monotonicExprs;
+    private List<Pair<SqlNode,SqlMonotonicity>> monotonicExprs;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -98,14 +99,18 @@ public class IdentifierNamespace
         }
 
         // Build a list of monotonic expressions.
-        monotonicExprs = new SqlNodeList(SqlParserPos.ZERO);
+        monotonicExprs = new ArrayList<Pair<SqlNode, SqlMonotonicity>>();
         RelDataType rowType = table.getRowType();
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; i++) {
             final String fieldName = fields[i].getName();
-            if (table.isMonotonic(fieldName)) {
+            final SqlMonotonicity monotonicity =
+                table.getMonotonicity(fieldName);
+            if (monotonicity != SqlMonotonicity.NotMonotonic) {
                 monotonicExprs.add(
-                    new SqlIdentifier(fieldName, SqlParserPos.ZERO));
+                    new Pair<SqlNode, SqlMonotonicity>(
+                        new SqlIdentifier(fieldName, SqlParserPos.ZERO),
+                        monotonicity));
             }
         }
 
@@ -136,15 +141,15 @@ public class IdentifierNamespace
         return null;
     }
 
-    public SqlNodeList getMonotonicExprs()
+    public List<Pair<SqlNode,SqlMonotonicity>> getMonotonicExprs()
     {
         return monotonicExprs;
     }
 
-    public boolean isMonotonic(String columnName)
+    public SqlMonotonicity getMonotonicity(String columnName)
     {
         final SqlValidatorTable table = getTable();
-        return table.isMonotonic(columnName);
+        return table.getMonotonicity(columnName);
     }
 }
 

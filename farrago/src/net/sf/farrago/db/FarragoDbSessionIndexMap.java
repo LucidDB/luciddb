@@ -22,17 +22,18 @@
 */
 package net.sf.farrago.db;
 
-import java.sql.*;
-
+import java.sql.SQLException;
 import java.util.*;
 
+import org.eigenbase.jmi.JmiObjUtil;
+
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.CwmTable;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.util.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.session.*;
+import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
+import net.sf.farrago.resource.FarragoResource;
+import net.sf.farrago.session.FarragoSessionIndexMap;
 import net.sf.farrago.util.*;
 
 
@@ -223,7 +224,7 @@ class FarragoDbSessionIndexMap
         if (updateMap) {
             setIndexRoot(index, indexRoot);
         }
-        indexIdMap.put(new Long(JmiUtil.getObjectId(index)),
+        indexIdMap.put(new Long(JmiObjUtil.getObjectId(index)),
             index);
         return indexRoot;
     }
@@ -256,7 +257,7 @@ class FarragoDbSessionIndexMap
         }
 
         if (!truncate) {
-            indexIdMap.remove(new Long(JmiUtil.getObjectId(index)));
+            indexIdMap.remove(new Long(JmiObjUtil.getObjectId(index)));
             tempIndexRootMap.remove(index);
         }
     }

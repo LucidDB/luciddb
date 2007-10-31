@@ -155,13 +155,19 @@ public class SqlToRelTestBase
             int i = -1;
             for (RelDataTypeField field : rowType.getFields()) {
                 ++i;
-                if (table.isMonotonic(field.getName())) {
+                final SqlMonotonicity monotonicity =
+                    table.getMonotonicity(field.getName());
+                if (monotonicity != SqlMonotonicity.NotMonotonic) {
+                    final RelFieldCollation.Direction direction =
+                        monotonicity.isDecreasing()
+                            ? RelFieldCollation.Direction.Descending
+                            : RelFieldCollation.Direction.Ascending;
                     collationList.add(
                         new RelCollationImpl(
                             Collections.singletonList(
                                 new RelFieldCollation(
                                     i,
-                                    RelFieldCollation.Direction.Ascending))));
+                                    direction))));
                 }
             }
             if (names.length < 3) {

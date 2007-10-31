@@ -82,26 +82,6 @@ public class DdlValidator
 
     private static final Logger tracer = FarragoTrace.getDdlValidatorTracer();
 
-    /**
-     * Symbolic constant used to mark an element being created
-     */
-    private static final Integer VALIDATE_CREATION = new Integer(1);
-
-    /**
-     * Symbolic constant used to mark an element being updated
-     */
-    private static final Integer VALIDATE_MODIFICATION = new Integer(2);
-
-    /**
-     * Symbolic constant used to mark an element being deleted
-     */
-    private static final Integer VALIDATE_DELETION = new Integer(3);
-
-    /**
-     * Symbolic constant used to mark an element being truncated
-     */
-    private static final Integer VALIDATE_TRUNCATION = new Integer(4);
-
     //~ Enums ------------------------------------------------------------------
 
     private static enum ValidatedOp
@@ -362,11 +342,33 @@ public class DdlValidator
     }
 
     // implement FarragoSessionDdlValidator
-    public void setParserOffset(
+    public String setParserOffset(
         RefObject obj,
-        SqlParserPos pos)
+        SqlParserPos pos, 
+        String body)
     {
+        int n = 0;
+        char c;
+        int column = pos.getColumnNum();
+        int line = pos.getLineNum();
+        while (n < body.length()
+                 && Character.isWhitespace((c = body.charAt(n)))) {
+            ++n;
+            if (c == '\n'
+                || (c == '\r'
+                && (n == 0 || body.charAt(n - 1) != '\n')))
+            {
+                ++line;
+                column = 1;
+            } else {
+                ++column;
+            }
+        }
+        pos =
+            new SqlParserPos(
+                line, column, pos.getEndLineNum(), pos.getEndColumnNum());
         parserOffsetMap.put(obj, pos);
+        return body.substring(n);
     }
 
     // implement FarragoSessionDdlValidator
@@ -399,7 +401,7 @@ public class DdlValidator
         CwmModelElement schemaElement,
         SqlIdentifier qualifiedName)
     {
-        SqlIdentifier schemaName = null;
+        SqlIdentifier schemaName;
         assert (qualifiedName.names.length > 0);
         assert (qualifiedName.names.length < 4);
 
@@ -1044,9 +1046,9 @@ public class DdlValidator
     }
 
     // implement FarragoSessionDdlValidator
-    public CwmDependency createDependency(
+    public <T extends CwmModelElement> CwmDependency createDependency(
         CwmNamespace client,
-        Collection suppliers)
+        Collection<T> suppliers)
     {
         String depName = client.getName() + "$DEP";
         CwmDependency dependency =
@@ -1066,8 +1068,8 @@ public class DdlValidator
             dependency.getClient().add(client);
         }
 
-        for (Object supplier : suppliers) {
-            dependency.getSupplier().add((CwmModelElement) supplier);
+        for (T supplier : suppliers) {
+            dependency.getSupplier().add(supplier);
         }
 
         return dependency;
@@ -1394,7 +1396,8 @@ public class DdlValidator
                 //set to a dummy value for now.
                 this.setParserOffset(
                     e,
-                    new SqlParserPos(1, 0));
+                    new SqlParserPos(1, 0),
+                    "");
                 schedulingMap.put(
                     e.refMofId(),
                     ValidatedOp.CREATION);

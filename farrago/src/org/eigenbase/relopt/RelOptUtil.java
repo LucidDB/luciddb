@@ -509,22 +509,20 @@ public abstract class RelOptUtil
             RelDataType returnType =
                 minFunction.inferReturnType(typeFactory, argTypes);
 
-            int [] pos = new int[1];
-            pos[0] = 0;
-
-            final AggregateRelBase.Call aggCall =
-                new AggregateRelBase.Call(
+            final AggregateCall aggCall =
+                new AggregateCall(
                     minFunction,
                     false,
-                    pos,
-                    returnType);
+                    Collections.singletonList(0),
+                    returnType,
+                    extraName);
 
             ret =
                 new AggregateRel(
                     ret.getCluster(),
                     ret,
                     0,
-                    new AggregateRel.Call[] { aggCall });
+                    Collections.singletonList(aggCall));
         }
 
         return ret;
@@ -592,29 +590,29 @@ public abstract class RelOptUtil
 
                 int newProjFieldCount = ret.getRowType().getFieldCount();
 
-                int [] pos = new int[1];
-                pos[0] = newProjFieldCount - 1;
-
-                final AggregateRelBase.Call aggCall =
-                    new AggregateRelBase.Call(
+                final AggregateCall aggCall =
+                    new AggregateCall(
                         minFunction,
                         false,
-                        pos,
-                        returnType);
+                        Collections.singletonList(newProjFieldCount - 1),
+                        returnType,
+                        null);
 
                 ret =
                     new AggregateRel(
                         ret.getCluster(),
                         ret,
                         newProjFieldCount - 1,
-                        new AggregateRel.Call[] { aggCall });
+                        Collections.singletonList(aggCall));
             } else {
+                final List<AggregateCall> aggCalls =
+                    Collections.emptyList();
                 ret =
                     new AggregateRel(
                         ret.getCluster(),
                         ret,
                         ret.getRowType().getFieldCount(),
-                        new AggregateRel.Call[0]);
+                        aggCalls);
             }
         }
 
@@ -771,7 +769,8 @@ public abstract class RelOptUtil
     {
         // assert (rel.getRowType().getFieldCount() == 1);
         int aggCallCnt = rel.getRowType().getFieldCount();
-        AggregateRel.Call [] aggCalls = new AggregateRel.Call[aggCallCnt];
+        List<AggregateCall> aggCalls =
+            new ArrayList<AggregateCall>();
 
         for (int i = 0; i < aggCallCnt; i++) {
             RelDataType returnType =
@@ -781,12 +780,13 @@ public abstract class RelOptUtil
                         rel.getRowType().getFields()[i].getType()
                     });
 
-            aggCalls[i] =
-                new AggregateRelBase.Call(
+            aggCalls.add(
+                new AggregateCall(
                     SqlStdOperatorTable.singleValueOperator,
                     false,
-                    new int[] { i },
-                    returnType);
+                    Collections.singletonList(i),
+                    returnType,
+                    null));
         }
 
         return new AggregateRel(
@@ -807,11 +807,12 @@ public abstract class RelOptUtil
     public static RelNode createDistinctRel(
         RelNode rel)
     {
+        List<AggregateCall> aggCalls = Collections.emptyList();
         return new AggregateRel(
             rel.getCluster(),
             rel,
             rel.getRowType().getFieldCount(),
-            new AggregateRel.Call[0]);
+            aggCalls);
     }
 
     public static boolean analyzeSimpleEquiJoin(

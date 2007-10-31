@@ -23,10 +23,9 @@ ProjectRel(EXPR$0=[$0])
     <TestCase name="testGroup">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(DEPTNO=[$0])
-  AggregateRel(groupCount=[1])
-    ProjectRel($f0=[$7])
-      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+AggregateRel(groupCount=[1])
+  ProjectRel(DEPTNO=[$7])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -44,14 +43,13 @@ ProjectRel(DEPTNO=[$0])
     <TestCase name="testGroupJustOneAgg">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
-  AggregateRel(groupCount=[1], agg#0=[SUM(1)])
-    ProjectRel($f0=[$7], $f1=[$5])
-      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+AggregateRel(groupCount=[1], SUM_SAL=[SUM(1)])
+  ProjectRel(DEPTNO=[$7], SAL=[$5])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="sql">
-            <![CDATA[select deptno, sum(sal) from emp group by deptno]]>
+            <![CDATA[select deptno, sum(sal) as sum_sal from emp group by deptno]]>
         </Resource>
         <Resource name="plan">
             <![CDATA[
@@ -66,8 +64,8 @@ ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])
-  AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(2)], agg#2=[COUNT(1)])
-    ProjectRel($f0=[$7], $f1=[$5], $f2=[+(3, $5)])
+  AggregateRel(groupCount=[1], EXPR$1=[SUM(1)], EXPR$2=[SUM(2)], agg#2=[COUNT(1)])
+    ProjectRel(DEPTNO=[$7], SAL=[$5], $f2=[+(3, $5)])
       TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
@@ -88,8 +86,8 @@ ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])
             <![CDATA[
 ProjectRel(EXPR$0=[$0])
   FilterRel(condition=[>($1, 10)])
-    AggregateRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(1)])
-      ProjectRel($f0=[+($5, $5)], $f1=[$5])
+    AggregateRel(groupCount=[0], EXPR$0=[SUM(0)], agg#1=[SUM(1)])
+      ProjectRel($f0=[+($5, $5)], SAL=[$5])
         TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
@@ -110,10 +108,9 @@ ProjectRel(EXPR$0=[$0])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(NAME=[$0])
-  ProjectRel(NAME=[$0])
-    AggregateRel(groupCount=[1])
-      ProjectRel($f0=[$1])
-        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+  AggregateRel(groupCount=[1])
+    ProjectRel(NAME=[$1])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -134,8 +131,8 @@ ProjectRel(NAME=[$0])
             <![CDATA[
 ProjectRel(NAME=[$1], FOO=[$2])
   ProjectRel(DEPTNO=[$1], NAME=[$0], FOO=[$3])
-    AggregateRel(groupCount=[3], agg#0=[COUNT(1)])
-      ProjectRel($f0=[$1], $f1=[$0], $f2=[$1])
+    AggregateRel(groupCount=[3], FOO=[COUNT(1)])
+      ProjectRel(NAME=[$1], DEPTNO=[$0], $f2=[$1])
         TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
@@ -155,10 +152,9 @@ ProjectRel(NAME=[$1], FOO=[$2])
     <TestCase name="testAggDistinct">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(DEPTNO=[$0], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[$3])
-  AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(DISTINCT 1)], agg#2=[COUNT()])
-    ProjectRel($f0=[$7], $f1=[$5])
-      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+AggregateRel(groupCount=[1], EXPR$1=[SUM(1)], EXPR$2=[SUM(DISTINCT 1)], EXPR$3=[COUNT()])
+  ProjectRel(DEPTNO=[$7], SAL=[$5])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -809,8 +805,8 @@ AggregateRel(groupCount=[1])
             <![CDATA[
 AggregateRel(groupCount=[1])
   ProjectRel(EXPR$0=[$1])
-    AggregateRel(groupCount=[1], agg#0=[SUM(1)])
-      ProjectRel($f0=[$7], $f1=[$5])
+    AggregateRel(groupCount=[1], EXPR$0=[SUM(1)])
+      ProjectRel(DEPTNO=[$7], SAL=[$5])
         TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
@@ -1051,8 +1047,8 @@ ProjectRel(EMPNO=[$0], SAL=[$1])
 ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
   SortRel(sort0=[$2], sort1=[$3], dir0=[Descending], dir1=[Ascending])
     ProjectRel(DEPTNO=[$0], EXPR$1=[$1], EXPR$2=[*($0, $2)], EXPR$3=[$3])
-      AggregateRel(groupCount=[1], agg#0=[COUNT()], agg#1=[SUM(1)], agg#2=[MIN(2)])
-        ProjectRel($f0=[$7], $f1=[$5], $f2=[$0])
+      AggregateRel(groupCount=[1], EXPR$1=[COUNT()], agg#1=[SUM(1)], agg#2=[MIN(2)])
+        ProjectRel(DEPTNO=[$7], SAL=[$5], EMPNO=[$0])
           TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
@@ -1290,6 +1286,36 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
           SamplingRel(mode=[system], rate=[0.1], repeatableSeed=[1])
             TableAccessRel(table=[[CATALOG, SALES, EMP]])
           TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSelectDistinctDup">
+        <Resource name="sql">
+            <![CDATA[select distinct sal + 5, deptno, sal + 5 from emp where deptno < 10]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0], DEPTNO=[$1], EXPR$2=[$0])
+  AggregateRel(groupCount=[2])
+    ProjectRel(EXPR$0=[$0], DEPTNO=[$1])
+      ProjectRel(EXPR$0=[+($5, 5)], DEPTNO=[$7], EXPR$2=[+($5, 5)])
+        FilterRel(condition=[<($7, 10)])
+          TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCountNoGroup">
+        <Resource name="sql">
+            <![CDATA[select count(*), sum(sal)
+from emp
+where empno > 10]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+AggregateRel(groupCount=[0], EXPR$0=[COUNT()], EXPR$1=[SUM(0)])
+  ProjectRel(SAL=[$5])
+    FilterRel(condition=[>($0, 10)])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
     </TestCase>

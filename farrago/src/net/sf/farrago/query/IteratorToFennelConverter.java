@@ -515,8 +515,12 @@ public class IteratorToFennelConverter
             (FarragoRelImplementor) implementor;
         initFennelInvocation(farragoRelImplementor.getRelPathEntry());
 
-        assert (farragoTransformClassNameMap.containsKey(fennelRelPath));
-        assert (childStreamDefsMap.containsKey(fennelRelPath));
+        assert (farragoTransformClassNameMap.containsKey(fennelRelPath))
+            : "path " + fennelRelPath
+            + " not in class map" + farragoTransformClassNameMap;
+        assert (childStreamDefsMap.containsKey(fennelRelPath))
+            : "path " + fennelRelPath
+            + " not in streamDef map" + childStreamDefsMap;
 
         // A single instance of this class may appear in multiple
         // locations throughout a plan.  The methods implementFennelChild
