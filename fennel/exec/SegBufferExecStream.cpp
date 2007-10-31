@@ -136,17 +136,10 @@ ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
                 pInAccessor->getConsumptionAvailable());
             pByteOutputStream->hardPageBreak();
             pInAccessor->consumeData(pInAccessor->getConsumptionEnd());
-            if (pInAccessor->getState() != EXECBUF_EOS) {
-                uint cb;
-                PBuffer pBuffer = pByteOutputStream->getWritePointer(1,&cb);
-                pInAccessor->provideBufferForProduction(
-                    pBuffer,
-                    pBuffer + cb,
-                    false);
+            if (pInAccessor->getState() == EXECBUF_EOS) {
+                return EXECRC_BUF_UNDERFLOW;
             }
-            return EXECRC_BUF_UNDERFLOW;
-        case EXECBUF_UNDERFLOW:
-            return EXECRC_BUF_UNDERFLOW;
+            // else fall through intentionally
         case EXECBUF_EMPTY:
             {
                 uint cb;
@@ -156,6 +149,8 @@ ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
                     pBuffer + cb,
                     false);
             }
+            return EXECRC_BUF_UNDERFLOW;
+        case EXECBUF_UNDERFLOW:
             return EXECRC_BUF_UNDERFLOW;
         case EXECBUF_EOS:
             {
