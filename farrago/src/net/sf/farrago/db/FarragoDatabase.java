@@ -452,21 +452,10 @@ public class FarragoDatabase
         FemFennelConfig fennelConfig =
             systemRepos.getCurrentConfig().getFennelConfig();
         
-        // this comment is here to work around a Perforce integ
-        // bug; please remove it
-        
         SortedMap<String, Object> configMap =
             JmiObjUtil.getAttributeValues(fennelConfig);
 
-        // Filter out null values.
-        Iterator<Map.Entry<String,Object>> configMapIter =
-            configMap.entrySet().iterator();
-        while (configMapIter.hasNext()) {
-            Map.Entry<String,Object> entry = configMapIter.next();
-            if (entry.getValue() == null) {
-                configMapIter.remove();
-            }
-        }
+        filterMapNullValues(configMap);
 
         // Copy config into a properties object, then tell the session mgr
         // about them. Note that some of the properties may be non-Strings.
@@ -519,6 +508,18 @@ public class FarragoDatabase
                 cmd);
 
         tracer.config("Fennel successfully loaded");
+    }
+
+    private void filterMapNullValues(Map<String,Object> configMap)
+    {
+        Iterator<Map.Entry<String,Object>> configMapIter =
+            configMap.entrySet().iterator();
+        while (configMapIter.hasNext()) {
+            Map.Entry<String,Object> entry = configMapIter.next();
+            if (entry.getValue() == null) {
+                configMapIter.remove();
+            }
+        }
     }
 
     /**
