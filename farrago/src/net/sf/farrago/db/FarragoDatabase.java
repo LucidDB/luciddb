@@ -454,6 +454,9 @@ public class FarragoDatabase
         SortedMap<String, Object> configMap =
             JmiObjUtil.getAttributeValues(fennelConfig);
 
+        // this comment is here to work around a Perforce integ
+        // bug; please remove it
+
         // Filter out null values.
         Iterator<Map.Entry<String,Object>> configMapIter =
             configMap.entrySet().iterator();
