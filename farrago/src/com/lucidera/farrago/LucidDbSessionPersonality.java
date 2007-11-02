@@ -341,9 +341,14 @@ public class LucidDbSessionPersonality
         builder.addSubprogram(subprogramBuilder.createProgram());
 
         // Eliminate reducible constant expression.  Do this after we've
-        // removed unnecessary projection expressions.
-        // TODO jvs 26-May-2006: do this again later wherever more such
-        // expressions may be reintroduced.
+        // removed unnecessary projection expressions to avoid marking
+        // query trees as non-cacheable if expressions that result in
+        // the query being non-cacheable are not actually referenced in the
+        // final query.  (This can occur as a result of unfolding views.)
+        // Note that this call will only reduce expressions in the projection
+        // and where clause.  Another round of reduction needs to be done
+        // further below after MultiJoinRel's have been converted back to
+        // JoinRel's.
         builder.addRuleClass(FarragoReduceExpressionsRule.class);
         
         // Push projection information in the remaining projections that sit
@@ -359,6 +364,10 @@ public class LucidDbSessionPersonality
         builder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
         builder.addRuleInstance(new LoptOptimizeJoinRule());
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
+        
+        // Now that we've converted MultiJoinRel's back to JoinRel's, reduce
+        // expressions in join conditions.
+        builder.addRuleClass(FarragoReduceExpressionsRule.class);
 
         // Push semijoins down to tables.  (The join part is a NOP for now,
         // but once we start taking more kinds of join factors, it won't be.)
