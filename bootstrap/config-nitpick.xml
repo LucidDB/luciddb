@@ -6,13 +6,19 @@
 <!ENTITY open_p4client   "cruise.nitpick">
 <!ENTITY open_p4user     "guest">
 <!ENTITY open_root       "//open/dt/dev">
+<!ENTITY open_root_dev   "//open/dt/dev">
+<!ENTITY open_root_stable "//open/dt/stable">
 <!ENTITY open_propfile   "UNUSED">
 <!ENTITY open_default.build.home     "/home/cruise/work">
 <!ENTITY open_integration.build.home "/home/cruise/work/build">
+<!ENTITY open_integration.src.home "/home/cruise/work/src">
+<!ENTITY open_integration.src.default "/home/cruise/work/src/dev">
 
 <!ENTITY aspen_p4port    "perforce-office.kalucki.com:1666">
 <!ENTITY aspen_p4client  "cruise.nitpick">
 <!ENTITY aspen_p4user    "guest">
+<!ENTITY aspen_root_dev   "//depot/aspen">
+<!ENTITY aspen_root_stable "//depot/stable/aspen">
 
 <!ENTITY buildresultsbase "http://nitpick.kalucki.com:8083/cruisecontrol/buildresults">
 <!ENTITY mailhost         "mail.speakeasy.net">
@@ -49,8 +55,8 @@
 ]>
 
 <cruisecontrol>
-	&saffronProject;
-	<!-- &fennelProject; -->
+	&saffronProject; 
+	<!-- &fennelProject;  -->
 	<!-- &farragoProject; -->
 	&aspenProject;
 </cruisecontrol>

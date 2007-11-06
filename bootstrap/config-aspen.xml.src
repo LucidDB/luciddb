@@ -1,30 +1,32 @@
 <!-- This file is an XML fragment with the -->
 <!-- CruiseControl config for Aspen -->
-<!-- This file must be preprocessed by config-aspen-generate to generate config-aspen.xml DELETETOKEN -->
+<!-- $Id: $ -->
+<!-- This file must be preprocessed by config-aspen-generate to generate config-aspen.xml HEADERLINETOKEN -->
 
 
-	<project name="ASPENTARGET&configSuffix;">
-		<labelincrementer defaultLabel="ASPENTARGET.1"/>
+	<project name="ASPENTARGET-P4SUFFIX&configSuffix;">
+		<labelincrementer defaultLabel="ASPENTARGET-P4SUFFIX.1"/>
 
 		<!-- Bootstrappers are run with every build before mod checks -->
 		<bootstrappers>
-			<!-- <currentbuildstatusbootstrapper file="logs/ASPENTARGET/currentbuildstatus.txt"/> -->
-			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
+			<!-- <currentbuildstatusbootstrapper file="logs/ASPENTARGET-P4SUFFIX/currentbuildstatus.txt"/> -->
+			<!-- always bootstrap from open_root_dev, don't bother with stable -->
+			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root_dev;/bootstrap/..."/>
 		</bootstrappers>
 
                 <listeners>
-                  <currentbuildstatuslistener file="logs/ASPENTARGET/currentbuildstatus.txt"/>
-                  <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/ASPENTARGET&configSuffix;/currentbuildstatus.txt"/> 
+                  <currentbuildstatuslistener file="logs/ASPENTARGET-P4SUFFIX/currentbuildstatus.txt"/>
+                  <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/ASPENTARGET-P4SUFFIX&configSuffix;/currentbuildstatus.txt"/> 
                 </listeners>
 
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
 		<modificationset quietperiod="300">
-			<p4 port="&aspen_p4port;" client="&aspen_p4client;" user="&aspen_p4user;" view="//depot/aspen/..."/>
-			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
-			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
-			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/thirdparty/..."/>
-			<timebuild time="0400"/> <!-- force an extra build at 0400 hours, 4am -->
+			<p4 port="&aspen_p4port;" client="&aspen_p4client;" user="&aspen_p4user;" view="&aspen_root_P4SUFFIX;/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root_P4SUFFIX;/farrago/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root_P4SUFFIX;/fennel/..."/>
+			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root_P4SUFFIX;/thirdparty/..."/>
+			<timebuild time="0200"/> <!-- force an extra build at 0200 hours, 2am -->
 			<filesystem folder="forcebuild"/>
 		</modificationset>
 
@@ -33,61 +35,63 @@
 		<schedule interval="&build_interval_aspen;">
 			<ant buildfile="&open_default.build.home;/build-aspen.xml" uselogger="true" usedebug="false" antscript="&ant;" target="entry-target-ASPENTARGET">
 			    <property name="open_propfile" value="&open_propfile;"/>
-			    <property name="open_root" value="&open_root;"/>
+			    <property name="open_root" value="&open_root_P4SUFFIX;"/>
+			    <property name="aspen_root" value="&aspen_root_P4SUFFIX;"/>
+			    <property name="srcdir" value="&open_integration.src.home;/P4SUFFIX"/>
 			</ant>
 		</schedule>
 
 		<!-- directory to write build logs to -->
-		<log dir="logs/ASPENTARGET">
+		<log dir="logs/ASPENTARGET-P4SUFFIX">
 			<merge dir="&open_integration.build.home;/aspen/testlog"/>
 		</log>
 
 		<!-- Publishers are run *after* a build completes -->
 		<publishers>
-			<!-- currentbuildstatuspublisher file="logs/ASPENTARGET/currentbuildstatus.txt"/ -->
+			<!-- currentbuildstatuspublisher file="logs/ASPENTARGET-P4SUFFIX/currentbuildstatus.txt"/ -->
 
-			<artifactspublisher dir="&open_integration.build.home;/fennel/trace" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="fennel_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/trace" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="farrago_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/unitsql" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="farrago_unitsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/initsql" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="farrago_initsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="farrago_regressionsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/testlog" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="farrago_testlog"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/cpp/aspen/trace" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="aspen_cpp_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/testlog" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="testlog"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/initsql" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="initsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/unitsql" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="unitsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/trace" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/testcases" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="testcases"/>
-                        <artifactspublisher file="&open_integration.build.home;/aspen/classes/FarragoRelease.properties" dest="artifacts/ASPENTARGET&configSuffix;"/>
+			<artifactspublisher dir="&open_integration.build.home;/fennel/trace" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="fennel_trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/trace" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/unitsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_unitsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/initsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_initsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_regressionsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/farrago/testlog" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="farrago_testlog"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/cpp/aspen/trace" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="aspen_cpp_trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/testlog" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="testlog"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/initsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="initsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/unitsql" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="unitsql"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/trace" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/aspen/testcases" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="testcases"/>
+                        <artifactspublisher file="&open_integration.build.home;/aspen/classes/FarragoRelease.properties" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"/>
 
 			<onsuccess>
 				<!-- Just want dist/*.bin, but artifactspublisher doesn't take wildcards. -->
-                        	<artifactspublisher dir="&open_integration.build.home;/aspen/dist" dest="artifacts/ASPENTARGET&configSuffix;" subdirectory="dist"/>
+                        	<artifactspublisher dir="&open_integration.build.home;/aspen/dist" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="dist"/>
 				<!-- Make an easy-to-find last-good-build installer. Places in top level dir, not in per-build dir. -->
-				<execute command="cp &open_integration.build.home;/aspen/dist/*.bin artifacts/ASPENTARGET&configSuffix;"/>
+				<execute command="cp &open_integration.build.home;/aspen/dist/*.bin artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"/>
 				<!-- artifactspublisher drops permissions. Make timestamped version executable.  -->
-				<execute command="chmod 555 artifacts/ASPENTARGET&configSuffix;/*/*.bin;"/>
+				<execute command="chmod 555 artifacts/ASPENTARGET-P4SUFFIX&configSuffix;/*/*.bin;"/>
 			</onsuccess>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
-			<execute command="&rsync_cmd; artifacts/ASPENTARGET&configSuffix; &rsync_dest;"/>
+			<execute command="&rsync_cmd; artifacts/ASPENTARGET-P4SUFFIX&configSuffix; &rsync_dest;"/>
 
-			<scp sourcedir="logs/ASPENTARGET"
+			<scp sourcedir="logs/ASPENTARGET-P4SUFFIX"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
 			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/ASPENTARGET&configSuffix;"
+			     targetdir="web/logs/ASPENTARGET-P4SUFFIX&configSuffix;"
                              options="&scp_options;"/>
 			
-			<scp sourcedir="logs/ASPENTARGET"
+			<scp sourcedir="logs/ASPENTARGET-P4SUFFIX"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
 			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/ASPENTARGET&configSuffix;"
+			     targetdir="web/logs/ASPENTARGET-P4SUFFIX&configSuffix;"
                              options="&scp_options;"/>
 			
-			<email buildresultsurl="&buildresultsbase;/ASPENTARGET&configSuffix;"
+			<email buildresultsurl="&buildresultsbase;/ASPENTARGET-P4SUFFIX&configSuffix;"
 			       mailhost="&mailhost;"
 			       reportsuccess="&reportsuccess;"
 			       returnname="&returnname;"

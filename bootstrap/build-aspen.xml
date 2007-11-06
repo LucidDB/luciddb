@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Delegating build script used by Cruise Control to build aspen. -->
+<!-- $Id$ -->
 <project name="build-aspen" default="build">
 	<property environment="env"/>
 
@@ -14,7 +15,7 @@
 
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Aspen project" unless="no-sync">
-		<p4sync view="//depot/aspen/..." failonerror="true"/>
+		<p4sync view="${aspen_root}/..." failonerror="true"/>
 	</target>
 
 	<!-- basic build targets -->
@@ -44,9 +45,9 @@
 	<!-- continuous intregration targets -->
 
 	<!-- indirections from config-aspen.xml substitution targets -->
-	<target name="entry-target-aspen"
-	        depends="integration-build-and-test"
-	        description="Entry point for cruise control aspen project">
+	<target name="entry-target-aspen-debug"
+	        depends="integration-build-and-test-debug"
+	        description="Entry point for cruise control aspen-debug project">
 	</target>
 	<target name="entry-target-aspen-opto"
 	        depends="integration-build-and-test-opto"
@@ -54,9 +55,9 @@
 	</target>
 	
 	<!-- integration-build-and-test -->
-	<target name="integration-build-and-test"
-	        depends="integration-test,integration-distbuild"
-	        description="Build and test the Aspen project and its dependencies in a clean tree">
+	<target name="integration-build-and-test-debug"
+	        depends="integration-test-debug,integration-distbuild-debug"
+	        description="Build and test the debut Aspen project and its dependencies in a clean tree">
 	</target>
 	<target name="integration-build-and-test-opto"
 	        depends="integration-test-opto,integration-distbuild-opto"
@@ -64,7 +65,7 @@
 	</target>
 
 	<!-- integration-test -->
-	<target name="integration-test" depends="integration-build">
+	<target name="integration-test-debug" depends="integration-build-debug">
 		<!-- clean build runs tests automagically -->
 	</target>
 	<target name="integration-test-opto" depends="integration-build-opto">
@@ -72,8 +73,8 @@
 	</target>
 
 	<!-- integration-build -->
-	<target name="integration-build"
-	        depends="integration-copy,integration-farrago,integration-fennel,integration-thirdparty">
+	<target name="integration-build-debug"
+	        depends="integration-copy,integration-thirdparty,integration-fennel,integration-farrago">
 		<antcall target="integration-configure-tests"/>
 		<antcall target="do-cleanbuild">
 			<param name="build.home" location="${integration.build.home}"/>
@@ -81,7 +82,7 @@
 		</antcall>
 	</target>
 	<target name="integration-build-opto"
-	        depends="integration-copy,integration-farrago,integration-fennel,integration-thirdparty">
+	        depends="integration-copy,integration-thirdparty,integration-fennel,integration-farrago">
 		<antcall target="integration-configure-tests"/>
 		<antcall target="do-cleanbuild">
 			<param name="build.home" location="${integration.build.home}"/>
@@ -90,7 +91,7 @@
 	</target>
 
 	<!-- integration-distbuild -->
-	<target name="integration-distbuild">
+	<target name="integration-distbuild-debug">
 		<antcall target="do-distbuild">
 			<param name="build.home" location="${integration.build.home}"/>
 			<param name="build.opto" value="--without-optimization"/>
@@ -129,23 +130,29 @@ saffron.opt.allowInfiniteCostConverters=true
 
 	<!-- integration-copy -->
 	<target name="integration-copy" depends="sync">
+		<mkdir dir="${integration.build.home}"/>
 		<delete dir="${integration.build.home}/aspen"/>
-		<mkdir dir="${integration.build.home}/aspen"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
-		<echo message="Copying ./aspen to ${integration.build.home}/"/>
-		<exec dir="${default.build.home}" executable="cp" failonerror="true">
+		<echo message="Copy ${srcdir}/aspen to ${integration.build.home}"/>
+		<exec dir="${srcdir}" executable="cp" failonerror="true">
 			<arg value="-pr"/>
-			<arg value="./aspen/"/>
-			<arg value="${integration.build.home}/"/>
+			<arg value="${srcdir}/aspen"/>
+			<arg value="${integration.build.home}"/>
 		</exec>
+	</target>
+
+       <target name="integration-thirdparty">
+		<antcall target="do-thirdparty">
+			<param name="build.target" value="integration-build"/>
+		</antcall>
 	</target>
 
 	<target name="integration-farrago">
 		<!-- just set up a clean farrago: we'll build it ourselves -->
 		<ant antfile="build-farrago.xml" target="integration-copy" inheritAll="false">
 		    <propertyset>
-		        <propertyref prefix="open_"/>
+			<propertyref prefix="open_"/>
 		    </propertyset>
 		</ant>
 	</target>
@@ -154,19 +161,11 @@ saffron.opt.allowInfiniteCostConverters=true
 		<!-- just set up a clean fennel: we'll build it ourselves -->
 		<ant antfile="build-fennel.xml" target="integration-copy" inheritAll="false">
 		    <propertyset>
-		        <propertyref prefix="open_"/>
+			<propertyref prefix="open_"/>
 		    </propertyset>
 		</ant>
 	</target>
 
-	<target name="integration-thirdparty">
-		<!-- just set up a clean thirdparty: we'll build it ourselves -->
-		<ant antfile="build-thirdparty.xml" target="integration-copy" inheritAll="false">
-		    <propertyset>
-		        <propertyref prefix="open_"/>
-		    </propertyset>
-		</ant>
-	</target>
 
 	<!-- helper targets -->
 
