@@ -38,20 +38,26 @@ public:
     /**
      * Allocates a chunk of memory of size determined by the constructor.
      *
+     * @param pErrorCode on error and if non-NULL, the int referenced is
+     * modified to contain the OS error code
+     *
      * @return the allocated chunk; NULL if memory cannot be allocated (see
      * pErrorCode for OS error code)
      */
-    virtual void *allocate(int *pErrorCode = 0) = 0;
+    virtual void *allocate(int *pErrorCode = NULL) = 0;
 
     /**
      * Deallocates a chunk of memory.
      *
      * @param pMem the allocated memory
      *
+     * @param pErrorCode on error and if non-NULL, the int referenced is
+     * modified to contain the OS error code
+     *
      * @return 0 on success; -1 if memory cannot be deallocated (see
      * pErrorCode for OS error code)
      */
-    virtual int deallocate(void *pMem, int *pErrorCode = 0) = 0;
+    virtual int deallocate(void *pMem, int *pErrorCode = NULL) = 0;
 
     /**
      * @return number of bytes currently allocated
@@ -68,11 +74,14 @@ public:
      * @param readOnly true for read-only; false for read-write
      * (TODO jvs 7-Feb-2006:  support no-access as well)
      *
+     * @param pErrorCode on error and if non-NULL, the int referenced is
+     * modified to contain the OS error code
+     *
      * @return 0 on success; -1 if an error occurs while manupulating memory
      * protections (see pErrorCode for OS error code)
      */
     virtual int setProtection(
-        void *pMem, uint cb, bool readOnly, int *pErrorCode = 0) = 0;
+        void *pMem, uint cb, bool readOnly, int *pErrorCode = NULL) = 0;
 };
 
 FENNEL_END_NAMESPACE

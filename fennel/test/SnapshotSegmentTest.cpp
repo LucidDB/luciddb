@@ -28,6 +28,8 @@
 #include "fennel/segment/LinearViewSegment.h"
 #include "fennel/segment/SegPageLock.h"
 
+#include <boost/test/test_tools.hpp>
+
 using namespace fennel;
 
 class SnapshotSegmentTest : virtual public SegmentTestBase
@@ -129,10 +131,17 @@ public:
             assert(pSnapshotRandomSegment2.unique());
             pSnapshotRandomSegment2.reset();
         }
+        // Free leftover temp pages used during page versioning
+        if (pVersionedRandomSegment) {
+            VersionedRandomAllocationSegment *pVRSegment =
+                SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+                    pVersionedRandomSegment);
+            pVRSegment->freeTempPages();
+        }
         closeVersionedRandomSegment();
         if (pTempSegment) {
             // Confirm that all temp pages have been freed.
-            assert(pTempSegment->getAllocatedSizeInPages() == 0);
+            BOOST_REQUIRE(pTempSegment->getAllocatedSizeInPages() == 0);
             assert(pTempSegment.unique());
             pTempSegment.reset();
         }

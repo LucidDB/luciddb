@@ -368,15 +368,17 @@ sqlline> !connect jdbc:luciddb: sa ""
 +-------------+--------------+
 +-------------+--------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOTE: zfong 10/26/07 - Commented out the following test because it does not
+0: jdbc:luciddb:> -- yield reliable results depending on whether or not Blackhawk creates a
+0: jdbc:luciddb:> -- new LucidDB instance in the "!closeall" calls above.  Temp pages associated
+0: jdbc:luciddb:> -- with segment allocation nodes are no longer freed at the end of a statement
+0: jdbc:luciddb:> -- and are instead freed when LucidDB is shutdown.  Therefore, if a new
+0: jdbc:luciddb:> -- LucidDB instance is not created, the count below returns 1 instead of 0.
+0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- check if number of temp allocated pages is 0
-0: jdbc:luciddb:> alter system deallocate old;
-0: jdbc:luciddb:> select counter_name, counter_value
-. . . . . . . . > from sys_root.dba_performance_counters
-. . . . . . . . > where counter_name = 'TempPagesAllocatedAfterReclaim';
-+---------------------------------+----------------+
-|          COUNTER_NAME           | COUNTER_VALUE  |
-+---------------------------------+----------------+
-| TempPagesAllocatedAfterReclaim  | 0              |
-+---------------------------------+----------------+
+0: jdbc:luciddb:> -- alter system deallocate old;
+0: jdbc:luciddb:> -- select counter_name, counter_value
+0: jdbc:luciddb:> -- from sys_root.dba_performance_counters
+0: jdbc:luciddb:> -- where counter_name = 'TempPagesAllocatedAfterReclaim';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -208,7 +208,7 @@ SharedSegment SegmentFactory::newTracingSegment(
     }
     if (qualifySourceName) {
         std::ostringstream oss;
-        oss << sourceName << "." << pSegment.get();
+        oss << "segment." << sourceName << "." << pSegment.get();
         sourceName = oss.str();
     }
     if (pTraceTarget->getSourceTraceLevel(sourceName) > TRACE_FINE) {

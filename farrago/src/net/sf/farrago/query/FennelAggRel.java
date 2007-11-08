@@ -48,22 +48,6 @@ public class FennelAggRel
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated todo: remove - not used in green or red DT code
-     */
-    public FennelAggRel(
-        RelOptCluster cluster,
-        RelNode child,
-        int groupCount,
-        AggregateCall[] aggCalls)
-    {
-        this(
-            cluster,
-            child,
-            groupCount,
-            Arrays.asList(aggCalls));
-    }
-
-    /**
      * Creates a FennelAggRel.
      *
      * @param cluster Cluster

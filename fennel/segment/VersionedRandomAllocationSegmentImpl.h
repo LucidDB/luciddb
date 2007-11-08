@@ -62,6 +62,11 @@ typedef SegNodeLock<VersionedExtentAllocationNode> VersionedExtentAllocLock;
 struct ModifiedAllocationNode
 {
     /**
+     * True if this corresponds to a segment allocation node
+     */
+    bool isSegAllocNode;
+
+    /**
      * Number of uncommitted updates on the node
      */
     uint updateCount;
@@ -74,7 +79,8 @@ struct ModifiedAllocationNode
 
 template <class AllocationLockT>
 PageId VersionedRandomAllocationSegment::getTempAllocNodePage(
-    PageId origNodePageId)
+    PageId origNodePageId,
+    bool isSegAllocNode)
 {
     SXMutexExclusiveGuard mapGuard(mapMutex);
 
@@ -107,6 +113,7 @@ PageId VersionedRandomAllocationSegment::getTempAllocNodePage(
             SharedModifiedAllocationNode(new ModifiedAllocationNode());
         pModAllocNode->tempPageId = tempNodePageId;
         pModAllocNode->updateCount = 0;
+        pModAllocNode->isSegAllocNode = isSegAllocNode;
     } else {
         pModAllocNode = iter->second;
         tempNodePageId = pModAllocNode->tempPageId;
@@ -114,10 +121,13 @@ PageId VersionedRandomAllocationSegment::getTempAllocNodePage(
 
     // Update the map
     pModAllocNode->updateCount++;
-    allocationNodeMap.insert(
-        ModifiedAllocationNodeMap::value_type(
-            origNodePageId,
-            pModAllocNode));
+    
+    if (iter == allocationNodeMap.end()) {
+        allocationNodeMap.insert(
+            ModifiedAllocationNodeMap::value_type(
+                origNodePageId,
+                pModAllocNode));
+    }
 
     return tempNodePageId;
 }

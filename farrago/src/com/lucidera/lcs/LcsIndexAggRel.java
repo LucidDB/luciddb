@@ -42,18 +42,6 @@ public class LcsIndexAggRel
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated not used in green or DT red code
-     */
-    public LcsIndexAggRel(
-        RelOptCluster cluster,
-        RelNode child,
-        int groupCount,
-        AggregateCall[] aggCalls)
-    {
-        this(cluster, child, groupCount, Arrays.asList(aggCalls));
-    }
-
-    /**
      * Creates an LcsIndexAggRel.
      *
      * @param cluster

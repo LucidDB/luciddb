@@ -107,6 +107,7 @@ public:
         ++versionNumber;
         VersionedSegment *pVersionedSegment =
             SegmentFactory::dynamicCast<VersionedSegment *>(pLinearSegment);
+        assert(pVersionedSegment);
         assert(versionNumber == pVersionedSegment->getVersionNumber());
         pVersionedSegment->deallocateCheckpointedLog(CHECKPOINT_FLUSH_FUZZY);
     }

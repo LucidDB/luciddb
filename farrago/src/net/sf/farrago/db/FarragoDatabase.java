@@ -457,16 +457,6 @@ public class FarragoDatabase
 
         filterMapNullValues(configMap);
 
-        // Filter out null values.
-        Iterator<Map.Entry<String,Object>> configMapIter =
-            configMap.entrySet().iterator();
-        while (configMapIter.hasNext()) {
-            Map.Entry<String,Object> entry = configMapIter.next();
-            if (entry.getValue() == null) {
-                configMapIter.remove();
-            }
-        }
-
         // Copy config into a properties object, then tell the session mgr
         // about them. Note that some of the properties may be non-Strings.
         Properties properties = new Properties();

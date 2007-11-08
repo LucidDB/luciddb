@@ -471,8 +471,8 @@ public class LucidDbSessionPersonality
 
         // Bitmap aggregation is favored
         if (enableIndexOnlyScans) {
-            builder.addRuleInstance(LcsIndexAggRule.instanceRenameRowScan);
-            builder.addRuleInstance(LcsIndexAggRule.instanceRenameNormalizer);
+            builder.addRuleInstance(LcsIndexAggRule.instanceRowScan);
+            builder.addRuleInstance(LcsIndexAggRule.instanceNormalizer);
         }
 
         // Prefer hash aggregation over the standard Fennel aggregation.

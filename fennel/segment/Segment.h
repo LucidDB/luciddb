@@ -192,7 +192,7 @@ public:
     
     /**
      * Determines the successor of a given PageId.  This is an optional
-     * interface only supported by segments with some concept of linearity.
+     * interface only supported by segments with some concept of page ordering.
      *
      * @param pageId PageId for which the successor is to be found
      *
@@ -202,7 +202,7 @@ public:
     
     /**
      * Sets the successor of a given PageId.  This is an optional interface only
-     * supported by segments with some concept of modifiable linearity.
+     * supported by segments with some concept of modifiable ordering.
      *
      * @param pageId PageId for which the successor is to be set
      *
@@ -277,7 +277,7 @@ public:
     
     /**
      * Determines whether a page can be updated in-place, and if so, prepares
-     * the page for update
+     * the page for update.
      *
      * @param pageId pageId of the page being modified
      *
@@ -290,7 +290,7 @@ public:
     virtual PageId updatePage(PageId pageId, bool needsTranslation = false);
 
     /**
-     * Returns the mapped page listener corresponding to a page
+     * Returns the mapped page listener corresponding to a page.
      *
      * @param blockId blockId of the page whose page listener we are returning
      *
@@ -299,7 +299,7 @@ public:
     virtual MappedPageListener *getMappedPageListener(BlockId blockId);
 
     /**
-     * Discards a page from the cache
+     * Discards a page from the cache.
      *
      * @param blockId block Id corresponding to the page to be discarded
      */
