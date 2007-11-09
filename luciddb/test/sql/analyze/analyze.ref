@@ -23,19 +23,19 @@
 +-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | DISTINCT_VALUE_COUNT  | IS_DISTINCT_VALUE_COUNT_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
 +-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
-| BENCH10K    | k10          | 10                    | true                               | 10.0             | 1000         |
-| BENCH10K    | k100         | 100                   | true                               | 10.0             | 1000         |
-| BENCH10K    | k100k        | 8863                  | true                               | 10.0             | 1000         |
-| BENCH10K    | k10k         | 4979                  | true                               | 10.0             | 1000         |
-| BENCH10K    | k1k          | 989                   | true                               | 10.0             | 1000         |
-| BENCH10K    | k2           | 2                     | true                               | 10.0             | 1000         |
-| BENCH10K    | k25          | 25                    | true                               | 10.0             | 1000         |
-| BENCH10K    | k250k        | 9822                  | true                               | 10.0             | 1000         |
-| BENCH10K    | k4           | 4                     | true                               | 10.0             | 1000         |
-| BENCH10K    | k40k         | 8310                  | true                               | 10.0             | 1000         |
-| BENCH10K    | k5           | 5                     | true                               | 10.0             | 1000         |
-| BENCH10K    | k500k        | 9822                  | true                               | 10.0             | 1000         |
-| BENCH10K    | kseq         | 10000                 | false                              | 10.0             | 1000         |
+| BENCH10K    | k10          | 10                    | true                               | 50.0             | 5000         |
+| BENCH10K    | k100         | 100                   | true                               | 50.0             | 5000         |
+| BENCH10K    | k100k        | 7206                  | true                               | 50.0             | 5000         |
+| BENCH10K    | k10k         | 5215                  | true                               | 50.0             | 5000         |
+| BENCH10K    | k1k          | 992                   | true                               | 50.0             | 5000         |
+| BENCH10K    | k2           | 2                     | true                               | 50.0             | 5000         |
+| BENCH10K    | k25          | 25                    | true                               | 50.0             | 5000         |
+| BENCH10K    | k250k        | 7372                  | true                               | 50.0             | 5000         |
+| BENCH10K    | k4           | 4                     | true                               | 50.0             | 5000         |
+| BENCH10K    | k40k         | 6781                  | true                               | 50.0             | 5000         |
+| BENCH10K    | k5           | 5                     | true                               | 50.0             | 5000         |
+| BENCH10K    | k500k        | 7430                  | true                               | 50.0             | 5000         |
+| BENCH10K    | kseq         | 10000                 | false                              | 50.0             | 5000         |
 | BENCH1M     | k10          | 10                    | true                               | 1.0              | 10000        |
 | BENCH1M     | k100         | 100                   | true                               | 1.0              | 10000        |
 | BENCH1M     | k100k        | 90756                 | true                               | 1.0              | 10000        |
@@ -49,11 +49,11 @@
 | BENCH1M     | k5           | 5                     | true                               | 1.0              | 10000        |
 | BENCH1M     | k500k        | 340201                | true                               | 1.0              | 10000        |
 | BENCH1M     | kseq         | 1000000               | false                              | 1.0              | 10000        |
-| INDEX_EST   | k10          | 10                    | false                              | 25.0             | 250          |
-| INDEX_EST   | k1k          | 559                   | true                               | 25.0             | 250          |
-| INDEX_EST   | kseq         | 1000                  | false                              | 25.0             | 250          |
-| INDEX_EST   | kuniq        | 1000                  | false                              | 25.0             | 250          |
-| INDEX_EST   | kuniq_null   | 902                   | false                              | 25.0             | 250          |
+| INDEX_EST   | k10          | 10                    | false                              | 100.0            | 1000         |
+| INDEX_EST   | k1k          | 632                   | false                              | 100.0            | 1000         |
+| INDEX_EST   | kseq         | 1000                  | false                              | 100.0            | 1000         |
+| INDEX_EST   | kuniq        | 1000                  | false                              | 100.0            | 1000         |
+| INDEX_EST   | kuniq_null   | 902                   | false                              | 100.0            | 1000         |
 +-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select table_name, column_name, ordinal, start_value, value_count
@@ -394,106 +394,106 @@
 +-------------+--------------+----------+--------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
 +-------------+--------------+----------+--------------+--------------+
-| BENCH10K    | kseq         | 0        | 1            | 10           |
-| BENCH10K    | kseq         | 1        | 11           | 10           |
-| BENCH10K    | kseq         | 2        | 21           | 10           |
-| BENCH10K    | kseq         | 3        | 31           | 10           |
-| BENCH10K    | kseq         | 4        | 41           | 10           |
-| BENCH10K    | kseq         | 5        | 51           | 10           |
-| BENCH10K    | kseq         | 6        | 61           | 10           |
-| BENCH10K    | kseq         | 7        | 71           | 10           |
-| BENCH10K    | kseq         | 8        | 81           | 10           |
-| BENCH10K    | kseq         | 9        | 91           | 10           |
-| BENCH10K    | kseq         | 10       | 1101         | 10           |
-| BENCH10K    | kseq         | 11       | 1111         | 10           |
-| BENCH10K    | kseq         | 12       | 1121         | 10           |
-| BENCH10K    | kseq         | 13       | 1131         | 10           |
-| BENCH10K    | kseq         | 14       | 1141         | 10           |
-| BENCH10K    | kseq         | 15       | 1151         | 10           |
-| BENCH10K    | kseq         | 16       | 1161         | 10           |
-| BENCH10K    | kseq         | 17       | 1171         | 10           |
-| BENCH10K    | kseq         | 18       | 1181         | 10           |
-| BENCH10K    | kseq         | 19       | 1191         | 10           |
-| BENCH10K    | kseq         | 20       | 2201         | 10           |
-| BENCH10K    | kseq         | 21       | 2211         | 10           |
-| BENCH10K    | kseq         | 22       | 2221         | 10           |
-| BENCH10K    | kseq         | 23       | 2231         | 10           |
-| BENCH10K    | kseq         | 24       | 2241         | 10           |
-| BENCH10K    | kseq         | 25       | 2251         | 10           |
-| BENCH10K    | kseq         | 26       | 2261         | 10           |
-| BENCH10K    | kseq         | 27       | 2271         | 10           |
-| BENCH10K    | kseq         | 28       | 2281         | 10           |
-| BENCH10K    | kseq         | 29       | 2291         | 10           |
-| BENCH10K    | kseq         | 30       | 3301         | 10           |
-| BENCH10K    | kseq         | 31       | 3311         | 10           |
-| BENCH10K    | kseq         | 32       | 3321         | 10           |
-| BENCH10K    | kseq         | 33       | 3331         | 10           |
-| BENCH10K    | kseq         | 34       | 3341         | 10           |
-| BENCH10K    | kseq         | 35       | 3351         | 10           |
-| BENCH10K    | kseq         | 36       | 3361         | 10           |
-| BENCH10K    | kseq         | 37       | 3371         | 10           |
-| BENCH10K    | kseq         | 38       | 3381         | 10           |
-| BENCH10K    | kseq         | 39       | 3391         | 10           |
-| BENCH10K    | kseq         | 40       | 4401         | 10           |
-| BENCH10K    | kseq         | 41       | 4411         | 10           |
-| BENCH10K    | kseq         | 42       | 4421         | 10           |
-| BENCH10K    | kseq         | 43       | 4431         | 10           |
-| BENCH10K    | kseq         | 44       | 4441         | 10           |
-| BENCH10K    | kseq         | 45       | 4451         | 10           |
-| BENCH10K    | kseq         | 46       | 4461         | 10           |
-| BENCH10K    | kseq         | 47       | 4471         | 10           |
-| BENCH10K    | kseq         | 48       | 4481         | 10           |
-| BENCH10K    | kseq         | 49       | 4491         | 10           |
-| BENCH10K    | kseq         | 50       | 5501         | 10           |
-| BENCH10K    | kseq         | 51       | 5511         | 10           |
-| BENCH10K    | kseq         | 52       | 5521         | 10           |
-| BENCH10K    | kseq         | 53       | 5531         | 10           |
-| BENCH10K    | kseq         | 54       | 5541         | 10           |
-| BENCH10K    | kseq         | 55       | 5551         | 10           |
-| BENCH10K    | kseq         | 56       | 5561         | 10           |
-| BENCH10K    | kseq         | 57       | 5571         | 10           |
-| BENCH10K    | kseq         | 58       | 5581         | 10           |
-| BENCH10K    | kseq         | 59       | 5591         | 10           |
-| BENCH10K    | kseq         | 60       | 6601         | 10           |
-| BENCH10K    | kseq         | 61       | 6611         | 10           |
-| BENCH10K    | kseq         | 62       | 6621         | 10           |
-| BENCH10K    | kseq         | 63       | 6631         | 10           |
-| BENCH10K    | kseq         | 64       | 6641         | 10           |
-| BENCH10K    | kseq         | 65       | 6651         | 10           |
-| BENCH10K    | kseq         | 66       | 6661         | 10           |
-| BENCH10K    | kseq         | 67       | 6671         | 10           |
-| BENCH10K    | kseq         | 68       | 6681         | 10           |
-| BENCH10K    | kseq         | 69       | 6691         | 10           |
-| BENCH10K    | kseq         | 70       | 7701         | 10           |
-| BENCH10K    | kseq         | 71       | 7711         | 10           |
-| BENCH10K    | kseq         | 72       | 7721         | 10           |
-| BENCH10K    | kseq         | 73       | 7731         | 10           |
-| BENCH10K    | kseq         | 74       | 7741         | 10           |
-| BENCH10K    | kseq         | 75       | 7751         | 10           |
-| BENCH10K    | kseq         | 76       | 7761         | 10           |
-| BENCH10K    | kseq         | 77       | 7771         | 10           |
-| BENCH10K    | kseq         | 78       | 7781         | 10           |
-| BENCH10K    | kseq         | 79       | 7791         | 10           |
-| BENCH10K    | kseq         | 80       | 8801         | 10           |
-| BENCH10K    | kseq         | 81       | 8811         | 10           |
-| BENCH10K    | kseq         | 82       | 8821         | 10           |
-| BENCH10K    | kseq         | 83       | 8831         | 10           |
-| BENCH10K    | kseq         | 84       | 8841         | 10           |
-| BENCH10K    | kseq         | 85       | 8851         | 10           |
-| BENCH10K    | kseq         | 86       | 8861         | 10           |
-| BENCH10K    | kseq         | 87       | 8871         | 10           |
-| BENCH10K    | kseq         | 88       | 8881         | 10           |
-| BENCH10K    | kseq         | 89       | 8891         | 10           |
-| BENCH10K    | kseq         | 90       | 9901         | 10           |
-| BENCH10K    | kseq         | 91       | 9911         | 10           |
-| BENCH10K    | kseq         | 92       | 9921         | 10           |
-| BENCH10K    | kseq         | 93       | 9931         | 10           |
-| BENCH10K    | kseq         | 94       | 9941         | 10           |
-| BENCH10K    | kseq         | 95       | 9951         | 10           |
-| BENCH10K    | kseq         | 96       | 9961         | 10           |
-| BENCH10K    | kseq         | 97       | 9971         | 10           |
-| BENCH10K    | kseq         | 98       | 9981         | 10           |
-| BENCH10K    | kseq         | 99       | 9991         | 10           |
+| BENCH10K    | kseq         | 0        | 1            | 50           |
+| BENCH10K    | kseq         | 1        | 51           | 50           |
+| BENCH10K    | kseq         | 2        | 101          | 50           |
+| BENCH10K    | kseq         | 3        | 151          | 50           |
+| BENCH10K    | kseq         | 4        | 201          | 50           |
+| BENCH10K    | kseq         | 5        | 251          | 50           |
+| BENCH10K    | kseq         | 6        | 301          | 50           |
+| BENCH10K    | kseq         | 7        | 351          | 50           |
+| BENCH10K    | kseq         | 8        | 401          | 50           |
+| BENCH10K    | kseq         | 9        | 451          | 50           |
+| BENCH10K    | kseq         | 10       | 1056         | 50           |
+| BENCH10K    | kseq         | 11       | 1106         | 50           |
+| BENCH10K    | kseq         | 12       | 1156         | 50           |
+| BENCH10K    | kseq         | 13       | 1206         | 50           |
+| BENCH10K    | kseq         | 14       | 1256         | 50           |
+| BENCH10K    | kseq         | 15       | 1306         | 50           |
+| BENCH10K    | kseq         | 16       | 1356         | 50           |
+| BENCH10K    | kseq         | 17       | 1406         | 50           |
+| BENCH10K    | kseq         | 18       | 1456         | 50           |
+| BENCH10K    | kseq         | 19       | 1506         | 50           |
+| BENCH10K    | kseq         | 20       | 2111         | 50           |
+| BENCH10K    | kseq         | 21       | 2161         | 50           |
+| BENCH10K    | kseq         | 22       | 2211         | 50           |
+| BENCH10K    | kseq         | 23       | 2261         | 50           |
+| BENCH10K    | kseq         | 24       | 2311         | 50           |
+| BENCH10K    | kseq         | 25       | 2361         | 50           |
+| BENCH10K    | kseq         | 26       | 2411         | 50           |
+| BENCH10K    | kseq         | 27       | 2461         | 50           |
+| BENCH10K    | kseq         | 28       | 2511         | 50           |
+| BENCH10K    | kseq         | 29       | 2561         | 50           |
+| BENCH10K    | kseq         | 30       | 3166         | 50           |
+| BENCH10K    | kseq         | 31       | 3216         | 50           |
+| BENCH10K    | kseq         | 32       | 3266         | 50           |
+| BENCH10K    | kseq         | 33       | 3316         | 50           |
+| BENCH10K    | kseq         | 34       | 3366         | 50           |
+| BENCH10K    | kseq         | 35       | 3416         | 50           |
+| BENCH10K    | kseq         | 36       | 3466         | 50           |
+| BENCH10K    | kseq         | 37       | 3516         | 50           |
+| BENCH10K    | kseq         | 38       | 3566         | 50           |
+| BENCH10K    | kseq         | 39       | 3616         | 50           |
+| BENCH10K    | kseq         | 40       | 4221         | 50           |
+| BENCH10K    | kseq         | 41       | 4271         | 50           |
+| BENCH10K    | kseq         | 42       | 4321         | 50           |
+| BENCH10K    | kseq         | 43       | 4371         | 50           |
+| BENCH10K    | kseq         | 44       | 4421         | 50           |
+| BENCH10K    | kseq         | 45       | 4471         | 50           |
+| BENCH10K    | kseq         | 46       | 4521         | 50           |
+| BENCH10K    | kseq         | 47       | 4571         | 50           |
+| BENCH10K    | kseq         | 48       | 4621         | 50           |
+| BENCH10K    | kseq         | 49       | 4671         | 50           |
+| BENCH10K    | kseq         | 50       | 5276         | 50           |
+| BENCH10K    | kseq         | 51       | 5326         | 50           |
+| BENCH10K    | kseq         | 52       | 5376         | 50           |
+| BENCH10K    | kseq         | 53       | 5426         | 50           |
+| BENCH10K    | kseq         | 54       | 5476         | 50           |
+| BENCH10K    | kseq         | 55       | 5526         | 50           |
+| BENCH10K    | kseq         | 56       | 5576         | 50           |
+| BENCH10K    | kseq         | 57       | 5626         | 50           |
+| BENCH10K    | kseq         | 58       | 5676         | 50           |
+| BENCH10K    | kseq         | 59       | 5726         | 50           |
+| BENCH10K    | kseq         | 60       | 6331         | 50           |
+| BENCH10K    | kseq         | 61       | 6381         | 50           |
+| BENCH10K    | kseq         | 62       | 6431         | 50           |
+| BENCH10K    | kseq         | 63       | 6481         | 50           |
+| BENCH10K    | kseq         | 64       | 6531         | 50           |
+| BENCH10K    | kseq         | 65       | 6581         | 50           |
+| BENCH10K    | kseq         | 66       | 6631         | 50           |
+| BENCH10K    | kseq         | 67       | 6681         | 50           |
+| BENCH10K    | kseq         | 68       | 6731         | 50           |
+| BENCH10K    | kseq         | 69       | 6781         | 50           |
+| BENCH10K    | kseq         | 70       | 7386         | 50           |
+| BENCH10K    | kseq         | 71       | 7436         | 50           |
+| BENCH10K    | kseq         | 72       | 7486         | 50           |
+| BENCH10K    | kseq         | 73       | 7536         | 50           |
+| BENCH10K    | kseq         | 74       | 7586         | 50           |
+| BENCH10K    | kseq         | 75       | 7636         | 50           |
+| BENCH10K    | kseq         | 76       | 7686         | 50           |
+| BENCH10K    | kseq         | 77       | 7736         | 50           |
+| BENCH10K    | kseq         | 78       | 7786         | 50           |
+| BENCH10K    | kseq         | 79       | 7836         | 50           |
+| BENCH10K    | kseq         | 80       | 8441         | 50           |
+| BENCH10K    | kseq         | 81       | 8491         | 50           |
+| BENCH10K    | kseq         | 82       | 8541         | 50           |
+| BENCH10K    | kseq         | 83       | 8591         | 50           |
+| BENCH10K    | kseq         | 84       | 8641         | 50           |
+| BENCH10K    | kseq         | 85       | 8691         | 50           |
+| BENCH10K    | kseq         | 86       | 8741         | 50           |
+| BENCH10K    | kseq         | 87       | 8791         | 50           |
+| BENCH10K    | kseq         | 88       | 8841         | 50           |
+| BENCH10K    | kseq         | 89       | 8891         | 50           |
+| BENCH10K    | kseq         | 90       | 9496         | 50           |
+| BENCH10K    | kseq         | 91       | 9546         | 50           |
+| BENCH10K    | kseq         | 92       | 9596         | 50           |
+| BENCH10K    | kseq         | 93       | 9646         | 50           |
+| BENCH10K    | kseq         | 94       | 9696         | 50           |
+| BENCH10K    | kseq         | 95       | 9746         | 50           |
+| BENCH10K    | kseq         | 96       | 9796         | 50           |
+| BENCH10K    | kseq         | 97       | 9846         | 50           |
+| BENCH10K    | kseq         | 98       | 9896         | 50           |
+| BENCH10K    | kseq         | 99       | 9946         | 50           |
 +-------------+--------------+----------+--------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select table_name, column_name, ordinal, start_value, value_count
@@ -553,8 +553,8 @@
 | BENCH10K    | k2           | 46       | 1            | 0            |
 | BENCH10K    | k2           | 47       | 1            | 0            |
 | BENCH10K    | k2           | 48       | 1            | 0            |
-| BENCH10K    | k2           | 49       | 1            | 0            |
-| BENCH10K    | k2           | 50       | 1            | 1            |
+| BENCH10K    | k2           | 49       | 1            | 1            |
+| BENCH10K    | k2           | 50       | 2            | 0            |
 | BENCH10K    | k2           | 51       | 2            | 0            |
 | BENCH10K    | k2           | 52       | 2            | 0            |
 | BENCH10K    | k2           | 53       | 2            | 0            |
@@ -614,106 +614,106 @@
 +-------------+--------------+----------+--------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | ORDINAL  | START_VALUE  | VALUE_COUNT  |
 +-------------+--------------+----------+--------------+--------------+
-| BENCH10K    | k1k          | 0        | 1            | 6            |
-| BENCH10K    | k1k          | 1        | 11           | 6            |
-| BENCH10K    | k1k          | 2        | 19           | 7            |
-| BENCH10K    | k1k          | 3        | 31           | 6            |
-| BENCH10K    | k1k          | 4        | 39           | 8            |
-| BENCH10K    | k1k          | 5        | 52           | 8            |
-| BENCH10K    | k1k          | 6        | 62           | 6            |
-| BENCH10K    | k1k          | 7        | 73           | 6            |
-| BENCH10K    | k1k          | 8        | 81           | 8            |
-| BENCH10K    | k1k          | 9        | 93           | 6            |
-| BENCH10K    | k1k          | 10       | 99           | 5            |
-| BENCH10K    | k1k          | 11       | 109          | 6            |
-| BENCH10K    | k1k          | 12       | 119          | 6            |
-| BENCH10K    | k1k          | 13       | 137          | 6            |
-| BENCH10K    | k1k          | 14       | 146          | 6            |
-| BENCH10K    | k1k          | 15       | 158          | 6            |
-| BENCH10K    | k1k          | 16       | 167          | 4            |
-| BENCH10K    | k1k          | 17       | 174          | 5            |
-| BENCH10K    | k1k          | 18       | 181          | 6            |
-| BENCH10K    | k1k          | 19       | 193          | 8            |
-| BENCH10K    | k1k          | 20       | 207          | 7            |
-| BENCH10K    | k1k          | 21       | 215          | 6            |
-| BENCH10K    | k1k          | 22       | 226          | 5            |
-| BENCH10K    | k1k          | 23       | 232          | 6            |
-| BENCH10K    | k1k          | 24       | 244          | 8            |
-| BENCH10K    | k1k          | 25       | 253          | 5            |
-| BENCH10K    | k1k          | 26       | 264          | 7            |
-| BENCH10K    | k1k          | 27       | 272          | 7            |
-| BENCH10K    | k1k          | 28       | 285          | 8            |
-| BENCH10K    | k1k          | 29       | 300          | 7            |
-| BENCH10K    | k1k          | 30       | 313          | 8            |
-| BENCH10K    | k1k          | 31       | 327          | 8            |
-| BENCH10K    | k1k          | 32       | 341          | 6            |
-| BENCH10K    | k1k          | 33       | 349          | 7            |
-| BENCH10K    | k1k          | 34       | 361          | 8            |
-| BENCH10K    | k1k          | 35       | 381          | 8            |
-| BENCH10K    | k1k          | 36       | 389          | 5            |
-| BENCH10K    | k1k          | 37       | 395          | 7            |
-| BENCH10K    | k1k          | 38       | 406          | 6            |
-| BENCH10K    | k1k          | 39       | 417          | 8            |
-| BENCH10K    | k1k          | 40       | 426          | 7            |
-| BENCH10K    | k1k          | 41       | 439          | 7            |
-| BENCH10K    | k1k          | 42       | 450          | 5            |
-| BENCH10K    | k1k          | 43       | 458          | 7            |
-| BENCH10K    | k1k          | 44       | 469          | 7            |
-| BENCH10K    | k1k          | 45       | 480          | 6            |
-| BENCH10K    | k1k          | 46       | 488          | 8            |
-| BENCH10K    | k1k          | 47       | 504          | 7            |
-| BENCH10K    | k1k          | 48       | 513          | 4            |
-| BENCH10K    | k1k          | 49       | 516          | 5            |
-| BENCH10K    | k1k          | 50       | 524          | 6            |
-| BENCH10K    | k1k          | 51       | 535          | 6            |
-| BENCH10K    | k1k          | 52       | 544          | 8            |
-| BENCH10K    | k1k          | 53       | 553          | 5            |
-| BENCH10K    | k1k          | 54       | 563          | 5            |
-| BENCH10K    | k1k          | 55       | 572          | 6            |
-| BENCH10K    | k1k          | 56       | 578          | 7            |
-| BENCH10K    | k1k          | 57       | 588          | 6            |
-| BENCH10K    | k1k          | 58       | 603          | 7            |
-| BENCH10K    | k1k          | 59       | 616          | 8            |
-| BENCH10K    | k1k          | 60       | 628          | 5            |
-| BENCH10K    | k1k          | 61       | 637          | 7            |
-| BENCH10K    | k1k          | 62       | 647          | 5            |
-| BENCH10K    | k1k          | 63       | 655          | 6            |
-| BENCH10K    | k1k          | 64       | 663          | 4            |
-| BENCH10K    | k1k          | 65       | 670          | 8            |
-| BENCH10K    | k1k          | 66       | 679          | 8            |
-| BENCH10K    | k1k          | 67       | 694          | 5            |
-| BENCH10K    | k1k          | 68       | 701          | 5            |
-| BENCH10K    | k1k          | 69       | 712          | 6            |
-| BENCH10K    | k1k          | 70       | 720          | 8            |
-| BENCH10K    | k1k          | 71       | 729          | 6            |
-| BENCH10K    | k1k          | 72       | 737          | 7            |
-| BENCH10K    | k1k          | 73       | 746          | 5            |
-| BENCH10K    | k1k          | 74       | 753          | 7            |
-| BENCH10K    | k1k          | 75       | 761          | 7            |
-| BENCH10K    | k1k          | 76       | 777          | 8            |
-| BENCH10K    | k1k          | 77       | 791          | 5            |
-| BENCH10K    | k1k          | 78       | 800          | 7            |
-| BENCH10K    | k1k          | 79       | 806          | 7            |
-| BENCH10K    | k1k          | 80       | 817          | 9            |
-| BENCH10K    | k1k          | 81       | 831          | 7            |
-| BENCH10K    | k1k          | 82       | 839          | 6            |
-| BENCH10K    | k1k          | 83       | 848          | 4            |
-| BENCH10K    | k1k          | 84       | 856          | 5            |
-| BENCH10K    | k1k          | 85       | 866          | 5            |
-| BENCH10K    | k1k          | 86       | 873          | 5            |
-| BENCH10K    | k1k          | 87       | 883          | 5            |
-| BENCH10K    | k1k          | 88       | 890          | 3            |
-| BENCH10K    | k1k          | 89       | 895          | 8            |
-| BENCH10K    | k1k          | 90       | 904          | 6            |
-| BENCH10K    | k1k          | 91       | 912          | 7            |
-| BENCH10K    | k1k          | 92       | 918          | 7            |
-| BENCH10K    | k1k          | 93       | 927          | 6            |
-| BENCH10K    | k1k          | 94       | 936          | 7            |
-| BENCH10K    | k1k          | 95       | 944          | 5            |
-| BENCH10K    | k1k          | 96       | 956          | 7            |
-| BENCH10K    | k1k          | 97       | 967          | 9            |
-| BENCH10K    | k1k          | 98       | 982          | 7            |
-| BENCH10K    | k1k          | 99       | 995          | 5            |
+| BENCH10K    | k1k          | 0        | 1            | 9            |
+| BENCH10K    | k1k          | 1        | 9            | 14           |
+| BENCH10K    | k1k          | 2        | 24           | 10           |
+| BENCH10K    | k1k          | 3        | 34           | 10           |
+| BENCH10K    | k1k          | 4        | 45           | 11           |
+| BENCH10K    | k1k          | 5        | 55           | 8            |
+| BENCH10K    | k1k          | 6        | 64           | 13           |
+| BENCH10K    | k1k          | 7        | 76           | 13           |
+| BENCH10K    | k1k          | 8        | 89           | 8            |
+| BENCH10K    | k1k          | 9        | 97           | 8            |
+| BENCH10K    | k1k          | 10       | 105          | 9            |
+| BENCH10K    | k1k          | 11       | 115          | 8            |
+| BENCH10K    | k1k          | 12       | 122          | 10           |
+| BENCH10K    | k1k          | 13       | 133          | 11           |
+| BENCH10K    | k1k          | 14       | 144          | 8            |
+| BENCH10K    | k1k          | 15       | 153          | 10           |
+| BENCH10K    | k1k          | 16       | 162          | 9            |
+| BENCH10K    | k1k          | 17       | 172          | 10           |
+| BENCH10K    | k1k          | 18       | 182          | 12           |
+| BENCH10K    | k1k          | 19       | 195          | 10           |
+| BENCH10K    | k1k          | 20       | 204          | 11           |
+| BENCH10K    | k1k          | 21       | 215          | 9            |
+| BENCH10K    | k1k          | 22       | 225          | 8            |
+| BENCH10K    | k1k          | 23       | 233          | 9            |
+| BENCH10K    | k1k          | 24       | 242          | 9            |
+| BENCH10K    | k1k          | 25       | 251          | 9            |
+| BENCH10K    | k1k          | 26       | 260          | 9            |
+| BENCH10K    | k1k          | 27       | 270          | 9            |
+| BENCH10K    | k1k          | 28       | 279          | 12           |
+| BENCH10K    | k1k          | 29       | 292          | 9            |
+| BENCH10K    | k1k          | 30       | 300          | 11           |
+| BENCH10K    | k1k          | 31       | 313          | 10           |
+| BENCH10K    | k1k          | 32       | 323          | 11           |
+| BENCH10K    | k1k          | 33       | 334          | 9            |
+| BENCH10K    | k1k          | 34       | 343          | 12           |
+| BENCH10K    | k1k          | 35       | 355          | 8            |
+| BENCH10K    | k1k          | 36       | 366          | 13           |
+| BENCH10K    | k1k          | 37       | 378          | 9            |
+| BENCH10K    | k1k          | 38       | 387          | 8            |
+| BENCH10K    | k1k          | 39       | 395          | 8            |
+| BENCH10K    | k1k          | 40       | 404          | 11           |
+| BENCH10K    | k1k          | 41       | 415          | 9            |
+| BENCH10K    | k1k          | 42       | 424          | 8            |
+| BENCH10K    | k1k          | 43       | 434          | 11           |
+| BENCH10K    | k1k          | 44       | 444          | 10           |
+| BENCH10K    | k1k          | 45       | 454          | 10           |
+| BENCH10K    | k1k          | 46       | 464          | 11           |
+| BENCH10K    | k1k          | 47       | 475          | 7            |
+| BENCH10K    | k1k          | 48       | 483          | 11           |
+| BENCH10K    | k1k          | 49       | 494          | 14           |
+| BENCH10K    | k1k          | 50       | 508          | 9            |
+| BENCH10K    | k1k          | 51       | 518          | 11           |
+| BENCH10K    | k1k          | 52       | 528          | 11           |
+| BENCH10K    | k1k          | 53       | 539          | 8            |
+| BENCH10K    | k1k          | 54       | 549          | 10           |
+| BENCH10K    | k1k          | 55       | 559          | 11           |
+| BENCH10K    | k1k          | 56       | 569          | 8            |
+| BENCH10K    | k1k          | 57       | 577          | 11           |
+| BENCH10K    | k1k          | 58       | 589          | 12           |
+| BENCH10K    | k1k          | 59       | 602          | 10           |
+| BENCH10K    | k1k          | 60       | 611          | 12           |
+| BENCH10K    | k1k          | 61       | 623          | 8            |
+| BENCH10K    | k1k          | 62       | 631          | 8            |
+| BENCH10K    | k1k          | 63       | 639          | 12           |
+| BENCH10K    | k1k          | 64       | 652          | 11           |
+| BENCH10K    | k1k          | 65       | 662          | 7            |
+| BENCH10K    | k1k          | 66       | 669          | 9            |
+| BENCH10K    | k1k          | 67       | 678          | 10           |
+| BENCH10K    | k1k          | 68       | 688          | 8            |
+| BENCH10K    | k1k          | 69       | 697          | 9            |
+| BENCH10K    | k1k          | 70       | 707          | 11           |
+| BENCH10K    | k1k          | 71       | 719          | 10           |
+| BENCH10K    | k1k          | 72       | 728          | 9            |
+| BENCH10K    | k1k          | 73       | 737          | 11           |
+| BENCH10K    | k1k          | 74       | 748          | 8            |
+| BENCH10K    | k1k          | 75       | 756          | 6            |
+| BENCH10K    | k1k          | 76       | 763          | 11           |
+| BENCH10K    | k1k          | 77       | 773          | 11           |
+| BENCH10K    | k1k          | 78       | 786          | 12           |
+| BENCH10K    | k1k          | 79       | 797          | 9            |
+| BENCH10K    | k1k          | 80       | 806          | 10           |
+| BENCH10K    | k1k          | 81       | 817          | 8            |
+| BENCH10K    | k1k          | 82       | 824          | 11           |
+| BENCH10K    | k1k          | 83       | 835          | 11           |
+| BENCH10K    | k1k          | 84       | 846          | 13           |
+| BENCH10K    | k1k          | 85       | 859          | 8            |
+| BENCH10K    | k1k          | 86       | 867          | 8            |
+| BENCH10K    | k1k          | 87       | 876          | 10           |
+| BENCH10K    | k1k          | 88       | 886          | 9            |
+| BENCH10K    | k1k          | 89       | 894          | 10           |
+| BENCH10K    | k1k          | 90       | 904          | 8            |
+| BENCH10K    | k1k          | 91       | 912          | 9            |
+| BENCH10K    | k1k          | 92       | 921          | 10           |
+| BENCH10K    | k1k          | 93       | 932          | 8            |
+| BENCH10K    | k1k          | 94       | 939          | 10           |
+| BENCH10K    | k1k          | 95       | 950          | 12           |
+| BENCH10K    | k1k          | 96       | 961          | 12           |
+| BENCH10K    | k1k          | 97       | 973          | 7            |
+| BENCH10K    | k1k          | 98       | 980          | 12           |
+| BENCH10K    | k1k          | 99       | 992          | 8            |
 +-------------+--------------+----------+--------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- delete rows from the index_est table and recompute the stats
