@@ -308,15 +308,16 @@ void LcsRowScanExecStream::initializeSystemSampling()
     clumpPos = 0;
     clumpSkipPos = 0;
 
+    FENNEL_TRACE(TRACE_FINE, "rowCount = " << rowCount);
+    FENNEL_TRACE(
+        TRACE_FINE, "samplingRate = " << static_cast<double>(samplingRate));
+
     if (rowCount <= 0) {
         // Handle empty table or non-sense input.
         clumpSize = 1;
         clumpDistance = 0;
+        return;
     }
-
-    FENNEL_TRACE(TRACE_FINE, "rowCount = " << rowCount);
-    FENNEL_TRACE(
-        TRACE_FINE, "samplingRate = " << static_cast<double>(samplingRate));
 
     // Manipulate this value locally so we don't mistakenly modify our stored
     // copy of the parameter.
