@@ -49,11 +49,11 @@
 | BENCH1M     | k5           | 5                     | true                               | 1.0              | 10000        |
 | BENCH1M     | k500k        | 340201                | true                               | 1.0              | 10000        |
 | BENCH1M     | kseq         | 1000000               | false                              | 1.0              | 10000        |
-| INDEX_EST   | k10          | 10                    | false                              | 100.0            | 1000         |
-| INDEX_EST   | k1k          | 632                   | false                              | 100.0            | 1000         |
-| INDEX_EST   | kseq         | 1000                  | false                              | 100.0            | 1000         |
-| INDEX_EST   | kuniq        | 1000                  | false                              | 100.0            | 1000         |
-| INDEX_EST   | kuniq_null   | 902                   | false                              | 100.0            | 1000         |
+| INDEX_EST   | k10          | 10                    | false                              | 50.0             | 5000         |
+| INDEX_EST   | k1k          | 992                   | true                               | 50.0             | 5000         |
+| INDEX_EST   | kseq         | 10000                 | false                              | 50.0             | 5000         |
+| INDEX_EST   | kuniq        | 10000                 | false                              | 50.0             | 5000         |
+| INDEX_EST   | kuniq_null   | 9902                  | false                              | 50.0             | 5000         |
 +-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select table_name, column_name, ordinal, start_value, value_count
@@ -735,11 +735,11 @@
 +-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
 | TABLE_NAME  | COLUMN_NAME  | DISTINCT_VALUE_COUNT  | IS_DISTINCT_VALUE_COUNT_ESTIMATED  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
 +-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
-| INDEX_EST   | k10          | 10                    | true                               | 25.0             | 170          |
-| INDEX_EST   | k1k          | 476                   | true                               | 25.0             | 170          |
-| INDEX_EST   | kseq         | 667                   | false                              | 25.0             | 170          |
-| INDEX_EST   | kuniq        | 667                   | false                              | 25.0             | 170          |
-| INDEX_EST   | kuniq_null   | 601                   | true                               | 25.0             | 170          |
+| INDEX_EST   | k10          | 10                    | true                               | 25.0             | 1670         |
+| INDEX_EST   | k1k          | 970                   | true                               | 25.0             | 1670         |
+| INDEX_EST   | kseq         | 6667                  | false                              | 25.0             | 1670         |
+| INDEX_EST   | kuniq        | 6667                  | false                              | 25.0             | 1670         |
+| INDEX_EST   | kuniq_null   | 6405                  | true                               | 25.0             | 1670         |
 +-------------+--------------+-----------------------+------------------------------------+------------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
