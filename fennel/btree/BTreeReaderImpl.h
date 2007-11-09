@@ -109,16 +109,16 @@ inline bool BTreeReader::searchForKeyTemplate(
             pageLock.lockPage(pageId,lockMode);
         }
         
-        BTreeNode const &node = pageLock.getNodeForRead();
+        BTreeNode const *pNode = &(pageLock.getNodeForRead());
 
         // TODO:  pull this out of loop
-        if (!node.height && !adjustRootLockMode(lockMode)) {
+        if (!pNode->height && !adjustRootLockMode(lockMode)) {
             // Retry with correct lock mode
             continue;
         }
         
         bool found;
-        uint iKeyBound = binarySearch(node,dupSeek,leastUpper,found);
+        uint iKeyBound = binarySearch(*pNode,dupSeek,leastUpper,found);
         if (foundKeyAndMovedRight && !found) {
             // if we previously located our desired key on the page to
             // the left of this one and had to search to the right because
@@ -133,15 +133,16 @@ inline bool BTreeReader::searchForKeyTemplate(
         // find an exact match, and we're positioned at the rightmost
         // key entry, need to search the first key in the right sibling
         // to be sure we have the correct glb
-        if (!leastUpper && !found && iKeyBound == node.nEntries - 1 &&
-            node.rightSibling != NULL_PAGE_ID)
+        if (!leastUpper && !found && iKeyBound == pNode->nEntries - 1 &&
+            pNode->rightSibling != NULL_PAGE_ID)
         {
             // not currently handling leaf lock coupling for reads,
             // which is the only time we're searching for glb
             assert(leafLockCoupling == false);
 
+            PageId siblingPageId = pNode->rightSibling;
             pageLock.unlock();
-            pageLock.lockPage(node.rightSibling, lockMode);
+            pageLock.lockPage(siblingPageId, lockMode);
             BTreeNode const &rightNode = pageLock.getNodeForRead();
             int res = compareFirstKey(rightNode);
 
@@ -158,40 +159,41 @@ inline bool BTreeReader::searchForKeyTemplate(
                 // original right sibling.  The key we want should then
                 // be the last entry on that node.
                 pageLock.lockPage(pageId, lockMode);
-                accessTupleInline(node, iKeyBound);
+                pNode = &(pageLock.getNodeForRead());
+                accessTupleInline(*pNode, iKeyBound);
             } else {
                 // switch over to the right sibling
-                pageId = node.rightSibling;
+                pageId = siblingPageId;
                 foundKeyAndMovedRight = false;
                 continue;
             }
         }
                 
-        if (iKeyBound == node.nEntries) {
+        if (iKeyBound == pNode->nEntries) {
             assert(!found || (dupSeek == DUP_SEEK_END));
             // What we're searching for is bigger than everything on
             // this node.
-            if (node.rightSibling == rightSearchTerminator) {
+            if (pNode->rightSibling == rightSearchTerminator) {
                 // No need to search rightward.  This should only
                 // happen at the leaf level (since we never delete keys from
                 // nodes, the upper bound should match at parent and child
                 // levels.)
-                assert(!node.height);
+                assert(!pNode->height);
                 if (rightSearchTerminator == NULL_PAGE_ID) {
                     singular = true;
                 }
             } else {
                 // have to search right
                 foundKeyAndMovedRight = found;
-                pageId = node.rightSibling;
-                if (leafLockCoupling && !node.height) {
+                pageId = pNode->rightSibling;
+                if (leafLockCoupling && !pNode->height) {
                     lockCoupling = true;
                 }
                 continue;
             }
         }
 
-        switch(node.height) {
+        switch(pNode->height) {
         case 0:
             // at leaf level
             iTupleOnLeaf = iKeyBound;
@@ -221,13 +223,13 @@ inline bool BTreeReader::searchForKeyTemplate(
         if ((*pSearchKey).size() == keyDescriptor.size() &&
             dupSeek != DUP_SEEK_END)
         {
-            if (iKeyBound < (node.nEntries - 1)) {
-                rightSearchTerminator = getChild(node,iKeyBound + 1);
+            if (iKeyBound < (pNode->nEntries - 1)) {
+                rightSearchTerminator = getChild(*pNode,iKeyBound + 1);
             } else {
                 // have to consult our own sibling to find the successor
                 // child
                 // need to get the pageId first, then unlock.
-                PageId rightSiblingPageId = node.rightSibling;
+                PageId rightSiblingPageId = pNode->rightSibling;
                 pageLock.unlock();
                 rightSearchTerminator = getFirstChild(rightSiblingPageId);
             }
