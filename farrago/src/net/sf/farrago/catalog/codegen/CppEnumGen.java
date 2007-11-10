@@ -92,6 +92,9 @@ public class CppEnumGen
             symbols.add(field.getName());
         }
 
+        // Force deterministic ordering
+        Collections.sort(symbols);
+
         pw.print("enum ");
         pw.print(enumName);
         pw.println(" {");
