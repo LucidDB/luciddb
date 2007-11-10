@@ -29,7 +29,7 @@
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "ContInteg Nitpick: ">
 <!ENTITY failureaddress   "the.team@disruptivetech.com">
-<!ENTITY emailmapper      "/home/cruise/work/bootstrap/p4email.txt">
+<!ENTITY emailmapper      "/home/cruise/work/p4email.txt">
 
 <!ENTITY reportwhenfixed  "true">
 
