@@ -95,6 +95,8 @@ struct ModifiedPageEntry
 };
 
 typedef boost::shared_ptr<ModifiedPageEntry> SharedModifiedPageEntry;
+
+// Use a shared pointer because the structure is dynamically allocated.
 typedef std::hash_map<PageId, SharedModifiedPageEntry> ModifiedPageEntryMap;
 typedef ModifiedPageEntryMap::const_iterator ModifiedPageEntryMapIter;
 
@@ -119,13 +121,13 @@ static const uint64_t DEALLOCATED_PAGE_OWNER_ID_MASK = 0x8000000000000000LL;
  * <p>When modifications are made to either VersionedExtentAllocationNodes
  * or SegmentAllocationNodes, the changes are reflected in pages originating
  * from a temporary segment.  The changes are only copied back to the permanent
- * segment when a transaction commits and thrown away on a rollback.
+ * segment when a transaction commits; changes are thrown away on a rollback.
  *
  * <p>Page deallocations are handled differently.  Deallocated pages are
  * not actually deallocated, but instead are marked as deallocation-deferred.
  * This makes the page unusable but not yet available for re-allocation.  A
  * deallocation-deferred page is deallocated by calling the methods
- * getOldPageIds() and deallocateOldpages().  The former finds pages that need
+ * getOldPageIds() and deallocateOldPages().  The former finds pages that need
  * to be deallocated, while the latter does the actual deallocation.  When the
  * deallocations are done, the modifications are made directly in the
  * permanent segment.  The two methods should be called in a loop, one after
@@ -147,13 +149,19 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
     /**
      * Mutex used to protect allocationNodeMap.  Multiple readers are allowed
      * but only a single writer.
+     *
+     * <p>In the case where both mapMutex and deallocationMutex need to be
+     * acquired, acquire mapMutex first.
      */
     SXMutex mapMutex;
 
     /**
-     * Mutex that prevents multiple deallocations from occuring concurrently
+     * Mutex that prevents multiple deallocations from occuring concurrently.
+     *
+     * <p>In the case where both mapMutex and deallocationMutex need to be
+     * acquired, acquire mapMutex first.
      */
-    SXMutex deallocationMutex;
+    StrictMutex deallocationMutex;
 
     /**
      * Segment used to allocate pages to store uncommitted modifications to
@@ -171,15 +179,21 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      *
      * @param origNodePageId pageId of the node in the permanent segment
      *
+     * @param isSegAllocNode true if the page being retrieved is a segment
+     * allocation node
+     *
      * @return pageId of node in the temporary segment
      */
     template <class AllocationLockT>
-    PageId getTempAllocNodePage(PageId origNodePageId);
+    PageId getTempAllocNodePage(PageId origNodePageId, bool isSegAllocNode);
 
     /**
      * Determines whether an allocation node page has been modified.  If it
      * has been, passes back the temporary pageId corresponding to the page.
      * Otherwise, the original pageId is passed back.
+     *
+     * <p>This method assumes that the caller has already acquired a shared
+     * mutex on allocationNodeMap.
      *
      * @param origAllocNodePageId pageId of the node in the permanent segment
      *
@@ -210,7 +224,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      * away.
      *
      * <p>This method assumes that the caller has already acquired an exclusive
-     * mutex on the page map.
+     * mutex on allocationNodeMap.
      *
      * @param iSegAlloc 0-based index of containing SegmentAllocationNode
      *
@@ -251,7 +265,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
 
     /**
      * Allocates a new VersionedExtentAllocationNode if it hasn't been 
-     * allocated yet.  If extent nodes preceeding the one that needs to be
+     * allocated yet.  If extent nodes preceding the one that needs to be
      * allocated haven't been allocated either, those are allocated as well.
      *
      * @param [in] segAllocNode SegmentAllocationNode containing the extent
@@ -271,7 +285,10 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
     /**
      * Updates a page entry by either copying a page entry from the temporary
      * segment to the permanent one if we're committing the page entry, or
-     * the reverse if we're rolling it back
+     * the reverse if we're rolling it back.
+     *
+     * <p>This method assumes that the caller has already acquired an exclusive
+     * mutex on allocationNodeMap.
      *
      * @param pageId pageId of the page entry
      *
@@ -286,10 +303,10 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      * if the pageEntry corresponds to a page allocation; otherwise, set to
      * NULL_TXN_ID
      *
+     * @param commit true if the updates correspond to a commit
+     *
      * @param pOrigSegment the originating segment that modified the page
      * entry that needs to be updated
-     *
-     * @param commit true if the updates correspond to a commit
      */
     void updatePageEntry(
         PageId pageId,
@@ -301,7 +318,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
         SharedSegment pOrigSegment);
 
     /**
-     * Copies a page entry from the temporary segment to the permanent one
+     * Copies a page entry from the temporary segment to the permanent one.
      *
      * @param pageId pageId of the page entry
      *
@@ -328,7 +345,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
         PageOwnerId ownerId);
 
     /**
-     * Copies a page entry from the permanent segment to the temporary one
+     * Copies a page entry from the permanent segment to the temporary one.
      *
      * @param origPageId pageId of the extent page in the permanent segment
      *
@@ -344,7 +361,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
     /**
      * Sanity checks the unallocated page count in a SegmentAllocationNode
      * against the pages marked as unallocated in the corresponding 
-     * VersionedExtentAllocationNode
+     * VersionedExtentAllocationNode.
      *
      * @param pageId pageId corresponding to the allocation nodes to be
      * verified
@@ -358,7 +375,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      * all temporary updates to the page have either committed or rolled back.
      *
      * <p>This method assumes the caller has already acquired an exclusive
-     * mutex on the page map.
+     * mutex on allocationNodeMap.
      *
      * @param origAllocNodePageId pageId of the original allocation node
      * corresponding to the one being freed
@@ -420,6 +437,9 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
     /**
      * Deallocates a single page and also discards it from the cache.
      *
+     * <p>This method assumes that the caller has already acquired an exclusive
+     * mutex on allocationNodeMap.
+     *
      * @param pageId pageId of the page to be deallocated
      *
      * @param [in, out] deallocatedPageSet set of pageIds deallocated
@@ -429,7 +449,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
         std::hash_set<PageId> &deallocatedPageSet);
 
     /**
-     * Deallocates all old pages in a page chain
+     * Deallocates all old pages in a page chain.
      *
      * @param anchorPageId pageId of the anchor page in the page chain
      *
@@ -446,7 +466,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
 
     /**
      * Walks a page chain and ensures that all pages in the chain are allocated
-     * pages
+     * pages.
      *
      * @param anchorPageId the pageId of the anchor page in the chain
      *
@@ -456,14 +476,12 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
 
     /**
      * Determines if a page chain is in the process of being marked
-     * deallocation-deferred and has not yet been committed
+     * deallocation-deferred and has not yet been committed.
+     *
+     * <p>This method assumes that the caller has already acquired an exclusive
+     * mutex on allocationNodeMap.
      *
      * @param anchorPageId pageId of the anchor page in a chain
-     *
-     * @param extentPageId pageId of the extent allocation node containing the
-     * anchor's page entry
-     *
-     * @param iPageInExtent 0-based index of page in extent
      *
      * @param [in, out] deallocatedPageSet set of pages that have been
      * deallocated or need to be skipped
@@ -473,14 +491,12 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      */
     bool uncommittedDeallocation(
         PageId anchorPageId,
-        PageId extentPageId,
-        BlockNum iPageInExtent,
         std::hash_set<PageId> &deallocatedPageSet);
 
     /**
      * Adds all pages in a page chain corresponding to deallocation-deferred
      * pages to the set of pages that have been deallocated so we'll skip
-     * over them
+     * over them.
      *
      * @param pageId pageId of a page in the chain
      *
@@ -492,18 +508,17 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
         std::hash_set<PageId> &deallocatedPageSet);
 
     /**
-     * Updates a page entry in the temporary segment, if it exists
+     * Updates a page entry in the temporary segment, if it exists.
      *
-     * @param extentPageId pageId of the VersionedExtentAllocationNode page
-     * containing the page entry
+     * <p>This method assumes that the caller has already acquired an exclusive
+     * mutex on allocationNodeMap.
      *
-     * @param iPageInExtent 0-based index of page in extent
+     * @param pageId of the page entry that needs to be updated
      *
      * @param [in] pageEntry source page entry
      */
     void updateTempPageEntry(
-        PageId extentPageId,
-        BlockNum iPageInExtent,
+        PageId pageId,
         VersionedPageEntry const &pageEntry);
 
     /**
@@ -525,7 +540,30 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
     bool isPageIdAllocateCommitted(PageId pageId);
 
     /**
-     * Constructs a pageOwnerId corresponding to a deallocation-deferred page
+     * Chains one page to another, updating either the corresponding permanent
+     * page entry or the temporary one.  Also may set the successorId of the
+     * first page.
+     *
+     * @param pageId the pageId of the page that will be chained to the page
+     * corresponding to the second parameter
+     *
+     * @param versionChainId the pageId of the page to be chained from the
+     * first parameter
+     *
+     * @param successorId if not set to NULL_PAGE_ID, the successorId of the
+     * pageEntry corresponding to the first parameter is set
+     *
+     * @param thisSegment if true, make updates in the permanent page entry
+     * rather than the temporary one
+     */
+    void chainPageEntries(
+        PageId pageId,
+        PageId versionChainId,
+        PageId successorId,
+        bool thisSegment);
+
+    /**
+     * Constructs a pageOwnerId corresponding to a deallocation-deferred page.
      *
      * @param txnId the id of the txn that deallocated the page
      *
@@ -535,7 +573,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
 
     /**
      * Determines whether a pageOwnerId corresponds to a deallocation-deferred
-     * page
+     * page.
      *
      * @param pageOwnerId the pageOwnerId under question
      *
@@ -546,7 +584,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
 
     /**
      * Extracts the id corresponding to the txn that deallocated a page from
-     * the page's pageOwnerId
+     * the page's pageOwnerId.
      *
      * @param pageOwnerId the pageOwnerId of the deallocated page
      *
@@ -599,7 +637,7 @@ public:
         VersionedPageEntry &pageEntryCopy);
 
     /**
-     * Initializes the versioning fields in a pageEntry for a specified page
+     * Initializes the versioning fields in a pageEntry for a specified page.
      *
      * @param pageId pageId of the page whose PageEntry we are setting
      *
@@ -613,7 +651,8 @@ public:
         TxnId allocationCsn);
 
     /**
-     * Chains one page to another.  Also may set the successorId of the first
+     * Chains one page to another, updating the corresponding page entry in
+     * the temp segment page.  Also may set the successorId of the first
      * page.
      *
      * @param pageId the pageId of the page that will be chained to the page
@@ -633,7 +672,7 @@ public:
     /**
      * Updates the permanent allocation nodes to reflect changes currently
      * in the temporary segment, or vice versa if the updates correspond
-     * to a rollback
+     * to a rollback.
      *
      * @param modifiedPageEntryMap map containing information on page entries
      * that have been modified
@@ -642,10 +681,10 @@ public:
      * if the pageEntry corresponds to a page allocation; otherwise, set to
      * NULL_TXN_ID
      *
+     * @param commit true if the updates correspond to a commit
+     *
      * @param pOrigSegment the originating segment that modified the allocation
      * nodes that need to be updated
-     *
-     * @param commit true if the updates correspond to a commit
      */
     void updateAllocNodes(
         ModifiedPageEntryMap const &modifiedPageEntryMap,
@@ -656,7 +695,7 @@ public:
     /**
      * Retrieves a batch of pageIds corresponding either to old snapshot
      * pages that are no longer being referenced or pages marked for
-     * deallocation.  The number of pageIds returned must at least be some
+     * deallocation.  The number of pageIds returned must be at least some
      * value as specified by an input parameter, unless there are no more
      * pages left to deallocate.  The old pages are located starting at a
      * location specified by the index of a SegmentAllocationNode and the
@@ -710,6 +749,14 @@ public:
      * used as the threshhold for determining which pages should be deallocated
      */
     void deallocateOldPages(PageSet const &oldPageSet, TxnId oldestActiveTxnId);
+
+    /**
+     * Frees any of the remaining temp pages that were used to keep track of
+     * allocation node updates.  All of the remaining pages should correspond
+     * to segment allocation nodes, since extent allocation node pages are
+     * freed once they no longer contain any pending updates.
+     */
+    void freeTempPages();
 
     // implementation of Segment interface
     virtual bool isPageIdAllocated(PageId pageId);

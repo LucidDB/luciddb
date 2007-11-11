@@ -55,7 +55,7 @@
 @thread truncate
     set schema 'rwconcur';
   @sync
-    @sleep 200
+    @sleep 2000
     truncate table lineitem;
   @sync
     select count(*) from lineitem;

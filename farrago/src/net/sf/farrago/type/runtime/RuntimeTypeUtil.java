@@ -55,8 +55,8 @@ public class RuntimeTypeUtil
         "[:space:]", " ",
         "[:WHITESPACE:]", "\\s",
         "[:whitespace:]", "\\s",
-        "[:ALNUM:]", "\\p{alnum}",
-        "[:alnum:]", "\\p{alnum}"
+        "[:ALNUM:]", "\\p{Alnum}",
+        "[:alnum:]", "\\p{Alnum}"
     };
 
     //~ Methods ----------------------------------------------------------------

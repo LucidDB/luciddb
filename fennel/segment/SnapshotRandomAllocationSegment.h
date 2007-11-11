@@ -59,15 +59,30 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
      */
     PageMap snapshotPageMap;
 
+    // NOTE jvs 23-Oct-2007: Both of these mutexes could become hotspots for
+    // read-only access in a parallel query executor.  May need a C++
+    // equivalent for ConcurrentHashMap.  Note that even SXMutex requires
+    // briefly taking a StrictMutex under the covers.  Alternatively,
+    // we could keep this class unchanged and then arrange for each
+    // thread to get its own instance (maintaining its own private cache).
+    
     /**
      * Mutex that ensures only a single thread is modifying modPageEntriesMap.
      * It also ensures that the map is in sync with the allocations and
      * deallocations in the underlying VersionedRandomAllocationSegment.
+     *
+     * <p>
+     * In cases where both modPageMapMutex and snapshotPageMapMutex need to
+     * be acquired, modPageMapMutex should be acquired first.
      */
     SXMutex modPageMapMutex;
 
     /**
-     * Mutex protecting the snapshotPageMap
+     * Mutex protecting the snapshotPageMap.
+     *
+     * <p>
+     * In cases where both modPageMapMutex and snapshotPageMapMutex need to
+     * be acquired, modPageMapMutex should be acquired first.
      */
     StrictMutex snapshotPageMapMutex;
 
@@ -96,7 +111,7 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
 
     /**
      * Retrieves the pageId corresponding to this segment's snapshot of a
-     * specified page
+     * specified page.
      *
      * @param pageId pageId of the desired page
      *
@@ -126,7 +141,7 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
         ModifiedPageEntry::ModType modType);
 
     /**
-     * Retrieves the pageId of the anchor page corresponding to a snapshot page
+     * Retrieves the pageId of the anchor page corresponding to a snapshot page.
      *
      * @param snapshotId the pageId of the snapshot page
      *
@@ -135,7 +150,7 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
     PageId getAnchorPageId(PageId snapshotId);
 
     /**
-     * Determines whether a snapshot page corresponds to a newly allocated one
+     * Determines whether a snapshot page corresponds to a newly allocated one.
      *          
      * @param pageId pageId of the page in question
      *
@@ -168,14 +183,14 @@ public:
         TxnId snapshotCsnInit);
 
     /**
-     * Commit page entry changes 
+     * Commits page entry changes.
      *
      * @param commitCsn sequence number to write into pageEntry's on commit
      */
     void commitChanges(TxnId commitCsn);
 
     /**
-     * Rollback page entry changes
+     * Rolls back page entry changes.
      */
     void rollbackChanges();
 
@@ -186,7 +201,7 @@ public:
      * @param destAnchorPageId pageId of the anchor page of the destination
      * page chain
      *
-     * @param srcArchorPageid pageId of the anchor page of the source page chain
+     * @param srcAnchorPageId pageId of the anchor page of the source page chain
      */
     void versionPage(PageId destAnchorPageId, PageId srcAnchorPageId);
 

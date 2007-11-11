@@ -56,22 +56,6 @@ public class LhxAggRel
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * @deprecated not used in green or red DT code
-     */
-    public LhxAggRel(
-        RelOptCluster cluster,
-        RelNode child,
-        int groupCount,
-        AggregateCall[] aggCalls,
-        long numInputRows,
-        long cndGroupByKey)
-    {
-        this(
-            cluster, child, groupCount, Arrays.asList(aggCalls), numInputRows,
-            cndGroupByKey);
-    }
-
-    /**
      * Creates a LhxAggRel.
      *
      * @param cluster Cluster

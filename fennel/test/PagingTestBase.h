@@ -162,6 +162,8 @@ public:
     /**
      * Carries out an operation on every "n" pages, starting at page 0
      *
+     * @param opType see testOp
+     *
      * @param n the offset between each page
      */
     void testSkipOp(OpType opType, uint n);

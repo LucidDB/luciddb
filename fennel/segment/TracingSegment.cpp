@@ -36,7 +36,7 @@ TracingSegment::TracingSegment(
     SharedTraceTarget pTraceTarget,
     std::string sourceName)
     : DelegatingSegment(pDelegateSegment),
-      TraceSource(pTraceTarget,"segment."+sourceName)
+      TraceSource(pTraceTarget,sourceName)
 {
     FENNEL_TRACE(TRACE_FINE,"constructor");
 }
@@ -204,6 +204,13 @@ MappedPageListener *TracingSegment::notifyAfterPageCheckpointFlush(
                 page.getBlockId() << " = " << std::hex << pListener);
         return pListener->getTracingListener();
     }
+}
+
+bool TracingSegment::isWriteVersioned()
+{
+    bool b = getDelegateSegment()->isWriteVersioned();
+    FENNEL_TRACE(TRACE_FINEST,"isWriteVersioned returns " << b);
+    return b;
 }
 
 FENNEL_END_CPPFILE("$Id$");

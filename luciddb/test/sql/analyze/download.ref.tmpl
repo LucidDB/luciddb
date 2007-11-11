@@ -75,13 +75,13 @@
 . . . . . . . . >         case "kseq" < 100 when true then null else "kseq" end,
 . . . . . . . . >         "k10",
 . . . . . . . . >         "k1k"
-. . . . . . . . >     from bench1k;
+. . . . . . . . >     from bench10k;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from index_est;
 +---------+
 | EXPR$0  |
 +---------+
-| 1000    |
+| 10000   |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

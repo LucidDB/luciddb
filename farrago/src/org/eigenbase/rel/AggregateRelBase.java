@@ -78,14 +78,6 @@ public abstract class AggregateRelBase
     }
 
     /**
-     * @deprecated Use {@link #getAggCallList()}; no usages in green or DT red code
-     */
-    public AggregateCall[] getAggCalls()
-    {
-        return aggCalls.toArray(new AggregateCall[aggCalls.size()]);
-    }
-
-    /**
      * Returns a list of calls to aggregate functions.
      *
      * @return list of calls to aggregate functions
@@ -228,24 +220,6 @@ public abstract class AggregateRelBase
     }
 
     //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * @deprecated remove when lucidera code uses this
-     */
-    public static class Call extends AggregateCall {
-
-        /**
-         * @deprecated
-         */
-        public Call(
-            Aggregation aggregation,
-            boolean distinct,
-            int[] args,
-            RelDataType type)
-        {
-            super(aggregation, distinct, IntList.asList(args), type, null);
-        }
-    }
 
     /**
      * Implementation of the {@link SqlOperatorBinding} interface for an {@link

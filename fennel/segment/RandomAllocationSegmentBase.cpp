@@ -152,18 +152,25 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
     PageId origSegAllocPageId = getFirstSegAllocPageId();
     PageId segAllocPageId = getSegAllocPageIdForWrite(origSegAllocPageId);
     for (uint iSegAlloc = 0; ; ++iSegAlloc) {
-        // note that we access the node for write, even though we may not
-        // actually update it
+        
+        // Initially access the node for read because we may not actually
+        // update it if all extents in the node are full.  Once we need
+        // to update the node, we'll acquire a writable node.
         segAllocLock.lockExclusive(segAllocPageId);
-        SegmentAllocationNode &segAllocNode = segAllocLock.getNodeForWrite();
+        SegmentAllocationNode const &readOnlySegAllocNode =
+            segAllocLock.getNodeForRead();
 
         // check each extent
-        for (uint i = 0; i < segAllocNode.nExtents; ++i, ++extentNum) {
-            SegmentAllocationNode::ExtentEntry &extentEntry =
-                segAllocNode.getExtentEntry(i);
-            if (extentEntry.nUnallocatedPages) {
-                // found one
-                extentEntry.nUnallocatedPages--;
+        for (uint i = 0; i < readOnlySegAllocNode.nExtents; ++i, ++extentNum) {
+            SegmentAllocationNode::ExtentEntry const &readOnlyExtentEntry =
+                readOnlySegAllocNode.getExtentEntry(i);
+            if (readOnlyExtentEntry.nUnallocatedPages) {
+                // found one, so get a writable node
+                SegmentAllocationNode &writableSegAllocNode =
+                    segAllocLock.getNodeForWrite();
+                SegmentAllocationNode::ExtentEntry &writableExtentEntry =
+                    writableSegAllocNode.getExtentEntry(i);
+                writableExtentEntry.nUnallocatedPages--;
                 // explicit unlock to minimize contention window and avoid
                 // deadlock with deallocatePageId; this is like a Southwest
                 // airlines reservation: we've got a flight reserved, not a
@@ -174,13 +181,13 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
             }
         }
 
-        if (segAllocNode.nextSegAllocPageId != NULL_PAGE_ID) {
+        if (readOnlySegAllocNode.nextSegAllocPageId != NULL_PAGE_ID) {
             // since there's no space on the current SegAllocNode, indicate
-            // that we haven't modified it
+            // that we haven't allocated any new pages from it
             undoSegAllocPageWrite(origSegAllocPageId);
 
             // try next SegAllocNode
-            origSegAllocPageId = segAllocNode.nextSegAllocPageId;
+            origSegAllocPageId = readOnlySegAllocNode.nextSegAllocPageId;
             segAllocPageId = getSegAllocPageIdForWrite(origSegAllocPageId);
             continue;
         }
@@ -189,7 +196,7 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
         // anyone else from trying to do the same thing at the same time.  So
         // hold onto segAllocLock during this process.
 
-        if (segAllocNode.nExtents < nExtentsPerSegAlloc) {
+        if (readOnlySegAllocNode.nExtents < nExtentsPerSegAlloc) {
             // Try to allocate a new extent.  The parameters to makePageNum
             // request just enough space to fit one more extent within the
             // current SegAllocNode.
@@ -206,19 +213,23 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
                 throw;
             }
 
-            segAllocNode.nExtents++;
-            SegmentAllocationNode::ExtentEntry &extentEntry =
-                segAllocNode.getExtentEntry(segAllocNode.nExtents - 1);
+            // acquire a writable node now that we're actually updating it
+            SegmentAllocationNode &writableSegAllocNode =
+                segAllocLock.getNodeForWrite();
+            writableSegAllocNode.nExtents++;
+            SegmentAllocationNode::ExtentEntry &writableExtentEntry =
+                writableSegAllocNode.getExtentEntry(
+                    writableSegAllocNode.nExtents - 1);
             
             // -2 = -1 for extent allocation node, -1 for page we're
             // about to allocate
-            extentEntry.nUnallocatedPages = nPagesPerExtent - 2;
+            writableExtentEntry.nUnallocatedPages = nPagesPerExtent - 2;
             
             return allocateFromNewExtent(extentNum, ownerId);
         }
 
         // since there's no space on the current SegAllocNode, indicate
-        // that we haven't modified it
+        // that we haven't allocated any pages from its extents
         undoSegAllocPageWrite(origSegAllocPageId);
 
         // Have to allocate a whole new SegAllocNode.  The parameters to
@@ -240,7 +251,11 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
         newNode.nPagesPerExtent = nPagesPerExtent;
         newNode.nExtents = 0;
         newNode.nextSegAllocPageId = NULL_PAGE_ID;
-        segAllocNode.nextSegAllocPageId = origSegAllocPageId;
+
+        // acquire a writable node to update the next page pointer
+        SegmentAllocationNode &writableSegAllocNode =
+            segAllocLock.getNodeForWrite();
+        writableSegAllocNode.nextSegAllocPageId = origSegAllocPageId;
 
         // Carry on with the loop.  We'll unlock and relock the node just
         // allocated, but that's not a big deal since allocating a new
