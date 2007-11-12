@@ -53,22 +53,22 @@ public class LucidDbSqlValidator
         SqlOperatorTable opTab,
         SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory,
-        Compatible compatible,
+        SqlConformance conformance,
         FarragoPreparingStmt preparingStmt)
     {
         super(
             opTab,
             catalogReader,
             typeFactory,
-            compatible,
+            conformance,
             preparingStmt);
     }
 
     public LucidDbSqlValidator(
         FarragoPreparingStmt preparingStmt,
-        Compatible compatible)
+        SqlConformance conformance)
     {
-        super(preparingStmt, compatible);
+        super(preparingStmt, conformance);
     }
 
     //~ Methods ----------------------------------------------------------------

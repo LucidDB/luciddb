@@ -20,8 +20,12 @@
 */
 package com.disruptivetech.farrago.sql.advise;
 
+import java.util.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -39,10 +43,21 @@ import org.eigenbase.util.*;
 public class SqlAdvisorValidator
     extends SqlValidatorImpl
 {
+    private final Set<SqlValidatorNamespace> activeNamespaces =
+        new HashSet<SqlValidatorNamespace>();
+
+    private final RelDataType emptyStructType =
+        SqlTypeUtil.createEmptyStructType(typeFactory);
+
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a SqlAdvisor validator.
+     *
+     * @param opTab          Operator table
+     * @param catalogReader  Catalog reader
+     * @param typeFactory    Type factory
+     * @param conformance     Compatibility mode
      *
      * @pre opTab != null
      * @pre // node is a "query expression" (per SQL standard)
@@ -53,26 +68,42 @@ public class SqlAdvisorValidator
         SqlOperatorTable opTab,
         SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory,
-        Compatible compatible)
+        SqlConformance conformance)
     {
-        super(opTab, catalogReader, typeFactory, compatible);
+        super(opTab, catalogReader, typeFactory, conformance);
     }
 
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Registers all the SqlIdentifiers in this parse tree into a map keyed by
-     * their respective ParserPostion. Performs the same for the associated
-     * scopes
-     *
-     * @param id
-     * @param scope
+     * Registers the identifier and its scope into a map keyed by
+     * ParserPostion.
      */
     public void validateIdentifier(SqlIdentifier id, SqlValidatorScope scope)
     {
-        String ppstring = id.getParserPosition().toString();
-        sqlIds.put(ppstring, id);
-        idScopes.put(ppstring, scope);
+        registerId(id, scope);
+        try {
+            super.validateIdentifier(id, scope);
+        } catch (EigenbaseException e) {
+            Util.swallow(e, tracer);
+        }
+    }
+
+    private void registerId(SqlIdentifier id, SqlValidatorScope scope)
+    {
+        for (int i = 0; i < id.names.length; i++) {
+            final SqlParserPos subPos = id.getComponentParserPosition(i);
+            final List<String> nameList = Arrays.asList(id.names);
+            SqlIdentifier subId =
+                i == id.names.length - 1
+                    ? id
+                    : new SqlIdentifier(
+                    nameList.subList(0, i + 1).toArray(new String[i]),
+                    subPos);
+            idPositions.put(
+                subPos.toString(),
+                new IdInfo(scope, subId));
+        }
     }
 
     public SqlNode expand(SqlNode expr, SqlValidatorScope scope)
@@ -114,12 +145,17 @@ public class SqlAdvisorValidator
 
     // we do not need to validate from clause for traversing the parse tree
     // because there is no SqlIdentifier in from clause that need to be
-    // registered into sqlIds map
+    // registered into {@link #idPositions} map
     protected void validateFrom(
         SqlNode node,
         RelDataType targetRowType,
         SqlValidatorScope scope)
     {
+        try {
+            super.validateFrom(node, targetRowType, scope);
+        } catch (EigenbaseException e) {
+            Util.swallow(e, tracer);
+        }
     }
 
     /**
@@ -130,6 +166,7 @@ public class SqlAdvisorValidator
         try {
             super.validateWhereClause(select);
         } catch (EigenbaseException e) {
+            Util.swallow(e, tracer);
         }
     }
 
@@ -141,8 +178,20 @@ public class SqlAdvisorValidator
         try {
             super.validateHavingClause(select);
         } catch (EigenbaseException e) {
+            Util.swallow(e, tracer);
+        }
+    }
+
+    protected void validateNamespace(final SqlValidatorNamespace namespace)
+    {
+        // Only attempt to validate each namespace once. Otherwise if
+        // validation fails, we may end up cycling.
+        if (activeNamespaces.add(namespace)) {
+            super.validateNamespace(namespace);
+        } else {
+            namespace.setRowType(emptyStructType);
         }
     }
 }
 
-// End of SqlAdvisorValidator.java
+// End SqlAdvisorValidator.java

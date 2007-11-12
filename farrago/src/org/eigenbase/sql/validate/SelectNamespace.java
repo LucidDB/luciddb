@@ -21,12 +21,9 @@
 */
 package org.eigenbase.sql.validate;
 
-import java.util.*;
-
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -55,7 +52,8 @@ public class SelectNamespace
 
     //~ Methods ----------------------------------------------------------------
 
-    public SqlNode getNode()
+    // implement SqlValidatorNamespace, overriding return type
+    public SqlSelect getNode()
     {
         return select;
     }
@@ -64,11 +62,6 @@ public class SelectNamespace
     {
         validator.validateSelect(select, validator.unknownType);
         return rowType;
-    }
-
-    public void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList)
-    {
-        validator.lookupSelectHints(select, pos, hintList);
     }
 
     public SqlMonotonicity getMonotonicity(String columnName)

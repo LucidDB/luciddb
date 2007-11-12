@@ -612,7 +612,12 @@ public class SqlToOpenjavaConverter
             return null;
         }
 
-        public SqlMoniker [] getAllSchemaObjectNames(String [] names)
+        public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public String getSchemaName()
         {
             throw new UnsupportedOperationException();
         }

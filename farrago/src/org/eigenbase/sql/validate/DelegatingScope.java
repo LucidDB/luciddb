@@ -107,30 +107,15 @@ public abstract class DelegatingScope
         }
     }
 
-    protected void addTableNames(
-        SqlValidatorNamespace ns,
-        List<SqlMoniker> tableNames)
-    {
-        SqlValidatorTable table = ns.getTable();
-        if (table == null) {
-            return;
-        }
-        String [] qnames = table.getQualifiedName();
-        if (qnames != null) {
-            tableNames.add(new SqlMonikerImpl(qnames, SqlMonikerType.Table));
-        }
-    }
-
     public void findAllColumnNames(
-        String parentObjName,
         List<SqlMoniker> result)
     {
-        parent.findAllColumnNames(parentObjName, result);
+        parent.findAllColumnNames(result);
     }
 
-    public void findAllTableNames(List<SqlMoniker> result)
+    public void findAliases(List<SqlMoniker> result)
     {
-        parent.findAllTableNames(result);
+        parent.findAliases(result);
     }
 
     public String findQualifyingTableName(String columnName, SqlNode ctx)

@@ -150,7 +150,7 @@ public class DdlAnalyzeStmt
      * @param session reentrant session
      *
      * @throws RuntimeException if the specified table cannot be analyzed
-     * @throws SQLExceptoin if there is an error executing the SQL necessary
+     * @throws SQLException if there is an error executing the SQL necessary
      *                      for statistics generation
      */
     private void analyzeTable(

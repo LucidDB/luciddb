@@ -23,17 +23,14 @@
 package org.eigenbase.test;
 
 import java.io.*;
-
 import java.lang.reflect.*;
-
-import java.nio.charset.*;
-
+import java.nio.charset.Charset;
 import java.util.*;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -133,9 +130,10 @@ public class SqlTestGen
             this.pw = pw;
         }
 
-        public SqlValidatorTestCase.Tester getTester()
+        public SqlValidatorTestCase.Tester getTester(
+            SqlConformance conformance)
         {
-            return new TesterImpl() {
+            return new TesterImpl(conformance) {
                 public SqlValidator getValidator()
                 {
                     throw new UnsupportedOperationException();

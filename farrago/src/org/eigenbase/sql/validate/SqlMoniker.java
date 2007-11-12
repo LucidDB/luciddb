@@ -49,6 +49,8 @@ public interface SqlMoniker
      * Creates a {@link SqlIdentifier} containing the fully-qualified name.
      */
     SqlIdentifier toIdentifier();
+
+    String id();
 }
 
 // End SqlMoniker.java

@@ -122,7 +122,7 @@ public class SqlToRelTestBase
         /**
          * Returns the SQL dialect to test.
          */
-        SqlValidator.Compatible getCompatible();
+        SqlConformance getConformance();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -448,9 +448,9 @@ public class SqlToRelTestBase
             return sqlNode;
         }
 
-        public SqlValidator.Compatible getCompatible()
+        public SqlConformance getConformance()
         {
-            return SqlValidator.Compatible.Default;
+            return SqlConformance.Default;
         }
 
         public SqlValidator createValidator(
@@ -461,7 +461,7 @@ public class SqlToRelTestBase
                 getOperatorTable(),
                 new MockCatalogReader(typeFactory),
                 typeFactory,
-                getCompatible());
+                getConformance());
         }
 
         public final SqlOperatorTable getOperatorTable()
@@ -495,27 +495,19 @@ public class SqlToRelTestBase
     private static class FarragoTestValidator
         extends SqlValidatorImpl
     {
-        private final Compatible compatible;
-
         public FarragoTestValidator(
             SqlOperatorTable opTab,
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory,
-            Compatible compatible)
+            SqlConformance conformance)
         {
-            super(opTab, catalogReader, typeFactory, compatible);
-            this.compatible = compatible;
+            super(opTab, catalogReader, typeFactory, conformance);
         }
 
         // override SqlValidator
         public boolean shouldExpandIdentifiers()
         {
             return true;
-        }
-
-        public Compatible getCompatible()
-        {
-            return compatible;
         }
     }
 }

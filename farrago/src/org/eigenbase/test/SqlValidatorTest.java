@@ -4996,7 +4996,7 @@ public class SqlValidatorTest
 
     public void testOrder()
     {
-        final SqlValidator.Compatible compatible = getCompatible();
+        final SqlConformance conformance = tester.getConformance();
         check("select empno as x from emp order by empno");
 
         // invalid use of 'asc'
@@ -5011,7 +5011,7 @@ public class SqlValidatorTest
             "select empno as x from emp order by empno",
 
             // in sql92, empno is obscured by the alias
-            compatible.isSortByAliasObscures() ? "unknown column empno" :
+            conformance.isSortByAliasObscures() ? "unknown column empno" :
             // otherwise valid
             null);
 
@@ -5019,7 +5019,7 @@ public class SqlValidatorTest
             "select empno as x from emp order by ^x^",
 
             // valid in oracle and pre-99 sql
-            compatible.isSortByAlias() ? null
+            conformance.isSortByAlias() ? null
             :
             // invalid in sql:2003
             "Column 'X' not found in any table");
@@ -5028,7 +5028,7 @@ public class SqlValidatorTest
             "select empno as x from emp order by ^10^",
 
             // invalid in oracle and pre-99
-            compatible.isSortByOrdinal() ? "Ordinal out of range" :
+            conformance.isSortByOrdinal() ? "Ordinal out of range" :
             // valid from sql:99 onwards (but sorting by constant achieves
             // nothing!)
             null);
@@ -5050,7 +5050,7 @@ public class SqlValidatorTest
             // Alias 'deptno' is closer in scope than 'emp.deptno'
             // and 'dept.deptno', and is therefore not ambiguous.
             // Checked Oracle10G -- it is valid.
-            compatible.isSortByAlias() ? null :
+            conformance.isSortByAlias() ? null :
             // Ambiguous in SQL:2003
             "col ambig");
 
@@ -5074,7 +5074,7 @@ public class SqlValidatorTest
             + "order by ^10^",
 
             // invalid in oracle and pre-99
-            compatible.isSortByOrdinal() ? "Ordinal out of range" : null);
+            conformance.isSortByOrdinal() ? "Ordinal out of range" : null);
 
         // Sort by scalar subquery
         check(
@@ -5140,7 +5140,7 @@ public class SqlValidatorTest
 
         // ordinal out of range -- if 'order by <ordinal>' means something in
         // this dialect
-        if (getCompatible().isSortByOrdinal()) {
+        if (tester.getConformance().isSortByOrdinal()) {
             checkFails(
                 "select empno, sal from emp "
                 + "union all "
@@ -5217,7 +5217,7 @@ public class SqlValidatorTest
             + "from emp "
             + "group by empno, deptno "
             + "order by empno * sum(sal + 2)",
-            getCompatible().isSortByAliasObscures() ? "xxxx" : null);
+            tester.getConformance().isSortByAliasObscures() ? "xxxx" : null);
     }
 
     public void testGroup()

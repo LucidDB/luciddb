@@ -561,7 +561,11 @@ public class SqlWindowOperator
     private static boolean isTableSorted(SqlValidatorScope scope)
     {
         List<SqlMoniker> columnNames = new ArrayList<SqlMoniker>();
-        scope.findAllColumnNames(null, columnNames);
+
+        // REVIEW: jhyde, 2007/11/7: This is the only use of
+        // findAllColumnNames. Find a better way to detect monotonicity, then
+        // remove that method.
+        scope.findAllColumnNames(columnNames);
         for (SqlMoniker columnName : columnNames) {
             SqlIdentifier columnId = columnName.toIdentifier();
             final SqlMonotonicity monotonicity =
