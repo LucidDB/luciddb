@@ -319,6 +319,34 @@ public class DdlRelationalHandler
 
         RelDataType rowType = analyzedSql.resultType;
 
+        // We would prefer to use the original SQL, if it is sufficiently
+        // similar. We require that (a) it gives no validation error, (b) it
+        // produces the same result type.
+        String originalSql = view.getOriginalDefinition();
+        if (originalSql != null) {
+            FarragoSessionAnalyzedSql analyzedOriginalSql;
+            try {
+                analyzedOriginalSql =
+                    session.analyzeSql(
+                        originalSql,
+                        validator.getTypeFactory(),
+                        null,
+                        false);
+                if (analyzedOriginalSql.canonicalString.equals(
+                    analyzedSql.canonicalString)
+                    || analyzedOriginalSql.resultType.equals(
+                    analyzedSql.resultType))
+                {
+                    sql = originalSql;
+                    analyzedSql = analyzedOriginalSql;
+                }
+            } catch (RuntimeException ex) {
+                // validation errors indicate that we will just have to use the
+                // canonical SQL
+                Util.swallow(ex, null);
+            }
+        }
+
         List<CwmFeature> columnList = view.getFeature();
         boolean implicitColumnNames = true;
 
@@ -342,7 +370,6 @@ public class DdlRelationalHandler
         }
 
         // Derive column information from result set metadata
-        FarragoTypeFactory typeFactory = validator.getTypeFactory();
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
             FemViewColumn column;
