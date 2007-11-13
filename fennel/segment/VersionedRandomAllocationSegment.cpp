@@ -1061,7 +1061,9 @@ void VersionedRandomAllocationSegment::deallocatePageChain(
         if (pageEntry.allocationCsn < deallocationCsn) {
             
             // Deallocate the page entry and chain the previous page
-            // entry to the page chained from the deallocated entry
+            // entry to the page chained from the deallocated entry.
+            // All of this is being done in the permanent page entry.
+            // The temporary entry will be updated below.
             deallocateSinglePage(nextPageId, deallocatedPageSet);
             nextPageId = pageEntry.versionChainPageId;
             chainPageEntries(
@@ -1069,6 +1071,7 @@ void VersionedRandomAllocationSegment::deallocatePageChain(
                 nextPageId,
                 NULL_PAGE_ID,
                 true);
+            prevPageEntry.versionChainPageId = nextPageId;
             needsUpdate = true;
 
         } else {
