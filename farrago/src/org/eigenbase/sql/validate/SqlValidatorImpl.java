@@ -3146,7 +3146,7 @@ public class SqlValidatorImpl
         }
 
         // validate that all row types have the same number of columns
-        //  and that expressions in each column are conformance.
+        //  and that expressions in each column are compatible.
         // A values expression is turned into something that looks like
         // ROW(type00, type01,...), ROW(type11,...),...
         final int rowCount = operands.length;
@@ -3165,7 +3165,7 @@ public class SqlValidatorImpl
                 }
             }
 
-            // 2. check if types at i:th position in each row are conformance
+            // 2. check if types at i:th position in each row are compatible
             for (int col = 0; col < columnCount; col++) {
                 RelDataType [] types = new RelDataType[rowCount];
                 for (int row = 0; row < rowCount; row++) {

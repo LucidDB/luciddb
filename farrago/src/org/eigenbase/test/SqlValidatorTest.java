@@ -4042,15 +4042,15 @@ public class SqlValidatorTest
             "sum(sal) over (order by deptno rows current row)",
             null);
         checkWinFuncExp(
-            "sum(sal) over ("
+            "sum(sal) over ^("
             + "order by deptno "
-            + "rows between unbounded preceding and unbounded following)",
-            null);
+            + "rows between unbounded preceding and unbounded following)^",
+            "UNBOUNDED FOLLOWING window not supported");
         checkWinFuncExp(
-            "sum(sal) over ("
+            "sum(sal) over ^("
             + "order by deptno "
-            + "rows between CURRENT ROW and unbounded following)",
-            null);
+            + "rows between CURRENT ROW and unbounded following)^",
+            "UNBOUNDED FOLLOWING window not supported");
         checkWinFuncExp(
             "sum(sal) over ("
             + "order by deptno "
@@ -4344,28 +4344,30 @@ public class SqlValidatorTest
 
     public void testWindowNegative()
     {
-        checkNegWindow("rows between 2 preceding and 4 preceding", true);
-        checkNegWindow("rows between 2 preceding and 3 preceding", true);
-        checkNegWindow("rows between 2 preceding and 2 preceding", false);
+        final String negSize = "Window has negative size";
+        checkNegWindow("rows between 2 preceding and 4 preceding", negSize);
+        checkNegWindow("rows between 2 preceding and 3 preceding", negSize);
+        checkNegWindow("rows between 2 preceding and 2 preceding", null);
         checkNegWindow(
             "rows between unbounded preceding and current row",
-            false);
+            null);
+        final String unboundedFollowing = "UNBOUNDED FOLLOWING window not supported";
         checkNegWindow(
             "rows between unbounded preceding and unbounded following",
-            false);
+            unboundedFollowing);
         checkNegWindow(
             "rows between current row and unbounded following",
-            false);
-        checkNegWindow("rows between current row and 2 following", false);
-        checkNegWindow("range between 2 preceding and 2 following", false);
-        checkNegWindow("range between 2 preceding and -2 preceding", false);
-        checkNegWindow("range between 4 following and 3 following", true);
-        checkNegWindow("range between 4 following and 5 following", false);
-        checkNegWindow("rows between 1 following and 0 following", true);
-        checkNegWindow("rows between 0 following and 0 following", false);
+            unboundedFollowing);
+        checkNegWindow("rows between current row and 2 following", null);
+        checkNegWindow("range between 2 preceding and 2 following", null);
+        checkNegWindow("range between 2 preceding and -2 preceding", null);
+        checkNegWindow("range between 4 following and 3 following", negSize);
+        checkNegWindow("range between 4 following and 5 following", null);
+        checkNegWindow("rows between 1 following and 0 following", negSize);
+        checkNegWindow("rows between 0 following and 0 following", null);
     }
 
-    private void checkNegWindow(String s, boolean fail)
+    private void checkNegWindow(String s, String msg)
     {
         String sql =
             "select sum(deptno) over ^(order by empno "
@@ -4373,7 +4375,7 @@ public class SqlValidatorTest
             + ")^ from emp";
         checkFails(
             sql,
-            fail ? "Window has negative size" : null);
+            msg);
     }
 
     public void testWindowPartial()
