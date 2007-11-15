@@ -155,9 +155,9 @@ void VersionedRandomAllocationSegment::deallocatePageRange(
         format();
     } else {
 
-        // Acquire the mutex to prevent another thread from trying
+        // Acquire mutex exclusively to prevent another thread from trying
         // to do the actual free of the same page, if it's an old page.
-        StrictMutexGuard deallocationGuard(deallocationMutex);
+        SXMutexExclusiveGuard deallocationGuard(deallocationMutex);
 
         // Simply mark the page as deallocation-deferred.  The actual
         // deallocation will be done by calls to deallocateOldPages().
@@ -796,8 +796,8 @@ void VersionedRandomAllocationSegment::deallocateOldPages(
     PageSet const &oldPageSet,
     TxnId oldestActiveTxnId)
 {
+    SXMutexExclusiveGuard deallocationGuard(deallocationMutex);
     SXMutexExclusiveGuard mapGuard(mapMutex);
-    StrictMutexGuard deallocationGuard(deallocationMutex);
 
     std::hash_set<PageId> deallocatedPageSet;
     for (PageSetConstIter pageIter = oldPageSet.begin();
@@ -1209,6 +1209,11 @@ void VersionedRandomAllocationSegment::freeTempPages()
         iter++;
         freeTempPage(pageId, pModAllocNode->tempPageId);
     }
+}
+
+SXMutex &VersionedRandomAllocationSegment::getDeallocationMutex()
+{
+    return deallocationMutex;
 }
 
 FENNEL_END_CPPFILE("$Id$");

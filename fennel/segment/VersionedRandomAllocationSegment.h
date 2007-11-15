@@ -151,7 +151,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      * but only a single writer.
      *
      * <p>In the case where both mapMutex and deallocationMutex need to be
-     * acquired, acquire mapMutex first.
+     * acquired, acquire deallocationMutex first.
      */
     SXMutex mapMutex;
 
@@ -159,9 +159,9 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      * Mutex that prevents multiple deallocations from occuring concurrently.
      *
      * <p>In the case where both mapMutex and deallocationMutex need to be
-     * acquired, acquire mapMutex first.
+     * acquired, acquire deallocationMutex first.
      */
-    StrictMutex deallocationMutex;
+    SXMutex deallocationMutex;
 
     /**
      * Segment used to allocate pages to store uncommitted modifications to
@@ -691,6 +691,12 @@ public:
         TxnId commitCsn,
         bool commit,
         SharedSegment pOrigSegment);
+
+    /**
+     * @return the deallocation mutex that prevents reading of the page chain
+     * while deallocations are in progress
+     */
+    SXMutex &getDeallocationMutex();
 
     /**
      * Retrieves a batch of pageIds corresponding either to old snapshot
