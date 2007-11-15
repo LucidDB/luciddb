@@ -62,7 +62,7 @@ PageId VersionedRandomAllocationSegment::allocatePageId(PageOwnerId ownerId)
 PageId VersionedRandomAllocationSegment::getSegAllocPageIdForWrite(
     PageId origSegAllocPageId)
 {
-    return getTempAllocNodePage<SegAllocLock>(origSegAllocPageId);
+    return getTempAllocNodePage<SegAllocLock>(origSegAllocPageId, true);
 }
 
 void VersionedRandomAllocationSegment::undoSegAllocPageWrite(
@@ -102,10 +102,8 @@ PageId VersionedRandomAllocationSegment::findAllocPageIdForRead(
     // corresponding to the modified allocation node, and access that
     // page from the temporary segment.  Otherwise, access the allocation
     // node from permanent storage.
-    //
-    // Note that this method assumes that the caller has already acquired a
-    // shared mutex on the allocationNodeMap.
 
+    assert(mapMutex.isLocked(LOCKMODE_S));
     PageId tempAllocNodePageId;
     NodeMapConstIter iter = allocationNodeMap.find(origAllocNodePageId);
     if (iter == allocationNodeMap.end()) {
@@ -157,9 +155,9 @@ void VersionedRandomAllocationSegment::deallocatePageRange(
         format();
     } else {
 
-        // Acquire the exclusive mutex to prevent another thread from trying
+        // Acquire the mutex to prevent another thread from trying
         // to do the actual free of the same page, if it's an old page.
-        SXMutexExclusiveGuard deallocationGuard(deallocationMutex);
+        StrictMutexGuard deallocationGuard(deallocationMutex);
 
         // Simply mark the page as deallocation-deferred.  The actual
         // deallocation will be done by calls to deallocateOldPages().
@@ -251,7 +249,8 @@ PageId VersionedRandomAllocationSegment::getExtAllocPageIdForWrite(
 {
     return
         getTempAllocNodePage<VersionedExtentAllocLock>(
-            getExtentAllocPageId(extentNum));
+            getExtentAllocPageId(extentNum),
+            false);
 }
 
 PageOwnerId VersionedRandomAllocationSegment::getPageOwnerId(
@@ -270,12 +269,12 @@ void VersionedRandomAllocationSegment::getPageEntryCopy(
     // We need to get a copy of the page entry rather than a reference
     // because the page entry may originate from a temporary page, which
     // can be freed by another thread.  By holding the mutex on the
-    // allocationNodeMap while we're retrieivng the copy, we're ensured that
+    // allocationNodeMap while we're retrieving the copy, we're ensured that
     // the page cannot be freed until we exit this method.
     SXMutexSharedGuard mapGuard(mapMutex);
 
     VersionedPageEntry *pVersionedPageEntry =
-        reinterpret_cast<VersionedPageEntry *>(&pageEntryCopy);
+        static_cast<VersionedPageEntry *>(&pageEntryCopy);
     getPageEntryCopyTemplate<
             VersionedExtentAllocationNode,
             VersionedExtentAllocLock,
@@ -332,6 +331,15 @@ void VersionedRandomAllocationSegment::chainPageEntries(
     PageId versionChainId,
     PageId successorId)
 {
+    chainPageEntries(pageId, versionChainId, successorId, false);
+}
+
+void VersionedRandomAllocationSegment::chainPageEntries(
+    PageId pageId,
+    PageId versionChainId,
+    PageId successorId,
+    bool thisSegment)
+{
     assert(isPageIdAllocated(pageId));
 
     ExtentNum extentNum;
@@ -340,9 +348,18 @@ void VersionedRandomAllocationSegment::chainPageEntries(
     splitPageId(pageId, iSegAlloc, extentNum, iPageInExtent);
     assert(iPageInExtent);
 
-    SegmentAccessor segAccessor(pTempSegment, pCache);
+    // Update the pageEntry either in the permanent or temp segment
+    // depending on the "thisSegment" parameter passed in
+    SharedSegment allocNodeSegment =
+        (thisSegment) ? getTracingSegment() : pTempSegment;
+    SegmentAccessor segAccessor(allocNodeSegment, pCache);
     VersionedExtentAllocLock extentAllocLock(segAccessor);
-    extentAllocLock.lockExclusive(getExtAllocPageIdForWrite(extentNum));
+    PageId extentPageId =
+        (thisSegment) ?
+            getExtentAllocPageId(extentNum) :
+            getExtAllocPageIdForWrite(extentNum);
+
+    extentAllocLock.lockExclusive(extentPageId);
     VersionedExtentAllocationNode &extentNode =
         extentAllocLock.getNodeForWrite();
     VersionedPageEntry &pageEntry =
@@ -381,67 +398,39 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
         // has been allocated
         allocateAllocNodes(iSegAlloc, NULL_PAGE_ID, extentNum);
 
-        // If we're reducing the free page count, update the extent entry
-        // first.  Otherwise, update the page entry first.
-        if ((commit &&
-               pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) ||
-           (!commit &&
-               pModEntry->lastModType == ModifiedPageEntry::DEALLOCATED))
+        // No need to order updates to the extent and page entries because no
+        // other thread should be modifying the permanent allocation node
+        // pages at the same time.
+        if ((pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) ||
+           (pModEntry->lastModType == ModifiedPageEntry::DEALLOCATED))
         {
             updateExtentEntry(
                 iSegAlloc,
                 extentNum,
                 pModEntry->allocationCount,
                 commit);
-            updatePageEntry(
-                pageId,
-                extentNum,
-                iPageInExtent,
-                pModEntry,
-                commitCsn,
-                commit,
-                pOrigSegment);
-        } else if (
-            (!commit &&
-                pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) ||
-            (commit &&
-                pModEntry->lastModType == ModifiedPageEntry::DEALLOCATED))
-        {
-            updatePageEntry(
-                pageId,
-                extentNum,
-                iPageInExtent,
-                pModEntry,
-                commitCsn,
-                commit,
-                pOrigSegment);
-            updateExtentEntry(
-                iSegAlloc,
-                extentNum,
-                pModEntry->allocationCount,
-                commit);
-        } else {
-            updatePageEntry(
-                pageId,
-                extentNum,
-                iPageInExtent,
-                pModEntry,
-                commitCsn,
-                commit,
-                pOrigSegment);
         }
+        updatePageEntry(
+            pageId,
+            extentNum,
+            iPageInExtent,
+            pModEntry,
+            commitCsn,
+            commit,
+            pOrigSegment);
     }
 
-    // Deallocate any temp allocation node pages that no longer contain
-    // any uncommitted updates
+    // Deallocate any temp allocation node pages corresponding to extent
+    // allocation nodes that no longer contain any uncommitted updates.
+    // Segment allocation nodes are not deallocated because those nodes can
+    // be accessed frequently, especially if all extents on the page are full.
     ModifiedAllocationNodeMap::iterator iter = allocationNodeMap.begin();
     while (iter != allocationNodeMap.end()) {
         SharedModifiedAllocationNode pModNode = iter->second;
-        if (pModNode->updateCount == 0) {
+        if (pModNode->updateCount == 0 && !pModNode->isSegAllocNode) {
             PageId pageId = iter->first;
             iter++;
             freeTempPage(pageId, pModNode->tempPageId);
-            allocationNodeMap.erase(pageId);
         } else {
             iter++;
         }
@@ -457,9 +446,11 @@ void VersionedRandomAllocationSegment::updatePageEntry(
     bool commit,
     SharedSegment pOrigSegment)
 {
+    assert(mapMutex.isLocked(LOCKMODE_X));
+
     // Update the extent allocation page, copying the contents from the
     // temporary page in the case of a commit and vice versa for a rollback.
-    
+
     PageId extentPageId = getExtentAllocPageId(extentNum);
     NodeMapConstIter iter = allocationNodeMap.find(extentPageId);
     assert(iter != allocationNodeMap.end());
@@ -477,7 +468,7 @@ void VersionedRandomAllocationSegment::updatePageEntry(
     } else {
         // In the case of a rollback of a newly allocated page, remove the
         // page from the cache
-        if (!commit && pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
+        if (pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
             SegmentAccessor segAccessor(pOrigSegment, pCache);
             segAccessor.pCacheAccessor->discardPage(
                 pOrigSegment->translatePageId(pageId));
@@ -558,6 +549,8 @@ void VersionedRandomAllocationSegment::updateExtentEntry(
     uint allocationCount,
     bool commit)
 {
+    assert(mapMutex.isLocked(LOCKMODE_X));
+
     // If the page was newly allocated, we need to update the
     // SegmentAllocationNode
 
@@ -703,6 +696,7 @@ void VersionedRandomAllocationSegment::freeTempPage(
     PageId origAllocNodePageId,
     PageId tempAllocNodePageId)
 {
+    assert(mapMutex.isLocked(LOCKMODE_X));
     pTempSegment->deallocatePageRange(tempAllocNodePageId, tempAllocNodePageId);
     allocationNodeMap.erase(origAllocNodePageId);
 }
@@ -803,7 +797,7 @@ void VersionedRandomAllocationSegment::deallocateOldPages(
     TxnId oldestActiveTxnId)
 {
     SXMutexExclusiveGuard mapGuard(mapMutex);
-    SXMutexExclusiveGuard deallocationGuard(deallocationMutex);
+    StrictMutexGuard deallocationGuard(deallocationMutex);
 
     std::hash_set<PageId> deallocatedPageSet;
     for (PageSetConstIter pageIter = oldPageSet.begin();
@@ -926,7 +920,7 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
                 newestOldCsn = pageEntry.allocationCsn;
                 newestOldPageId = chainPageId;
 
-            // It's possible to have to have two page entries with the same
+            // It's possible to have two page entries with the same
             // csn if a page is truncated and then versioned within the same
             // transaction.
             } else if
@@ -993,6 +987,8 @@ void VersionedRandomAllocationSegment::deallocateSinglePage(
     PageId pageId,
     std::hash_set<PageId> &deallocatedPageSet)
 {
+    assert(mapMutex.isLocked(LOCKMODE_X));
+
     // Discard the page from the cache
     BlockId blockId = DelegatingSegment::translatePageId(pageId);
     SegmentAccessor selfAccessor(getTracingSegment(), pCache);
@@ -1040,102 +1036,80 @@ void VersionedRandomAllocationSegment::deallocatePageChain(
     TxnId deallocationCsn,
     std::hash_set<PageId> &deallocatedPageSet)
 {
-    ExtentNum extentNum;
-    BlockNum iPrevPageInExtent;
-    uint iSegAlloc;
-    splitPageId(anchorPageId, iSegAlloc, extentNum, iPrevPageInExtent);
-    assert(iPrevPageInExtent);
-
-    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
-    PageId prevExtentPageId = getExtentAllocPageId(extentNum);
-    VersionedExtentAllocLock prevExtentAllocLock(selfAccessor);
-    prevExtentAllocLock.lockExclusive(prevExtentPageId);
-    VersionedExtentAllocationNode &prevExtentNode =
-        prevExtentAllocLock.getNodeForWrite();
-    VersionedPageEntry *pPrevPageEntry =
-        &(prevExtentNode.getPageEntry(iPrevPageInExtent));
+    VersionedPageEntry prevPageEntry;
+    getCommittedPageEntryCopy(anchorPageId, prevPageEntry);
     assert(
-        pPrevPageEntry->ownerId != UNALLOCATED_PAGE_OWNER_ID &&
-        !isDeallocatedPageOwnerId(pPrevPageEntry->ownerId));
-    
+        prevPageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID &&
+        !isDeallocatedPageOwnerId(prevPageEntry.ownerId));
+
     // See if the page is in the process of being marked
     // deallocation-deferred.  If it is, then don't deallocate any of the
     // pages in the page chain, even if they are old.  We'll wait until
     // the deallocation-deferral is actually committed before deallocating
     // them.
-    if (uncommittedDeallocation(
-        anchorPageId,
-        prevExtentPageId,
-        iPrevPageInExtent,
-        deallocatedPageSet))
-    {
+    if (uncommittedDeallocation(anchorPageId, deallocatedPageSet)) {
         return;
     }
 
     bool needsUpdate = false;
-    PageId nextPageId = pPrevPageEntry->versionChainPageId;
+    PageId prevPageId = anchorPageId;
+    PageId nextPageId = prevPageEntry.versionChainPageId;
     do {
         VersionedPageEntry pageEntry;
-        ExtentNum extentNum;
-        BlockNum iPageInExtent;
-        uint iSegAlloc;
-        splitPageId(nextPageId, iSegAlloc, extentNum, iPageInExtent);
-        assert(iPageInExtent);
-        PageId extentPageId = getExtentAllocPageId(extentNum);
         getCommittedPageEntryCopy(nextPageId, pageEntry);
 
         if (pageEntry.allocationCsn < deallocationCsn) {
             
-            // Deallocate the page entry
+            // Deallocate the page entry and chain the previous page
+            // entry to the page chained from the deallocated entry
             deallocateSinglePage(nextPageId, deallocatedPageSet);
             nextPageId = pageEntry.versionChainPageId;
-            pPrevPageEntry->versionChainPageId = nextPageId;
+            chainPageEntries(
+                prevPageId,
+                nextPageId,
+                NULL_PAGE_ID,
+                true);
             needsUpdate = true;
 
         } else {
             // Reflect the changes made in the previous page entry
             // in the temporary page entry, if it exists
             if (needsUpdate) {
-                updateTempPageEntry(
-                    prevExtentPageId,
-                    iPrevPageInExtent,
-                    *pPrevPageEntry);
+                updateTempPageEntry(prevPageId, prevPageEntry);
             }
             needsUpdate = false;
 
-            // Lock the page entry that's now the previous entry
-            prevExtentPageId = extentPageId;
-            prevExtentAllocLock.lockExclusive(prevExtentPageId);
-            VersionedExtentAllocationNode &extentNode =
-                prevExtentAllocLock.getNodeForWrite();
-            pPrevPageEntry = &(extentNode.getPageEntry(iPageInExtent));
-            iPrevPageInExtent = iPageInExtent;
-
+            // Move the info for the current page entry into the previous
+            prevPageId = nextPageId;
+            prevPageEntry = pageEntry;
             nextPageId = pageEntry.versionChainPageId;
         }
     } while (nextPageId != anchorPageId);
 
     // Update the last previous entry if needed
     if (needsUpdate) {
-        updateTempPageEntry(
-            prevExtentPageId,
-            iPrevPageInExtent,
-            *pPrevPageEntry);
+        updateTempPageEntry(prevPageId, prevPageEntry);
     }
 }
 
 bool VersionedRandomAllocationSegment::uncommittedDeallocation(
     PageId anchorPageId,
-    PageId extentPageId,
-    BlockNum iPageInExtent,
     std::hash_set<PageId> &deallocatedPageSet)
 {
+    ExtentNum extentNum;
+    BlockNum iPageInExtent;
+    uint iSegAlloc;
+    splitPageId(anchorPageId, iSegAlloc, extentNum, iPageInExtent);
+    assert(iPageInExtent);
+
     // See if the page entry corresponding to the anchor is marked as
     // deallocation-deferred with a txnId of 0 in the temporary page entry.
     // If it is, then that means the txn doing the deallocation has not
     // committed yet.
 
-    NodeMapConstIter iter = allocationNodeMap.find(extentPageId);
+    assert(mapMutex.isLocked(LOCKMODE_X));
+    NodeMapConstIter iter =
+        allocationNodeMap.find(getExtentAllocPageId(extentNum));
     if (iter == allocationNodeMap.end()) {
         return false;
     }
@@ -1178,6 +1152,9 @@ void VersionedRandomAllocationSegment::skipDeferredDeallocations(
 
 bool VersionedRandomAllocationSegment::validatePageChain(PageId anchorPageId)
 {
+    // TODO zfong 25-Oct-2007: Check that the page chain is not circular,
+    // except for the expected reference back to the anchor page.
+
     PageId chainPageId = anchorPageId;
     VersionedPageEntry pageEntry;
     do {
@@ -1189,11 +1166,18 @@ bool VersionedRandomAllocationSegment::validatePageChain(PageId anchorPageId)
 }
 
 void VersionedRandomAllocationSegment::updateTempPageEntry(
-    PageId extentPageId,
-    BlockNum iPageInExtent,
+    PageId pageId,
     VersionedPageEntry const &pageEntry)
 {
-    NodeMapConstIter iter = allocationNodeMap.find(extentPageId);
+    ExtentNum extentNum;
+    BlockNum iPageInExtent;
+    uint iSegAlloc;
+    splitPageId(pageId, iSegAlloc, extentNum, iPageInExtent);
+    assert(iPageInExtent);
+
+    assert(mapMutex.isLocked(LOCKMODE_X));
+    NodeMapConstIter iter =
+        allocationNodeMap.find(getExtentAllocPageId(extentNum));
     if (iter != allocationNodeMap.end()) {
         PageId tempExtentPageId = iter->second->tempPageId;
         SegmentAccessor segAccessor(pTempSegment, pCache);
@@ -1204,6 +1188,23 @@ void VersionedRandomAllocationSegment::updateTempPageEntry(
         VersionedPageEntry &tempPageEntry =
             tempExtentNode.getPageEntry(iPageInExtent);
         tempPageEntry = pageEntry;
+    }
+}
+
+void VersionedRandomAllocationSegment::freeTempPages()
+{
+    SXMutexExclusiveGuard mapGuard(mapMutex);
+
+    ModifiedAllocationNodeMap::iterator iter = allocationNodeMap.begin();
+    while (iter != allocationNodeMap.end()) {
+        // All entries in the map should correspond to segment allocation
+        // nodes because we free the nodes corresponding to extent allocation
+        // nodes once their update counts reach 0.
+        SharedModifiedAllocationNode pModAllocNode = iter->second;
+        assert(!pModAllocNode->updateCount && pModAllocNode->isSegAllocNode);
+        PageId pageId = iter->first;
+        iter++;
+        freeTempPage(pageId, pModAllocNode->tempPageId);
     }
 }
 

@@ -579,7 +579,7 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
             // Implement rollback by simulating crash recovery,
             // reverting all pages modified by transaction.  No need
             // to do this when snapshots are in use because no permanent
-            // pages were modfied.
+            // pages were modified.
             pDb->recoverOnline();
         }
     }

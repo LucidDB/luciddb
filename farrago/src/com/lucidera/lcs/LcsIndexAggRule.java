@@ -27,8 +27,6 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-
 
 /**
  * A rule for directly aggregating off of an unclustered index scan.
@@ -45,40 +43,32 @@ public class LcsIndexAggRule
      * The singletons
      *
      * <p>TODO: handle CalcRel after sort order has been cleaned up
-     */
-    public final static LcsIndexAggRule instanceRenameRowScan =
+     */   
+    public final static LcsIndexAggRule instanceRowScan =
         new LcsIndexAggRule(
             new RelOptRuleOperand(
                 AggregateRel.class,
                 new RelOptRuleOperand[] {
                     new RelOptRuleOperand(
-                        FennelRenameRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                LcsRowScanRel.class,
-                                RelOptRuleOperand.noOperands)
-                        })
+                        LcsRowScanRel.class,
+                        RelOptRuleOperand.noOperands)
                 }),
-            "rename row scan");
-
-    public final static LcsIndexAggRule instanceRenameNormalizer =
+            "row scan");
+    
+    public final static LcsIndexAggRule instanceNormalizer =
         new LcsIndexAggRule(
             new RelOptRuleOperand(
                 AggregateRel.class,
                 new RelOptRuleOperand[] {
                     new RelOptRuleOperand(
-                        FennelRenameRel.class,
+                        LcsNormalizerRel.class,
                         new RelOptRuleOperand[] {
                             new RelOptRuleOperand(
-                                LcsNormalizerRel.class,
-                                new RelOptRuleOperand[] {
-                                    new RelOptRuleOperand(
-                                        LcsIndexOnlyScanRel.class,
-                                        null)
-                                })
+                                LcsIndexOnlyScanRel.class,
+                                null)
                         })
                 }),
-            "rename normalizer");
+            "normalizer");
 
     //~ Constructors -----------------------------------------------------------
 
@@ -105,11 +95,10 @@ public class LcsIndexAggRule
     public void onMatch(RelOptRuleCall call)
     {
         AggregateRel aggRel = (AggregateRel) call.rels[0];
-        FennelRenameRel renameRel = (FennelRenameRel) call.rels[1];
         LcsRowScanRel rowScan = null;
         LcsIndexOnlyScanRel indexOnlyScan = null;
-        if (call.rels[2] instanceof LcsRowScanRel) {
-            rowScan = (LcsRowScanRel) call.rels[2];
+        if (call.rels[1] instanceof LcsRowScanRel) {
+            rowScan = (LcsRowScanRel) call.rels[1];
 
             // NOTE: Here we check for no inputs because RelOptRuleOperand
             // seems to allow a row scan with inputs
@@ -117,9 +106,9 @@ public class LcsIndexAggRule
                 return;
             }
         } else {
-            assert (call.rels[2] instanceof LcsNormalizerRel);
-            assert (call.rels[3] instanceof LcsIndexOnlyScanRel);
-            indexOnlyScan = (LcsIndexOnlyScanRel) call.rels[3];
+            assert (call.rels[1] instanceof LcsNormalizerRel);
+            assert (call.rels[2] instanceof LcsIndexOnlyScanRel);
+            indexOnlyScan = (LcsIndexOnlyScanRel) call.rels[2];
             Integer [] proj = indexOnlyScan.getOutputProj();
             if (!projectionSatisfiesGroupBy(
                     proj,
@@ -169,25 +158,10 @@ public class LcsIndexAggRule
                     bestProj);
         }
 
-        RelDataType renameType = renameRel.getRowType();
-        RelDataType indexType = indexOnlyScan.getRowType();
-        String [] fieldNames = new String[indexType.getFieldCount()];
-        for (int i = 0; i < fieldNames.length; i++) {
-            RelDataType type =
-                (i < renameType.getFieldCount()) ? renameType : indexType;
-            fieldNames[i] = type.getFields()[i].getName();
-        }
-        RelNode indexRename =
-            new FennelRenameRel(
-                renameRel.getCluster(),
-                indexOnlyScan,
-                fieldNames,
-                renameRel.getTraits());
-
         RelNode indexAgg =
             new LcsIndexAggRel(
                 aggRel.getCluster(),
-                indexRename,
+                indexOnlyScan,
                 aggRel.getGroupCount(),
                 aggRel.getAggCallList());
 

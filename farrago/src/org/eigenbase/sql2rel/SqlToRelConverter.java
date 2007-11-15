@@ -2047,6 +2047,10 @@ public class SqlToRelConverter
                 mapCorrelToRefRel.put(correl, bb.root);
             }
 
+            // REVIEW jvs 31-Oct-2007:  doesn't the declaration of
+            // monotonicity here assume sort-based aggregation at
+            // the physical level?
+
             // Tell bb which of group columns are sorted.
             bb.columnMonotonicities.clear();
             for (SqlNode groupItem : groupList) {

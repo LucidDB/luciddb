@@ -64,6 +64,9 @@ public:
     explicit LogicalTxnTest()
     {
         onlineUuid.generateInvalid();
+
+        // TODO jvs 26-Oct-2007:  need multi-threading tests,
+        // e.g. for FNL-68
         
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testTxnIdSequence);
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackEmpty);

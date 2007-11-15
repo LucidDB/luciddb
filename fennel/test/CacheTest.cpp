@@ -100,8 +100,8 @@ public:
         FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
 
 #ifdef RLIMIT_AS
-        FENNEL_UNIT_TEST_CASE(CacheTest,testLargeCacheInit);
-        FENNEL_UNIT_TEST_CASE(CacheTest,testLargeCacheRequest);
+        FENNEL_EXTRA_UNIT_TEST_CASE(CacheTest,testLargeCacheInit);
+        FENNEL_EXTRA_UNIT_TEST_CASE(CacheTest,testLargeCacheRequest);
 #endif
     }
 

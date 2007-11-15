@@ -194,13 +194,15 @@ typedef char const * const ParamName;
 typedef char const * const ParamVal;
 
 // PageOwnerId is a 64-bit integer identifying the owner of a page allocated
-// from a segment.  Only the low 63 bits should be used (with the exception
+// from a segment.  Only the low 62 bits should be used (with the exception
 // of ANON_PAGE_OWNER_ID), as the high order bit may be used to flag special
-// settings.
+// settings, and if that high order bit is used and set, we need to be able
+// to distinguish an ownerId with that bit set from ANON_PAGE_OWNER_ID.  So,
+// that's why we also need to reserve the second highest bit.
 DEFINE_OPAQUE_INTEGER(PageOwnerId,uint64_t);
 
 #define VALID_PAGE_OWNER_ID(pageOwnerId) \
-    (!(opaqueToInt(pageOwnerId) & 0x8000000000000000LL))
+    (!(opaqueToInt(pageOwnerId) & 0xC000000000000000LL))
 
 // DeviceID is an integer identifying a device.
 DEFINE_OPAQUE_INTEGER(DeviceId,uint);

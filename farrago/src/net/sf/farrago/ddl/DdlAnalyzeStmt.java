@@ -61,6 +61,8 @@ public class DdlAnalyzeStmt
 
     private final static int DEFAULT_HISTOGRAM_BAR_COUNT = 100;
 
+    private final static long MIN_SAMPLE_SIZE = 5000L;
+
     public static final String REPEATABLE_SEED = "test.estimateStatsSeed";
 
     //~ Instance fields --------------------------------------------------------
@@ -391,14 +393,13 @@ public class DdlAnalyzeStmt
     private void chooseSamplePercentage(long rowCount)
     {
         String rate;
-        if (rowCount < 1000L) {
+        if (rowCount <= MIN_SAMPLE_SIZE) {
             rate = "100";
-        } else if (rowCount < 10000L) {
-            rate = "25";
-        } else if (rowCount < 100000L) {
-            rate = "10";
         } else {
-            rate = "1";
+            double ratio = (double)MIN_SAMPLE_SIZE / (double)rowCount;
+            int percent = (int)Math.round(ratio * 100.0);
+            percent = Math.max(percent, 1);
+            rate = String.valueOf(percent);
         }
         
         samplePercent = 

@@ -1974,4 +1974,60 @@
 | 3   | 3           | 100000  | 3  | 2    | 2   | 2   | 2   |
 +-----+-------------+---------+----+------+-----+-----+-----+
 > 
+> ----------------
+> -- Misc tests --
+> ----------------
+> 
+> -- LER-6753 -- Make sure TRIM expression in the ON clause is converted into
+> -- a constant. The EXPLAIN PLAN should *not* contain a TRIM.
+> !set outputformat csv
+> explain plan for 
+> select xid, xactDate, currency, amount as origAmount,
+>         toCurrency, toDate,
+>         cast(amount * rate as decimal(10,2)) as convertedAmount
+>     from xacts left outer join convRates
+>     on currency = fromCurrency and xactDate >= fromDate and
+>     currency = trim('EUR   ');
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..10=[{inputs}], expr#11=[Reinterpret($t1)], expr#12=[CAST($t11):DOUBLE NOT NULL], expr#13=[1E2], expr#14=[/INT($t12, $t13)], expr#15=[*($t14, $t7)], expr#16=[*($t15, $t13)], expr#17=[CAST($t16):BIGINT], expr#18=[true], expr#19=[Reinterpret($t17, $t18)], XID=[$t0], XACTDATE=[$t3], CURRENCY=[$t2], ORIGAMOUNT=[$t1], TOCURRENCY=[$t6], TODATE=[$t9], CONVERTEDAMOUNT=[$t19])'
+'    FennelNestedLoopJoinRel(joinType=[LEFT], leftJoinKeys=[[2, 4, 3]], joinKeyParamIds=[[3, 1, 2]])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 2]], outputRowType=[RecordType(INTEGER NOT NULL XID, DECIMAL(10, 2) NOT NULL AMOUNT, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY, DATE XACTDATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($2):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, NLJ, XACTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$XACTS$AMOUNT, SYS$CLUSTERED_INDEX$XACTS$CURRENCY, SYS$CLUSTERED_INDEX$XACTS$XACTDATE, SYS$CLUSTERED_INDEX$XACTS$XID]])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5]], filterOp=[COMP_EQ], filterOrdinals=[[6]], filterTuple=[['EUR']], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL FROMCURRENCY, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL TOCURRENCY, DOUBLE RATE, DATE FROMDATE, DATE NOT NULL TODATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5]], dynamicParameters=[[3]], paramCompareOffsets=[[-1]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL FROMCURRENCY, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL TOCURRENCY, DOUBLE RATE, DATE FROMDATE, DATE NOT NULL TODATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CURRENCY) NOT NULL])'
+'          FennelTempIdxSearchRel(indexKeys=[[5, 3]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], searchKeyParamIds=[[1, 1, 2]], keyOffsets=[[0, 2, 3]], rootPageIdParamId=[4])'
+'            FennelValuesRel(tuples=[[{ '(', null, null, ']', null, null }]])'
+'      FennelIdxWriteRel(discardDuplicates=[false], monotonicInserts=[true], rootPageIdParamId=[4], indexCols=[[5, 3]])'
+'        FennelSortRel(key=[[5, 3]], discardDuplicates=[false])'
+'          FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 0]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL FROMCURRENCY, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL TOCURRENCY, DOUBLE RATE, DATE FROMDATE, DATE NOT NULL TODATE, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'            LcsRowScanRel(table=[[LOCALDB, NLJ, CONVRATES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$CONVRATES$FROMCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$FROMDATE, SYS$CLUSTERED_INDEX$CONVRATES$RATE, SYS$CLUSTERED_INDEX$CONVRATES$TOCURRENCY, SYS$CLUSTERED_INDEX$CONVRATES$TODATE]])'
+> !set outputformat table
+> select xid, xactDate, currency, amount as origAmount,
+>         toCurrency, toDate,
+>         cast(amount * rate as decimal(10,2)) as convertedAmount
+>     from xacts left outer join convRates
+>     on currency = fromCurrency and xactDate >= fromDate and
+>     currency = trim('EUR   ')
+>     order by currency, toCurrency, xactDate, toDate;
++------+-------------+-----------+-------------+-------------+-------------+------------------+
+| XID  |  XACTDATE   | CURRENCY  | ORIGAMOUNT  | TOCURRENCY  |   TODATE    | CONVERTEDAMOUNT  |
++------+-------------+-----------+-------------+-------------+-------------+------------------+
+| 11   |             |           | 1100.00     |             |             |                  |
+| 10   | 2007-03-01  |           | 1000.00     |             |             |                  |
+| 2    | 2007-01-01  | EUR       | 200.00      | GBP         | 2007-03-31  | 135.24           |
+| 6    | 2007-05-01  | EUR       | 600.00      | GBP         | 2007-03-31  | 405.72           |
+| 6    | 2007-05-01  | EUR       | 600.00      | GBP         | 2007-06-30  | 408.00           |
+| 2    | 2007-01-01  | EUR       | 200.00      | JPY         | 2007-03-31  | 33024.00         |
+| 6    | 2007-05-01  | EUR       | 600.00      | JPY         | 2007-03-31  | 99072.00         |
+| 6    | 2007-05-01  | EUR       | 600.00      | JPY         | 2007-06-30  | 99000.00         |
+| 3    | 2007-02-01  | GBP       | 300.00      |             |             |                  |
+| 7    | 2007-06-30  | GBP       | 700.00      |             |             |                  |
+| 4    | 2007-03-31  | JPY       | 50000.00    |             |             |                  |
+| 8    | 2007-07-01  | JPY       | 80000.00    |             |             |                  |
+| 9    |             | USD       | 900.00      |             |             |                  |
+| 1    | 2006-12-31  | USD       | 100.00      |             |             |                  |
+| 5    | 2007-04-01  | USD       | 500.00      |             |             |                  |
++------+-------------+-----------+-------------+-------------+-------------+------------------+
+> 
 > !quit

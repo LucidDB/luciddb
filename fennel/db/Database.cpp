@@ -251,11 +251,19 @@ void Database::closeImpl()
         pCheckpointThread->close();
     }
 
+    // Free any leftover temp pages used for page versioning
+    if (pDataSegment && areSnapshotsEnabled()) {
+        VersionedRandomAllocationSegment *pVersionedRandomSegment =
+            SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+                pDataSegment);
+        pVersionedRandomSegment->freeTempPages();
+    }
+    
     // Verify that no garbage temp pages remain allocated.
     if (pTempSegment) {
         assert(pTempSegment->getAllocatedSizeInPages() == 0);
     }        
-    
+
     if (isRecoveryRequired()) {
         closeDevices();
     } else {
@@ -901,15 +909,19 @@ void Database::deallocateOldPages()
                 oldestActiveTxnId,
                 numPages,
                 oldPageSet);
-        // Hold the checkpoint mutex while deallocating old pages
-        pCheckpointThread->getActionMutex().waitFor(LOCKMODE_S);
-        pVersionedRandomSegment->deallocateOldPages(
-            oldPageSet,
-            oldestActiveTxnId);
 
-        pCheckpointThread->getActionMutex().release(LOCKMODE_S);
-        requestCheckpoint(CHECKPOINT_FLUSH_ALL, false);
-        oldPageSet.clear();
+        // Hold the checkpoint mutex while deallocating old pages, if there
+        // are pages to deallocate.
+        if (!oldPageSet.empty()) {
+            pCheckpointThread->getActionMutex().waitFor(LOCKMODE_S);
+            pVersionedRandomSegment->deallocateOldPages(
+                oldPageSet,
+                oldestActiveTxnId);
+
+            pCheckpointThread->getActionMutex().release(LOCKMODE_S);
+            requestCheckpoint(CHECKPOINT_FLUSH_ALL, false);
+            oldPageSet.clear();
+        }
     } while (morePages);
     nDataPagesAllocated = pVersionedRandomSegment->getAllocatedSizeInPages();
     nTempPagesAllocated = pTempSegment->getAllocatedSizeInPages();

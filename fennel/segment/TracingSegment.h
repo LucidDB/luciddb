@@ -61,6 +61,7 @@ public:
     virtual void delegatedCheckpoint(
         Segment &delegatingSegment,CheckpointType checkpointType);
     virtual MappedPageListener *getMappedPageListener(BlockId blockId);
+    virtual bool isWriteVersioned();
 
     // delegate the MappedPageListener interface
     virtual void notifyPageMap(CachePage &page);

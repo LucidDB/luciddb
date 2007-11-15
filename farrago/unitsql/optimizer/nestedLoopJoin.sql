@@ -637,3 +637,26 @@ select * from ints_notnullable i_nn left outer join ints_nullable i_n
     on i_nn.id > i_n.id and i_nn.a > i_n.a and i_nn.b > i_n.b and
         i_nn.c > i_n.c
     order by 1, 2, 3, 4, 5, 6, 7, 8;
+
+----------------
+-- Misc tests --
+----------------
+
+-- LER-6753 -- Make sure TRIM expression in the ON clause is converted into
+-- a constant. The EXPLAIN PLAN should *not* contain a TRIM.
+!set outputformat csv
+explain plan for 
+select xid, xactDate, currency, amount as origAmount,
+        toCurrency, toDate,
+        cast(amount * rate as decimal(10,2)) as convertedAmount
+    from xacts left outer join convRates
+    on currency = fromCurrency and xactDate >= fromDate and
+    currency = trim('EUR   ');
+!set outputformat table
+select xid, xactDate, currency, amount as origAmount,
+        toCurrency, toDate,
+        cast(amount * rate as decimal(10,2)) as convertedAmount
+    from xacts left outer join convRates
+    on currency = fromCurrency and xactDate >= fromDate and
+    currency = trim('EUR   ')
+    order by currency, toCurrency, xactDate, toDate;

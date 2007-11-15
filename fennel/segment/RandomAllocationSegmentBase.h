@@ -129,7 +129,8 @@ protected:
     virtual PageId getSegAllocPageIdForWrite(PageId origSegAllocPageId) = 0;
 
     /**
-     * Indicates that a SegmentAllocationNode was not written
+     * Indicates that no new pages were allocated from extents within a
+     * SegmentAllocationNode.
      *
      * @param segAllocPageId SegmentAllocationNode pageId
      */
@@ -201,7 +202,7 @@ protected:
     bool testPageId(PageId pageId,bool testAllocation,bool thisSegment);
 
     /**
-     * Retrieves the ownerId corresponding to a page entry
+     * Retrieves the ownerId corresponding to a page entry.
      *
      * @see getPageOwnerIdTemplate()
      *
@@ -215,7 +216,7 @@ protected:
     virtual PageOwnerId getPageOwnerId(PageId pageId, bool thisSegment) = 0;
 
     /**
-     * Retrieves the ownerId corresponding to a page entry
+     * Retrieves the ownerId corresponding to a page entry.
      *
      * <p>This template method allows the caller to specify different page
      * entry types.
@@ -238,7 +239,7 @@ protected:
     void deallocatePageId(PageId pageId);
 
     /**
-     * Marks the page entry corresponding to a deallocated page as unallocated
+     * Marks the page entry corresponding to a deallocated page as unallocated.
      *
      * @see freePageEntryTemplate()
      *
@@ -270,7 +271,7 @@ protected:
     void freePageEntryTemplate(ExtentNum extentNum, BlockNum iPageInExtent);
 
     /**
-     * Marks a page entry as unused
+     * Marks a page entry as unused.
      *
      * @param [in, out] pageEntry entry to be marked
      */
@@ -294,7 +295,7 @@ protected:
     void format();
 
     /**
-     * Formats each of the extents within a segment allocation node
+     * Formats each of the extents within a segment allocation node.
      *
      * @see formatPageExtentsTemplate()
      *
@@ -309,7 +310,7 @@ protected:
         ExtentNum &extentNum) = 0;
 
     /**
-     * Formats each of the extents within a segment allocation node
+     * Formats each of the extents within a segment allocation node.
      *
      * <p>This template method allows the caller to specify different extent
      * allocation node types.
@@ -401,7 +402,7 @@ protected:
         SharedSegment allocNodeSegment);
 
     /**
-     * Allocates a page from a new extent allocation node
+     * Allocates a page from a new extent allocation node.
      *
      * @see allocateFromNewExtentTemplate()
      *
@@ -484,7 +485,7 @@ protected:
 
     /**
      * Retrieves the actual pageId corresponding to the SegmentAllocationNode
-     * that should be accessed when reading from the node
+     * that should be accessed when reading from the node.
      *
      * @param origSegAllocPageId original SegmentAllocationNode pageId
      *
@@ -499,7 +500,7 @@ protected:
 
     /**
      * Retrieves the actual pageId corresponding to the extent allocation node
-     * that should be accessed when reading from the node
+     * that should be accessed when reading from the node.
      *
      * @param extentNum absolute 0-based extent number
      *
@@ -513,7 +514,7 @@ protected:
         SharedSegment &allocNodeSegment) = 0;
 
     /**
-     * Retrieves a copy of the page entry for a specified page
+     * Retrieves a copy of the page entry for a specified page.
      *
      * @see getPageEntryCopyTemplate()
      *
@@ -533,7 +534,7 @@ protected:
         bool thisSegment) = 0;
 
     /**
-     * Retrieves a copy of the page entry for a specified page
+     * Retrieves a copy of the page entry for a specified page.
      *
      * <p>This template method allows the caller to specify different extent
      * allocation node and page entry types.

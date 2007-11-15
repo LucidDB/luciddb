@@ -726,8 +726,8 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 > explain plan for select a, count(*) from minus group by a;
 'column0'
 'FennelToIteratorConverter'
-'  LhxAggRel(groupCount=[1], EXPR$1=[COUNT()])'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, MINUS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$MINUS$A]])'
+'  LcsIndexAggRel(groupCount=[1], EXPR$1=[COUNT()])'
+'    LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MINUS]], index=[IMINUS], projection=[[0, 2, 3, 4]])'
 > !set outputformat table
 > select a, count(*) from minus group by a;
 +----+---------+

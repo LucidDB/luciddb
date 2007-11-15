@@ -58,31 +58,6 @@ public final class AggregateRel
      * @param aggCalls Array of aggregates to compute
      *
      * @pre aggCalls != null
-     * @deprecated no usages in green or dt red
-     */
-    public AggregateRel(
-        RelOptCluster cluster,
-        RelNode child,
-        int groupCount,
-        AggregateCall[] aggCalls)
-    {
-        this(
-            cluster,
-            child,
-            groupCount,
-            Arrays.asList(aggCalls));
-    }
-
-    /**
-     * Creates an AggregateRel.
-     *
-     * @param cluster {@link RelOptCluster}  this relational expression belongs
-     * to
-     * @param child input relational expression
-     * @param groupCount Number of columns to group on
-     * @param aggCalls Array of aggregates to compute
-     *
-     * @pre aggCalls != null
      */
     public AggregateRel(
         RelOptCluster cluster,

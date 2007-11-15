@@ -74,6 +74,7 @@ VersionedSegment::VersionedSegment(
 {
     logSegment = logSegmentInit;
     pWALSegment = SegmentFactory::dynamicCast<WALSegment *>(logSegment);
+    assert(pWALSegment);
 
     setUsablePageSize(
         DelegatingSegment::getUsablePageSize()

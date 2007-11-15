@@ -32,10 +32,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelRenameRel(fieldNames=[[k2, EXPR$1]])'
-'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH1M]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH1M$k2]], mode=[bernoulli], rate=[0.01], repeatableSeed=[-])'
+'    LhxAggRel(groupCount=[1], EXPR$1=[COUNT()])'
+'      LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH1M]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH1M$k2]], mode=[bernoulli], rate=[0.01], repeatableSeed=[-])'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Validate that only k2 is projected, despite count(*)
 0: jdbc:luciddb:> explain plan for select "k2", count(*)
@@ -45,10 +43,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelRenameRel(fieldNames=[[k2, EXPR$1]])'
-'      LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
-'        FennelRenameRel(fieldNames=[[$f0]])'
-'          LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH1M]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH1M$k2]], mode=[system], rate=[0.01], repeatableSeed=[-])'
+'    LhxAggRel(groupCount=[1], EXPR$1=[COUNT()])'
+'      LcsSamplingRowScanRel(table=[[LOCALDB, ANALYZETEST, BENCH1M]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$BENCH1M$k2]], mode=[system], rate=[0.01], repeatableSeed=[-])'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !outputformat table
 0: jdbc:luciddb:> 

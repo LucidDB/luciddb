@@ -38,6 +38,8 @@ SnapshotRandomAllocationSegment::SnapshotRandomAllocationSegment(
     pVersionedRandomSegment =
         SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
             versionedSegment);
+    assert(pVersionedRandomSegment);
+
     snapshotCsn = snapshotCsnInit;
     needPageFlush = false;
     forceCacheUnmap = false;
@@ -56,7 +58,7 @@ PageId SnapshotRandomAllocationSegment::getSnapshotId(PageId pageId)
     // If possible, use the mapping we've previously cached
     PageMapConstIter pSnapshotPageId = snapshotPageMap.find(pageId);
     if (pSnapshotPageId != snapshotPageMap.end()) {
-        return snapshotPageMap[pageId];
+        return pSnapshotPageId->second;
     }
 
     VersionedPageEntry pageEntry;
@@ -99,6 +101,8 @@ PageId SnapshotRandomAllocationSegment::getPageSuccessor(PageId pageId)
 void SnapshotRandomAllocationSegment::setPageSuccessor(
     PageId pageId, PageId successorId)
 {
+    // The successor should be set in the latest page version.  The
+    // pageId passed in may correspond to the anchor.
     PageId snapshotId = getSnapshotId(pageId);
     DelegatingSegment::setPageSuccessor(snapshotId, successorId);
 
@@ -114,11 +118,12 @@ void SnapshotRandomAllocationSegment::incrPageUpdateCount(
     PageOwnerId ownerId,
     ModifiedPageEntry::ModType modType)
 {
+    assert(modPageMapMutex.isLocked(LOCKMODE_X));
+
     needPageFlush = true;
 
     // Add an entry into the map if it's not there yet.  Otherwise, increment
-    // the count for the existing entry.  This method assumes that the caller
-    // has already acquired the exclusive mutex on the map.
+    // the count for the existing entry.
     ModifiedPageEntryMapIter iter = modPageEntriesMap.find(pageId);
     SharedModifiedPageEntry pModPageEntry;
     if (iter == modPageEntriesMap.end()) {
@@ -147,8 +152,10 @@ void SnapshotRandomAllocationSegment::incrPageUpdateCount(
     // Update count corresponding to the VersionedExtentAllocationNode
     pModPageEntry->updateCount++;
 
-    modPageEntriesMap.insert(
-        ModifiedPageEntryMap::value_type(pageId, pModPageEntry));
+    if (iter == modPageEntriesMap.end()) {
+        modPageEntriesMap.insert(
+            ModifiedPageEntryMap::value_type(pageId, pModPageEntry));
+    }
 }
 
 PageId SnapshotRandomAllocationSegment::getAnchorPageId(PageId snapshotId)
@@ -327,6 +334,7 @@ void SnapshotRandomAllocationSegment::commitChanges(TxnId commitCsn)
         true,
         getTracingSegment());
     modPageEntriesMap.clear();
+    snapshotPageMap.clear(); 
 }
 
 void SnapshotRandomAllocationSegment::rollbackChanges()
@@ -339,6 +347,7 @@ void SnapshotRandomAllocationSegment::rollbackChanges()
         false,
         getTracingSegment());
     modPageEntriesMap.clear();
+    snapshotPageMap.clear(); 
 }
 
 MappedPageListener *SnapshotRandomAllocationSegment::getMappedPageListener(
@@ -446,6 +455,11 @@ void SnapshotRandomAllocationSegment::versionPage(
     StrictMutexGuard mutexGuard(snapshotPageMapMutex);
     snapshotPageMap[destAnchorPageId] = pageIdAfterSrcAnchor;
 }
+
+// REVIEW jvs 23-Oct-2007:  this raises the question of whether
+// discardCachePage should really be part of the Segment interface at all;
+// seems like SegPageLock should instead rely on deallocatePageRange
+// to do it implicitly.
 
 void SnapshotRandomAllocationSegment::discardCachePage(BlockId blockId)
 {
