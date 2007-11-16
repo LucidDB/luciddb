@@ -28,6 +28,7 @@ import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -137,11 +138,16 @@ public class SqlIdentifier
 
     public String toString()
     {
-        String s = names[0];
-        for (int i = 1; i < names.length; i++) {
-            s += ("." + names[i]);
+        // Short-circuit for common case.
+        if (names.length == 1) {
+            return names[0];
         }
-        return s;
+        StringBuilder buf = new StringBuilder(names[0]);
+        for (int i = 1; i < names.length; i++) {
+            buf.append('.');
+            buf.append(names[i]);
+        }
+        return buf.toString();
     }
 
     /**
@@ -204,8 +210,7 @@ public class SqlIdentifier
     {
         final SqlWriter.Frame frame =
             writer.startList(SqlWriter.FrameTypeEnum.Identifier);
-        for (int i = 0; i < names.length; i++) {
-            String name = names[i];
+        for (String name : names) {
             writer.sep(".");
             if (name.equals("*")) {
                 writer.print(name);
@@ -223,99 +228,6 @@ public class SqlIdentifier
     public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
         validator.validateIdentifier(this, scope);
-    }
-
-    /**
-     * Lists all the valid alternatives for this identifier.
-     *
-     * @param validator Validator
-     * @param scope Validation scope
-     * @param hintList list of valid options
-     */
-    public void findValidOptions(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        List<SqlMoniker> hintList)
-    {
-        String tableName;
-        if (names.length > 1) {
-            tableName = names[names.length - 2];
-        } else {
-            tableName = null;
-
-            // table names are valid completion hints when the identifier
-            // has only 1 name part
-            scope.findAllTableNames(hintList);
-            findAllValidFunctionNames(validator, scope, hintList);
-        }
-        findAllValidUdfNames(names, validator, hintList);
-
-        // if the identifer has more than 1 part, use the tableName to limit
-        // the choices of valid column names
-        scope.findAllColumnNames(tableName, hintList);
-        Collections.sort(
-            hintList,
-            new SqlMonikerComparator());
-    }
-
-    private void findAllValidUdfNames(
-        String [] names,
-        SqlValidator validator,
-        List<SqlMoniker> result)
-    {
-        SqlMoniker [] objNames =
-            validator.getCatalogReader().getAllSchemaObjectNames(names);
-        for (int i = 0; i < objNames.length; i++) {
-            if (objNames[i].getType() == SqlMonikerType.Function) {
-                result.add(objNames[i]);
-            }
-        }
-    }
-
-    private void findAllValidFunctionNames(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        List<SqlMoniker> result)
-    {
-        // a function name can only be 1 part
-        if (names.length > 1) {
-            return;
-        }
-        for (SqlOperator op : validator.getOperatorTable().getOperatorList()) {
-            SqlIdentifier curOpId =
-                new SqlIdentifier(
-                    op.getName(),
-                    getParserPosition());
-
-            final SqlCall call =
-                SqlUtil.makeCall(
-                    validator.getOperatorTable(),
-                    curOpId);
-            if (call != null) {
-                result.add(
-                    new SqlMonikerImpl(
-                        op.getName(),
-                        SqlMonikerType.Function));
-            } else {
-                if ((op.getSyntax() == SqlSyntax.Function)
-                    || (op.getSyntax() == SqlSyntax.Prefix))
-                {
-                    if (op.getOperandTypeChecker() != null) {
-                        String sig = op.getAllowedSignatures();
-                        sig = sig.replaceAll("'", "");
-                        result.add(
-                            new SqlMonikerImpl(
-                                sig,
-                                SqlMonikerType.Function));
-                        continue;
-                    }
-                    result.add(
-                        new SqlMonikerImpl(
-                            op.getName(),
-                            SqlMonikerType.Function));
-                }
-            }
-        }
     }
 
     public void validateExpr(SqlValidator validator, SqlValidatorScope scope)

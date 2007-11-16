@@ -270,18 +270,18 @@ public class FarragoStmtValidator
     }
 
     // implement FarragoSessionStmtValidator
-    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
+    public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
     {
         // use default catalog.  If not set, don't do anything
         CwmCatalog catalog = repos.getCatalog(sessionVariables.catalogName);
         if (catalog == null) {
-            return Util.emptySqlMonikerArray;
+            return Collections.emptyList();
         }
 
         // look for both schema and object names
-        if (names.length == 1) {
+        if (names.size() == 1) {
             // get all schema names
-            List<SqlMonikerImpl> schemaNames =
+            List<SqlMoniker> schemaNames =
                 getAllObjectNamesByType(
                     catalog.getOwnedElement(),
                     FemLocalSchema.class);
@@ -292,44 +292,46 @@ public class FarragoStmtValidator
                     catalog,
                     sessionVariables.schemaName);
             if (schema != null) {
-                List<SqlMonikerImpl> tableNames =
+                List<SqlMoniker> tableNames =
                     getAllObjectNamesByType(
                         schema.getOwnedElement(),
                         FemLocalTable.class);
                 schemaNames.addAll(tableNames);
             }
-            return schemaNames.toArray(Util.emptySqlMonikerArray);
-        }
-        // looking for table names under the specified schema
-        else if (names.length == 2) {
+            return schemaNames;
+        } else if (names.size() == 2) {
+            // looking for table names under the specified schema
             FemLocalSchema schema =
                 FarragoCatalogUtil.getSchemaByName(
                     catalog,
-                    names[0]);
+                    names.get(0));
             if (schema != null) {
-                List<SqlMonikerImpl> tableNames =
+                List<SqlMoniker> tableNames =
                     getAllObjectNamesByType(
                         schema.getOwnedElement(),
                         FemLocalTable.class);
-                return tableNames.toArray(Util.emptySqlMonikerArray);
+                return tableNames;
             } else {
-                return Util.emptySqlMonikerArray;
+                return Collections.emptyList();
             }
-        }
-        // currently not supporting the likes of SALES.EMPS.$DUMMY
-        else {
-            return Util.emptySqlMonikerArray;
+        } else {
+            // currently not supporting the likes of SALES.EMPS.$DUMMY
+            return Collections.emptyList();
         }
     }
 
     /**
      * Returns a list of all object names of a given type in a collection.
+     *
+     * @param collection Collection
+     * @param type Type of object to return
+     * @return list of object names
      */
-    private List<SqlMonikerImpl> getAllObjectNamesByType(
+    private List<SqlMoniker> getAllObjectNamesByType(
         Collection<CwmModelElement> collection,
         Class<? extends CwmModelElement> type)
     {
-        List<SqlMonikerImpl> list = new ArrayList<SqlMonikerImpl>();
+        List<SqlMoniker> list = new ArrayList<SqlMoniker>();
         for (CwmModelElement element : collection) {
             if (type.isInstance(element)) {
                 // it only supports schema and table type right now
@@ -544,7 +546,7 @@ public class FarragoStmtValidator
             SqlIdentifier schemaId =
                 new SqlIdentifier(schemaNames, SqlParserPos.ZERO);
             FemLocalSchema schema = findSchema(schemaId);
-            routines = (Collection<CwmModelElement>) schema.getOwnedElement();
+            routines = schema.getOwnedElement();
         } else {
             simpleName = invocationName.getSimple();
 
@@ -556,8 +558,7 @@ public class FarragoStmtValidator
                     continue;
                 }
                 FarragoCatalogUtil.filterTypedModelElements(
-                    (Collection<CwmModelElement>) searchedSchema
-                    .getOwnedElement(),
+                    searchedSchema.getOwnedElement(),
                     routines,
                     FemRoutine.class);
             }
@@ -715,7 +716,7 @@ public class FarragoStmtValidator
 
         resolved.object =
             FarragoCatalogUtil.getModelElementByNameAndType(
-                (Collection<CwmModelElement>) resolved.schema.getOwnedElement(),
+                resolved.schema.getOwnedElement(),
                 resolved.objectName,
                 clazz);
         if (resolved.object == null) {
@@ -732,8 +733,7 @@ public class FarragoStmtValidator
         if (columnSet instanceof FemAbstractColumnSet) {
             for (
                 FemSampleDataset dataset
-                : (Collection<FemSampleDataset>)
-                ((FemAbstractColumnSet) columnSet).getSampleDataset())
+                : ((FemAbstractColumnSet) columnSet).getSampleDataset())
             {
                 if (dataset.getName().equals(datasetName)) {
                     return (CwmNamedColumnSet) dataset.getUsedColumnSet();

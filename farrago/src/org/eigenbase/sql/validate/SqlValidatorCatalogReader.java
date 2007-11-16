@@ -21,6 +21,8 @@
 */
 package org.eigenbase.sql.validate;
 
+import java.util.List;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 
@@ -45,6 +47,7 @@ public interface SqlValidatorCatalogReader
     /**
      * Finds a table with the given name, possibly qualified.
      *
+     * @param names Name of table
      * @return named table, or null if not found
      */
     SqlValidatorTable getTable(String [] names);
@@ -57,6 +60,7 @@ public interface SqlValidatorCatalogReader
      * context-dependent information such as SQL schema path, whereas a type
      * factory is context-independent.
      *
+     * @param typeName Name of type
      * @return named type, or null if not found
      */
     RelDataType getNamedType(SqlIdentifier typeName);
@@ -75,7 +79,14 @@ public interface SqlValidatorCatalogReader
      * @return the list of all object (schema and table) names under the above
      * criteria
      */
-    SqlMoniker [] getAllSchemaObjectNames(String [] names);
+    List<SqlMoniker> getAllSchemaObjectNames(List<String> names);
+
+    /**
+     * Returns the name of the current schema.
+     *
+     * @return name of the current schema
+     */
+    String getSchemaName();
 }
 
 // End SqlValidatorCatalogReader.java

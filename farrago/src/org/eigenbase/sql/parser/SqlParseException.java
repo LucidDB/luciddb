@@ -77,13 +77,50 @@ public class SqlParseException
     /**
      * Returns a list of the token names which could have legally occurred at
      * this point.
+     *
+     * <p>If some of the alternatives contain multiple tokens, returns the last
+     * token of only these longest sequences. (This occurs when the parser is
+     * maintaining more than the usual lookup.) For instance, if the possible
+     * tokens are
+     *
+     * <blockquote>
+     * <pre>
+     * {"IN"}
+     * {"BETWEEN"}
+     * {"LIKE"}
+     * {"=", "&lt;IDENTIFIER>"}
+     * {"=", "USER"}
+     * </pre>
+     * </blockquote>
+     *
+     * returns
+     *
+     * <blockquote>
+     * <pre>
+     * "&lt;IDENTIFIER>"
+     * "USER"
+     * </pre>
+     * </blockquote>
+     *
+     * @return list of token names which could have occurred at this point
      */
     public Collection<String> getExpectedTokenNames()
     {
-        final TreeSet<String> set = new TreeSet<String>();
-        for (int i = 0; i < expectedTokenSequences.length; i++) {
-            int [] expectedTokenSequence = expectedTokenSequences[i];
-            set.add(tokenImages[expectedTokenSequence[0]]);
+        if (expectedTokenSequences == null) {
+            return Collections.emptyList();
+        }
+        int maxLength = 0;
+        for (int[] expectedTokenSequence : expectedTokenSequences) {
+            maxLength = Math.max(expectedTokenSequence.length, maxLength);
+        }
+        final Set<String> set = new TreeSet<String>();
+        for (int[] expectedTokenSequence : expectedTokenSequences) {
+            if (expectedTokenSequence.length == maxLength) {
+                set.add(
+                    tokenImages[
+                        expectedTokenSequence[
+                            expectedTokenSequence.length - 1]]);
+            }
         }
         return set;
     }

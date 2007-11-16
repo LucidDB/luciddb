@@ -68,17 +68,16 @@ public class SetopNamespace
         case SqlKind.UnionORDINAL:
         case SqlKind.IntersectORDINAL:
         case SqlKind.ExceptORDINAL:
-            for (int i = 0; i < call.operands.length; i++) {
-                SqlNode operand = call.operands[i];
+            final SqlValidatorScope scope = validator.scopes.get(call);
+            for (SqlNode operand : call.operands) {
                 if (!operand.getKind().isA(SqlKind.Query)) {
                     throw validator.newValidationError(
                         operand,
                         EigenbaseResource.instance().NeedQueryOp.ex(
                             operand.toString()));
                 }
-                validator.validateQuery(operand);
+                validator.validateQuery(operand, scope);
             }
-            final SqlValidatorScope scope = validator.scopes.get(call);
             return call.getOperator().validateOperands(
                 validator,
                 scope,

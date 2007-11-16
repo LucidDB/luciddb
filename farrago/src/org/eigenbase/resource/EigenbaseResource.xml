@@ -439,6 +439,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Window has negative size</text>
 </exception>
 
+<exception id="120675" name="UnboundedFollowingWindowNotSupported" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>UNBOUNDED FOLLOWING window not supported</text>
+</exception>
+
 <exception id="120680" name="CannotUseDisallowPartialWithRange" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Cannot use DISALLOW PARTIAL with window based on RANGE</text>
 </exception>

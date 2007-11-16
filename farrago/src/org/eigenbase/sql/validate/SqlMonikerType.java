@@ -21,36 +21,24 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.util.*;
-
-
 /**
- * An enumeration of moniker types. used in {@link SqlMoniker}
+ * An enumeration of moniker types.
+ *
+ * <p>Used in {@link SqlMoniker}.
  *
  * @author tleung
  * @version $Id$
  * @since May 24, 2005
  */
-public class SqlMonikerType
-    extends EnumeratedValues.BasicValue
+public enum SqlMonikerType
 {
-    //~ Static fields/initializers ---------------------------------------------
-
-    public static final SqlMonikerType Column = new SqlMonikerType("Column", 0);
-    public static final SqlMonikerType Table = new SqlMonikerType("Table", 1);
-    public static final SqlMonikerType View = new SqlMonikerType("View", 2);
-    public static final SqlMonikerType Schema = new SqlMonikerType("Schema", 3);
-    public static final SqlMonikerType Repository =
-        new SqlMonikerType("Repository", 4);
-    public static final SqlMonikerType Function =
-        new SqlMonikerType("Function", 5);
-
-    //~ Constructors -----------------------------------------------------------
-
-    public SqlMonikerType(String name, int ordinal)
-    {
-        super(name, ordinal, name);
-    }
+    Column,
+    Table,
+    View,
+    Schema,
+    Repository,
+    Function,
+    Keyword;
 }
 
 // End SqlMonikerType.java

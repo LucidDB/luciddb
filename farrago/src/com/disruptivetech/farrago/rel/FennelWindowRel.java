@@ -362,17 +362,25 @@ public class FennelWindowRel
             //
             // Case                                  offset range
             // ===================================== ====== =====
-            // 3 preceding:                          0      4
-            // 3 following:                          3      4
-            // between 10 preceding and 2 preceding: -2     8
-            // between 3 preceding and 2 following:  2      6
-            // between 2 following and 6 following:  6      4
-            // between current row and current row:  0      1
+            // 3 preceding:                               0     4
+            // 3 following:                               3     4
+            // between 10 preceding and 2 preceding:     -2     8
+            // between 3 preceding and 2 following:       2     6
+            // between 2 following and 6 following:       6     4
+            // between current row and current row:       0     1
+            // between unbounded preceding
+            //     and 3 preceding                       -3  +inf
+            // between unbounded preceding
+            //     and 3 following                        3  +inf
+            // between 3 preceding
+            //     and unbounded following      not representable
             SqlWindowOperator.OffsetRange offsetAndRange =
                 SqlWindowOperator.getOffsetAndRange(
                     window.lowerBound,
                     window.upperBound,
                     window.physical);
+            assert offsetAndRange != null;
+            assert offsetAndRange.range >= 0;
             windowDef.setOffset((int) offsetAndRange.offset);
             windowDef.setRange(String.valueOf(offsetAndRange.range));
 

@@ -168,13 +168,14 @@ public class SqlCall
         SqlParserPos pos,
         List<SqlMoniker> hintList)
     {
-        final SqlNode [] operands = getOperands();
-        for (int i = 0; i < operands.length; i++) {
-            if (operands[i] instanceof SqlIdentifier) {
-                SqlIdentifier id = (SqlIdentifier) operands[i];
-                String posstring = id.getParserPosition().toString();
-                if (posstring.equals(pos.toString())) {
-                    id.findValidOptions(validator, scope, hintList);
+        for (SqlNode operand : getOperands()) {
+            if (operand instanceof SqlIdentifier) {
+                SqlIdentifier id = (SqlIdentifier) operand;
+                SqlParserPos idPos = id.getParserPosition();
+                if (idPos.toString().equals(pos.toString())) {
+                    ((SqlValidatorImpl) validator).lookupNameCompletionHints(
+                        scope, Arrays.asList(id.names), pos,
+                        hintList);
                     return;
                 }
             }

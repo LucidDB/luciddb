@@ -199,6 +199,7 @@
       <classpath refid="saffron.build.classpath"/>
       <jvmarg line="&EnableAssertions;"/>
       <jvmarg line="&SaffronProps;"/>
+      <jvmarg value="-Duser.dir=${project.location}"/>
       <jvmarg value="-Dsaffron.package.name=net.sf.saffron.runtime"/>
       <jvmarg value="-Dsaffron.java.dir=${examples.dir}"/>
       <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>

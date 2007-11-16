@@ -217,7 +217,7 @@ public class MockSessionStmtValidator
         return null;
     }
 
-    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
+    public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
     {
         return null;
     }

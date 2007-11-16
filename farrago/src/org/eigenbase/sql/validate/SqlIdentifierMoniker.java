@@ -72,6 +72,11 @@ public class SqlIdentifierMoniker
     {
         return id.toString();
     }
+
+    public String id()
+    {
+        return id.toString();
+    }
 }
 
 // End SqlIdentifierMoniker.java

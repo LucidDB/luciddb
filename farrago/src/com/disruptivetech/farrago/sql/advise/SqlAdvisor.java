@@ -23,11 +23,13 @@ package com.disruptivetech.farrago.sql.advise;
 import java.io.*;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+import org.eigenbase.trace.EigenbaseTrace;
 
 
 /**
@@ -40,6 +42,8 @@ import org.eigenbase.util.*;
  */
 public class SqlAdvisor
 {
+    public static final Logger tracer = EigenbaseTrace.parserTracer;
+
     //~ Instance fields --------------------------------------------------------
 
     // Flags indicating precision/scale combinations
@@ -50,6 +54,8 @@ public class SqlAdvisor
 
     /**
      * Creates a SqlAdvisor with a validator instance
+     *
+     * @param validator Validator
      */
     public SqlAdvisor(
         SqlValidatorWithHints validator)
@@ -66,21 +72,17 @@ public class SqlAdvisor
      *
      * @param sql A partial or syntatically incorrect sql statement for which to
      * retrieve completion hints
+     *
      * @param cursor to indicate the 0-based cursor position in the query at
-     * which completion hints need to be retrieved.
+     *
+     * @return completion hints
      */
-    public SqlMoniker [] getCompletionHints(String sql, int cursor)
-        throws SqlParseException
+    public List<SqlMoniker> getCompletionHints(String sql, int cursor)
     {
         String simpleSql = simplifySql(sql, cursor);
         int idx = simpleSql.indexOf(hintToken);
         if (idx < 0) {
-            SqlMoniker [] emptyMonikers = new SqlMoniker[0];
-            return emptyMonikers;
-        }
-        int idxAdj = adjustTokenPosition(simpleSql, idx);
-        if (idxAdj >= 0) {
-            idx = idxAdj;
+            return Collections.emptyList();
         }
         SqlParserPos pos = new SqlParserPos(1, idx + 1);
         return getCompletionHints(simpleSql, pos);
@@ -103,25 +105,79 @@ public class SqlAdvisor
      * @return an array of hints ({@link SqlMoniker}) that can fill in at the
      * indicated position
      */
-    public SqlMoniker [] getCompletionHints(String sql, SqlParserPos pos)
-        throws SqlParseException
+    public List<SqlMoniker> getCompletionHints(String sql, SqlParserPos pos)
     {
-        SqlNode sqlNode = parseQuery(sql);
+        // First try the statement they gave us. If this fails, just return
+        // the tokens which were expected at the failure point.
+        List<SqlMoniker> hintList = new ArrayList<SqlMoniker>();
+        SqlNode sqlNode = tryParse(sql, hintList);
+        if (sqlNode == null) {
+            return hintList;
+        }
+
+        // Now construct a statement which is bound to fail. (Character 7 BEL
+        // is not legal in any SQL statement.)
+        final int x = pos.getColumnNum() - 1;
+        sql = sql.substring(0, x) +
+            " \07" +
+            sql.substring(x);
+        tryParse(sql, hintList);
+
+        // Add the identifiers which are expected at the point of interest.
         try {
             validator.validate(sqlNode);
         } catch (Exception e) {
-            // mask any exception that is thrown during the validation, i.e. try
-            // to continue even if the sql is invalid. we are doing a best
-            // effort here to try to come up with the requested completion hints
+            // mask any exception that is thrown during the validation, i.e.
+            // try to continue even if the sql is invalid. we are doing a best
+            // effort here to try to come up with the requested completion
+            // hints
+            Util.swallow(e, tracer);
         }
-        return validator.lookupHints(sqlNode, pos);
+        final List<SqlMoniker> validatorHints =
+            validator.lookupHints(sqlNode, pos);
+        hintList.addAll(validatorHints);
+        return hintList;
+    }
+
+    /**
+     * Tries to parse a SQL statement.
+     *
+     * <p>If succeeds, returns the parse tree node; if fails, populates
+     * the list of hints and returns null.
+     *
+     * @param sql SQL statement
+     * @param hintList List of hints suggesting allowable tokens at the point
+     * of failure
+     * @return Parse tree if succeeded, null if parse failed
+     */
+    private SqlNode tryParse(String sql, List<SqlMoniker> hintList)
+    {
+        try {
+            return parseQuery(sql);
+        } catch (SqlParseException e) {
+            for (String tokenName : e.getExpectedTokenNames()) {
+                // Only add tokens which are keywords, like '"BY"'; ignore
+                // symbols such as '<Identifier>'.
+                if (tokenName.startsWith("\"")
+                    && tokenName.endsWith("\"")) {
+                hintList.add(
+                    new SqlMonikerImpl(
+                        tokenName.substring(1, tokenName.length() - 1),
+                        SqlMonikerType.Keyword));
+                }
+            }
+            return null;
+        } catch (EigenbaseException e) {
+            Util.swallow(e, null);
+            return null;
+        }
     }
 
     /**
      * Gets the fully qualified name for a {@link SqlIdentifier} at a given
-     * position of a sql statement
+     * position of a sql statement.
      *
-     * @param sql A syntatically correct sql statement for which to retrieve a
+     * @param sql A syntactically correct sql statement for which to retrieve a
      * fully qualified SQL identifier name
      * @param cursor to indicate the 0-based cursor position in the query that
      * represents a SQL identifier for which its fully qualified name is to be
@@ -133,7 +189,7 @@ public class SqlAdvisor
      */
     public SqlMoniker getQualifiedName(String sql, int cursor)
     {
-        SqlNode sqlNode = null;
+        SqlNode sqlNode;
         try {
             sqlNode = parseQuery(sql);
             validator.validate(sqlNode);
@@ -152,15 +208,17 @@ public class SqlAdvisor
 
     /**
      * Attempts to complete and validate a given partially completed sql
-     * statement. return whether it's valid.
+     * statement, and returns whether it is valid.
      *
      * @param sql A partial or syntatically incorrect sql statement to validate
+     *
+     * @return whether SQL statement is valid
      */
     public boolean isValid(String sql)
     {
         SqlSimpleParser simpleParser = new SqlSimpleParser(hintToken);
         String simpleSql = simpleParser.simplifySql(sql);
-        SqlNode sqlNode = null;
+        SqlNode sqlNode;
         try {
             sqlNode = parseQuery(simpleSql);
         } catch (Exception e) {
@@ -186,7 +244,7 @@ public class SqlAdvisor
      */
     public List<ValidateErrorInfo> validate(String sql)
     {
-        SqlNode sqlNode = null;
+        SqlNode sqlNode;
         List<ValidateErrorInfo> errorList = new ArrayList<ValidateErrorInfo>();
 
         sqlNode = collectParserError(sql, errorList);
@@ -238,7 +296,7 @@ public class SqlAdvisor
      *
      * @return an of SQL reserved and keywords
      */
-    public String [] getReservedAndKeyWords()
+    public List<String> getReservedAndKeyWords()
     {
         Collection<String> c = SqlAbstractParserImpl.getSql92ReservedWords();
         List<String> l =
@@ -247,11 +305,14 @@ public class SqlAdvisor
         List<String> al = new ArrayList<String>();
         al.addAll(c);
         al.addAll(l);
-        return al.toArray(new String[al.size()]);
+        return al;
     }
 
     /**
-     * Return the underlying Parser implementation class
+     * Returns the underlying Parser implementation class.
+     *
+     * <p>To use a different parser (recognizing a different dialect of SQL),
+     * derived class should override.
      *
      * @return a {@link SqlAbstractParserImpl} instance
      */
@@ -262,14 +323,19 @@ public class SqlAdvisor
     }
 
     /**
-     * Wrapper function to parse a SQL statement, throwing a {@link
-     * SqlParseException} if the statement is not syntactically valid
+     * Wrapper function to parse a SQL query (SELECT or VALUES, but not INSERT,
+     * UPDATE, DELETE, CREATE, DROP etc.), throwing a {@link
+     * SqlParseException} if the statement is not syntactically valid.
+     *
+     * @param sql SQL statement
+     * @return parse tree
+     * @throws SqlParseException if not syntactically valid
      */
     protected SqlNode parseQuery(String sql)
         throws SqlParseException
     {
         SqlParser parser = new SqlParser(sql);
-        return parser.parseQuery();
+        return parser.parseStmt();
     }
 
     /**
@@ -288,8 +354,7 @@ public class SqlAdvisor
         List<ValidateErrorInfo> errorList)
     {
         try {
-            SqlNode sqlNode = parseQuery(sql);
-            return sqlNode;
+            return parseQuery(sql);
         } catch (SqlParseException e) {
             ValidateErrorInfo errInfo =
                 new ValidateErrorInfo(
@@ -299,26 +364,6 @@ public class SqlAdvisor
             // parser only returns 1 exception now
             errorList.add(errInfo);
             return null;
-        }
-    }
-
-    /**
-     * simplifySql takes a 0-based cursor which points to exactly where
-     * completion hint is to be requested. getCompletionHints takes a 1-based
-     * SqlParserPos which points to the beginning of a SqlIdentifier. For
-     * example, the caret in 'where b.^' indicates the cursor position needed
-     * for simplifySql, while getCompletionHints will require the same clause to
-     * be represented as 'where ^b.$suggest$'
-     */
-    private int adjustTokenPosition(String sql, int cursor)
-    {
-        if (sql.charAt(cursor - 1) == '.') {
-            int idxLastSpace = sql.lastIndexOf(' ', cursor - 1);
-            int idxLastEqual = sql.lastIndexOf('=', cursor - 1);
-            return (idxLastSpace < idxLastEqual) ? (idxLastEqual + 1)
-                : (idxLastSpace + 1);
-        } else {
-            return -1;
         }
     }
 

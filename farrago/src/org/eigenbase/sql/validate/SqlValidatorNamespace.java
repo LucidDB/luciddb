@@ -86,11 +86,6 @@ public interface SqlValidatorNamespace
      */
     void validate();
 
-    /**
-     * Looks up hints from this namespace.
-     */
-    void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList);
-
     SqlNode getNode();
 
     SqlValidatorNamespace lookupChild(

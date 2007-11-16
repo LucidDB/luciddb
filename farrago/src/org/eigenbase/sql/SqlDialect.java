@@ -25,6 +25,7 @@ package org.eigenbase.sql;
 import java.sql.*;
 
 import java.util.regex.*;
+import java.util.List;
 
 import org.eigenbase.util.*;
 
@@ -136,6 +137,28 @@ public class SqlDialect
         buf.append(identifierQuoteString);
         buf.append(val2);
         buf.append(identifierQuoteString);
+        return buf;
+    }
+
+    /**
+     * Quotes a multi-part identifier.
+     *
+     * @param buf Buffer
+     * @param identifiers List of parts of the identifier to quote
+     *
+     * @return The buffer
+     */
+    public StringBuilder quoteIdentifier(
+        StringBuilder buf,
+        List<String> identifiers)
+    {
+        int i = 0;
+        for (String identifier : identifiers) {
+            if (i++ > 0) {
+                buf.append('.');
+            }
+            quoteIdentifier(buf, identifier);
+        }
         return buf;
     }
 

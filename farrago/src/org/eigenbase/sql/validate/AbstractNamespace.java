@@ -25,7 +25,6 @@ import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
 
 
@@ -70,11 +69,6 @@ abstract class AbstractNamespace
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    public void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList)
-    {
-        // no hints
-    }
 
     public void validate()
     {

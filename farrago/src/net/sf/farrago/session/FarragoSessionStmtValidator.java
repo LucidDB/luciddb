@@ -298,7 +298,7 @@ public interface FarragoSessionStmtValidator
      * @return the list of all {@link SqlMoniker} object (schema and table)
      * names under the above criteria
      */
-    public SqlMoniker [] getAllSchemaObjectNames(String [] names);
+    public List<SqlMoniker> getAllSchemaObjectNames(List<String> names);
 
     /**
      * Sets the parser position to use for context in error messages.

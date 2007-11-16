@@ -20,8 +20,6 @@
 */
 package com.lucidera.farrago;
 
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 
@@ -56,7 +54,7 @@ public class LucidDbPreparingStmt
             sqlValidator =
                 new LucidDbSqlValidator(
                     this,
-                    SqlValidator.Compatible.Default);
+                    SqlConformance.Default);
         }
         return sqlValidator;
     }
