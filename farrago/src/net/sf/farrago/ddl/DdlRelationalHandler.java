@@ -321,7 +321,8 @@ public class DdlRelationalHandler
 
         // We would prefer to use the original SQL, if it is sufficiently
         // similar. We require that (a) it gives no validation error, (b) it
-        // produces the same result type.
+        // produces the same result type, and (c) it is equivalent to
+        // the same canonical SQL.
         String originalSql = view.getOriginalDefinition();
         if (originalSql != null) {
             FarragoSessionAnalyzedSql analyzedOriginalSql;
@@ -334,7 +335,7 @@ public class DdlRelationalHandler
                         false);
                 if (analyzedOriginalSql.canonicalString.equals(
                     analyzedSql.canonicalString)
-                    || analyzedOriginalSql.resultType.equals(
+                    && analyzedOriginalSql.resultType.equals(
                     analyzedSql.resultType))
                 {
                     sql = originalSql;

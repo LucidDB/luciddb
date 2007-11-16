@@ -1,6 +1,32 @@
 > -- $Id$
 > -- Test effect on view's stored original text when a dependency is re-created.
 > 
+> create schema x;
+> create schema y;
+> create table x.t(i int not null primary key);
+> create table y.t(i int not null primary key);
+> insert into x.t values(100);
+> insert into y.t values(200);
+> set schema 'x';
+> create view y.q1 as select * from t;
+> create view y.q2 as select * from t union all select * from y.q1;
+> select * from y.q2;
++------+
+|  I   |
++------+
+| 100  |
+| 100  |
++------+
+> set schema 'y';
+> create or replace view y.q1 as select * from t;
+> select * from y.q2;
++------+
+|  I   |
++------+
+| 100  |
+| 200  |
++------+
+> 
 > !set outputformat csv
 > !set force true
 > CREATE OR REPLACE SCHEMA dtbug1173;
