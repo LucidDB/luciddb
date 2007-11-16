@@ -555,6 +555,19 @@ public interface SqlValidator
      * @return Expanded expression
      */
     SqlNode expand(SqlNode expr, SqlValidatorScope scope);
+
+    /**
+     * @deprecated This class is for backwards-compatibility with
+     * the previous incarnation of SqlConformance.
+     */
+    public static class Compatible 
+    {
+        /**
+         * @deprecated This symbol is for backwards-compatibility with
+         * the previous incarnation of SqlConformance.
+         */
+        public static final SqlConformance Default = SqlConformance.Default;
+    }
 }
 
 // End SqlValidator.java
