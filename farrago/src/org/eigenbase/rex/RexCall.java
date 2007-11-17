@@ -72,6 +72,9 @@ public class RexCall
         this.kind = sqlKindToRexKind(op.getKind());
         assert this.kind != null : op;
         this.digest = computeDigest(true);
+        if (op instanceof SqlBinaryOperator) {
+            assert(operands.length == 2);
+        }
     }
 
     //~ Methods ----------------------------------------------------------------

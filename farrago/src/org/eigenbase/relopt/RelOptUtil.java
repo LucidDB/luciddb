@@ -904,9 +904,8 @@ public abstract class RelOptUtil
         case 1:
             return residualList.get(0);
         default:
-            return left.getCluster().getRexBuilder().makeCall(
-                SqlStdOperatorTable.andOperator,
-                residualList);
+            return RexUtil.andRexNodeList(
+                left.getCluster().getRexBuilder(), residualList);
         }
     }
 
@@ -960,8 +959,8 @@ public abstract class RelOptUtil
         case 1:
             return nonEquiList.get(0);
         default:
-            return leftRel.getCluster().getRexBuilder().makeCall(
-                SqlStdOperatorTable.andOperator,
+            return RexUtil.andRexNodeList(
+                leftRel.getCluster().getRexBuilder(),
                 nonEquiList);
         }
     }
@@ -987,8 +986,8 @@ public abstract class RelOptUtil
         case 1:
             return nonEquiList.get(0);
         default:
-            return filterRel.getCluster().getRexBuilder().makeCall(
-                SqlStdOperatorTable.andOperator,
+            return RexUtil.andRexNodeList(
+                filterRel.getCluster().getRexBuilder(),
                 nonEquiList);
         }
     }
@@ -1016,8 +1015,8 @@ public abstract class RelOptUtil
         case 1:
             return nonEquiList.get(0);
         default:
-            return filterRel.getCluster().getRexBuilder().makeCall(
-                SqlStdOperatorTable.andOperator,
+            return RexUtil.andRexNodeList(
+                filterRel.getCluster().getRexBuilder(),
                 nonEquiList);
         }
     }

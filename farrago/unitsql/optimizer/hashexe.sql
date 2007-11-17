@@ -687,6 +687,15 @@ drop table A;
 drop table B;
 drop table C;
 
+-- LER-6819
+create table tab(a int, b int, c int);
+insert into tab values(1,2,3),(1,2,4);
+create view vtab(a,b,c) as
+    select coalesce(t2.a, t1.a), coalesce(t2.b, t1.b), coalesce(t2.c, t1.c)
+        from tab t1, tab t2 where t1.a = t2.a;
+!set outputformat table
+select * from vtab where a = 1 and b = 2 and c = 3 order by a, b, c; 
+
 --------------
 -- Clean up --
 --------------
