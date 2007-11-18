@@ -67,20 +67,57 @@ public abstract class DdlGenerator
     protected static final String NL = System.getProperty("line.separator");
     protected static final String SEP = ";" + NL + NL;
 
+    private boolean schemaQualified;
+    protected String previousSetSchema;
+
     //~ Methods ----------------------------------------------------------------
 
     protected abstract JmiModelView getModelView();
 
-    public void generateSetSchema(GeneratedDdlStmt stmt, String schemaName)
+    /**
+     * Sets whether object names should be qualified with a schema name, if
+     * they have one. Default is false.
+     *
+     * @param schemaQualified whether to qualify object names with schema name
+     */
+    public void setSchemaQualified(boolean schemaQualified)
     {
-        if (schemaName != null) {
+        this.schemaQualified = schemaQualified;
+    }
+
+    /**
+     * Appends a 'SET SCHEMA' command to <code>stmt</code> if
+     * <code>schemaName</code> is not null. If <code>evenIfUnchanged</code>
+     * is true, does so even if the schema is the same as the previous
+     * call to this method.
+     *
+     * @param stmt Statement to append to
+     * @param schemaName Name of schema
+     * @param evenIfUnchanged Whether to generate again for same schema name
+     *
+     * @return whether SET SCHEMA command was generated
+     */
+    public boolean generateSetSchema(
+        GeneratedDdlStmt stmt,
+        String schemaName,
+        boolean evenIfUnchanged)
+    {
+        if (schemaName != null
+            && (evenIfUnchanged
+            || previousSetSchema == null
+            || !previousSetSchema.equals(schemaName)))
+        {
             StringBuilder sb = new StringBuilder();
             sb.append("SET SCHEMA ");
             sb.append(literal(quote(schemaName)));
             stmt.addStmt(sb.toString());
+            previousSetSchema = schemaName;
+            return true;
+        } else {
+            return false;
         }
     }
-
+    
     public void generateCreate(CwmModelElement e, GeneratedDdlStmt stmt)
     {
         generate("create", e, stmt);
@@ -330,16 +367,39 @@ public abstract class DdlGenerator
      * Gathers a list of elements in a schema, optionally including elements
      * which don't belong to any schema.
      *
-     * @param list List to populate
-     * @param schemaName Name of schema
+     * @param list                     List to populate
+     * @param schemaName               Name of schema
      * @param includeNonSchemaElements Whether to include elements which do not
-     * @param catalog
+     *                                 belong to a schema
+     * @param catalog                  Catalog
      */
     public abstract void gatherElements(
         List<CwmModelElement> list,
         String schemaName,
         boolean includeNonSchemaElements,
         CwmCatalog catalog);
+
+    /**
+     * Outputs the name of an object, optionally qualified by a schema name.
+     *
+     * @param sb StringBuilder to write to
+     *
+     * @param schema Schema object belongs to, or null if object does not
+     * belong to a schema
+     *
+     * @param objectName Name of object
+     */
+    protected void name(
+        StringBuilder sb,
+        CwmNamespace schema,
+        String objectName)
+    {
+        if (schemaQualified && schema != null) {
+            sb.append(quote(schema.getName()));
+            sb.append('.');
+        }
+        sb.append(quote(objectName));
+    }
 
     /**
      * Implementation of {@link org.eigenbase.jmi.JmiObjUtil.Namer} which
