@@ -72,6 +72,12 @@ public class RexCall
         this.kind = sqlKindToRexKind(op.getKind());
         assert this.kind != null : op;
         this.digest = computeDigest(true);
+        // TODO zfong 11/19/07 - Extend the check below to all types of
+        // operators, similar to SqlOperator.checkOperandCount.  However,
+        // that method operates on SqlCalls, which may have not have the
+        // same number of operands as their corresponding RexCalls.  One
+        // example is the CAST operator, which is originally a 2-operand
+        // SqlCall, but is later converted to a 1-operand RexCall.
         if (op instanceof SqlBinaryOperator) {
             assert(operands.length == 2);
         }
