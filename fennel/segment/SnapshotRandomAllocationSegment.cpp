@@ -70,7 +70,11 @@ PageId SnapshotRandomAllocationSegment::getSnapshotId(PageId pageId)
     }
 
     // If we have to walk through the page chain, then we need to be starting
-    // from the anchor
+    // from the anchor.  Note that there's no need to acquire the deallocation
+    // mutex while walking through the page chain looking for the appropriate
+    // snapshot page because we always start at the anchor and walk from
+    // newer pages to older pages.  Therefore, we should never try reading
+    // the pageEntry for an older page that's going to be deallocated.
     assert(pageId == getAnchorPageId(pageId));
     PageId chainPageId = pageEntry.versionChainPageId;
     do {
@@ -160,6 +164,10 @@ void SnapshotRandomAllocationSegment::incrPageUpdateCount(
 
 PageId SnapshotRandomAllocationSegment::getAnchorPageId(PageId snapshotId)
 {
+    // Acquire the deallocation mutex to prevent the page chain from being
+    // modified while we're walking through it
+    SXMutexSharedGuard(pVersionedRandomSegment->getDeallocationMutex());
+
     // Walk the page chain to find the anchor, looking for the entry with
     // the minimum allocationCsn.
     PageId chainPageId = snapshotId;

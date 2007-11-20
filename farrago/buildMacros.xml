@@ -339,6 +339,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${ant.home}/lib/ant-contrib.jar"/>
     <path refid="xerces.classpath"/>
     <pathelement location="${ant.home}/lib/ant-junit.jar"/>
+    <pathelement location="${ant.home}/lib/ant-nodeps.jar"/>
   </path>
   <property name="ant.classpath" refid="ant.classpath"/>
 
