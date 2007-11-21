@@ -113,7 +113,11 @@
 	<target name="do-cleanbuild">
 		<property name="build.home" location="${default.build.home}"/>
     
-		<exec dir="${build.home}/luciddb" executable="bash" failonerror="true">
+		<exec 
+      dir="${build.home}/luciddb" 
+      executable="bash" 
+      output="${project.logs.dir}/build.log"
+      failonerror="true">
 			<arg value="${build.home}/luciddb/initBuild.sh"/>
 			<arg value="${luciddb.init.arg}"/>
 			<arg value="--with-debug"/>

@@ -3,6 +3,7 @@
 
     <property name="artifacts.dir" value="${artifacts.root}/${project}"/>
     <property name="logs.dir" value="${red.bootstrap.dir}/logs" />
+    <property name="project.logs.dir" value="${logs.dir}/${project}" />
 
     <labelincrementer 
         port="${p4port}" 
@@ -17,7 +18,7 @@
 	</bootstrappers>
 
     <listeners>
-        <currentbuildstatuslistener file="${logs.dir}/${project}/currentbuildstatus.txt"/>
+        <currentbuildstatuslistener file="${project.logs.dir}/currentbuildstatus.txt"/>
     </listeners>
 
 	<!-- Defines where cruise looks for changes, to decide whether to run the build -->
@@ -46,11 +47,12 @@
             <property name="open_root" value="${p4root}"/>
             <property name="eigen_home" value="${open.integration.build.home}"/>
             <property name="lucidera_platform_home" value="${red.default.build.home}/platform/main"/>
+            <property name="project.logs.dir" value="${project.logs.dir}"/>
 		</ant>
 	</schedule>
 
 	<!-- directory to write build logs to -->
-    <log dir="${logs.dir}/${project}">
+    <log dir="${project.logs.dir}">
         <merge dir="${open.integration.build.home}/luciddb/testlog"/>
         <merge dir="${open.integration.build.home}/farrago/testlog"/>
 	</log>
@@ -103,6 +105,10 @@
             file="${open.integration.build.home}/${project}/dist/${luciddb.tar}"
             dest="${artifacts.dir}" 
             subdirectory="release"/>
+
+        <artifactspublisher
+            file="${project.logs.dir}/build.log"
+            dest="${artifacts.dir}"/>
 
 		<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 
