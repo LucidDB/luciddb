@@ -185,10 +185,17 @@ public class FarragoDdlGenerator
         FemLocalView view,
         GeneratedDdlStmt stmt)
     {
+        // Assume that the view was created in the context of its schema. If
+        // that was not the case, we would have no way to detect it. We'd need
+        // implement a closure mechanism to deal with SET SCHEMA and SET PATH.
+        if (generateSetSchema(stmt, view.getNamespace().getName(), false)) {
+            stmt.addStmt(";" + NL);
+        }
+
         StringBuilder sb = new StringBuilder();
         createHeader(sb, "VIEW", stmt);
 
-        sb.append(quote(view.getName()));
+        name(sb, view.getNamespace(), view.getName());
         addDescription(sb, view);
         sb.append(" AS");
         sb.append(NL);
@@ -206,7 +213,7 @@ public class FarragoDdlGenerator
         StringBuilder sb = new StringBuilder();
         createHeader(sb, "SCHEMA", stmt);
 
-        sb.append(quote(schema.getName()));
+        name(sb, null, schema.getName());
         stmt.addStmt(sb.toString());
     }
 
@@ -217,7 +224,7 @@ public class FarragoDdlGenerator
         StringBuilder sb = new StringBuilder();
         createHeader(sb, "TABLE", false, null);
 
-        sb.append(quote(table.getName()));
+        name(sb, table.getNamespace(), table.getName());
         stmt.addStmt(sb.toString());
         sb.setLength(0);
         addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
@@ -235,7 +242,7 @@ public class FarragoDdlGenerator
         StringBuilder sb = new StringBuilder();
         createHeader(sb, "FOREIGN TABLE", false, null);
 
-        sb.append(quote(table.getName()));
+        name(sb, table.getNamespace(), table.getName());
         stmt.addStmt(sb.toString());
         sb.setLength(0);
         addColumns(sb, Util.cast(table.getFeature(), CwmColumn.class));
@@ -243,7 +250,7 @@ public class FarragoDdlGenerator
         sb.append("SERVER ");
         FemDataServer server = table.getServer();
         if (server != null) {
-            sb.append(quote(server.getName()));
+            name(sb, null, server.getName());
         }
         addOptions(
             sb,
@@ -259,7 +266,7 @@ public class FarragoDdlGenerator
         StringBuilder sb = new StringBuilder();
         createHeader(sb, "FOREIGN DATA WRAPPER", stmt);
 
-        sb.append(quote(wrapper.getName()));
+        name(sb, null, wrapper.getName());
         stmt.addStmt(sb.toString());
         sb.setLength(0);
         // "LIBRARY" clause is optional
@@ -293,9 +300,10 @@ public class FarragoDdlGenerator
     {
         StringBuilder sb = new StringBuilder();
         final ProcedureType routineType = routine.getType();
+        final CwmClassifier owner = routine.getSpecification().getOwner();
         boolean method =
             routine.getSpecification() != null
-                && routine.getSpecification().getOwner()
+                && owner
                 instanceof FemUserDefinedType;
         if (method) {
             createHeader(sb, "SPECIFIC METHOD", stmt);
@@ -305,14 +313,14 @@ public class FarragoDdlGenerator
             createHeader(sb, "PROCEDURE", stmt);
         }
 
-        sb.append(quote(routine.getName()));
+        name(sb, routine.getNamespace(), routine.getName());
         stmt.addStmt(sb.toString());
         sb.setLength(0);
 
         if (method) {
             sb.append(NL);
             sb.append("FOR ");
-            sb.append(quote(routine.getSpecification().getOwner().getName()));
+            name(sb, owner.getNamespace(), owner.getName());
         } else {
             methodBody(routine, sb);
         }
@@ -372,7 +380,7 @@ public class FarragoDdlGenerator
         }
 
         sb.append("SPECIFIC ");
-        sb.append(quote(routine.getName()));
+        name(sb, routine.getNamespace(), routine.getName());
 
         sb.append(NL);
         sb.append("LANGUAGE ");
@@ -516,7 +524,7 @@ public class FarragoDdlGenerator
     {
         StringBuilder sb = new StringBuilder();
         createHeader(sb, "TYPE", stmt);
-        sb.append(quote(type.getName()));
+        name(sb, type.getNamespace(), type.getName());
         sb.append(" AS");
         addColumns(sb, Util.filter(type.getFeature(), CwmColumn.class));
         sb.append(NL);
@@ -551,7 +559,7 @@ public class FarragoDdlGenerator
     {
         StringBuilder sb = new StringBuilder();
         createHeader(sb, "TYPE", stmt);
-        sb.append(quote(type.getName()));
+        name(sb, type.getNamespace(), type.getName());
         sb.append(" AS ");
 
         appendType(
@@ -573,7 +581,7 @@ public class FarragoDdlGenerator
         StringBuilder sb = new StringBuilder();
         createHeader(sb, "SERVER", stmt);
 
-        sb.append(quote(server.getName()));
+        name(sb, null, server.getName());
         stmt.addStmt(sb.toString());
         sb.setLength(0);
         // "TYPE" clause is optional
@@ -590,7 +598,7 @@ public class FarragoDdlGenerator
         }
         sb.append(NL);
         sb.append("FOREIGN DATA WRAPPER ");
-        sb.append(quote(server.getWrapper().getName()));
+        name(sb, null, server.getWrapper().getName());
         addOptions(
             sb,
             server.getStorageOptions());
@@ -613,7 +621,7 @@ public class FarragoDdlGenerator
     {
         StringBuilder sb = new StringBuilder();
         sb.append("DROP SCHEMA ");
-        sb.append(quote(schema.getName()));
+        name(sb, null, schema.getName());
         sb.append(" CASCADE");
         stmt.addStmt(sb.toString());
     }
@@ -638,7 +646,7 @@ public class FarragoDdlGenerator
     {
         StringBuilder sb = new StringBuilder();
         sb.append("DROP TABLE ");
-        sb.append(quote(table.getName()));
+        name(sb, table.getNamespace(), table.getName());
         sb.append(" CASCADE");
         stmt.addStmt(sb.toString());
     }
@@ -664,9 +672,10 @@ public class FarragoDdlGenerator
             sb,
             index.isClustered() ? "CLUSTERED INDEX" : "INDEX",
             stmt);
-        sb.append(quote(index.getName()));
+        name(sb, index.getNamespace(), index.getName());
         sb.append(" ON ");
-        sb.append(quote(index.getSpannedClass().getName()));
+        final CwmClass spanned = index.getSpannedClass();
+        name(sb, spanned.getNamespace(), spanned.getName());
         sb.append(" (");
         int k = -1;
         for (CwmIndexedFeature feature : index.getIndexedFeature()) {
@@ -868,9 +877,7 @@ public class FarragoDdlGenerator
             StringBuilder sb = new StringBuilder();
             sb.append("DROP ").append(elementType).append(" ");
 
-            // we're already in the current schema (SET SCHEMA) so don't fully
-            // qualify name
-            sb.append(quote(e.getName()));
+            name(sb, e.getNamespace(), e.getName());
             stmt.addStmt(sb.toString());
         }
     }
