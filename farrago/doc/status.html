@@ -11,7 +11,7 @@
 <h1>What's Working Already?</h1>
 
 Here's a laundry list of SQL features which are already working in
-Farrago as of release 0.6.  If a sub-feature isn't
+Farrago as of release 0.7.  If a sub-feature isn't
 mentioned (e.g. CHECK clause in CREATE TABLE), it isn't available yet.
 Everything is supposed to work according to the SQL standard, so if
 something doesn't, that's either a bug or an incomplete feature.
@@ -175,7 +175,7 @@ TABLE "tbl" REBUILD</a>: physically reorganize table contents, purging
 deleted entries and rebalancing indexes where supported.
 
 <li><a href="http://wiki.eigenbase.org/TableStatistics">ANALYZE TABLE
-"tbl" COMPUTE STATISTICS FOR { ALL COLUMNS | COLUMNS (a, b, c...)
+"tbl" {ESTIMATE|COMPUTE} STATISTICS FOR { ALL COLUMNS | COLUMNS (a, b, c...)
 }</a>: collect statistics on stored data distribution for use by the
 optimizer.
 
@@ -249,6 +249,9 @@ EXCLUDING ATTRIBUTES shows relational operator names only.
 INCLUDING ATTRIBUTES is the default.  INCLUDING ALL ATTRIBUTES provides
 additional attributes such as cost.
 
+<li><a href="http://wiki.eigenbase.org/TableStatistics#Sampling">TABLESAMPLE</a>
+with BERNOULLI and SYSTEM options
+
 <li>The LucidDB SQL reference has the most up-to-date list of
 <a href="http://docs.eigenbase.org/LucidDbValueExpression">supported row
 expressions</a>
@@ -294,7 +297,8 @@ getCrossReference
 
 <ul>
 
-<li>hash join/agg coming soon (already available in LucidDB session personality)
+<li>hash join/agg and nested loop joins coming soon (already available
+in LucidDB session personality)
 
 <li>cartesian product join (for inner joins only)
 
