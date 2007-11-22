@@ -768,3 +768,26 @@ select sid
         c.city = st.city and st.state = 'New York' and
         c.city = t.c
     order by sid;
+
+------------
+-- Misc Bugs
+------------
+
+-- LER-6865 -- a semijoin should not be used
+create table le_org_party(org_party_key int primary key, dummy int);
+create table le_sales_ordlns(cust_sold_to_key int, dummy int);
+create index i_sales_ordlns on le_sales_ordlns(cust_sold_to_key);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'LE_ORG_PARTY', 6353);
+call sys_boot.mgmt.stat_set_row_count(
+    'LOCALDB', 'SJ', 'LE_SALES_ORDLNS', 2641498);
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'LE_ORG_PARTY', 'ORG_PARTY_KEY', 6353, 100, 6353, 0,
+    '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'LE_SALES_ORDLNS', 'CUST_SOLD_TO_KEY', 5614, 100, 5614, 0,
+    '0123456789');
+!set outputformat csv
+explain plan for
+    select count(*) from le_sales_ordlns s, le_org_party o
+    where s.cust_sold_to_key = o.org_party_key;
+

@@ -205,7 +205,7 @@ public class RelMdDistinctRowCount
         ProjectRelBase rel,
         BitSet groupKey,
         RexNode predicate)
-    {
+    {    
         BitSet baseCols = new BitSet();
         BitSet projCols = new BitSet();
         RexNode [] projExprs = rel.getChildExps();
@@ -237,6 +237,12 @@ public class RelMdDistinctRowCount
                 modifiedPred);
         if (distinctRowCount == null) {
             return null;
+        }
+        
+        // Handle the special case where the groupKey forms a unique key
+        if (RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey)) {
+            assert(projCols.cardinality() == 0);
+            return distinctRowCount;
         }
 
         // multiply by the cardinality of the non-child projection expressions

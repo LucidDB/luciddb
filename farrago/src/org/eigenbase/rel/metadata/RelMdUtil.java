@@ -286,7 +286,13 @@ public class RelMdUtil
 
     /**
      * Returns the number of distinct values provided numSelected are selected
-     * where there are domainSize distinct values
+     * where there are domainSize distinct values.
+     * 
+     * <p>
+     * Note that in the case where domainSize == numSelected, it's not true
+     * that the return value should be domainSize.  If you pick 100 random
+     * values between 1 and 100, you'll most likely end up with fewer than
+     * 100 distinct values, because you'll pick some values more than once. 
      *
      * @param domainSize number of distinct values in the domain
      * @param numSelected number selected from the domain
