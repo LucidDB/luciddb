@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.7.1
+LucidDB Binary Release 0.7.2
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -41,6 +41,38 @@ http://issues.eigenbase.org
 
 ----------------------------------------------------------------------
 CHANGE HISTORY
+
+Changes since 0.7.1 include
+
+- sampling support for ANALYZE
+- BERNOULLI and SYSTEM options for TABLESAMPLE
+- significant performance improvement for large DROP operations
+- additional system view DBA_COLUMN_STATS
+- table name mapping support in JDBC foreign data wrapper
+- new system parameter "deviceSchedulerType" for controlling I/O impl
+- new VJDBC listener system parameter "connectionTimeoutMillis"
+- new session parameter "lastRowsRejected"
+- new performance counters
+  "DatabasePagesAllocatedAfterReclaim", "TempPagesAllocatedAfterReclaim"
+- miscellaneous optimizer improvements and fixes
+- optimize away distinct agg for semijoins where the keys are already unique
+- improve rowcount inference for UDX's (FRG-289)
+- support optimization for functional expressions in nested loop join
+  conditions
+- optimize away nested loop join temp index when LHS input is empty
+- fixes for a few problems in efficient subquery decorrelation
+- increase applib function input/output lengths
+- fixes for page versioning concurrency and other code review findings
+- fix a bad cache page access during index search
+- fixes for some rare bitmap index corruptions during incremental load
+- some segment-level tracing fixes
+- improved error reporting for failures setting large cache sizes
+- fix a rare problem with simultaneous commits (FNL-68)
+- fix decimal rounding mode for converting literals in VALUES clause
+- fix exception handling issues with JNI (FNL-67)
+- change LucidDB mbean to use local JDBC driver rather than RMI
+- improve EXPLAIN PLAN readability for GROUP BY
+- improve rejected row logfile naming
 
 Changes since 0.7.0 include
 
