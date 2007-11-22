@@ -1131,10 +1131,7 @@ public class LoptMetadataTest
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                100.0,
-                100.0);
+        double expected = 100.0;
         checkDistinctRowCount(
             "select * from tabwithuniqueKey",
             groupKey,

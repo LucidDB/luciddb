@@ -123,6 +123,12 @@ public class RelMdPopulationSize
         if (population == null) {
             return null;
         }
+        
+        // Handle the special case where the groupKey forms a unique key
+        if (RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey)) {
+            assert(projCols.cardinality() == 0);
+            return population;
+        }
 
         for (
             int bit = projCols.nextSetBit(0);
