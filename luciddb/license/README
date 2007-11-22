@@ -31,9 +31,13 @@ RELEASE NOTES
 This binary release is intended for use by anyone who wants to run
 LucidDB without having to build anything.
 
-LucidDB packaging does not yet support upgrade, so install this
+LucidDB packaging does not yet support automatic upgrade, so install this
 release in a fresh location; do not attempt to unpack over an existing
 installation!
+
+For manual upgrade from an older version, use this procedure:
+
+http://docs.eigenbase.org/LucidDbUpgrade
 
 Please report issues at Eigenbase JIRA:
 
