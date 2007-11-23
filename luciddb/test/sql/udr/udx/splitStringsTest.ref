@@ -124,6 +124,67 @@
 | CC           |
 +--------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test with whitespace-only string input
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '  ',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE)
+. . . . . . . . > );
++--------------+
+| OUT_STRINGS  |
++--------------+
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '  ',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE)
+. . . . . . . . > );
++--------------+
+| OUT_STRINGS  |
++--------------+
+|              |
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test with empty input
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE)
+. . . . . . . . > );
++--------------+
+| OUT_STRINGS  |
++--------------+
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE)
+. . . . . . . . > );
++--------------+
+| OUT_STRINGS  |
++--------------+
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test with null input
+0: jdbc:luciddb:> call applib.create_var('splittest', null, 'xyz');
+0: jdbc:luciddb:> call applib.set_var('splittest', 'var', null);
+0: jdbc:luciddb:> select * from table(applib.split_string_to_rows(applib.get_var('splittest', 'var'), ',', '!',TRUE));
++--------------+
+| OUT_STRINGS  |
++--------------+
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test exception when more than one escape char
 0: jdbc:luciddb:> -- enable when LER-4686 is fixed
 0: jdbc:luciddb:> --select * from table(
