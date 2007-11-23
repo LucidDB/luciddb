@@ -51,7 +51,7 @@ Changes since 0.7.1 include
 - sampling support for ANALYZE
 - BERNOULLI and SYSTEM options for TABLESAMPLE
 - significant performance improvement for large DROP operations
-- additional system view DBA_COLUMN_STATS
+- additional system views DBA_COLUMN_STATS and DBA_COLUMN_HISTOGRAMS
 - table name mapping support in JDBC foreign data wrapper
 - new system parameter "deviceSchedulerType" for controlling I/O impl
 - new VJDBC listener system parameter "connectionTimeoutMillis"
