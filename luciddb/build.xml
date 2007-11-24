@@ -488,7 +488,6 @@ ${farrago.test.jvmargs}
     <ant dir="test/sql/numerics" target="clean"/>
     <ant dir="test/sql/oracle-specific" target="clean"/>
     <ant dir="test/sql/setops" target="clean"/>
-    <ant dir="test/sql/sfdc" target="clean"/>
     <ant dir="test/sql/shortreg" target="clean"/>
     <ant dir="test/sql/sqbm" target="clean"/>
     <ant dir="test/sql/sqlserver-specific" target="clean"/>
