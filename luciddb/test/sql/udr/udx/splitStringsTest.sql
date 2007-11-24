@@ -66,6 +66,46 @@ select * from table(
     TRUE)
 );
 
+-- test with whitespace-only string input
+select * from table(
+  applib.split_string_to_rows(
+    '  ',
+    '~',
+    '\',
+    TRUE)
+);
+
+select * from table(
+  applib.split_string_to_rows(
+    '  ',
+    '~',
+    '\',
+    FALSE)
+);
+
+-- test with empty input
+select * from table(
+  applib.split_string_to_rows(
+    '',
+    '~',
+    '\',
+    FALSE)
+);
+
+select * from table(
+  applib.split_string_to_rows(
+    '',
+    '~',
+    '\',
+    TRUE)
+);
+
+-- test with null input
+call applib.create_var('splittest', null, 'xyz');
+call applib.set_var('splittest', 'var', null);
+select * from table(applib.split_string_to_rows(applib.get_var('splittest', 'var'), ',', '!',TRUE));
+
+
 -- test exception when more than one escape char
 -- enable when LER-4686 is fixed
 --select * from table(

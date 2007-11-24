@@ -1,2 +1,0 @@
-"Id"	"Name"	"Description"	"TableEnumOrId"	"IsActive"	"CreatedById"	"CreatedDate"	"LastModifiedById"	"LastModifiedDate"	"SystemModstamp"
-"019300000000HOSAA2"	"j"		"Lead"	"true"	"00530000000hPnYAAU"	"2005-11-25T07:10:45.000Z"	"00530000000hPnYAAU"	"2005-11-25T07:10:45.000Z"	"2005-11-25T07:10:45.000Z"

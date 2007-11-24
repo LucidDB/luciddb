@@ -1,6 +1,0 @@
-"Id"	"PeriodId"	"Name"	"IsStandardYear"	"YearType"	"QuarterLabelScheme"	"PeriodLabelScheme"	"WeekLabelScheme"	"QuarterPrefix"	"PeriodPrefix"	"SystemModstamp"
-"022300000000034AAA"	"02630000000rbb8AAA"	"2005"	"true"	"0"	"0"	"2"	"0"	"Quarter"	"Period"	"2006-01-07T15:56:31.000Z"
-"022300000000035AAA"	"02630000000rbbPAAQ"	"2006"	"true"	"0"	"0"	"2"	"0"	"Quarter"	"Period"	"2006-01-07T15:56:31.000Z"
-"0223000000001kPAAQ"	"02630000000s2SUAAY"	"2004"	"true"	"0"	"0"	"2"	"0"	"Quarter"	"Period"	"2006-01-09T19:50:32.000Z"
-"0223000000001kQAAQ"	"02630000000s2SlAAI"	"2007"	"true"	"0"	"0"	"2"	"0"	"Quarter"	"Period"	"2006-01-09T19:50:32.000Z"
-"0223000000001kRAAQ"	"02630000000s2T2AAI"	"2008"	"true"	"0"	"0"	"2"	"0"	"Quarter"	"Period"	"2006-01-09T19:50:32.000Z"

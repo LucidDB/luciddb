@@ -64,6 +64,11 @@ public abstract class SplitStringUdx
                 EscapeCharMustBeOneCharacter.ex();
         }
 
+        // NULL input gives empty output
+        if (inputString == null) {
+          return;
+        }
+
         Iterator<String> tokens = splitString(
             inputString, 
             separator.charAt(0), 

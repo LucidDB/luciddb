@@ -1,3 +1,0 @@
-"Id"	"Name"	"RuleType"	"Active"	"CreatedById"	"CreatedDate"	"LastModifiedById"	"LastModifiedDate"	"SystemModstamp"
-"01Q300000001LNLEA2"	"Standard"	"caseAssignment"	true	"00530000000jdMGAAY"	"2005-11-17T23:45:20.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:20.000Z"	"2005-11-17T23:45:20.000Z"
-"01Q300000001LNNEA2"	"Standard2"	"leadAssignment"	true	"00530000000jdMGAAY"	"2005-11-17T23:45:20.000Z"	"00530000000jdMGAAY"	"2005-11-17T23:45:20.000Z"	"2005-11-17T23:45:20.000Z"
