@@ -1,6 +1,0 @@
-6.0
-4
-1	SQLVARCHAR	0	25	"\t"	1	Id
-2	SQLVARCHAR	0	25	"\t"	2	GroupId
-3	SQLVARCHAR	0	25	"\t"	3	UserOrGroupId
-4	SQLVARCHAR	0	24	"\r\n"	4	SystemModstamp

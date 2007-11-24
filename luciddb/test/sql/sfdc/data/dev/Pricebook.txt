@@ -1,2 +1,0 @@
-"Id"	"Name"	"IsActive"	"LastModifiedDate"	"SystemModstamp"
-"00i30000000cTpRAAU"	"Standard Price Book"	false	"2005-11-17T23:45:42.000Z"	"2005-11-17T23:45:46.000Z"
