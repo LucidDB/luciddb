@@ -306,10 +306,7 @@ public class FarragoMetadataTest
     {
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                2 * TAB_ROWCOUNT,
-                2 * TAB_ROWCOUNT);
+        double expected = 2 * TAB_ROWCOUNT;
         checkPopulation(
             "select * from (select * from tab union all select * from tab)",
             groupKey,
@@ -812,10 +809,7 @@ public class FarragoMetadataTest
         BitSet groupKey = new BitSet();
         groupKey.set(0);
 
-        double expected =
-            RelMdUtil.numDistinctVals(
-                2 * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY,
-                2 * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        double expected = 2 * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY;
 
         checkDistinctRowCount(rootRel, groupKey, expected);
     }

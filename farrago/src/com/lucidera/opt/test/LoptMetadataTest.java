@@ -1042,10 +1042,7 @@ public class LoptMetadataTest
         // count the number of distinct values in "name"
         BitSet groupKey = new BitSet();
         groupKey.set(1);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                (double) 90000,
-                (double) COLSTORE_EMPS_ROWCOUNT);
+        double expected = 90000;
         checkDistinctRowCount(
             "select * from emps",
             groupKey,
@@ -1068,10 +1065,7 @@ public class LoptMetadataTest
     {
         BitSet groupKey = new BitSet();
         groupKey.set(1);
-        double expected =
-            RelMdUtil.numDistinctVals(
-                90000 * DEFAULT_EQUAL_SELECTIVITY,
-                COLSTORE_EMPS_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        double expected = 90000 * DEFAULT_EQUAL_SELECTIVITY;
         checkDistinctRowCount(
             "select * from emps where upper(name) = 'FOO'",
             groupKey,
@@ -1087,11 +1081,7 @@ public class LoptMetadataTest
         groupKey.set(0);
         groupKey.set(1);
         double expected =
-            RelMdUtil.numDistinctVals(
-                (double) COLSTORE_EMPS_ROWCOUNT * .145
-                * DEFAULT_EQUAL_SELECTIVITY,
-                (double) COLSTORE_EMPS_ROWCOUNT * .145
-                * DEFAULT_EQUAL_SELECTIVITY);
+            (double) COLSTORE_EMPS_ROWCOUNT * .145 * DEFAULT_EQUAL_SELECTIVITY;
 
         // selectivity of deptno < 150 is .145
         checkDistinctRowCount(
@@ -1204,15 +1194,13 @@ public class LoptMetadataTest
         assertTrue(result != null);
         double expected = 90000.0;
 
-        // call numDistinctVals twice -- once for the join and then once
-        // for the project; no need to call it a 3rd time for the semijoin
-        // because that doesn't reduce the distinct count any further
-        for (int i = 0; i < 2; i++) {
-            expected =
-                RelMdUtil.numDistinctVals(
-                    expected,
-                    (double) COLSTORE_EMPS_ROWCOUNT);
-        }
+        // call numDistinctVals once for the join; no need to call it a 2nd
+        // time for the semijoin because that doesn't reduce the distinct
+        // count any further
+        expected =
+            RelMdUtil.numDistinctVals(
+                expected,
+                (double) COLSTORE_EMPS_ROWCOUNT);
         assertEquals(expected, result, EPSILON);
     }
 
@@ -1350,9 +1338,9 @@ public class LoptMetadataTest
         assertTrue(result != null);
         double expected = 90000.0;
 
-        // call numDistinctVals three times -- once for the semijoin, once
-        // for the join and then once for the project
-        for (int i = 0; i < 3; i++) {
+        // call numDistinctVals two times -- once for the semijoin and once
+        // for the join
+        for (int i = 0; i < 2; i++) {
             expected =
                 RelMdUtil.numDistinctVals(
                     expected,
