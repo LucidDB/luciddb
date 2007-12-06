@@ -150,23 +150,23 @@ bool DoOp_0( int iOpCode, int iExType, const char *pExpected,
     TProgramCounter pc(0);
     switch( iOpCode ) {
         case OP_ADD:
-        *tResult = Noisy<TMPL>::add( pc, *tOp0, *tOp1 );
+        *tResult = Noisy<TMPL>::add( pc, *tOp0, *tOp1, 0 );
             break;
             
         case OP_SUB:
-            *tResult = Noisy<TMPL>::sub( pc, *tOp0, *tOp1 );
+            *tResult = Noisy<TMPL>::sub( pc, *tOp0, *tOp1, 0 );
             break;
             
         case OP_MUL:
-            *tResult = Noisy<TMPL>::mul( pc, *tOp0, *tOp1 );
+            *tResult = Noisy<TMPL>::mul( pc, *tOp0, *tOp1, 0 );
             break;
             
         case OP_DIV:
-            *tResult = Noisy<TMPL>::div( pc, *tOp0, *tOp1 );
+            *tResult = Noisy<TMPL>::div( pc, *tOp0, *tOp1, 0 );
             break;
             
         case OP_NEG:
-            *tResult = Noisy<TMPL>::neg( pc, *tOp0 );
+            *tResult = Noisy<TMPL>::neg( pc, *tOp0, 0 );
             break;
             
         default:
@@ -279,7 +279,7 @@ static bool ReadArgument( int iLine, const char *pFile, int iArg, TType &tType,
 {
     const char *pValue = ppArgs[iArg];
     assert( pValue );
-    if ( *pValue=='$' ) {
+    if ( *pValue=='&' ) {
         return SetConstant( &(pValue[1]), tType.iCode, t2Read._cptr, iLine );
         }
     else if ( 1 != sscanf( pValue, tType.pScanfFormat, t2Read._cptr ) ) {
@@ -487,7 +487,7 @@ int ProcessCppLine( int iLine, const char *pInputFileName,
 /* --- */
 int main( int iArgc, const char *ppArgv[] )
 {
-return 0;	/* disabled for now */
+return 0;   /* disabled for now */
     /* --- */
     if ( iArgc < 1/*how?*/ || iArgc>2 ) {
         fprintf( stderr, "Usage: %s [<filename>|-]\n", iArgc>0 ? ppArgv[0] : "" );

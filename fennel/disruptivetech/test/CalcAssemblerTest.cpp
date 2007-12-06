@@ -42,7 +42,7 @@ bool verbose = false;
 bool showProgram = true;
 
 /* --- defining this indicates we expect full arithmetic exceptions --- */
-// #define USING_NOISY_ARITHMETIC	(1)
+/* #define USING_NOISY_ARITHMETIC    (1) */
 
 template <typename T>
 class RegisterTestInfo
@@ -1229,12 +1229,12 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     addBinaryInstructions(instostr, "ADD", outreg, inregs);
     string addstr = string("ADD ") + typestr;
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-	if (std::numeric_limits<T>::is_signed)
-    	expectedCalcOut.add(addstr, overflow, pc++, __LINE__);     // I0 + I0 (min + min)
-	else 
-		expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);// I0 + I0 (min + min)
+    if (std::numeric_limits<T>::is_signed)
+        expectedCalcOut.add(addstr, overflow, pc++, __LINE__);     // I0 + I0 (min + min)
+    else 
+        expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);// I0 + I0 (min + min)
 #else
-	expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);    // I0 + I0 (min + min)
+    expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);    // I0 + I0 (min + min)
 #endif
     expectedCalcOut.add(addstr, (T) (min+max), pc++, __LINE__);    // I0 + I1 (min + max)
     expectedCalcOut.add(addstr, pNULL,   pc++, __LINE__);          // I0 + I2 (min + NULL)
@@ -1380,10 +1380,10 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     expectedCalcOut.add(divstr, pNULL,   pc++, __LINE__);           // I0 / I2 (min / NULL)
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
     const char *invalid = "22023";
-	if (min==0) 
-    	expectedCalcOut.add(divstr, invalid,  pc++, __LINE__);          // I0 / I3 (min / 10)
-	else
-    	expectedCalcOut.add(divstr, (T) (min/mid),  pc++, __LINE__);    // I0 / I3 (min / 10)
+    if (min==0) 
+        expectedCalcOut.add(divstr, invalid,  pc++, __LINE__);          // I0 / I3 (min / 10)
+    else
+        expectedCalcOut.add(divstr, (T) (min/mid),  pc++, __LINE__);    // I0 / I3 (min / 10)
 #else
     expectedCalcOut.add(divstr, (T) (min/mid),  pc++, __LINE__);    // I0 / I3 (min / 10)
 #endif
@@ -1422,10 +1422,10 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
 #endif
     expectedCalcOut.add(negstr, pNULL,      pc++, __LINE__);    // - I2 (- NULL)
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-	if (std::numeric_limits<T>::is_signed)
-    	expectedCalcOut.add(negstr, (T) (-mid), pc++, __LINE__);// - I3 (- 10)
-	else
-    	expectedCalcOut.add(negstr, overflow, pc++, __LINE__);  // - I3 (- 10)
+    if (std::numeric_limits<T>::is_signed)
+        expectedCalcOut.add(negstr, (T) (-mid), pc++, __LINE__);// - I3 (- 10)
+    else
+        expectedCalcOut.add(negstr, overflow, pc++, __LINE__);  // - I3 (- 10)
 #else
     expectedCalcOut.add(negstr, (T) (-mid), pc++, __LINE__);    // - I3 (- 10)
 #endif
