@@ -133,12 +133,15 @@ class ResultSetToFarragoIteratorConverter
             if ((SqlTypeUtil.isJavaPrimitive(type)) && !type.isNullable()) {
                 // TODO:  make this official:  java.sql and java.nio
                 // use the same accessor names, happily,
-                // (except for boolean, sadly)
+                // (except for boolean and tinyint, sadly)
                 String methodName =
                     ReflectUtil.getByteBufferReadMethod(
                         factory.getClassForPrimitive(type)).getName();
                 if (type.getSqlTypeName() == SqlTypeName.BOOLEAN) {
                     methodName = "getBoolean";
+                }
+                if (type.getSqlTypeName() == SqlTypeName.TINYINT) {
+                    methodName = "getByte";
                 }
                 rhsExp =
                     new MethodCall(castResultSet, methodName, colPosExpList);
