@@ -44,7 +44,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-#define NOISY_DISABLED    (1)
 /* #define NOISY_DISABLED    (1) */
 
 /* TODO --- check these codes: 220 DATA_EXCEPTION */
@@ -283,10 +282,22 @@ inline void maybe_raise_fe_exception( TExceptionCBData *pExData,
     /* leave this last because it occurs in conjunction with other
         flags */
     else if ( fe & FE_INEXACT ) {
-        Raise( pExData, pc, S_INEX );
+/* disabling inexact. for <float> 200.0 + 0.3 == 200.300003 and S_INEX
+ gets set., so is too pedestrian a case to raise an error for
+        Raise( pExData, pc, S_INEX ); */
         }
 }
 
+/* ---
+Removing the following dev. time sanity checks here b/c they may fail
+because of an ignored S_INEX, see above comment.
+    assert( result == (left+right) );                                       \
+    assert( result == (left-right) );                                       \
+    assert( result == (left*right) );                                       \
+    assert( result == (left/right) );                                       \
+    assert( result == (-right) );                                           \
+
+--- */
 #define FLOATING_ADD(type)                                                  \
     template <> type Noisy<type>::add( TProgramCounter pc, const type left, \
         const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
@@ -295,7 +306,6 @@ inline void maybe_raise_fe_exception( TExceptionCBData *pExData,
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = left + right;                                                  \
     maybe_raise_fe_exception( pExData, pc );                                \
-    assert( result == (left+right) );                                       \
     return result;                                                          \
     }
 
@@ -307,7 +317,6 @@ inline void maybe_raise_fe_exception( TExceptionCBData *pExData,
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = left - right;                                                  \
     maybe_raise_fe_exception( pExData, pc );                                \
-    assert( result == (left-right) );                                       \
     return result;                                                          \
     }
 
@@ -319,7 +328,6 @@ inline void maybe_raise_fe_exception( TExceptionCBData *pExData,
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = left * right;                                                  \
     maybe_raise_fe_exception( pExData, pc );                                \
-    assert( result == (left*right) );                                       \
     return result;                                                          \
     }
 
@@ -331,7 +339,6 @@ inline void maybe_raise_fe_exception( TExceptionCBData *pExData,
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = left / right;                                                  \
     maybe_raise_fe_exception( pExData, pc );                                \
-    assert( result == (left/right) );                                       \
     return result;                                                          \
     }
 
@@ -343,7 +350,6 @@ inline void maybe_raise_fe_exception( TExceptionCBData *pExData,
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = (-right);                                                      \
     maybe_raise_fe_exception( pExData, pc );                                \
-    assert( result == (-right) );                                           \
     return result;                                                          \
     }
 

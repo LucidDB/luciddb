@@ -487,7 +487,6 @@ int ProcessCppLine( int iLine, const char *pInputFileName,
 /* --- */
 int main( int iArgc, const char *ppArgv[] )
 {
-return 0;   /* disabled for now */
     /* --- */
     if ( iArgc < 1/*how?*/ || iArgc>2 ) {
         fprintf( stderr, "Usage: %s [<filename>|-]\n", iArgc>0 ? ppArgv[0] : "" );

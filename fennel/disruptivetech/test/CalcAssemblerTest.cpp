@@ -42,6 +42,7 @@ bool verbose = false;
 bool showProgram = true;
 
 /* --- defining this indicates we expect full arithmetic exceptions --- */
+#define USING_NOISY_ARITHMETIC    (1)
 /* #define USING_NOISY_ARITHMETIC    (1) */
 
 template <typename T>
@@ -481,9 +482,9 @@ public:
                 res = false;
                 fail(expoutstr.c_str(), "Calculator warnings");
 //TEMP LATER
-//for (uint i=0; i < mCalc.mWarnings.size(); i++) {
-//printf( "Calc warning [%s]\n", mCalc.mWarnings[i].str );
-//}
+for (uint i=0; i < mCalc.mWarnings.size(); i++) {
+printf( "Calc warning [%s]\n", mCalc.mWarnings[i].str );
+}
             }
         }
         else {
@@ -1220,16 +1221,18 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     T  max = std::numeric_limits<T>::max();
     T  mid = 10;
 
-    // TODO: Overflows/Underflows (different for unsigned/signed)
-
-    // Test ADD
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
     const char *overflow = "22003";
+    const char *underflow = "22000";
+//    const char *invalid = "22023";
 #endif
+    const char *divbyzero = "22012";
+
+    // Test ADD
     addBinaryInstructions(instostr, "ADD", outreg, inregs);
     string addstr = string("ADD ") + typestr;
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    if (std::numeric_limits<T>::is_signed)
+    if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
         expectedCalcOut.add(addstr, overflow, pc++, __LINE__);     // I0 + I0 (min + min)
     else 
         expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);// I0 + I0 (min + min)
@@ -1248,10 +1251,14 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
 #endif
     expectedCalcOut.add(addstr, pNULL,   pc++, __LINE__);          // I1 + I2 (max + NULL)
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(addstr, overflow, pc++, __LINE__);         // I1 + I3 (max + 10)
+    if (std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(addstr, overflow, pc++, __LINE__);         // I1 + I3 (max + 10)
+    else
+        expectedCalcOut.add(addstr, (T) (max+mid), pc++, __LINE__);    // I1 + I3 (max + 10)
 #else
     expectedCalcOut.add(addstr, (T) (max+mid), pc++, __LINE__);    // I1 + I3 (max + 10)
 #endif
+
 
     expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);      // I2 + I0 (NULL + min)
     expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);      // I2 + I1 (NULL + max)
@@ -1260,7 +1267,10 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
 
     expectedCalcOut.add(addstr, (T) (mid+min), pc++, __LINE__);    // I3 + I0 (10 + min)
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(addstr, overflow, pc++, __LINE__);         // I3 + I1 (10 + max)
+    if (std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(addstr, overflow, pc++, __LINE__);         // I3 + I1 (10 + max)
+    else
+        expectedCalcOut.add(addstr, (T) (mid+max), pc++, __LINE__);    // I3 + I1 (10 + max)
 #else
     expectedCalcOut.add(addstr, (T) (mid+max), pc++, __LINE__);    // I3 + I1 (10 + max)
 #endif
@@ -1272,19 +1282,28 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     string substr = string("SUB ") + typestr;
     expectedCalcOut.add(substr, (T) (min-min), pc++, __LINE__);    // I0 - I0 (min - min)
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(substr, overflow, pc++, __LINE__);         // I0 - I1 (min - max)
+    if (std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(substr, overflow, pc++, __LINE__);         // I0 - I1 (min - max)
+    else
+        expectedCalcOut.add(substr, (T) (min-max), pc++, __LINE__);    // I0 - I1 (min - max)
 #else
     expectedCalcOut.add(substr, (T) (min-max), pc++, __LINE__);    // I0 - I1 (min - max)
 #endif
     expectedCalcOut.add(substr, pNULL,   pc++, __LINE__);          // I0 - I2 (min - NULL)
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(substr, overflow,  pc++, __LINE__);        // I0 - I3 (min - 10)
+    if (std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(substr, overflow,  pc++, __LINE__);        // I0 - I3 (min - 10)
+    else
+        expectedCalcOut.add(substr, (T) (min-mid),  pc++, __LINE__);   // I0 - I3 (min - 10)
 #else
     expectedCalcOut.add(substr, (T) (min-mid),  pc++, __LINE__);   // I0 - I3 (min - 10)
 #endif
 
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(substr, overflow, pc++, __LINE__);         // I1 - I0 (max - min)
+    if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(substr, overflow, pc++, __LINE__);         // I1 - I0 (max - min)
+    else
+        expectedCalcOut.add(substr, (T) (max-min), pc++, __LINE__);    // I1 - I0 (max - min)
 #else
     expectedCalcOut.add(substr, (T) (max-min), pc++, __LINE__);    // I1 - I0 (max - min)
 #endif
@@ -1298,12 +1317,19 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     expectedCalcOut.add(substr, pNULL, pc++, __LINE__);      // I2 - I3 (NULL - 10)
 
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(substr, overflow, pc++, __LINE__);         // I3 - I0 (10 - min)
+    if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(substr, overflow, pc++, __LINE__);    // I3 - I0 (10 - min)
+    else
+        expectedCalcOut.add(substr, (T) (mid-min), pc++, __LINE__);    // I3 - I0 (10 - min)
 #else
     expectedCalcOut.add(substr, (T) (mid-min), pc++, __LINE__);    // I3 - I0 (10 - min)
 #endif
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(substr, overflow, pc++, __LINE__);    // I3 - I1 (10 - max)
+    //if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
+    if (!std::numeric_limits<T>::is_signed)
+        expectedCalcOut.add(substr, overflow, pc++, __LINE__);    // I3 - I1 (10 - max)
+    else
+        expectedCalcOut.add(substr, (T) (mid-max), pc++, __LINE__);    // I3 - I1 (10 - max)
 #else
     expectedCalcOut.add(substr, (T) (mid-max), pc++, __LINE__);    // I3 - I1 (10 - max)
 #endif
@@ -1314,24 +1340,38 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     addBinaryInstructions(instostr, "MUL", outreg, inregs);
     string mulstr = string("MUL ") + typestr;
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I0 * I0 (min * min)
+    if (!std::numeric_limits<T>::is_signed)
+        expectedCalcOut.add(mulstr, (T) (min*min), pc++, __LINE__);    // I0 * I0 (min * min)
+    else if (std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I0 * I0 (min * min)
+    else
+        expectedCalcOut.add(mulstr, underflow, pc++, __LINE__);         // I0 * I0 (min * min)
 #else
     expectedCalcOut.add(mulstr, (T) (min*min), pc++, __LINE__);    // I0 * I0 (min * min)
 #endif
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I0 * I1 (min * max)
+    if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I0 * I1 (min * max)
+    else
+        expectedCalcOut.add(mulstr, (T) (min*max), pc++, __LINE__);    // I0 * I1 (min * max)
 #else
     expectedCalcOut.add(mulstr, (T) (min*max), pc++, __LINE__);    // I0 * I1 (min * max)
 #endif
     expectedCalcOut.add(mulstr, pNULL,   pc++, __LINE__);          // I0 * I2 (min * NULL)
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(mulstr, overflow,  pc++, __LINE__);        // I0 * I3 (min * 10)
+    if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(mulstr, overflow,  pc++, __LINE__);        // I0 * I3 (min * 10)
+    else
+        expectedCalcOut.add(mulstr, (T) (min*mid),  pc++, __LINE__);   // I0 * I3 (min * 10)
 #else
     expectedCalcOut.add(mulstr, (T) (min*mid),  pc++, __LINE__);   // I0 * I3 (min * 10)
 #endif
 
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I1 * I0 (max * min)
+    if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I1 * I0 (max * min)
+    else
+        expectedCalcOut.add(mulstr, (T) (max*min), pc++, __LINE__);    // I1 * I0 (max * min)
 #else
     expectedCalcOut.add(mulstr, (T) (max*min), pc++, __LINE__);    // I1 * I0 (max * min)
 #endif
@@ -1353,7 +1393,10 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     expectedCalcOut.add(mulstr, pNULL, pc++, __LINE__);      // I2 * I3 (NULL * 10)
 
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I3 * I0 (10 * min)
+    if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(mulstr, overflow, pc++, __LINE__);         // I3 * I0 (10 * min)
+    else
+        expectedCalcOut.add(mulstr, (T) (mid*min), pc++, __LINE__);    // I3 * I0 (10 * min)
 #else
     expectedCalcOut.add(mulstr, (T) (mid*min), pc++, __LINE__);    // I3 * I0 (10 * min)
 #endif
@@ -1366,31 +1409,41 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     expectedCalcOut.add(mulstr, (T) (mid*mid), pc++, __LINE__);    // I3 * I3 (10 * 10)
 
     // Test DIV
-    const char* divbyzero = "22012";
     addBinaryInstructions(instostr, "DIV", outreg, inregs);
     string divstr = string("DIV ") + typestr;
     if (min != zero)
         expectedCalcOut.add(divstr, (T) (min/min), pc++, __LINE__); // I0 / I0 (min / min)
-    else expectedCalcOut.add(divstr, divbyzero, pc++, __LINE__);    // I0 / I0 (min / min)
+    else
+        expectedCalcOut.add(divstr, divbyzero, pc++, __LINE__);    // I0 / I0 (min / min)
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(divstr, overflow, pc++, __LINE__);          // I0 / I1 (min / max)
+    if (std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(divstr, (T) (min/max), pc++, __LINE__);     // I0 / I1 (min / max)
+    else
+        expectedCalcOut.add(divstr, underflow, pc++, __LINE__);    // I0 / I1 (min / min)
 #else
     expectedCalcOut.add(divstr, (T) (min/max), pc++, __LINE__);     // I0 / I1 (min / max)
 #endif
     expectedCalcOut.add(divstr, pNULL,   pc++, __LINE__);           // I0 / I2 (min / NULL)
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    const char *invalid = "22023";
-    if (min==0) 
-        expectedCalcOut.add(divstr, invalid,  pc++, __LINE__);          // I0 / I3 (min / 10)
-    else
+    if (std::numeric_limits<T>::is_integer)
         expectedCalcOut.add(divstr, (T) (min/mid),  pc++, __LINE__);    // I0 / I3 (min / 10)
+    else
+        expectedCalcOut.add(divstr, underflow,  pc++, __LINE__);    // I0 / I3 (min / 10)
 #else
     expectedCalcOut.add(divstr, (T) (min/mid),  pc++, __LINE__);    // I0 / I3 (min / 10)
 #endif
 
     if (min != zero)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+        if (std::numeric_limits<T>::is_integer)
+            expectedCalcOut.add(divstr, (T) (max/min), pc++, __LINE__); // I1 / I0 (max / min)
+        else
+            expectedCalcOut.add(divstr, overflow, pc++, __LINE__);    // I1 / I0 (max / min)
+#else
         expectedCalcOut.add(divstr, (T) (max/min), pc++, __LINE__); // I1 / I0 (max / min)
-    else expectedCalcOut.add(divstr, divbyzero, pc++, __LINE__);    // I1 / I0 (max / min)
+#endif
+    else
+        expectedCalcOut.add(divstr, divbyzero, pc++, __LINE__);    // I1 / I0 (max / min)
     expectedCalcOut.add(divstr, (T) (max/max), pc++, __LINE__);     // I1 / I1 (max / max)
     expectedCalcOut.add(divstr, pNULL,   pc++, __LINE__);           // I1 / I2 (max / NULL)
     expectedCalcOut.add(divstr, (T) (max/mid), pc++, __LINE__);    // I1 / I3 (max / 10)
@@ -1401,8 +1454,16 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     expectedCalcOut.add(divstr, pNULL, pc++, __LINE__);      // I2 / I3 (NULL / 10)
 
     if (min != zero)
+#if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
+        if (std::numeric_limits<T>::is_integer)
+            expectedCalcOut.add(divstr, (T) (mid/min), pc++); // I3 / I0 (mid / min)
+        else
+            expectedCalcOut.add(divstr, overflow, pc++, __LINE__);    // I3 / I0 (mid / min)
+#else
         expectedCalcOut.add(divstr, (T) (mid/min), pc++); // I3 / I0 (mid / min)
-    else expectedCalcOut.add(divstr, divbyzero, pc++);    // I3 / I0 (mid / min)
+#endif
+    else
+        expectedCalcOut.add(divstr, divbyzero, pc++);    // I3 / I0 (mid / min)
     expectedCalcOut.add(divstr, (T) (mid/max), pc++);     // I3 / I1 (10 / max)
     expectedCalcOut.add(divstr, pNULL, pc++);             // I3 / I2 (10 / NULL)
     expectedCalcOut.add(divstr, (T) (mid/mid), pc++);     // I3 / I3 (10 / 10)
@@ -1411,12 +1472,18 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     addUnaryInstructions(instostr, "NEG", outreg, inregs);
     string negstr = string("NEG ") + typestr;
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(negstr, overflow, pc++, __LINE__);      // - I0 (- min)
+    if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
+        expectedCalcOut.add(negstr, overflow, pc++, __LINE__);      // - I0 (- min)
+    else
+        expectedCalcOut.add(negstr, (T) (-min), pc++, __LINE__);    // - I0 (- min)
 #else
     expectedCalcOut.add(negstr, (T) (-min), pc++, __LINE__);    // - I0 (- min)
 #endif
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
-    expectedCalcOut.add(negstr, overflow, pc++, __LINE__);      // - I1 (- max)
+    if (!std::numeric_limits<T>::is_signed)
+        expectedCalcOut.add(negstr, overflow, pc++, __LINE__);      // - I0 (- min)
+    else
+        expectedCalcOut.add(negstr, (T) (-max), pc++, __LINE__);    // - I1 (- max)
 #else
     expectedCalcOut.add(negstr, (T) (-max), pc++, __LINE__);    // - I1 (- max)
 #endif
