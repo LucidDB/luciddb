@@ -44,11 +44,6 @@ bool showProgram = true;
 /* --- defining this indicates we expect full arithmetic exceptions --- */
 #define USING_NOISY_ARITHMETIC    (1)
 /* #define USING_NOISY_ARITHMETIC    (1) */
-#ifndef NDEBUG  // TEMP.
-#   define TMP_EXPECT_FENV_EXCEPTIONS  (1)
-#else
-/* #define TMP_EXPECT_FENV_EXCEPTIONS  (1) */
-#endif
 
 template <typename T>
 class RegisterTestInfo
@@ -1968,7 +1963,9 @@ void CalcAssemblerTest::testStandardTypes()
             testIntegralNativeInstructions<int64_t>(type);
             break;
 
-#if defined(TMP_EXPECT_FENV_EXCEPTIONS) && TMP_EXPECT_FENV_EXCEPTIONS
+// TEMP. LATER TODO: dtbug#1490 re-enable these 2
+// tests for optimized builds when bug is fixed
+#ifndef NDEBUG
         case STANDARD_TYPE_REAL:
             testNativeInstructions<float>(type);
             break;
