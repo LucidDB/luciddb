@@ -335,6 +335,7 @@ because of an ignored S_INEX, see above comment.
     template <> type Noisy<type>::div( TProgramCounter pc, const type left, \
         const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
     {                                                                       \
+    if ( right == 0 ) Raise( pExData, pc, S_DIV0 );                         \
     type result;                                                            \
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = left / right;                                                  \
