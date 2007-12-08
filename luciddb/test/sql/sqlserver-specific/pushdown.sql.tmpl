@@ -175,7 +175,6 @@ explain plan for (
   order by 1,2,3
 );
 
-
 -- NOT LIKE
 select "c_varchar", "c_timestamp" from test.datatype where "c_varchar" NOT LIKE '%char-02%' order by 1,2;
 
@@ -320,7 +319,7 @@ explain plan for (
 
 create or replace foreign table DATATYPE (
   "c_timestamp" timestamp,
-  "c_date" timestamp,
+  "c_date" date,
   "deleted_column" integer,
   "c_varchar" varchar(1024)
 ) server SQL_SERVER_ALL_PUSHDOWN
@@ -333,6 +332,11 @@ explain plan for select "deleted_column" from test.datatype where "c_varchar" LI
 
 select "deleted_column" from test.datatype where "deleted_column" > 10 order by 1;
 explain plan for select "deleted_column" from test.datatype where"deleted_column" > 10 order by 1;
+
+-- date pushdown
+select "c_date" from test.datatype where "c_date" >= DATE '2005-01-01' order by 1;
+
+explain plan for select "c_date" from test.datatype where "c_date" >= DATE '2005-01-01' order by 1;
 
 -- lenient = false
 

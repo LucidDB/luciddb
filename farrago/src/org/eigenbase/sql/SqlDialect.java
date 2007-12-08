@@ -84,6 +84,11 @@ public class SqlDialect
         return databaseProductName.toUpperCase().indexOf("POSTGRE") >= 0;
     }
 
+    public boolean isSqlServer()
+    {
+        return databaseProductName.toUpperCase().indexOf("SQL SERVER") >= 0;
+    }
+
     /**
      * Encloses an identifier in quotation marks appropriate for the current SQL
      * dialect.
