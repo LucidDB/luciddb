@@ -98,6 +98,25 @@ public abstract class FarragoTestUDR
         }
     }
 
+    public static String itoa(int i)
+    {
+        if (i < 0 || i > 0xFFFF) {
+            throw new IllegalArgumentException(
+                "Cannot convert '" + i + "' to a Java char");
+        }
+        
+        return new String(new char[] { (char)i }, 0, 1);
+    }
+    
+    public static String itoaWithNulForErr(int i)
+    {
+        if (i < 0 || i > 0xFFFF) {
+            return null;
+        }
+        
+        return new String(new char[] { (char)i }, 0, 1);
+    }
+    
     public static void setSystemProperty(String name, String value)
     {
         System.setProperty(name, value);
@@ -369,7 +388,7 @@ public abstract class FarragoTestUDR
         } catch (Throwable e) {
             throw new SQLException(e.getMessage());
         }
-    }
+    }    
 }
 
 // End FarragoTestUDR.java
