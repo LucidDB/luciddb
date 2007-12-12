@@ -24,19 +24,28 @@
 // error conditions (overflow, divide-by-zero etc.)
 //
 // TODO:
-//      1. Need to research whether this usage of fenv is thread and
-//          reentrant safe.
-//      2. How does little/big endian effect the bit shift used in 
+//      1. How does little/big endian effect the bit shift used in 
 //          unsigned multiplication?
-//      3. [placeholder] - why is op2 (second operand) passed to describe
-//          helper @line 332 in NativeNativeInstruction.h? (this is a unary
-//          operator & therefore has no 2nd operand.
-//      4. Round operator?
+//      3. Shift/Bit/Round operator etc.
 //
 */
+/* TEMP. TODO. LATER, gcc>=4.1 is braindead: optimizes fp instructions until
+    AFTER the fp status check (fetestexcept()). At the same time FENV_ACCESS ON
+    is not yet implemented. ref. dtbug #1490.
+
+   Ref. this macro in code and cleanup by removing redundant code
+*/
+#define DTBUG1490   (1)
+
 #include "fennel/common/CommonPreamble.h"
 
 #include <assert.h>
+#ifndef DTBUG1490
+#pragma STDC FENV_ACCESS ON         /* notify compiler we expect to use fp exceptions,
+                                    this is the standard way of stopping compiler 
+                                    from introducing optimizations which don't play well
+                                    with fp status registers */
+#endif
 #include <fenv.h>
 #include <string>
 
@@ -296,15 +305,31 @@ because of an ignored S_INEX, see above comment.
     assert( result == (left*right) );                                       \
     assert( result == (left/right) );                                       \
     assert( result == (-right) );                                           \
-
 --- */
+
+
+        
+#if defined(DTBUG1490) && DTBUG1490
+    /* instruct gcc *NEVER* to inline functions, thereby forcing the actual fp
+    operation to occur before we test it's result.... */
+#   define OP_FN_PROLOG static void __attribute__((noinline))
+#else
+    /* optimize to inplace operations, even at -O1 */
+#   define inline void
+#endif
+template <typename TYPE> OP_FN_PROLOG na_add(TYPE &res, const TYPE &r, const TYPE &l) { res=(r + l); }
+template <typename TYPE> OP_FN_PROLOG na_sub(TYPE &res, const TYPE &r, const TYPE &l) { res=(r - l); }
+template <typename TYPE> OP_FN_PROLOG na_mul(TYPE &res, const TYPE &r, const TYPE &l) { res=(r * l); }
+template <typename TYPE> OP_FN_PROLOG na_div(TYPE &res, const TYPE &r, const TYPE &l) { res=(r / l); }
+template <typename TYPE> OP_FN_PROLOG na_neg(TYPE &res, const TYPE &r) { res=(-r); }
+
 #define FLOATING_ADD(type)                                                  \
     template <> type Noisy<type>::add( TProgramCounter pc, const type left, \
         const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
     {                                                                       \
     type result;                                                            \
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
-    result = left + right;                                                  \
+    na_add<type>(result, left, right );                                     \
     maybe_raise_fe_exception( pExData, pc );                                \
     return result;                                                          \
     }
@@ -315,7 +340,7 @@ because of an ignored S_INEX, see above comment.
     {                                                                       \
     type result;                                                            \
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
-    result = left - right;                                                  \
+    na_sub<type>(result, left, right );                                     \
     maybe_raise_fe_exception( pExData, pc );                                \
     return result;                                                          \
     }
@@ -326,7 +351,7 @@ because of an ignored S_INEX, see above comment.
     {                                                                       \
     type result;                                                            \
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
-    result = left * right;                                                  \
+    na_mul<type>(result, left, right );                                     \
     maybe_raise_fe_exception( pExData, pc );                                \
     return result;                                                          \
     }
@@ -338,7 +363,7 @@ because of an ignored S_INEX, see above comment.
     if ( right == 0 ) Raise( pExData, pc, S_DIV0 );                         \
     type result;                                                            \
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
-    result = left / right;                                                  \
+    na_div<type>(result, left, right );                                     \
     maybe_raise_fe_exception( pExData, pc );                                \
     return result;                                                          \
     }
@@ -350,6 +375,7 @@ because of an ignored S_INEX, see above comment.
     type result;                                                            \
     ::feclearexcept( FE_ALL_EXCEPT );                                       \
     result = (-right);                                                      \
+    na_neg<type>(result, right );                                           \
     maybe_raise_fe_exception( pExData, pc );                                \
     return result;                                                          \
     }

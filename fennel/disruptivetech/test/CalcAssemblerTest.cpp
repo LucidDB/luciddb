@@ -482,9 +482,9 @@ public:
                 res = false;
                 fail(expoutstr.c_str(), "Calculator warnings");
 //TEMP LATER
-for (uint i=0; i < mCalc.mWarnings.size(); i++) {
-printf( "Calc warning [%s]\n", mCalc.mWarnings[i].str );
-}
+//for (uint i=0; i < mCalc.mWarnings.size(); i++) {
+//printf( "Calc warning [%s]\n", mCalc.mWarnings[i].str );
+//}
             }
         }
         else {
@@ -1963,9 +1963,6 @@ void CalcAssemblerTest::testStandardTypes()
             testIntegralNativeInstructions<int64_t>(type);
             break;
 
-// TEMP. LATER TODO: dtbug#1490 re-enable these 2
-// tests for optimized builds when bug is fixed
-#ifndef NDEBUG
         case STANDARD_TYPE_REAL:
             testNativeInstructions<float>(type);
             break;
@@ -1973,7 +1970,6 @@ void CalcAssemblerTest::testStandardTypes()
         case STANDARD_TYPE_DOUBLE:
             testNativeInstructions<double>(type);
             break;
-#endif
 
         default:
             break;
