@@ -39,7 +39,7 @@ import org.eigenbase.relopt.*;
  * expanded as soon as a non-abstract relexp is added to the set.</p>
  */
 public class AbstractConverter
-    extends ConverterRel
+    extends ConverterRelImpl
 {
     //~ Constructors -----------------------------------------------------------
 

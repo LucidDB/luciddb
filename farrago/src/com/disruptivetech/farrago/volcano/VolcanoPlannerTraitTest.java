@@ -620,7 +620,7 @@ public class VolcanoPlannerTraitTest
     }
 
     private static class AltTraitConverter
-        extends ConverterRel
+        extends ConverterRelImpl
     {
         private final RelTrait toTrait;
 
@@ -674,7 +674,7 @@ public class VolcanoPlannerTraitTest
     }
 
     private static class PhysToIteratorConverter
-        extends ConverterRel
+        extends ConverterRelImpl
     {
         public PhysToIteratorConverter(
             RelOptCluster cluster,

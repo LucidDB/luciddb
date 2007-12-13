@@ -22,113 +22,71 @@
 */
 package org.eigenbase.rel.convert;
 
-import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.*;
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
-
-// REVIEW jvs 23-April-2004:  This should really be an interface
-// (with a companion abstract class), providing more flexibility in
-// multiple inheritance situations.
 
 /**
- * Converts a relational expression from one {@link CallingConvention calling
- * convention} to another.
+ * A relational expression implements the interface <code>ConverterRel</code>
+ * to indicate that it converts a physical attribute, or
+ * {@link org.eigenbase.relopt.RelTrait trait}, of a relational expression
+ * from one value to another.
+ *
+ * <p>A typical example of a trait is {@link CallingConvention calling
+ * convention}, and {@link net.sf.farrago.query.FennelToIteratorConverter} is
+ * an example of a relational expression which converts that trait.</p>
  *
  * <p>Sometimes this conversion is expensive; for example, to convert a
  * non-distinct to a distinct object stream, we have to clone every object in
  * the input.</p>
+ *
+ * <p>A converter does not change the logical expression being evaluated; after
+ * conversion, the number of rows and the values of those rows will still be
+ * the same. By declaring itself to be a converter, a relational expression is
+ * telling the planner about this equivalence, and the planner groups
+ * expressions which are logically equivalent but have different physical
+ * traits into groups called <code>RelSet</code>s.
+ *
+ * <p>In principle one could devise converters which change multiple traits
+ * simultaneously (say change the sort-order and the physical location of
+ * a relational expression). In which case, the method
+ * {@link #getInputTraits()} would return a
+ * {@link org.eigenbase.relopt.RelTraitSet}. But for simplicity, this class
+ * only allows one trait to be converted at a time; all other traits are
+ * assumed to be preserved.</p>
+ *
+ * @author jhyde
+ * @version $Id$
+ * @since Dec 12, 2007
  */
-public abstract class ConverterRel
-    extends SingleRel
+public interface ConverterRel extends RelNode
 {
-    //~ Instance fields --------------------------------------------------------
-
-    protected RelTraitSet inTraits;
-    protected final RelTraitDef traitDef;
-
-    //~ Constructors -----------------------------------------------------------
+    /**
+     * Returns the trait of the input relational expression.
+     *
+     * @return input trait
+     */
+    RelTraitSet getInputTraits();
 
     /**
-     * @param cluster planner's cluster
-     * @param traitDef the RelTraitDef this converter converts
-     * @param traits the output traits of this converter
-     * @param child child rel (provides input traits)
+     * Returns the definition of trait which this converter works on.
+     *
+     * <p>The input relational expression (matched by the rule) must possess
+     * this trait and have the value given by {@link #getInputTraits()}, and
+     * the traits of the output of this converter given by {@link #getTraits()}
+     * will have one trait altered and the other orthogonal traits will be the
+     * same.
+     *
+     * @return trait which this converter modifies
      */
-    protected ConverterRel(
-        RelOptCluster cluster,
-        RelTraitDef traitDef,
-        RelTraitSet traits,
-        RelNode child)
-    {
-        super(cluster, traits, child);
-        this.inTraits = child.getTraits();
-        this.traitDef = traitDef;
-    }
-
-    //~ Methods ----------------------------------------------------------------
-
-    // implement RelNode
-    public RelOptCost computeSelfCost(RelOptPlanner planner)
-    {
-        double dRows = RelMetadataQuery.getRowCount(getChild());
-        double dCpu = dRows;
-        double dIo = 0;
-        return planner.makeCost(dRows, dCpu, dIo);
-    }
-
-    protected Error cannotImplement()
-    {
-        return Util.newInternal(
-            getClass() + " cannot convert from "
-            + inTraits + " traits");
-    }
-
-    public boolean isDistinct()
-    {
-        return getChild().isDistinct();
-    }
-
-    protected CallingConvention getInputConvention()
-    {
-        return (CallingConvention) inTraits.getTrait(
-            CallingConventionTraitDef.instance);
-    }
-
-    public RelTraitSet getInputTraits()
-    {
-        return inTraits;
-    }
-
-    public RelTraitDef getTraitDef()
-    {
-        return traitDef;
-    }
+    RelTraitDef getTraitDef();
 
     /**
-     * Returns a new trait set based on <code>traits</code>, with a different
-     * trait for a given type of trait. Clones <code>traits</code>, and then
-     * replaces the existing trait matching <code>trait.getTraitDef()</code>
-     * with <code>trait</code>.
+     * Returns the sole input relational expression
      *
-     * @param traits the set of traits to convert
-     * @param trait the converted trait
-     *
-     * @return a new RelTraitSet
+     * @return child relational expression
      */
-    protected static RelTraitSet convertTraits(
-        RelTraitSet traits,
-        RelTrait trait)
-    {
-        RelTraitSet converted = RelOptUtil.clone(traits);
-
-        converted.setTrait(
-            trait.getTraitDef(),
-            trait);
-
-        return converted;
-    }
+    RelNode getChild();
 }
 
 // End ConverterRel.java
