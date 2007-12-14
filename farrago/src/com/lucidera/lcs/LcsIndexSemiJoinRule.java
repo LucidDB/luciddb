@@ -231,7 +231,7 @@ public class LcsIndexSemiJoinRule
         RelNode distinctRel;
         BitSet rightJoinCols = new BitSet();
         for (int i = 0; i < rightOrdinals.length; i++) {
-            rightJoinCols.set(i);
+            rightJoinCols.set(rightOrdinals[i]);
         }
         if (RelMdUtil.areColumnsDefinitelyUnique(rightRel, rightJoinCols)) {
             distinctRel = distInput;

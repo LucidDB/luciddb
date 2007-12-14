@@ -877,6 +877,14 @@ Messages: {1}</text>
 <text>Failed to version index root page for {0}</text>
 </exception>
 
+<exception id="460230" name="MedJdbc_InvalidTableSchemaMapping">
+<text>Cannot specify both a TABLE_MAPPING and a SCHEMA_MAPPING</text>
+</exception>
+
+<exception id="460240" name="MedJdbc_InvalidTableMapping">
+<text>''{0}.{1}'' and ''{2}.{3}'' cannot both map to ''{4}.{5}''.</text>
+</exception>
+
 <!-- NOTE:  Mock resources don't really need localization; this one is
      just here as an example of how to do i18n for wrapper properties.  -->
 

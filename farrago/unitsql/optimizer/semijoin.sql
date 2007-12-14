@@ -791,3 +791,28 @@ explain plan for
     select count(*) from le_sales_ordlns s, le_org_party o
     where s.cust_sold_to_key = o.org_party_key;
 
+-- LER-6916 -- aggregation should be performed on SUPPLIER(S_NATIONKEY)
+CREATE TABLE TPCHCUSTOMER ( C_CUSTKEY     INTEGER PRIMARY KEY,
+                             C_NAME        VARCHAR(25) NOT NULL,
+                             C_ADDRESS     VARCHAR(40) NOT NULL,
+                             C_NATIONKEY   INTEGER NOT NULL,
+                             C_PHONE       VARCHAR(15) NOT NULL,
+                             C_ACCTBAL     DECIMAL(15,2)   NOT NULL,
+                             C_MKTSEGMENT  VARCHAR(10) NOT NULL,
+                             C_COMMENT     VARCHAR(117) NOT NULL);
+CREATE TABLE SUPPLIER ( S_SUPPKEY     INTEGER PRIMARY KEY,
+                             S_NAME        VARCHAR(25) NOT NULL,
+                             S_ADDRESS     VARCHAR(40) NOT NULL,
+                             S_NATIONKEY   INTEGER NOT NULL,
+                             S_PHONE       VARCHAR(15) NOT NULL,
+                             S_ACCTBAL     DECIMAL(15,2) NOT NULL,
+                             S_COMMENT     VARCHAR(101) NOT NULL);
+CREATE INDEX C_NATIONKEY_IDX ON TPCHCUSTOMER(C_NATIONKEY);
+CREATE INDEX S_NATIONKEY_IDX ON SUPPLIER(S_NATIONKEY);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'TPCHCUSTOMER', 10000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SUPPLIER', 100);
+explain plan for
+    select * from
+        tpchcustomer c, supplier s where
+            c.c_nationkey = s.s_nationkey and
+            s.s_name = 'foo';

@@ -239,9 +239,9 @@ public class RelMdDistinctRowCount
             return null;
         }
         
-        // Handle the special case where the groupKey forms a unique key
-        if (RelMdUtil.areColumnsDefinitelyUnique(rel, groupKey)) {
-            assert(projCols.cardinality() == 0);
+        // No further computation required if the projection expressions
+        // are all column references
+        if (projCols.cardinality() == 0) {
             return distinctRowCount;
         }
 

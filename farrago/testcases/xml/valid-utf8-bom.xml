@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<test>
+  <elem attrib="a1">e1</elem>
+  <elem attrib="a2:">e2:</elem>
+</test>

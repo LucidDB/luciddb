@@ -125,6 +125,18 @@ public class SqlTimestampLiteral
         }
         return result;
     }
+
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
+    {
+        if (writer.getDialect().isSqlServer()) {
+            writer.literal("'" + this.toFormattedString() + "'");
+        } else {
+            writer.literal(this.toString());
+        }
+    }
 }
 
 // End SqlTimestampLiteral.java

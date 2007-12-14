@@ -21,10 +21,15 @@
 */
 package net.sf.farrago.test;
 
+import java.io.*;
 import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
+import javax.xml.parsers.*;
+
+import org.xml.sax.*;
+import org.xml.sax.helpers.*;
 
 import junit.framework.*;
 
@@ -177,6 +182,135 @@ public class FarragoRepositoryTest
             // Always rollback to clean up repo
             txn.rollback();
         }
+    }
+    
+    public void testInvalidCharFilter() throws Exception
+    {
+        String[] validFiles = {
+            "valid-utf8.xml",
+            "valid-utf8-bom.xml",
+            "valid-utf16be.xml",
+            "valid-utf16be-bom.xml",
+            "valid-utf16le.xml",
+            "valid-utf16le-bom.xml",            
+        };
+        
+        String[] invalidFiles = { 
+            "invalid-ascii.xml",
+            "invalid-utf8.xml",
+            "invalid-utf8-bom.xml",
+            "invalid-utf16be.xml",
+            "invalid-utf16be-bom.xml",
+            "invalid-utf16le.xml",
+            "invalid-utf16le-bom.xml",
+        };
+        
+        String[] allFiles = 
+            new String[validFiles.length + invalidFiles.length];
+        for(int i = 0; i < validFiles.length; i++) {
+            allFiles[i] = validFiles[i];
+        }
+        for(int i = 0; i < invalidFiles.length; i++) {
+            allFiles[i + validFiles.length] = invalidFiles[i];
+        }
+        
+        SAXParserFactory spf = SAXParserFactory.newInstance();
+        SAXParser parser = spf.newSAXParser();
+        
+        // Verify that these files pass XML parsing.
+        final String DIR = "testcases/xml";
+        for(String filename: validFiles) {
+            File file = new File(DIR, filename);
+            
+            parser.reset();
+            
+            // will throw on invalid file
+            parser.parse(file, new DefaultHandler());
+        }
+        
+        // Verify that these files cause XML parsing to fail.
+        for(String filename: invalidFiles) {
+            File file = new File(DIR, filename);
+            
+            parser.reset();
+            try {
+                parser.parse(file, new DefaultHandler());
+                
+                fail("Missing expected exception");
+            }
+            catch(SAXParseException e) {
+                // Expected.
+            }
+        }
+        
+        // Verify that we're able to filter out the invalid chars and parse
+        // all the files.
+        for(String filename: allFiles) {
+            File file = new File(DIR, filename);
+
+            FileInputStream in = new FileInputStream(file);
+            FarragoReposUtil.InvalidXmlCharFilterInputStream filter =
+                new FarragoReposUtil.InvalidXmlCharFilterInputStream(in);
+            
+            parser.reset();
+            parser.parse(
+                filter, 
+                new DefaultHandler() {
+                    private int elemNum = -1;
+                    @Override
+                    public void startElement(
+                        String uri,
+                        String localName,
+                        String name,
+                        Attributes attributes)
+                    {
+                        String value;
+                        elemNum++;
+                        
+                        switch(elemNum) {
+                        case 0: // test
+                            return;
+                            
+                        case 1:
+                        case 2: // elem
+                            value = attributes.getValue(0);
+                            break;
+                            
+                        default:
+                            fail("too many elements");
+                            return;
+                        }
+                        
+                        assertTrue(value.startsWith("a" + elemNum));
+                        if (value.length() > 2) {
+                            assertEquals(3, value.length());
+                            assertTrue(value.endsWith(":"));
+                        }
+                    }
+                    
+                    @Override
+                    public void characters(char[] ch, int start, int length)
+                    {
+                        if (elemNum < 1 || elemNum > 2) {
+                            return;
+                        }
+                        
+                        String value = new String(ch, start, length);
+                        value = value.trim();
+                        if (value.length() == 0) {
+                            return;
+                        }
+                        
+                        assertTrue(value.startsWith("e" + elemNum));
+                        if (value.length() > 2) {
+                            assertEquals(3, value.length());
+                            assertTrue(value.endsWith(":"));
+                        }
+                    }
+                });
+            
+            filter.close();
+        }        
     }
 }
 

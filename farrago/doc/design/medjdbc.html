@@ -118,7 +118,11 @@ SCHEMA_NAME is not set.
 <td>
 Semicolon-separated list of schema_name:mapped_schema_name pairs.  This
 option is only valid for servers which support schemas.  This allows for
-a single schema view of tables spanning multiple schemas.
+a single schema view of tables spanning multiple schemas. If set, TABLE_MAPPING
+must not be set. A schema or table name may be quoted by the double quote character.  
+The double quote character can be used in a name, if escaped by itself 
+(the double quote character). A single quote character can be used,
+if escaped by itself (the single quote character). 
 </td>
 </tr>
 <tr>
@@ -126,7 +130,11 @@ a single schema view of tables spanning multiple schemas.
 <td>
 Semicolon-separated list of source_schema.source_table:mapped_schema.mapped_table pairs.
 This option is only valid for servers which support schemas.  This allows for
-a single schema view of the specified tables spanning multiple schemas.
+a single schema view of the specified tables spanning multiple schemas. 
+If set, SCHEMA_MAPPING must not be set.  A schema or table
+name may be quoted by the double quote character.  The double quote character 
+can be used in a name, if escaped by itself (the double quote character). 
+A single quote character can be used, if escaped by itself (the single quote character). 
 </td>
 </tr>
 <td>QUALIFYING_CATALOG_NAME</td> 

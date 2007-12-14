@@ -2078,5 +2078,42 @@
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL ORG_PARTY_KEY, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, LE_ORG_PARTY]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LE_ORG_PARTY$ORG_PARTY_KEY]])'
 > 
+> -- LER-6916 -- aggregation should be performed on SUPPLIER(S_NATIONKEY)
+> CREATE TABLE TPCHCUSTOMER ( C_CUSTKEY     INTEGER PRIMARY KEY,
+>                              C_NAME        VARCHAR(25) NOT NULL,
+>                              C_ADDRESS     VARCHAR(40) NOT NULL,
+>                              C_NATIONKEY   INTEGER NOT NULL,
+>                              C_PHONE       VARCHAR(15) NOT NULL,
+>                              C_ACCTBAL     DECIMAL(15,2)   NOT NULL,
+>                              C_MKTSEGMENT  VARCHAR(10) NOT NULL,
+>                              C_COMMENT     VARCHAR(117) NOT NULL);
+> CREATE TABLE SUPPLIER ( S_SUPPKEY     INTEGER PRIMARY KEY,
+>                              S_NAME        VARCHAR(25) NOT NULL,
+>                              S_ADDRESS     VARCHAR(40) NOT NULL,
+>                              S_NATIONKEY   INTEGER NOT NULL,
+>                              S_PHONE       VARCHAR(15) NOT NULL,
+>                              S_ACCTBAL     DECIMAL(15,2) NOT NULL,
+>                              S_COMMENT     VARCHAR(101) NOT NULL);
+> CREATE INDEX C_NATIONKEY_IDX ON TPCHCUSTOMER(C_NATIONKEY);
+> CREATE INDEX S_NATIONKEY_IDX ON SUPPLIER(S_NATIONKEY);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'TPCHCUSTOMER', 10000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SUPPLIER', 100);
+> explain plan for
+>     select * from
+>         tpchcustomer c, supplier s where
+>             c.c_nationkey = s.s_nationkey and
+>             s.s_name = 'foo';
+'column0'
+'FennelToIteratorConverter'
+'  LhxJoinRel(leftKeys=[[3]], rightKeys=[[3]], joinType=[INNER])'
+'    LcsRowScanRel(table=[[LOCALDB, SJ, TPCHCUSTOMER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TPCHCUSTOMER$C_ACCTBAL, SYS$CLUSTERED_INDEX$TPCHCUSTOMER$C_ADDRESS, SYS$CLUSTERED_INDEX$TPCHCUSTOMER$C_COMMENT, SYS$CLUSTERED_INDEX$TPCHCUSTOMER$C_CUSTKEY, SYS$CLUSTERED_INDEX$TPCHCUSTOMER$C_MKTSEGMENT, SYS$CLUSTERED_INDEX$TPCHCUSTOMER$C_NAME, SYS$CLUSTERED_INDEX$TPCHCUSTOMER$C_NATIONKEY, SYS$CLUSTERED_INDEX$TPCHCUSTOMER$C_PHONE]])'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'        LcsIndexSearchRel(table=[[LOCALDB, SJ, TPCHCUSTOMER]], index=[C_NATIONKEY_IDX], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'          FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'            LhxAggRel(groupCount=[1])'
+'              LcsRowScanRel(table=[[LOCALDB, SJ, SUPPLIER]], projection=[[3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SUPPLIER$S_NAME, SYS$CLUSTERED_INDEX$SUPPLIER$S_NATIONKEY]], residual columns=[[1]])'
+'                FennelValuesRel(tuples=[[{ '[', 'foo', ']', 'foo' }]])'
+'    LcsRowScanRel(table=[[LOCALDB, SJ, SUPPLIER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SUPPLIER$S_ACCTBAL, SYS$CLUSTERED_INDEX$SUPPLIER$S_ADDRESS, SYS$CLUSTERED_INDEX$SUPPLIER$S_COMMENT, SYS$CLUSTERED_INDEX$SUPPLIER$S_NAME, SYS$CLUSTERED_INDEX$SUPPLIER$S_NATIONKEY, SYS$CLUSTERED_INDEX$SUPPLIER$S_PHONE, SYS$CLUSTERED_INDEX$SUPPLIER$S_SUPPKEY]], residual columns=[[1]])'
+'      FennelValuesRel(tuples=[[{ '[', 'foo', ']', 'foo' }]])'
 > 
 > !quit

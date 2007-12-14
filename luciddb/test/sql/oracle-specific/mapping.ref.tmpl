@@ -49,6 +49,8 @@
 | 2nd St  |
 | 4th St  |
 +---------+
+0: jdbc:luciddb:> select street from orcl_server_schema_mapping.x.BOGUS order by 1;
+Error: From line 1, column 20 to line 1, column 53: Table 'ORCL_SERVER_SCHEMA_MAPPING.X.BOGUS' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema apps;
 0: jdbc:luciddb:> 
@@ -243,11 +245,144 @@ Error: From line 1, column 15 to line 1, column 25: Table 'TESTING3.T1' not foun
 | 4th St  | San Francisco  | CA     |
 +---------+----------------+--------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- schema and table mapping both specified
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_MAPPING_BAD
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     table_mapping 'SCHOI.BILL:DEFAULT.T1;SCOTT.ADDR:DEFAULT.T3',
+. . . . . . . . >     schema_mapping 'SCHOI:DEFAULT;SCOTT.DEFAULT'
+. . . . . . . . > );
+Error: Cannot specify both a TABLE_MAPPING and a SCHEMA_MAPPING (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table mapping with target_schema.target_table mapped 2x
+0: jdbc:luciddb:> -- allow this
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_MAPPING_BAD
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     table_mapping 'SCHOI.BILL:DEFAULT.T1;SCHOI.BILL:DEFAULT.T1'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- fail this
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_MAPPING_BAD
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     table_mapping 'SCHOI.BILL:DEFAULT.T1;SCOTT.ADDR:DEFAULT.T1'
+. . . . . . . . > );
+Error: 'SCHOI.BILL' and 'SCOTT.ADDR' cannot both map to 'DEFAULT.T1'. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Quoting/Escaping
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_MAPPING_QUOTES
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     schema_mapping '"SCHOI":"X";"SCOTT":"X"'
+. . . . . . . . > );
+0: jdbc:luciddb:> select numericcolzerop from orcl_server_mapping_quotes.x.@DATATYPE_TABLE@ order by 1;
++------------------+
+| NUMERICCOLZEROP  |
++------------------+
+| 0.0              |
+| 100.011          |
+| 99999.0          |
+| 99999.0          |
+| 99999.0          |
++------------------+
+0: jdbc:luciddb:> select street from orcl_server_mapping_quotes.x.ADDR order by 1;
++---------+
+| STREET  |
++---------+
+| 1st St  |
+| 2nd St  |
+| 4th St  |
++---------+
+0: jdbc:luciddb:> select street from orcl_server_mapping_quotes.x.BOGUS order by 1;
+Error: From line 1, column 20 to line 1, column 53: Table 'ORCL_SERVER_MAPPING_QUOTES.X.BOGUS' not found (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_MAPPING_QUOTES
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     table_mapping '"SCHOI"."BILL":"DEFAULT"."T1";"SCHOI"."DATATYPES":"DEFAULT"."T2";"SCOTT"."ADDR":"DEFAULT"."T3";"SCOTT"."ADDR":"BLAH"."T1"'
+. . . . . . . . > );
+0: jdbc:luciddb:> select * from ORCL_SERVER_MAPPING_QUOTES."DEFAULT".T2 order by 1,2,3,4,5,6;
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+|                        |                        | 99999.0          |                   | varchar     |          |          |
+|                        |                        | 99999.0          |                   | varchar     | 123      |          |
+|                        |                        | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |          |          |
+| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |          |          |
++------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
+0: jdbc:luciddb:> select * from ORCL_SERVER_MAPPING_QUOTES."DEFAULT".T3 order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> select * from ORCL_SERVER_MAPPING_QUOTES.BLAH.T1 order by 1,2,3;
++---------+----------------+--------+
+| STREET  |      CITY      | STATE  |
++---------+----------------+--------+
+| 1st St  | San Francisco  | CA     |
+| 2nd St  | San Francisco  | CA     |
+| 4th St  | San Francisco  | CA     |
++---------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Escapes
+0: jdbc:luciddb:> create or replace server ORCL_SERVER_MAPPING_ESCAPE
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     table_mapping '"SCHOI"."SOME.TABLE;I.LIKE''":"DEFAULT"."TEST1";"SCHOI".THISDOESN"TEXIST:"DEFAULT"."TEST2"'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ORCL_SERVER_MAPPING_ESCAPE."DEFAULT".TEST1 order by 1;
++------------+
+| NUMBERCOL  |
++------------+
+| 1          |
+| 2          |
+| 3          |
+| 4          |
+| 5          |
++------------+
+0: jdbc:luciddb:> select * from ORCL_SERVER_MAPPING_ESCAPE."DEFAULT".TEST2 order by 1;
+Error: ORA-00942: table or view does not exist (state=42000,code=942)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema testing cascade;
 0: jdbc:luciddb:> drop schema testing2 cascade;
 0: jdbc:luciddb:> drop schema testing3 cascade;
 0: jdbc:luciddb:> drop schema testing4 cascade;
 0: jdbc:luciddb:> drop server ORCL_SERVER_TABLE_MAPPING cascade;
+0: jdbc:luciddb:> drop server ORCL_SERVER_TABLE_MAPPING2 cascade;
+0: jdbc:luciddb:> drop server ORCL_SERVER_MAPPING_BAD cascade;
+0: jdbc:luciddb:> drop server ORCL_SERVER_MAPPING_QUOTES cascade;
+0: jdbc:luciddb:> drop server ORCL_SERVER_MAPPING_ESCAPE cascade;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
