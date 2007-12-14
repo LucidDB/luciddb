@@ -36,7 +36,7 @@ import org.eigenbase.util.*;
  * @since 15 February, 2002
  */
 public class NoneConverterRel
-    extends ConverterRel
+    extends ConverterRelImpl
 {
     //~ Constructors -----------------------------------------------------------
 

@@ -46,11 +46,17 @@ ExecStreamResult CopyExecStream::execute(ExecStreamQuantum const &quantum)
     PBuffer pDst = pOutAccessor->getProductionStart();
 
     if (cbAvailableOut < cbAvailableIn) {
+        // In a non-DFS scheduler, the first call to this XO may be made before
+        // the first call to its consumer. If so, the consumer may not have
+        // allocated its buffer; punt until it has.
+        if (cbAvailableOut == 0 && pOutAccessor->getState() == EXECBUF_EMPTY) {
+            return EXECRC_BUF_OVERFLOW;
+        }
         // oops, impedance mismatch:  have to figure out how many
         // complete tuples we can safely copy without overflow
         cbAvailableIn =
             pInAccessor->getConsumptionAvailableBounded(cbAvailableOut);
-        assert(cbAvailableIn);
+        permAssert(cbAvailableIn > 0);
     } else {
         rc = EXECRC_BUF_UNDERFLOW;
     }

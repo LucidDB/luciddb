@@ -482,7 +482,7 @@ ${farrago.test.jvmargs}
        the source="1.4" attribute, revealing that creeping generics have 
        forced us to abandon 1.4-compatibility. -->
   <presetdef name="farrago.javaCompileClient">
-    <javac debug="on" deprecation="on" source="1.5" target="1.5"/>
+    <javac debug="on" deprecation="on" source="1.4" target="1.4"/>
   </presetdef>
 
   <!-- Customization for java task -->
