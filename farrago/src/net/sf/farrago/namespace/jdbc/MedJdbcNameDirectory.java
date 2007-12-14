@@ -133,6 +133,9 @@ class MedJdbcNameDirectory
                     foreignName = sources.getTable();
                 }
             }
+            if (schemaName == null || foreignName == null) {
+                return null;
+            }
             if (server.catalogName != null) {
                 foreignQualifiedName =
                     new String[] {
@@ -580,8 +583,6 @@ class MedJdbcNameDirectory
                         }
                     }
                     String columnName = resultSet.getString(4);
-                    boolean isNullable =
-                        resultSet.getInt(11) != DatabaseMetaData.columnNoNulls;
                     RelDataType type =
                         sink.getTypeFactory().createJdbcColumnType(
                             resultSet,
@@ -620,35 +621,23 @@ class MedJdbcNameDirectory
         ArrayList allSchemas = new ArrayList();
 
         // schema mapping
-        String mapping =
-            server.getProperties().getProperty(
-                MedJdbcDataServer.PROP_SCHEMA_MAPPING);
-        if (mapping != null) {
-            String [] allMapping = mapping.split(";");
-            for (String map : allMapping) {
-                String [] oneMap = map.split(":");
-                if (oneMap.length != 2) {
-                    continue;
-                }
-                if (schemaName.equals(oneMap[1].trim())) {
-                    allSchemas.add(oneMap[0]);
+        if (server.getProperties().getProperty(
+                MedJdbcDataServer.PROP_SCHEMA_MAPPING) != null) {
+            HashMap map = (HashMap) server.schemaMaps.get(schemaName);
+            if (map != null) {
+                for (Object s : map.values().toArray()) {
+                    if (!allSchemas.contains((String) s)) {
+                        allSchemas.add(s);
+                    }
                 }
             }
-            if (allSchemas.size() > 0) {
-                return (String []) allSchemas.toArray(
-                    new String[allSchemas.size()]);
-            } else {
-                return new String[] { schemaName };
-            }
-        } else {
-            // table mapping
-            mapping = server.getProperties().getProperty(
-                MedJdbcDataServer.PROP_TABLE_MAPPING);
-            if (mapping != null) {
-                HashMap map = (HashMap) server.tableMaps.get(schemaName);
-                if (map == null) {
-                    return new String[] { schemaName };
-                }
+        }
+
+        // table mapping
+        if (server.getProperties().getProperty(
+                MedJdbcDataServer.PROP_TABLE_MAPPING) != null) {
+            HashMap map = (HashMap) server.tableMaps.get(schemaName);
+            if (map != null) {
                 for (Iterator i = map.values().iterator(); i.hasNext();) {
                     String sch =
                         ((MedJdbcDataServer.Source) i.next()).getSchema();
@@ -656,17 +645,16 @@ class MedJdbcNameDirectory
                         allSchemas.add(sch);
                     }
                 }
-                if (allSchemas.size() > 0) {
-                    return (String []) allSchemas.toArray(
-                        new String[allSchemas.size()]);
-                } else {
-                    return new String[] { schemaName };
-                }
-            } else {
-                // no mapping
-                return new String[] { schemaName };
             }
         }
+
+        if (allSchemas.size() > 0) {
+            return (String []) allSchemas.toArray(
+                new String[allSchemas.size()]);
+        } else {
+            return new String[] { schemaName };
+        }
+
     }
 
     private String [] getTablePattern(
@@ -715,44 +703,19 @@ class MedJdbcNameDirectory
     private String getMappedTableName(
         String schema, String table, String origSchema)
     {
-        String mapping = server.getProperties().getProperty(
-            MedJdbcDataServer.PROP_TABLE_MAPPING);
+        HashMap map = (HashMap) server.tableMaps.get(origSchema);
+        if (map == null) {
+            return table;
+        }
 
-        if (mapping != null) {
-            String [] allMapping = mapping.split(";");
+        Object[] keys = map.keySet().toArray();
+        Object[] sources = map.values().toArray();
 
-            for (String s : allMapping) {
-                String [] map = s.split(":");
-
-                // not a valid mapping
-                if (map.length != 2) {
-                    continue;
-                }
-                String source = map[0].trim();
-                String target = map[1].trim();
-
-                map = source.split("\\.");
-                // not a valid mapping
-                if (map.length != 2) {
-                    continue;
-                }
-                String src_schema = map[0].trim();
-                String src_table = map[1].trim();
-
-                if (src_schema.equals(schema) &&
-                    src_table.equals(table)) {
-                    map = target.split("\\.");
-                    // not a valid mapping
-                    if (map.length != 2) {
-                        continue;
-                    }
-                    String target_schema = map[0].trim();
-                    if (!target_schema.equals(origSchema)) {
-                        continue;
-                    }
-                    String target_table = map[1].trim();
-                    return target_table;
-                }
+        for (int i = 0; i < sources.length; i++) {
+            String sch = ((MedJdbcDataServer.Source)sources[i]).getSchema();
+            String tab = ((MedJdbcDataServer.Source)sources[i]).getTable();
+            if (schema.equals(sch) && table.equals(tab)) {
+                return (String) keys[i];
             }
         }
         return table;

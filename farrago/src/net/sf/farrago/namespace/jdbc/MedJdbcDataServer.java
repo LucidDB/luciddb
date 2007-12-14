@@ -191,16 +191,23 @@ public class MedJdbcDataServer
 
         createConnection();
 
-        // schema mapping
         String schemaMapping = props.getProperty(PROP_SCHEMA_MAPPING);
+        String tableMapping = props.getProperty(PROP_TABLE_MAPPING);
+
+        if (schemaMapping != null &&
+            tableMapping != null) {
+            throw FarragoResource.instance().MedJdbc_InvalidTableSchemaMapping
+                .ex();
+        }
+
+        // schema mapping
         if (schemaMapping != null) {
-            createSchemaMaps(schemaMapping);
+            parseMapping(schemaMapping, false);
         }
 
         // table mapping
-        String tableMapping = props.getProperty(PROP_TABLE_MAPPING);
         if (tableMapping != null) {
-            createTableMaps(tableMapping);
+            parseMapping(tableMapping, true);
         }
     }
 
@@ -522,91 +529,203 @@ public class MedJdbcDataServer
         validateConnection = true;
     }
 
-    private void createSchemaMaps(String mapping)
+    private void parseMapping(String mapping, boolean isTableMapping)
         throws SQLException
     {
-        String [] allMapping = mapping.split(";");
+        String srcSchema = null;
+        String srcTable = null;
+        String targetSchema = null;
+        String targetTable = null;
 
-        for (String s : allMapping) {
-            String [] map = s.split(":");
+        StringBuffer buffer = new StringBuffer(64);
+        buffer.setLength(0);
 
-            // not a valid mapping
-            if (map.length != 2) {
-                continue;
-            }
-            String key = map[0].trim();
-            String value = map[1].trim();
+        boolean insideQuotes = false;
+        boolean atSource = true;
 
-            if (!key.equals("") && !value.equals("")) {
-                HashMap h = new HashMap();
-                if (schemaMaps.get(value) != null) {
-                    h = (HashMap) schemaMaps.get(value);
+        int len = mapping.length();
+        int i = 0;
+
+        while (i < len) {
+            char c = mapping.charAt(i);
+            switch (c) {
+            case '"':
+                if (!isQuoteChar(mapping, i)) {
+                    // escape character, add one quote
+                    buffer.append(c);
+                    i++;
+                } else {
+                    if (insideQuotes) {
+                        // this is the endQuote
+                        insideQuotes = false;
+                    } else {
+                        // this is the startQuote
+                        insideQuotes = true;
+                    }
                 }
-                ResultSet resultSet = null;
-                try {
-                    resultSet =
-                        databaseMetaData.getTables(
-                            catalogName,
-                            key,
-                            null,
-                            tableTypes);
-                    if (resultSet == null) {
-                        continue;
+                i++;
+                break;
+            case '.':
+                if (!isTableMapping) {
+                    // non special characters
+                    buffer.append(c);
+                } else {
+                    // in table mapping, "." is a special character
+                    if (insideQuotes) {
+                        buffer.append(c);
+                    } else {
+                        if (atSource) {
+                            srcSchema = buffer.toString();
+                            srcSchema = srcSchema.trim();
+                        } else {
+                            targetSchema = buffer.toString();
+                            targetSchema = targetSchema.trim();
+                        }
+                        buffer.setLength(0);
                     }
-                    while (resultSet.next()) {
-                        h.put(resultSet.getString(3), key);
+                }
+                i++;
+                break;
+            case ':':
+                if (insideQuotes) {
+                    buffer.append(c);
+                } else {
+                    srcTable = buffer.toString();
+                    srcTable = srcTable.trim();
+                    atSource = false;
+                    buffer.setLength(0);
+                }
+                i++;
+                break;
+            case ';':
+                if (insideQuotes) {
+                    buffer.append(c);
+                } else {
+                    targetTable = buffer.toString();
+                    targetTable = targetTable.trim();
+                    atSource = true;
+                    buffer.setLength(0);
+                    if (isTableMapping) {
+                        createTableMaps(
+                            srcSchema,
+                            srcTable,
+                            targetSchema,
+                            targetTable);
+                    } else {
+                        createSchemaMaps(
+                            srcTable,
+                            targetTable);
                     }
-                    schemaMaps.put(value, h);
-                } catch (Throwable ex) {
-                    // assume unsupported
-                    continue;
-                } finally {
-                    if (resultSet != null) {
-                        resultSet.close();
-                    }
+                }
+                i++;
+                break;
+            default:
+                // non special characters
+                buffer.append(c);
+                i++;
+                break;
+            }
+            if (i == len) {
+                targetTable = buffer.toString();
+                targetTable = targetTable.trim();
+                buffer.setLength(0);
+                if (isTableMapping) {
+                    createTableMaps(
+                        srcSchema,
+                        srcTable,
+                        targetSchema,
+                        targetTable);
+                } else {
+                    createSchemaMaps(
+                        srcTable,
+                        targetTable);
                 }
             }
         }
     }
 
-    private void createTableMaps(String mapping)
+    private void createSchemaMaps(String key, String value)
         throws SQLException
     {
-        String [] allMapping = mapping.split(";");
-
-        for (String s : allMapping) {
-            String [] map = s.split(":");
-
-            // not a valid mapping
-            if (map.length != 2) {
-                continue;
-            }
-            String source = map[0].trim();
-            String target = map[1].trim();
-
-            map = source.split("\\.");
-            // not a valid mapping
-            if (map.length != 2) {
-                continue;
-            }
-            String src_schema = map[0].trim();
-            String src_table = map[1].trim();
-
-            map = target.split("\\.");
-            // not a valid mapping
-            if (map.length != 2) {
-                continue;
-            }
-            String target_schema = map[0].trim();
-            String target_table = map[1].trim();
-
-            HashMap h = new HashMap();
-            if (tableMaps.get(target_schema) != null) {
-                h = (HashMap) tableMaps.get(target_schema);
-            }
-            h.put(target_table, new Source(src_schema, src_table));
-            tableMaps.put(target_schema, h);
+        if (key == null || value == null) {
+            return;
         }
+
+        if (!key.equals("") && !value.equals("")) {
+            HashMap h = new HashMap();
+            if (schemaMaps.get(value) != null) {
+                h = (HashMap) schemaMaps.get(value);
+            }
+            ResultSet resultSet = null;
+            try {
+                resultSet =
+                    databaseMetaData.getTables(
+                        catalogName,
+                        key,
+                        null,
+                        tableTypes);
+                if (resultSet == null) {
+                    return;
+                }
+                while (resultSet.next()) {
+                    h.put(resultSet.getString(3), key);
+                }
+                schemaMaps.put(value, h);
+            } catch (Throwable ex) {
+                // assume unsupported
+                return;
+            } finally {
+                if (resultSet != null) {
+                    resultSet.close();
+                }
+            }
+        }
+    }
+
+    private void createTableMaps(String src_schema, String src_table,
+        String target_schema, String target_table)
+        throws SQLException
+    {
+        if (src_schema == null ||
+            src_table == null ||
+            target_schema == null ||
+            target_table == null) {
+            return;
+        }
+        HashMap h = new HashMap();
+        if (tableMaps.get(target_schema) != null) {
+            h = (HashMap) tableMaps.get(target_schema);
+        }
+
+        // validate that the same table name is not mapped to the same schema
+        // name
+        Source src = (Source)h.get(target_table);
+        if (src != null) {
+            // forgive the instance where the same source_schema and
+            // source_table are mapped again
+            if (!src.getSchema().equals(src_schema) ||
+                !src.getTable().equals(src_table)) {
+                throw FarragoResource.instance().MedJdbc_InvalidTableMapping
+                    .ex(src.getSchema(), src.getTable(), src_schema, src_table,
+                        target_schema, target_table);
+            }
+        }
+        h.put(target_table, new Source(src_schema, src_table));
+        tableMaps.put(target_schema, h);
+    }
+
+    private boolean isQuoteChar(String mapping, int index)
+    {
+        boolean isQuote = false;
+
+        for (int i = index; i < mapping.length(); i++) {
+            if (mapping.charAt(i) == '"') {
+                isQuote = !isQuote;
+            } else {
+                break;
+            }
+        }
+        return isQuote;
     }
 
     public static class Source
