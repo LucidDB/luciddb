@@ -20,17 +20,18 @@
 */
 package com.disruptivetech.farrago.test;
 
+import java.util.*;
+import java.util.logging.Logger;
+
 import com.disruptivetech.farrago.sql.advise.*;
 
-import java.util.*;
-import java.util.logging.*;
-
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.parser.SqlParserUtil;
+import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.test.*;
+import org.eigenbase.util.TestUtil;
 
 
 /**
@@ -48,6 +49,201 @@ public class SqlAdvisorTest
 
     public final Logger logger = Logger.getLogger(getClass().getName());
 
+    private static final List<String> STAR_KEYWORD = Arrays.asList(
+        "Keyword(*)");
+
+    protected static final List<String> FROM_KEYWORDS = Arrays.asList(
+        "Keyword(()",
+        "Keyword(LATERAL)",
+        "Keyword(TABLE)",
+        "Keyword(UNNEST)");
+
+    protected static final List<String> AGG_KEYWORDS = Arrays.asList(
+        "Keyword(SELECT)",
+        "Keyword(TABLE)",
+        "Keyword(VALUES)",
+        "Keyword())",
+        "Keyword(*)",
+        "Keyword(ALL)",
+        "Keyword(DISTINCT)");
+
+    protected static final List<String> SALES_TABLES = Arrays.asList(
+        "Table(EMP)",
+        "Table(EMP_ADDRESS)",
+        "Table(DEPT)",
+        "Table(BONUS)",
+        "Table(SALGRADE)");
+
+    private static final List<String> SCHEMAS = Arrays.asList(
+        "Schema(SALES)",
+        "Schema(CUSTOMER)");
+
+    private static final List<String> AB_TABLES = Arrays.asList(
+        "Table(A)",
+        "Table(B)");
+
+    private static final List<String> EMP_TABLE = Arrays.asList(
+        "Table(EMP)");
+
+    protected static final List<String> EXPR_KEYWORDS = Arrays.asList(
+        "Keyword(()",
+        "Keyword(+)",
+        "Keyword(-)",
+        "Keyword(?)",
+        "Keyword(ABS)",
+        "Keyword(AVG)",
+        "Keyword(CARDINALITY)",
+        "Keyword(CASE)",
+        "Keyword(CAST)",
+        "Keyword(CEIL)",
+        "Keyword(CEILING)",
+        "Keyword(CHARACTER_LENGTH)",
+        "Keyword(CHAR_LENGTH)",
+        "Keyword(COALESCE)",
+        "Keyword(COLLECT)",
+        "Keyword(CONVERT)",
+        "Keyword(COUNT)",
+        "Keyword(CUME_DIST)",
+        "Keyword(CURRENT_DATE)",
+        "Keyword(CURRENT_DEFAULT_TRANSFORM_GROUP)",
+        "Keyword(CURRENT_PATH)",
+        "Keyword(CURRENT_ROLE)",
+        "Keyword(CURRENT_TIME)",
+        "Keyword(CURRENT_TIMESTAMP)",
+        "Keyword(CURRENT_USER)",
+        "Keyword(CURSOR)",
+        "Keyword(DATE)",
+        "Keyword(DENSE_RANK)",
+        "Keyword(ELEMENT)",
+        "Keyword(EXISTS)",
+        "Keyword(EXP)",
+        "Keyword(EXTRACT)",
+        "Keyword(FALSE)",
+        "Keyword(FIRST_VALUE)",
+        "Keyword(FLOOR)",
+        "Keyword(FUSION)",
+        "Keyword(INTERVAL)",
+        "Keyword(LAST_VALUE)",
+        "Keyword(LN)",
+        "Keyword(LOCALTIME)",
+        "Keyword(LOCALTIMESTAMP)",
+        "Keyword(LOWER)",
+        "Keyword(MAX)",
+        "Keyword(MIN)",
+        "Keyword(MOD)",
+        "Keyword(MULTISET)",
+        "Keyword(NEW)",
+        "Keyword(NOT)",
+        "Keyword(NULL)",
+        "Keyword(NULLIF)",
+        "Keyword(OCTET_LENGTH)",
+        "Keyword(OVERLAY)",
+        "Keyword(PERCENT_RANK)",
+        "Keyword(POSITION)",
+        "Keyword(POWER)",
+        "Keyword(RANK)",
+        "Keyword(ROW)",
+        "Keyword(ROW_NUMBER)",
+        "Keyword(SESSION_USER)",
+        "Keyword(SPECIFIC)",
+        "Keyword(SQRT)",
+        "Keyword(SUBSTRING)",
+        "Keyword(SUM)",
+        "Keyword(SYSTEM_USER)",
+        "Keyword(TIME)",
+        "Keyword(TIMESTAMP)",
+        "Keyword(TRANSLATE)",
+        "Keyword(TRIM)",
+        "Keyword(TRUE)",
+        "Keyword(UNKNOWN)",
+        "Keyword(UPPER)",
+        "Keyword(USER)");
+
+    protected static final List<String> SELECT_KEYWORDS = Arrays.asList(
+        "Keyword(ALL)",
+        "Keyword(DISTINCT)",
+        "Keyword(*)");
+
+    private static final List<String> ORDER_KEYWORDS = Arrays.asList(
+        "Keyword(,)",
+        "Keyword(ASC)",
+        "Keyword(DESC)");
+
+    private static final List<String> EMP_COLUMNS = Arrays.asList(
+        "Column(EMPNO)",
+        "Column(ENAME)",
+        "Column(JOB)",
+        "Column(MGR)",
+        "Column(HIREDATE)",
+        "Column(SAL)",
+        "Column(COMM)",
+        "Column(DEPTNO)",
+        "Column(SLACKER)");
+
+    private static final List<String> DEPT_COLUMNS = Arrays.asList(
+        "Column(DEPTNO)",
+        "Column(NAME)");
+
+    protected static final List<String> PREDICATE_KEYWORDS = Arrays.asList(
+        "Keyword(()",
+        "Keyword(*)",
+        "Keyword(+)",
+        "Keyword(-)",
+        "Keyword(.)",
+        "Keyword(/)",
+        "Keyword(<)",
+        "Keyword(<=)",
+        "Keyword(<>)",
+        "Keyword(=)",
+        "Keyword(>)",
+        "Keyword(>=)",
+        "Keyword(AND)",
+        "Keyword(BETWEEN)",
+        "Keyword(IN)",
+        "Keyword(IS)",
+        "Keyword(LIKE)",
+        "Keyword(MEMBER)",
+        "Keyword(MULTISET)",
+        "Keyword(NOT)",
+        "Keyword(OR)",
+        "Keyword(SIMILAR)",
+        "Keyword(SUBMULTISET)",
+        "Keyword(||)");
+
+    private static final List<String> WHERE_KEYWORDS = Arrays.asList(
+        "Keyword(EXCEPT)",
+        "Keyword(GROUP)",
+        "Keyword(HAVING)",
+        "Keyword(INTERSECT)",
+        "Keyword(ORDER)",
+        "Keyword(UNION)",
+        "Keyword(WINDOW)");
+
+    private static final List<String> A_TABLE = Arrays.asList(
+        "Table(A)");
+    protected static final List<String> JOIN_KEYWORDS = Arrays.asList(
+            "Keyword(UNION)",
+            "Keyword(FULL)",
+            "Keyword(ORDER)",
+            "Keyword(AS)",
+            "Keyword(USING)",
+            "Keyword(RIGHT)",
+            "Keyword(GROUP)",
+            "Keyword(CROSS)",
+            "Keyword(,)",
+            "Keyword(NATURAL)",
+            "Keyword(INNER)",
+            "Keyword(HAVING)",
+            "Keyword(LEFT)",
+            "Keyword(EXCEPT)",
+            "Keyword(JOIN)",
+            "Keyword(WINDOW)",
+            "Keyword(.)",
+            "Keyword(TABLESAMPLE)",
+            "Keyword(ON)",
+            "Keyword(INTERSECT)",
+            "Keyword(WHERE)");
+
     //~ Constructors -----------------------------------------------------------
 
     public SqlAdvisorTest(String name)
@@ -55,440 +251,86 @@ public class SqlAdvisorTest
         super(name);
     }
 
-    //~ Methods ----------------------------------------------------------------
-
-    public void testFrom()
-        throws Exception
+    protected List<String> getFromKeywords()
     {
-        String sql;
-        List<String> expected = new ArrayList<String>();
-        expected.add("SALES");
-        expected.add("EMP");
-        expected.add("DEPT");
-        expected.add("BONUS");
-        expected.add("SALGRADE");
-        expected.add("CUSTOMER");
-        expected.add("CONTACT");
-        expected.add("ACCOUNT");
-        expected.add("EMP_ADDRESS");
-
-        sql = "select a.empno, b.deptno from ^dummy a, sales.dummy b";
-        assertHint(sql, expected); // join
-
-        sql = "select a.empno, b.deptno from ^";
-        assertComplete(sql, expected);
-        sql = "select a.empno, b.deptno from ^, sales.dummy b";
-        assertComplete(sql, expected);
-        sql = "select a.empno, b.deptno from ^a";
-        assertComplete(sql, expected);
-
-        expected.clear();
-        expected.add("EMP");
-        expected.add("DEPT");
-        expected.add("BONUS");
-        expected.add("SALGRADE");
-        expected.add("EMP_ADDRESS");
-
-        sql = "select a.empno, b.deptno from dummy a, ^sales.dummy b";
-        assertHint(sql, expected); // join
-
-        sql = "select a.empno, b.deptno from dummy a, sales.^";
-        assertComplete(sql, expected);
+        return FROM_KEYWORDS;
     }
 
-    public void testJoin()
-        throws Exception
+    protected List<String> getSelectKeywords()
     {
-        String sql;
-        List<String> expected = new ArrayList<String>();
-        expected.add("SALES");
-        expected.add("EMP");
-        expected.add("DEPT");
-        expected.add("BONUS");
-        expected.add("SALGRADE");
-        expected.add("CUSTOMER");
-        expected.add("CONTACT");
-        expected.add("ACCOUNT");
-        expected.add("EMP_ADDRESS");
-
-        sql =
-            "select a.empno, b.deptno from ^dummy a join sales.dummy b "
-            + "on a.deptno=b.deptno where empno=1";
-        assertHint(sql, expected); // from
-
-        sql = "select a.empno, b.deptno from ^ a join sales.dummy b";
-        assertComplete(sql, expected); // from
-
-        expected.clear();
-        expected.add("EMP");
-        expected.add("DEPT");
-        expected.add("BONUS");
-        expected.add("SALGRADE");
-        expected.add("EMP_ADDRESS");
-
-        sql =
-            "select a.empno, b.deptno from dummy a join ^sales.dummy b "
-            + "on a.deptno=b.deptno where empno=1";
-        assertHint(sql, expected); // join
-
-        sql = "select a.empno, b.deptno from dummy a join sales.^";
-        assertComplete(sql, expected); // join
-        sql = "select a.empno, b.deptno from dummy a join sales.^ on";
-        assertComplete(sql, expected); // join
-        sql = "select a.empno, b.deptno from dummy a join sales.^ on a.deptno=";
-        assertComplete(sql, expected); // join
+        return SELECT_KEYWORDS;
     }
 
-    public void testOnCondition()
-        throws Exception
+    /**
+     * Returns a list of the tables in the SALES schema. Derived classes with
+     * extended SALES schemas may override.
+     *
+     * @return list of tables in the SALES schema
+     */
+    protected List<String> getSalesTables()
     {
-        String sql;
-        List<String> expected = empColumns();
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on ^a.deptno=b.dummy where empno=1";
-        assertHint(sql, expected); // on left
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.^";
-        assertComplete(sql, expected); // on left
-
-        expected.clear();
-        expected.add("DEPTNO");
-        expected.add("NAME");
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno=^b.dummy where empno=1";
-        assertHint(sql, expected); // on right
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno=b.^ where empno=1";
-        assertComplete(sql, expected); // on right
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno=b.^";
-        assertComplete(sql, expected); // on right
+        return SALES_TABLES;
     }
 
-    public void testFromWhere()
-        throws Exception
+    protected List<String> getJoinKeywords()
     {
-        String sql;
-        List<String> expected = empColumns();
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a, sales.dept b "
-            + "where b.deptno=^a.dummy";
-        assertHint(sql, expected); // where list
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a, sales.dept b "
-            + "where b.deptno=a.^";
-        assertComplete(sql, expected); // where list
-
-        expected.clear();
-        expected.add("SALES.EMP");
-        expected.add("SALES.DEPT");
-        expected.add("EMPNO");
-        expected.add("ENAME");
-        expected.add("JOB");
-        expected.add("MGR");
-        expected.add("HIREDATE");
-        expected.add("SAL");
-        expected.add("COMM");
-        expected.add("DEPTNO");
-        expected.add("NAME");
-        expected.add("SLACKER");
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a, sales.dept b "
-            + "where ^dummy=1";
-        assertHint(sql, expected); // where list
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a, sales.dept b "
-            + "where ^";
-        assertComplete(sql, expected); // where list
+        return JOIN_KEYWORDS;
     }
 
-    public void testWhereList()
-        throws Exception
+    private void assertTokenizesTo(String sql, String expected)
     {
-        String sql;
-        List<String> expected = new ArrayList<String>();
-        expected.add("SALES.EMP");
-        expected.add("SALES.DEPT");
-        expected.add("EMPNO");
-        expected.add("ENAME");
-        expected.add("JOB");
-        expected.add("MGR");
-        expected.add("HIREDATE");
-        expected.add("SAL");
-        expected.add("COMM");
-        expected.add("DEPTNO");
-        expected.add("NAME");
-        expected.add("SLACKER");
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno=b.deptno where ^dummy=1";
-        assertHint(sql, expected); // where list
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno=b.deptno where ^";
-        assertComplete(sql, expected); // where list
-
-        expected.clear();
-        expected.addAll(empColumns());
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno=b.deptno where ^a.dummy=1";
-        assertHint(sql, expected); // where list
-
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno=b.deptno where a.^";
-        assertComplete(sql, expected); // where list
+        SqlSimpleParser.Tokenizer tokenizer = new SqlSimpleParser.Tokenizer(sql);
+        StringBuilder buf = new StringBuilder();
+        while (true) {
+            SqlSimpleParser.Token token = tokenizer.nextToken();
+            if (token == null) {
+                break;
+            }
+            buf.append(token).append(TestUtil.NL);
+        }
+        assertEquals(expected, buf.toString());
     }
 
-    public void testSelectList()
-        throws Exception
+    protected void assertHint(
+        String sql,
+        List<String>... expectedLists) throws Exception
     {
-        String sql;
-        List<String> expected = new ArrayList<String>();
-        expected.add("SALES.EMP");
-        expected.add("SALES.DEPT");
-        expected.addAll(empColumns());
-        expected.add("NAME");
-
-        sql =
-            "select ^dummy, b.dummy from sales.emp a join sales.dept b "
-            + "on a.deptno=b.deptno where empno=1";
-        assertHint(sql, expected); // select list
-
-        sql = "select ^, b.dummy from sales.emp a join sales.dept b ";
-        assertComplete(sql, expected); // select list
-
-        expected.clear();
-        expected.add("DEPTNO");
-        expected.add("NAME");
-
-        sql =
-            "select dummy, ^b.dummy from sales.emp a join sales.dept b "
-            + "on a.deptno=b.deptno where empno=1";
-        assertHint(sql, expected); // select list
-
-        sql = "select dummy, b.^ from sales.emp a join sales.dept b";
-        assertComplete(sql, expected); // select list
-
-        expected.clear();
-        sql = "select dummy, b.^ from sales.emp a";
-        assertComplete(sql, expected); // select list
-
-        expected.clear();
-        expected.addAll(empColumns());
-
-        sql = "select ^emp.dummy from sales.emp";
-        assertHint(sql, expected); // select list
-
-        sql = "select emp.^ from sales.emp";
-        assertComplete(sql, expected); // select list
-    }
-
-    public void testOrderByList()
-        throws Exception
-    {
-        String sql;
-        List<String> expected = new ArrayList<String>();
-        expected.add("SALES.EMP");
-        expected.add("EMPNO");
-
-        sql = "select emp.empno from sales.emp where empno=1 order by ^dummy";
-        assertHint(sql, expected); // where list
-
-        sql = "select emp.empno from sales.emp where empno=1 order by ^";
-        assertComplete(sql, expected); // where list
-    }
-
-    public void testSubQuery()
-        throws Exception
-    {
-        String sql;
-        List<String> expected = new ArrayList<String>();
-        expected.add("X");
-        expected.add("Y");
-
-        sql =
-            "select ^t.dummy from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
-        assertHint(sql, expected); // select list
-
-        sql = "select t.^ from (select 1 as x, 2 as y from sales.emp) as t";
-        assertComplete(sql, expected); // select list
-
-        expected.clear();
-        expected.add("X");
-        expected.add("Y");
-
-        sql =
-            "select t.x from (select 1 as x, 2 as y from sales.emp) as t where ^t.dummy=1";
-        assertHint(sql, expected); // select list
-
-        sql =
-            "select t.x from (select 1 as x, 2 as y from sales.emp) as t where t.^";
-        assertComplete(sql, expected); // select list
-
-        sql =
-            "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
-        assertComplete(sql, expected);
-
-        expected.clear();
-        expected.add("EMP");
-        expected.add("DEPT");
-        expected.add("BONUS");
-        expected.add("SALGRADE");
-        expected.add("EMP_ADDRESS");
-
-        sql = "select t.x from (select 1 as x, 2 as y from sales.^) as t";
-        assertComplete(sql, expected); // select list
-    }
-
-    public void testSimpleParser()
-    {
-        String sql;
-        String expected;
-
-        // from
-        sql = "select * from ^where";
-        expected = "select * from _suggest_";
-        assertSimplify(sql, expected);
-
-        // from
-        sql = "select a.empno, b.deptno from ^";
-        expected = "select a.empno , b.deptno from _suggest_";
-        assertSimplify(sql, expected);
-
-        // select list
-        sql = "select emp.^ from sales.emp";
-        expected = "select emp._suggest_ from sales.emp";
-        assertSimplify(sql, expected);
-
-        sql = "select ^from sales.emp";
-        expected = "select _suggest_ from sales.emp";
-        assertSimplify(sql, expected);
-
-        sql = "select a.empno ,^  from sales.emp a , sales.dept b";
-        expected = "select a.empno , _suggest_ from sales.emp a , sales.dept b";
-        assertSimplify(sql, expected);
-
-        // join
-        sql = "select a.empno, b.deptno from dummy a join ^on where empno=1";
-        expected = "select a.empno , b.deptno from dummy a join _suggest_";
-        assertSimplify(sql, expected);
-
-        // on
-        sql =
-            "select a.empno, b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno=^";
-        expected =
-            "select a.empno , b.deptno from sales.emp a join sales.dept b "
-            + "on a.deptno = _suggest_";
-        assertSimplify(sql, expected);
-
-        // where
-        sql =
-            "select a.empno, b.deptno from sales.emp a, sales.dept b "
-            + "where ^";
-        expected =
-            "select a.empno , b.deptno from sales.emp a , sales.dept b "
-            + "where _suggest_";
-        assertSimplify(sql, expected);
-
-        // order by
-        sql = "select emp.empno from sales.emp where empno=1 order by ^";
-        expected = "select emp.empno from sales.emp order by _suggest_";
-        assertSimplify(sql, expected);
-
-        // subquery
-        sql =
-            "select t.^ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
-        expected =
-            "select t._suggest_ from (select 1 as x , 2 as y from sales.emp) as t";
-        assertSimplify(sql, expected);
-
-        sql =
-            "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
-        expected =
-            "select t from (select 1 as x , 2 as y from (select x from sales.emp)) as t where _suggest_";
-        assertSimplify(sql, expected);
-
-        sql =
-            "select ^from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
-        expected =
-            "select _suggest_ from (select 1 as x , 2 as y from sales.emp) , (select 2 as y from (select m from n)) as t";
-        assertSimplify(sql, expected);
-
-        sql = "select t.x from ( select 1 as x, 2 as y from sales.^";
-        expected = "select 1 as x , 2 as y from sales._suggest_";
-        assertSimplify(sql, expected);
-
-        sql = "select a.empno, b.deptno from dummy a, sales.^";
-        expected = "select a.empno , b.deptno from dummy a , sales._suggest_";
-        assertSimplify(sql, expected);
-
-        // function
-        sql = "select count(1) from sales.emp a where ^";
-        expected = "select count(1) from sales.emp a where _suggest_";
-        assertSimplify(sql, expected);
-    }
-
-    private static List<String> empColumns()
-    {
-        List<String> expected = new ArrayList<String>();
-        expected.add("EMPNO");
-        expected.add("ENAME");
-        expected.add("JOB");
-        expected.add("MGR");
-        expected.add("HIREDATE");
-        expected.add("SAL");
-        expected.add("COMM");
-        expected.add("DEPTNO");
-        expected.add("SLACKER");
-        return expected;
+        List<String> expectedList = plus(expectedLists);
+        Collections.sort(expectedList);
+        assertHint(sql, toString(expectedList));
     }
 
     /**
      * Checks that a given SQL statement yields the expected set of completion
      * hints.
+     *
+     * @param sql SQL statement
+     * @param expectedResults Expected list of hints
+     *
+     * @throws Exception on error
      */
     protected void assertHint(
         String sql,
-        List<String> expectedResults)
+        String expectedResults)
         throws Exception
     {
         SqlValidatorWithHints validator =
             (SqlValidatorWithHints) tester.getValidator();
-        SqlAdvisor advisor = new SqlAdvisor(validator);
+        SqlAdvisor advisor = ((Tester) tester).createAdvisor(validator);
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
 
-        SqlMoniker [] results =
+        List<SqlMoniker> results =
             advisor.getCompletionHints(
                 sap.sql,
                 sap.pos);
         assertEquals(
-            convertCompletionHints(results),
-            expectedResults);
+            expectedResults,
+            convertCompletionHints(results));
     }
 
     /**
-     * Tests that a given SQL statement simplifies to the expected result.
+     * Tests that a given SQL statement simplifies to the salesTables result.
      *
      * @param sql SQL statement to simplify. The SQL statement must contain
      * precisely one caret '^', which marks the location where completion is to
@@ -499,81 +341,682 @@ public class SqlAdvisorTest
     {
         SqlValidatorWithHints validator =
             (SqlValidatorWithHints) tester.getValidator();
-        SqlAdvisor advisor = new SqlAdvisor(validator);
+        SqlAdvisor advisor = ((Tester) tester).createAdvisor(validator);
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
         String actual = advisor.simplifySql(sap.sql, sap.cursor);
-        assertEquals(actual, expected);
+        assertEquals(expected, actual);
+    }
+
+    protected void assertComplete(
+        String sql,
+        List<String>... expectedResults)
+    {
+        List<String> expectedList = plus(expectedResults);
+        Collections.sort(expectedList);
+        String expected = toString(expectedList);
+        assertComplete(sql, expected);
     }
 
     /**
      * Tests that a given SQL which may be invalid or incomplete simplifies
-     * itself and yields the expected set of completion hints. This is an
-     * integration test of assertHint and assertSimplify.
+     * itself and yields the salesTables set of completion hints. This is an
+     * integration test of {@link #assertHint} and {@link #assertSimplify}.
+     *
+     * @param sql SQL statement
+     * @param expectedResults Expected list of hints
      */
     protected void assertComplete(
         String sql,
-        List<String> expectedResults)
-        throws Exception
+        String expectedResults)
     {
         SqlValidatorWithHints validator =
             (SqlValidatorWithHints) tester.getValidator();
-        SqlAdvisor advisor = new SqlAdvisor(validator);
+        SqlAdvisor advisor = ((Tester) tester).createAdvisor(validator);
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
-        SqlMoniker [] results = advisor.getCompletionHints(sap.sql, sap.cursor);
+        List<SqlMoniker> results =
+            advisor.getCompletionHints(sap.sql, sap.cursor);
         assertEquals(
-            convertCompletionHints(results),
-            expectedResults);
+            expectedResults,
+            convertCompletionHints(results));
     }
 
     protected void assertEquals(
         String [] actualResults,
-        List<String> expectedResults)
+        List<String>... expectedResults)
         throws Exception
     {
+        List<String> expectedList = plus(expectedResults);
         Map<String, String> uniqueResults = new HashMap<String, String>();
-        for (int i = 0; i < actualResults.length; i++) {
-            uniqueResults.put(actualResults[i], actualResults[i]);
+        for (String actualResult : actualResults) {
+            uniqueResults.put(actualResult, actualResult);
         }
-        if (!(expectedResults.containsAll(uniqueResults.values())
-                && (expectedResults.size() == uniqueResults.values().size())))
+        if (!(expectedList.containsAll(uniqueResults.values())
+                && (expectedList.size() == uniqueResults.values().size())))
         {
             fail(
-                "SqlAdvisorTest: completion hints results not as expected:\n"
-                + uniqueResults.values() + "\nExpected:\n" + expectedResults);
+                "SqlAdvisorTest: completion hints results not as salesTables:\n"
+                + uniqueResults.values() + "\nExpected:\n" + expectedList);
         }
-        return;
     }
 
-    private String [] convertCompletionHints(SqlMoniker [] results)
+    private String convertCompletionHints(List<SqlMoniker> hints)
     {
-        int cnt = 0;
-        for (int i = 0; i < results.length; i++) {
-            if (results[i].getType() != SqlMonikerType.Function) {
-                cnt++;
+        List<String> list = new ArrayList<String>();
+        for (SqlMoniker hint : hints) {
+            if (hint.getType() != SqlMonikerType.Function) {
+                list.add(hint.id());
             }
         }
-        String [] strHints = new String[cnt];
-        cnt = 0;
-        for (int i = 0; i < results.length; i++) {
-            if (results[i].getType() != SqlMonikerType.Function) {
-                strHints[cnt++] = results[i].toString();
-            }
-        }
-        return strHints;
+        Collections.sort(list);
+        return toString(list);
     }
 
-    public Tester getTester()
+    /**
+     * Converts a list to a string, one item per line.
+     *
+     * @param list List
+     * @return String with one item of the list per line
+     */
+    private static <T> String toString(List<T> list)
     {
-        return new AdvisorTestImpl();
+        StringBuilder buf = new StringBuilder();
+        for (T t : list) {
+            buf.append(t).append(TestUtil.NL);
+        }
+        return buf.toString();
+    }
+
+    public Tester getTester(SqlConformance conformance)
+    {
+        return new AdvisorTestImpl(conformance);
+    }
+
+    /**
+     * Concatenates several lists of the same type into a single list.
+     *
+     * @param lists Lists to concatenate
+     * @return Sum list
+     */
+    protected static <T> List<T> plus(List<T>... lists)
+    {
+        final List<T> result = new ArrayList<T>();
+        for (List<T> list : lists) {
+            result.addAll(list);
+        }
+        return result;
+    }
+
+    //~ Tests =----------------------------------------------------------------
+
+    public void testFrom()
+        throws Exception
+    {
+        String sql;
+
+        sql = "select a.empno, b.deptno from ^dummy a, sales.dummy b";
+        assertHint(sql, SCHEMAS, getSalesTables(), getFromKeywords()); // join
+
+        sql = "select a.empno, b.deptno from ^";
+        assertComplete(sql, SCHEMAS, getSalesTables(), getFromKeywords());
+        sql = "select a.empno, b.deptno from ^, sales.dummy b";
+        assertComplete(sql, SCHEMAS, getSalesTables(), getFromKeywords());
+        sql = "select a.empno, b.deptno from ^a";
+        assertComplete(sql, SCHEMAS, getSalesTables(), getFromKeywords());
+
+        sql = "select a.empno, b.deptno from dummy a, ^sales.dummy b";
+        assertHint(sql, SCHEMAS, getSalesTables(), getFromKeywords()); // join
+    }
+
+    public void testFromComplete()
+    {
+        String sql = "select a.empno, b.deptno from dummy a, sales.^";
+        assertComplete(sql, getSalesTables());
+    }
+
+    public void testGroup()
+    {
+        // This test is hard because the statement is not valid if you replace
+        // '^' with a dummy identifier.
+        String sql = "select a.empno, b.deptno from emp group ^";
+        assertComplete(sql, Arrays.asList("Keyword(BY)"));
+    }
+
+    public void testJoin()
+        throws Exception
+    {
+        String sql;
+        sql =
+            "select a.empno, b.deptno from ^dummy a join sales.dummy b "
+            + "on a.deptno=b.deptno where empno=1";
+        assertHint(sql, getFromKeywords(), SCHEMAS, getSalesTables()); // from
+
+        sql = "select a.empno, b.deptno from ^ a join sales.dummy b";
+        assertComplete(sql, getFromKeywords(), SCHEMAS, getSalesTables()); // from
+
+        // REVIEW: because caret is before 'sales', should it ignore schema
+        // name and present all schemas and all tables in the default schema?
+        sql =
+            "select a.empno, b.deptno from dummy a join ^sales.dummy b "
+            + "on a.deptno=b.deptno where empno=1";
+        assertHint(sql, getFromKeywords(), SCHEMAS, getSalesTables()); // join
+
+        sql = "select a.empno, b.deptno from dummy a join sales.^";
+        assertComplete(sql, getSalesTables()); // join
+        sql = "select a.empno, b.deptno from dummy a join sales.^ on";
+        assertComplete(sql, getSalesTables()); // join
+
+        // unfortunately cannot complete this case: syntax is too broken
+        sql = "select a.empno, b.deptno from dummy a join sales.^ on a.deptno=";
+        assertComplete(sql, EXPR_KEYWORDS); // join
+    }
+
+    public void testJoinKeywords()
+    {
+        // variety of keywords possible
+        List<String> list = getJoinKeywords();
+        String sql = "select * from dummy join sales.emp ^";
+        assertSimplify(sql, "SELECT * FROM dummy JOIN sales.emp _suggest_");
+        assertComplete(sql, list);
+    }
+
+    public void testOnCondition()
+        throws Exception
+    {
+        String sql;
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on ^a.deptno=b.dummy where empno=1";
+        assertHint(sql, AB_TABLES, EXPR_KEYWORDS); // on left
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.^";
+        assertComplete(sql, EMP_COLUMNS); // on left
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=^b.dummy where empno=1";
+        assertHint(sql, EXPR_KEYWORDS, AB_TABLES); // on right
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=b.^ where empno=1";
+        assertComplete(sql, DEPT_COLUMNS); // on right
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=b.^";
+        assertComplete(sql, DEPT_COLUMNS); // on right
+    }
+
+    public void testFromWhere()
+        throws Exception
+    {
+        String sql;
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a, sales.dept b "
+            + "where b.deptno=^a.dummy";
+        assertHint(sql, AB_TABLES, EXPR_KEYWORDS); // where list
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a, sales.dept b "
+            + "where b.deptno=a.^";
+        assertComplete(sql, EMP_COLUMNS); // where list
+
+        // hints contain no columns, only table aliases, because there are >1
+        // aliases
+        sql =
+            "select a.empno, b.deptno from sales.emp a, sales.dept b "
+            + "where ^dummy=1";
+        assertHint(sql, AB_TABLES, EXPR_KEYWORDS); // where list
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a, sales.dept b "
+            + "where ^";
+        assertComplete(sql, AB_TABLES, EXPR_KEYWORDS); // where list
+
+        // If there's only one table alias, we allow both the alias and the
+        // unqualified columns
+        assertComplete(
+            "select a.empno, a.deptno from sales.emp a "
+                + "where ^",
+            A_TABLE, EMP_COLUMNS, EXPR_KEYWORDS);
+    }
+
+    public void testWhereList()
+        throws Exception
+    {
+        String sql;
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=b.deptno where ^dummy=1";
+        assertHint(sql, EXPR_KEYWORDS, AB_TABLES); // where list
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=b.deptno where ^";
+        assertComplete(sql, EXPR_KEYWORDS, AB_TABLES); // where list
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=b.deptno where ^a.dummy=1";
+        assertHint(sql, EXPR_KEYWORDS, AB_TABLES); // where list
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=b.deptno where a.^";
+        assertComplete(sql, EMP_COLUMNS);
+
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=b.deptno where a.empno ^ ";
+        assertComplete(sql, PREDICATE_KEYWORDS, WHERE_KEYWORDS);
+    }
+
+    public void testSelectList()
+        throws Exception
+    {
+        String sql;
+
+        sql =
+            "select ^dummy, b.dummy from sales.emp a join sales.dept b "
+            + "on a.deptno=b.deptno where empno=1";
+        assertHint(sql, getSelectKeywords(), EXPR_KEYWORDS, AB_TABLES);
+
+        sql = "select ^ from (values (1))";
+        assertComplete(sql,
+            getSelectKeywords(), EXPR_KEYWORDS,
+            Arrays.asList("Table(EXPR$0)", "Column(EXPR$0)"));
+
+        sql = "select ^, b.dummy from sales.emp a join sales.dept b ";
+        assertComplete(sql, getSelectKeywords(), EXPR_KEYWORDS, AB_TABLES);
+
+        sql =
+            "select dummy, ^b.dummy from sales.emp a join sales.dept b "
+            + "on a.deptno=b.deptno where empno=1";
+        assertHint(sql, EXPR_KEYWORDS, STAR_KEYWORD, AB_TABLES);
+
+        sql = "select dummy, b.^ from sales.emp a join sales.dept b on true";
+        assertComplete(sql, STAR_KEYWORD, DEPT_COLUMNS);
+
+        // REVIEW: Since 'b' is not a valid alias, should it suggest anything?
+        // We don't get through validation, so the only suggestion, '*', comes
+        // from the parser.
+        sql = "select dummy, b.^ from sales.emp a";
+        assertComplete(sql, STAR_KEYWORD);
+
+        sql = "select ^emp.dummy from sales.emp";
+        assertHint(
+            sql,
+
+            getSelectKeywords(), EXPR_KEYWORDS,
+            EMP_COLUMNS, Arrays.asList("Table(EMP)"));
+
+        sql = "select emp.^ from sales.emp";
+        assertComplete(sql, EMP_COLUMNS, STAR_KEYWORD);
+    }
+
+    public void testOrderByList()
+        throws Exception
+    {
+        String sql;
+
+        sql = "select emp.empno from sales.emp where empno=1 order by ^dummy";
+        assertHint(sql, EXPR_KEYWORDS, EMP_COLUMNS, EMP_TABLE);
+
+        sql = "select emp.empno from sales.emp where empno=1 order by ^";
+        assertComplete(sql, EXPR_KEYWORDS, EMP_COLUMNS, EMP_TABLE);
+
+        sql = "select emp.empno from sales.emp where empno=1 order by empno ^, deptno";
+        assertComplete(sql, PREDICATE_KEYWORDS, ORDER_KEYWORDS);
+    }
+
+    public void testSubQuery()
+        throws Exception
+    {
+        String sql;
+        final List<String> xyColumns = Arrays.asList(
+            "Column(X)",
+            "Column(Y)");
+        final List<String> tTable = Arrays.asList(
+            "Table(T)");
+
+        sql =
+            "select ^t.dummy from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
+        assertHint(sql, EXPR_KEYWORDS, getSelectKeywords(), xyColumns, tTable);
+
+        sql = "select t.^ from (select 1 as x, 2 as y from sales.emp) as t";
+        assertComplete(sql, xyColumns, STAR_KEYWORD);
+
+        sql =
+            "select t.x from (select 1 as x, 2 as y from sales.emp) as t where ^t.dummy=1";
+        assertHint(sql, EXPR_KEYWORDS, tTable, xyColumns);
+
+        sql =
+            "select t.x from (select 1 as x, 2 as y from sales.emp) as t where t.^";
+        assertComplete(sql, xyColumns);
+
+        sql =
+            "select t.x from (select 1 as x, 2 as y from sales.emp) as t where ^";
+        assertComplete(sql, EXPR_KEYWORDS, tTable, xyColumns);
+
+        // with extra from item, aliases are ambiguous, so columns are not
+        // offered
+        sql =
+            "select a.x from (select 1 as x, 2 as y from sales.emp) as a, dept as b where ^";
+        assertComplete(sql, EXPR_KEYWORDS, AB_TABLES);
+
+        // note that we get hints even though there's a syntax error in
+        // select clause ('t.')
+        sql =
+            "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
+        String simplified =
+            "SELECT * FROM ( SELECT 0 AS x , 0 AS y FROM ( SELECT 0 AS x FROM sales.emp ) ) as t WHERE _suggest_";
+        assertSimplify(sql, simplified);
+        assertComplete(sql, EXPR_KEYWORDS, tTable, xyColumns);
+
+        sql = "select t.x from (select 1 as x, 2 as y from sales.^) as t";
+        assertComplete(sql, getSalesTables());
+    }
+
+    public void testSubQueryInWhere() {
+        String sql;
+
+        // Aliases from enclosing subqueries are inherited: hence A from
+        // enclosing, B from same scope.
+        // The raw columns from dept are suggested (because they can
+        // be used unqualified in the inner scope) but the raw
+        // columns from emp are not (because they would need to be qualified
+        // with A).
+        sql = "select * from sales.emp a where deptno in (" +
+            "select * from sales.dept b where ^)";
+        String simplifiedSql =
+            "SELECT * FROM sales.emp a WHERE deptno in (" +
+                " SELECT * FROM sales.dept b WHERE _suggest_ )";
+        assertSimplify(sql, simplifiedSql);
+        assertComplete(
+            sql,
+            AB_TABLES, DEPT_COLUMNS, EXPR_KEYWORDS);
+    }
+
+    public void testSimpleParserTokenizer()
+    {
+        String sql = "select" +
+            " 12" +
+            " " +
+            "*" +
+            " 1.23e45" +
+            " " +
+            "(" +
+            "\"an id\"" +
+            "," +
+            " " +
+            "\"an id with \"\"quotes' inside\"" +
+            "," +
+            " " +
+            "/* a comment, with 'quotes', over\nmultiple lines\nand select keyword */" +
+            "\n " +
+            "(" +
+            " " +
+            "a" +
+            " " +
+            "different" +
+            " " +
+            "// comment\n\r" +
+            "//and a comment /* containing comment */ and then some more\r" +
+            ")" +
+            " " +
+            "from" +
+            " " +
+            "t" +
+            ")" +
+            ")" +
+            "/* a comment after close paren */" +
+            " " +
+            "(" +
+            "'quoted'" +
+            " " +
+            "'string with ''single and \"double\"\" quote'" +
+            ")";
+        String expected = "SELECT\n" +
+            "ID(12)\n" +
+            "ID(*)\n" +
+            "ID(1.23e45)\n" +
+            "LPAREN\n" +
+            "DQID(\"an id\")\n" +
+            "COMMA\n" +
+            "DQID(\"an id with \"\"quotes' inside\")\n" +
+            "COMMA\n" +
+            "COMMENT\n" +
+            "LPAREN\n" +
+            "ID(a)\n" +
+            "ID(different)\n" +
+            "COMMENT\n" +
+            "COMMENT\n" +
+            "RPAREN\n" +
+            "FROM\n" +
+            "ID(t)\n" +
+            "RPAREN\n" +
+            "RPAREN\n" +
+            "COMMENT\n" +
+            "LPAREN\n" +
+            "SQID('quoted')\n" +
+            "SQID('string with ''single and \"double\"\" quote')\n" +
+            "RPAREN\n";
+        assertTokenizesTo(sql, expected);
+
+        // Tokenizer should be lenient if input ends mid-token
+        assertTokenizesTo("select /* unfinished comment", "SELECT\nCOMMENT\n");
+        assertTokenizesTo("select // unfinished comment", "SELECT\nCOMMENT\n");
+        assertTokenizesTo("'starts with string'", "SQID('starts with string')\n");
+        assertTokenizesTo("'unfinished string", "SQID('unfinished string)\n");
+        assertTokenizesTo("\"unfinished double-quoted id", "DQID(\"unfinished double-quoted id)\n");
+        assertTokenizesTo("123", "ID(123)\n");
+    }
+
+    public void testSimpleParser()
+    {
+        String sql;
+        String expected;
+
+        // from
+        sql = "select * from ^where";
+        expected = "SELECT * FROM _suggest_";
+        assertSimplify(sql, expected);
+
+        // from
+        sql = "select a.empno, b.deptno from ^";
+        expected = "SELECT * FROM _suggest_";
+        assertSimplify(sql, expected);
+
+        // select list
+        sql = "select ^ from (values (1))";
+        expected = "SELECT _suggest_ FROM ( values ( 1 ) )";
+        assertSimplify(sql, expected);
+
+        sql = "select emp.^ from sales.emp";
+        expected = "SELECT emp. _suggest_ FROM sales.emp";
+        assertSimplify(sql, expected);
+
+        sql = "select ^from sales.emp";
+        expected = "SELECT _suggest_ FROM sales.emp";
+        assertSimplify(sql, expected);
+
+        // remove other expressions in select clause
+        sql = "select a.empno ,^  from sales.emp a , sales.dept b";
+        expected = "SELECT _suggest_ FROM sales.emp a , sales.dept b";
+        assertSimplify(sql, expected);
+
+        sql = "select ^, a.empno from sales.emp a , sales.dept b";
+        expected = "SELECT _suggest_ FROM sales.emp a , sales.dept b";
+        assertSimplify(sql, expected);
+
+        sql = "select dummy, b.^ from sales.emp a , sales.dept b";
+        expected = "SELECT b. _suggest_ FROM sales.emp a , sales.dept b";
+        assertSimplify(sql, expected);
+
+        // join
+        sql = "select a.empno, b.deptno from dummy a join ^on where empno=1";
+        expected = "SELECT * FROM dummy a JOIN _suggest_ ON TRUE";
+        assertSimplify(sql, expected);
+
+        // join
+        sql = "select a.empno, b.deptno from dummy a join sales.^ where empno=1";
+        expected = "SELECT * FROM dummy a JOIN sales. _suggest_";
+        assertSimplify(sql, expected);
+
+        // on
+        sql =
+            "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=^";
+        expected =
+            "SELECT * FROM sales.emp a JOIN sales.dept b ON a.deptno= _suggest_";
+        assertSimplify(sql, expected);
+
+        // where
+        sql =
+            "select a.empno, b.deptno from sales.emp a, sales.dept b "
+            + "where ^";
+        expected =
+            "SELECT * FROM sales.emp a , sales.dept b WHERE _suggest_";
+        assertSimplify(sql, expected);
+
+        // order by
+        sql = "select emp.empno from sales.emp where empno=1 order by ^";
+        expected = "SELECT emp.empno FROM sales.emp ORDER BY _suggest_";
+        assertSimplify(sql, expected);
+
+        // subquery in from
+        sql =
+            "select t.^ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
+        expected =
+            "SELECT t. _suggest_ FROM ( SELECT 0 AS x , 0 AS y FROM sales.emp ) as t";
+        assertSimplify(sql, expected);
+
+        sql =
+            "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
+        expected =
+            "SELECT * FROM ( SELECT 0 AS x , 0 AS y FROM ( SELECT 0 AS x FROM sales.emp ) ) as t WHERE _suggest_";
+        assertSimplify(sql, expected);
+
+        sql =
+            "select ^from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
+        expected =
+            "SELECT _suggest_ FROM ( SELECT 0 AS x , 0 AS y FROM sales.emp ) , ( SELECT 0 AS y FROM ( SELECT 0 AS m FROM n ) ) as t";
+        assertSimplify(sql, expected);
+
+        // Note: completes the missing close paren; wipes out select clause of
+        // both outer and inner queries since not relevant.
+        sql = "select t.x from ( select 1 as x, 2 as y from sales.^";
+        expected = "SELECT * FROM ( SELECT * FROM sales. _suggest_ )";
+        assertSimplify(sql, expected);
+
+        sql = "select t.^ from (select 1 as x, 2 as y from sales)";
+        expected = "SELECT t. _suggest_ FROM ( SELECT 0 AS x , 0 AS y FROM sales )";
+        assertSimplify(sql, expected);
+
+        // subquery in where; note that:
+        // 1. removes the SELECT clause of subquery in WHERE clause;
+        // 2. keeps SELECT clause of subquery in FROM clause;
+        // 3. removes GROUP BY clause of subquery in FROM clause;
+        // 4. removes SELECT clause of outer query.
+        sql = "select x + y + 32 from (select 1 as x, 2 as y from sales group by invalid stuff) as t where x in (select deptno from emp where foo + t.^ < 10)";
+        expected = "SELECT * FROM ( SELECT 0 AS x , 0 AS y FROM sales ) as t WHERE x in ( SELECT * FROM emp WHERE foo + t. _suggest_ < 10 )";
+        assertSimplify(sql, expected);
+
+        // if hint is in FROM, can remove other members of FROM clause
+        sql = "select a.empno, b.deptno from dummy a, sales.^";
+        expected = "SELECT * FROM sales. _suggest_";
+        assertSimplify(sql, expected);
+
+        // function
+        sql = "select count(1) from sales.emp a where ^";
+        expected = "SELECT * FROM sales.emp a WHERE _suggest_";
+        assertSimplify(sql, expected);
+
+        sql = "select count(1) from sales.emp a where substring(a.^ FROM 3 for 6) = '1234'";
+        expected = "SELECT * FROM sales.emp a WHERE substring ( a. _suggest_ FROM 3 for 6 ) = '1234'";
+        assertSimplify(sql, expected);
+
+        // missing ')' following subquery
+        sql = "select * from sales.emp a where deptno in (" +
+            "select * from sales.dept b where ^";
+        expected = "SELECT * FROM sales.emp a WHERE deptno in (" +
+            " SELECT * FROM sales.dept b WHERE _suggest_ )";
+        assertSimplify(sql, expected);
+
+        // keyword embedded in single and double quoted string should be
+        // ignored
+        sql = "select 'a cat from a king' as foobar, 1 / 2 \"where\" from t group by t.^ order by 123";
+        expected = "SELECT * FROM t GROUP BY t. _suggest_";
+        assertSimplify(sql, expected);
+
+        // skip comments
+        sql = "select /* here is from */ 'cat' as foobar, 1 as x from t group by t.^ order by 123";
+        expected = "SELECT * FROM t GROUP BY t. _suggest_";
+        assertSimplify(sql, expected);
+
+        // skip comments
+        sql = "select // here is from clause\n 'cat' as foobar, 1 as x from t group by t.^ order by 123";
+        expected = "SELECT * FROM t GROUP BY t. _suggest_";
+        assertSimplify(sql, expected);
+    }
+
+    public void testInsert() throws Exception
+    {
+        String sql;
+        sql = "insert into emp(empno, mgr) select ^ from dept a";
+        assertComplete(sql, getSelectKeywords(), EXPR_KEYWORDS, A_TABLE, DEPT_COLUMNS);
+
+        sql = "insert into emp(empno, mgr) values (123, 3 + ^)";
+        assertComplete(sql, EXPR_KEYWORDS);
+
+        // Wish we could do better here. Parser gives error 'Non-query
+        // expression encountered in illegal context' and cannot suggest
+        // possible tokens.
+        sql = "insert into emp(empno, mgr) ^";
+        assertComplete(sql, "");
+    }
+
+    public void testUnion() throws Exception
+    {
+        // we simplify set ops such as UNION by removing other queries -
+        // thereby avoiding validation errors due to mismatched select lists
+        String sql = "select 1 from emp union select 2 from dept a where ^ and deptno < 5";
+        String simplified = "SELECT * FROM dept a WHERE _suggest_ and deptno < 5";
+        assertSimplify(sql, simplified);
+        assertComplete(sql, EXPR_KEYWORDS, A_TABLE, DEPT_COLUMNS);
+
+        // UNION ALL
+        sql = "select 1 from emp union all select 2 from dept a where ^ and deptno < 5";
+        assertSimplify(sql, simplified);
+
+        // hint is in first query
+        sql = "select 1 from emp group by ^ except select 2 from dept a";
+        simplified = "SELECT * FROM emp GROUP BY _suggest_";
+        assertSimplify(sql, simplified);
     }
 
     //~ Inner Classes ----------------------------------------------------------
 
+    public interface Tester extends SqlValidatorTest.Tester {
+        SqlAdvisor createAdvisor(SqlValidatorWithHints validator);
+    }
+
     public class AdvisorTestImpl
         extends TesterImpl
+        implements Tester
     {
+        public AdvisorTestImpl(SqlConformance conformance)
+        {
+            super(conformance);
+        }
+
         // REVIEW this is the same as the base method
         public SqlValidator getValidator()
         {
@@ -582,7 +1025,12 @@ public class SqlAdvisorTest
                 SqlStdOperatorTable.instance(),
                 new MockCatalogReader(typeFactory),
                 typeFactory,
-                getCompatible());
+                conformance);
+        }
+
+        public SqlAdvisor createAdvisor(SqlValidatorWithHints validator)
+        {
+            return new SqlAdvisor(validator);
         }
     }
 }

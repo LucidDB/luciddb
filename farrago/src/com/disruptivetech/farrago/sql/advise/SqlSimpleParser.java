@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
+// Copyright (C) 2005-2007 Disruptive Tech
 // Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -20,68 +20,41 @@
 */
 package com.disruptivetech.farrago.sql.advise;
 
-import java.io.*;
-
 import java.util.*;
-import java.util.regex.*;
-
 
 /**
  * A simple parser that takes an incomplete and turn it into a syntactically
  * correct statement. It is used in the SQL editor user-interface.
  *
- * @author tleung
+ * @author jhyde
  * @version $Id$
- * @since Jan 31, 2004
+ * @since Oct 31, 2007
  */
 public class SqlSimpleParser
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    private final static String subqueryRegex = "\\$subquery\\$";
-
-    // patterns are made static, to amortize cost of compiling regexps
-    static Pattern psq = Pattern.compile(subqueryRegex);
-    static Pattern pparen =
-        Pattern.compile(
-            "\\([^()]*(SELECT)+[^()]*\\)",
-            Pattern.CASE_INSENSITIVE);
-    static Pattern pparensq =
-        Pattern.compile(
-            "\\([^()]*(SELECT)+[^()]*" + subqueryRegex + "$\\)",
-            Pattern.CASE_INSENSITIVE);
-
     //~ Instance fields --------------------------------------------------------
 
-    // Flags indicating precision/scale combinations
     private final String hintToken;
-    final LinkedHashSet<String> keywords;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a SqlSimpleParser
+     *
+     * @param hintToken Hint token
      */
     public SqlSimpleParser(String hintToken)
     {
         this.hintToken = hintToken;
-        keywords = new LinkedHashSet<String>();
-        keywords.add("select");
-        keywords.add("from");
-        keywords.add("join");
-        keywords.add("on");
-        keywords.add("where");
-        keywords.add("group");
-        keywords.add("having");
-        keywords.add("order");
-        keywords.add("");
     }
 
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Turns a partially completed or syntatically incorrect sql statement into
-     * a simplified, valid one that can be passed into getCompletionHints()
+     * Turns a partially completed or syntactically incorrect sql statement into
+     * a simplified, valid one that can be passed into getCompletionHints().
      *
      * @param sql A partial or syntatically incorrect sql statement
      * @param cursor to indicate column position in the query at which
@@ -93,11 +66,11 @@ public class SqlSimpleParser
     {
         // introduce the hint token into the sql at the cursor pos
         if (cursor >= sql.length()) {
-            sql += hintToken + " ";
+            sql += " " + hintToken + " ";
         } else {
             String left = sql.substring(0, cursor);
             String right = sql.substring(cursor);
-            sql = left + hintToken + " " + right;
+            sql = left + " " + hintToken + " " + right;
         }
         return simplifySql(sql);
     }
@@ -112,460 +85,740 @@ public class SqlSimpleParser
      */
     public String simplifySql(String sql)
     {
-        // if there are subqueries, extract them and push them into a stack
-        Stack<String> subqueries = new Stack<String>();
-        stackSubqueries(sql, subqueries);
-
-        // retrieve the top level query from the stack and go down the stack
-        // to handle each subquery one by one
-        if (subqueries.empty()) {
-            return "";
-        }
-        String topLevelQuery = subqueries.pop();
-        String result = handleSubQuery(topLevelQuery, subqueries);
-
-        // remove the enclosing parentheses from the top level query
-        return result.substring(1, result.length() - 1);
-    }
-
-    private String handleUnion(String sql)
-    {
-        String [] parts = sql.split("(?i)UNION( )+(ALL)?");
-        for (int i = 0; i < parts.length; i++) {
-            if (parts[i].indexOf(hintToken) >= 0) {
-                return parts[i];
-            }
-        }
-
-        // no hint token found
-        return sql;
-    }
-
-    private String handleSubQuery(String subquery, Stack<String> stack)
-    {
-        subquery = handleUnion(subquery);
-        List<String> tokenList = tokenizeSubquery(subquery);
-        Map<String, List<String>> buckets = bucketByKeyword(tokenList);
-
-        //printBuckets(buckets);
-        simplifyBuckets(buckets);
-
-        //printBuckets(buckets);
-        String simplesq = createNewSql(buckets);
-
-        Matcher m = psq.matcher(simplesq);
-
-        // this stack is used to reverse the ordering of same level subqueries
-        Stack<String> reverseStack = new Stack<String>();
-        while (m.find()) {
-            String nextlevelQuery = stack.pop();
-            nextlevelQuery = handleSubQuery(nextlevelQuery, stack);
-            reverseStack.push(nextlevelQuery);
-        }
-
-        while (!reverseStack.empty()) {
-            String sq = reverseStack.pop();
-            simplesq = simplesq.replaceFirst(subqueryRegex, sq);
-        }
-        return "(" + simplesq.trim() + ")";
-    }
-
-    private String createNewSqlClause(List<String> members)
-    {
-        StringBuilder result = new StringBuilder();
-        for (String member : members) {
-            result.append(member).append(" ");
-        }
-        return result.toString();
-    }
-
-    private String createNewSql(Map<String, List<String>> buckets)
-    {
-        StringBuilder sql = new StringBuilder();
-        for (String keyword : keywords) {
-            List<String> entries = buckets.get(keyword);
-            if (entries != null) {
-                sql.append(keyword).append(" ").append(
-                    createNewSqlClause(buckets.get(keyword)));
-            }
-        }
-        return sql.toString();
-    }
-
-    private void stackSubqueries(String sql, Stack<String> stack)
-    {
-        // we're going depth first here, so that the innermost subquery
-        // and its enclosing subqueries will be pushed into the stack
-        // in that order
-
-        Matcher msq = pparensq.matcher(sql);
-        Matcher m = pparen.matcher(sql);
-
-        boolean found = false;
-        String remained = "";
-
-        // giving preference to matching parentheses with the subquery token
-        // inside to achieve depth-first
-        if (msq.find()) {
-            found = true;
-            String matched = msq.group();
-
-            // remove the enclosing parentheses
-            matched = matched.substring(1, matched.length() - 1);
-            stack.push(matched);
-            if (matched.indexOf(hintToken) >= 0) {
-                return;
-            }
-            remained = msq.replaceFirst(subqueryRegex);
-        } else if (m.find()) {
-            found = true;
-            String matched = m.group();
-
-            // remove the enclosing parentheses
-            matched = matched.substring(1, matched.length() - 1);
-            stack.push(matched);
-            if (matched.indexOf(hintToken) >= 0) {
-                return;
-            }
-            remained = m.replaceFirst(subqueryRegex);
-        }
-        if (!found) {
-            stack.push(sql);
-            return;
-        }
-        stackSubqueries(remained, stack);
-    }
-
-    // use StreamTokenizer to tokenize the subquery sql statement
-    private List<String> tokenizeSubquery(String sql)
-    {
-        StreamTokenizer st = new StreamTokenizer(new StringReader(sql));
-
-        boolean done = false;
-        initializeSyntax(st);
-
-        ArrayList<String> tokenList = new ArrayList<String>();
-        while (!done) {
-            int c = StreamTokenizer.TT_EOF;
-            try {
-                c = st.nextToken();
-            } catch (IOException e) {
+        Tokenizer tokenizer = new Tokenizer(sql);
+        List<Token> list = new ArrayList<Token>();
+        while (true) {
+            Token token = tokenizer.nextToken();
+            if (token == null) {
                 break;
             }
-            switch (c) {
-            case StreamTokenizer.TT_EOF:
-                tokenList.add("<EOF>");
-                done = true;
+            list.add(token);
+        }
+
+        // Gather consecutive subsequences of tokens into subqueries.
+        List<Token> outList = new ArrayList<Token>();
+        consumeQuery(list.listIterator(), outList);
+
+        // Simplify.
+        Query.simplifyList(outList, hintToken);
+
+        // Convert to string.
+        StringBuilder buf = new StringBuilder();
+        int k = -1;
+        for (Token token : outList) {
+            if (++k > 0) {
+                buf.append(' ');
+            }
+            token.unparse(buf);
+        }
+        return buf.toString();
+    }
+
+    private void consumeQuery(ListIterator<Token> iter, List<Token> outList) {
+        while (iter.hasNext()) {
+            consumeSelect(iter, outList);
+            if (iter.hasNext()) {
+                Token token = iter.next();
+                switch (token.type) {
+                case UNION:
+                case INTERSECT:
+                case EXCEPT:
+                    outList.add(token);
+                    if (iter.hasNext()) {
+                        token = iter.next();
+                        if (token.type == TokenType.ID
+                            && token.s.equalsIgnoreCase("ALL"))
+                        {
+                            outList.add(token);
+                        } else {
+                            iter.previous();
+                        }
+                    }
+                    break;
+                case RPAREN:
+                    iter.previous();
+                    return;
+                default:
+                    iter.previous();
+                    break;
+                }
+            }
+        }
+    }
+
+    private void consumeSelect(
+        ListIterator<Token> iter,
+        List<Token> outList)
+    {
+        boolean isQuery = false;
+        int start = outList.size();
+        List<Token> subqueryList = new ArrayList<Token>();
+        loop:
+        while (iter.hasNext()) {
+            Token token = iter.next();
+            subqueryList.add(token);
+            switch (token.type) {
+            case LPAREN:
+                consumeQuery(iter, subqueryList);
                 break;
-            case StreamTokenizer.TT_EOL:
-                tokenList.add("<EOL>");
+            case RPAREN:
+                if (isQuery) {
+                    subqueryList.remove(subqueryList.size() - 1);
+                }
+                break loop;
+            case SELECT:
+                isQuery = true;
                 break;
-            case StreamTokenizer.TT_WORD:
-                tokenList.add(st.sval);
-                break;
-            case StreamTokenizer.TT_NUMBER:
-                tokenList.add(Double.toString(st.nval));
-                break;
+            case UNION:
+            case INTERSECT:
+            case EXCEPT:
+                subqueryList.remove(subqueryList.size() - 1);
+                iter.previous();
+                break loop;
             default:
-
-                // Was just a regular character.
-                break;
             }
         }
-        return tokenList;
-    }
-
-    // enter the tokens list into different buckets keyed by its preceding
-    // SQL keyword
-    private Map<String, List<String>> bucketByKeyword(List<String> tokenList)
-    {
-        Map<String, List<String>> buckets = new HashMap<String, List<String>>();
-        String curToken = "";
-        List<String> curList = null;
-        List<String> nokwList = new ArrayList<String>();
-        for (String token : tokenList) {
-            String tokenLc = token.toLowerCase();
-            if (keywords.contains(tokenLc) || token.equals("<EOF>")) {
-                if (!curToken.equals("")) {
-                    buckets.put(curToken, curList);
-                }
-                curToken = tokenLc;
-                curList = new ArrayList<String>();
-            } else {
-                if (curToken.equals("")) {
-                    // this token does not follow any keyword
-                    // this may not be a subquery, probably just an identifier
-                    nokwList.add(token);
-                } else {
-                    curList.add(token);
-                }
+        // Fell off end of list. Pretend we saw the required right-paren.
+        if (isQuery) {
+            outList.subList(start, outList.size()).clear();
+            outList.add(new Query(subqueryList));
+            if (outList.size() >= 2
+                && outList.get(outList.size() - 2).type == TokenType.LPAREN)
+            {
+                outList.add(new Token(TokenType.RPAREN));
             }
-        }
-        buckets.put("", nokwList);
-        return buckets;
-    }
-
-    private void printBuckets(HashMap<String, List<String>> buckets)
-    {
-        for (String keyword : buckets.keySet()) {
-            List<String> entries = buckets.get(keyword);
-            System.out.println("keyword = " + keyword);
-            System.out.println(entries);
-        }
-    }
-
-    // remove unnecessary (incomplete) keyword clause
-    private void simplifyBuckets(Map<String, List<String>> buckets)
-    {
-        Set<String> toRemove = new HashSet<String>();
-
-        for (String keyword : buckets.keySet()) {
-            List<String> entries = buckets.get(keyword);
-            SqlKw sqlkw = makeSqlKw(keyword, entries);
-            List<String> valEntries = sqlkw.validate();
-            if (valEntries == null) {
-                toRemove.add(keyword);
-            }
-            buckets.put(
-                keyword,
-                sqlkw.validate());
-        }
-
-        // remove keywords with an empty clause
-        for (String keyword : toRemove) {
-            buckets.remove(keyword);
-        }
-    }
-
-    // define the rules for the StreamTokenizer
-    private void initializeSyntax(StreamTokenizer st)
-    {
-        st.resetSyntax();
-        st.whitespaceChars(0, 32);
-        st.wordChars(48, 122);
-        st.ordinaryChars(33, 43);
-        st.ordinaryChars(45, 45);
-        st.ordinaryChars(58, 64);
-        st.ordinaryChars(91, 96);
-        st.ordinaryChars(123, 127);
-
-        // we use $ for our specialized token => hence considered word character
-        st.wordChars(36, 36);
-
-        // " ' ( ) , . * = are considered word characters for a SQL statement
-        st.wordChars(34, 34);
-        st.wordChars(39, 42);
-        st.wordChars(44, 44);
-        st.wordChars(46, 46);
-        st.wordChars(61, 61);
-        st.wordChars(95, 95);
-    }
-
-    private SqlKw makeSqlKw(String keyword, List<String> entries)
-    {
-        if (keyword.equals("on")) {
-            return new SqlKwOn(entries);
-        } else if (keyword.equals("select")) {
-            return new SqlKwSelect(entries);
-        } else if (keyword.equals("from")) {
-            return new SqlKwFrom(entries);
-        } else if (keyword.equals("where")) {
-            return new SqlKwWhere(entries);
-        } else if (keyword.equals("group") || keyword.equals("order")) {
-            return new SqlKwGroupOrder(entries);
         } else {
-            return new SqlKw(entries);
+            // not a query - just a parenthesized expr
+            outList.addAll(subqueryList);
         }
     }
 
     //~ Inner Classes ----------------------------------------------------------
 
-    class SqlKw
-    {
-        protected List<String> entries;
+    public static class Tokenizer {
+        final String sql;
+        private int pos;
+        int start = 0;
 
-        SqlKw(List<String> entries)
-        {
-            this.entries = entries;
-        }
-
-        List<String> validate()
-        {
-            if (entries.isEmpty()) {
-                return null;
-            } else {
-                return entries;
+        private static final Map<String, TokenType> map =
+            new HashMap<String, TokenType>();
+        static {
+            for (TokenType type : TokenType.values()) {
+                map.put(type.name(), type);
             }
         }
-    }
 
-    class SqlKwOn
-        extends SqlKw
-    {
-        private String dummyOp = "dummy";
-
-        SqlKwOn(List<String> entries)
-        {
-            super(entries);
+        public Tokenizer(String sql) {
+            this.sql = sql;
+            this.pos = 0;
         }
 
-        List<String> validate()
-        {
-            if (entries.isEmpty()) {
-                return null;
-            }
-            List<String> validEntries = new ArrayList<String>();
-            StringBuilder onClause = new StringBuilder();
-            for (String entry : entries) {
-                onClause.append(entry);
-            }
-            String [] operands = onClause.toString().split("=");
+        public Token nextToken() {
+            while (pos < sql.length()) {
+                char c = sql.charAt(pos);
+                switch (c) {
+                case ',':
+                    ++pos;
+                    return new Token(TokenType.COMMA);
 
-            if (operands.length >= 2) {
-                validEntries.add(operands[0]);
-                validEntries.add("=");
-                validEntries.add(operands[1]);
+                case '(':
+                    ++pos;
+                    return new Token(TokenType.LPAREN);
 
-                // if there're more operands the input SQL is invalid
-                // anyway for having more than 1 '=' in 'on' clause
-                // in that case we'll strip off the extra operands
-                return validEntries;
-            } else if (operands.length == 1) {
-                validEntries.add(operands[0]);
-                validEntries.add("=");
-                validEntries.add(dummyOp);
+                case ')':
+                    ++pos;
+                    return new Token(TokenType.RPAREN);
 
-                // if there's only 1 operand, put 'dummy' as the other one
-                return validEntries;
-            } else {
-                // if there's no operands, there's no '='
-                validEntries.add(onClause.toString());
-                validEntries.add("=");
-                validEntries.add(dummyOp);
-                return validEntries;
-            }
-        }
-    }
-
-    class SqlKwList
-        extends SqlKw
-    {
-        SqlKwList(List<String> entries)
-        {
-            super(entries);
-        }
-
-        List<String> validate()
-        {
-            List<String> validEntries = new ArrayList<String>();
-            StringBuilder selectClause = new StringBuilder();
-            for (int i = 0; i < entries.size(); i++) {
-                String entry = entries.get(i);
-                selectClause.append(entry);
-                if (i < (entries.size() - 1)) {
-                    selectClause.append(" ");
-                }
-            }
-            String [] selectList = selectClause.toString().split(",");
-            for (int i = 0; i < selectList.length; i++) {
-                // remove leading and trailing space
-                String entry = selectList[i].trim();
-
-                // remove leading and trailing '.'
-                entry = entry.replaceFirst("^\\.", "");
-                entry = entry.replaceFirst("\\.$", "");
-                validEntries.add(entry);
-                if (i < (selectList.length - 1)) {
-                    validEntries.add(",");
-                }
-            }
-            return validEntries;
-        }
-    }
-
-    class SqlKwSelect
-        extends SqlKwList
-    {
-        SqlKwSelect(List<String> entries)
-        {
-            super(entries);
-        }
-
-        List<String> validate()
-        {
-            if (entries.isEmpty()) {
-                entries.add("*");
-                return entries;
-            } else {
-                return super.validate();
-            }
-        }
-    }
-
-    class SqlKwFrom
-        extends SqlKwList
-    {
-        SqlKwFrom(List<String> entries)
-        {
-            super(entries);
-        }
-
-        List<String> validate()
-        {
-            if (entries.isEmpty()) {
-                return null;
-            } else {
-                return super.validate();
-            }
-        }
-    }
-
-    class SqlKwGroupOrder
-        extends SqlKwList
-    {
-        SqlKwGroupOrder(List<String> entries)
-        {
-            super(entries);
-        }
-
-        List<String> validate()
-        {
-            if (entries.isEmpty()) {
-                return null;
-            } else if (
-                (entries.size() == 1)
-                && entries.get(0).trim().equals("by"))
-            {
-                // a 'group' or 'order' keyword followed by 'by' but no
-                // actual Sql Identifier
-                return null;
-            } else {
-                for (String entry : entries) {
-                    if (entry.indexOf(hintToken) >= 0) {
-                        return super.validate();
+                case '"':
+                    // Parse double-quoted identifier.
+                    start = pos;
+                    ++pos;
+                    while (pos < sql.length()) {
+                        c = sql.charAt(pos);
+                        ++pos;
+                        if (c == '"') {
+                            if (pos < sql.length()) {
+                                char c1 = sql.charAt(pos);
+                                if (c1 == '"') {
+                                    // encountered consecutive
+                                    // double-quotes; still in identifier
+                                    ++pos;
+                                } else {
+                                    break;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
                     }
-                }
-                return null;
-            }
-        }
-    }
+                    return new Token(TokenType.DQID, sql.substring(start, pos));
 
-    class SqlKwWhere
-        extends SqlKwList
-    {
-        SqlKwWhere(List<String> entries)
-        {
-            super(entries);
-        }
+                case '\'':
+                    // Parse single-quoted identifier.
+                    start = pos;
+                    ++pos;
+                    while (pos < sql.length()) {
+                        c = sql.charAt(pos);
+                        ++pos;
+                        if (c == '\'') {
+                            if (pos < sql.length()) {
+                                char c1 = sql.charAt(pos);
+                                if (c1 == '\'') {
+                                    // encountered consecutive
+                                    // single-quotes; still in identifier
+                                    ++pos;
+                                } else {
+                                    break;
+                                }
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    return new Token(TokenType.SQID, sql.substring(start, pos));
 
-        List<String> validate()
-        {
-            for (String entry : entries) {
-                if (entry.indexOf(hintToken) >= 0) {
-                    return super.validate();
+                case '/':
+                    // possible start of '/*' or '//' comment
+                    if (pos < sql.length()) {
+                        char c1 = sql.charAt(pos + 1);
+                        if (c1 == '*') {
+                            int end = sql.indexOf("*/", pos + 2);
+                            if (end < 0) {
+                                end = sql.length();
+                            } else {
+                                end += "*/".length();
+                            }
+                            pos = end;
+                            return new Token(TokenType.COMMENT);
+                        }
+                        if (c1 == '/') {
+                            pos = indexOfLineEnd(sql, pos + 2);
+                            return new Token(TokenType.COMMENT);
+                        }
+                        // fall through
+                    }
+
+                default:
+                    if (Character.isWhitespace(c)) {
+                        ++pos;
+                        break;
+                    } else {
+                        // Probably a letter or digit. Start an identifier.
+                        // Other characters, e.g. *, ! are also included
+                        // in identifiers.
+                        int start = pos;
+                        ++pos;
+                        loop:
+                        while (pos < sql.length()) {
+                            c = sql.charAt(pos);
+                            switch (c) {
+                            case '(':
+                            case ')':
+                            case '/':
+                            case ',':
+                                break loop;
+                            default:
+                                if (Character.isWhitespace(c)) {
+                                    break loop;
+                                } else {
+                                    ++pos;
+                                }
+                            }
+                        }
+                        String name = sql.substring(start, pos);
+                        TokenType tokenType = map.get(name.toUpperCase());
+                        if (tokenType == null) {
+                            return new IdToken(TokenType.ID, name);
+                        } else {
+                            // keyword, e.g. SELECT, FROM, WHERE
+                            return new Token(tokenType);
+                        }
+                    }
                 }
             }
             return null;
+        }
+
+        private int indexOfLineEnd(String sql, int i)
+        {
+            int length = sql.length();
+            while (i < length) {
+                char c = sql.charAt(i);
+                switch (c) {
+                case '\r':
+                case '\n':
+                    return i;
+                default:
+                    ++i;
+                }
+            }
+            return i;
+        }
+    }
+
+    public static class Token
+    {
+        private final TokenType type;
+        private final String s;
+
+        Token(TokenType tokenType)
+        {
+            this(tokenType, null);
+        }
+
+        Token(TokenType type, String s)
+        {
+            this.type = type;
+            this.s = s;
+        }
+
+        public String toString()
+        {
+            return s == null
+                ? type.toString()
+                : (type + "(" + s + ")");
+        }
+
+        public void unparse(StringBuilder buf)
+        {
+            if (s == null) {
+                buf.append(type.sql());
+            } else {
+                buf.append(s);
+            }
+        }
+    }
+
+    public static class IdToken extends Token
+    {
+        public IdToken(TokenType type, String s)
+        {
+            super(type, s);
+            assert type == TokenType.DQID || type == TokenType.ID;
+        }
+    }
+
+    static class Query extends Token
+    {
+        private final List<Token> tokenList;
+
+        public Query(List<Token> tokenList)
+        {
+            super(TokenType.QUERY);
+            this.tokenList = new ArrayList<Token>(tokenList);
+        }
+
+        public void unparse(StringBuilder buf)
+        {
+            int k = -1;
+            for (Token token : tokenList) {
+                if (++k > 0) {
+                    buf.append(' ');
+                }
+                token.unparse(buf);
+            }
+        }
+
+        public static void simplifyList(List<Token> list, String hintToken)
+        {
+            // Simplify
+            //   SELECT * FROM t UNION ALL SELECT * FROM u WHERE ^
+            // to
+            //   SELECT * FROM u WHERE ^
+            for (Token token : list) {
+                if (token instanceof Query) {
+                    Query query = (Query) token;
+                    if (query.contains(hintToken))
+                    {
+                        list.clear();
+                        list.add(query.simplify(hintToken));
+                        break;
+                    }
+                }
+            }
+        }
+
+        public Query simplify(String hintToken)
+        {
+            TokenType clause = TokenType.SELECT;
+            TokenType foundInClause = null;
+            Query foundInSubquery = null;
+            TokenType majorClause = null;
+            if (hintToken != null) {
+                for (Token token : tokenList) {
+                    switch (token.type) {
+                    case ID:
+                        if (token.s.equals(hintToken)) {
+                            foundInClause = clause;
+                        }
+                        break;
+                    case SELECT:
+                    case FROM:
+                    case WHERE:
+                    case GROUP:
+                    case HAVING:
+                    case ORDER:
+                        majorClause = token.type;
+                        // fall through
+                    case JOIN:
+                    case USING:
+                    case ON:
+                        clause = token.type;
+                        break;
+                    case COMMA:
+                        if (majorClause == TokenType.FROM) {
+                            // comma inside from clause
+                            clause = TokenType.FROM;
+                        }
+                        break;
+                    case QUERY:
+                        if (((Query) token).contains(hintToken)) {
+                            foundInClause = clause;
+                            foundInSubquery = (Query) token;
+                        }
+                        break;
+                    }
+                }
+            } else {
+                foundInClause = TokenType.QUERY;
+            }
+            if (foundInClause != null) {
+                switch (foundInClause) {
+                case SELECT:
+                    purgeSelectListExcept(hintToken);
+                    purgeWhere();
+                    purgeOrderBy();
+                    break;
+                case FROM:
+                case JOIN:
+                    // See comments against ON/USING.
+                    purgeSelect();
+                    purgeFromExcept(hintToken);
+                    purgeWhere();
+                    purgeGroupByHaving();
+                    purgeOrderBy();
+                    break;
+                case ON:
+                case USING:
+                    // We need to treat expressions in FROM and JOIN
+                    // differently than ON and USING. Consider
+                    //     FROM t1 JOIN t2 ON b1 JOIN t3 USING (c2)
+                    // t1, t2, t3 occur in the FROM clause, and do not depend
+                    // on anything; b1 and c2 occur in ON scope, and depend
+                    // on the FROM clause
+                    purgeSelect();
+                    purgeWhere();
+                    purgeOrderBy();
+                    break;
+                case WHERE:
+                    purgeSelect();
+                    purgeGroupByHaving();
+                    purgeOrderBy();
+                    break;
+                case GROUP:
+                case HAVING:
+                    purgeSelect();
+                    purgeWhere();
+                    purgeOrderBy();
+                    break;
+                case ORDER:
+                    purgeWhere();
+                    break;
+                case QUERY:
+                    // Indicates that the expression to be simplified is
+                    // outside this subquery. Preserve a simplified SELECT
+                    // clause.
+                    purgeSelectExprsKeepAliases();
+                    purgeWhere();
+                    purgeGroupByHaving();
+                    break;
+                }
+            }
+
+            // Simplify sub-queries.
+            for (Token token : tokenList) {
+                switch (token.type) {
+                case QUERY: {
+                    Query query = (Query) token;
+                    query.simplify(query == foundInSubquery ? hintToken : null);
+                    break;
+                }
+                }
+            }
+            return this;
+        }
+
+        private void purgeSelectListExcept(String hintToken)
+        {
+            List<Token> sublist = findClause(TokenType.SELECT);
+            int parenCount = 0;
+            int itemStart = 1;
+            int itemEnd = -1;
+            boolean found = false;
+            for (int i = 0; i < sublist.size(); i++) {
+                Token token = sublist.get(i);
+                switch (token.type) {
+                case LPAREN:
+                    ++parenCount;
+                    break;
+                case RPAREN:
+                    --parenCount;
+                    break;
+                case COMMA:
+                    if (parenCount == 0) {
+                        if (found) {
+                            itemEnd = i;
+                            break;
+                        }
+                        itemStart = i + 1;
+                    }
+                    break;
+                case ID:
+                    if (token.s.equals(hintToken)) {
+                        found = true;
+                    }
+                }
+            }
+            if (found) {
+                if (itemEnd < 0) {
+                    itemEnd = sublist.size();
+                }
+
+                List<Token> selectItem =
+                    new ArrayList<Token>(
+                        sublist.subList(itemStart, itemEnd));
+                Token select = sublist.get(0);
+                sublist.clear();
+                sublist.add(select);
+                sublist.addAll(selectItem);
+            }
+        }
+
+        private void purgeSelect()
+        {
+            List<Token> sublist = findClause(TokenType.SELECT);
+            Token select = sublist.get(0);
+            sublist.clear();
+            sublist.add(select);
+            sublist.add(new Token(TokenType.ID, "*"));
+        }
+
+        private void purgeSelectExprsKeepAliases()
+        {
+            List<Token> sublist = findClause(TokenType.SELECT);
+            List<Token> newSelectClause = new ArrayList<Token>();
+            newSelectClause.add(sublist.get(0));
+            int itemStart = 1;
+            for (int i = 1; i < sublist.size(); i++) {
+                Token token = sublist.get(i);
+                if (i + 1 == sublist.size()
+                    || sublist.get(i + 1).type == TokenType.COMMA) {
+                    if (token.type == TokenType.ID) {
+                        newSelectClause.add(new Token(TokenType.ID, "0"));
+                        newSelectClause.add(new Token(TokenType.ID, "AS"));
+                        newSelectClause.add(token);
+                    } else {
+                        newSelectClause.addAll(
+                            sublist.subList(itemStart, i + 1));
+                    }
+                    itemStart = i + 2;
+                    if (i + 1 < sublist.size()) {
+                        newSelectClause.add(new Token(TokenType.COMMA));
+                    }
+                }
+            }
+            sublist.clear();
+            sublist.addAll(newSelectClause);
+        }
+
+        private void purgeFromExcept(String hintToken)
+        {
+            List<Token> sublist = findClause(TokenType.FROM);
+            int itemStart = -1;
+            int itemEnd = -1;
+            int joinCount = 0;
+            boolean found = false;
+            for (int i = 0; i < sublist.size(); i++) {
+                Token token = sublist.get(i);
+                switch (token.type) {
+                case JOIN:
+                    ++joinCount;
+                    // fall through
+                case FROM:
+                case ON:
+                case COMMA:
+                    if (found) {
+                        itemEnd = i;
+                        break;
+                    }
+                    itemStart = i + 1;
+                    break;
+                case ID:
+                    if (token.s.equals(hintToken)) {
+                        found = true;
+                    }
+                }
+            }
+            // Don't simplify a FROM clause containing a JOIN: we lose help
+            // with syntax.
+            if (found && joinCount == 0) {
+                if (itemEnd == -1) {
+                    itemEnd = sublist.size();
+                }
+                List<Token> fromItem =
+                    new ArrayList<Token>(
+                        sublist.subList(itemStart, itemEnd));
+                Token from = sublist.get(0);
+                sublist.clear();
+                sublist.add(from);
+                sublist.addAll(fromItem);
+            }
+            if (sublist.get(sublist.size() - 1).type == TokenType.ON) {
+                sublist.add(new Token(TokenType.ID, "TRUE"));
+            }
+        }
+
+        private void purgeWhere()
+        {
+            List<Token> sublist = findClause(TokenType.WHERE);
+            if (sublist != null) {
+                sublist.clear();
+            }
+        }
+
+        private void purgeGroupByHaving()
+        {
+            List<Token> sublist = findClause(TokenType.GROUP);
+            if (sublist != null) {
+                sublist.clear();
+            }
+            sublist = findClause(TokenType.HAVING);
+            if (sublist != null) {
+                sublist.clear();
+            }
+        }
+
+        private void purgeOrderBy()
+        {
+            List<Token> sublist = findClause(TokenType.ORDER);
+            if (sublist != null) {
+                sublist.clear();
+            }
+        }
+
+        private List<Token> findClause(TokenType keyword)
+        {
+            int start = -1;
+            int k = -1;
+            EnumSet<TokenType> clauses = EnumSet.of(
+                TokenType.SELECT,
+                TokenType.FROM,
+                TokenType.WHERE,
+                TokenType.GROUP,
+                TokenType.HAVING,
+                TokenType.ORDER);
+            for (Token token : tokenList) {
+                ++k;
+                if (token.type == keyword) {
+                    start = k;
+                } else if (start >= 0
+                    && clauses.contains(token.type)) {
+                   return tokenList.subList(start, k);
+                }
+            }
+            if (start >= 0) {
+                return tokenList.subList(start, k + 1);
+            }
+            return null;
+        }
+
+        private boolean contains(String hintToken)
+        {
+            for (Token token : tokenList) {
+                switch (token.type) {
+                case ID:
+                    if (token.s.equals(hintToken)) {
+                        return true;
+                    }
+                    break;
+                case QUERY:
+                    if (((Query) token).contains(hintToken)) {
+                        return true;
+                    }
+                    break;
+                }
+            }
+            return false;
+        }
+    }
+
+    enum TokenType {
+        // keywords
+        SELECT,
+        FROM,
+        JOIN,
+        ON,
+        USING,
+        WHERE,
+        GROUP,
+        HAVING,
+        ORDER,
+        BY,
+
+        UNION,
+        INTERSECT,
+        EXCEPT,
+
+        /**
+         * left parenthesis
+         */
+        LPAREN {
+            public String sql()
+            {
+                return "(";
+            }
+        },
+
+        /**
+         * right parenthesis
+         */
+        RPAREN {
+            public String sql()
+            {
+                return ")";
+            }
+        },
+
+        /**
+         * identifier, or indeed any miscellaneous sequence of characters
+         */
+        ID,
+
+        /**
+         * double-quoted identifier, e.g. "FOO""BAR"
+         */
+        DQID,
+
+        /**
+         * single-quoted string literal, e.g. 'foobar'
+         */
+        SQID,
+        COMMENT,
+        COMMA {
+            public String sql()
+            {
+                return ",";
+            }
+        },
+
+        /**
+         * A token created by reducing an entire subquery.
+         */
+        QUERY;
+
+        public String sql()
+        {
+            return name();
         }
     }
 }

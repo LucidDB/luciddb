@@ -25,7 +25,6 @@ import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 
 
 /**
@@ -72,7 +71,6 @@ public class OrderByScope
     }
 
     public void findAllColumnNames(
-        String parentObjName,
         List<SqlMoniker> result)
     {
         final SqlValidatorNamespace ns = validator.getNamespace(select);
@@ -83,7 +81,7 @@ public class OrderByScope
     {
         // If it's a simple identifier, look for an alias.
         if (identifier.isSimple()
-            && validator.getCompatible().isSortByAlias())
+            && validator.getConformance().isSortByAlias())
         {
             String name = identifier.names[0];
             final SqlValidatorNamespace selectNs =

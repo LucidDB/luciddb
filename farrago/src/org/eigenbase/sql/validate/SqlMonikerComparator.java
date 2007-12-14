@@ -25,33 +25,23 @@ import java.util.*;
 
 
 /**
- * A generic implementation of {@link SqlMonikerComparator} to compare {@link
- * SqlMoniker}.
+ * A general-purpose implementation of {@link Comparator} to compare
+ * {@link SqlMoniker} values.
  *
  * @author tleung
- * @version $$
+ * @version $Id$
  * @since Oct 16, 2005
  */
 public class SqlMonikerComparator
-    implements Comparator
+    implements Comparator<SqlMoniker>
 {
     //~ Methods ----------------------------------------------------------------
 
-    /*
-     * Compares its arguments for order.  The arguments have to be of type
-     * {@link SqlMoniker}
-     */
-    public int compare(Object o1, Object o2)
+    public int compare(SqlMoniker m1, SqlMoniker m2)
     {
-        if (!(o1 instanceof SqlMoniker) || !(o2 instanceof SqlMoniker)) {
-            return 0;
-        }
-        SqlMoniker m1 = (SqlMoniker) o1;
-        SqlMoniker m2 = (SqlMoniker) o2;
-
-        if (m1.getType().getOrdinal() > m2.getType().getOrdinal()) {
+        if (m1.getType().ordinal() > m2.getType().ordinal()) {
             return 1;
-        } else if (m1.getType().getOrdinal() < m2.getType().getOrdinal()) {
+        } else if (m1.getType().ordinal() < m2.getType().ordinal()) {
             return -1;
         } else {
             return (m1.toString().compareTo(m2.toString()));

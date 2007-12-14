@@ -461,6 +461,7 @@ ${farrago.test.jvmargs}
     <antcall target="runFarragoInitSql"/>
     <antcall target="runLuciddbInitSql"/>
     <antcall target="backupCatalog"/>
+    <antcall target="createCatalogScript"/>
   </target>
 
   <target name="clean" depends="clean-dist">
@@ -1035,6 +1036,8 @@ ${farrago.test.jvmargs}
       location="${dist.dir}/${lucidera.release.spec}/plugin"/>
     <property name="release.bin.dir"
       location="${dist.dir}/${lucidera.release.spec}/bin"/>
+    <property name="release.install.dir"
+      location="${dist.dir}/${lucidera.release.spec}/install"/>
     <property name="release.properties.target"
       location="${release.lib.dir}/FarragoRelease.properties"/>
 
@@ -1084,6 +1087,9 @@ ${farrago.test.jvmargs}
       file="${luciddb.dir}/license/README" 
       todir="${dist.dir}/${lucidera.release.spec}"
       overwrite="true" />
+
+    <copy todir="${release.install.dir}" overwrite="true"
+      file="${luciddb.dir}/initsql/catalog.sql"/>
 
     <copy file="${release.properties.source}"
       todir="${release.lib.dir}" overwrite="true"/>
@@ -1240,17 +1246,18 @@ ${farrago.test.jvmargs}
     </copy>
   </target>
 
-<!-- Begin Experiment -->
-
-  <target name="create-catalog-script">
+  <target name="createCatalogScript">
+    <delete file="${luciddb.initsql.dir}/catalog.sql" quiet="true"/>
     <concat destfile="${luciddb.initsql.dir}/catalog.sql">
       <filelist refid="farrago.filelist.initsql"/>
       <filelist refid="luciddb.filelist.initsql"/>
     </concat>
   </target>
 
+<!-- Begin Experiment -->
+
   <!-- ref file doesn't quite match yet, but makes it easier to compare -->
-  <target name="test-catalog-script" depends="create-catalog-script">
+  <target name="testCatalogScript" depends="createCatalogScript">
     <pathconvert property="fcatalog.ref.prop"
       refid="farrago.filelist.initsql" pathsep="${line.separator}"
       dirsep="${file.separator}" >

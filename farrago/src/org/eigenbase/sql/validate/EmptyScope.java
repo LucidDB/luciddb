@@ -79,12 +79,15 @@ class EmptyScope
     }
 
     public void findAllColumnNames(
-        String parentObjName,
         List<SqlMoniker> result)
     {
     }
 
     public void findAllTableNames(List<SqlMoniker> result)
+    {
+    }
+
+    public void findAliases(List<SqlMoniker> result)
     {
     }
 

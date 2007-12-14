@@ -4739,6 +4739,18 @@ TOKEN :
     >
 }
 
+/* Special token to throw a wrench in the works. It is never valid in SQL,
+   and so when it occurs, it causes the parser to print which tokens would
+   have been valid at that point. Used by SqlAdvisor. */
+TOKEN :
+{
+    < BEL:
+    [
+        "\u0007"
+    ]
+    >
+}
+
 /**
  * Defines a production which can never be accepted by the parser.
  * In effect, it tells the parser, "If you got here, you've gone too far."

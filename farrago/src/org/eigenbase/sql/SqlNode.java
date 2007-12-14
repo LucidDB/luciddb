@@ -228,22 +228,6 @@ public abstract class SqlNode
     }
 
     /**
-     * Populates a list of all the valid alternatives for this node. Only
-     * implemented now for {@link SqlIdentifier}.
-     *
-     * @param validator Validator
-     * @param scope Validation scope
-     * @param hintList a list of valid options
-     */
-    public void findValidOptions(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        List<SqlMoniker> hintList)
-    {
-        // no valid options
-    }
-
-    /**
      * Validates this node in an expression context.
      *
      * <p>Usually, this method does much the same as {@link #validate}, but a

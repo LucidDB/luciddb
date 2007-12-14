@@ -272,7 +272,7 @@ public class FarragoPreparingStmt
             sqlValidator =
                 new FarragoSqlValidator(
                     this,
-                    SqlValidator.Compatible.Default);
+                    SqlConformance.Default);
         }
         return sqlValidator;
     }
@@ -1135,7 +1135,7 @@ public class FarragoPreparingStmt
 
         assert (resolved.object instanceof CwmNamedColumnSet);
 
-        CwmNamedColumnSet columnSet = (CwmNamedColumnSet) resolved.object;
+        CwmNamedColumnSet columnSet = resolved.object;
 
         // If they requested a sample, see if there's a sample with that name.
         // Set oldColumnSet to remind us to cast & reorder columns.
@@ -1318,7 +1318,7 @@ public class FarragoPreparingStmt
             return null;
         }
 
-        CwmNamedColumnSet table = (CwmNamedColumnSet) resolved.object;
+        CwmNamedColumnSet table = resolved.object;
         ModalityType modality = ModalityTypeEnum.MODALITYTYPE_RELATIONAL;
         if (table instanceof FemAbstractColumnSet) {
             modality = ((FemAbstractColumnSet) table).getModality();
@@ -1402,10 +1402,16 @@ public class FarragoPreparingStmt
         return getFarragoTypeFactory().createCwmType(cwmType);
     }
 
-    // implement SqlValidator.CatalogReader
-    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
+    // implement SqlValidatorCatalogReader
+    public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
     {
         return stmtValidator.getAllSchemaObjectNames(names);
+    }
+
+    // implement SqlValidatorCatalogReader
+    public String getSchemaName()
+    {
+        return getSession().getSessionVariables().schemaName;
     }
 
     public void addDependency(CwmModelElement supplier,

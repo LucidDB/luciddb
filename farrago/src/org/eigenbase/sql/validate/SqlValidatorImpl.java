@@ -74,7 +74,7 @@ public class SqlValidatorImpl
         /**
          * Validation has completed (perhaps unsuccessfully).
          */
-        Valid;
+        Valid
     }
 
     //~ Instance fields --------------------------------------------------------
@@ -86,15 +86,8 @@ public class SqlValidatorImpl
      * Maps ParsePosition strings to the {@link SqlIdentifier} identifier
      * objects at these positions
      */
-    protected final Map<String, SqlIdentifier> sqlIds =
-        new HashMap<String, SqlIdentifier>();
-
-    /**
-     * Maps ParsePosition strings to the {@link SqlValidatorScope} scope objects
-     * at these positions
-     */
-    protected final Map<String, SqlValidatorScope> idScopes =
-        new HashMap<String, SqlValidatorScope>();
+    protected final Map<String, IdInfo> idPositions =
+        new HashMap<String, IdInfo>();
 
     /**
      * Maps {@link SqlNode query node} objects to the {@link SqlValidatorScope}
@@ -166,7 +159,7 @@ public class SqlValidatorImpl
     private final Map<SqlNode, RelDataType> nodeToTypeMap =
         new IdentityHashMap<SqlNode, RelDataType>();
     private final AggFinder aggFinder = new AggFinder();
-    private final Compatible compatible;
+    private final SqlConformance conformance;
     private final Map<SqlNode, SqlNode> originalExprs =
         new HashMap<SqlNode, SqlNode>();
 
@@ -185,26 +178,31 @@ public class SqlValidatorImpl
     /**
      * Creates a validator.
      *
+     * @param opTab          Operator table
+     * @param catalogReader  Catalog reader
+     * @param typeFactory    Type factory
+     * @param conformance     Compatibility mode
+     * 
      * @pre opTab != null
      * @pre // node is a "query expression" (per SQL standard)
      * @pre catalogReader != null
      * @pre typeFactory != null
-     * @pre compatible != null
+     * @pre conformance != null
      */
     protected SqlValidatorImpl(
         SqlOperatorTable opTab,
         SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory,
-        Compatible compatible)
+        SqlConformance conformance)
     {
         Util.pre(opTab != null, "opTab != null");
         Util.pre(catalogReader != null, "catalogReader != null");
         Util.pre(typeFactory != null, "typeFactory != null");
-        Util.pre(compatible != null, "compatible != null");
+        Util.pre(conformance != null, "conformance != null");
         this.opTab = opTab;
         this.catalogReader = catalogReader;
         this.typeFactory = typeFactory;
-        this.compatible = compatible;
+        this.conformance = conformance;
 
         // NOTE jvs 23-Dec-2003:  This is used as the type for dynamic
         // parameters and null literals until a real type is imposed for them.
@@ -216,9 +214,9 @@ public class SqlValidatorImpl
 
     //~ Methods ----------------------------------------------------------------
 
-    public Compatible getCompatible()
+    public SqlConformance getConformance()
     {
-        return compatible;
+        return conformance;
     }
 
     public SqlValidatorCatalogReader getCatalogReader()
@@ -330,15 +328,13 @@ public class SqlValidatorImpl
                     final SqlValidatorNamespace fromNs = getNamespace(from);
                     assert fromNs != null;
                     final RelDataType rowType = fromNs.getRowType();
-                    final RelDataTypeField [] fields = rowType.getFields();
-                    for (int j = 0; j < fields.length; j++) {
-                        RelDataTypeField field = fields[j];
+                    for (RelDataTypeField field : rowType.getFields()) {
                         String columnName = field.getName();
 
                         //todo: do real implicit collation here
                         final SqlNode exp =
                             new SqlIdentifier(
-                                new String[] { tableName, columnName },
+                                new String[]{tableName, columnName},
                                 starPosition);
                         addToSelectList(
                             selectItems,
@@ -368,15 +364,13 @@ public class SqlValidatorImpl
                 final SqlValidatorNamespace fromNs = getNamespace(from);
                 assert fromNs != null;
                 final RelDataType rowType = fromNs.getRowType();
-                final RelDataTypeField [] fields = rowType.getFields();
-                for (int i = 0; i < fields.length; i++) {
-                    RelDataTypeField field = fields[i];
+                for (RelDataTypeField field : rowType.getFields()) {
                     String columnName = field.getName();
 
                     //todo: do real implicit collation here
                     final SqlIdentifier exp =
                         new SqlIdentifier(
-                            new String[] { tableName, columnName },
+                            new String[]{tableName, columnName},
                             starPosition);
                     addToSelectList(
                         selectItems,
@@ -430,23 +424,7 @@ public class SqlValidatorImpl
         return validateScopedExpression(topNode, scope);
     }
 
-    /**
-     * Looks up completion hints for a syntatically correct SQL that has been
-     * parsed into an expression tree (Note this should be called after
-     * validate())
-     *
-     * @param topNode top of expression tree in which to lookup completion hints
-     * @param pos indicates the position in the sql statement we want to get
-     * completion hints for. For example, "select a.ename, b.deptno from
-     * sales.emp a join sales.dept b "on a.deptno=b.deptno where empno=1";
-     * setting pos to 'Line 1, Column 17' returns all the possible column names
-     * that can be selected from sales.dept table setting pos to 'Line 1, Column
-     * 31' returns all the possible table names in 'sales' schema
-     *
-     * @return an array of {@link SqlMoniker} (sql identifiers) that can fill in
-     * at the indicated position
-     */
-    public SqlMoniker [] lookupHints(SqlNode topNode, SqlParserPos pos)
+    public List<SqlMoniker> lookupHints(SqlNode topNode, SqlParserPos pos)
     {
         SqlValidatorScope scope = new EmptyScope(this);
         SqlNode outermostNode = performUnconditionalRewrites(topNode);
@@ -459,39 +437,24 @@ public class SqlValidatorImpl
             throw Util.newInternal("Not a query: " + outermostNode);
         }
         List<SqlMoniker> hintList = new ArrayList<SqlMoniker>();
-        ns.lookupHints(pos, hintList);
-        return hintList.toArray(new SqlMoniker[hintList.size()]);
+        lookupSelectHints(ns, pos, hintList);
+        return hintList;
     }
 
-    /**
-     * Looks up the fully qualified name for a {@link SqlIdentifier} at a given
-     * Parser Position in a parsed expression tree Note: call this only after
-     * {@link #validate} has been called.
-     *
-     * @param topNode top of expression tree in which to lookup the qualfied
-     * name for the SqlIdentifier
-     * @param pos indicates the position of the {@link SqlIdentifier} in the sql
-     * statement we want to get the qualified name for
-     *
-     * @return a string of the fully qualified name of the {@link SqlIdentifier}
-     * if the Parser position represents a valid {@link SqlIdentifier}. Else
-     * return an empty string
-     */
     public SqlMoniker lookupQualifiedName(SqlNode topNode, SqlParserPos pos)
     {
         final String posString = pos.toString();
-        SqlIdentifier id = sqlIds.get(posString);
-        SqlValidatorScope scope = idScopes.get(posString);
-        if ((id != null) && (scope != null)) {
-            return new SqlIdentifierMoniker(scope.fullyQualify(id));
+        IdInfo info = idPositions.get(posString);
+        if (info != null) {
+            return new SqlIdentifierMoniker(info.scope.fullyQualify(info.id));
         } else {
             return null;
         }
     }
 
     /**
-     * Looks up completion hints for a syntatically correct select SQL that has
-     * been parsed into an expression tree
+     * Looks up completion hints for a syntactically correct select SQL that
+     * has been parsed into an expression tree.
      *
      * @param select the Select node of the parsed expression tree
      * @param pos indicates the position in the sql statement we want to get
@@ -504,14 +467,23 @@ public class SqlValidatorImpl
         SqlParserPos pos,
         List<SqlMoniker> hintList)
     {
-        SqlIdentifier dummyId = sqlIds.get(pos.toString());
-        SqlValidatorScope dummyScope = idScopes.get(pos.toString());
-        if ((dummyId == null) || (dummyScope == null)) {
+        IdInfo info = idPositions.get(pos.toString());
+        if (info == null || info.scope == null) {
             SqlNode fromNode = select.getFrom();
             final SqlValidatorScope fromScope = getFromScope(select);
             lookupFromHints(fromNode, fromScope, pos, hintList);
         } else {
-            dummyId.findValidOptions(this, dummyScope, hintList);
+            lookupNameCompletionHints(
+                info.scope, Arrays.asList(info.id.names),
+                info.id.getParserPosition(), hintList);
+        }
+    }
+
+    private void lookupSelectHints(
+        SqlValidatorNamespace ns, SqlParserPos pos, List<SqlMoniker> hintList)
+    {
+        if (ns instanceof SelectNamespace) {
+            lookupSelectHints((SqlSelect) ns.getNode(), pos, hintList);
         }
     }
 
@@ -524,28 +496,32 @@ public class SqlValidatorImpl
         final SqlValidatorNamespace ns = getNamespace(node);
         if (ns instanceof IdentifierNamespace) {
             IdentifierNamespace idNs = (IdentifierNamespace) ns;
-            if (pos.toString().equals(
-                    idNs.getId().getParserPosition().toString()))
-            {
-                SqlMoniker [] objNames =
-                    catalogReader.getAllSchemaObjectNames(
-                        idNs.getId().names);
-
-                for (int i = 0; i < objNames.length; i++) {
-                    if (objNames[i].getType() != SqlMonikerType.Function) {
-                        hintList.add(objNames[i]);
+            final SqlIdentifier id = idNs.getId();
+            for (int i = 0; i < id.names.length; i++) {
+                if (pos.toString().equals(
+                    id.getComponent(i).getParserPosition().toString()))
+                {
+                    List<SqlMoniker> objNames = new ArrayList<SqlMoniker>();
+                    SqlValidatorUtil.getSchemaObjectMonikers(
+                        getCatalogReader(),
+                        Arrays.asList(id.names).subList(0, i + 1),
+                        objNames);
+                    for (SqlMoniker objName : objNames) {
+                        if (objName.getType() != SqlMonikerType.Function) {
+                            hintList.add(objName);
+                        }
                     }
+                    return;
                 }
-                return;
             }
         }
         switch (node.getKind().getOrdinal()) {
         case SqlKind.JoinORDINAL:
             lookupJoinHints((SqlJoin) node, scope, pos, hintList);
-            return;
+            break;
         default:
-            getNamespace(node).lookupHints(pos, hintList);
-            return;
+            lookupSelectHints(ns, pos, hintList);
+            break;
         }
     }
 
@@ -567,8 +543,7 @@ public class SqlValidatorImpl
             return;
         }
         SqlJoinOperator.ConditionType conditionType = join.getConditionType();
-        final SqlValidatorScope joinScope =
-            (SqlValidatorScope) scopes.get(join);
+        final SqlValidatorScope joinScope = scopes.get(join);
         switch (conditionType) {
         case On:
             condition.findValidOptions(this, joinScope, pos, hintList);
@@ -578,6 +553,133 @@ public class SqlValidatorImpl
             // No suggestions.
             // Not supporting hints for other types such as 'Using' yet.
             return;
+        }
+    }
+
+    /**
+     * Populates a list of all the valid alternatives for an identifier.
+     *
+     * @param scope     Validation scope
+     * @param names     Components of the identifier
+     * @param pos       position
+     * @param hintList  a list of valid options
+     */
+    public final void lookupNameCompletionHints(
+        SqlValidatorScope scope,
+        List<String> names,
+        SqlParserPos pos,
+        List<SqlMoniker> hintList)
+    {
+        // Remove the last part of name - it is a dummy
+        List<String> subNames =
+            names.subList(0, names.size() - 1);
+
+        if (subNames.size() > 0) {
+            // If there's a prefix, resolve it to a namespace.
+            SqlValidatorNamespace ns = null;
+            for (String name : subNames) {
+                if (ns == null) {
+                    ns = scope.resolve(name, null, null);
+                } else {
+                    ns = ns.lookupChild(name, null, null);
+                }
+                if (ns == null) {
+                    break;
+                }
+            }
+            if (ns != null) {
+                RelDataType rowType = ns.getRowType();
+                for (RelDataTypeField field : rowType.getFieldList()) {
+                    hintList.add(
+                        new SqlMonikerImpl(
+                            field.getName(), SqlMonikerType.Column));
+                }
+            }
+
+            // builtin function names are valid completion hints when the
+            // identifier has only 1 name part
+            findAllValidFunctionNames(names, this, hintList, pos);
+        } else {
+            // No prefix; use the children of the current scope (that is,
+            // the aliases in the FROM clause)
+            scope.findAliases(hintList);
+
+            // If there's only one alias, add all child columns
+            SelectScope selectScope = SqlValidatorUtil.getEnclosingSelectScope(scope);
+            if (selectScope != null &&
+                selectScope.getChildren().size() == 1)
+            {
+                RelDataType rowType =
+                    selectScope.getChildren().get(0).getRowType();
+                for (RelDataTypeField field : rowType.getFieldList()) {
+                    hintList.add(
+                        new SqlMonikerImpl(
+                            field.getName(), SqlMonikerType.Column));
+                }
+            }
+        }
+
+        findAllValidUdfNames(names, this, hintList);
+    }
+
+    private static void findAllValidUdfNames(
+        List<String> names,
+        SqlValidator validator,
+        List<SqlMoniker> result)
+    {
+        List<SqlMoniker> objNames = new ArrayList<SqlMoniker>();
+        SqlValidatorUtil.getSchemaObjectMonikers(
+            validator.getCatalogReader(), names, objNames);
+        for (SqlMoniker objName : objNames) {
+            if (objName.getType() == SqlMonikerType.Function) {
+                result.add(objName);
+            }
+        }
+    }
+
+    private static void findAllValidFunctionNames(
+        List<String> names,
+        SqlValidator validator,
+        List<SqlMoniker> result, SqlParserPos pos)
+    {
+        // a function name can only be 1 part
+        if (names.size() > 1) {
+            return;
+        }
+        for (SqlOperator op : validator.getOperatorTable().getOperatorList()) {
+            SqlIdentifier curOpId =
+                new SqlIdentifier(
+                    op.getName(),
+                    pos);
+
+            final SqlCall call =
+                SqlUtil.makeCall(
+                    validator.getOperatorTable(),
+                    curOpId);
+            if (call != null) {
+                result.add(
+                    new SqlMonikerImpl(
+                        op.getName(),
+                        SqlMonikerType.Function));
+            } else {
+                if ((op.getSyntax() == SqlSyntax.Function)
+                    || (op.getSyntax() == SqlSyntax.Prefix))
+                {
+                    if (op.getOperandTypeChecker() != null) {
+                        String sig = op.getAllowedSignatures();
+                        sig = sig.replaceAll("'", "");
+                        result.add(
+                            new SqlMonikerImpl(
+                                sig,
+                                SqlMonikerType.Function));
+                        continue;
+                    }
+                    result.add(
+                        new SqlMonikerImpl(
+                            op.getName(),
+                            SqlMonikerType.Function));
+                }
+            }
         }
     }
 
@@ -615,7 +717,7 @@ public class SqlValidatorImpl
         return outermostNode;
     }
 
-    public void validateQuery(SqlNode node)
+    public void validateQuery(SqlNode node, SqlValidatorScope scope)
     {
         final SqlValidatorNamespace ns = getNamespace(node);
         if (ns == null) {
@@ -691,7 +793,7 @@ public class SqlValidatorImpl
 
     public SqlValidatorScope getFromScope(SqlSelect select)
     {
-        return (SqlValidatorScope) scopes.get(select);
+        return scopes.get(select);
     }
 
     public SqlValidatorScope getOrderScope(SqlSelect select)
@@ -705,13 +807,13 @@ public class SqlValidatorImpl
         case SqlKind.AsORDINAL:
             return getJoinScope(((SqlCall) node).operands[0]);
         default:
-            return (SqlValidatorScope) scopes.get(node);
+            return scopes.get(node);
         }
     }
 
     public SqlValidatorScope getOverScope(SqlNode node)
     {
-        return (SqlValidatorScope) scopes.get(node);
+        return scopes.get(node);
     }
 
     /**
@@ -728,7 +830,7 @@ public class SqlValidatorImpl
     {
         switch (operandType) {
         case SqlSelect.FROM_OPERAND:
-            return (SqlValidatorScope) scopes.get(select);
+            return scopes.get(select);
         case SqlSelect.WHERE_OPERAND:
         case SqlSelect.GROUP_OPERAND:
             return whereScopes.get(select);
@@ -797,7 +899,7 @@ public class SqlValidatorImpl
                             null,
                             SqlSyntax.Function);
                     if (overloads.size() == 1) {
-                        call.setOperator((SqlOperator) overloads.get(0));
+                        call.setOperator(overloads.get(0));
                     }
                 }
             }
@@ -819,8 +921,7 @@ public class SqlValidatorImpl
         if (node.isA(SqlKind.Values)) {
             final SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
             selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
-            SqlSelect wrapperNode =
-                SqlStdOperatorTable.selectOperator.createCall(
+            return SqlStdOperatorTable.selectOperator.createCall(
                     null,
                     selectList,
                     node,
@@ -830,7 +931,6 @@ public class SqlValidatorImpl
                     null,
                     null,
                     node.getParserPosition());
-            return wrapperNode;
         } else if (node.isA(SqlKind.OrderBy)) {
             SqlCall orderBy = (SqlCall) node;
             SqlNode query =
@@ -851,8 +951,7 @@ public class SqlValidatorImpl
             }
             final SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
             selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
-            SqlSelect wrapperNode =
-                SqlStdOperatorTable.selectOperator.createCall(
+            return SqlStdOperatorTable.selectOperator.createCall(
                     null,
                     selectList,
                     query,
@@ -862,14 +961,12 @@ public class SqlValidatorImpl
                     null,
                     orderList,
                     SqlParserPos.ZERO);
-            return wrapperNode;
         } else if (node.isA(SqlKind.ExplicitTable)) {
             // (TABLE t) is equivalent to (SELECT * FROM t)
             SqlCall call = (SqlCall) node;
             final SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
             selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
-            SqlSelect wrapperNode =
-                SqlStdOperatorTable.selectOperator.createCall(
+            return SqlStdOperatorTable.selectOperator.createCall(
                     null,
                     selectList,
                     call.getOperands()[0],
@@ -879,7 +976,6 @@ public class SqlValidatorImpl
                     null,
                     null,
                     SqlParserPos.ZERO);
-            return wrapperNode;
         } else if (node.isA(SqlKind.Delete)) {
             SqlDelete call = (SqlDelete) node;
             final SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
@@ -1220,7 +1316,7 @@ public class SqlValidatorImpl
                 && (fun.getSyntax() != SqlSyntax.FunctionId))
             {
                 final Integer expectedArgCount =
-                    (Integer) fun.getOperandCountRange().getAllowedList().get(
+                    fun.getOperandCountRange().getAllowedList().get(
                         0);
                 throw newValidationError(
                     call,
@@ -1247,7 +1343,7 @@ public class SqlValidatorImpl
         SqlValidatorScope scope,
         SqlNode node)
     {
-        final SqlValidatorScope newScope = (SqlValidatorScope) scopes.get(node);
+        final SqlValidatorScope newScope = scopes.get(node);
         if (newScope != null) {
             scope = newScope;
         }
@@ -1905,7 +2001,7 @@ public class SqlValidatorImpl
             // validation check
             if (mergeCall.getUpdateCall() != null) {
                 registerQuery(
-                    (ListScope) whereScopes.get(mergeCall.getSourceSelect()),
+                    whereScopes.get(mergeCall.getSourceSelect()),
                     null,
                     mergeCall.getUpdateCall(),
                     null,
@@ -2044,7 +2140,7 @@ public class SqlValidatorImpl
                 registerSubqueries(parentScope, listNode, coerceToScalar);
             }
         } else {
-            ; // atomic node -- can be ignored
+            // atomic node -- can be ignored
         }
     }
 
@@ -2276,7 +2372,8 @@ public class SqlValidatorImpl
             validateOver((SqlCall) node, scope);
             return;
         default:
-            validateQuery(node);
+            validateQuery(node, scope);
+            return;
         }
     }
 
@@ -2293,8 +2390,7 @@ public class SqlValidatorImpl
         boolean natural = join.isNatural();
         SqlJoinOperator.JoinType joinType = join.getJoinType();
         SqlJoinOperator.ConditionType conditionType = join.getConditionType();
-        final SqlValidatorScope joinScope =
-            (SqlValidatorScope) scopes.get(join);
+        final SqlValidatorScope joinScope = scopes.get(join);
         validateFrom(left, unknownType, joinScope);
         validateFrom(right, unknownType, joinScope);
 
@@ -2678,8 +2774,8 @@ public class SqlValidatorImpl
     /**
      * Validates an expression.
      *
-     * @param expr
-     * @param scope
+     * @param expr Expression
+     * @param scope Scope in which expression occurs
      */
     private void validateExpr(SqlNode expr, SqlValidatorScope scope)
     {
@@ -2812,7 +2908,8 @@ public class SqlValidatorImpl
             SqlSelect sqlSelect = (SqlSelect) source;
             validateSelect(sqlSelect, targetRowType);
         } else {
-            validateQuery(source);
+            SqlValidatorScope scope = scopes.get(source);
+            validateQuery(source, scope);
         }
         RelDataType sourceRowType = getNamespace(source).getRowType();
         RelDataType logicalTargetRowType =
@@ -2990,7 +3087,10 @@ public class SqlValidatorImpl
     }
 
     /**
-     * Validates access to a table
+     * Validates access to a table.
+     *
+     * @param table Table
+     * @param requiredAccess Access requested on table
      */
     private void validateAccess(
         SqlValidatorTable table,
@@ -3007,7 +3107,11 @@ public class SqlValidatorImpl
     }
 
     /**
-     * Validates a VALUES clause
+     * Validates a VALUES clause.
+     *
+     * @param node          Values clause
+     * @param targetRowType Row type which expression must conform to
+     * @param scope         Scope within which clause occurs
      */
     protected void validateValues(
         SqlCall node,
@@ -3037,8 +3141,7 @@ public class SqlValidatorImpl
                 rowConstructor);
         }
 
-        for (int i = 0; i < operands.length; i++) {
-            SqlNode operand = operands[i];
+        for (SqlNode operand : operands) {
             operand.validate(this, scope);
         }
 
@@ -3206,13 +3309,6 @@ public class SqlValidatorImpl
 
             public void validate()
             {
-            }
-
-            public void lookupHints(
-                SqlParserPos pos,
-                List<SqlMoniker> hintList)
-            {
-                // no hints
             }
 
             public SqlNode getNode()
@@ -3665,7 +3761,7 @@ public class SqlValidatorImpl
             // Only recognize them if they are the whole expression,
             // and if the dialect permits.
             if ((literal == root)
-                && getCompatible().isSortByOrdinal())
+                && getConformance().isSortByOrdinal())
             {
                 if ((literal.getTypeName() == SqlTypeName.DECIMAL)
                     || (literal.getTypeName() == SqlTypeName.DOUBLE))
@@ -3725,7 +3821,7 @@ public class SqlValidatorImpl
         {
             // Aliases, e.g. 'select a as x, b from t order by x'.
             if (id.isSimple()
-                && getCompatible().isSortByAlias())
+                && getConformance().isSortByAlias())
             {
                 String alias = id.getSimple();
                 final SqlValidatorNamespace selectNs = getNamespace(select);
@@ -3750,6 +3846,17 @@ public class SqlValidatorImpl
                 return call;
             }
             return super.visitScoped(call);
+        }
+    }
+
+
+    protected static class IdInfo {
+        public final SqlValidatorScope scope;
+        public final SqlIdentifier id;
+
+        public IdInfo(SqlValidatorScope scope, SqlIdentifier id) {
+            this.scope = scope;
+            this.id = id;
         }
     }
 }

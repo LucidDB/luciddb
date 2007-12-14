@@ -547,6 +547,12 @@ public class SqlWindowOperator
         // expedient.
         final OffsetRange offsetAndRange =
             getOffsetAndRange(lowerBound, upperBound, false);
+        if (offsetAndRange == null) {
+            throw validator.newValidationError(
+                window,
+                EigenbaseResource.instance()
+                    .UnboundedFollowingWindowNotSupported.ex());
+        }
         if (offsetAndRange.range < 0) {
             throw validator.newValidationError(
                 window,
@@ -561,7 +567,11 @@ public class SqlWindowOperator
     private static boolean isTableSorted(SqlValidatorScope scope)
     {
         List<SqlMoniker> columnNames = new ArrayList<SqlMoniker>();
-        scope.findAllColumnNames(null, columnNames);
+
+        // REVIEW: jhyde, 2007/11/7: This is the only use of
+        // findAllColumnNames. Find a better way to detect monotonicity, then
+        // remove that method.
+        scope.findAllColumnNames(columnNames);
         for (SqlMoniker columnName : columnNames) {
             SqlIdentifier columnId = columnName.toIdentifier();
             final SqlMonotonicity monotonicity =
@@ -679,6 +689,20 @@ public class SqlWindowOperator
             && (SqlLiteral.symbolValue(node) == Bound.UNBOUNDED_FOLLOWING);
     }
 
+    /**
+     * Converts a pair of bounds into a (range, offset) pair.
+     *
+     * <p>If the upper bound is unbounded, returns null, since that cannot
+     * be represented as a (range, offset) pair. (The offset would be
+     * +infinity, but what would the range be?)
+     *
+     * @param lowerBound Lower bound
+     * @param upperBound Upper bound
+     * @param physical Whether interval is physical (rows), as opposed to
+     * logical (values)
+     *
+     * @return range-offset pair, or null
+     */
     public static OffsetRange getOffsetAndRange(
         final SqlNode lowerBound,
         final SqlNode upperBound,
@@ -686,47 +710,88 @@ public class SqlWindowOperator
     {
         ValSign upper = getRangeOffset(upperBound, precedingOperator);
         ValSign lower = getRangeOffset(lowerBound, followingOperator);
-        long offset = upper.signedVal();
-        long range = lower.signedVal() + upper.signedVal();
+        long offset;
+        long range;
+        if (upper == null) {
+            // cannot represent this as a range-offset pair
+            return null;
+        } else if (lower == null) {
+            offset = upper.signedVal();
+            range = Long.MAX_VALUE;
+        } else {
+            offset = upper.signedVal();
+            range = lower.signedVal() + upper.signedVal();
+        }
+        // if range is physical and crosses or touches zero (current row),
+        // increase the size by one
         if (physical
-            && ((lower.sign != upper.sign) || (lower.val == 0)
-                || (upper.val == 0)))
+            && (lower != null)
+            && ((lower.sign != upper.sign)
+            || (lower.val == 0)
+            || (upper.val == 0)))
         {
             ++range;
         }
         return new OffsetRange(offset, range);
     }
 
+    /**
+     * Decodes a node, representing an upper or lower bound to a window, into
+     * a range offset. For example, '3 FOLLOWING' is 3, '3 PRECEDING' is -3,
+     * and 'UNBOUNDED PRECEDING' or 'UNBOUNDED FOLLOWING' is null.
+     *
+     * @param node Node representing window bound
+     * @param op Either {@link #precedingOperator} or {@link #followingOperator}
+     * @return range
+     */
     private static ValSign getRangeOffset(SqlNode node, SqlPostfixOperator op)
     {
-        if ((node == null) || !(node instanceof SqlCall)) {
+        assert op == precedingOperator
+            || op == followingOperator;
+        if (node == null) {
+            return new ValSign(0, 1);
+        } else if (node instanceof SqlLiteral) {
+            SqlLiteral literal = (SqlLiteral) node;
+            if (literal.getValue() == Bound.CURRENT_ROW) {
+                return new ValSign(0, 1);
+            } else if (literal.getValue() == Bound.UNBOUNDED_FOLLOWING
+                && op == precedingOperator) {
+                return null;
+            } else if (literal.getValue() == Bound.UNBOUNDED_PRECEDING
+                && op == followingOperator) {
+                return null;
+            } else {
+                throw Util.newInternal("unexpected literal " + literal);
+            }
+        } else if (node instanceof SqlCall) {
+            final SqlCall call = (SqlCall) node;
+            long sign = (call.getOperator() == op) ? -1 : 1;
+            SqlNode [] operands = call.getOperands();
+            assert (operands.length == 1) && (operands[0] != null);
+            SqlLiteral operand = (SqlLiteral) operands[0];
+            Object obj = operand.getValue();
+            long val;
+            if (obj instanceof BigDecimal) {
+                val = ((BigDecimal) obj).intValue();
+            } else if (obj instanceof SqlIntervalLiteral.IntervalValue) {
+                val =
+                    SqlParserUtil.intervalToMillis(
+                        (SqlIntervalLiteral.IntervalValue) obj);
+            } else {
+                val = 0;
+            }
+            return new ValSign(val, sign);
+        } else {
             return new ValSign(0, 1);
         }
-        final SqlCall call = (SqlCall) node;
-        long sign = (call.getOperator() == op) ? -1 : 1;
-        SqlNode [] operands = call.getOperands();
-        assert (operands.length == 1) && (operands[0] != null);
-        SqlLiteral operand = (SqlLiteral) operands[0];
-        Object obj = operand.getValue();
-        long val;
-        if (obj instanceof BigDecimal) {
-            val = ((BigDecimal) obj).intValue();
-        } else if (obj instanceof SqlIntervalLiteral.IntervalValue) {
-            val =
-                SqlParserUtil.intervalToMillis(
-                    (SqlIntervalLiteral.IntervalValue) obj);
-        } else {
-            val = 0;
-        }
-        return new ValSign(val, sign);
     }
 
     //~ Inner Classes ----------------------------------------------------------
 
     public static class OffsetRange
     {
-        public long offset;
-        public long range;
+        public final long offset;
+        public final long range;
 
         OffsetRange(long offset, long range)
         {

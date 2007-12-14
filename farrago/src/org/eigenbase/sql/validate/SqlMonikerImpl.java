@@ -23,8 +23,6 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.*;
-
 
 /**
  * A generic implementation of {@link SqlMoniker}.
@@ -48,10 +46,10 @@ public class SqlMonikerImpl
      */
     public SqlMonikerImpl(String [] names, SqlMonikerType type)
     {
-        Util.pre(names != null, "names != null");
-        Util.pre(type != null, "type != null");
-        for (int i = 0; i < names.length; i++) {
-            Util.pre(names[i] != null, "names[i] != null");
+        assert names != null;
+        assert type != null;
+        for (String name : names) {
+            assert name != null;
         }
         this.names = names;
         this.type = type;
@@ -92,6 +90,20 @@ public class SqlMonikerImpl
             }
             result.append(names[i]);
         }
+        return result.toString();
+    }
+
+    public String id()
+    {
+        StringBuilder result = new StringBuilder(type.name());
+        result.append("(");
+        for (int i = 0; i < names.length; i++) {
+            if (i > 0) {
+                result.append('.');
+            }
+            result.append(names[i]);
+        }
+        result.append(")");
         return result.toString();
     }
 }

@@ -29,7 +29,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -45,11 +44,12 @@ public class MockCatalogReader
     //~ Instance fields --------------------------------------------------------
 
     protected final RelDataTypeFactory typeFactory;
-    private final HashMap<Vector<String>, MockTable> tables =
-        new HashMap<Vector<String>, MockTable>();
-    private final HashMap<String, MockSchema> schemas =
+    private final Map<List<String>, MockTable> tables =
+        new HashMap<List<String>, MockTable>();
+    protected final Map<String, MockSchema> schemas =
         new HashMap<String, MockSchema>();
     private final RelDataType addressType;
+    protected static final String defaultSchema = "SALES";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -159,7 +159,7 @@ public class MockCatalogReader
     {
         table.onRegister(typeFactory);
         tables.put(
-            convertToVector(table.getQualifiedName()),
+            Arrays.asList(table.getQualifiedName()),
             table);
     }
 
@@ -174,11 +174,9 @@ public class MockCatalogReader
             // assume table in SALES schema (the original default)
             // if it's not supplied, because SqlValidatorTest is effectively
             // using SALES as its default schema.
-            String [] qualifiedName = { "SALES", names[0] };
-            return tables.get(
-                convertToVector(qualifiedName));
+            return tables.get(Arrays.asList(defaultSchema, names[0]));
         } else if (names.length == 2) {
-            return tables.get(convertToVector(names));
+            return tables.get(Arrays.asList(names));
         }
         return null;
     }
@@ -195,57 +193,48 @@ public class MockCatalogReader
         }
     }
 
-    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
+    public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
     {
-        if (names.length == 1) {
-            // looking for both schema and object names
-            Collection<MockSchema> schemasColl = schemas.values();
-            Iterator<MockSchema> i = schemasColl.iterator();
-            ArrayList<SqlMonikerImpl> result = new ArrayList<SqlMonikerImpl>();
-            while (i.hasNext()) {
-                MockSchema schema = i.next();
+        switch (names.size()) {
+        case 0: {
+            // looking for schema names
+            List<SqlMoniker> result = new ArrayList<SqlMoniker>();
+            for (MockSchema schema : schemas.values()) {
                 result.add(
                     new SqlMonikerImpl(schema.name, SqlMonikerType.Schema));
-                for (String tableName : schema.tableNames) {
-                    result.add(
-                        new SqlMonikerImpl(
-                            tableName,
-                            SqlMonikerType.Table));
-                }
             }
-            return (SqlMoniker []) result.toArray(Util.emptySqlMonikerArray);
-        } else if (names.length == 2) {
-            // looking for table names under the schema
-            MockSchema schema = schemas.get(names[0]);
+            return result;
+        }
+        case 1: {
+            // looking for table names in the given schema
+            MockSchema schema = schemas.get(names.get(0));
             if (schema == null) {
-                return Util.emptySqlMonikerArray;
+                return Collections.emptyList();
             }
-            ArrayList<SqlMonikerImpl> result = new ArrayList<SqlMonikerImpl>();
+            List<SqlMoniker> result = new ArrayList<SqlMoniker>();
             for (String tableName : schema.tableNames) {
-                result.add(new SqlMonikerImpl(
+                result.add(
+                    new SqlMonikerImpl(
                         tableName,
                         SqlMonikerType.Table));
             }
-            return (SqlMoniker []) result.toArray(Util.emptySqlMonikerArray);
-        } else {
-            return Util.emptySqlMonikerArray;
+            return result;
+        }
+        default:
+            return Collections.emptyList();
         }
     }
 
-    private Vector<String> convertToVector(String [] names)
+    public String getSchemaName()
     {
-        Vector<String> v = new Vector<String>(names.length);
-        for (int i = 0; i < names.length; i++) {
-            v.addElement(names[i]);
-        }
-        return v;
+        return defaultSchema;
     }
 
     //~ Inner Classes ----------------------------------------------------------
 
     public static class MockSchema
     {
-        private final ArrayList<String> tableNames = new ArrayList<String>();
+        private final List<String> tableNames = new ArrayList<String>();
         private String name;
 
         public MockSchema(String name)
@@ -270,12 +259,6 @@ public class MockCatalogReader
             new ArrayList<RelDataType>();
         private RelDataType rowType;
         private final String [] names;
-
-        public MockTable(String name)
-        {
-            // default schema is SALES
-            this.names = new String[] { "SALES", name };
-        }
 
         public MockTable(MockSchema schema, String name)
         {

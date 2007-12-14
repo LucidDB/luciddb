@@ -90,18 +90,17 @@ public interface SqlValidatorScope
     /**
      * Collects the {@link SqlMoniker}s of all possible columns in this scope.
      *
-     * @param parentObjName if not null, used to resolve a namespace from which
-     * to query the column names
      * @param result an array list of strings to add the result to
      */
-    void findAllColumnNames(String parentObjName, List<SqlMoniker> result);
+    void findAllColumnNames(List<SqlMoniker> result);
 
     /**
-     * Collects the {@link SqlMoniker}s of all possible tables in this scope.
+     * Collects the {@link SqlMoniker}s of all table aliases (uses of tables
+     * in query FROM clauses) available in this scope.
      *
-     * @param result an array list of strings to add the result to
+     * @param result a list of monikers to add the result to
      */
-    void findAllTableNames(List<SqlMoniker> result);
+    void findAliases(List<SqlMoniker> result);
 
     /**
      * Converts an identifier into a fully-qualified identifier. For example,

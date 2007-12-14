@@ -4042,15 +4042,15 @@ public class SqlValidatorTest
             "sum(sal) over (order by deptno rows current row)",
             null);
         checkWinFuncExp(
-            "sum(sal) over ("
+            "sum(sal) over ^("
             + "order by deptno "
-            + "rows between unbounded preceding and unbounded following)",
-            null);
+            + "rows between unbounded preceding and unbounded following)^",
+            "UNBOUNDED FOLLOWING window not supported");
         checkWinFuncExp(
-            "sum(sal) over ("
+            "sum(sal) over ^("
             + "order by deptno "
-            + "rows between CURRENT ROW and unbounded following)",
-            null);
+            + "rows between CURRENT ROW and unbounded following)^",
+            "UNBOUNDED FOLLOWING window not supported");
         checkWinFuncExp(
             "sum(sal) over ("
             + "order by deptno "
@@ -4344,28 +4344,30 @@ public class SqlValidatorTest
 
     public void testWindowNegative()
     {
-        checkNegWindow("rows between 2 preceding and 4 preceding", true);
-        checkNegWindow("rows between 2 preceding and 3 preceding", true);
-        checkNegWindow("rows between 2 preceding and 2 preceding", false);
+        final String negSize = "Window has negative size";
+        checkNegWindow("rows between 2 preceding and 4 preceding", negSize);
+        checkNegWindow("rows between 2 preceding and 3 preceding", negSize);
+        checkNegWindow("rows between 2 preceding and 2 preceding", null);
         checkNegWindow(
             "rows between unbounded preceding and current row",
-            false);
+            null);
+        final String unboundedFollowing = "UNBOUNDED FOLLOWING window not supported";
         checkNegWindow(
             "rows between unbounded preceding and unbounded following",
-            false);
+            unboundedFollowing);
         checkNegWindow(
             "rows between current row and unbounded following",
-            false);
-        checkNegWindow("rows between current row and 2 following", false);
-        checkNegWindow("range between 2 preceding and 2 following", false);
-        checkNegWindow("range between 2 preceding and -2 preceding", false);
-        checkNegWindow("range between 4 following and 3 following", true);
-        checkNegWindow("range between 4 following and 5 following", false);
-        checkNegWindow("rows between 1 following and 0 following", true);
-        checkNegWindow("rows between 0 following and 0 following", false);
+            unboundedFollowing);
+        checkNegWindow("rows between current row and 2 following", null);
+        checkNegWindow("range between 2 preceding and 2 following", null);
+        checkNegWindow("range between 2 preceding and -2 preceding", null);
+        checkNegWindow("range between 4 following and 3 following", negSize);
+        checkNegWindow("range between 4 following and 5 following", null);
+        checkNegWindow("rows between 1 following and 0 following", negSize);
+        checkNegWindow("rows between 0 following and 0 following", null);
     }
 
-    private void checkNegWindow(String s, boolean fail)
+    private void checkNegWindow(String s, String msg)
     {
         String sql =
             "select sum(deptno) over ^(order by empno "
@@ -4373,7 +4375,7 @@ public class SqlValidatorTest
             + ")^ from emp";
         checkFails(
             sql,
-            fail ? "Window has negative size" : null);
+            msg);
     }
 
     public void testWindowPartial()
@@ -4996,7 +4998,7 @@ public class SqlValidatorTest
 
     public void testOrder()
     {
-        final SqlValidator.Compatible compatible = getCompatible();
+        final SqlConformance conformance = tester.getConformance();
         check("select empno as x from emp order by empno");
 
         // invalid use of 'asc'
@@ -5011,7 +5013,7 @@ public class SqlValidatorTest
             "select empno as x from emp order by empno",
 
             // in sql92, empno is obscured by the alias
-            compatible.isSortByAliasObscures() ? "unknown column empno" :
+            conformance.isSortByAliasObscures() ? "unknown column empno" :
             // otherwise valid
             null);
 
@@ -5019,7 +5021,7 @@ public class SqlValidatorTest
             "select empno as x from emp order by ^x^",
 
             // valid in oracle and pre-99 sql
-            compatible.isSortByAlias() ? null
+            conformance.isSortByAlias() ? null
             :
             // invalid in sql:2003
             "Column 'X' not found in any table");
@@ -5028,7 +5030,7 @@ public class SqlValidatorTest
             "select empno as x from emp order by ^10^",
 
             // invalid in oracle and pre-99
-            compatible.isSortByOrdinal() ? "Ordinal out of range" :
+            conformance.isSortByOrdinal() ? "Ordinal out of range" :
             // valid from sql:99 onwards (but sorting by constant achieves
             // nothing!)
             null);
@@ -5050,7 +5052,7 @@ public class SqlValidatorTest
             // Alias 'deptno' is closer in scope than 'emp.deptno'
             // and 'dept.deptno', and is therefore not ambiguous.
             // Checked Oracle10G -- it is valid.
-            compatible.isSortByAlias() ? null :
+            conformance.isSortByAlias() ? null :
             // Ambiguous in SQL:2003
             "col ambig");
 
@@ -5074,7 +5076,7 @@ public class SqlValidatorTest
             + "order by ^10^",
 
             // invalid in oracle and pre-99
-            compatible.isSortByOrdinal() ? "Ordinal out of range" : null);
+            conformance.isSortByOrdinal() ? "Ordinal out of range" : null);
 
         // Sort by scalar subquery
         check(
@@ -5140,7 +5142,7 @@ public class SqlValidatorTest
 
         // ordinal out of range -- if 'order by <ordinal>' means something in
         // this dialect
-        if (getCompatible().isSortByOrdinal()) {
+        if (tester.getConformance().isSortByOrdinal()) {
             checkFails(
                 "select empno, sal from emp "
                 + "union all "
@@ -5217,7 +5219,7 @@ public class SqlValidatorTest
             + "from emp "
             + "group by empno, deptno "
             + "order by empno * sum(sal + 2)",
-            getCompatible().isSortByAliasObscures() ? "xxxx" : null);
+            tester.getConformance().isSortByAliasObscures() ? "xxxx" : null);
     }
 
     public void testGroup()

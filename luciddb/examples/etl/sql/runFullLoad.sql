@@ -18,9 +18,9 @@ from
 where
     t.empno=e.empno and t.workday=c.calendar_date;
 
-analyze table employee_dimension compute statistics for all columns;
-analyze table calendar_dimension compute statistics for all columns;
-analyze table timesheet_fact compute statistics for all columns;
+analyze table employee_dimension estimate statistics for all columns;
+analyze table calendar_dimension estimate statistics for all columns;
+analyze table timesheet_fact estimate statistics for all columns;
 
 select count(*) from employee_dimension;
 

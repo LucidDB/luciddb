@@ -22,8 +22,6 @@
 */
 package net.sf.farrago.query;
 
-import java.math.*;
-
 import java.util.*;
 
 import net.sf.farrago.cwm.behavioral.*;
@@ -32,7 +30,6 @@ import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
-import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
@@ -65,14 +62,14 @@ public class FarragoSqlValidator
         SqlOperatorTable opTab,
         SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory,
-        Compatible compatible,
+        SqlConformance conformance,
         FarragoPreparingStmt preparingStmt)
     {
         super(
             opTab,
             catalogReader,
             typeFactory,
-            compatible);
+            conformance);
 
         this.preparingStmt = preparingStmt;
     }
@@ -83,13 +80,13 @@ public class FarragoSqlValidator
      */
     public FarragoSqlValidator(
         FarragoPreparingStmt preparingStmt,
-        Compatible compatible)
+        SqlConformance conformance)
     {
         super(
             preparingStmt.getSqlOperatorTable(),
             preparingStmt,
             preparingStmt.getFarragoTypeFactory(),
-            compatible);
+            conformance);
 
         this.preparingStmt = preparingStmt;
     }

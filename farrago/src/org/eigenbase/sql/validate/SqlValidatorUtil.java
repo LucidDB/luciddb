@@ -262,7 +262,7 @@ public class SqlValidatorUtil
             opTab,
             catalogReader,
             typeFactory,
-            SqlValidator.Compatible.Default);
+            SqlConformance.Default);
     }
 
     /**
@@ -304,6 +304,37 @@ public class SqlValidatorUtil
         }
         Util.permAssert(namespace != null, "post: namespace != null");
         return namespace;
+    }
+
+    public static void getSchemaObjectMonikers(
+        SqlValidatorCatalogReader catalogReader,
+        List<String> names,
+        List<SqlMoniker> hints)
+    {
+        // Assume that the last name is 'dummy' or similar.
+        List<String> subNames = names.subList(0, names.size() - 1);
+        hints.addAll(catalogReader.getAllSchemaObjectNames(subNames));
+
+        // If the name has length 0, try prepending the name of the default
+        // schema. So, the empty name would yield a list of tables in the
+        // default schema, as well as a list of schemas from the above code.
+        if (subNames.size() == 0) {
+            hints.addAll(
+                catalogReader.getAllSchemaObjectNames(
+                    Collections.singletonList(
+                        catalogReader.getSchemaName())));
+        }
+    }
+
+    public static SelectScope getEnclosingSelectScope(SqlValidatorScope scope)
+    {
+        while (scope instanceof DelegatingScope) {
+            if (scope instanceof SelectScope) {
+                return (SelectScope) scope;
+            }
+            scope = ((DelegatingScope) scope).getParent();
+        }
+        return null;
     }
 
     //~ Inner Classes ----------------------------------------------------------

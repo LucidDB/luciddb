@@ -21,13 +21,13 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.resgen.*;
-import org.eigenbase.resource.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.resgen.ResourceDefinition;
+import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -59,13 +59,9 @@ public class SqlValidatorFeatureTest
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Returns a tester. Derived classes should override this method to run the
-     * same set of tests in a different testing environment.
-     */
-    public Tester getTester()
+    public Tester getTester(SqlConformance conformance)
     {
-        return new FeatureTesterImpl();
+        return new FeatureTesterImpl(conformance);
     }
 
     public void testDistinct()
@@ -140,6 +136,11 @@ public class SqlValidatorFeatureTest
     private class FeatureTesterImpl
         extends TesterImpl
     {
+        private FeatureTesterImpl(SqlConformance conformance)
+        {
+            super(conformance);
+        }
+
         public SqlValidator getValidator()
         {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
@@ -147,7 +148,7 @@ public class SqlValidatorFeatureTest
                 SqlStdOperatorTable.instance(),
                 new MockCatalogReader(typeFactory),
                 typeFactory,
-                getCompatible());
+                getConformance());
         }
     }
 
@@ -158,9 +159,9 @@ public class SqlValidatorFeatureTest
             SqlOperatorTable opTab,
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory,
-            Compatible compatible)
+            SqlConformance conformance)
         {
-            super(opTab, catalogReader, typeFactory, compatible);
+            super(opTab, catalogReader, typeFactory, conformance);
         }
 
         protected void validateFeature(

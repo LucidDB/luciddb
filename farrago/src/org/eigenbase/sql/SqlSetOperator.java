@@ -99,7 +99,7 @@ public class SqlSetOperator
         SqlValidatorScope scope,
         SqlValidatorScope operandScope)
     {
-        validator.validateQuery(call);
+        validator.validateQuery(call, operandScope);
     }
 }
 

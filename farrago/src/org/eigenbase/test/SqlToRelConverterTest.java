@@ -175,7 +175,7 @@ public class SqlToRelConverterTest
     public void testOrderByOrdinalDesc()
     {
         // FRG-98
-        if (!tester.getCompatible().isSortByOrdinal()) {
+        if (!tester.getConformance().isSortByOrdinal()) {
             return;
         }
         check(
@@ -241,7 +241,7 @@ public class SqlToRelConverterTest
 
     public void testOrderByAliasOverrides()
     {
-        if (!tester.getCompatible().isSortByAlias()) {
+        if (!tester.getConformance().isSortByAlias()) {
             return;
         }
 
@@ -253,7 +253,7 @@ public class SqlToRelConverterTest
 
     public void testOrderByAliasDoesNotOverride()
     {
-        if (tester.getCompatible().isSortByAlias()) {
+        if (tester.getConformance().isSortByAlias()) {
             return;
         }
 
@@ -282,7 +282,7 @@ public class SqlToRelConverterTest
 
     public void testOrderUnionOrdinal()
     {
-        if (!tester.getCompatible().isSortByOrdinal()) {
+        if (!tester.getConformance().isSortByOrdinal()) {
             return;
         }
         check(

@@ -66,9 +66,16 @@ ${farrago.test.jvmargs}
     </not>
   </condition>
 
+  <condition property="luciddb.createTestHarness.sql" 
+    value="createTestHarness.sql" else="">
+    <not>
+      <istrue value="${release.gpl}"/>
+    </not>
+  </condition>
+
   <!-- filelist for luciddb init scripts -->
   <filelist dir="${luciddb.initsql.dir}" id="luciddb.filelist.initsql"
-    files="installApplib.sql createTestHarness.sql createDbaViews.sql ${luciddb.createForeignWrappers.sql}"/>
+    files="installApplib.sql ${luciddb.createTestHarness.sql} createDbaViews.sql ${luciddb.createForeignWrappers.sql}"/>
 
 
   <!-- Macro to run sql scripts/tests using LucidDbSqlTest -->

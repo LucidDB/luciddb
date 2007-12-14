@@ -22,18 +22,17 @@
 */
 package org.eigenbase.test;
 
-import java.nio.charset.*;
-
+import java.nio.charset.Charset;
 import java.util.regex.*;
 
 import junit.framework.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -76,8 +75,7 @@ public class SqlValidatorTestCase
 
     //~ Instance fields --------------------------------------------------------
 
-    protected final Tester tester = getTester();
-    private final SqlValidator.Compatible compatible;
+    protected final Tester tester;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -92,12 +90,11 @@ public class SqlValidatorTestCase
     public SqlValidatorTestCase(String name)
     {
         super(splitName(name));
-        SqlValidator.Compatible compatible = splitCompatible(name);
-        if (compatible == null) {
-            this.compatible = SqlValidator.Compatible.Default;
-        } else {
-            this.compatible = compatible;
+        SqlConformance conformance = splitConformance(name);
+        if (conformance == null) {
+            conformance = SqlConformance.Default;
         }
+        this.tester = getTester(conformance);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -112,29 +109,26 @@ public class SqlValidatorTestCase
         }
     }
 
-    private static SqlValidator.Compatible splitCompatible(String name)
+    private static SqlConformance splitConformance(String name)
     {
         int colon = name.indexOf(':');
         if (colon < 0) {
             return null;
         } else {
-            String compatibleName = name.substring(0, colon);
-            return SqlValidator.Compatible.valueOf(compatibleName);
+            String conformanceName = name.substring(0, colon);
+            return SqlConformance.valueOf(conformanceName);
         }
-    }
-
-    private String buildQuery(String expression)
-    {
-        return "values (" + expression + ")";
     }
 
     /**
      * Returns a tester. Derived classes should override this method to run the
      * same set of tests in a different testing environment.
+     *
+     * @param conformance Language version tests should check compatibility with
      */
-    public Tester getTester()
+    public Tester getTester(SqlConformance conformance)
     {
-        return new TesterImpl();
+        return new TesterImpl(conformance);
     }
 
     public void check(String sql)
@@ -145,7 +139,7 @@ public class SqlValidatorTestCase
     public void checkExp(String sql)
     {
         tester.assertExceptionIsThrown(
-            buildQuery(sql),
+            TesterImpl.buildQuery(sql),
             null);
     }
 
@@ -168,7 +162,7 @@ public class SqlValidatorTestCase
         String expected)
     {
         tester.assertExceptionIsThrown(
-            buildQuery(sql),
+            TesterImpl.buildQuery(sql),
             expected);
     }
 
@@ -189,7 +183,7 @@ public class SqlValidatorTestCase
         String expected)
     {
         checkColumnType(
-            buildQuery(sql),
+            TesterImpl.buildQuery(sql),
             expected);
     }
 
@@ -241,7 +235,7 @@ public class SqlValidatorTestCase
         String expected)
     {
         tester.checkIntervalConv(
-            buildQuery(sql),
+            TesterImpl.buildQuery(sql),
             expected);
     }
 
@@ -265,11 +259,6 @@ public class SqlValidatorTestCase
         SqlCollation.Coercibility expectedCoercibility)
     {
         tester.checkCollation(sql, expectedCollationName, expectedCoercibility);
-    }
-
-    protected SqlValidator.Compatible getCompatible()
-    {
-        return compatible;
     }
 
     /**
@@ -486,7 +475,7 @@ public class SqlValidatorTestCase
          * fail, and give an error location of (expectedLine, expectedColumn)
          * through (expectedEndLine, expectedEndColumn).
          *
-         * @param sql
+         * @param sql SQL statement
          * @param expectedMsgPattern If this parameter is null the query must be
          * valid for the test to pass; If this parameter is not null the query
          * must be malformed and the message given must match the pattern
@@ -571,6 +560,8 @@ public class SqlValidatorTestCase
          * @return Monotonicity
          */
         SqlMonotonicity getMonotonicity(String sql);
+
+        SqlConformance getConformance();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -583,15 +574,23 @@ public class SqlValidatorTestCase
      * {@link SqlOperatorTests}. It can parse and validate queries, but it does
      * not invoke Farrago, so it is very fast but cannot execute functions.
      */
-    public class TesterImpl
+    public static class TesterImpl
         implements Tester,
             SqlTester
     {
         protected final SqlOperatorTable opTab;
+        protected final SqlConformance conformance;
 
-        public TesterImpl()
+        public TesterImpl(SqlConformance conformance)
         {
-            opTab = createOperatorTable();
+            assert conformance != null;
+            this.conformance = conformance;
+            this.opTab = createOperatorTable();
+        }
+
+        public SqlConformance getConformance()
+        {
+            return conformance;
         }
 
         protected SqlOperatorTable createOperatorTable()
@@ -774,7 +773,7 @@ public class SqlValidatorTestCase
             String sql,
             Charset expectedCharset)
         {
-            RelDataType actualType = tester.getColumnType(buildQuery(sql));
+            RelDataType actualType = getColumnType(buildQuery(sql));
             Charset actualCharset = actualType.getCharset();
 
             if (!expectedCharset.equals(actualCharset)) {
@@ -905,7 +904,7 @@ public class SqlValidatorTestCase
             String query,
             String expectedRewrite)
         {
-            SqlNode rewrittenNode = tester.parseAndValidate(validator, query);
+            SqlNode rewrittenNode = parseAndValidate(validator, query);
             String actualRewrite =
                 rewrittenNode.toSqlString(SqlUtil.dummyDialect, false);
             TestUtil.assertEqualsVerbose(expectedRewrite, actualRewrite);
@@ -924,7 +923,7 @@ public class SqlValidatorTestCase
                 SqlNode n = parseAndValidate(validator, sql);
                 assertNotNull(n);
             } else {
-                SqlValidatorTestCase.this.checkFails(
+                assertExceptionIsThrown(
                     buildQuery(expression),
                     expectedError);
             }
@@ -938,6 +937,11 @@ public class SqlValidatorTestCase
             final SqlNode selectItem0 = select.getSelectList().get(0);
             final SqlValidatorScope scope = validator.getSelectScope(select);
             return selectItem0.getMonotonicity(scope);
+        }
+
+        private static String buildQuery(String expression)
+        {
+            return "values (" + expression + ")";
         }
     }
 }

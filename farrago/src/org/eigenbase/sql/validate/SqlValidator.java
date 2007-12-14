@@ -75,67 +75,13 @@ public interface SqlValidator
 {
     //~ Enums ------------------------------------------------------------------
 
-    /**
-     * Enumeration of valid SQL compatiblity modes.
-     *
-     * <p>TODO jvs 16-June-2006: Move this to top-level as enum SqlConformance.
-     */
-    public enum Compatible
-    {
-        Default, Strict92, Strict99, Pragmatic99, Oracle10g, Sql2003,
-        Pragmatic2003;
-
-        /**
-         * Whether 'order by 2' is interpreted to mean 'sort by the 2nd column
-         * in the select list'.
-         */
-        public boolean isSortByOrdinal()
-        {
-            switch (this) {
-            case Default:
-            case Oracle10g:
-            case Strict92:
-            case Pragmatic99:
-            case Pragmatic2003:
-                return true;
-            default:
-                return false;
-            }
-        }
-
-        /**
-         * Whether 'order by x' is interpreted to mean 'sort by the select list
-         * item whose alias is x' even if there is a column called x.
-         */
-        public boolean isSortByAlias()
-        {
-            switch (this) {
-            case Default:
-            case Oracle10g:
-            case Strict92:
-                return true;
-            default:
-                return false;
-            }
-        }
-
-        /**
-         * Whether "empno" is invalid in "select empno as x from emp order by
-         * empno" because the alias "x" obscures it.
-         */
-        public boolean isSortByAliasObscures()
-        {
-            return this == Compatible.Strict92;
-        }
-    }
-
     //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the dialect of SQL (SQL:2003, etc.) this validator recognizes.
-     * Default is {@link Compatible#Default}.
+     * Default is {@link SqlConformance#Default}.
      */
-    Compatible getCompatible();
+    SqlConformance getConformance();
 
     /**
      * Returns the catalog reader used by this validator.
@@ -176,13 +122,22 @@ public interface SqlValidator
         Map<String, RelDataType> nameToTypeMap);
 
     /**
-     * Checks that a query (<code>select</code> statement, or a set operation
-     * <code>union</code>, <code>intersect</code>, <code>except</code>) is
-     * valid.
+     * Checks that a query is valid.
      *
+     * <p>Valid queries include:
+     * <ul>
+     * <li><code>SELECT</code> statement,
+     * <li>set operation (<code>UNION</code>, <code>INTERSECT</code>,
+     *     <code>EXCEPT</code>)
+     * <li>identifier (e.g. representing use of a table in a FROM clause)
+     * <li>query aliased with the <code>AS</code> operator
+     * </ul>
+     *
+     * @param node Query node
+     * @param scope Scope in which the query occurs
      * @throws RuntimeException if the query is not valid
      */
-    void validateQuery(SqlNode node);
+    void validateQuery(SqlNode node, SqlValidatorScope scope);
 
     /**
      * Returns the type assigned to a node by validation.
@@ -600,6 +555,19 @@ public interface SqlValidator
      * @return Expanded expression
      */
     SqlNode expand(SqlNode expr, SqlValidatorScope scope);
+
+    /**
+     * @deprecated This class is for backwards-compatibility with
+     * the previous incarnation of SqlConformance.
+     */
+    public static class Compatible 
+    {
+        /**
+         * @deprecated This symbol is for backwards-compatibility with
+         * the previous incarnation of SqlConformance.
+         */
+        public static final SqlConformance Default = SqlConformance.Default;
+    }
 }
 
 // End SqlValidator.java
