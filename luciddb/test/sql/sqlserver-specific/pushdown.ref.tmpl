@@ -132,17 +132,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------+
-|                                     column0                                      |
-+----------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                        |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                      |
-|     IteratorToFennelConverter                                                    |
-|       ResultSetToFarragoIteratorConverter                                        |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"  |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                   |
-| WHERE "c_date" >= '2005-10-07 03:00:00'])                                        |
-+----------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GE], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- >
@@ -168,17 +168,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------+
-|                                     column0                                      |
-+----------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                        |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                      |
-|     IteratorToFennelConverter                                                    |
-|       ResultSetToFarragoIteratorConverter                                        |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"  |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                   |
-| WHERE "c_date" > '2005-10-07 03:00:00'])                                         |
-+----------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- <=
@@ -199,17 +199,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------+
-|                                     column0                                      |
-+----------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                        |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                      |
-|     IteratorToFennelConverter                                                    |
-|       ResultSetToFarragoIteratorConverter                                        |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"  |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                   |
-| WHERE "c_date" <= '2005-10-07 03:00:00'])                                        |
-+----------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_LE], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- <
@@ -230,17 +230,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------+
-|                                     column0                                      |
-+----------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                        |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                      |
-|     IteratorToFennelConverter                                                    |
-|       ResultSetToFarragoIteratorConverter                                        |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"  |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                   |
-| WHERE "c_date" < '2005-10-07 03:00:00'])                                         |
-+----------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- =
@@ -261,17 +261,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------+
-|                                     column0                                      |
-+----------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                        |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                      |
-|     IteratorToFennelConverter                                                    |
-|       ResultSetToFarragoIteratorConverter                                        |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"  |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                   |
-| WHERE "c_date" = '2005-10-07 03:00:00'])                                         |
-+----------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                 |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                               |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[2005-10-07 03:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) c_timestamp, TIMESTAMP(0) c_date, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" c_varchar) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                           |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                               |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- <>
@@ -297,17 +297,18 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------+
-|                                     column0                                      |
-+----------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                        |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                      |
-|     IteratorToFennelConverter                                                    |
-|       ResultSetToFarragoIteratorConverter                                        |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"  |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                   |
-| WHERE "c_date" <> '2005-10-07 03:00:00'])                                        |
-+----------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                column0                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                              |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                            |
+|     IteratorToFennelConverter                                                                                                          |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2005-10-07 03:00:00.0], expr#4=[<>($t1, $t3)], proj#0..2=[{exprs}], $condition=[$t4])  |
+|         ResultSetToFarragoIteratorConverter                                                                                            |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                      |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                       |
++----------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOT LIKE
 0: jdbc:luciddb:> select "c_varchar", "c_timestamp" from test.datatype where "c_varchar" NOT LIKE '%char-02%' order by 1,2;
@@ -384,17 +385,17 @@
 . . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------+
-|                                        column0                                         |
-+----------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                              |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                            |
-|     IteratorToFennelConverter                                                          |
-|       ResultSetToFarragoIteratorConverter                                              |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"        |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                         |
-| WHERE NOT ("c_date" >= '2005-08-23 03:00:00' AND "c_date" <= '2005-10-12 03:00:00')])  |
-+----------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                 column0                                                                                                                  |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                              |
+|     IteratorToFennelConverter                                                                                                                                                                                                            |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2005-08-23 03:00:00.0], expr#4=[>=($t1, $t3)], expr#5=[2005-10-12 03:00:00.0], expr#6=[<=($t1, $t5)], expr#7=[AND($t4, $t6)], expr#8=[NOT($t7)], proj#0..2=[{exprs}], $condition=[$t8])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                              |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                        |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                         |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- BETWEEN
@@ -424,17 +425,17 @@
 . . . . . . . . >     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------+
-|                                     column0                                      |
-+----------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                        |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                      |
-|     IteratorToFennelConverter                                                    |
-|       ResultSetToFarragoIteratorConverter                                        |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"  |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                   |
-| WHERE "c_date" >= '2005-08-23 03:00:00' AND "c_date" <= '2005-10-12 03:00:00'])  |
-+----------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                        column0                                                                                                        |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                             |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                           |
+|     IteratorToFennelConverter                                                                                                                                                                                         |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[2005-08-23 03:00:00.0], expr#4=[>=($t1, $t3)], expr#5=[2005-10-12 03:00:00.0], expr#6=[<=($t1, $t5)], expr#7=[AND($t4, $t6)], proj#0..2=[{exprs}], $condition=[$t7])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                           |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                     |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                      |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- NOT IN
@@ -571,17 +572,17 @@
 . . . . . . . . >   "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+----------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                         column0                                                                          |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                              |
-|     IteratorToFennelConverter                                                                                                                            |
-|       ResultSetToFarragoIteratorConverter                                                                                                                |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                          |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                           |
-| WHERE "c_varchar" IS NOT NULL AND ("c_date" >= '2005-10-01 00:00:00' AND "c_date" <= '2007-01-01 00:00:00' AND "c_timestamp" < '2006-10-31 12:12:12')])  |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                           column0                                                                                                                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                    |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                                                                  |
+|     IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                                |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], expr#4=[2005-10-01 00:00:00.0], expr#5=[>=($t1, $t4)], expr#6=[2007-01-01 00:00:00.0], expr#7=[<=($t1, $t6)], expr#8=[AND($t5, $t7)], expr#9=[2006-10-31 12:12:12.0], expr#10=[<($t0, $t9)], expr#11=[AND($t8, $t10)], expr#12=[AND($t3, $t11)], proj#0..2=[{exprs}], $condition=[$t12])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                                                                  |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                                                                            |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                                                                             |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- OR
 0: jdbc:luciddb:> select "c_timestamp", "c_date", "c_varchar" from test.datatype
@@ -612,17 +613,17 @@
 . . . . . . . . >   "c_timestamp" < TIMESTAMP'2006-10-31 12:12:12')
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                        column0                                                                         |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                              |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                            |
-|     IteratorToFennelConverter                                                                                                                          |
-|       ResultSetToFarragoIteratorConverter                                                                                                              |
-|         MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                        |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                         |
-| WHERE "c_varchar" IS NOT NULL OR ("c_date" >= '2005-10-01 00:00:00' AND "c_date" <= '2007-01-01 00:00:00' OR "c_timestamp" < '2006-10-31 12:12:12')])  |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                                          column0                                                                                                                                                                           |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                                                                  |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                                                                |
+|     IteratorToFennelConverter                                                                                                                                                                                                                                                                                                                              |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], expr#4=[2005-10-01 00:00:00.0], expr#5=[>=($t1, $t4)], expr#6=[2007-01-01 00:00:00.0], expr#7=[<=($t1, $t6)], expr#8=[AND($t5, $t7)], expr#9=[2006-10-31 12:12:12.0], expr#10=[<($t0, $t9)], expr#11=[OR($t8, $t10)], expr#12=[OR($t3, $t11)], proj#0..2=[{exprs}], $condition=[$t12])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                                                                |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                                                                                                                                                                                                                          |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                                                                                                                                                                           |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- not mapped
@@ -658,7 +659,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create or replace foreign table DATATYPE (
 . . . . . . . . >   "c_timestamp" timestamp,
-. . . . . . . . >   "c_date" date,
+. . . . . . . . >   "c_date" timestamp,
 . . . . . . . . >   "deleted_column" integer,
 . . . . . . . . >   "c_varchar" varchar(1024)
 . . . . . . . . > ) server SQL_SERVER_ALL_PUSHDOWN
@@ -696,43 +697,17 @@
 +-----------------+
 +-----------------+
 0: jdbc:luciddb:> explain plan for select "deleted_column" from test.datatype where"deleted_column" > 10 order by 1;
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                         column0                                                                         |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                               |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                   |
-|     IteratorToFennelConverter                                                                                                                           |
-|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[null], expr#4=[CAST($t3):INTEGER], expr#5=[CAST($t3):BOOLEAN], deleted_column=[$t4], $condition=[$t5])  |
-|         ResultSetToFarragoIteratorConverter                                                                                                             |
-|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                       |
-| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                        |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- date pushdown
-0: jdbc:luciddb:> select "c_date" from test.datatype where "c_date" >= DATE '2005-01-01' order by 1;
-+-------------+
-|   c_date    |
-+-------------+
-| 2005-10-12  |
-| 2005-10-12  |
-| 2005-10-12  |
-| 2005-10-12  |
-| 2005-10-12  |
-+-------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> explain plan for select "c_date" from test.datatype where "c_date" >= DATE '2005-01-01' order by 1;
-+-------------------------------------------------------------------------------------------+
-|                                          column0                                          |
-+-------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                 |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                     |
-|     FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(DATE c_date) NOT NULL])  |
-|       IteratorToFennelConverter                                                           |
-|         ResultSetToFarragoIteratorConverter                                               |
-|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"         |
-| FROM "BENCHMARK"."dbo"."TYPES"                                                            |
-| WHERE "c_date" >= '2005-01-01'])                                                          |
-+-------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                            column0                                                                             |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                      |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                          |
+|     IteratorToFennelConverter                                                                                                                                  |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[null], expr#4=[CAST($t3):INTEGER], expr#5=[10], expr#6=[>($t4, $t5)], deleted_column=[$t4], $condition=[$t6])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                                    |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date", "c_varchar"                                                                              |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- lenient = false
 0: jdbc:luciddb:> 

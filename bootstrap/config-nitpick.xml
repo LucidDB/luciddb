@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE cruisecontrol [
+
+<!ENTITY open_p4port     "perforce.eigenbase.org:1666">
+<!ENTITY open_p4client   "cruise.nitpick">
+<!ENTITY open_p4user     "guest">
+<!ENTITY open_root       "//open/dt/dev">
+<!ENTITY open_root_dev   "//open/dt/dev">
+<!ENTITY open_root_stable "//open/dt/stable">
+<!ENTITY open_propfile   "UNUSED">
+<!ENTITY open_default.build.home     "/home/cruise/work">
+<!ENTITY open_integration.build.home "/home/cruise/work/build">
+<!ENTITY open_integration.src.home "/home/cruise/work/src">
+<!ENTITY open_integration.src.default "/home/cruise/work/src/dev">
+
+<!ENTITY aspen_p4port    "perforce-office.kalucki.com:1666">
+<!ENTITY aspen_p4client  "cruise.nitpick">
+<!ENTITY aspen_p4user    "guest">
+<!ENTITY aspen_root_dev   "//depot/aspen">
+<!ENTITY aspen_root_stable "//depot/stable/aspen">
+
+<!ENTITY buildresultsbase "http://nitpick.kalucki.com:8083/cruisecontrol/buildresults">
+<!ENTITY mailhost         "mail.speakeasy.net">
+<!ENTITY reportsuccess    "always">
+<!ENTITY returnname       "Build Monkey">
+<!ENTITY returnaddress    "buildmonkey@kalucki.com">
+<!ENTITY skipusers        "true">
+<!ENTITY spamwhilebroken  "true">
+<!ENTITY subjectprefix    "ContInteg Nitpick: ">
+<!ENTITY failureaddress   "the.team@disruptivetech.com">
+<!ENTITY emailmapper      "/home/cruise/work/p4email.txt">
+
+<!ENTITY reportwhenfixed  "true">
+
+<!ENTITY scp_user         "cruise">
+<!ENTITY scp_host         "nitpick">
+<!ENTITY scp_filesep      "/">
+<!ENTITY scp_options      "-P 9023">
+<!ENTITY rsync_cmd        "rsync -az -e &quot;ssh -p 9023&quot; --delete-after">
+<!ENTITY rsync_dest       "cruise@nitpick:web/artifacts">
+
+<!ENTITY build_interval         "3600">
+<!ENTITY build_interval_aspen   "300">
+
+<!ENTITY ant              "ant/bin/ant">
+
+<!ENTITY configSuffix     "">
+
+<!ENTITY saffronProject SYSTEM "config-saffron.xml">
+<!ENTITY fennelProject SYSTEM "config-fennel.xml">
+<!ENTITY farragoProject SYSTEM "config-farrago.xml">
+<!ENTITY aspenProject SYSTEM "config-aspen.xml">
+
+]>
+
+<cruisecontrol>
+	&saffronProject; 
+	<!-- &fennelProject;  -->
+	<!-- &farragoProject; -->
+	&aspenProject;
+</cruisecontrol>
