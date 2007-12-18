@@ -33,9 +33,9 @@
 #include <boost/test/unit_test_suite.hpp>
 
 // FIXME jvs 12-Aug-2007:  This file had compilation errors on Windows
-// so I disabled it for now.
+// and 64-bit Linux so I disabled it on those platforms for now.
 #ifndef __MINGW32__
-
+#if __WORDSIZE != 64
 #include <assert.h>
 #include <stdio.h>
 #include <sysexits.h>
@@ -514,6 +514,7 @@ notably chelmsford - track via dtbug#1490 */
     return 0;
 }
 
+#endif
 #endif
 
 boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
