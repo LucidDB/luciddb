@@ -183,10 +183,22 @@ public class RelMdDistinctRowCount
         BitSet childKey = new BitSet();
         RelMdUtil.setAggChildKeys(groupKey, rel, childKey);
 
-        return RelMetadataQuery.getDistinctRowCount(
-            rel.getChild(),
-            childKey,
-            childPreds);
+        Double distinctRowCount =
+            RelMetadataQuery.getDistinctRowCount(
+                rel.getChild(),
+                childKey,
+                childPreds);
+        if (distinctRowCount == null) {
+            return null;
+        } else if (notPushable.isEmpty()) {
+            return distinctRowCount;
+        } else {
+            RexNode preds =
+                RexUtil.andRexNodeList(
+                    rel.getCluster().getRexBuilder(),
+                    notPushable);
+            return distinctRowCount * RelMdUtil.guessSelectivity(preds);
+        }
     }
 
     public Double getDistinctRowCount(
@@ -235,8 +247,15 @@ public class RelMdDistinctRowCount
                 rel.getChild(),
                 baseCols,
                 modifiedPred);
+        
         if (distinctRowCount == null) {
             return null;
+        } else if (!notPushable.isEmpty()) {
+            RexNode preds =
+                RexUtil.andRexNodeList(
+                    rel.getCluster().getRexBuilder(),
+                    notPushable);
+            distinctRowCount *= RelMdUtil.guessSelectivity(preds);
         }
         
         // No further computation required if the projection expressions
