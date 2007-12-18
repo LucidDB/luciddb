@@ -28,7 +28,7 @@
 <!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "ContInteg Chelmsford ">
-<!ENTITY failureaddress   "the.team@disruptivetech.com">
+<!ENTITY failureaddress   "build.monkey@sqlstream.com">
 <!ENTITY emailmapper      "/home/cruise/work/p4email.txt">
 
 <!ENTITY reportwhenfixed  "true">

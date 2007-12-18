@@ -20,7 +20,7 @@
 <!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "Continuous Integration: ">
-<!ENTITY failureaddress   "the.team@disruptivetech.com">
+<!ENTITY failureaddress   "build.monkey@sqlstream.com">
 <!ENTITY reportwhenfixed  "true">
 
 <!ENTITY scp_user         "aspen">
