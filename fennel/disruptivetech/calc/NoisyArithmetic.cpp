@@ -108,8 +108,13 @@ DO(short)
 DO(unsigned short)
 DO(int)
 DO(unsigned int)
+#if __WORDSIZE == 64
+DO(long int)
+DO(long unsigned int)
+#else
 DO(long long int)
 DO(long long unsigned int)
+#endif
 DO(float)
 DO(double)
 DO(long double)
