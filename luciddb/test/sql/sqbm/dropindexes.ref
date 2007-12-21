@@ -18,13 +18,12 @@
 . . . . . . . . > select count(*) from bench1M where K10 = 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel'
-'    FennelAggRel'
-'      IteratorToFennelConverter'
-'        IterCalcRel'
-'          FennelToIteratorConverter'
-'            LcsRowScanRel'
-'              FennelValuesRel'
+'  FennelAggRel'
+'    IteratorToFennelConverter'
+'      IterCalcRel'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K10 = 2
 . . . . . . . . > ;
@@ -37,13 +36,12 @@
 . . . . . . . . > select count(*) from bench1M where K10 = 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel'
-'    FennelAggRel'
-'      IteratorToFennelConverter'
-'        IterCalcRel'
-'          FennelToIteratorConverter'
-'            LcsRowScanRel'
-'              FennelValuesRel'
+'  FennelAggRel'
+'    IteratorToFennelConverter'
+'      IterCalcRel'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K10 = 2
 . . . . . . . . > ;
@@ -57,13 +55,12 @@
 . . . . . . . . > select count(*) from bench1M where K5 = 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel'
-'    FennelAggRel'
-'      IteratorToFennelConverter'
-'        IterCalcRel'
-'          FennelToIteratorConverter'
-'            LcsRowScanRel'
-'              FennelValuesRel'
+'  FennelAggRel'
+'    IteratorToFennelConverter'
+'      IterCalcRel'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K5 = 2
 . . . . . . . . > ;
@@ -76,13 +73,12 @@
 . . . . . . . . > select count(*) from bench1M where K5 = 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel'
-'    FennelAggRel'
-'      IteratorToFennelConverter'
-'        IterCalcRel'
-'          FennelToIteratorConverter'
-'            LcsRowScanRel'
-'              FennelValuesRel'
+'  FennelAggRel'
+'    IteratorToFennelConverter'
+'      IterCalcRel'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K5 = 2
 . . . . . . . . > ;
@@ -96,13 +92,12 @@
 . . . . . . . . > select count(*) from bench1M where K25 = 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel'
-'    FennelAggRel'
-'      IteratorToFennelConverter'
-'        IterCalcRel'
-'          FennelToIteratorConverter'
-'            LcsRowScanRel'
-'              FennelValuesRel'
+'  FennelAggRel'
+'    IteratorToFennelConverter'
+'      IterCalcRel'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K25 = 2
 . . . . . . . . > ;
@@ -115,13 +110,12 @@
 . . . . . . . . > select count(*) from bench1M where K25 = 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel'
-'    FennelAggRel'
-'      IteratorToFennelConverter'
-'        IterCalcRel'
-'          FennelToIteratorConverter'
-'            LcsRowScanRel'
-'              FennelValuesRel'
+'  FennelAggRel'
+'    IteratorToFennelConverter'
+'      IterCalcRel'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K25 = 2
 . . . . . . . . > ;
