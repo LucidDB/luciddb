@@ -487,12 +487,23 @@ public class MedJdbcDataServer
                     }),
                 "filter");
 
+        // case 4: only projection, no filter
+        MedJdbcPushDownRule r4 =
+            new MedJdbcPushDownRule(
+                new RelOptRuleOperand(
+                    ProjectRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(MedJdbcQueryRel.class, null)
+                    }),
+                "proj");
+
         // all pushdown rules
         ArrayList<MedJdbcPushDownRule> pushdownRuleList =
             new ArrayList<MedJdbcPushDownRule>();
         pushdownRuleList.add(r1);
         pushdownRuleList.add(r2);
         pushdownRuleList.add(r3);
+        pushdownRuleList.add(r4);
 
         // add the non-disabled pushdown rules
         for (MedJdbcPushDownRule rule : pushdownRuleList) {
