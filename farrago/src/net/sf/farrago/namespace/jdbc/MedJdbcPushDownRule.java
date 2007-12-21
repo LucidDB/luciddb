@@ -104,11 +104,7 @@ class MedJdbcPushDownRule
             ProjectRel newProj = pushProject.convertProject(null);
             if (newProj != null) {
                 topProj = (ProjectRel) newProj.getChild();
-                // put the original project on top,
-                // converting it to reference the modified projection list
-                int [] adjustments = pushProject.getAdjustments();
-                newTopProject =
-                    pushProject.createNewProject(topProj, adjustments);
+                newTopProject = newProj;
             } else {
                 // nothing to push down
                 projOnFilter = false;
@@ -125,11 +121,7 @@ class MedJdbcPushDownRule
                 ProjectRel newProj = pushProject.convertProject(null);
                 if (newProj != null) {
                     bottomProj = (ProjectRel) newProj.getChild();
-                    // put the original project on top,
-                    // converting it to reference the modified projection list
-                    int [] adjustments = pushProject.getAdjustments();
-                    newTopProject = pushProject.createNewProject(
-                        (ProjectRel) newProj.getChild(), adjustments);
+                    newTopProject = newProj;
                 } else {
                     // only projection, nothing to push down
                     // could be second firing of this rule
