@@ -112,8 +112,7 @@ public class VolcanoPlannerTraitTest
         RelNode convertedRel =
             planner.changeTraits(
                 noneRel,
-                new RelTraitSet(
-                    new RelTrait[] { CallingConvention.ITERATOR, ALT_TRAIT2 }));
+                new RelTraitSet(CallingConvention.ITERATOR, ALT_TRAIT2));
 
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
@@ -168,7 +167,7 @@ public class VolcanoPlannerTraitTest
             planner.changeTraits(
                 noneRel,
                 new RelTraitSet(
-                    new RelTrait[] { CallingConvention.ITERATOR, ALT_TRAIT2 }));
+                    CallingConvention.ITERATOR, ALT_TRAIT2));
 
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
@@ -249,8 +248,8 @@ public class VolcanoPlannerTraitTest
     private static class AltTraitDef
         extends RelTraitDef
     {
-        private MultiMap<RelTrait, Object[]> conversionMap =
-            new MultiMap<RelTrait, Object[]>();
+        private MultiMap<RelTrait, Pair<RelTrait, ConverterRule>> conversionMap =
+            new MultiMap<RelTrait, Pair<RelTrait, ConverterRule>>();
 
         public Class getTraitClass()
         {
@@ -271,9 +270,11 @@ public class VolcanoPlannerTraitTest
             RelTrait fromTrait = rel.getTraits().getTrait(this);
 
             if (conversionMap.containsKey(fromTrait)) {
-                for (Object [] traitAndRule : conversionMap.getMulti(fromTrait)) {
-                    RelTrait trait = (RelTrait) traitAndRule[0];
-                    ConverterRule rule = (ConverterRule) traitAndRule[1];
+                for (Pair<RelTrait, ConverterRule> traitAndRule
+                    : conversionMap.getMulti(fromTrait))
+                {
+                    RelTrait trait = traitAndRule.left;
+                    ConverterRule rule = traitAndRule.right;
 
                     if (trait == toTrait) {
                         RelNode converted = rule.convert(rel);
@@ -296,8 +297,10 @@ public class VolcanoPlannerTraitTest
             RelTrait toTrait)
         {
             if (conversionMap.containsKey(fromTrait)) {
-                for (Object [] traitAndRule : conversionMap.getMulti(fromTrait)) {
-                    if (traitAndRule[0] == toTrait) {
+                for (Pair<RelTrait, ConverterRule> traitAndRule
+                    : conversionMap.getMulti(fromTrait))
+                {
+                    if (traitAndRule.left == toTrait) {
                         return true;
                     }
                 }
@@ -314,12 +317,12 @@ public class VolcanoPlannerTraitTest
                 return;
             }
 
-            RelTrait fromTrait = converterRule.getInTraits().getTrait(this);
-            RelTrait toTrait = converterRule.getOutTraits().getTrait(this);
+            RelTrait fromTrait = converterRule.getInTrait();
+            RelTrait toTrait = converterRule.getOutTrait();
 
             conversionMap.putMulti(
                 fromTrait,
-                new Object[] { toTrait, converterRule });
+                new Pair<RelTrait, ConverterRule>(toTrait, converterRule));
         }
     }
 
@@ -533,6 +536,11 @@ public class VolcanoPlannerTraitTest
             return CallingConvention.ITERATOR;
         }
 
+        public RelTrait getOutTrait()
+        {
+            return getOutConvention();
+        }
+
         // implement RelOptRule
         public void onMatch(RelOptRuleCall call)
         {
@@ -541,7 +549,7 @@ public class VolcanoPlannerTraitTest
             RelNode converted =
                 mergeTraitsAndConvert(
                     rel.getTraits(),
-                    getOutTraits(),
+                    getOutTrait(),
                     rel.getInput(0));
 
             call.transformTo(new IterSingleRel(
@@ -564,6 +572,11 @@ public class VolcanoPlannerTraitTest
             return CallingConvention.ITERATOR;
         }
 
+        public RelTrait getOutTrait()
+        {
+            return getOutConvention();
+        }
+
         // implement RelOptRule
         public void onMatch(RelOptRuleCall call)
         {
@@ -572,7 +585,7 @@ public class VolcanoPlannerTraitTest
             RelNode converted =
                 mergeTraitsAndConvert(
                     rel.getTraits(),
-                    getOutTraits(),
+                    getOutTrait(),
                     rel.getInput(0));
 
             IterSingleRel child =
@@ -598,8 +611,8 @@ public class VolcanoPlannerTraitTest
         {
             super(
                 RelNode.class,
-                new RelTraitSet(new RelTrait[] { null, fromTrait }),
-                new RelTraitSet(new RelTrait[] { null, toTrait }),
+                fromTrait,
+                toTrait,
                 description);
 
             this.toTrait = toTrait;

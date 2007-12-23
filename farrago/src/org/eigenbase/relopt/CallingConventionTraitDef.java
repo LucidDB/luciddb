@@ -96,10 +96,8 @@ public class CallingConventionTraitDef
 
             final Graph.Arc arc =
                 conversionGraph.createArc(
-                    (CallingConvention) converterRule.getInTraits().getTrait(
-                        this),
-                    (CallingConvention) converterRule.getOutTraits().getTrait(
-                        this));
+                    (CallingConvention) converterRule.getInTrait(),
+                    (CallingConvention) converterRule.getOutTrait());
 
             mapArcToConverterRule.putMulti(arc, converterRule);
         }
@@ -119,10 +117,8 @@ public class CallingConventionTraitDef
 
             final Graph.Arc arc =
                 conversionGraph.deleteArc(
-                    (CallingConvention) converterRule.getInTraits().getTrait(
-                        this),
-                    (CallingConvention) converterRule.getOutTraits().getTrait(
-                        this));
+                    (CallingConvention) converterRule.getInTrait(),
+                    (CallingConvention) converterRule.getOutTrait());
             assert arc != null;
 
             mapArcToConverterRule.removeMulti(arc, converterRule);
@@ -197,8 +193,8 @@ loop:
             converterRuleIter.hasNext();)
         {
             ConverterRule converterRule = converterRuleIter.next();
-            assert (converterRule.getInTraits().getTrait(this) == arc.from);
-            assert (converterRule.getOutTraits().getTrait(this) == arc.to);
+            assert (converterRule.getInTrait() == arc.from);
+            assert (converterRule.getOutTrait() == arc.to);
             RelNode converted = converterRule.convert(rel);
             if (converted != null) {
                 return converted;

@@ -56,48 +56,45 @@ public class RelOptRuleOperand
     public int [] solveOrder;
     public int ordinalInParent;
     public int ordinalInRule;
-    private final RelTraitSet traits;
+    private final RelTrait trait;
     private final Class clazz;
     private final RelOptRuleOperand [] children;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates an operand which matches any {@link CallingConvention}.
+     * Creates an operand.
      *
-     * @pre clazz != null
+     * @param clazz Class of relational expression to match (must not be null)
+     *
+     * @param children Child operands; or null, meaning match any number of
+     * children
      */
     public RelOptRuleOperand(
         Class clazz,
         RelOptRuleOperand [] children)
     {
-        this(clazz, (RelTraitSet) null, children);
+        this(clazz, null, children);
     }
 
     /**
-     * Creates an operand which matches any {@link CallingConvention}.
+     * Creates an operand which matches a given trait.
      *
-     * @pre clazz != null
+     * @param clazz Class of relational expression to match (must not be null)
+     *
+     * @param trait Trait to match, or null to match any trait
+     *
+     * @param children Child operands; or null, meaning match any number of
+     * children
      */
     public RelOptRuleOperand(
         Class clazz,
-        CallingConvention convention,
-        RelOptRuleOperand [] children)
-    {
-        this(
-            clazz,
-            new RelTraitSet(convention),
-            children);
-    }
-
-    public RelOptRuleOperand(
-        Class clazz,
-        RelTraitSet traits,
+        RelTrait trait,
         RelOptRuleOperand [] children)
     {
         assert (clazz != null);
         this.clazz = clazz;
-        this.traits = traits;
+        this.trait = trait;
         this.children = children;
         if (children != null) {
             for (int i = 0; i < this.children.length; i++) {
@@ -133,7 +130,7 @@ public class RelOptRuleOperand
         int h = clazz.hashCode();
         h = Util.hash(
             h,
-            traits.hashCode());
+            trait.hashCode());
         h = Util.hashArray(h, children);
         return h;
     }
@@ -146,8 +143,8 @@ public class RelOptRuleOperand
         RelOptRuleOperand that = (RelOptRuleOperand) obj;
 
         boolean equalTraits =
-            (this.traits != null) ? this.traits.equals(that.traits)
-            : (that.traits == null);
+            (this.trait != null) ? this.trait.equals(that.trait)
+            : (that.trait == null);
 
         return (this.clazz == that.clazz)
             && equalTraits
@@ -162,6 +159,11 @@ public class RelOptRuleOperand
         return clazz;
     }
 
+    /**
+     * Returns the child operands.
+     *
+     * @return child operands
+     */
     public RelOptRuleOperand [] getChildOperands()
     {
         return children;
@@ -176,7 +178,7 @@ public class RelOptRuleOperand
         if (!clazz.isInstance(rel)) {
             return false;
         }
-        if ((traits != null) && !rel.getTraits().matches(traits)) {
+        if ((trait != null) && !rel.getTraits().contains(trait)) {
             return false;
         }
         return true;
