@@ -1154,7 +1154,7 @@ public abstract class SqlTypeStrategies
                 return opBinding.getTypeFactory().createMultisetType(
                     opBinding.getTypeFactory().createStructType(
                         new RelDataType[] { componentType },
-                        new String[] { "EXPR$0" }),
+                        new String[] { SqlUtil.deriveAliasFromOrdinal(0) }),
                     -1);
             }
         };

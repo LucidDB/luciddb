@@ -69,6 +69,24 @@ public class SqlToRelConverterTest
             "${plan}");
     }
 
+    public void testAliasList()
+    {
+        check("select a + b from (\n" +
+            "  select deptno, 1 as one, name from dept\n" +
+            ") as d(a, b, c)\n" +
+            "where c like 'X%'",
+            "${plan}");
+    }
+
+    public void testAliasList2()
+    {
+        check("select * from (\n" +
+            "  select a, b, c from (values (1, 2, 3)) as t (c, b, a)\n" +
+            ") join dept on dept.deptno = c\n" +
+            "order by c + a",
+            "${plan}");
+    }
+
     public void testJoinOn()
     {
         check("SELECT * FROM emp JOIN dept on emp.deptno = dept.deptno", "${plan}");

@@ -25,7 +25,6 @@ import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.Pair;
 
 
@@ -40,6 +39,19 @@ import org.eigenbase.util.Pair;
  * namespace contains the constituent columns) and a subquery (the namespace
  * contains the columns in the SELECT clause of the subquery).
  *
+ * <p>These various kinds of namespace are implemented by classes
+ * {@link IdentifierNamespace} for table names,
+ * {@link SelectNamespace} for SELECT queries, {@link SetopNamespace} for
+ * UNION, EXCEPT and INTERSECT, and so forth.
+ * But if you are looking at a SELECT query and call
+ * {@link SqlValidator#getNamespace(org.eigenbase.sql.SqlNode)}, you may not
+ * get a SelectNamespace. Why? Because the validator is allowed to wrap
+ * namespaces in other objects which implement {@link SqlValidatorNamespace}.
+ * Your SelectNamespace will be there somewhere, but might be one or two levels
+ * deep. Don't try to cast the namespace or use <code>instanceof</code>; use
+ * {@link SqlValidatorNamespace#unwrap(Class)} and
+ * {@link SqlValidatorNamespace#isWrapperFor(Class)} instead.</p>
+ *
  * @author jhyde
  * @version $Id$
  * @see SqlValidator
@@ -49,6 +61,13 @@ import org.eigenbase.util.Pair;
 public interface SqlValidatorNamespace
 {
     //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Returns the validator.
+     *
+     * @return validator
+     */
+    SqlValidator getValidator();
 
     /**
      * Returns the underlying table, or null if there is none.
@@ -86,24 +105,32 @@ public interface SqlValidatorNamespace
      */
     void validate();
 
+    /**
+     * Returns the parse tree node at the root of this namespace.
+     *
+     * @return parse tree node
+     */
     SqlNode getNode();
 
-    SqlValidatorNamespace lookupChild(
-        String name,
-        SqlValidatorScope [] ancestorOut,
-        int [] offsetOut);
+    /**
+     * Looks up a child namespace of a given name.
+     *
+     * <p>For example, in the query <code>select e.name from emps as e</code>,
+     * <code>e</code> is an {@link IdentifierNamespace} which has a child
+     * <code>name</code> which is a {@link FieldNamespace}.
+     *
+     * @param name Name of namespace
+     * @return Namespace
+     */
+    SqlValidatorNamespace lookupChild(String name);
 
+    /**
+     * Returns whether this namespace has a field of a given name.
+     *
+     * @param name Field name
+     * @return Whether field exists
+     */
     boolean fieldExists(String name);
-
-    /**
-     * Returns the object containing implementation-specific information.
-     */
-    Object getExtra();
-
-    /**
-     * Saves an object containing implementation-specific information.
-     */
-    void setExtra(Object o);
 
     /**
      * Returns a list of expressions which are monotonic in this namespace. For
@@ -123,6 +150,32 @@ public interface SqlValidatorNamespace
      * the outer side of an outer join.
      */
     void makeNullable();
+
+    /**
+     * Translates a field name to the name in the underlying namespace.
+     */
+    String translate(String name);
+
+    /**
+     * Returns this namespace, or a wrapped namespace, cast to a particular
+     * class.
+     *
+     * @param clazz Desired type
+     *
+     * @return This namespace cast to desired type
+     *
+     * @throws ClassCastException if no such interface is available
+     */
+    <T> T unwrap(Class<T> clazz);
+
+    /**
+     * Returns whether this namespace implements a given interface, or wraps
+     * a class which does.
+     *
+     * @param clazz Interface
+     * @return Whether namespace implements given interface
+     */
+    boolean isWrapperFor(Class<?> clazz);
 }
 
 // End SqlValidatorNamespace.java

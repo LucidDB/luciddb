@@ -54,7 +54,6 @@ abstract class AbstractNamespace
      * column. Set on validate.
      */
     protected RelDataType rowType;
-    private Object extra;
 
     private boolean forceNullable;
 
@@ -70,7 +69,12 @@ abstract class AbstractNamespace
 
     //~ Methods ----------------------------------------------------------------
 
-    public void validate()
+    public SqlValidator getValidator()
+    {
+        return validator;
+    }
+
+    public final void validate()
     {
         switch (status) {
         case Unvalidated:
@@ -140,16 +144,12 @@ abstract class AbstractNamespace
         return null;
     }
 
-    public SqlValidatorNamespace lookupChild(
-        String name,
-        SqlValidatorScope [] ancestorOut,
-        int [] offsetOut)
+    public SqlValidatorNamespace lookupChild(String name)
     {
         return validator.lookupFieldNamespace(
             getRowType(),
-            name,
-            ancestorOut,
-            offsetOut);
+            name
+        );
     }
 
     public boolean fieldExists(String name)
@@ -158,16 +158,6 @@ abstract class AbstractNamespace
         final RelDataType dataType =
             SqlValidatorUtil.lookupFieldType(rowType, name);
         return dataType != null;
-    }
-
-    public Object getExtra()
-    {
-        return extra;
-    }
-
-    public void setExtra(Object o)
-    {
-        this.extra = o;
     }
 
     public List<Pair<SqlNode, SqlMonotonicity>> getMonotonicExprs()
@@ -183,6 +173,21 @@ abstract class AbstractNamespace
     public void makeNullable()
     {
         forceNullable = true;
+    }
+
+    public String translate(String name)
+    {
+        return name;
+    }
+
+    public <T> T unwrap(Class<T> clazz)
+    {
+        return clazz.cast(this);
+    }
+
+    public boolean isWrapperFor(Class<?> clazz)
+    {
+        return clazz.isInstance(this);
     }
 }
 

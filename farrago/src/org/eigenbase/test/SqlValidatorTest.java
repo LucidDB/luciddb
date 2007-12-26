@@ -4557,6 +4557,21 @@ public class SqlValidatorTest
             "Unknown identifier 'EMPNO'");
     }
 
+    public void testAsColumnList()
+    {
+        check("select d.a, b from dept as d(a, b)");
+        checkFails("select d.^deptno^ from dept as d(a, b)",
+            "(?s).*Column 'DEPTNO' not found in table 'D'.*");
+        checkFails("select 1 from dept as d(^a^, b, c)",
+            "(?s).*List of column aliases must have same degree as table; " +
+                "table has 2 columns \\('DEPTNO', 'NAME'\\), " +
+                "whereas alias list has 3 columns.*");
+        checkResultType("select * from dept as d(a, b)",
+            "RecordType(INTEGER NOT NULL A, VARCHAR(10) NOT NULL B) NOT NULL");
+        checkResultType("select * from (values ('a', 1), ('bc', 2)) t (a, b)",
+            "RecordType(CHAR(2) NOT NULL A, INTEGER NOT NULL B) NOT NULL");
+    }
+
     // todo: implement IN
     public void _testAmbiguousColumnInIn()
     {

@@ -267,6 +267,14 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Table or column alias must be a simple identifier</text>
 </exception>
 
+<exception id="120285" name="AliasListDegree" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>List of column aliases must have same degree as table; table has {0,number,#} columns {1}, whereas alias list has {2,number,#} columns</text>
+</exception>
+
+<exception id="120287" name="AliasListDuplicate" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Duplicate name ''{0}'' in column alias list</text>
+</exception>
+
 <exception id="120290" name="JoinRequiresCondition" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>INNER, LEFT, RIGHT or FULL join requires a condition (NATURAL keyword or ON or USING clause)</text>
 </exception>

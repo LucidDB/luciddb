@@ -129,7 +129,7 @@ public class SqlStdOperatorTable
      * <code>AS</code> operator associates an expression in the SELECT clause
      * with an alias.
      */
-    public static final SqlBinaryOperator asOperator = new SqlAsOperator();
+    public static final SqlAsOperator asOperator = new SqlAsOperator();
 
     /**
      * String concatenation operator, '<code>||</code>'.

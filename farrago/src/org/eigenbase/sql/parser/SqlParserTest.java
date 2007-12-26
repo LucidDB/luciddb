@@ -2403,6 +2403,37 @@ public class SqlParserTest
             "(?s).*Encountered \"over\".*");
     }
 
+    public void testAsAliases()
+    {
+        check("select x from t as t1 (a, b) where foo",
+            TestUtil.fold("SELECT `X`\n"
+                + "FROM `T` AS `T1` (`A`, `B`)\n"
+                + "WHERE `FOO`"));
+
+        check("select x from (values (1, 2), (3, 4)) as t1 (\"a\", b) where \"a\" > b",
+            TestUtil.fold("SELECT `X`\n"
+                + "FROM (VALUES (ROW(1, 2)), (ROW(3, 4))) AS `T1` (`a`, `B`)\n"
+                + "WHERE (`a` > `B`)"));
+
+        // must have at least one column
+        checkFails("select x from (values (1, 2), (3, 4)) as t1 (^)",
+            TestUtil.fold("(?s).*Was expecting one of:\n" +
+                "    <IDENTIFIER> ...\n" +
+                "    <QUOTED_IDENTIFIER>.*"));
+
+        // cannot have expressions
+        checkFails("select x from t as t1 (x ^+^ y)",
+            TestUtil.fold("(?s).*Was expecting one of:\n" +
+                "    \"\\)\" \\.\\.\\.\n" +
+                "    \",\" \\.\\.\\..*"));
+
+        // cannot have compound identifiers
+        checkFails("select x from t as t1 (x^.^y)",
+            TestUtil.fold("(?s).*Was expecting one of:\n" +
+                "    \"\\)\" \\.\\.\\.\n" +
+                "    \",\" \\.\\.\\..*"));
+    }
+
     public void testOver()
     {
         checkExp("sum(sal) over ()",
