@@ -63,9 +63,9 @@ public class SqlValidatorUtil
         String datasetName,
         boolean [] usedDataset)
     {
-        if (namespace instanceof IdentifierNamespace) {
+        if (namespace.isWrapperFor(IdentifierNamespace.class)) {
             IdentifierNamespace identifierNamespace =
-                (IdentifierNamespace) namespace;
+                namespace.unwrap(IdentifierNamespace.class);
             final String [] names = identifierNamespace.getId().names;
             if ((datasetName != null)
                 && (schema instanceof RelOptSchemaWithSampling))
@@ -299,7 +299,7 @@ public class SqlValidatorUtil
             if (i == 0) {
                 namespace = scope.resolve(name, null, null);
             } else {
-                namespace = namespace.lookupChild(name, null, null);
+                namespace = namespace.lookupChild(name);
             }
         }
         Util.permAssert(namespace != null, "post: namespace != null");

@@ -81,6 +81,11 @@ public class MockRelOptCost
         return this;
     }
 
+    public double divideBy(RelOptCost cost)
+    {
+        return 1;
+    }
+
     public RelOptCost plus(RelOptCost cost)
     {
         return this;

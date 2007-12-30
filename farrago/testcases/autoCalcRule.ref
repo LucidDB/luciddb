@@ -99,7 +99,7 @@
 | FennelToIteratorConverter                                                                                                                                              |
 |   FennelCalcRel(expr#0..12=[{inputs}], expr#13=[CPLUS($t12, $t10)], expr#14=[=($t13, $t11)], proj#0..9=[{exprs}], $condition=[$t14])                                   |
 |     IteratorToFennelConverter                                                                                                                                          |
-|       IterCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[2], expr#12=[100], expr#13=[JPLUS($t2, $t10)], proj#0..9=[{exprs}], $11=[$t11], $12=[$t12], $12=[$t13])  |
+|       IterCalcRel(expr#0..9=[{inputs}], expr#10=[1], expr#11=[2], expr#12=[100], expr#13=[JPLUS($t2, $t10)], proj#0..9=[{exprs}], $10=[$t11], $11=[$t12], $12=[$t13])  |
 |         FennelToIteratorConverter                                                                                                                                      |
 |           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])                   |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------+

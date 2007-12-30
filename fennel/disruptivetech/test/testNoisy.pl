@@ -134,34 +134,34 @@ sub do_type
 		$mid = int($max / 2);
 		$hange = int($range / 2);
 
-		d_type( $type, $min, $min+$range, $min, $min+range );
-		d_type( $type, $min, $min+$range, -$mid-$hange, -$mid+hange );
-		d_type( $type, $min, $min+$range, 0-$hange, 0+hange );
-		d_type( $type, $min, $min+$range, $mid-$hange, $mid+hange );
+		d_type( $type, $min, $min+$range, $min, $min+$range );
+		d_type( $type, $min, $min+$range, -$mid-$hange, -$mid+$hange );
+		d_type( $type, $min, $min+$range, 0-$hange, 0+$hange );
+		d_type( $type, $min, $min+$range, $mid-$hange, $mid+$hange );
 		d_type( $type, $min, $min+$range, $max-$range, $max );
 
-		d_type( $type, -$mid-$hange, -$mid+$hange, $min, $min+range );
-		d_type( $type, -$mid-$hange, -$mid+$hange, -$mid-$hange, -$mid+hange );
-		d_type( $type, -$mid-$hange, -$mid+$hange, 0-$hange, 0+hange );
-		d_type( $type, -$mid-$hange, -$mid+$hange, $mid-$hange, $mid+hange );
+		d_type( $type, -$mid-$hange, -$mid+$hange, $min, $min+$range );
+		d_type( $type, -$mid-$hange, -$mid+$hange, -$mid-$hange, -$mid+$hange );
+		d_type( $type, -$mid-$hange, -$mid+$hange, 0-$hange, 0+$hange );
+		d_type( $type, -$mid-$hange, -$mid+$hange, $mid-$hange, $mid+$hange );
 		d_type( $type, -$mid-$hange, -$mid+$hange, $max-$range, $max );
 
-		d_type( $type, 0-$hange, 0+$hange, $min, $min+range );
-		d_type( $type, 0-$hange, 0+$hange, -$mid-$hange, -$mid+hange );
-		d_type( $type, 0-$hange, 0+$hange, 0-$hange, 0+hange );
-		d_type( $type, 0-$hange, 0+$hange, $mid-$hange, $mid+hange );
+		d_type( $type, 0-$hange, 0+$hange, $min, $min+$range );
+		d_type( $type, 0-$hange, 0+$hange, -$mid-$hange, -$mid+$hange );
+		d_type( $type, 0-$hange, 0+$hange, 0-$hange, 0+$hange );
+		d_type( $type, 0-$hange, 0+$hange, $mid-$hange, $mid+$hange );
 		d_type( $type, 0-$hange, 0+$hange, $max-$range, $max );
 
-		d_type( $type, $mid-$hange, $mid+$hange, $min, $min+range );
-		d_type( $type, $mid-$hange, $mid+$hange, -$mid-$hange, -$mid+hange );
-		d_type( $type, $mid-$hange, $mid+$hange, 0-$hange, 0+hange );
-		d_type( $type, $mid-$hange, $mid+$hange, $mid-$hange, $mid+hange );
+		d_type( $type, $mid-$hange, $mid+$hange, $min, $min+$range );
+		d_type( $type, $mid-$hange, $mid+$hange, -$mid-$hange, -$mid+$hange );
+		d_type( $type, $mid-$hange, $mid+$hange, 0-$hange, 0+$hange );
+		d_type( $type, $mid-$hange, $mid+$hange, $mid-$hange, $mid+$hange );
 		d_type( $type, $mid-$hange, $mid+$hange, $max-$range, $max );
 
-		d_type( $type, $max-$range, $max, $min, $min+range );
-		d_type( $type, $max-$range, $max -$mid-$hange, -$mid+hange );
-		d_type( $type, $max-$range, $max, 0-$hange, 0+hange );
-		d_type( $type, $max-$range, $max, $mid-$hange, $mid+hange );
+		d_type( $type, $max-$range, $max, $min, $min+$range );
+		d_type( $type, $max-$range, $max -$mid-$hange, -$mid+$hange );
+		d_type( $type, $max-$range, $max, 0-$hange, 0+$hange );
+		d_type( $type, $max-$range, $max, $mid-$hange, $mid+$hange );
 		d_type( $type, $max-$range, $max, $max-$range, $max );
 
 		}
@@ -170,16 +170,16 @@ sub do_type
 		$mid = int($max / 2);
 		$hange = int($range / 2);
 
-		d_type( $type, $min, $min+$range, $min, $min+range );
-		d_type( $type, $min, $min+$range, $mid-$hange, $mid+hange );
+		d_type( $type, $min, $min+$range, $min, $min+$range );
+		d_type( $type, $min, $min+$range, $mid-$hange, $mid+$hange );
 		d_type( $type, $min, $min+$range, $max-$range, $max );
 
-		d_type( $type, $mid-$hange, $mid+$hange, $min, $min+range );
-		d_type( $type, $mid-$hange, $mid+$hange, $mid-$hange, $mid+hange );
+		d_type( $type, $mid-$hange, $mid+$hange, $min, $min+$range );
+		d_type( $type, $mid-$hange, $mid+$hange, $mid-$hange, $mid+$hange );
 		d_type( $type, $mid-$hange, $mid+$hange, $max-$range, $max );
 
-		d_type( $type, $max-$range, $max, $min, $min+range );
-		d_type( $type, $max-$range, $max, $mid-$hange, $mid+hange );
+		d_type( $type, $max-$range, $max, $min, $min+$range );
+		d_type( $type, $max-$range, $max, $mid-$hange, $mid+$hange );
 		d_type( $type, $max-$range, $max, $max-$range, $max );
 
 		}

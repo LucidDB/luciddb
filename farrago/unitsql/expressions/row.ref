@@ -63,4 +63,15 @@
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 > 
+> -- aliased columns
+> select a + c as d
+> from (values (1, 2, 3), (4, 5, 6)) as t(a, b, c)
+> where b > 0
+> order by a;
+'D'
+'4'
+'10'
+> 
+> -- End row.sql
+> 
 > !quit

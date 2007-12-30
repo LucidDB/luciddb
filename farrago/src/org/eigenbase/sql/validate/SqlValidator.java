@@ -58,14 +58,23 @@ import org.eigenbase.util.*;
  * particular point in the query; and a {@link SqlValidatorNamespace} is a
  * description of a data source used in a query.
  *
+ * <p>There are different kinds of namespace for different parts of the query.
+ * for example {@link IdentifierNamespace} for table names,
+ * {@link SelectNamespace} for SELECT queries, {@link SetopNamespace} for
+ * UNION, EXCEPT and INTERSECT. A validator is allowed to wrap namespaces in
+ * other objects which implement {@link SqlValidatorNamespace}, so don't try
+ * to cast your namespace or use <code>instanceof</code>; use
+ * {@link SqlValidatorNamespace#unwrap(Class)} and
+ * {@link SqlValidatorNamespace#isWrapperFor(Class)} instead.</p>
+ *
  * <p>The validator builds the map by making a quick scan over the query when
  * the root {@link SqlNode} is first provided. Thereafter, it supplies the
- * correct scope or namespace object when it calls validation methods.
+ * correct scope or namespace object when it calls validation methods.</p>
  *
  * <p>The methods {@link #getSelectScope}, {@link #getFromScope}, {@link
  * #getWhereScope}, {@link #getGroupScope}, {@link #getHavingScope}, {@link
  * #getOrderScope} and {@link #getJoinScope} get the correct scope to resolve
- * names in a particular clause of a SQL statement.
+ * names in a particular clause of a SQL statement.</p>
  *
  * @author jhyde
  * @version $Id$

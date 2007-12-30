@@ -191,50 +191,6 @@ public class RelOptPlanWriter
     {
         return detailLevel;
     }
-
-    // REVIEW jvs 23-Dec-2005:  I'm not sure what the original purpose
-    // of this code was, but the output is hard to understand, and
-    // no one was using it, so I made it inaccessible.
-    private void explainBrief(
-        String s,
-        RelNode rel,
-        String [] terms)
-    {
-        print(s);
-        if (active.add(rel)) {
-            RelNode [] inputs = rel.getInputs();
-            RexNode [] children = rel.getChildExps();
-            if ((inputs.length > 0) || (children.length > 0)) {
-                level++;
-                print("(");
-                int j = 0;
-                for (int i = 0; i < inputs.length; i++) {
-                    if (j++ > 0) {
-                        print(", ");
-                    }
-                    RelNode input = inputs[i];
-                    if (active.add(input)) {
-                        input.explain(this);
-                        active.remove(input);
-                    } else {
-                        print(input.getId());
-                    }
-                }
-                for (int i = 0; i < children.length; i++) {
-                    if (j++ > 0) {
-                        print(", ");
-                    }
-                    RexNode child = children[i];
-                    print(child.toString());
-                }
-                print(")");
-                level--;
-                active.remove(rel);
-            }
-        } else {
-            print("Rel#" + rel.toString());
-        }
-    }
 }
 
 // End RelOptPlanWriter.java

@@ -24,7 +24,6 @@ package org.eigenbase.rel.convert;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -40,106 +39,63 @@ public abstract class ConverterRule
 {
     //~ Instance fields --------------------------------------------------------
 
-    private final RelTraitSet inTraits;
-    private final RelTraitSet outTraits;
-
-    /**
-     * The RelTraitDef of traits that this ConverterRule applies to.
-     */
-    private final RelTraitDef traitDef;
+    private final RelTrait inTrait;
+    private final RelTrait outTrait;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a <code>ConverterRule</code>. It is preferable to use the {@link
-     * #ConverterRule(Class, RelTraitSet, RelTraitSet, String)} constructor
-     * instead.
+     * Creates a <code>ConverterRule</code>.
+     *
+     * @param clazz Type of relational expression to consider converting
+     * @param in Trait of relational expression to consider converting
+     * @param out Trait which is converted to
+     * @param description Description of rule
      *
      * @pre in != null
      * @pre out != null
      */
     public ConverterRule(
         Class clazz,
-        CallingConvention in,
-        CallingConvention out,
-        String description)
-    {
-        this(
-            clazz,
-            new RelTraitSet(in),
-            new RelTraitSet(out),
-            description);
-    }
-
-    /**
-     * Creates a <code>ConverterRule</code>
-     *
-     * @pre in != null
-     * @pre out != null
-     */
-    public ConverterRule(
-        Class clazz,
-        RelTraitSet in,
-        RelTraitSet out,
+        RelTrait in,
+        RelTrait out,
         String description)
     {
         super(new ConverterRelOptRuleOperand(clazz, in));
         assert (in != null);
         assert (out != null);
 
-        // RelTraitSets must match in size
-        assert (in.size() == out.size());
+        // Source and target traits must have same type
+        assert in.getTraitDef() == out.getTraitDef();
 
-        // RelTraitSets must match in which trait is being converted.
-        int traitCount = 0;
-        RelTraitDef traitDef = null;
-        for (int i = 0; i < in.size(); i++) {
-            RelTrait inTrait = in.getTrait(i);
-            RelTrait outTrait = out.getTrait(i);
-
-            if ((inTrait != null) && (outTrait != null)) {
-                traitCount++;
-                traitDef = inTrait.getTraitDef();
-            } else {
-                Util.permAssert(
-                    (inTrait == null)
-                    && (outTrait == null),
-                    "ConverterRule cannot convert one trait type to another");
-            }
-        }
-        Util.permAssert(
-            traitCount == 1,
-            "ConverterRule must convert exactly one type of trait");
-
-        this.inTraits = in;
-        this.outTraits = out;
+        this.inTrait = in;
+        this.outTrait = out;
         if (description == null) {
             description = "ConverterRule<in=" + in + ",out=" + out + ">";
         }
         this.description = description;
-        this.traitDef = traitDef;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     public CallingConvention getOutConvention()
     {
-        return (CallingConvention) outTraits.getTrait(0);
+        return (CallingConvention) outTrait;
     }
 
-    public RelTraitSet getOutTraits()
+    public RelTrait getOutTrait()
     {
-        return outTraits;
+        return outTrait;
     }
 
-    public RelTraitSet getInTraits()
+    public RelTrait getInTrait()
     {
-        return inTraits;
+        return inTrait;
     }
 
     public RelTraitDef getTraitDef()
     {
-        return traitDef;
+        return inTrait.getTraitDef();
     }
 
     public abstract RelNode convert(RelNode rel);
@@ -159,7 +115,7 @@ public abstract class ConverterRule
     public void onMatch(RelOptRuleCall call)
     {
         RelNode rel = call.rels[0];
-        if (rel.getTraits().matches(inTraits)) {
+        if (rel.getTraits().contains(inTrait)) {
             final RelNode converted = convert(rel);
             if (converted != null) {
                 call.transformTo(converted);
@@ -172,7 +128,7 @@ public abstract class ConverterRule
     private static class ConverterRelOptRuleOperand
         extends RelOptRuleOperand
     {
-        public ConverterRelOptRuleOperand(Class clazz, RelTraitSet in)
+        public ConverterRelOptRuleOperand(Class clazz, RelTrait in)
         {
             super(clazz, in, null);
         }
@@ -186,10 +142,13 @@ public abstract class ConverterRule
                 if (((ConverterRule) getRule()).getTraitDef()
                     == ((ConverterRel) rel).getTraitDef())
                 {
+                    RelOptPlanner.tracer.finest("trying to match " + rel + ": false");
                     return false;
                 }
             }
-            return super.matches(rel);
+            final boolean b = super.matches(rel);
+            RelOptPlanner.tracer.finest("trying to match " + rel + ": " + b);
+            return b;
         }
     }
 }

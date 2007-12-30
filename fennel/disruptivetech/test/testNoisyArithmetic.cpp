@@ -486,8 +486,7 @@ int ProcessCppLine( int iLine, const char *pInputFileName,
 /* --- */
 int main( int iArgc, const char *ppArgv[] )
 {
-return 0;   /* this test is disable b/c it's causing a crash on some systems
-notably chelmsford - track via dtbug#1490 */
+return 0;   /* this test is causing a seg. fault, and its not valuable as part of build tests */
     /* --- */
     if ( iArgc < 1/*how?*/ || iArgc>2 ) {
         fprintf( stderr, "Usage: %s [<filename>|-]\n", iArgc>0 ? ppArgv[0] : "" );

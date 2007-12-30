@@ -1261,6 +1261,7 @@ SqlNode TableRef() :
     SqlNumericLiteral samplePercentage;
     boolean isRepeatable = false;
     int repeatableSeed = 0;
+    List<SqlNode> columnAliasList = null;
 }
 {
     (
@@ -1309,10 +1310,20 @@ SqlNode TableRef() :
     )
     [
         [ <AS> ] alias = Identifier()
+        [ <LPAREN> columnAliasList = SimpleIdentifierCommaList() <RPAREN> ]
         {
             pos = getPos();
-            tableRef = SqlStdOperatorTable.asOperator.createCall(
-                pos, tableRef, new SqlIdentifier(alias, pos));
+            if (columnAliasList == null) {
+                tableRef = SqlStdOperatorTable.asOperator.createCall(
+                    pos, tableRef, new SqlIdentifier(alias, pos));
+            } else {
+                List<SqlNode> idList = new ArrayList<SqlNode>();
+                idList.add(tableRef);
+                idList.add(new SqlIdentifier(alias, pos));
+                idList.addAll(columnAliasList);
+                tableRef = SqlStdOperatorTable.asOperator.createCall(
+                    pos, idList);
+            }
         }
     ]
     [

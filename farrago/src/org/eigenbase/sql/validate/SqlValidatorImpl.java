@@ -482,8 +482,9 @@ public class SqlValidatorImpl
     private void lookupSelectHints(
         SqlValidatorNamespace ns, SqlParserPos pos, List<SqlMoniker> hintList)
     {
-        if (ns instanceof SelectNamespace) {
-            lookupSelectHints((SqlSelect) ns.getNode(), pos, hintList);
+        final SqlNode node = ns.getNode();
+        if (node instanceof SqlSelect) {
+            lookupSelectHints((SqlSelect) node, pos, hintList);
         }
     }
 
@@ -494,8 +495,8 @@ public class SqlValidatorImpl
         List<SqlMoniker> hintList)
     {
         final SqlValidatorNamespace ns = getNamespace(node);
-        if (ns instanceof IdentifierNamespace) {
-            IdentifierNamespace idNs = (IdentifierNamespace) ns;
+        if (ns.isWrapperFor(IdentifierNamespace.class)) {
+            IdentifierNamespace idNs = ns.unwrap(IdentifierNamespace.class);
             final SqlIdentifier id = idNs.getId();
             for (int i = 0; i < id.names.length; i++) {
                 if (pos.toString().equals(
@@ -581,7 +582,7 @@ public class SqlValidatorImpl
                 if (ns == null) {
                     ns = scope.resolve(name, null, null);
                 } else {
-                    ns = ns.lookupChild(name, null, null);
+                    ns = ns.lookupChild(name);
                 }
                 if (ns == null) {
                     break;
@@ -731,7 +732,9 @@ public class SqlValidatorImpl
                 validateFeature(
                     EigenbaseResource.instance().SQLFeature_T613, 
                     node.getParserPosition());
-            } else if (sampleSpec instanceof SqlSampleSpec.SqlSubstitutionSampleSpec) {
+            } else if (sampleSpec
+                instanceof SqlSampleSpec.SqlSubstitutionSampleSpec)
+            {
                 validateFeature(
                     EigenbaseResource.instance().SQLFeatureExt_T613_Substitution,
                     node.getParserPosition());
@@ -848,6 +851,12 @@ public class SqlValidatorImpl
     {
         switch (node.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
+            // AS has a namespace if it has a column list 'AS t (c1, c2, ...)'
+            final SqlValidatorNamespace ns = namespaces.get(node);
+            if (ns != null) {
+                return ns;
+            }
+            // fall through
         case SqlKind.OverORDINAL:
         case SqlKind.CollectionTableORDINAL:
         case SqlKind.OrderByORDINAL:
@@ -1504,13 +1513,15 @@ public class SqlValidatorImpl
 
     /**
      * Registers a new namespace, and adds it as a child of its parent scope.
+     * Derived class can override this method to tinker with namespaces as
+     * they are created.
      *
      * @param usingScope Parent scope (which will want to look for things in
      * this namespace)
      * @param alias Alias by which parent will refer to this namespace
      * @param ns Namespace
      */
-    private void registerNamespace(
+    protected void registerNamespace(
         SqlValidatorScope usingScope,
         String alias,
         SqlValidatorNamespace ns,
@@ -1580,16 +1591,29 @@ public class SqlValidatorImpl
             if (alias == null) {
                 alias = call.operands[1].toString();
             }
+            SqlValidatorScope usingScope2 = usingScope;
+            if (call.getOperands().length > 2) {
+                usingScope2 = null;
+            }
             final SqlNode expr = call.operands[0];
             final SqlNode newExpr =
                 registerFrom(
                     parentScope,
-                    usingScope,
+                    usingScope2,
                     expr,
                     alias,
                     forceNullable);
             if (newExpr != expr) {
                 call.setOperand(0, newExpr);
+            }
+            // If alias has a column list, introduce a namespace to translate
+            // column names.
+            if (call.getOperands().length > 2) {
+                registerNamespace(
+                    usingScope,
+                    alias,
+                    new AliasNamespace(this, call),
+                    false);
             }
             return node;
         }
@@ -2344,10 +2368,10 @@ public class SqlValidatorImpl
      * Validates the FROM clause of a query, or (recursively) a child node of
      * the FROM clause: AS, OVER, JOIN, VALUES, or subquery.
      *
-     * @param node
+     * @param node Node in FROM clause, typically a table or derived table
      * @param targetRowType Desired row type of this expression, or {@link
      * #unknownType} if not fussy. Must not be null.
-     * @param scope
+     * @param scope Scope
      */
     protected void validateFrom(
         SqlNode node,
@@ -2361,20 +2385,23 @@ public class SqlValidatorImpl
                 ((SqlCall) node).getOperands()[0],
                 targetRowType,
                 scope);
-            return;
+            break;
         case SqlKind.ValuesORDINAL:
             validateValues((SqlCall) node, targetRowType, scope);
-            return;
+            break;
         case SqlKind.JoinORDINAL:
             validateJoin((SqlJoin) node, scope);
-            return;
+            break;
         case SqlKind.OverORDINAL:
             validateOver((SqlCall) node, scope);
-            return;
+            break;
         default:
             validateQuery(node, scope);
-            return;
+            break;
         }
+        // Validate the namespace representation of the node, just in case the
+        // validation did not occur implicitly.
+        getNamespace(node).validate();
     }
 
     protected void validateOver(SqlCall call, SqlValidatorScope scope)
@@ -2487,8 +2514,15 @@ public class SqlValidatorImpl
         SqlSelect select,
         RelDataType targetRowType)
     {
-        Util.pre(targetRowType != null, "targetRowType != null");
-        final SelectNamespace ns = (SelectNamespace) getNamespace(select);
+        assert targetRowType != null;
+
+        // Namespace is either a select namespace or a wrapper around one.
+        final SelectNamespace ns =
+            getNamespace(select).unwrap(SelectNamespace.class);
+
+        // Its rowtype is null, meaning it hasn't been validated yet.
+        // This is important, because we need to take the targetRowType into
+        // account.
         assert ns.rowType == null;
 
         if (select.isDistinct()) {
@@ -2528,7 +2562,9 @@ public class SqlValidatorImpl
         // Validate the SELECT clause late, because a select item might
         // depend on the GROUP BY list, or the window function might reference
         // window name in the WINDOW clause etc.
-        ns.rowType = validateSelectList(selectItems, select, targetRowType);
+        final RelDataType rowType =
+            validateSelectList(selectItems, select, targetRowType);
+        ns.setRowType(rowType);
 
         // Validate ORDER BY after we have set ns.rowType because in some
         // dialects you can refer to columns of the select list, e.g.
@@ -2889,8 +2925,7 @@ public class SqlValidatorImpl
 
     public void validateInsert(SqlInsert insert)
     {
-        InsertNamespace targetNamespace =
-            (InsertNamespace) getNamespace(insert);
+        SqlValidatorNamespace targetNamespace = getNamespace(insert);
         validateNamespace(targetNamespace);
         SqlValidatorTable table = targetNamespace.getTable();
 
@@ -3029,7 +3064,8 @@ public class SqlValidatorImpl
         validateSelect(sqlSelect, unknownType);
 
         IdentifierNamespace targetNamespace =
-            (IdentifierNamespace) getNamespace(call.getTargetTable());
+            getNamespace(call.getTargetTable())
+                .unwrap(IdentifierNamespace.class);
         validateNamespace(targetNamespace);
         SqlValidatorTable table = targetNamespace.getTable();
 
@@ -3039,7 +3075,8 @@ public class SqlValidatorImpl
     public void validateUpdate(SqlUpdate call)
     {
         IdentifierNamespace targetNamespace =
-            (IdentifierNamespace) getNamespace(call.getTargetTable());
+            getNamespace(call.getTargetTable())
+                .unwrap(IdentifierNamespace.class);
         validateNamespace(targetNamespace);
         SqlValidatorTable table = targetNamespace.getTable();
 
@@ -3280,85 +3317,11 @@ public class SqlValidatorImpl
 
     SqlValidatorNamespace lookupFieldNamespace(
         RelDataType rowType,
-        String name,
-        SqlValidatorScope [] ancestorOut,
-        int [] offsetOut)
+        String name)
     {
         final RelDataType dataType =
             SqlValidatorUtil.lookupFieldType(rowType, name);
-        return new SqlValidatorNamespace() {
-            public SqlValidatorTable getTable()
-            {
-                return null;
-            }
-
-            public RelDataType getRowType()
-            {
-                return dataType;
-            }
-
-            public void setRowType(RelDataType rowType)
-            {
-                // intentionally empty
-            }
-
-            public RelDataType getRowTypeSansSystemColumns()
-            {
-                return getRowType();
-            }
-
-            public void validate()
-            {
-            }
-
-            public SqlNode getNode()
-            {
-                return null;
-            }
-
-            public SqlValidatorNamespace lookupChild(
-                String name,
-                SqlValidatorScope [] ancestorOut,
-                int [] offsetOut)
-            {
-                if (dataType.isStruct()) {
-                    return lookupFieldNamespace(
-                        dataType,
-                        name,
-                        ancestorOut,
-                        offsetOut);
-                }
-                return null;
-            }
-
-            public boolean fieldExists(String name)
-            {
-                return false;
-            }
-
-            public Object getExtra()
-            {
-                return null;
-            }
-
-            public void setExtra(Object o)
-            {
-            }
-
-            public List<Pair<SqlNode, SqlMonotonicity>> getMonotonicExprs()
-            {
-                return null;
-            }
-
-            public SqlMonotonicity getMonotonicity(String columnName)
-            {
-                return SqlMonotonicity.NotMonotonic;
-            }
-
-            public void makeNullable()
-            {
-            }
-        };
+        return new FieldNamespace(this, dataType);
     }
 
     public void validateWindow(
@@ -3549,6 +3512,98 @@ public class SqlValidatorImpl
         public SqlNode getNode()
         {
             return node;
+        }
+    }
+
+    /**
+     * Namespace for an <code>AS t(c1, c2, ...)</code> clause.
+     *
+     * <p>A namespace is necessary only if there is a column list, in order to
+     * re-map column names; a <code>relation AS t</code> clause just uses the
+     * same namespace as <code>relation</code>. 
+     */
+    protected static class AliasNamespace extends AbstractNamespace
+    {
+        protected final SqlCall call;
+
+        /**
+         * Creates an AliasNamespace.
+         *
+         * @param validator Validator
+         * @param call Call to AS operator
+         */
+        protected AliasNamespace(SqlValidatorImpl validator, SqlCall call)
+        {
+            super(validator);
+            this.call = call;
+            assert call.getOperator() == SqlStdOperatorTable.asOperator;
+        }
+
+        protected RelDataType validateImpl()
+        {
+            final List<String> nameList = new ArrayList<String>();
+            final SqlValidatorNamespace childNs =
+                validator.getNamespace(call.getOperands()[0]);
+            final RelDataType rowType =
+                childNs.getRowTypeSansSystemColumns();
+            for (int i = 2; i < call.getOperands().length; ++i) {
+                final SqlNode operand = call.getOperands()[i];
+                String name = ((SqlIdentifier) operand).getSimple();
+                if (nameList.contains(name)) {
+                    throw validator.newValidationError(
+                        operand,
+                        EigenbaseResource.instance().AliasListDuplicate.ex(
+                            name));
+                }
+                nameList.add(name);
+            }
+            if (nameList.size() != rowType.getFieldCount()) {
+                StringBuilder buf = new StringBuilder();
+                buf.append("(");
+                int k = 0;
+                for (RelDataTypeField field : rowType.getFieldList()) {
+                    if (k++ > 0) {
+                        buf.append(", ");
+                    }
+                    buf.append("'");
+                    buf.append(field.getName());
+                    buf.append("'");
+                }
+                buf.append(")");
+                // Position error at first name in list.
+                throw validator.newValidationError(
+                    call.getOperands()[2],
+                    EigenbaseResource.instance().AliasListDegree.ex(
+                        rowType.getFieldCount(),
+                        buf.toString(),
+                        nameList.size()));
+            }
+            final List<RelDataType> typeList = new ArrayList<RelDataType>();
+            for (RelDataTypeField field : rowType.getFieldList()) {
+                typeList.add(field.getType());
+            }
+            return validator.getTypeFactory().createStructType(
+                typeList, nameList);
+        }
+
+        public SqlNode getNode()
+        {
+            return call;
+        }
+
+        public String translate(String name)
+        {
+            final RelDataType underlyingRowType =
+                validator.getValidatedNodeType(call.getOperands()[0]);
+            int i = 0;
+            for (RelDataTypeField field : rowType.getFieldList()) {
+                if (field.getName().equals(name)) {
+                    return underlyingRowType.getFieldList().get(i).getName();
+                }
+                ++i;
+            }
+            throw new AssertionError("unknown field '" + name +
+                "' in rowtype " + underlyingRowType);
         }
     }
 
@@ -3859,6 +3914,7 @@ public class SqlValidatorImpl
             this.id = id;
         }
     }
+
 }
 
-// End SqlValidator.java
+// End SqlValidatorImpl.java

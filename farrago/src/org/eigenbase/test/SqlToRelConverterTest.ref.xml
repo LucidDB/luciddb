@@ -1319,4 +1319,40 @@ AggregateRel(groupCount=[0], EXPR$0=[COUNT()], EXPR$1=[SUM(0)])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testAliasList">
+        <Resource name="sql">
+            <![CDATA[select a + b from (
+  select deptno, 1 as one, name from dept
+) as d(a, b, c)
+where c like 'X%']]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[+($0, $1)])
+  FilterRel(condition=[LIKE($2, 'X%')])
+    ProjectRel(DEPTNO=[$0], ONE=[1], NAME=[$1])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testAliasList2">
+        <Resource name="sql">
+            <![CDATA[select * from (
+  select a, b, c from (values (1, 2, 3)) as t (c, b, a)
+) join dept on dept.deptno = c
+order by c + a]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(A=[$0], B=[$1], C=[$2], DEPTNO=[$3], NAME=[$4])
+  SortRel(sort0=[$5], dir0=[Ascending])
+    ProjectRel(A=[$0], B=[$1], C=[$2], DEPTNO=[$3], NAME=[$4], EXPR$5=[+($2, $0)])
+      JoinRel(condition=[=($3, $2)], joinType=[inner])
+        ProjectRel(A=[$2], B=[$1], C=[$0])
+          ProjectRel(EXPR$0=[$0], EXPR$1=[$1], EXPR$2=[$2])
+            ValuesRel(tuples=[[{ 1, 2, 3 }]])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

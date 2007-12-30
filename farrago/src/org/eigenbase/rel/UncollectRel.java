@@ -24,6 +24,7 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.SqlUtil;
 
 
 /**
@@ -100,7 +101,7 @@ public final class UncollectRel
             ret =
                 rel.getCluster().getTypeFactory().createStructType(
                     new RelDataType[] { ret },
-                    new String[] { "EXPR$0" });
+                    new String[] { SqlUtil.deriveAliasFromOrdinal(0) });
         }
         return ret;
     }

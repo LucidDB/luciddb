@@ -228,25 +228,12 @@ public abstract class RelOptRule
     }
 
     /**
-     * Returns the set of traits of the result of firing this rule. An empty
-     * RelTraitSet is returned if the results are not known.
+     * Returns the trait which will be modified as a result of firing this
+     * rule, or null if the rule is not a converter rule.
      */
-    public RelTraitSet getOutTraits()
+    public RelTrait getOutTrait()
     {
-        // REVIEW: SZ: 2/17/05: Lazy initialization here.  Some RelOptRule
-        // implementations accept their "OutConvention" as a parameter to
-        // their constructor.  If we did this in the constructor, we'd get the
-        // wrong CallingConvention.  In the future, we could require that
-        // the CallingConvention be passed to RelOptRule's constructor.
-        if (traits == null) {
-            traits = new RelTraitSet(new RelTrait[] { getOutConvention() });
-        }
-
-        // Changing the CallingConvention RelTrait via RelTraitSet.setTrait
-        // is not supported!
-        assert (getOutConvention() == traits.getTrait(0));
-
-        return traits;
+        return null;
     }
 
     public String toString()

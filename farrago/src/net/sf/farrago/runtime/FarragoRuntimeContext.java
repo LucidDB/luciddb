@@ -83,7 +83,7 @@ public class FarragoRuntimeContext
     private final Map<String, FarragoObjectCache.Entry> txnCodeCache;
     private final FennelTxnContext fennelTxnContext;
     private final FarragoWarningQueue warningQueue;
-    private final Object cursorMonitor;
+    protected final Object cursorMonitor;
     private boolean cursorActive;
 
     /**
@@ -781,9 +781,6 @@ public class FarragoRuntimeContext
             cursorActive = active;
             if (!cursorActive) {
                 cursorMonitor.notifyAll();
-                // check again after fetch to catch case where cancel()'s
-                // streamGraph.abort() causes END_OF_DATA during the fetch
-                checkCancel();
             }
         }
     }

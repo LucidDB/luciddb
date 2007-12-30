@@ -2651,8 +2651,10 @@ public class SqlToRelConverter
                 + "' is not a group expr");
         }
 
+        SqlValidatorNamespace namespace = null;
         if (bb.scope != null) {
             identifier = bb.scope.fullyQualify(identifier);
+            namespace = bb.scope.resolve(identifier.names[0], null, null);
         }
         RexNode e = bb.lookupExp(identifier.names[0]);
         final String correlationName;
@@ -2664,6 +2666,10 @@ public class SqlToRelConverter
 
         for (int i = 1; i < identifier.names.length; i++) {
             String name = identifier.names[i];
+            if (namespace != null) {
+                name = namespace.translate(name);
+                namespace = null;
+            }
             e = rexBuilder.makeFieldAccess(e, name);
         }
         if (e instanceof RexInputRef) {

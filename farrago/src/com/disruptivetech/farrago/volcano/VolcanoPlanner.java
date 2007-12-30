@@ -133,7 +133,7 @@ public class VolcanoPlanner
     /**
      * Holds the currently registered RelTraitDefs.
      */
-    private final Set<RelTraitDef> traitDefs = new HashSet<RelTraitDef>();
+    private final List<RelTraitDef> traitDefs = new ArrayList<RelTraitDef>();
 
     /**
      * Set of all registered rules.
@@ -209,8 +209,7 @@ public class VolcanoPlanner
                 list.add(operand);
             }
         }
-        return (RelOptRuleOperand []) list.toArray(
-            new RelOptRuleOperand[list.size()]);
+        return list.toArray(new RelOptRuleOperand[list.size()]);
     }
 
     // implement RelOptPlanner
@@ -251,7 +250,7 @@ public class VolcanoPlanner
 
     public boolean addRelTraitDef(RelTraitDef relTraitDef)
     {
-        return traitDefs.add(relTraitDef);
+        return !traitDefs.contains(relTraitDef) && traitDefs.add(relTraitDef);
     }
 
     public boolean addRule(RelOptRule rule)
@@ -266,24 +265,18 @@ public class VolcanoPlanner
         mapRuleDescription(rule);
 
         // Each of this rule's operands is an 'entry point' for a rule call.
-        for (RelOptRuleOperand operand : rule.operands) {
-            allOperands.add(operand);
-        }
+        allOperands.addAll(Arrays.asList(rule.operands));
 
-        // If this is a converter rule, check if the registered RelTraitDefs
-        // which notification of its addition.
+        // If this is a converter rule, check that it operates on one of the
+        // kinds of trait we are interested in, and if so, register the rule
+        // with the trait.
         if (rule instanceof ConverterRule) {
             ConverterRule converterRule = (ConverterRule) rule;
 
-            final RelTraitSet ruleTraits = converterRule.getInTraits();
-
-            for (RelTraitDef traitDef : traitDefs) {
-                if (ruleTraits.getTrait(traitDef) == null) {
-                    // Rule does not operate on this RelTraitDef.
-                    continue;
-                }
-
-                traitDef.registerConverterRule(this, converterRule);
+            final RelTrait ruleTrait = converterRule.getInTrait();
+            final RelTraitDef ruleTraitDef = ruleTrait.getTraitDef();
+            if (traitDefs.contains(ruleTraitDef)) {
+                ruleTraitDef.registerConverterRule(this, converterRule);
             }
         }
 
@@ -315,16 +308,10 @@ public class VolcanoPlanner
         // graph.)
         if (rule instanceof ConverterRule) {
             ConverterRule converterRule = (ConverterRule) rule;
-
-            final RelTraitSet ruleTraits = converterRule.getInTraits();
-
-            for (RelTraitDef traitDef : traitDefs) {
-                if (ruleTraits.getTrait(traitDef) == null) {
-                    // Rule does not operate on this RelTraitDef.
-                    continue;
-                }
-
-                traitDef.deregisterConverterRule(this, converterRule);
+            final RelTrait ruleTrait = converterRule.getInTrait();
+            final RelTraitDef ruleTraitDef = ruleTrait.getTraitDef();
+            if (traitDefs.contains(ruleTraitDef)) {
+                ruleTraitDef.deregisterConverterRule(this, converterRule);
             }
         }
         return true;
@@ -933,7 +920,7 @@ SUBSET_LOOP:
                 pw.println(
                     "\t" + subset.getDescription() + ", best="
                     + ((subset.best == null) ? "null"
-                        : ("Rel#" + subset.best.getId())) + ", importance="
+                        : ("rel#" + subset.best.getId())) + ", importance="
                     + ruleQueue.getImportance(subset));
                 assert (subset.set == set);
                 for (int k = 0; k < j; k++) {
@@ -941,7 +928,7 @@ SUBSET_LOOP:
                         subset.getTraits());
                 }
                 for (RelNode rel : subset.rels) {
-                    // "\t\trel#34:JavaProject(Rel#32:JavaFilter(...), ...)"
+                    // "\t\trel#34:JavaProject(rel#32:JavaFilter(...), ...)"
                     pw.print("\t\t" + rel.getDescription());
                     RelNode [] inputs = rel.getInputs();
                     for (int m = 0; m < inputs.length; m++) {
