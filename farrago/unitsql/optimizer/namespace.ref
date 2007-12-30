@@ -348,11 +348,8 @@
 > from hsqldb_demo.sales.dept
 > where deptno=20;
 'column0'
-'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME) NOT NULL])'
-'    IteratorToFennelConverter'
-'      ResultSetToFarragoIteratorConverter'
-'        MedJdbcQueryRel(foreignSql=[SELECT *'
+'ResultSetToFarragoIteratorConverter'
+'  MedJdbcQueryRel(foreignSql=[SELECT "DNAME"'
 'FROM "SALES"."DEPT"'
 'WHERE "DEPTNO" = 20])'
 > 

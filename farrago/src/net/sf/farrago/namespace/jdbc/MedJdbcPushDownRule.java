@@ -26,6 +26,7 @@ import java.sql.*;
 import java.util.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -35,7 +36,7 @@ import org.eigenbase.sql.parser.*;
 
 
 /**
- * MedJdbcPushDownRule is a rule to push filters down to Jdbc source
+ * MedJdbcPushDownRule is a rule to push filters and projections down to Jdbc source
  *
  * @author Sunny Choi
  * @version $Id$
@@ -48,6 +49,7 @@ class MedJdbcPushDownRule
     boolean projOnFilter = false;
     boolean filterOnProj = false;
     boolean filterOnly = false;
+    boolean projectOnly = false;
 
     // ~ Constructors ---------------------------------------------------------
 
@@ -63,11 +65,12 @@ class MedJdbcPushDownRule
         description = "MedJdbcPushDownRule: " + id;
         if (description.contains("proj on filter")) {
             projOnFilter = true;
-        }
-        if (description.contains("filter on proj")) {
+        } else if (description.contains("filter on proj")) {
             filterOnProj = true;
-        } else {
+        } else if (description.contains("filter")) {
             filterOnly = true;
+        } else {
+            projectOnly = true;
         }
     }
 
@@ -85,59 +88,136 @@ class MedJdbcPushDownRule
         ProjectRel topProj = null;
         FilterRel filter = null;
         ProjectRel bottomProj = null;
+        ProjectRel newTopProject = null;
 
-        if (projOnFilter) {
-            topProj = (ProjectRel) call.rels[0];
-        }
-        if (filterOnProj) {
-            bottomProj = (ProjectRel) call.rels[relLength - 2];
+        if (!projectOnly && !filterOnly) {
             filter = (FilterRel) call.rels[relLength - 3];
-        } else {
+        } else if (filterOnly) {
             filter = (FilterRel) call.rels[relLength - 2];
         }
 
-        final FilterRel filterRel = filter;
+        if (projOnFilter) {
+            topProj = (ProjectRel) call.rels[0];
+            // handle any expressions in the projection
+            PushProjector pushProject = new PushProjector(
+                topProj, null, filter.getChild(), Collections.EMPTY_SET);
+            ProjectRel newProj = pushProject.convertProject(null);
+            if (newProj != null) {
+                topProj = (ProjectRel) newProj.getChild();
+                newTopProject = newProj;
+            } else {
+                // nothing to push down
+                projOnFilter = false;
+                newTopProject = topProj;
+                filterOnProj = true;
+            }
+        }
 
-        // push down filter
-        RexCall filterCall = (RexCall) filter.getCondition();
-
-        // convert the RexCall to SqlNode
-        // using RexToSqlNodeConverter
-        RexToSqlNodeConverter exprConverter =
-            new RexToSqlNodeConverterImpl(new RexSqlStandardConvertletTable()) {
-                public SqlIdentifier convertInputRef(RexInputRef ref)
-                {
-                    RelDataType fields = filterRel.getRowType();
-                    String fieldName =
-                        fields.getFieldList().get(ref.getIndex()).getName();
-                    if (!queryRel.columnSet.directory.server.lenient) {
-                        List<RelDataTypeField> fieldList =
-                            queryRel.columnSet.origRowType.getFieldList();
-                        for (int i = 0; i < fieldList.size(); i++) {
-                            if (fieldName.equals(fieldList.get(i).getName())) {
-                                fields = queryRel.columnSet.srcRowType;
-                                fieldName =
-                                    fields.getFieldList().get(i).getName();
-                                break;
-                            }
-                        }
-                    }
-                    return new SqlIdentifier(fieldName, SqlParserPos.ZERO);
+        if (!filterOnly) {
+            bottomProj = (ProjectRel) call.rels[relLength - 2];
+            if (projectOnly) {
+                PushProjector pushProject = new PushProjector(
+                    bottomProj, null, queryRel, Collections.EMPTY_SET);
+                ProjectRel newProj = pushProject.convertProject(null);
+                if (newProj != null) {
+                    bottomProj = (ProjectRel) newProj.getChild();
+                    newTopProject = newProj;
+                } else {
+                    // only projection, nothing to push down
+                    // could be second firing of this rule
+                    return;
                 }
-            };
+            }
+        }
 
-        // Apply standard conversions.
-        SqlNode filterNode;
-        try {
-            filterNode = exprConverter.convertCall(filterCall);
-        } catch (Exception e) {
-            return;
+        final FilterRel filterRel = filter;
+        SqlNode filterNode = null;
+        if (!projectOnly) {
+            // push down filter
+            RexCall filterCall = (RexCall) filter.getCondition();
+
+            // convert the RexCall to SqlNode
+            // using RexToSqlNodeConverter
+            RexToSqlNodeConverter exprConverter =
+                new RexToSqlNodeConverterImpl(
+                    new RexSqlStandardConvertletTable()) {
+                    public SqlIdentifier convertInputRef(RexInputRef ref)
+                    {
+                        RelDataType fields = filterRel.getRowType();
+                        return new SqlIdentifier(
+                            getSourceFieldName(
+                                queryRel,
+                                fields.getFieldList().get(
+                                    ref.getIndex()).getName()),
+                            SqlParserPos.ZERO);
+                    }
+                };
+
+            // Apply standard conversions.
+            try {
+                filterNode = exprConverter.convertCall(filterCall);
+            } catch (Exception e) {
+                return;
+            }
+        }
+
+        List<SqlIdentifier> projList = null;
+        String[] fieldNames= null;
+        RelDataType[] fieldTypes = null;
+
+        // push down projection
+        if (projOnFilter) {
+            projList =
+                new ArrayList<SqlIdentifier>();
+            List<RelDataTypeField> fields =
+                topProj.getRowType().getFieldList();
+            int fieldLen = fields.size();
+            fieldNames = new String[fieldLen];
+            fieldTypes = new RelDataType[fieldLen];
+            for (int i = 0; i < fieldLen; i++) {
+                RelDataTypeField field = fields.get(i);
+                projList.add(
+                    new SqlIdentifier(
+                        getSourceFieldName(queryRel, field.getName()),
+                        SqlParserPos.ZERO));
+                fieldNames[i] = field.getName();
+                fieldTypes[i] = field.getType();
+            }
+        } else if (!filterOnly) {
+            projList =
+                new ArrayList<SqlIdentifier>();
+            List<RelDataTypeField> fields =
+                bottomProj.getRowType().getFieldList();
+            int fieldLen = fields.size();
+            fieldNames = new String[fieldLen];
+            fieldTypes = new RelDataType[fieldLen];
+            for (int i = 0; i < fieldLen; i++) {
+                RelDataTypeField field = fields.get(i);
+                projList.add(
+                    new SqlIdentifier(
+                        getSourceFieldName(queryRel, field.getName()),
+                        SqlParserPos.ZERO));
+                fieldNames[i] = field.getName();
+                fieldTypes[i] = field.getType();
+            }
+        }
+
+        SqlNodeList projection = queryRel.getSql().getSelectList();
+        if (projList != null) {
+            projection = new SqlNodeList(
+                Collections.unmodifiableList(
+                    projList),
+                SqlParserPos.ZERO);
+        }
+
+        if (filterNode == null) {
+            filterNode = queryRel.getSql().getWhere();
         }
 
         SqlSelect selectWithFilter =
             SqlStdOperatorTable.selectOperator.createCall(
                 null,
-                queryRel.getSql().getSelectList(),
+                projection,
                 queryRel.getSql().getFrom(),
                 filterNode,
                 null,
@@ -186,6 +266,8 @@ class MedJdbcPushDownRule
             }
         } catch (SQLException ex) {
             return;
+        } catch (RuntimeException ex) {
+            return;
         } finally {
             try {
                 if (rs != null) {
@@ -201,38 +283,50 @@ class MedJdbcPushDownRule
             }
         }
 
+        RelDataType rt = queryRel.getRowType();
+        if (!filterOnly) {
+            RexBuilder rexBuilder = queryRel.getCluster().getRexBuilder();
+            RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+            rt = typeFactory.createStructType(fieldTypes, fieldNames);
+        }
+
         RelNode rel =
             new MedJdbcQueryRel(
                 queryRel.columnSet,
                 queryRel.getCluster(),
-                queryRel.getRowType(),
+                rt,
                 queryRel.connection,
                 queryRel.dialect,
                 selectWithFilter);
 
-        if (bottomProj != null) {
-            rel =
-                new ProjectRel(
-                    bottomProj.getCluster(),
-                    rel,
-                    bottomProj.getProjectExps(),
-                    bottomProj.getRowType(),
-                    bottomProj.getFlags(),
-                    bottomProj.getCollationList());
-        }
-
-        if (topProj != null) {
-            rel =
-                new ProjectRel(
-                    topProj.getCluster(),
-                    rel,
-                    topProj.getProjectExps(),
-                    topProj.getRowType(),
-                    topProj.getFlags(),
-                    topProj.getCollationList());
+        if (newTopProject != null) {
+            rel = new ProjectRel(
+                newTopProject.getCluster(),
+                rel,
+                newTopProject.getProjectExps(),
+                newTopProject.getRowType(),
+                newTopProject.getFlags(),
+                newTopProject.getCollationList());
         }
 
         call.transformTo(rel);
+    }
+
+    private String getSourceFieldName(MedJdbcQueryRel queryRel, String name) {
+        String fieldName = name;
+        if (!queryRel.columnSet.directory.server.lenient) {
+            List<RelDataTypeField> fieldList =
+                queryRel.columnSet.origRowType.getFieldList();
+            List<RelDataTypeField> srcFields =
+                queryRel.columnSet.srcRowType.getFieldList();
+            for (int i = 0; i < fieldList.size(); i++) {
+                if (name.equals(fieldList.get(i).getName())) {
+                    fieldName = srcFields.get(i).getName();
+                    break;
+                }
+            }
+        }
+        return fieldName;
     }
 }
 //End MedJdbcPushDownRule.java

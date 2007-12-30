@@ -826,8 +826,11 @@ public class FarragoMetadataTest
         groupKey.set(0);
         groupKey.set(1);
 
-        // number of distinct values from applying the filter
-        double expected = TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY;
+        // number of distinct values from applying the filter and
+        // having clause
+        double expected =
+            TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY *
+            DEFAULT_EQUAL_SELECTIVITY;
         checkDistinctRowCount(rootRel, groupKey, expected);
     }
 

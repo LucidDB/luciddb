@@ -602,7 +602,7 @@ public abstract class FarragoReposUtil
         }
 
         /**
-         * Convert int array to byte array.  Assumes all int values in the
+         * Converts an int array to byte array.  Assumes all int values in the
          * array contain only 8 bits of data.
          * 
          * @param data int array
@@ -618,7 +618,7 @@ public abstract class FarragoReposUtil
         }
         
         /**
-         * Compare two bytes arrays.  If the data array does not begin with
+         * Compares two bytes arrays.  If the data array does not begin with
          * exactly the bytes specified in the expected array, returns false.
          * The data array may be longer than the expected array, but not 
          * shorter.
@@ -644,11 +644,11 @@ public abstract class FarragoReposUtil
         }
             
         /**
-         * Guess the character set used by the input stream, storing characters
-         * in the buffer stream.  The first block of data in the input stream
-         * is compared against the XML declarations in {@link #ALL_DECLS} to
-         * find a characters set suitable for reading at least the XML 
-         * declaration from the input stream.
+         * Guesses the character set used by the input stream, storing
+         * characters in the buffer stream.  The first block of data in the
+         * input stream is compared against the XML declarations in
+         * {@link #ALL_DECLS} to find a characters set suitable for reading at
+         * least the XML declaration from the input stream.
          * 
          * @param in input stream
          * @param bufferStream buffer stream for temporary storage
@@ -694,9 +694,10 @@ public abstract class FarragoReposUtil
         }
         
         /**
-         * Given a Reader configured with a suitable character set encoding,
-         * parse the XML declaration at the start of the Reader's input and
-         * return the encoding specified therein, if any.
+         * Parses the XML declaration at the start of the Reader's input and
+         * returns the specified encoding, if any.  The given Reader must be
+         * configured with a character set encoding capable of reading the XML
+         * declaration (which will only contain a limited set of characters).
          * 
          * @param reader a Reader configured with a suitable character set
          *               encoding
