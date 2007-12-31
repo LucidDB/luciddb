@@ -22,6 +22,7 @@
 package org.eigenbase.test;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
 
@@ -134,6 +135,14 @@ abstract class RelOptTestBase
         RelNode relInitial = tester.convertSqlToRel(sql2);
 
         assertTrue(relInitial != null);
+
+        ChainedRelMetadataProvider plannerChain =
+            new ChainedRelMetadataProvider();
+        DefaultRelMetadataProvider defaultProvider =
+            new DefaultRelMetadataProvider();
+        plannerChain.addProvider(defaultProvider);
+        planner.registerMetadataProviders(plannerChain);
+        relInitial.getCluster().setMetadataProvider(plannerChain);
 
         RelNode relBefore;
         if (preProgram == null) {
