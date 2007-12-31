@@ -1,6 +1,6 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of data management components.
+// Farrago is an extensible data management system.
 // Copyright (C) 2006-2007 The Eigenbase Project
 // Copyright (C) 2006-2007 Disruptive Tech
 // Copyright (C) 2006-2007 LucidEra, Inc.
@@ -19,59 +19,57 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.relopt.hep;
+package net.sf.farrago.query;
 
 import java.util.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
-
+import org.eigenbase.rex.RexLiteral;
 
 /**
- * HepRuleCall implements {@link RelOptRuleCall} for a {@link HepPlanner}. It
- * remembers transformation results so that the planner can choose which one (if
- * any) should replace the original expression.
+ * FennelEmptyRule provides an implementation for
+ * {@link org.eigenbase.rel.EmptyRel} in terms of
+ * {@link net.sf.farrago.query.FennelValuesRel}.
  *
- * @author John V. Sichi
+ * @author jhyde
  * @version $Id$
  */
-public class HepRuleCall
-    extends RelOptRuleCall
+public class FennelEmptyRule
+    extends ConverterRule
 {
-    //~ Instance fields --------------------------------------------------------
-
-    private List<RelNode> results;
+    /**
+     * Singleton instance of this rule.
+     */
+    public static final FennelEmptyRule INSTANCE = new FennelEmptyRule();
 
     //~ Constructors -----------------------------------------------------------
 
-    HepRuleCall(
-        RelOptPlanner planner,
-        RelOptRuleOperand operand,
-        RelNode[] rels,
-        Map<RelNode, List<RelNode>> nodeChildren)
+    /**
+     * Creates a FennelEmptyRule.
+     */
+    private FennelEmptyRule()
     {
-        super(planner, operand, rels, nodeChildren);
-
-        results = new ArrayList<RelNode>();
+        super(
+            EmptyRel.class,
+            CallingConvention.NONE,
+            FennelRel.FENNEL_EXEC_CONVENTION,
+            "FennelEmptyRule");
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    // implement RelOptRuleCall
-    public void transformTo(RelNode rel)
+    // implement ConverterRule
+    public RelNode convert(RelNode rel)
     {
-        RelOptUtil.verifyTypeEquivalence(
-            getRels()[0],
-            rel,
-            getRels()[0]);
+        EmptyRel valuesRel = (EmptyRel) rel;
 
-        results.add(rel);
-    }
-
-    List<RelNode> getResults()
-    {
-        return results;
+        return new FennelValuesRel(
+            valuesRel.getCluster(),
+            valuesRel.getRowType(),
+            Collections.<List<RexLiteral>>emptyList());
     }
 }
 
-// End HepRuleCall.java
+// End FennelEmptyRule.java

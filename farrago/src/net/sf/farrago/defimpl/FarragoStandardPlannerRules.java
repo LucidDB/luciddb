@@ -79,9 +79,13 @@ public class FarragoStandardPlannerRules
 
         planner.addRule(new ReduceDecimalsRule());
 
-        planner.addRule(new FarragoReduceExpressionsRule(FilterRel.class));
-        planner.addRule(new FarragoReduceExpressionsRule(ProjectRel.class));
-        planner.addRule(new FarragoReduceExpressionsRule(JoinRel.class));
+        planner.addRule(FarragoReduceExpressionsRule.FILTER_INSTANCE);
+        planner.addRule(FarragoReduceExpressionsRule.PROJECT_INSTANCE);
+        planner.addRule(FarragoReduceExpressionsRule.JOIN_INSTANCE);
+        planner.addRule(FarragoReduceExpressionsRule.CALC_INSTANCE);
+        planner.addRule(FarragoReduceValuesRule.FILTER_INSTANCE);
+        planner.addRule(FarragoReduceValuesRule.PROJECT_INSTANCE);
+        planner.addRule(FarragoReduceValuesRule.PROJECT_FILTER_INSTANCE);
 
         planner.addRule(ReduceAggregatesRule.instance);
 
@@ -105,6 +109,7 @@ public class FarragoStandardPlannerRules
             planner.addRule(new FennelCartesianJoinRule());
             planner.addRule(new FennelOneRowRule());
             planner.addRule(new FennelValuesRule());
+            planner.addRule(FennelEmptyRule.INSTANCE);
             planner.addRule(new FennelAggRule());
             planner.addRule(new FennelReshapeRule());
         }

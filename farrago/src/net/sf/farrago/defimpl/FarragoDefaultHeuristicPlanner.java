@@ -285,6 +285,7 @@ public class FarragoDefaultHeuristicPlanner
             builder.addRuleInstance(new FennelUncollectRule());
             builder.addRuleInstance(new FennelCorrelatorRule());
             builder.addRuleInstance(new FennelValuesRule());
+            builder.addRuleInstance(FennelEmptyRule.INSTANCE);
             builder.addRuleInstance(new FennelBernoulliSamplingRule());
         } else {
             builder.addRuleInstance(

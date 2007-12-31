@@ -41,17 +41,27 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public abstract class ReflectiveRelMetadataProvider
-    implements RelMetadataProvider
+    implements RelMetadataProvider, ReflectUtil.ReflectiveVisitor
 {
     //~ Instance fields --------------------------------------------------------
 
     private final Map<String, List<Class>> parameterTypeMap;
 
+    private final ReflectUtil.VisitDispatcher<
+        ReflectiveRelMetadataProvider, RelNode> visitDispatcher;
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a ReflectiveRelMetadataProvider.
+     */
     protected ReflectiveRelMetadataProvider()
     {
         parameterTypeMap = new HashMap<String, List<Class>>();
+        visitDispatcher =
+            ReflectUtil.createDispatcher(
+                ReflectiveRelMetadataProvider.class,
+                RelNode.class);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -78,10 +88,10 @@ public abstract class ReflectiveRelMetadataProvider
     {
         List<Class> parameterTypes = parameterTypeMap.get(metadataQueryName);
         if (parameterTypes == null) {
-            parameterTypes = Collections.EMPTY_LIST;
+            parameterTypes = Collections.emptyList();
         }
         Method method =
-            ReflectUtil.lookupVisitMethod(
+            visitDispatcher.lookupVisitMethod(
                 getClass(),
                 rel.getClass(),
                 metadataQueryName,

@@ -59,26 +59,58 @@ public class RelOptRuleOperand
     private final RelTrait trait;
     private final Class clazz;
     private final RelOptRuleOperand [] children;
+    public final boolean matchAnyChildren;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an operand.
      *
+     * <p>If <code>children</code> is null, the rule matches regardless of the
+     * number of children.
+     *
+     * <p>If <code>matchAnyChild</code> is true, child operands can be matched
+     * in any order. This is useful when matching a relational expression which
+     * can have a variable number of children. For example, the rule to
+     * eliminate empty children of a Union would have operands
+     * <blockquote>Operand(UnionRel, true, Operand(EmptyRel))</blockquote>
+     * and given the relational expressions
+     * <blockquote>UnionRel(FilterRel, EmptyRel, ProjectRel)</blockquote>
+     * would fire the rule with arguments
+     * <blockquote>{Union, Empty}</blockquote>
+     * It is up to the rule to deduce the other children, or indeed the
+     * position of the matched child.</p>
+     *
      * @param clazz Class of relational expression to match (must not be null)
      *
-     * @param children Child operands; or null, meaning match any number of
-     * children
+     * @param trait Trait to match, or null to match any trait
+     *
+     * @param matchAnyChild Must be true
      */
     public RelOptRuleOperand(
         Class clazz,
+        RelTrait trait,
+        boolean matchAnyChild,
         RelOptRuleOperand [] children)
     {
-        this(clazz, null, children);
+        assert (clazz != null);
+        this.clazz = clazz;
+        this.trait = trait;
+        this.children = children;
+        if (children != null) {
+            for (int i = 0; i < this.children.length; i++) {
+                this.children[i].parent = this;
+            }
+        }
+        this.matchAnyChildren = matchAnyChild;
     }
 
     /**
-     * Creates an operand which matches a given trait.
+     * Creates an operand which matches a given trait and matches child
+     * operands in the order they appear.
+     *
+     * <p>If <code>children</code> is null, the rule matches regardless of the
+     * number of children.
      *
      * @param clazz Class of relational expression to match (must not be null)
      *
@@ -92,34 +124,64 @@ public class RelOptRuleOperand
         RelTrait trait,
         RelOptRuleOperand [] children)
     {
-        assert (clazz != null);
-        this.clazz = clazz;
-        this.trait = trait;
-        this.children = children;
-        if (children != null) {
-            for (int i = 0; i < this.children.length; i++) {
-                this.children[i].parent = this;
-            }
-        }
+        this(clazz, trait, false, children);
+    }
+
+    /**
+     * Creates an operand that matches child operands in the order they appear.
+     *
+     * <p>If <code>children</code> is null, the rule matches regardless of the
+     * number of children.
+     *
+     * @param clazz Class of relational expression to match (must not be null)
+     *
+     * @param children Child operands; or null, meaning match any number of
+     * children
+     */
+    public RelOptRuleOperand(
+        Class clazz,
+        RelOptRuleOperand [] children)
+    {
+        this(clazz, null, false, children);
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the parent operand.
+     *
+     * @return parent operand
+     */
     public RelOptRuleOperand getParent()
     {
         return parent;
     }
 
+    /**
+     * Sets the parent operand.
+     *
+     * @param parent Parent operand
+     */
     public void setParent(RelOptRuleOperand parent)
     {
         this.parent = parent;
     }
 
+    /**
+     * Returns the rule this operand belongs to.
+     *
+     * @return containing rule
+     */
     public RelOptRule getRule()
     {
         return rule;
     }
 
+    /**
+     * Sets the rule this operand belongs to
+     *
+     * @param rule containing rule
+     */
     public void setRule(RelOptRule rule)
     {
         this.rule = rule;

@@ -28,8 +28,9 @@ import junit.framework.*;
 
 
 /**
- * ReflectVisitorTest tests {@link ReflectUtil#invokeVisitor} and provides a
- * contrived example of how to use it.
+ * ReflectVisitorTest tests {@link ReflectUtil#invokeVisitor} and
+ * {@link ReflectUtil.ReflectiveVisitor} and provides a
+ * contrived example of how to use them.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -167,8 +168,14 @@ public class ReflectVisitorTest
      * subclass of Number.
      */
     public abstract class NumberNegater
+        implements ReflectUtil.ReflectiveVisitor
     {
         protected Number result;
+        private final ReflectUtil.VisitDispatcher<NumberNegater, Number>
+            dispatcher =
+            ReflectUtil.createDispatcher(
+                NumberNegater.class,
+                Number.class);
 
         /**
          * Negates the given number.
@@ -176,9 +183,31 @@ public class ReflectVisitorTest
          * @param n the number to be negated
          *
          * @return the negated result; not guaranteed to be the same concrete
-         * type as n; null is returend if n's type wasn't handled
+         * type as n; null is returned if n's type wasn't handled
          */
         public Number negate(Number n)
+        {
+            // we specify Number.class as the hierarchy root so
+            // that extraneous visit methods are ignored
+            result = null;
+            dispatcher.invokeVisitor(
+                this,
+                n,
+                "visit");
+            return result;
+        }
+
+        /**
+         * Negates the given number without using a dispatcher object to
+         * cache applicable methods. The results should be the same as
+         * {@link #negate(Number)}.
+         *
+         * @param n the number to be negated
+         *
+         * @return the negated result; not guaranteed to be the same concrete
+         * type as n; null is returned if n's type wasn't handled
+         */
+        public Number negateWithoutDispatcher(Number n)
         {
             // we specify Number.class as the hierarchy root so
             // that extraneous visit methods are ignored

@@ -23,6 +23,7 @@ package com.disruptivetech.farrago.volcano;
 import java.io.*;
 
 import java.util.*;
+import java.util.regex.*;
 import java.util.logging.*;
 
 import org.eigenbase.oj.rel.*;
@@ -489,6 +490,7 @@ public class VolcanoPlanner
                 }
 
                 VolcanoRuleMatch match = ruleQueue.popMatch(phase);
+                assert match.getRule().matches(match);
                 match.onMatch();
 
                 // The root may have been merged with another
@@ -893,6 +895,7 @@ SUBSET_LOOP:
      * Dumps the internal state of this VolcanoPlanner to a writer.
      *
      * @param pw Print writer
+     * @see #normalizePlan(String)
      */
     void dump(PrintWriter pw)
     {
@@ -1393,6 +1396,50 @@ SUBSET_LOOP:
             return 0;
         } else {
             return subset.timestamp;
+        }
+    }
+
+    /**
+     * Normalizes references to subsets within the string representation of a
+     * plan.
+     *
+     * <p>This is useful when writing tests: it helps to ensure
+     * that tests don't break when an extra rule is introduced that
+     * generates a new subset and causes subsequent subset numbers to be
+     * off by one.
+     *
+     * <p>For example,
+     * <blockquote>
+     * FennelAggRel.FENNEL_EXEC(child=Subset#17.FENNEL_EXEC,groupCount=1,EXPR$1=COUNT())
+     * &nbsp;&nbsp;FennelSortRel.FENNEL_EXEC(child=Subset#2.FENNEL_EXEC,key=[0],discardDuplicates=false)
+     * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(child=Subset#4.FENNEL_EXEC,expr#0..8={inputs},expr#9=3456,DEPTNO=$t7,$f0=$t9)
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(table=[CATALOG, SALES, EMP])
+     * </blockquote>
+     * becomes
+     * <blockquote>
+     * FennelAggRel.FENNEL_EXEC(child=Subset#{0}.FENNEL_EXEC,groupCount=1,EXPR$1=COUNT())
+     * &nbsp;&nbsp;FennelSortRel.FENNEL_EXEC(child=Subset#{1}.FENNEL_EXEC,key=[0],discardDuplicates=false)
+     * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(child=Subset#{2}.FENNEL_EXEC,expr#0..8={inputs},expr#9=3456,DEPTNO=$t7,$f0=$t9)
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(table=[CATALOG, SALES, EMP])
+     * </blockquote>
+     *
+     * @param plan Plan
+     * @return Normalized plan
+     */
+    public static String normalizePlan(String plan)
+    {
+        if (plan == null) {
+            return null;
+        }
+        final Pattern poundDigits = Pattern.compile("Subset#[0-9]+\\.");
+        int i = 0;
+        while (true) {
+            final Matcher matcher = poundDigits.matcher(plan);
+            if (!matcher.find()) {
+                return plan;
+            }
+            final String token = matcher.group(); // e.g. "Subset#23."
+            plan = plan.replace(token, "Subset#{" + i++ + "}.");
         }
     }
 

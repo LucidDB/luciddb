@@ -43,7 +43,7 @@ import org.eigenbase.util.*;
 
 
 /**
- * FarragoReduceExpressionsRule applies various simplifying transformations on
+ * Collection of planner rules that apply various simplifying transformations on
  * RexNode trees. Currently, the only transformation is constant reduction,
  * which evaluates constant subtrees, replacing them with a corresponding
  * RexLiteral.
@@ -51,15 +51,189 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoReduceExpressionsRule
+public abstract class FarragoReduceExpressionsRule
     extends RelOptRule
 {
     //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getOptimizerRuleTracer();
 
+    /**
+     * Regular expression which matches the description of all instances of
+     * this rule and {@link net.sf.farrago.query.FarragoReduceValuesRule} also.
+     * Use it to prevent the planner from invoking these rules.
+     */
     public static final Pattern EXCLUSION_PATTERN =
-        Pattern.compile("FarragoReduceExpressionsRule.*");
+        Pattern.compile("FarragoReduce(Expressions|Values)Rule.*");
+
+    /**
+     * Singleton rule which reduces constants inside a {@link FilterRel}.
+     * If the condition is a constant, the filter is removed (if TRUE)
+     * or replaced with {@link EmptyRel} (if FALSE or NULL).
+     */
+    public static final FarragoReduceExpressionsRule FILTER_INSTANCE =
+        new FarragoReduceExpressionsRule(FilterRel.class)
+        {
+            public void onMatch(RelOptRuleCall call)
+            {
+                FilterRel filter = (FilterRel) call.rels[0];
+                List<RexNode> expList =
+                    new ArrayList<RexNode>(
+                        Arrays.asList(filter.getChildExps()));
+                if (reduceExpressions(filter, expList)) {
+                    assert (expList.size() == 1);
+                    final RexNode newConditionExp = expList.get(0);
+                    if (newConditionExp.isAlwaysTrue()) {
+                        call.transformTo(
+                            filter.getChild());
+                    } else if (newConditionExp instanceof RexLiteral
+                        || RexUtil.isNullLiteral(newConditionExp, true))
+                    {
+                        call.transformTo(
+                            new EmptyRel(
+                                filter.getCluster(),
+                                filter.getRowType()));
+                    } else {
+                        call.transformTo(
+                            CalcRel.createFilter(
+                                filter.getChild(),
+                                expList.get(0)));
+                    }
+                    // New plan is absolutely better than old plan.
+                    call.getPlanner().setImportance(filter, 0.0);
+                }
+            }
+        };
+
+    public static final FarragoReduceExpressionsRule PROJECT_INSTANCE =
+        new FarragoReduceExpressionsRule(ProjectRel.class)
+        {
+            public void onMatch(RelOptRuleCall call)
+            {
+                ProjectRel project = (ProjectRel) call.rels[0];
+                List<RexNode> expList =
+                    new ArrayList<RexNode>(
+                        Arrays.asList(project.getChildExps()));
+                if (reduceExpressions(project, expList)) {
+                    call.transformTo(
+                        new ProjectRel(
+                            project.getCluster(),
+                            project.getChild(),
+                            expList.toArray(new RexNode[expList.size()]),
+                            project.getRowType(),
+                            ProjectRel.Flags.Boxed,
+                            RelCollation.emptyList));
+                    // New plan is absolutely better than old plan.
+                    call.getPlanner().setImportance(project, 0.0);
+                }
+            }
+        };
+
+    public static final FarragoReduceExpressionsRule JOIN_INSTANCE =
+        new FarragoReduceExpressionsRule(JoinRel.class)
+        {
+            public void onMatch(RelOptRuleCall call)
+            {
+                JoinRel join = (JoinRel) call.rels[0];
+                List<RexNode> expList =
+                    new ArrayList<RexNode>(
+                        Arrays.asList(join.getChildExps()));
+                if (reduceExpressions(join, expList)) {
+                    call.transformTo(
+                        new JoinRel(
+                            join.getCluster(),
+                            join.getLeft(),
+                            join.getRight(),
+                            expList.get(0),
+                            join.getJoinType(),
+                            join.getVariablesStopped()));
+                    // New plan is absolutely better than old plan.
+                    call.getPlanner().setImportance(join, 0.0);
+                }
+            }
+        };
+
+    public static final FarragoReduceExpressionsRule CALC_INSTANCE =
+        new FarragoReduceExpressionsRule(CalcRel.class)
+        {
+            public void onMatch(RelOptRuleCall call)
+            {
+                CalcRel calc = (CalcRel) call.getRels()[0];
+                RexProgram program = calc.getProgram();
+                final List<RexNode> exprList = program.getExprList();
+
+                // Form a list of expressions with sub-expressions fully
+                // expanded.
+                final List<RexNode> expandedExprList =
+                    new ArrayList<RexNode>(exprList.size());
+                final RexShuttle shuttle = new RexShuttle() {
+                    public RexNode visitLocalRef(RexLocalRef localRef)
+                    {
+                        return expandedExprList.get(localRef.getIndex());
+                    }
+                };
+                for (RexNode expr : exprList) {
+                    expandedExprList.add(expr.accept(shuttle));
+                }
+                if (reduceExpressions(calc, expandedExprList)) {
+                    final RexProgramBuilder builder =
+                        new RexProgramBuilder(
+                            calc.getChild().getRowType(),
+                            calc.getCluster().getRexBuilder());
+                    List<RexLocalRef> list = new ArrayList<RexLocalRef>();
+                    for (RexNode expr : expandedExprList) {
+                        if (expr instanceof RexInputRef) {
+                            list.add(
+                                new RexLocalRef(
+                                    ((RexInputRef) expr).getIndex(),
+                                    expr.getType()));
+                        } else {
+                            list.add(builder.addExpr(expr));
+                        }
+                    }
+                    if (program.getCondition() != null) {
+                        final int conditionIndex =
+                            program.getCondition().getIndex();
+                        final RexNode newConditionExp =
+                            expandedExprList.get(conditionIndex);
+                        if (newConditionExp.isAlwaysTrue()) {
+                            // condition is always TRUE - drop it
+                        } else if (newConditionExp instanceof RexLiteral
+                            || RexUtil.isNullLiteral(newConditionExp, true))
+                        {
+                            // condition is always NULL or FALSE - replace calc
+                            // with empty
+                            call.transformTo(
+                                new EmptyRel(
+                                    calc.getCluster(),
+                                    calc.getRowType()));
+                            return;
+                        } else {
+                            builder.addCondition(list.get(conditionIndex));
+                        }
+                    }
+                    int k = 0;
+                    for (RexLocalRef projectExpr : program.getProjectList()) {
+                        final int index = projectExpr.getIndex();
+                        builder.addProject(
+                            list.get(index),
+                            program.getOutputRowType().getFieldList()
+                                .get(k++).getName());
+                    }
+                    builder.eliminateUnused();
+                    call.transformTo(
+                        new CalcRel(
+                            calc.getCluster(),
+                            calc.getTraits(),
+                            calc.getChild(),
+                            calc.getRowType(),
+                            builder.getProgram(),
+                            calc.getCollationList()));
+                    // New plan is absolutely better than old plan.
+                    call.getPlanner().setImportance(calc, 0.0);
+                }
+            }
+        };
 
     //~ Constructors -----------------------------------------------------------
 
@@ -68,9 +242,10 @@ public class FarragoReduceExpressionsRule
      *
      * @param relClass class of rels to which this rule should apply
      */
-    public FarragoReduceExpressionsRule(Class relClass)
+    private FarragoReduceExpressionsRule(Class relClass)
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 relClass,
                 null));
         description =
@@ -80,11 +255,17 @@ public class FarragoReduceExpressionsRule
 
     //~ Methods ----------------------------------------------------------------
 
-    // implement RelOptRule
-    public void onMatch(RelOptRuleCall call)
+    /**
+     * Reduces a list of expressions.
+     *
+     * @param rel Relational expression
+     * @param expList List of expressions, modified in place
+     * @return whether reduction found something to change, and succeeded
+     */
+    static boolean reduceExpressions(
+        RelNode rel,
+        List<RexNode> expList)
     {
-        RelNode rel = call.rels[0];
-        RexNode [] exps = rel.getChildExps();
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
 
         // Find reducible expressions.
@@ -95,9 +276,9 @@ public class FarragoReduceExpressionsRule
             findReducibleExps(
                 preparingStmt,
                 rel.getCluster().getTypeFactory(),
-                exps);
+                expList);
         if (reducibleExps.isEmpty()) {
-            return;
+            return false;
         }
 
         // Compute the values they reduce to.
@@ -110,7 +291,7 @@ public class FarragoReduceExpressionsRule
         FarragoSession session = getSession(rel);
         reentrantStmt.execute(session, true);
         if (reentrantStmt.failed) {
-            return;
+            return false;
         }
 
         // For ProjectRel, we have to be sure to preserve the result
@@ -119,54 +300,17 @@ public class FarragoReduceExpressionsRule
         // rules such as sarg analysis, which require bare literals.
         boolean addCasts = (rel instanceof ProjectRel);
 
-        RexNode [] newExps = new RexNode[exps.length];
-        System.arraycopy(exps, 0, newExps, 0, exps.length);
-        exps = newExps;
         RexReplacer replacer =
             new RexReplacer(
                 rexBuilder,
                 reducibleExps,
                 reducedValues,
                 addCasts);
-        for (int i = 0; i < exps.length; ++i) {
-            exps[i] = replacer.apply(exps[i]);
-        }
-
-        RelNode newRel;
-        if (rel instanceof FilterRel) {
-            assert (exps.length == 1);
-            FilterRel oldRel = (FilterRel) rel;
-            newRel =
-                CalcRel.createFilter(
-                    oldRel.getChild(),
-                    exps[0]);
-        } else if (rel instanceof ProjectRel) {
-            ProjectRel oldRel = (ProjectRel) rel;
-            newRel =
-                new ProjectRel(
-                    oldRel.getCluster(),
-                    oldRel.getChild(),
-                    exps,
-                    oldRel.getRowType(),
-                    ProjectRel.Flags.Boxed,
-                    RelCollation.emptyList);
-        } else if (rel instanceof JoinRel) {
-            JoinRel oldRel = (JoinRel) rel;
-            newRel =
-                new JoinRel(
-                    oldRel.getCluster(),
-                    oldRel.getLeft(),
-                    oldRel.getRight(),
-                    exps[0],
-                    oldRel.getJoinType(),
-                    oldRel.getVariablesStopped());
-        } else {
-            throw Util.needToImplement(rel);
-        }
-        call.transformTo(newRel);
+        replacer.apply(expList);
+        return true;
     }
 
-    private FarragoSession getSession(RelNode rel)
+    static FarragoSession getSession(RelNode rel)
     {
         FarragoSessionPlanner planner =
             (FarragoSessionPlanner) rel.getCluster().getPlanner();
@@ -174,10 +318,10 @@ public class FarragoReduceExpressionsRule
         return preparingStmt.getSession();
     }
 
-    private List<RexNode> findReducibleExps(
+    private static List<RexNode> findReducibleExps(
         FarragoSessionPreparingStmt preparingStmt,
         RelDataTypeFactory typeFactory,
-        RexNode [] exps)
+        List<RexNode> exps)
     {
         List<RexNode> result = new ArrayList<RexNode>();
         ConstantGardener gardener =
@@ -271,7 +415,7 @@ public class FarragoReduceExpressionsRule
      * Evaluates constant expressions via a reentrant query of the form "VALUES
      * (exp1, exp2, exp3, ...)".
      */
-    private static class ReentrantValuesStmt
+    static class ReentrantValuesStmt
         extends FarragoReentrantStmt
     {
         private final RexBuilder rexBuilder;
@@ -415,7 +559,7 @@ public class FarragoReduceExpressionsRule
             this.preparingStmt = preparingStmt;
             this.typeFactory = typeFactory;
             this.result = result;
-            stack = new ArrayList<Constancy>();
+            this.stack = new ArrayList<Constancy>();
         }
 
         public void analyze(RexNode exp)
@@ -510,7 +654,7 @@ public class FarragoReduceExpressionsRule
                 // cache the plan if the function is dynamic
                 preparingStmt.disableStatementCaching();
             }
-            
+
             // Row operator itself can't be reduced to a literal, but if
             // the operands are constants, we still want to reduce those
             if (callConstancy == Constancy.REDUCIBLE_CONSTANT &&

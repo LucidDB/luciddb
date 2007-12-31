@@ -442,11 +442,14 @@ public class HepPlanner
         }
 
         List<RelNode> bindings = new ArrayList<RelNode>();
+        Map<RelNode, List<RelNode>> nodeChildren =
+            new HashMap<RelNode, List<RelNode>>();
         boolean match =
             matchOperands(
                 rule.getOperand(),
                 vertex.getCurrentRel(),
-                bindings);
+                bindings,
+                nodeChildren);
 
         if (!match) {
             return null;
@@ -456,7 +459,14 @@ public class HepPlanner
             new HepRuleCall(
                 this,
                 rule.getOperand(),
-                bindings.toArray(new RelNode[bindings.size()]));
+                bindings.toArray(new RelNode[bindings.size()]),
+                nodeChildren);
+
+        // Allow the rule to apply its own side-conditions.
+        if (!rule.matches(call)) {
+            return null;
+        }
+
         fireRule(call);
 
         if (!call.getResults().isEmpty()) {
@@ -494,7 +504,8 @@ public class HepPlanner
     private boolean matchOperands(
         RelOptRuleOperand operand,
         RelNode rel,
-        List<RelNode> bindings)
+        List<RelNode> bindings,
+        Map<RelNode, List<RelNode>> nodeChildren)
     {
         if (!operand.matches(rel)) {
             return false;
@@ -506,20 +517,50 @@ public class HepPlanner
         }
         int n = childOperands.length;
         RelNode [] childRels = rel.getInputs();
-        if (childRels.length < n) {
-            return false;
-        }
-        for (int i = 0; i < n; ++i) {
-            boolean match =
-                matchOperands(
-                    childOperands[i],
-                    ((HepRelVertex) childRels[i]).getCurrentRel(),
-                    bindings);
-            if (!match) {
+        if (operand.matchAnyChildren) {
+            // For each operand, at least one child must match. If
+            // matchAnyChildren, usually there's just one operand.
+            for (RelOptRuleOperand childOperand : childOperands) {
+                boolean match = false;
+                for (int i = 0; i < childRels.length; ++i) {
+                    final HepRelVertex childRel = (HepRelVertex) childRels[i];
+                    match =
+                        matchOperands(
+                            childOperand,
+                            childRel.getCurrentRel(),
+                            bindings,
+                            nodeChildren);
+                    if (match) {
+                        break;
+                    }
+                }
+                if (!match) {
+                    return false;
+                }
+            }
+            List<RelNode> children = new ArrayList<RelNode>(childRels.length);
+            for (RelNode childRel : childRels) {
+                children.add(((HepRelVertex) childRel).getCurrentRel());
+            }
+            nodeChildren.put(rel, children);
+            return true;
+        } else {
+            if (childRels.length < n) {
                 return false;
             }
+            for (int i = 0; i < n; ++i) {
+                boolean match =
+                    matchOperands(
+                        childOperands[i],
+                        ((HepRelVertex) childRels[i]).getCurrentRel(),
+                        bindings,
+                        nodeChildren);
+                if (!match) {
+                    return false;
+                }
+            }
+            return true;
         }
-        return true;
     }
 
     private HepRelVertex applyTransformationResults(
