@@ -52,7 +52,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class DdlHandler
+public abstract class DdlHandler implements ReflectUtil.ReflectiveVisitor
 {
     //~ Static fields/initializers ---------------------------------------------
 

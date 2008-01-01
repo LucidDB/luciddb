@@ -20,6 +20,8 @@
 */
 package com.disruptivetech.farrago.test;
 
+import java.util.*;
+
 import com.disruptivetech.farrago.calc.*;
 import com.disruptivetech.farrago.rel.*;
 
@@ -741,7 +743,9 @@ public class Rex2CalcPlanTest
                 RelOptRuleOperand operand,
                 final RelNode [] rels)
             {
-                super(null, operand, rels);
+                super(
+                    null, operand, rels,
+                    Collections.<RelNode, List<RelNode>>emptyMap());
             }
 
             public void transformTo(RelNode rel)

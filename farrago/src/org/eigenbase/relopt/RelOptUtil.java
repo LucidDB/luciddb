@@ -1623,6 +1623,9 @@ public abstract class RelOptUtil
         planner.addRule(MergeProjectOntoCalcRule.instance);
 
         planner.addRule(MergeCalcRule.instance);
+        planner.addRule(RemoveEmptyRule.UNION_INSTANCE);
+        planner.addRule(RemoveEmptyRule.PROJECT_INSTANCE);
+        planner.addRule(RemoveEmptyRule.FILTER_INSTANCE);
     }
 
     /**

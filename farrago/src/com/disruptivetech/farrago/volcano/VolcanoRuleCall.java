@@ -31,6 +31,9 @@ import org.eigenbase.util.*;
 /**
  * <code>VolcanoRuleCall</code> implements the {@link RelOptRuleCall} interface
  * for VolcanoPlanner.
+ *
+ * @version $Id$
+ * @author jhyde
  */
 public class VolcanoRuleCall
     extends RelOptRuleCall
@@ -46,15 +49,30 @@ public class VolcanoRuleCall
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a rule call, internal, with array to hold bindings.
+     *
+     * @param planner Planner
+     * @param operand First operand of the rule
+     * @param rels Array which will hold the matched relational expressions
+     */
     protected VolcanoRuleCall(
-        VolcanoPlanner volcanoPlanner,
+        VolcanoPlanner planner,
         RelOptRuleOperand operand,
         RelNode [] rels)
     {
-        super(volcanoPlanner, operand, rels);
-        this.volcanoPlanner = volcanoPlanner;
+        super(
+            planner, operand, rels,
+            Collections.<RelNode, List<RelNode>>emptyMap());
+        this.volcanoPlanner = planner;
     }
 
+    /**
+     * Creates a rule call.
+     *
+     * @param planner Planner
+     * @param operand First operand of the rule
+     */
     VolcanoRuleCall(
         VolcanoPlanner planner,
         RelOptRuleOperand operand)
@@ -129,9 +147,12 @@ public class VolcanoRuleCall
 
     /**
      * Called when all operands have matched.
+     *
+     * @pre getRule().matches(this)
      */
     protected void onMatch()
     {
+        assert getRule().matches(this);
         try {
             if (volcanoPlanner.isRuleExcluded(getRule())) {
                 if (tracer.isLoggable(Level.FINE)) {
@@ -241,13 +262,21 @@ public class VolcanoRuleCall
     }
 
     /**
+     * Recursively matches operands above a given solve order.
+     *
+     * @param solve Solver order of operand
      * @pre solve &gt; 0
      * @pre solve &lt;= rule.operands.length
      */
     private void matchRecurse(int solve)
     {
         if (solve == getRule().operands.length) {
-            onMatch();
+            // We have matched all operands. Now ask the rule whether it
+            // matches; this gives the rule chance to apply side-conditions.
+            // If the side-conditions are satisfied, we have a match.
+            if (getRule().matches(this)) {
+                onMatch();
+            }
         } else {
             int operandOrdinal = getOperand0().solveOrder[solve];
             int previousOperandOrdinal = getOperand0().solveOrder[solve - 1];

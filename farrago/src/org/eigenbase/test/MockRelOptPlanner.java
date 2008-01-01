@@ -89,6 +89,15 @@ public class MockRelOptPlanner
         return root;
     }
 
+    /**
+     * Recursively matches a rule.
+     *
+     * @param rel Relational expression
+     * @param parent Parent relational expression
+     * @param ordinalInParent Ordinal of relational expression among its
+     *                        siblings
+     * @return whether match occurred
+     */
     private boolean matchRecursive(
         RelNode rel,
         RelNode parent,
@@ -103,8 +112,10 @@ public class MockRelOptPlanner
                 new MockRuleCall(
                     this,
                     rule.getOperand(),
-                    bindings.toArray(RelNode.emptyArray));
-            rule.onMatch(call);
+                    bindings.toArray(new RelNode[bindings.size()]));
+            if (rule.matches(call)) {
+                rule.onMatch(call);
+            }
         }
 
         if (transformationResult != null) {
@@ -125,6 +136,14 @@ public class MockRelOptPlanner
         return false;
     }
 
+    /**
+     * Matches a relational expression to a rule.
+     *
+     * @param operand Root operand of rule
+     * @param rel Relational expression
+     * @param bindings Bindings, populated on successful match
+     * @return whether relational expression matched rule
+     */
     private boolean match(
         RelOptRuleOperand operand,
         RelNode rel,
@@ -179,12 +198,21 @@ public class MockRelOptPlanner
     private class MockRuleCall
         extends RelOptRuleCall
     {
+        /**
+         * Creates a MockRuleCall.
+         *
+         * @param planner Planner
+         * @param operand Operand
+         * @param rels List of matched relational expressions
+         */
         MockRuleCall(
             RelOptPlanner planner,
             RelOptRuleOperand operand,
             RelNode [] rels)
         {
-            super(planner, operand, rels);
+            super(
+                planner, operand, rels,
+                Collections.<RelNode, List<RelNode>>emptyMap());
         }
 
         // implement RelOptRuleCall

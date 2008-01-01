@@ -238,10 +238,12 @@ public abstract class AbstractRelOptPlanner
      * Fires a rule, taking care of tracing and listener notification.
      *
      * @param ruleCall description of rule call
+     * @pre ruleCall.getRule().matches(ruleCall)
      */
     protected void fireRule(
         RelOptRuleCall ruleCall)
     {
+        assert ruleCall.getRule().matches(ruleCall);
         if (isRuleExcluded(ruleCall.getRule())) {
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine(

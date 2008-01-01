@@ -172,6 +172,10 @@ public class DdlValidator
 
     private String timestamp;
 
+    private final ReflectUtil.VisitDispatcher<DdlHandler, CwmModelElement>
+        dispatcher =
+        ReflectUtil.createDispatcher(DdlHandler.class, CwmModelElement.class);
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -1314,12 +1318,11 @@ public class DdlValidator
         CwmModelElement modelElement,
         String action)
     {
-        for (Object handler : actionHandlers) {
+        for (DdlHandler handler : actionHandlers) {
             boolean handled =
-                ReflectUtil.invokeVisitor(
+                dispatcher.invokeVisitor(
                     handler,
                     modelElement,
-                    CwmModelElement.class,
                     action);
             if (handled) {
                 return true;

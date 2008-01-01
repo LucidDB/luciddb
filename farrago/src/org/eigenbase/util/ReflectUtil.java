@@ -221,12 +221,33 @@ public abstract class ReflectUtil
      * @return true if a matching visit method was found and invoked
      */
     public static boolean invokeVisitor(
+        ReflectiveVisitor visitor,
+        Object visitee,
+        Class hierarchyRoot,
+        String visitMethodName)
+    {
+        return invokeVisitorInternal(
+            visitor, visitee, hierarchyRoot, visitMethodName);
+    }
+
+    /**
+     * Shared implementation of the two forms of invokeVisitor.
+     *
+     * @param visitor object whose visit method is to be invoked
+     * @param visitee object to be passed as a parameter to the visit method
+     * @param hierarchyRoot if non-null, visitor method will only be invoked if
+     * it takes a parameter whose type is a subtype of hierarchyRoot
+     * @param visitMethodName name of visit method, e.g. "visit"
+     *
+     * @return true if a matching visit method was found and invoked
+     */
+    private static boolean invokeVisitorInternal(
         Object visitor,
         Object visitee,
         Class hierarchyRoot,
         String visitMethodName)
     {
-        Class<? extends Object> visitorClass = visitor.getClass();
+        Class<?> visitorClass = visitor.getClass();
         Class visiteeClass = visitee.getClass();
         Method method =
             lookupVisitMethod(
@@ -267,6 +288,29 @@ public abstract class ReflectUtil
     }
 
     /**
+     * For backwards compatibility. Remove ASAP.
+     *
+     * @deprecated
+     *
+     * @param visitor object whose visit method is to be invoked
+     * @param visitee object to be passed as a parameter to the visit method
+     * @param hierarchyRoot if non-null, visitor method will only be invoked if
+     * it takes a parameter whose type is a subtype of hierarchyRoot
+     * @param visitMethodName name of visit method, e.g. "visit"
+     *
+     * @return true if a matching visit method was found and invoked
+     */
+    public static boolean invokeVisitor(
+        Object visitor,
+        Object visitee,
+        Class hierarchyRoot,
+        String visitMethodName)
+    {
+        return invokeVisitorInternal(
+            visitor, visitee, hierarchyRoot, visitMethodName);
+    }
+
+    /**
      * Looks up a visit method.
      *
      * @param visitorClass class of object whose visit method is to be invoked
@@ -277,7 +321,7 @@ public abstract class ReflectUtil
      * @return method found, or null if none found
      */
     public static Method lookupVisitMethod(
-        Class<? extends Object> visitorClass,
+        Class<?> visitorClass,
         Class visiteeClass,
         String visitMethodName)
     {
@@ -285,12 +329,14 @@ public abstract class ReflectUtil
             visitorClass,
             visiteeClass,
             visitMethodName,
-            Collections.EMPTY_LIST);
+            Collections.<Class>emptyList());
     }
 
     /**
      * Looks up a visit method taking additional parameters beyond the
      * overloaded visitee type.
+     *
+     * @see #createDispatcher(Class,Class)
      *
      * @param visitorClass class of object whose visit method is to be invoked
      * @param visiteeClass class of object to be passed as a parameter to the
@@ -301,13 +347,11 @@ public abstract class ReflectUtil
      * @return method found, or null if none found
      */
     public static Method lookupVisitMethod(
-        Class<? extends Object> visitorClass,
+        Class<?> visitorClass,
         Class visiteeClass,
         String visitMethodName,
         List<Class> additionalParameterTypes)
     {
-        // TODO jvs 28-Nov-2004:  cache results in a dispatch map
-
         Class [] paramTypes = new Class[1 + additionalParameterTypes.size()];
         int iParam = 0;
         paramTypes[iParam++] = visiteeClass;
@@ -372,6 +416,77 @@ public abstract class ReflectUtil
     }
 
     /**
+     * Creates a dispatcher for calls to {@link #lookupVisitMethod}.
+     * The dispatcher caches methods between invocations.
+     *
+     * @param visitorBaseClazz Visitor base class
+     * @param visiteeBaseClazz Visitee base class
+     *
+     * @return cache of methods
+     */
+    public static <R extends ReflectiveVisitor, E> VisitDispatcher<R, E>
+    createDispatcher(
+        final Class<R> visitorBaseClazz,
+        final Class<E> visiteeBaseClazz)
+    {
+        assert ReflectiveVisitor.class.isAssignableFrom(visitorBaseClazz);
+        assert Object.class.isAssignableFrom(visiteeBaseClazz);
+        return new VisitDispatcher<R, E>()
+        {
+            final Map<List<Object>, Method> map =
+                new HashMap<List<Object>, Method>();
+
+            public Method lookupVisitMethod(
+                Class<? extends R> visitorClass,
+                Class<? extends E> visiteeClass,
+                String visitMethodName)
+            {
+                return lookupVisitMethod(
+                    visitorClass,
+                    visiteeClass,
+                    visitMethodName,
+                    Collections.<Class>emptyList());
+            }
+
+            public Method lookupVisitMethod(
+                Class<? extends R> visitorClass,
+                Class<? extends E> visiteeClass,
+                String visitMethodName,
+                List<Class> additionalParameterTypes)
+            {
+                final List<Object> key =
+                    Arrays.asList(
+                        visitorClass,
+                        visiteeClass,
+                        visitMethodName,
+                        additionalParameterTypes);
+                Method method = map.get(key);
+                if (method == null) {
+                    if (map.containsKey(key)) {
+                        // We already looked for the method and found nothing.
+                    } else {
+                        method =
+                            ReflectUtil.lookupVisitMethod(
+                                visitorClass,
+                                visiteeClass,
+                                visitMethodName,
+                                additionalParameterTypes);
+                        map.put(key, method);
+                    }
+                }
+                return method;
+            }
+
+            public boolean invokeVisitor(
+                R visitor, E visitee, String visitMethodName)
+            {
+                return ReflectUtil.invokeVisitor(
+                    visitor, visitee, visiteeBaseClazz, visitMethodName);
+            }
+        };
+    }
+
+    /**
      * Looks up a class by name. This is like Class.forName, except that it
      * handles primitive type names.
      *
@@ -403,6 +518,87 @@ public abstract class ReflectUtil
         } else {
             return Class.forName(name);
         }
+    }
+
+    /**
+     * Interface for looking up methods relating to reflective visitation.
+     * One possible implementation would cache the results.
+     *
+     * <p>Type parameter 'R' is the base class of visitoR class;
+     * type parameter 'E' is the base class of visiteE class.
+     *
+     * <p>TODO: obsolete {@link ReflectUtil#lookupVisitMethod}, and
+     * use caching in implementing that method.
+     */
+    public interface VisitDispatcher<R extends ReflectiveVisitor, E>
+    {
+        /**
+         * Looks up a visit method taking additional parameters beyond the
+         * overloaded visitee type.
+         *
+         * @param visitorClass class of object whose visit method is to be invoked
+         * @param visiteeClass class of object to be passed as a parameter to the
+         * visit method
+         * @param visitMethodName name of visit method
+         * @param additionalParameterTypes list of additional parameter types
+         *
+         * @return method found, or null if none found
+         */
+        Method lookupVisitMethod(
+            Class<? extends R> visitorClass,
+            Class<? extends E> visiteeClass,
+            String visitMethodName,
+            List<Class> additionalParameterTypes);
+
+        /**
+         * Looks up a visit method.
+         *
+         * @param visitorClass class of object whose visit method is to be invoked
+         * @param visiteeClass class of object to be passed as a parameter to the
+         * visit method
+         * @param visitMethodName name of visit method
+         *
+         * @return method found, or null if none found
+         */
+        Method lookupVisitMethod(
+            Class<? extends R> visitorClass,
+            Class<? extends E> visiteeClass,
+            String visitMethodName);
+
+        /**
+         * Implements the {@link Glossary#VisitorPattern} via reflection. The
+         * basic technique is taken from <a
+         * href="http://www.javaworld.com/javaworld/javatips/jw-javatip98.html">
+         * a Javaworld article</a>. For an example of how to use it, see {@link
+         * ReflectVisitorTest}. Visit method lookup follows the same rules as if
+         * compile-time resolution for VisitorClass.visit(VisiteeClass) were
+         * performed. An ambiguous match due to multiple interface inheritance
+         * results in an IllegalArgumentException. A non-match is indicated by
+         * returning false.
+         *
+         * @param visitor object whose visit method is to be invoked
+         * @param visitee object to be passed as a parameter to the visit method
+         * @param visitMethodName name of visit method, e.g. "visit"
+         *
+         * @return true if a matching visit method was found and invoked
+         */
+        boolean invokeVisitor(
+            R visitor,
+            E visitee,
+            String visitMethodName);
+    }
+
+    /**
+     * Object which can be a target for a reflective visitation (see
+     * {@link ReflectUtil#invokeVisitor(ReflectiveVisitor, Object, Class, String)}.
+     *
+     * <p>This is a tagging interface: it has no methods, and is not even
+     * required in order to use reflective visitation, but serves to advise
+     * users of the class of the intended use of the class and refer them to
+     * auxilliary classes.
+     */
+    public interface ReflectiveVisitor
+    {
     }
 }
 
