@@ -424,14 +424,15 @@ public abstract class ReflectUtil
      *
      * @return cache of methods
      */
-    public static <R extends ReflectiveVisitor, E> VisitDispatcher<R, E>
+    public static
+        <R extends ReflectiveVisitor, E> ReflectiveVisitDispatcher<R, E>
     createDispatcher(
         final Class<R> visitorBaseClazz,
         final Class<E> visiteeBaseClazz)
     {
         assert ReflectiveVisitor.class.isAssignableFrom(visitorBaseClazz);
         assert Object.class.isAssignableFrom(visiteeBaseClazz);
-        return new VisitDispatcher<R, E>()
+        return new ReflectiveVisitDispatcher<R, E>()
         {
             final Map<List<Object>, Method> map =
                 new HashMap<List<Object>, Method>();
@@ -518,87 +519,6 @@ public abstract class ReflectUtil
         } else {
             return Class.forName(name);
         }
-    }
-
-    /**
-     * Interface for looking up methods relating to reflective visitation.
-     * One possible implementation would cache the results.
-     *
-     * <p>Type parameter 'R' is the base class of visitoR class;
-     * type parameter 'E' is the base class of visiteE class.
-     *
-     * <p>TODO: obsolete {@link ReflectUtil#lookupVisitMethod}, and
-     * use caching in implementing that method.
-     */
-    public interface VisitDispatcher<R extends ReflectiveVisitor, E>
-    {
-        /**
-         * Looks up a visit method taking additional parameters beyond the
-         * overloaded visitee type.
-         *
-         * @param visitorClass class of object whose visit method is to be invoked
-         * @param visiteeClass class of object to be passed as a parameter to the
-         * visit method
-         * @param visitMethodName name of visit method
-         * @param additionalParameterTypes list of additional parameter types
-         *
-         * @return method found, or null if none found
-         */
-        Method lookupVisitMethod(
-            Class<? extends R> visitorClass,
-            Class<? extends E> visiteeClass,
-            String visitMethodName,
-            List<Class> additionalParameterTypes);
-
-        /**
-         * Looks up a visit method.
-         *
-         * @param visitorClass class of object whose visit method is to be invoked
-         * @param visiteeClass class of object to be passed as a parameter to the
-         * visit method
-         * @param visitMethodName name of visit method
-         *
-         * @return method found, or null if none found
-         */
-        Method lookupVisitMethod(
-            Class<? extends R> visitorClass,
-            Class<? extends E> visiteeClass,
-            String visitMethodName);
-
-        /**
-         * Implements the {@link Glossary#VisitorPattern} via reflection. The
-         * basic technique is taken from <a
-         * href="http://www.javaworld.com/javaworld/javatips/jw-javatip98.html">
-         * a Javaworld article</a>. For an example of how to use it, see {@link
-         * ReflectVisitorTest}. Visit method lookup follows the same rules as if
-         * compile-time resolution for VisitorClass.visit(VisiteeClass) were
-         * performed. An ambiguous match due to multiple interface inheritance
-         * results in an IllegalArgumentException. A non-match is indicated by
-         * returning false.
-         *
-         * @param visitor object whose visit method is to be invoked
-         * @param visitee object to be passed as a parameter to the visit method
-         * @param visitMethodName name of visit method, e.g. "visit"
-         *
-         * @return true if a matching visit method was found and invoked
-         */
-        boolean invokeVisitor(
-            R visitor,
-            E visitee,
-            String visitMethodName);
-    }
-
-    /**
-     * Object which can be a target for a reflective visitation (see
-     * {@link ReflectUtil#invokeVisitor(ReflectiveVisitor, Object, Class, String)}.
-     *
-     * <p>This is a tagging interface: it has no methods, and is not even
-     * required in order to use reflective visitation, but serves to advise
-     * users of the class of the intended use of the class and refer them to
-     * auxilliary classes.
-     */
-    public interface ReflectiveVisitor
-    {
     }
 }
 

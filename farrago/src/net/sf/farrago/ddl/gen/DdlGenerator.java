@@ -59,7 +59,7 @@ import org.eigenbase.jmi.*;
  * @version $Id$
  */
 public abstract class DdlGenerator
-    implements ReflectUtil.ReflectiveVisitor
+    implements ReflectiveVisitor
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -71,7 +71,7 @@ public abstract class DdlGenerator
     private boolean schemaQualified;
     protected String previousSetSchema;
 
-    private final ReflectUtil.VisitDispatcher<DdlGenerator, CwmModelElement>
+    private final ReflectiveVisitDispatcher<DdlGenerator, CwmModelElement>
         visitDispatcher =
         ReflectUtil.createDispatcher(
             DdlGenerator.class, CwmModelElement.class);

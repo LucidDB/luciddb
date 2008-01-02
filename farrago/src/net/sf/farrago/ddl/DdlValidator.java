@@ -172,7 +172,7 @@ public class DdlValidator
 
     private String timestamp;
 
-    private final ReflectUtil.VisitDispatcher<DdlHandler, CwmModelElement>
+    private final ReflectiveVisitDispatcher<DdlHandler, CwmModelElement>
         dispatcher =
         ReflectUtil.createDispatcher(DdlHandler.class, CwmModelElement.class);
 

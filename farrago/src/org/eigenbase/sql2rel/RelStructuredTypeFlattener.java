@@ -76,7 +76,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class RelStructuredTypeFlattener
-    implements ReflectUtil.ReflectiveVisitor
+    implements ReflectiveVisitor
 {
     //~ Instance fields --------------------------------------------------------
 
@@ -718,7 +718,7 @@ public class RelStructuredTypeFlattener
     private class RewriteRelVisitor
         extends RelVisitor
     {
-        private final ReflectUtil.VisitDispatcher<
+        private final ReflectiveVisitDispatcher<
             RelStructuredTypeFlattener,RelNode> dispatcher =
             ReflectUtil.createDispatcher(
                 RelStructuredTypeFlattener.class, RelNode.class);
