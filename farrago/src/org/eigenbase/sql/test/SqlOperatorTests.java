@@ -2377,12 +2377,10 @@ public abstract class SqlOperatorTests
             "++interval '-6:2:8' hour to second",
             "-6:02:08",
             "INTERVAL HOUR TO SECOND NOT NULL");
-        if (Bug.Frg254Fixed) {
-            getTester().checkScalar(
-                "+interval '6:2:8.234' hour to second",
-                "+06:02:08.234",
-                "INTERVAL HOUR TO SECOND NOT NULL");
-        }
+        getTester().checkScalar(
+            "+interval '6:2:8.234' hour to second",
+            "+6:02:08.234",
+            "INTERVAL HOUR TO SECOND NOT NULL");
         getTester().checkScalar(
             "+interval '5' month",
             "+5",

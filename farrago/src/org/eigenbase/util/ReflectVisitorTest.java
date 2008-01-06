@@ -29,7 +29,7 @@ import junit.framework.*;
 
 /**
  * ReflectVisitorTest tests {@link ReflectUtil#invokeVisitor} and
- * {@link ReflectUtil.ReflectiveVisitor} and provides a
+ * {@link ReflectiveVisitor} and provides a
  * contrived example of how to use them.
  *
  * @author John V. Sichi
@@ -168,10 +168,10 @@ public class ReflectVisitorTest
      * subclass of Number.
      */
     public abstract class NumberNegater
-        implements ReflectUtil.ReflectiveVisitor
+        implements ReflectiveVisitor
     {
         protected Number result;
-        private final ReflectUtil.VisitDispatcher<NumberNegater, Number>
+        private final ReflectiveVisitDispatcher<NumberNegater, Number>
             dispatcher =
             ReflectUtil.createDispatcher(
                 NumberNegater.class,

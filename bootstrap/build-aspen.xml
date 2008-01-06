@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Delegating build script used by Cruise Control to build aspen. -->
+<!-- $Id$ -->
 <project name="build-aspen" default="build">
 	<property environment="env"/>
 
@@ -14,7 +15,7 @@
 
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Aspen project" unless="no-sync">
-		<p4sync view="//depot/aspen/..." failonerror="true"/>
+		<p4sync view="${aspen_root}/..." failonerror="true"/>
 	</target>
 
 	<!-- basic build targets -->
@@ -42,22 +43,68 @@
 
 
 	<!-- continuous intregration targets -->
-	<target name="integration-build-and-test"
-	        depends="integration-test"
-	        description="Build and test the Aspen project and its dependencies in a clean tree"/>
 
-	<target name="integration-test" depends="integration-build">
+	<!-- indirections from config-aspen.xml substitution targets -->
+	<target name="entry-target-aspen-debug"
+	        depends="integration-build-and-test-debug"
+	        description="Entry point for cruise control aspen-debug project">
+	</target>
+	<target name="entry-target-aspen-opto"
+	        depends="integration-build-and-test-opto"
+	        description="Entry point for cruise control aspen-opto project">
+	</target>
+	
+	<!-- integration-build-and-test -->
+	<target name="integration-build-and-test-debug"
+	        depends="integration-test-debug,integration-distbuild-debug"
+	        description="Build and test the debut Aspen project and its dependencies in a clean tree">
+	</target>
+	<target name="integration-build-and-test-opto"
+	        depends="integration-test-opto,integration-distbuild-opto"
+	        description="Build and test the optimized Aspen project and its dependencies in a clean tree">
+	</target>
+
+	<!-- integration-test -->
+	<target name="integration-test-debug" depends="integration-build-debug">
+		<!-- clean build runs tests automagically -->
+	</target>
+	<target name="integration-test-opto" depends="integration-build-opto">
 		<!-- clean build runs tests automagically -->
 	</target>
 
-	<target name="integration-build"
-	        depends="integration-copy,integration-farrago,integration-fennel,integration-thirdparty">
+	<!-- integration-build -->
+	<target name="integration-build-debug"
+	        depends="integration-copy,integration-thirdparty,integration-fennel,integration-farrago">
 		<antcall target="integration-configure-tests"/>
 		<antcall target="do-cleanbuild">
 			<param name="build.home" location="${integration.build.home}"/>
+			<param name="build.opto" value="--without-optimization"/>
+		</antcall>
+	</target>
+	<target name="integration-build-opto"
+	        depends="integration-copy,integration-thirdparty,integration-fennel,integration-farrago">
+		<antcall target="integration-configure-tests"/>
+		<antcall target="do-cleanbuild">
+			<param name="build.home" location="${integration.build.home}"/>
+			<param name="build.opto" value="--with-optimization"/>
 		</antcall>
 	</target>
 
+	<!-- integration-distbuild -->
+	<target name="integration-distbuild-debug">
+		<antcall target="do-distbuild">
+			<param name="build.home" location="${integration.build.home}"/>
+			<param name="build.opto" value="--without-optimization"/>
+		</antcall>
+	</target>
+	<target name="integration-distbuild-opto">
+		<antcall target="do-distbuild">
+			<param name="build.home" location="${integration.build.home}"/>
+			<param name="build.opto" value="--with-optimization"/>
+		</antcall>
+	</target>
+
+	<!-- integration-configure-tests -->
 	<target name="integration-configure-tests">
 		<chmod file="${integration.build.home}/aspen/aspen.properties" perm="u+w"/>
 		<replace file="${integration.build.home}/aspen/aspen.properties"
@@ -81,24 +128,31 @@ saffron.opt.allowInfiniteCostConverters=true
 </echo>
 	</target>
 
+	<!-- integration-copy -->
 	<target name="integration-copy" depends="sync">
+		<mkdir dir="${integration.build.home}"/>
 		<delete dir="${integration.build.home}/aspen"/>
-		<mkdir dir="${integration.build.home}/aspen"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
-		<echo message="Copying ./aspen to ${integration.build.home}/"/>
-		<exec dir="${default.build.home}" executable="cp" failonerror="true">
+		<echo message="Copy ${srcdir}/aspen to ${integration.build.home}"/>
+		<exec dir="${srcdir}" executable="cp" failonerror="true">
 			<arg value="-pr"/>
-			<arg value="./aspen/"/>
-			<arg value="${integration.build.home}/"/>
+			<arg value="${srcdir}/aspen"/>
+			<arg value="${integration.build.home}"/>
 		</exec>
+	</target>
+
+       <target name="integration-thirdparty">
+		<antcall target="do-thirdparty">
+			<param name="build.target" value="integration-build"/>
+		</antcall>
 	</target>
 
 	<target name="integration-farrago">
 		<!-- just set up a clean farrago: we'll build it ourselves -->
 		<ant antfile="build-farrago.xml" target="integration-copy" inheritAll="false">
 		    <propertyset>
-		        <propertyref prefix="open_"/>
+			<propertyref prefix="open_"/>
 		    </propertyset>
 		</ant>
 	</target>
@@ -107,19 +161,11 @@ saffron.opt.allowInfiniteCostConverters=true
 		<!-- just set up a clean fennel: we'll build it ourselves -->
 		<ant antfile="build-fennel.xml" target="integration-copy" inheritAll="false">
 		    <propertyset>
-		        <propertyref prefix="open_"/>
+			<propertyref prefix="open_"/>
 		    </propertyset>
 		</ant>
 	</target>
 
-	<target name="integration-thirdparty">
-		<!-- just set up a clean thirdparty: we'll build it ourselves -->
-		<ant antfile="build-thirdparty.xml" target="integration-copy" inheritAll="false">
-		    <propertyset>
-		        <propertyref prefix="open_"/>
-		    </propertyset>
-		</ant>
-	</target>
 
 	<!-- helper targets -->
 
@@ -158,6 +204,20 @@ saffron.opt.allowInfiniteCostConverters=true
 			<arg value="${build.home}/aspen/initBuild.sh"/>
 			<arg value="${build.home}/farrago"/>
                         <arg value="--with-tests"/>
+                        <arg value="--release"/>
+                        <arg value="${build.opto}"/>
+			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
+			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
+		</exec>
+	</target>
+
+	<target name="do-distbuild">
+		<exec dir="${build.home}/aspen" executable="bash" failonerror="true">
+			<arg value="${build.home}/aspen/distBuild.sh"/>
+			<arg value="${build.home}/farrago"/>
+                        <arg value="--skip-init-build"/>
+                        <arg value="--skip-postgres"/>
+                        <arg value="${build.opto}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
 		</exec>

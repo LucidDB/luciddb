@@ -51,18 +51,13 @@ public abstract class InStrUdf
         int subStrLen = subStr.length();
 
         if (startPos == 0 || nthAppearance < 1 || startPos > inStrLen || 
+            subStrLen == 0 || subStrLen > inStrLen || 
             inStrLen > MAX_VARCHAR_PRECISION || 
             subStrLen > MAX_VARCHAR_PRECISION) 
         {
             throw ApplibResourceObject.get().InStrInvalidArgument.ex(
                 inStr, subStr, String.valueOf(startPos), 
                 String.valueOf(nthAppearance));
-        }
-
-        // returns 0 is substring is longer than instring or if substring 
-        // length is 0
-        if ((subStrLen > inStrLen) || (subStrLen == 0)) {
-            return 0;
         }
 
         if (startPos > 0) {

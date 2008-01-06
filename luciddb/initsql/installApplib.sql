@@ -257,7 +257,7 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.string.RightNUdf.exe
 
 -- define StrReplace function
 create or replace function applib.str_replace(inStr varchar(65535), oldStr varchar(65535), newStr varchar(65535))
-returns varchar(65535)
+returns varchar(128)
 language java
 deterministic
 no sql

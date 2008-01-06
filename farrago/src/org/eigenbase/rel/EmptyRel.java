@@ -47,12 +47,12 @@ public class EmptyRel
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new ValuesRel. Note that tuples passed in become owned by this
-     * rel (without a deep copy), so caller must not modify them after this
-     * call, otherwise bad things will happen.
+     * Creates a new EmptyRel.
      *
      * @param cluster Cluster
-     * @param rowType row type for tuples produced by this rel
+     * @param rowType row type for tuples which would be produced by this rel
+     * if it actually produced any, but it doesn't (see,
+     * philosophy is good for something after all!)
      */
     public EmptyRel(
         RelOptCluster cluster,

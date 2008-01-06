@@ -48,7 +48,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class RelDecorrelator
-    implements ReflectUtil.ReflectiveVisitor
+    implements ReflectiveVisitor
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -1421,7 +1421,7 @@ public class RelDecorrelator
     private class DecorrelateRelVisitor
         extends RelVisitor
     {
-        private final ReflectUtil.VisitDispatcher<RelDecorrelator,RelNode>
+        private final ReflectiveVisitDispatcher<RelDecorrelator,RelNode>
             dispatcher =
             ReflectUtil.createDispatcher(RelDecorrelator.class, RelNode.class);
 
