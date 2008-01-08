@@ -200,10 +200,10 @@ void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
         PBuffer pBuffer = page->pBuffer;
         if (pBuffer) {
             unmappedBucket.pageList.push_back(*page);
+            victimPolicy.registerPage(*page);
         } else {
             unallocatedBucket.pageList.push_back(*page);
         }
-        victimPolicy.registerPage(*page);
     }
 }
 
@@ -271,6 +271,7 @@ void CacheImpl<PageT,VictimPolicyT>::setAllocatedPageCount(
             PageT *page = mutator.detach();
             assert(!page->pBuffer);
             page->pBuffer = pBuffer;
+            victimPolicy.registerPage(*page);
             // move to unmappedBucket
             freePage(*page);
         }
@@ -290,6 +291,7 @@ void CacheImpl<PageT,VictimPolicyT>::setAllocatedPageCount(
                 throw SysCallExcn("munmap failed", errorCode);
             }
             page->pBuffer = NULL;
+            victimPolicy.unregisterPage(*page);
             // move to unallocatedBucket
             unallocatedBucket.pageList.push_back(*page);
         }

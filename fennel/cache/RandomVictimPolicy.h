@@ -56,8 +56,6 @@ class RandomVictimPolicy
      */
     std::vector<PageT *> pages;
 
-    bool bClosed;
-
     std::subtractive_rng randomNumberGenerator;
 
     friend class PageIterator;
@@ -73,7 +71,6 @@ public:
 
         PageT *getCurrent() const
         {
-            assert(!policy.bClosed);
             return policy.pages[iPage];
         }
         
@@ -116,13 +113,8 @@ public:
     
     RandomVictimPolicy()
     {
-        bClosed = false;
     }
 
-    // NOTE:  for now we assume that CacheImpl only registers pages
-    // on initialization and unregisters them on shutdown (no dynamic page
-    // allocation).
-    
     void registerPage(PageT &page)
     {
         pages.push_back(&page);
@@ -130,32 +122,28 @@ public:
 
     void unregisterPage(PageT &)
     {
-        bClosed = true;
+        // TODO: zfong 1/8/08 - Should remove the page from the pages vector.
+        // Otherwise, unallocated pages will be returned by getVictimRange().
     }
 
     void notifyPageAccess(PageT &)
     {
-        assert(!bClosed);
     }
 
     void notifyPageNice(PageT &)
     {
-        assert(!bClosed);
     }
 
     void notifyPageMap(PageT &)
     {
-        assert(!bClosed);
     }
 
     void notifyPageUnmap(PageT &)
     {
-        assert(!bClosed);
     }
 
     NullMutex &getMutex()
     {
-        assert(!bClosed);
         return nullMutex;
     }
 
