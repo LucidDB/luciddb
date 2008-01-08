@@ -27,6 +27,7 @@ import java.io.*;
 import java.sql.*;
 
 import java.util.*;
+import java.util.regex.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
@@ -568,6 +569,22 @@ public abstract class FarragoManagementUDR
             String itemValue = st.nextToken().trim();
             String itemUnits = null;
             addSysInfo(resultInserter, src, itemName, itemValue, itemUnits);
+        }
+    }
+
+    /**
+     * Sets a filter on the optimizer rules to be used in the
+     * current session.
+     *
+     * @param regex regular expression for rule names to be excluded
+     */
+    public static void setOptRuleDescExclusionFilter(String regex)
+    {
+        FarragoSession sess = FarragoUdrRuntime.getSession();
+        if (regex == null) {
+            sess.setOptRuleDescExclusionFilter(null);
+        } else {
+            sess.setOptRuleDescExclusionFilter(Pattern.compile(regex));
         }
     }
 }

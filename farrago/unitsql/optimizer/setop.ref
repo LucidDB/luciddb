@@ -1,5 +1,5 @@
 > -- $Id$
-> -- Test queries for set operations (union, intersect, exception).
+> -- Test queries for set operations (union, intersect, except).
 > 
 > -----------
 > -- Setup --
@@ -356,6 +356,139 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 > !set outputformat table
 > alter session implementation set default;
 > drop schema lhx cascade;
+> 
+> -- setops also work in default Farrago personality
+> 
+> select * from 
+> (
+>     select deptno from sales.emps
+>     intersect 
+>     select deptno from sales.depts
+> )
+> order by deptno;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 20      |
++---------+
+> 
+> select * from 
+> (
+>     select deptno from sales.emps
+>     except
+>     select deptno from sales.depts
+> )
+> order by deptno;
++---------+
+| DEPTNO  |
++---------+
+| 40      |
++---------+
+> 
+> select * from 
+> (
+>     select deptno from sales.emps
+>     union 
+>     select deptno from sales.depts
+> )
+> order by deptno;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 20      |
+| 30      |
+| 40      |
++---------+
+> 
+> select * from 
+> (
+>     select deptno from sales.emps
+>     union all
+>     select deptno from sales.depts
+> )
+> order by deptno;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 10      |
+| 20      |
+| 20      |
+| 20      |
+| 30      |
+| 40      |
++---------+
+> 
+> !set outputformat csv
+> 
+> explain plan for
+> select * from 
+> (
+>     select deptno from sales.emps
+>     intersect 
+>     select deptno from sales.depts
+> )
+> order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from 
+> (
+>     select deptno from sales.emps
+>     except
+>     select deptno from sales.depts
+> )
+> order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from 
+> (
+>     select deptno from sales.emps
+>     union 
+>     select deptno from sales.depts
+> )
+> order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LhxAggRel(groupCount=[1])'
+'      IteratorToFennelConverter'
+'        IterConcatenateRel(all=[true])'
+'          FennelToIteratorConverter'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'          FennelToIteratorConverter'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from 
+> (
+>     select deptno from sales.emps
+>     union all
+>     select deptno from sales.depts
+> )
+> order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterConcatenateRel(all=[true])'
+'        FennelToIteratorConverter'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'        FennelToIteratorConverter'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 > 
 > -- End setop.sql
 > 

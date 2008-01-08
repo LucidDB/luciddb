@@ -354,7 +354,7 @@ Messages:
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
 '          FennelAggRel(groupCount=[0], C=[COUNT(0)])'
-'            FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'            LhxAggRel(groupCount=[1])'
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > !set outputformat table

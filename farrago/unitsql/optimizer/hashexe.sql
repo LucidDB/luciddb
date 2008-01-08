@@ -14,6 +14,11 @@ alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 
 alter session implementation set default;
 
+-- for first portion, prevent usage of hash/NL join so that we can use
+-- cartesian join as a reference instead
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(
+    'Lhx.*Rule|.*NestedLoop.*');
+
 create table lhxemps(
     empno integer not null,
     ename varchar(40),
@@ -55,7 +60,7 @@ drop schema lhx cascade;
 
 
 ------------------------------------
--- LDB personality uses hash join --
+-- test LDB personality with hash join --
 ------------------------------------
 create schema lhx;
 set schema 'lhx';
@@ -65,6 +70,9 @@ set path 'lhx';
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- allow hash joins again
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(null);
 
 create table lhxemps(
     empno integer not null,

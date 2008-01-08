@@ -25,14 +25,13 @@
 >         where ve.deptno = vd.deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..4=[{inputs}], expr#5=[=($t1, $t4)], NAME=[$t0], DOUBLEAGE=[$t2], NAME0=[$t3], $condition=[$t5])'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
+'  FennelReshapeRel(projection=[[0, 2, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DOUBLEAGE, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME0) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[UPPER($t0)], expr#4=[2], expr#5=[*($t2, $t4)], NAME=[$t3], DEPTNO=[$t1], DOUBLEAGE=[$t5])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelRenameRel(fieldNames=[[NAME, DEPTNO]])'
-'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[UPPER($t1)], EXPR$0=[$t2], DEPTNO=[$t0])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'      FennelRenameRel(fieldNames=[[NAME, DEPTNO]])'
+'        FennelCalcRel(expr#0..1=[{inputs}], expr#2=[UPPER($t1)], EXPR$0=[$t2], DEPTNO=[$t0])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 > explain plan for
 >     select lower(ve.name), ve.doubleage/2
 >         from vemps ve, vdepts vd

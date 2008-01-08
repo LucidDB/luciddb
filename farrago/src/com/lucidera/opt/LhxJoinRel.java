@@ -85,7 +85,7 @@ public class LhxJoinRel
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FennelCartesianProductRel object.
+     * Creates a new LhxJoinRel object.
      *
      * @param cluster RelOptCluster for this rel
      * @param left left input
@@ -189,7 +189,16 @@ public class LhxJoinRel
     // implement RelNode
     public double getRows()
     {
-        return RelMetadataQuery.getRowCount(this);
+        // NOTE jvs 7-Jan-2008: In LucidDB, LoptMetadataProvider takes care of
+        // overriding this with a better implementation, but in vanilla
+        // Farrago, this default implementation is used.
+        
+        double product =
+            RelMetadataQuery.getRowCount(getLeft())
+            * RelMetadataQuery.getRowCount(getRight())
+            * 0.1;
+
+        return product;
     }
 
     // override RelNode

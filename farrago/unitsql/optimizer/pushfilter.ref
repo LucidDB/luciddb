@@ -46,13 +46,12 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t4, $t9)], proj#0..9=[{exprs}], $condition=[$t10])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[11], expr#6=[>=($t1, $t5)], expr#7=[1], expr#8=[+($t2, $t7)], expr#9=[=($t8, $t3)], expr#10=[AND($t6, $t9)], proj#0..4=[{exprs}], $condition=[$t10])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 6, 7, 8, 9, 10]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[5]], rightKeys=[[4]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[11], expr#6=[>=($t1, $t5)], expr#7=[1], expr#8=[+($t2, $t7)], expr#9=[=($t8, $t3)], expr#10=[AND($t6, $t9)], expr#11=[CAST($t4):INTEGER], proj#0..4=[{exprs}], CAST($4):INTEGER=[$t11], $condition=[$t10])'
 '          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > 
 > -- filters in the on clause
 > explain plan for
@@ -62,13 +61,12 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t4, $t9)], proj#0..9=[{exprs}], $condition=[$t10])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[11], expr#6=[>=($t1, $t5)], expr#7=[1], expr#8=[+($t2, $t7)], expr#9=[=($t8, $t3)], expr#10=[AND($t6, $t9)], proj#0..4=[{exprs}], $condition=[$t10])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 6, 7, 8, 9, 10]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[5]], rightKeys=[[4]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[11], expr#6=[>=($t1, $t5)], expr#7=[1], expr#8=[+($t2, $t7)], expr#9=[=($t8, $t3)], expr#10=[AND($t6, $t9)], expr#11=[CAST($t4):INTEGER], proj#0..4=[{exprs}], CAST($4):INTEGER=[$t11], $condition=[$t10])'
 '          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > 
 > -- filters in both on clause and where
 > explain plan for
@@ -79,13 +77,12 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t4, $t9)], proj#0..9=[{exprs}], $condition=[$t10])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[1], expr#6=[+($t2, $t5)], expr#7=[=($t6, $t3)], expr#8=[11], expr#9=[>=($t1, $t8)], expr#10=[AND($t7, $t9)], proj#0..4=[{exprs}], $condition=[$t10])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 6, 7, 8, 9, 10]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[5]], rightKeys=[[4]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[1], expr#6=[+($t2, $t5)], expr#7=[=($t6, $t3)], expr#8=[11], expr#9=[>=($t1, $t8)], expr#10=[AND($t7, $t9)], expr#11=[CAST($t4):INTEGER], proj#0..4=[{exprs}], CAST($4):INTEGER=[$t11], $condition=[$t10])'
 '          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+'        FennelCalcRel(expr#0..4=[{inputs}], expr#5=[21], expr#6=[<=($t5, $t1)], expr#7=[32], expr#8=[<($t2, $t7)], expr#9=[43], expr#10=[>($t3, $t9)], expr#11=[OR($t8, $t10)], expr#12=[AND($t6, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
 > 
 > -- outer joins
 > -- need to join on key columns as outer joins not supported otherwise
@@ -158,19 +155,16 @@
 >     select * from t1, t2, t3 where
 >         t1a = t2a and t2b = t3b and t1b > 12 and t2c > 23 and t3d = 34;
 'column0'
-'IterCalcRel(expr#0..14=[{inputs}], expr#15=[=($t7, $t12)], proj#0..14=[{exprs}], $condition=[$t15])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
-'      FennelCalcRel(expr#0..9=[{inputs}], expr#10=[=($t1, $t6)], proj#0..9=[{exprs}], $condition=[$t10])'
-'        FennelCartesianProductRel(leftouterjoin=[false])'
-'          FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_GT], filterOrdinals=[[2]], filterTuple=[[12]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D) NOT NULL])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-'          FennelBufferRel(inMemory=[false], multiPass=[true])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_GT], filterOrdinals=[[3]], filterTuple=[[23]], outputRowType=[RecordType(INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
-'              FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_EQ], filterOrdinals=[[4]], filterTuple=[[34]], outputRowType=[RecordType(INTEGER NOT NULL K3, INTEGER T3A, INTEGER T3B, INTEGER T3C, INTEGER T3D) NOT NULL])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T3], preserveOrder=[false])'
+'FennelToIteratorConverter'
+'  LhxJoinRel(leftKeys=[[7]], rightKeys=[[2]], joinType=[INNER])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 6, 7, 8, 9, 10]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[5]], rightKeys=[[1]], joinType=[INNER])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 1]], filterOp=[COMP_GT], filterOrdinals=[[2]], filterTuple=[[12]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER NOT NULL T1A, INTEGER NOT NULL T1B, INTEGER NOT NULL T1C, INTEGER NOT NULL T1D, INTEGER CAST($1):INTEGER) NOT NULL])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_GT], filterOrdinals=[[3]], filterTuple=[[23]], outputRowType=[RecordType(INTEGER NOT NULL K2, INTEGER T2A, INTEGER T2B, INTEGER T2C, INTEGER T2D) NOT NULL])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_EQ], filterOrdinals=[[4]], filterTuple=[[34]], outputRowType=[RecordType(INTEGER NOT NULL K3, INTEGER T3A, INTEGER T3B, INTEGER T3C, INTEGER T3D) NOT NULL])'
+'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T3], preserveOrder=[false])'
 > 
 > -- join filter that references all 3 columns and therefore can only be pushed
 > -- to the topmost join
@@ -181,14 +175,15 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 5]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..14=[{inputs}], expr#15=[10], expr#16=[/($t1, $t15)], expr#17=[/($t7, $t15)], expr#18=[/($t13, $t15)], expr#19=[+($t17, $t18)], expr#20=[=($t16, $t19)], proj#0..14=[{exprs}], $condition=[$t20])'
+'    FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[1, 7]], joinKeyParamIds=[[1, 2]])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCartesianProductRel(leftouterjoin=[false])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
-'          FennelBufferRel(inMemory=[false], multiPass=[true])'
-'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T3], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T2], preserveOrder=[false])'
+'      FennelCalcRel(expr#0..6=[{inputs}], expr#7=[10], expr#8=[/($t5, $t7)], expr#9=[/($t6, $t7)], expr#10=[/($t3, $t7)], expr#11=[+($t9, $t10)], expr#12=[=($t8, $t11)], proj#0..4=[{exprs}], $condition=[$t12])'
+'        FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], dynamicParameters=[[1, 2]], paramCompareOffsets=[[-1, -1]], outputRowType=[RecordType(INTEGER NOT NULL K3, INTEGER T3A, INTEGER T3B, INTEGER T3C, INTEGER T3D, INTEGER NOT NULL T1A, INTEGER T2B) NOT NULL])'
+'          FennelBufferRel(inMemory=[false], multiPass=[true])'
+'            FtrsIndexScanRel(table=[[LOCALDB, PDF, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T3], preserveOrder=[false])'
 > 
 > -------------------------------
 > -- push down filter past setops
@@ -197,7 +192,7 @@
 >     select * from (select * from t1 union select * from t2) where t1a < 41;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0, 1, 2, 3, 4]], discardDuplicates=[true])'
+'  LhxAggRel(groupCount=[5])'
 '    FennelMergeRel'
 '      FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[41]], outputRowType=[RecordType(INTEGER NOT NULL K1, INTEGER T1A, INTEGER T1B, INTEGER T1C, INTEGER T1D) NOT NULL])'
 '        FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'
@@ -225,9 +220,9 @@
 >         where t1b in (12, 21, 32);
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'  LhxAggRel(groupCount=[2])'
 '    FennelMergeRel'
-'      FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'      LhxAggRel(groupCount=[2])'
 '        FennelMergeRel'
 '          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[12], expr#3=[=($t1, $t2)], expr#4=[21], expr#5=[=($t1, $t4)], expr#6=[OR($t3, $t5)], expr#7=[32], expr#8=[=($t1, $t7)], expr#9=[OR($t6, $t8)], expr#10=[CAST($t0):INTEGER], expr#11=[CAST($t1):INTEGER], T1A=[$t10], T1B=[$t11], $condition=[$t9])'
 '            FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$T1], preserveOrder=[false])'

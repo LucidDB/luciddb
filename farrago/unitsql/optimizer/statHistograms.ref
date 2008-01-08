@@ -681,7 +681,8 @@
 >         "k10",
 >         cast("k10" - 2 as varchar(20)) as low,
 >         cast("k10" + 2 as varchar(20)) as high
->     from stat);
+>     from stat)
+> order by "k10";
 +------+------+-------+---------+----------+---------+----------+
 | k10  | LOW  | HIGH  | SEL_CC  | CARD_CC  | SEL_OO  | CARD_OO  |
 +------+------+-------+---------+----------+---------+----------+
@@ -719,7 +720,8 @@
 >         "k10",
 >         cast("k10" - 2 as varchar(20)) as low,
 >         cast("k10" + 2 as varchar(20)) as high
->     from stat);
+>     from stat)
+> order by "k10";
 +------+------+-------+---------+----------+---------+----------+
 | k10  | LOW  | HIGH  | SEL_CO  | CARD_CO  | SEL_OC  | CARD_OC  |
 +------+------+-------+---------+----------+---------+----------+

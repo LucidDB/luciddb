@@ -367,9 +367,9 @@
 >     e."mofId" = p."mofClassName"
 > ;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t1, $t3)], EXCEPTION_NAME=[$t0], PARAM_NAME=[$t2], $condition=[$t4])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[false])'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXCEPTION_NAME, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" PARAM_NAME) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      FennelReshapeRel(projection=[[0, 5]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" name, VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" mofId) NOT NULL])'
 '        IteratorToFennelConverter'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
