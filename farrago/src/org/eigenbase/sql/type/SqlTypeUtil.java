@@ -109,15 +109,25 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * Returns whether the operands to a call are char type-comparable.
+     *
+     * @param binding Binding of call to operands
+     * @param operands Operands to check for compatibility; usually the
+     * operands of the bound call, but not always
+     * @param throwOnFailure Whether to throw an exception on failure
+     *
+     * @return whether operands are valid
+     *
      * @pre null != operands
      * @pre 2 <= operands.length
      */
     public static boolean isCharTypeComparable(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlNode [] operands,
+        SqlCallBinding binding,
+        SqlNode[] operands,
         boolean throwOnFailure)
     {
+        final SqlValidator validator = binding.getValidator();
+        final SqlValidatorScope scope = binding.getScope();
         assert null != operands : "precondition failed";
         assert 2 <= operands.length : "precondition failed";
 
@@ -132,7 +142,8 @@ public abstract class SqlTypeUtil
                     }
                     msg += operands[i].toString();
                 }
-                throw EigenbaseResource.instance().OperandNotComparable.ex(msg);
+                throw binding.newError(
+                    EigenbaseResource.instance().OperandNotComparable.ex(msg));
             }
             return false;
         }
@@ -266,22 +277,6 @@ public abstract class SqlTypeUtil
             }
         }
         return false;
-    }
-
-    public static void isCharTypeComparableThrows(RelDataType [] argTypes)
-    {
-        if (!isCharTypeComparable(argTypes)) {
-            String msg = "";
-            for (int i = 0; i < argTypes.length; i++) {
-                if (i > 0) {
-                    msg += ", ";
-                }
-                RelDataType argType = argTypes[i];
-                msg += argType.toString();
-            }
-            throw EigenbaseResource.instance().TypeNotComparableEachOther.ex(
-                msg);
-        }
     }
 
     /**

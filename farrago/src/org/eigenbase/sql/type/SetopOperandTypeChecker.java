@@ -70,10 +70,14 @@ public class SetopOperandTypeChecker
 
             if (fields.length != colCount) {
                 if (throwOnFailure) {
+                    SqlNode node = callBinding.getCall().getOperands()[i];
+                    if (node instanceof SqlSelect) {
+                        node = ((SqlSelect) node).getSelectList();
+                    }
                     throw validator.newValidationError(
-                        callBinding.getCall().getOperands()[i],
+                        node,
                         EigenbaseResource.instance().ColumnCountMismatchInSetop
-                        .ex(
+                            .ex(
                             callBinding.getOperator().getName()));
                 } else {
                     return false;

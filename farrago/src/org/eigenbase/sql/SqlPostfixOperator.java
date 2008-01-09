@@ -48,7 +48,7 @@ public class SqlPostfixOperator
             name,
             kind,
             leftPrec(prec, true),
-            rightPrec(0, true),
+            rightPrec(prec, true),
             returnTypeInference,
             operandTypeInference,
             operandTypeChecker);

@@ -26,6 +26,8 @@ import java.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.util.*;
 
 
@@ -261,6 +263,12 @@ public abstract class AggregateRelBase
             final RelDataType childType = aggregateRel.getChild().getRowType();
             int operand = operands.get(ordinal);
             return childType.getFields()[operand].getType();
+        }
+
+        public EigenbaseException newError(
+            SqlValidatorException e)
+        {
+            return SqlUtil.newContextException(SqlParserPos.ZERO, e);
         }
     }
 }

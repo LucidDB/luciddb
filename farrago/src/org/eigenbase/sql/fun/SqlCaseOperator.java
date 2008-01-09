@@ -199,8 +199,7 @@ public class SqlCaseOperator
                     node);
             if (!SqlTypeUtil.inBooleanFamily(type)) {
                 if (throwOnFailure) {
-                    throw callBinding.getValidator().newValidationError(
-                        node,
+                    throw callBinding.newError(
                         EigenbaseResource.instance().ExpectedBoolean.ex());
                 }
                 return false;
@@ -226,7 +225,8 @@ public class SqlCaseOperator
             // according to the sql standard we can not have all of the THEN
             // statements and the ELSE returning null
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().MustNotNullInElse.ex();
+                throw callBinding.newError(
+                    EigenbaseResource.instance().MustNotNullInElse.ex());
             }
             return false;
         }

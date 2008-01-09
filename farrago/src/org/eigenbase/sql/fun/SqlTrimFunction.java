@@ -159,14 +159,13 @@ public class SqlTrimFunction
             }
         }
 
-        SqlNode [] ops = new SqlNode[2];
-        for (int i = 1; i < call.operands.length; i++) {
-            ops[i - 1] = call.operands[i];
-        }
+        SqlNode [] ops = {
+            call.operands[1],
+            call.operands[2]
+        };
 
         return SqlTypeUtil.isCharTypeComparable(
-            validator,
-            scope,
+            callBinding,
             ops,
             throwOnFailure);
     }

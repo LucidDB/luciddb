@@ -51,6 +51,11 @@ public class SqlInOperator
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a SqlInOperator
+     *
+     * @param isNotIn Whether this is the 'NOT IN' operator
+     */
     SqlInOperator(boolean isNotIn)
     {
         super(
@@ -66,6 +71,11 @@ public class SqlInOperator
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns whether this is the 'NOT IN' operator
+     *
+     * @return whether this is the 'NOT IN' operator
+     */
     public boolean isNotIn()
     {
         return isNotIn;
@@ -94,7 +104,7 @@ public class SqlInOperator
                 rightTypeList.add(nodeType);
             }
             RelDataType [] rightTypes =
-                (RelDataType []) rightTypeList.toArray(
+                rightTypeList.toArray(
                     new RelDataType[rightTypeList.size()]);
             rightType = typeFactory.leastRestrictive(rightTypes);
 
@@ -136,8 +146,10 @@ public class SqlInOperator
             SqlTypeStrategies.otcComparableUnorderedX2;
         if (!checker.checkOperandTypes(
                 new ExplicitOperatorBinding(
-                    typeFactory,
-                    this,
+                    new SqlCallBinding(
+                        validator,
+                        scope,
+                        call),
                     new RelDataType[] { leftRowType, rightRowType })))
         {
             throw validator.newValidationError(

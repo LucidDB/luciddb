@@ -55,7 +55,7 @@
 > 
 > -- disallow internal ORDER BY
 > select * from (select name from sales.depts order by name);
-Error: From line 1, column 23 to line 1, column 26: ORDER BY is only allowed on top-level SELECT (state=,code=0)
+Error: From line 1, column 16 to line 1, column 43: ORDER BY is only allowed on top-level SELECT (state=,code=0)
 > 
 > -- ORDER BY on explicit TABLE
 > table sales.depts order by name;

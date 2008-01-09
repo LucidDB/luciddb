@@ -1375,7 +1375,7 @@ Error: From line 9, column 33 to line 9, column 36: Column 'NAME' not found in a
 >     when not matched then
 >         insert (empno, name, age, gender, salary, city)
 >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000);
-Error: Number of INSERT target columns (6) does not equal number of source items (5) (state=,code=0)
+Error: From line 8, column 9 to line 8, column 14: Number of INSERT target columns (6) does not equal number of source items (5) (state=,code=0)
 > 
 > -- mismatch in types in values clause
 > explain plan without implementation for

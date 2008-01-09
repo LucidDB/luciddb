@@ -347,12 +347,16 @@ public final class SqlParserUtil
                 + sql.substring(secondCaret + 1);
             int [] start = indexToLineCol(sql, firstCaret);
 
-            // subtract 1 because first caret pushed the string out
-            --secondCaret;
-
             // subtract 1 because the col position needs to be inclusive
             --secondCaret;
             int [] end = indexToLineCol(sql, secondCaret);
+
+            // if second caret is on same line as first, decrement its column,
+            // because first caret pushed the string out
+            if (start[0] == end[0]) {
+                --end[1];
+            }
+
             SqlParserPos pos =
                 new SqlParserPos(start[0], start[1], end[0], end[1]);
             return new StringAndPos(sqlSansCaret, firstCaret, pos);
@@ -511,6 +515,11 @@ public final class SqlParserUtil
     public static SqlNode [] toNodeArray(List<SqlNode> list)
     {
         return list.toArray(new SqlNode[list.size()]);
+    }
+
+    public static SqlNode [] toNodeArray(SqlNodeList list)
+    {
+        return list.toArray();
     }
 
     public static String rightTrim(

@@ -66,13 +66,6 @@ public class SqlValidatorTestCase
         Pattern.compile(
             "(?s)From line ([0-9]+), column ([0-9]+) to line ([0-9]+), column ([0-9]+): (.*)");
 
-    /**
-     * Whether to assert if a test doesn't specify the location of the error.
-     *
-     * <p/>todo: Set this to true, make all the tests succeed, then remove it.
-     */
-    private static final boolean FailIfNoPosition = Bug.Dt1203Fixed;
-
     //~ Instance fields --------------------------------------------------------
 
     protected final Tester tester;
@@ -144,8 +137,7 @@ public class SqlValidatorTestCase
     }
 
     /**
-     * Checks that a SQL query gives a particular error, but without specifying
-     * the location of that error.
+     * Checks that a SQL query gives a particular error.
      */
     public final void checkFails(
         String sql,
@@ -262,12 +254,12 @@ public class SqlValidatorTestCase
     }
 
     /**
-     * Checks whether an exception matches the pattern and expected position
-     * expected.
+     * Checks whether an exception matches the expected pattern. If
+     * <code>sap</code> contains an error location, checks this too.
      *
      * @param ex Exception thrown
      * @param expectedMsgPattern Expected pattern
-     * @param sap Query and position in query
+     * @param sap Query and (optional) position in query
      */
     public static void checkEx(
         Throwable ex,
@@ -382,13 +374,14 @@ public class SqlValidatorTestCase
                     || (actualEndColumn <= 0)
                     || (actualEndLine <= 0))
                 {
-                    if (FailIfNoPosition) {
+                    if (sap.pos != null) {
                         throw new AssertionFailedError(
-                            "Error did not have position: "
-                            + " actual pos [line " + actualLine
-                            + " col " + actualColumn
-                            + " thru line " + actualEndLine
-                            + " col " + actualEndColumn + "]");
+                            "Expected error to have position,"
+                                + " but actual error did not: "
+                                + " actual pos [line " + actualLine
+                                + " col " + actualColumn
+                                + " thru line " + actualEndLine
+                                + " col " + actualEndColumn + "]");
                     }
                     sqlWithCarets = sap.sql;
                 } else {
@@ -399,10 +392,12 @@ public class SqlValidatorTestCase
                             actualColumn,
                             actualEndLine,
                             actualEndColumn + 1);
-                }
-                if (FailIfNoPosition && (sap.pos == null)) {
-                    throw new AssertionFailedError(
-                        "todo: add carets to sql: " + sqlWithCarets);
+                    if (sap.pos == null) {
+                        throw new AssertionFailedError(
+                            "Actual error had a position, but expected error"
+                                + " did not. Add error position carets to sql:\n"
+                                + sqlWithCarets);
+                    }
                 }
                 if ((actualMessage == null)
                     || !actualMessage.matches(expectedMsgPattern))
@@ -436,11 +431,11 @@ public class SqlValidatorTestCase
                     fail(
                         "Validator threw expected "
                         + "exception [" + actualMessage
-                        + "]; but at pos [line " + actualLine
+                        + "];\nbut at pos [line " + actualLine
                         + " col " + actualColumn
                         + " thru line " + actualEndLine
                         + " col " + actualEndColumn
-                        + "]; sql [" + sqlWithCarets + "]");
+                        + "];\nsql [" + sqlWithCarets + "]");
                 }
             }
         }

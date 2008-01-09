@@ -743,6 +743,7 @@ public class SqlValidatorImpl
         
         validateNamespace(ns);
         validateAccess(
+            node,
             ns.getTable(),
             SqlAccessEnum.SELECT);
     }
@@ -2952,23 +2953,26 @@ public class SqlValidatorImpl
         RelDataType logicalSourceRowType =
             getLogicalSourceRowType(sourceRowType, insert);
 
-        checkFieldCount(logicalSourceRowType, logicalTargetRowType);
+        checkFieldCount(insert, logicalSourceRowType, logicalTargetRowType);
 
         checkTypeAssignment(logicalSourceRowType, logicalTargetRowType, insert);
 
-        validateAccess(table, SqlAccessEnum.INSERT);
+        validateAccess(insert.getTargetTable(), table, SqlAccessEnum.INSERT);
     }
 
     private void checkFieldCount(
+        SqlNode node,
         RelDataType logicalSourceRowType,
         RelDataType logicalTargetRowType)
     {
         final int sourceFieldCount = logicalSourceRowType.getFieldCount();
         final int targetFieldCount = logicalTargetRowType.getFieldCount();
         if (sourceFieldCount != targetFieldCount) {
-            throw EigenbaseResource.instance().UnmatchInsertColumn.ex(
-                targetFieldCount,
-                sourceFieldCount);
+            throw newValidationError(
+                node,
+                EigenbaseResource.instance().UnmatchInsertColumn.ex(
+                    targetFieldCount,
+                    sourceFieldCount));
         }
     }
 
@@ -3069,7 +3073,7 @@ public class SqlValidatorImpl
         validateNamespace(targetNamespace);
         SqlValidatorTable table = targetNamespace.getTable();
 
-        validateAccess(table, SqlAccessEnum.DELETE);
+        validateAccess(call.getTargetTable(), table, SqlAccessEnum.DELETE);
     }
 
     public void validateUpdate(SqlUpdate call)
@@ -3092,7 +3096,7 @@ public class SqlValidatorImpl
         RelDataType sourceRowType = getNamespace(select).getRowType();
         checkTypeAssignment(sourceRowType, targetRowType, call);
 
-        validateAccess(table, SqlAccessEnum.UPDATE);
+        validateAccess(call.getTargetTable(), table, SqlAccessEnum.UPDATE);
     }
 
     public void validateMerge(SqlMerge call)
@@ -3120,7 +3124,7 @@ public class SqlValidatorImpl
         }
 
         SqlValidatorTable table = targetNamespace.getTable();
-        validateAccess(table, SqlAccessEnum.UPDATE);
+        validateAccess(call.getTargetTable(), table, SqlAccessEnum.UPDATE);
     }
 
     /**
@@ -3130,15 +3134,18 @@ public class SqlValidatorImpl
      * @param requiredAccess Access requested on table
      */
     private void validateAccess(
+        SqlNode node,
         SqlValidatorTable table,
         SqlAccessEnum requiredAccess)
     {
         if (table != null) {
             SqlAccessType access = table.getAllowedAccess();
             if (!access.allowsAccess(requiredAccess)) {
-                throw EigenbaseResource.instance().AccessNotAllowed.ex(
-                    requiredAccess.name(),
-                    Arrays.asList(table.getQualifiedName()).toString());
+                throw newValidationError(
+                    node,
+                    EigenbaseResource.instance().AccessNotAllowed.ex(
+                        requiredAccess.name(),
+                        Arrays.asList(table.getQualifiedName()).toString()));
             }
         }
     }

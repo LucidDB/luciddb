@@ -154,6 +154,12 @@ public class SqlCallBinding
         return validator.deriveType(scope, query);
     }
 
+    public EigenbaseException newError(
+        SqlValidatorException e)
+    {
+        return validator.newValidationError(call, e);
+    }
+
     /**
      * Constructs a new validation signature error for the call.
      *
