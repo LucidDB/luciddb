@@ -27,6 +27,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.stat.*;
+import org.eigenbase.sql.*;
 
 
 /**
@@ -310,6 +311,32 @@ public abstract class RelMetadataQuery
                 "getDistinctRowCount",
                 new Object[] { groupKey, predicate });
         return validateResult(result);
+    }
+
+    /**
+     * Determines whether a relational expression should be visible
+     * in EXPLAIN PLAN output at a particular level of detail.
+     *
+     * @param rel the relational expression
+     *
+     * @param explainLevel level of detail
+     *
+     * @return true for visible, false for invisible
+     */
+    public static boolean isVisibleInExplain(
+        RelNode rel,
+        SqlExplainLevel explainLevel)
+    {
+        Boolean b =
+            (Boolean) rel.getCluster().getMetadataProvider().getRelMetadata(
+                rel,
+                "isVisibleInExplain",
+                new Object[] { explainLevel });
+        if (b == null) {
+            return true;
+        } else {
+            return b;
+        }
     }
 
     private static boolean assertPercentage(Double result)

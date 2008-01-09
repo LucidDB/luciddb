@@ -101,7 +101,7 @@
 '  FennelValuesRel(tuples=[[{ 1, -1.25, 1.0E50, true, 'bonjour', 'bonjour', _US-ASCII'bonjour', 2006-11-08, 15:05:05, 2006-11-08 15:05:05.0, X'CAFEBABE' }]])'
 > 
 > -- Apply a tweak to the session personality and verify that
-> -- the costing changes accordingly.
+> -- the costing and rel visibility changes accordingly.
 > 
 > create schema s;
 > set schema 's';
@@ -129,6 +129,14 @@
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()]): rowcount = 1000000.0, cumulative cost = 3.0'
 '    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1]): rowcount = 1.0, cumulative cost = 2.0'
 '      FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0'
+> 
+> -- explain again without attributes; converter should be hidden
+> explain plan for
+> select count(*) from (values(0));
+'column0'
+'FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'  FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'    FennelValuesRel(tuples=[[{ 0 }]])'
 > 
 > 
 > -- End explain.sql

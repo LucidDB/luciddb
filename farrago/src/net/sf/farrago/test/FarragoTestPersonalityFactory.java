@@ -30,6 +30,7 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.sql.*;
 
 
 /**
@@ -74,10 +75,25 @@ public class FarragoTestPersonalityFactory
     public static class FarragoTestRelMetadataProvider
         extends ReflectiveRelMetadataProvider
     {
+        FarragoTestRelMetadataProvider()
+        {
+            mapParameterTypes(
+                "isVisibleInExplain",
+                Collections.singletonList((Class) SqlExplainLevel.class));
+        }
+        
         public Double getRowCount(AggregateRelBase rel)
         {
             // Lie and say aggregates always returns a million rows.
             return 1000000.0;
+        }
+        
+        public Boolean isVisibleInExplain(
+            FennelToIteratorConverter rel, SqlExplainLevel level)
+        {
+            // Hide instances of FennelToIteratorConverter from EXPLAIN PLAN
+            // unless WITH ALL ATTRIBUTES is specified.
+            return level == SqlExplainLevel.ALL_ATTRIBUTES;
         }
     }
 }

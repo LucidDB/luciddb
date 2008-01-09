@@ -41,10 +41,6 @@ public class RelOptPlanWriter
 
     private boolean withIdPrefix = true;
 
-    /**
-     * Recursion detection.
-     */
-    Set<RelNode> active = new HashSet<RelNode>();
     private final SqlExplainLevel detailLevel;
     int level;
 
@@ -88,6 +84,16 @@ public class RelOptPlanWriter
         Object [] values)
     {
         RelNode [] inputs = rel.getInputs();
+
+        if (!RelMetadataQuery.isVisibleInExplain(
+                rel,
+                detailLevel))
+        {
+            // render children in place of this, at same level
+            explainInputs(inputs);
+            return;
+        }
+        
         RexNode [] children = rel.getChildExps();
         assert terms.length
             == (inputs.length + children.length
@@ -133,11 +139,16 @@ public class RelOptPlanWriter
         }
         println("");
         level++;
+        explainInputs(inputs);
+        level--;
+    }
+
+    private void explainInputs(RelNode [] inputs)
+    {
         for (int i = 0; i < inputs.length; i++) {
             RelNode child = inputs[i];
             child.explain(this);
         }
-        level--;
     }
 
     public void explain(
