@@ -698,12 +698,6 @@ public class SqlValidatorTestCase
         public void checkColumnType(String sql, String expected)
         {
             RelDataType actualType = getColumnType(sql);
-            if (expected.startsWith("todo:")) {
-                Util.permAssert(
-                    !Bug.Dt1204Fixed,
-                    "After bug 315 is fixed, no type should start 'todo:'");
-                return; // don't check the type for now
-            }
             String actual = AbstractSqlTester.getTypeString(actualType);
             assertEquals(expected, actual);
         }

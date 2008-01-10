@@ -549,14 +549,12 @@ public class SqlValidatorTest
 
     public void testStringCompareType()
     {
-        checkExpType("'a' = 'b'", "todo: BOOLEAN"); // todo: should it be
-                                                    // "BOOLEAN NOT NULL" since
-                                                    // args are not null?
-        checkExpType("'a' <> 'b'", "todo: BOOLEAN");
-        checkExpType("'a' > 'b'", "todo: BOOLEAN");
-        checkExpType("'a' < 'b'", "todo: BOOLEAN");
-        checkExpType("'a' >= 'b'", "todo: BOOLEAN");
-        checkExpType("'a' <= 'b'", "todo: BOOLEAN");
+        checkExpType("'a' = 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' <> 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' > 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' < 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' >= 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' <= 'b'", "BOOLEAN NOT NULL");
         checkExpType("CAST(NULL AS VARCHAR(33)) > 'foo'", "BOOLEAN");
     }
 

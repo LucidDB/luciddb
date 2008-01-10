@@ -77,17 +77,9 @@ public abstract class Bug
      */
     public static final boolean Fnl25Fixed = false;
 
-    public static final boolean Dt464Fixed = false;
-
-    public static final boolean Dt292Fixed = false;
-
     public static final boolean Dt591Fixed = false;
 
     public static final boolean Dt785Fixed = false;
-
-    public static final boolean Dt1203Fixed = false;
-
-    public static final boolean Dt1204Fixed = false;
 
     // -----------------------------------------------------------------------
     // Developers should create new fields here, in their own section. This
@@ -134,13 +126,7 @@ public abstract class Bug
 
     // jhyde
 
-    public static final boolean Dt536Fixed = false;
-
     public static final boolean Dt561Fixed = false;
-
-    public static final boolean Dt562Fixed = false;
-
-    public static final boolean Dt563Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-73">issue FRG-73:
