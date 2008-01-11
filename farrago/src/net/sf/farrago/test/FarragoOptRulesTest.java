@@ -388,6 +388,18 @@ public class FarragoOptRulesTest
             "select * from (values (1,2)) where 1 + 2 > 3 + CAST(NULL AS INTEGER)");
     }
 
+    public void testAlreadyFalseEliminatesFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.FILTER_INSTANCE);
+
+        check(
+            programBuilder.createProgram(),
+            "select * from (values (1,2)) where false");
+    }
+
     public void testReduceConstantsCalc()
         throws Exception
     {

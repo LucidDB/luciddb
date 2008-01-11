@@ -80,28 +80,40 @@ public abstract class FarragoReduceExpressionsRule
                 List<RexNode> expList =
                     new ArrayList<RexNode>(
                         Arrays.asList(filter.getChildExps()));
+                RexNode newConditionExp;
+                boolean reduced;
                 if (reduceExpressions(filter, expList)) {
                     assert (expList.size() == 1);
-                    final RexNode newConditionExp = expList.get(0);
-                    if (newConditionExp.isAlwaysTrue()) {
-                        call.transformTo(
-                            filter.getChild());
-                    } else if (newConditionExp instanceof RexLiteral
-                        || RexUtil.isNullLiteral(newConditionExp, true))
-                    {
-                        call.transformTo(
-                            new EmptyRel(
-                                filter.getCluster(),
-                                filter.getRowType()));
-                    } else {
-                        call.transformTo(
-                            CalcRel.createFilter(
-                                filter.getChild(),
-                                expList.get(0)));
-                    }
-                    // New plan is absolutely better than old plan.
-                    call.getPlanner().setImportance(filter, 0.0);
+                    newConditionExp = expList.get(0);
+                    reduced = true;
+                } else {
+                    // No reduction, but let's still test the original
+                    // predicate to see if it was already a constant,
+                    // in which case we don't need any runtime decision
+                    // about filtering.
+                    newConditionExp = filter.getChildExps()[0];
+                    reduced = false;
                 }
+                if (newConditionExp.isAlwaysTrue()) {
+                    call.transformTo(
+                        filter.getChild());
+                } else if (newConditionExp instanceof RexLiteral
+                    || RexUtil.isNullLiteral(newConditionExp, true))
+                {
+                    call.transformTo(
+                        new EmptyRel(
+                            filter.getCluster(),
+                            filter.getRowType()));
+                } else if (reduced) {
+                    call.transformTo(
+                        CalcRel.createFilter(
+                            filter.getChild(),
+                            expList.get(0)));
+                } else {
+                    return;
+                }
+                // New plan is absolutely better than old plan.
+                call.getPlanner().setImportance(filter, 0.0);
             }
         };
 
@@ -391,8 +403,7 @@ public abstract class FarragoReduceExpressionsRule
             }
             RexNode replacement = reducedValues.get(i);
             if (addCasts
-                && (true ? (replacement.getType() != call.getType())
-                    : (call.getOperator() != SqlStdOperatorTable.castFunc)))
+                && (replacement.getType() != call.getType()))
             {
                 // Handle change from nullable to NOT NULL by claiming
                 // that the result is still nullable, even though

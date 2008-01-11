@@ -671,4 +671,23 @@ TableModificationRel(table=[[LOCALDB, SALES, DEPTS]], operation=[INSERT], update
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testAlreadyFalseEliminatesFilter">
+        <Resource name="sql">
+            <![CDATA[select * from (values (1,2)) where false]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0], EXPR$1=[$1])
+  FilterRel(condition=[false])
+    ProjectRel(EXPR$0=[$0], EXPR$1=[$1])
+      ValuesRel(tuples=[[{ 1, 2 }]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0], EXPR$1=[$1])
+  EmptyRel
+]]>
+        </Resource>
+    </TestCase>
 </Root>
