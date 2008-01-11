@@ -36,6 +36,9 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
 
+import net.sf.farrago.resource.*;
+import javax.jmi.reflect.*;
+import net.sf.farrago.cwm.core.*;
 
 /**
  * FarragoManagementUDR is a set of user-defined routines providing access to
@@ -569,6 +572,71 @@ public abstract class FarragoManagementUDR
             String itemUnits = null;
             addSysInfo(resultInserter, src, itemName, itemValue, itemUnits);
         }
+    }
+
+    /**
+     * Retrieves a long catalog string attribute in chunks.
+     *
+     * @param mofId MOFID of a repository object
+     * @param attributeName name of attribute to retrieve
+     * @param resultInserter
+     */
+    public static void lobText(
+        String mofId,
+        String attributeName,
+        PreparedStatement resultInserter)
+        throws Exception
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoRepos repos = session.getRepos();
+        RefObject refObj = (RefObject) repos.getMdrRepos().getByMofId(mofId);
+        if (refObj == null) {
+            throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                "MOFID " + mofId);
+        }
+        
+        Object expr = refObj.refGetValue(attributeName);
+        
+        String text;
+        if (expr == null) {
+            text = null;
+        } else if (expr instanceof CwmExpression) {
+            text = ((CwmExpression) expr).getBody();
+        } else {
+            text = expr.toString();
+        }
+
+        // special case for null
+        if (text == null) {
+            // emit a single null value
+            resultInserter.setInt(1, -1);
+            resultInserter.setString(2, null);
+            resultInserter.executeUpdate();
+            return;
+        }
+        
+        // special case for empty string
+        int textLength = text.length();
+        if (textLength == 0) {
+            resultInserter.setInt(1, 0);
+            resultInserter.setString(2, "");
+            resultInserter.executeUpdate();
+            return;
+        }
+        
+        // break up text into chunks of maximum size 1024 characters
+        int begin = 0;
+        do {
+            int end = begin + 1024;
+            if (end > textLength) {
+                end = textLength;
+            }
+            String chunk = text.substring(begin, end);
+            resultInserter.setInt(1, begin);
+            resultInserter.setString(2, chunk);
+            resultInserter.executeUpdate();
+            begin = end;
+        } while (begin < textLength);
     }
 }
 
