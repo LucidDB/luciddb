@@ -84,6 +84,15 @@ public abstract class FarragoTestUDR
         }
     }
 
+    public static String repeat(String s, int n)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < n; ++i) {
+            sb.append(s);
+        }
+        return sb.toString();
+    }
+
     public static int atoi(String s)
     {
         return Integer.parseInt(s);

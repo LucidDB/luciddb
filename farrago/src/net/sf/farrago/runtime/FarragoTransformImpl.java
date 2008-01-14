@@ -25,6 +25,7 @@ import java.nio.*;
 
 import org.eigenbase.runtime.*;
 
+import net.sf.farrago.resource.*;
 
 /**
  * FarragoTransformImpl provides a base class for generated implementations of
@@ -95,10 +96,14 @@ public abstract class FarragoTransformImpl
 
         for (;;) {
             if (!tupleWriter.marshalTuple(outputBuffer, next)) {
-                // Not enough room to marshal the tuple.  We assume that the
-                // buffer is large enough for at least one tuple, otherwise this
-                // method may incorrectly return 0 (end of stream).
-                break;
+                if (outputBuffer.position() == 0) {
+                    throw FarragoResource.instance().JavaRowTooLong.ex(
+                        outputBuffer.remaining(),
+                        next.toString());
+                } else {
+                    // Not enough room to marshal the tuple.
+                    break;
+                }
             }
 
             // See note re: quantum as unsigned int.
