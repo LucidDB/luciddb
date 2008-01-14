@@ -32,10 +32,12 @@ import junit.framework.*;
 
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.catalog.*;
 
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
@@ -550,7 +552,110 @@ public class FarragoQueryTest
             resultSet.close();
             stmt.executeUpdate(dropStmt);
         }
+    }
+
+    public void testLobTextUdxNull()
+        throws Exception
+    {
+        String schemaName = "SALES";
         
+        CwmCatalog catalog = repos.getSelfAsCatalog();
+        CwmSchema schema =
+            (CwmSchema) FarragoCatalogUtil.getModelElementByName(
+                catalog.getOwnedElement(),
+                schemaName);
+        
+        String actualDescription = fetchLobText(
+            schema.refMofId(), "description");
+        assertNull(actualDescription);
+    }
+
+    public void testLobTextUdxEmptyString()
+        throws Exception
+    {
+        // Create a schema with an empty string as its description.
+        stmt.execute(
+            "CREATE SCHEMA EMPTY_DESC DESCRIPTION ''");
+        
+        CwmCatalog catalog = repos.getSelfAsCatalog();
+        FemLocalSchema schema =
+            (FemLocalSchema) FarragoCatalogUtil.getModelElementByName(
+                catalog.getOwnedElement(),
+                "EMPTY_DESC");
+
+        assertEquals("", schema.getDescription());
+        
+        String actualDescription = fetchLobText(
+            schema.refMofId(), "description");
+        assertEquals("", actualDescription);
+    }
+
+    public void testLobTextUdxOneChunk()
+        throws Exception
+    {
+        String schemaName = "SALES";
+        
+        CwmCatalog catalog = repos.getSelfAsCatalog();
+        CwmSchema schema =
+            (CwmSchema) FarragoCatalogUtil.getModelElementByName(
+                catalog.getOwnedElement(),
+                schemaName);
+        
+        String actualSchemaName = fetchLobText(schema.refMofId(), "name");
+        assertEquals("SALES", actualSchemaName);
+    }
+
+    public void testLobTextUdxMultiChunk()
+        throws Exception
+    {
+        // Create a very long string.
+        char [] x = new char[10000];
+        Arrays.fill(x, 'X');
+        String description = new String(x);
+
+        // Create a schema with this string as its description.
+        stmt.execute(
+            "CREATE SCHEMA LONG_DESC DESCRIPTION '" + description + "'");
+        
+        CwmCatalog catalog = repos.getSelfAsCatalog();
+        FemLocalSchema schema =
+            (FemLocalSchema) FarragoCatalogUtil.getModelElementByName(
+                catalog.getOwnedElement(),
+                "LONG_DESC");
+
+        assertEquals(description, schema.getDescription());
+        
+        String actualDescription = fetchLobText(
+            schema.refMofId(), "description");
+        assertEquals(description, actualDescription);
+    }
+
+    private String fetchLobText(String mofId, String attributeName)
+        throws Exception
+    {
+        String sql =
+            "select chunk_offset, chunk_text from table("
+            + "sys_boot.mgmt.repository_lob_text('" + mofId + "', '"
+            + attributeName + "')) order by chunk_offset";
+        StringBuilder sb = new StringBuilder();
+        try {
+            resultSet = stmt.executeQuery(sql);
+            assertTrue(resultSet.next());
+            do {
+                int offset = resultSet.getInt(1);
+                String chunk = resultSet.getString(2);
+                if (chunk == null) {
+                    assertEquals(0, sb.length());
+                    assertEquals(-1, offset);
+                    return null;
+                }
+                assertEquals(sb.length(), offset);
+                sb.append(chunk);
+            } while (resultSet.next());
+        } finally {
+            resultSet.close();
+        }
+        return sb.toString();
     }
 
     //~ Inner Classes ----------------------------------------------------------

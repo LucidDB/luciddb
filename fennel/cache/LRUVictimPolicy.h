@@ -117,6 +117,7 @@ public:
     void registerPage(PageT &page)
     {
         // TODO:  use a DList container to avoid this edge case
+        ExclusiveGuard exclusiveGuard(mutex);
         if (!pageLRU) {
             pageLRU = &page;
         } else {
@@ -134,9 +135,14 @@ public:
      */
     void unregisterPage(PageT &page)
     {
-        // NOTE:  for now we assume that CacheImpl only registers pages on
-        // initialization and unregisters them on shutdown (no dynamic page
-        // allocation).  So don't bother unlinking the page.
+        ExclusiveGuard exclusiveGuard(mutex);
+        if (&page == pageLRU) {
+            pageLRU = (PageT *) (page.getNext());
+        }
+        if (&page == pageMRU) {
+            pageMRU = (PageT *) (page.getPrev());
+        }
+        page.IntrusiveDListNode::detach();
     }
 
     /**

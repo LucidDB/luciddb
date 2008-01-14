@@ -918,3 +918,15 @@ specific std_timestamp_to_char
 no sql
 external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.timestamp_to_char';
 
+-- retrieves a long catalog string attribute in chunks
+create or replace function repository_lob_text(
+  mof_id varchar(128),
+  attribute_name varchar(128))
+returns table(
+  chunk_offset integer,
+  chunk_text varchar(1024))
+language java
+parameter style system defined java
+no sql
+external name 
+'class net.sf.farrago.syslib.FarragoManagementUDR.lobText';
