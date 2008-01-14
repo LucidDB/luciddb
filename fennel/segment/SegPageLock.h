@@ -148,8 +148,9 @@ public:
         assert(isLocked());
         BlockId blockId = pPage->getBlockId();
         unlock();
-        segmentAccessor.pSegment->discardCachePage(blockId);
         PageId pageId = segmentAccessor.pSegment->translateBlockId(blockId);
+        // we rely on the segment to decide whether to discard the block
+        // from cache
         segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
     }
 
@@ -157,7 +158,8 @@ public:
     {
         assert(pageId != NULL_PAGE_ID);
         BlockId blockId = segmentAccessor.pSegment->translatePageId(pageId);
-        segmentAccessor.pSegment->discardCachePage(blockId);
+        // we rely on the segment to decide whether to discard the block
+        // from cache
         segmentAccessor.pSegment->deallocatePageRange(pageId,pageId);
     }
         

@@ -300,6 +300,10 @@ void RandomAllocationSegmentBase::deallocatePageId(PageId pageId)
     permAssert(pageId != NULL_PAGE_ID);
     assert(isPageIdAllocated(pageId));
 
+    // Discard the page from the cache
+    BlockId blockId = DelegatingSegment::translatePageId(pageId);
+    pCache->discardPage(blockId);
+    
     ExtentNum extentNum;
     BlockNum iPageInExtent;
     uint iSegAlloc;

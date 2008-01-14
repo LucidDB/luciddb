@@ -140,11 +140,6 @@ PageId DelegatingSegment::updatePage(PageId pageId, bool needsTranslation)
     return pDelegateSegment->updatePage(pageId, needsTranslation);
 }
 
-void DelegatingSegment::discardCachePage(BlockId blockId)
-{
-    pDelegateSegment->discardCachePage(blockId);
-}
-
 FENNEL_END_CPPFILE("$Id$");
 
 // End DelegatingSegment.cpp

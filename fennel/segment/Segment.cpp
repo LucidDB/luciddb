@@ -154,12 +154,6 @@ MappedPageListener *Segment::getMappedPageListener(BlockId blockId)
     return this;
 }
 
-void Segment::discardCachePage(BlockId blockId)
-{
-    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
-    selfAccessor.pCacheAccessor->discardPage(blockId);
-}
-
 bool Segment::isWriteVersioned()
 {
     return false;
