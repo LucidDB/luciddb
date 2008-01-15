@@ -588,6 +588,8 @@ public class FarragoQueryTest
         String actualDescription = fetchLobText(
             schema.refMofId(), "description");
         assertEquals("", actualDescription);
+
+        stmt.execute("DROP SCHEMA EMPTY_DESC");
     }
 
     public void testLobTextUdxOneChunk()
@@ -628,6 +630,8 @@ public class FarragoQueryTest
         String actualDescription = fetchLobText(
             schema.refMofId(), "description");
         assertEquals(description, actualDescription);
+
+        stmt.execute("DROP SCHEMA LONG_DESC");
     }
 
     private String fetchLobText(String mofId, String attributeName)
