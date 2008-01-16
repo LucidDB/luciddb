@@ -1341,6 +1341,7 @@ SqlStrCastFromExact(char* dest,
             if (rv <= destStorageBytes) {
                 memcpy(dest, buf, rv);
             } else {
+                memcpy(dest, buf, destStorageBytes);
                 // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
                 // length), "22001" data exception -- string data, right
                 // truncation
