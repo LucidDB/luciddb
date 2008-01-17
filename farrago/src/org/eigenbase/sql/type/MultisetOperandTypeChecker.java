@@ -81,9 +81,10 @@ public class MultisetOperandTypeChecker
                 argTypes);
         if (null == biggest) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().TypeNotComparable.ex(
-                    call.operands[0].getParserPosition().toString(),
-                    call.operands[1].getParserPosition().toString());
+                throw callBinding.newError(
+                    EigenbaseResource.instance().TypeNotComparable.ex(
+                        call.operands[0].getParserPosition().toString(),
+                        call.operands[1].getParserPosition().toString()));
             }
 
             return false;

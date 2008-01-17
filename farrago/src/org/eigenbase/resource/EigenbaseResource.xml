@@ -44,9 +44,9 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>line {0,number,#}, column {1,number,#}</text>
 </message>
 
-<message id="100010" name="IllegalLiteral">
-    <text>Illegal {0} literal {1} at {2}: {3}</text>
-</message>
+<exception id="100010" name="IllegalLiteral">
+    <text>Illegal {0} literal {1}: {2}</text>
+</exception>
 
 <message id="100030" name="BadFormat">
     <text>not in format ''{0}''</text>
@@ -64,11 +64,11 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
 </exception>
 
 <exception id="100060" name="IllegalMinusDate">
-    <text>Illegal expression; at {0}. Was expecting "(DATETIME - DATETIME) INTERVALQUALIFIER"</text>
+    <text>Illegal expression. Was expecting "(DATETIME - DATETIME) INTERVALQUALIFIER"</text>
 </exception>
 
 <exception id="100070" name="IllegalOverlaps">
-    <text>Illegal overlaps expression; at {0}. Was expecting expression on the form "(DATETIME, EXPRESSION) OVERLAPS (DATETIME, EXPRESSION)"</text>
+    <text>Illegal overlaps expression. Was expecting expression on the form "(DATETIME, EXPRESSION) OVERLAPS (DATETIME, EXPRESSION)"</text>
 </exception>
 
 <exception id="100080" name="IllegalNonQueryExpression">
@@ -84,15 +84,15 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
 </exception>
 
 <exception id="100100" name="IllegalOrderBy">
-    <text>ORDER BY unexpected near {0}</text>
+    <text>ORDER BY unexpected</text>
 </exception>
 
 <exception id="100110" name="IllegalBinaryString">
-    <text>Illegal binary string {0} near {1}</text>
+    <text>Illegal binary string {0}</text>
 </exception>
 
 <exception id="100120" name="IllegalFromEmpty">
-    <text>''FROM'' near {0}, without operands preceding it is illegal</text>
+    <text>''FROM'' without operands preceding it is illegal</text>
 </exception>
 
 <exception id="100130" name="IllegalRowExpression">
@@ -104,18 +104,16 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>TABLESAMPLE percentage must be between 0 and 100, inclusive</text>
 </exception>
     
+<exception id="100150" name="UnknownCharacterSet">
+    <text>Unknown character set ''{0}''</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->
 <!-- ====================================================================== -->
 <exception id="120000" name="ValidatorUnknownFunction" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>No match found for function signature {0}</text>
 </exception>
-
-<!-- 
-<exception id="120001" name="InvalidArgument">
-    <text>Argument {0,number,#} to function ''{1}'' is invalid: {2}</text>
-</exception>
- -->
 
 <exception id="120002" name="InvalidArgCount" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Invalid number of arguments to function ''{0}''. Was expecting {1,number,#} arguments</text>
@@ -129,7 +127,7 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>From line {0,number,#}, column {1,number,#} to line {2,number,#}, column {3,number,#}</text>
 </exception>
 
-<exception id="120010" name="CannotCastValue">
+<exception id="120010" name="CannotCastValue" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Cast function cannot convert value of type {0} to type {1}</text>
 </exception>
 
@@ -145,7 +143,7 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Values in expression list must have compatible types</text>
 </exception>
 
-<exception id="120030" name="IncompatibleCharset">
+<exception id="120030" name="IncompatibleCharset" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Cannot apply {0} to the two different charsets {1} and {2}</text>
 </exception>
 
@@ -165,7 +163,7 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Unknown target column ''{0}''</text>
 </exception>
 
-<exception id="120070" name="UnmatchInsertColumn">
+<exception id="120070" name="UnmatchInsertColumn" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Number of INSERT target columns ({0,number}) does not equal number of source items ({1,number})</text>
 </exception>
 
@@ -206,7 +204,7 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Expected a boolean type</text>
 </exception>
 
-<exception id="120150" name="MustNotNullInElse">
+<exception id="120150" name="MustNotNullInElse" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>ELSE clause or at least one THEN clause must be non-NULL</text>
 </exception>
 
@@ -231,7 +229,7 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Invalid syntax. Two explicit different collations ({0}, {1}) are illegal</text>
 </exception>
 
-<exception id="120220" name="TypeNotComparable">
+<exception id="120220" name="TypeNotComparable" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>{0} is not comparable to {1}</text>
 </exception>
 
@@ -243,11 +241,11 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Wrong number of arguments to expression</text>
 </exception>
 
-<exception id="120240" name="OperandNotComparable">
+<exception id="120240" name="OperandNotComparable" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Operands {0} not comparable to each other</text>
 </exception>
 
-<exception id="120250" name="TypeNotComparableEachOther">
+<exception id="120250" name="TypeNotComparableEachOther" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Types {0} not comparable to each other</text>
 </exception>
 
@@ -427,7 +425,7 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>DISTINCT/ALL not allowed with {0} function</text>
 </exception>
 
-<exception id="120630" name="AccessNotAllowed">
+<exception id="120630" name="AccessNotAllowed" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Not allowed to perform {0} on {1}</text>
 </exception>
 
@@ -470,15 +468,11 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Internal error: {0}</text>
 </exception>
 
-<exception id="130010" name="FunctionNotFound">
-    <text>Function ''{0}'' does not exist</text>
-</exception>
-
-<exception id="130020" name="ArgumentMustBeLiteral">
+<exception id="130020" name="ArgumentMustBeLiteral" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Argument to function ''{0}'' must be a literal</text>
 </exception>
 
-<exception id="130030" name="ArgumentMustBePositiveInteger">
+<exception id="130030" name="ArgumentMustBePositiveInteger" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Argument to function ''{0}'' must be a positive integer literal</text>
 </exception>
 
@@ -490,7 +484,7 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Parser Error: {0}</text>
 </exception>
 
-<exception id="130060" name="ArgumentMustNotBeNull">
+<exception id="130060" name="ArgumentMustNotBeNull" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Argument to function ''{0}'' must not be NULL</text>
 </exception>
 
@@ -506,7 +500,7 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>''{0}'' is not a valid boolean value</text>
 </exception>
 
-<exception id="130100" name="ArgumentMustBeValidPrecision">
+<exception id="130100" name="ArgumentMustBeValidPrecision" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Argument to function ''{0}'' must be a valid precision between ''{1}'' and ''{2}''</text>
 </exception>
 

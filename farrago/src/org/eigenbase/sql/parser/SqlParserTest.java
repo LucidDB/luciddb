@@ -44,6 +44,7 @@ public class SqlParserTest
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
+    private static final String ANY = "(?s).*";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -369,11 +370,11 @@ public class SqlParserTest
             ".*BETWEEN operator has no terminating AND");
 
         checkFails(
-            "values a between",
+            "values a ^between^",
             "(?s).*Encountered \"between <EOF>\" at line 1, column 10.*");
 
         checkFails(
-            "values a between symmetric 1",
+            "values a between symmetric 1^",
             ".*BETWEEN operator has no terminating AND");
 
         // precedence of BETWEEN is higher than AND and OR, but lower than '+'
@@ -438,15 +439,15 @@ public class SqlParserTest
             "((TRUE AND (NOT ((`X`, `XX`) OVERLAPS (`Y`, `YY`)))) OR FALSE)");
 
         checkExpFails(
-            "(x,xx,xxx) overlaps (y,yy) or false",
+            "^(x,xx,xxx) overlaps (y,yy)^ or false",
             "(?s).*Illegal overlaps expression.*");
 
         checkExpFails(
-            "(x,xx,xxx) overlaps (y,yy,yyy) or false",
+            "true or ^(x,xx,xxx) overlaps (y,yy,yyy)^ or false",
             "(?s).*Illegal overlaps expression.*");
 
         checkExpFails(
-            "(x,xx) overlaps (y,yy,yyy) or false",
+            "^(x,xx) overlaps (y,yy,yyy)^ or false",
             "(?s).*Illegal overlaps expression.*");
     }
 
@@ -568,7 +569,7 @@ public class SqlParserTest
             "(VALUES (ROW((`A` SIMILAR TO (`B` LIKE (`C` SIMILAR TO `D` ESCAPE `E`) ESCAPE `F`)))))");
 
         checkFails(
-            "select * from t where escape 'e'",
+            "select * from t where ^escape^ 'e'",
             "(?s).*Encountered \"escape\" at line 1, column 23.*");
 
         // LIKE with +
@@ -583,12 +584,12 @@ public class SqlParserTest
 
         // ESCAPE with no expression
         checkFails(
-            "values a like escape d",
+            "values a like ^escape^ d",
             "(?s).*Encountered \"escape\" at line 1, column 15.*");
 
         // ESCAPE with no expression
         checkFails(
-            "values a like b || c escape and false",
+            "values a like b || c ^escape^ and false",
             "(?s).*Encountered \"escape and\" at line 1, column 22.*");
 
         // basic SIMILAR TO
@@ -775,7 +776,7 @@ public class SqlParserTest
     public void testHavingBeforeGroupFails()
     {
         checkFails(
-            "select deptno from emp having count(*) > 5 and deptno < 4 group by deptno, emp",
+            "select deptno from emp having count(*) > 5 and deptno < 4 ^group^ by deptno, emp",
             "(?s).*Encountered \"group\" at .*");
     }
 
@@ -1038,7 +1039,7 @@ public class SqlParserTest
     {
         // cannot have more than one of INNER, FULL, LEFT, RIGHT, CROSS
         checkFails(
-            "select * from a full inner join b",
+            "select * from a full ^inner^ join b",
             "(\\s|.)*Encountered \"inner\" at line 1, column 22(\\s|.)*");
     }
 
@@ -1058,7 +1059,7 @@ public class SqlParserTest
     public void testInnerOuterJoinFails()
     {
         checkFails(
-            "select * from a inner outer join b",
+            "select * from a inner ^outer^ join b",
             "(\\s|.)*Encountered \"outer\" at line 1, column 23(\\s|.)*");
     }
 
@@ -1113,7 +1114,7 @@ public class SqlParserTest
                     "INNER JOIN `B` USING (`X`)"
                 }));
         checkFails(
-            "select * from a join b using () where c = d",
+            "select * from a join b using (^)^ where c = d",
             "(?s).*Encountered \"[)]\" at line 1, column 31.*");
     }
 
@@ -1268,6 +1269,29 @@ public class SqlParserTest
                     "SELECT *",
                     "FROM `EMP`)"
                 }));
+
+        check(
+            "select * from (select * from t order by x, y) where a = b",
+            TestUtil.fold(
+                "SELECT *\n"
+                    + "FROM (SELECT *\n"
+                    + "FROM `T`\n"
+                    + "ORDER BY `X`, `Y`)\n"
+                    + "WHERE (`A` = `B`)"));
+    }
+
+    public void testOrderIllegalInExpression()
+    {
+        check(
+            "select (select 1 from foo order by x,y) from t where a = b",
+            TestUtil.fold("SELECT (SELECT 1\n"
+                + "FROM `FOO`\n"
+                + "ORDER BY `X`, `Y`)\n"
+                + "FROM `T`\n"
+                + "WHERE (`A` = `B`)"));
+        checkFails(
+            "select (1 ^order^ by x, y) from t where a = b",
+            "ORDER BY unexpected");
     }
 
     public void testSqlInlineComment()
@@ -1432,7 +1456,7 @@ public class SqlParserTest
     public void testParseNumberFails()
     {
         checkFails(
-            "SELECT 0.5e1.1 from t",
+            "SELECT 0.5e1^.1^ from t",
             "(?s).*Encountered .*\\.1.* at line 1.*");
     }
 
@@ -1571,7 +1595,8 @@ public class SqlParserTest
 
     public void testSelectList4()
     {
-        checkFails("select from emp", "(?s).*Encountered \"from\" at line .*");
+        checkFails("select ^from^ emp",
+            "(?s).*Encountered \"from\" at line .*");
     }
 
     public void testStar()
@@ -1646,7 +1671,7 @@ public class SqlParserTest
     public void testEmptyValues()
     {
         checkFails(
-            "select * from (values())",
+            "select * from (values(^)^)",
             "(?s).*Encountered \"\\)\" at line .*");
     }
 
@@ -1684,7 +1709,7 @@ public class SqlParserTest
     public void testSelectFromBareExplicitTableFails()
     {
         checkFails(
-            "select * from table emp",
+            "select * from table ^emp^",
             "(?s).*Encountered \"emp\" at line 1, column 21.*");
 
         checkFails(
@@ -1909,7 +1934,7 @@ public class SqlParserTest
     {
         // Bit-string is longer part of the SQL standard. We do not support it.
         checkFails(
-            "select B'1011' || 'foobar' from (values (true))",
+            "select B^'1011'^ || 'foobar' from (values (true))",
             "(?s).*Encountered \"\\\\'1011\\\\'\" at line 1, column 9.*");
     }
 
@@ -1981,14 +2006,14 @@ public class SqlParserTest
     public void testStringLiteralFails()
     {
         checkFails(
-            "select N 'space'",
+            "select N ^'space'^",
             "(?s).*Encountered .*space.* at line 1, column ...*");
         checkFails(
-            "select _latin1 \n'newline'",
+            "select _latin1 \n^'newline'^",
             "(?s).*Encountered.*newline.* at line 2, column ...*");
         checkFails(
-            "select _unknown-charset'' from (values(true))",
-            "(?s).*UNKNOWN-CHARSET.*");
+            "select ^_unknown-charset''^ from (values(true))",
+            "Unknown character set 'unknown-charset'");
 
         // valid syntax, but should give a validator error
         check(
@@ -2042,12 +2067,13 @@ public class SqlParserTest
 
     public void testCaseExpressionFails()
     {
-        //forget end
-        checkFails("select case col1 when 1 then 'one' from t", "(?s).*from.*");
+        // Missing 'END'
+        checkFails("select case col1 when 1 then 'one' ^from^ t",
+            "(?s).*from.*");
 
-        //wrong when
+        // Wrong 'WHEN'
         checkFails(
-            "select case col1 when1 then 'one' end from t",
+            "select case col1 ^when1^ then 'one' end from t",
             "(?s).*when1.*");
     }
 
@@ -2173,11 +2199,11 @@ public class SqlParserTest
         checkExpSame("TIMESTAMP '2004-12-01 12:01:01.1'");
 
         // Failures.
-        checkFails("DATE '12/21/99'", "(?s).*Illegal DATE literal.*");
-        checkFails("TIME '1230:33'", "(?s).*Illegal TIME literal.*");
-        checkFails("TIME '12:00:00 PM'", "(?s).*Illegal TIME literal.*");
+        checkFails("^DATE '12/21/99'^", "(?s).*Illegal DATE literal.*");
+        checkFails("^TIME '1230:33'^", "(?s).*Illegal TIME literal.*");
+        checkFails("^TIME '12:00:00 PM'^", "(?s).*Illegal TIME literal.*");
         checkFails(
-            "TIMESTAMP '12-21-99, 12:30:00'",
+            "^TIMESTAMP '12-21-99, 12:30:00'^",
             "(?s).*Illegal TIMESTAMP literal.*");
     }
 
@@ -2191,10 +2217,10 @@ public class SqlParserTest
         checkExp("CAST('2001-12-21' AS DATE)", "CAST('2001-12-21' AS DATE)");
         checkExp("CAST(12 AS DATE)", "CAST(12 AS DATE)");
         checkFails(
-            "CAST('2000-12-21' AS DATE NOT NULL)",
+            "CAST('2000-12-21' AS DATE ^NOT^ NULL)",
             "(?s).*Encountered \"NOT\" at line 1, column 27.*");
         checkFails(
-            "CAST('foo' as 1)",
+            "CAST('foo' as ^1^)",
             "(?s).*Encountered \"1\" at line 1, column 15.*");
         checkExp(
             "Cast(DATE '2004-12-21' AS VARCHAR(10))",
@@ -2226,8 +2252,8 @@ public class SqlParserTest
             + "' ') || COALESCE('junk ', '')))");
 
         checkFails(
-            "trim(from 'beard')",
-            "(?s).*'FROM' near line 1, column 6, without operands preceding it is illegal.*");
+            "trim(^from^ 'beard')",
+            "(?s).*'FROM' without operands preceding it is illegal.*");
     }
 
     public void testConvertAndTranslate()
@@ -2264,7 +2290,8 @@ public class SqlParserTest
         checkExp("sum(sal) over (w)", "(SUM(`SAL`) OVER (`W`))");
 
         // Only 1 window reference allowed
-        checkExpFails("sum(sal) over (w w1 partition by deptno)", "(?s).*");
+        checkExpFails("sum(sal) over (w ^w1^ partition by deptno)",
+            "(?s)Encountered \"w1\" at.*");
     }
 
     public void testWindowInSubquery()
@@ -4750,197 +4777,210 @@ public class SqlParserTest
 
     public void testUnparseableIntervalQualifiers()
     {
-        //no qualifier
-        checkExpFails("interval '1'", "(?s).*");
+        // No qualifier
+        checkExpFails("interval '1^'^",
+            TestUtil.fold("Encountered \"<EOF>\" at line 1, column 12\\.\n" +
+                "Was expecting one of:\n" +
+                "    \"DAY\" \\.\\.\\.\n" +
+                "    \"HOUR\" \\.\\.\\.\n" +
+                "    \"MINUTE\" \\.\\.\\.\n" +
+                "    \"MONTH\" \\.\\.\\.\n" +
+                "    \"SECOND\" \\.\\.\\.\n" +
+                "    \"YEAR\" \\.\\.\\.\n" +
+                "    "));
 
-        //illegal qualfiers, no precision in either field
-        checkExpFails("interval '1' year to year", "(?s).*");
-        checkExpFails("interval '1-2' year to day", "(?s).*");
-        checkExpFails("interval '1-2' year to hour", "(?s).*");
-        checkExpFails("interval '1-2' year to minute", "(?s).*");
-        checkExpFails("interval '1-2' year to second", "(?s).*");
+        // illegal qualfiers, no precision in either field
+        checkExpFails("interval '1' year ^to^ year",
+            TestUtil.fold("(?s)Encountered \"to year\" at line 1, column 19.\n" +
+                "Was expecting one of:\n" +
+                "    <EOF> \n" +
+                "    \"AND\" \\.\\.\\..*"));
+        checkExpFails("interval '1-2' year ^to^ day", ANY);
+        checkExpFails("interval '1-2' year ^to^ hour", ANY);
+        checkExpFails("interval '1-2' year ^to^ minute", ANY);
+        checkExpFails("interval '1-2' year ^to^ second", ANY);
 
-        checkExpFails("interval '1-2' month to year", "(?s).*");
-        checkExpFails("interval '1-2' month to month", "(?s).*");
-        checkExpFails("interval '1-2' month to day", "(?s).*");
-        checkExpFails("interval '1-2' month to hour", "(?s).*");
-        checkExpFails("interval '1-2' month to minute", "(?s).*");
-        checkExpFails("interval '1-2' month to second", "(?s).*");
+        checkExpFails("interval '1-2' month ^to^ year", ANY);
+        checkExpFails("interval '1-2' month ^to^ month", ANY);
+        checkExpFails("interval '1-2' month ^to^ day", ANY);
+        checkExpFails("interval '1-2' month ^to^ hour", ANY);
+        checkExpFails("interval '1-2' month ^to^ minute", ANY);
+        checkExpFails("interval '1-2' month ^to^ second", ANY);
 
-        checkExpFails("interval '1-2' day to year", "(?s).*");
-        checkExpFails("interval '1-2' day to month", "(?s).*");
-        checkExpFails("interval '1-2' day to day", "(?s).*");
+        checkExpFails("interval '1-2' day ^to^ year", ANY);
+        checkExpFails("interval '1-2' day ^to^ month", ANY);
+        checkExpFails("interval '1-2' day ^to^ day", ANY);
 
-        checkExpFails("interval '1-2' hour to year", "(?s).*");
-        checkExpFails("interval '1-2' hour to month", "(?s).*");
-        checkExpFails("interval '1-2' hour to day", "(?s).*");
-        checkExpFails("interval '1-2' hour to hour", "(?s).*");
+        checkExpFails("interval '1-2' hour ^to^ year", ANY);
+        checkExpFails("interval '1-2' hour ^to^ month", ANY);
+        checkExpFails("interval '1-2' hour ^to^ day", ANY);
+        checkExpFails("interval '1-2' hour ^to^ hour", ANY);
 
-        checkExpFails("interval '1-2' minute to year", "(?s).*");
-        checkExpFails("interval '1-2' minute to month", "(?s).*");
-        checkExpFails("interval '1-2' minute to day", "(?s).*");
-        checkExpFails("interval '1-2' minute to hour", "(?s).*");
-        checkExpFails("interval '1-2' minute to minute", "(?s).*");
+        checkExpFails("interval '1-2' minute ^to^ year", ANY);
+        checkExpFails("interval '1-2' minute ^to^ month", ANY);
+        checkExpFails("interval '1-2' minute ^to^ day", ANY);
+        checkExpFails("interval '1-2' minute ^to^ hour", ANY);
+        checkExpFails("interval '1-2' minute ^to^ minute", ANY);
 
-        checkExpFails("interval '1-2' second to year", "(?s).*");
-        checkExpFails("interval '1-2' second to month", "(?s).*");
-        checkExpFails("interval '1-2' second to day", "(?s).*");
-        checkExpFails("interval '1-2' second to hour", "(?s).*");
-        checkExpFails("interval '1-2' second to minute", "(?s).*");
-        checkExpFails("interval '1-2' second to second", "(?s).*");
+        checkExpFails("interval '1-2' second ^to^ year", ANY);
+        checkExpFails("interval '1-2' second ^to^ month", ANY);
+        checkExpFails("interval '1-2' second ^to^ day", ANY);
+        checkExpFails("interval '1-2' second ^to^ hour", ANY);
+        checkExpFails("interval '1-2' second ^to^ minute", ANY);
+        checkExpFails("interval '1-2' second ^to^ second", ANY);
 
-        //illegal qualfiers, including precision in start field
-        checkExpFails("interval '1' year(3) to year", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to day", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to hour", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to minute", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to second", "(?s).*");
+        // illegal qualfiers, including precision in start field
+        checkExpFails("interval '1' year(3) ^to^ year", ANY);
+        checkExpFails("interval '1-2' year(3) ^to^ day", ANY);
+        checkExpFails("interval '1-2' year(3) ^to^ hour", ANY);
+        checkExpFails("interval '1-2' year(3) ^to^ minute", ANY);
+        checkExpFails("interval '1-2' year(3) ^to^ second", ANY);
 
-        checkExpFails("interval '1-2' month(3) to year", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to month", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to day", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to hour", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to minute", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to second", "(?s).*");
+        checkExpFails("interval '1-2' month(3) ^to^ year", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ month", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ day", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ hour", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ minute", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ second", ANY);
 
-        checkExpFails("interval '1-2' day(3) to year", "(?s).*");
-        checkExpFails("interval '1-2' day(3) to month", "(?s).*");
+        checkExpFails("interval '1-2' day(3) ^to^ year", ANY);
+        checkExpFails("interval '1-2' day(3) ^to^ month", ANY);
 
-        checkExpFails("interval '1-2' hour(3) to year", "(?s).*");
-        checkExpFails("interval '1-2' hour(3) to month", "(?s).*");
-        checkExpFails("interval '1-2' hour(3) to day", "(?s).*");
+        checkExpFails("interval '1-2' hour(3) ^to^ year", ANY);
+        checkExpFails("interval '1-2' hour(3) ^to^ month", ANY);
+        checkExpFails("interval '1-2' hour(3) ^to^ day", ANY);
 
-        checkExpFails("interval '1-2' minute(3) to year", "(?s).*");
-        checkExpFails("interval '1-2' minute(3) to month", "(?s).*");
-        checkExpFails("interval '1-2' minute(3) to day", "(?s).*");
-        checkExpFails("interval '1-2' minute(3) to hour", "(?s).*");
+        checkExpFails("interval '1-2' minute(3) ^to^ year", ANY);
+        checkExpFails("interval '1-2' minute(3) ^to^ month", ANY);
+        checkExpFails("interval '1-2' minute(3) ^to^ day", ANY);
+        checkExpFails("interval '1-2' minute(3) ^to^ hour", ANY);
 
-        checkExpFails("interval '1-2' second(3) to year", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to month", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to day", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to hour", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to minute", "(?s).*");
+        checkExpFails("interval '1-2' second(3) ^to^ year", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ month", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ day", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ hour", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ minute", ANY);
 
-        //illegal qualfiers, including precision in end field
-        checkExpFails("interval '1' year to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' year to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' year to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' year to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' year to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' year to second(2)", "(?s).*");
-        checkExpFails("interval '1-2' year to second(2,6)", "(?s).*");
+        // illegal qualfiers, including precision in end field
+        checkExpFails("interval '1' year ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' year to month^(^2)", ANY);
+        checkExpFails("interval '1-2' year ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' year ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' year ^to^ minute(2)", ANY);
+        checkExpFails("interval '1-2' year ^to^ second(2)", ANY);
+        checkExpFails("interval '1-2' year ^to^ second(2,6)", ANY);
 
-        checkExpFails("interval '1-2' month to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' month to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' month to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' month to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' month to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' month to second(2)", "(?s).*");
-        checkExpFails("interval '1-2' month to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' month ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' month ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' month ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' month ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' month ^to^ minute(2)", ANY);
+        checkExpFails("interval '1-2' month ^to^ second(2)", ANY);
+        checkExpFails("interval '1-2' month ^to^ second(2,6)", ANY);
 
-        checkExpFails("interval '1-2' day to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' day to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' day to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' day to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' day to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' day to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' day ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' day ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' day ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' day to hour^(^2)", ANY);
+        checkExpFails("interval '1-2' day to minute^(^2)", ANY);
+        checkExpFails("interval '1-2' day to second(2^,^6)", ANY);
 
-        checkExpFails("interval '1-2' hour to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' hour ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' hour ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' hour ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' hour ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' hour to minute^(^2)", ANY);
+        checkExpFails("interval '1-2' hour to second(2^,^6)", ANY);
 
-        checkExpFails("interval '1-2' minute to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' minute ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' minute ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' minute ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' minute ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' minute ^to^ minute(2)", ANY);
+        checkExpFails("interval '1-2' minute to second(2^,^6)", ANY);
 
-        checkExpFails("interval '1-2' second to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' second to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' second to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' second to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' second to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' second to second(2)", "(?s).*");
-        checkExpFails("interval '1-2' second to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' second ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' second ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' second ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' second ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' second ^to^ minute(2)", ANY);
+        checkExpFails("interval '1-2' second ^to^ second(2)", ANY);
+        checkExpFails("interval '1-2' second ^to^ second(2,6)", ANY);
 
-        //illegal qualfiers, including precision in start and end field
-        checkExpFails("interval '1' year(3) to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to second(2)", "(?s).*");
-        checkExpFails("interval '1-2' year(3) to second(2,6)", "(?s).*");
+        // illegal qualfiers, including precision in start and end field
+        checkExpFails("interval '1' year(3) ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' year(3) to month^(^2)", ANY);
+        checkExpFails("interval '1-2' year(3) ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' year(3) ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' year(3) ^to^ minute(2)", ANY);
+        checkExpFails("interval '1-2' year(3) ^to^ second(2)", ANY);
+        checkExpFails("interval '1-2' year(3) ^to^ second(2,6)", ANY);
 
-        checkExpFails("interval '1-2' month(3) to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to second(2)", "(?s).*");
-        checkExpFails("interval '1-2' month(3) to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' month(3) ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ minute(2)", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ second(2)", ANY);
+        checkExpFails("interval '1-2' month(3) ^to^ second(2,6)", ANY);
 
-        checkExpFails("interval '1-2' day(3) to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' day(3) to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' day(3) to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' day(3) to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' day(3) to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' day(3) to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' day(3) ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' day(3) ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' day(3) ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' day(3) to hour^(^2)", ANY);
+        checkExpFails("interval '1-2' day(3) to minute^(^2)", ANY);
+        checkExpFails("interval '1-2' day(3) to second(2^,^6)", ANY);
 
-        checkExpFails("interval '1-2' hour(3) to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour(3) to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour(3) to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour(3) to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour(3) to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' hour(3) to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' hour(3) ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' hour(3) ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' hour(3) ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' hour(3) ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' hour(3) to minute^(^2)", ANY);
+        checkExpFails("interval '1-2' hour(3) to second(2^,^6)", ANY);
 
-        checkExpFails("interval '1-2' minute(3) to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute(3) to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute(3) to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute(3) to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute(3) to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' minute(3) to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' minute(3) ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' minute(3) ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' minute(3) ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' minute(3) ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' minute(3) ^to^ minute(2)", ANY);
+        checkExpFails("interval '1-2' minute(3) to second(2^,^6)", ANY);
 
-        checkExpFails("interval '1-2' second(3) to year(2)", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to month(2)", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to day(2)", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to hour(2)", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to minute(2)", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to second(2)", "(?s).*");
-        checkExpFails("interval '1-2' second(3) to second(2,6)", "(?s).*");
+        checkExpFails("interval '1-2' second(3) ^to^ year(2)", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ month(2)", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ day(2)", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ hour(2)", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ minute(2)", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ second(2)", ANY);
+        checkExpFails("interval '1-2' second(3) ^to^ second(2,6)", ANY);
 
         // precision of -1 (< minimum allowed)
-        checkExpFails("INTERVAL '0' YEAR(-1)", "(?s).*");
-        checkExpFails("INTERVAL '0-0' YEAR(-1) TO MONTH", "(?s).*");
-        checkExpFails("INTERVAL '0' MONTH(-1)", "(?s).*");
-        checkExpFails("INTERVAL '0' DAY(-1)", "(?s).*");
-        checkExpFails("INTERVAL '0 0' DAY(-1) TO HOUR", "(?s).*");
-        checkExpFails("INTERVAL '0 0' DAY(-1) TO MINUTE", "(?s).*");
-        checkExpFails("INTERVAL '0 0:0:0' DAY(-1) TO SECOND", "(?s).*");
-        checkExpFails("INTERVAL '0 0:0:0' DAY TO SECOND(-1)", "(?s).*");
-        checkExpFails("INTERVAL '0' HOUR(-1)", "(?s).*");
-        checkExpFails("INTERVAL '0:0' HOUR(-1) TO MINUTE", "(?s).*");
-        checkExpFails("INTERVAL '0:0:0' HOUR(-1) TO SECOND", "(?s).*");
-        checkExpFails("INTERVAL '0:0:0' HOUR TO SECOND(-1)", "(?s).*");
-        checkExpFails("INTERVAL '0' MINUTE(-1)", "(?s).*");
-        checkExpFails("INTERVAL '0:0' MINUTE(-1) TO SECOND", "(?s).*");
-        checkExpFails("INTERVAL '0:0' MINUTE TO SECOND(-1)", "(?s).*");
-        checkExpFails("INTERVAL '0' SECOND(-1)", "(?s).*");
-        checkExpFails("INTERVAL '0' SECOND(1, -1)", "(?s).*");
+        checkExpFails("INTERVAL '0' YEAR(^-^1)", ANY);
+        checkExpFails("INTERVAL '0-0' YEAR(^-^1) TO MONTH", ANY);
+        checkExpFails("INTERVAL '0' MONTH(^-^1)", ANY);
+        checkExpFails("INTERVAL '0' DAY(^-^1)", ANY);
+        checkExpFails("INTERVAL '0 0' DAY(^-^1) TO HOUR", ANY);
+        checkExpFails("INTERVAL '0 0' DAY(^-^1) TO MINUTE", ANY);
+        checkExpFails("INTERVAL '0 0:0:0' DAY(^-^1) TO SECOND", ANY);
+        checkExpFails("INTERVAL '0 0:0:0' DAY TO SECOND(^-^1)", ANY);
+        checkExpFails("INTERVAL '0' HOUR(^-^1)", ANY);
+        checkExpFails("INTERVAL '0:0' HOUR(^-^1) TO MINUTE", ANY);
+        checkExpFails("INTERVAL '0:0:0' HOUR(^-^1) TO SECOND", ANY);
+        checkExpFails("INTERVAL '0:0:0' HOUR TO SECOND(^-^1)", ANY);
+        checkExpFails("INTERVAL '0' MINUTE(^-^1)", ANY);
+        checkExpFails("INTERVAL '0:0' MINUTE(^-^1) TO SECOND", ANY);
+        checkExpFails("INTERVAL '0:0' MINUTE TO SECOND(^-^1)", ANY);
+        checkExpFails("INTERVAL '0' SECOND(^-^1)", ANY);
+        checkExpFails("INTERVAL '0' SECOND(1, ^-^1)", ANY);
 
-        //These may actually be legal per SQL2003, as the first field is
+        // These may actually be legal per SQL2003, as the first field is
         // "more significant" than the last, but we do not support them
-        checkExpFails("interval '1' day(3) to day", "(?s).*");
-        checkExpFails("interval '1' hour(3) to hour", "(?s).*");
-        checkExpFails("interval '1' minute(3) to minute", "(?s).*");
-        checkExpFails("interval '1' second(3) to second", "(?s).*");
-        checkExpFails("interval '1' second(3,1) to second", "(?s).*");
-        checkExpFails("interval '1' second(2,3) to second", "(?s).*");
-        checkExpFails("interval '1' second(2,2) to second(3)", "(?s).*");
+        checkExpFails("interval '1' day(3) ^to^ day", ANY);
+        checkExpFails("interval '1' hour(3) ^to^ hour", ANY);
+        checkExpFails("interval '1' minute(3) ^to^ minute", ANY);
+        checkExpFails("interval '1' second(3) ^to^ second", ANY);
+        checkExpFails("interval '1' second(3,1) ^to^ second", ANY);
+        checkExpFails("interval '1' second(2,3) ^to^ second", ANY);
+        checkExpFails("interval '1' second(2,2) ^to^ second(3)", ANY);
     }
 
     public void testMiscIntervalQualifier()
@@ -4974,7 +5014,7 @@ public class SqlParserTest
         checkExp("interval -'1' day", "INTERVAL -'1' DAY");
         checkExp("interval '-1' day", "INTERVAL '-1' DAY");
         checkExpFails(
-            "interval 'wael was here'",
+            "interval 'wael was here^'^",
             "(?s)Encountered \"<EOF>\".*");
         checkExp(
             "interval 'wael was here' HOUR",
@@ -4991,11 +5031,11 @@ public class SqlParserTest
             "(date1 - date2) HOUR > interval '1' HOUR",
             "(((`DATE1` - `DATE2`) HOUR) > INTERVAL '1' HOUR)");
         checkExpFails(
-            "(date1 + date2) second",
-            "(?s).*Illegal expression; at line 1, column 17. Was expecting ..DATETIME - DATETIME. INTERVALQUALIFIER.*");
+            "^(date1 + date2) second^",
+            "(?s).*Illegal expression. Was expecting ..DATETIME - DATETIME. INTERVALQUALIFIER.*");
         checkExpFails(
-            "(date1,date2,date2) second",
-            "(?s).*Illegal expression; at line 1, column 21. Was expecting ..DATETIME - DATETIME. INTERVALQUALIFIER.*");
+            "^(date1,date2,date2) second^",
+            "(?s).*Illegal expression. Was expecting ..DATETIME - DATETIME. INTERVALQUALIFIER.*");
     }
 
     public void testExtract()
@@ -5099,11 +5139,11 @@ public class SqlParserTest
     public void testUnnest()
     {
         check("select*from unnest(x)",
-            "SELECT *" + NL
+            "SELECT *\n"
             + "FROM (UNNEST(`X`))");
         check(
             "select*from unnest(x) AS T",
-            "SELECT *" + NL
+            "SELECT *\n"
             + "FROM (UNNEST(`X`)) AS `T`");
 
         // UNNEST cannot be first word in query
@@ -5115,7 +5155,7 @@ public class SqlParserTest
     {
         // UNNEST may not occur within parentheses.
         checkFails(
-            "select *from (unnest(x))",
+            "select *from (^unnest^(x))",
             "(?s)Encountered \"unnest\" at .*");
 
         // <table-name> may not occur within parentheses.

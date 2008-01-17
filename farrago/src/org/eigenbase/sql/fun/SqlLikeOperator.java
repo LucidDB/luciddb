@@ -60,6 +60,13 @@ public class SqlLikeOperator
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a SqlLikeOperator.
+     *
+     * @param name Operator name
+     * @param kind Kind
+     * @param negated Whether this is 'NOT LIKE'
+     */
     SqlLikeOperator(
         String name,
         SqlKind kind,
@@ -81,6 +88,11 @@ public class SqlLikeOperator
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns whether this is the 'NOT LIKE' operator.
+     *
+     * @return whether this is 'NOT LIKE'
+     */
     public boolean isNegated()
     {
         return negated;
@@ -120,15 +132,10 @@ public class SqlLikeOperator
                 "unexpected number of args to " + callBinding.getCall());
         }
 
-        if (!SqlTypeUtil.isCharTypeComparable(
-                callBinding.getValidator(),
-                callBinding.getScope(),
-                callBinding.getCall().operands,
-                throwOnFailure))
-        {
-            return false;
-        }
-        return true;
+        return SqlTypeUtil.isCharTypeComparable(
+            callBinding,
+            callBinding.getCall().getOperands(),
+            throwOnFailure);
     }
 
     public void unparse(

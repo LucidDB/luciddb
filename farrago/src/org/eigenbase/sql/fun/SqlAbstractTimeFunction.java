@@ -83,10 +83,11 @@ public class SqlAbstractTimeFunction
         }
         assert (precision >= 0);
         if (precision > SqlTypeName.MAX_DATETIME_PRECISION) {
-            throw EigenbaseResource.instance().ArgumentMustBeValidPrecision.ex(
-                opBinding.getOperator().getName(),
-                "0",
-                String.valueOf(SqlTypeName.MAX_DATETIME_PRECISION));
+            throw opBinding.newError(
+                EigenbaseResource.instance().ArgumentMustBeValidPrecision.ex(
+                    opBinding.getOperator().getName(),
+                    "0",
+                    String.valueOf(SqlTypeName.MAX_DATETIME_PRECISION)));
         }
         return opBinding.getTypeFactory().createSqlType(typeName, precision);
     }

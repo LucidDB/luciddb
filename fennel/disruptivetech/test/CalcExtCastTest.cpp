@@ -985,26 +985,25 @@ CalcExtCastTest::testCalcExtCastExactToStringTruncates()
 
     // check results:
     // 1666 -> vc(3) = truncates
-    // dtbug : last char of truncated value is a nul.
-    // BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[0], "166"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[0], "166"));
     BOOST_CHECK_EQUAL(iter->pc, 0);
     BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
 
     // -1666 -> vc(3) = truncates
-    // BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[0], "-16"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[1], "-16"));
     BOOST_CHECK_EQUAL(iter->pc, 1);
     BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
 
     // 1666 -> c(3) = truncates
-    // BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[0], "166"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[2], "166"));
     BOOST_CHECK_EQUAL(iter->pc, 2);
     BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;
 
     // -1666 -> c(3) = truncates
-    // BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[0], "-16"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[3], "-16"));
     BOOST_CHECK_EQUAL(iter->pc, 3);
     BOOST_CHECK_EQUAL(0, strcmp(iter->str, truncErr));
     iter++;

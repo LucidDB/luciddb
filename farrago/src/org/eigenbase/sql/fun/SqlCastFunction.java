@@ -120,9 +120,10 @@ public class SqlCastFunction
                 callBinding.getCall().operands[1]);
         if (!SqlTypeUtil.canCastFrom(returnType, validatedNodeType, true)) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().CannotCastValue.ex(
-                    validatedNodeType.toString(),
-                    returnType.toString());
+                throw callBinding.newError(
+                    EigenbaseResource.instance().CannotCastValue.ex(
+                        validatedNodeType.toString(),
+                        returnType.toString()));
             }
             return false;
         }

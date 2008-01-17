@@ -43,6 +43,9 @@ public class SqlSubstringFunction
 {
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates the SqlSubstringFunction.
+     */
     SqlSubstringFunction()
     {
         super(
@@ -136,9 +139,8 @@ public class SqlSubstringFunction
                 }
 
                 if (!SqlTypeUtil.isCharTypeComparable(
-                        validator,
-                        scope,
-                        call.operands,
+                        callBinding,
+                        callBinding.getCall().getOperands(),
                         throwOnFailure))
                 {
                     return false;

@@ -146,8 +146,11 @@ public class SqlCollation implements Serializable
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
      *
-     * @return the resulting collation sequence. If no collating sequence could
-     * be deduced a {@link EigenbaseResource#InvalidCompare} is thrown
+     * @return the resulting collation sequence
+     *
+     * @throws EigenbaseException {@link EigenbaseResource#InvalidCompare}
+     * or {@link EigenbaseResource#DifferentCollations} if no collating
+     * sequence can be deduced
      *
      * @sql.99 Part 2 Section 4.2.3 Table 2
      */

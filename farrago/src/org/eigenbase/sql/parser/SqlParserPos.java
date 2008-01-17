@@ -85,6 +85,27 @@ public class SqlParserPos
 
     //~ Methods ----------------------------------------------------------------
 
+    public int hashCode()
+    {
+        return lineNumber
+            ^ (columnNumber << 2)
+            ^ (endLineNumber << 5)
+            ^ (endColumnNumber << 7);
+    }
+
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof SqlParserPos) {
+            final SqlParserPos that = (SqlParserPos) obj;
+            return that.lineNumber == this.lineNumber
+                && that.columnNumber == this.columnNumber
+                && that.endLineNumber == this.endLineNumber
+                && that.endColumnNumber == this.endColumnNumber;
+        } else {
+            return false;
+        }
+    }
+
     /**
      * @return 1-based starting line number
      */
@@ -197,6 +218,9 @@ public class SqlParserPos
                 continue;
             }
             SqlParserPos pos = node.getParserPosition();
+            if (pos.equals(SqlParserPos.ZERO)) {
+                continue;
+            }
             testLine = pos.getLineNum();
             testColumn = pos.getColumnNum();
             if ((testLine < line)
