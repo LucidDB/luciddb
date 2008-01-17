@@ -127,7 +127,7 @@ Error: From line 1, column 13 to line 5, column 3: Illegal mixing of types in CA
 . . . . . . . . >  ELSE NULL
 . . . . . . . . > END)
 . . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
-Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
+Error: From line 1, column 13 to line 5, column 3: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
 0: jdbc:luciddb:> -- Output into an expression with null
 0: jdbc:luciddb:> SELECT n1, (CASE WHEN (n1 < -100) THEN NULL
 . . . . . . . . >  WHEN (n1 < 0) THEN NULL
@@ -135,7 +135,7 @@ Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
 . . . . . . . . >  ELSE NULL
 . . . . . . . . > END) * 14.553
 . . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
-Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
+Error: From line 1, column 13 to line 5, column 3: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Check null values
 0: jdbc:luciddb:> -- simulate NVL(col, 0)
@@ -261,7 +261,7 @@ Error: From line 1, column 13 to line 5, column 3: Cannot apply '=' to arguments
 . . . . . . . . >  ELSE 1000
 . . . . . . . . > END)
 . . . . . . . . > FROM TEST_INTEGER_TABLE ORDER BY n1;
-Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '1976-08-11' at line 2, column 23: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+Error: Illegal TIMESTAMP literal '1976-08-11': not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- CHAR VARCHAR Comparison
 0: jdbc:luciddb:> SELECT c2, (CASE c2 WHEN 'KIRK' THEN 100
