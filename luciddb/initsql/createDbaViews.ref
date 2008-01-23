@@ -520,19 +520,6 @@
 > specific kill_all_matching_statements_cancel
 > external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
 > 
-> -- retrieves a long catalog string attribute in chunks
-> create or replace function retrieve_repository_lob_text(
->   mof_id varchar(128),
->   attribute_name varchar(128))
-> returns table(
->   chunk_offset integer,
->   chunk_text varchar(1024))
-> language java
-> parameter style system defined java
-> no sql
-> external name 
-> 'class net.sf.farrago.syslib.FarragoManagementUDR.lobText';
-> 
 > -- Exports the complete contents of the catalog to an XMI file
 > create or replace procedure export_catalog_xmi(in filename varchar(65535))
 > language java

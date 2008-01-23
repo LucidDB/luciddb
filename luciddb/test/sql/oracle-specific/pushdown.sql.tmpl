@@ -76,186 +76,186 @@ options
 
 
 -- >=
-select datecol, timestampcol from test.datatype where datecol >=
+select * from test.datatype where datecol >=
   APPLIB.ADD_DAYS(
    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where datecol >=
+  select * from test.datatype where datecol >=
     APPLIB.ADD_DAYS(
      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-  order by 1,2
+  order by 1,2,3
 );
 
 
 -- >
-select datecol, timestampcol from test.datatype where datecol >
+select * from test.datatype where datecol >
   APPLIB.ADD_DAYS(
    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where datecol >
+  select * from test.datatype where datecol >
     APPLIB.ADD_DAYS(
      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-  order by 1,2
+  order by 1,2,3
 );
 
 
 -- <=
-select datecol, timestampcol from test.datatype where datecol <=
+select * from test.datatype where datecol <=
   APPLIB.ADD_DAYS(
    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where datecol <=
+  select * from test.datatype where datecol <=
     APPLIB.ADD_DAYS(
      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-  order by 1,2
+  order by 1,2,3
 );
 
 
 -- <
-select datecol, timestampcol from test.datatype where datecol <
+select * from test.datatype where datecol <
   APPLIB.ADD_DAYS(
    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where datecol <
+  select * from test.datatype where datecol <
     APPLIB.ADD_DAYS(
      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-  order by 1,2
+  order by 1,2,3
 );
 
 
 -- =
-select datecol, timestampcol from test.datatype where datecol =
+select * from test.datatype where datecol =
   APPLIB.ADD_DAYS(
    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where datecol =
+  select * from test.datatype where datecol =
     APPLIB.ADD_DAYS(
      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-  order by 1,2
+  order by 1,2,3
 );
 
 
 -- <>
-select datecol, timestampcol from test.datatype where datecol <>
+select * from test.datatype where datecol <>
   APPLIB.ADD_DAYS(
    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where datecol <>
+  select * from test.datatype where datecol <>
     APPLIB.ADD_DAYS(
      (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
-  order by 1,2
+  order by 1,2,3
 );
 
 
 -- NOT LIKE
-select datecol, timestampcol from test.datatype where varcharcol NOT LIKE '%char' order by 1,2;
+select * from test.datatype where varcharcol NOT LIKE '%char' order by 1,2,3;
 
 explain plan for (
-select datecol, timestampcol from test.datatype where varcharcol NOT LIKE '%char' order by 1,2
+select * from test.datatype where varcharcol NOT LIKE '%char' order by 1,2,3
 );
 
 
 -- LIKE
-select datecol, timestampcol from test.datatype where varcharcol LIKE '%char' order by 1,2;
+select * from test.datatype where varcharcol LIKE '%char' order by 1,2,3;
 
 explain plan for (
-select datecol, timestampcol from test.datatype where varcharcol LIKE '%char' order by 1,2
+select * from test.datatype where varcharcol LIKE '%char' order by 1,2,3
 );
 
 
 -- NOT BETWEEN
-select datecol, timestampcol from test.datatype where datecol NOT BETWEEN
+select * from test.datatype where datecol NOT BETWEEN
   APPLIB.ADD_DAYS(
     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
     -50)
   AND
   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where datecol NOT BETWEEN
+  select * from test.datatype where datecol NOT BETWEEN
     APPLIB.ADD_DAYS(
       (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
       -50)
     AND
     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
-  order by 1,2
+  order by 1,2,3
 );
 
 
 -- BETWEEN
-select datecol, timestampcol from test.datatype where datecol BETWEEN
+select * from test.datatype where datecol BETWEEN
   APPLIB.ADD_DAYS(
     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
     -50)
   AND
   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where datecol BETWEEN
+  select * from test.datatype where datecol BETWEEN
     APPLIB.ADD_DAYS(
       (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
       -50)
     AND
     (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
-  order by 1,2
+  order by 1,2,3
 );
 
 
 -- NOT IN
-select datecol, timestampcol from test.datatype where varcharcol NOT IN ('varchar2', 'varchar') order by 1,2;
+select * from test.datatype where varcharcol NOT IN ('varchar2', 'varchar') order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where varcharcol NOT IN ('varchar2', 'varchar') order by 1,2
+  select * from test.datatype where varcharcol NOT IN ('varchar2', 'varchar') order by 1,2,3
 );
 
 
 -- IN
-select datecol, timestampcol from test.datatype where varcharcol IN ('varchar2', 'varchar') order by 1,2;
+select * from test.datatype where varcharcol IN ('varchar2', 'varchar') order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where varcharcol IN ('varchar2', 'varchar') order by 1,2
+  select * from test.datatype where varcharcol IN ('varchar2', 'varchar') order by 1,2,3
 );
 
 
 -- IS NOT NULL
-select datecol, timestampcol from test.datatype where varcharcol IS NOT NULL order by 1,2;
+select * from test.datatype where varcharcol IS NOT NULL order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where varcharcol IS NOT NULL order by 1,2
+  select * from test.datatype where varcharcol IS NOT NULL order by 1,2,3
 );
 
 
 -- IS NULL
-select datecol, timestampcol from test.datatype where varcharcol IS NULL order by 1,2;
+select * from test.datatype where varcharcol IS NULL order by 1,2,3;
 
 explain plan for (
-  select datecol, timestampcol from test.datatype where varcharcol IS NULL order by 1,2
+  select * from test.datatype where varcharcol IS NULL order by 1,2,3
 );
 
 
@@ -267,7 +267,7 @@ AND
 (datecol BETWEEN TIMESTAMP'2006-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
   AND
 timestampcol < TIMESTAMP'2006-10-31 12:12:12')
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
   select timestampcol, datecol, varcharcol from test.datatype
@@ -277,7 +277,7 @@ explain plan for (
   (datecol BETWEEN TIMESTAMP'2006-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
     AND
   timestampcol < TIMESTAMP'2006-10-31 12:12:12')
-  order by 1,2
+  order by 1,2,3
 );
 
 -- OR
@@ -288,7 +288,7 @@ OR
 (datecol BETWEEN TIMESTAMP'2006-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
   OR
 timestampcol < TIMESTAMP'2006-10-31 12:12:12')
-order by 1,2;
+order by 1,2,3;
 
 explain plan for (
   select timestampcol, datecol, varcharcol from test.datatype 
@@ -298,7 +298,7 @@ explain plan for (
   (datecol BETWEEN TIMESTAMP'2006-10-01 00:00:00' AND TIMESTAMP'2007-01-01 00:00:00' 
     OR
   timestampcol < TIMESTAMP'2006-10-31 12:12:12')
-  order by 1,2
+  order by 1,2,3
 );
 
 
@@ -317,29 +317,3 @@ explain plan for (
   select datecol from test.datatype where datecol >= cast('2006-10-10 00:00:00' as TIMESTAMP)
 );
 
--- lenient = true && columns deleted
-
-create or replace foreign table DATATYPE (
-  timestampcol timestamp,
-  datecol date,
-  deletedcol integer,
-  varcharcol varchar(1024)
-) server ORCL_SERVER_ALL_PUSHDOWN
-options
-(object '@DATATYPE_TABLE@');
-
--- date pushdown
-select datecol from test.datatype where datecol >= DATE '2005-01-01' order by 1;
-
-explain plan for select datecol from test.datatype where datecol >= DATE '2005-01-01' order by 1;
-
-
--- projections
-
-select cast(varcharcol as varchar(2)) as "var col", cast(datecol as timestamp(0)) as "date timestamp" from test.datatype where datecol >= DATE '2005-01-01' order by 1, 2;
-
-explain plan for select cast(varcharcol as varchar(2)) as "var col", cast(datecol as timestamp(0)) as "date timestamp" from test.datatype where datecol >= DATE '2005-01-01' order by 1, 2;
-
-select * from test.datatype where datecol >= DATE '2005-01-01' order by 1,2,3;
-
-explain plan for select * from test.datatype where datecol >= DATE '2005-01-01' order by 1,2,3;

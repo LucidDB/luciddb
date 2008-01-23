@@ -14,7 +14,7 @@
 +---------+---------+
 0: jdbc:luciddb:> -- SELECT t1, CAST (t1 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert value of type BIGINT to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type BIGINT to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS char(21)) FROM CST.alltypes;
 +---------+------------------------+
 |   T1    |         EXPR$1         |
@@ -62,7 +62,7 @@ Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS tinyint) FROM CST.alltypes;
 Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert value of type BIGINT to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type BIGINT to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t1, CAST (t1 AS varchar(23)) FROM CST.alltypes;
 +---------+---------+
 |   T1    | EXPR$1  |
@@ -72,7 +72,7 @@ Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- t2 boolean
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS bigint) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 30: Cast function cannot convert value of type BOOLEAN to type BIGINT (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type BIGINT (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t2, CAST (t2 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS boolean) FROM CST.alltypes;
 +-------+---------+
@@ -87,27 +87,27 @@ Error: From line 1, column 12 to line 1, column 30: Cast function cannot convert
 | true  | TRUE                   |
 +-------+------------------------+
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS decimal) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert value of type BOOLEAN to type DECIMAL (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type DECIMAL (state=,code=0)
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS double) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 30: Cast function cannot convert value of type BOOLEAN to type DOUBLE (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS float) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 29: Cast function cannot convert value of type BOOLEAN to type FLOAT (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type FLOAT (state=,code=0)
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS integer) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert value of type BOOLEAN to type INTEGER (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type INTEGER (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t2, CAST (t2 AS long varbinary) FROM CST.alltypes;
 0: jdbc:luciddb:> -- SELECT t2, CAST (t2 AS long varchar) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS numeric(8,4)) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 36: Cast function cannot convert value of type BOOLEAN to type DECIMAL(8, 4) (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type DECIMAL(8, 4) (state=,code=0)
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS numeric(6,2)) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 36: Cast function cannot convert value of type BOOLEAN to type DECIMAL(6, 2) (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type DECIMAL(6, 2) (state=,code=0)
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS real) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 28: Cast function cannot convert value of type BOOLEAN to type REAL (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type REAL (state=,code=0)
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS smallint) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 32: Cast function cannot convert value of type BOOLEAN to type SMALLINT (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type SMALLINT (state=,code=0)
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS tinyint) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert value of type BOOLEAN to type TINYINT (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type TINYINT (state=,code=0)
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert value of type BOOLEAN to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type BOOLEAN to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t2, CAST (t2 AS varchar(23)) FROM CST.alltypes;
 +-------+---------+
 |  T2   | EXPR$1  |
@@ -148,7 +148,7 @@ Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatExc
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS tinyint) FROM CST.alltypes;
 Error: Cannot assign 'v lesu rodilas       ' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert value of type CHAR(21) to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type CHAR(21) to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t3, CAST (t3 AS varchar(23)) FROM CST.alltypes;
 +------------------------+------------------------+
 |           T3           |         EXPR$1         |
@@ -165,7 +165,7 @@ Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert
 +-----+---------+
 0: jdbc:luciddb:> -- SELECT t5, CAST (t5 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t5, CAST (t5 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert value of type DECIMAL to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type DECIMAL to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t5, CAST (t5 AS char(21)) FROM CST.alltypes;
 +-----+------------------------+
 | T5  |         EXPR$1         |
@@ -229,7 +229,7 @@ Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert
 | 5   | 5       |
 +-----+---------+
 0: jdbc:luciddb:> SELECT t5, CAST (t5 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert value of type DECIMAL to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type DECIMAL to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t5, CAST (t5 AS varchar(23)) FROM CST.alltypes;
 +-----+---------+
 | T5  | EXPR$1  |
@@ -246,7 +246,7 @@ Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert
 +------------+---------+
 0: jdbc:luciddb:> -- SELECT t6, CAST (t6 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert value of type DOUBLE to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type DOUBLE to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS char(21)) FROM CST.alltypes;
 +------------+------------------------+
 |     T6     |         EXPR$1         |
@@ -306,7 +306,7 @@ Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS tinyint) FROM CST.alltypes;
 Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS varchar(23)) FROM CST.alltypes;
 +------------+--------------+
 |     T6     |    EXPR$1    |
@@ -323,7 +323,7 @@ Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert
 +-----------+---------+
 0: jdbc:luciddb:> -- SELECT t7, CAST (t7 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert value of type DOUBLE to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type DOUBLE to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS char(21)) FROM CST.alltypes;
 +-----------+------------------------+
 |    T7     |         EXPR$1         |
@@ -383,7 +383,7 @@ Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS tinyint) FROM CST.alltypes;
 Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS varchar(23)) FROM CST.alltypes;
 +-----------+-------------+
 |    T7     |   EXPR$1    |
@@ -400,7 +400,7 @@ Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert
 +----------+----------+
 0: jdbc:luciddb:> -- SELECT t8, CAST (t8 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 31: Cast function cannot convert value of type INTEGER to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type INTEGER to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS char(21)) FROM CST.alltypes;
 +----------+------------------------+
 |    T8    |         EXPR$1         |
@@ -448,7 +448,7 @@ Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS tinyint) FROM CST.alltypes;
 Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert value of type INTEGER to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type INTEGER to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS varchar(23)) FROM CST.alltypes;
 +----------+----------+
 |    T8    |  EXPR$1  |
@@ -503,7 +503,7 @@ Error: From line 1, column 12 to line 1, column 37: Cast function cannot convert
 +----------+---------+
 0: jdbc:luciddb:> -- SELECT t11_1, CAST (t11_1 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 15 to line 1, column 37: Cast function cannot convert value of type DECIMAL(8, 4) to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type DECIMAL(8, 4) to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS char(21)) FROM CST.alltypes;
 +----------+------------------------+
 |  T11_1   |         EXPR$1         |
@@ -567,7 +567,7 @@ Error: From line 1, column 15 to line 1, column 37: Cast function cannot convert
 | 12.3000  | 12      |
 +----------+---------+
 0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 15 to line 1, column 43: Cast function cannot convert value of type DECIMAL(8, 4) to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type DECIMAL(8, 4) to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS varchar(23)) FROM CST.alltypes;
 +----------+----------+
 |  T11_1   |  EXPR$1  |
@@ -584,7 +584,7 @@ Error: From line 1, column 15 to line 1, column 43: Cast function cannot convert
 +--------+---------+
 0: jdbc:luciddb:> -- SELECT t11_2, CAST (t11_2 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 15 to line 1, column 37: Cast function cannot convert value of type DECIMAL(6, 2) to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type DECIMAL(6, 2) to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS char(21)) FROM CST.alltypes;
 +--------+------------------------+
 | T11_2  |         EXPR$1         |
@@ -651,7 +651,7 @@ Error: From line 1, column 15 to line 1, column 37: Cast function cannot convert
 | 45.30  | 45      |
 +--------+---------+
 0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 15 to line 1, column 43: Cast function cannot convert value of type DECIMAL(6, 2) to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type DECIMAL(6, 2) to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS varchar(23)) FROM CST.alltypes;
 +--------+---------+
 | T11_2  | EXPR$1  |
@@ -668,7 +668,7 @@ Error: From line 1, column 15 to line 1, column 43: Cast function cannot convert
 +------------+---------+
 0: jdbc:luciddb:> -- SELECT t12, CAST (t12 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert value of type REAL to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type REAL to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS char(21)) FROM CST.alltypes;
 +------------+------------------------+
 |    T12     |         EXPR$1         |
@@ -728,7 +728,7 @@ Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS tinyint) FROM CST.alltypes;
 Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 39: Cast function cannot convert value of type REAL to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type REAL to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS varchar(23)) FROM CST.alltypes;
 +------------+-------------+
 |    T12     |   EXPR$1    |
@@ -745,7 +745,7 @@ Error: From line 1, column 13 to line 1, column 39: Cast function cannot convert
 +------+---------+
 0: jdbc:luciddb:> -- SELECT t13, CAST (t13 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t13, CAST (t13 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert value of type SMALLINT to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type SMALLINT to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t13, CAST (t13 AS char(21)) FROM CST.alltypes;
 +------+------------------------+
 | T13  |         EXPR$1         |
@@ -809,7 +809,7 @@ Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert
 | 69   | 69      |
 +------+---------+
 0: jdbc:luciddb:> SELECT t13, CAST (t13 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 39: Cast function cannot convert value of type SMALLINT to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type SMALLINT to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t13, CAST (t13 AS varchar(23)) FROM CST.alltypes;
 +------+---------+
 | T13  | EXPR$1  |
@@ -826,7 +826,7 @@ Error: From line 1, column 13 to line 1, column 39: Cast function cannot convert
 +------+---------+
 0: jdbc:luciddb:> -- SELECT t16, CAST (t16 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t16, CAST (t16 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert value of type TINYINT to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type TINYINT to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t16, CAST (t16 AS char(21)) FROM CST.alltypes;
 +------+------------------------+
 | T16  |         EXPR$1         |
@@ -890,7 +890,7 @@ Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert
 | 15   | 15      |
 +------+---------+
 0: jdbc:luciddb:> SELECT t16, CAST (t16 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 39: Cast function cannot convert value of type TINYINT to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type TINYINT to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t16, CAST (t16 AS varchar(23)) FROM CST.alltypes;
 +------+---------+
 | T16  | EXPR$1  |
@@ -900,32 +900,32 @@ Error: From line 1, column 13 to line 1, column 39: Cast function cannot convert
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- t17 varbinary(10)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS bigint) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 32: Cast function cannot convert value of type VARBINARY(10) to type BIGINT (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type BIGINT (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t17, CAST (t17 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert value of type VARBINARY(10) to type BOOLEAN (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type BOOLEAN (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS char(21)) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 34: Cast function cannot convert value of type VARBINARY(10) to type CHAR(21) (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type CHAR(21) (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS decimal) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert value of type VARBINARY(10) to type DECIMAL (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type DECIMAL (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS double) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 32: Cast function cannot convert value of type VARBINARY(10) to type DOUBLE (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS float) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 31: Cast function cannot convert value of type VARBINARY(10) to type FLOAT (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type FLOAT (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS integer) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert value of type VARBINARY(10) to type INTEGER (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type INTEGER (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t17, CAST (t17 AS long varbinary) FROM CST.alltypes;
 0: jdbc:luciddb:> -- SELECT t17, CAST (t17 AS long varchar) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS numeric(8,4)) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 38: Cast function cannot convert value of type VARBINARY(10) to type DECIMAL(8, 4) (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type DECIMAL(8, 4) (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS numeric(6,2)) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 38: Cast function cannot convert value of type VARBINARY(10) to type DECIMAL(6, 2) (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type DECIMAL(6, 2) (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS real) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 30: Cast function cannot convert value of type VARBINARY(10) to type REAL (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type REAL (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS smallint) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 34: Cast function cannot convert value of type VARBINARY(10) to type SMALLINT (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type SMALLINT (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS tinyint) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert value of type VARBINARY(10) to type TINYINT (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type TINYINT (state=,code=0)
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS varbinary(10)) FROM CST.alltypes;
 +-------------+-------------+
 |     T17     |   EXPR$1    |
@@ -933,7 +933,7 @@ Error: From line 1, column 13 to line 1, column 33: Cast function cannot convert
 | 1101001010  | 1101001010  |
 +-------------+-------------+
 0: jdbc:luciddb:> SELECT t17, CAST (t17 AS varchar(23)) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 37: Cast function cannot convert value of type VARBINARY(10) to type VARCHAR(23) (state=,code=0)
+Error: Cast function cannot convert value of type VARBINARY(10) to type VARCHAR(23) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- t18 varchar(23)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS bigint) FROM CST.alltypes;
@@ -968,7 +968,7 @@ Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatE
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS tinyint) FROM CST.alltypes;
 Error: Cannot assign 'zimoy i letom stroynaya' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 13 to line 1, column 39: Cast function cannot convert value of type VARCHAR(23) to type VARBINARY(10) (state=,code=0)
+Error: Cast function cannot convert value of type VARCHAR(23) to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t18, CAST (t18 AS varchar(23)) FROM CST.alltypes;
 +--------------------------+--------------------------+
 |           T18            |          EXPR$1          |

@@ -140,6 +140,6 @@ PageId DelegatingSegment::updatePage(PageId pageId, bool needsTranslation)
     return pDelegateSegment->updatePage(pageId, needsTranslation);
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/segment/DelegatingSegment.cpp#8 $");
 
 // End DelegatingSegment.cpp

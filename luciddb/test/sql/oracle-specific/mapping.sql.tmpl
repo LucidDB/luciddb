@@ -17,7 +17,6 @@ select * from orcl_server_schema_mapping.scott.ADDR order by 1,2,3;
 -- query directly using mapped schema name
 select numericcolzerop from orcl_server_schema_mapping.x.@DATATYPE_TABLE@ order by 1;
 select street from orcl_server_schema_mapping.x.ADDR order by 1;
-select street from orcl_server_schema_mapping.x.BOGUS order by 1;
 
 create schema apps;
 
@@ -93,90 +92,9 @@ select * from testing4.BILL2 order by 1;
 select * from testing4.BILL order by 1,2,3;
 select * from testing4.ADDR order by 1,2,3;
 
--- schema and table mapping both specified
-create or replace server ORCL_SERVER_MAPPING_BAD
-foreign data wrapper ORACLE
-options(
-    url '@URL@',
-    user_name '@USERNAME@',
-    password '@PASSWORD@',
-    driver_class '@DRIVER_CLASS@',
-    table_mapping 'SCHOI.BILL:DEFAULT.T1;SCOTT.ADDR:DEFAULT.T3',
-    schema_mapping 'SCHOI:DEFAULT;SCOTT.DEFAULT'
-);
-
--- table mapping with target_schema.target_table mapped 2x
--- allow this
-create or replace server ORCL_SERVER_MAPPING_BAD
-foreign data wrapper ORACLE
-options(
-    url '@URL@',
-    user_name '@USERNAME@',
-    password '@PASSWORD@',
-    driver_class '@DRIVER_CLASS@',
-    table_mapping 'SCHOI.BILL:DEFAULT.T1;SCHOI.BILL:DEFAULT.T1'
-);
-
--- fail this
-create or replace server ORCL_SERVER_MAPPING_BAD
-foreign data wrapper ORACLE
-options(
-    url '@URL@',
-    user_name '@USERNAME@',
-    password '@PASSWORD@',
-    driver_class '@DRIVER_CLASS@',
-    table_mapping 'SCHOI.BILL:DEFAULT.T1;SCOTT.ADDR:DEFAULT.T1'
-);
-
--- Quoting/Escaping
-create or replace server ORCL_SERVER_MAPPING_QUOTES
-foreign data wrapper ORACLE
-options(
-    url '@URL@',
-    user_name '@USERNAME@',
-    password '@PASSWORD@',
-    driver_class '@DRIVER_CLASS@',
-    schema_mapping '"SCHOI":"X";"SCOTT":"X"'
-);
-select numericcolzerop from orcl_server_mapping_quotes.x.@DATATYPE_TABLE@ order by 1;
-select street from orcl_server_mapping_quotes.x.ADDR order by 1;
-select street from orcl_server_mapping_quotes.x.BOGUS order by 1;
-
-create or replace server ORCL_SERVER_MAPPING_QUOTES
-foreign data wrapper ORACLE
-options(
-    url '@URL@',
-    user_name '@USERNAME@',
-    password '@PASSWORD@',
-    driver_class '@DRIVER_CLASS@',
-    table_mapping '"SCHOI"."BILL":"DEFAULT"."T1";"SCHOI"."DATATYPES":"DEFAULT"."T2";"SCOTT"."ADDR":"DEFAULT"."T3";"SCOTT"."ADDR":"BLAH"."T1"'
-);
-select * from ORCL_SERVER_MAPPING_QUOTES."DEFAULT".T2 order by 1,2,3,4,5,6;
-select * from ORCL_SERVER_MAPPING_QUOTES."DEFAULT".T3 order by 1,2,3;
-select * from ORCL_SERVER_MAPPING_QUOTES.BLAH.T1 order by 1,2,3;
-
--- Escapes
-create or replace server ORCL_SERVER_MAPPING_ESCAPE
-foreign data wrapper ORACLE
-options(
-    url '@URL@',
-    user_name '@USERNAME@',
-    password '@PASSWORD@',
-    driver_class '@DRIVER_CLASS@',
-    table_mapping '"SCHOI"."SOME.TABLE;I.LIKE''":"DEFAULT"."TEST1";"SCHOI".THISDOESN"TEXIST:"DEFAULT"."TEST2"'
-);
-
-select * from ORCL_SERVER_MAPPING_ESCAPE."DEFAULT".TEST1 order by 1;
-select * from ORCL_SERVER_MAPPING_ESCAPE."DEFAULT".TEST2 order by 1;
-
-
 drop schema testing cascade;
 drop schema testing2 cascade;
 drop schema testing3 cascade;
 drop schema testing4 cascade;
 drop server ORCL_SERVER_TABLE_MAPPING cascade;
-drop server ORCL_SERVER_TABLE_MAPPING2 cascade;
-drop server ORCL_SERVER_MAPPING_BAD cascade;
-drop server ORCL_SERVER_MAPPING_QUOTES cascade;
-drop server ORCL_SERVER_MAPPING_ESCAPE cascade;
 
