@@ -98,8 +98,15 @@ public abstract class CollapseRowsUdx
                             valIter.next();
                         numItems++;
                     }
-                    resultInserter.setString(2, concatenation);
-                    resultInserter.setInt(3, numItems);
+                    // oversize values are likely to cause trouble downstream,
+                    // so treat them as empty list
+                    if (concatenation.length() > 16384) {
+                        resultInserter.setString(2, null);
+                        resultInserter.setInt(3, 0);
+                    } else {
+                        resultInserter.setString(2, concatenation);
+                        resultInserter.setInt(3, numItems);
+                    }
                 }
                 resultInserter.executeUpdate();
             }
