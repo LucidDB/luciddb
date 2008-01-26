@@ -197,6 +197,60 @@
 | 11            | 12~13                      | 2                    |
 +---------------+----------------------------+----------------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- concatenations greater than 16384 characters will get truncated (LER-7174),
+0: jdbc:luciddb:> -- so only one row makes it through here
+0: jdbc:luciddb:> select 
+. . . . . . . . >     parent_value, 
+. . . . . . . . >     char_length(concatenated_child_values) as concat_len, 
+. . . . . . . . >     collapsed_row_count
+. . . . . . . . > from table(applib.collapse_rows(
+. . . . . . . . > cursor(select * from (values 
+. . . . . . . . > (0, applib.repeater('X',10000)), 
+. . . . . . . . > (0, applib.repeater('Y',10000)))),
+. . . . . . . . > '|'
+. . . . . . . . > ));
++---------------+-------------+----------------------+
+| PARENT_VALUE  | CONCAT_LEN  | COLLAPSED_ROW_COUNT  |
++---------------+-------------+----------------------+
+| 0             | 10000       | 1                    |
++---------------+-------------+----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- similar, but let two rows through to make sure the delimiter is there
+0: jdbc:luciddb:> select 
+. . . . . . . . >     parent_value, 
+. . . . . . . . >     char_length(concatenated_child_values) as concat_len, 
+. . . . . . . . >     collapsed_row_count
+. . . . . . . . > from table(applib.collapse_rows(
+. . . . . . . . > cursor(select * from (values 
+. . . . . . . . > (0, applib.repeater('X',6000)),
+. . . . . . . . > (0, applib.repeater('Y',6000)),
+. . . . . . . . > (0, applib.repeater('Z',6000)))),
+. . . . . . . . > '|'
+. . . . . . . . > ));
++---------------+-------------+----------------------+
+| PARENT_VALUE  | CONCAT_LEN  | COLLAPSED_ROW_COUNT  |
++---------------+-------------+----------------------+
+| 0             | 12001       | 2                    |
++---------------+-------------+----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- in the case where not even one row can make it through due to
+0: jdbc:luciddb:> -- truncation, see what comes out
+0: jdbc:luciddb:> select 
+. . . . . . . . >     parent_value, 
+. . . . . . . . >     char_length(concatenated_child_values) as concat_len, 
+. . . . . . . . >     collapsed_row_count
+. . . . . . . . > from table(applib.collapse_rows(
+. . . . . . . . > cursor(select * from (values 
+. . . . . . . . > (0, applib.repeater('X',20000)))),
+. . . . . . . . > '|'
+. . . . . . . . > ));
++---------------+-------------+----------------------+
+| PARENT_VALUE  | CONCAT_LEN  | COLLAPSED_ROW_COUNT  |
++---------------+-------------+----------------------+
+| 0             | 0           | 0                    |
++---------------+-------------+----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- input table with incorrect number of columns
 0: jdbc:luciddb:> select * 
 . . . . . . . . > from table( applib.collapse_rows(cursor (select *, parent||'lolo' from tree), '|'))
@@ -207,4 +261,5 @@ Error: Database access error while getting number of input and output columns (s
 0: jdbc:luciddb:> drop table tree cascade;
 0: jdbc:luciddb:> drop table typetable cascade;
 0: jdbc:luciddb:> drop schema cr cascade;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

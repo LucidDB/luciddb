@@ -121,6 +121,45 @@ select *
 from table( applib.collapse_rows(cursor ( select * from tree), '~~||**'))
 order by parent_value;
 
+-- concatenations greater than 16384 characters will get truncated (LER-7174),
+-- so only one row makes it through here
+select 
+    parent_value, 
+    char_length(concatenated_child_values) as concat_len, 
+    collapsed_row_count
+from table(applib.collapse_rows(
+cursor(select * from (values 
+(0, applib.repeater('X',10000)), 
+(0, applib.repeater('Y',10000)))),
+'|'
+));
+
+-- similar, but let two rows through to make sure the delimiter is there
+select 
+    parent_value, 
+    char_length(concatenated_child_values) as concat_len, 
+    collapsed_row_count
+from table(applib.collapse_rows(
+cursor(select * from (values 
+(0, applib.repeater('X',6000)),
+(0, applib.repeater('Y',6000)),
+(0, applib.repeater('Z',6000)))),
+'|'
+));
+
+-- in the case where not even one row can make it through due to
+-- truncation, see what comes out
+select 
+    parent_value, 
+    char_length(concatenated_child_values) as concat_len, 
+    collapsed_row_count
+from table(applib.collapse_rows(
+cursor(select * from (values 
+(0, applib.repeater('X',20000)))),
+'|'
+));
+
+
 -- input table with incorrect number of columns
 select * 
 from table( applib.collapse_rows(cursor (select *, parent||'lolo' from tree), '|'))

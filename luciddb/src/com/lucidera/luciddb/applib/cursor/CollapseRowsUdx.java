@@ -34,6 +34,8 @@ import com.lucidera.luciddb.applib.resource.*;
  */
 public abstract class CollapseRowsUdx
 {
+    private static final int MAX_CONCAT_LEN = 16384;
+    
     public static void execute(
         ResultSet inputSet, String delimiter, PreparedStatement resultInserter)
         throws ApplibException
@@ -49,8 +51,8 @@ public abstract class CollapseRowsUdx
             throw ApplibResourceObject.get().CannotGetMetaData.ex(e);
         }
 
-        HashMap<String, ArrayList<String>> relMap = new HashMap();
-        ArrayList currentList;
+        Map<String, List<String>> relMap = new HashMap();
+        List<String> currentList;
         String currentKey;
         String currentValue;
 
@@ -89,16 +91,35 @@ public abstract class CollapseRowsUdx
                     resultInserter.setInt(3, 0);
                 } else {
                     // inserts concatenation of all items in list
-                    Iterator<String> valIter = currentList.iterator();
-                    String concatenation = valIter.next();
-                    int numItems = 1;
+                    StringBuilder sb = new StringBuilder();
+                    
+                    int numItems = 0;
+                    int delimLen = delimiter.length();
 
-                    while (valIter.hasNext()) {
-                        concatenation = concatenation + delimiter + 
-                            valIter.next();
+                    for (String val : currentList) {
+                        int newLen = val.length();
+                        // all items after first are preceded by delimiter;
+                        // account for truncation accordingly
+                        if (numItems > 0) {
+                            newLen += delimLen;
+                        }
+                        if (sb.length() + newLen > MAX_CONCAT_LEN) {
+                            // truncate to avoid going over the limit
+                            break;
+                        }
+                        if (numItems > 0) {
+                            sb.append(delimiter);
+                        }
+                        sb.append(val);
                         numItems++;
                     }
-                    resultInserter.setString(2, concatenation);
+
+                    // REVIEW jvs 24-Jan-2007:  if first item was so big that
+                    // it exceeded the truncation limit, we will emit 0
+                    // and empty string (rather than null as in the case
+                    // of no items at all).
+
+                    resultInserter.setString(2, sb.toString());
                     resultInserter.setInt(3, numItems);
                 }
                 resultInserter.executeUpdate();
