@@ -279,7 +279,8 @@ public class SqlAdvisorTest
 
     private void assertTokenizesTo(String sql, String expected)
     {
-        SqlSimpleParser.Tokenizer tokenizer = new SqlSimpleParser.Tokenizer(sql);
+        SqlSimpleParser.Tokenizer tokenizer =
+            new SqlSimpleParser.Tokenizer(sql, "xxxxx");
         StringBuilder buf = new StringBuilder();
         while (true) {
             SqlSimpleParser.Token token = tokenizer.nextToken();
@@ -355,7 +356,7 @@ public class SqlAdvisorTest
         List<String> expectedList = plus(expectedResults);
         Collections.sort(expectedList);
         String expected = toString(expectedList);
-        assertComplete(sql, expected);
+        assertComplete(sql, expected, null);
     }
 
     /**
@@ -365,21 +366,30 @@ public class SqlAdvisorTest
      *
      * @param sql SQL statement
      * @param expectedResults Expected list of hints
+     * @param expectedWord Word that we expect to be replaced, or null if we
+     * don't care
      */
     protected void assertComplete(
         String sql,
-        String expectedResults)
+        String expectedResults,
+        String expectedWord)
     {
         SqlValidatorWithHints validator =
             (SqlValidatorWithHints) tester.getValidator();
         SqlAdvisor advisor = ((Tester) tester).createAdvisor(validator);
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
+        final String[] replaced = {null};
         List<SqlMoniker> results =
-            advisor.getCompletionHints(sap.sql, sap.cursor);
+            advisor.getCompletionHints(sap.sql, sap.cursor, replaced);
+        assertNotNull(replaced[0]);
+        assertNotNull(results);
         assertEquals(
             expectedResults,
             convertCompletionHints(results));
+        if (expectedWord != null) {
+            assertEquals(expectedWord, replaced[0]);
+        }
     }
 
     protected void assertEquals(
@@ -991,6 +1001,76 @@ public class SqlAdvisorTest
         assertSimplify(sql, expected);
     }
 
+    public void testSimpleParserQuotedId()
+    {
+        String sql;
+        String expected;
+
+        // unclosed double-quote
+        sql = "select * from t where \"^";
+        expected = "SELECT * FROM t WHERE _suggest_";
+        assertSimplify(sql, expected);
+
+        // closed double-quote
+        sql = "select * from t where \"^\" and x = y";
+        expected = "SELECT * FROM t WHERE _suggest_ and x = y";
+        assertSimplify(sql, expected);
+
+        // closed double-quote containing extra stuff
+        sql = "select * from t where \"^foo\" and x = y";
+        expected = "SELECT * FROM t WHERE _suggest_ and x = y";
+        assertSimplify(sql, expected);
+    }
+
+    public void testPartialIdentifier()
+    {
+        String sql = "select * from emp where e^ and emp.deptno = 10";
+        final String expected = "Column(EMPNO)\n" +
+            "Column(ENAME)\n" +
+            "Keyword(ELEMENT)\n" +
+            "Keyword(EXISTS)\n" +
+            "Keyword(EXP)\n" +
+            "Keyword(EXTRACT)\n" +
+            "Table(EMP)\n";
+        assertComplete(sql, expected, "e");
+
+        // cursor in middle of word and at end
+        sql = "select * from emp where e^";
+        assertComplete(sql, expected, null);
+
+        // longer completion
+        sql = "select * from emp where em^";
+        final String EMPNO_EMP = "Column(EMPNO)\n" +
+            "Table(EMP)\n";
+        assertComplete(sql, EMPNO_EMP, null);
+
+        // word after punctuation
+        sql = "select deptno,em^ from emp where 1+2<3+4";
+        assertComplete(sql, EMPNO_EMP, null);
+
+        // inside double-quotes, no terminating double-quote.
+        // Only identifiers should be suggested (no keywords),
+        // and suggestion should include double-quotes
+        sql = "select deptno,\"EM^ from emp where 1+2<3+4";
+        assertComplete(sql, EMPNO_EMP, "\"EM");
+
+        // inside double-quotes, match is case-sensitive
+        sql = "select deptno,\"em^ from emp where 1+2<3+4";
+        assertComplete(sql, "", "\"em");
+
+        // eat up following double-quote
+        sql = "select deptno,\"EM^ps\" from emp where 1+2<3+4";
+        assertComplete(sql, EMPNO_EMP, "\"EM");
+
+        // closing double-quote is at very end of string
+        sql = "select * from emp where 5 = \"EM^xxx\"";
+        assertComplete(sql, EMPNO_EMP, "\"EM");
+
+        // just before dot
+        sql = "select emp.^name from emp";
+        assertComplete(sql, EMP_COLUMNS, STAR_KEYWORD);
+    }
+
     public void testInsert() throws Exception
     {
         String sql;
@@ -1004,7 +1084,7 @@ public class SqlAdvisorTest
         // expression encountered in illegal context' and cannot suggest
         // possible tokens.
         sql = "insert into emp(empno, mgr) ^";
-        assertComplete(sql, "");
+        assertComplete(sql, "", null);
     }
 
     public void testUnion() throws Exception

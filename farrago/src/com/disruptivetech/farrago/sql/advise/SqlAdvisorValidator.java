@@ -182,6 +182,23 @@ public class SqlAdvisorValidator
         }
     }
 
+    protected void validateOver(SqlCall call, SqlValidatorScope scope)
+    {
+        try {
+            final OverScope overScope = (OverScope) getOverScope(call);
+            final SqlNode relation = call.operands[0];
+            validateFrom(relation, unknownType, scope);
+            final SqlNode window = call.operands[1];
+            SqlValidatorScope opScope = scopes.get(relation);
+            if (opScope == null) {
+                opScope = overScope;
+            }
+            validateWindow(window, opScope, null);
+        } catch (EigenbaseException e) {
+            Util.swallow(e, tracer);
+        }
+    }
+
     protected void validateNamespace(final SqlValidatorNamespace namespace)
     {
         // Only attempt to validate each namespace once. Otherwise if
@@ -191,6 +208,11 @@ public class SqlAdvisorValidator
         } else {
             namespace.setRowType(emptyStructType);
         }
+    }
+
+    protected boolean shouldAllowOverRelation()
+    {
+        return true; // no reason not to be lenient
     }
 }
 
