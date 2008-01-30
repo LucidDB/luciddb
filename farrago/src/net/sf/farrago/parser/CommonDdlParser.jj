@@ -239,7 +239,7 @@ DdlStmt DdlStmtEof() :
                 modelElement = ExtensionModelDrop()
             )
             {
-                ddlStmt = new DdlDropStmt(modelElement,dropRestrict);
+                ddlStmt = newDdlDropStmt(modelElement,dropRestrict);
             }
         )
         |

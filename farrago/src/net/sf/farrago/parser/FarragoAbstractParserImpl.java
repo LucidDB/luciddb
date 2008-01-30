@@ -28,6 +28,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.ddl.DdlDropStmt;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -184,6 +185,19 @@ public abstract class FarragoAbstractParserImpl
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * Creates new DDL Statement for DROP.
+     * @param droppedElement catalog element to drop
+     * @param restrict whether a DROP RESTRICT statement is being processed
+     * @return DDL Statement for DROP
+     */
+    public DdlDropStmt newDdlDropStmt(
+        CwmModelElement droppedElement,
+        boolean restrict)
+    {
+        return new DdlDropStmt(droppedElement, restrict);
     }
 }
 
