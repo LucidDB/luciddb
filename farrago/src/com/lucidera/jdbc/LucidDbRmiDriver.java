@@ -38,6 +38,21 @@ public class LucidDbRmiDriver
     static {
         new LucidDbRmiDriver().register();
     }
+
+    // override FarragoAbstractJdbcDriver
+    public String getBaseUrl()
+    {
+        // REVIEW jvs 3-Feb-2008:  This is a hack to allow the JDBC driver
+        // to be loaded off of the bootstrap class path, which is not really
+        // a good thing to do.  It's half-baked because it doesn't take
+        // care of other resources normally loaded from
+        // FarragoRelease.properties such as default port number.  The
+        // problem is that the bootstrap class loader is so "primordial"
+        // that it doesn't even know how to load resources.
+        // If this hack stays around, it should be applied to the other
+        // LucidDB JDBC drivers as well.
+        return "jdbc:luciddb:";
+    }
 }
 
 // End LucidDbRmiDriver.java
