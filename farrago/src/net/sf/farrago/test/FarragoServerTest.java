@@ -51,6 +51,10 @@ import org.eigenbase.util14.*;
 public class FarragoServerTest
     extends TestCase
 {
+    //~ Static fields ----------------------------------------------------------
+
+    static private final String stmtMismatch = "Returned statement does not match original";
+
     //~ Instance fields --------------------------------------------------------
 
     private FarragoAbstractServer server;
@@ -200,6 +204,67 @@ public class FarragoServerTest
         assertTrue(stopped);
     }
 
+    /**
+     * Tests that Paser/Validator exceptions contain original statement.
+     *
+     * @throws Throwable
+     */
+    public void testExceptionContents()
+        throws Throwable
+    {
+        server = newServer();
+        FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
+        server.start(serverDriver);
+
+        // NOTE: can't call DriverManager.getConnection here, because that
+        // would deadlock
+        FarragoAbstractJdbcDriver clientDriver = newClientDriver();
+
+        // N.B. it is better practice to put the login credentials in the
+        // Properties object rather than on the URL, but this is a convenient
+        // test of the client driver's connect string processing.
+        String uri = clientDriver.getUrlPrefix() + "localhost;user=sa";
+        Connection connection =
+            clientDriver.connect(
+                uri,
+                new Properties());
+
+        boolean recieved = true;
+        String query = "create table sales.emps (col1 integer primary key)";
+        try {
+            connection.createStatement().execute(query);
+            recieved = false;
+        } catch (SQLException e) {
+            String returned = FarragoJdbcUtil.findInputString(e);
+            assertEquals(stmtMismatch, query, returned);
+        }
+        assertTrue("Expected DDL exception not received", recieved);
+
+        query = "select wqe from sales.emps";
+        try {
+            connection.createStatement().execute(query);
+            recieved = false;
+        } catch (SQLException e) {
+            String returned = FarragoJdbcUtil.findInputString(e);
+            assertEquals(stmtMismatch, query, returned);
+        }
+        assertTrue("Expected validator exception not received", recieved);
+
+        query = "select * frm sales.emps";
+        try {
+            connection.createStatement().execute(query);
+            recieved = false;
+        } catch (SQLException e) {
+            String returned = FarragoJdbcUtil.findInputString(e);
+            assertEquals(stmtMismatch, query, returned);
+        }
+        assertTrue("Expected parser exception not received", recieved);
+
+        connection.close();
+        boolean stopped = server.stopSoft();
+        server = null;
+        assertTrue(stopped);
+    }
     /**
      * Tests error message when a 2nd server is started.
      */

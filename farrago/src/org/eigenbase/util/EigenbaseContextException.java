@@ -42,6 +42,8 @@ public class EigenbaseContextException
 
     private int endPosColumn;
 
+    private String originalStatement;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -78,6 +80,24 @@ public class EigenbaseContextException
         assert (cause != null);
         setPosition(posLine, posColumn, endPosLine, endPosColumn);
     }
+
+    /**
+     * Creates a new EigenbaseContextException object. This constructor is for
+     * use by the generated factory.
+     *
+     * @param message error message
+     * @param cause underlying cause, must not be null
+     * @param inputText is the orginal SQL statement, may be null
+     */
+    public EigenbaseContextException(
+        String message,
+        Throwable cause,
+        String inputText)
+    {
+        this(message,cause,0,0,0,0);
+        this.originalStatement = inputText;
+    }
+
 
     //~ Methods ----------------------------------------------------------------
 
@@ -147,6 +167,24 @@ public class EigenbaseContextException
     {
         return endPosColumn;
     }
+
+    /**
+     * @return the input string that is associated with the context
+     */
+    public String getOriginalStatement()
+    {
+        return originalStatement;
+    }
+
+    /**
+     *
+     * @param originalStatement - String to associate with the current context
+     */
+    public void setOriginalStatement(String originalStatement)
+    {
+        this.originalStatement = originalStatement;
+    }
+
 }
 
 // End EigenbaseContextException.java
