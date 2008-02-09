@@ -74,4 +74,38 @@ create or replace foreign table CASTING (
 options
 (object '@DATATYPE_TABLE@');
 
+-- test changed datatypes for column
+
+create or replace foreign table TYPECHANGE (
+  "mydate" date,
+  "timestampcol" timestamp,
+  "numeric" numeric(10,1),
+  "numeric2" numeric(10,0),
+  varcharcol double,
+  "clob" varchar(10),
+  "blob" varchar(1024)
+) server ORCL_SERVER_STRICT
+options
+(object '@DATATYPE_TABLE@');
+
+select * from test.typechange;
+
+--  lenient & allow errors
+alter session set "logDir" = 'testlog';
+alter session set "errorMax" = 5;
+
+create or replace foreign table TYPECHANGE (
+  "mydate" date,
+  "timestampcol" timestamp,
+  "numeric" numeric(10,1),
+  "numeric2" numeric(10,0),
+  varcharcol double,
+  "clob" varchar(10),
+  "blob" varchar(1024)
+) server ORCL_SERVER_LENIENT
+options
+(object '@DATATYPE_TABLE@');
+
+select * from test.typechange;
+
 drop schema test cascade;

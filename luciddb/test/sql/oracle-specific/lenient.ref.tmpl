@@ -94,6 +94,46 @@ Error: Number of fields in foreign table: '8'. Number of fields in external data
 . . . . . . . . > (object '@DATATYPE_TABLE@');
 Error: External data source field 'BLOBCOL' has datatype 'VARCHAR(1024)' which cannot be cast to datatype 'VARBINARY' of foreign table field 'blob'. (state=,code=0)
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test changed datatypes for column
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace foreign table TYPECHANGE (
+. . . . . . . . >   "mydate" date,
+. . . . . . . . >   "timestampcol" timestamp,
+. . . . . . . . >   "numeric" numeric(10,1),
+. . . . . . . . >   "numeric2" numeric(10,0),
+. . . . . . . . >   varcharcol double,
+. . . . . . . . >   "clob" varchar(10),
+. . . . . . . . >   "blob" varchar(1024)
+. . . . . . . . > ) server ORCL_SERVER_STRICT
+. . . . . . . . > options
+. . . . . . . . > (object '@DATATYPE_TABLE@');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from test.typechange;
+Error: Cannot assign 'varchar' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --  lenient & allow errors
+0: jdbc:luciddb:> alter session set "logDir" = 'testlog';
+0: jdbc:luciddb:> alter session set "errorMax" = 5;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace foreign table TYPECHANGE (
+. . . . . . . . >   "mydate" date,
+. . . . . . . . >   "timestampcol" timestamp,
+. . . . . . . . >   "numeric" numeric(10,1),
+. . . . . . . . >   "numeric2" numeric(10,0),
+. . . . . . . . >   varcharcol double,
+. . . . . . . . >   "clob" varchar(10),
+. . . . . . . . >   "blob" varchar(1024)
+. . . . . . . . > ) server ORCL_SERVER_LENIENT
+. . . . . . . . > options
+. . . . . . . . > (object '@DATATYPE_TABLE@');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from test.typechange;
++---------+---------------+----------+-----------+-------------+-------+-------+
+| mydate  | timestampcol  | numeric  | numeric2  | VARCHARCOL  | clob  | blob  |
++---------+---------------+----------+-----------+-------------+-------+-------+
+|         |               |          |           |             |       |       |
++---------+---------------+----------+-----------+-------------+-------+-------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema test cascade;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
