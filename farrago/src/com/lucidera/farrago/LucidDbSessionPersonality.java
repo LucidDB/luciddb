@@ -179,6 +179,14 @@ public class LucidDbSessionPersonality
     }
 
     // implement FarragoSessionPersonality
+    public boolean shouldReplacePreserveOriginalSql()
+    {
+        // The preservation attempt can cause spurious errors
+        // during CREATE OR REPLACE, so skip it.
+        return false;
+    }
+    
+    // implement FarragoSessionPersonality
     public FarragoSessionPlanner newPlanner(
         FarragoSessionPreparingStmt stmt,
         boolean init)
