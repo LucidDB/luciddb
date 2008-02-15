@@ -769,7 +769,7 @@ class MedJdbcNameDirectory
                     true))
             {
                 fieldsVector.add(currField.getName());
-                typesVector.add(currField.getType());
+                typesVector.add(type);
             }
         }
 
