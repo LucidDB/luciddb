@@ -29,4 +29,19 @@ CREATE OR REPLACE VIEW v AS SELECT 1 AS i, 2 AS j FROM (VALUES (TRUE));
 -- must change V2's text because V's columns have changed
 SELECT "originalDefinition" FROM sys_fem."SQL2003"."LocalView" WHERE "name" = 'V2';
 SELECT * FROM v2;
+
+-- repeat, this time with LucidDB personality, which eschews
+-- the view text preservation since it causes spurious exceptions
+-- in the log
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+CREATE OR REPLACE SCHEMA ler_7331;
+SET SCHEMA 'ler_7331';
+CREATE OR REPLACE VIEW v AS SELECT 1 AS i FROM (VALUES (TRUE));
+CREATE OR REPLACE VIEW v3 AS SELECT *, 999 AS k FROM v;
+CREATE OR REPLACE VIEW v AS SELECT 1 AS i FROM (VALUES (TRUE));
+-- expect original view text to be changed
+SELECT "originalDefinition" FROM sys_fem."SQL2003"."LocalView" WHERE "name" = 'V3';
+
 -- End replaceView.sql

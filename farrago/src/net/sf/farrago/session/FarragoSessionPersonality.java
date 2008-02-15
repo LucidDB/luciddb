@@ -295,6 +295,15 @@ public interface FarragoSessionPersonality
     public boolean supportsFeature(ResourceDefinition feature);
 
     /**
+     * Tests whether this personality wants original SQL to be preserved for
+     * dependent objects where possible during the revalidation
+     * triggered by CREATE OR REPLACE.
+     *
+     * @return true iff an attempt should be made to preserve original SQL
+     */
+    public boolean shouldReplacePreserveOriginalSql();
+
+    /**
      * Gives this personality a chance to register one or more {@link
      * RelMetadataProvider}s in the chain which will be used to answer
      * relational expression metadata queries during optimization. Personalities

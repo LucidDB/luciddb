@@ -510,6 +510,12 @@ public class FarragoDefaultSessionPersonality
     }
 
     // implement FarragoSessionPersonality
+    public boolean shouldReplacePreserveOriginalSql()
+    {
+        return true;
+    }
+    
+    // implement FarragoSessionPersonality
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
         // Don't chain in FarragoRelMetadataProvider here; instead,
