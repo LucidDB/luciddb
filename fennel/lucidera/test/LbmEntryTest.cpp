@@ -26,6 +26,7 @@
 #include "fennel/cache/Cache.h"
 #include <stdarg.h>
 #include <hash_set>
+#include <math.h>
 
 #include <boost/scoped_array.hpp>
 #include <boost/test/test_tools.hpp>
@@ -90,7 +91,8 @@ class LbmEntryTest : virtual public SegStorageTestBase
     PBuffer allocateBuf(SegPageLock &bufferLock);
 
     bool compareExpected(
-        LbmEntry &entry, std::vector<LcsRid> const &ridValues, uint &ridPos);
+        LbmEntry &entry, std::vector<LcsRid> const &ridValues, uint &ridPos,
+        bool testContains);
 
     void recurseCombos(uint curr, uint nEntries, std::vector<uint> &eTypes);
 
@@ -132,6 +134,7 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testCombos);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testldb35);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testler5920);
+        FENNEL_UNIT_TEST_CASE(LbmEntryTest, testZeroBytes);
 
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonInFront1);
         FENNEL_UNIT_TEST_CASE(LbmEntryTest, testMergeSingletonInFront2);
@@ -175,6 +178,7 @@ public:
     void testCombos();
     void testldb35();
     void testler5920();
+    void testZeroBytes();
     void testMergeSingletonInFront1();
     void testMergeSingletonInFront2();
     void testMergeSingletonMidSegment1();
@@ -379,14 +383,14 @@ void LbmEntryTest::testMergeEntry(
         }
         // not able to merge, so need to produce entry and compare against
         // expected rids before starting to merge on the next entry
-        bool rc = compareExpected(mEntry, ridValues, ridPos);
+        bool rc = compareExpected(mEntry, ridValues, ridPos, true);
         BOOST_REQUIRE(rc);
         mEntry.setEntryTuple(entryList[i]->entryTuple);
     }
     // if this is the last remaining entry, compare it against
     // expected rid values
     if (ridPos < totalRids) {
-        bool rc = compareExpected(mEntry, ridValues, ridPos);
+        bool rc = compareExpected(mEntry, ridValues, ridPos, true);
         BOOST_REQUIRE(rc);
     }
 
@@ -428,7 +432,7 @@ PBuffer LbmEntryTest::allocateBuf(SegPageLock &bufferLock)
 
 bool LbmEntryTest::compareExpected(
     LbmEntry &generatedEntry, std::vector<LcsRid> const &expectedRids,
-    uint &ridPos)
+    uint &ridPos, bool testContains)
 {
     TupleData const &generatedTuple = generatedEntry.produceEntryTuple();
     std::vector<LcsRid> actualRids;
@@ -463,14 +467,16 @@ bool LbmEntryTest::compareExpected(
         }
         // search for the rids in between the current and next; these should
         // not be set in the entry
-        if (ridPos + 1 < expectedRids.size()) {
-            for (LcsRid nextRid = expectedRids[ridPos] + 1;
-                nextRid < expectedRids[ridPos + 1]; nextRid++)
-            {
-                if (generatedEntry.containsRid(nextRid)) {
-                    std::cout << "Negative containsRid check failed on rid = "
-                        << nextRid << std::endl;
-                    return false;
+        if (testContains) {
+            if (ridPos + 1 < expectedRids.size()) {
+                for (LcsRid nextRid = expectedRids[ridPos] + 1;
+                    nextRid < expectedRids[ridPos + 1]; nextRid++)
+                {
+                    if (generatedEntry.containsRid(nextRid)) {
+                        std::cout << "Negative containsRid check failed" <<
+                           " on rid = " << nextRid << std::endl;
+                        return false;
+                    }
                 }
             }
         }
@@ -629,14 +635,14 @@ void LbmEntryTest::testldb35()
         }
         // not able to merge, so need to produce entry and compare against
         // expected rids before starting to merge on the next entry
-        bool rc = compareExpected(mEntry, ridValues, ridPos);
+        bool rc = compareExpected(mEntry, ridValues, ridPos, true);
         BOOST_REQUIRE(rc);
         mEntry.setEntryTuple(entryList[i]->entryTuple);
     }
     // if this is the last remaining entry, compare it against
     // expected rid values
     if (ridPos < ridValues.size()) {
-        bool rc = compareExpected(mEntry, ridValues, ridPos);
+        bool rc = compareExpected(mEntry, ridValues, ridPos, true);
         BOOST_REQUIRE(rc);
     }
 
@@ -760,13 +766,147 @@ void LbmEntryTest::testler5920()
     // this merge should overflow the currentEntry
     rc = mEntry.mergeEntry(entryList[2]->entryTuple);
     BOOST_REQUIRE(!rc);
-    rc = compareExpected(mEntry, ridValues, ridPos);
+    rc = compareExpected(mEntry, ridValues, ridPos, true);
     BOOST_REQUIRE(rc);
 
     // make sure the previous merge didn't add any extra rids
     mEntry.setEntryTuple(entryList[2]->entryTuple);
-    rc = compareExpected(mEntry, ridValues, ridPos);
+    rc = compareExpected(mEntry, ridValues, ridPos, true);
     BOOST_REQUIRE(rc);
+
+    scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+}
+
+void LbmEntryTest::testZeroBytes()
+{
+    // Exercise creating bitmaps that contain zero bytes requiring various
+    // lengths to encode.
+
+    std::vector<SharedLbmEntryInfo> entryList;
+    std::vector<LcsRid> ridValues;
+
+    SegmentAccessor scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache, 10);
+    bufSize = scratchAccessor.pSegment->getUsablePageSize();
+    SegPageLock bufferLock;
+    bufferLock.accessSegment(scratchAccessor);
+    bufUsed = bufSize;
+
+    bitmapColSize = 16;
+    attrDesc_bitmap =
+        TupleAttributeDescriptor(
+            stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
+            true, bitmapColSize);
+    attrDesc_int64 =
+        TupleAttributeDescriptor(
+            stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+
+    entryTupleDesc.push_back(attrDesc_int64);
+    entryTupleDesc.push_back(attrDesc_bitmap);
+    entryTupleDesc.push_back(attrDesc_bitmap);
+    entryTuple.compute(entryTupleDesc);
+
+    SharedLbmEntryInfo pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
+
+    // 1st entry -- start with rid 1
+    
+    pListElement->pBuf = allocateBuf(bufferLock);
+    pListElement->entry.init(
+        pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
+    entryList.push_back(pListElement);
+    LcsRid rid = LcsRid(1);
+    ridValues.push_back(rid);
+    LcsRid roundedRid = LbmSegment::roundToByteBoundary(rid);
+    entryTuple[0].pData = (PConstBuffer) &roundedRid;
+    entryTuple[1].pData = NULL;
+    uint8_t byte =
+        (uint8_t) (1 << (opaqueToInt(rid) % LbmSegment::LbmOneByteSize));
+    entryTuple[2].pData = &byte;
+    entryTuple[2].cbData = 1;
+    entryList.back()->entry.setEntryTuple(entryTuple);
+
+    // 2nd entry -- previous rid + 2^16*8.  This will require 2 bytes to store
+    // the zero bytes in between this rid and the previous.
+
+    pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
+    pListElement->pBuf = allocateBuf(bufferLock);
+    pListElement->entry.init(
+        pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
+    entryList.push_back(pListElement);
+    rid = LcsRid(rid + (int64_t) pow(2,16)*8);
+    ridValues.push_back(rid);
+    entryTuple[0].pData = (PConstBuffer) &rid;
+    entryTuple[1].pData = NULL;
+    entryTuple[2].pData = NULL;
+    entryList.back()->entry.setEntryTuple(entryTuple);
+
+    // 3rd entry -- previous rid + 2^24*8.  This will require 3 bytes to
+    // store the zero bytes in between this rid and the previous.
+
+    pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
+    pListElement->pBuf = allocateBuf(bufferLock);
+    pListElement->entry.init(
+        pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
+    entryList.push_back(pListElement);
+    rid = LcsRid(rid + (int64_t) pow(2,24)*8);
+    ridValues.push_back(rid);
+    entryTuple[0].pData = (PConstBuffer) &rid;
+    entryTuple[1].pData = NULL;
+    entryTuple[2].pData = NULL;
+    entryList.back()->entry.setEntryTuple(entryTuple);
+
+    // 4th entry -- previous rid + ((2^24)+1)*8.  The zero bytes in this case
+    // cannot be encoded in 3 bytes, so a new bitmap entry will be created.
+
+    pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
+    pListElement->pBuf = allocateBuf(bufferLock);
+    pListElement->entry.init(
+        pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
+    entryList.push_back(pListElement);
+    rid = LcsRid(rid + (int64_t) (pow(2,24)+1)*8);
+    ridValues.push_back(rid);
+    entryTuple[0].pData = (PConstBuffer) &rid;
+    entryTuple[1].pData = NULL;
+    entryTuple[2].pData = NULL;
+    entryList.back()->entry.setEntryTuple(entryTuple);
+
+    // produce the tuples corresponding to each LbmEntry
+    for (uint i = 0; i < entryList.size(); i++) {
+        entryList[i]->entryTuple = entryList[i]->entry.produceEntryTuple();
+    }
+
+    uint ridPos = 0;
+    PBuffer mergeBuf = allocateBuf(bufferLock);
+    LbmEntry mEntry;
+    mEntry.init(
+        mergeBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
+        entryTupleDesc);
+
+    mEntry.setEntryTuple(entryList[0]->entryTuple);
+    for (uint i = 1; i < entryList.size(); i++) {
+        if (mEntry.mergeEntry(entryList[i]->entryTuple)) {
+            continue;
+        }
+        // not able to merge, so need to produce entry and compare against
+        // expected rids before starting to merge on the next entry; pass
+        // in false for the testContains parameter to avoid excessive
+        // containsRids() calls
+        bool rc = compareExpected(mEntry, ridValues, ridPos, false);
+        BOOST_REQUIRE(rc);
+        mEntry.setEntryTuple(entryList[i]->entryTuple);
+    }
+    // if this is the last remaining entry, compare it against
+    // expected rid values
+    if (ridPos < ridValues.size()) {
+        bool rc = compareExpected(mEntry, ridValues, ridPos, false);
+        BOOST_REQUIRE(rc);
+    }
+
+    BOOST_REQUIRE(ridPos == ridValues.size());
 
     scratchAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
 }
@@ -949,7 +1089,7 @@ void LbmEntryTest::testMergeSingleton(
         entryTuple[1].cbData = 0;
         if (!lbmEntry.mergeEntry(entryTuple)) {
             BOOST_REQUIRE(split);
-            bool rc = compareExpected(lbmEntry, sortedRids, ridPos);
+            bool rc = compareExpected(lbmEntry, sortedRids, ridPos, true);
             BOOST_REQUIRE(rc);
             lbmEntry.setEntryTuple(entryTuple);
             splitOccurred = true;
@@ -958,7 +1098,7 @@ void LbmEntryTest::testMergeSingleton(
 
     // compare the rids in the last entry
     if (ridPos < totalRids) {
-        bool rc = compareExpected(lbmEntry, sortedRids, ridPos);
+        bool rc = compareExpected(lbmEntry, sortedRids, ridPos, true);
         BOOST_REQUIRE(rc);
     }
 
