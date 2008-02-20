@@ -14,17 +14,17 @@
 <!ENTITY open_integration.src.home "/home/cruise/work/src">
 <!ENTITY open_integration.src.default "/home/cruise/work/src/dev">
 
-<!ENTITY aspen_p4port    "perforce-office.kalucki.com:1666">
+<!ENTITY aspen_p4port    "perforce-office:1666">
 <!ENTITY aspen_p4client  "cruise.chelmsford">
 <!ENTITY aspen_p4user    "guest">
 <!ENTITY aspen_root_dev  "//depot/aspen">
 <!ENTITY aspen_root_stable  "//depot/stable/aspen">
 
-<!ENTITY buildresultsbase "http://chelmsford.kalucki.com:8082/cruisecontrol/buildresults">
+<!ENTITY buildresultsbase "http://chutney.disruptivetech.com:8082/cruisecontrol/buildresults">
 <!ENTITY mailhost         "mail.speakeasy.net">
 <!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Build Monkey">
-<!ENTITY returnaddress    "buildmonkey@kalucki.com">
+<!ENTITY returnaddress    "the.eng@sqlstream.com">
 <!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "ContInteg Chelmsford ">
