@@ -25,6 +25,7 @@ package net.sf.farrago.test;
 import java.sql.*;
 
 import java.util.*;
+import java.util.logging.*;
 
 import javax.jmi.reflect.*;
 
@@ -660,6 +661,28 @@ public class FarragoQueryTest
             resultSet.close();
         }
         return sb.toString();
+    }
+
+    public void testNoNativeTraceLeak()
+        throws Exception
+    {
+        // LER-7367 (leaks from loggers for native Segments and ExecStreams);
+        // note that if you have xo tracing enabled, this test will fail
+        // (see FRG-309)
+        resultSet = stmt.executeQuery(
+            "select * from (values(0)) order by 1");
+        resultSet.next();
+        resultSet.close();
+        Enumeration<String> e = LogManager.getLogManager().getLoggerNames();
+        while (e.hasMoreElements()) {
+            String s = e.nextElement();
+            if (!s.startsWith("net.sf.fennel.xo")) {
+                continue;
+            }
+            // The # character is part of the per-object logger, which
+            // is not supposed to exist, so we expect to not see it.
+            assertEquals(-1, s.indexOf('#'));
+        }
     }
 
     //~ Inner Classes ----------------------------------------------------------
