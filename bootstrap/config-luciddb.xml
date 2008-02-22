@@ -102,7 +102,7 @@
             subdirectory="fennel"/>
 
         <artifactspublisher
-            file="${open.integration.build.home}/${project}/dist/${luciddb.tar}"
+            file="${open.integration.build.home}/luciddb/dist/${luciddb.tar}"
             dest="${artifacts.dir}" 
             subdirectory="release"/>
 
