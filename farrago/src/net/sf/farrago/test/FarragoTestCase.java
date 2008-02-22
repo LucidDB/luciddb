@@ -353,6 +353,7 @@ public abstract class FarragoTestCase
             savedFarragoConfig.remove("serverSingleListenerPort");
             savedFarragoConfig.remove("connectionTimeoutMillis");
             savedFennelConfig.remove("resourceDir");
+            savedFennelConfig.remove("deviceSchedulerType");
         } finally {
             reposTxn.commit();
         }
