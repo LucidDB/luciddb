@@ -239,6 +239,12 @@ public abstract class DiffTestCase
                     }
                 }
             }
+
+            String diffMask = System.getProperty("diff.mask",null);
+            if (diffMask != null) {
+                addDiffMask(diffMask);
+            }
+ 
             logReader = new FileReader(logFile);
             refReader = new FileReader(refFile);
             LineNumberReader logLineReader = new LineNumberReader(logReader);
