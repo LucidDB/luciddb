@@ -113,10 +113,27 @@
 	<target name="do-cleanbuild">
 		<property name="build.home" location="${default.build.home}"/>
     
+    <echo file="${project.logs.dir}/build.log">Build p4 client:
+    </echo>
+    <exec 
+      dir="${build.home}/luciddb" 
+      executable="bash" 
+      output="${project.logs.dir}/build.log"
+      append="true"
+      failonerror="false">
+      <arg value="-c"/>
+      <arg value="p4 client -o | sed -e '1,/^View:/d'"/>
+
+      <env key="P4PORT" file="${p4.port}"/>
+      <env key="P4USER" file="${p4.user}"/>
+      <env key="P4CLIENT" file="${p4.client}"/>
+    </exec>
+
 		<exec 
       dir="${build.home}/luciddb" 
       executable="bash" 
       output="${project.logs.dir}/build.log"
+      append="true"
       failonerror="true">
 			<arg value="${build.home}/luciddb/initBuild.sh"/>
 			<arg value="${luciddb.init.arg}"/>
