@@ -47,11 +47,12 @@ uint LbmSegment::value2ByteArray(uint value, PBuffer array, uint arraySize)
         size ++;
     }
     /*
-     * If size exceeds the maximum, it means that the value can not be encoded
+     * If value is non-zero, it means that the value cannot be encoded
      * within an array of arraySize. Return 0 in that case.
      */
-    if (size > arraySize) 
+    if (value > 0) {
         size = 0;
+    }
 
     return size;
 }
