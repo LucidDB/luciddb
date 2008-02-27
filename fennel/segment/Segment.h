@@ -256,6 +256,12 @@ public:
      * it's a simple linear PageId range, while for a RANDOM_ALLOCATION
      * segment, successors could be used).
      *
+     *<p>
+     *
+     * Depending on the circumstances, it may be the responsibility of the
+     * segment to discard the corresponding blocks from the cache.  The details
+     * vary by segment implementation.
+     *
      * @param startPageId inclusive start of PageId range to deallocate, or
      * default NULL_PAGE_ID for beginning of segment
      *
@@ -297,13 +303,6 @@ public:
      * @return segment corresponding to mapped page listener
      */
     virtual MappedPageListener *getMappedPageListener(BlockId blockId);
-
-    /**
-     * Discards a page from the cache.
-     *
-     * @param blockId block Id corresponding to the page to be discarded
-     */
-    virtual void discardCachePage(BlockId blockId);
 
     /**
      * @return true if the segment supports versioning

@@ -157,7 +157,8 @@ from (
         "k10",
         cast("k10" - 2 as varchar(20)) as low,
         cast("k10" + 2 as varchar(20)) as high
-    from stat);
+    from stat)
+order by "k10";
 
 -- More ranges with mismatched ends.
 select
@@ -181,4 +182,5 @@ from (
         "k10",
         cast("k10" - 2 as varchar(20)) as low,
         cast("k10" + 2 as varchar(20)) as high
-    from stat);
+    from stat)
+order by "k10";

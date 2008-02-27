@@ -27,6 +27,7 @@
 #include "fennel/segment/VersionedRandomAllocationSegment.h"
 #include "fennel/segment/LinearViewSegment.h"
 #include "fennel/segment/SegPageLock.h"
+#include "fennel/cache/CacheStats.h"
 
 #include <boost/test/test_tools.hpp>
 
@@ -371,11 +372,28 @@ public:
         // will be marked as deallocation-deferred.
         currCsn = TxnId(9);
         openStorage(DeviceMode::load);
+
+        // Read all pages into cache to test discard behavior.
+        testSequentialRead();
+
+        // Save cache stats before deallocation.
+        CacheStats statsBefore;
+        pCache->collectStats(statsBefore);
+        
         for (int i = opaqueToInt(firstPageId);
             i < 100 + opaqueToInt(firstPageId); i++)
         {
             pSnapshotRandomSegment->deallocatePageRange(PageId(i), PageId(i));
         }
+        
+        // Get cache stats after deallocation and compare.
+        CacheStats statsAfter;
+        pCache->collectStats(statsAfter);
+
+        // Count of unused pages should not go up since deallocation is
+        // deferred.
+        BOOST_CHECK(statsAfter.nMemPagesUnused <= statsBefore.nMemPagesUnused);
+        
         closeStorage();
 
         // Deallocate old pages, but set the oldestActiveTxnId to TxnId(0) so

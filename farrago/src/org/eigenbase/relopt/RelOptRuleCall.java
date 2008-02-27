@@ -23,6 +23,7 @@
 package org.eigenbase.relopt;
 
 import java.util.logging.*;
+import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.trace.*;
@@ -41,19 +42,31 @@ public abstract class RelOptRuleCall
     //~ Instance fields --------------------------------------------------------
 
     private final RelOptRuleOperand operand0;
+    private final Map<RelNode, List<RelNode>> nodeChildren;
     private final RelOptRule rule;
     public final RelNode [] rels;
     private final RelOptPlanner planner;
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a RelOptRuleCall.
+     *
+     * @param planner Planner
+     * @param operand Root operand
+     * @param rels Array of relational expressions which matched each operand
+     * @param nodeChildren For each node which matched with
+     *        <code>matchAnyChildren</code>=true, a list of the node's children
+     */
     protected RelOptRuleCall(
         RelOptPlanner planner,
         RelOptRuleOperand operand,
-        RelNode [] rels)
+        RelNode[] rels,
+        Map<RelNode, List<RelNode>> nodeChildren)
     {
         this.planner = planner;
         this.operand0 = operand;
+        this.nodeChildren = nodeChildren;
         this.rule = operand.getRule();
         this.rels = rels;
         assert (rels.length == rule.operands.length);
@@ -61,21 +74,63 @@ public abstract class RelOptRuleCall
 
     //~ Methods ----------------------------------------------------------------
 
+    /**
+     * Returns the root operand matched by this rule.
+     *
+     * @return root operand
+     */
     public RelOptRuleOperand getOperand0()
     {
         return operand0;
     }
 
+    /**
+     * Returns the invoked planner rule.
+     *
+     * @return planner rule
+     */
     public RelOptRule getRule()
     {
         return rule;
     }
 
+    /**
+     * Returns a list of matched relational expressions.
+     *
+     * @return matched relational expressions
+     */
     public RelNode [] getRels()
     {
         return rels;
     }
 
+    /**
+     * Returns the children of a given relational expression node matched in
+     * a rule.
+     *
+     * <p>If the operand which caused the match has
+     * {@link RelOptRuleOperand#matchAnyChildren}=false, the children will have
+     * their own operands and therefore be easily available in the array
+     * returned by the {@link #getRels} method, so this method returns null.
+     *
+     * <p>This method is for {@link RelOptRuleOperand#matchAnyChildren}=true,
+     * which is generally used when a node can have a variable number of
+     * children, and hence where the matched children are not retrievable by
+     * any other means.
+     *
+     * @param rel Relational expression
+     * @return Children of relational expression
+     */
+    public List<RelNode> getChildRels(RelNode rel)
+    {
+        return nodeChildren.get(rel);
+    }
+
+    /**
+     * Returns the planner.
+     *
+     * @return planner
+     */
     public RelOptPlanner getPlanner()
     {
         return planner;

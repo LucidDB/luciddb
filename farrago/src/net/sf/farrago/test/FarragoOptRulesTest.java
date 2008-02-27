@@ -356,11 +356,11 @@ public class FarragoOptRulesTest
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(
-            new FarragoReduceExpressionsRule(ProjectRel.class));
+            FarragoReduceExpressionsRule.PROJECT_INSTANCE);
         programBuilder.addRuleInstance(
-            new FarragoReduceExpressionsRule(FilterRel.class));
+            FarragoReduceExpressionsRule.FILTER_INSTANCE);
         programBuilder.addRuleInstance(
-            new FarragoReduceExpressionsRule(JoinRel.class));
+            FarragoReduceExpressionsRule.JOIN_INSTANCE);
 
         // NOTE jvs 27-May-2006: among other things, this verifies
         // intentionally different treatment for identical coalesce expression
@@ -373,6 +373,74 @@ public class FarragoOptRulesTest
             + " from sales.depts d inner join sales.emps e"
             + " on d.deptno = e.deptno + (5-5)"
             + " where d.deptno=(7+8) and d.deptno=coalesce(2,null)");
+    }
+
+    public void testReduceConstantsEliminatesFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.FILTER_INSTANCE);
+
+        // WHERE NULL is the same as WHERE FALSE, so get empty result
+        check(
+            programBuilder.createProgram(),
+            "select * from (values (1,2)) where 1 + 2 > 3 + CAST(NULL AS INTEGER)");
+    }
+
+    public void testAlreadyFalseEliminatesFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.FILTER_INSTANCE);
+
+        check(
+            programBuilder.createProgram(),
+            "select * from (values (1,2)) where false");
+    }
+
+    public void testReduceConstantsCalc()
+        throws Exception
+    {
+        // This reduction does not work using
+        // FarragoReduceExpressionsRule.PROJECT_INSTANCE or FILTER_INSTANCE,
+        // only CALC_INSTANCE, because we need to pull the project expression
+        //    upper('table')
+        // into the condition
+        //    upper('table') = 'TABLE'
+        // and reduce it to TRUE. Only in the Calc are projects and conditions
+        // combined.
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterPastProjectRule());
+        programBuilder.addRuleInstance(new PushFilterPastSetOpRule());
+        programBuilder.addRuleInstance(FilterToCalcRule.instance);
+        programBuilder.addRuleInstance(ProjectToCalcRule.instance);
+        programBuilder.addRuleInstance(MergeCalcRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.CALC_INSTANCE);
+        // the hard part is done... a few more rule calls to clean up
+        programBuilder.addRuleInstance(RemoveEmptyRule.UNION_INSTANCE);
+        programBuilder.addRuleInstance(ProjectToCalcRule.instance);
+        programBuilder.addRuleInstance(MergeCalcRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.CALC_INSTANCE);
+
+        // Result should be same as typing
+        //  SELECT * FROM (VALUES ('TABLE        ', 'T')) AS T(U, S)
+        check(
+            programBuilder.createProgram(),
+            "select * from (\n"
+                + "  select upper(substring(x FROM 1 FOR 2) || substring(x FROM 3)) as u,\n"
+                + "      substring(x FROM 1 FOR 1) as s\n"
+                + "  from (\n"
+                + "    select 'table' as x from (values (true))\n"
+                + "    union\n"
+                + "    select 'view' from (values (true))\n"
+                + "    union\n"
+                + "    select 'foreign table' from (values (true))\n"
+                + "  )\n"
+                + ") where u = 'TABLE'");
     }
 
     public void testRemoveSemiJoin()
@@ -496,6 +564,106 @@ public class FarragoOptRulesTest
             + "(select name, trim(city), age * 2, deptno from sales.emps) e, "
             + "sales.depts d "
             + "where e.deptno = d.deptno");
+    }
+
+    public void testReduceValuesUnderFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterPastProjectRule());
+        programBuilder.addRuleInstance(FarragoReduceValuesRule.FILTER_INSTANCE);
+
+        // Plan should be same as for
+        // select a, b from (values (10,'x')) as t(a, b)");
+        check(
+            programBuilder.createProgram(),
+            "select a, b from (values (10, 'x'), (20, 'y')) as t(a, b) where a < 15");
+    }
+
+    public void testReduceValuesUnderProject()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new MergeProjectRule());
+        programBuilder.addRuleInstance(FarragoReduceValuesRule.PROJECT_INSTANCE);
+
+        // Plan should be same as for
+        // select a, b as x from (values (11), (23)) as t(x)");
+        check(
+            programBuilder.createProgram(),
+            "select a + b from (values (10, 1), (20, 3)) as t(a, b)");
+    }
+
+    public void testReduceValuesUnderProjectFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterPastProjectRule());
+        programBuilder.addRuleInstance(new MergeProjectRule());
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.PROJECT_FILTER_INSTANCE);
+
+        // Plan should be same as for
+        // select * from (values (11, 1, 10), (23, 3, 20)) as t(x, b, a)");
+        check(
+            programBuilder.createProgram(),
+            "select a + b as x, b, a from (values (10, 1), (30, 7), (20, 3)) as t(a, b)" +
+                " where a - b < 21");
+    }
+
+    public void testReduceValuesNull()
+        throws Exception
+    {
+        // The NULL literal presents pitfalls for value-reduction. Only
+        // an INSERT statement contains un-CASTed NULL values.
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.PROJECT_INSTANCE);
+
+        check(
+            programBuilder.createProgram(),
+            "insert into sales.depts(deptno,name) values (NULL, 'null')");
+    }
+
+    public void testReduceValuesToEmpty()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterPastProjectRule());
+        programBuilder.addRuleInstance(new MergeProjectRule());
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.PROJECT_FILTER_INSTANCE);
+
+        // Plan should be same as for
+        // select * from (values (11, 1, 10), (23, 3, 20)) as t(x, b, a)");
+        check(
+            programBuilder.createProgram(),
+            "select a + b as x, b, a from (values (10, 1), (30, 7)) as t(a, b)" +
+                " where a - b < 0");
+    }
+
+    public void testEmptyFilterProjectUnion()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterPastSetOpRule());
+        programBuilder.addRuleInstance(new PushFilterPastProjectRule());
+        programBuilder.addRuleInstance(new MergeProjectRule());
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.PROJECT_FILTER_INSTANCE);
+        programBuilder.addRuleInstance(RemoveEmptyRule.PROJECT_INSTANCE);
+        programBuilder.addRuleInstance(RemoveEmptyRule.UNION_INSTANCE);
+
+        // Plan should be same as for
+        // select * from (values (30, 3)) as t(x, y)");
+        check(
+            programBuilder.createProgram(),
+            "select * from (\n" +
+                "select * from (values (10, 1), (30, 3)) as t (x, y)\n" +
+                "union all\n" +
+                "select * from (values (20, 2))\n" +
+                ")\n" +
+                "where x + y > 30");
     }
 }
 

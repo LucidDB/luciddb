@@ -48,6 +48,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class RelDecorrelator
+    implements ReflectiveVisitor
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -1420,6 +1421,10 @@ public class RelDecorrelator
     private class DecorrelateRelVisitor
         extends RelVisitor
     {
+        private final ReflectiveVisitDispatcher<RelDecorrelator,RelNode>
+            dispatcher =
+            ReflectUtil.createDispatcher(RelDecorrelator.class, RelNode.class);
+
         // implement RelVisitor
         public void visit(RelNode p, int ordinal, RelNode parent)
         {
@@ -1430,10 +1435,9 @@ public class RelDecorrelator
 
             final String visitMethodName = "decorrelateRel";
             boolean found =
-                ReflectUtil.invokeVisitor(
+                dispatcher.invokeVisitor(
                     RelDecorrelator.this,
                     currentRel,
-                    RelNode.class,
                     visitMethodName);
             currentRel = null;
 

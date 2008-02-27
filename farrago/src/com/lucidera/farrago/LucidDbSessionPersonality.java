@@ -526,6 +526,7 @@ public class LucidDbSessionPersonality
             builder.addRuleInstance(new FennelCartesianJoinRule());
             builder.addRuleInstance(new FennelAggRule());
             builder.addRuleInstance(new FennelValuesRule());
+            builder.addRuleInstance(FennelEmptyRule.INSTANCE);
 
             // Requires CoerceInputsRule.
             builder.addRuleInstance(FennelUnionRule.instance);

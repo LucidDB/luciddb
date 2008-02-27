@@ -427,7 +427,7 @@ public class HepPlanner
         HepRelVertex vertex,
         boolean forceConversions)
     {
-        RelTraitSet parentTraits = null;
+        RelTrait parentTrait = null;
         if (rule instanceof ConverterRule) {
             // Guaranteed converter rules require special casing to make sure
             // they only fire where actually needed, otherwise they tend to
@@ -437,16 +437,19 @@ public class HepPlanner
                 if (!doesConverterApply(converterRule, vertex)) {
                     return null;
                 }
-                parentTraits = converterRule.getOutTraits();
+                parentTrait = converterRule.getOutTrait();
             }
         }
 
         List<RelNode> bindings = new ArrayList<RelNode>();
+        Map<RelNode, List<RelNode>> nodeChildren =
+            new HashMap<RelNode, List<RelNode>>();
         boolean match =
             matchOperands(
                 rule.getOperand(),
                 vertex.getCurrentRel(),
-                bindings);
+                bindings,
+                nodeChildren);
 
         if (!match) {
             return null;
@@ -456,14 +459,21 @@ public class HepPlanner
             new HepRuleCall(
                 this,
                 rule.getOperand(),
-                bindings.toArray(RelNode.emptyArray));
+                bindings.toArray(new RelNode[bindings.size()]),
+                nodeChildren);
+
+        // Allow the rule to apply its own side-conditions.
+        if (!rule.matches(call)) {
+            return null;
+        }
+
         fireRule(call);
 
         if (!call.getResults().isEmpty()) {
             return applyTransformationResults(
                 vertex,
                 call,
-                parentTraits);
+                parentTrait);
         }
 
         return null;
@@ -473,7 +483,7 @@ public class HepPlanner
         ConverterRule converterRule,
         HepRelVertex vertex)
     {
-        RelTraitSet outTraits = converterRule.getOutTraits();
+        RelTrait outTrait = converterRule.getOutTrait();
         List<HepRelVertex> parents = Graphs.predecessorListOf(graph, vertex);
         for (HepRelVertex parent : parents) {
             RelNode parentRel = parent.getCurrentRel();
@@ -481,23 +491,21 @@ public class HepPlanner
                 // We don't support converter chains.
                 continue;
             }
-            if (parentRel.getTraits().matches(outTraits)) {
+            if (parentRel.getTraits().contains(outTrait)) {
                 // This parent wants the traits produced by the converter.
                 return true;
             }
         }
-        if ((vertex == root) && (requestedRootTraits != null)) {
-            if (requestedRootTraits.matches(outTraits)) {
-                return true;
-            }
-        }
-        return false;
+        return (vertex == root)
+            && (requestedRootTraits != null)
+            && requestedRootTraits.contains(outTrait);
     }
 
     private boolean matchOperands(
         RelOptRuleOperand operand,
         RelNode rel,
-        List<RelNode> bindings)
+        List<RelNode> bindings,
+        Map<RelNode, List<RelNode>> nodeChildren)
     {
         if (!operand.matches(rel)) {
             return false;
@@ -509,26 +517,56 @@ public class HepPlanner
         }
         int n = childOperands.length;
         RelNode [] childRels = rel.getInputs();
-        if (childRels.length < n) {
-            return false;
-        }
-        for (int i = 0; i < n; ++i) {
-            boolean match =
-                matchOperands(
-                    childOperands[i],
-                    ((HepRelVertex) childRels[i]).getCurrentRel(),
-                    bindings);
-            if (!match) {
+        if (operand.matchAnyChildren) {
+            // For each operand, at least one child must match. If
+            // matchAnyChildren, usually there's just one operand.
+            for (RelOptRuleOperand childOperand : childOperands) {
+                boolean match = false;
+                for (int i = 0; i < childRels.length; ++i) {
+                    final HepRelVertex childRel = (HepRelVertex) childRels[i];
+                    match =
+                        matchOperands(
+                            childOperand,
+                            childRel.getCurrentRel(),
+                            bindings,
+                            nodeChildren);
+                    if (match) {
+                        break;
+                    }
+                }
+                if (!match) {
+                    return false;
+                }
+            }
+            List<RelNode> children = new ArrayList<RelNode>(childRels.length);
+            for (RelNode childRel : childRels) {
+                children.add(((HepRelVertex) childRel).getCurrentRel());
+            }
+            nodeChildren.put(rel, children);
+            return true;
+        } else {
+            if (childRels.length < n) {
                 return false;
             }
+            for (int i = 0; i < n; ++i) {
+                boolean match =
+                    matchOperands(
+                        childOperands[i],
+                        ((HepRelVertex) childRels[i]).getCurrentRel(),
+                        bindings,
+                        nodeChildren);
+                if (!match) {
+                    return false;
+                }
+            }
+            return true;
         }
-        return true;
     }
 
     private HepRelVertex applyTransformationResults(
         HepRelVertex vertex,
         HepRuleCall call,
-        RelTraitSet parentTraits)
+        RelTrait parentTrait)
     {
         // TODO jvs 5-Apr-2006:  Take the one that gives the best
         // global cost rather than the best local cost.  That requires
@@ -573,7 +611,7 @@ public class HepPlanner
         List<HepRelVertex> allParents = Graphs.predecessorListOf(graph, vertex);
         List<HepRelVertex> parents = new ArrayList<HepRelVertex>();
         for (HepRelVertex parent : allParents) {
-            if (parentTraits != null) {
+            if (parentTrait != null) {
                 RelNode parentRel = parent.getCurrentRel();
                 if (parentRel instanceof ConverterRel) {
                     // We don't support automatically chaining conversions.
@@ -583,7 +621,7 @@ public class HepPlanner
                     // the multi-parent DAG case.
                     continue;
                 }
-                if (!parentRel.getTraits().matches(parentTraits)) {
+                if (!parentRel.getTraits().contains(parentTrait)) {
                     // This parent does not want the converted result.
                     continue;
                 }

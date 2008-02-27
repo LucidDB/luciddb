@@ -69,7 +69,6 @@ public:
         Segment &delegatingSegment,CheckpointType checkpointType);
     virtual PageId updatePage(PageId pageId, bool needsTranslation = false);
     virtual MappedPageListener *getMappedPageListener(BlockId blockId);
-    virtual void discardCachePage(BlockId blockId);
     virtual bool isWriteVersioned();
 
     // delegate the MappedPageListener interface

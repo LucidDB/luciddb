@@ -155,6 +155,11 @@ void VersionedRandomAllocationSegment::deallocatePageRange(
         format();
     } else {
 
+        // Note that we cannot discard deferred-deallocation pages from cache
+        // because they really haven't been freed yet and still may be
+        // referenced by other threads.  The pages will be removed from the
+        // cache when they are actually freed.
+
         // Acquire mutex exclusively to prevent another thread from trying
         // to do the actual free of the same page, if it's an old page.
         SXMutexExclusiveGuard deallocationGuard(deallocationMutex);
@@ -469,9 +474,7 @@ void VersionedRandomAllocationSegment::updatePageEntry(
         // In the case of a rollback of a newly allocated page, remove the
         // page from the cache
         if (pModEntry->lastModType == ModifiedPageEntry::ALLOCATED) {
-            SegmentAccessor segAccessor(pOrigSegment, pCache);
-            segAccessor.pCacheAccessor->discardPage(
-                pOrigSegment->translatePageId(pageId));
+            pCache->discardPage(pOrigSegment->translatePageId(pageId));
         }
 
         copyPageEntryToTemp(extentPageId, pModNode->tempPageId, iPageInExtent);
@@ -989,11 +992,7 @@ void VersionedRandomAllocationSegment::deallocateSinglePage(
 {
     assert(mapMutex.isLocked(LOCKMODE_X));
 
-    // Discard the page from the cache
-    BlockId blockId = DelegatingSegment::translatePageId(pageId);
-    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
-    selfAccessor.pCacheAccessor->discardPage(blockId);
-
+    // We rely on superclass to discard page from cache as part of deallocation.
     RandomAllocationSegmentBase::deallocatePageRange(pageId, pageId);
 
     ExtentNum extentNum;

@@ -134,34 +134,34 @@ sub do_type
 		$mid = int($max / 2);
 		$hange = int($range / 2);
 
-		d_type( $type, $min, $min+$range, $min, $min+range );
-		d_type( $type, $min, $min+$range, -$mid-$hange, -$mid+hange );
-		d_type( $type, $min, $min+$range, 0-$hange, 0+hange );
-		d_type( $type, $min, $min+$range, $mid-$hange, $mid+hange );
+		d_type( $type, $min, $min+$range, $min, $min+$range );
+		d_type( $type, $min, $min+$range, -$mid-$hange, -$mid+$hange );
+		d_type( $type, $min, $min+$range, 0-$hange, 0+$hange );
+		d_type( $type, $min, $min+$range, $mid-$hange, $mid+$hange );
 		d_type( $type, $min, $min+$range, $max-$range, $max );
 
-		d_type( $type, -$mid-$hange, -$mid+$hange, $min, $min+range );
-		d_type( $type, -$mid-$hange, -$mid+$hange, -$mid-$hange, -$mid+hange );
-		d_type( $type, -$mid-$hange, -$mid+$hange, 0-$hange, 0+hange );
-		d_type( $type, -$mid-$hange, -$mid+$hange, $mid-$hange, $mid+hange );
+		d_type( $type, -$mid-$hange, -$mid+$hange, $min, $min+$range );
+		d_type( $type, -$mid-$hange, -$mid+$hange, -$mid-$hange, -$mid+$hange );
+		d_type( $type, -$mid-$hange, -$mid+$hange, 0-$hange, 0+$hange );
+		d_type( $type, -$mid-$hange, -$mid+$hange, $mid-$hange, $mid+$hange );
 		d_type( $type, -$mid-$hange, -$mid+$hange, $max-$range, $max );
 
-		d_type( $type, 0-$hange, 0+$hange, $min, $min+range );
-		d_type( $type, 0-$hange, 0+$hange, -$mid-$hange, -$mid+hange );
-		d_type( $type, 0-$hange, 0+$hange, 0-$hange, 0+hange );
-		d_type( $type, 0-$hange, 0+$hange, $mid-$hange, $mid+hange );
+		d_type( $type, 0-$hange, 0+$hange, $min, $min+$range );
+		d_type( $type, 0-$hange, 0+$hange, -$mid-$hange, -$mid+$hange );
+		d_type( $type, 0-$hange, 0+$hange, 0-$hange, 0+$hange );
+		d_type( $type, 0-$hange, 0+$hange, $mid-$hange, $mid+$hange );
 		d_type( $type, 0-$hange, 0+$hange, $max-$range, $max );
 
-		d_type( $type, $mid-$hange, $mid+$hange, $min, $min+range );
-		d_type( $type, $mid-$hange, $mid+$hange, -$mid-$hange, -$mid+hange );
-		d_type( $type, $mid-$hange, $mid+$hange, 0-$hange, 0+hange );
-		d_type( $type, $mid-$hange, $mid+$hange, $mid-$hange, $mid+hange );
+		d_type( $type, $mid-$hange, $mid+$hange, $min, $min+$range );
+		d_type( $type, $mid-$hange, $mid+$hange, -$mid-$hange, -$mid+$hange );
+		d_type( $type, $mid-$hange, $mid+$hange, 0-$hange, 0+$hange );
+		d_type( $type, $mid-$hange, $mid+$hange, $mid-$hange, $mid+$hange );
 		d_type( $type, $mid-$hange, $mid+$hange, $max-$range, $max );
 
-		d_type( $type, $max-$range, $max, $min, $min+range );
-		d_type( $type, $max-$range, $max -$mid-$hange, -$mid+hange );
-		d_type( $type, $max-$range, $max, 0-$hange, 0+hange );
-		d_type( $type, $max-$range, $max, $mid-$hange, $mid+hange );
+		d_type( $type, $max-$range, $max, $min, $min+$range );
+		d_type( $type, $max-$range, $max -$mid-$hange, -$mid+$hange );
+		d_type( $type, $max-$range, $max, 0-$hange, 0+$hange );
+		d_type( $type, $max-$range, $max, $mid-$hange, $mid+$hange );
 		d_type( $type, $max-$range, $max, $max-$range, $max );
 
 		}
@@ -170,16 +170,16 @@ sub do_type
 		$mid = int($max / 2);
 		$hange = int($range / 2);
 
-		d_type( $type, $min, $min+$range, $min, $min+range );
-		d_type( $type, $min, $min+$range, $mid-$hange, $mid+hange );
+		d_type( $type, $min, $min+$range, $min, $min+$range );
+		d_type( $type, $min, $min+$range, $mid-$hange, $mid+$hange );
 		d_type( $type, $min, $min+$range, $max-$range, $max );
 
-		d_type( $type, $mid-$hange, $mid+$hange, $min, $min+range );
-		d_type( $type, $mid-$hange, $mid+$hange, $mid-$hange, $mid+hange );
+		d_type( $type, $mid-$hange, $mid+$hange, $min, $min+$range );
+		d_type( $type, $mid-$hange, $mid+$hange, $mid-$hange, $mid+$hange );
 		d_type( $type, $mid-$hange, $mid+$hange, $max-$range, $max );
 
-		d_type( $type, $max-$range, $max, $min, $min+range );
-		d_type( $type, $max-$range, $max, $mid-$hange, $mid+hange );
+		d_type( $type, $max-$range, $max, $min, $min+$range );
+		d_type( $type, $max-$range, $max, $mid-$hange, $mid+$hange );
 		d_type( $type, $max-$range, $max, $max-$range, $max );
 
 		}
@@ -206,25 +206,28 @@ EXPR(":add:long double:300.0:200.0:100.0")
 EXPR(":sub:long double:100.0:200.0:100.0")
 EXPR(":mul:long double:40000.0:200.0:200.0")
 EXPR(":div:long double:2.0:400.0:200.0")
+EXPR(":# --- these were raising S_INEX, so that was disabled ")
+EXPR(":add:float:200.3:200.0:0.3")
+EXPR(":add:float:2997.7:3000.0:-2.3")
 EXPR(":")
 EXPR(":# --- error conditions")
 EXPR(":div:float:!22012:1.0:0.0")
 EXPR(":div:float:!22023:0.0:0.0")
-EXPR(":add:float:!22000:\$MAX:1.0")
-EXPR(":add:float:!22003:\$MAX:\$MAX:")
-EXPR(":div:float:!22000:.00001:\$MAX:")
+/* no longer raises S_INEX EXPR(":add:float:!22000:\&MAX:1.0") */
+EXPR(":add:float:!22003:\&MAX:\&MAX:")
+EXPR(":div:float:!22000:.00001:\&MAX:")
 EXPR(":")
 EXPR(":div:double:!22012:1.0:0.0")
 EXPR(":div:double:!22023:0.0:0.0")
-EXPR(":add:double:!22000:\$MAX:1.0")
-EXPR(":add:double:!22003:\$MAX:\$MAX:")
-EXPR(":div:double:!22000:.00001:\$MAX:")
+/* no longer raises S_INEX EXPR(":add:double:!22000:\&MAX:1.0") */
+EXPR(":add:double:!22003:\&MAX:\&MAX:")
+EXPR(":div:double:!22000:.00001:\&MAX:")
 EXPR(":")
 EXPR(":div:long double:!22012:1.0:0.0")
 EXPR(":div:long double:!22023:0.0:0.0")
-EXPR(":add:long double:!22000:\$MAX:1.0")
-EXPR(":add:long double:!22003:\$MAX:\$MAX:")
-EXPR(":div:long double:!22000:.00001:\$MAX:")
+/* no longer raises S_INEX EXPR(":add:long double:!22000:\&MAX:1.0") */
+EXPR(":add:long double:!22003:\&MAX:\&MAX:")
+EXPR(":div:long double:!22000:.00001:\&MAX:")
 EXPR(":")
 __EOT__
 ;

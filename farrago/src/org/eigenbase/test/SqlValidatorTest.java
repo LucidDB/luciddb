@@ -67,6 +67,7 @@ public class SqlValidatorTest
 
     private final String ERR_IN_OPERANDS_INCOMPATIBLE =
         "Values passed to IN operator must have compatible types";
+    private static final String ANY = "(?s).*";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -150,32 +151,32 @@ public class SqlValidatorTest
             "'abc' AND FaLsE",
             "(?s).*'<CHAR.3.> AND <BOOLEAN>'.*");
 
-        checkWholeExpFails("TRUE OR 1", "(?s).*");
+        checkWholeExpFails("TRUE OR 1", ANY);
 
         checkWholeExpFails("unknown OR 1.0",
-            "(?s).*");
+            ANY);
 
         checkWholeExpFails("true OR 1.0e4",
-            "(?s).*");
+            ANY);
 
         if (todo) {
             checkWholeExpFails("TRUE OR (TIME '12:00' AT LOCAL)",
-                "(?s).*");
+                ANY);
         }
     }
 
     public void testNotIllegalTypeFails()
     {
-        //TODO need col+line number
         assertExceptionIsThrown(
-            "select NOT 3.141 from (values(true))",
-            "(?s).*'NOT<DECIMAL.4, 3.>'.*");
+            "select ^NOT 3.141^ from (values(true))",
+            "(?s).*Cannot apply 'NOT' to arguments of type 'NOT<DECIMAL.4, 3.>'.*");
 
         assertExceptionIsThrown(
-            "select NOT 'abc' from (values(true))",
-            "(?s).*");
+            "select ^NOT 'abc'^ from (values(true))",
+            ANY);
 
-        assertExceptionIsThrown("select NOT 1 from (values(true))", "(?s).*");
+        assertExceptionIsThrown("select ^NOT 1^ from (values(true))",
+            ANY);
     }
 
     public void testIs()
@@ -193,26 +194,26 @@ public class SqlValidatorTest
 
         check("select 1 IS NULL FROM (values(true))");
         check("select 1.2 IS NULL FROM (values(true))");
-        checkExpFails("'abc' IS NOT UNKNOWN", "(?s).*Cannot apply.*");
+        checkExpFails("^'abc' IS NOT UNKNOWN^", "(?s).*Cannot apply.*");
     }
 
     public void testIsFails()
     {
         assertExceptionIsThrown(
-            "select 1 IS TRUE FROM (values(true))",
+            "select ^1 IS TRUE^ FROM (values(true))",
             "(?s).*'<INTEGER> IS TRUE'.*");
 
         assertExceptionIsThrown(
-            "select 1.1 IS NOT FALSE FROM (values(true))",
-            "(?s).*");
+            "select ^1.1 IS NOT FALSE^ FROM (values(true))",
+            ANY);
 
         assertExceptionIsThrown(
-            "select 1.1e1 IS NOT FALSE FROM (values(true))",
+            "select ^1.1e1 IS NOT FALSE^ FROM (values(true))",
             "(?s).*Cannot apply 'IS NOT FALSE' to arguments of type '<DOUBLE> IS NOT FALSE'.*");
 
         assertExceptionIsThrown(
-            "select 'abc' IS NOT TRUE FROM (values(true))",
-            "(?s).*");
+            "select ^'abc' IS NOT TRUE^ FROM (values(true))",
+            ANY);
     }
 
     public void testScalars()
@@ -240,9 +241,8 @@ public class SqlValidatorTest
 
     public void testScalarsFails()
     {
-        //TODO need col+line number
         assertExceptionIsThrown(
-            "select 1+TRUE from (values(true))",
+            "select ^1+TRUE^ from (values(true))",
             "(?s).*Cannot apply '\\+' to arguments of type '<INTEGER> \\+ <BOOLEAN>'\\. Supported form\\(s\\):.*");
     }
 
@@ -256,10 +256,10 @@ public class SqlValidatorTest
         checkExpType("+interval '1' second", "INTERVAL SECOND NOT NULL");
         checkExpType("-interval '1' month", "INTERVAL MONTH NOT NULL");
         checkFails(
-            "SELECT -'abc' from (values(true))",
+            "SELECT ^-'abc'^ from (values(true))",
             "(?s).*Cannot apply '-' to arguments of type '-<CHAR.3.>'.*");
         checkFails(
-            "SELECT +'abc' from (values(true))",
+            "SELECT ^+'abc'^ from (values(true))",
             "(?s).*Cannot apply '\\+' to arguments of type '\\+<CHAR.3.>'.*");
     }
 
@@ -313,34 +313,34 @@ public class SqlValidatorTest
     public void testEqualNotEqualFails()
     {
         checkExpFails(
-            "''<>1",
+            "^''<>1^",
             "(?s).*Cannot apply '<>' to arguments of type '<CHAR.0.> <> <INTEGER>'.*");
         checkExpFails(
-            "'1'>=1",
+            "^'1'>=1^",
             "(?s).*Cannot apply '>=' to arguments of type '<CHAR.1.> >= <INTEGER>'.*");
         checkExpFails(
-            "1<>n'abc'",
+            "^1<>n'abc'^",
             "(?s).*Cannot apply '<>' to arguments of type '<INTEGER> <> <CHAR.3.>'.*");
         checkExpFails(
-            "''=.1",
+            "^''=.1^",
             "(?s).*Cannot apply '=' to arguments of type '<CHAR.0.> = <DECIMAL.1..1.>'.*");
         checkExpFails(
-            "true<>1e-1",
+            "^true<>1e-1^",
             "(?s).*Cannot apply '<>' to arguments of type '<BOOLEAN> <> <DOUBLE>'.*");
         checkExpFails(
-            "false=''",
+            "^false=''^",
             "(?s).*Cannot apply '=' to arguments of type '<BOOLEAN> = <CHAR.0.>'.*");
         checkExpFails(
-            "x'a4'=0.01",
+            "^x'a4'=0.01^",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <DECIMAL.3, 2.>'.*");
         checkExpFails(
-            "x'a4'=1",
+            "^x'a4'=1^",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <INTEGER>'.*");
         checkExpFails(
-            "x'13'<>0.01",
+            "^x'13'<>0.01^",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.1.> <> <DECIMAL.3, 2.>'.*");
         checkExpFails(
-            "x'abcd'<>1",
+            "^x'abcd'<>1^",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.2.> <> <INTEGER>'.*");
     }
 
@@ -353,16 +353,16 @@ public class SqlValidatorTest
     public void testBinaryStringFails()
     {
         assertExceptionIsThrown(
-            "select x'ffee'='abc' from (values(true))",
+            "select ^x'ffee'='abc'^ from (values(true))",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.2.> = <CHAR.3.>'.*");
         assertExceptionIsThrown(
-            "select x'ff'=88 from (values(true))",
+            "select ^x'ff'=88^ from (values(true))",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <INTEGER>'.*");
         assertExceptionIsThrown(
-            "select x''<>1.1e-1 from (values(true))",
+            "select ^x''<>1.1e-1^ from (values(true))",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.0.> <> <DOUBLE>'.*");
         assertExceptionIsThrown(
-            "select x''<>1.1 from (values(true))",
+            "select ^x''<>1.1^ from (values(true))",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.0.> <> <DECIMAL.2, 1.>'.*");
     }
 
@@ -404,28 +404,28 @@ public class SqlValidatorTest
     public void testArithmeticOperatorsFails()
     {
         checkExpFails(
-            "pow(2,'abc')",
+            "^pow(2,'abc')^",
             "(?s).*Cannot apply 'POW' to arguments of type 'POW.<INTEGER>, <CHAR.3.>.*");
         checkExpFails(
-            "pow(true,1)",
+            "^pow(true,1)^",
             "(?s).*Cannot apply 'POW' to arguments of type 'POW.<BOOLEAN>, <INTEGER>.*");
         checkExpFails(
-            "mod(x'1100',1)",
+            "^mod(x'1100',1)^",
             "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<BINARY.2.>, <INTEGER>.*");
         checkExpFails(
-            "mod(1, x'1100')",
+            "^mod(1, x'1100')^",
             "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<INTEGER>, <BINARY.2.>.*");
         checkExpFails(
-            "abs(x'')",
+            "^abs(x'')^",
             "(?s).*Cannot apply 'ABS' to arguments of type 'ABS.<BINARY.0.>.*");
         checkExpFails(
-            "ln(x'face12')",
+            "^ln(x'face12')^",
             "(?s).*Cannot apply 'LN' to arguments of type 'LN.<BINARY.3.>.*");
         checkExpFails(
-            "log10(x'fa')",
+            "^log10(x'fa')^",
             "(?s).*Cannot apply 'LOG10' to arguments of type 'LOG10.<BINARY.1.>.*");
         checkExpFails(
-            "exp('abc')",
+            "^exp('abc')^",
             "(?s).*Cannot apply 'EXP' to arguments of type 'EXP.<CHAR.3.>.*");
     }
 
@@ -481,17 +481,17 @@ public class SqlValidatorTest
     public void testCaseExpressionFails()
     {
         //varchar not comparable with bit string
-        checkExpFails(
+        checkWholeExpFails(
             "case 'string' when x'01' then 'zero one' else 'something' end",
             "(?s).*Cannot apply '=' to arguments of type '<CHAR.6.> = <BINARY.1.>'.*");
 
         //all thens and else return null
-        checkExpFails(
+        checkWholeExpFails(
             "case 1 when 1 then null else null end",
             "(?s).*ELSE clause or at least one THEN clause must be non-NULL.*");
 
         //all thens and else return null
-        checkExpFails(
+        checkWholeExpFails(
             "case 1 when 1 then null end",
             "(?s).*ELSE clause or at least one THEN clause must be non-NULL.*");
         checkWholeExpFails(
@@ -549,14 +549,12 @@ public class SqlValidatorTest
 
     public void testStringCompareType()
     {
-        checkExpType("'a' = 'b'", "todo: BOOLEAN"); // todo: should it be
-                                                    // "BOOLEAN NOT NULL" since
-                                                    // args are not null?
-        checkExpType("'a' <> 'b'", "todo: BOOLEAN");
-        checkExpType("'a' > 'b'", "todo: BOOLEAN");
-        checkExpType("'a' < 'b'", "todo: BOOLEAN");
-        checkExpType("'a' >= 'b'", "todo: BOOLEAN");
-        checkExpType("'a' <= 'b'", "todo: BOOLEAN");
+        checkExpType("'a' = 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' <> 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' > 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' < 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' >= 'b'", "BOOLEAN NOT NULL");
+        checkExpType("'a' <= 'b'", "BOOLEAN NOT NULL");
         checkExpType("CAST(NULL AS VARCHAR(33)) > 'foo'", "BOOLEAN");
     }
 
@@ -586,7 +584,7 @@ public class SqlValidatorTest
 
     public void testConcatFails()
     {
-        checkExpFails(
+        checkWholeExpFails(
             "'a'||x'ff'",
             "(?s).*Cannot apply '\\|\\|' to arguments of type '<CHAR.1.> \\|\\| <BINARY.1.>'"
             + ".*Supported form.s.: '<STRING> \\|\\| <STRING>.*'");
@@ -596,31 +594,32 @@ public class SqlValidatorTest
     {
         checkExp("1 between 2 and 3");
         checkExp("'a' between 'b' and 'c'");
-        checkExpFails("'' between 2 and 3", "(?s).*Cannot apply.*");
+        checkWholeExpFails("'' between 2 and 3",
+            "(?s).*Cannot apply 'BETWEEN' to arguments of type.*");
     }
 
     public void testCharsetMismatch()
     {
-        checkExpFails(
+        checkWholeExpFails(
             "''=_shift_jis''",
-            "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails(
+            "Cannot apply .* to the two different charsets ISO-8859-1 and Shift_JIS");
+        checkWholeExpFails(
             "''<>_shift_jis''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails(
+        checkWholeExpFails(
             "''>_shift_jis''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails(
+        checkWholeExpFails(
             "''<_shift_jis''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails(
+        checkWholeExpFails(
             "''<=_shift_jis''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails(
+        checkWholeExpFails(
             "''>=_shift_jis''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkExpFails("''||_shift_jis''", "(?s).*");
-        checkExpFails("'a'||'b'||_iso-8859-6'c'", "(?s).*");
+        checkWholeExpFails("''||_shift_jis''", ANY);
+        checkWholeExpFails("'a'||'b'||_iso-8859-6'c'", ANY);
     }
 
     // FIXME jvs 2-Feb-2005: all collation-related tests are disabled due to
@@ -696,7 +695,7 @@ public class SqlValidatorTest
         checkExp("upper(_shift_jis'sadf')");
         checkExp("lower(n'sadf')");
         checkExpType("lower('sadf')", "CHAR(4) NOT NULL");
-        checkExpFails(
+        checkWholeExpFails(
             "upper(123)",
             "(?s).*Cannot apply 'UPPER' to arguments of type 'UPPER.<INTEGER>.'.*");
     }
@@ -707,7 +706,7 @@ public class SqlValidatorTest
         checkExp("position(x'11' in x'100110')");
         checkExp("position(x'abcd' in x'')");
         checkExpType("position('mouse' in 'house')", "INTEGER NOT NULL");
-        checkExpFails(
+        checkWholeExpFails(
             "position(x'1234' in '110')",
             "(?s).*Cannot apply 'POSITION' to arguments of type 'POSITION.<BINARY.2.> IN <CHAR.3.>.'.*");
     }
@@ -734,13 +733,13 @@ public class SqlValidatorTest
 
     public void testTrimFails()
     {
-        checkExpFails(
+        checkWholeExpFails(
             "trim(123 FROM 'beard')",
             "(?s).*Cannot apply 'TRIM' to arguments of type.*");
-        checkExpFails(
+        checkWholeExpFails(
             "trim('a' FROM 123)",
             "(?s).*Cannot apply 'TRIM' to arguments of type.*");
-        checkExpFails(
+        checkWholeExpFails(
             "trim('a' FROM _shift_jis'b')",
             "(?s).*not comparable to each other.*");
     }
@@ -755,7 +754,7 @@ public class SqlValidatorTest
     {
         checkExp("overlay('ABCdef' placing 'abc' from 1)");
         checkExp("overlay('ABCdef' placing 'abc' from 1 for 3)");
-        checkExpFails(
+        checkWholeExpFails(
             "overlay('ABCdef' placing 'abc' from '1' for 3)",
             "(?s).*OVERLAY\\(<STRING> PLACING <STRING> FROM <INTEGER>\\).*");
         checkExpType(
@@ -805,16 +804,16 @@ public class SqlValidatorTest
 
     public void testSubstringFails()
     {
-        checkExpFails(
+        checkWholeExpFails(
             "substring('a' from 1 for 'b')",
             "(?s).*Cannot apply 'SUBSTRING' to arguments of type.*");
-        checkExpFails(
+        checkWholeExpFails(
             "substring(_shift_jis'10' FROM '0' FOR '\\')",
             "(?s).* not comparable to each other.*");
-        checkExpFails(
+        checkWholeExpFails(
             "substring('10' FROM _shift_jis'0' FOR '\\')",
             "(?s).* not comparable to each other.*");
-        checkExpFails(
+        checkWholeExpFails(
             "substring('10' FROM '0' FOR _shift_jis'\\')",
             "(?s).* not comparable to each other.*");
     }
@@ -843,8 +842,8 @@ public class SqlValidatorTest
 
     public void testNull()
     {
-        checkFails("values 1.0 + NULL", "(?s).*Illegal use of .NULL.*");
-        checkExpFails("1.0 + NULL", "(?s).*Illegal use of .NULL.*");
+        checkFails("values 1.0 + ^NULL^", "(?s).*Illegal use of .NULL.*");
+        checkExpFails("1.0 + ^NULL^", "(?s).*Illegal use of .NULL.*");
     }
 
     public void testNullCast()
@@ -913,36 +912,40 @@ public class SqlValidatorTest
     public void testCastFails()
     {
         checkExpFails(
-            "cast('foo' as bar)",
+            "cast('foo' as ^bar^)",
             "(?s).*Unknown datatype name 'BAR'");
-        checkExpFails(
+        checkWholeExpFails(
             "cast(multiset[1] as integer)",
             "(?s).*Cast function cannot convert value of type INTEGER MULTISET to type INTEGER");
-        checkExpFails(
+        checkWholeExpFails(
             "cast(x'ff' as decimal(5,2))",
             "(?s).*Cast function cannot convert value of type BINARY\\(1\\) to type DECIMAL\\(5, 2\\)");
 
-        checkExpFails(
+        checkWholeExpFails(
             "cast(1 as boolean)",
             "(?s).*Cast function cannot convert value of type INTEGER to type BOOLEAN.*");
-        checkExpFails(
+        checkWholeExpFails(
             "cast(1.0e1 as boolean)",
             "(?s).*Cast function cannot convert value of type DOUBLE to type BOOLEAN.*");
-        checkExpFails(
+        checkWholeExpFails(
             "cast(true as numeric)",
             "(?s).*Cast function cannot convert value of type BOOLEAN to type DECIMAL.*");
-        checkExpFails(
+        checkWholeExpFails(
             "cast(DATE '1243-12-01' as TIME)",
             "(?s).*Cast function cannot convert value of type DATE to type TIME.*");
-        checkExpFails(
+        checkWholeExpFails(
             "cast(TIME '12:34:01' as DATE)",
             "(?s).*Cast function cannot convert value of type TIME\\(0\\) to type DATE.*");
+
+        // It's a runtime error that 'TRUE' cannot fit into CHAR(3), but at
+        // validate time this expression is OK.
+        checkExp("cast(true as char(3))");
     }
 
     public void testCastBinaryLiteral()
     {
         checkExpFails(
-            "cast(x'0dd' as binary(5))",
+            "cast(^x'0dd'^ as binary(5))",
             "Binary literal string must contain an even number of hexits");
     }
 
@@ -951,45 +954,51 @@ public class SqlValidatorTest
         // LOCAL_TIME
         checkExp("LOCALTIME(3)");
         checkExp("LOCALTIME"); //    fix sqlcontext later.
-        checkExpFails(
+        checkWholeExpFails(
             "LOCALTIME(1+2)",
             "Argument to function 'LOCALTIME' must be a literal");
+        checkExpFails(
+            "LOCALTIME(^NULL^)",
+            "Illegal use of 'NULL'");
+        checkWholeExpFails(
+            "LOCALTIME(CAST(NULL AS INTEGER))",
+            "Argument to function 'LOCALTIME' must not be NULL");
         checkWholeExpFails(
             "LOCALTIME()",
             "No match found for function signature LOCALTIME..");
         checkExpType("LOCALTIME", "TIME(0) NOT NULL"); //  with TZ ?
-        checkExpFails(
+        checkWholeExpFails(
             "LOCALTIME(-1)",
             "Argument to function 'LOCALTIME' must be a positive integer literal");
         checkExpFails(
-            "LOCALTIME(100000000000000)",
+            "LOCALTIME(^100000000000000^)",
             "(?s).*Numeric literal '100000000000000' out of range.*");
-        checkExpFails(
+        checkWholeExpFails(
             "LOCALTIME(4)",
             "Argument to function 'LOCALTIME' must be a valid precision between '0' and '3'");
-        checkExpFails("LOCALTIME('foo')",
+        checkWholeExpFails("LOCALTIME('foo')",
             "(?s).*Cannot apply.*");
 
         // LOCALTIMESTAMP
         checkExp("LOCALTIMESTAMP(3)");
         checkExp("LOCALTIMESTAMP"); //    fix sqlcontext later.
-        checkExpFails(
+        checkWholeExpFails(
             "LOCALTIMESTAMP(1+2)",
             "Argument to function 'LOCALTIMESTAMP' must be a literal");
         checkWholeExpFails(
             "LOCALTIMESTAMP()",
             "No match found for function signature LOCALTIMESTAMP..");
         checkExpType("LOCALTIMESTAMP", "TIMESTAMP(0) NOT NULL"); //  with TZ ?
-        checkExpFails(
+        checkWholeExpFails(
             "LOCALTIMESTAMP(-1)",
             "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal");
         checkExpFails(
-            "LOCALTIMESTAMP(100000000000000)",
+            "LOCALTIMESTAMP(^100000000000000^)",
             "(?s).*Numeric literal '100000000000000' out of range.*");
-        checkExpFails(
+        checkWholeExpFails(
             "LOCALTIMESTAMP(4)",
             "Argument to function 'LOCALTIMESTAMP' must be a valid precision between '0' and '3'");
-        checkExpFails("LOCALTIMESTAMP('foo')",
+        checkWholeExpFails("LOCALTIMESTAMP('foo')",
             "(?s).*Cannot apply.*");
 
         // CURRENT_DATE
@@ -1007,35 +1016,35 @@ public class SqlValidatorTest
         checkWholeExpFails(
             "CURRENT_DATE(-1)",
             "No match found for function signature CURRENT_DATE..NUMERIC.."); // i guess -s1 is an expression?
-        checkExpFails("CURRENT_DATE('foo')", "(?s).*");
+        checkWholeExpFails("CURRENT_DATE('foo')", ANY);
 
         // current_time
         checkExp("current_time(3)");
         checkExp("current_time"); //    fix sqlcontext later.
-        checkExpFails(
+        checkWholeExpFails(
             "current_time(1+2)",
             "Argument to function 'CURRENT_TIME' must be a literal");
         checkWholeExpFails(
             "current_time()",
             "No match found for function signature CURRENT_TIME..");
         checkExpType("current_time", "TIME(0) NOT NULL"); //  with TZ ?
-        checkExpFails(
+        checkWholeExpFails(
             "current_time(-1)",
             "Argument to function 'CURRENT_TIME' must be a positive integer literal");
         checkExpFails(
-            "CURRENT_TIME(100000000000000)",
+            "CURRENT_TIME(^100000000000000^)",
             "(?s).*Numeric literal '100000000000000' out of range.*");
-        checkExpFails(
+        checkWholeExpFails(
             "CURRENT_TIME(4)",
             "Argument to function 'CURRENT_TIME' must be a valid precision between '0' and '3'");
-        checkExpFails("current_time('foo')",
+        checkWholeExpFails("current_time('foo')",
             "(?s).*Cannot apply.*");
 
         // current_timestamp
         checkExp("CURRENT_TIMESTAMP(3)");
         checkExp("CURRENT_TIMESTAMP"); //    fix sqlcontext later.
         check("SELECT CURRENT_TIMESTAMP AS X FROM (VALUES (1))");
-        checkExpFails(
+        checkWholeExpFails(
             "CURRENT_TIMESTAMP(1+2)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a literal");
         checkWholeExpFails(
@@ -1043,16 +1052,16 @@ public class SqlValidatorTest
             "No match found for function signature CURRENT_TIMESTAMP..");
         checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0) NOT NULL"); //  with TZ ?
         checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2) NOT NULL"); //  with TZ ?
-        checkExpFails(
+        checkWholeExpFails(
             "CURRENT_TIMESTAMP(-1)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
         checkExpFails(
-            "CURRENT_TIMESTAMP(100000000000000)",
+            "CURRENT_TIMESTAMP(^100000000000000^)",
             "(?s).*Numeric literal '100000000000000' out of range.*");
-        checkExpFails(
+        checkWholeExpFails(
             "CURRENT_TIMESTAMP(4)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a valid precision between '0' and '3'");
-        checkExpFails("CURRENT_TIMESTAMP('foo')",
+        checkWholeExpFails("CURRENT_TIMESTAMP('foo')",
             "(?s).*Cannot apply.*");
 
         // Date literals
@@ -1072,7 +1081,7 @@ public class SqlValidatorTest
      */
     public void testDateTimeCast()
     {
-        checkExpFails(
+        checkWholeExpFails(
             "CAST(1 as DATE)",
             "Cast function cannot convert value of type INTEGER to type DATE");
         checkExp("CAST(DATE '2001-12-21' AS VARCHAR(10))");
@@ -1098,24 +1107,22 @@ public class SqlValidatorTest
         checkExp("{fn log10(1)}");
         checkExp("{fn locate('','')}");
         checkExp("{fn insert('',1,2,'')}");
-        checkExpFails("{fn insert('','',1,2)}", "(?s).*.*");
-        checkExpFails("{fn insert('','',1)}", "(?s).*4.*");
-        checkExpFails("{fn locate('','',1)}", "(?s).*"); //todo this is legal
-                                                         //jdbc syntax, just
-                                                         //that currently the 3
-                                                         //ops call is not
-                                                         //implemented in the
-                                                         //system
-        checkExpFails(
+        checkWholeExpFails("{fn insert('','',1,2)}", "(?s).*.*");
+        checkWholeExpFails("{fn insert('','',1)}", "(?s).*4.*");
+
+        // TODO: this is legal JDBC syntax, but the 3 ops call is not
+        // implemented
+        checkWholeExpFails("{fn locate('','',1)}", ANY);
+        checkWholeExpFails(
             "{fn log10('1')}",
             "(?s).*Cannot apply.*fn LOG10..<CHAR.1.>.*");
-        checkExpFails(
+        checkWholeExpFails(
             "{fn log10(1,1)}",
             "(?s).*Encountered .fn LOG10. with 2 parameter.s.; was expecting 1 parameter.s.*");
-        checkExpFails(
+        checkWholeExpFails(
             "{fn fn(1)}",
             "(?s).*Function '.fn FN.' is not defined.*");
-        checkExpFails(
+        checkWholeExpFails(
             "{fn hahaha(1)}",
             "(?s).*Function '.fn HAHAHA.' is not defined.*");
     }
@@ -1261,7 +1268,7 @@ public class SqlValidatorTest
     {
         checkExp("multiset[1] is a set");
         checkExp("multiset['1'] is a set");
-        checkExpFails("'a' is a set", ".*Cannot apply 'IS A SET' to.*");
+        checkWholeExpFails("'a' is a set", ".*Cannot apply 'IS A SET' to.*");
     }
 
     public void testCardinality()
@@ -2334,49 +2341,49 @@ public class SqlValidatorTest
     public void subTestIntervalYearNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL '-' ^YEAR^",
+        checkWholeExpFails(
+            "INTERVAL '-' YEAR",
             "Illegal interval literal format '-' for INTERVAL YEAR.*");
-        checkExpFails(
-            "INTERVAL '1-2' ^YEAR^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' YEAR",
             "Illegal interval literal format '1-2' for INTERVAL YEAR.*");
-        checkExpFails(
-            "INTERVAL '1.2' ^YEAR^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' YEAR",
             "Illegal interval literal format '1.2' for INTERVAL YEAR.*");
-        checkExpFails(
-            "INTERVAL '1 2' ^YEAR^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' YEAR",
             "Illegal interval literal format '1 2' for INTERVAL YEAR.*");
-        checkExpFails(
-            "INTERVAL '1-2' YEAR(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' YEAR(2)",
             "Illegal interval literal format '1-2' for INTERVAL YEAR\\(2\\)");
-        checkExpFails(
-            "INTERVAL 'bogus text' ^YEAR^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' YEAR",
             "Illegal interval literal format 'bogus text' for INTERVAL YEAR.*");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1' ^YEAR^",
+        checkWholeExpFails(
+            "INTERVAL '--1' YEAR",
             "Illegal interval literal format '--1' for INTERVAL YEAR.*");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
-        checkExpFails(
-            "INTERVAL '100' ^YEAR^",
+        checkWholeExpFails(
+            "INTERVAL '100' YEAR",
             "Illegal interval literal format '100' for INTERVAL YEAR.*");
-        checkExpFails(
-            "INTERVAL '100' YEAR(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '100' YEAR(2)",
             "Illegal interval literal format '100' for INTERVAL YEAR\\(2\\).*");
-        checkExpFails(
-            "INTERVAL '1000' YEAR(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1000' YEAR(3)",
             "Illegal interval literal format '1000' for INTERVAL YEAR\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '-1000' YEAR(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '-1000' YEAR(3)",
             "Illegal interval literal format '-1000' for INTERVAL YEAR\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '2147483648' YEAR(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648' YEAR(10)",
             "Illegal interval literal format '2147483648' for INTERVAL YEAR\\(10\\).*");
-        checkExpFails(
-            "INTERVAL '-2147483648' YEAR(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' YEAR(10)",
             "Illegal interval literal format '-2147483648' for INTERVAL YEAR\\(10\\).*");
 
         // precision > maximum
@@ -2402,59 +2409,59 @@ public class SqlValidatorTest
     public void subTestIntervalYearToMonthNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL '-' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '-' YEAR TO MONTH",
             "Illegal interval literal format '-' for INTERVAL YEAR TO MONTH");
-        checkExpFails(
-            "INTERVAL '1' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1' YEAR TO MONTH",
             "Illegal interval literal format '1' for INTERVAL YEAR TO MONTH");
-        checkExpFails(
-            "INTERVAL '1:2' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' YEAR TO MONTH",
             "Illegal interval literal format '1:2' for INTERVAL YEAR TO MONTH");
-        checkExpFails(
-            "INTERVAL '1.2' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' YEAR TO MONTH",
             "Illegal interval literal format '1.2' for INTERVAL YEAR TO MONTH");
-        checkExpFails(
-            "INTERVAL '1 2' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' YEAR TO MONTH",
             "Illegal interval literal format '1 2' for INTERVAL YEAR TO MONTH");
-        checkExpFails(
-            "INTERVAL '1:2' YEAR(2) TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' YEAR(2) TO MONTH",
             "Illegal interval literal format '1:2' for INTERVAL YEAR\\(2\\) TO MONTH");
-        checkExpFails(
-            "INTERVAL 'bogus text' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' YEAR TO MONTH",
             "Illegal interval literal format 'bogus text' for INTERVAL YEAR TO MONTH");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1-2' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '--1-2' YEAR TO MONTH",
             "Illegal interval literal format '--1-2' for INTERVAL YEAR TO MONTH");
-        checkExpFails(
-            "INTERVAL '1--2' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1--2' YEAR TO MONTH",
             "Illegal interval literal format '1--2' for INTERVAL YEAR TO MONTH");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
         //  plus >max value for mid/end fields
-        checkExpFails(
-            "INTERVAL '100-0' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '100-0' YEAR TO MONTH",
             "Illegal interval literal format '100-0' for INTERVAL YEAR TO MONTH.*");
-        checkExpFails(
-            "INTERVAL '100-0' YEAR(2) TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '100-0' YEAR(2) TO MONTH",
             "Illegal interval literal format '100-0' for INTERVAL YEAR\\(2\\) TO MONTH.*");
-        checkExpFails(
-            "INTERVAL '1000-0' YEAR(3) TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1000-0' YEAR(3) TO MONTH",
             "Illegal interval literal format '1000-0' for INTERVAL YEAR\\(3\\) TO MONTH.*");
-        checkExpFails(
-            "INTERVAL '-1000-0' YEAR(3) TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '-1000-0' YEAR(3) TO MONTH",
             "Illegal interval literal format '-1000-0' for INTERVAL YEAR\\(3\\) TO MONTH.*");
-        checkExpFails(
-            "INTERVAL '2147483648-0' YEAR(10) TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648-0' YEAR(10) TO MONTH",
             "Illegal interval literal format '2147483648-0' for INTERVAL YEAR\\(10\\) TO MONTH.*");
-        checkExpFails(
-            "INTERVAL '-2147483648-0' YEAR(10) TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648-0' YEAR(10) TO MONTH",
             "Illegal interval literal format '-2147483648-0' for INTERVAL YEAR\\(10\\) TO MONTH.*");
-        checkExpFails(
-            "INTERVAL '1-12' YEAR TO ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1-12' YEAR TO MONTH",
             "Illegal interval literal format '1-12' for INTERVAL YEAR TO MONTH.*");
 
         // precision > maximum
@@ -2480,49 +2487,49 @@ public class SqlValidatorTest
     public void subTestIntervalMonthNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL '-' ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '-' MONTH",
             "Illegal interval literal format '-' for INTERVAL MONTH.*");
-        checkExpFails(
-            "INTERVAL '1-2' ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' MONTH",
             "Illegal interval literal format '1-2' for INTERVAL MONTH.*");
-        checkExpFails(
-            "INTERVAL '1.2' ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' MONTH",
             "Illegal interval literal format '1.2' for INTERVAL MONTH.*");
-        checkExpFails(
-            "INTERVAL '1 2' ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' MONTH",
             "Illegal interval literal format '1 2' for INTERVAL MONTH.*");
-        checkExpFails(
-            "INTERVAL '1-2' MONTH(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' MONTH(2)",
             "Illegal interval literal format '1-2' for INTERVAL MONTH\\(2\\)");
-        checkExpFails(
-            "INTERVAL 'bogus text' ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' MONTH",
             "Illegal interval literal format 'bogus text' for INTERVAL MONTH.*");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1' ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '--1' MONTH",
             "Illegal interval literal format '--1' for INTERVAL MONTH.*");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
-        checkExpFails(
-            "INTERVAL '100' ^MONTH^",
+        checkWholeExpFails(
+            "INTERVAL '100' MONTH",
             "Illegal interval literal format '100' for INTERVAL MONTH.*");
-        checkExpFails(
-            "INTERVAL '100' MONTH(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '100' MONTH(2)",
             "Illegal interval literal format '100' for INTERVAL MONTH\\(2\\).*");
-        checkExpFails(
-            "INTERVAL '1000' MONTH(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1000' MONTH(3)",
             "Illegal interval literal format '1000' for INTERVAL MONTH\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '-1000' MONTH(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '-1000' MONTH(3)",
             "Illegal interval literal format '-1000' for INTERVAL MONTH\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '2147483648' MONTH(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648' MONTH(10)",
             "Illegal interval literal format '2147483648' for INTERVAL MONTH\\(10\\).*");
-        checkExpFails(
-            "INTERVAL '-2147483648' MONTH(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' MONTH(10)",
             "Illegal interval literal format '-2147483648' for INTERVAL MONTH\\(10\\).*");
 
         // precision > maximum
@@ -2548,52 +2555,52 @@ public class SqlValidatorTest
     public void subTestIntervalDayNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL '-' ^DAY^",
+        checkWholeExpFails(
+            "INTERVAL '-' DAY",
             "Illegal interval literal format '-' for INTERVAL DAY.*");
-        checkExpFails(
-            "INTERVAL '1-2' ^DAY^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' DAY",
             "Illegal interval literal format '1-2' for INTERVAL DAY.*");
-        checkExpFails(
-            "INTERVAL '1.2' ^DAY^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' DAY",
             "Illegal interval literal format '1.2' for INTERVAL DAY.*");
-        checkExpFails(
-            "INTERVAL '1 2' ^DAY^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' DAY",
             "Illegal interval literal format '1 2' for INTERVAL DAY.*");
-        checkExpFails(
-            "INTERVAL '1:2' ^DAY^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY",
             "Illegal interval literal format '1:2' for INTERVAL DAY.*");
-        checkExpFails(
-            "INTERVAL '1-2' DAY(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' DAY(2)",
             "Illegal interval literal format '1-2' for INTERVAL DAY\\(2\\)");
-        checkExpFails(
-            "INTERVAL 'bogus text' ^DAY^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' DAY",
             "Illegal interval literal format 'bogus text' for INTERVAL DAY.*");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1' ^DAY^",
+        checkWholeExpFails(
+            "INTERVAL '--1' DAY",
             "Illegal interval literal format '--1' for INTERVAL DAY.*");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
-        checkExpFails(
-            "INTERVAL '100' ^DAY^",
+        checkWholeExpFails(
+            "INTERVAL '100' DAY",
             "Illegal interval literal format '100' for INTERVAL DAY.*");
-        checkExpFails(
-            "INTERVAL '100' DAY(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '100' DAY(2)",
             "Illegal interval literal format '100' for INTERVAL DAY\\(2\\).*");
-        checkExpFails(
-            "INTERVAL '1000' DAY(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1000' DAY(3)",
             "Illegal interval literal format '1000' for INTERVAL DAY\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '-1000' DAY(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '-1000' DAY(3)",
             "Illegal interval literal format '-1000' for INTERVAL DAY\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '2147483648' DAY(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648' DAY(10)",
             "Illegal interval literal format '2147483648' for INTERVAL DAY\\(10\\).*");
-        checkExpFails(
-            "INTERVAL '-2147483648' DAY(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' DAY(10)",
             "Illegal interval literal format '-2147483648' for INTERVAL DAY\\(10\\).*");
 
         // precision > maximum
@@ -2619,62 +2626,62 @@ public class SqlValidatorTest
     public void subTestIntervalDayToHourNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL '-' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '-' DAY TO HOUR",
             "Illegal interval literal format '-' for INTERVAL DAY TO HOUR");
-        checkExpFails(
-            "INTERVAL '1' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1' DAY TO HOUR",
             "Illegal interval literal format '1' for INTERVAL DAY TO HOUR");
-        checkExpFails(
-            "INTERVAL '1:2' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY TO HOUR",
             "Illegal interval literal format '1:2' for INTERVAL DAY TO HOUR");
-        checkExpFails(
-            "INTERVAL '1.2' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' DAY TO HOUR",
             "Illegal interval literal format '1.2' for INTERVAL DAY TO HOUR");
-        checkExpFails(
-            "INTERVAL '1 x' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1 x' DAY TO HOUR",
             "Illegal interval literal format '1 x' for INTERVAL DAY TO HOUR");
-        checkExpFails(
-            "INTERVAL ' ' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL ' ' DAY TO HOUR",
             "Illegal interval literal format ' ' for INTERVAL DAY TO HOUR");
-        checkExpFails(
-            "INTERVAL '1:2' DAY(2) TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY(2) TO HOUR",
             "Illegal interval literal format '1:2' for INTERVAL DAY\\(2\\) TO HOUR");
-        checkExpFails(
-            "INTERVAL 'bogus text' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' DAY TO HOUR",
             "Illegal interval literal format 'bogus text' for INTERVAL DAY TO HOUR");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1 1' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '--1 1' DAY TO HOUR",
             "Illegal interval literal format '--1 1' for INTERVAL DAY TO HOUR");
-        checkExpFails(
-            "INTERVAL '1 -1' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1 -1' DAY TO HOUR",
             "Illegal interval literal format '1 -1' for INTERVAL DAY TO HOUR");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
         //  plus >max value for mid/end fields
-        checkExpFails(
-            "INTERVAL '100 0' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '100 0' DAY TO HOUR",
             "Illegal interval literal format '100 0' for INTERVAL DAY TO HOUR.*");
-        checkExpFails(
-            "INTERVAL '100 0' DAY(2) TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '100 0' DAY(2) TO HOUR",
             "Illegal interval literal format '100 0' for INTERVAL DAY\\(2\\) TO HOUR.*");
-        checkExpFails(
-            "INTERVAL '1000 0' DAY(3) TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1000 0' DAY(3) TO HOUR",
             "Illegal interval literal format '1000 0' for INTERVAL DAY\\(3\\) TO HOUR.*");
-        checkExpFails(
-            "INTERVAL '-1000 0' DAY(3) TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '-1000 0' DAY(3) TO HOUR",
             "Illegal interval literal format '-1000 0' for INTERVAL DAY\\(3\\) TO HOUR.*");
-        checkExpFails(
-            "INTERVAL '2147483648 0' DAY(10) TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648 0' DAY(10) TO HOUR",
             "Illegal interval literal format '2147483648 0' for INTERVAL DAY\\(10\\) TO HOUR.*");
-        checkExpFails(
-            "INTERVAL '-2147483648 0' DAY(10) TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648 0' DAY(10) TO HOUR",
             "Illegal interval literal format '-2147483648 0' for INTERVAL DAY\\(10\\) TO HOUR.*");
-        checkExpFails(
-            "INTERVAL '1 24' DAY TO ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1 24' DAY TO HOUR",
             "Illegal interval literal format '1 24' for INTERVAL DAY TO HOUR.*");
 
         // precision > maximum
@@ -2700,83 +2707,83 @@ public class SqlValidatorTest
     public void subTestIntervalDayToMinuteNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL ' :' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL ' :' DAY TO MINUTE",
             "Illegal interval literal format ' :' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1' DAY TO MINUTE",
             "Illegal interval literal format '1' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 2' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' DAY TO MINUTE",
             "Illegal interval literal format '1 2' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1:2' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY TO MINUTE",
             "Illegal interval literal format '1:2' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1.2' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' DAY TO MINUTE",
             "Illegal interval literal format '1.2' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL 'x 1:1' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL 'x 1:1' DAY TO MINUTE",
             "Illegal interval literal format 'x 1:1' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 x:1' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 x:1' DAY TO MINUTE",
             "Illegal interval literal format '1 x:1' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 1:x' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:x' DAY TO MINUTE",
             "Illegal interval literal format '1 1:x' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 1:2:3' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:2:3' DAY TO MINUTE",
             "Illegal interval literal format '1 1:2:3' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 1:1:1.2' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:1.2' DAY TO MINUTE",
             "Illegal interval literal format '1 1:1:1.2' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 1:2:3' DAY(2) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:2:3' DAY(2) TO MINUTE",
             "Illegal interval literal format '1 1:2:3' for INTERVAL DAY\\(2\\) TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 1' DAY(2) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 1' DAY(2) TO MINUTE",
             "Illegal interval literal format '1 1' for INTERVAL DAY\\(2\\) TO MINUTE");
-        checkExpFails(
-            "INTERVAL 'bogus text' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' DAY TO MINUTE",
             "Illegal interval literal format 'bogus text' for INTERVAL DAY TO MINUTE");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1 1:1' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '--1 1:1' DAY TO MINUTE",
             "Illegal interval literal format '--1 1:1' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 -1:1' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 -1:1' DAY TO MINUTE",
             "Illegal interval literal format '1 -1:1' for INTERVAL DAY TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 1:-1' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:-1' DAY TO MINUTE",
             "Illegal interval literal format '1 1:-1' for INTERVAL DAY TO MINUTE");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
         //  plus >max value for mid/end fields
-        checkExpFails(
-            "INTERVAL '100 0:0' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '100 0:0' DAY TO MINUTE",
             "Illegal interval literal format '100 0:0' for INTERVAL DAY TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '100 0:0' DAY(2) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '100 0:0' DAY(2) TO MINUTE",
             "Illegal interval literal format '100 0:0' for INTERVAL DAY\\(2\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1000 0:0' DAY(3) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1000 0:0' DAY(3) TO MINUTE",
             "Illegal interval literal format '1000 0:0' for INTERVAL DAY\\(3\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '-1000 0:0' DAY(3) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '-1000 0:0' DAY(3) TO MINUTE",
             "Illegal interval literal format '-1000 0:0' for INTERVAL DAY\\(3\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '2147483648 0:0' DAY(10) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648 0:0' DAY(10) TO MINUTE",
             "Illegal interval literal format '2147483648 0:0' for INTERVAL DAY\\(10\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '-2147483648 0:0' DAY(10) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648 0:0' DAY(10) TO MINUTE",
             "Illegal interval literal format '-2147483648 0:0' for INTERVAL DAY\\(10\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1 24:1' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 24:1' DAY TO MINUTE",
             "Illegal interval literal format '1 24:1' for INTERVAL DAY TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1 1:60' DAY TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:60' DAY TO MINUTE",
             "Illegal interval literal format '1 1:60' for INTERVAL DAY TO MINUTE.*");
 
         // precision > maximum
@@ -2802,101 +2809,101 @@ public class SqlValidatorTest
     public void subTestIntervalDayToSecondNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL ' ::' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL ' ::' DAY TO SECOND",
             "Illegal interval literal format ' ::' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL ' ::.' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL ' ::.' DAY TO SECOND",
             "Illegal interval literal format ' ::\\.' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1' DAY TO SECOND",
             "Illegal interval literal format '1' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 2' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' DAY TO SECOND",
             "Illegal interval literal format '1 2' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:2' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' DAY TO SECOND",
             "Illegal interval literal format '1:2' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1.2' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' DAY TO SECOND",
             "Illegal interval literal format '1\\.2' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:2' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' DAY TO SECOND",
             "Illegal interval literal format '1 1:2' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:2:x' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:2:x' DAY TO SECOND",
             "Illegal interval literal format '1 1:2:x' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:2:3' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:2:3' DAY TO SECOND",
             "Illegal interval literal format '1:2:3' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:1:1.2' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.2' DAY TO SECOND",
             "Illegal interval literal format '1:1:1\\.2' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:2' DAY(2) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' DAY(2) TO SECOND",
             "Illegal interval literal format '1 1:2' for INTERVAL DAY\\(2\\) TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1' DAY(2) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1' DAY(2) TO SECOND",
             "Illegal interval literal format '1 1' for INTERVAL DAY\\(2\\) TO SECOND");
-        checkExpFails(
-            "INTERVAL 'bogus text' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' DAY TO SECOND",
             "Illegal interval literal format 'bogus text' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '2345 6:7:8901' DAY TO SECOND(4^)^",
+        checkWholeExpFails(
+            "INTERVAL '2345 6:7:8901' DAY TO SECOND(4)",
             "Illegal interval literal format '2345 6:7:8901' for INTERVAL DAY TO SECOND\\(4\\)");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1 1:1:1' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '--1 1:1:1' DAY TO SECOND",
             "Illegal interval literal format '--1 1:1:1' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 -1:1:1' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 -1:1:1' DAY TO SECOND",
             "Illegal interval literal format '1 -1:1:1' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:-1:1' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:-1:1' DAY TO SECOND",
             "Illegal interval literal format '1 1:-1:1' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:1:-1' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:-1' DAY TO SECOND",
             "Illegal interval literal format '1 1:1:-1' for INTERVAL DAY TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:1:1.-1' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:1.-1' DAY TO SECOND",
             "Illegal interval literal format '1 1:1:1.-1' for INTERVAL DAY TO SECOND");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
         //  plus >max value for mid/end fields
-        checkExpFails(
-            "INTERVAL '100 0' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '100 0' DAY TO SECOND",
             "Illegal interval literal format '100 0' for INTERVAL DAY TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '100 0' DAY(2) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '100 0' DAY(2) TO SECOND",
             "Illegal interval literal format '100 0' for INTERVAL DAY\\(2\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1000 0' DAY(3) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1000 0' DAY(3) TO SECOND",
             "Illegal interval literal format '1000 0' for INTERVAL DAY\\(3\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '-1000 0' DAY(3) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '-1000 0' DAY(3) TO SECOND",
             "Illegal interval literal format '-1000 0' for INTERVAL DAY\\(3\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '2147483648 0' DAY(10) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648 0' DAY(10) TO SECOND",
             "Illegal interval literal format '2147483648 0' for INTERVAL DAY\\(10\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '-2147483648 0' DAY(10) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648 0' DAY(10) TO SECOND",
             "Illegal interval literal format '-2147483648 0' for INTERVAL DAY\\(10\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1 24:1:1' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 24:1:1' DAY TO SECOND",
             "Illegal interval literal format '1 24:1:1' for INTERVAL DAY TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1 1:60:1' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:60:1' DAY TO SECOND",
             "Illegal interval literal format '1 1:60:1' for INTERVAL DAY TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1 1:1:60' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:60' DAY TO SECOND",
             "Illegal interval literal format '1 1:1:60' for INTERVAL DAY TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1 1:1:1.0000001' DAY TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:1.0000001' DAY TO SECOND",
             "Illegal interval literal format '1 1:1:1\\.0000001' for INTERVAL DAY TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1 1:1:1.0001' DAY TO SECOND(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:1:1.0001' DAY TO SECOND(3)",
             "Illegal interval literal format '1 1:1:1\\.0001' for INTERVAL DAY TO SECOND\\(3\\).*");
 
         // precision > maximum
@@ -2928,52 +2935,52 @@ public class SqlValidatorTest
     public void subTestIntervalHourNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL '-' ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '-' HOUR",
             "Illegal interval literal format '-' for INTERVAL HOUR.*");
-        checkExpFails(
-            "INTERVAL '1-2' ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' HOUR",
             "Illegal interval literal format '1-2' for INTERVAL HOUR.*");
-        checkExpFails(
-            "INTERVAL '1.2' ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' HOUR",
             "Illegal interval literal format '1.2' for INTERVAL HOUR.*");
-        checkExpFails(
-            "INTERVAL '1 2' ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' HOUR",
             "Illegal interval literal format '1 2' for INTERVAL HOUR.*");
-        checkExpFails(
-            "INTERVAL '1:2' ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' HOUR",
             "Illegal interval literal format '1:2' for INTERVAL HOUR.*");
-        checkExpFails(
-            "INTERVAL '1-2' HOUR(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' HOUR(2)",
             "Illegal interval literal format '1-2' for INTERVAL HOUR\\(2\\)");
-        checkExpFails(
-            "INTERVAL 'bogus text' ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' HOUR",
             "Illegal interval literal format 'bogus text' for INTERVAL HOUR.*");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1' ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '--1' HOUR",
             "Illegal interval literal format '--1' for INTERVAL HOUR.*");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
-        checkExpFails(
-            "INTERVAL '100' ^HOUR^",
+        checkWholeExpFails(
+            "INTERVAL '100' HOUR",
             "Illegal interval literal format '100' for INTERVAL HOUR.*");
-        checkExpFails(
-            "INTERVAL '100' HOUR(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '100' HOUR(2)",
             "Illegal interval literal format '100' for INTERVAL HOUR\\(2\\).*");
-        checkExpFails(
-            "INTERVAL '1000' HOUR(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1000' HOUR(3)",
             "Illegal interval literal format '1000' for INTERVAL HOUR\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '-1000' HOUR(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '-1000' HOUR(3)",
             "Illegal interval literal format '-1000' for INTERVAL HOUR\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '2147483648' HOUR(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648' HOUR(10)",
             "Illegal interval literal format '2147483648' for INTERVAL HOUR\\(10\\).*");
-        checkExpFails(
-            "INTERVAL '-2147483648' HOUR(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' HOUR(10)",
             "Illegal interval literal format '-2147483648' for INTERVAL HOUR\\(10\\).*");
 
         // precision > maximum
@@ -2999,62 +3006,62 @@ public class SqlValidatorTest
     public void subTestIntervalHourToMinuteNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL ':' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL ':' HOUR TO MINUTE",
             "Illegal interval literal format ':' for INTERVAL HOUR TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1' HOUR TO MINUTE",
             "Illegal interval literal format '1' for INTERVAL HOUR TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1:x' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1:x' HOUR TO MINUTE",
             "Illegal interval literal format '1:x' for INTERVAL HOUR TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1.2' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' HOUR TO MINUTE",
             "Illegal interval literal format '1.2' for INTERVAL HOUR TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 2' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' HOUR TO MINUTE",
             "Illegal interval literal format '1 2' for INTERVAL HOUR TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1:2:3' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1:2:3' HOUR TO MINUTE",
             "Illegal interval literal format '1:2:3' for INTERVAL HOUR TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1 2' HOUR(2) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' HOUR(2) TO MINUTE",
             "Illegal interval literal format '1 2' for INTERVAL HOUR\\(2\\) TO MINUTE");
-        checkExpFails(
-            "INTERVAL 'bogus text' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' HOUR TO MINUTE",
             "Illegal interval literal format 'bogus text' for INTERVAL HOUR TO MINUTE");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1:1' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '--1:1' HOUR TO MINUTE",
             "Illegal interval literal format '--1:1' for INTERVAL HOUR TO MINUTE");
-        checkExpFails(
-            "INTERVAL '1:-1' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1:-1' HOUR TO MINUTE",
             "Illegal interval literal format '1:-1' for INTERVAL HOUR TO MINUTE");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
         //  plus >max value for mid/end fields
-        checkExpFails(
-            "INTERVAL '100:0' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '100:0' HOUR TO MINUTE",
             "Illegal interval literal format '100:0' for INTERVAL HOUR TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '100:0' HOUR(2) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '100:0' HOUR(2) TO MINUTE",
             "Illegal interval literal format '100:0' for INTERVAL HOUR\\(2\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1000:0' HOUR(3) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1000:0' HOUR(3) TO MINUTE",
             "Illegal interval literal format '1000:0' for INTERVAL HOUR\\(3\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '-1000:0' HOUR(3) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '-1000:0' HOUR(3) TO MINUTE",
             "Illegal interval literal format '-1000:0' for INTERVAL HOUR\\(3\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '2147483648:0' HOUR(10) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648:0' HOUR(10) TO MINUTE",
             "Illegal interval literal format '2147483648:0' for INTERVAL HOUR\\(10\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '-2147483648:0' HOUR(10) TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648:0' HOUR(10) TO MINUTE",
             "Illegal interval literal format '-2147483648:0' for INTERVAL HOUR\\(10\\) TO MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1:60' HOUR TO ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1:60' HOUR TO MINUTE",
             "Illegal interval literal format '1:60' for INTERVAL HOUR TO MINUTE.*");
 
         // precision > maximum
@@ -3080,95 +3087,95 @@ public class SqlValidatorTest
     public void subTestIntervalHourToSecondNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL '::' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '::' HOUR TO SECOND",
             "Illegal interval literal format '::' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '::.' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '::.' HOUR TO SECOND",
             "Illegal interval literal format '::\\.' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1' HOUR TO SECOND",
             "Illegal interval literal format '1' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 2' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' HOUR TO SECOND",
             "Illegal interval literal format '1 2' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:2' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' HOUR TO SECOND",
             "Illegal interval literal format '1:2' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1.2' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' HOUR TO SECOND",
             "Illegal interval literal format '1\\.2' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:2' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' HOUR TO SECOND",
             "Illegal interval literal format '1 1:2' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:2:x' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:2:x' HOUR TO SECOND",
             "Illegal interval literal format '1:2:x' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:x:3' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:x:3' HOUR TO SECOND",
             "Illegal interval literal format '1:x:3' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:1:1.x' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.x' HOUR TO SECOND",
             "Illegal interval literal format '1:1:1\\.x' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:2' HOUR(2) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' HOUR(2) TO SECOND",
             "Illegal interval literal format '1 1:2' for INTERVAL HOUR\\(2\\) TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1' HOUR(2) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1' HOUR(2) TO SECOND",
             "Illegal interval literal format '1 1' for INTERVAL HOUR\\(2\\) TO SECOND");
-        checkExpFails(
-            "INTERVAL 'bogus text' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' HOUR TO SECOND",
             "Illegal interval literal format 'bogus text' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '6:7:8901' HOUR TO SECOND(4^)^",
+        checkWholeExpFails(
+            "INTERVAL '6:7:8901' HOUR TO SECOND(4)",
             "Illegal interval literal format '6:7:8901' for INTERVAL HOUR TO SECOND\\(4\\)");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1:1:1' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '--1:1:1' HOUR TO SECOND",
             "Illegal interval literal format '--1:1:1' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:-1:1' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:-1:1' HOUR TO SECOND",
             "Illegal interval literal format '1:-1:1' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:1:-1' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:1:-1' HOUR TO SECOND",
             "Illegal interval literal format '1:1:-1' for INTERVAL HOUR TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:1:1.-1' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.-1' HOUR TO SECOND",
             "Illegal interval literal format '1:1:1\\.-1' for INTERVAL HOUR TO SECOND");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
         //  plus >max value for mid/end fields
-        checkExpFails(
-            "INTERVAL '100:0:0' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '100:0:0' HOUR TO SECOND",
             "Illegal interval literal format '100:0:0' for INTERVAL HOUR TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '100:0:0' HOUR(2) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '100:0:0' HOUR(2) TO SECOND",
             "Illegal interval literal format '100:0:0' for INTERVAL HOUR\\(2\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1000:0:0' HOUR(3) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1000:0:0' HOUR(3) TO SECOND",
             "Illegal interval literal format '1000:0:0' for INTERVAL HOUR\\(3\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '-1000:0:0' HOUR(3) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '-1000:0:0' HOUR(3) TO SECOND",
             "Illegal interval literal format '-1000:0:0' for INTERVAL HOUR\\(3\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '2147483648:0:0' HOUR(10) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648:0:0' HOUR(10) TO SECOND",
             "Illegal interval literal format '2147483648:0:0' for INTERVAL HOUR\\(10\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '-2147483648:0:0' HOUR(10) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648:0:0' HOUR(10) TO SECOND",
             "Illegal interval literal format '-2147483648:0:0' for INTERVAL HOUR\\(10\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1:60:1' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:60:1' HOUR TO SECOND",
             "Illegal interval literal format '1:60:1' for INTERVAL HOUR TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1:1:60' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:1:60' HOUR TO SECOND",
             "Illegal interval literal format '1:1:60' for INTERVAL HOUR TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1:1:1.0000001' HOUR TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.0000001' HOUR TO SECOND",
             "Illegal interval literal format '1:1:1\\.0000001' for INTERVAL HOUR TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1:1:1.0001' HOUR TO SECOND(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.0001' HOUR TO SECOND(3)",
             "Illegal interval literal format '1:1:1\\.0001' for INTERVAL HOUR TO SECOND\\(3\\).*");
 
         // precision > maximum
@@ -3200,52 +3207,52 @@ public class SqlValidatorTest
     public void subTestIntervalMinuteNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL '-' ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '-' MINUTE",
             "Illegal interval literal format '-' for INTERVAL MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1-2' ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' MINUTE",
             "Illegal interval literal format '1-2' for INTERVAL MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1.2' ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' MINUTE",
             "Illegal interval literal format '1.2' for INTERVAL MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1 2' ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' MINUTE",
             "Illegal interval literal format '1 2' for INTERVAL MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1:2' ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' MINUTE",
             "Illegal interval literal format '1:2' for INTERVAL MINUTE.*");
-        checkExpFails(
-            "INTERVAL '1-2' MINUTE(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' MINUTE(2)",
             "Illegal interval literal format '1-2' for INTERVAL MINUTE\\(2\\)");
-        checkExpFails(
-            "INTERVAL 'bogus text' ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' MINUTE",
             "Illegal interval literal format 'bogus text' for INTERVAL MINUTE.*");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1' ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '--1' MINUTE",
             "Illegal interval literal format '--1' for INTERVAL MINUTE.*");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
-        checkExpFails(
-            "INTERVAL '100' ^MINUTE^",
+        checkWholeExpFails(
+            "INTERVAL '100' MINUTE",
             "Illegal interval literal format '100' for INTERVAL MINUTE.*");
-        checkExpFails(
-            "INTERVAL '100' MINUTE(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '100' MINUTE(2)",
             "Illegal interval literal format '100' for INTERVAL MINUTE\\(2\\).*");
-        checkExpFails(
-            "INTERVAL '1000' MINUTE(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1000' MINUTE(3)",
             "Illegal interval literal format '1000' for INTERVAL MINUTE\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '-1000' MINUTE(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '-1000' MINUTE(3)",
             "Illegal interval literal format '-1000' for INTERVAL MINUTE\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '2147483648' MINUTE(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648' MINUTE(10)",
             "Illegal interval literal format '2147483648' for INTERVAL MINUTE\\(10\\).*");
-        checkExpFails(
-            "INTERVAL '-2147483648' MINUTE(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' MINUTE(10)",
             "Illegal interval literal format '-2147483648' for INTERVAL MINUTE\\(10\\).*");
 
         // precision > maximum
@@ -3271,94 +3278,94 @@ public class SqlValidatorTest
     public void subTestIntervalMinuteToSecondNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL ':' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL ':' MINUTE TO SECOND",
             "Illegal interval literal format ':' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL ':.' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL ':.' MINUTE TO SECOND",
             "Illegal interval literal format ':\\.' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '1' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1' MINUTE TO SECOND",
             "Illegal interval literal format '1' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 2' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' MINUTE TO SECOND",
             "Illegal interval literal format '1 2' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '1.2' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1.2' MINUTE TO SECOND",
             "Illegal interval literal format '1\\.2' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:2' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' MINUTE TO SECOND",
             "Illegal interval literal format '1 1:2' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:x' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:x' MINUTE TO SECOND",
             "Illegal interval literal format '1:x' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL 'x:3' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL 'x:3' MINUTE TO SECOND",
             "Illegal interval literal format 'x:3' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:1.x' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:1.x' MINUTE TO SECOND",
             "Illegal interval literal format '1:1\\.x' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1:2' MINUTE(2) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1:2' MINUTE(2) TO SECOND",
             "Illegal interval literal format '1 1:2' for INTERVAL MINUTE\\(2\\) TO SECOND");
-        checkExpFails(
-            "INTERVAL '1 1' MINUTE(2) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 1' MINUTE(2) TO SECOND",
             "Illegal interval literal format '1 1' for INTERVAL MINUTE\\(2\\) TO SECOND");
-        checkExpFails(
-            "INTERVAL 'bogus text' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' MINUTE TO SECOND",
             "Illegal interval literal format 'bogus text' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '7:8901' MINUTE TO SECOND(4^)^",
+        checkWholeExpFails(
+            "INTERVAL '7:8901' MINUTE TO SECOND(4)",
             "Illegal interval literal format '7:8901' for INTERVAL MINUTE TO SECOND\\(4\\)");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1:1' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '--1:1' MINUTE TO SECOND",
             "Illegal interval literal format '--1:1' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:-1' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:-1' MINUTE TO SECOND",
             "Illegal interval literal format '1:-1' for INTERVAL MINUTE TO SECOND");
-        checkExpFails(
-            "INTERVAL '1:1.-1' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:1.-1' MINUTE TO SECOND",
             "Illegal interval literal format '1:1.-1' for INTERVAL MINUTE TO SECOND");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
         //  plus >max value for mid/end fields
-        checkExpFails(
-            "INTERVAL '100:0' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '100:0' MINUTE TO SECOND",
             "Illegal interval literal format '100:0' for"
             + " INTERVAL MINUTE TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '100:0' MINUTE(2) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '100:0' MINUTE(2) TO SECOND",
             "Illegal interval literal format '100:0' for"
             + " INTERVAL MINUTE\\(2\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1000:0' MINUTE(3) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1000:0' MINUTE(3) TO SECOND",
             "Illegal interval literal format '1000:0' for"
             + " INTERVAL MINUTE\\(3\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '-1000:0' MINUTE(3) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '-1000:0' MINUTE(3) TO SECOND",
             "Illegal interval literal format '-1000:0' for"
             + " INTERVAL MINUTE\\(3\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '2147483648:0' MINUTE(10) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648:0' MINUTE(10) TO SECOND",
             "Illegal interval literal format '2147483648:0' for"
             + " INTERVAL MINUTE\\(10\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '-2147483648:0' MINUTE(10) TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648:0' MINUTE(10) TO SECOND",
             "Illegal interval literal format '-2147483648:0' for"
             + " INTERVAL MINUTE\\(10\\) TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1:60' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:60' MINUTE TO SECOND",
             "Illegal interval literal format '1:60' for"
             + " INTERVAL MINUTE TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1:1.0000001' MINUTE TO ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:1.0000001' MINUTE TO SECOND",
             "Illegal interval literal format '1:1\\.0000001' for"
             + " INTERVAL MINUTE TO SECOND.*");
-        checkExpFails(
-            "INTERVAL '1:1:1.0001' MINUTE TO SECOND(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1:1:1.0001' MINUTE TO SECOND(3)",
             "Illegal interval literal format '1:1:1\\.0001' for"
             + " INTERVAL MINUTE TO SECOND\\(3\\).*");
 
@@ -3395,75 +3402,75 @@ public class SqlValidatorTest
     public void subTestIntervalSecondNegative()
     {
         // Qualifier - field mismatches
-        checkExpFails(
-            "INTERVAL ':' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL ':' SECOND",
             "Illegal interval literal format ':' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL '.' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '.' SECOND",
             "Illegal interval literal format '\\.' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL '1-2' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' SECOND",
             "Illegal interval literal format '1-2' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL '1.x' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1.x' SECOND",
             "Illegal interval literal format '1\\.x' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL 'x.1' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL 'x.1' SECOND",
             "Illegal interval literal format 'x\\.1' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL '1 2' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1 2' SECOND",
             "Illegal interval literal format '1 2' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL '1:2' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1:2' SECOND",
             "Illegal interval literal format '1:2' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL '1-2' SECOND(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '1-2' SECOND(2)",
             "Illegal interval literal format '1-2' for INTERVAL SECOND\\(2\\)");
-        checkExpFails(
-            "INTERVAL 'bogus text' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL 'bogus text' SECOND",
             "Illegal interval literal format 'bogus text' for INTERVAL SECOND.*");
 
         // negative field values
-        checkExpFails(
-            "INTERVAL '--1' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '--1' SECOND",
             "Illegal interval literal format '--1' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL '1.-1' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1.-1' SECOND",
             "Illegal interval literal format '1.-1' for INTERVAL SECOND.*");
 
         // Field value out of range
         //  (default, explicit default, alt, neg alt, max, neg max)
-        checkExpFails(
-            "INTERVAL '100' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '100' SECOND",
             "Illegal interval literal format '100' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL '100' SECOND(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '100' SECOND(2)",
             "Illegal interval literal format '100' for INTERVAL SECOND\\(2\\).*");
-        checkExpFails(
-            "INTERVAL '1000' SECOND(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1000' SECOND(3)",
             "Illegal interval literal format '1000' for INTERVAL SECOND\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '-1000' SECOND(3^)^",
+        checkWholeExpFails(
+            "INTERVAL '-1000' SECOND(3)",
             "Illegal interval literal format '-1000' for INTERVAL SECOND\\(3\\).*");
-        checkExpFails(
-            "INTERVAL '2147483648' SECOND(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '2147483648' SECOND(10)",
             "Illegal interval literal format '2147483648' for"
             + " INTERVAL SECOND\\(10\\).*");
-        checkExpFails(
-            "INTERVAL '-2147483648' SECOND(10^)^",
+        checkWholeExpFails(
+            "INTERVAL '-2147483648' SECOND(10)",
             "Illegal interval literal format '-2147483648' for"
             + " INTERVAL SECOND\\(10\\).*");
-        checkExpFails(
-            "INTERVAL '1.0000001' ^SECOND^",
+        checkWholeExpFails(
+            "INTERVAL '1.0000001' SECOND",
             "Illegal interval literal format '1\\.0000001' for INTERVAL SECOND.*");
-        checkExpFails(
-            "INTERVAL '1.0000001' SECOND(2^)^",
+        checkWholeExpFails(
+            "INTERVAL '1.0000001' SECOND(2)",
             "Illegal interval literal format '1\\.0000001' for INTERVAL SECOND\\(2\\).*");
-        checkExpFails(
-            "INTERVAL '1.0001' SECOND(2, 3^)^",
+        checkWholeExpFails(
+            "INTERVAL '1.0001' SECOND(2, 3)",
             "Illegal interval literal format '1\\.0001' for INTERVAL SECOND\\(2, 3\\).*");
-        checkExpFails(
-            "INTERVAL '1.0000000001' SECOND(2, 9^)^",
+        checkWholeExpFails(
+            "INTERVAL '1.0000000001' SECOND(2, 9)",
             "Illegal interval literal format '1\\.0000000001' for"
             + " INTERVAL SECOND\\(2, 9\\).*");
 
@@ -3601,16 +3608,16 @@ public class SqlValidatorTest
         checkExpType(
             "interval '1' month - interval '1' year",
             "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpFails(
+        checkWholeExpFails(
             "interval '1' year + interval '1' day",
             "(?s).*Cannot apply '\\+' to arguments of type '<INTERVAL YEAR> \\+ <INTERVAL DAY>'.*");
-        checkExpFails(
+        checkWholeExpFails(
             "interval '1' month + interval '1' second",
             "(?s).*Cannot apply '\\+' to arguments of type '<INTERVAL MONTH> \\+ <INTERVAL SECOND>'.*");
-        checkExpFails(
+        checkWholeExpFails(
             "interval '1' year - interval '1' day",
             "(?s).*Cannot apply '-' to arguments of type '<INTERVAL YEAR> - <INTERVAL DAY>'.*");
-        checkExpFails(
+        checkWholeExpFails(
             "interval '1' month - interval '1' second",
             "(?s).*Cannot apply '-' to arguments of type '<INTERVAL MONTH> - <INTERVAL SECOND>'.*");
 
@@ -3630,8 +3637,8 @@ public class SqlValidatorTest
         checkExpType(
             "interval '1-2' year TO month / 0.1e-9",
             "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpFails(
-            "1.234/interval '1 1:2:3' day to second ",
+        checkWholeExpFails(
+            "1.234/interval '1 1:2:3' day to second",
             "(?s).*Cannot apply '/' to arguments of type '<DECIMAL.4, 3.> / <INTERVAL DAY TO SECOND>'.*");
     }
 
@@ -4112,12 +4119,12 @@ public class SqlValidatorTest
         checkWinFuncExp(
             "sum(sal) over ("
             + "order by deptno "
-            + "RANGE BETWEEN INTERVAL '1' ^SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
+            + "RANGE BETWEEN ^INTERVAL '1' SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
             "Data Type mismatch between ORDER BY and RANGE clause");
         checkWinFuncExp(
             "sum(sal) over ("
             + "order by empno "
-            + "RANGE BETWEEN INTERVAL '1' ^SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
+            + "RANGE BETWEEN ^INTERVAL '1' SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
             "Data Type mismatch between ORDER BY and RANGE clause");
         checkWinFuncExp(
             "sum(sal) over (order by deptno, empno ^range^ 2 preceding)",
@@ -4140,7 +4147,7 @@ public class SqlValidatorTest
         checkWinFuncExp("sum(sal) over (partition by empno + deptno order by empno range 5 preceding)",
             null);
 
-        checkWinFuncExp("sum(sal) over (partition by empno + ename order by empno range 5 preceding)",
+        checkWinFuncExp("sum(sal) over (partition by ^empno + ename^ order by empno range 5 preceding)",
             "(?s)Cannot apply '\\+' to arguments of type '<INTEGER> \\+ <VARCHAR\\(20\\)>'.*");
     }
 
@@ -4169,7 +4176,7 @@ public class SqlValidatorTest
         // a)
         // missing window order clause.
         checkWinClauseExp(
-            "window w as (range 100 preceding)",
+            "window w as ^(range 100 preceding)^",
             "Window specification must contain an ORDER BY clause");
 
         // order by number
@@ -4179,12 +4186,12 @@ public class SqlValidatorTest
 
         // order by date
         checkWinClauseExp(
-            "window w as (order by hiredate range 100 preceding)",
+            "window w as (order by hiredate range ^100^ preceding)",
             "Data Type mismatch between ORDER BY and RANGE clause");
 
         // order by string, should fail
         checkWinClauseExp(
-            "window w as (order by ename range 100 preceding)",
+            "window w as (order by ename range ^100^ preceding)",
             "Data type of ORDER BY prohibits use of RANGE clause");
         // todo: interval test ???
 
@@ -4319,7 +4326,7 @@ public class SqlValidatorTest
         checkWinClauseExp(
             "window\n"
             + "w  as (partition by deptno order by empno rows 2 preceding),\n"
-            + "w2 as (partition by deptno order by empno rows 2 preceding)\n",
+            + "w2 as ^(partition by deptno order by empno rows 2 preceding)^\n",
             "Duplicate window specification not allowed in the same window clause");
     }
 
@@ -4557,6 +4564,21 @@ public class SqlValidatorTest
             "Unknown identifier 'EMPNO'");
     }
 
+    public void testAsColumnList()
+    {
+        check("select d.a, b from dept as d(a, b)");
+        checkFails("select d.^deptno^ from dept as d(a, b)",
+            "(?s).*Column 'DEPTNO' not found in table 'D'.*");
+        checkFails("select 1 from dept as d(^a^, b, c)",
+            "(?s).*List of column aliases must have same degree as table; " +
+                "table has 2 columns \\('DEPTNO', 'NAME'\\), " +
+                "whereas alias list has 3 columns.*");
+        checkResultType("select * from dept as d(a, b)",
+            "RecordType(INTEGER NOT NULL A, VARCHAR(10) NOT NULL B) NOT NULL");
+        checkResultType("select * from (values ('a', 1), ('bc', 2)) t (a, b)",
+            "RecordType(CHAR(2) NOT NULL A, INTEGER NOT NULL B) NOT NULL");
+    }
+
     // todo: implement IN
     public void _testAmbiguousColumnInIn()
     {
@@ -4581,7 +4603,7 @@ public class SqlValidatorTest
         check(
             "select * from emp where empno in (10 + deptno, cast(null as integer))");
         checkFails(
-            "select * from emp where empno ^in (10, '20')^",
+            "select * from emp where empno in ^(10, '20')^",
             ERR_IN_VALUES_INCOMPATIBLE);
 
         checkExpType("1 in (2, 3, 4)", "BOOLEAN NOT NULL");
@@ -4605,9 +4627,9 @@ public class SqlValidatorTest
             "select empno in (1, nullif(empno,empno), 2) from emp",
             "BOOLEAN");
 
-        checkExpFails("1 in (2, 'c')",
+        checkExpFails("1 in ^(2, 'c')^",
             ERR_IN_VALUES_INCOMPATIBLE);
-        checkExpFails("1 in ((2), (3,4))",
+        checkExpFails("1 in ^((2), (3,4))^",
             ERR_IN_VALUES_INCOMPATIBLE);
         checkExpFails(
             "false and ^1 in ('b', 'c')^",
@@ -4624,9 +4646,12 @@ public class SqlValidatorTest
             "select * from emp where (empno,deptno)"
             + " in (select deptno,deptno from dept)");
 
+        // NOTE: jhyde: The closing caret should be one character to the right 
+        // ("dept)^"), but it's difficult to achieve, because parentheses are
+        // discarded during the parsing process.
         checkFails(
-            "select * from emp where deptno in "
-            + "(select deptno,deptno from dept)",
+            "select * from emp where ^deptno in "
+            + "(select deptno,deptno from dept^)",
             "Values passed to IN operator must have compatible types");
     }
 
@@ -5114,7 +5139,7 @@ public class SqlValidatorTest
             "select empno, sal from emp "
             + "union all "
             + "select deptno, deptno from dept "
-            + "order by asc",
+            + "order by ^asc^",
             "Column 'ASC' not found in any table");
 
         // name belongs to emp but is not projected so cannot sort on it
@@ -5122,7 +5147,7 @@ public class SqlValidatorTest
             "select empno, sal from emp "
             + "union all "
             + "select deptno, deptno from dept "
-            + "order by ename desc",
+            + "order by ^ename^ desc",
             "Column 'ENAME' not found in any table");
 
         // empno is not an alias in the first select in the union
@@ -5451,10 +5476,10 @@ public class SqlValidatorTest
             "interval '1' year >= interval '1' month",
             "BOOLEAN NOT NULL");
 
-        checkExpFails(
+        checkWholeExpFails(
             "interval '1' second >= interval '1' year",
             "(?s).*Cannot apply '>=' to arguments of type '<INTERVAL SECOND> >= <INTERVAL YEAR>'.*");
-        checkExpFails(
+        checkWholeExpFails(
             "interval '1' month = interval '1' day",
             "(?s).*Cannot apply '=' to arguments of type '<INTERVAL MONTH> = <INTERVAL DAY>'.*");
     }
@@ -5471,13 +5496,13 @@ public class SqlValidatorTest
         checkExp(
             "(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (timestamp '1-2-3 4:5:6', interval '1 2:3:4.5' day to second)");
 
-        checkExpFails(
+        checkWholeExpFails(
             "(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)",
             "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIMESTAMP>, <TIMESTAMP>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.*");
-        checkExpFails(
+        checkWholeExpFails(
             "(time '4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)",
             "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIMESTAMP>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.'.*");
-        checkExpFails(
+        checkWholeExpFails(
             "(time '4:5:6', time '4:5:6' ) overlaps (time '4:5:6', date '1-2-3')",
             "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIME.0.>. OVERLAPS .<TIME.0.>, <DATE>.'.*");
     }
@@ -5491,10 +5516,10 @@ public class SqlValidatorTest
             "BIGINT NOT NULL");
         checkExp("extract(minute from interval '1.1' second)");
 
-        checkExpFails(
+        checkWholeExpFails(
             "extract(minute from interval '11' month)",
             "(?s).*Cannot apply.*");
-        checkExpFails(
+        checkWholeExpFails(
             "extract(year from interval '11' second)",
             "(?s).*Cannot apply.*");
     }
@@ -5520,10 +5545,10 @@ public class SqlValidatorTest
             "cast(interval '1:1' hour to minute as interval minute to second)",
             "INTERVAL MINUTE TO SECOND NOT NULL");
 
-        checkExpFails(
+        checkWholeExpFails(
             "cast(interval '1:1' hour to minute as interval month)",
             "Cast function cannot convert value of type INTERVAL HOUR TO MINUTE to type INTERVAL MONTH");
-        checkExpFails(
+        checkWholeExpFails(
             "cast(interval '1-1' year to month as interval second)",
             "Cast function cannot convert value of type INTERVAL YEAR TO MONTH to type INTERVAL SECOND");
     }
@@ -5536,7 +5561,7 @@ public class SqlValidatorTest
         checkExpType(
             "(CURRENT_DATE - CURRENT_DATE) YEAR TO MONTH",
             "INTERVAL YEAR TO MONTH NOT NULL");
-        checkExpFails(
+        checkWholeExpFails(
             "(CURRENT_DATE - LOCALTIME) YEAR TO MONTH",
             "(?s).*Parameters must be of the same type.*");
     }
@@ -5584,7 +5609,7 @@ public class SqlValidatorTest
             "select*from unnest(multiset['1','22','333','22'])",
             "CHAR(3) NOT NULL");
         checkFails(
-            "select*from unnest(1)",
+            "select*from ^unnest(1)^",
             "(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.'.*");
         check("select*from unnest(multiset(select*from dept))");
     }
@@ -5619,7 +5644,7 @@ public class SqlValidatorTest
     public void testLateral()
     {
         checkFails(
-            "select * from emp, (select * from dept where emp.deptno=dept.deptno)",
+            "select * from emp, (select * from dept where ^emp^.deptno=dept.deptno)",
             "Table 'EMP' not found");
 
         check(
@@ -5642,7 +5667,7 @@ public class SqlValidatorTest
     public void testFusion()
     {
         checkFails(
-            "select fusion(deptno) from emp",
+            "select ^fusion(deptno)^ from emp",
             "(?s).*Cannot apply 'FUSION' to arguments of type 'FUSION.<INTEGER>.'.*");
         check("select fusion(multiset[3]) from emp");
         // todo. FUSION is an aggregate function. test that validator only can
@@ -5762,7 +5787,7 @@ public class SqlValidatorTest
     {
         check("SELECT  ename,(select name from dept where deptno=1) FROM emp");
         checkFails(
-            "SELECT ename,(select losal, ^hisal^ from salgrade where grade=1) FROM emp",
+            "SELECT ename,(^select losal, hisal from salgrade where grade=1^) FROM emp",
             "Cannot apply '\\$SCALAR_QUERY' to arguments of type '\\$SCALAR_QUERY\\(<RECORDTYPE\\(INTEGER LOSAL, INTEGER HISAL\\)>\\)'\\. Supported form\\(s\\): '\\$SCALAR_QUERY\\(<RECORDTYPE\\(SINGLE FIELD\\)>\\)'");
 
         // Note that X is a field (not a record) and is nullable even though

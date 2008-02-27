@@ -257,12 +257,32 @@ public abstract class SqlOperator
      *
      * <p>The position of the resulting call is the union of the <code>
      * pos</code> and the positions of all of the operands.
+     *
+     * @param pos Parser position
+     * @param operands List of arguments
+     * @return call to this operator
      */
     public final SqlCall createCall(
         SqlParserPos pos,
         SqlNode ... operands)
     {
         return createCall(null, pos, operands);
+    }
+
+    /**
+     * Creates a call to this operand with a list of operands contained in a
+     * {@link SqlNodeList}.
+     *
+     * <p>The position of the resulting call inferred from the SqlNodeList.
+     * 
+     * @param nodeList List of arguments
+     * @return call to this operator
+     */
+    public final SqlCall createCall(
+        SqlNodeList nodeList)
+    {
+        return createCall(
+            null, nodeList.getParserPosition(), nodeList.toArray());
     }
 
     /**

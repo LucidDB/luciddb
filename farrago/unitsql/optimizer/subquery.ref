@@ -765,7 +765,7 @@ Error: Scalar query returned more than one row (state=,code=0)
 > -- this should report validation error
 > explain plan without implementation for
 > select name, (select * from depts) from emps;
-Error: At line 2, column 22: Cannot apply '$SCALAR_QUERY' to arguments of type '$SCALAR_QUERY(<RECORDTYPE(INTEGER DEPTNO, VARCHAR(128) NAME)>)'. Supported form(s): '$SCALAR_QUERY(<RECORDTYPE(SINGLE FIELD)>)' (state=,code=0)
+Error: From line 2, column 15 to line 2, column 33: Cannot apply '$SCALAR_QUERY' to arguments of type '$SCALAR_QUERY(<RECORDTYPE(INTEGER DEPTNO, VARCHAR(128) NAME)>)'. Supported form(s): '$SCALAR_QUERY(<RECORDTYPE(SINGLE FIELD)>)' (state=,code=0)
 > 
 > -- check that scalar subquery type inference is correct
 > create table s (a int);
@@ -920,7 +920,7 @@ Error: Scalar query returned more than one row (state=,code=0)
 > explain plan without implementation for
 > select * from emps
 > where deptno = (select * from depts);
-Error: At line 3, column 24: Cannot apply '$SCALAR_QUERY' to arguments of type '$SCALAR_QUERY(<RECORDTYPE(INTEGER DEPTNO, VARCHAR(128) NAME)>)'. Supported form(s): '$SCALAR_QUERY(<RECORDTYPE(SINGLE FIELD)>)' (state=,code=0)
+Error: From line 3, column 17 to line 3, column 35: Cannot apply '$SCALAR_QUERY' to arguments of type '$SCALAR_QUERY(<RECORDTYPE(INTEGER DEPTNO, VARCHAR(128) NAME)>)'. Supported form(s): '$SCALAR_QUERY(<RECORDTYPE(SINGLE FIELD)>)' (state=,code=0)
 > 
 > -- 3.4 correlated scalar subquery in where clause:
 > -- 
@@ -1168,7 +1168,7 @@ Error: Scalar query returned more than one row (state=,code=0)
 > select deptno, sum((select * from emps2))
 > from emps
 > group by deptno;
-Error: At line 2, column 28: Cannot apply '$SCALAR_QUERY' to arguments of type '$SCALAR_QUERY(<RECORDTYPE(INTEGER DEPTNO, VARCHAR(20) NAME)>)'. Supported form(s): '$SCALAR_QUERY(<RECORDTYPE(SINGLE FIELD)>)' (state=,code=0)
+Error: From line 2, column 21 to line 2, column 39: Cannot apply '$SCALAR_QUERY' to arguments of type '$SCALAR_QUERY(<RECORDTYPE(INTEGER DEPTNO, VARCHAR(20) NAME)>)'. Supported form(s): '$SCALAR_QUERY(<RECORDTYPE(SINGLE FIELD)>)' (state=,code=0)
 > 
 > -- Aggregate over window functions
 > explain plan without implementation for

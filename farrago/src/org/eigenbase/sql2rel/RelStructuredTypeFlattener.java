@@ -76,6 +76,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class RelStructuredTypeFlattener
+    implements ReflectiveVisitor
 {
     //~ Instance fields --------------------------------------------------------
 
@@ -717,6 +718,11 @@ public class RelStructuredTypeFlattener
     private class RewriteRelVisitor
         extends RelVisitor
     {
+        private final ReflectiveVisitDispatcher<
+            RelStructuredTypeFlattener,RelNode> dispatcher =
+            ReflectUtil.createDispatcher(
+                RelStructuredTypeFlattener.class, RelNode.class);
+
         // implement RelVisitor
         public void visit(RelNode p, int ordinal, RelNode parent)
         {
@@ -726,10 +732,9 @@ public class RelStructuredTypeFlattener
             currentRel = p;
             final String visitMethodName = "rewriteRel";
             boolean found =
-                ReflectUtil.invokeVisitor(
+                dispatcher.invokeVisitor(
                     RelStructuredTypeFlattener.this,
                     currentRel,
-                    RelNode.class,
                     visitMethodName);
             currentRel = null;
             if (!found) {

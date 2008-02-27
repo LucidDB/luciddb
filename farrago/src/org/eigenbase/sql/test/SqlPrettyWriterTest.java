@@ -353,21 +353,34 @@ public class SqlPrettyWriterTest
             "${formatted}");
     }
 
-    public void testWhereListItemsOnSeparateLines()
+    public void testWhereListItemsOnSeparateLinesOr()
         throws Exception
+    {
+        checkPrettySeparateLines("select x"
+            + " from y"
+            + " where h is not null and i < j"
+            + " or ((a or b) is true) and d not in (f,g)"
+            + " or x <> z");
+    }
+
+    public void testWhereListItemsOnSeparateLinesAnd()
+        throws Exception
+    {
+        checkPrettySeparateLines("select x"
+            + " from y"
+            + " where h is not null and (i < j"
+            + " or ((a or b) is true)) and (d not in (f,g)"
+            + " or v <> ((w * x) + y) * z)");
+    }
+
+    private void checkPrettySeparateLines(String sql)
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
         prettyWriter.setSelectListItemsOnSeparateLines(true);
         prettyWriter.setSelectListExtraIndentFlag(false);
 
-        final SqlNode node =
-            parseQuery(
-                "select x"
-                + " from y"
-                + " where h is not null and i < j"
-                + " or ((a or b) is true) and d not in (f,g)"
-                + " or x <> z");
+        final SqlNode node = parseQuery(sql);
 
         // Describe settings
         final StringWriter sw = new StringWriter();
@@ -384,4 +397,4 @@ public class SqlPrettyWriterTest
     }
 }
 
-//End SqlPrettyWriterTest.java
+// End SqlPrettyWriterTest.java

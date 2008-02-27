@@ -207,6 +207,47 @@ public abstract class RelOptRule
     }
 
     /**
+     * Returns whether this rule could possibly match the given operands.
+     *
+     * <p> This method is an opportunity to apply side-conditions to a rule.
+     * The {@link RelOptPlanner} calls this method after matching all
+     * operands of the rule, and before calling
+     * {@link #onMatch(RelOptRuleCall)}.
+     *
+     * <p>In implementations of {@link RelOptPlanner} which may queue up a
+     * matched {@link RelOptRuleCall} for a long time before calling
+     * {@link #onMatch(RelOptRuleCall)}, this method is beneficial because it
+     * allows the planner to discard rules earlier in the process.
+     *
+     * <p>The default implementation of this method returns <code>true</code>.
+     * It is acceptable for any implementation of this method to give a false
+     * positives, that is, to say that the rule matches the operands but have
+     * {@link #onMatch(RelOptRuleCall)} subsequently not generate any
+     * successors.
+     *
+     * <p>The following script is useful to identify rules which commonly
+     * produce no successors. You should override this method for these rules:
+     * <blockquote><pre><code>awk '
+     * /Apply rule/ {rule=$4; ruleCount[rule]++;}
+     * /generated 0 successors/ {ruleMiss[rule]++;}
+     * END {
+     *   printf "%-30s %s %s\n", "Rule", "Fire", "Miss";
+     *   for (i in ruleCount) {
+     *     printf "%-30s %5d %5d\n", i, ruleCount[i], ruleMiss[i];
+     *   }
+     * } ' FarragoTrace.log</code></pre></blockquote>
+     *
+     *
+     * @param call Rule call which has been determined to match all operands
+     *   of this rule
+     * @return whether this RelOptRule matches a given RelOptRuleCall
+     */
+    public boolean matches(RelOptRuleCall call)
+    {
+        return true;
+    }
+
+    /**
      * Receives notification about a rule match. At the time that this method is
      * called, {@link RelOptRuleCall#rels call.rels} holds the set of relational
      * expressions which match the operands to the rule; <code>
@@ -215,6 +256,11 @@ public abstract class RelOptRule
      * <p>Typically a rule would check that the nodes are valid matches, creates
      * a new expression, then calls back {@link RelOptRuleCall#transformTo} to
      * register the expression.</p>
+     *
+     * @see #matches(RelOptRuleCall)
+     * @pre matches(call)
+     *
+     * @param call Rule call
      */
     public abstract void onMatch(RelOptRuleCall call);
 
@@ -228,25 +274,12 @@ public abstract class RelOptRule
     }
 
     /**
-     * Returns the set of traits of the result of firing this rule. An empty
-     * RelTraitSet is returned if the results are not known.
+     * Returns the trait which will be modified as a result of firing this
+     * rule, or null if the rule is not a converter rule.
      */
-    public RelTraitSet getOutTraits()
+    public RelTrait getOutTrait()
     {
-        // REVIEW: SZ: 2/17/05: Lazy initialization here.  Some RelOptRule
-        // implementations accept their "OutConvention" as a parameter to
-        // their constructor.  If we did this in the constructor, we'd get the
-        // wrong CallingConvention.  In the future, we could require that
-        // the CallingConvention be passed to RelOptRule's constructor.
-        if (traits == null) {
-            traits = new RelTraitSet(new RelTrait[] { getOutConvention() });
-        }
-
-        // Changing the CallingConvention RelTrait via RelTraitSet.setTrait
-        // is not supported!
-        assert (getOutConvention() == traits.getTrait(0));
-
-        return traits;
+        return null;
     }
 
     public String toString()

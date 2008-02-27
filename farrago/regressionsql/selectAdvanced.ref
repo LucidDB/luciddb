@@ -141,13 +141,13 @@
 > 
 > -- fails
 > values cast(null as boolean) + cast(null as integer);
-Error: From line 1, column 13 to line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
+Error: From line 1, column 8 to line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
 '<DATETIME_INTERVAL> + <DATETIME_INTERVAL>'
 '<DATETIME> + <DATETIME_INTERVAL>'
 '<DATETIME_INTERVAL> + <DATETIME>' (state=,code=0)
 > -- fails
 > values cast(null as boolean) and 1;
-Error: From line 1, column 13 to line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
 > 
 > -- OK - some of these test fail due to cast issues but shouldnt
 > --values cast(null as tinyint)+1;
@@ -179,7 +179,7 @@ Error: From line 1, column 13 to line 1, column 34: Cannot apply 'AND' to argume
 | -6      |
 +---------+
 > values cast(1 as varbinary(1))+x'ff';
-Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (state=,code=0)
+Error: From line 1, column 8 to line 1, column 30: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (state=,code=0)
 > values x'ff'=x'ff';
 +---------+
 | EXPR$0  |
@@ -354,7 +354,7 @@ Messages:
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
 '          FennelAggRel(groupCount=[0], C=[COUNT(0)])'
-'            FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'            LhxAggRel(groupCount=[1])'
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > !set outputformat table

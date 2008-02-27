@@ -3,13 +3,18 @@
 
 set schema 'sales';
 
+--------------------------
+-- Test Sort Aggregates --
+--------------------------
+alter session implementation set default;
+
+-- for first portion, prevent usage of hash agg so that we can
+-- test sort-based agg instead
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter('LhxAggRule');
+
 -- force usage of Fennel calculator
 alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 
---------------------------
--- Test Sort Aggreagtes --
---------------------------
-alter session implementation set default;
 !set outputformat table
 
 select count(*) from depts;
@@ -98,10 +103,11 @@ explain plan for
 select sum(age) from emps group by deptno;
 
 --------------------------
--- Test Hash Aggreagtes --
+-- Test Hash Aggregates --
 --------------------------
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 call sys_boot.mgmt.flush_code_cache();
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(null);
 alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 !set outputformat table
@@ -112,7 +118,7 @@ alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 select deptno, count(*) from emps group by deptno order by 1;
 
--- Issue the same statement again to make sure SortedAggStream
+-- Issue the same statement again to make sure AggStream
 -- is in good state when reopened
 select deptno, count(*) from emps group by deptno order by 1;
 

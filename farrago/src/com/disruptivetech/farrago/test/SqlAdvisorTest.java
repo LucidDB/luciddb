@@ -633,6 +633,11 @@ public class SqlAdvisorTest
             getSelectKeywords(), EXPR_KEYWORDS,
             Arrays.asList("Table(EXPR$0)", "Column(EXPR$0)"));
 
+        sql = "select ^ from (values (1)) as t(c)";
+        assertComplete(sql,
+            getSelectKeywords(), EXPR_KEYWORDS,
+            Arrays.asList("Table(T)", "Column(C)"));
+
         sql = "select ^, b.dummy from sales.emp a join sales.dept b ";
         assertComplete(sql, getSelectKeywords(), EXPR_KEYWORDS, AB_TABLES);
 
@@ -653,7 +658,6 @@ public class SqlAdvisorTest
         sql = "select ^emp.dummy from sales.emp";
         assertHint(
             sql,
-
             getSelectKeywords(), EXPR_KEYWORDS,
             EMP_COLUMNS, Arrays.asList("Table(EMP)"));
 
@@ -671,6 +675,26 @@ public class SqlAdvisorTest
 
         sql = "select emp.empno from sales.emp where empno=1 order by ^";
         assertComplete(sql, EXPR_KEYWORDS, EMP_COLUMNS, EMP_TABLE);
+
+        sql = "select emp.empno\n" +
+            "from sales.emp as e(\n" +
+            "  mpno,name,ob,gr,iredate,al,omm,eptno,lacker)\n" +
+            "where e.mpno=1 order by ^";
+        assertComplete(
+            sql,
+            EXPR_KEYWORDS,
+            Arrays.asList(
+                "Column(MPNO)",
+                "Column(NAME)",
+                "Column(OB)",
+                "Column(GR)",
+                "Column(IREDATE)",
+                "Column(AL)",
+                "Column(OMM)",
+                "Column(EPTNO)",
+                "Column(LACKER)"),
+            Arrays.asList(
+                "Table(E)"));
 
         sql = "select emp.empno from sales.emp where empno=1 order by empno ^, deptno";
         assertComplete(sql, PREDICATE_KEYWORDS, ORDER_KEYWORDS);

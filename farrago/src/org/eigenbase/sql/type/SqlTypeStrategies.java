@@ -26,6 +26,7 @@ import java.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.*;
 
 
@@ -178,13 +179,14 @@ public abstract class SqlTypeStrategies
                     return false;
                 }
 
-                final SqlLiteral arg = ((SqlLiteral) node);
+                final SqlLiteral arg = (SqlLiteral) node;
                 final int value = arg.intValue(true);
                 if (value < 0) {
                     if (throwOnFailure) {
-                        throw EigenbaseResource.instance()
-                        .ArgumentMustBePositiveInteger.ex(
-                            callBinding.getOperator().getName());
+                        throw callBinding.newError(
+                            EigenbaseResource.instance()
+                                .ArgumentMustBePositiveInteger.ex(
+                                callBinding.getOperator().getName()));
                     }
                     return false;
                 }
@@ -992,9 +994,10 @@ public abstract class SqlTypeStrategies
                             0,
                             1))
                     {
-                        throw EigenbaseResource.instance().TypeNotComparable.ex(
-                            opBinding.getOperandType(0).toString(),
-                            opBinding.getOperandType(1).toString());
+                        throw opBinding.newError(
+                            EigenbaseResource.instance().TypeNotComparable.ex(
+                                opBinding.getOperandType(0).toString(),
+                                opBinding.getOperandType(1).toString()));
                     }
 
                     pickedCollation =
@@ -1154,7 +1157,7 @@ public abstract class SqlTypeStrategies
                 return opBinding.getTypeFactory().createMultisetType(
                     opBinding.getTypeFactory().createStructType(
                         new RelDataType[] { componentType },
-                        new String[] { "EXPR$0" }),
+                        new String[] { SqlUtil.deriveAliasFromOrdinal(0) }),
                     -1);
             }
         };

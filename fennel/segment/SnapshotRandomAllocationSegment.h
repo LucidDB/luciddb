@@ -226,7 +226,6 @@ public:
     virtual MappedPageListener *notifyAfterPageCheckpointFlush(CachePage &page);
     virtual bool canFlushPage(CachePage &page);
     virtual void notifyPageDirty(CachePage &page, bool bDataValid);
-    virtual void discardCachePage(BlockId blockId);
     virtual bool isWriteVersioned();
 };
 

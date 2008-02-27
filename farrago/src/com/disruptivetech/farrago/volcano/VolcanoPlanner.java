@@ -23,6 +23,7 @@ package com.disruptivetech.farrago.volcano;
 import java.io.*;
 
 import java.util.*;
+import java.util.regex.*;
 import java.util.logging.*;
 
 import org.eigenbase.oj.rel.*;
@@ -133,7 +134,7 @@ public class VolcanoPlanner
     /**
      * Holds the currently registered RelTraitDefs.
      */
-    private final Set<RelTraitDef> traitDefs = new HashSet<RelTraitDef>();
+    private final List<RelTraitDef> traitDefs = new ArrayList<RelTraitDef>();
 
     /**
      * Set of all registered rules.
@@ -209,8 +210,7 @@ public class VolcanoPlanner
                 list.add(operand);
             }
         }
-        return (RelOptRuleOperand []) list.toArray(
-            new RelOptRuleOperand[list.size()]);
+        return list.toArray(new RelOptRuleOperand[list.size()]);
     }
 
     // implement RelOptPlanner
@@ -251,7 +251,7 @@ public class VolcanoPlanner
 
     public boolean addRelTraitDef(RelTraitDef relTraitDef)
     {
-        return traitDefs.add(relTraitDef);
+        return !traitDefs.contains(relTraitDef) && traitDefs.add(relTraitDef);
     }
 
     public boolean addRule(RelOptRule rule)
@@ -266,24 +266,18 @@ public class VolcanoPlanner
         mapRuleDescription(rule);
 
         // Each of this rule's operands is an 'entry point' for a rule call.
-        for (RelOptRuleOperand operand : rule.operands) {
-            allOperands.add(operand);
-        }
+        allOperands.addAll(Arrays.asList(rule.operands));
 
-        // If this is a converter rule, check if the registered RelTraitDefs
-        // which notification of its addition.
+        // If this is a converter rule, check that it operates on one of the
+        // kinds of trait we are interested in, and if so, register the rule
+        // with the trait.
         if (rule instanceof ConverterRule) {
             ConverterRule converterRule = (ConverterRule) rule;
 
-            final RelTraitSet ruleTraits = converterRule.getInTraits();
-
-            for (RelTraitDef traitDef : traitDefs) {
-                if (ruleTraits.getTrait(traitDef) == null) {
-                    // Rule does not operate on this RelTraitDef.
-                    continue;
-                }
-
-                traitDef.registerConverterRule(this, converterRule);
+            final RelTrait ruleTrait = converterRule.getInTrait();
+            final RelTraitDef ruleTraitDef = ruleTrait.getTraitDef();
+            if (traitDefs.contains(ruleTraitDef)) {
+                ruleTraitDef.registerConverterRule(this, converterRule);
             }
         }
 
@@ -315,16 +309,10 @@ public class VolcanoPlanner
         // graph.)
         if (rule instanceof ConverterRule) {
             ConverterRule converterRule = (ConverterRule) rule;
-
-            final RelTraitSet ruleTraits = converterRule.getInTraits();
-
-            for (RelTraitDef traitDef : traitDefs) {
-                if (ruleTraits.getTrait(traitDef) == null) {
-                    // Rule does not operate on this RelTraitDef.
-                    continue;
-                }
-
-                traitDef.deregisterConverterRule(this, converterRule);
+            final RelTrait ruleTrait = converterRule.getInTrait();
+            final RelTraitDef ruleTraitDef = ruleTrait.getTraitDef();
+            if (traitDefs.contains(ruleTraitDef)) {
+                ruleTraitDef.deregisterConverterRule(this, converterRule);
             }
         }
         return true;
@@ -502,6 +490,7 @@ public class VolcanoPlanner
                 }
 
                 VolcanoRuleMatch match = ruleQueue.popMatch(phase);
+                assert match.getRule().matches(match);
                 match.onMatch();
 
                 // The root may have been merged with another
@@ -906,6 +895,7 @@ SUBSET_LOOP:
      * Dumps the internal state of this VolcanoPlanner to a writer.
      *
      * @param pw Print writer
+     * @see #normalizePlan(String)
      */
     void dump(PrintWriter pw)
     {
@@ -933,7 +923,7 @@ SUBSET_LOOP:
                 pw.println(
                     "\t" + subset.getDescription() + ", best="
                     + ((subset.best == null) ? "null"
-                        : ("Rel#" + subset.best.getId())) + ", importance="
+                        : ("rel#" + subset.best.getId())) + ", importance="
                     + ruleQueue.getImportance(subset));
                 assert (subset.set == set);
                 for (int k = 0; k < j; k++) {
@@ -941,7 +931,7 @@ SUBSET_LOOP:
                         subset.getTraits());
                 }
                 for (RelNode rel : subset.rels) {
-                    // "\t\trel#34:JavaProject(Rel#32:JavaFilter(...), ...)"
+                    // "\t\trel#34:JavaProject(rel#32:JavaFilter(...), ...)"
                     pw.print("\t\t" + rel.getDescription());
                     RelNode [] inputs = rel.getInputs();
                     for (int m = 0; m < inputs.length; m++) {
@@ -1406,6 +1396,50 @@ SUBSET_LOOP:
             return 0;
         } else {
             return subset.timestamp;
+        }
+    }
+
+    /**
+     * Normalizes references to subsets within the string representation of a
+     * plan.
+     *
+     * <p>This is useful when writing tests: it helps to ensure
+     * that tests don't break when an extra rule is introduced that
+     * generates a new subset and causes subsequent subset numbers to be
+     * off by one.
+     *
+     * <p>For example,
+     * <blockquote>
+     * FennelAggRel.FENNEL_EXEC(child=Subset#17.FENNEL_EXEC,groupCount=1,EXPR$1=COUNT())
+     * &nbsp;&nbsp;FennelSortRel.FENNEL_EXEC(child=Subset#2.FENNEL_EXEC,key=[0],discardDuplicates=false)
+     * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(child=Subset#4.FENNEL_EXEC,expr#0..8={inputs},expr#9=3456,DEPTNO=$t7,$f0=$t9)
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(table=[CATALOG, SALES, EMP])
+     * </blockquote>
+     * becomes
+     * <blockquote>
+     * FennelAggRel.FENNEL_EXEC(child=Subset#{0}.FENNEL_EXEC,groupCount=1,EXPR$1=COUNT())
+     * &nbsp;&nbsp;FennelSortRel.FENNEL_EXEC(child=Subset#{1}.FENNEL_EXEC,key=[0],discardDuplicates=false)
+     * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(child=Subset#{2}.FENNEL_EXEC,expr#0..8={inputs},expr#9=3456,DEPTNO=$t7,$f0=$t9)
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(table=[CATALOG, SALES, EMP])
+     * </blockquote>
+     *
+     * @param plan Plan
+     * @return Normalized plan
+     */
+    public static String normalizePlan(String plan)
+    {
+        if (plan == null) {
+            return null;
+        }
+        final Pattern poundDigits = Pattern.compile("Subset#[0-9]+\\.");
+        int i = 0;
+        while (true) {
+            final Matcher matcher = poundDigits.matcher(plan);
+            if (!matcher.find()) {
+                return plan;
+            }
+            final String token = matcher.group(); // e.g. "Subset#23."
+            plan = plan.replace(token, "Subset#{" + i++ + "}.");
         }
     }
 

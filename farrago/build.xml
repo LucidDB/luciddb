@@ -1232,7 +1232,7 @@ please disable it and try again.
   <target name="javadoc-with-ydoc" if="ydoc.home">
     <property name="ps" value="${path.separator}"/>
     <javadoc
-      maxmemory="512m"
+      maxmemory="1024m"
       private="true"
       destdir="${javadoc.dir}"
       source="${farrago.javasrc.version}"
@@ -1278,7 +1278,7 @@ please disable it and try again.
 
   <target name="javadoc-without-ydoc" unless="ydoc.home">
     <javadoc
-      maxmemory="512m"
+      maxmemory="1024m"
       private="true"
       destdir="${javadoc.dir}"
       source="${farrago.javasrc.version}"

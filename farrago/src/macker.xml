@@ -1028,6 +1028,7 @@
       <include pattern="dt.fennel.deps" />
       <include pattern="lu.fennel.deps" />
       <include pattern="lu.lurql.deps" />
+      <include pattern="lu.opt.deps" />
       <include pattern="defimpl" />
     </pattern>
 

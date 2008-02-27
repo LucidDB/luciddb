@@ -194,12 +194,6 @@ void DynamicDelegatingSegment::setDelegatingSegment(
     delegateSegment = delegatingSegment;
 }
 
-void DynamicDelegatingSegment::discardCachePage(BlockId blockId)
-{
-    SharedSegment pDelegateSegment = delegateSegment.lock();
-    pDelegateSegment->discardCachePage(blockId);
-}
-
 FENNEL_END_CPPFILE("$Id$");
 
 // End DynamicDelegatingSegment.cpp

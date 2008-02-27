@@ -25,6 +25,7 @@ import java.nio.*;
 
 import org.eigenbase.runtime.*;
 
+import net.sf.farrago.resource.*;
 
 /**
  * FarragoTransformImpl provides a base class for generated implementations of
@@ -76,7 +77,7 @@ public abstract class FarragoTransformImpl
     {
         long tupleCount = 0;
 
-        // If next is not null, then a row was previous fetched but
+        // If next is not null, then a row was previously fetched but
         // there wasn't room to marshal it.
         if (next == null) {
             Object o = tupleIter.fetchNext();
@@ -94,11 +95,22 @@ public abstract class FarragoTransformImpl
         outputBuffer.clear();
 
         for (;;) {
+            // Before attempting to marshal tuple, record current start
+            // position in case a partial marshalling attempt moves it.
+            int startPosition = outputBuffer.position();
             if (!tupleWriter.marshalTuple(outputBuffer, next)) {
-                // Not enough room to marshal the tuple.  We assume that the
-                // buffer is large enough for at least one tuple, otherwise this
-                // method may incorrectly return 0 (end of stream).
-                break;
+                if (startPosition == 0) {
+                    // We were not able to marshal the entire tuple,
+                    // and so far we haven't even marshalled one tuple,
+                    // so there's no way we're going to make progress.
+                    throw FarragoResource.instance().JavaRowTooLong.ex(
+                        outputBuffer.remaining(),
+                        next.toString());
+                } else {
+                    // Not enough room to marshal the latest tuple, but we've
+                    // already got some earlier ones marshalled.
+                    break;
+                }
             }
 
             // See note re: quantum as unsigned int.

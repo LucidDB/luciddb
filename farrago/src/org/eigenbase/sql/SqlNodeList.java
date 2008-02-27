@@ -27,6 +27,7 @@ import java.util.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 
 /**
@@ -131,29 +132,49 @@ public class SqlNodeList
 
     void commaList(SqlWriter writer)
     {
+        // The precedence of the comma operator if low but not zero. For
+        // instance, this ensures parentheses in
+        //    select x, (select * from foo order by z), y from t
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = list.get(i);
             writer.sep(",");
-            node.unparse(writer, 0, 0);
+            node.unparse(writer, 2, 3);
         }
     }
 
     void andOrList(SqlWriter writer, SqlKind sepKind)
     {
-        int lprec, rprec;
+        SqlBinaryOperator sepOp =
+            sepKind == SqlKind.And
+                ? SqlStdOperatorTable.andOperator
+                : SqlStdOperatorTable.orOperator;
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = list.get(i);
             writer.sep(sepKind.getName(), false);
-            lprec = rprec = 0;
-            if (node instanceof SqlCall) {
-                SqlCall call = (SqlCall) node;
-                if (call.getKind().isA(SqlKind.And)
-                    || call.getKind().isA(SqlKind.Or))
-                {
-                    lprec = call.getOperator().getLeftPrec();
-                    rprec = call.getOperator().getRightPrec();
-                }
-            }
+
+            // The precedence pulling on the LHS of a node is the
+            // right-precedence of the separator operator, except at the start
+            // of the list; similarly for the RHS of a node. If the operator
+            // has left precedence 4 and right precedence 5, the precedences
+            // in a 3-node list will look as follows:
+            //   0 <- node1 -> 4  5 <- node2 -> 4  5 <- node3 -> 0
+            int lprec = (i == 0) ? 0 : sepOp.getRightPrec();
+            int rprec = (i == list.size() - 1) ? 0 : sepOp.getLeftPrec();
+            node.unparse(writer, lprec, rprec);
+        }
+    }
+
+    void _andOrList(SqlWriter writer, SqlKind sepKind)
+    {
+        SqlBinaryOperator sepOp =
+            sepKind == SqlKind.And
+                ? SqlStdOperatorTable.andOperator
+                : SqlStdOperatorTable.orOperator;
+        for (int i = 0; i < list.size(); i++) {
+            SqlNode node = list.get(i);
+            writer.sep(sepKind.getName(), false);
+            int lprec = (i == 0) ? 0 : sepOp.getRightPrec();
+            int rprec = (i == list.size() - 1) ? 0 : sepOp.getLeftPrec();
             node.unparse(writer, lprec, rprec);
         }
     }

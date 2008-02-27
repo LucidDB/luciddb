@@ -155,6 +155,34 @@ class VolcanoCost
         return new VolcanoCost(dRows * factor, dCpu * factor, dIo * factor);
     }
 
+    public double divideBy(RelOptCost cost)
+    {
+        // Compute the geometric average of the ratios of all of the factors
+        // which are non-zero and finite.
+        VolcanoCost that = (VolcanoCost) cost;
+        double d = 1;
+        double n = 0;
+        if (this.dRows != 0 && !Double.isInfinite(this.dRows)
+            && that.dRows != 0 && !Double.isInfinite(that.dRows)) {
+            d *= this.dRows / that.dRows;
+            ++n;
+        }
+        if (this.dCpu != 0 && !Double.isInfinite(this.dCpu)
+            && that.dCpu != 0 && !Double.isInfinite(that.dCpu)) {
+            d *= this.dCpu / that.dCpu;
+            ++n;
+        }
+        if (this.dIo != 0 && !Double.isInfinite(this.dIo)
+            && that.dIo != 0 && !Double.isInfinite(that.dIo)) {
+            d *= this.dIo / that.dIo;
+            ++n;
+        }
+        if (n == 0) {
+            return 1.0;
+        }
+        return Math.pow(d, 1 / n);
+    }
+
     public RelOptCost plus(RelOptCost other)
     {
         VolcanoCost that = (VolcanoCost) other;

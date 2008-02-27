@@ -1215,14 +1215,14 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
-'    FennelCalcRel(expr#0..7=[{inputs}], expr#8=['should not be updated'], expr#9=[CAST($t7):BIGINT NOT NULL], expr#10=[CAST($t8):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], rid=[$t9], EMPNO=[$t1], NAME=[$t10], DEPTNO=[$t2], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t6])'
+'    FennelCalcRel(expr#0..7=[{inputs}], expr#8=['should not be updated'], expr#9=[CAST($t6):BIGINT NOT NULL], expr#10=[CAST($t8):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], rid=[$t9], EMPNO=[$t0], NAME=[$t10], DEPTNO=[$t1], GENDER=[$t2], CITY=[$t3], AGE=[$t4], SALARY=[$t5])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=[false], T_EMPNO=[$t0], $condition=[$t1])'
-'          LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TEMPEMPS$T_EMPNO]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0..7=[{inputs}], expr#8=[ROW($t1)], expr#9=['should not be updated'], expr#10=[CAST($t9):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#11=[ROW($t10)], expr#12=[$IS_DIFFERENT_FROM($t8, $t11)], EMPNO=[$t0], DEPTNO=[$t2], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t6], LCS_RID=[$t7], $condition=[$t12])'
 '            FennelToIteratorConverter'
 '              LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]])'
+'        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER T_EMPNO) NOT NULL])'
+'          FennelValuesRel(tuples=[[]])'
 > 
 > -- source for INSERT matches the columns from the source table
 > create table comic (empid int primary key, name varchar(30));
@@ -1375,7 +1375,7 @@ Error: From line 9, column 33 to line 9, column 36: Column 'NAME' not found in a
 >     when not matched then
 >         insert (empno, name, age, gender, salary, city)
 >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000);
-Error: Number of INSERT target columns (6) does not equal number of source items (5) (state=,code=0)
+Error: From line 8, column 9 to line 8, column 14: Number of INSERT target columns (6) does not equal number of source items (5) (state=,code=0)
 > 
 > -- mismatch in types in values clause
 > explain plan without implementation for

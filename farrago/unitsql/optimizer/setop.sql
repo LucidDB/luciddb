@@ -1,5 +1,5 @@
 -- $Id$
--- Test queries for set operations (union, intersect, exception).
+-- Test queries for set operations (union, intersect, except).
 
 -----------
 -- Setup --
@@ -153,6 +153,78 @@ explain plan for select * from s1 union all (select * from s2 where a = 1);
 !set outputformat table
 alter session implementation set default;
 drop schema lhx cascade;
+
+-- setops also work in default Farrago personality
+
+select * from 
+(
+    select deptno from sales.emps
+    intersect 
+    select deptno from sales.depts
+)
+order by deptno;
+
+select * from 
+(
+    select deptno from sales.emps
+    except
+    select deptno from sales.depts
+)
+order by deptno;
+
+select * from 
+(
+    select deptno from sales.emps
+    union 
+    select deptno from sales.depts
+)
+order by deptno;
+
+select * from 
+(
+    select deptno from sales.emps
+    union all
+    select deptno from sales.depts
+)
+order by deptno;
+
+!set outputformat csv
+
+explain plan for
+select * from 
+(
+    select deptno from sales.emps
+    intersect 
+    select deptno from sales.depts
+)
+order by deptno;
+
+explain plan for
+select * from 
+(
+    select deptno from sales.emps
+    except
+    select deptno from sales.depts
+)
+order by deptno;
+
+explain plan for
+select * from 
+(
+    select deptno from sales.emps
+    union 
+    select deptno from sales.depts
+)
+order by deptno;
+
+explain plan for
+select * from 
+(
+    select deptno from sales.emps
+    union all
+    select deptno from sales.depts
+)
+order by deptno;
 
 -- End setop.sql
 

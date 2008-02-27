@@ -131,14 +131,11 @@
 > in (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 'column0'
 'FennelToIteratorConverter'
-'  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[=($t1, $t2)], NAME=[$t0], $condition=[$t3])'
-'    FennelCalcRel(expr#0..2=[{inputs}], $f1=[$t1], $f10=[$t2], ROW_VALUE=[$t0])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'          FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelRenameRel(fieldNames=[[$f1, $f10]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 0]], index=[EMPS_UX], preserveOrder=[false])'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFTSEMI])'
+'      FennelRenameRel(fieldNames=[[$f1, $f10]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 0]], index=[EMPS_UX], preserveOrder=[false])'
+'      FennelValuesRel(tuples=[[{ 110 }, { 110 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }, { 1 }]])'
 > 
 > alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 > 
@@ -157,15 +154,15 @@
 > 'A1', 'A1', 'A1', 'A1', 'A1',
 > 'A1', 'B', 'A1', 'A1', 'A1');
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[=($t1, $t2)], COL=[$t0], $condition=[$t3])'
-'  IterCalcRel(expr#0..2=[{inputs}], $f0=[$t1], $f1=[$t2], ROW_VALUE=[$t0])'
-'    FennelToIteratorConverter'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'          FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[[0, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST1], preserveOrder=[false])'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL COL) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[LEFTSEMI])'
+'      FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, TEST1]], projection=[[0, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST1], preserveOrder=[false])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], proj#0..1=[{exprs}])'
+'          FennelToIteratorConverter'
+'            FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
 > 
 > select col from test1
 > where col in (
@@ -191,15 +188,12 @@
 > 'A1', 'A1', 'A1', 'A1', 'A1',
 > 'A1', 'B', 'A1', 'A1', 'A1');
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[=($t1, $t2)], COL=[$t0], $condition=[$t3])'
-'  IterCalcRel(expr#0..2=[{inputs}], $f0=[$t1], $f1=[$t2], ROW_VALUE=[$t0])'
-'    FennelToIteratorConverter'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'          FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
-'        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelRenameRel(fieldNames=[[$f0, $f1]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST2], preserveOrder=[false])'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL COL) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFTSEMI])'
+'      FennelRenameRel(fieldNames=[[$f0, $f1]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, TEST2]], projection=[[0, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TEST2], preserveOrder=[false])'
+'      FennelValuesRel(tuples=[[{ 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'A1' }, { 'B ' }, { 'A1' }, { 'A1' }, { 'A1' }]])'
 > 
 > select col from test2
 > where col in (

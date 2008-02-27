@@ -453,6 +453,12 @@ levelLoop:
                 int inputIndex = ((RexInputRef) expr).getIndex();
                 fieldNames[i] =
                     child.getRowType().getFields()[inputIndex].getName();
+                if (fieldNames[i].startsWith("$")
+                    && !fieldNames[i].startsWith("$EXPR")) {
+                    // Don't inherit field names like '$3' from child: that's
+                    // confusing.
+                    fieldNames[i] = "$" + i;
+                }
             } else {
                 fieldNames[i] = "$" + i;
             }
@@ -564,13 +570,14 @@ levelLoop:
      * Searches for a value in a map, and returns the position where it was
      * found, or -1.
      *
-     * @param index
-     * @param map
+     * @param value Value to search for
+     * @param map Map to search in
+     * @return Ordinal of value in map, or -1 if not found
      */
-    private static int indexOf(int index, int [] map)
+    private static int indexOf(int value, int [] map)
     {
         for (int i = 0; i < map.length; i++) {
-            if (index == map[i]) {
+            if (value == map[i]) {
                 return i;
             }
         }

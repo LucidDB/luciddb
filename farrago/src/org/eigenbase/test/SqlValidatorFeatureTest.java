@@ -84,14 +84,14 @@ public class SqlValidatorFeatureTest
     public void testIntersect()
     {
         checkFeature(
-            "select name from dept intersect select name from dept",
+            "^select name from dept intersect select name from dept^",
             EigenbaseResource.instance().SQLFeature_F302);
     }
 
     public void testExcept()
     {
         checkFeature(
-            "select name from dept except select name from dept",
+            "^select name from dept except select name from dept^",
             EigenbaseResource.instance().SQLFeature_E071_03);
     }
 
@@ -109,11 +109,11 @@ public class SqlValidatorFeatureTest
     public void testTablesample()
     {
         checkFeature(
-            "select name from dept tablesample bernoulli(50)",
+            "select name from ^dept tablesample bernoulli(50)^",
             EigenbaseResource.instance().SQLFeature_T613);
 
         checkFeature(
-            "select name from dept tablesample substitute('sample_dept')",
+            "select name from ^dept tablesample substitute('sample_dept')^",
             EigenbaseResource.instance().SQLFeatureExt_T613_Substitution);
     }
     

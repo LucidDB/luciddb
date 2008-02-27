@@ -106,6 +106,12 @@ public class RelOptCostImpl
         return new RelOptCostImpl(getRows() * factor);
     }
 
+    public double divideBy(RelOptCost cost)
+    {
+        RelOptCostImpl that = (RelOptCostImpl) cost;
+        return this.getRows() / that.getRows();
+    }
+
     // implement RelOptCost
     public String toString()
     {

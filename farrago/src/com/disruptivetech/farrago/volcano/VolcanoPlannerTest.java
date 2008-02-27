@@ -605,7 +605,7 @@ public class VolcanoPlannerTest
     }
 
     class PhysToIteratorConverter
-        extends ConverterRel
+        extends ConverterRelImpl
     {
         public PhysToIteratorConverter(
             RelOptCluster cluster,

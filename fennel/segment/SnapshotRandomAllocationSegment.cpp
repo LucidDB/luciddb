@@ -220,6 +220,11 @@ void SnapshotRandomAllocationSegment::deallocatePageRange(
     // deallocation of these pages will be done by an ALTER SYSTEM DEALLOCATE
     // OLD.
 
+    // Note that we cannot discard snapshot pages from cache because they
+    // really haven't been freed yet and still may be referenced by other
+    // threads.  The pages will be removed from the cache when they are
+    // actually freed.
+    
     PageId chainPageId = startPageId;
     VersionedPageEntry pageEntry;
     do {
@@ -462,18 +467,6 @@ void SnapshotRandomAllocationSegment::versionPage(
 
     StrictMutexGuard mutexGuard(snapshotPageMapMutex);
     snapshotPageMap[destAnchorPageId] = pageIdAfterSrcAnchor;
-}
-
-// REVIEW jvs 23-Oct-2007:  this raises the question of whether
-// discardCachePage should really be part of the Segment interface at all;
-// seems like SegPageLock should instead rely on deallocatePageRange
-// to do it implicitly.
-
-void SnapshotRandomAllocationSegment::discardCachePage(BlockId blockId)
-{
-    // We cannot discard snapshot pages because they really haven't been 
-    // freed yet and still may be referenced by other threads.  The
-    // pages will be removed from the cache when they are actually freed.
 }
 
 bool SnapshotRandomAllocationSegment::isWriteVersioned()

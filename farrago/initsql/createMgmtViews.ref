@@ -176,6 +176,14 @@
 >   specific kill_statement_match_cancel
 >   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
 > 
+> -- sets a filter on the optimizer rules to be used in the current session
+> create or replace procedure set_opt_rule_desc_exclusion_filter(
+>     in regex varchar(2000))
+> language java
+> contains sql
+> external name 
+> 'class net.sf.farrago.syslib.FarragoManagementUDR.setOptRuleDescExclusionFilter';
+> 
 > -- exports the catalog to an XMI file
 > create or replace procedure export_catalog_xmi(in filename varchar(65535))
 >   language java

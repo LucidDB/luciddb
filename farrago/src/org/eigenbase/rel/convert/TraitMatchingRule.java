@@ -75,7 +75,7 @@ public class TraitMatchingRule
     public void onMatch(RelOptRuleCall call)
     {
         RelNode input = call.rels[1];
-        if (input.getTraits().matches(converter.getOutTraits())) {
+        if (input.getTraits().contains(converter.getOutTrait())) {
             converter.onMatch(call);
         }
     }

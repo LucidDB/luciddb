@@ -32,14 +32,38 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+/* ---
+Struct for notification that an exception is forthcoming, allows
+the callee to take some exception specific action with its opaque
+element pData (such as cast it to a RegisterReference and call
+toNull()).
+
+Assumptions: if this structure exists the fnCB must not
+be NULL.
+ --- */
+struct TExceptionCBData
+{
+    void (* fnCB)(const char *, void *);
+    void *pData;
+    TExceptionCBData( void (* fnTheCB)(const char *, void *), void *pTheData )
+    :   fnCB( fnTheCB ),
+        pData( pTheData ) {
+        }
+};
+
 /* --- */
 template <typename TMPL>
     struct Noisy {
-        static TMPL add( TProgramCounter pc, const TMPL left, const TMPL right ) throw( CalcMessage );
-        static TMPL sub( TProgramCounter pc, const TMPL left, const TMPL right ) throw( CalcMessage );
-        static TMPL mul( TProgramCounter pc, const TMPL left, const TMPL right ) throw( CalcMessage );
-        static TMPL div( TProgramCounter pc, const TMPL left, const TMPL right ) throw( CalcMessage );
-        static TMPL neg( TProgramCounter pc, const TMPL right ) throw( CalcMessage );
+        static TMPL add( TProgramCounter pc, const TMPL left, const TMPL right,
+            TExceptionCBData *pExData ) throw( CalcMessage );
+        static TMPL sub( TProgramCounter pc, const TMPL left, const TMPL right,
+            TExceptionCBData *pExData ) throw( CalcMessage );
+        static TMPL mul( TProgramCounter pc, const TMPL left, const TMPL right,
+            TExceptionCBData *pExData ) throw( CalcMessage );
+        static TMPL div( TProgramCounter pc, const TMPL left, const TMPL right,
+            TExceptionCBData *pExData ) throw( CalcMessage );
+        static TMPL neg( TProgramCounter pc, const TMPL right,
+            TExceptionCBData *pExData ) throw( CalcMessage );
     };
 
 FENNEL_END_NAMESPACE

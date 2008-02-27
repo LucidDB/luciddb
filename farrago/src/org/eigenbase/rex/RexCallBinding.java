@@ -23,6 +23,8 @@ package org.eigenbase.rex;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorException;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.*;
 
 
@@ -81,6 +83,12 @@ public class RexCallBinding
     public RelDataType getOperandType(int ordinal)
     {
         return operands[ordinal].getType();
+    }
+
+    public EigenbaseException newError(
+        SqlValidatorException e)
+    {
+        return SqlUtil.newContextException(SqlParserPos.ZERO, e);
     }
 }
 

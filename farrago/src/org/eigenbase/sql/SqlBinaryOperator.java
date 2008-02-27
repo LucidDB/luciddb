@@ -34,12 +34,25 @@ import org.eigenbase.util.*;
 
 /**
  * <code>SqlBinaryOperator</code> is a binary operator.
+ *
+ * @version $Id$
  */
 public class SqlBinaryOperator
     extends SqlOperator
 {
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a SqlBinaryOperator.
+     *
+     * @param name Name of operator
+     * @param kind Kind
+     * @param prec Precedence
+     * @param leftAssoc Left-associativity
+     * @param returnTypeInference Strategy to infer return type
+     * @param operandTypeInference Strategy to infer operand types
+     * @param operandTypeChecker Validator for operand types
+     */
     public SqlBinaryOperator(
         String name,
         SqlKind kind,
@@ -74,6 +87,17 @@ public class SqlBinaryOperator
         return "{1} {0} {2}";
     }
 
+    /**
+     * Returns whether this operator should be surrounded by space when
+     * unparsed.
+     *
+     * <p>Returns true for most operators but false for the '.'
+     * operator; consider
+     *
+     * <blockquote><pre>x.y + 5 * 6</pre></blockquote>
+     *  
+     * @return whether this operator should be surrounded by space
+     */
     boolean needsSpace()
     {
         return !getName().equals(".");
@@ -95,10 +119,12 @@ public class SqlBinaryOperator
             Charset cs2 = operandType2.getCharset();
             assert ((null != cs1) && (null != cs2)) : "An implicit or explicit charset should have been set";
             if (!cs1.equals(cs2)) {
-                throw EigenbaseResource.instance().IncompatibleCharset.ex(
-                    getName(),
-                    cs1.name(),
-                    cs2.name());
+                throw validator.newValidationError(
+                    call,
+                    EigenbaseResource.instance().IncompatibleCharset.ex(
+                        getName(),
+                        cs1.name(),
+                        cs2.name()));
             }
 
             SqlCollation col1 = operandType1.getCollation();
@@ -140,10 +166,12 @@ public class SqlBinaryOperator
             Charset cs2 = operandType2.getCharset();
             assert ((null != cs1) && (null != cs2)) : "An implicit or explicit charset should have been set";
             if (!cs1.equals(cs2)) {
-                throw EigenbaseResource.instance().IncompatibleCharset.ex(
-                    getName(),
-                    cs1.name(),
-                    cs2.name());
+                throw validator.newValidationError(
+                    call,
+                    EigenbaseResource.instance().IncompatibleCharset.ex(
+                        getName(),
+                        cs1.name(),
+                        cs2.name()));
             }
 
             SqlCollation col1 = operandType1.getCollation();

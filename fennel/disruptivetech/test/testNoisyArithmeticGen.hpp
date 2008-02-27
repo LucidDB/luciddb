@@ -1,23 +1,3 @@
-/*
-// $Id: //open/dt/dev/fennel/disruptivetech/test/testNoisyArithmetic.cpp#1 $
-// Fennel is a library of data storage and processing components.
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 The Eigenbase Project
-//
-// This program is free software; you can redistribute it and/or modify it
-// under the terms of the GNU General Public License as published by the Free
-// Software Foundation; either version 2 of the License, or (at your option)
-// any later version approved by The Eigenbase Project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
 EXPR(":# ---")
 EXPR(":# AUTOMATICALLY GENERATED FILE. DO NOT MODIFY")
 EXPR(":# ---")
@@ -7419,25 +7399,26 @@ EXPR(":add:long double:300.0:200.0:100.0")
 EXPR(":sub:long double:100.0:200.0:100.0")
 EXPR(":mul:long double:40000.0:200.0:200.0")
 EXPR(":div:long double:2.0:400.0:200.0")
+EXPR(":# --- these were raising S_INEX, so that was disabled ")
+EXPR(":add:float:200.3:200.0:0.3")
+EXPR(":add:float:2997.7:3000.0:-2.3")
 EXPR(":")
 EXPR(":# --- error conditions")
 EXPR(":div:float:!22012:1.0:0.0")
 EXPR(":div:float:!22023:0.0:0.0")
-EXPR(":add:float:!22000:&MAX:1.0")
+/* no longer raises S_INEX EXPR(":add:float:!22000:&MAX:1.0") */
 EXPR(":add:float:!22003:&MAX:&MAX:")
 EXPR(":div:float:!22000:.00001:&MAX:")
 EXPR(":")
 EXPR(":div:double:!22012:1.0:0.0")
 EXPR(":div:double:!22023:0.0:0.0")
-EXPR(":add:double:!22000:&MAX:1.0")
+/* no longer raises S_INEX EXPR(":add:double:!22000:&MAX:1.0") */
 EXPR(":add:double:!22003:&MAX:&MAX:")
 EXPR(":div:double:!22000:.00001:&MAX:")
 EXPR(":")
 EXPR(":div:long double:!22012:1.0:0.0")
 EXPR(":div:long double:!22023:0.0:0.0")
-EXPR(":add:long double:!22000:&MAX:1.0")
+/* no longer raises S_INEX EXPR(":add:long double:!22000:&MAX:1.0") */
 EXPR(":add:long double:!22003:&MAX:&MAX:")
 EXPR(":div:long double:!22000:.00001:&MAX:")
 EXPR(":")
-// End testNoisyArithmeticGen.hpp
-

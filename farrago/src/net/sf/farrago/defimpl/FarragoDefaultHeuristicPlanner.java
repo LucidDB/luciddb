@@ -22,6 +22,7 @@
 package net.sf.farrago.defimpl;
 
 import com.disruptivetech.farrago.rel.*;
+import com.lucidera.opt.*;
 
 import java.util.*;
 
@@ -196,6 +197,13 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleInstance(new MergeProjectRule());
         builder.addGroupEnd();
 
+        // Eliminate UNION DISTINCT and trivial UNION.
+        builder.addRuleInstance(new UnionToDistinctRule());
+        builder.addRuleInstance(new UnionEliminatorRule());
+
+        // Eliminate redundant SELECT DISTINCT.
+        builder.addRuleInstance(new RemoveDistinctRule());
+
         // We're getting close to physical implementation.  First, insert
         // type coercions for expressions which require it.
         builder.addRuleClass(CoerceInputsRule.class);
@@ -205,12 +213,23 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleCollection(medPluginRules);
         builder.addRuleInstance(RemoveTrivialProjectRule.instance);
 
+        // Use hash semi join if possible.
+        builder.addRuleInstance(new LhxSemiJoinRule());
+        
         // Use hash join where possible. Make sure this rule is called before
         // any physical conversions have been done
-        /*
-        // TODO jvs 3-May-2006:  Once hash partitioning is available.
-         builder.addRuleInstance(new LhxJoinRule());
-         */
+        builder.addRuleInstance(new LhxJoinRule());
+
+        // Use hash join to implement set op: Intersect.
+        builder.addRuleInstance(new LhxIntersectRule());
+
+        // Use hash join to implement set op: Except(minus).
+        builder.addRuleInstance(new LhxMinusRule());
+        
+        // Use nested loop join if hash join can't be used
+        if (fennelEnabled) {
+            builder.addRuleInstance(new FennelNestedLoopJoinRule());
+        }
 
         // Extract join conditions again so that FennelCartesianJoinRule can do
         // its job.  Need to do this before converting filters to calcs, but
@@ -225,6 +244,9 @@ public class FarragoDefaultHeuristicPlanner
         // Replace AVG with SUM/COUNT (need to do this BEFORE calc conversion
         // and decimal reduction).
         builder.addRuleInstance(ReduceAggregatesRule.instance);
+
+        // Prefer hash aggregation over the standard Fennel aggregation.
+        builder.addRuleInstance(new LhxAggRule());
 
         // Handle trivial renames now so that they don't get
         // implemented as calculators.
@@ -245,15 +267,12 @@ public class FarragoDefaultHeuristicPlanner
         builder.addGroupEnd();
 
         // These rules handle expressions which can be introduced by multiset
-        // rewrite.
-        // Eliminate UNION DISTINCT and trivial UNION.
+        // rewrite, which is why they repeat earlier ones.
         builder.addRuleClass(CoerceInputsRule.class);
         builder.addRuleInstance(new UnionToDistinctRule());
         builder.addRuleInstance(new UnionEliminatorRule());
-
-        // Eliminate redundant SELECT DISTINCT.
         builder.addRuleInstance(new RemoveDistinctRule());
-
+        
         // First, try to use ReshapeRel for calcs before firing the other
         // physical calc conversion rules.  Fire this rule before
         // ReduceDecimalsRule so we avoid decimal reinterprets that can
@@ -265,6 +284,9 @@ public class FarragoDefaultHeuristicPlanner
         // Replace the DECIMAL datatype with primitive ints.
         builder.addRuleInstance(new ReduceDecimalsRule());
 
+        // NOTE jvs 8-Jan-2008:  FennelDistinctSortRule is now
+        // redundant with LhxAggRule above.
+        
         // Implement DISTINCT via tree-sort instead of letting it
         // be handled via normal sort plus agg.
         builder.addRuleInstance(new FennelDistinctSortRule());
@@ -280,11 +302,14 @@ public class FarragoDefaultHeuristicPlanner
             builder.addRuleInstance(new FennelSortRule());
             builder.addRuleInstance(new FennelRenameRule());
             builder.addRuleInstance(new FennelCartesianJoinRule());
+            // NOTE jvs 8-Jan-2008:  FennelAggRule is now redundant with
+            // LhxAggRule above.
             builder.addRuleInstance(new FennelAggRule());
             builder.addRuleInstance(new FennelCollectRule());
             builder.addRuleInstance(new FennelUncollectRule());
             builder.addRuleInstance(new FennelCorrelatorRule());
             builder.addRuleInstance(new FennelValuesRule());
+            builder.addRuleInstance(FennelEmptyRule.INSTANCE);
             builder.addRuleInstance(new FennelBernoulliSamplingRule());
         } else {
             builder.addRuleInstance(

@@ -28,6 +28,7 @@ ResourceTest \
 LocalConditionTest \
 TupleTest \
 StandardTypeTest \
+RandomAllocationSegmentTest \
 ExecStreamTest \
 DatabaseTest \
 LogicalTxnTest \
@@ -89,6 +90,8 @@ BacktraceTest_SOURCES=BacktraceTest.cpp
 ExecStreamGovernorTest_SOURCES=ExecStreamGovernorTest.cpp
 
 PseudoUuidTest_SOURCES=PseudoUuidTest.cpp
+
+RandomAllocationSegmentTest_SOURCES=RandomAllocationSegmentTest.cpp
 
 if !STATIC_TEST_LIBRARY
 libfenneltestdyn_la_LIBADD=libfenneltest.la

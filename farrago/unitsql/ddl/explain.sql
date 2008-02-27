@@ -47,7 +47,7 @@ _US-ASCII'bonjour', date '2006-11-08', time '15:05:05',
 timestamp '2006-11-08 15:05:05', X'CAFEBABE');
 
 -- Apply a tweak to the session personality and verify that
--- the costing changes accordingly.
+-- the costing and rel visibility changes accordingly.
 
 create schema s;
 set schema 's';
@@ -64,6 +64,10 @@ alter session implementation set jar test_personality_plugin;
 
 -- explain again with tweak
 explain plan including all attributes for
+select count(*) from (values(0));
+
+-- explain again without attributes; converter should be hidden
+explain plan for
 select count(*) from (values(0));
 
 

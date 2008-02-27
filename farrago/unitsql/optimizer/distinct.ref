@@ -48,7 +48,7 @@
 > select distinct gender from emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'  LhxAggRel(groupCount=[1])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for
@@ -56,14 +56,14 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'    LhxAggRel(groupCount=[1])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for
 > select distinct empno,gender from emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'  LhxAggRel(groupCount=[2])'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for
@@ -71,7 +71,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'    LhxAggRel(groupCount=[2])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for
@@ -79,7 +79,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'    LhxAggRel(groupCount=[1])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > !quit

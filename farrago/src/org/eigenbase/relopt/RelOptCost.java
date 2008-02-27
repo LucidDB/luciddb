@@ -118,6 +118,20 @@ public interface RelOptCost
     public RelOptCost multiplyBy(double factor);
 
     /**
+     * Computes the ratio between this cost and another cost.
+     *
+     *
+     * <p>divideBy is the inverse of {@link #multiplyBy(double)}. For any
+     * finite, non-zero cost and factor f,
+     * <code>cost.divideBy(cost.multiplyBy(f))</code> yields
+     * <code>1 / f</code>.
+     *
+     * @param cost Other cost
+     * @return Ratio between costs
+     */
+    public double divideBy(RelOptCost cost);
+
+    /**
      * Forces implementations to override {@link Object#toString} and provide a
      * good cost rendering to use during tracing.
      */

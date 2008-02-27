@@ -39,7 +39,7 @@ import org.eigenbase.relopt.*;
  * expanded as soon as a non-abstract relexp is added to the set.</p>
  */
 public class AbstractConverter
-    extends ConverterRel
+    extends ConverterRelImpl
 {
     //~ Constructors -----------------------------------------------------------
 
@@ -127,9 +127,6 @@ public class AbstractConverter
             final VolcanoPlanner planner = (VolcanoPlanner) call.getPlanner();
             AbstractConverter converter = (AbstractConverter) call.rels[0];
             final RelSubset converterSubset = planner.getSubset(converter);
-            if (!planner.getCost(converterSubset).isInfinite()) {
-                return;
-            }
             final RelNode child = converter.getChild();
             RelNode converted =
                 planner.changeTraitsUsingConverters(child,

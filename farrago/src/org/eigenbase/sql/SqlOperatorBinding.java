@@ -23,8 +23,8 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-
+import org.eigenbase.util.EigenbaseException;
+import org.eigenbase.sql.validate.SqlValidatorException;
 
 /**
  * <code>SqlOperatorBinding</code> represents the binding of an {@link
@@ -44,6 +44,12 @@ public abstract class SqlOperatorBinding
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a SqlOperatorBinding.
+     *
+     * @param typeFactory Type factory
+     * @param sqlOperator Operator which is subject of this call
+     */
     protected SqlOperatorBinding(
         RelDataTypeFactory typeFactory,
         SqlOperator sqlOperator)
@@ -152,6 +158,19 @@ public abstract class SqlOperatorBinding
     {
         throw new UnsupportedOperationException();
     }
+
+    /**
+     * Wraps a validation error with context appropriate to this operator call.
+     *
+     * @param e Validation error
+     *
+     * @return Error wrapped, if possible, with positional information
+     *
+     * @pre node != null
+     * @post return != null
+     */
+    public abstract EigenbaseException newError(
+        SqlValidatorException e);
 }
 
 // End SqlOperatorBinding.java

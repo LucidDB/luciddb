@@ -59,8 +59,8 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class IteratorToFennelConverter
-    extends ConverterRel
-    implements FennelRel
+    extends ConverterRelImpl
+    implements FennelRel, ConverterRel
 {
     //~ Static fields/initializers ---------------------------------------------
 

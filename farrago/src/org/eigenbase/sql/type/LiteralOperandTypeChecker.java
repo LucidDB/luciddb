@@ -21,13 +21,9 @@
 */
 package org.eigenbase.sql.type;
 
-import java.util.*;
-
-import org.eigenbase.reltype.*;
-import org.eigenbase.resource.*;
+import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -68,15 +64,17 @@ public class LiteralOperandTypeChecker
                 return true;
             }
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().ArgumentMustNotBeNull.ex(
-                    callBinding.getOperator().getName());
+                throw callBinding.newError(
+                    EigenbaseResource.instance().ArgumentMustNotBeNull.ex(
+                        callBinding.getOperator().getName()));
             }
             return false;
         }
         if (!SqlUtil.isLiteral(node) && !SqlUtil.isLiteralChain(node)) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().ArgumentMustBeLiteral.ex(
-                    callBinding.getOperator().getName());
+                throw callBinding.newError(
+                    EigenbaseResource.instance().ArgumentMustBeLiteral.ex(
+                        callBinding.getOperator().getName()));
             }
             return false;
         }

@@ -754,11 +754,13 @@ public class SqlLiteral
      * Creates a string literal in the system character set.
      *
      * @param s a string (without the sql single quotes)
+     * @param pos Parser position
      */
     public static SqlCharStringLiteral createCharString(
         String s,
         SqlParserPos pos)
     {
+        // UnsupportedCharsetException not possible
         return createCharString(s, null, pos);
     }
 
@@ -767,8 +769,12 @@ public class SqlLiteral
      *
      * @param s a string (without the sql single quotes)
      * @param charSet character set name, null means take system default
+     * @param pos Parser position
      *
      * @return A string literal
+     *
+     * @throws UnsupportedCharsetException if charSet is not null but there is
+     * no character set with that name in this environment
      */
     public static SqlCharStringLiteral createCharString(
         String s,
