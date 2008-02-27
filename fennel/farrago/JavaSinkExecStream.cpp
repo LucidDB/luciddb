@@ -24,6 +24,8 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/JniUtil.h"
+#include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include <iostream>
 
@@ -95,6 +97,9 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
         assert(inAccessor.getConsumptionAvailable() == 0);
         break;
     default:
+        FENNEL_TRACE(TRACE_FINER, "input rows:");
+        getGraph().getScheduler()->
+            traceStreamBufferContents(*this, inAccessor, TRACE_FINER);
         break;
     }
 
@@ -146,6 +151,22 @@ void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, u
 
     // copy the data
     memcpy(dst, src, size);
+
+    // trace the copy
+    if (isTracingLevel(TRACE_FINER)) {
+        // wrap the output buffer with a buf accessor
+        ExecStreamBufAccessor ba;
+        ba.setProvision(BUFPROV_PRODUCER);
+        ba.setTupleShape(
+            pInAccessor->getTupleDesc(), pInAccessor->getTupleFormat());
+        ba.clear();
+        PBuffer buf = (PBuffer) dst;
+        ba.provideBufferForConsumption(buf, buf+size);
+        FENNEL_TRACE(TRACE_FINER, "output rows:");
+        getGraph().getScheduler()->
+            traceStreamBufferContents(*this, ba, TRACE_FINER);
+    }
+
     // unpin
     pEnv->ReleaseByteArrayElements(bufBacking, dst, 0);
 }
