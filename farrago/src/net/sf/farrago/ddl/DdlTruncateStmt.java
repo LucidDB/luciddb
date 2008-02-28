@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.ddl;
 
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
@@ -39,10 +41,13 @@ import net.sf.farrago.session.*;
  */
 public class DdlTruncateStmt
     extends DdlStmt
+    implements DdlMultipleTransactionStmt
 {
     //~ Instance fields --------------------------------------------------------
 
     private CwmTable table;
+
+    private Collection<FemLocalIndex> tableIndexes;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -60,47 +65,47 @@ public class DdlTruncateStmt
     //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
-    public void preValidate(FarragoSessionDdlValidator ddlValidator)
-    {
-        // Use a reentrant session to simplify cleanup.
-        FarragoSession session = ddlValidator.newReentrantSession();
-        try {
-            execute(ddlValidator, session);
-        } finally {
-            ddlValidator.releaseReentrantSession(session);
-        }
-    }
-
-    // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
         visitor.visit(this);
     }
 
-    private void execute(
+    // implement DdlMultipleTransactionStmt
+    public void prepForExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
-        FarragoRepos repos = session.getRepos();
+        tableIndexes = FarragoCatalogUtil.getTableIndexes(
+            session.getRepos(), table);
+    }
+
+    // implement DdlMultipleTransactionStmt
+    public void executeUnlocked(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session)
+    {
         FarragoSessionIndexMap baseIndexMap = ddlValidator.getIndexMap();
-        FarragoDataWrapperCache wrapperCache =
+        FarragoDataWrapperCache wrapperCache = 
             ddlValidator.getDataWrapperCache();
-        for (
-            FemLocalIndex index
-            : FarragoCatalogUtil.getTableIndexes(repos, table))
-        {
+        for (FemLocalIndex index : tableIndexes) {
+            // REVIEW: SWZ: 2008-02-26: This method might inadvertently access
+            // the repository outside a txn by navigating links on index.
             baseIndexMap.dropIndexStorage(wrapperCache, index, true);
         }
+    }
 
-        FarragoReposTxnContext txn = repos.newTxnContext();
-        try {
-            txn.beginWriteTxn();
-            session.getPersonality().resetRowCounts(
-                (FemAbstractColumnSet) table);
-            txn.commit();
-        } finally {
-            txn.rollback();
-        }
+    // implement DdlMultipleTransactionStmt
+    public boolean cleanupRequiresWriteTxn()
+    {
+        return true;
+    }
+    
+    // implement DdlMultipleTransactionStmt
+    public void cleanupAfterExecuteUnlocked(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session)
+    {
+        session.getPersonality().resetRowCounts((FemAbstractColumnSet) table);
     }
 }
 
