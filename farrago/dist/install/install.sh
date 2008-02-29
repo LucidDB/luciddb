@@ -10,7 +10,7 @@ cd $INSTALL_DIR
 
 if [ -z "$JAVA_HOME" ]; then
     echo "The JAVA_HOME environment variable must be set to the location"
-    echo "of your desired JVM, JDK Version 1.4 or newer."
+    echo "of your desired JVM, JDK Version 1.5 or newer."
     exit 1;
 fi
 
