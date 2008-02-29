@@ -27,8 +27,10 @@ import java.io.*;
 import java.lang.reflect.*;
 
 import java.util.*;
+import java.util.logging.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
 
@@ -98,6 +100,12 @@ import org.eigenbase.util.*;
  * org.eigenbase.sql.SqlWriter.SubqueryStyle#Black Black}.</td>
  * <td>{@link org.eigenbase.sql.SqlWriter.SubqueryStyle#Hyde Hyde}</td>
  * </tr>
+ * <tr>
+ * <td>{@link #setLineLength LineLength}</td>
+ * <td>Set the desired maximum length for lines (to look nice in editors,
+ * printouts, etc.).</td>
+ * <td>0</td>
+ * </tr>
  * </table>
  *
  * @author Julian Hyde
@@ -109,6 +117,8 @@ public class SqlPrettyWriter
 {
     //~ Static fields/initializers ---------------------------------------------
 
+    protected static final EigenbaseLogger logger =
+        new EigenbaseLogger(Logger.getLogger("org.eigenbase.sql.pretty.SqlPrettyWriter"));
     /**
      * Bean holding the default property values.
      */
@@ -154,6 +164,8 @@ public class SqlPrettyWriter
     private boolean whereListItemsOnSeparateLines;
 
     private boolean caseClausesOnNewLines;
+    private int lineLength;
+    private int charCount;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -203,6 +215,16 @@ public class SqlPrettyWriter
     {
         this.subqueryStyle = subqueryStyle;
     }
+    
+    public void setWindowNewline(boolean windowNewline)
+    {
+        this.windowNewline = windowNewline;
+    }
+    
+    public void setWindowDeclListNewline(boolean windowDeclListNewline)
+    {
+        this.windowDeclListNewline = windowDeclListNewline;
+    }
 
     public int getIndentation()
     {
@@ -250,6 +272,11 @@ public class SqlPrettyWriter
     {
         return keywordsLowerCase;
     }
+    
+    public int getLineLength()
+    {
+        return lineLength;
+    }
 
     public void resetSettings()
     {
@@ -266,13 +293,15 @@ public class SqlPrettyWriter
         subqueryStyle = SubqueryStyle.Hyde;
         alwaysUseParentheses = false;
         whereListItemsOnSeparateLines = false;
+        lineLength = 0;
+        charCount = 0;
     }
 
     public void reset()
     {
         pw.flush();
         sw.getBuffer().setLength(0);
-        needWhitespace = false;
+        setNeedWhitespace(false);
         nextWhitespace = " ";
     }
 
@@ -416,8 +445,9 @@ public class SqlPrettyWriter
     public void newlineAndIndent()
     {
         pw.println();
+        charCount = 0;
         indent(currentIndent);
-        needWhitespace = false; // no further whitespace necessary
+        setNeedWhitespace(false); // no further whitespace necessary
     }
 
     void indent(int indent)
@@ -437,6 +467,7 @@ public class SqlPrettyWriter
                 pw.print(spaces[rem]);
             }
         }
+        charCount += indent;
     }
 
     /**
@@ -642,7 +673,7 @@ public class SqlPrettyWriter
                     false);
 
             case FunCall:
-                needWhitespace = false;
+                setNeedWhitespace(false);
                 return new FrameImpl(
                     frameType,
                     keyword,
@@ -704,16 +735,17 @@ public class SqlPrettyWriter
                             newlineBeforeSep
                             && !sep.equals(",");
                         boolean newlineAfter =
-                            newlineAfterSep
-                            && sep.equals(",");
+                            (newlineAfterSep && sep.equals(","));
                         if ((itemCount > 0) || printFirst) {
                             if (newlineBefore && (itemCount > 0)) {
                                 pw.println();
+                                charCount = 0;
                                 indent(currentIndent + sepIndent);
-                                needWhitespace = false;
+                                setNeedWhitespace(false);
                             }
                             keyword(sep);
-                            nextWhitespace = newlineAfter ? NL : " ";
+                            nextWhitespace =
+                                (newlineAfter) ? NL : " ";
                         }
                         ++itemCount;
                     }
@@ -854,7 +886,7 @@ public class SqlPrettyWriter
     public void literal(String s)
     {
         print(s);
-        needWhitespace = true;
+        setNeedWhitespace(true);
     }
 
     public void keyword(String s)
@@ -862,15 +894,15 @@ public class SqlPrettyWriter
         maybeWhitespace(s);
         pw.print(
             isKeywordsLowerCase() ? s.toLowerCase() : s.toUpperCase());
+        charCount += s.length();
         if (!s.equals("")) {
-            needWhitespace = needWhitespaceAfter(s);
+            setNeedWhitespace(needWhitespaceAfter(s));
         }
     }
 
     private void maybeWhitespace(String s)
     {
-        if (needWhitespace
-            && needWhitespaceBefore(s))
+        if (tooLong(s) || (needWhitespace && needWhitespaceBefore(s)))
         {
             whiteSpace();
         }
@@ -899,10 +931,21 @@ public class SqlPrettyWriter
                 newlineAndIndent();
             } else {
                 pw.print(nextWhitespace);
+                charCount += nextWhitespace.length();
             }
             nextWhitespace = " ";
-            needWhitespace = false;
+            setNeedWhitespace(false);
         }
+    }
+    
+    protected boolean tooLong(String s)
+    {
+        boolean result = ((lineLength > 0) 
+            && (charCount > currentIndent)
+            && ((charCount + s.length()) >= lineLength));
+        if (result) nextWhitespace = NL;
+        logger.info("Token is '" + s + "'; result is " + result);
+        return result;
     }
 
     public void print(String s)
@@ -915,25 +958,28 @@ public class SqlPrettyWriter
         }
         maybeWhitespace(s);
         pw.print(s);
+        charCount += s.length();
     }
 
     public void print(int x)
     {
         maybeWhitespace("0");
         pw.print(x);
+        charCount += String.valueOf(x).length();
     }
 
     public void identifier(String name)
     {
-        whiteSpace();
+        String qName = name;
         if (isQuoteAllIdentifiers()
             || dialect.identifierNeedsToBeQuoted(name))
         {
-            pw.print(dialect.quoteIdentifier(name));
-        } else {
-            pw.print(name);
+             qName = dialect.quoteIdentifier(name);
         }
-        needWhitespace = true;
+        maybeWhitespace(qName);
+        pw.print(qName);
+        charCount += qName.length();
+        setNeedWhitespace(true);
     }
 
     public Frame startFunCall(String funName)
@@ -984,6 +1030,11 @@ public class SqlPrettyWriter
     public void setNeedWhitespace(boolean needWhitespace)
     {
         this.needWhitespace = needWhitespace;
+    }
+    
+    public void setLineLength(int lineLength)
+    {
+        this.lineLength = lineLength;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -1074,7 +1125,7 @@ public class SqlPrettyWriter
             }
             if ((itemCount > 0) || printFirst) {
                 keyword(sep);
-                nextWhitespace = newlineAfterSep ? NL : " ";
+                nextWhitespace = (newlineAfterSep) ? NL : " ";
             }
             ++itemCount;
         }
