@@ -67,10 +67,11 @@
 			<onsuccess>
 				<!-- Just want dist/*.bin, but artifactspublisher doesn't take wildcards. -->
                         	<artifactspublisher dir="&open_integration.build.home;/aspen/dist" dest="artifacts/ASPENTARGET-P4SUFFIX&configSuffix;" subdirectory="dist"/>
-				<!-- Make an easy-to-find last-good-build installer. Places in top level dir, not in per-build dir. -->
-				<execute command="cp &open_integration.build.home;/aspen/dist/*.bin artifacts/ASPENTARGET-P4SUFFIX&configSuffix;"/>
-				<!-- artifactspublisher drops permissions. Make timestamped version executable.  -->
-				<execute command="chmod 555 artifacts/ASPENTARGET-P4SUFFIX&configSuffix;/*/*.bin;"/>
+
+				<!-- Make an easy-to-find symbolic link to the last-good-build installer. Places in per-build artifacts dir. -->
+				<!-- artifactspublisher drops permissions. Make timestamped version executable (555).  -->
+				<!-- There seems to be no way to reference the build timestamp here (?!?), so permissions and symbolic linking done by script. -->
+				<execute command="./onsuccess.sh ASPENTARGET-P4SUFFIX&configSuffix; latest-installer"/>
 			</onsuccess>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
