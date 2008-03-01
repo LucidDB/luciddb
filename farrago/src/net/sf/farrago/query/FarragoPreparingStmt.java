@@ -114,7 +114,7 @@ public class FarragoPreparingStmt
     private SqlIdentifier dmlTarget;
     private PrivilegedAction dmlAction;
     private TableAccessMap tableAccessMap;
-    private ChainedRelMetadataProvider relMetadataProvider;
+    protected ChainedRelMetadataProvider relMetadataProvider;
     private boolean allowPartialImplementation;
     private final Map<String, RelDataType> resultSetTypeMap;
     private final Map<String, RelDataType> iterCalcTypeMap;

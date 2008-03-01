@@ -95,10 +95,8 @@ public class PushFilterPastJoinRule
             // (with "true" condition) otherwise this rule will be applied
             // again on the new cartesian product joinRel.
             boolean onlyTrueFilter = true;
-            ListIterator filterIter = joinFilters.listIterator();
-            while (filterIter.hasNext()) {
-                RexNode filter = (RexNode) filterIter.next();
-                if (!filter.isAlwaysTrue()) {
+            for (RexNode joinFilter : joinFilters) {
+                if (!joinFilter.isAlwaysTrue()) {
                     onlyTrueFilter = false;
                     break;
                 }
@@ -202,7 +200,7 @@ public class PushFilterPastJoinRule
                 rightRel,
                 joinFilter,
                 joinRel.getJoinType(),
-                (Set<String>) Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 joinRel.isSemiJoinDone());
 
         // create a FilterRel on top of the join if needed
