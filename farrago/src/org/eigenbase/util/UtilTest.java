@@ -495,14 +495,12 @@ public class UtilTest
 	    
 	    if (timezone.inDaylightTime(testDate)) {
 		
-		assertEquals(timezone.toString(),
-			     "EST10EST1,M10.5.0/2,M3.5.0/3",
+		assertEquals("EST10EST1,M10.5.0/2,M3.5.0/3",
 			     Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
 					  true));
 	    } else {
 		
-		assertEquals(timezone.toString(),
-			     "EST10EST1,M10.1.0/2,M4.1.0/3",
+		assertEquals("EST10EST1,M10.1.0/2,M4.1.0/3",
 			     Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
 					  true));
 	    }
