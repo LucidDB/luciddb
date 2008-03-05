@@ -107,10 +107,11 @@ public enum SqlTypeName
     private static final Map<String, SqlTypeName> VALUES_MAP =
         Util.enumConstants(SqlTypeName.class);
 
-    /**
-     * @deprecated use JDK 1.5 support for treating enumeration
-     * as collection instead
-     */
+    // categorizations used by SqlTypeFamily definitions
+
+    // you probably want to use JDK 1.5 support for treating enumeration
+    // as collection instead; this is only here to support
+    // SqlTypeFamily.ANY
     public static final SqlTypeName [] allTypes =
         new SqlTypeName[] {
             BOOLEAN, INTEGER, VARCHAR, DATE, TIME, TIMESTAMP, NULL, DECIMAL,
@@ -119,8 +120,6 @@ public enum SqlTypeName
             FLOAT, MULTISET, DISTINCT, STRUCTURED, ROW, CURSOR, COLUMN_LIST
         };
     
-    // categorizations used by SqlTypeFamily definitions
-
     public static final SqlTypeName [] booleanTypes = {
         BOOLEAN
     };
@@ -180,224 +179,6 @@ public enum SqlTypeName
         COLUMN_LIST
     };
 
-    //~ Backwards compatibility ---------------------------------------------
-    /**
-     * @deprecated
-     */
-    public static final int Boolean_ordinal = Types.BOOLEAN;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Boolean = BOOLEAN;
-    /**
-     * @deprecated
-     */
-    public static final int Tinyint_ordinal = Types.TINYINT;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Tinyint = TINYINT;
-    /**
-     * @deprecated
-     */
-    public static final int Smallint_ordinal = Types.SMALLINT;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Smallint = SMALLINT;
-    /**
-     * @deprecated
-     */
-    public static final int Integer_ordinal = Types.INTEGER;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Integer = INTEGER;
-    /**
-     * @deprecated
-     */
-    public static final int Bigint_ordinal = Types.BIGINT;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Bigint = BIGINT;
-    /**
-     * @deprecated
-     */
-    public static final int Decimal_ordinal = Types.DECIMAL;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Decimal = DECIMAL;
-    /**
-     * @deprecated
-     */
-    public static final int Float_ordinal = Types.FLOAT;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Float = FLOAT;
-    /**
-     * @deprecated
-     */
-    public static final int Real_ordinal = Types.REAL;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Real = REAL;
-    /**
-     * @deprecated
-     */
-    public static final int Double_ordinal = Types.DOUBLE;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Double = DOUBLE;
-    /**
-     * @deprecated
-     */
-    public static final int Date_ordinal = Types.DATE;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Date = DATE;
-    /**
-     * @deprecated
-     */
-    public static final int Time_ordinal = Types.TIME;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Time = TIME;
-    /**
-     * @deprecated
-     */
-    public static final int Timestamp_ordinal = Types.TIMESTAMP;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Timestamp = TIMESTAMP;
-    /**
-     * @deprecated
-     */
-    public static final int IntervalYearMonth_ordinal = Types.OTHER;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName IntervalYearMonth = INTERVAL_YEAR_MONTH;
-    /**
-     * @deprecated
-     */
-    public static final int IntervalDayTime_ordinal = Types.OTHER;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName IntervalDayTime = INTERVAL_DAY_TIME;
-    /**
-     * @deprecated
-     */
-    public static final int Char_ordinal = Types.CHAR;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Char = CHAR;
-    /**
-     * @deprecated
-     */
-    public static final int Varchar_ordinal = Types.VARCHAR;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Varchar = VARCHAR;
-    /**
-     * @deprecated
-     */
-    public static final int Binary_ordinal = Types.BINARY;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Binary = BINARY;
-    /**
-     * @deprecated
-     */
-    public static final int Varbinary_ordinal = Types.VARBINARY;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Varbinary = VARBINARY;
-    /**
-     * @deprecated
-     */
-    public static final int Null_ordinal = Types.NULL;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Null = NULL;
-    /**
-     * @deprecated
-     */
-    public static final int Any_ordinal = Types.OTHER;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Any = ANY;
-    /**
-     * @deprecated
-     */
-    public static final int Symbol_ordinal = Types.OTHER;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Symbol = SYMBOL;
-    /**
-     * @deprecated
-     */
-    public static final int Multiset_ordinal = Types.ARRAY;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Multiset = MULTISET;
-    /**
-     * @deprecated
-     */
-    public static final int Distinct_ordinal = Types.DISTINCT;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Distinct = DISTINCT;
-    /**
-     * @deprecated
-     */
-    public static final int Structured_ordinal = Types.STRUCT;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Structured = STRUCTURED;
-    /**
-     * @deprecated
-     */
-    public static final int Row_ordinal = Types.STRUCT;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Row = ROW;
-    /**
-     * @deprecated
-     */
-    public static final int Cursor_ordinal = Types.OTHER + 1;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName Cursor = CURSOR;
-    /**
-     * @deprecated
-     */
-    public static final int ColumnList_ordinal = Types.OTHER + 2;
-    /**
-     * @deprecated
-     */
-    public static final SqlTypeName ColumnList = COLUMN_LIST;
-    
     static {
         // This squanders some memory since MAX_JDBC_TYPE == 2006!
         jdbcTypeToName = new SqlTypeName[(1 + MAX_JDBC_TYPE) - MIN_JDBC_TYPE];
@@ -1091,14 +872,6 @@ public enum SqlTypeName
         default:
             throw Util.unexpected(this);
         }
-    }
-
-    /**
-     * @deprecated
-     */
-    public int getOrdinal()
-    {
-        return jdbcOrdinal;
     }
 
     /**

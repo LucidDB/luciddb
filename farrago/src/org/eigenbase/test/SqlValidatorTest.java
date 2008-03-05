@@ -4784,12 +4784,12 @@ public class SqlValidatorTest
             "Type mismatch in column 2 of UNION");
 
         checkFails(
-            "select ^1^ from (values ('x')) union " + NL
+            "select 1 from (values (^'x'^)) union " + NL
             + "select 'a' from (values ('y'))",
             "Type mismatch in column 1 of UNION");
 
         checkFails(
-            "select ^1^ from (values ('x')) union " + NL
+            "select 1 from (values (^'x'^)) union " + NL
             + "(values ('a'))",
             "Type mismatch in column 1 of UNION");
     }
@@ -6010,6 +6010,32 @@ public class SqlValidatorTest
                 + NL
                 + "FROM `EMP`");
         }
+    }
+
+    public void testValuesRewrite()
+    {
+        SqlValidator validator = tester.getValidator();
+        // bare VALUES should be rewritten
+        tester.checkRewrite(
+            validator,
+            "values (3)",
+            TestUtil.fold(
+                "SELECT *\n"
+                + "FROM (VALUES ROW(3))"));
+        // but VALUES under FROM should not...
+        tester.checkRewrite(
+            validator,
+            "select * from (values (3))",
+            TestUtil.fold(
+                "SELECT *\n"
+                + "FROM (VALUES ROW(3))"));
+        // ...even if an alias is present
+        tester.checkRewrite(
+            validator,
+            "select * from (values (3)) as fluff",
+            TestUtil.fold(
+                "SELECT *\n"
+                + "FROM (VALUES ROW(3)) AS `FLUFF`"));
     }
 
     public void _testValuesWithAggFuncs()

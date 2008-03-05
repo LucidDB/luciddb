@@ -34,15 +34,6 @@ import org.eigenbase.sql.*;
  * PushProjectPastFilterRule implements the rule for pushing a projection past a
  * filter.
  *
- * <p>REVIEW (jhyde, 2006/5/18): Rules of this kind, dealing in {@link
- * ProjectRel}s and {@link FilterRel}s, are deprecated. We should write rules
- * which deal with calcs, which are effectively projects and filters fused
- * together. It is still possible to ask a calc whether it is a pure project or
- * a pure filter, or to split a calc into its pure project and filter parts, if
- * desired. An added advantage is the corpus of code in {@link RexProgram} for
- * performing typical operations on {@link RexNode} expressions, in particular
- * common sub-expression elimination.
- *
  * @author Zelaine Fong
  * @version $Id$
  */
