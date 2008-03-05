@@ -944,7 +944,7 @@ public class SqlPrettyWriter
             && (charCount > currentIndent)
             && ((charCount + s.length()) >= lineLength));
         if (result) nextWhitespace = NL;
-        logger.info("Token is '" + s + "'; result is " + result);
+        logger.finest("Token is '" + s + "'; result is " + result);
         return result;
     }
 
