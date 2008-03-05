@@ -1014,7 +1014,6 @@ public class FarragoDbSession
             pRollback[0] = false;
             ddlValidator.closeAllocation();
             ddlValidator = null;
-            personality.validate(stmtValidator, sqlNode);
             FarragoSessionExecutableStmt stmt =
                 database.prepareStmt(
                     stmtContext,

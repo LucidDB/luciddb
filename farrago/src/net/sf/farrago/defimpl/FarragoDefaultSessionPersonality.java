@@ -363,10 +363,10 @@ public class FarragoDefaultSessionPersonality
         RefClass refClass,
         PrivilegedAction [] actions)
     {
-        for (int i = 0; i < actions.length; ++i) {
+        for (PrivilegedAction action : actions) {
             map.mapPrivilegeForType(
                 refClass,
-                actions[i].toString(),
+                action.toString(),
                 true,
                 true);
         }
@@ -391,13 +391,6 @@ public class FarragoDefaultSessionPersonality
         FarragoRepos repos)
     {
         return new FarragoTypeFactoryImpl(repos);
-    }
-
-    // implement FarragoSessionPersonality
-    public void validate(
-        FarragoSessionStmtValidator stmtValidator,
-        SqlNode sqlNode)
-    {
     }
 
     // implement FarragoSessionPersonality
@@ -672,7 +665,7 @@ public class FarragoDefaultSessionPersonality
                     ddlValidator.getRepos().getLocalizedObjectName(name));
             }
             ParamDesc paramDesc = params.get(name);
-            if ((paramDesc.nullability == false) && (value == null)) {
+            if (!paramDesc.nullability && value == null) {
                 throw FarragoResource.instance().ValidatorSysParamTypeMismatch
                 .ex(
                     value,
@@ -681,7 +674,7 @@ public class FarragoDefaultSessionPersonality
                 return null;
             }
 
-            Object o = null;
+            Object o;
             switch (paramDesc.type) {
             case BOOLEAN_TYPE:
                 o = ConversionUtil.toBoolean(value);

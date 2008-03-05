@@ -988,57 +988,11 @@ public class SqlValidatorImpl
                     SqlParserPos.ZERO);
         } else if (node.isA(SqlKind.Delete)) {
             SqlDelete call = (SqlDelete) node;
-            final SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
-            selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
-            SqlNode sourceTable = call.getTargetTable();
-            if (call.getAlias() != null) {
-                sourceTable =
-                    SqlValidatorUtil.addAlias(
-                        sourceTable,
-                        call.getAlias().getSimple());
-            }
-            SqlSelect select =
-                SqlStdOperatorTable.selectOperator.createCall(
-                    null,
-                    selectList,
-                    sourceTable,
-                    call.getCondition(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    SqlParserPos.ZERO);
+            SqlSelect select = createSourceSelectForDelete(call);
             call.setOperand(SqlDelete.SOURCE_SELECT_OPERAND, select);
         } else if (node.isA(SqlKind.Update)) {
             SqlUpdate call = (SqlUpdate) node;
-            final SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
-            selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
-            int ordinal = 0;
-            for (SqlNode exp : call.getSourceExpressionList()) {
-                // Force unique aliases to avoid a duplicate for Y with
-                // SET X=Y
-                String alias = SqlUtil.deriveAliasFromOrdinal(ordinal);
-                selectList.add(SqlValidatorUtil.addAlias(exp, alias));
-                ++ordinal;
-            }
-            SqlNode sourceTable = call.getTargetTable();
-            if (call.getAlias() != null) {
-                sourceTable =
-                    SqlValidatorUtil.addAlias(
-                        sourceTable,
-                        call.getAlias().getSimple());
-            }
-            SqlSelect select =
-                SqlStdOperatorTable.selectOperator.createCall(
-                    null,
-                    selectList,
-                    sourceTable,
-                    call.getCondition(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    SqlParserPos.ZERO);
+            SqlSelect select = createSourceSelectForUpdate(call);
             call.setOperand(SqlUpdate.SOURCE_SELECT_OPERAND, select);
         } else if (node.isA(SqlKind.Merge)) {
             SqlMerge call = (SqlMerge) node;
@@ -1130,6 +1084,76 @@ public class SqlValidatorImpl
             }
         }
         return node;
+    }
+
+    /**
+     * Creates the SELECT statement that putatively feeds rows into an UPDATE
+     * statement to be updated.
+     *
+     * @param call Call to the UPDATE operator
+     * @return select statement
+     */
+    protected SqlSelect createSourceSelectForUpdate(SqlUpdate call)
+    {
+        final SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
+        selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
+        int ordinal = 0;
+        for (SqlNode exp : call.getSourceExpressionList()) {
+            // Force unique aliases to avoid a duplicate for Y with
+            // SET X=Y
+            String alias = SqlUtil.deriveAliasFromOrdinal(ordinal);
+            selectList.add(SqlValidatorUtil.addAlias(exp, alias));
+            ++ordinal;
+        }
+        SqlNode sourceTable = call.getTargetTable();
+        if (call.getAlias() != null) {
+            sourceTable =
+                SqlValidatorUtil.addAlias(
+                    sourceTable,
+                    call.getAlias().getSimple());
+        }
+        return
+            SqlStdOperatorTable.selectOperator.createCall(
+                null,
+                selectList,
+                sourceTable,
+                call.getCondition(),
+                null,
+                null,
+                null,
+                null,
+                SqlParserPos.ZERO);
+    }
+
+    /**
+     * Creates the SELECT statement that putatively feeds rows into a DELETE
+     * statement to be deleted.
+     *
+     * @param call Call to the DELETE operator
+     * @return select statement
+     */
+    protected SqlSelect createSourceSelectForDelete(SqlDelete call)
+    {
+        final SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
+        selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
+        SqlNode sourceTable = call.getTargetTable();
+        if (call.getAlias() != null) {
+            sourceTable =
+                SqlValidatorUtil.addAlias(
+                    sourceTable,
+                    call.getAlias().getSimple());
+        }
+        return
+            SqlStdOperatorTable.selectOperator.createCall(
+                null,
+                selectList,
+                sourceTable,
+                call.getCondition(),
+                null,
+                null,
+                null,
+                null,
+                SqlParserPos.ZERO);
     }
 
     RelDataType getTableConstructorRowType(
