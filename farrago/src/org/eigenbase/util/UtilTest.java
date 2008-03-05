@@ -504,7 +504,10 @@ public class UtilTest
 			     Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
 					  true));
 	    }
-	} catch (ParseException pe) { fail("Problem parsing test date"); }
+	} catch (ParseException pe) { 
+
+	    fail("Problem parsing test date"); 
+	}
 
         // Paris, France. (Uses UTC_TIME time-transition mode.)
         assertEquals("CET1CEST1,M3.5.0/2,M10.5.0/3",
