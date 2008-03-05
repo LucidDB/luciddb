@@ -465,7 +465,7 @@ public class UtilTest
         // NOTE jvs 31-July-2007:  First two tests are disabled since
         // not everyone may have patched their system yet for recent
         // DST change.
-        
+
         // Pacific Standard Time. Effective 2007, the local time changes from
         // PST to PDT at 02:00 LST to 03:00 LDT on the second Sunday in March
         // and returns at 02:00 LDT to 01:00 LST on the first Sunday in
@@ -487,27 +487,29 @@ public class UtilTest
         // hemisphere, daylight savings begins on the last Sunday in October at
         // 2am and ends on the last Sunday in March at 3am.
         // (Uses STANDARD_TIME time-transition mode.)
-	try {
+        try {
 
-	    TimeZone timezone = TimeZone.getTimeZone("Australia/Sydney");
-	    DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-	    Date testDate = format.parse("2008-10-3");
-	    
-	    if (timezone.inDaylightTime(testDate)) {
-		
-		assertEquals("EST10EST1,M10.5.0/2,M3.5.0/3",
-			     Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
-					  true));
-	    } else {
-		
-		assertEquals("EST10EST1,M10.1.0/2,M4.1.0/3",
-			     Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
-					  true));
-	    }
-	} catch (ParseException pe) { 
+            TimeZone timezone = TimeZone.getTimeZone("Australia/Sydney");
+            DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+            Date testDate = format.parse("2008-10-3");
 
-	    fail("Problem parsing test date"); 
-	}
+            if (timezone.inDaylightTime(testDate)) {
+
+                assertEquals(
+                             "EST10EST1,M10.5.0/2,M3.5.0/3",
+                             Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
+                                          true));
+            } else {
+
+                assertEquals(
+                             "EST10EST1,M10.1.0/2,M4.1.0/3",
+                             Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
+                                          true));
+            }
+        } catch (ParseException pe) {
+
+            fail("Problem parsing test date");
+        }
 
         // Paris, France. (Uses UTC_TIME time-transition mode.)
         assertEquals("CET1CEST1,M3.5.0/2,M10.5.0/3",
