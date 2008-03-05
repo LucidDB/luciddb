@@ -27,6 +27,9 @@ import java.io.*;
 import java.math.*;
 
 import java.util.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 import junit.framework.*;
 
@@ -484,8 +487,26 @@ public class UtilTest
         // hemisphere, daylight savings begins on the last Sunday in October at
         // 2am and ends on the last Sunday in March at 3am.
         // (Uses STANDARD_TIME time-transition mode.)
-        assertEquals("EST10EST1,M10.5.0/2,M3.5.0/3",
-            Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"), true));
+	try {
+
+	    TimeZone timezone = TimeZone.getTimeZone("Australia/Sydney");
+	    DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+	    Date testDate = format.parse("2008-10-3");
+	    
+	    if (timezone.inDaylightTime(testDate)) {
+		
+		assertEquals(timezone.toString(),
+			     "EST10EST1,M10.5.0/2,M3.5.0/3",
+			     Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
+					  true));
+	    } else {
+		
+		assertEquals(timezone.toString(),
+			     "EST10EST1,M10.1.0/2,M4.1.0/3",
+			     Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
+					  true));
+	    }
+	} catch (ParseException pe) { fail("Problem parsing test date"); }
 
         // Paris, France. (Uses UTC_TIME time-transition mode.)
         assertEquals("CET1CEST1,M3.5.0/2,M10.5.0/3",
