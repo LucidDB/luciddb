@@ -28,9 +28,6 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
@@ -239,9 +236,9 @@ public interface FarragoSessionDdlValidator
      * validate the names provided in a VIEW's explicit column list.
      *
      * @param collection Collection of CwmModelElements representing the
-     * explicity named columns
+     * explicitly named columns
      */
-    public void validateViewColumnList(Collection collection);
+    public void validateViewColumnList(Collection<?> collection);
 
     /**
      * Creates a new dependency.
@@ -325,6 +322,13 @@ public interface FarragoSessionDdlValidator
      * @param analyzedSql Analyzed SQL for the view definition
      */
     void fixupView(FemLocalView view, FarragoSessionAnalyzedSql analyzedSql);
+    
+    /**
+     * Obtains the single consistent timestamp for this DDL transaction.
+     * 
+     * @return the timestamp for this DDL transaction
+     */
+    public String obtainTimestamp();
 }
 
 // End FarragoSessionDdlValidator.java

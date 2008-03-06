@@ -48,11 +48,6 @@ public class DdlVisitor
     }
 
     // visitor dispatch
-    public void visit(DdlTruncateStmt stmt)
-    {
-    }
-
-    // visitor dispatch
     public void visit(DdlCommitStmt stmt)
     {
     }
@@ -133,12 +128,12 @@ public class DdlVisitor
     }
 
     // visitor dispatch
-    public void visit(DdlAnalyzeStmt stmt)
+    public void visit(DdlDeallocateOldStmt stmt)
     {
     }
 
     // visitor dispatch
-    public void visit(DdlDeallocateOldStmt stmt)
+    public void visit(DdlMultipleTransactionStmt stmt)
     {
     }
 }

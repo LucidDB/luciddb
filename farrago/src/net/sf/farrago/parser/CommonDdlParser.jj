@@ -305,6 +305,7 @@ DdlStmt DdlStmtEof() :
             |
             <TABLE>
             {
+                reposTxnContext.beginLockedTxn(false);
                 ddlStmt = AlterTableStmt();
             }
             |
@@ -1514,21 +1515,17 @@ DdlStmt AlterTableStmt() :
 {
     DdlStmt ddlStmt;
     CwmTable table;
-    FarragoReposTxnContext reposTxnContext =
-        farragoParser.getStmtValidator().getReposTxnContext();
 }
 {
     table = TableIdentifier()
     (
         <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
         {
-            reposTxnContext.beginLockedTxn(false);
             return ddlStmt;
         }
         |
         <REBUILD>
         {
-            reposTxnContext.beginLockedTxn(true);
             return new DdlRebuildTableStmt(table);
         }
     )

@@ -324,7 +324,9 @@ public class DdlRelationalHandler
         // produces the same result type, and (c) it is equivalent to
         // the same canonical SQL.
         String originalSql = view.getOriginalDefinition();
-        if (originalSql != null) {
+        boolean analyzeOriginalSql =
+            session.getPersonality().shouldReplacePreserveOriginalSql();
+        if (analyzeOriginalSql && (originalSql != null)) {
             FarragoSessionAnalyzedSql analyzedOriginalSql;
             try {
                 analyzedOriginalSql =

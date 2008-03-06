@@ -1374,7 +1374,7 @@ public class DdlValidator
             }
             graph.addVertex(element);
             visited.add(element);
-            Collection deps = depSupplier.getSupplierDependency(element);
+            Collection<?> deps = depSupplier.getSupplierDependency(element);
 
             if (deps != null) {
                 for (Object o : deps) {
@@ -1545,7 +1545,7 @@ public class DdlValidator
 
         CwmNamespace ns = target.getNamespace();
         if (ns != null) {
-            Collection c = ns.getOwnedElement();
+            Collection<?> c = ns.getOwnedElement();
             if (c != null) {
                 for (Object o : c) {
                     CwmModelElement element = (CwmModelElement) o;
@@ -1567,7 +1567,8 @@ public class DdlValidator
         return null;
     }
 
-    private String obtainTimestamp()
+    // implement FarragoSessionDdlValidator
+    public String obtainTimestamp()
     {
         // NOTE jvs 5-Nov-2006:  Use a single consistent timestamp for
         // all objects involved in the same DDL transaction (FRG-126).
@@ -1577,7 +1578,7 @@ public class DdlValidator
         return timestamp;
     }
 
-    public void validateViewColumnList(Collection collection)
+    public void validateViewColumnList(Collection<?> collection)
     {
         // intentionally empty
     }
