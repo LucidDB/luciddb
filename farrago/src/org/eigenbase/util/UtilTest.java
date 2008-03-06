@@ -27,9 +27,6 @@ import java.io.*;
 import java.math.*;
 
 import java.util.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 
 import junit.framework.*;
 
@@ -487,32 +484,25 @@ public class UtilTest
         // hemisphere, daylight savings begins on the last Sunday in October at
         // 2am and ends on the last Sunday in March at 3am.
         // (Uses STANDARD_TIME time-transition mode.)
-        try {
 
-            TimeZone timezone = TimeZone.getTimeZone("Australia/Sydney");
-            DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-            Date testDate = format.parse("2007-10-8");
+        // Because australia changed their daylight savings rules, some JVMs
+        // have a different (older and incorrect) timezone settings for
+        // Australia.  So we test for the older one first then do the
+        // correct assert based upon what the toPosix method returns
+        String posixTime =
+            Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"), true);
 
-            if (timezone.inDaylightTime(testDate)) {
+        if (posixTime.equals("EST10EST1,M10.5.0/2,M3.5.0/3")) {
 
-                // older JVMs without the fix
-                assertEquals(
-                             "EST10EST1,M10.5.0/2,M3.5.0/3",
-                             Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
-                                          true));
+            // older JVMs without the fix
+            assertEquals("EST10EST1,M10.5.0/2,M3.5.0/3", posixTime);
 
-            } else {
+        } else {
 
-                // newer JVMs with the fix
-                assertEquals(
-                             "EST10EST1,M10.1.0/2,M4.1.0/3",
-                             Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"),
-                                          true));
-            }
-        } catch (ParseException pe) {
-
-            fail("Problem parsing test date");
+            // newer JVMs with the fix
+            assertEquals("EST10EST1,M10.1.0/2,M4.1.0/3", posixTime);
         }
+
 
         // Paris, France. (Uses UTC_TIME time-transition mode.)
         assertEquals("CET1CEST1,M3.5.0/2,M10.5.0/3",
