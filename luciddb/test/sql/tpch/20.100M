@@ -39,27 +39,27 @@
 +---------------------+----------------------------------------+
 |       S_NAME        |               S_ADDRESS                |
 +---------------------+----------------------------------------+
-| Supplier#000000013  | GK71HPyWoqQWOX8FI FpfAifWZ2PoH         |
-| Supplier#000000020  | hybAEZRmTylrZVY9FZva1SH,j              |
-| Supplier#000000091  | XV45D6TkfdPanOOY7q9QwkyGU9pU1oNWU6q2   |
-| Supplier#000000157  | ZmEGoqBfVIl                            |
-| Supplier#000000197  | XC2Acnn6kjX3zj3Ebxs2j4Vdf6X0cd1F       |
-| Supplier#000000205  | qF uV7d0JNDk                           |
-| Supplier#000000285  | Ar7e1mnt1ywrw6IlgpJ7XdhFDiuBf          |
-| Supplier#000000287  | 6a9SP6qW5Yju5PvRg                      |
-| Supplier#000000358  | U3yxhGhHSXpOoc5TPv5TvkVDGJQsG          |
-| Supplier#000000402  | h9Sw4CoyMhyhKXCG9By, YSgmC             |
-| Supplier#000000431  | VoeV,MINojD6hJj9uAdrk5fGccxX5JTPLnrhm  |
-| Supplier#000000530  | ,pwCMvobKYzOcmLxfRXl9gA8ujENJvZ        |
-| Supplier#000000555  | SfB,a4bfl3 h 3Zz74GqmNs6zJVGM          |
-| Supplier#000000557  | ij0wUXh9K3eG5Jhchrkux ,4               |
-| Supplier#000000640  | lvvtlPKsTOrJj5Igk7,cp                  |
-| Supplier#000000729  | oqck2opy757TQpZBUAjPulU55J3QjfK7Bi     |
-| Supplier#000000736  | k6i2nLwVuoufKnuUgaSGJ2rDy55DlAELegiK7  |
-| Supplier#000000744  | 4NKuw4W4mFCMQBbTjUO4j kfojG8yv e       |
-| Supplier#000000752  | k cHMsEnodwj3FV                        |
-| Supplier#000000848  | sx44J uF,Jmw1                          |
-| Supplier#000000997  | 6eUWMqOCKCo2JYar6P4mK93eaVIOtKJWtTX    |
+| Supplier#000000013  | HK71HQyWoqRWOX8GI FpgAifW,2PoH         |
+| Supplier#000000020  | iybAE,RmTymrZVYaFZva2SH,j              |
+| Supplier#000000091  | YV45D7TkfdQanOOZ7q9QxkyGUapU1oOWU6q3   |
+| Supplier#000000157  | ,mEGorBfVIm                            |
+| Supplier#000000197  | YC2Acon6kjY3zj3Fbxs2k4Vdf7X0cd2F       |
+| Supplier#000000205  | rF uV8d0JNEk                           |
+| Supplier#000000285  | Br7e1nnt1yxrw6ImgpJ7YdhFDjuBf          |
+| Supplier#000000287  | 7a9SP7qW5Yku5PvSg                      |
+| Supplier#000000358  | V3yxhHhHSXqOoc5UPv5TwkVDGKQsG          |
+| Supplier#000000402  | i9Sw4DoyMhzhKXCH9By,AYSgmD             |
+| Supplier#000000431  | WoeV,NINojE6hJjauAdrl5fGcdxX5JUPLnrim  |
+| Supplier#000000530  | 0qwCMwobKY OcmLyfRXlagA8ukENJv,        |
+| Supplier#000000555  | TfB,a5bfl3Ah 3Z 74GqnNs6zKVGM          |
+| Supplier#000000557  | jj0wUYh9K3fG5Jhdhrkuy ,4               |
+| Supplier#000000640  | mvvtlQKsTOsJj5Ihk7,cq                  |
+| Supplier#000000729  | pqck2ppy758TQpZCUAjPvlU55K3QjfL7Bi     |
+| Supplier#000000736  | l6i2nMwVuovfKnuVgaSGK2rDy65DlAFLegiL7  |
+| Supplier#000000744  | 5NKuw5W4mFDMQBbUjUO4k kfokG8yvAe       |
+| Supplier#000000752  | l cHMtEnodxj3FV                        |
+| Supplier#000000848  | tx44JAuF,Jnw1                          |
+| Supplier#000000997  | 7eUWMrOCKCp2JYas6P4mL93eaWIOtKKWtTX    |
 +---------------------+----------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
