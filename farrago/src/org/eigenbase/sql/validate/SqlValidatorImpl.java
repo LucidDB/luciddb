@@ -427,7 +427,8 @@ public class SqlValidatorImpl
     public List<SqlMoniker> lookupHints(SqlNode topNode, SqlParserPos pos)
     {
         SqlValidatorScope scope = new EmptyScope(this);
-        SqlNode outermostNode = performUnconditionalRewrites(topNode);
+        SqlNode outermostNode =
+            performUnconditionalRewrites(topNode, false);
         cursorSet.add(outermostNode);
         if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
             registerQuery(scope, null, outermostNode, null, false);
@@ -696,7 +697,7 @@ public class SqlValidatorImpl
         SqlNode topNode,
         SqlValidatorScope scope)
     {
-        SqlNode outermostNode = performUnconditionalRewrites(topNode);
+        SqlNode outermostNode = performUnconditionalRewrites(topNode, false);
         cursorSet.add(outermostNode);
         if (tracer.isLoggable(Level.FINER)) {
             tracer.finer(
@@ -871,13 +872,16 @@ public class SqlValidatorImpl
     /**
      * Performs expression rewrites which are always used unconditionally. These
      * rewrites massage the expression tree into a standard form so that the
-     * rest of the validation logic can be similar.
+     * rest of the validation logic can be simpler.
      *
      * @param node expression to be rewritten
      *
+     * @param underFrom whether node appears directly under a FROM clause
+     *
      * @return rewritten expression
      */
-    protected SqlNode performUnconditionalRewrites(SqlNode node)
+    protected SqlNode performUnconditionalRewrites(
+        SqlNode node, boolean underFrom)
     {
         if (node == null) {
             return node;
@@ -886,10 +890,23 @@ public class SqlValidatorImpl
         // first transform operands and invoke generic call rewrite
         if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
+            boolean isSelect = call.isA(SqlKind.Select);
+            boolean isAs = call.isA(SqlKind.As);
             final SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
                 SqlNode operand = operands[i];
-                SqlNode newOperand = performUnconditionalRewrites(operand);
+                boolean childUnderFrom;
+                if (isSelect) {
+                    childUnderFrom = (i == SqlSelect.FROM_OPERAND);
+                } else if (isAs && (i == 0)) {
+                    // for an aliased expression, it is under FROM if
+                    // the AS expression is under FROM
+                    childUnderFrom = underFrom;
+                } else {
+                    childUnderFrom = false;
+                }
+                SqlNode newOperand =
+                    performUnconditionalRewrites(operand, childUnderFrom);
                 if (newOperand != null) {
                     call.setOperand(i, newOperand);
                 }
@@ -920,7 +937,8 @@ public class SqlValidatorImpl
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {
                 SqlNode operand = list.get(i);
-                SqlNode newOperand = performUnconditionalRewrites(operand);
+                SqlNode newOperand = performUnconditionalRewrites(
+                    operand, false);
                 if (newOperand != null) {
                     list.getList().set(i, newOperand);
                 }
@@ -929,9 +947,16 @@ public class SqlValidatorImpl
 
         // now transform node itself
         if (node.isA(SqlKind.Values)) {
-            final SqlNodeList selectList = new SqlNodeList(SqlParserPos.ZERO);
-            selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
-            return SqlStdOperatorTable.selectOperator.createCall(
+            if (underFrom) {
+                // leave FROM (VALUES(...)) [ AS alias ] clauses alone,
+                // otherwise they grow cancerously if this rewrite is invoked
+                // over and over
+                return node;
+            } else {
+                final SqlNodeList selectList =
+                    new SqlNodeList(SqlParserPos.ZERO);
+                selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
+                return SqlStdOperatorTable.selectOperator.createCall(
                     null,
                     selectList,
                     node,
@@ -941,6 +966,7 @@ public class SqlValidatorImpl
                     null,
                     null,
                     node.getParserPosition());
+            }
         } else if (node.isA(SqlKind.OrderBy)) {
             SqlCall orderBy = (SqlCall) node;
             SqlNode query =

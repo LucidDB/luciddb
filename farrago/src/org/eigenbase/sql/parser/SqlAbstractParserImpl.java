@@ -43,42 +43,6 @@ public abstract class SqlAbstractParserImpl
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    /**
-     * @deprecated
-     */
-    protected static final ExprContext EXPR_ACCEPT_ALL =
-        ExprContext.ACCEPT_ALL;
-
-    /**
-     * @deprecated
-     */
-    protected static final ExprContext EXPR_ACCEPT_NONCURSOR =
-        ExprContext.ACCEPT_NONCURSOR;
-
-    /**
-     * @deprecated
-     */
-    protected static final ExprContext EXPR_ACCEPT_QUERY =
-        ExprContext.ACCEPT_QUERY;
-
-    /**
-     * @deprecated
-     */
-    protected static final ExprContext EXPR_ACCEPT_NONQUERY =
-        ExprContext.ACCEPT_NONQUERY;
-
-    /**
-     * @deprecated
-     */
-    protected static final ExprContext EXPR_ACCEPT_SUBQUERY =
-        ExprContext.ACCEPT_SUBQUERY;
-
-    /**
-     * @deprecated
-     */
-    protected static final ExprContext EXPR_ACCEPT_CURSOR =
-        ExprContext.ACCEPT_CURSOR;
-
     private static final Set<String> sql92ReservedWordSet;
 
     static {

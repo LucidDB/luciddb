@@ -1146,6 +1146,19 @@ please disable it and try again.
     </macker>
   </target>
 
+  <target name="findbugs">
+    <taskdef name="findbugs"
+      classname="edu.umd.cs.findbugs.anttask.FindBugsTask" />
+    <findbugs home="${findbugs.dir}" 
+      jvmargs="-Xms1024m -Xmx1024m"
+      output="emacs" 
+      outputFile="findbugs.txt">
+      <sourcePath path="${farrago.src.dir}"/>
+      <auxClasspath path="${farrago.sqlline.classpath}"/>
+      <class location="${farrago.classes.dir}"/>
+    </findbugs>
+  </target>
+
   <!-- Verify that all source files have the required headers -->
   <!-- TODO:  see if this works in non-Linux environments -->
   <target name="checkSourceFilePreambles">
