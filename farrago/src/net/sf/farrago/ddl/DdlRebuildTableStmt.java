@@ -121,7 +121,10 @@ public class DdlRebuildTableStmt
         session.getPersonality().resetRowCounts((FemAbstractColumnSet) table);
 
         // Update the table's timestamp (for a normal DdlStmt executing in
-        // preValidate this happens behind the scenes).
+        // preValidate this happens as a result of DdlValidator's event
+        // monitoring).  It's necessary so that any cached plans involving this
+        // table are expired, but it's hokey since the table definition hasn't
+        // actually changed.
         FarragoCatalogUtil.updateAnnotatedElement(
             (FemLocalTable)table,
             ddlValidator.obtainTimestamp(),
@@ -152,13 +155,13 @@ public class DdlRebuildTableStmt
     }
 
     // implement DdlMultipleTransactionStmt
-    public boolean cleanupRequiresWriteTxn()
+    public boolean completeRequiresWriteTxn()
     {
         return true;
     }
     
     // implement DdlMultipleTransactionStmt
-    public void cleanupAfterExecuteUnlocked(
+    public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {

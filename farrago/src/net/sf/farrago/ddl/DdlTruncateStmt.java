@@ -95,13 +95,13 @@ public class DdlTruncateStmt
     }
 
     // implement DdlMultipleTransactionStmt
-    public boolean cleanupRequiresWriteTxn()
+    public boolean completeRequiresWriteTxn()
     {
         return true;
     }
     
     // implement DdlMultipleTransactionStmt
-    public void cleanupAfterExecuteUnlocked(
+    public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
