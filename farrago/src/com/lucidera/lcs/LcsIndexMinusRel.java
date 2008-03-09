@@ -35,7 +35,7 @@ import org.eigenbase.relopt.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-class LcsIndexMinusRel
+public class LcsIndexMinusRel
     extends LcsIndexBitOpRel
 {
     //~ Constructors -----------------------------------------------------------

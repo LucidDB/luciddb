@@ -29,6 +29,7 @@
 #include "fennel/cache/CachePage.h"
 #include "fennel/cache/CacheImpl.h"
 #include "fennel/cache/RandomVictimPolicy.h"
+#include "fennel/cache/LRUVictimPolicy.h"
 #include <boost/test/test_tools.hpp>
 #include <strstream>
 
@@ -48,6 +49,20 @@ typedef CacheImpl<
     RandomVictimPolicy<CachePage>
 > RandomCache;
 
+class LRUPage : public CachePage, public LRUVictim
+{
+public:
+    LRUPage(Cache &cache,PBuffer buffer)
+        : CachePage(cache,buffer)
+    {
+    }
+};
+
+typedef CacheImpl<
+    LRUPage,
+    LRUVictimPolicy<LRUPage>
+> LRUCache;
+
 SharedCache CacheTestBase::newCache()
 {
     switch (victimPolicy) {
@@ -56,6 +71,10 @@ SharedCache CacheTestBase::newCache()
             new RandomCache(cacheParams),
             ClosableObjectDestructor());
     case victimLRU:
+        return SharedCache(
+            new LRUCache(cacheParams),
+            ClosableObjectDestructor());
+    case victimTwoQ:
         return Cache::newCache(cacheParams);
     default:
         permAssert(false);
@@ -130,11 +149,13 @@ CacheTestBase::CacheTestBase()
     nMemPages = cacheParams.nMemPagesMax;
     cbPageFull = cacheParams.cbPage;
     std::string victimPolicyString = configMap.getStringParam(
-        "victimPolicy","lru");
+        "victimPolicy","twoq");
     if (victimPolicyString == "random") {
         victimPolicy = victimRandom;
     } else if (victimPolicyString == "lru") {
         victimPolicy = victimLRU;
+    } else if (victimPolicyString == "twoq") {
+        victimPolicy = victimTwoQ;
     } else {
         std::cerr << "Unknown victim policy " << victimPolicyString
                   << std::endl;

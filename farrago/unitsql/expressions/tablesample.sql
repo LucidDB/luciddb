@@ -95,4 +95,23 @@ select * from t tablesample system(50) repeatable;
 
 select * from t tablesample bob(10);
 
+-- do some testing with column store tables
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+create table lcstab (i int primary key, j int, k int);
+insert into lcstab select * from t;
+
+!outputformat csv
+explain plan for select * from lcstab tablesample system(10) repeatable(31415);
+!outputformat table
+
+select * from lcstab tablesample system(10) repeatable(31415);
+
+-- Some slightly more complex queries
+
+!outputformat csv
+explain plan for select j, k from lcstab tablesample bernoulli(50) repeatable(1776) where j = 1;
+!outputformat table
+
+select j, k from lcstab tablesample bernoulli(50) repeatable(1776) where j = 1;
+
 -- end tablesample.sql

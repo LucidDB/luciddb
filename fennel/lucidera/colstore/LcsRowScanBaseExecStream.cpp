@@ -79,7 +79,9 @@ void LcsRowScanBaseExecStream::prepare(
         treeDescriptor.segmentId = bTreeParams.segmentId;
         treeDescriptor.pageOwnerId = bTreeParams.pageOwnerId;
 
-        pClu = SharedLcsClusterReader(new LcsClusterReader(treeDescriptor));
+        pClu =
+            SharedLcsClusterReader(
+                new LcsClusterReader(treeDescriptor, &ridRuns));
 
         // setup the cluster and column readers to only read the columns
         // that are going to be projected
@@ -108,7 +110,8 @@ void LcsRowScanBaseExecStream::prepare(
            clusterProj.push_back(0); 
         } 
         pClu->initColumnReaders(
-            params.lcsClusterScanDefs[i].clusterTupleDesc.size(), clusterProj);
+            params.lcsClusterScanDefs[i].clusterTupleDesc.size(),
+            clusterProj);
         if (!allSpecial) {
             for (uint j = 0; j < pClu->nColsToRead; j++) {
                 allClusterTupleDesc.push_back(

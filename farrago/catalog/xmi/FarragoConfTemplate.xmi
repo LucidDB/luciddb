@@ -37,6 +37,10 @@
           jniHandleTraceFile='@jniHandleTraceFile@'
           expectedConcurrentStatements='4'
           cacheReservePercentage='5'
+          freshmenPageQueuePercentage='25'
+          pageHistoryQueuePercentage='100'
+          prefetchPagesMax='12'
+          prefetchThrottleRate='10'
           />
       </FEMConfig:FarragoConfig.FennelConfig>
     </FEMConfig:FarragoConfig>

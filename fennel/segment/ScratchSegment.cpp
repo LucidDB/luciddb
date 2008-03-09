@@ -153,10 +153,11 @@ void ScratchSegment::discardPage(
 {
 }
 
-void ScratchSegment::prefetchPage(
+bool ScratchSegment::prefetchPage(
     BlockId,
     MappedPageListener *)
 {
+    return false;
 }
 
 void ScratchSegment::prefetchBatch(
@@ -202,6 +203,12 @@ void ScratchSegment::setTxnId(TxnId)
 TxnId ScratchSegment::getTxnId() const
 {
     return IMPLICIT_TXN_ID;
+}
+
+void ScratchSegment::getPrefetchParams(
+    uint &nPagesPerBatch,
+    uint &nBatchPrefetches)
+{
 }
 
 FENNEL_END_CPPFILE("$Id$");

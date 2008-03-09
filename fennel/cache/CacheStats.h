@@ -91,6 +91,81 @@ public:
      * Number of disk pages written (since cache initialization).
      */
     uint nPageWritesSinceInit;
+    
+    /**
+     * Number of rejected cache pre-fetch requests (since last snapshot).
+     */
+    uint nRejectedPrefetches;
+
+    /**
+     * Number of rejected cache pre-fetch requests (since cache initialization).
+     */
+    uint nRejectedPrefetchesSinceInit;
+
+    /**
+     * Number of I/O requests requiring retry (since last snapshot).
+     */
+    uint nIoRetries;
+
+    /**
+     * Number of I/O requests requiring retry (since cache initialization).
+     */
+    uint nIoRetriesSinceInit;
+
+    /**
+     * Number of successful cache pre-fetch requests (since last snapshot).
+     */
+    uint nSuccessfulPrefetches;
+
+    /**
+     * Number of successful cache pre-fetch requests (since cache
+     * initialization).
+     */
+    uint nSuccessfulPrefetchesSinceInit;
+
+    /**
+     * Number of lazy cache page writes (since last snapshot).
+     */
+    uint nLazyWrites;
+
+    /**
+     * Number of lazy cache page writes (since last initialization).
+     */
+    uint nLazyWritesSinceInit;
+
+    /**
+     * Number of lazy write calls that encountered at least one dirty page
+     * (since last snapshot);
+     */
+    uint nLazyWriteCalls;
+
+    /**
+     * Number of lazy write calls that encountered at least one dirty page
+     * (since initialization);
+     */
+    uint nLazyWriteCallsSinceInit;
+
+    /**
+     * Number of cache page writes during page victimization (since last
+     * snapshot).
+     */
+    uint nVictimizationWrites;
+
+    /**
+     * Number of lazy cache page writes during victimizations (since last
+     * initialization).
+     */
+    uint nVictimizationWritesSinceInit;
+
+    /**
+     * Number of cache page writes during checkpoint (since last snapshot).
+     */
+    uint nCheckpointWrites;
+
+    /**
+     * Number of cache page writes during checkpoint (since initialization).
+     */
+    uint nCheckpointWritesSinceInit;
 
     /**
      * Number of memory pages currently allocated in buffer pool

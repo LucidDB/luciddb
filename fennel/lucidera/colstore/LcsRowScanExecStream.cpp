@@ -30,6 +30,13 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 int32_t LcsRowScanExecStreamParams::defaultSystemSamplingClumps = 10;
 
+LcsRowScanExecStream::LcsRowScanExecStream()
+: 
+    LcsRowScanBaseExecStream(),
+    ridRunIter(&ridRuns)
+{
+    ridRuns.resize(4000);
+}
 
 void LcsRowScanExecStream::prepareResidualFilters(
     LcsRowScanExecStreamParams const &params)
@@ -169,6 +176,7 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
 
     if (samplingMode != SAMPLING_OFF) {
         samplingRate = params.samplingRate;
+        rowCount = params.samplingRowCount;
 
         if (samplingMode == SAMPLING_BERNOULLI) {
             isSamplingRepeatable = params.samplingIsRepeatable;
@@ -183,8 +191,6 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
             assert(samplingClumps > 0);
             
             isSamplingRepeatable = false;
-
-            rowCount = params.samplingRowCount;
         }
     }
 }
@@ -195,11 +201,18 @@ void LcsRowScanExecStream::open(bool restart)
     producePending = false;
     tupleFound = false;
     nRidsRead = 0;
+    ridRunsBuilt = false;
+    currRidRun.startRid = LcsRid(MAXU);
+    currRidRun.nRids = 0;
+    ridRuns.clear();
+    ridRunIter.reset();
+
     if (isFullScan) {
-        rid = LcsRid(0);
+        inputRid = LcsRid(0);
         readDeletedRid = true;
         deletedRidEos = false;
     }
+    nextRid = LcsRid(0);
     ridReader.init(inAccessors[0], ridTupleData);
 
     /*
@@ -227,6 +240,7 @@ void LcsRowScanExecStream::open(bool restart)
         clumpSize = 0;
         clumpDistance = 0;
         clumpPos = 0;
+        numClumpsBuilt = 0;
 
         initializeSystemSampling();
     }
@@ -316,12 +330,13 @@ void LcsRowScanExecStream::initializeSystemSampling()
         // Handle empty table or non-sense input.
         clumpSize = 1;
         clumpDistance = 0;
+        numClumps = 0;
         return;
     }
 
-    // Manipulate this value locally so we don't mistakenly modify our stored
-    // copy of the parameter.
-    int32_t numClumps = samplingClumps;
+    // Manipulate this value in a separate member field so we don't
+    // mistakenly modify our stored copy of the parameter.
+    numClumps = samplingClumps;
 
     // Compute clump size and distance
     int64_t sampleSize = 
@@ -380,13 +395,6 @@ void LcsRowScanExecStream::initializeSystemSampling()
 
 ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    if (!isFullScan && inAccessors[0]->getState() == EXECBUF_EOS) {
-        // Check for input EOS if not full table scan.
-        // Full table scan does not have any input.
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
-    }
-
     if (!initializeFiltersIfNeeded()) {
         return EXECRC_BUF_UNDERFLOW;
     }
@@ -397,87 +405,23 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         bool passedFilter;
 
         while (!producePending) {
-            ExecStreamResult rc;
-            if (!isFullScan) {
-                rc = ridReader.readRidAndAdvance(rid);
-                if (rc == EXECRC_EOS) {
-                    pOutAccessor->markEOS();
-                    return rc;
-                }
+
+            // No need to fill the rid run buffer each time through the loop
+            if (!ridRunsBuilt && ridRuns.nFreeSpace() > 100) {
+                ExecStreamResult rc = fillRidRunBuffer();
                 if (rc != EXECRC_YIELD) {
                     return rc;
                 }
-            } else {
-                if (!deletedRidEos && readDeletedRid) {
-                    rc = ridReader.readRidAndAdvance(deletedRid);
-                    if (rc == EXECRC_EOS) {
-                        deletedRidEos = true;
-                    } else if (rc != EXECRC_YIELD) {
-                        return rc;
-                    } else {
-                        readDeletedRid = false;
-                    }
-                }
-                // skip over deleted rids
-                if (!deletedRidEos && rid == deletedRid) {
-                    rid++;
-                    readDeletedRid = true;
-                    continue;
-                }
             }
 
-            if (samplingMode != SAMPLING_OFF) {
-                if (samplingMode == SAMPLING_SYSTEM) {
-                    if (clumpSkipPos > 0) {
-                        // We need to skip clumpSkipPos RIDs, taking into
-                        // account deleted RIDs.  If all deleted RIDs have been
-                        // processed (a), we can just skip forward to the next
-                        // clump.  If we know the next deleted RID, skip to the
-                        // next clump if we can (b), else skip to the deleted
-                        // RID (c).  Processing will return here to handle the
-                        // remaining clumpSkipPos rows when we reach the next
-                        // live RID.  If we don't know the next deleted RID
-                        // (d), skip the current live RID, let the deleted RID
-                        // processing occur above and then processing will
-                        // return here to deal with the remaining clumpSkipPos
-                        // rows.
-                        if (deletedRidEos) {
-                            // (a)
-                            rid += clumpSkipPos;
-                            clumpSkipPos = 0;
-                        } else if (!readDeletedRid) {
-                            if (deletedRid > rid + clumpSkipPos) {
-                                // (b)
-                                rid += clumpSkipPos;
-                                clumpSkipPos = 0;
-                            } else {
-                                // (c)
-                                clumpSkipPos -= opaqueToInt(deletedRid - rid);
-                                rid = deletedRid;
-                                continue;
-                            }
-                        } else {
-                            // (d)
-                            clumpSkipPos--;
-                            rid++;
-                            continue;
-                        }
-                    }
-
-                    if (++clumpPos > clumpSize) {
-                        clumpPos = 0;
-                        clumpSkipPos = clumpDistance;
-                        if (clumpDistance > 0) {
-                            continue;
-                        }
-                    }
-                } else {
-                    // Bernoulli sampling
-                    if (!samplingRng->nextValue()) {
-                        rid++;
-                        continue;
-                    }
-                }
+            // Determine the rid that needs to be fetched based on the
+            // contents of the rid run buffer.
+            LcsRid rid =
+                LcsClusterReader::getFetchRids(ridRunIter, nextRid, true);
+            if (rid == LcsRid(MAXU)) {
+                assert(ridRunIter.done());
+                pOutAccessor->markEOS();
+                return EXECRC_EOS;
             }
 
             uint prevClusterEnd = 0;
@@ -500,6 +444,9 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
             for (iClu = 0, passedFilter = true; iClu <  nClusters; iClu++) {
 
                 SharedLcsClusterReader &pScan = pClusters[iClu];
+
+                // Resync the cluster reader to the current rid position
+                pScan->catchUp(ridRunIter.getCurrPos(), nextRid);
 
                 // if we have not read a batch yet or we've reached the
                 // end of a batch, position to the rid we want to read
@@ -540,9 +487,6 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
             }
 
             if (!passedFilter) {
-                if (isFullScan) {
-                    rid++;
-                }
                 continue;
             }
             if (iClu == nClusters) {
@@ -561,13 +505,11 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         producePending = false;
         
         if (isFullScan) {
-            // if tuple not found, reached end of table,
-            // else move to next rid
+            // if tuple not found, reached end of table
             if (!tupleFound) {
                 pOutAccessor->markEOS();
                 return EXECRC_EOS;
             }
-            rid++;
         }
 
         tupleFound = false;
@@ -575,6 +517,159 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     return EXECRC_QUANTUM_EXPIRED;
+}
+
+ExecStreamResult LcsRowScanExecStream::fillRidRunBuffer()
+{
+    ExecStreamResult rc;
+    RecordNum nRows;
+
+    do {
+        if (!isFullScan) {
+            rc = ridReader.readRidAndAdvance(inputRid);
+            if (rc == EXECRC_EOS) {
+                ridRunsBuilt = true;
+                break;
+            }
+            if (rc != EXECRC_YIELD) {
+                return rc;
+            }
+            nRows = 1;
+
+        } else {
+            if (!deletedRidEos && readDeletedRid) {
+                rc = ridReader.readRidAndAdvance(deletedRid);
+                if (rc == EXECRC_EOS) {
+                    deletedRidEos = true;
+                    if (samplingMode == SAMPLING_OFF) {
+                        ridRunsBuilt = true;
+                    } else if (samplingMode == SAMPLING_SYSTEM &&
+                        numClumps == 0)
+                    {
+                        ridRunsBuilt = true;
+                        break;
+                    }
+                } else if (rc != EXECRC_YIELD) {
+                    return rc;
+                } else {
+                    readDeletedRid = false;
+                }
+            }
+            // skip over deleted rids
+            if (!deletedRidEos && inputRid == deletedRid) {
+                inputRid++;
+                readDeletedRid = true;
+                continue;
+            } else {
+                if (deletedRidEos) {
+                    nRows = MAXU;
+                } else {
+                    nRows = opaqueToInt(deletedRid - inputRid);
+                }
+            }
+        }
+
+        if (samplingMode != SAMPLING_OFF) {
+            if (samplingMode == SAMPLING_SYSTEM) {
+                if (clumpSkipPos > 0) {
+                    // We need to skip clumpSkipPos RIDs, taking into
+                    // account deleted RIDs.  If all deleted RIDs have been
+                    // processed (a), we can just skip forward to the next
+                    // clump.  If we know the next deleted RID, skip to the
+                    // next clump if we can (b), else skip to the deleted
+                    // RID (c).  Processing will return here to handle the
+                    // remaining clumpSkipPos rows when we reach the next
+                    // live RID.  If we don't know the next deleted RID
+                    // (d), skip the current live RID, let the deleted RID
+                    // processing occur above and then processing will
+                    // return here to deal with the remaining clumpSkipPos
+                    // rows.
+                    if (deletedRidEos) {
+                        // (a)
+                        inputRid += clumpSkipPos;
+                        clumpSkipPos = 0;
+                    } else if (!readDeletedRid) {
+                        if (deletedRid > inputRid + clumpSkipPos) {
+                            // (b)
+                            inputRid += clumpSkipPos;
+                            clumpSkipPos = 0;
+                            nRows = opaqueToInt(deletedRid - inputRid);
+                        } else {
+                            // (c)
+                            clumpSkipPos -= opaqueToInt(deletedRid - inputRid);
+                            inputRid = deletedRid;
+                            continue;
+                        }
+                    } else {
+                        // (d)
+                        clumpSkipPos--;
+                        inputRid++;
+                        continue;
+                    }
+                }
+
+                if (nRows >= clumpSize - clumpPos) {
+                    // Scale back the size of the rid run based on the
+                    // clump size
+                    nRows = clumpSize - clumpPos;
+                    clumpPos = 0;
+                    clumpSkipPos = clumpDistance;
+                    if (++numClumpsBuilt == numClumps) {
+                        ridRunsBuilt = true;
+                    }
+                } else  {
+                    // We only have enough rids for a partial clump
+                    clumpPos += nRows;
+                }
+            } else {
+                // Bernoulli sampling
+                if (opaqueToInt(inputRid) >= opaqueToInt(rowCount)) {
+                    ridRunsBuilt = true;
+                    break;
+                }
+                if (!samplingRng->nextValue()) {
+                    inputRid++;
+                    continue;
+                }
+                nRows = 1;
+            }
+        }
+
+        if (currRidRun.startRid == LcsRid(MAXU)) {
+            currRidRun.startRid = inputRid;
+            currRidRun.nRids = nRows;
+        } else if (currRidRun.startRid + currRidRun.nRids == inputRid) {
+            // If the next set of rids is contiguous with the previous,
+            // continue adding on to the current run
+            if (nRows == RecordNum(MAXU)) {
+                currRidRun.nRids = MAXU;
+            } else {
+                currRidRun.nRids += nRows;
+            }
+        } else {
+            // Otherwise, end the current one
+            ridRuns.push_back(currRidRun);
+
+            // And start a new one
+            currRidRun.startRid = inputRid;
+            currRidRun.nRids = nRows;
+        }
+
+        if (isFullScan) {
+            inputRid += nRows;
+        }
+
+    } while (ridRuns.spaceAvailable() && !ridRunsBuilt);
+
+    // Write out the last run
+    if (ridRunsBuilt && currRidRun.startRid != LcsRid(MAXU)) {
+        ridRuns.push_back(currRidRun);
+    }
+
+    if (ridRunsBuilt) {
+        ridRuns.setReadOnly();
+    }
+    return EXECRC_YIELD;
 }
 
 void LcsRowScanExecStream::closeImpl()

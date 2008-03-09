@@ -20,19 +20,17 @@ call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(
     'Lhx.*Rule|.*NestedLoop.*');
 
 create table lhxemps(
-    empno integer not null,
+    empno integer primary key,
     ename varchar(40),
-    deptno integer)
-server sys_column_store_data_server;
+    deptno integer);
 
 create table lhxdepts(
-    deptnoA integer)
-server sys_column_store_data_server;
+    deptnoA integer primary key);
 
-insert into lhxemps select empno, name, deptno from sales.emps;
-insert into lhxemps select empno, name, deptno from sales.emps;
+insert into lhxemps
+    select empno, name, deptno from sales.emps where empno <> 110;
 
-insert into lhxdepts select deptno from sales.emps;
+insert into lhxdepts select deptno from sales.emps where deptno <> 20;
 
 !set outputformat csv
 select * from lhxemps order by 1;

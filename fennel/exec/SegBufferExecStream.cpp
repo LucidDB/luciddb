@@ -45,9 +45,9 @@ void SegBufferExecStream::getResourceRequirements(
 {
     ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
 
-    // pages for I/O (including pre-fetch)
-    minQuantity.nCachePages += SEG_NUM_PREFETCH_PAGES;
-    
+    // set aside 1 page for I/O
+    minQuantity.nCachePages += 1;
+
     optQuantity = minQuantity;
 }
 

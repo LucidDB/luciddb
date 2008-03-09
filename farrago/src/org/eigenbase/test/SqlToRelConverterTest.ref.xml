@@ -1351,4 +1351,21 @@ ProjectRel(A=[$0], B=[$1], C=[$2], DEPTNO=[$3], NAME=[$4])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testJoinWithUnion">
+        <Resource name="sql">
+            <![CDATA[select grade from (select empno from emp union select deptno from dept), salgrade]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(GRADE=[$1])
+  JoinRel(condition=[true], joinType=[inner])
+    UnionRel(all=[false])
+      ProjectRel(EMPNO=[$0])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      ProjectRel(DEPTNO=[$0])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, SALGRADE]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

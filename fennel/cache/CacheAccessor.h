@@ -144,8 +144,10 @@ public:
      * @param pMappedPageListener optional listener to receive notifications
      * when this page is written; if specified, it must match all prior and
      * subsequent lock requests for the same page mapping
+     *
+     * @return true if the pre-fetch request was successful
      */
-    virtual void prefetchPage(
+    virtual bool prefetchPage(
         BlockId blockId,
         MappedPageListener *pMappedPageListener = NULL) = 0;
 
@@ -218,6 +220,21 @@ public:
      * @return default TxnId associated with this accessor
      */
     virtual TxnId getTxnId() const = 0;
+
+    /**
+     * Retrieves the current pre-fetch caching parameters that determine how
+     * many pages should be pre-fetched and how often the pre-fetches should
+     * occur.
+     *
+     * @param [out] prefetchPagesMax max number of outstanding pre-fetch pages
+     *
+     * @param [out] prefetchThrottleRate the number of successful pre-fetches
+     * that have to occur before the pre-fetch rate is throttled back up,
+     * in the event that it has been throttled down due to rejected requests
+     */
+    virtual void getPrefetchParams(
+        uint &prefetchPagesMax,
+        uint &prefetchThrottleRate) = 0;
 };
 
 FENNEL_END_NAMESPACE

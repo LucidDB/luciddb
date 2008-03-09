@@ -23,7 +23,7 @@
 #define Fennel_LbmSearchExecStream_Included
 
 #include "fennel/exec/DynamicParam.h"
-#include "fennel/ftrs/BTreeSearchExecStream.h"
+#include "fennel/ftrs/BTreePrefetchSearchExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -31,7 +31,7 @@ FENNEL_BEGIN_NAMESPACE
  * LbmSearchExecStreamParams defines parameters for instantiating a
  * LbmSearchExecStream
  */
-struct LbmSearchExecStreamParams : public BTreeSearchExecStreamParams
+struct LbmSearchExecStreamParams : public BTreePrefetchSearchExecStreamParams
 {
     /**
      * Parameter id representing the dynamic parameter used to limit the
@@ -53,7 +53,7 @@ struct LbmSearchExecStreamParams : public BTreeSearchExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmSearchExecStream : public BTreeSearchExecStream
+class LbmSearchExecStream : public BTreePrefetchSearchExecStream
 {
     /**
      * True if the rid key is included in the btree search key.  This will
@@ -124,6 +124,13 @@ class LbmSearchExecStream : public BTreeSearchExecStream
      * the rid can be part of the btree search key.
      */
     virtual void setAdditionalKeys();
+
+    /**
+     * Sets the lower bound key, taking into account the rid search key.
+     *
+     * @param buf the buffer containing the lower bound key
+     */
+    virtual void setLowerBoundKey(PConstBuffer buf);
 
 public:
     virtual void prepare(LbmSearchExecStreamParams const &params);

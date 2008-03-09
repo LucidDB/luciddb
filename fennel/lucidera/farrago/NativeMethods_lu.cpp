@@ -266,6 +266,7 @@ class ExecStreamSubFactory_lu
     {
         LbmSearchExecStreamParams params;
         pExecStreamFactory->readBTreeSearchStreamParams(params, streamDef);
+        pExecStreamFactory->createPrivateScratchSegment(params);
 
         params.rowLimitParamId =
             pExecStreamFactory->readDynamicParamId(

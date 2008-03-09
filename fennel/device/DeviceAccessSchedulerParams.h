@@ -64,7 +64,7 @@ public:
     /**
      * Suggested number of threads to dedicate to scheduling
      * activities; the scheduler may adjust this number based on
-     * maxSimultaneousRequests.
+     * maxRequests.
      */
     uint nThreads;
 

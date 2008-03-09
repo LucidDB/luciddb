@@ -207,6 +207,53 @@ Was expecting one of:
     "SUBSTITUTE" ...
     "SYSTEM" ... (state=,code=0)
 > 
+> -- do some testing with column store tables
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> create table lcstab (i int primary key, j int, k int);
+> insert into lcstab select * from t;
+> 
+> !outputformat csv
+> explain plan for select * from lcstab tablesample system(10) repeatable(31415);
+'column0'
+'FennelToIteratorConverter'
+'  LcsSamplingRowScanRel(table=[[LOCALDB, TBLSAMPLE, LCSTAB]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSTAB$I, SYS$CLUSTERED_INDEX$LCSTAB$J, SYS$CLUSTERED_INDEX$LCSTAB$K]], mode=[system], rate=[0.1], repeatableSeed=[31415])'
+> !outputformat table
+> 
+> select * from lcstab tablesample system(10) repeatable(31415);
++-----+----+----+
+|  I  | J  | K  |
++-----+----+----+
+| 1   | 1  | 1  |
+| 2   | 2  | 2  |
+| 3   | 1  | 3  |
+| 4   | 2  | 4  |
+| 5   | 1  | 5  |
+| 6   | 2  | 1  |
+| 7   | 1  | 2  |
+| 8   | 2  | 3  |
+| 9   | 1  | 4  |
+| 10  | 2  | 5  |
++-----+----+----+
+> 
+> -- Some slightly more complex queries
+> 
+> !outputformat csv
+> explain plan for select j, k from lcstab tablesample bernoulli(50) repeatable(1776) where j = 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[1]], outputRowType=[RecordType(INTEGER J, INTEGER K) NOT NULL])'
+'    LcsSamplingRowScanRel(table=[[LOCALDB, TBLSAMPLE, LCSTAB]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSTAB$J, SYS$CLUSTERED_INDEX$LCSTAB$K]], mode=[bernoulli], rate=[0.5], repeatableSeed=[1776])'
+> !outputformat table
+> 
+> select j, k from lcstab tablesample bernoulli(50) repeatable(1776) where j = 1;
++----+----+
+| J  | K  |
++----+----+
+| 1  | 1  |
+| 1  | 5  |
+| 1  | 4  |
++----+----+
+> 
 > -- end tablesample.sql
 > 
 > !quit

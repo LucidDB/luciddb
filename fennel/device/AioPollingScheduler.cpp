@@ -45,7 +45,7 @@ AioPollingScheduler::~AioPollingScheduler()
 {
 }
 
-void AioPollingScheduler::schedule(RandomAccessRequest &request)
+bool AioPollingScheduler::schedule(RandomAccessRequest &request)
 {
     StrictMutexGuard guard(mutex);
     uint iFirst = newRequests.size();
@@ -61,6 +61,7 @@ void AioPollingScheduler::schedule(RandomAccessRequest &request)
     // TODO:  handle error cases
     assert(rc == 0);
     newRequestPending.notify_all();
+    return true;
 }
 
 void AioPollingScheduler::stop()

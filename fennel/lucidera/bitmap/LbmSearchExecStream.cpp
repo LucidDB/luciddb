@@ -21,7 +21,6 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
-#include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/colstore/LcsClusterNode.h"
 #include "fennel/lucidera/bitmap/LbmSearchExecStream.h"
 
@@ -29,7 +28,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 void LbmSearchExecStream::prepare(LbmSearchExecStreamParams const &params)
 {
-    BTreeSearchExecStream::prepare(params);
+    BTreePrefetchSearchExecStream::prepare(params);
 
     rowLimitParamId = params.rowLimitParamId;
     ignoreRowLimit = (rowLimitParamId == DynamicParamId(0));
@@ -63,7 +62,9 @@ void LbmSearchExecStream::prepare(LbmSearchExecStreamParams const &params)
             ridKeySetup = true;
         }
 
+        savedLowerBoundAccessor.compute(ridKeyDesc);
         ridSearchKeyData.compute(ridKeyDesc);
+        pfLowerBoundData.compute(ridKeyDesc);
         // rid is last key
         ridSearchKeyData[ridSearchKeyData.size() - 1].pData =
             (PConstBuffer) &startRid;
@@ -111,6 +112,18 @@ void LbmSearchExecStream::setAdditionalKeys()
         pSearchKey = &ridSearchKeyData;
 
     } else {
+        pSearchKey = &inputKeyData;
+    }
+}
+
+void LbmSearchExecStream::setLowerBoundKey(PConstBuffer buf)
+{
+    savedLowerBoundAccessor.setCurrentTupleBuf(buf);
+    if (ridInKey) {
+        savedLowerBoundAccessor.unmarshal(ridSearchKeyData);
+        pSearchKey = &ridSearchKeyData;
+    } else {
+        savedLowerBoundAccessor.unmarshal(inputKeyData);
         pSearchKey = &inputKeyData;
     }
 }

@@ -4,6 +4,7 @@ noinst_LTLIBRARIES=libftrs.la
 libftrs_la_SOURCES=\
 BTreeExecStream.cpp \
 BTreeInsertExecStream.cpp \
+BTreePrefetchSearchExecStream.cpp \
 BTreeReadExecStream.cpp \
 BTreeScanExecStream.cpp \
 BTreeSearchExecStream.cpp \

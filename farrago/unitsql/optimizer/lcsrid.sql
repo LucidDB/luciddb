@@ -4,6 +4,11 @@
 create schema rid;
 set schema 'rid';
 
+-- lcs_rid not available outside of LucidDb personality
+create table dummy(a int) server sys_column_store_data_server;
+select lcs_rid(a) from dummy;
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 create table tencols(c0 int, c1 int, c2 int, c3 int, c4 int, c5 int, c6 int,
             c7 int, c8 int, c9 int)
     server sys_column_store_data_server
@@ -18,11 +23,6 @@ insert into tencols values(20, 21, 22, 23, 24, 25, 26, 27, 28, 29);
 insert into tencols values(30, 31, 32, 33, 34, 35, 36, 37, 38, 39);
 insert into tencols values(40, 41, 42, 43, 44, 45, 46, 47, 48, 49);
 analyze table tencols compute statistics for all columns;
-
--- lcs_rid not available outside of LucidDb personality
-select lcs_rid(c0) from tencols;
-
-alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 -- basic selects
 select * from tencols order by c0;

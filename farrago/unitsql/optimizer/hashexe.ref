@@ -20,36 +20,26 @@
 >     'Lhx.*Rule|.*NestedLoop.*');
 > 
 > create table lhxemps(
->     empno integer not null,
+>     empno integer primary key,
 >     ename varchar(40),
->     deptno integer)
-> server sys_column_store_data_server;
+>     deptno integer);
 > 
 > create table lhxdepts(
->     deptnoA integer)
-> server sys_column_store_data_server;
+>     deptnoA integer primary key);
 > 
-> insert into lhxemps select empno, name, deptno from sales.emps;
-> insert into lhxemps select empno, name, deptno from sales.emps;
+> insert into lhxemps
+>     select empno, name, deptno from sales.emps where empno <> 110;
 > 
-> insert into lhxdepts select deptno from sales.emps;
+> insert into lhxdepts select deptno from sales.emps where deptno <> 20;
 > 
 > !set outputformat csv
 > select * from lhxemps order by 1;
 'EMPNO','ENAME','DEPTNO'
 '100','Fred','10'
-'100','Fred','10'
-'110','John','40'
-'110','Eric','20'
-'110','John','40'
-'110','Eric','20'
-'120','Wilma','20'
 '120','Wilma','20'
 > select * from lhxdepts order by 1;
 'DEPTNOA'
 '10'
-'20'
-'20'
 '40'
 > 
 > explain plan for 
@@ -59,29 +49,17 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t2, $t3)], proj#0..3=[{exprs}], $condition=[$t4])'
-'        FennelToIteratorConverter'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$LHXDEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[3]], inputJoinProj=[[0, 1, 2]], inputDirectiveProj=[[]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], expr#4=[CAST($t2):INTEGER NOT NULL], proj#0..2=[{exprs}], DEPTNOA=[$t4], $condition=[$t3])'
+'          FennelToIteratorConverter'
+'            FtrsIndexScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$LHXEMPS], preserveOrder=[false])'
 > 
 > select * from lhxemps, lhxdepts
 > where lhxemps.deptno = lhxdepts.deptnoA
 > order by empno, ename;
 'EMPNO','ENAME','DEPTNO','DEPTNOA'
 '100','Fred','10','10'
-'100','Fred','10','10'
-'110','Eric','20','20'
-'110','Eric','20','20'
-'110','Eric','20','20'
-'110','Eric','20','20'
-'110','John','40','40'
-'110','John','40','40'
-'120','Wilma','20','20'
-'120','Wilma','20','20'
-'120','Wilma','20','20'
-'120','Wilma','20','20'
 > 
 > ---------------------------------------------------
 > -- test "is not distinct from" as join condition --
@@ -93,8 +71,9 @@
 'IterCalcRel(expr#0..3=[{inputs}], expr#4=[IS NULL($t2)], expr#5=[IS NULL($t3)], expr#6=[=($t2, $t3)], expr#7=[CASE($t4, $t5, $t5, $t4, $t6)], expr#8=[CAST($t7):BOOLEAN NOT NULL], proj#0..3=[{exprs}], $condition=[$t8])'
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA]])'
+'      FtrsIndexScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$LHXEMPS], preserveOrder=[false])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FtrsIndexScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$LHXDEPTS], preserveOrder=[false])'
 > 
 > -- Clean up
 > !set outputformat table

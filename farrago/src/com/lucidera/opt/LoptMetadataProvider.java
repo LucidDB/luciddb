@@ -36,6 +36,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.stat.*;
 import org.eigenbase.util14.*;
@@ -103,6 +104,10 @@ public class LoptMetadataProvider
         mapParameterTypes(
             "areColumnsUnique",
             Collections.singletonList((Class) BitSet.class));
+        
+        mapParameterTypes(
+            "isVisibleInExplain",
+            Collections.singletonList((Class) SqlExplainLevel.class));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -840,6 +845,34 @@ public class LoptMetadataProvider
         {
             return LoptMetadataQuery.getSimpleColumnOrigins(rel, iOutputColumn);
         }
+    }
+    
+    public Boolean isVisibleInExplain(
+        LcsIndexSearchRel rel,
+        SqlExplainLevel level)
+    {
+        return
+            level == SqlExplainLevel.ALL_ATTRIBUTES ||
+            rel.isVisibleInExplain();
+    }
+    
+    public Boolean isVisibleInExplain(
+        LcsIndexMinusRel rel,
+        SqlExplainLevel level)
+    {
+        return level == SqlExplainLevel.ALL_ATTRIBUTES;
+    }
+    
+    public Boolean isVisibleInExplain(
+        FennelValuesRel rel,
+        SqlExplainLevel level)
+    {
+        // Note that this method is defined here rather than
+        // FarragoRelMetadataProvider because only the LucidDbPersonality
+        // depends on this.
+        return
+            level == SqlExplainLevel.ALL_ATTRIBUTES ||
+            rel.isVisibleInExplain();
     }
 }
 

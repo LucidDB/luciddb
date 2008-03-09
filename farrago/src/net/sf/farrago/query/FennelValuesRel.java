@@ -48,8 +48,37 @@ public class FennelValuesRel
     extends ValuesRelBase
     implements FennelRel
 {
+    private final boolean isVisibleInExplain;
+    
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a new FennelValuesRel. Note that tuples passed in become owned by
+     * this rel (without a deep copy), so caller must not modify them after this
+     * call, otherwise bad things will happen.
+     *
+     * @param cluster .
+     * @param rowType row type for tuples produced by this rel
+     * @param tuples 2-dimensional array of tuple values to be produced; outer
+     * list contains tuples; each inner list is one tuple; all tuples must be of
+     * same length, conforming to rowType
+     * @param isVisibleInExplain whether the RelNode should appear in the
+     * explain output
+     */
+    public FennelValuesRel(
+        RelOptCluster cluster,
+        RelDataType rowType,
+        List<List<RexLiteral>> tuples,
+        boolean isVisibleInExplain)
+    {
+        super(
+            cluster,
+            rowType,
+            tuples,
+            new RelTraitSet(FENNEL_EXEC_CONVENTION));
+        this.isVisibleInExplain = isVisibleInExplain;
+    }
+    
     /**
      * Creates a new FennelValuesRel. Note that tuples passed in become owned by
      * this rel (without a deep copy), so caller must not modify them after this
@@ -71,6 +100,7 @@ public class FennelValuesRel
             rowType,
             tuples,
             new RelTraitSet(FENNEL_EXEC_CONVENTION));
+        this.isVisibleInExplain = true;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -97,6 +127,11 @@ public class FennelValuesRel
     {
         // TODO:  if tuples.size() == 1, say it's trivially sorted
         return RelFieldCollation.emptyCollationArray;
+    }
+    
+    public boolean isVisibleInExplain()
+    {
+        return isVisibleInExplain;
     }
 }
 

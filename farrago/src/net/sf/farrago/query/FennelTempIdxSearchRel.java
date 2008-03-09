@@ -177,6 +177,7 @@ class FennelTempIdxSearchRel
 
         searchStream.setUniqueKey(false);
         searchStream.setOuterJoin(false);
+        searchStream.setPrefetch(true);
         searchStream.setInputKeyProj(
             FennelRelUtil.createTupleProjection(repos, inputKeyProj));
         searchStream.setInputDirectiveProj(

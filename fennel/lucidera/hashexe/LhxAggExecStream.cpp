@@ -63,12 +63,10 @@ void LhxAggExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     /*
-     * Set aside cache blocks per child partition writer for I/O (including
-     * pre-fetch).
+     * Set aside one cache block per child partition writer for I/O
      */
     uint numInputs = 1;
-    numMiscCacheBlocks = LhxPlan::LhxChildPartCount * numInputs *
-        SEG_NUM_PREFETCH_PAGES;
+    numMiscCacheBlocks = LhxPlan::LhxChildPartCount * numInputs;
 }
 
 void LhxAggExecStream::getResourceRequirements(

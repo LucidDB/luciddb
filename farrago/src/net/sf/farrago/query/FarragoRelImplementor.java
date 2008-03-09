@@ -219,17 +219,7 @@ public class FarragoRelImplementor
     // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel, int ordinal)
     {
-        return visitFennelChild(rel, ordinal, true);
-    }
-    
-    // implement FennelRelImplementor
-    public FemExecutionStreamDef visitFennelChild(
-        FennelRel rel,
-        int ordinal,
-        boolean addToPathList)
-    {
-        FemExecutionStreamDef streamDef =
-            toStreamDefImpl(rel, ordinal, addToPathList);
+        FemExecutionStreamDef streamDef = toStreamDefImpl(rel, ordinal);
         registerRelStreamDef(streamDef, rel, null);
         return streamDef;
     }
@@ -271,19 +261,15 @@ public class FarragoRelImplementor
      * @param rel Relational expression
      * @param ordinal input position of the relational expression for its
      * parent
-     * @param addToPathList if true, add this RelNode to the pathlist that
-     * keeps track of the RelNodes that lead up to this node
      *
      * @return Plan
      */
     protected final FemExecutionStreamDef toStreamDefImpl(
         FennelRel rel,
-        int ordinal,
-        boolean addToPathList)
+        int ordinal)
     {
-        if (addToPathList) {
-            addRelPathEntry(rel, ordinal);
-        }
+        addRelPathEntry(rel, ordinal);
+
         FemExecutionStreamDef streamDef;
         try {
             streamDef = rel.toStreamDef(this);
@@ -293,9 +279,8 @@ public class FarragoRelImplementor
                 "Error occurred while translating relational expression "
                 + rel + " to a plan");
         }
-        if (addToPathList) {
-            removeRelPathEntry();
-        }
+        removeRelPathEntry();
+        
         return streamDef;
     }
 

@@ -153,10 +153,11 @@ protected:
      * @param repeatSeqValues initial repeating sequence values for each column
      * @param useDynamicKeys if true, pass search keys through dynamic
      * parameters
+     * @param includeRid if true, include rid >= 0 in the search
      */
     void testScanFullKey(
         uint nRows, uint nKeys, std::vector<int> const &repeatSeqValues,
-        bool useDynamicKeys);
+        bool useDynamicKeys, bool includeRid);
 
     /**
      * Tests equality scan on the table created in loadTableAndIndex, using
@@ -192,6 +193,8 @@ protected:
      * @param useDynamicKeys if true, pass in search key values using dynamic
      * parameters
      *
+     * @param includeRid include rid in search
+     *
      * @param vals search key values
      */
     void testScanIdx(
@@ -200,6 +203,7 @@ protected:
         uint expectedNBitmaps, PBuffer expectedBitmaps,
         bool dynamicRootPageId,
         bool useDynamicKeys,
+        bool includeRid,
         const boost::scoped_array<uint64_t> &vals);
 
     /**
@@ -231,22 +235,34 @@ protected:
 public:
     explicit LbmSearchTest()
     {
-        FENNEL_UNIT_TEST_CASE(LbmSearchTest, testScan1000);
+        FENNEL_UNIT_TEST_CASE(LbmSearchTest, testScanOneLevel);
+        FENNEL_UNIT_TEST_CASE(LbmSearchTest, testScanTwoLevel);
         FENNEL_UNIT_TEST_CASE(LbmSearchTest, testMultipleRanges);
     }
 
     void testCaseSetUp();
     void testCaseTearDown();
+    void testScans(uint nRows);
 
-    void testScan1000();
+    void testScanOneLevel();
+    void testScanTwoLevel();
     void testMultipleRanges();
 };
 
-void LbmSearchTest::testScan1000()
+void LbmSearchTest::testScanOneLevel()
 {
-    // with a 3-key index, 1000 rows will generate a 2-level btree, which
-    // should suffice for this testcase
-    uint nRows = 1000;
+    // single level btree
+    testScans(100);
+}
+
+void LbmSearchTest::testScanTwoLevel()
+{
+    // with a 3-key index, 2000 rows will generate a 2-level btree
+    testScans(2000);
+}
+
+void LbmSearchTest::testScans(uint nRows)
+{
     uint nClusters = 3; 
     std::vector<int> repeatSeqValues;
 
@@ -256,10 +272,12 @@ void LbmSearchTest::testScan1000()
     repeatSeqValues.push_back(9);
     loadTableAndIndex(nRows, nClusters, repeatSeqValues, true);
 
-    // scan on all keys, passing the search keys through the input stream
-    // and then through dynamic parameters
-    testScanFullKey(nRows, nClusters, repeatSeqValues, false);
-    testScanFullKey(nRows, nClusters, repeatSeqValues, true);
+    // Scan on all keys, passing the search keys through the input stream.
+    // Then do the same, passing the keys via dynamic parameters.  Then,
+    // finally, do the search, including a rid search.
+    testScanFullKey(nRows, nClusters, repeatSeqValues, false, false);
+    testScanFullKey(nRows, nClusters, repeatSeqValues, true, false);
+    testScanFullKey(nRows, nClusters, repeatSeqValues, false, true);
 
     // scan on (nClusters - 1) keys
     testScanPartialKey(nRows, nClusters, repeatSeqValues);
@@ -267,7 +285,7 @@ void LbmSearchTest::testScan1000()
 
 void LbmSearchTest::testMultipleRanges()
 {
-    uint nRows = 1000;
+    uint nRows = 20000;
     uint nClusters = 1; 
     std::vector<int> repeatSeqValues;
 
@@ -276,14 +294,16 @@ void LbmSearchTest::testMultipleRanges()
     loadTableAndIndex(nRows, nClusters, repeatSeqValues, true);
 
     // scan on all keys, just to make sure all key values really are there
-    testScanFullKey(nRows, nClusters, repeatSeqValues, false);
+    testScanFullKey(nRows, nClusters, repeatSeqValues, false, false);
 
     resetExecStreamTest();
     
-    // setup the following search keys:
-    // 1. key < 10
-    // 2. key > 40 and <= 70
-    // 3. key > 80
+    // Setup the following search keys.  Note that these keys weren't randomly
+    // selected.  Some of them correspond to boundary conditions.
+    // 1. key < 8
+    // 2. key > 10 && key <= 17
+    // 3. key >= 44 and key < 60
+    // 4. key > 71
     
     TupleDescriptor inputTupleDesc;
     for (uint i = 0; i < 2; i++) {
@@ -294,7 +314,7 @@ void LbmSearchTest::testMultipleRanges()
     TupleAccessor inputTupleAccessor;
     inputTupleAccessor.compute(inputTupleDesc);
 
-    uint nInputTuples = 3;
+    uint nInputTuples = 4;
     boost::shared_array<FixedBuffer> inputBuffer;
     inputBuffer.reset(
         new FixedBuffer[nInputTuples * inputTupleAccessor.getMaxByteCount()]);
@@ -302,12 +322,15 @@ void LbmSearchTest::testMultipleRanges()
     uint offset = 0;
 
     setSearchKey(
-        '-', ')', 0, 10, inputBuf, offset, inputTupleAccessor, inputTupleData);
+        '-', ')', 0, 8, inputBuf, offset, inputTupleAccessor, inputTupleData);
     setSearchKey(
-        '(', ']', 40, 70, inputBuf, offset, inputTupleAccessor,
+        '(', ']', 10, 17, inputBuf, offset, inputTupleAccessor,
         inputTupleData);
     setSearchKey(
-        '[', '+', 80, 0, inputBuf, offset, inputTupleAccessor,
+        '[', ')', 44, 60, inputBuf, offset, inputTupleAccessor,
+        inputTupleData);
+    setSearchKey(
+        '(', '+', 71, 0, inputBuf, offset, inputTupleAccessor,
         inputTupleData);
 
     // setup the expected bitmap result values
@@ -319,17 +342,22 @@ void LbmSearchTest::testMultipleRanges()
     uint expectedBufSize = 0;
     // for each range, generate the bitmap values for each key in the desired
     // range
-    for (uint i = 0; i < 10; i++) {
+    for (uint i = 0; i < 8; i++) {
         generateBitmaps(
             nRows, i, repeatSeqValues[0], bitmapBuf, expectedBufSize,
             bufferSize, expectedNBitmaps);
     }
-    for (uint i = 41; i <= 70; i++) {
+    for (uint i = 11; i <= 17; i++) {
         generateBitmaps(
             nRows, i, repeatSeqValues[0], bitmapBuf, expectedBufSize,
             bufferSize, expectedNBitmaps);
     }
-    for (uint i = 80; i < repeatSeqValues[0]; i++) {
+    for (uint i = 44; i < 60; i++) {
+        generateBitmaps(
+            nRows, i, repeatSeqValues[0], bitmapBuf, expectedBufSize,
+            bufferSize, expectedNBitmaps);
+    }
+    for (uint i = 72; i < repeatSeqValues[0]; i++) {
         generateBitmaps(
             nRows, i, repeatSeqValues[0], bitmapBuf, expectedBufSize,
             bufferSize, expectedNBitmaps);
@@ -338,7 +366,7 @@ void LbmSearchTest::testMultipleRanges()
     boost::scoped_array<uint64_t> vals;
     testScanIdx(
         nClusters, nClusters, offset, inputBuffer, expectedNBitmaps,
-        bitmapBuf, true, false, vals);
+        bitmapBuf, true, false, false, vals);
 }
 
 void LbmSearchTest::setSearchKey(
@@ -360,7 +388,7 @@ void LbmSearchTest::setSearchKey(
 
 void LbmSearchTest::testScanFullKey(
     uint nRows, uint nKeys, std::vector<int> const &repeatSeqValues,
-    bool useDynamicKeys)
+    bool useDynamicKeys, bool includeRid)
 {
     // search for key0 = <val0>, key1 = <val1>, ..., key(n-1) = <val(n-1)>
     uint nInputTuples = 1;
@@ -401,7 +429,7 @@ void LbmSearchTest::testScanFullKey(
         testScanIdx(
             nKeys, nKeys, inputTupleAccessor.getCurrentByteCount(),
             inputBuffer, expectedNBitmaps, expectedBitmaps.get(), false,
-            useDynamicKeys, vals);
+            useDynamicKeys, includeRid, vals);
     }
 }
 
@@ -472,7 +500,7 @@ void LbmSearchTest::testScanPartialKey(
     }
     testScanIdx(
         nKeys, nKeys - 1, inputTupleAccessor.getCurrentByteCount(),
-        inputBuffer, expectedNBitmaps, bitmapBuf, false, false, vals);
+        inputBuffer, expectedNBitmaps, bitmapBuf, false, false, false, vals);
 }
 
 void LbmSearchTest::initEqualSearch(
@@ -855,6 +883,7 @@ void LbmSearchTest::testScanIdx(
     uint expectedNBitmaps, PBuffer expectedBitmaps,
     bool dynamicRootPageId,
     bool useDynamicKeys,
+    bool includeRid,
     const boost::scoped_array<uint64_t> &vals)
 {
     resetExecStreamTest();
@@ -882,7 +911,19 @@ void LbmSearchTest::testScanIdx(
 
     // initialize parameters specific to indexScan
     indexScanParams.rowLimitParamId = DynamicParamId(0);
-    indexScanParams.startRidParamId = DynamicParamId(0);
+    if (includeRid) {
+        indexScanParams.startRidParamId = DynamicParamId(1);
+        SharedDynamicParamManager pDynamicParamManager =
+            pGraph->getDynamicParamManager();
+        pDynamicParamManager->createParam(DynamicParamId(1), attrDesc_int64);
+        TupleDatum ridDatum;
+        LcsRid rid = LcsRid(0);
+        ridDatum.pData = (PConstBuffer) &rid;
+        ridDatum.cbData = sizeof(LcsRid);
+        pDynamicParamManager->writeParam(DynamicParamId(1), ridDatum);
+    } else {
+        indexScanParams.startRidParamId = DynamicParamId(0);
+    }
 
     // initialize parameters for btree read
     initBTreeBitmapDesc(
@@ -894,14 +935,14 @@ void LbmSearchTest::testScanIdx(
         indexScanParams.rootPageId = savedBTreeBitmapRootIds[0];
     } else {
         indexScanParams.rootPageId = NULL_PAGE_ID;
-        indexScanParams.rootPageIdParamId = DynamicParamId(1);
+        indexScanParams.rootPageIdParamId = DynamicParamId(2);
         SharedDynamicParamManager pDynamicParamManager =
             pGraph->getDynamicParamManager();
-        pDynamicParamManager->createParam(DynamicParamId(1), attrDesc_int64);
+        pDynamicParamManager->createParam(DynamicParamId(2), attrDesc_int64);
         TupleDatum rootPageIdDatum;
         rootPageIdDatum.pData = (PConstBuffer) &(savedBTreeBitmapRootIds[0]);
         rootPageIdDatum.cbData = sizeof(PageId);
-        pDynamicParamManager->writeParam(DynamicParamId(1), rootPageIdDatum);
+        pDynamicParamManager->writeParam(DynamicParamId(2), rootPageIdDatum);
     }
 
     TupleProjection outputProj;
@@ -928,15 +969,15 @@ void LbmSearchTest::testScanIdx(
     if (useDynamicKeys) {
         SharedDynamicParamManager pDynamicParamManager =
             pGraph->getDynamicParamManager();
-        for (uint i = 1; i < nKeys * 2 + 1; i++) {
+        for (uint i = 3; i < nKeys * 2 + 3; i++) {
             indexScanParams.searchKeyParams.push_back(
                 BTreeSearchKeyParameter(
                     DynamicParamId(i),
-                    i - 1));
+                    i - 3));
             pDynamicParamManager->createParam(
                 DynamicParamId(i), attrDesc_int64);
             TupleDatum keyValDatum;
-            keyValDatum.pData = (PConstBuffer) &(vals[(i - 1) % nKeys]);
+            keyValDatum.pData = (PConstBuffer) &(vals[(i - 3) % nKeys]);
             keyValDatum.cbData = sizeof(uint64_t);
             pDynamicParamManager->writeParam(DynamicParamId(i), keyValDatum);
         }

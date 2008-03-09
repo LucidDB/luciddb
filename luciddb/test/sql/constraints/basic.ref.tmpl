@@ -422,20 +422,20 @@
 . . . . . . . . >   on F1 = partkey
 . . . . . . . . > where tgt.crc_value <> src.crc_value
 . . . . . . . . > order by partkey;
-+----------+-----------------------------------------+--------------------+-----------+--------------------------+-------+------------+--------------+----------------------+-------------+
-| PARTKEY  |                  NAME                   |        MFGR        |   BRAND   |           TYPE           | SIZE  | CONTAINER  | RETAILPRICE  |       COMMENT        |  CRC_VALUE  |
-+----------+-----------------------------------------+--------------------+-----------+--------------------------+-------+------------+--------------+----------------------+-------------+
-| 1000     | cream frosted navajo aquamarine black   | NewManufacturer#2  | Brand#24  | ECONOMY BRUSHED NICKEL   | 110   | SM DRUM    | 901.00       | slyly                | 1696409240  |
-| 2000     | drab blue goldenrod powder medium       | NewManufacturer#1  | Brand#12  | PROMO ANODIZED STEEL     | 146   | SM BAG     | 902.00       | furiously express r  | 1197112289  |
-| 3000     | coral hot drab sandy white              | NewManufacturer#3  | Brand#33  | MEDIUM ANODIZED COPPER   | 116   | SM BOX     | 903.00       | slyly furious reque  | 542803384   |
-| 4000     | ghost spring green misty cornsilk       | NewManufacturer#1  | Brand#12  | LARGE BRUSHED STEEL      | 121   | MED JAR    | 904.00       | final asympt         | 1338504517  |
-| 5000     | seashell blush papaya cornflower ghost  | NewManufacturer#3  | Brand#34  | MEDIUM BRUSHED BRASS     | 131   | LG JAR     | 905.00       | busily express p     | 2758153105  |
-| 6000     | chocolate deep hot firebrick moccasin   | NewManufacturer#5  | Brand#52  | MEDIUM BRUSHED TIN       | 101   | MED BOX    | 906.00       | foxes accordin       | 414990977   |
-| 7000     | beige dim sienna khaki blue             | NewManufacturer#4  | Brand#44  | ECONOMY ANODIZED NICKEL  | 137   | WRAP CASE  | 907.00       | fluffily             | 2074853021  |
-| 8000     | brown chartreuse metallic bisque blush  | NewManufacturer#1  | Brand#13  | LARGE PLATED STEEL       | 136   | LG PKG     | 908.00       | doggedly bold p      | 236357171   |
-| 9000     | plum blue khaki lawn lemon              | NewManufacturer#1  | Brand#11  | SMALL BRUSHED STEEL      | 129   | SM BOX     | 909.00       | pendi                | 2802306294  |
-| 10000    | slate deep plum steel black             | NewManufacturer#3  | Brand#35  | LARGE POLISHED NICKEL    | 129   | MED BAG    | 910.00       | careful              | 839401172   |
-+----------+-----------------------------------------+--------------------+-----------+--------------------------+-------+------------+--------------+----------------------+-------------+
++----------+-----------------------------------------+--------------------+-----------+--------------------------+-------+------------+--------------+------------------------+-------------+
+| PARTKEY  |                  NAME                   |        MFGR        |   BRAND   |           TYPE           | SIZE  | CONTAINER  | RETAILPRICE  |        COMMENT         |  CRC_VALUE  |
++----------+-----------------------------------------+--------------------+-----------+--------------------------+-------+------------+--------------+------------------------+-------------+
+| 1000     | cream frosted navajo aquamarine black   | NewManufacturer#2  | Brand#24  | ECONOMY BRUSHED NICKEL   | 110   | SM DRUM    | 901.00       | g fluf                 | 703189168   |
+| 2000     | drab blue goldenrod powder medium       | NewManufacturer#1  | Brand#12  | PROMO ANODIZED STEEL     | 146   | SM BAG     | 902.00       | ajole carefully        | 399699461   |
+| 3000     | coral hot drab sandy white              | NewManufacturer#3  | Brand#33  | MEDIUM ANODIZED COPPER   | 116   | SM BOX     | 903.00       | its after the furious  | 2888675460  |
+| 4000     | ghost spring green misty cornsilk       | NewManufacturer#1  | Brand#12  | LARGE BRUSHED STEEL      | 121   | MED JAR    | 904.00       | s across t             | 1053246215  |
+| 5000     | seashell blush papaya cornflower ghost  | NewManufacturer#3  | Brand#34  | MEDIUM BRUSHED BRASS     | 131   | LG JAR     | 905.00       | ow accounts.           | 2604262105  |
+| 6000     | chocolate deep hot firebrick moccasin   | NewManufacturer#5  | Brand#52  | MEDIUM BRUSHED TIN       | 101   | MED BOX    | 906.00       | are carefully a        | 2010375445  |
+| 7000     | beige dim sienna khaki blue             | NewManufacturer#4  | Brand#44  | ECONOMY ANODIZED NICKEL  | 137   | WRAP CASE  | 907.00       | . furiously c          | 1074676639  |
+| 8000     | brown chartreuse metallic bisque blush  | NewManufacturer#1  | Brand#13  | LARGE PLATED STEEL       | 136   | LG PKG     | 908.00       | ts-- carefully         | 2935440723  |
+| 9000     | plum blue khaki lawn lemon              | NewManufacturer#1  | Brand#11  | SMALL BRUSHED STEEL      | 129   | SM BOX     | 909.00       | ckly ironic instructi  | 2403164163  |
+| 10000    | slate deep plum steel black             | NewManufacturer#3  | Brand#35  | LARGE POLISHED NICKEL    | 129   | MED BAG    | 910.00       | efully even deposits!  | 3629020589  |
++----------+-----------------------------------------+--------------------+-----------+--------------------------+-------+------------+--------------+------------------------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- check logs
 0: jdbc:luciddb:> select action_id, error_count, warning_count, "SQL"

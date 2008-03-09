@@ -782,6 +782,8 @@ SharedProxyTupleProjection getInputKeyProj();
 static jmethodID meth_getInputKeyProj;
 bool isOuterJoin();
 static jmethodID meth_isOuterJoin;
+bool isPrefetch();
+static jmethodID meth_isPrefetch;
 SharedProxyCorrelation getSearchKeyParameter();
 static jmethodID meth_getSearchKeyParameter;
 bool isUniqueKey();

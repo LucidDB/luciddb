@@ -44,6 +44,39 @@ class Segment;
 class SegPageIter
 {
     /**
+     * Maximum number of outstanding pre-fetch requests
+     */
+    uint prefetchPagesMax;
+
+    /**
+     * Number of successful pre-fetches before pre-fetch can be throttled back
+     * up
+     */
+    uint prefetchThrottleRate;
+    
+    /**
+     * Current slot in the prefetchQueue that needs to be populated
+     */
+    uint currPageSlot;
+
+    /**
+     * True if pre-fetches have been turned off
+     */
+    bool noPrefetch;
+
+    /**
+     * The remaining number of successful pre-fetches that need to occur before
+     * the pre-fetch rate can be throttled back up
+     */
+    uint throttleCount;
+
+    /**
+     * If true, force the next pre-fetch request to be rejected
+     */
+    bool forceReject;
+
+protected:
+    /**
      * Accessor for the Segment containing the pages to be visited.
      */
     SegmentAccessor segmentAccessor;
@@ -70,16 +103,28 @@ class SegPageIter
     bool atEnd;
 
     /**
-     * Number of pages per batch prefetch.
+     * Current size of the pre-fetch queue
      */
-    uint nPagesPerBatch;
+    uint queueSize;
 
     /**
-     * Number of batches to prefetch.
+     * Number of slots available in the prefetchQueue.  May temporarily become
+     * negative in the case where pre-fetches are turned off.
      */
-    uint nBatchPrefetches;
-    
-    void prefetchBatch(PageId head,uint batchNumber);
+    int nFreePageSlots;
+
+    /**
+     * Reads the pre-fetch parameters, sizes the pre-fetch queue, and
+     * initializes various state variables related to the queue.
+     */
+    void initPrefetchQueue();
+
+    /**
+     * Pre-fetches a specified page.
+     *
+     * @param pageId the id of the page to be pre-fetched
+     */
+    void prefetchPage(PageId pageId);
     
 public:
     /**
@@ -119,6 +164,12 @@ public:
      * called when positioned on endPageId.
      */
     void operator ++ ();
+
+    /**
+     * Forces the next pre-fetch request to be rejected.  Used for testing
+     * purposes.
+     */
+    void forcePrefetchReject();
 
     /**
      * Aborts any iteration in progress and release all resources.

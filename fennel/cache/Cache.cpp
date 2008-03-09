@@ -23,7 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/cache/CacheImpl.h"
-#include "fennel/cache/LRUVictimPolicy.h"
+#include "fennel/cache/TwoQVictimPolicy.h"
 #include "fennel/common/StatsTarget.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -38,10 +38,10 @@ CacheAccessor::~CacheAccessor()
 {
 }
 
-class LRUPage : public CachePage, public LRUVictim
+class TwoQPage : public CachePage, public TwoQVictim
 {
 public:
-    LRUPage(Cache &cache,PBuffer buffer)
+    TwoQPage(Cache &cache,PBuffer buffer)
         : CachePage(cache,buffer)
     {
     }
@@ -52,11 +52,11 @@ SharedCache Cache::newCache(
     CacheAllocator *bufferAllocator)
 {
     typedef CacheImpl<
-        LRUPage,
-        LRUVictimPolicy<LRUPage>
-        > LRUCache;
+        TwoQPage,
+        TwoQVictimPolicy<TwoQPage>
+        > TwoQCache;
     return SharedCache(
-        new LRUCache(cacheParams,bufferAllocator),
+        new TwoQCache(cacheParams,bufferAllocator),
         ClosableObjectDestructor());
 }
 
@@ -109,6 +109,35 @@ void Cache::writeStats(StatsTarget &target)
         "CachePagesWritten", stats.nPageWrites);
     target.writeCounter(
         "CachePagesWrittenSinceInit", stats.nPageWritesSinceInit);
+    target.writeCounter(
+        "CachePagePrefetchesRejected", stats.nRejectedPrefetches);
+    target.writeCounter(
+        "CachePagePrefetchesRejectedSinceInit",
+        stats.nRejectedPrefetchesSinceInit);
+    target.writeCounter(
+        "CachePageIoRetries", stats.nIoRetries);
+    target.writeCounter(
+        "CachePageIoRetriesSinceInit",
+        stats.nIoRetriesSinceInit);
+    target.writeCounter(
+        "CachePagesPrefetched", stats.nSuccessfulPrefetches);
+    target.writeCounter(
+        "CachePagesPrefetchedSinceInit",
+        stats.nSuccessfulPrefetchesSinceInit);
+    target.writeCounter("CacheLazyWrites", stats.nLazyWrites);
+    target.writeCounter("CacheLazyWritesSinceInit", stats.nLazyWritesSinceInit);
+    target.writeCounter("CacheLazyWriteCalls", stats.nLazyWriteCalls);
+    target.writeCounter(
+        "CacheLazyWriteCallsSinceInit",
+        stats.nLazyWriteCallsSinceInit);
+    target.writeCounter("CacheVictimizationWrites", stats.nVictimizationWrites);
+    target.writeCounter(
+        "CacheVictimizationWritesSinceInit",
+        stats.nVictimizationWritesSinceInit);
+    target.writeCounter("CacheCheckpointWrites", stats.nCheckpointWrites);
+    target.writeCounter(
+        "CacheCheckpointWritesSinceInit",
+        stats.nCheckpointWritesSinceInit);
     target.writeCounter(
         "CachePagesAllocated", stats.nMemPagesAllocated);
     target.writeCounter(

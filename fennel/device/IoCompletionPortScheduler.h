@@ -68,7 +68,7 @@ public:
 // Implementation of DeviceAccessScheduler interface (q.v.)
 // ----------------------------------------------------------------------
     virtual void registerDevice(SharedRandomAccessDevice pDevice);
-    virtual void schedule(RandomAccessRequest &request);
+    virtual bool schedule(RandomAccessRequest &request);
     virtual void stop();
 };
 

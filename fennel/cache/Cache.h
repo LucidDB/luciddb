@@ -74,7 +74,7 @@ public:
     static const DeviceId NULL_DEVICE_ID;
     
     /**
-     * Factory method.  This creates a cache which uses LRUVictimPolicy.
+     * Factory method.  This creates a cache which uses TwoQVictimPolicy.
      * To create a cache with custom policies, include CacheImpl.h and
      * instantiate CacheImpl directly.
      *
