@@ -73,7 +73,7 @@ IoCompletionPortScheduler::~IoCompletionPortScheduler()
     }
 }
 
-void IoCompletionPortScheduler::schedule(RandomAccessRequest &request)
+bool IoCompletionPortScheduler::schedule(RandomAccessRequest &request)
 {
     assert(isStarted());
 
@@ -111,6 +111,8 @@ void IoCompletionPortScheduler::schedule(RandomAccessRequest &request)
         cbOffset += pBinding->getBufferSize();
     }
     assert(cbOffset == request.cbOffset + request.cbTransfer);
+
+    return true;
 }
 
 void IoCompletionPortScheduler::stop()

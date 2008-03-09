@@ -31,11 +31,22 @@ ParamName CacheParams::paramMaxPages = "cachePagesMax";
 ParamName CacheParams::paramPagesInit = "cachePagesInit";
 ParamName CacheParams::paramPageSize = "cachePageSize";
 ParamName CacheParams::paramIdleFlushInterval = "cacheIdleFlushInterval";
+ParamName CacheParams::paramFreshmenQueuePercentage =
+    "freshmenPageQueuePercentage";
+ParamName CacheParams::paramPageHistoryQueuePercentage =
+    "pageHistoryQueuePercentage";
+ParamName CacheParams::paramPrefetchPagesMax =
+    "prefetchPagesMax";
+ParamName CacheParams::paramPrefetchThrottleRate = "prefetchThrottleRate";
 
 uint CacheParams::defaultMemPagesMax = 1024;
 uint CacheParams::defaultMemPagesInit = MAXU;
 uint CacheParams::defaultPageSize = 4096;
 uint CacheParams::defaultIdleFlushInterval = 100;
+uint CacheParams::defaultFreshmenQueuePercentage = 25;
+uint CacheParams::defaultPageHistoryQueuePercentage = 100;
+uint CacheParams::defaultPrefetchPagesMax = 12;
+uint CacheParams::defaultPrefetchThrottleRate = 10;
 
 CacheParams::CacheParams()
 {
@@ -43,6 +54,10 @@ CacheParams::CacheParams()
     cbPage = defaultPageSize;
     nMemPagesInit = defaultMemPagesInit;
     idleFlushInterval = defaultIdleFlushInterval;
+    freshmenQueuePercentage = defaultFreshmenQueuePercentage;
+    pageHistoryQueuePercentage = defaultPageHistoryQueuePercentage;
+    prefetchPagesMax = defaultPrefetchPagesMax;
+    prefetchThrottleRate = defaultPrefetchThrottleRate;
 }
 
 void CacheParams::readConfig(ConfigMap const &configMap)
@@ -61,6 +76,14 @@ void CacheParams::readConfig(ConfigMap const &configMap)
     }
     idleFlushInterval = configMap.getIntParam(
         paramIdleFlushInterval,idleFlushInterval);
+    freshmenQueuePercentage = configMap.getIntParam(
+        paramFreshmenQueuePercentage,freshmenQueuePercentage);
+    pageHistoryQueuePercentage = configMap.getIntParam(
+        paramPageHistoryQueuePercentage,pageHistoryQueuePercentage);
+    prefetchPagesMax = configMap.getIntParam(
+        paramPrefetchPagesMax,prefetchPagesMax);
+    prefetchThrottleRate = configMap.getIntParam(
+        paramPrefetchThrottleRate,prefetchThrottleRate);
 }
 
 FENNEL_END_CPPFILE("$Id$");

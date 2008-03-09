@@ -63,6 +63,7 @@ class RandomVictimPolicy
 public:
     // for use by CacheImpl when iterating over candidate victims
     typedef NullMutexGuard SharedGuard;
+    typedef NullMutexGuard ExclusiveGuard;
     // TODO:  write an STL modulo_iterator
     class PageIterator
     {
@@ -111,7 +112,17 @@ public:
         }
     };
     
+    typedef PageIterator DirtyPageIterator;
+
     RandomVictimPolicy()
+    {
+    }
+
+    RandomVictimPolicy(const CacheParams &params)
+    {
+    }
+
+    void setAllocatedPageCount(uint nCachePages)
     {
     }
 
@@ -126,7 +137,7 @@ public:
         // Otherwise, unallocated pages will be returned by getVictimRange().
     }
 
-    void notifyPageAccess(PageT &)
+    void notifyPageAccess(PageT &, bool)
     {
     }
 
@@ -134,11 +145,27 @@ public:
     {
     }
 
-    void notifyPageMap(PageT &)
+    void notifyPageMap(PageT &, bool)
     {
     }
 
-    void notifyPageUnmap(PageT &)
+    void notifyPageUnmap(PageT &, bool)
+    {
+    }
+
+    void notifyPageUnpin(PageT &page)
+    {
+    }
+
+    void notifyPageDirty(PageT &page)
+    {
+    }
+
+    void notifyPageClean(PageT &page)
+    {
+    }
+
+    void notifyPageDiscard(BlockId blockId)
     {
     }
 
@@ -154,6 +181,13 @@ public:
         return std::pair<PageIterator,PageIterator>(
             PageIterator(*this,iPage),
             PageIterator(*this,iPageEnd));
+    }
+
+    std::pair<DirtyPageIterator,DirtyPageIterator> getDirtyVictimRange()
+    {
+        return
+            static_cast<std::pair<DirtyPageIterator,DirtyPageIterator> >(
+                getVictimRange());
     }
 };
 

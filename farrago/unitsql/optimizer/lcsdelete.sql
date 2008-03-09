@@ -50,6 +50,9 @@ insert into deltab select * from matrix9x9;
 insert into deltab select * from matrix9x9;
 select lcs_rid(a1), * from deltab order by 1;
 
+-- fake stats to ensure that index is used
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LCSDEL', 'DELTAB', 1000);
+
 delete from deltab where a1 < 30 and lcs_rid(a1) >= 9;
 select lcs_rid(a1), * from deltab order by 1;
 

@@ -102,6 +102,15 @@ public class SqlToRelConverterTest
             "SELECT *, deptno * 5 as empno FROM dept) " +
             "USING (deptno,empno)", "${plan}");
     }
+    
+    public void testJoinWithUnion()
+    {
+        check(
+            "select grade from " +
+            "(select empno from emp union select deptno from dept), " +
+            "salgrade",
+            "${plan}");
+    }
 
     public void testGroup()
     {

@@ -129,7 +129,7 @@
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Thu Oct 18 12:12:08 PDT 2007'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Jan 08 16:57:51 PST 2008'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -1507,6 +1507,21 @@
                       </UML:StructuralFeature.multiplicity>
                       <UML:StructuralFeature.type>
                         <UML:Class xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7f9f'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1-6a5a097d:1173b6dd940:-8000:0000000000000E32'
+                      name = 'prefetch' visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                      changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1-7db23573:1173c003594:-8000:0000000000000E36'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1-7db23573:1173c003594:-8000:0000000000000E35'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fde'/>
                       </UML:StructuralFeature.type>
                     </UML:Attribute>
                   </UML:Classifier.feature>
@@ -4723,6 +4738,66 @@
                       </UML:StructuralFeature.multiplicity>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1--61b13bb2:116252c99f8:-8000:0000000000000E2C'
+                      name = 'freshmenPageQueuePercentage' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--61b13bb2:116252c99f8:-8000:0000000000000E34'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--61b13bb2:116252c99f8:-8000:0000000000000E33'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1--61b13bb2:116252c99f8:-8000:0000000000000E35'
+                      name = 'pageHistoryQueuePercentage' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1-47a4281a:1174185aa87:-8000:0000000000000E3D'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1-47a4281a:1174185aa87:-8000:0000000000000E3C'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1-47a4281a:1174185aa87:-8000:0000000000000E37'
+                      name = 'prefetchPagesMax' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1-1904e282:1175b2b639c:-8000:0000000000000E3C'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1-1904e282:1175b2b639c:-8000:0000000000000E3B'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1-47a4281a:1174185aa87:-8000:0000000000000E40'
+                      name = 'prefetchThrottleRate' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--3a2353cf:1175c0d2237:-8000:0000000000000E3C'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--3a2353cf:1175c0d2237:-8000:0000000000000E3B'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
                       </UML:StructuralFeature.type>
                     </UML:Attribute>
                   </UML:Classifier.feature>
@@ -10162,7 +10237,7 @@
     />
   </group>
   <group name="Fig1"
-       description="org.argouml.uml.diagram.static_structure.ui.FigClass[680, 112, 219, 278]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[680, 112, 219, 330]pathVisible=false;operationsVisible=false;attributesVisible=true"
        href="Ilsmmsmmsmm4fe91emf85207efd8mm7e27"
        fill="1"
        fillcolor="white"
@@ -10176,7 +10251,7 @@
       x="680"
       y="112"
       width="219"
-      height="278"
+      height="330"
       fill="1"
       fillcolor="white"
       stroke="0"
@@ -10215,7 +10290,7 @@
       textsize="10"
     >FennelConfig</text>
     <group name="Fig1.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[681, 381, 218, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[681, 433, 218, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -10227,7 +10302,7 @@
       
       <rectangle name="Fig1.3.0"
         x="681"
-        y="381"
+        y="433"
         width="218"
         height="20"
         fill="1"
@@ -10245,13 +10320,13 @@
         visibility="0"
       >
         <moveto x="681"
-                y="381" />
+                y="433" />
         <lineto x="899"
-                y="381" />
+                y="433" />
       </path>
     </group>
     <group name="Fig1.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[681, 135, 218, 255]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[681, 135, 218, 307]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -10264,7 +10339,7 @@
         x="681"
         y="135"
         width="218"
-        height="255"
+        height="307"
         fill="1"
         fillcolor="white"
         stroke="0"
@@ -10291,7 +10366,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >databaseInitSize : Integer</text>
+      >databaseInitSize : Integer { frozen }</text>
       <text name="Fig1.4.3"
         x="681"
         y="149"
@@ -10411,7 +10486,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >cachePageSize : Integer</text>
+      >cachePageSize : Integer { frozen }</text>
       <text name="Fig1.4.15"
         x="681"
         y="305"
@@ -10471,13 +10546,53 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >deviceSchedulerType : String</text>
+      >deviceSchedulerType [0..1] : String</text>
+      <text name="Fig1.4.21"
+        x="681"
+        y="383"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >freshmenPageQueuePercentage : Integer</text>
+      <text name="Fig1.4.22"
+        x="681"
+        y="396"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >pageHistoryQueuePercentage : Integer</text>
+      <text name="Fig1.4.23"
+        x="681"
+        y="409"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >prefetchPagesMax : Integer</text>
+      <text name="Fig1.4.24"
+        x="681"
+        y="422"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >prefetchThrottleRate : Integer</text>
     </group>
     <rectangle name="Fig1.5"
       x="680"
       y="112"
       width="219"
-      height="278"
+      height="330"
       fill="0"
       fillcolor="white"
       stroke="1"
@@ -15598,7 +15713,7 @@
       textsize="10"
     >IndexSearchDef</text>
     <group name="Fig14.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[329, 621, 207, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[329, 628, 207, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -15610,7 +15725,7 @@
       
       <rectangle name="Fig14.3.0"
         x="329"
-        y="621"
+        y="628"
         width="207"
         height="20"
         fill="1"
@@ -15628,13 +15743,13 @@
         visibility="0"
       >
         <moveto x="329"
-                y="621" />
+                y="628" />
         <lineto x="536"
-                y="621" />
+                y="628" />
       </path>
     </group>
     <group name="Fig14.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[329, 551, 207, 73]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[329, 551, 207, 86]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -15647,7 +15762,7 @@
         x="329"
         y="551"
         width="207"
-        height="73"
+        height="86"
         fill="1"
         fillcolor="white"
         stroke="0"
@@ -15715,6 +15830,16 @@
         font="Dialog"
         textsize="10"
       >inputDirectiveProj : TupleProjection</text>
+      <text name="Fig14.4.7"
+        x="329"
+        y="617"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >prefetch : Boolean</text>
     </group>
     <rectangle name="Fig14.5"
       x="328"
@@ -23421,7 +23546,7 @@
       textsize="10"
     >IndexSearchDef</text>
     <group name="Fig4.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[9, 437, 207, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[9, 444, 207, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -23433,7 +23558,7 @@
       
       <rectangle name="Fig4.3.0"
         x="9"
-        y="437"
+        y="444"
         width="207"
         height="20"
         fill="1"
@@ -23451,13 +23576,13 @@
         visibility="0"
       >
         <moveto x="9"
-                y="437" />
+                y="444" />
         <lineto x="216"
-                y="437" />
+                y="444" />
       </path>
     </group>
     <group name="Fig4.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[9, 367, 207, 73]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[9, 367, 207, 86]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -23470,7 +23595,7 @@
         x="9"
         y="367"
         width="207"
-        height="73"
+        height="86"
         fill="1"
         fillcolor="white"
         stroke="0"
@@ -23538,6 +23663,16 @@
         font="Dialog"
         textsize="10"
       >inputDirectiveProj : TupleProjection</text>
+      <text name="Fig4.4.7"
+        x="9"
+        y="433"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >prefetch : Boolean</text>
     </group>
     <rectangle name="Fig4.5"
       x="8"
@@ -24489,7 +24624,7 @@
       textsize="10"
     >LcsRowScanStreamDef</text>
     <group name="Fig16.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[417, 371, 377, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[417, 384, 377, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -24501,7 +24636,7 @@
       
       <rectangle name="Fig16.3.0"
         x="417"
-        y="371"
+        y="384"
         width="377"
         height="20"
         fill="1"
@@ -24519,9 +24654,9 @@
         visibility="0"
       >
         <moveto x="417"
-                y="371" />
+                y="384" />
         <lineto x="794"
-                y="371" />
+                y="384" />
       </path>
     </group>
     <group name="Fig16.4"
@@ -24605,7 +24740,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >samplingMode : TableSamplingMode  = TableSamplingMode::SAMPLING_OFF</text>
+      >samplingMode : TableSamplingMode</text>
       <text name="Fig16.4.7"
         x="417"
         y="321"
@@ -26150,7 +26285,7 @@
       textsize="10"
     >LcsRowScanStreamDef</text>
     <group name="Fig1.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[73, 555, 379, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[73, 568, 379, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -26162,7 +26297,7 @@
       
       <rectangle name="Fig1.3.0"
         x="73"
-        y="555"
+        y="568"
         width="379"
         height="20"
         fill="1"
@@ -26180,9 +26315,9 @@
         visibility="0"
       >
         <moveto x="73"
-                y="555" />
+                y="568" />
         <lineto x="452"
-                y="555" />
+                y="568" />
       </path>
     </group>
     <group name="Fig1.4"
@@ -26266,7 +26401,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >samplingMode : TableSamplingMode  = TableSamplingMode::SAMPLING_OFF</text>
+      >samplingMode : TableSamplingMode</text>
       <text name="Fig1.4.7"
         x="73"
         y="505"

@@ -139,6 +139,101 @@ public:
     }
 };
 
+/**
+ * Iterator over two intrusive doubly-linked lists.  The first list is
+ * walked followed by the second list.  The lists can only be walked over in
+ * the forward direction.
+ *
+ * <p>
+ * Elements in both lists are all of the same type.  A callback method must be
+ * defined that determines what should be returned for each element in the
+ * lists.
+ */
+template <class ElementT, class ReturnT>
+class IntrusiveTwoDListIter
+{
+    /**
+     * Pointer to the current list element
+     */
+    ElementT *curr;
+
+    /**
+     * Pointer to the start of the second list
+     */
+    ElementT *next;
+
+    /**
+     * True if the first list has been walked
+     */
+    bool processingNext;
+
+protected:
+
+    /**
+     * Returns a pointer to the return element corresponding to the element
+     * that the iterator is currently positioned at.
+     *
+     * @param element the current element
+     *
+     * @return pointer to the return element
+     */
+    virtual ReturnT *getReturnElement(ElementT *element) const = 0;
+
+public:
+    
+    explicit IntrusiveTwoDListIter()
+    {
+        curr = NULL;
+        next = NULL;
+        processingNext = false;
+    }
+    
+    explicit IntrusiveTwoDListIter(ElementT *list1, ElementT *list2)
+    {
+        if (list1 == NULL) {
+            curr = list2;
+            processingNext = true;
+        } else {
+            curr = list1;
+            next = list2;
+            processingNext = false;
+        }
+    }
+    
+    virtual ~IntrusiveTwoDListIter()
+    {
+    }
+
+    void operator ++ ()
+    {
+        curr = static_cast<ElementT *>(curr->getNext());
+        if (curr == NULL && !processingNext) {
+            curr = next;
+            processingNext = true;
+        }
+    }
+    
+    ReturnT *operator -> () const
+    {
+        return getReturnElement(curr);
+    }
+    
+    operator ReturnT * () const
+    {
+        return getReturnElement(curr);
+    }
+    
+    ReturnT & operator * () const
+    {
+        return *(getReturnElement(curr));
+    }
+    
+    bool operator == (IntrusiveTwoDListIter const &other) const
+    {
+        return curr == other.curr;
+    }
+};
+
 FENNEL_END_NAMESPACE
 
 #endif

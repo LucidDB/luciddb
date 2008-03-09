@@ -40,11 +40,19 @@ public:
     static ParamName paramPagesInit;
     static ParamName paramPageSize;
     static ParamName paramIdleFlushInterval;
+    static ParamName paramFreshmenQueuePercentage;
+    static ParamName paramPageHistoryQueuePercentage;
+    static ParamName paramPrefetchPagesMax;
+    static ParamName paramPrefetchThrottleRate;
 
     static uint defaultMemPagesMax;
     static uint defaultMemPagesInit;
     static uint defaultPageSize;
     static uint defaultIdleFlushInterval;
+    static uint defaultFreshmenQueuePercentage;
+    static uint defaultPageHistoryQueuePercentage;
+    static uint defaultPrefetchPagesMax;
+    static uint defaultPrefetchThrottleRate;
 
     /**
      * Parameters for instantiating DeviceAccessScheduler.
@@ -71,6 +79,31 @@ public:
      * Number of milliseconds between idle flushes, or 0 to disable.
      */
     uint idleFlushInterval;
+
+    /**
+     * Percentage of the total cache set aside for the freshmen queue
+     * when using the 2Q page victimization policy
+     */
+    uint freshmenQueuePercentage;
+
+    /**
+     * The percentage of the total number of cache pages that dictates the
+     * number of pages in the history queue.  This is used as part of the 2Q
+     * page victimization policy.
+     */
+    uint pageHistoryQueuePercentage;
+
+    /**
+     * Maximum number of outstanding pre-fetch page requests
+     */
+    uint prefetchPagesMax;
+
+    /**
+     * Number of successful pre-fetches that must occur before the pre-fetch
+     * rate is throttled back up, in the event that it has been throttled down
+     * because of rejected requests.
+     */
+    uint prefetchThrottleRate;
 
     /**
      * Define a default set of cache parameters.

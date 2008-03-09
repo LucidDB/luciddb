@@ -25,6 +25,7 @@ usage() {
     echo "            [--with[out]-fennel] (default with) "
     echo "            [--with[out]-optimization] (default without) "
     echo "            [--with[out]-debug] (default with) "
+    echo "            [--with[out]-aio-required] (default with) "
     echo ""
     echo "            [--with[out]-tests] (default without) "
     echo "            [--with-nightly-tests] (default without) "
@@ -34,6 +35,7 @@ usage() {
 }
 
 with_fennel=true
+with_aio=true
 without_farrago_build=false
 without_dist_build=false
 without_tests=true
@@ -66,6 +68,11 @@ while [ -n "$1" ]; do
             with_fennel=true;;
         --without-fennel)
             with_fennel=false;;
+
+        --with-aio-required)
+            with_aio=true;;
+        --without-aio-required)
+            with_aio=false;;
             
         --with?(out)-optimization) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --with?(out)-debug) 
@@ -89,6 +96,12 @@ if $with_fennel ; then
     FARRAGO_FLAGS="${FARRAGO_FLAGS} --with-fennel"
 else
     FARRAGO_FLAGS="${FARRAGO_FLAGS} --without-fennel"
+fi
+
+if $with_aio ; then
+    FARRAGO_FLAGS="${FARRAGO_FLAGS} --with-aio-required"
+else
+    FARRAGO_FLAGS="${FARRAGO_FLAGS} --without-aio-required"
 fi
 
 if $with_nightly_tests ; then

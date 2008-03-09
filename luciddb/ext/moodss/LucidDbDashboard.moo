@@ -3,8 +3,8 @@
 
 <moodssConfiguration>
   <version>19.7</version>
-  <date>09/24/06</date>
-  <time>16:34:03</time>
+  <date>02/04/08</date>
+  <time>09:12:14</time>
   <configuration graphPlotBackground="black" currentValueTableRows="1000" canvasWidth="1280" canvasBackground="white" canvasImagePosition="nw" pieLabeler="peripheral" graphNumberOfIntervals="200" cellsLabelModuleHeader="1" graphXAxisLabelsRotation="90" graphLabelsPosition="right" canvasHeight="1024" graphDisplayGrid="0" canvasImageFile="" graphMinimumY="">
     <viewerColors>
       <item>#7FFFFF</item>
@@ -25,7 +25,9 @@
     <module namespace="luciddb&lt;0&gt;">
       <arguments>--file LucidDbPerfCounters.txt</arguments>
       <tables>
-        <table level="97" width="306" x="1077.0" xIcon="17.0" height="594" y="66.0" yIcon="985.0"/>
+        <table level="112" width="306" x="575.0" xIcon="17.0" height="594" y="206.0" yIcon="985.0">
+          <configuration toprow="2"/>
+        </table>
       </tables>
     </module>
   </modules>
@@ -56,12 +58,24 @@
         <item>luciddb&lt;0&gt;::data(18446744071617397978,1)</item>
         <item>luciddb&lt;0&gt;::data(374652009,1)</item>
         <item>luciddb&lt;0&gt;::data(1531934709,1)</item>
+        <item>luciddb&lt;0&gt;::data(18446744073109041616,1)</item>
+        <item>luciddb&lt;0&gt;::data(1052357712,1)</item>
+        <item>luciddb&lt;0&gt;::data(1102852748,1)</item>
+        <item>luciddb&lt;0&gt;::data(18446744071951220030,1)</item>
+        <item>luciddb&lt;0&gt;::data(36719590,1)</item>
+        <item>luciddb&lt;0&gt;::data(18446744072864213359,1)</item>
       </cells>
       <configuration labelsposition="left" yminimumcell="" yminimum="" grid="0" ymaximumcell="" ymaximum="">
         <cellcolors>
           <item>#7FFF7F</item>
           <item>#FFBF00</item>
           <item>#7FFFFF</item>
+          <item>#7FFFFF</item>
+          <item>#7FFF7F</item>
+          <item>#FF7F7F</item>
+          <item>#FFFF7F</item>
+          <item>#7F7FFF</item>
+          <item>#FFBF00</item>
         </cellcolors>
       </configuration>
     </viewer>

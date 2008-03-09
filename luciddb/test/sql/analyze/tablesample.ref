@@ -564,7 +564,7 @@
 +---------+
 | EXPR$0  |
 +---------+
-| 100     |
+| 0       |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Report 5 rows where there are 100
@@ -575,7 +575,7 @@
 +---------+
 | EXPR$0  |
 +---------+
-| 100     |
+| 5       |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Report 50 rows where there are 100
@@ -584,7 +584,7 @@
 +---------+
 | EXPR$0  |
 +---------+
-| 60      |
+| 30      |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Report 200 rows where there are 100
@@ -651,7 +651,7 @@
 +---------+
 | EXPR$0  |
 +---------+
-| 4       |
+| 0       |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Report 100 rows when there are 4

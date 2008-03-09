@@ -65,10 +65,14 @@
 | databaseTxnLogInitSize          | 4        | INTEGER      |
 | deviceSchedulerType             | 12       | VARCHAR      |
 | expectedConcurrentStatements    | 4        | INTEGER      |
+| freshmenPageQueuePercentage     | 4        | INTEGER      |
 | groupCommitInterval             | 4        | INTEGER      |
 | jniHandleTraceFile              | 12       | VARCHAR      |
 | mofClassName                    | 12       | VARCHAR      |
 | mofId                           | 12       | VARCHAR      |
+| pageHistoryQueuePercentage      | 4        | INTEGER      |
+| prefetchPagesMax                | 4        | INTEGER      |
+| prefetchThrottleRate            | 4        | INTEGER      |
 | resourceDir                     | 12       | VARCHAR      |
 | tempIncrementSize               | 4        | INTEGER      |
 | tempInitSize                    | 4        | INTEGER      |

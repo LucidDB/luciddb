@@ -1011,6 +1011,25 @@ public class FarragoDatabase
                     "1", upperBound);
             }
         }
+        
+        if (paramName.equals("prefetchPagesMax")) {
+            int paramVal = ddlStmt.getParamValue().intValue(false);
+            FemFennelConfig config =
+                systemRepos.getCurrentConfig().getFennelConfig();
+            int cachePages = config.getCachePagesInit();           
+            if (paramVal < 0 || paramVal > cachePages) {
+                throw FarragoResource.instance().InvalidParam.ex(
+                    "0", "'cachePagesInit'");
+            }
+        }
+        
+        if (paramName.equals("prefetchThrottleRate")) {
+            int paramVal = ddlStmt.getParamValue().intValue(false);
+            if (paramVal < 1) {
+                throw FarragoResource.instance().InvalidParam.ex(
+                    "1", String.valueOf(Integer.MAX_VALUE));
+            }
+        }
 
         if (paramName.equals("cachePagesInit")
             || paramName.equals("expectedConcurrentStatements")

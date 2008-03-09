@@ -116,7 +116,7 @@ protected:
     SharedBTreeReader pBTreeReader;
     DynamicParamId rootPageIdParamId;
     
-    SharedBTreeReader newReader();
+    virtual SharedBTreeReader newReader();
     SharedBTreeWriter newWriter(bool monotonic = false);
 
     /**

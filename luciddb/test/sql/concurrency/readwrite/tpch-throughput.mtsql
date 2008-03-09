@@ -2,6 +2,7 @@
 
 @setup
   set schema 'rwconcur';
+  alter system set "expectedConcurrentStatements" = 5;
   
   --load tables
   insert into nation select * from "nation";
@@ -34,6 +35,7 @@
 @thread cleanup
   @sync
   @sync
+  set schema 'rwconcur';
   truncate table Nation;
   truncate table Region;
   truncate table Part;
@@ -42,6 +44,7 @@
   truncate table PartSupp;
   truncate table Orders;
   truncate table LineItem;
+  alter system set "expectedConcurrentStatements" = 4;
 
 @end
 

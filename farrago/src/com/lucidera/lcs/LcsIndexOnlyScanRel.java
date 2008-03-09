@@ -238,6 +238,7 @@ public class LcsIndexOnlyScanRel
                 projectedColumns,
                 isUniqueKey,
                 isOuter,
+                true,
                 inputKeyProj,
                 inputJoinProj,
                 inputDirectiveProj,

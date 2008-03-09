@@ -96,7 +96,7 @@ AioSignalScheduler::~AioSignalScheduler()
     assert(!isStarted());
 }
 
-void AioSignalScheduler::schedule(RandomAccessRequest &request)
+bool AioSignalScheduler::schedule(RandomAccessRequest &request)
 {
     assert(isStarted());
 
@@ -118,6 +118,8 @@ void AioSignalScheduler::schedule(RandomAccessRequest &request)
         }
         assert(!rc);
     }
+
+    return true;
 }
 
 void AioSignalScheduler::stop()

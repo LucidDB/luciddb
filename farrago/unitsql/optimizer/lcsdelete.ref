@@ -76,6 +76,9 @@
 | 17      | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
 +---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+
 > 
+> -- fake stats to ensure that index is used
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LCSDEL', 'DELTAB', 1000);
+> 
 > delete from deltab where a1 < 30 and lcs_rid(a1) >= 9;
 > select lcs_rid(a1), * from deltab order by 1;
 +---------+-----+-----+-----+-----+-----+-----+-----+-----+-----+

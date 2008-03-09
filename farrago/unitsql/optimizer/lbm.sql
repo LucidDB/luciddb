@@ -8,6 +8,8 @@ create schema lbm;
 set schema 'lbm';
 set path 'lbm';
 
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
 create server test_data
 foreign data wrapper sys_file_wrapper
 options (

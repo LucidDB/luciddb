@@ -115,3 +115,20 @@ select * from sys_boot.mgmt.session_parameters_view
 
 -- should work
 alter session set "etlActionId" = null;
+
+-- should not work
+alter system set "prefetchPagesMax" = -10;
+alter system set "prefetchThrottleRate" = 0;
+alter system set "prefetchPagesMax" = 1001;
+
+-- should work -- turns off pre-fetches; make sure selects still work
+alter system set "prefetchPagesMax" = 0;
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+create schema param;
+set schema 'param';
+create table t(a int);
+insert into t values(1);
+select * from t;
+drop schema param cascade;
+
+alter system set "prefetchPagesMax" = 12;

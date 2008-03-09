@@ -160,4 +160,29 @@ Error: Value '-1' is out of range for parameter of type errorLogMax (state=,code
 > -- should work
 > alter session set "etlActionId" = null;
 > 
+> -- should not work
+> alter system set "prefetchPagesMax" = -10;
+Error: Invalid parameter setting.  Setting must be between 0 and 'cachePagesInit'. (state=,code=0)
+> alter system set "prefetchThrottleRate" = 0;
+Error: Invalid parameter setting.  Setting must be between 1 and 2147483647. (state=,code=0)
+> alter system set "prefetchPagesMax" = 1001;
+Error: Invalid parameter setting.  Setting must be between 0 and 'cachePagesInit'. (state=,code=0)
+> 
+> -- should work -- turns off pre-fetches; make sure selects still work
+> alter system set "prefetchPagesMax" = 0;
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> create schema param;
+> set schema 'param';
+> create table t(a int);
+> insert into t values(1);
+> select * from t;
++----+
+| A  |
++----+
+| 1  |
++----+
+> drop schema param cascade;
+> 
+> alter system set "prefetchPagesMax" = 12;
+> 
 > !quit

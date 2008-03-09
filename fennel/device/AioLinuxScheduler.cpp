@@ -43,10 +43,9 @@ AioLinuxScheduler::AioLinuxScheduler(
     DeviceAccessSchedulerParams const &params)
 {
     quit = false;
-    nRequestsMax = params.maxRequests;
-    nRequestsPending.clear();
+    nRequestsOutstanding.clear();
     context = NULL;
-    int rc = io_queue_init(nRequestsMax, &context);
+    int rc = io_queue_init(params.maxRequests, &context);
     if (rc) {
         throw SysCallExcn("io_queue_init failed");
     }
@@ -64,6 +63,7 @@ inline bool AioLinuxScheduler::isStarted() const
 AioLinuxScheduler::~AioLinuxScheduler()
 {
     assert(!isStarted());
+    assert(!nRequestsOutstanding);
     int rc = io_queue_release(context);
     if (rc) {
         throw SysCallExcn("io_queue_release failed");
@@ -81,60 +81,100 @@ void AioLinuxScheduler::registerDevice(
     fcntl(hFile, F_SETFL, flags | O_DIRECT);
 }
 
-void AioLinuxScheduler::schedule(RandomAccessRequest &request)
+bool AioLinuxScheduler::schedule(RandomAccessRequest &request)
 {
-    iocb *requestsArray[request.bindingList.size()];
-    iocb **requests = requestsArray;
-    
     assert(isStarted());
-
     request.pDevice->prepareTransfer(request);
+    return submitRequests(request.bindingList);
+}
 
+bool AioLinuxScheduler::submitRequests(
+    RandomAccessRequest::BindingList &bindingList)
+{
+    iocb *requestsArray[bindingList.size()];
+    iocb **requests = requestsArray;
+
+    // convert list to array
     int n = 0;
-    RandomAccessRequest::BindingListMutator bindingMutator(request.bindingList);
+    RandomAccessRequest::BindingListMutator bindingMutator(bindingList);
     for (; bindingMutator; ++n) {
-        assert(n < nRequestsMax);
         RandomAccessRequestBinding *pBinding = bindingMutator.detach();
         requests[n] = pBinding;
     }
 
     if (n == 0) {
         // just in case someone asks for a nop
-        return;
+        return true;
     }
 
-    // io_submit is allowed to do less than we asked for, so
-    // we have to loop in case the OS is too busy
+    // submit array
+    int rc = io_submit(context, n, requests);
+    if (rc == -EAGAIN) {
+        rc = 0;
+    }
+
+    if (rc < 0) {
+        // hard error
+        throw SysCallExcn("io_submit failed");
+    }
+    
+    // keep track of the number successfully submitted
+    // (can't use += because nRequestsOutstanding is
+    // an AtomicCounter)
+    for (int i = 0; i < rc; ++i) {
+        ++nRequestsOutstanding;
+    }
+    
+    if (rc == n) {
+        // we're done
+        return true;
+    } else {
+        // io_submit is allowed to do less than we asked for, so
+        // we need to resubmit some leftovers
+        requests += rc;
+        n -= rc;
+        deferLeftoverRequests(requests, n);
+        return false;
+    }
+}
+
+void AioLinuxScheduler::deferLeftoverRequests(
+    iocb **ppLeftovers,
+    uint nLeftovers)
+{
+    assert(nLeftovers > 0);
+
+    // convert array back to list
+    RandomAccessRequest::BindingList bindingList;
+
+    for (uint i = 0; i < nLeftovers; ++i) {
+        RandomAccessRequestBinding *pBinding =
+            static_cast<RandomAccessRequestBinding *>(ppLeftovers[i]);
+        bindingList.push_back(*pBinding);
+    }
+
+    StrictMutexGuard deferredQueueGuard(deferredQueueMutex);
+    deferredQueue.push_back(bindingList);
+}
+
+bool AioLinuxScheduler::retryDeferredRequests()
+{
     for (;;) {
-        int rc = io_submit(context, n, requests);
-        if (rc > 0) {
-            // keep track of the number successfully submitted
-            // (can't use += because nRequestsPending is
-            // an AtomicCounter)
-            for (int i = 0; i < rc; ++i) {
-                ++nRequestsPending;
-            }
-            if (rc == n) {
-                // we're done
-                break;
-            } else {
-                // need to resubmit some leftovers
-                requests += rc;
-                n -= rc;
-            }
-        } else {
-            assert (rc < 0);
-            if (rc != -EAGAIN) {
-                // hard error
-                throw SysCallExcn("io_submit failed");
-            }
+        StrictMutexGuard deferredQueueGuard(deferredQueueMutex);
+        if (deferredQueue.empty()) {
+            // all resubmitted successfully (or none to begin with)
+            return true;
         }
+        RandomAccessRequest::BindingList bindingList = deferredQueue.front();
+        deferredQueue.pop_front();
+        // release mutex now to avoid potential deadlocks
+        deferredQueueGuard.unlock();
         
-        // try again in 1 millisecond
-        // REVIEW jvs 30-May-2007:  probably needs to be parameterized;
-        // and ideally, we would signal up to higher levels to
-        // stop being so aggressive about I/O requests
-        ::sleep(1);
+        bool success = submitRequests(bindingList);
+        if (!success) {
+            // at least one failed
+            return false;
+        }
     }
 }
 
@@ -148,28 +188,33 @@ void AioLinuxScheduler::stop()
 
 void AioLinuxScheduler::run()
 {
-    while (nRequestsPending || !quit) {
+    while (nRequestsOutstanding || !quit) {
         io_event event;
         timespec ts;
+
+        // Check the deferred request queue before entering wait state.
+        if (retryDeferredRequests()) {
+            // If we retried any requests, they all succeeded, so we're in our
+            // normal wait state: timeout every second to check the quit flag.
+            ts.tv_sec = 1;
+            ts.tv_nsec = 0;
+        } else {
+            // At least one retry just failed, so during wait, timeout in a
+            // millisecond so we can retry the failed requests.
+            ts.tv_sec = 0;
+            ts.tv_nsec = 1000000;
+        }
         
-        // timeout every second, because that's the only means available for
-        // checking the quit flag
-        ts.tv_sec = 1;
-        ts.tv_nsec = 0;
         long rc = io_getevents(context, 1, 1, &event, &ts);
-        if (rc == 0) {
-            // timed out:  check quit flag
+        
+        // NOTE jvs 20-Jan-2008:  Docs don't mention the possibility of
+        // spurious interrupts, but they can occur, at least while
+        // debugging with gdb, so treat them as timeout.
+        if ((rc == 0) || (rc == -EINTR)) {
+            // timed out
             continue;
         }
 
-        // REVIEW jvs 11-Nov-2005: I had to put this in to swallow spurious
-        // interrupts while debugging with gdb, but the docs don't mention this
-        // possibility.  Sigh.
-        if (rc == -EINTR) {
-            // spurious interrupt:  ignore
-            continue;
-        }
-        
         if (rc != 1) {
             throw SysCallExcn("io_getevents failed");
         }
@@ -178,7 +223,7 @@ void AioLinuxScheduler::run()
         bool success = (pBinding->getBufferSize() == event.res)
             && !event.res2;
         pBinding->notifyTransferCompletion(success);
-        --nRequestsPending;
+        --nRequestsOutstanding;
     }
 }
 

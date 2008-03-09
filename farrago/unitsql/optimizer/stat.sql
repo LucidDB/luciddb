@@ -265,12 +265,10 @@ drop table stat_file;
 --
 -- 2.9 A few more rows than histogram bars
 --
-create table ten(i int primary key)
-server sys_column_store_data_server;
+create table ten(i int primary key);
 insert into ten values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
 
-create table hundred (i int primary key)
-server sys_column_store_data_server;
+create table hundred (i int primary key);
 insert into hundred (select a.i*10 + b.i from ten a, ten b);
 insert into hundred values (100), (101);
 

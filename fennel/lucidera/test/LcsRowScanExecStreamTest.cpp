@@ -134,7 +134,10 @@ protected:
      * Sample rows from clusters.  Assumes clusters have been loaded by
      * loadClusters/loadOneCluster.
      *
-     * @param nRows total number of rows in the clusters
+     * @param nRows total number of rows in the clusters; if set to 0, full
+     * table scans should be done
+     *
+     * @param nRowsActual actual total number of rows in the clusters
      *
      * @param nCols number of columns in each cluster
      *
@@ -156,8 +159,8 @@ protected:
      * normally should be the same as nRows unless skipping rows or
      * testing exception cases
      */
-    void testSampleScanCols(uint nRows, uint nCols, uint nClusters,
-                            TupleProjection proj, uint skipRows,
+    void testSampleScanCols(uint nRows, uint nRowsActual, uint nCols,
+                            uint nClusters, TupleProjection proj, uint skipRows,
                             TableSamplingMode mode, float rate,
                             int seed, uint clumps, uint expectedNumRows);
 
@@ -531,16 +534,16 @@ void LcsRowScanExecStreamTest::testScans()
 
     resetExecStreamTest();
 
-    // skip one cluster
+    // skip one cluster; also setup the input so every 7 rows are skipped
     proj.resize(0);
     for (uint i = 0; i < nClusters-1; i++) {
         for (uint j = 0; j < nCols; j++) {
             proj.push_back(i * nCols + j);
         }
     }
-    testFilterCols(nRows, nCols, nClusters, proj, 1, 1000, false);
+    testFilterCols(
+        nRows, nCols, nClusters, proj, 7, 1000/7 + 1, false);
 }
-
 
 void LcsRowScanExecStreamTest::testCompressedFiltering()
 {
@@ -669,12 +672,12 @@ void LcsRowScanExecStreamTest::testBernoulliSampling()
 
     // Full Row Scan (4938 is based on the seed, but determine empirically)
     testSampleScanCols(
-        0, nCols, nClusters, proj, 1, mode, rate, seed, 0, 4938);
+        0, nRows, nCols, nClusters, proj, 1, mode, rate, seed, 0, 4938);
     resetExecStreamTest();
 
     // Skip every other row
     testSampleScanCols(
-        nRows, nCols, nClusters, proj, 2, mode, rate, seed, 0, 2489);
+        nRows, nRows, nCols, nClusters, proj, 2, mode, rate, seed, 0, 2489);
     resetExecStreamTest();
 }
 
@@ -704,15 +707,15 @@ void LcsRowScanExecStreamTest::testSystemSampling()
     }
 
     testSampleScanCols(
-        nRows, nCols, nClusters, proj, 1, mode, 0.1, -1, 10, 5000);
+        nRows, nRows, nCols, nClusters, proj, 1, mode, 0.1, -1, 10, 5000);
     resetExecStreamTest();
 
     testSampleScanCols(
-        nRows, nCols, nClusters, proj, 1, mode, 1.0, -1, 10, 50000);
+        nRows, nRows, nCols, nClusters, proj, 1, mode, 1.0, -1, 10, 50000);
     resetExecStreamTest();
 
     testSampleScanCols(
-        nRows, nCols, nClusters, proj, 1, mode, 0.33333, -1, 10, 16670);
+        nRows, nRows, nCols, nClusters, proj, 1, mode, 0.33333, -1, 10, 16670);
     resetExecStreamTest();
 }
 
@@ -809,7 +812,8 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     uint offset = 0;
 
     setSearchKey(
-        '-', ')', 0, 1000, inputBuf, offset, inputTupleAccessor, inputTupleData);
+        '-', ')', 0, 1000, inputBuf, offset, inputTupleAccessor,
+        inputTupleData);
     setSearchKey(
         '[', '+', 2000, 0, inputBuf, offset, inputTupleAccessor,
         inputTupleData);
@@ -822,9 +826,11 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     uint offset1 = 0;
 
     setSearchKey(
-        '[', ')', 500+nCols, 2999+nCols, inputBuf1, offset1, inputTupleAccessor, inputTupleData1);
+        '[', ')', 500+nCols, 2999+nCols, inputBuf1, offset1, inputTupleAccessor,
+        inputTupleData1);
     setSearchKey(
-        '[', ']', 2999+nCols, 2999+nCols, inputBuf1, offset1, inputTupleAccessor, inputTupleData1);
+        '[', ']', 2999+nCols, 2999+nCols, inputBuf1, offset1,
+        inputTupleAccessor, inputTupleData1);
 
     TupleData inputTupleData2(inputTupleDesc);
     boost::shared_array<FixedBuffer> inputBuffer2;
@@ -834,7 +840,8 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     uint offset2 = 0;
 
     setSearchKey(
-        '(', '+', 1500+2*nCols, 0, inputBuf2, offset2, inputTupleAccessor, inputTupleData1);
+        '(', '+', 1500+2*nCols, 0, inputBuf2, offset2, inputTupleAccessor,
+        inputTupleData1);
 
     valuesParams.pTupleBuffer = inputBuffer;
     valuesParams.bufSize = offset;
@@ -901,11 +908,14 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     // setup generators for result stream
 
     vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
+    offset = (int) ceil(2000.0 / skipRows) * skipRows;
     for (uint i = 0; i < proj.size(); i++) {
         SharedInt64ColumnGenerator col =
-            SharedInt64ColumnGenerator(compressed ? 
-            (Int64ColumnGenerator*)new MixedDupColumnGenerator(NDUPS, 
-            proj[i]+2000,500) : new SeqColumnGenerator(proj[i]+2000, skipRows));
+            SharedInt64ColumnGenerator(
+                compressed ? 
+                    (Int64ColumnGenerator*) new MixedDupColumnGenerator(
+                        NDUPS, proj[i]+2000,500) :
+                    new SeqColumnGenerator(proj[i]+offset, skipRows));
         columnGenerators.push_back(col);
     }
 
@@ -915,8 +925,8 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
 }
 
 
-void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nCols,
-                                                  uint nClusters,
+void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nRowsActual,
+                                                  uint nCols, uint nClusters,
                                                   TupleProjection proj,
                                                   uint skipRows,
                                                   TableSamplingMode mode,
@@ -998,11 +1008,7 @@ void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nCols,
     scanParams.samplingIsRepeatable = true;
     scanParams.samplingRepeatableSeed = seed;
     scanParams.samplingClumps = clumps;
-    if (mode == SAMPLING_SYSTEM) {
-        scanParams.samplingRowCount = nRows;
-    } else {
-        scanParams.samplingRowCount = 0;
-    }
+    scanParams.samplingRowCount = nRowsActual;
 
     ExecStreamEmbryo scanStreamEmbryo;
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);

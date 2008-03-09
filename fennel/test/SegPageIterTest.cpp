@@ -39,11 +39,13 @@ public:
         FENNEL_UNIT_TEST_CASE(SegPageIterTest,testUnboundedIter);
         FENNEL_UNIT_TEST_CASE(SegPageIterTest,testBoundedIter);
         FENNEL_UNIT_TEST_CASE(SegPageIterTest,testWithLock);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testHighPrefetchRejects);
+        FENNEL_UNIT_TEST_CASE(SegPageIterTest,testLowPrefetchRejects);
     }
 
     void testUnboundedIter()
     {
-        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false);
+        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,0);
     }
     
     void testBoundedIter()
@@ -51,15 +53,30 @@ public:
         testIter(
             Segment::getLinearPageId(3),
             Segment::getLinearPageId(51),
-            false);
+            false,
+            0);
     }
 
     void testWithLock()
     {
-        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,true);
+        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,true,0);
     }
 
-    void testIter(PageId beginPageId,PageId endPageId,bool bLock)
+    void testHighPrefetchRejects()
+    {
+        // High pre-fetch reject rate.  This will force frequent downward
+        // throttles.
+        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,3);
+    }
+    
+    void testLowPrefetchRejects()
+    {
+        // Low pre-fetch reject rate.  This will allow the rate to throttle
+        // back up once it's throttled down.
+        testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,123);
+    }
+
+    void testIter(PageId beginPageId,PageId endPageId,bool bLock,int rejectRate)
     {
         openStorage(DeviceMode::createNew);
 
@@ -72,10 +89,13 @@ public:
         SegPageIter iter;
         iter.mapRange(segmentAccessor,beginPageId,endPageId);
         PageId pageId = beginPageId;
-        for (;;) {
+        for (uint i = 0; ; i++) {
             BOOST_CHECK_EQUAL(pageId,*iter);
             if (pageId == endPageId) {
                 break;
+            }
+            if (rejectRate > 0 && !(i % rejectRate)) {
+                iter.forcePrefetchReject();
             }
             if (bLock) {
                 pageLock.lockShared(pageId);

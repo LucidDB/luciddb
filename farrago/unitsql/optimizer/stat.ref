@@ -1094,12 +1094,10 @@
 > --
 > -- 2.9 A few more rows than histogram bars
 > --
-> create table ten(i int primary key)
-> server sys_column_store_data_server;
+> create table ten(i int primary key);
 > insert into ten values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
 > 
-> create table hundred (i int primary key)
-> server sys_column_store_data_server;
+> create table hundred (i int primary key);
 > insert into hundred (select a.i*10 + b.i from ten a, ten b);
 > insert into hundred values (100), (101);
 > 
@@ -1109,16 +1107,13 @@
 +------------+--------------+-------------+-----------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                  INDEX_NAME                   | PAGES  |
 +------------+--------------+-------------+-----------------------------------------------+--------+
-| LOCALDB    | STAT         | HUNDRED     | SYS$CLUSTERED_INDEX$HUNDRED$I                 | 2      |
 | LOCALDB    | STAT         | HUNDRED     | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$HUNDRED  | 1      |
-| LOCALDB    | STAT         | HUNDRED     | SYS$DELETION_INDEX$HUNDRED                    | 1      |
 +------------+--------------+-------------+-----------------------------------------------+--------+
 > select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | ROW_COUNT  |
 +------------+--------------+-------------+------------+
 | LOCALDB    | STAT         | HUNDRED     | 102        |
-| LOCALDB    | STAT         | TEN         | 0          |
 +------------+--------------+-------------+------------+
 > select table_cat, table_schem,table_name, column_name, "CARDINALITY",
 >   cardinality_estimated, percent_sampled, sample_size, bar_count, 

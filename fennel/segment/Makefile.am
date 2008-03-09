@@ -9,6 +9,7 @@ DelegatingSegment.cpp \
 DynamicDelegatingSegment.cpp \
 LinearDeviceSegment.cpp \
 LinearViewSegment.cpp \
+MockSegPageEntryIterSource.cpp \
 RandomAllocationSegmentBase.cpp \
 RandomAllocationSegment.cpp \
 ScratchSegment.cpp \

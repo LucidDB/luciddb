@@ -120,7 +120,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      * @param rightPageId PageId corresponding to rightNode
      */
     void grow(
-        BTreeNode &rightNode, PageId rightPageId);
+        BTreeNode const &rightNode, PageId rightPageId);
 
     /**
      * Finds the parent page by using the page stack (plus searches if root

@@ -126,6 +126,7 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
         if (searchKeyParams.size() == 0) {
             for (uint i = 0; i < inputKeyData.size(); i++) {
                 searchKeyProj.push_back(i);
+                upperBoundKeyProj.push_back(i);
             }
         }
     }
@@ -186,31 +187,11 @@ ExecStreamResult BTreeSearchExecStream::execute(
         }
 
         // inner fetch loop
-        for (;;) {
-            if (nTuples >= quantum.nTuplesMax) {
-                return EXECRC_QUANTUM_EXPIRED;
-            }
-            if (reachedTupleLimit(nTuples)) {
-                return EXECRC_BUF_OVERFLOW;
-            }
-            if (pOutAccessor->produceTuple(tupleData)) {
-                ++nTuples;
-            } else {
-                return EXECRC_BUF_OVERFLOW;
-            }
-            if (pReader->searchNext()) {
-                if (testInterval()) {
-                    projAccessor.unmarshal(
-                        tupleData.begin() + nJoinAttributes);
-                    // continue with inner fetch loop
-                    continue;
-                }
-            }
-            pReader->endSearch();
+        rc = innerFetchLoop(quantum, nTuples);
+        if (rc == EXECRC_YIELD) {
             pInAccessor->consumeTuple();
-            // break out of the inner loop, which will take us to the top of the
-            // outer loop
-            break;
+        } else {
+            return rc;
         }
     }
 }
@@ -224,71 +205,10 @@ bool BTreeSearchExecStream::innerSearchLoop()
 
         readSearchKey();
         readDirectives();
-        setAdditionalKeys();
-
-        switch(lowerBoundDirective) {
-        case SEARCH_UNBOUNDED_LOWER:
-            if ((*pSearchKey).size() <= 1) {
-                pReader->searchFirst();
-                break;
-            } 
-            // otherwise, this is the case where we have > 1 key and a
-            // non-equality search on the last key; in this case, we need
-            // to position to the equality portion of the key
-        case SEARCH_CLOSED_LOWER:
-            pReader->searchForKey(*pSearchKey,DUP_SEEK_BEGIN,leastUpper);
-            break;
-        case SEARCH_OPEN_LOWER:
-            pReader->searchForKey(*pSearchKey,DUP_SEEK_END,leastUpper);
-            break;
-        default:
-            permFail(
-                "unexpected lower bound directive:  "
-                << (char) lowerBoundDirective);
-        }
-
-        bool match = true;
-        if (preFilterNulls && (*pSearchKey).containsNull(searchKeyProj)) {
-            // null never matches when preFilterNulls is true;
-            // TODO:  so don't bother searching, but need a way
-            // to fake pReader->isPositioned()
-            match = false;
-        } else {
-            if (pReader->isSingular()) {
-                // Searched past end of tree.
-                match = false;
-            } else {
-                // Read the upper bound key so we know where to stop
-                // while scanning forward.
-                readUpperBoundKey();
-                if (preFilterNulls &&
-                    upperBoundData.containsNull(searchKeyProj))
-                {
-                    match = false;
-                } else {
-                    match = testInterval();
-                }
-            }
-        }
-            
-        if (!match) {
-            if (!outerJoin) {
-                pInAccessor->consumeTuple();
-                pReader->endSearch();
-                continue;
-            }
-            // no match, so make up null values for the missing attributes
-            for (uint i = nJoinAttributes; i < tupleData.size(); ++i) {
-                tupleData[i].pData = NULL;
-            }
-        } else {
-            projAccessor.unmarshal(
-                tupleData.begin() + nJoinAttributes);
-        }
-
-        // propagate join attributes
-        if (inputJoinAccessor.size()) {
-            inputJoinAccessor.unmarshal(tupleData);
+        pSearchKey = &inputKeyData;
+        readUpperBoundKey();
+        if (!searchForKey()) {
+            pInAccessor->consumeTuple();
         }
     }
     return true;
@@ -351,17 +271,84 @@ void BTreeSearchExecStream::readDirectives()
         upperBoundDirective = SEARCH_CLOSED_UPPER;
         return;
     }
-    
+
     directiveAccessor.unmarshal(directiveData);
 
     // directives can never be null
     assert(directiveData[LOWER_BOUND_DIRECTIVE].pData);
     assert(directiveData[UPPER_BOUND_DIRECTIVE].pData);
-    
+
     lowerBoundDirective =
         SearchEndpoint(*(directiveData[LOWER_BOUND_DIRECTIVE].pData));
     upperBoundDirective =
         SearchEndpoint(*(directiveData[UPPER_BOUND_DIRECTIVE].pData));
+}
+
+bool BTreeSearchExecStream::searchForKey()
+{
+    switch(lowerBoundDirective) {
+    case SEARCH_UNBOUNDED_LOWER:
+        if (pSearchKey->size() <= 1) {
+            pReader->searchFirst();
+            break;
+        } 
+        // otherwise, this is the case where we have > 1 key and a
+        // non-equality search on the last key; in this case, we need
+        // to position to the equality portion of the key
+    case SEARCH_CLOSED_LOWER:
+        pReader->searchForKey(*pSearchKey, DUP_SEEK_BEGIN, leastUpper);
+        break;
+    case SEARCH_OPEN_LOWER:
+        pReader->searchForKey(*pSearchKey, DUP_SEEK_END, leastUpper);
+        break;
+    default:
+        permFail(
+            "unexpected lower bound directive:  "
+            << (char) lowerBoundDirective);
+    }
+
+    bool match = true;
+    if (preFilterNulls && pSearchKey->containsNull(searchKeyProj))
+    {
+        // null never matches when preFilterNulls is true;
+        // TODO:  so don't bother searching, but need a way
+        // to fake pReader->isPositioned()
+        match = false;
+    } else {
+        if (pReader->isSingular()) {
+            // Searched past end of tree.
+            match = false;
+        } else {
+            if (preFilterNulls &&
+                upperBoundData.containsNull(upperBoundKeyProj))
+            {
+                match = false;
+            } else {
+                match = testInterval();
+            }
+        }
+    }
+        
+    if (!match) {
+        if (!outerJoin) {
+            pReader->endSearch();
+            return false;
+        }
+        // no match, so make up null values for the missing attributes
+        for (uint i = nJoinAttributes; i < tupleData.size(); ++i) {
+            tupleData[i].pData = NULL;
+        }
+    } else {
+        projAccessor.unmarshal(
+            tupleData.begin() + nJoinAttributes);
+    }
+
+    // propagate join attributes
+    if (inputJoinAccessor.size()) {
+        inputJoinAccessor.unmarshal(tupleData);
+    }
+    
+    return true;
 }
 
 void BTreeSearchExecStream::readUpperBoundKey()
@@ -383,20 +370,20 @@ void BTreeSearchExecStream::readUpperBoundKey()
         // to actual parameters supplied.  Since the lower and upper bound
         // keys may have a different number of supplied parameters, we need
         // to recreate the projection.
-        searchKeyProj.clear();
+        upperBoundKeyProj.clear();
         if (!(nParams%2) || searchKeyParams[nParams/2].keyOffset == nParams/2+1)
         {
             upperBoundData[0] =
                 pDynamicParamManager->getParam(
                     searchKeyParams[nParams/2].dynamicParamId).getDatum();
-            searchKeyProj.push_back(0);
+            upperBoundKeyProj.push_back(0);
         }
         uint keySize = upperBoundData.size();
         for (uint i = nParams/2 + 1; i < nParams; i++) {
             upperBoundData[searchKeyParams[i].keyOffset - keySize] =
                 pDynamicParamManager->getParam(
                     searchKeyParams[i].dynamicParamId).getDatum();
-            searchKeyProj.push_back(i - keySize);
+            upperBoundKeyProj.push_back(i - keySize);
         }
     }
 }
@@ -407,10 +394,13 @@ bool BTreeSearchExecStream::testInterval()
         // if more than one search key in an unbounded search, the first part
         // of the key must be equality, so make sure that part of the key
         // matches
-        if ((*pSearchKey).size() > 1) {
+        if (pSearchKey->size() > 1) {
             readerKeyAccessor.unmarshal(readerKeyData);
-            int c = inputKeyDesc.compareTuplesKey(
-                readerKeyData, *pSearchKey, (*pSearchKey).size() - 1);
+            int c =
+                inputKeyDesc.compareTuplesKey(
+                    readerKeyData,
+                    *pSearchKey,
+                    pSearchKey->size() - 1);
             if (c != 0) {
                 return false;
             }
@@ -425,7 +415,7 @@ bool BTreeSearchExecStream::testInterval()
             // our desired key position; move forward one key to see if there
             // is a match
             if (!leastUpper && lowerBoundDirective == SEARCH_CLOSED_LOWER &&
-                (*pSearchKey).size() > 1 && c > 0)
+                pSearchKey->size() > 1 && c > 0)
             {
                 return checkNextKey();
             }
@@ -454,6 +444,36 @@ bool BTreeSearchExecStream::checkNextKey()
     return (c == 0);
 }
 
+ExecStreamResult BTreeSearchExecStream::innerFetchLoop(
+    ExecStreamQuantum const &quantum,
+    uint &nTuples)
+{
+    for (;;) {
+        if (nTuples >= quantum.nTuplesMax) {
+            return EXECRC_QUANTUM_EXPIRED;
+        }
+        if (reachedTupleLimit(nTuples)) {
+            return EXECRC_BUF_OVERFLOW;
+        }
+        if (pOutAccessor->produceTuple(tupleData)) {
+            ++nTuples;
+        } else {
+            return EXECRC_BUF_OVERFLOW;
+        }
+        if (pReader->searchNext()) {
+            if (testInterval()) {
+                projAccessor.unmarshal(
+                    tupleData.begin() + nJoinAttributes);
+                // continue with inner fetch loop
+                continue;
+            }
+        }
+        pReader->endSearch();
+        // break out of this loop to enable a new key search
+        return EXECRC_YIELD;
+    }
+}
+
 void BTreeSearchExecStream::closeImpl()
 {
     ConduitExecStream::closeImpl();
@@ -463,11 +483,6 @@ void BTreeSearchExecStream::closeImpl()
 bool BTreeSearchExecStream::reachedTupleLimit(uint nTuples)
 {
     return false;
-}
-
-void BTreeSearchExecStream::setAdditionalKeys()
-{
-    pSearchKey = &inputKeyData;
 }
 
 FENNEL_END_CPPFILE("$Id$");

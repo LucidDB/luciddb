@@ -144,12 +144,43 @@ class CacheImpl : public Cache, private TimerThreadClient
     std::vector<PageBucketT *> pageTable;
 
     /**
-     * See CacheStats::nCacheHits.
+     * Percentage of pages in the cache that must be dirty for lazy writes to
+     * be initiated
+     */
+    uint dirtyHighWaterPercent;
+
+    /**
+     * Percentage of pages in the cache that must be dirty for lazy writes to
+     * be suspended
+     */
+    uint dirtyLowWaterPercent;
+
+    /**
+     * Number of dirty pages in the cache corresponding to the high-water
+     * percentage
+     */
+    uint dirtyHighWaterMark;
+
+    /**
+     * Number of dirty pages in the cache corresponding to the low-water
+     * percentage
+     */
+    uint dirtyLowWaterMark;
+
+    /**
+     * Used by the lazy writer thread to indicate that the high-water dirty
+     * threshhold has been reached and page flushes should continue until
+     * the low-water threshhold is reached
+     */
+    bool inFlushMode;
+
+    /**
+     * See CacheStats::nHits.
      */
     AtomicCounter nCacheHits;
 
     /**
-     * See CacheStats::nCacheRequests.
+     * See CacheStats::nRequests.
      */
     AtomicCounter nCacheRequests;
 
@@ -174,6 +205,41 @@ class CacheImpl : public Cache, private TimerThreadClient
      * See CacheStats::nPageWrites.
      */
     AtomicCounter nPageWrites;
+
+    /**
+     * See CacheStats::nRejectedPrefetches.
+     */
+    AtomicCounter nRejectedCachePrefetches;
+
+    /**
+     * See CacheStats::nIoRetries.
+     */
+    AtomicCounter nIoRetries;
+
+    /**
+     * See CacheStats::nSuccessfulPrefetches.
+     */
+    AtomicCounter nSuccessfulCachePrefetches;
+
+    /**
+     * See CacheStats::nLazyWrites.
+     */
+    AtomicCounter nLazyWrites;
+
+    /**
+     * See CacheStats::nLazyWriteCalls.
+     */
+    AtomicCounter nLazyWriteCalls;
+
+    /**
+     * See CacheStats::nVictimizationWrites.
+     */
+    AtomicCounter nVictimizationWrites;
+
+    /**
+     * See CacheStats::nCheckpointWrites.
+     */
+    AtomicCounter nCheckpointWrites;
 
     /**
      * Accumulated state for all counters which are tracked since cache
@@ -231,6 +297,18 @@ class CacheImpl : public Cache, private TimerThreadClient
     uint idleFlushInterval;
 
     /**
+     * Maximum number of outstanding pre-fetch requests
+     */
+    uint prefetchPagesMax;
+
+    /**
+     * The number of successful pre-fetches that have to occur before the
+     * pre-fetch rate is throttled back up, in the event that it has been
+     * throttled down due to rejected requests
+     */
+    uint prefetchThrottleRate;
+
+    /**
      * Flush state used inside of checkpointPages.
      */
     enum FlushPhase {
@@ -242,7 +320,9 @@ class CacheImpl : public Cache, private TimerThreadClient
     // over victim candidates.  Within CacheImpl code, these are referred to
     // via private typedefs for brevity.
     typedef typename VictimPolicyT::PageIterator VictimPageIterator;
+    typedef typename VictimPolicyT::DirtyPageIterator DirtyVictimPageIterator;
     typedef typename VictimPolicyT::SharedGuard VictimSharedGuard;
+    typedef typename VictimPolicyT::ExclusiveGuard VictimExclusiveGuard;
 
 // ----------------------------------------------------------------------
 // CacheImpl internal helper methods
@@ -257,10 +337,11 @@ class CacheImpl : public Cache, private TimerThreadClient
      * getHashBucket(blockId)
      *
      * @param blockId the BlockId of the page to look for
+     * @param pin if true, the page will be pinned in the cache
      *
      * @return the page found, or NULL if not present
      */
-    PageT *lookupPage(PageBucketT &bucket,BlockId blockId);
+    PageT *lookupPage(PageBucketT &bucket,BlockId blockId,bool pin);
 
     /**
      * Obtains a free page (either from the free queue or by victimizing
@@ -292,22 +373,28 @@ class CacheImpl : public Cache, private TimerThreadClient
      * and dataStatus should already be defined.
      *
      * @param page page to transfer
+     *
+     * @return true if the aynch I/O operation did not require retry
      */
-    void transferPageAsync(PageT &page);
+    bool transferPageAsync(PageT &page);
 
     /**
      * Reads the given page asynchronously.
      *
      * @param page page to read
+     *
+     * @return true if the asynch page request did not require retry
      */
-    void readPageAsync(PageT &page);
+    bool readPageAsync(PageT &page);
     
     /**
      * Writes the given page asynchronously.
      *
      * @param page page to write
+     *
+     * @return true if the asynch page request did not require retry
      */
-    void writePageAsync(PageT &page);
+    bool writePageAsync(PageT &page);
 
     /**
      * Translates a BlockId into the byte offset of the corresponding device
@@ -347,8 +434,10 @@ class CacheImpl : public Cache, private TimerThreadClient
      * @param guard a guard on page.mutex, which must already be held by the
      * calling thread when this method is invoked, and which will be released
      * when the method returns
+     *
+     * @param discard if true, the page is being discarded from the cache
      */
-    void unmapPage(PageT &page,StrictMutexTryGuard &guard);
+    void unmapPage(PageT &page,StrictMutexTryGuard &guard,bool discard);
 
     /**
      * Unmaps a page being discarded and adds it to unmappedBucket.
@@ -457,6 +546,29 @@ class CacheImpl : public Cache, private TimerThreadClient
      */
     void allocatePages(CacheParams const &params);
 
+    /**
+     * Updates counters indicating a successful pre-fetch has occurred.
+     */
+    void successfulPrefetch();
+
+    /**
+     * Updates counters indicating a pre-fetch was rejected.
+     */
+    void rejectedPrefetch();
+
+    /**
+     * Updates counters indicating I/O retry was required
+     */
+    void ioRetry();
+
+    /**
+     * Calculates the number of dirty pages corresponding to the high and low
+     * water marks.
+     *
+     * @param nCachePages number of cache pages
+     */
+    void calcDirtyThreshholds(uint nCachePages);
+
 // ----------------------------------------------------------------------
 // Implementation of private Cache interface (q.v.)
 // ----------------------------------------------------------------------
@@ -496,7 +608,7 @@ public:
         DeviceId deviceId,SharedRandomAccessDevice pDevice);
     virtual void unregisterDevice(DeviceId deviceId);
     virtual SharedRandomAccessDevice &getDevice(DeviceId deviceId);
-    virtual void prefetchPage(
+    virtual bool prefetchPage(
         BlockId blockId,MappedPageListener *pMappedPageListener);
     virtual void prefetchBatch(
         BlockId blockId,uint nPages,MappedPageListener *pMappedPageListener);
@@ -505,6 +617,9 @@ public:
     virtual void nicePage(CachePage &page);
     virtual bool isPageMapped(BlockId blockId);
     virtual CacheAllocator &getAllocator() const;
+    virtual void getPrefetchParams(
+        uint &prefetchPagesMax,
+        uint &prefetchThrottleRate);
 };
 
 FENNEL_END_NAMESPACE

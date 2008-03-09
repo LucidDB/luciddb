@@ -34,6 +34,7 @@ DatabaseTest \
 LogicalTxnTest \
 SegStreamTest \
 SegPageIterTest \
+SegPageEntryIterTest \
 RandomAccessFileDeviceTest \
 CacheTest \
 LinearDeviceSegmentTest \
@@ -43,6 +44,7 @@ VersionedSegmentTest \
 ExecStreamGovernorTest \
 BTreeTxnTest \
 BTreeTest \
+BTreeReadersTest \
 BacktraceTest \
 PseudoUuidTest
 
@@ -73,7 +75,11 @@ SegStreamTest_SOURCES=SegStreamTest.cpp
 
 SegPageIterTest_SOURCES=SegPageIterTest.cpp
 
+SegPageEntryIterTest_SOURCES=SegPageEntryIterTest.cpp
+
 LogicalTxnTest_SOURCES=LogicalTxnTest.cpp
+
+BTreeReadersTest_SOURCES=BTreeReadersTest.cpp
 
 BTreeTest_SOURCES=BTreeTest.cpp
 

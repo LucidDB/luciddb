@@ -837,6 +837,31 @@
 '    LcsIndexSearchRel(table=[[LOCALDB, LCS, TENCOLS]], index=[I_C9], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '      FennelValuesRel(tuples=[[{ '[', 9, ']', 9 }]])'
 > 
+> -- make sure deletion index scan appears in output when all attributes is
+> -- specified
+> explain plan including all attributes for
+>     select * from tencols;
+'column0'
+'FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 200.0'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[*], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]]): rowcount = 100.0, cumulative cost = 100.0'
+'    LcsIndexSearchRel(table=[[LOCALDB, LCS, TENCOLS]], index=[SYS$DELETION_INDEX$TENCOLS], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0]): rowcount = 100.0, cumulative cost = 101.0'
+'      FennelValuesRel(tuples=[[{ '-', null, '+', null }]]): rowcount = 1.0, cumulative cost = 1.0'
+> explain plan including all attributes for
+>     select c1, c4, c8 from tencols;
+'column0'
+'FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 200.0'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[1, 4, 8]], clustered indexes=[[I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]]): rowcount = 100.0, cumulative cost = 100.0'
+'    LcsIndexSearchRel(table=[[LOCALDB, LCS, TENCOLS]], index=[SYS$DELETION_INDEX$TENCOLS], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0]): rowcount = 100.0, cumulative cost = 101.0'
+'      FennelValuesRel(tuples=[[{ '-', null, '+', null }]]): rowcount = 1.0, cumulative cost = 1.0'
+> explain plan including all attributes for
+>     select c0, c5, c7, c1 from tencols where c8 = 5;
+'column0'
+'FennelToIteratorConverter: rowcount = 10.0, cumulative cost = 41.622776601683796'
+'  LcsRowScanRel(table=[[LOCALDB, LCS, TENCOLS]], projection=[[0, 5, 7, 1]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]], residual columns=[[8]]): rowcount = 10.0, cumulative cost = 31.622776601683793'
+'    LcsIndexSearchRel(table=[[LOCALDB, LCS, TENCOLS]], index=[SYS$DELETION_INDEX$TENCOLS], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0]): rowcount = 100.0, cumulative cost = 101.0'
+'      FennelValuesRel(tuples=[[{ '-', null, '+', null }]]): rowcount = 1.0, cumulative cost = 1.0'
+'    FennelValuesRel(tuples=[[{ '[', 5, ']', 5 }]]): rowcount = 1.0, cumulative cost = 1.0'
+> 
 > !set outputformat table
 > 
 > select c2, c8, c4, c0 from tencols

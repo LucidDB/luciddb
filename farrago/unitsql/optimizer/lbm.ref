@@ -8,6 +8,8 @@
 > set schema 'lbm';
 > set path 'lbm';
 > 
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
 > create server test_data
 > foreign data wrapper sys_file_wrapper
 > options (
@@ -482,8 +484,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
-'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 1]], clustered indexes=[[MULTI_1]], residual columns=[[0, 1]])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[LCS_RID]], clustered indexes=[[MULTI_1]], residual columns=[[0, 1]])'
 '        FennelValuesRel(tuples=[[{ '[', 11, ']', 11 }]])'
 '        FennelValuesRel(tuples=[[{ '[', 12, ']', 12 }]])'
 > !set outputformat table
@@ -500,8 +502,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
-'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 3]], clustered indexes=[[MULTI_1, MULTI_2]], residual columns=[[0, 3]])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[LCS_RID]], clustered indexes=[[MULTI_1, MULTI_2]], residual columns=[[0, 3]])'
 '        FennelValuesRel(tuples=[[{ '[', 21, ']', 21 }]])'
 '        FennelValuesRel(tuples=[[{ '[', 24, ']', 24 }]])'
 > !set outputformat table
@@ -518,8 +520,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
-'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[0, 6]], clustered indexes=[[MULTI_1, MULTI_3]], residual columns=[[0, 6]])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'      LcsRowScanRel(table=[[LOCALDB, LBM, MULTIMULTI]], projection=[[LCS_RID]], clustered indexes=[[MULTI_1, MULTI_3]], residual columns=[[0, 6]])'
 '        FennelValuesRel(tuples=[[{ '[', 31, ']', 31 }]])'
 '        FennelValuesRel(tuples=[[{ '[', 37, ']', 37 }]])'
 > !set outputformat table

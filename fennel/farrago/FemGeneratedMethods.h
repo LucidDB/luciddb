@@ -96,6 +96,7 @@ jmethodID ProxyIndexSearchDef::meth_getInputDirectiveProj = 0;
 jmethodID ProxyIndexSearchDef::meth_getInputJoinProj = 0;
 jmethodID ProxyIndexSearchDef::meth_getInputKeyProj = 0;
 jmethodID ProxyIndexSearchDef::meth_isOuterJoin = 0;
+jmethodID ProxyIndexSearchDef::meth_isPrefetch = 0;
 jmethodID ProxyIndexSearchDef::meth_getSearchKeyParameter = 0;
 jmethodID ProxyIndexSearchDef::meth_isUniqueKey = 0;
 jmethodID ProxyIndexWriterDef::meth_getDistinctness = 0;
@@ -431,6 +432,7 @@ ProxyIndexSearchDef::meth_getInputDirectiveProj = pEnv->GetMethodID(jClass,"getI
 ProxyIndexSearchDef::meth_getInputJoinProj = pEnv->GetMethodID(jClass,"getInputJoinProj","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
 ProxyIndexSearchDef::meth_getInputKeyProj = pEnv->GetMethodID(jClass,"getInputKeyProj","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
 ProxyIndexSearchDef::meth_isOuterJoin = pEnv->GetMethodID(jClass,"isOuterJoin","()Z");
+ProxyIndexSearchDef::meth_isPrefetch = pEnv->GetMethodID(jClass,"isPrefetch","()Z");
 ProxyIndexSearchDef::meth_getSearchKeyParameter = pEnv->GetMethodID(jClass,"getSearchKeyParameter","()Ljava/util/List;");
 ProxyIndexSearchDef::meth_isUniqueKey = pEnv->GetMethodID(jClass,"isUniqueKey","()Z");
 
@@ -1306,6 +1308,11 @@ return p;
 bool ProxyIndexSearchDef::isOuterJoin()
 {
 return pEnv->CallBooleanMethod(jObject,meth_isOuterJoin);
+}
+
+bool ProxyIndexSearchDef::isPrefetch()
+{
+return pEnv->CallBooleanMethod(jObject,meth_isPrefetch);
 }
 
 SharedProxyCorrelation ProxyIndexSearchDef::getSearchKeyParameter()

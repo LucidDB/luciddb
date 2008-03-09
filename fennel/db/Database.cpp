@@ -155,10 +155,6 @@ void Database::init()
     pSegmentFactory = SegmentFactory::newSegmentFactory(
         configMap,getSharedTraceTarget());
 
-    if (FileSystem::doesFileExist(tempDeviceName.c_str())) {
-        FileSystem::remove(tempDeviceName.c_str());
-    }
-    
     if (!openMode.create) {
         // TODO:  real excn
         assert(FileSystem::doesFileExist(dataDeviceName.c_str()));

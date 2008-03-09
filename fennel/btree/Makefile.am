@@ -8,7 +8,9 @@ BTreeBuildLevel.cpp \
 BTreeCompactNodeAccessor.cpp \
 BTreeDuplicateKeyExcn.cpp \
 BTreeHeapNodeAccessor.cpp \
+BTreeLeafReader.cpp \
 BTreeNodeAccessor.cpp \
+BTreeNonLeafReader.cpp \
 BTreeReader.cpp \
 BTreeRecoveryFactory.cpp \
 BTreeVerifier.cpp \

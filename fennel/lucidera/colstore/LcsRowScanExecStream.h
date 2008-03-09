@@ -152,9 +152,14 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
     RecordNum nRidsRead;
 
     /**
-     * Current rid being fetched
+     * Current rid read from the input stream
      */
-    LcsRid rid;
+    LcsRid inputRid;
+
+    /**
+     * Next rid that needs to be fetched
+     */
+    LcsRid nextRid;
 
     /**
      * True if need to read a new deleted rid from the input stream
@@ -250,14 +255,40 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
     uint64_t clumpSkipPos;
 
     /**
+     * The number of clumps that need to be built
+     */
+    uint numClumps;
+
+    /**
+     * Running counter of the number of clumps built
+     */
+    uint numClumpsBuilt;
+
+    /**
      * RNG for Bernoulli sampling.
      */
     boost::scoped_ptr<BernoulliRng> samplingRng;
 
     /**
-     * Number of rows in the table; for system sampling only.
+     * Number of rows in the table.  Used only for sampling.  In the
+     * case of Bernoulli sampling, includes count of deleted rows.
      */
     int64_t rowCount;
+
+    /**
+     * True if completed building rid runs
+     */
+    bool ridRunsBuilt;
+
+    /**
+     * Current rid run being constructed
+     */
+    LcsRidRun currRidRun;
+
+    /**
+     * Iterator over the circular buffer containing rid runs
+     */
+    CircularBufferIter<LcsRidRun> ridRunIter;
 
     /**
      * Builds outputProj from params.
@@ -284,13 +315,20 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      */
     void prepareResidualFilters(LcsRowScanExecStreamParams const &params);
 
-
     /**
      * Initializes the system sampling data structures during open time.
      */
     void initializeSystemSampling();
 
+    /**
+     * Populates the circular rid run buffer.
+     *
+     * @return EXECRC_YIELD if buffer successfully populated
+     */
+    ExecStreamResult fillRidRunBuffer();
+
 public:
+    LcsRowScanExecStream();
     virtual void prepare(LcsRowScanExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
