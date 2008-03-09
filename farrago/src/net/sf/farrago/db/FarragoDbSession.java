@@ -1047,7 +1047,7 @@ public class FarragoDbSession
         }
 
         if (ddlStmt.runsAsDml()) {
-            markTableInUse(stmtContext, reposTxnContext, ddlStmt);
+            markTableInUse(stmtContext, ddlStmt);
         }
 
         validateDdl(ddlValidator, stmtContext, reposTxnContext, ddlStmt);
@@ -1101,25 +1101,23 @@ public class FarragoDbSession
     }
 
     /**
-     * Marks the target table for a DDL statement as in-use so we can release
-     * the MDR repository lock acquired at the start of query preparation. Since
-     * we no longer have the repository locked, marking the table as in-use
-     * prevents it from being dropped.
+     * Marks the target table for a DDL statement as in-use.  This allows us to
+     * subsequently release the MDR repository lock acquired at the start of
+     * query preparation. Marking the table as in-use prevents it from being
+     * dropped while the repository is unlocked.  The lock is released in 
+     * {@link DdlExecutionVisitor} during the execution of some types of
+     * long-running DdlStmt.
      *
      * @param stmtContext context of the DDL statement
-     * @param reposTxnContext current repository txn context
      * @param ddlStmt the DDL statement
      */
     private void markTableInUse(
         FarragoDbStmtContextBase stmtContext,
-        FarragoReposTxnContext reposTxnContext,
         FarragoSessionDdlStmt ddlStmt)
     {
         // Mark the table as in use, then unlock the repository
         CwmModelElement table = ddlStmt.getModelElement();
         stmtContext.lockObjectInUse(table.refMofId());
-        reposTxnContext.commit();
-        reposTxnContext.unlockAfterTxn();
     }
 
     /**
@@ -1173,7 +1171,8 @@ public class FarragoDbSession
             ddlValidator.executeStorage();
             ddlStmt.preExecute();
             if (ddlStmt instanceof DdlStmt) {
-                ((DdlStmt) ddlStmt).visit(new DdlExecutionVisitor());
+                ((DdlStmt) ddlStmt).visit(
+                    new DdlExecutionVisitor(reposTxnContext, ddlValidator));
             }
             ddlStmt.postExecute();
 
@@ -1209,6 +1208,17 @@ public class FarragoDbSession
     private class DdlExecutionVisitor
         extends DdlVisitor
     {
+        private final FarragoReposTxnContext reposTxnContext;
+        private final FarragoSessionDdlValidator ddlValidator;
+
+        private DdlExecutionVisitor(
+            FarragoReposTxnContext reposTxnContext,
+            FarragoSessionDdlValidator ddlValidator)
+        {
+            this.reposTxnContext = reposTxnContext;
+            this.ddlValidator = ddlValidator;
+        }
+
         // implement DdlVisitor
         public void visit(DdlCommitStmt stmt)
         {
@@ -1314,6 +1324,32 @@ public class FarragoDbSession
         public void visit(DdlDeallocateOldStmt stmt)
         {
             database.deallocateOld();
+        }
+
+        // implement DdlVisitor
+        public void visit(DdlMultipleTransactionStmt stmt)
+        {
+            Util.permAssert(
+                reposTxnContext.isTxnInProgress(), 
+                "must be in repos txn");
+            
+            boolean readOnly = !stmt.completeRequiresWriteTxn();
+            
+            FarragoSession session = ddlValidator.newReentrantSession();
+            try {
+                stmt.prepForExecuteUnlocked(ddlValidator, session);
+
+                reposTxnContext.commit();
+                reposTxnContext.unlockAfterTxn();
+
+                stmt.executeUnlocked(ddlValidator, session);
+
+                reposTxnContext.beginLockedTxn(readOnly);
+
+                stmt.completeAfterExecuteUnlocked(ddlValidator, session);
+            } finally {
+                ddlValidator.releaseReentrantSession(session);
+            }
         }
     }
 

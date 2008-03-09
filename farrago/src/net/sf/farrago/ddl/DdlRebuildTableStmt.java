@@ -40,16 +40,28 @@ import org.eigenbase.sql.pretty.*;
  * DdlRebuildTableStmt represents an ALTER TABLE ... REBUILD statement. The
  * statement compacts data stored in a table's indexes by removing deleted
  * entries.
+ * 
+ * <p>Note: Although DdlRebuildTableStmt is an ALTER statement, it does not
+ * extend {@link DdlAlterStmt}.  This avoids the complexity of having
+ * subclasses of DdlAlterStmt which may or may not also be implementations of
+ * {@link DdlMultipleTransactionStmt}.
  *
  * @author John Pham
  * @version $Id$
  */
 public class DdlRebuildTableStmt
-    extends DdlAlterStmt
+    extends DdlStmt
+    implements DdlMultipleTransactionStmt
 {
     //~ Instance fields --------------------------------------------------------
 
     private CwmTable table;
+
+    private FarragoSessionIndexMap baseIndexMap;
+    private FarragoDataWrapperCache wrapperCache;
+    private Map<FemLocalIndex, Long> writeIndexMap;
+    private FarragoSessionIndexMap rebuildMap;
+    private String rebuildSql;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -70,21 +82,20 @@ public class DdlRebuildTableStmt
         visitor.visit(this);
     }
 
-    // implement DdlAlterStmt
-    public void execute(
+    // implement DdlMultipleTransactionStmt
+    public void prepForExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
         FarragoRepos repos = session.getRepos();
-        FarragoSessionIndexMap baseIndexMap = ddlValidator.getIndexMap();
-        FarragoDataWrapperCache wrapperCache =
-            ddlValidator.getDataWrapperCache();
+        baseIndexMap = ddlValidator.getIndexMap();
+        wrapperCache = ddlValidator.getDataWrapperCache();
         SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
-
-        // Create new index roots
-        Map<FemLocalIndex, Long> writeIndexMap =
-            new HashMap<FemLocalIndex, Long>();
+        
+        // Create new index roots, which depends on index creation validation
+        // events being triggered
+        writeIndexMap = new HashMap<FemLocalIndex, Long>();
         for (
             FemLocalIndex index
             : FarragoCatalogUtil.getTableIndexes(repos, table))
@@ -109,9 +120,28 @@ public class DdlRebuildTableStmt
         // Or another would be to find a way to defer updating the rowcounts.
         session.getPersonality().resetRowCounts((FemAbstractColumnSet) table);
 
+        // Update the table's timestamp (for a normal DdlStmt executing in
+        // preValidate this happens as a result of DdlValidator's event
+        // monitoring).  It's necessary so that any cached plans involving this
+        // table are expired, but it's hokey since the table definition hasn't
+        // actually changed.
+        FarragoCatalogUtil.updateAnnotatedElement(
+            (FemLocalTable)table,
+            ddlValidator.obtainTimestamp(),
+            false);
+        
+        rebuildMap = new RebuildTableIndexMap(baseIndexMap, writeIndexMap);
+
+        rebuildSql = getRebuildDml(writer);
+    }
+    
+
+    // implement DdlMultipleTransactionStmt
+    public void executeUnlocked(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session)
+    {
         // Copy data from old roots to new roots
-        FarragoSessionIndexMap rebuildMap =
-            new RebuildTableIndexMap(baseIndexMap, writeIndexMap);
         session.setSessionIndexMap(rebuildMap);
         session.getSessionVariables().set(
             FarragoDefaultSessionPersonality.CACHE_STATEMENTS,
@@ -120,34 +150,47 @@ public class DdlRebuildTableStmt
             FarragoDefaultSessionPersonality.ENFORCE_IDENTITY_GENERATED_ALWAYS,
             Boolean.toString(false));
         FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
-        stmtContext.prepare(getRebuildDml(writer), true);
+        stmtContext.prepare(rebuildSql, true);
         stmtContext.execute();
+    }
 
-        FarragoReposTxnContext txn = repos.newTxnContext();
-        try {
-            txn.beginWriteTxn();
-
-            for (
-                FemLocalIndex index
+    // implement DdlMultipleTransactionStmt
+    public boolean completeRequiresWriteTxn()
+    {
+        return true;
+    }
+    
+    // implement DdlMultipleTransactionStmt
+    public void completeAfterExecuteUnlocked(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session)
+    {
+        FarragoRepos repos = session.getRepos();
+        for (
+            FemLocalIndex index
                 : FarragoCatalogUtil.getTableIndexes(repos, table))
-            {
-                if (FarragoCatalogUtil.isDeletionIndex(index)) {
-                    // Truncate the deletion index
-                    baseIndexMap.dropIndexStorage(wrapperCache, index, true);
-                } else {
-                    // Let each personality decide how to update the index
-                    session.getPersonality().updateIndexRoot(
-                        index,
-                        wrapperCache,
-                        baseIndexMap,
-                        writeIndexMap.get(index));
-                }
+        {
+            if (FarragoCatalogUtil.isDeletionIndex(index)) {
+                // Truncate the deletion index
+                baseIndexMap.dropIndexStorage(wrapperCache, index, true);
+            } else {
+                // Let each personality decide how to update the index
+                session.getPersonality().updateIndexRoot(
+                    index,
+                    wrapperCache,
+                    baseIndexMap,
+                    writeIndexMap.get(index));
+                
+                // Update the index's timestamp (for a normal DdlStmt executing
+                // in preValidate this happens behind the scenes).
+                FarragoCatalogUtil.updateAnnotatedElement(
+                    index,
+                    ddlValidator.obtainTimestamp(),
+                    false);
             }
-            txn.commit();
-        } finally {
-            txn.rollback();
         }
     }
+
 
     /**
      * Generates the query: "insert into T select * from T"

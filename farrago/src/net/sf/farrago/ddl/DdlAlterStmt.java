@@ -65,6 +65,8 @@ public abstract class DdlAlterStmt
         super(alterElement);
     }
 
+    // REVIEW: SWZ: 2008-02-26: Eliminate this constructor if no red-zone 
+    // subclasses require it.
     public DdlAlterStmt(CwmModelElement alterElement, boolean runsAsDml)
     {
         super(alterElement, runsAsDml);
@@ -92,6 +94,10 @@ public abstract class DdlAlterStmt
     // implement DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
+        // REVIEW: SWZ: 2008-02-26: It may be possible to eliminate this
+        // reentrant session if DdlAlterGenericStmt (and its red-zone
+        // subclasses) don't require it.
+
         // Use a reentrant session to simplify cleanup.
         FarragoSession session = ddlValidator.newReentrantSession();
         try {
