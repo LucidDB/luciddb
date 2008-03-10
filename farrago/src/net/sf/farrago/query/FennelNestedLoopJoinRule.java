@@ -402,7 +402,7 @@ public class FennelNestedLoopJoinRule
                 mapSqlOpToCompOp(filterOpList, filterOp);
             }
         }
-        
+
         // Combine the keys for indexing and reshape and create the
         // projections required to produce the join keys that were located
         // by the two calls to splitJoinCondition
@@ -414,16 +414,16 @@ public class FennelNestedLoopJoinRule
         leftJoinKeys.addAll(leftFilterKeys);
         rightJoinKeys.addAll(rightIndexKeys);
         rightJoinKeys.addAll(rightFilterKeys);
-        RelNode [] inputRels =
-            new RelNode[] { joinInputs[0], joinInputs[1] };
+        RelNode [] inputRels = { joinInputs[0], joinInputs[1] };
         RelOptUtil.projectJoinInputs(
             inputRels,
             leftJoinKeys,
             rightJoinKeys,
+            0,
             operands,
             cols,
             outputProj);
-        
+
         // Now that we have the new key offsets, assign them respectively
         // to the index and filter return parameters
         int keyIdx;

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2002-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 2003-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -857,10 +857,10 @@ public class Util
      *
      * @return a non-null string containing all messages of the exception
      */
-    public static String getMessages(Exception ex)
+    public static String getMessages(Throwable t)
     {
         StringBuilder sb = new StringBuilder();
-        for (Throwable curr = ex; curr != null; curr = curr.getCause()) {
+        for (Throwable curr = t; curr != null; curr = curr.getCause()) {
             String msg =
                 ((curr instanceof EigenbaseException)
                     || (curr instanceof SQLException)) ? curr.getMessage()

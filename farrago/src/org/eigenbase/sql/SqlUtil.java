@@ -743,6 +743,19 @@ public abstract class SqlUtil
      */
     public static EigenbaseException newContextException(
         final SqlParserPos pos,
+        Throwable e,
+        String inputText)
+    {
+        EigenbaseContextException ex = (EigenbaseContextException)newContextException(pos, e);
+        ex.setOriginalStatement(inputText);
+        return ex;
+    }
+
+    /**
+     * Wraps an exception with context.
+     */
+    public static EigenbaseException newContextException(
+        final SqlParserPos pos,
         Throwable e)
     {
         int line = pos.getLineNum();

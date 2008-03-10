@@ -209,6 +209,7 @@ public class LhxSemiJoinRule
             inputRels,
             leftJoinKeys,
             rightJoinKeys,
+            0,
             newLeftJoinKeyPos,
             newRightJoinKeyPos,
             outputProj);

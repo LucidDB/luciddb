@@ -884,8 +884,7 @@ public class DdlValidator
                         element.setVisibility(VisibilityKindEnum.VK_PRIVATE);
                     }
                     if ((revalidateQueue != null)
-                        && revalidateQueue.contains(element))
-                    {
+                        && revalidateQueue.contains(element)) {
                         setRevalidationResult(element, null);
                     }
                     progress = true;
@@ -901,6 +900,7 @@ public class DdlValidator
                         "Revalidate exception on "
                         + ((CwmModelElement) obj).getName() + ": "
                         + FarragoUtil.exceptionToString(ex));
+                    setSourceInContext(ex, getParser().getSourceString());
                     if ((revalidateQueue != null)
                         && revalidateQueue.contains(element))
                     {
@@ -935,6 +935,20 @@ public class DdlValidator
 
         // finally, process any deferred privilege checks
         stmtValidator.getPrivilegeChecker().checkAccess();
+    }
+
+    private void setSourceInContext(EigenbaseException e, String sourceString)
+    {
+        if (sourceString != null) {
+            Throwable ex = (Throwable)e;
+            while (ex != null) {
+                if (ex instanceof EigenbaseContextException) {
+                    ((EigenbaseContextException)ex).setOriginalStatement(sourceString);
+                    break;
+                }
+                ex = ex.getCause();
+            }
+        }
     }
 
     /**

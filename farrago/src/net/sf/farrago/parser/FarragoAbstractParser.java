@@ -54,12 +54,15 @@ public abstract class FarragoAbstractParser
 
     protected String sourceString;
 
+    private boolean parsingComplete = false;
+
+
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionParser
     public SqlParserPos getCurrentPosition()
     {
-        if (sourceString == null) {
+        if ((sourceString == null) || parsingComplete) {
             return null;
         } else {
             return parserImpl.getCurrentPosition();
@@ -70,7 +73,7 @@ public abstract class FarragoAbstractParser
     public EigenbaseException newPositionalError(
         SqlValidatorException ex)
     {
-        if (sourceString == null) {
+        if ((sourceString == null) || parsingComplete) {
             return FarragoResource.instance().ValidatorNoPositionContext.ex(ex);
         } else {
             String msg = getCurrentPosition().toString();
@@ -90,6 +93,12 @@ public abstract class FarragoAbstractParser
     public FarragoSessionStmtValidator getStmtValidator()
     {
         return stmtValidator;
+    }
+
+    // implement FarragoSessionParser
+    public String getSourceString()
+    {
+        return sourceString;
     }
 
     /**
@@ -116,6 +125,7 @@ public abstract class FarragoAbstractParser
         String sql,
         boolean expectStatement)
     {
+        parsingComplete = false;
         this.stmtValidator = stmtValidator;
         this.ddlValidator = ddlValidator;
 
@@ -131,6 +141,7 @@ public abstract class FarragoAbstractParser
                 return parserImpl.SqlExpressionEof();
             }
         } catch (EigenbaseContextException ex) {
+            ex.setOriginalStatement(sql);
             Throwable actualEx = (ex.getCause() == null) ? ex : ex.getCause();
             throw EigenbaseResource.instance().ParserError.ex(
                 actualEx.getMessage(),
@@ -141,7 +152,7 @@ public abstract class FarragoAbstractParser
             Exception x = spex;
             final SqlParserPos pos = spex.getPos();
             if (pos != null) {
-                x = SqlUtil.newContextException(pos, actualEx);
+                x = SqlUtil.newContextException(pos, actualEx, sql);
             } else {
                 x = spex;
             }
@@ -154,7 +165,8 @@ public abstract class FarragoAbstractParser
             Exception x = spex;
             final SqlParserPos pos = spex.getPos();
             if (pos != null) {
-                x = SqlUtil.newContextException(pos, actualEx);
+                x = SqlUtil.newContextException(pos, actualEx, sql);
+
             } else {
                 x = spex;
             }
@@ -162,7 +174,7 @@ public abstract class FarragoAbstractParser
                 actualEx.getMessage(),
                 x);
         } finally {
-            sourceString = null;
+            parsingComplete = true;
         }
     }
 

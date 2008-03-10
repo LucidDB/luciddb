@@ -96,9 +96,14 @@ public class FarragoSqlValidator
     // override SqlValidator
     public SqlNode validate(SqlNode topNode)
     {
-        SqlNode node = super.validate(topNode);
-        getPreparingStmt().analyzeRoutineDependencies(node);
-        return node;
+        try {
+            SqlNode node = super.validate(topNode);
+            getPreparingStmt().analyzeRoutineDependencies(node);
+            return node;
+        } catch (EigenbaseContextException e) {
+            e.setOriginalStatement(preparingStmt.getSql());
+            throw e;
+        }
     }
 
     // override SqlValidator

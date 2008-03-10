@@ -4201,13 +4201,20 @@ public class SqlValidatorTest
 
         // invalid tests
         // exact numeric for the unsigned value specification
-        // The followoing two test fail as they should but in the parser
-        //checkWinClauseExp("window w as (rows -2.5 preceding)", null);
-        //checkWinClauseExp("window w as (rows -2 preceding)", null);
+        // The followoing two test fail as they should but in the parser: JR not anymore
+        // now the validator kicks out
+        checkWinClauseExp(
+            "window w as (rows ^-2.5^ preceding)",
+            "ROWS value must be a non-negative integral constant");
+        checkWinClauseExp(
+            "window w as (rows ^-2^ preceding)",
+            "ROWS value must be a non-negative integral constant");
 
         // This test should fail as per 03 Std. but we pass it and plan
         // to apply the FLOOR function before window processing
-        checkWinClauseExp("window w as (rows 2.5 preceding)", null);
+        checkWinClauseExp(
+            "window w as (rows ^2.5^ preceding)",
+            "ROWS value must be a non-negative integral constant");
 
         // -----------------------------------
         // --   negative testings           --

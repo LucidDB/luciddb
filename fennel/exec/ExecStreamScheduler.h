@@ -109,7 +109,10 @@ protected:
         ExecStream &stream,
         TraceLevel inputTupleTraceLevel,
         TraceLevel outputTupleTraceLevel);
-    
+
+public:
+    virtual ~ExecStreamScheduler();
+
     /**
      * Traces the contents of a stream buffer.
      *
@@ -123,9 +126,6 @@ protected:
         ExecStream &stream,
         ExecStreamBufAccessor &bufAccessor, 
         TraceLevel traceLevel);
-    
-public:
-    virtual ~ExecStreamScheduler();
 
     /**
      * Adds a graph to be scheduled.  Some implementations may require all

@@ -43,10 +43,6 @@ public class FarragoJdbcEngineStatement
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    protected static final String ERRMSG_NOT_A_QUERY = "Not a query:  ";
-    protected static final String ERRMSG_IS_A_QUERY =
-        "Can't executeUpdate a query:  ";
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -261,7 +257,8 @@ public class FarragoJdbcEngineStatement
         throws SQLException
     {
         if (max < 0) {
-            throw new SQLException("setMaxRows requires non-negative argument");
+            throw FarragoJdbcEngineDriver.newSqlException(
+                ERRMSG_REQ_NON_NEG + "max=" + max);
         }
         maxRows = max;
     }
@@ -284,6 +281,11 @@ public class FarragoJdbcEngineStatement
     public void setQueryTimeout(int seconds)
         throws SQLException
     {
+        // Statement API specifies must throw for negative timeout
+        if (seconds < 0) {
+            throw FarragoJdbcEngineDriver.newSqlException(
+                ERRMSG_REQ_NON_NEG + "seconds=" + seconds);
+        }
         stmtContext.setQueryTimeout(seconds * 1000);
     }
 
