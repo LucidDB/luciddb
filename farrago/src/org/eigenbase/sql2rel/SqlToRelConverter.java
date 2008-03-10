@@ -2881,7 +2881,10 @@ public class SqlToRelConverter
 
         // Project any system fields. (Must be done before regular select items,
         // because offsets may be affected.)
-        extraSelectItems(bb, select, exprs, fieldNames, aliases);
+        final List<SqlMonotonicity> columnMonotonicityList =
+            new ArrayList<SqlMonotonicity>();
+        extraSelectItems(
+            bb, select, exprs, fieldNames, aliases, columnMonotonicityList);
 
         // Project select clause.
         int i = -1;
@@ -2910,6 +2913,7 @@ public class SqlToRelConverter
             false);
 
         assert bb.columnMonotonicities.isEmpty();
+        bb.columnMonotonicities.addAll(columnMonotonicityList);
         for (SqlNode selectItem : selectList) {
             bb.columnMonotonicities.add(
                 selectItem.getMonotonicity(bb.scope));
@@ -2925,14 +2929,24 @@ public class SqlToRelConverter
     }
 
     /**
-     * Adds extra select items. The default implementation adds nothing.
+     * Adds extra select items. The default implementation adds nothing;
+     * derived classes may add columns to exprList, nameList, aliasList and
+     * columnMonotonicityList.
+     *
+     * @param bb Blackboard
+     * @param select Select statement being translated
+     * @param exprList List of expressions in select clause
+     * @param nameList List of names, one per column
+     * @param aliasList Collection of aliases that have been used already
+     * @param columnMonotonicityList List of monotonicity, one per column
      */
     protected void extraSelectItems(
         Blackboard bb,
         SqlSelect select,
         List<RexNode> exprList,
         List<String> nameList,
-        Collection<String> aliasList)
+        Collection<String> aliasList,
+        List<SqlMonotonicity> columnMonotonicityList)
     {
     }
 

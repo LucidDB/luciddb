@@ -401,7 +401,7 @@ public class FennelWindowRel
                 // rows. Does not include the expression to form the output
                 // record.
                 RexProgram combinedProgram =
-                    makeProgram(inputProgram, partition.overList);
+                    makeProgram(getCluster().getRexBuilder(), inputProgram, partition.overList);
 
                 String [] programs = new String[3];
                 translator.getAggProgram(combinedProgram, programs);
@@ -409,7 +409,7 @@ public class FennelWindowRel
                 windowPartitionDef.setAddProgram(programs[1]);
                 windowPartitionDef.setDropProgram(programs[2]);
 
-                RexNode [] dups =
+                List<RexNode> dups =
                     removeDuplicates(translator, partition.overList);
                 final FemTupleDescriptor bucketDesc =
                     FennelRelUtil.createTupleDescriptorFromRexNode(repos, dups);
@@ -440,7 +440,7 @@ public class FennelWindowRel
                         this);
 
                 RexProgram combinedProgram =
-                    makeProgram(inputProgram, partition.overList);
+                    makeProgram(getCluster().getRexBuilder(), inputProgram, partition.overList);
 
                 String [] programs = new String[3];
                 translator.getAggProgram(combinedProgram, programs);
@@ -466,6 +466,7 @@ public class FennelWindowRel
      * Creates a program with one output field per windowed aggregate
      * expression.
      *
+     * @param rexBuilder Expression builder
      * @param bottomProgram Calculates the inputs to the program
      * @param overList Aggregate expressions
      *
@@ -475,14 +476,15 @@ public class FennelWindowRel
      * @pre bottomPogram.getCondition() == null
      * @post return.getProjectList().size() == overList.size()
      */
-    private RexProgram makeProgram(
+    public static RexProgram makeProgram(
+        RexBuilder rexBuilder,
         RexProgram bottomProgram,
         List<RexWinAggCall> overList)
     {
-        assert bottomProgram.getCondition() == null : "pre: bottomPogram.getCondition() == null";
+        assert bottomProgram.getCondition() == null
+            : "pre: bottomPogram.getCondition() == null";
         assert bottomProgram.isValid(true);
 
-        final RexBuilder rexBuilder = getCluster().getRexBuilder();
         final RexProgramBuilder topProgramBuilder =
             new RexProgramBuilder(
                 bottomProgram.getOutputRowType(),
@@ -502,13 +504,14 @@ public class FennelWindowRel
                 bottomProgram,
                 rexBuilder);
 
-        assert mergedProgram.getProjectList().size() == overList.size() : "post: return.getProjectList().size() == overList.size()";
+        assert mergedProgram.getProjectList().size() == overList.size()
+            : "post: return.getProjectList().size() == overList.size()";
         return mergedProgram;
     }
 
     // TODO: add a duplicate-elimination feature to RexProgram, use that, and
     //   obsolete this method
-    private RexNode [] removeDuplicates(
+    private List<RexNode> removeDuplicates(
         RexToCalcTranslator translator,
         List<RexWinAggCall> outputExps)
     {
@@ -521,14 +524,12 @@ public class FennelWindowRel
             }
             dups.put(key, node);
         }
-        RexNode [] nodes = new RexNode[dups.size()];
-        int count = 0;
+        List<RexNode> nodes = new ArrayList<RexNode>(dups.size());
         for (RexWinAggCall node : outputExps) {
             Object key = translator.getKey(node);
             if (dups.containsKey(key)) {
-                nodes[count] = node;
+                nodes.add(node);
                 dups.remove(key);
-                count++;
             }
         }
         return nodes;
@@ -765,9 +766,17 @@ public class FennelWindowRel
         /**
          * Ordinal of this aggregate within its partition.
          */
-        public int ordinal;
+        public final int ordinal;
 
-        RexWinAggCall(
+        /**
+         * Creates a RexWinAggCall.
+         *
+         * @param aggFun Aggregate function
+         * @param type   Result type
+         * @param operands Operands to call
+         * @param ordinal Ordinal within its partition
+         */
+        public RexWinAggCall(
             SqlAggFunction aggFun,
             RelDataType type,
             RexNode [] operands,

@@ -38,7 +38,6 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -96,8 +95,7 @@ public abstract class FennelRelUtil
                 transientFarragoPackage,
                 tupleAccessorXmiString);
         assert (c.size() == 1);
-        FemTupleAccessor accessor = (FemTupleAccessor) c.iterator().next();
-        return accessor;
+        return (FemTupleAccessor) c.iterator().next();
     }
 
     /**
@@ -154,23 +152,23 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Creates a FemTupleDescriptor from RexNode's which is a row.
+     * Creates a FemTupleDescriptor from a list of RexNodes representing a row.
      *
      * @param repos repos storing object definitions
-     * @param nodes RexNode's
+     * @param nodeList List of RexNodes
      *
      * @return generated tuple descriptor
      */
     public static FemTupleDescriptor createTupleDescriptorFromRexNode(
         FarragoMetadataFactory repos,
-        RexNode [] nodes)
+        List<? extends RexNode> nodeList)
     {
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
-        for (int i = 0; i < nodes.length; i++) {
+        for (RexNode node : nodeList) {
             addTupleAttrDescriptor(
                 repos,
                 tupleDesc,
-                nodes[i].getType());
+                node.getType());
         }
         return tupleDesc;
     }
@@ -250,6 +248,13 @@ public abstract class FennelRelUtil
         return array;
     }
 
+    /**
+     * Adds a type to a tuple descriptor.
+     *
+     * @param repos Repository/metadata factory
+     * @param tupleDesc Tuple descriptor
+     * @param type Type to be aded
+     */
     public static void addTupleAttrDescriptor(
         FarragoMetadataFactory repos,
         FemTupleDescriptor tupleDesc,
@@ -485,6 +490,7 @@ public abstract class FennelRelUtil
         if (allLiteral) {
             // Since all tuple values are literals, we can optimize
             // to use the FennelValuesRel representation.
+            //noinspection unchecked
             return new FennelValuesRel(
                 cluster,
                 keyRowType,
@@ -517,12 +523,11 @@ public abstract class FennelRelUtil
             return inputs.get(0);
         }
 
-        UnionRel unionRel =
+        return
             new UnionRel(
                 cluster,
-                inputs.toArray(new RelNode[0]),
+                inputs.toArray(new RelNode[inputs.size()]),
                 true);
-        return unionRel;
     }
 
     /**
@@ -656,7 +661,7 @@ public abstract class FennelRelUtil
         RelNode keyRel =
             CalcRel.createProject(
                 oneRowRel,
-                tuple.toArray(RexNode.EMPTY_ARRAY),
+                tuple.toArray(new RexNode[tuple.size()]),
                 null);
 
         if (!filterFieldOrdinals.isEmpty()) {
@@ -668,12 +673,11 @@ public abstract class FennelRelUtil
         }
 
         // Generate code to cast the keys to the index column type.
-        RelNode castRel =
+        return
             RelOptUtil.createCastRel(
                 keyRel,
                 keyRowType,
                 false);
-        return castRel;
     }
 
     /**
@@ -731,6 +735,12 @@ public abstract class FennelRelUtil
         }
     }
 
+    /**
+     * Returns the fennel implementor for a given relational expression.
+     *
+     * @param rel Relational expression
+     * @return Fennel implementor
+     */
     public static FennelRelImplementor getRelImplementor(RelNode rel)
     {
         return (FennelRelImplementor) getPreparingStmt(rel).getRelImplementor(
@@ -826,12 +836,10 @@ public abstract class FennelRelUtil
         }
 
         byte [] tupleBytes = byteStream.toByteArray();
-        String base64 =
+        return
             RhBase64.encodeBytes(
                 tupleBytes,
                 RhBase64.DONT_BREAK_LINES);
-
-        return base64;
     }
 
     /**
