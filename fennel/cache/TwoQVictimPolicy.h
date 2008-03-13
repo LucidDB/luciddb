@@ -324,6 +324,7 @@ public:
     TwoQVictim()
     {
         state = PAGE_STATE_FREE;
+        dirtyPageNode.setDirtyState(TwoQDirtyPage::PAGE_CLEAN);
     }
 
     /**
