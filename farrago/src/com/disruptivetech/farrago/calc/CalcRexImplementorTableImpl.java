@@ -1455,8 +1455,8 @@ public class CalcRexImplementorTableImpl
             SqlTypeName [] t2s,
             CalcRexImplementor value)
         {
-            for (int i = 0; i < t1s.length; i++) {
-                putSM(t1s[i], t2s, value);
+            for (SqlTypeName t1 : t1s) {
+                putSM(t1, t2s, value);
             }
         }
 
@@ -1465,8 +1465,8 @@ public class CalcRexImplementorTableImpl
             SqlTypeName t2,
             CalcRexImplementor value)
         {
-            for (int i = 0; i < t1s.length; i++) {
-                put(t1s[i], t2, value);
+            for (SqlTypeName t1 : t1s) {
+                put(t1, t2, value);
             }
         }
 
@@ -1475,8 +1475,8 @@ public class CalcRexImplementorTableImpl
             SqlTypeName [] t2s,
             CalcRexImplementor value)
         {
-            for (int i = 0; i < t2s.length; i++) {
-                put(t1, t2s[i], value);
+            for (SqlTypeName t2 : t2s) {
+                put(t1, t2, value);
             }
         }
 
@@ -2016,8 +2016,7 @@ public class CalcRexImplementorTableImpl
                 if (SqlTypeUtil.isInterval(castToType)) {
                     RelDataTypeFactory fac =
                         translator.rexBuilder.getTypeFactory();
-                    RelDataType int8 = fac.createSqlType(SqlTypeName.BIGINT);
-                    castToType = int8;
+                    castToType = fac.createSqlType(SqlTypeName.BIGINT);
                 }
                 RexNode castCall =
                     translator.rexBuilder.makeCast(
@@ -2177,7 +2176,7 @@ public class CalcRexImplementorTableImpl
                 } else {
                     // we can do some optimizations
                     Boolean val = (Boolean) compareResult.getValue();
-                    if (val.booleanValue()) {
+                    if (val) {
                         implementCaseValue(
                             translator,
                             resultOfCall,
@@ -2431,7 +2430,7 @@ public class CalcRexImplementorTableImpl
             // See the help for SumCalcRexImplementor.implementAdd()
             if ((operand != null) && operand.getType().isNullable()) {
                 int ordinal = translator.getNullRegisterOrdinal();
-                CalcReg isNullReg = null;
+                CalcReg isNullReg;
                 String wasNotNull = translator.newLabel();
                 String next = translator.newLabel();
                 if (ordinal == -1) {
@@ -2439,10 +2438,10 @@ public class CalcRexImplementorTableImpl
                         translator.builder.newLocal(
                             CalcProgramBuilder.OpType.Bool,
                             -1);
-                    translator.setNullRegisterOrdinal(
-                        translator.builder.registerSets.getSet(
-                            CalcProgramBuilder.RegisterSetType.Local).size()
-                        - 1);
+                    final List<CalcReg> regList =
+                        translator.builder.registerSets.getRegisterList(
+                            CalcProgramBuilder.RegisterSetType.Local);
+                    translator.setNullRegisterOrdinal(regList.size() - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(
@@ -2450,14 +2449,7 @@ public class CalcRexImplementorTableImpl
                             CalcProgramBuilder.RegisterSetType.Local);
                 }
 
-                CalcReg input = null;
-                final RexNode [] inputExps = translator.getInputExprs();
-                if (inputExps != null) {
-                    RexNode arg = inputExps[((RexInputRef) operand).getIndex()];
-                    input = translator.implementNode(arg);
-                } else {
-                    input = translator.implementNode(operand);
-                }
+                CalcReg input = translator.implementNode(operand);
 
                 CalcProgramBuilder.boolNativeIsNull.add(
                     translator.builder,
@@ -2508,7 +2500,7 @@ public class CalcRexImplementorTableImpl
             // See the help for SumCalcRexImplementor.implementDrop()
             if ((operand != null) && operand.getType().isNullable()) {
                 int ordinal = translator.getNullRegisterOrdinal();
-                CalcReg isNullReg = null;
+                CalcReg isNullReg;
                 String wasNotNull = translator.newLabel();
                 String next = translator.newLabel();
                 if (ordinal == -1) {
@@ -2516,10 +2508,10 @@ public class CalcRexImplementorTableImpl
                         translator.builder.newLocal(
                             CalcProgramBuilder.OpType.Bool,
                             -1);
-                    translator.setNullRegisterOrdinal(
-                        translator.builder.registerSets.getSet(
-                            CalcProgramBuilder.RegisterSetType.Local).size()
-                        - 1);
+                    final List<CalcReg> regList =
+                        translator.builder.registerSets.getRegisterList(
+                            CalcProgramBuilder.RegisterSetType.Local);
+                    translator.setNullRegisterOrdinal(regList.size() - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(
@@ -2527,14 +2519,7 @@ public class CalcRexImplementorTableImpl
                             CalcProgramBuilder.RegisterSetType.Local);
                 }
 
-                CalcReg input = null;
-                final RexNode [] inputExps = translator.getInputExprs();
-                if (inputExps != null) {
-                    RexNode arg = inputExps[((RexInputRef) operand).getIndex()];
-                    input = translator.implementNode(arg);
-                } else {
-                    input = translator.implementNode(operand);
-                }
+                CalcReg input = translator.implementNode(operand);
 
                 CalcProgramBuilder.boolNativeIsNull.add(
                     translator.builder,
@@ -2605,14 +2590,7 @@ public class CalcRexImplementorTableImpl
             assert call.operands.length == 1;
             final RexNode operand = call.operands[0];
 
-            CalcReg input = null;
-            final RexNode [] inputExps = translator.getInputExprs();
-            if (inputExps != null) {
-                RexNode arg = inputExps[((RexInputRef) operand).getIndex()];
-                input = translator.implementNode(arg);
-            } else {
-                input = translator.implementNode(operand);
-            }
+            CalcReg input = translator.implementNode(operand);
 
             // If the input can be null, then we check if the value is in fact
             // null and then skip adding it to the total. If, however, the value
@@ -2631,7 +2609,7 @@ public class CalcRexImplementorTableImpl
             // simply a return statement.
             if (operand.getType().isNullable()) {
                 int ordinal = translator.getNullRegisterOrdinal();
-                CalcReg isNullReg = null;
+                CalcReg isNullReg;
                 String wasNotNull = translator.newLabel();
                 String next = translator.newLabel();
                 if (ordinal == -1) {
@@ -2639,10 +2617,10 @@ public class CalcRexImplementorTableImpl
                         translator.builder.newLocal(
                             CalcProgramBuilder.OpType.Bool,
                             -1);
-                    translator.setNullRegisterOrdinal(
-                        translator.builder.registerSets.getSet(
-                            CalcProgramBuilder.RegisterSetType.Local).size()
-                        - 1);
+                    final List<CalcReg> regList =
+                        translator.builder.registerSets.getRegisterList(
+                            CalcProgramBuilder.RegisterSetType.Local);
+                    translator.setNullRegisterOrdinal(regList.size() - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(
@@ -2682,14 +2660,7 @@ public class CalcRexImplementorTableImpl
             assert call.operands.length == 1;
             final RexNode operand = call.operands[0];
 
-            CalcReg input = null;
-            final RexNode [] inputExps = translator.getInputExprs();
-            if (inputExps != null) {
-                RexNode arg = inputExps[((RexInputRef) operand).getIndex()];
-                input = translator.implementNode(arg);
-            } else {
-                input = translator.implementNode(operand);
-            }
+            CalcReg input = translator.implementNode(operand);
 
             // Refer to the comments for implementAdd method above.
             // Here is the pseudo code:
@@ -2698,9 +2669,9 @@ public class CalcRexImplementorTableImpl
             // JMP @4                  /* 2 */
             // SUB O0, O0, col1        /* 3 */
             //                         /* 4 */
-            if (operand.getType().isNullable() && (inputExps == null)) {
+            if (operand.getType().isNullable()) {
                 int ordinal = translator.getNullRegisterOrdinal();
-                CalcReg isNullReg = null;
+                CalcReg isNullReg;
                 String wasNotNull = translator.newLabel();
                 String next = translator.newLabel();
                 if (ordinal == -1) {
@@ -2708,10 +2679,10 @@ public class CalcRexImplementorTableImpl
                         translator.builder.newLocal(
                             CalcProgramBuilder.OpType.Bool,
                             -1);
-                    translator.setNullRegisterOrdinal(
-                        translator.builder.registerSets.getSet(
-                            CalcProgramBuilder.RegisterSetType.Local).size()
-                        - 1);
+                    final List<CalcReg> regList =
+                        translator.builder.registerSets.getRegisterList(
+                            CalcProgramBuilder.RegisterSetType.Local);
+                    translator.setNullRegisterOrdinal(regList.size() - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(
