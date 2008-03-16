@@ -218,9 +218,9 @@
 <text>Dropping {0} requires CASCADE because other objects still reference it</text>
 </exception>
 
-<exception id="420180" name="ValidatorDropClusteredIndex"
+<exception id="420180" name="ValidatorDropIndex"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Clustered {0} cannot be dropped</text>
+<text>{0} {1} cannot be dropped</text>
 </exception>
 
 <exception id="420190" name="ValidatorNoDefaultSchema">

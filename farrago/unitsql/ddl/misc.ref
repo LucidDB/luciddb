@@ -251,6 +251,13 @@ Error: Multiple clustered indexes contain column "J" (state=,code=0)
 > ;
 Error: java.lang.UnsupportedOperationException: class java.lang.String: column-store for collection type (state=,code=0)
 > 
+> -- should fail: can't drop primary key/unique indexes
+> create table testdrop(i1 int primary key, i2 int unique);
+> drop index "SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TESTDROP";
+Error: Primary key index "MISC"."SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TESTDROP" cannot be dropped (state=,code=0)
+> drop index "SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$TESTDROP$I2";
+Error: Unique constraint index "MISC"."SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$TESTDROP$I2" cannot be dropped (state=,code=0)
+> 
 > -- End misc.sql
 > 
 > !quit

@@ -41,11 +41,8 @@
 +------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try to drop the deletion index (should fail)
-0: jdbc:luciddb:> drop index SYS$DELETION_INDEX$DT2$FISH;
-Error: org.eigenbase.sql.parser.SqlParseException: Encountered "SYS$DELETION_INDEX$DT2$FISH" at line 1, column 12.
-Was expecting one of:
-    <IDENTIFIER> ...
-    <QUOTED_IDENTIFIER> ... (state=,code=0)
+0: jdbc:luciddb:> drop index "SYS$DELETION_INDEX$FISH";
+Error: Deletion index "DT2"."SYS$DELETION_INDEX$FISH" cannot be dropped (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- delete and recreate entries
 0: jdbc:luciddb:> delete from fish where is_ocean=true;

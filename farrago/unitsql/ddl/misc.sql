@@ -162,4 +162,9 @@ create table lcs_table_multiset(i int not null,im integer multiset)
 server sys_column_store_data_server
 ;
 
+-- should fail: can't drop primary key/unique indexes
+create table testdrop(i1 int primary key, i2 int unique);
+drop index "SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TESTDROP";
+drop index "SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$TESTDROP$I2";
+
 -- End misc.sql

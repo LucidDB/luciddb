@@ -454,10 +454,38 @@ public class DdlRelationalHandler
             return;
         }
 
+        // The test for primary key should go before isClustered()
+        // or tests in unitsql/ddl/misc.sql will fail
+        // because primary key will be identified as clustered
+        if (FarragoCatalogUtil.isIndexPrimaryKey(index)) {
+            throw validator.newPositionalError(
+                index,
+                res.ValidatorDropIndex.ex(
+                    "Primary key",
+                    repos.getLocalizedObjectName(index)));
+        }
+
         if (index.isClustered()) {
             throw validator.newPositionalError(
                 index,
-                res.ValidatorDropClusteredIndex.ex(
+                res.ValidatorDropIndex.ex(
+                    "Clustered",
+                    repos.getLocalizedObjectName(index)));
+        }
+
+        if (FarragoCatalogUtil.isDeletionIndex(index)) {
+            throw validator.newPositionalError(
+                index,
+                res.ValidatorDropIndex.ex(
+                    "Deletion",
+                    repos.getLocalizedObjectName(index)));
+        }
+
+        if (FarragoCatalogUtil.isIndexUnique(index)) {
+            throw validator.newPositionalError(
+                index,
+                res.ValidatorDropIndex.ex(
+                    "Unique constraint",
                     repos.getLocalizedObjectName(index)));
         }
 
