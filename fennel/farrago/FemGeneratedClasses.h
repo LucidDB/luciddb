@@ -96,6 +96,9 @@ typedef JniProxyIter<ProxyDatabaseParam> SharedProxyDatabaseParam;
 class ProxyDbHandle;
 typedef JniProxyIter<ProxyDbHandle> SharedProxyDbHandle;
 
+class ProxyDynamicParamUse;
+typedef JniProxyIter<ProxyDynamicParamUse> SharedProxyDynamicParamUse;
+
 class ProxyDynamicParameter;
 typedef JniProxyIter<ProxyDynamicParameter> SharedProxyDynamicParameter;
 
@@ -304,6 +307,8 @@ class ProxyExecutionStreamDef
 : virtual public JniProxy
 {
 public:
+SharedProxyDynamicParamUse getDynamicParamUse();
+static jmethodID meth_getDynamicParamUse;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
 std::string getName();
@@ -652,6 +657,18 @@ class ProxyDbHandle
 public:
 };
 
+class ProxyDynamicParamUse
+: virtual public JniProxy
+{
+public:
+int32_t getDynamicParamId();
+static jmethodID meth_getDynamicParamId;
+SharedProxyExecutionStreamDef getExecutionStreamDef();
+static jmethodID meth_getExecutionStreamDef;
+bool isRead();
+static jmethodID meth_isRead;
+};
+
 class ProxyDynamicParameter
 : virtual public JniProxy
 {
@@ -782,6 +799,8 @@ SharedProxyTupleProjection getInputKeyProj();
 static jmethodID meth_getInputKeyProj;
 bool isOuterJoin();
 static jmethodID meth_isOuterJoin;
+bool isPrefetch();
+static jmethodID meth_isPrefetch;
 SharedProxyCorrelation getSearchKeyParameter();
 static jmethodID meth_getSearchKeyParameter;
 bool isUniqueKey();
@@ -1329,6 +1348,8 @@ virtual void visit(ProxyDatabaseCmd &)
 virtual void visit(ProxyDatabaseParam &)
 { unhandledVisit(); }
 virtual void visit(ProxyDbHandle &)
+{ unhandledVisit(); }
+virtual void visit(ProxyDynamicParamUse &)
 { unhandledVisit(); }
 virtual void visit(ProxyDynamicParameter &)
 { unhandledVisit(); }

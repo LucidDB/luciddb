@@ -25,6 +25,7 @@
 #include "fennel/exec/DynamicParam.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/tuple/TuplePrinter.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -59,14 +60,32 @@ void CorrelationJoinExecStream::prepare(
     ConfluenceExecStream::prepare(params);
 }
 
-void CorrelationJoinExecStream::open(bool restart) 
+void CorrelationJoinExecStream::open(bool restart)
 {
     ConfluenceExecStream::open(restart);
-    std::vector<Correlation>::iterator it = correlations.begin();
-    for (/* empty */ ; it != correlations.end(); ++it) {
-        pDynamicParamManager->createParam(
-            it->dynamicParamId,
-            pLeftBufAccessor->getTupleDesc()[it->leftAttributeOrdinal]);
+
+    if (!restart) {
+        leftRowCount = 0;
+        for (std::vector<Correlation>::iterator it = correlations.begin();
+             it != correlations.end(); ++it) 
+        {
+            pDynamicParamManager->createParam(
+                it->dynamicParamId,
+                pLeftBufAccessor->getTupleDesc()[it->leftAttributeOrdinal]);
+
+            // Make right-hand child and its descendants (upstream XOs)
+            // non-runnable. We don't want them to execute until we have
+            // read a row from the left and called open(restart=true).
+            const std::vector<ExecStreamId> &readerStreamIds = 
+                pGraph->getDynamicParamReaders(it->dynamicParamId);
+            for (std::vector<ExecStreamId>::const_iterator it2 = 
+                     readerStreamIds.begin(); 
+                 it2 != readerStreamIds.end(); ++it2)
+            {
+                pGraph->getScheduler()->setRunnable(
+                    *pGraph->getStream(*it2), false);
+            }
+        }
     }
 }
 
@@ -104,23 +123,48 @@ ExecStreamResult CorrelationJoinExecStream::execute(
 
             // restart right input stream
             pGraph->getStreamInput(getStreamId(),1)->open(true);
+
+            // make runnable
+            if (++leftRowCount == 1) {
+                for (std::vector<Correlation>::iterator it = correlations.begin();
+                     it != correlations.end(); ++it) 
+                {
+                    // Make the right-hand descendant that uses the
+                    // variable runnable. Note that we made it
+                    // non-runnable in open so that it didn't read an
+                    // uninitialized variable.
+                    const std::vector<ExecStreamId> &readerStreamIds = 
+                        pGraph->getDynamicParamReaders(it->dynamicParamId);
+                    for (std::vector<ExecStreamId>::const_iterator it2 = 
+                             readerStreamIds.begin(); 
+                         it2 != readerStreamIds.end(); ++it2)
+                    {
+                        pGraph->getScheduler()->setRunnable(
+                             *pGraph->getStream(*it2), true);
+                    }
+                }
+            }
         }
         for (;;) { 
             if (!pRightBufAccessor->isTupleConsumptionPending()) {
                 if (pRightBufAccessor->getState() == EXECBUF_EOS) {
+std::cout << __LINE__ << std::endl;
                     pLeftBufAccessor->consumeTuple();
                     break;
                 }
                 if (!pRightBufAccessor->demandData()) {
+std::cout << __LINE__ << std::endl;
                     return EXECRC_BUF_UNDERFLOW;
                 }
+std::cout << __LINE__ << std::endl;
                 pRightBufAccessor->unmarshalTuple(
                     outputData, nLeftAttributes);
                 break;
             }
-            
+
+std::cout << __LINE__ << std::endl;
             if (pOutAccessor->produceTuple(outputData)) {
-#if 0
+#if 1
     TupleDescriptor statusDesc = pOutAccessor->getTupleDesc();
     TuplePrinter tuplePrinter;
     tuplePrinter.print(std::cout, statusDesc, outputData);
@@ -129,12 +173,14 @@ ExecStreamResult CorrelationJoinExecStream::execute(
 
                 ++nTuplesProduced;
             } else {
+std::cout << __LINE__ << std::endl;
                 return EXECRC_BUF_OVERFLOW;
             }
             
             pRightBufAccessor->consumeTuple();
             
             if (nTuplesProduced >= quantum.nTuplesMax) {
+std::cout << __LINE__ << std::endl;
                 return EXECRC_QUANTUM_EXPIRED;
             }
         }

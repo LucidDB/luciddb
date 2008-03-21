@@ -57,8 +57,8 @@ struct CorrelationJoinExecStreamParams : public ConfluenceExecStreamParams
 
 /**
  * CorrelationJoinExecStream produces a join of two input
- * streams.  The corrleation will happen based on one or serveral
- * given column from the left hand side
+ * streams.  The correlation will happen based on one or several
+ * given columns from the left-hand side.
  *
  * @author Wael Chatila
  * @version $Id$
@@ -70,6 +70,9 @@ class CorrelationJoinExecStream : public ConfluenceExecStream
     SharedExecStreamBufAccessor pRightBufAccessor;
     uint nLeftAttributes;
     std::vector<Correlation> correlations;
+
+    /// number of rows read from left-hand side since open(false)
+    uint leftRowCount;
 
 public:
     // implement ExecStream

@@ -75,7 +75,7 @@ status of each stream.  This information is based on the result of
 each call to ExecStream::execute (including the return code and incident
 buffer state changes), and can be queried via
 ExecStreamScheduler::isRunnable.  In addition,
-ExecStreamScheduler::makeRunnable can be invoked explicitly to alert the
+ExecStreamScheduler::setRunnable can be invoked explicitly to alert the
 scheduler to an externally-driven status change (e.g. arrival of a network
 packet or completion of asynchronous disk I/O requested by a stream).  A stream
 may call ExecStreamScheduler::setTimer to automatically become runnable
@@ -338,7 +338,7 @@ If the current stream has no parent, the traversal terminates instead.
 </ol>
 
 DfsTreeExecStreamScheduler does not support asynchronous runnability
-changes (makeRunnable and setTimer).
+changes (setRunnable and setTimer).
 
 <h3>Example Exec</h3>
 

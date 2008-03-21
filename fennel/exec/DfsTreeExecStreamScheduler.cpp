@@ -73,7 +73,7 @@ void DfsTreeExecStreamScheduler::start()
     aborted = false;
 }
 
-void DfsTreeExecStreamScheduler::makeRunnable(ExecStream &)
+void DfsTreeExecStreamScheduler::setRunnable(ExecStream &, bool)
 {
     permAssert(false);
 }

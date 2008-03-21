@@ -129,7 +129,7 @@
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Jan 08 16:57:51 PST 2008'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 18 23:01:30 GMT-08:00 2008'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -4441,6 +4441,91 @@
                     <UML:Class xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fc3'/>
                   </UML:Generalization.parent>
                 </UML:Generalization>
+                <UML:Class xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3B'
+                  name = 'DynamicParamUse' visibility = 'public' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false' isActive = 'false'>
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E5A'
+                      isSpecification = 'false'>
+                      <UML:TaggedValue.dataValue>Use of a dynamic parameter by an execution stream.
+
+A map of which execution objects are reading and writing which dynamic parameters may allow the scheduler to be more intelligent when it starts particular execution objects.</UML:TaggedValue.dataValue>
+                      <UML:TaggedValue.type>
+                        <UML:TagDefinition xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7e0a'/>
+                      </UML:TaggedValue.type>
+                    </UML:TaggedValue>
+                  </UML:ModelElement.taggedValue>
+                  <UML:Classifier.feature>
+                    <UML:Attribute xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3D'
+                      name = 'dynamicParamId' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E43'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E42'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E44'
+                      name = 'read' visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                      changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4C'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4B'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fde'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                  </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Association xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4D'
+                  name = 'ParamUses' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+                  isAbstract = 'false'>
+                  <UML:Association.connection>
+                    <UML:AssociationEnd xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4E'
+                      name = 'ExecutionStreamDef' visibility = 'public' isSpecification = 'false'
+                      isNavigable = 'true' ordering = 'unordered' aggregation = 'composite' targetScope = 'instance'
+                      changeability = 'changeable'>
+                      <UML:AssociationEnd.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E55'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E54'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:AssociationEnd.multiplicity>
+                      <UML:AssociationEnd.participant>
+                        <UML:Class xmi.idref = 'Ilsmmsmmsmm3228a1mfaabd66bafmm7ff7'/>
+                      </UML:AssociationEnd.participant>
+                    </UML:AssociationEnd>
+                    <UML:AssociationEnd xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E51'
+                      name = 'DynamicParamUse' visibility = 'public' isSpecification = 'false'
+                      isNavigable = 'true' ordering = 'unordered' aggregation = 'none' targetScope = 'instance'
+                      changeability = 'changeable'>
+                      <UML:AssociationEnd.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E59'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E58'
+                              lower = '0' upper = '-1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:AssociationEnd.multiplicity>
+                      <UML:AssociationEnd.participant>
+                        <UML:Class xmi.idref = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3B'/>
+                      </UML:AssociationEnd.participant>
+                    </UML:AssociationEnd>
+                  </UML:Association.connection>
+                </UML:Association>
               </UML:Namespace.ownedElement>
             </UML:Package>
             <UML:Package xmi.id = 'Ilsmmsmmsmm4fe91emf85207efd8mm7e26' name = 'Config'
@@ -10366,7 +10451,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >databaseInitSize : Integer { frozen }</text>
+      >databaseInitSize : Integer</text>
       <text name="Fig1.4.3"
         x="681"
         y="149"
@@ -10486,7 +10571,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >cachePageSize : Integer { frozen }</text>
+      >cachePageSize : Integer</text>
       <text name="Fig1.4.15"
         x="681"
         y="305"
@@ -10546,7 +10631,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >deviceSchedulerType [0..1] : String</text>
+      >deviceSchedulerType : String</text>
       <text name="Fig1.4.21"
         x="681"
         y="383"
@@ -14417,6 +14502,184 @@
               y="280" />
       <lineto x="237"
               y="177" />
+    </path>
+  </group>
+  <group name="Fig6"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[272, 392, 131, 57]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       href="127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3B"
+       fill="1"
+       fillcolor="white"
+       stroke="1"
+       strokecolor="black"
+  >
+    <private>
+    </private>
+    
+    <rectangle name="Fig6.0"
+      x="272"
+      y="392"
+      width="131"
+      height="57"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="0 255 255"
+    />
+    <group name="Fig6.1"
+         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[272, 392, 131, 2]"
+         href="127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3B"
+         fill="1"
+         fillcolor="white"
+         stroke="1"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig6.1.0"
+        x="272"
+        y="392"
+        width="131"
+        height="2"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      />
+    </group>
+    <text name="Fig6.2"
+      x="272"
+      y="394"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="red"
+      font="Dialog"
+      textsize="10"
+    >DynamicParamUse</text>
+    <group name="Fig6.3"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[273, 450, 130, 20]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+         visibility="0"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig6.3.0"
+        x="273"
+        y="450"
+        width="130"
+        height="20"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        visibility="0"
+      />
+      <path name="Fig6.3.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+        visibility="0"
+      >
+        <moveto x="273"
+                y="450" />
+        <lineto x="403"
+                y="450" />
+      </path>
+    </group>
+    <group name="Fig6.4"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[273, 415, 130, 34]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig6.4.0"
+        x="273"
+        y="415"
+        width="130"
+        height="34"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+      />
+      <path name="Fig6.4.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      >
+        <moveto x="273"
+                y="415" />
+        <lineto x="403"
+                y="415" />
+      </path>
+      <text name="Fig6.4.2"
+        x="273"
+        y="416"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >dynamicParamId : Integer</text>
+      <text name="Fig6.4.3"
+        x="273"
+        y="429"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >read : Boolean</text>
+    </group>
+    <rectangle name="Fig6.5"
+      x="272"
+      y="392"
+      width="131"
+      height="57"
+      fill="0"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    />
+  </group>
+  <group name="Fig7"
+       description="org.argouml.uml.diagram.ui.FigAssociation"
+       href="127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4D"
+       stroke="1"
+       strokecolor="black"
+  >
+    <private>
+      sourcePortFig="Fig1.0"
+      destPortFig="Fig6.0"
+      sourceFigNode="Fig1"
+      destFigNode="Fig6"
+    </private>
+    <path name="Fig7.0"
+      description="org.tigris.gef.presentation.FigPoly"
+      fill="0"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    >
+      <moveto x="296"
+              y="177" />
+      <lineto x="296"
+              y="392" />
     </path>
   </group>
 </pgml>
