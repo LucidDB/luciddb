@@ -1332,7 +1332,7 @@ RETURN /* 48: */;]]>
     <TestCase name="testWindowedMinMax">
         <Resource name="expectedInit">
             <![CDATA[
-O vb,4;
+O vb,8;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
 L s8;
 T;
@@ -1342,7 +1342,7 @@ RETURN /* 2: */;]]>
         </Resource>
         <Resource name="expectedAdd">
             <![CDATA[
-O vb,4;
+O vb,8;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
 L s8;
 T;
@@ -1352,7 +1352,7 @@ RETURN /* 2: */;]]>
         </Resource>
         <Resource name="expectedDrop">
             <![CDATA[
-O vb,4;
+O vb,8;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
 L s8;
 T;
@@ -1363,7 +1363,7 @@ RETURN /* 2: */;]]>
         <Resource name="expectedOutput">
             <![CDATA[
 O s4, s4;
-I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, vb,4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, vb,8;
 L s8, s4, s8, s4;
 T;
 CALL 'WinAggMin(L0, I9) /* 0: $HISTOGRAM_MIN($t9) */;
@@ -1378,7 +1378,7 @@ RETURN /* 6: */;]]>
     <TestCase name="testWindowedFirstLastValue">
         <Resource name="expectedInit">
             <![CDATA[
-O vb,4, vb,4;
+O vb,8, vb,8;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
 L s8, s4, s8;
 C s4;
@@ -1393,7 +1393,7 @@ RETURN /* 5: */;]]>
         </Resource>
         <Resource name="expectedAdd">
             <![CDATA[
-O vb,4, vb,4;
+O vb,8, vb,8;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
 L s8, s4, s8;
 C s4;
@@ -1408,7 +1408,7 @@ RETURN /* 5: */;]]>
         </Resource>
         <Resource name="expectedDrop">
             <![CDATA[
-O vb,4, vb,4;
+O vb,8, vb,8;
 I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
 L s8, s4, s8;
 C s4;
@@ -1424,7 +1424,7 @@ RETURN /* 5: */;]]>
         <Resource name="expectedOutput">
             <![CDATA[
 O s4, s4, s4, s4;
-I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, vb,4, vb,4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, vb,8, vb,8;
 L s8, s4, s8, s4, s8, s4, s4, s8, s4, s4, bo;
 C s4, s4, vc,5;
 V 2, 3, 0x3232303034 /* 22004 */;
