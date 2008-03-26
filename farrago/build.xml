@@ -94,6 +94,7 @@ ${farrago.test.jvmargs}
 
   <!-- Files -->
 
+
   <!-- Template developer configuration file. -->
   <property name="FarragoConfTemplate.xmi"
     location="${farrago.xmi.dir}/FarragoConfTemplate.xmi"/>
@@ -885,7 +886,7 @@ ${farrago.test.jvmargs}
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="-Xmx128m"/>
-        <jvmarg line="-Xss1024k"/>
+        <jvmarg line="-Xss1536k"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <syspropertyset>
