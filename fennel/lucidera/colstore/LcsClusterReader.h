@@ -27,9 +27,28 @@
 #include "fennel/lucidera/colstore/LcsColumnReader.h"
 #include "fennel/btree/BTreeReader.h"
 #include "fennel/tuple/TupleDescriptor.h"
+#include "fennel/segment/SegPageEntryIter.h"
+#include "fennel/segment/SegPageEntryIterSource.h"
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
+ 
+/**
+ * Structure representing a contiguous run of rids that need to be read.
+ */
+struct LcsRidRun
+{
+    /**
+     * First rid in the run
+     */
+    LcsRid startRid;
+
+    /**
+     * Number of rids in the run.  MAXU indicates that the run includes all
+     * remaining rids following startRid.
+     */
+    RecordNum nRids;
+};
 
 /**
  * Reads blocks from a single cluster.  A column reader object
@@ -62,7 +81,8 @@ FENNEL_BEGIN_NAMESPACE
  * while scan.nextRange != false
  * scan.close()
  */
-class LcsClusterReader : public LcsClusterAccessBase
+class LcsClusterReader :
+    public LcsClusterAccessBase, public SegPageEntryIterSource<LcsRid>
 {
     friend class LcsColumnReader;
 
@@ -107,12 +127,50 @@ class LcsClusterReader : public LcsClusterAccessBase
     PLcsBatchDir pBatches;
 
     /**
-     * Reads a cluster block and sets up necessary structures to navigate
-     * within the page
-     *
-     * @param clusterPageId pageid of the cluster page to be read
+     * Iterator over the circular buffer containing rid runs
      */
-    void moveToBlock(PageId clusterPageId);
+    CircularBufferIter<LcsRidRun> ridRunIter;
+
+    /**
+     * Pre-fetch queue for pages read from this cluster
+     */
+    SegPageEntryIter<LcsRid> prefetchQueue;
+
+    /**
+     * The next rid that needs to be read
+     */
+    LcsRid nextRid;
+
+    /**
+     * The next entry in the rid-to-pageId btree map following the one that
+     * contains the last page that was pre-fetched
+     */
+    std::pair<PageId, LcsRid> nextBTreeEntry;
+
+    /**
+     * The next entry from the pre-fetch queue
+     */
+    std::pair<PageId, LcsRid> nextPrefetchEntry;
+
+    /**
+     * If true, switch has been made to dumb pre-fetch
+     */
+    bool dumbPrefetch;
+
+    /**
+     * The current rid that needs to be read
+     */
+    LcsRid currRid;
+
+    /**
+     * Reads a cluster block and sets up necessary structures to navigate
+     * within the page corresponding to a rid.
+     *
+     * @param rid the rid that determines the page that needs to be read
+     *
+     * @return true if a cluster block was successfully located
+     */
+    bool moveToBlock(LcsRid rid);
 
     /**
      * Finds the range in the current block which contains "Rid".  Does not
@@ -155,6 +213,11 @@ class LcsClusterReader : public LcsClusterAccessBase
      */
     bool searchForRid(LcsRid rid);
 
+    /**
+     * Reads the next entry in the rid-to-pageId btree map.
+     */
+    void getNextBTreeEntry();
+
 public:
     /**
      * Number of cluster columns that will be read
@@ -167,10 +230,17 @@ public:
     boost::scoped_array<LcsColumnReader> clusterCols;
 
     /**
-     * Constructor - takes as input treeDescriptor of btree corresponding
-     * to cluster
+     * Constructor
+     *
+     * @param treeDescriptor of btree corresponding to cluster
+     *
+     * @param pRidRuns pointer to circular buffer of rid runs; defaults to NULL
      */
-    explicit LcsClusterReader(BTreeDescriptor const &treeDescriptor);
+    explicit LcsClusterReader(
+        BTreeDescriptor const &treeDescriptor,
+        CircularBuffer<LcsRidRun> *pRidRuns = NULL);
+
+    virtual ~LcsClusterReader();
 
     /**
      * Initializes cluster reader with column readers
@@ -181,7 +251,8 @@ public:
      * numbers are 0-based relative to the cluster
      */
     void initColumnReaders(
-        uint nClusterColsInit, TupleProjection const &clusterProj);
+        uint nClusterColsInit,
+        TupleProjection const &clusterProj);
 
     /**
      * Initializes state variables used by cluster reader.
@@ -278,6 +349,49 @@ public:
      * @param nRids number of rids to advance
      */
     inline void advanceWithinBatch(uint nRids);
+
+    /**
+     * Determines the next page to be pre-fetched based on the rids
+     * that need to be read.
+     *
+     * @param [out] rid returns the rid corresponding to the page to be
+     * pre-fetched
+     *
+     * @param [out] found true if a pre-fetch page was found
+     *
+     * @return the page to be pre-fetched next
+     */
+    virtual PageId getNextPageForPrefetch(LcsRid &rid, bool &found);
+
+    /**
+     * Retrieves the current and next rids that need to be read, based on
+     * the current rid run being processed.
+     *
+     * @param ridRunIter iterator over the circular buffer that provides the
+     * rid runs
+     *
+     * @param [in, out] nextRid on input, indicates the minimum rid value to
+     * be retrieved; on return, the next rid that will need to be read
+     *
+     * @param remove if true, remove the first element from the circular
+     * buffer if the rid run buffer's position is incremented
+     *
+     * @return the current rid that needs to be read
+     */
+    static LcsRid getFetchRids(
+        CircularBufferIter<LcsRidRun> &ridRunIter,
+        LcsRid &nextRid,
+        bool remove);
+
+    /**
+     * Resynchronizes the cluster reader's prefetch position to that of the
+     * parent scan.
+     *
+     * @param parentBufPos buffer position of the parent scan
+     *
+     * @param parentNextRid next rid of the parent scan
+     */
+    void catchUp(uint parentBufPos, LcsRid parentNextRid);
 };
 
 inline bool LcsClusterReader::isPositioned() const

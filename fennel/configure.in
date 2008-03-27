@@ -10,7 +10,7 @@ AC_CANONICAL_TARGET
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_SRCDIR([common/CommonPreamble.h])
 
-AM_INIT_AUTOMAKE(fennel, 0.7.2)
+AM_INIT_AUTOMAKE(fennel, 0.7.3)
 
 dnl Define CXXFLAGS before AC_PROG_CXX to suppress the default autoconf
 dnl compiler options
@@ -61,6 +61,15 @@ AC_CHECK_LIB(aio,io_queue_init,[ found_libaio=true ])
 if test "$found_libaio" = "true"
 then
     AC_DEFINE([HAVE_LIBAIO],[1],[Define to 1 if you have the `aio' library (-laio).])
+else
+    if test "$target_os" = "linux-gnu"
+    then
+        AC_ARG_WITH([aio-required],
+            AC_HELP_STRING(
+               [--with-aio-required],
+               [whether the libaio-dev package must exist on Linux]),
+            AC_MSG_ERROR([Fennel build on Linux requires libaio-dev package]))
+    fi
 fi
 
 dnl Check if Farrago support is desired

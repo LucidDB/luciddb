@@ -85,8 +85,11 @@ public:
      * scheduler lock be held while notifyTransferCompletion is called.
      *
      * @param request parameters for the request to be scheduled
+     *
+     * @return true if the request was successfully scheduled without any
+     * retries
      */
-    virtual void schedule(RandomAccessRequest &request) = 0;
+    virtual bool schedule(RandomAccessRequest &request) = 0;
 
     /**
      * Shuts down, waiting for all pending requests to complete.

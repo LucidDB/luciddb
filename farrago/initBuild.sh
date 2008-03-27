@@ -24,7 +24,7 @@
 # an existing one after syncing changes from source control.
 
 usage() {
-    echo "Usage:  initBuild.sh --with[out]-fennel [--with[out]-optimization] [--with[out]-debug] [--without-fennel[-thirdparty]-build] [--with[out]-tests] [--with-nightly-tests]"
+    echo "Usage:  initBuild.sh --with[out]-fennel [--with[out]-optimization] [--with[out]-debug] [--without-fennel[-thirdparty]-build] [--with[out]-aio-required] [--with[out]-tests] [--with-nightly-tests]"
 }
 
 fennel_flag_missing=true
@@ -42,6 +42,7 @@ while [ -n "$1" ]; do
         --without-fennel) fennel_disabled=true;;
         --with?(out)-optimization) OPT_FLAG="$1";;
         --with?(out)-debug) DEBUG_FLAG="$1";;
+        --with?(out)-aio-required) AIO_FLAG="$1";;
         --skip-fennel-build|--without-fennel-build) 
             fennel_skip_build=true;;
         --skip-fennel-thirdparty-build|--without-fennel-thirdparty-build) 
@@ -105,7 +106,7 @@ else
     if $fennel_skip_build; then
         echo Fennel enabled. Skipping Fennel build.
     else
-        ./initBuild.sh --with-farrago $OPT_FLAG $DEBUG_FLAG \
+        ./initBuild.sh --with-farrago $OPT_FLAG $DEBUG_FLAG $AIO_FLAG \
             $FENNEL_BUILD_FLAG $TEST_FLAG
     fi
 

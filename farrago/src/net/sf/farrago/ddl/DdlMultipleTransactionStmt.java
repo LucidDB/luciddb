@@ -62,14 +62,14 @@ public interface DdlMultipleTransactionStmt extends FarragoSessionDdlStmt
 
     /**
      * Checks whether the 
-     * {@link #cleanupAfterExecuteUnlocked(
+     * {@link #completeAfterExecuteUnlocked(
      *      FarragoSessionDdlValidator, FarragoSession)}
      * method requires a repository write transaction.
      * 
-     * @return true if a write txn must be started before cleanup, false if
-     *         a read txn is sufficient
+     * @return true if a write txn must be started before executing the
+     *         completion step, false if a read txn is sufficient
      */
-    boolean cleanupRequiresWriteTxn();
+    boolean completeRequiresWriteTxn();
     
     /**
      * Provides access to the repository after execution of the DDL.  
@@ -78,17 +78,25 @@ public interface DdlMultipleTransactionStmt extends FarragoSessionDdlStmt
      * {@link #executeUnlocked(FarragoSessionDdlValidator, FarragoSession)}.
      * This method is invoked in a 
      * {@link FarragoReposTxnContext#beginLockedTxn(boolean) locked} repository
-     * transaction.  The method {@link #cleanupRequiresWriteTxn()} controls
+     * transaction.  The method {@link #completeRequiresWriteTxn()} controls
      * whether the transaction read-only or not.  Ths method may access
      * and/or modify repository objects loaded in a previous transaction so
      * long as it is guaranteed (for instance by "table-in-use" semantics)
      * that they have not been modified by another statement.
      *
+     * <p>Note that any repository modifications made during the execution of
+     * this method <b>will not</b> be post-processed by {@link DdlValidator}.
+     * For instance, {@link DdlValidator#checkJmiConstraints(RefObject)} is
+     * not called, and therefore any mandatory default primitives are not
+     * automatically set, which will cause errors later if the attributes
+     * have not been explicitly initialized.  See 
+     * {@link org.eigenbase.jmi.JmiObjUtil#setMandatoryPrimitiveDefaults}.
+     *
      * @param ddlValidator DDL validator for this statement
      * @param session reentrant Farrago session which may be used to execute
      *                DML statements
      */
-    void cleanupAfterExecuteUnlocked(
+    void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session);
 }

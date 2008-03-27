@@ -54,10 +54,16 @@ CacheImpl<PageT,VictimPolicyT>
         *pBufferAllocatorInit
         : *new VMAllocator(params.cbPage,0)),
     pBufferAllocator(pBufferAllocatorInit ? NULL : &bufferAllocator),
+    victimPolicy(params),
     timerThread(*this)
 {
     cbPage = params.cbPage;
     pDeviceAccessScheduler = NULL;
+    inFlushMode = false;
+
+    // TODO - parameterize
+    dirtyHighWaterPercent = 25;
+    dirtyLowWaterPercent = 5;
 
     initializeStats();
 
@@ -85,6 +91,18 @@ CacheImpl<PageT,VictimPolicyT>
     if (idleFlushInterval) {
         timerThread.start();
     }
+
+    prefetchPagesMax = params.prefetchPagesMax;
+    prefetchThrottleRate = params.prefetchThrottleRate;
+}
+
+template <class PageT,class VictimPolicyT>
+void CacheImpl<PageT,VictimPolicyT>::getPrefetchParams(
+    uint &prefetchPagesMax,
+    uint &prefetchThrottleRate)
+{
+    prefetchPagesMax = this->prefetchPagesMax;
+    prefetchThrottleRate = this->prefetchThrottleRate;
 }
 
 template <class PageT,class VictimPolicyT>
@@ -102,6 +120,20 @@ void CacheImpl<PageT,VictimPolicyT>::initializeStats()
     statsSinceInit.nPageReadsSinceInit = 0;
     statsSinceInit.nPageWrites = 0;
     statsSinceInit.nPageWritesSinceInit = 0;
+    statsSinceInit.nRejectedPrefetches = 0;
+    statsSinceInit.nRejectedPrefetchesSinceInit = 0;
+    statsSinceInit.nIoRetries = 0;
+    statsSinceInit.nIoRetriesSinceInit = 0;
+    statsSinceInit.nSuccessfulPrefetches = 0;
+    statsSinceInit.nSuccessfulPrefetchesSinceInit = 0;
+    statsSinceInit.nLazyWrites = 0;
+    statsSinceInit.nLazyWritesSinceInit = 0;
+    statsSinceInit.nLazyWriteCalls = 0;
+    statsSinceInit.nLazyWriteCallsSinceInit = 0;
+    statsSinceInit.nVictimizationWrites = 0;
+    statsSinceInit.nVictimizationWritesSinceInit = 0;
+    statsSinceInit.nCheckpointWrites = 0;
+    statsSinceInit.nCheckpointWritesSinceInit = 0;
     statsSinceInit.nMemPagesAllocated = 0;
     statsSinceInit.nMemPagesUnused = 0;
     statsSinceInit.nMemPagesMax = 0;
@@ -111,6 +143,8 @@ template <class PageT,class VictimPolicyT>
 void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
 {
     static const int allocErrorMsgSize = 255;
+    uint nPagesMax = 0;
+    uint nPagesInit = 0;
 
     // Make two attempts: First, use the configured values.  If that fails, 
     // try again with default nMemPagesMax.  If that fails, throw in the towel.
@@ -119,8 +153,8 @@ void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
         int allocErrorCode = 0;
         char allocErrorMsg[allocErrorMsgSize + 1] = { 0 };
 
-        uint nPagesMax = params.nMemPagesMax;
-        uint nPagesInit = params.nMemPagesInit;
+        nPagesMax = params.nMemPagesMax;
+        nPagesInit = params.nMemPagesInit;
 
         try {
             if (attempts != 0) {
@@ -205,6 +239,17 @@ void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
             unallocatedBucket.pageList.push_back(*page);
         }
     }
+
+    uint nPages = std::min(nPagesInit, nPagesMax);
+    calcDirtyThreshholds(nPages);
+    victimPolicy.setAllocatedPageCount(nPages);
+}
+
+template <class PageT,class VictimPolicyT>
+void CacheImpl<PageT,VictimPolicyT>::calcDirtyThreshholds(uint nCachePages)
+{
+    dirtyHighWaterMark = nCachePages * dirtyHighWaterPercent / 100;
+    dirtyLowWaterMark = nCachePages * dirtyLowWaterPercent / 100;
 }
 
 template <class PageT,class VictimPolicyT>
@@ -296,6 +341,10 @@ void CacheImpl<PageT,VictimPolicyT>::setAllocatedPageCount(
             unallocatedBucket.pageList.push_back(*page);
         }
     }
+
+    calcDirtyThreshholds(nMemPagesDesired);
+    // Notify the policy of the new cache size
+    victimPolicy.setAllocatedPageCount(nMemPagesDesired);
 }
 
 template <class PageT,class VictimPolicyT>
@@ -309,7 +358,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     assert(blockId != NULL_BLOCK_ID);
     assert(CompoundId::getDeviceId(blockId) != NULL_DEVICE_ID);
     PageBucketT &bucket = getHashBucket(blockId);
-    PageT *page = lookupPage(bucket,blockId);
+    PageT *page = lookupPage(bucket,blockId,true);
     if (page) {
         assert(page->pMappedPageListener == pMappedPageListener); 
         // note that lookupPage incremented page's reference count for us, so
@@ -358,6 +407,9 @@ PageT *CacheImpl<PageT,VictimPolicyT>
                (lockMode == LOCKMODE_X_NOWAIT));
         StrictMutexGuard pageGuard(page->mutex);
         page->nReferences--;
+        if (!page->nReferences) {
+            victimPolicy.notifyPageUnpin(*page);
+        }
         return NULL;
     }
     if ((lockMode == LOCKMODE_X) || (lockMode == LOCKMODE_X_NOWAIT)) {
@@ -421,12 +473,18 @@ void CacheImpl<PageT,VictimPolicyT>
     }
     page.nReferences--;
     if (!page.nReferences) {
+
         if (bFree) {
-            // the page lock was acquired via lockScratch, so return the page
-            // to the free list
+            // The page lock was acquired via lockScratch, so return it to
+            // the free list.  No need to notify the victimPolicy since
+            // the policy wasn't notified when the page was locked.
             page.dataStatus = CachePage::DATA_INVALID;
             page.blockId = NULL_BLOCK_ID;
             freePage(page);
+        } else {
+            // notify the victim policy that the page is no longer
+            // being referenced
+            victimPolicy.notifyPageUnpin(page);
         }
 
         // let waiting threads know that a page has become available
@@ -445,7 +503,7 @@ bool CacheImpl<PageT,VictimPolicyT>
         StrictMutexGuard pageGuard(iter->mutex);
         if (iter->getBlockId() == blockId) {
             bucketGuard.unlock();
-            victimPolicy.notifyPageAccess(*iter);
+            victimPolicy.notifyPageAccess(*iter, false);
             return true;
         }
     }
@@ -458,9 +516,11 @@ void CacheImpl<PageT,VictimPolicyT>
 {
     assert(blockId != NULL_BLOCK_ID);
     PageBucketT &bucket = getHashBucket(blockId);
-    PageT *page = lookupPage(bucket,blockId);
+    PageT *page = lookupPage(bucket,blockId,false);
     if (!page) {
-        // page is not mapped, so nothing to discard
+        // page is not mapped, so nothing to discard, but still need to
+        // notify the policy
+        victimPolicy.notifyPageDiscard(blockId);
         return;
     }
     StrictMutexTryGuard pageGuard(page->mutex,true);
@@ -487,7 +547,10 @@ PageT &CacheImpl<PageT,VictimPolicyT>
 
     StrictMutexGuard pageGuard(page->mutex);
     page->nReferences = 1;
-    // set dirty early to avoid work on first call to getWritableData
+    // Set dirty early to avoid work on first call to getWritableData.
+    // No need to notify the victimPolicy that the page is dirty because
+    // scratch pages are locked for the duration of their use so they're
+    // never candidates for victimization or flushing.
     page->dataStatus = CachePage::DATA_DIRTY;
     CompoundId::setDeviceId(page->blockId,NULL_DEVICE_ID);
     CompoundId::setBlockNum(page->blockId,blockNum);
@@ -496,19 +559,21 @@ PageT &CacheImpl<PageT,VictimPolicyT>
 }
 
 template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+bool CacheImpl<PageT,VictimPolicyT>
 ::prefetchPage(BlockId blockId,MappedPageListener *pMappedPageListener)
 {
     assert(blockId != NULL_BLOCK_ID);
     if (isPageMapped(blockId)) {
         // already mapped:  either it's already fully read or someone
         // else has initiated a read; either way, nothing for us to do
-        return;
+        successfulPrefetch();
+        return true;
     }
     PageT *page = findFreePage();
     if (!page) {
         // cache is low on free pages:  ignore prefetch hint
-        return;
+        rejectedPrefetch();
+        return false;
     }
     
     PageBucketT &bucket = getHashBucket(blockId);
@@ -520,12 +585,18 @@ void CacheImpl<PageT,VictimPolicyT>
     PageT &mappedPage = mapPage(
         bucket,*page,blockId,pMappedPageListener,bPendingRead,bIncRef);
     if (&mappedPage == page) {
-        readPageAsync(*page);
+        if (readPageAsync(*page)) {
+            successfulPrefetch();
+        } else {
+            rejectedPrefetch();
+            return false;
+        }
     } else {
         // forget unused free page, and don't bother with read since someone
         // else must already have kicked it off
         page = &mappedPage;
     }
+    return true;
 }
 
 template <class PageT,class VictimPolicyT>
@@ -565,7 +636,12 @@ void CacheImpl<PageT,VictimPolicyT>
             // (or has a read in progress).  For remaining pages, continue
             // building new request.
             if (request.cbTransfer) {
-                scheduler.schedule(request);
+                if (scheduler.schedule(request)) {
+                    successfulPrefetch();
+                } else {
+                    ioRetry();
+                    rejectedPrefetch();
+                }
             }
             // adjust start past transfer just initiated plus already mapped
             // page
@@ -582,8 +658,34 @@ void CacheImpl<PageT,VictimPolicyT>
     }
     // deal with leftovers
     if (request.cbTransfer) {
-        scheduler.schedule(request);
+        if (scheduler.schedule(request)) {
+            successfulPrefetch();
+        } else {
+            ioRetry();
+            rejectedPrefetch();
+        }
     }
+}
+
+template <class PageT,class VictimPolicyT>
+void CacheImpl<PageT,VictimPolicyT>
+::successfulPrefetch()
+{
+    incrementStatsCounter(nSuccessfulCachePrefetches);
+}
+
+template <class PageT,class VictimPolicyT>
+void CacheImpl<PageT,VictimPolicyT>
+::rejectedPrefetch()
+{
+    incrementStatsCounter(nRejectedCachePrefetches);
+}
+
+template <class PageT,class VictimPolicyT>
+void CacheImpl<PageT,VictimPolicyT>
+::ioRetry()
+{
+    incrementStatsCounter(nIoRetries);
 }
 
 template <class PageT,class VictimPolicyT>
@@ -622,6 +724,7 @@ uint CacheImpl<PageT,VictimPolicyT>
                     // shouldn't be flushing a page if someone is currently
                     // scribbling on it
                     assert(!page.isExclusiveLockHeld());
+                    incrementStatsCounter(nCheckpointWrites);
                     // initiate a flush
                     writePageAsync(page);
                 }
@@ -752,6 +855,7 @@ void CacheImpl<PageT,VictimPolicyT>
                 ::abort();
             }
             decrementCounter(nDirtyPages);
+            victimPolicy.notifyPageClean(static_cast<PageT &>(page));
             // let waiting threads know that this page may now be available
             // for victimization
             freePageCondition.notify_all();
@@ -787,6 +891,7 @@ void CacheImpl<PageT,VictimPolicyT>
     incrementCounter(nDirtyPages);
     bool bValid = page.isDataValid();
     page.dataStatus = CachePage::DATA_DIRTY;
+    victimPolicy.notifyPageDirty(static_cast<PageT &>(page));
     
     // No synchronization required during notification because caller already
     // holds exclusive lock on page.  The notification is called AFTER the page
@@ -872,14 +977,14 @@ void CacheImpl<PageT,VictimPolicyT>::closeImpl()
 
 template <class PageT,class VictimPolicyT>
 PageT *CacheImpl<PageT,VictimPolicyT>
-::lookupPage(PageBucketT &bucket,BlockId blockId)
+::lookupPage(PageBucketT &bucket,BlockId blockId, bool pin)
 {
     assertCorrectBucket(bucket,blockId);
     SXMutexSharedGuard bucketGuard(bucket.mutex);
     for (PageBucketIter iter(bucket.pageList); iter; ++iter) {
         StrictMutexGuard pageGuard(iter->mutex);
         if (iter->getBlockId() == blockId) {
-            victimPolicy.notifyPageAccess(*iter);
+            victimPolicy.notifyPageAccess(*iter, pin);
             iter->nReferences++;
             while (iter->dataStatus == CachePage::DATA_READ) {
                 iter->waitForPendingIO(pageGuard);
@@ -934,13 +1039,18 @@ PageT *CacheImpl<PageT,VictimPolicyT>
                     continue;
                 }
                 nToFlush--;
-                writePageAsync(page);
+                incrementStatsCounter(nVictimizationWrites);
+                // If the write request required retry, don't submit any
+                // additional write requests in this loop
+                if (!writePageAsync(page)) {
+                    nToFlush = 0;
+                }
                 continue;
             }
             // NOTE:  have to do this early since unmapPage will
             // call back into victimPolicy, which could deadlock
             victimSharedGuard.unlock();
-            unmapPage(page,pageGuard);
+            unmapPage(page,pageGuard,false);
             incrementStatsCounter(nVictimizations);
             return &page;
         }
@@ -965,6 +1075,13 @@ void CacheImpl<PageT,VictimPolicyT>
     stats.nDirtyPages = nDirtyPages;
     stats.nPageReads = nPageReads;
     stats.nPageWrites = nPageWrites;
+    stats.nRejectedPrefetches = nRejectedCachePrefetches;
+    stats.nIoRetries = nIoRetries;
+    stats.nSuccessfulPrefetches = nSuccessfulCachePrefetches;
+    stats.nLazyWrites = nLazyWrites;
+    stats.nLazyWriteCalls = nLazyWriteCalls;
+    stats.nVictimizationWrites = nVictimizationWrites;
+    stats.nCheckpointWrites = nCheckpointWrites;
     stats.nMemPagesAllocated = getAllocatedPageCount();
     stats.nMemPagesUnused = unmappedBucket.pageList.size();
     stats.nMemPagesMax = getMaxAllocatedPageCount();
@@ -975,18 +1092,45 @@ void CacheImpl<PageT,VictimPolicyT>
     nVictimizations.clear();
     nPageReads.clear();
     nPageWrites.clear();
+    nRejectedCachePrefetches.clear();
+    nIoRetries.clear();
+    nSuccessfulCachePrefetches.clear();
+    nLazyWrites.clear();
+    nLazyWriteCalls.clear();
+    nVictimizationWrites.clear();
+    nCheckpointWrites.clear();
 
     statsSinceInit.nHitsSinceInit += stats.nHits;
     statsSinceInit.nRequestsSinceInit += stats.nRequests;
     statsSinceInit.nVictimizationsSinceInit += stats.nVictimizations;
     statsSinceInit.nPageReadsSinceInit += stats.nPageReads;
     statsSinceInit.nPageWritesSinceInit += stats.nPageWrites;
+    statsSinceInit.nRejectedPrefetchesSinceInit += stats.nRejectedPrefetches;
+    statsSinceInit.nIoRetriesSinceInit += stats.nIoRetries;
+    statsSinceInit.nSuccessfulPrefetchesSinceInit +=
+        stats.nSuccessfulPrefetches;
+    statsSinceInit.nLazyWritesSinceInit += stats.nLazyWrites;
+    statsSinceInit.nLazyWriteCallsSinceInit += stats.nLazyWriteCalls;
+    statsSinceInit.nVictimizationWritesSinceInit += stats.nVictimizationWrites;
+    statsSinceInit.nCheckpointWritesSinceInit += stats.nCheckpointWrites;
 
     stats.nHitsSinceInit = statsSinceInit.nHitsSinceInit;
     stats.nRequestsSinceInit = statsSinceInit.nRequestsSinceInit;
     stats.nVictimizationsSinceInit = statsSinceInit.nVictimizationsSinceInit;
     stats.nPageReadsSinceInit = statsSinceInit.nPageReadsSinceInit;
     stats.nPageWritesSinceInit = statsSinceInit.nPageWritesSinceInit;
+    stats.nRejectedPrefetchesSinceInit =
+        statsSinceInit.nRejectedPrefetchesSinceInit;
+    stats.nIoRetriesSinceInit =
+        statsSinceInit.nIoRetriesSinceInit;
+    stats.nSuccessfulPrefetchesSinceInit =
+        statsSinceInit.nSuccessfulPrefetchesSinceInit;
+    stats.nLazyWritesSinceInit = statsSinceInit.nLazyWritesSinceInit;
+    stats.nLazyWriteCallsSinceInit = statsSinceInit.nLazyWriteCallsSinceInit;
+    stats.nVictimizationWritesSinceInit =
+        statsSinceInit.nVictimizationWritesSinceInit;
+    stats.nCheckpointWritesSinceInit =
+        statsSinceInit.nCheckpointWritesSinceInit;
 }
 
 template <class PageT,class VictimPolicyT>
@@ -999,10 +1143,24 @@ void CacheImpl<PageT,VictimPolicyT>
         // in case there aren't any dirty buffers to start with
         return;
     }
+
+    // Only flush if we're within the dirty threshholds
+    if (!inFlushMode) {
+        if (nDirtyPages < dirtyHighWaterMark) {
+            return;
+        }
+        inFlushMode = true;
+    }
+    if (nDirtyPages < dirtyLowWaterMark) {
+        inFlushMode = false;
+        return;
+    }
+
+    incrementStatsCounter(nLazyWriteCalls);
     uint nFlushed = 0;
     VictimSharedGuard victimSharedGuard(victimPolicy.getMutex());
-    std::pair<VictimPageIterator,VictimPageIterator> victimRange(
-        victimPolicy.getVictimRange());
+    std::pair<DirtyVictimPageIterator,DirtyVictimPageIterator> victimRange(
+        victimPolicy.getDirtyVictimRange());
     for (; victimRange.first != victimRange.second; ++(victimRange.first)) {
         PageT &page = *(victimRange.first);
         // if page mutex is unavailable, just skip it
@@ -1029,7 +1187,12 @@ void CacheImpl<PageT,VictimPolicyT>
         {
             continue;
         }
-        writePageAsync(page);
+        incrementStatsCounter(nLazyWrites);
+        // If the write request required retry, don't submit any
+        // additional write requests
+        if (!writePageAsync(page)) {
+            break;
+        }
         nFlushed++;
         if (nFlushed >= nToFlush) {
             break;
@@ -1039,12 +1202,12 @@ void CacheImpl<PageT,VictimPolicyT>
 
 template <class PageT,class VictimPolicyT>
 void CacheImpl<PageT,VictimPolicyT>
-::unmapPage(PageT &page,StrictMutexTryGuard &pageGuard)
+::unmapPage(PageT &page,StrictMutexTryGuard &pageGuard, bool discard)
 {
     assert(!page.nReferences);
     assert(pageGuard.locked());
 
-    victimPolicy.notifyPageUnmap(page);
+    victimPolicy.notifyPageUnmap(page, discard);
     if (page.pMappedPageListener) {
         page.pMappedPageListener->notifyPageUnmap(page);
         page.pMappedPageListener = NULL;
@@ -1075,7 +1238,7 @@ void CacheImpl<PageT,VictimPolicyT>
     while (page.isTransferInProgress()) {
         page.waitForPendingIO(pageGuard);
     }
-    unmapPage(page,pageGuard);
+    unmapPage(page,pageGuard,true);
     pageGuard.lock();
     assert(!page.nReferences);
     freePage(page);
@@ -1106,7 +1269,7 @@ PageT &CacheImpl<PageT,VictimPolicyT>
             }
             bucketGuard.unlock();
             assert(pMappedPageListener == iter->pMappedPageListener);
-            victimPolicy.notifyPageAccess(*iter);
+            victimPolicy.notifyPageAccess(*iter, bIncRef);
             return *iter;
         }
     }
@@ -1124,7 +1287,7 @@ PageT &CacheImpl<PageT,VictimPolicyT>
     }
     bucket.pageList.push_back(page);
     bucketGuard.unlock();
-    victimPolicy.notifyPageMap(page);
+    victimPolicy.notifyPageMap(page, bIncRef);
     if (pMappedPageListener) {
         pMappedPageListener->notifyPageMap(page);
     }
@@ -1132,7 +1295,7 @@ PageT &CacheImpl<PageT,VictimPolicyT>
 }
 
 template <class PageT,class VictimPolicyT>
-void CacheImpl<PageT,VictimPolicyT>
+bool CacheImpl<PageT,VictimPolicyT>
 ::transferPageAsync(PageT &page)
 {
     SharedRandomAccessDevice &pDevice =
@@ -1148,7 +1311,11 @@ void CacheImpl<PageT,VictimPolicyT>
         request.type = RandomAccessRequest::READ;
     }
     request.bindingList.push_back(page);
-    getDeviceAccessScheduler(*pDevice).schedule(request);
+    bool rc = getDeviceAccessScheduler(*pDevice).schedule(request);
+    if (!rc) {
+        ioRetry();
+    }
+    return rc;
 }
 
 template <class PageT,class VictimPolicyT>
@@ -1159,17 +1326,16 @@ CacheAllocator &CacheImpl<PageT,VictimPolicyT>
 }
 
 template <class PageT,class VictimPolicyT>
-inline void CacheImpl<PageT,VictimPolicyT>
+inline bool CacheImpl<PageT,VictimPolicyT>
 ::readPageAsync(PageT &page)
 {
     page.dataStatus = CachePage::DATA_READ;
     incrementStatsCounter(nPageReads);
-    transferPageAsync(page);
+    return transferPageAsync(page);
 }
 
-
 template <class PageT,class VictimPolicyT>
-inline void CacheImpl<PageT,VictimPolicyT>
+inline bool CacheImpl<PageT,VictimPolicyT>
 ::writePageAsync(PageT &page)
 {
     assert(page.isDirty());
@@ -1179,7 +1345,12 @@ inline void CacheImpl<PageT,VictimPolicyT>
     }
     page.dataStatus = CachePage::DATA_WRITE;
     incrementStatsCounter(nPageWrites);
-    transferPageAsync(page);
+    if (!transferPageAsync(page)) {
+        ioRetry();
+        return false;
+    } else {
+        return true;
+    }
 }
 
 template <class PageT,class VictimPolicyT>

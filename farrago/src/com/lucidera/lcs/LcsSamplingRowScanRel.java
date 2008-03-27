@@ -116,25 +116,27 @@ public class LcsSamplingRowScanRel
         
         FemLcsRowScanStreamDef scanStream = createScanStream(implementor);
         
+        CwmColumnSet columnSet = lcsTable.getCwmColumnSet();
+        assert(columnSet instanceof FemAbstractColumnSet);
+        // Don't allow caching of this plan, since it contains a row
+        // count which could change at any moment.
+        ((FarragoPreparingStmt)connection).disableStatementCaching();
+        
+        Long rowCount;
         if (samplingParams.isBernoulli()) {
             scanStream.setSamplingMode(
                 TableSamplingModeEnum.SAMPLING_BERNOULLI);
+            rowCount = 
+                ((FemAbstractColumnSet)columnSet).getRowCount() +
+                ((FemAbstractColumnSet)columnSet).getDeletedRowCount();
+            
         } else {
             scanStream.setSamplingMode(TableSamplingModeEnum.SAMPLING_SYSTEM);
-            
-            // Don't allow caching of this plan, since it contains a row
-            // count which could change at any moment.
-            ((FarragoPreparingStmt)connection).disableStatementCaching();
-            
-            CwmColumnSet columnSet = lcsTable.getCwmColumnSet();
-            assert(columnSet instanceof FemAbstractColumnSet);
-
-            Long rowCount = 
+            rowCount = 
                 ((FemAbstractColumnSet)columnSet).getRowCount();
             assert(rowCount != null);
-            
-            scanStream.setSamplingRowCount(rowCount);
         }
+        scanStream.setSamplingRowCount(rowCount);
         
         scanStream.setSamplingRate(samplingParams.getSamplingPercentage());
         scanStream.setSamplingRepeatable(samplingParams.isRepeatable());

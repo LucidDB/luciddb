@@ -35,6 +35,25 @@ FENNEL_BEGIN_NAMESPACE
  */
 class BTreeReader : public BTreeAccessBase
 {
+protected:
+    /**
+     * Enumeration of which node types the reader should be reading
+     */
+    enum ReadMode {
+        /**
+         * Read both non-leaf and leaf nodes
+         */
+        READ_ALL,
+        /**
+         * Read only non-leaf nodes
+         */
+        READ_NONLEAF_ONLY,
+        /**
+         * Read only leaf nodes
+         */
+        READ_LEAF_ONLY
+    };
+
     /**
      * Dummy stack implementation used when we don't care about keeping track
      * of PageId's on the way down.
@@ -49,7 +68,6 @@ class BTreeReader : public BTreeAccessBase
     
     inline void accessLeafTuple();
 
-protected:
     /**
      * Lock on node being searched.
      */
@@ -61,9 +79,9 @@ protected:
     PageId pageId;
 
     /**
-     * 0-based position on leaf.
+     * 0-based position on lowest level searched by the reader.
      */
-    uint iTupleOnLeaf;
+    uint iTupleOnLowestLevel;
 
     /**
      * @see isSingular()
@@ -173,12 +191,28 @@ protected:
      * @param pageStack receives a path of rightmost PageId's encountered
      * from root to the level above the leaf (PageStack must support
      * the push_back method)
+     *
+     * @param startPageId the pageId at which the search should start
+     *
+     * @param initialLockMode the initial lockmode to use when searching the
+     * tree
+     *
+     * @param readMode which node types should be searched
      */
     template <bool leafLockCoupling,class PageStack>
     inline bool searchForKeyTemplate(
         TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
-        PageStack &pageStack);
+        PageStack &pageStack, PageId startPageId, LockMode initialLockMode,
+        ReadMode readMode);
     
+    /**
+     * @see searchForKeyTemplate()
+     */
+    bool searchForKeyInternal(
+        TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
+        PageId startPageId, LockMode initialLockMode,
+        ReadMode readMode);
+
     /**
      * Searches for the first or last tuple in the tree.
      *
@@ -186,8 +220,26 @@ protected:
      *
      * @return true if tuple found; false if tree is empty
      */
-    bool searchExtreme(bool first);
-    
+    virtual bool searchExtreme(bool first);
+
+    /**
+     * Searches for the first or last tuple in the tree.
+     *
+     * @param first true for first; false for last
+     *
+     * @param readMode which types of nodes should be searched
+     *
+     * @return true if tuple found; false if tree is empty
+     */
+    bool searchExtremeInternal(bool first, ReadMode readMode);
+
+    /**
+     * Searches for next tuple.
+     *
+     * @return true if next tuple found; false if end of tree reached
+     */
+    bool searchNextInternal();
+
 public:
     explicit BTreeReader(BTreeDescriptor const &descriptor);
     virtual ~BTreeReader();
@@ -255,8 +307,10 @@ public:
      * @return true if tuple found; false if not found, in which case reader is
      * positioned on tuple depending on leastUpper parameter
      */
-    bool searchForKey(TupleData const &key,DuplicateSeek dupSeek,
-                      bool leastUpper = true);
+    virtual bool searchForKey(
+        TupleData const &key,
+        DuplicateSeek dupSeek,
+        bool leastUpper = true);
     
     /**
      * Searches for the next tuple.  Can be used after either searchFirst
@@ -264,12 +318,12 @@ public:
      *
      * @return true if next tuple found; false if end of tree reached
      */
-    bool searchNext();
+    virtual bool searchNext();
 
     /**
      * Forgets the current search, releasing any page lock.
      */
-    void endSearch();
+    virtual void endSearch();
 
     /**
      * @return true if a search method has been called without a subsequent

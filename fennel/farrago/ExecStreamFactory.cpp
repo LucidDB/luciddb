@@ -26,6 +26,7 @@
 #include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/JavaTransformExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
+#include "fennel/ftrs/BTreePrefetchSearchExecStream.h"
 #include "fennel/ftrs/BTreeScanExecStream.h"
 #include "fennel/ftrs/BTreeSearchExecStream.h"
 #include "fennel/ftrs/BTreeSearchUniqueExecStream.h"
@@ -189,12 +190,21 @@ void ExecStreamFactory::visit(ProxyIndexScanDef &streamDef)
 
 void ExecStreamFactory::visit(ProxyIndexSearchDef &streamDef)
 {
-    BTreeSearchExecStreamParams params;
-    readBTreeSearchStreamParams(params, streamDef);
-    embryo.init(
-        streamDef.isUniqueKey()
-        ? new BTreeSearchUniqueExecStream() : new BTreeSearchExecStream(),
-        params);
+    assert(!(streamDef.isUniqueKey() && streamDef.isPrefetch()));
+    if (streamDef.isPrefetch()) {
+        BTreePrefetchSearchExecStreamParams params;
+        readBTreeSearchStreamParams(params, streamDef);
+        embryo.init(
+            new BTreePrefetchSearchExecStream(),
+            params);
+    } else {
+        BTreeSearchExecStreamParams params;
+        readBTreeSearchStreamParams(params, streamDef);
+        embryo.init(
+            streamDef.isUniqueKey()
+            ? new BTreeSearchUniqueExecStream() : new BTreeSearchExecStream(),
+            params);
+    }
 }
 
 void ExecStreamFactory::visit(ProxyJavaSinkStreamDef &streamDef)

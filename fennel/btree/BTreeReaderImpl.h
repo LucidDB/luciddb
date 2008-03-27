@@ -86,10 +86,17 @@ inline void BTreeReader::accessTupleInline(BTreeNode const &node, uint iEntry)
     getNodeAccessor(node).accessTupleInline(node, iEntry);
 }
 
+inline void BTreeReader::accessLeafTuple()
+{
+    BTreeNode const &node = pageLock.getNodeForRead();
+    getLeafNodeAccessor(node).accessTuple(node,iTupleOnLowestLevel);
+}
+
 template <bool leafLockCoupling,class PageStack>
 inline bool BTreeReader::searchForKeyTemplate(
     TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
-    PageStack &pageStack)
+    PageStack &pageStack, PageId startPageId, LockMode initialLockMode,
+    ReadMode readMode)
 {
     pSearchKey = &key;
     
@@ -98,8 +105,8 @@ inline bool BTreeReader::searchForKeyTemplate(
     // right sibling of the child page.  Lehman-Yao uses keys instead, but
     // PageId should work as well?
     PageId rightSearchTerminator = NULL_PAGE_ID;
-    pageId = getRootPageId();
-    LockMode lockMode = rootLockMode;
+    pageId = startPageId;
+    LockMode lockMode = initialLockMode;
     bool lockCoupling = false;
     bool foundKeyAndMovedRight = false;
     for (;;) {
@@ -162,7 +169,16 @@ inline bool BTreeReader::searchForKeyTemplate(
                 pNode = &(pageLock.getNodeForRead());
                 accessTupleInline(*pNode, iKeyBound);
             } else {
-                // switch over to the right sibling
+                // switch over to the right sibling, unless we're only
+                // searching a single leaf page
+                if (readMode == READ_LEAF_ONLY) {
+                    assert(rightNode.height == 0);
+                    // need to relock the original page and position to the
+                    // last key on the page
+                    pageLock.lockPage(pageId, lockMode);
+                    iTupleOnLowestLevel = iKeyBound;
+                    return false;
+                }
                 pageId = siblingPageId;
                 foundKeyAndMovedRight = false;
                 continue;
@@ -196,10 +212,14 @@ inline bool BTreeReader::searchForKeyTemplate(
         switch(pNode->height) {
         case 0:
             // at leaf level
-            iTupleOnLeaf = iKeyBound;
+            iTupleOnLowestLevel = iKeyBound;
             return found;
             
         case 1:
+            if (readMode == READ_NONLEAF_ONLY) {
+                iTupleOnLowestLevel = iKeyBound;
+                return found;
+            }
             // prepare to hit rock bottom
             lockMode = leafLockMode;
             break;

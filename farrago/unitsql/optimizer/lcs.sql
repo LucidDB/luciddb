@@ -395,6 +395,15 @@ explain plan for select c0 + c1 from tencols where c0 = 0;
 -- not be projected
 explain plan for select c0 from tencols where c9 = 9;
 
+-- make sure deletion index scan appears in output when all attributes is
+-- specified
+explain plan including all attributes for
+    select * from tencols;
+explain plan including all attributes for
+    select c1, c4, c8 from tencols;
+explain plan including all attributes for
+    select c0, c5, c7, c1 from tencols where c8 = 5;
+
 !set outputformat table
 
 select c2, c8, c4, c0 from tencols

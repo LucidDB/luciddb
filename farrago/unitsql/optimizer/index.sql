@@ -547,6 +547,14 @@ from lbmemps
 where (empno = 110 or empno = 120) and (deptno = 10 or deptno = 20)
 order by empno;
 
+-- same explain as above but with all attributes so deletion index scan should
+-- appear in the plan
+explain plan including all attributes for
+select *
+from lbmemps
+where (empno = 110 or empno = 120) and (deptno = 10 or deptno = 20)
+order by empno;
+
 select *
 from lbmemps
 where (empno = 110 or empno = 120) and (deptno = 10 or deptno = 20)

@@ -32,6 +32,7 @@ import net.sf.farrago.query.*;
 
 import openjava.ptree.Literal;
 
+import org.eigenbase.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
@@ -113,7 +114,7 @@ public abstract class LcsRowScanRelBase
         boolean hasResidualFilter,
         Integer [] resCols,
         double inputSelectivity)
-    {
+    {      
         super(cluster, children);
         this.lcsTable = lcsTable;
         this.clusteredIndexes = clusteredIndexes;
@@ -130,7 +131,7 @@ public abstract class LcsRowScanRelBase
     }
 
     //~ Methods ----------------------------------------------------------------
-
+    
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
@@ -308,56 +309,29 @@ public abstract class LcsRowScanRelBase
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
+        // This assert will fail if the LucidDbSessionPersonality was not
+        // used and therefore LcsAddDeletionScanRule wasn't fired.
+        Util.permAssert(
+            inputs.length > 0 &&
+                (inputs[0] instanceof LcsIndexSearchRel ||
+                    inputs[0] instanceof LcsIndexMinusRel),
+            "Column store row scans are only available in the LucidDb" +
+            " personality");
         return createScanStream(implementor);
     }
     
     protected FemLcsRowScanStreamDef createScanStream(
         FennelRelImplementor implementor)
     {
-        // modify the input to the scan to either scan the deletion index
-        // (in the case of a full table scan) or to minus off the deletion
-        // index (in the case of an index scan)
-        RelNode [] newInputs;
-        if (isFullScan) {
-            newInputs = new RelNode[inputs.length + 1];
-            System.arraycopy(inputs, 0, newInputs, 1, inputs.length);
-            LcsIndexSearchRel delIndexScan =
-                getIndexGuide().createDeletionIndexScan(
-                    this,
-                    lcsTable,
-                    null,
-                    null,
-                    true);
-            newInputs[0] = delIndexScan;
-        } else {
-            newInputs = new RelNode[inputs.length];
-            if (inputs.length > 1) {
-                System.arraycopy(inputs, 1, newInputs, 1, inputs.length - 1);
-            }
-            newInputs[0] =
-                getIndexGuide().createMinusOfDeletionIndex(
-                    this,
-                    lcsTable,
-                    inputs[0]);
-        }
-
         FemLcsRowScanStreamDef scanStream =
             getIndexGuide().newRowScan(this, projectedColumns, residualColumns);
 
         // Sampling is disabled by default.
         scanStream.setSamplingMode(TableSamplingModeEnum.SAMPLING_OFF);
         
-        for (int i = 0; i < newInputs.length; i++) {
-            // the first input into the rowscan was implicitly added so
-            // don't keep track of it in the RelNode pathlist; otherwise,
-            // it's out-of-sync with a RelNode pathlist that was created
-            // before the deletion index scan was added.  Adjust its
-            // ordinal to come after the original inputs.
-            int ordinal = (i != 0) ? i - 1 : newInputs.length - 1;
-
+        for (int i = 0; i < inputs.length; i++) {
             FemExecutionStreamDef inputStream =
-                implementor.visitFennelChild(
-                    (FennelRel) newInputs[i], ordinal, (i != 0));
+                implementor.visitFennelChild((FennelRel) inputs[i], i);
             implementor.addDataFlowFromProducerToConsumer(
                 inputStream,
                 scanStream);

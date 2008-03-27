@@ -1332,7 +1332,7 @@ public class FarragoDbSession
                 reposTxnContext.isTxnInProgress(), 
                 "must be in repos txn");
             
-            boolean readOnly = !stmt.cleanupRequiresWriteTxn();
+            boolean readOnly = !stmt.completeRequiresWriteTxn();
             
             FarragoSession session = ddlValidator.newReentrantSession();
             try {
@@ -1345,7 +1345,7 @@ public class FarragoDbSession
 
                 reposTxnContext.beginLockedTxn(readOnly);
 
-                stmt.cleanupAfterExecuteUnlocked(ddlValidator, session);
+                stmt.completeAfterExecuteUnlocked(ddlValidator, session);
             } finally {
                 ddlValidator.releaseReentrantSession(session);
             }

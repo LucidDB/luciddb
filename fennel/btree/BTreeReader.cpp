@@ -46,13 +46,12 @@ BTreeReader::~BTreeReader()
     endSearch();
 }
 
-inline void BTreeReader::accessLeafTuple()
+bool BTreeReader::searchExtreme(bool first)
 {
-    BTreeNode const &node = pageLock.getNodeForRead();
-    getLeafNodeAccessor(node).accessTuple(node,iTupleOnLeaf);
+    return searchExtremeInternal(first, READ_ALL);
 }
 
-bool BTreeReader::searchExtreme(bool first)
+bool BTreeReader::searchExtremeInternal(bool first, ReadMode readMode)
 {
     singular = false;
     pageId = getRootPageId();
@@ -78,13 +77,22 @@ bool BTreeReader::searchExtreme(bool first)
                 continue;
             }
             if (first) {
-                iTupleOnLeaf = 0;
+                iTupleOnLowestLevel = 0;
             } else {
-                iTupleOnLeaf = node.nEntries - 1;
+                iTupleOnLowestLevel = node.nEntries - 1;
             }
             accessLeafTuple();
             return true;
         case 1:
+            if (readMode == READ_NONLEAF_ONLY) {
+                if (first) {
+                    iTupleOnLowestLevel = 0;
+                } else {
+                    iTupleOnLowestLevel = node.nEntries - 1;
+                }
+                accessTupleInline(node, iTupleOnLowestLevel);
+                return true;
+            }
             // next level down is leaf, so take the correct lock
             lockMode = leafLockMode;
             break;
@@ -100,43 +108,57 @@ bool BTreeReader::searchExtreme(bool first)
         } else {
             // continue searching on last child
             pageId = getChild(node,node.nEntries - 1);
-        }
+       }
     }
 }
 
-// TODO:  prefetch
 bool BTreeReader::searchNext()
 {
-    assert(!singular);
     assert(pageLock.isLocked());
     assert(!pageLock.getNodeForRead().height);
-    ++iTupleOnLeaf;
+    return searchNextInternal();
+}
+
+bool BTreeReader::searchNextInternal()
+{
+    assert(!singular);
+    ++iTupleOnLowestLevel;
     for (;;) {
         BTreeNode const &node = pageLock.getNodeForRead();
-        if (iTupleOnLeaf < node.nEntries) {
+        if (iTupleOnLowestLevel < node.nEntries) {
+            accessTupleInline(node, iTupleOnLowestLevel);
             break;
         }
         pageId = node.rightSibling;
         if (pageId == NULL_PAGE_ID) {
             // might as well preserve position
-            --iTupleOnLeaf;
+            --iTupleOnLowestLevel;
             singular = true;
             return false;
         }
         pageLock.lockPage(pageId,leafLockMode);
-        iTupleOnLeaf = 0;
+        iTupleOnLowestLevel = 0;
     }
-    accessLeafTuple();
     return true;
 }
 
-bool BTreeReader::searchForKey(TupleData const &key,DuplicateSeek dupSeek,
-                               bool leastUpper)
+bool BTreeReader::searchForKey(
+    TupleData const &key, DuplicateSeek dupSeek, bool leastUpper)
+{
+    return
+        searchForKeyInternal(
+            key, dupSeek, leastUpper, getRootPageId(), rootLockMode, READ_ALL);
+}
+
+bool BTreeReader::searchForKeyInternal(
+    TupleData const &key, DuplicateSeek dupSeek, bool leastUpper, 
+    PageId startPageId, LockMode initialLockMode, ReadMode readMode)
 {
     singular = false;
     NullPageStack nullPageStack;
     bool found = searchForKeyTemplate<false,NullPageStack>(
-        key,dupSeek,leastUpper,nullPageStack);
+        key,dupSeek,leastUpper,nullPageStack,startPageId,initialLockMode,
+        readMode);
     pSearchKey = NULL;
     return found;
 }

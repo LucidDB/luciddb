@@ -1587,13 +1587,13 @@ public class SqlToRelConverter
                     convertedJoinType);
             bb.setRoot(joinRel, false);
             return;
-
+        
         case SqlKind.SelectORDINAL:
         case SqlKind.IntersectORDINAL:
         case SqlKind.ExceptORDINAL:
         case SqlKind.UnionORDINAL:
             final RelNode rel = convertQueryRecursive(from, false);
-            bb.setRoot(rel, false);
+            bb.setRoot(rel, true);
             return;
 
         case SqlKind.ValuesORDINAL:
@@ -3364,8 +3364,9 @@ public class SqlToRelConverter
          * @param root New root relational expression
          * @param leaf Whether the relational expression is a leaf, that is,
          * derived from an atomic relational expression such as a table name in
-         * the from clause. In particular, relational expressions derived from
-         * JOIN operators are not leaves.
+         * the from clause, or the projection on top of a select-subquery.
+         * In particular, relational expressions derived from JOIN operators
+         * are not leaves, but set expressions are.
          */
         public void setRoot(RelNode root, boolean leaf)
         {

@@ -225,8 +225,7 @@ ProjectRel(DEPTNO=[$0], NAME=[$1])
             <![CDATA[
 ProjectRel(EXPR$0=[$1])
   JoinRel(condition=[true], joinType=[inner])
-    ProjectRel(EXPR$0=[$0])
-      ValuesRel(tuples=[[{ true }]])
+    ValuesRel(tuples=[[{ true }]])
     CollectRel
       ProjectRel(DEPTNO=[$0])
         TableAccessRel(table=[[CATALOG, SALES, DEPT]])
@@ -634,8 +633,7 @@ ProjectRel(DEPTNO=[$7])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[CAST(CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), <>(1, 2))):BOOLEAN NOT NULL])
-  ProjectRel(EXPR$0=[$0])
-    ValuesRel(tuples=[[{ true }]])
+  ValuesRel(tuples=[[{ true }]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -654,8 +652,7 @@ ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), 
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[CAST(CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))):BOOLEAN NOT NULL])
-  ProjectRel(EXPR$0=[$0])
-    ValuesRel(tuples=[[{ true }]])
+  ValuesRel(tuples=[[{ true }]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -1349,9 +1346,25 @@ ProjectRel(A=[$0], B=[$1], C=[$2], DEPTNO=[$3], NAME=[$4])
     ProjectRel(A=[$0], B=[$1], C=[$2], DEPTNO=[$3], NAME=[$4], EXPR$5=[+($2, $0)])
       JoinRel(condition=[=($3, $2)], joinType=[inner])
         ProjectRel(A=[$2], B=[$1], C=[$0])
-          ProjectRel(EXPR$0=[$0], EXPR$1=[$1], EXPR$2=[$2])
-            ValuesRel(tuples=[[{ 1, 2, 3 }]])
+          ValuesRel(tuples=[[{ 1, 2, 3 }]])
         TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinWithUnion">
+        <Resource name="sql">
+            <![CDATA[select grade from (select empno from emp union select deptno from dept), salgrade]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(GRADE=[$1])
+  JoinRel(condition=[true], joinType=[inner])
+    UnionRel(all=[false])
+      ProjectRel(EMPNO=[$0])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+      ProjectRel(DEPTNO=[$0])
+        TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+    TableAccessRel(table=[[CATALOG, SALES, SALGRADE]])
 ]]>
         </Resource>
     </TestCase>

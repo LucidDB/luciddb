@@ -107,6 +107,12 @@ typedef boost::shared_ptr<BTreeAccessBase> SharedBTreeAccessBase;
 class BTreeReader;
 typedef boost::shared_ptr<BTreeReader> SharedBTreeReader;
 
+class BTreeNonLeafReader;
+typedef boost::shared_ptr<BTreeNonLeafReader> SharedBTreeNonLeafReader;
+
+class BTreeLeafReader;
+typedef boost::shared_ptr<BTreeLeafReader> SharedBTreeLeafReader;
+
 class BTreeWriter;
 typedef boost::shared_ptr<BTreeWriter> SharedBTreeWriter;
 

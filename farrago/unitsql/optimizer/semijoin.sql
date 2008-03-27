@@ -111,7 +111,7 @@ order by a;
 select *
 from t full outer join smalltable s
 on t.d = s.s1 where s.s2 > 0
-order by a;
+order by a, s1;
 
 ---------------------
 -- multi-column joins

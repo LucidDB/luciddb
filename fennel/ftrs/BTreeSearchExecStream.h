@@ -131,9 +131,12 @@ protected:
     std::vector<BTreeSearchKeyParameter> searchKeyParams;
     boost::scoped_array<FixedBuffer> searchKeyBuffer;
     bool dynamicKeysRead;
-    TupleProjection searchKeyProj;
+    TupleProjection searchKeyProj, upperBoundKeyProj;
 
     bool innerSearchLoop();
+    ExecStreamResult innerFetchLoop(
+        ExecStreamQuantum const &quantum,
+        uint &nTuples);
     void readDirectives();
     bool testInterval();
 
@@ -166,18 +169,18 @@ protected:
     virtual bool reachedTupleLimit(uint nTuples);
     
     /**
-     * Sets additional key values for the search, in cases where the key
-     * values are not passed in through the input stream
+     * Searches the btree for a specific key.
+     *
+     * @return true if the search yielded matching keys
      */
-    virtual void setAdditionalKeys();
+    bool searchForKey();
 
-    virtual void closeImpl();
-    
 public:
     // implement ExecStream
     void prepare(BTreeSearchExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
+    virtual void closeImpl();
 };
 
 FENNEL_END_NAMESPACE

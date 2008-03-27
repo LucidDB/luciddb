@@ -299,13 +299,13 @@ public class DdlAnalyzeStmt
     }
 
     // implement DdlMultipleTransactionStmt
-    public boolean cleanupRequiresWriteTxn()
+    public boolean completeRequiresWriteTxn()
     {
         return true;
     }
     
     // implement DdlMultipleTransactionStmt
-    public void cleanupAfterExecuteUnlocked(
+    public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
@@ -967,138 +967,6 @@ public class DdlAnalyzeStmt
     }
 
     /**
-     * Analyze the table's indexes.  If estimated statistics are in use,
-     * the index statistics will also be estimated, unless an index can
-     * provide a more accurate cardinality for a given column.
-     * 
-     * @param ddlValidator used to execute index statistics gathering
-     * @param rowCount table's row count
-     * @param deletedRowCount number of deleted rows in the table store 
-     *                        (usually zero outside LucidDb)
-     * @param histograms previously gathered column histograms
-     * @return a map of index to page count
-     */
-/*
-    private Map<FemLocalIndex, Long> analyzeIndexes(
-        FarragoSessionDdlValidator ddlValidator,
-        long rowCount,
-        long deletedRowCount,
-        LinkedHashMap<CwmColumn, Histogram> histograms)
-    {
-        Map<FemLocalIndex, Long> indexPageCounts =
-            new HashMap<FemLocalIndex, Long>();
-        Collection<FemLocalIndex> tableIndexes =
-            FarragoCatalogUtil.getTableIndexes(repos, table);
-        
-        HashSet<FemLocalIndex> computedStatsSet = null;
-        if (estimate) {
-            // Map columns to the index that will be used for distinct
-            // value counting, preferring single-column indexes to
-            // multi-column indexes.
-            HashMap<FemAbstractColumn, FemLocalIndex> countMap = 
-                new HashMap<FemAbstractColumn, FemLocalIndex>();
-            
-            for (FemLocalIndex index: tableIndexes) {
-                if (!index.isClustered()) {
-                    List<CwmIndexedFeature> indexedColumns = 
-                        index.getIndexedFeature();
-                    if (indexedColumns.isEmpty()) {
-                        continue;
-                    }
-                    FemAbstractColumn column = 
-                        (FemAbstractColumn)indexedColumns.get(0).getFeature();
-
-                    Histogram histogram = histograms.get(column); 
-                    if (histogram == null || 
-                        !histogram.distinctValuesEstimated) 
-                    {
-                        // Not analyzing column or already used a constraint 
-                        // to accurately compute distinct value count.
-                        continue;
-                    }
-                    
-                    if (indexedColumns.size() == 1 || 
-                        !countMap.containsKey(column))
-                    {
-                        countMap.put(column, index);
-                    }
-                }
-            }
-            
-            computedStatsSet  = new HashSet<FemLocalIndex>(countMap.values());
-        }
-        
-        for (FemLocalIndex index: tableIndexes) {
-            // Default is to estimate index page counts when statistics
-            // are estimated.  For user-defined indexes we override this
-            // behavior and compute statistics in order to retrieve the
-            // number of distinct values in the index.
-            boolean estimateThisIndex = estimate;
-            FemAbstractColumn column = null;
-            if (estimateThisIndex && computedStatsSet.contains(index)) {
-                estimateThisIndex = false;
-                
-                column = 
-                    (FemAbstractColumn)index.getIndexedFeature().get(0).getFeature();
-            }
-            
-            FarragoMedLocalIndexStats indexStats =
-                ddlValidator.getIndexMap().computeIndexStats(
-                    ddlValidator.getDataWrapperCache(),
-                    index,
-                    estimateThisIndex);
-
-            long pageCount = indexStats.getPageCount();
-
-            indexPageCounts.put(index, pageCount);
-            
-            if (estimate && !estimateThisIndex) {
-                long indexDistinctValues = indexStats.getUniqueKeyCount();
-                assert(indexDistinctValues >= 0);
-                
-                Histogram histogram = histograms.get(column);
-
-                // Get the unique key count and place it in the histogram if
-                // it's better than the estimate we have.
-                if (deletedRowCount == 0) {
-                    histogram.distinctValues = indexDistinctValues;
-                    histogram.distinctValuesEstimated = false;
-                } else {
-                    // Estimate distinct values in undeleted rows by computing
-                    // the number of distinct values per row and applying that
-                    // to just the undeleted row count.
-                    double rate = 
-                        (double)indexDistinctValues / 
-                        (double)(deletedRowCount + rowCount);
-                    if (rate > 1.0) {
-                        // REVIEW: SWZ 2-OCT-2007: One (or both) of the row 
-                        // counts is incorrect.  For now clamp the rate to 1.0,
-                        // but perhaps we should consider emitting some type
-                        // of warning.
-                        rate = 1.0;
-                    }
-
-                    long estDistinctValues = 
-                        Math.round(rate * (double)rowCount);
-                    
-                    // If distinct values is 0 we must have seen zero rows
-                    // in the sample.  Otherwise, if the estimate from the
-                    // index is much larger than the estimate from the sample,
-                    // use the index-based estimate.
-                    if (histogram.distinctValues > 0 &&
-                        (estDistinctValues / histogram.distinctValues) >= 10.0)
-                    {
-                        histogram.distinctValues = estDistinctValues;
-                        histogram.distinctValuesEstimated = true;
-                    }
-                }
-            }
-        }
-        return indexPageCounts;
-    }
-*/
-
-    /**
      * Prepares for analyzing table indexes. Must be called within a repository
      * transaction.
      */
@@ -1374,7 +1242,7 @@ public class DdlAnalyzeStmt
 
         public int hashCode()
         {
-            return this.identifier.hashCode();
+            return toString().hashCode();
         }
 
         public String toString()

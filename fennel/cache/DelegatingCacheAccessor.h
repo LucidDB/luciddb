@@ -56,7 +56,7 @@ public:
     virtual void unlockPage(
         CachePage &page,LockMode lockMode,TxnId txnId = IMPLICIT_TXN_ID);
     virtual void discardPage(BlockId blockId);
-    virtual void prefetchPage(
+    virtual bool prefetchPage(
         BlockId blockId,
         MappedPageListener *pMappedPageListener = NULL);
     virtual void prefetchBatch(
@@ -69,6 +69,10 @@ public:
     virtual void setMaxLockedPages(uint nPages);
     virtual void setTxnId(TxnId txnId);
     virtual TxnId getTxnId() const;
+    virtual void getPrefetchParams(
+        uint &prefetchPagesMax,
+        uint &prefetchThrottleRate);
+
 };
 
 FENNEL_END_NAMESPACE

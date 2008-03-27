@@ -64,6 +64,8 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
         treeDescriptor.segmentAccessor.pSegment->getUsablePageSize(),
         minBitmapSize,
         maxBitmapSize);
+
+    ridRuns.resize(1);
 }
 
 void LbmGeneratorExecStream::open(bool restart)
@@ -79,6 +81,7 @@ void LbmGeneratorExecStream::open(bool restart)
     rowCount = 0;
     batchRead = false;
     doneReading = false;
+    ridRuns.clear();
     if (!restart) {
         pDynamicParamManager->createParam(
             insertRowCountParamId, inAccessors[0]->getTupleDesc()[0]);
@@ -141,16 +144,24 @@ ExecStreamResult LbmGeneratorExecStream::execute(
 
         // in the case of create index, the number of rows affected
         // is returned as 0, since the statement is a DDL
+        LcsRidRun ridRun;
         if (createIndex) {
             numRowsToLoad = 0;
+            ridRun.nRids = RecordNum(MAXU);
             startRid = LcsRid(0);
         } else {
             numRowsToLoad =
                 *reinterpret_cast<RecordNum const *> (inputTuple[0].pData);
+            ridRun.nRids = numRowsToLoad;
             startRid = 
                 *reinterpret_cast<LcsRid const *> (inputTuple[1].pData);
         }
         currRid = startRid;
+
+        // Setup the prefetch rid run to a single run spanning the range
+        // of rows to be inserted into the index
+        ridRun.startRid = startRid;
+        ridRuns.push_back(ridRun);
 
         // set number of rows to load in a dynamic parameter that
         // splicer will later read

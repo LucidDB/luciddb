@@ -233,7 +233,7 @@ public class LucidDbSessionPersonality
 
         planner.addRule(new CoerceInputsRule(LcsTableMergeRel.class, false));
 
-        planner.removeRule(SwapJoinRule.instance);
+        planner.removeRule(SwapJoinRule.instance);       
         return planner;
     }
 
@@ -482,6 +482,13 @@ public class LucidDbSessionPersonality
             builder.addRuleInstance(LcsIndexAggRule.instanceRowScan);
             builder.addRuleInstance(LcsIndexAggRule.instanceNormalizer);
         }
+             
+        // Add deletion index scans as input into row scans.  This set of
+        // rules need to be applied only after *ALL* inputs into the row
+        // scan have been finalized.
+        builder.addRuleInstance(LcsAddDeletionScanRule.instanceMinusInput);
+        builder.addRuleInstance(LcsAddDeletionScanRule.instanceAnyInput);
+        builder.addRuleInstance(LcsAddDeletionScanRule.instanceNoInputs);
 
         // Prefer hash aggregation over the standard Fennel aggregation.
         // Apply aggregation rules before the calc rules below so we can

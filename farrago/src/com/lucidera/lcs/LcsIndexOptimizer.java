@@ -1565,6 +1565,7 @@ public class LcsIndexOptimizer
                 null,
                 false,
                 false,
+                true,
                 inputKeyProj,
                 null,
                 inputDirectiveProj,

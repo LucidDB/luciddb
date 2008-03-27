@@ -24,13 +24,25 @@
 #include "fennel/lucidera/colstore/LcsColumnReader.h"
 #include "fennel/btree/BTreeWriter.h"
 #include "fennel/tuple/TupleAccessor.h"
+#include "fennel/segment/SegPageEntryIterImpl.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-LcsClusterReader::LcsClusterReader(BTreeDescriptor const &treeDescriptor) :
-    LcsClusterAccessBase(treeDescriptor)
+LcsClusterReader::LcsClusterReader(
+    BTreeDescriptor const &treeDescriptor,
+    CircularBuffer<LcsRidRun> *pRidRuns)
+:
+    LcsClusterAccessBase(treeDescriptor),
+    SegPageEntryIterSource<LcsRid>(),
+    ridRunIter(pRidRuns),
+    prefetchQueue(4000)
 {
     bTreeReader = SharedBTreeReader(new BTreeReader(treeDescriptor));
+    prefetchQueue.setPrefetchSource(*this);
+}
+
+LcsClusterReader::~LcsClusterReader()
+{
 }
 
 LcsClusterNode const &LcsClusterReader::readClusterPage()
@@ -74,7 +86,8 @@ bool LcsClusterReader::getNextClusterPageForRead(PConstLcsClusterNode &pBlock)
 }
 
 void LcsClusterReader::initColumnReaders(
-    uint nClusterColsInit, TupleProjection const &clusterProj)
+    uint nClusterColsInit,
+    TupleProjection const &clusterProj)
 {
     nClusterCols = nClusterColsInit;
     nColsToRead = clusterProj.size();
@@ -87,6 +100,17 @@ void LcsClusterReader::open()
 {
     pLeaf = NULL;
     pRangeBatches = NULL;
+    ridRunIter.reset();
+
+    // values of (0, MAXU) indicate that entry has not been filled in yet
+    nextBTreeEntry.first = PageId(0);
+    nextBTreeEntry.second = LcsRid(MAXU);
+
+    nextPrefetchEntry.first = PageId(0);
+    nextPrefetchEntry.second = LcsRid(MAXU);
+
+    dumbPrefetch = false;
+    nextRid = LcsRid(0);
 }
 
 void LcsClusterReader::close()
@@ -99,6 +123,7 @@ bool LcsClusterReader::position(LcsRid rid)
 {
     bool found;
 
+    currRid = rid;
     if (pLeaf) {
         // Scan is already in progress. Try to find the row we want in the
         // current block.
@@ -107,20 +132,14 @@ bool LcsClusterReader::position(LcsRid rid)
         if (found)
             return true;
     } else {
-        if (!bTreeReader->searchFirst()) {
-            bTreeReader->endSearch();
-        }
+        // Initiate the first set of pre-fetches.
+        prefetchQueue.mapRange(segmentAccessor, NULL_PAGE_ID);
     }
 
-    // Either this is the start of the scan or we need to read a new page
-    // to locate the rid we want; find the btree record corresponding to
-    // the rid
-
-    found = searchForRid(rid);
-    if (!found)
+    found = moveToBlock(rid);
+    if (!found) {
         return false;
-
-    moveToBlock(readClusterPageId());
+    }
     
     found = positionInBlock(rid);
     // page ends before "rid"; we must be off the last block
@@ -132,12 +151,13 @@ bool LcsClusterReader::position(LcsRid rid)
 
 bool LcsClusterReader::searchForRid(LcsRid rid)
 {
-    if (!bTreeReader->isPositioned())
-        return false;
     bTreeTupleData[0].pData = (PConstBuffer) &rid;
     // position on greatest lower bound of key
     bTreeReader->searchForKey(bTreeTupleData, DUP_SEEK_BEGIN,
                                            false);
+    if (bTreeReader->isSingular()) {
+        return false;
+    }
     bTreeReader->getTupleAccessorForRead().unmarshal(bTreeTupleData);
 
     LcsRid key = readRid();
@@ -145,15 +165,46 @@ bool LcsClusterReader::searchForRid(LcsRid rid)
     return true;
 }
 
-void LcsClusterReader::moveToBlock(PageId clusterPageId)
+bool LcsClusterReader::moveToBlock(LcsRid rid)
 {
-    // read the desired cluster page and initialize structures to reflect
-    // page read
+    PageId clusterPageId;
 
+    // Read entries from the pre-fetch queue until we either find the entry
+    // within the range of our desired rid, or we exhaust the contents of
+    // the queue.
+    for (;;) {
+        std::pair<PageId, LcsRid> &prefetchEntry =
+            (nextPrefetchEntry.second == LcsRid(MAXU)) ?
+            *prefetchQueue : nextPrefetchEntry;
+
+        clusterPageId = prefetchEntry.first;
+        if (clusterPageId == NULL_PAGE_ID) {
+            return false;
+        }
+
+        LcsRid prefetchRid = prefetchEntry.second;
+        assert(prefetchRid <= rid);
+
+        // Make sure this is the correct entry by checking that the rid
+        // is smaller than the next entry.  We can end up with non-matching
+        // entries if dumb pre-fetches are being used.
+        ++prefetchQueue;
+        nextPrefetchEntry = *prefetchQueue;
+        if (nextPrefetchEntry.first == NULL_PAGE_ID ||
+            rid < nextPrefetchEntry.second)
+        {
+            break;
+        } else {
+            continue;
+        }
+    }
+
+    // Now that we've located the desired page, read it.
     clusterLock.lockShared(clusterPageId);
     LcsClusterNode const &page = clusterLock.getNodeForRead();
     pLHdr = &page;
     setUpBlock();
+    return true;
 }
 
 bool LcsClusterReader::positionInBlock(LcsRid rid)
@@ -210,6 +261,128 @@ bool LcsClusterReader::advance(uint nRids)
         return true;
     } else {
         return false;
+    }
+}
+
+PageId LcsClusterReader::getNextPageForPrefetch(LcsRid &rid, bool &found)
+{
+    found = true;
+    for (;;) {
+        if (dumbPrefetch) {
+            rid = currRid;
+        } else {
+            rid = getFetchRids(ridRunIter, nextRid, false);
+        }
+
+        // If the rid run buffer is exhausted and there are still rid runs
+        // to be filled in, we're pre-fetching faster than we can fill up
+        // the rid run buffers.  So, switch to dumb pre-fetch in that case.
+        if (rid == LcsRid(MAXU)) {
+            if (ridRunIter.done()) {
+                rid = LcsRid(0);
+                return NULL_PAGE_ID;
+            } else {
+                // TODO - Use stricter criteria on when to switch to dumb
+                // pre-fetch.  E.g., if there are less than a certain number
+                // of pages already pre-fetched.
+                dumbPrefetch = true;
+                continue;
+            }
+        }
+
+        if (!(nextBTreeEntry.second == LcsRid(MAXU) &&
+            nextBTreeEntry.first == PageId(0)))
+        {
+            // If we hit the end of the btree on the last iteration, then
+            // there are no more pages.
+            if (nextBTreeEntry.first == NULL_PAGE_ID) {
+                rid = LcsRid(0);
+                return NULL_PAGE_ID;
+            }
+
+            // If the next rid to be read is on the same page as the last
+            // one located, bump up the rid so we move over to the next page.
+            // In the case of dumb pre-fetch, just use the next page in the
+            // cluster sequence.
+            if (rid < nextBTreeEntry.second) {
+                if (dumbPrefetch) {
+                    rid = nextBTreeEntry.second;
+                    PageId pageId = nextBTreeEntry.first;
+                    getNextBTreeEntry();
+                    return pageId;
+                }
+                nextRid = nextBTreeEntry.second;
+                continue;
+            } else {
+                // TODO - optimize by avoiding search from top of btree if
+                // desired entry is within a few entries of the current
+                break;
+           }
+        } else {
+            // We haven't located any pages yet.  Initiate first btree search.
+            break;
+        }
+    }
+
+    bool rc = searchForRid(rid);
+    if (!rc) {
+        return NULL_PAGE_ID;
+    }
+    rid = readRid();
+    PageId pageId = readClusterPageId();
+    getNextBTreeEntry();
+    return pageId;
+}
+
+void LcsClusterReader::getNextBTreeEntry()
+{
+    bool rc = bTreeReader->searchNext();
+    if (!rc) {
+        // Indicate that there are no more pages
+        nextBTreeEntry.first = NULL_PAGE_ID;
+    } else {
+        bTreeReader->getTupleAccessorForRead().unmarshal(bTreeTupleData);
+        nextBTreeEntry.first = readClusterPageId();
+        nextBTreeEntry.second = readRid();
+    }
+}
+
+LcsRid LcsClusterReader::getFetchRids(
+    CircularBufferIter<LcsRidRun> &ridRunIter,
+    LcsRid &nextRid,
+    bool remove)
+{
+    for (;;) {
+        if (ridRunIter.end()) {
+            return LcsRid(MAXU);
+        }
+
+        LcsRidRun &currRidRun = *ridRunIter;
+        if (nextRid < currRidRun.startRid) {
+            nextRid = currRidRun.startRid + 1;
+            return currRidRun.startRid;
+        } else if (
+            (currRidRun.nRids == RecordNum(MAXU) &&
+                nextRid >= currRidRun.startRid) ||
+            (nextRid < currRidRun.startRid + currRidRun.nRids))
+        {
+            return nextRid++;
+        } else {
+            ++ridRunIter;
+            if (remove) {
+                ridRunIter.removeFront();
+            }
+        }
+    }
+}
+
+void LcsClusterReader::catchUp(uint parentBufPos, LcsRid parentNextRid)
+{
+    if (parentNextRid - 1 > nextRid) {
+        nextRid = parentNextRid - 1;
+    }
+    if (parentBufPos > ridRunIter.getCurrPos()) {
+        ridRunIter.setCurrPos(parentBufPos);
     }
 }
 

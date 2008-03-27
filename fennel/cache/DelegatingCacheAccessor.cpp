@@ -57,11 +57,11 @@ void DelegatingCacheAccessor::discardPage(
     pDelegate->discardPage(blockId);
 }
 
-void DelegatingCacheAccessor::prefetchPage(
+bool DelegatingCacheAccessor::prefetchPage(
     BlockId blockId,
     MappedPageListener *pMappedPageListener)
 {
-    pDelegate->prefetchPage(blockId,pMappedPageListener);
+    return pDelegate->prefetchPage(blockId,pMappedPageListener);
 }
 
 void DelegatingCacheAccessor::prefetchBatch(
@@ -104,6 +104,13 @@ TxnId DelegatingCacheAccessor::getTxnId() const
 void DelegatingCacheAccessor::setTxnId(TxnId txnId)
 {
     pDelegate->setTxnId(txnId);
+}
+
+void DelegatingCacheAccessor::getPrefetchParams(
+    uint &prefetchPagesMax,
+    uint &prefetchThrottleRate)
+{
+    pDelegate->getPrefetchParams(prefetchPagesMax, prefetchThrottleRate);
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -1039,6 +1039,7 @@ public class LcsIndexGuide
 
         searchStream.setUniqueKey(isUniqueKey);
         searchStream.setOuterJoin(isOuter);
+        searchStream.setPrefetch(false);
 
         if (inputKeyProj != null) {
             searchStream.setInputKeyProj(
@@ -1434,6 +1435,7 @@ public class LcsIndexGuide
                 null,
                 true,
                 false,
+                false,
                 inputKeyProj,
                 null,
                 inputDirectiveProj,
@@ -1521,7 +1523,8 @@ public class LcsIndexGuide
             new FennelValuesRel(
                 rel.getCluster(),
                 keyRowType,
-                inputTuples);
+                inputTuples,
+                false);
 
         RelNode keyInput =
             RelOptRule.mergeTraitsAndConvert(

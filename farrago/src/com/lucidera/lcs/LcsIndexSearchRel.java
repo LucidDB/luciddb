@@ -51,7 +51,7 @@ import org.eigenbase.reltype.*;
  * @author Rushan Chen
  * @version $Id$
  */
-class LcsIndexSearchRel
+public class LcsIndexSearchRel
     extends FennelOptionalRel
 {
     //~ Instance fields --------------------------------------------------------
@@ -79,6 +79,7 @@ class LcsIndexSearchRel
 
     final boolean isUniqueKey;
     final boolean isOuter;
+    final boolean isVisibleInExplain;
 
     final Integer [] inputKeyProj;
     final Integer [] inputJoinProj;
@@ -103,6 +104,8 @@ class LcsIndexSearchRel
      * @param isUniqueKey for a search, whether keys are known to be unique
      * @param isOuter for a search with join, whether nulls should be made up
      * for unmatched inputs
+     * @param isVisibleInExplain whether the relNode should appear in the
+     * explain output
      * @param inputKeyProj for a double key search, the projection of input
      * fields to be used as search keys
      * @param inputJoinProj for an index join, a projection of input fields to
@@ -123,6 +126,7 @@ class LcsIndexSearchRel
         Integer [] projectedColumns,
         boolean isUniqueKey,
         boolean isOuter,
+        boolean isVisibleInExplain,
         Integer [] inputKeyProj,
         Integer [] inputJoinProj,
         Integer [] inputDirectiveProj,
@@ -141,6 +145,7 @@ class LcsIndexSearchRel
         this.projectedColumns = projectedColumns;
         this.isUniqueKey = isUniqueKey;
         this.isOuter = isOuter;
+        this.isVisibleInExplain = isVisibleInExplain;
         this.inputKeyProj = inputKeyProj;
         this.inputJoinProj = inputJoinProj;
         this.inputDirectiveProj = inputDirectiveProj;
@@ -172,6 +177,7 @@ class LcsIndexSearchRel
                 projectedColumns,
                 isUniqueKey,
                 isOuter,
+                isVisibleInExplain,
                 inputKeyProj,
                 inputJoinProj,
                 inputDirectiveProj,
@@ -206,6 +212,7 @@ class LcsIndexSearchRel
                 projectedColumns,
                 isUniqueKey,
                 isOuter,
+                isVisibleInExplain,
                 inputKeyProj,
                 inputJoinProj,
                 inputDirectiveProj,
@@ -382,6 +389,11 @@ class LcsIndexSearchRel
     public boolean isOuter()
     {
         return isOuter;
+    }
+    
+    public boolean isVisibleInExplain()
+    {
+        return isVisibleInExplain;
     }
 
     public Integer [] getInputKeyProj()

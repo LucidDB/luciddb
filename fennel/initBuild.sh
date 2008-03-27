@@ -2,13 +2,14 @@
 # $Id$
 
 usage() {
-    echo "Usage:  initBuild.sh [--with[out]-farrago] [--with[out]-icu] [--with[out]-optimization] [--with[out]-debug] [--without[-fennel]-thirdparty-build] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh [--with[out]-farrago] [--with[out]-icu] [--with[out]-optimization] [--with[out]-debug] [--without[-fennel]-thirdparty-build] [--with[out]-tests] [--with[out]-aio-required]"
 }
 
 build_thirdparty=true
 skip_tests=true
 ICU_FLAG=
 OPT_FLAG=--without-optimization
+AIO_FLAG=
 
 # extended globbing for case statement
 shopt -sq extglob
@@ -23,6 +24,8 @@ while [ -n "$1" ]; do
             build_thirdparty=false;;
         --with-tests) skip_tests=false;;
         --without-tests) skip_tests=true;;
+        --with-aio-required) AIO_FLAG="$1";;
+        --without-aio-required) ;;
         *) usage; exit -1;;
     esac
     shift
@@ -121,7 +124,7 @@ rm -rf autom4te.cache
 autoreconf --force --install
 ./configure --with-boost=`pwd`/../thirdparty/boost \
     --with-stlport=`pwd`/../thirdparty/stlport \
-    $FARRAGO_FLAG $ICU_CONF $MINGW32_TARGET $OPT_FLAG $DEBUG_FLAG
+    $FARRAGO_FLAG $ICU_CONF $MINGW32_TARGET $OPT_FLAG $DEBUG_FLAG $AIO_FLAG
 
 if $cygwin ; then
     unset CC

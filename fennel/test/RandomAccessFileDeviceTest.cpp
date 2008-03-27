@@ -148,6 +148,11 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         virtual ~Listener()
         {
         }
+
+        StrictMutex &getMutex()
+        {
+            return mutex;
+        }
             
         void notifyTransferCompletion(bool b)
         {
@@ -207,9 +212,13 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         testAsyncIO(0);
     }
 
-    void testAsyncIO(FileSize cbOffset)
+    void testRetryAsyncIO()
     {
-        int n = 5;
+        testAsyncIO(0, 5000);
+    }
+
+    void testAsyncIO(FileSize cbOffset, int n = 5)
+    {
         uint cbSector = HALF_SIZE;
         VMAllocator allocator(cbSector*n);
         void *pBuf = allocator.allocate();
@@ -265,7 +274,14 @@ class RandomAccessFileDeviceTest : virtual public TestBase
                 writeListener,cbSector,PBuffer(pBuf));
             writeRequest.bindingList.push_back(*pBinding);
         }
+
+        // LER-7110: take a redundant mutex on the listener around the request
+        // to confirm that attempts to notify the listener don't deadlock in
+        // the case where the async I/O queue is full
+        StrictMutexGuard mutexGuard(writeListener.getMutex());
         pScheduler->schedule(writeRequest);
+        mutexGuard.unlock();
+        
         writeListener.waitForAll();
         BOOST_CHECK_EQUAL(n, writeListener.nSuccess);
         pRandomAccessDevice->flush();
@@ -311,6 +327,7 @@ public:
         FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentNoDirect);
         FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testTemporary);
         FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testPermanentDirect);
+        FENNEL_UNIT_TEST_CASE(RandomAccessFileDeviceTest,testRetryAsyncIO);
 
         // NOTE jvs 11-Feb-2006:  This is optional since it creates
         // a 5G file.  On operating systems with sparse-file support, it

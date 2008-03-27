@@ -41,6 +41,7 @@ protected:
      * The available victim policy implementations.
      */
     enum VictimPolicy {
+        victimTwoQ,
         victimLRU,
         victimRandom
     };

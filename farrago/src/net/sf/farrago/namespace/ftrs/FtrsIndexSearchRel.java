@@ -235,6 +235,7 @@ class FtrsIndexSearchRel
         scanRel.defineScanStream(searchStream);
         searchStream.setUniqueKey(isUniqueKey);
         searchStream.setOuterJoin(isOuter);
+        searchStream.setPrefetch(false);
         if (inputKeyProj != null) {
             searchStream.setInputKeyProj(
                 FennelRelUtil.createTupleProjection(repos, inputKeyProj));

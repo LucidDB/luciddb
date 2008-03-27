@@ -102,6 +102,15 @@ public class SqlToRelConverterTest
             "SELECT *, deptno * 5 as empno FROM dept) " +
             "USING (deptno,empno)", "${plan}");
     }
+    
+    public void testJoinWithUnion()
+    {
+        check(
+            "select grade from " +
+            "(select empno from emp union select deptno from dept), " +
+            "salgrade",
+            "${plan}");
+    }
 
     public void testGroup()
     {
@@ -710,28 +719,20 @@ public class SqlToRelConverterTest
         pw.flush();
         TestUtil.assertEqualsVerbose(
             TestUtil.fold(
-                new String[] {
-                    "<RelNode type=\"ProjectRel\">",
-                    "\t<Property name=\"EXPR$0\">",
-                    "\t\t+(1, 2)\t</Property>",
-                    "\t<Property name=\"EXPR$1\">",
-                    "\t\t3\t</Property>",
-                    "\t<Inputs>",
-                    "\t\t<RelNode type=\"ProjectRel\">",
-                    "\t\t\t<Property name=\"EXPR$0\">",
-                    "\t\t\t\t$0\t\t\t</Property>",
-                    "\t\t\t<Inputs>",
-                    "\t\t\t\t<RelNode type=\"ValuesRel\">",
-                    "\t\t\t\t\t<Property name=\"tuples\">",
-                    "\t\t\t\t\t\t[{ true }]\t\t\t\t\t</Property>",
-                    "\t\t\t\t\t<Inputs/>",
-                    "\t\t\t\t</RelNode>",
-                    "\t\t\t</Inputs>",
-                    "\t\t</RelNode>",
-                    "\t</Inputs>",
-                    "</RelNode>",
-                    ""
-                }),
+                "<RelNode type=\"ProjectRel\">\n"
+                + "\t<Property name=\"EXPR$0\">\n"
+                + "\t\t+(1, 2)\t</Property>\n"
+                + "\t<Property name=\"EXPR$1\">\n"
+                + "\t\t3\t</Property>\n"
+                + "\t<Inputs>\n"
+                + "\t\t<RelNode type=\"ValuesRel\">\n"
+                + "\t\t\t<Property name=\"tuples\">\n"
+                + "\t\t\t\t[{ true }]\t\t\t</Property>\n"
+                + "\t\t\t<Inputs/>\n"
+                + "\t\t</RelNode>\n"
+                + "\t</Inputs>\n"
+                + "</RelNode>\n"
+                + ""),
             sw.toString());
     }
 }

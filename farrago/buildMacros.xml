@@ -107,6 +107,7 @@ ${farrago.test.jvmargs}
   <fail unless="rmijdbc.dir"/>
   <fail unless="emma.dir"/>
   <fail unless="vjdbc.dir"/>
+  <fail unless="findbugs.dir"/>
 
   <!-- Directories -->
 

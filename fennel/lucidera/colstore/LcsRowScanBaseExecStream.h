@@ -27,6 +27,7 @@
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/tuple/UnalignedAttributeAccessor.h"
+#include "fennel/common/CircularBuffer.h"
 #include "fennel/lucidera/colstore/LcsClusterReader.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -99,6 +100,11 @@ protected:
      * I.e., we don't actually have to read the underlying cluster data.
      */
     bool allSpecial;
+
+    /**
+     * Circular buffer of rid runs
+     */
+    CircularBuffer<LcsRidRun> ridRuns;
 
     /**
      * Positions column readers based on new cluster reader position

@@ -44,7 +44,7 @@ ThreadPoolScheduler::~ThreadPoolScheduler()
 {
 }
 
-void ThreadPoolScheduler::schedule(RandomAccessRequest &request)
+bool ThreadPoolScheduler::schedule(RandomAccessRequest &request)
 {
     RandomAccessRequest::BindingListMutator bindingMutator(request.bindingList);
     FileSize cbOffset = request.cbOffset;
@@ -66,6 +66,7 @@ void ThreadPoolScheduler::schedule(RandomAccessRequest &request)
         pool.submitTask(subRequest);
     }
     assert(cbOffset == request.cbOffset + request.cbTransfer);
+    return true;
 }
 
 void ThreadPoolScheduler::stop()
