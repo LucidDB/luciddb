@@ -711,8 +711,6 @@ public class Rex2CalcPlanTest
                 new RexToCalcTranslator(rexBuilder, aggregate);
             translator.setGenerateShortCircuit(shortCircuit);
             translator.setGenerateComments(doComments);
-            String [] programs = new String[3];
-            translator.getAggProgram(program, programs);
 
             DiffRepository diffRepos = getDiffRepos();
             diffRepos.assertEqualsMulti(
@@ -727,9 +725,9 @@ public class Rex2CalcPlanTest
                     "${expectedDrop}",
                 },
                 new String[] {
-                    TestUtil.NL + programs[0],
-                    TestUtil.NL + programs[1],
-                    TestUtil.NL + programs[2],
+                    TestUtil.NL + translator.getAggProgram(program, AggOp.Init),
+                    TestUtil.NL + translator.getAggProgram(program, AggOp.Add),
+                    TestUtil.NL + translator.getAggProgram(program, AggOp.Drop)
                 },
                 false);
         }

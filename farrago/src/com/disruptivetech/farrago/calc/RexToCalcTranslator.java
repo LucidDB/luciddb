@@ -40,24 +40,12 @@ import org.eigenbase.util.*;
  *
  * @author Wael Chatila
  * @version $Id$
- * @see CalcProgramBuilder
- * @since Feb 5, 2004
+ * @see RexToCalcTranslator
+ * @since Mar 25, 2008
  */
 public class RexToCalcTranslator
     implements RexVisitor<CalcReg>
 {
-    //~ Enums ------------------------------------------------------------------
-
-    /**
-     * Enumeration of aggregate operations.
-     */
-    public enum AggOp
-    {
-        None, Init, Add, Drop
-    }
-
-    //~ Instance fields --------------------------------------------------------
-
     // The following 3 fields comprise the program; they are reset each time a
     // new program is started.
     final CalcProgramBuilder builder = new CalcProgramBuilder();
@@ -589,6 +577,7 @@ public class RexToCalcTranslator
         case None:
         case Init:
         case Add:
+        case InitAdd:
         case Drop:
             break;
         default:
@@ -1052,6 +1041,10 @@ public class RexToCalcTranslator
                     aggImplementor.implementInitialize(call, register, this);
                     return setResult(call, register);
                 case Add:
+                    aggImplementor.implementAdd(call, register, this);
+                    return setResult(call, register);
+                case InitAdd:
+                    aggImplementor.implementInitialize(call, register, this);
                     aggImplementor.implementAdd(call, register, this);
                     return setResult(call, register);
                 case Drop:

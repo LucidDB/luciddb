@@ -405,9 +405,12 @@ public class FennelWindowRel
 
                 String [] programs = new String[3];
                 translator.getAggProgram(combinedProgram, programs);
-                windowPartitionDef.setInitializeProgram(programs[0]);
-                windowPartitionDef.setAddProgram(programs[1]);
-                windowPartitionDef.setDropProgram(programs[2]);
+                windowPartitionDef.setInitializeProgram(
+                    translator.getAggProgram(combinedProgram, AggOp.Init));
+                windowPartitionDef.setAddProgram(
+                    translator.getAggProgram(combinedProgram, AggOp.Add));
+                windowPartitionDef.setDropProgram(
+                    translator.getAggProgram(combinedProgram, AggOp.Drop));
 
                 List<RexNode> dups =
                     removeDuplicates(translator, partition.overList);
@@ -442,18 +445,15 @@ public class FennelWindowRel
                 RexProgram combinedProgram =
                     makeProgram(getCluster().getRexBuilder(), inputProgram, partition.overList);
 
-                String [] programs = new String[3];
-                translator.getAggProgram(combinedProgram, programs);
-
                 String outputProgramString =
                     translator.generateProgram(
                         outputProgram.getInputRowType(),
                         outputProgram);
 
                 return new String[] {
-                        programs[0],
-                        programs[1],
-                        programs[2],
+                		translator.getAggProgram(combinedProgram, AggOp.Init),
+                		translator.getAggProgram(combinedProgram, AggOp.Add),
+                		translator.getAggProgram(combinedProgram, AggOp.Drop),
                         outputProgramString
                     };
             }
