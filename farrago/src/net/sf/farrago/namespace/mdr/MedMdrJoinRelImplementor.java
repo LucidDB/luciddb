@@ -33,7 +33,7 @@ import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.util.*;
@@ -392,8 +392,11 @@ class MedMdrJoinRelImplementor
             joinRel.getRightReference().getReferencedEnd().getType();
         leftKeyRefClass =
             (RefClass) rightRel.getRefObjectFromModelElement(leftKeyClassifier);
-        leftKeyClass = JmiObjUtil.getClassForRefClass(leftKeyRefClass);
-
+        leftKeyClass = 
+            JmiObjUtil.getClassForRefClass(
+                implementor.getRepos().getMdrRepos(),
+                leftKeyRefClass);
+        
         boolean useAssocReflection = rightRel.useReflection;
 
         if (leftKeyClass == RefObject.class) {

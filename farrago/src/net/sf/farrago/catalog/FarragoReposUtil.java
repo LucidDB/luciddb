@@ -36,13 +36,12 @@ import net.sf.farrago.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.EnkiMDRepository;
 import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.*;
 import org.netbeans.api.xmi.*;
-import org.netbeans.mdr.*;
-import org.netbeans.mdr.persistence.*;
 
 
 /**
@@ -94,6 +93,10 @@ public abstract class FarragoReposUtil
         URL inputUrl)
         throws Exception
     {
+        if (((EnkiMDRepository)mdrRepos).isExtentBuiltIn("FarragoMetamodel")) {
+            return;
+        }
+        
         XMIReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
         ImportRefResolver refResolver =
             new ImportRefResolver(
@@ -159,6 +162,7 @@ public abstract class FarragoReposUtil
             deleteStorage(modelLoader, farragoPackage);
             success = true;
         } finally {
+            // Close session started in modelLoader.loadModel
             modelLoader.close();
             if (!success) {
                 metamodelDump.delete();
@@ -207,7 +211,7 @@ public abstract class FarragoReposUtil
                 "FarragoMetamodel",
                 null,
                 null);
-
+            
             // import catalog
             importExtent(
                 modelLoader.getMdrRepos(),
@@ -245,16 +249,10 @@ public abstract class FarragoReposUtil
         throws Exception
     {
         try {
-            // grotty internals for dropping physical repos storage
-            String mofIdString = farragoPackage.refMofId();
-            MOFID mofId = MOFID.fromString(mofIdString);
-
-            NBMDRepositoryImpl reposImpl =
-                (NBMDRepositoryImpl) modelLoader.getMdrRepos();
-            Storage storage =
-                reposImpl.getMdrStorage().getStorageByMofId(mofId);
-            storage.close();
-            storage.delete();
+            EnkiMDRepository repos = 
+                (EnkiMDRepository)modelLoader.getMdrRepos();
+            
+            repos.dropExtentStorage(farragoPackage);
         } finally {
             modelLoader.close();
         }
@@ -268,28 +266,34 @@ public abstract class FarragoReposUtil
         String metaPackageName)
         throws Exception
     {
-        RefPackage extent;
-        if (metaPackageExtentName != null) {
-            ModelPackage modelPackage =
-                (ModelPackage) mdrRepos.getExtent(metaPackageExtentName);
-            MofPackage metaPackage = null;
-            for (Object o : modelPackage.getMofPackage().refAllOfClass()) {
-                MofPackage result = (MofPackage) o;
-                if (result.getName().equals(metaPackageName)) {
-                    metaPackage = result;
-                    break;
-                }
-            }
-            extent = mdrRepos.createExtent(extentName, metaPackage);
-        } else {
-            extent = mdrRepos.createExtent(extentName);
-        }
-        XmiReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
-        boolean rollback = false;
+        mdrRepos.beginTrans(true);
+        boolean rollback = true;
         try {
-            mdrRepos.beginTrans(true);
-            rollback = true;
+            RefPackage extent;
+            if (metaPackageExtentName != null) {
+                ModelPackage modelPackage =
+                    (ModelPackage) mdrRepos.getExtent(metaPackageExtentName);
+                MofPackage metaPackage = null;
+                for (Object o : modelPackage.getMofPackage().refAllOfClass()) {
+                    MofPackage result = (MofPackage) o;
+                    if (result.getName().equals(metaPackageName)) {
+                        metaPackage = result;
+                        break;
+                    }
+                }
+                extent = mdrRepos.createExtent(extentName, metaPackage);
+            } else {
+                if (((EnkiMDRepository)mdrRepos).isExtentBuiltIn(extentName)) {
+                    // Go ahead and rollback; we haven't changed anything.
+                    return;
+                }
+                
+                extent = mdrRepos.createExtent(extentName);
+            }
             
+            XmiReader xmiReader = 
+                XMIReaderFactory.getDefault().createXMIReader();
+    
             InputStream in = new FileInputStream(file);
             InvalidXmlCharFilterInputStream filter = 
                 new InvalidXmlCharFilterInputStream(in);
@@ -307,11 +311,8 @@ public abstract class FarragoReposUtil
             }
             
             rollback = false;
-            mdrRepos.endTrans();
         } finally {
-            if (rollback) {
-                mdrRepos.endTrans(true);
-            }
+            mdrRepos.endTrans(rollback);
         }
     }
 

@@ -28,6 +28,8 @@ import java.util.List;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
+import net.sf.farrago.query.FarragoPreparingStmt;
+import net.sf.farrago.query.FarragoRelUtil;
 import openjava.mop.*;
 
 import openjava.ptree.*;
@@ -79,7 +81,13 @@ class MedMdrClassExtentRel
             connection);
         this.mdrClassExtent = mdrClassExtent;
 
-        rowClass = JmiObjUtil.getClassForRefClass(mdrClassExtent.refClass);
+        FarragoPreparingStmt preparingStmt = 
+            FarragoRelUtil.getPreparingStmt(this);
+        
+        rowClass = 
+            JmiObjUtil.getClassForRefClass(
+                preparingStmt.getRepos().getMdrRepos(),
+                mdrClassExtent.refClass);
         useReflection = (rowClass == RefObject.class);
     }
 

@@ -684,7 +684,7 @@ public class DdlRoutineHandler
                 if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                     returnType = param.getType();
                 } else {
-                    if (param.getType() != orderingDef.getType()) {
+                    if (!param.getType().equals(orderingDef.getType())) {
                         throw validator.newPositionalError(
                             orderingDef,
                             res.ValidatorOrderingParamType.ex(

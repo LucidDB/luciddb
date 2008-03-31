@@ -33,8 +33,8 @@ import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
-
 import org.netbeans.api.mdr.*;
 
 
@@ -50,10 +50,22 @@ public interface FarragoRepos
 {
     //~ Methods ----------------------------------------------------------------
 
+    // TODO: SWZ: 2008-03-26: Transition all red-zone code to getEnkiMdrRepos()
+    // then either remove getMdrRepos() or else change it's return type to
+    // EnkiMDRepository and migrate everyone back.
+    
     /**
      * @return MDRepository storing this Farrago repository
      */
     public MDRepository getMdrRepos();
+
+    /**
+     * Returns an EnkiMDRepository storing this Farrago repository.  This
+     * method returns the same instance of {@link #getMdrRepos()}.
+     * 
+     * @return EnkiMDRepository storing this Farrago repository
+     */
+    public EnkiMDRepository getEnkiMdrRepos();
 
     /**
      * @return model graph for repository metamodel
@@ -263,11 +275,37 @@ public interface FarragoRepos
     public void addResourceBundles(List<ResourceBundle> bundles);
 
     /**
+     * Returns an instance of FarragoReposTxnContext for use in executing
+     * transactions against this repository with out no automatic repository 
+     * session management.  
+     * Equivalent to {@link #newTxnContext(boolean) newTxnContext(false)}.
+     * 
      * @return an instance of FarragoReposTxnContext for use in executing
      * transactions against this repository
      */
     public FarragoReposTxnContext newTxnContext();
 
+    /**
+     * Returns an instance of FarragoReposTxnContext for use in executing
+     * transactions against this repository.  If the manageReposSession
+     * parameter is true, the returned {@link FarragoReposTxnContext} is
+     * responsible for managing repository sessions.  Otherwise the caller
+     * is responsible for managing the repository session.
+     * 
+     * @param manageReposSession if true, the FarragoReposTxnContext manages
+     *                           the repository session
+     * @return an instance of FarragoReposTxnContext for use in executing
+     * transactions against this repository
+     */
+    public FarragoReposTxnContext newTxnContext(boolean manageReposSession);
+
+    /**
+     * Begins a session on the metadata repository.
+     * 
+     * @see #newTxnContext(boolean)
+     */
+    public void beginReposSession();
+    
     /**
      * Begins a metadata transaction on the repository. In most cases, this
      * should be done by creating and manipulating an instance of {@link
@@ -284,6 +322,13 @@ public interface FarragoRepos
      */
     public void endReposTxn(boolean rollback);
 
+    /**
+     * Ends a session on the metadata repository.
+     * 
+     * @see #newTxnContext(boolean)
+     */
+    public void endReposSession();
+    
     /**
      * Returns the metadata factory for a particular plugin. In particular,
      * <code>getMetadataFactory("Fem")</code> returns this.

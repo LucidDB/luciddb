@@ -24,8 +24,6 @@ package net.sf.farrago.test;
 import java.io.*;
 import java.util.*;
 
-import javax.jmi.model.*;
-import javax.jmi.reflect.*;
 import javax.xml.parsers.*;
 
 import org.xml.sax.*;
@@ -78,51 +76,67 @@ public class FarragoRepositoryTest
      */
     public void testTags()
     {
-        FemAnnotatedElement element =
-            (FemAnnotatedElement) repos.getSelfAsCatalog();
-
-        String TAG_NAME = "SHIP_TO";
-        String TAG_VALUE = "BUGS_BUNNY";
-
-        assertNull(repos.getTagAnnotation(element, TAG_NAME));
-        repos.setTagAnnotationValue(element, TAG_NAME, TAG_VALUE);
-        assertEquals(
-            TAG_VALUE,
-            repos.getTagAnnotationValue(element, TAG_NAME));
-
-        FemTagAnnotation tag = repos.getTagAnnotation(element, TAG_NAME);
-        assertNotNull(tag);
-        assertEquals(
-            TAG_NAME,
-            tag.getName());
-        assertEquals(
-            TAG_VALUE,
-            tag.getValue());
-
-        // Clean up the repo
-        tag.refDelete();
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        try {
+            txn.beginWriteTxn();
+            
+            FemAnnotatedElement element =
+                (FemAnnotatedElement) repos.getSelfAsCatalog();
+    
+            String TAG_NAME = "SHIP_TO";
+            String TAG_VALUE = "BUGS_BUNNY";
+    
+            assertNull(repos.getTagAnnotation(element, TAG_NAME));
+            repos.setTagAnnotationValue(element, TAG_NAME, TAG_VALUE);
+            assertEquals(
+                TAG_VALUE,
+                repos.getTagAnnotationValue(element, TAG_NAME));
+    
+            FemTagAnnotation tag = repos.getTagAnnotation(element, TAG_NAME);
+            assertNotNull(tag);
+            assertEquals(
+                TAG_NAME,
+                tag.getName());
+            assertEquals(
+                TAG_VALUE,
+                tag.getValue());
+    
+            // Clean up the repo
+            tag.refDelete();
+        }
+        finally {
+            txn.commit();
+        }
     }
 
     public void testObjIntegrityVerificationPass()
     {
-        // Verify an existing object
-        CwmCatalog catalog = repos.getSelfAsCatalog();
-        CwmSchema schema =
-            (CwmSchema) FarragoCatalogUtil.getModelElementByName(
-                catalog.getOwnedElement(),
-                "SALES");
-        CwmTable tbl =
-            (CwmTable) FarragoCatalogUtil.getModelElementByName(
-                schema.getOwnedElement(),
-                "DEPTS");
-
-        List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(tbl);
-        assertEquals(0, errs.size());
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        try {
+            txn.beginReadTxn();
+            
+            // Verify an existing object
+            CwmCatalog catalog = repos.getSelfAsCatalog();
+            CwmSchema schema =
+                (CwmSchema) FarragoCatalogUtil.getModelElementByName(
+                    catalog.getOwnedElement(),
+                    "SALES");
+            CwmTable tbl =
+                (CwmTable) FarragoCatalogUtil.getModelElementByName(
+                    schema.getOwnedElement(),
+                    "DEPTS");
+    
+            List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(tbl);
+            assertEquals(0, errs.size());
+        }
+        finally {
+            txn.commit();
+        }
     }
 
     public void testObjIntegrityVerificationFail()
     {
-        FarragoReposTxnContext txn = repos.newTxnContext();
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
         try {
             txn.beginWriteTxn();
 
@@ -159,8 +173,8 @@ public class FarragoRepositoryTest
 
             assertEquals(
                 "javax.jmi.reflect.WrongSizeException, "
-                + "Attribute$Impl = visibility, Table = BOOFAR",
-                err.getDescription());
+                + "Attribute = visibility, Table = BOOFAR",
+                stripDollarImpl(err.getDescription()));
 
             // Now run verification on column
             errs = repos.verifyIntegrity(col);
@@ -175,13 +189,19 @@ public class FarragoRepositoryTest
                     "javax.jmi.reflect.WrongSizeException:  "
                     + "Not enough objects linked to "));
             assertTrue(
-                err.getDescription().endsWith(
+                stripDollarImpl(err.getDescription()).endsWith(
                     "at end 'structuralFeature'., "
-                    + "AssociationEnd$Impl = type, Column = SNEE"));
+                    + "AssociationEnd = type, Column = SNEE"));
         } finally {
             // Always rollback to clean up repo
             txn.rollback();
         }
+    }
+    
+    private String stripDollarImpl(String str)
+    {
+        // Handle Enki Hibernate vs. Netbeans difference in class names
+        return str.replaceAll("\\$Impl", "");
     }
     
     public void testInvalidCharFilter() throws Exception

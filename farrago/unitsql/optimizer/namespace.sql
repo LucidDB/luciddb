@@ -7,6 +7,7 @@ alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 create server mof_repository
 foreign data wrapper sys_mdr
 options(
+    "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr',
     extent_name 'MOF', 
     schema_name 'MODEL');

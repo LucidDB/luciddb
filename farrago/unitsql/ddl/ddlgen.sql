@@ -27,6 +27,7 @@ FOREIGN DATA WRAPPER test_mdr
 OPTIONS (
     extent_name 'MOF',
     schema_name 'Model',
+    "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
 DESCRIPTION 'a server';
 

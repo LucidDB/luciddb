@@ -229,10 +229,17 @@ public abstract class FarragoTestCase
     {
         // See CleanupFactory for an example of adding custom cleanup.
         Cleanup cleanup = CleanupFactory.getFactory().newCleanup("cleanup");
+        boolean endSession = false;
         try {
             cleanup.setUp();
+            getSession().getRepos().beginReposSession();
+            endSession = true;
             cleanup.execute(); // let overrides see this call!
         } finally {
+            if (endSession) {
+                getSession().getRepos().endReposSession();
+            }
+            
             // NOTE:  bypass staticTearDown
             cleanup.tearDownImpl();
         }
@@ -337,7 +344,7 @@ public abstract class FarragoTestCase
 
     protected static void saveParameters(FarragoRepos repos)
     {
-        FarragoReposTxnContext reposTxn = repos.newTxnContext();
+        FarragoReposTxnContext reposTxn = repos.newTxnContext(true);
         try {
             reposTxn.beginReadTxn();
             savedFarragoConfig =
@@ -361,7 +368,7 @@ public abstract class FarragoTestCase
 
     protected static void restoreParameters(FarragoRepos repos)
     {
-        FarragoReposTxnContext reposTxn = repos.newTxnContext();
+        FarragoReposTxnContext reposTxn = repos.newTxnContext(true);
         try {
             reposTxn.beginWriteTxn();
             JmiObjUtil.setAttributeValues(

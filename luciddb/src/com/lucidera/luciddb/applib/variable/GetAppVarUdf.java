@@ -42,9 +42,11 @@ public abstract class GetAppVarUdf
             throw ApplibResourceObject.get().AppVarIdRequired.ex();
         }
         FarragoRepos repos = null;
+        FarragoReposTxnContext txn = null;
         try {
             repos = AppVarUtil.getRepos();
-            repos.beginReposTxn(false);
+            txn = repos.newTxnContext(true);
+            txn.beginReadTxn();
             CwmExtent context = AppVarUtil.lookupContext(repos, contextId);
             CwmTaggedValue tag = AppVarUtil.lookupVariable(
                 repos, context, varId);
@@ -55,8 +57,8 @@ public abstract class GetAppVarUdf
             throw ApplibResourceObject.get().AppVarReadFailed.ex(
                 contextId, varId, ex);
         } finally {
-            if (repos != null) {
-                repos.endReposTxn(false);
+            if (txn != null) {
+                txn.commit();
             }
         }
     }

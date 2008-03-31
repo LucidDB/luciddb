@@ -397,11 +397,48 @@ public abstract class FarragoCatalogUtil
      * @return index collection
      */
     public static Collection<FemLocalIndex> getTableIndexes(
-        FarragoRepos repos,
-        CwmClass table)
+        final FarragoRepos repos,
+        final CwmClass table)
     {
-        return repos.getKeysIndexesPackage().getIndexSpansClass().getIndex(
-            table);
+        // REVIEW: SWZ: 2008-02-11:  The association IndexSpansClass is
+        // between CwmClass and CwmIndex.  However, Farrago never creates
+        // any CwmIndex (or CqmSqlindex) instances, only FemLocalIndex
+        // instances.  Netbeans MDR doesn't generate generic types for return
+        // values, but Enki does.  Consider modifying calls to this method to
+        // do the conversion as necessary.  Or perhaps introduce a 
+        // getModelElementByType method.
+        return new AbstractCollection<FemLocalIndex>() {
+            private final Collection<CwmIndex> c = 
+                repos.getKeysIndexesPackage().getIndexSpansClass().getIndex(
+                    table);
+            
+            public Iterator<FemLocalIndex> iterator()
+            {
+                return new Iterator<FemLocalIndex>() {
+                    private final Iterator<CwmIndex> iter = c.iterator();
+
+                    public boolean hasNext()
+                    {
+                        return iter.hasNext();
+                    }
+
+                    public FemLocalIndex next()
+                    {
+                        return (FemLocalIndex)iter.next();
+                    }
+
+                    public void remove()
+                    {
+                        throw new UnsupportedOperationException();
+                    }  
+                };
+            }
+            
+            public int size()
+            {
+                return c.size();
+            }
+        };
     }
 
     /**
@@ -1062,9 +1099,11 @@ public abstract class FarragoCatalogUtil
         List<FemColumnHistogramBar> oldBars = histogram.getBar();
         int oldBarsCount = oldBars.size();
         if (oldBarsCount > barCount) {
-            Iterator iter = oldBars.listIterator(barCount);
+            Iterator<FemColumnHistogramBar> iter = 
+                oldBars.listIterator(barCount);
             while (iter.hasNext()) {
-                FemColumnHistogramBar bar = (FemColumnHistogramBar) iter.next();
+                FemColumnHistogramBar bar = iter.next();
+                iter.remove();
                 bar.refDelete();
             }
         }
@@ -1073,9 +1112,9 @@ public abstract class FarragoCatalogUtil
         // already associated with the histogram
         if (barCount > oldBarsCount) {
             int ordinal = oldBarsCount;
-            Iterator iter = bars.listIterator(ordinal);
+            Iterator<FemColumnHistogramBar> iter = bars.listIterator(ordinal);
             while (iter.hasNext()) {
-                FemColumnHistogramBar bar = (FemColumnHistogramBar) iter.next();
+                FemColumnHistogramBar bar = iter.next();
                 bar.setHistogram(histogram);
                 bar.setOrdinal(ordinal++);
             }

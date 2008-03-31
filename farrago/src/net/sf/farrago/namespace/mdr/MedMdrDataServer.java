@@ -36,10 +36,10 @@ import net.sf.farrago.util.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-
 import org.netbeans.api.mdr.*;
 
 
@@ -106,9 +106,9 @@ public class MedMdrDataServer
     /**
      * @return the MDR repository instance
      */
-    public MDRepository getMdrRepository()
+    public EnkiMDRepository getMdrRepository()
     {
-        return repository;
+        return (EnkiMDRepository)repository;
     }
 
     void initialize()

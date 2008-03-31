@@ -280,6 +280,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Invalid definition for {0}</text>
 </exception>
 
+<exception id="420321" name="ValidatorInvalidObjectAttributeDefinition">
+<text>Cannot create {0} because attribute "{1}" exceeds {2,number,#} characters in length</text>
+</exception>
+
 <exception id="420330" name="ValidatorInvalidViewDynamicParam">
 <text>Dynamic parameters are illegal in views</text>
 </exception>
@@ -654,7 +658,6 @@ column type family is {1} but default value type family is {2}</text>
 <exception id="421110" name="ValidatorIndexedColumnsNotDistinct">
 <text>Cannot create {0} because columns must be distinct.</text>
 </exception>
-
 
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->

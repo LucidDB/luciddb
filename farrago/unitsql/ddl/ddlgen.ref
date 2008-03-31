@@ -29,6 +29,7 @@ Error: DDL validation error near line 1, column 27: Reference to unknown data wr
 > OPTIONS (
 >     extent_name 'MOF',
 >     schema_name 'Model',
+>     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
 >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
 > DESCRIPTION 'a server';
 > 

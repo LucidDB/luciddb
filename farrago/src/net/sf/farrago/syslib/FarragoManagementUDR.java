@@ -282,15 +282,24 @@ public abstract class FarragoManagementUDR
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
-        List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(null);
-        for (FarragoReposIntegrityErr err : errs) {
-            resultInserter.setString(1, err.getDescription());
-            if (err.getRefObject() != null) {
-                resultInserter.setString(2, err.getRefObject().refMofId());
-            } else {
-                resultInserter.setString(2, null);
+        FarragoReposTxnContext reposTxnContext = 
+            new FarragoReposTxnContext(repos, true);
+        reposTxnContext.beginReadTxn();
+
+        try {
+            List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(null);
+            for (FarragoReposIntegrityErr err : errs) {
+                resultInserter.setString(1, err.getDescription());
+                if (err.getRefObject() != null) {
+                    resultInserter.setString(2, err.getRefObject().refMofId());
+                } else {
+                    resultInserter.setString(2, null);
+                }
+                resultInserter.executeUpdate();
             }
-            resultInserter.executeUpdate();
+        }
+        finally {
+            reposTxnContext.commit();
         }
     }
 
@@ -590,23 +599,32 @@ public abstract class FarragoManagementUDR
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
-        RefObject refObj = (RefObject) repos.getMdrRepos().getByMofId(mofId);
-        if (refObj == null) {
-            throw FarragoResource.instance().ValidatorUnknownObject.ex(
-                "MOFID " + mofId);
-        }
-        
-        Object expr = refObj.refGetValue(attributeName);
-        
+        FarragoReposTxnContext reposTxnContext = 
+            new FarragoReposTxnContext(repos, true);
+        reposTxnContext.beginReadTxn();
         String text;
-        if (expr == null) {
-            text = null;
-        } else if (expr instanceof CwmExpression) {
-            text = ((CwmExpression) expr).getBody();
-        } else {
-            text = expr.toString();
+        try {
+            RefObject refObj = 
+                (RefObject) repos.getMdrRepos().getByMofId(mofId);
+            if (refObj == null) {
+                throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                    "MOFID " + mofId);
+            }
+            
+            Object expr = refObj.refGetValue(attributeName);
+            
+            if (expr == null) {
+                text = null;
+            } else if (expr instanceof CwmExpression) {
+                text = ((CwmExpression) expr).getBody();
+            } else {
+                text = expr.toString();
+            }
         }
-
+        finally {
+            reposTxnContext.commit();
+        }
+        
         // special case for null
         if (text == null) {
             // emit a single null value

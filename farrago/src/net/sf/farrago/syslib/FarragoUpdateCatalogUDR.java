@@ -58,19 +58,27 @@ public class FarragoUpdateCatalogUDR
         FarragoRepos repos = session.getRepos();
 
         FarragoUpdateCatalogUDR init = null;
-        FarragoReposTxnContext txn = repos.newTxnContext();
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        boolean rollback = true;
         try {
-            txn.beginWriteTxn();
-            init = new FarragoUpdateCatalogUDR(repos);
-            init.updateSystemParameters();
-            txn.commit();
-        } finally {
-            if (init != null) {
-                // if txn is still in progress, it means we're handling
-                // an exception, so pass rollback=true
-                init.publishObjects(txn.isTxnInProgress());
+            try {
+                txn.beginWriteTxn();
+                init = new FarragoUpdateCatalogUDR(repos);
+                init.updateSystemParameters();
+                rollback = false;
+            } finally {
+                if (init != null) {
+                    // Guarantee that publishObjects is called
+                    init.publishObjects(rollback);
+                }
             }
-            txn.rollback();
+        } finally {
+            // Guarantee that the txn is cleaned up
+            if (rollback) {
+                txn.rollback();
+            } else {
+                txn.commit();
+            }
         }
         tracer.info("Update of Farrago system parameters complete");
     }
@@ -86,19 +94,27 @@ public class FarragoUpdateCatalogUDR
         FarragoRepos repos = session.getRepos();
 
         FarragoUpdateCatalogUDR init = null;
-        FarragoReposTxnContext txn = repos.newTxnContext();
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        boolean rollback = true;
         try {
-            txn.beginWriteTxn();
-            init = new FarragoUpdateCatalogUDR(repos);
-            init.updateSystemTypes();
-            txn.commit();
-        } finally {
-            if (init != null) {
-                // if txn is still in progress, it means we're handling
-                // an exception, so pass rollback=true
-                init.publishObjects(txn.isTxnInProgress());
+            try {
+                txn.beginWriteTxn();
+                init = new FarragoUpdateCatalogUDR(repos);
+                init.updateSystemTypes();
+                rollback = true;
+            } finally {
+                if (init != null) {
+                    // Guarantee that publishObjects is called
+                    init.publishObjects(rollback);
+                }
             }
-            txn.rollback();
+        } finally {
+            // Guarantee that the txn is cleaned up
+            if (rollback) {
+                txn.rollback();
+            } else {
+                txn.commit();
+            }
         }
         tracer.info("Update of system-owned catalog objects committed");
     }

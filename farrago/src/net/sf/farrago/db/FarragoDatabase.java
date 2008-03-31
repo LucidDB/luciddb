@@ -49,6 +49,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
@@ -60,9 +61,6 @@ import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
 import org.eigenbase.resource.EigenbaseResource;
-
-import org.netbeans.mdr.handlers.*;
-
 
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
@@ -124,6 +122,7 @@ public class FarragoDatabase
         if (instance == null) {
             instance = this;
         }
+        
         try {
             FarragoCompoundAllocation startOfWorldAllocation =
                 new FarragoCompoundAllocation();
@@ -144,7 +143,7 @@ public class FarragoDatabase
             // Tell MDR about our plugin ClassLoader so that it can find
             // extension model JMI interfaces in plugin jars.
             pluginClassLoader = new FarragoPluginClassLoader();
-            BaseObjectHandler.setClassLoaderProvider(
+            MDRepositoryFactory.setClassLoaderProvider(
                 new ClassLoaderProvider() {
                     public ClassLoader getClassLoader()
                     {
@@ -164,99 +163,105 @@ public class FarragoDatabase
             loadBootUrls();
 
             systemRepos = sessionFactory.newRepos(this, false);
-            userRepos = systemRepos;
-            if (init) {
-                FarragoCatalogInit.createSystemObjects(systemRepos);
-            }
-
-            // REVIEW:  system/user configuration
-            FemFarragoConfig currentConfig = systemRepos.getCurrentConfig();
-
-            tracer.config(
-                "java.class.path = "
-                + System.getProperty("java.class.path"));
-
-            tracer.config(
-                "java.library.path = "
-                + System.getProperty("java.library.path"));
-
-            if (systemRepos.isFennelEnabled()) {
-                FarragoReposTxnContext txn = systemRepos.newTxnContext();
-                try {
-                    txn.beginWriteTxn();
-                    loadFennel(
-                        startOfWorldAllocation,
-                        sessionFactory.newFennelCmdExecutor(),
-                        init);
-                    txn.commit();
-                } finally {
-                    txn.rollback();
+            systemRepos.beginReposSession();
+            
+            try {
+                userRepos = systemRepos;
+                if (init) {
+                    FarragoCatalogInit.createSystemObjects(systemRepos);
                 }
-            } else {
-                tracer.config("Fennel support disabled");
-            }
-
-            long codeCacheMaxBytes = getCodeCacheMaxBytes(currentConfig);
-            codeCache =
-                new FarragoObjectCache(
-                    this,
-                    codeCacheMaxBytes,
-                    new FarragoLruVictimPolicy());
-
-            ojRexImplementorTable =
-                new FarragoOJRexImplementorTable(
-                    SqlStdOperatorTable.instance());
-
-            // Create instances of plugin model extensions for shared use
-            // by all sessions.
-            loadModelPlugins();
-
-            // REVIEW:  sequencing from this point on
-            if (currentConfig.isUserCatalogEnabled()) {
-                userRepos = sessionFactory.newRepos(this, true);
-                if (userRepos.getSelfAsCatalog() == null) {
-                    // REVIEW:  request this explicitly?
-                    FarragoCatalogInit.createSystemObjects(userRepos);
+    
+                // REVIEW:  system/user configuration
+                FemFarragoConfig currentConfig = systemRepos.getCurrentConfig();
+    
+                tracer.config(
+                    "java.class.path = "
+                    + System.getProperty("java.class.path"));
+    
+                tracer.config(
+                    "java.library.path = "
+                    + System.getProperty("java.library.path"));
+    
+                if (systemRepos.isFennelEnabled()) {
+                    FarragoReposTxnContext txn = systemRepos.newTxnContext();
+                    try {
+                        txn.beginWriteTxn();
+                        loadFennel(
+                            startOfWorldAllocation,
+                            sessionFactory.newFennelCmdExecutor(),
+                            init);
+                        txn.commit();
+                    } finally {
+                        txn.rollback();
+                    }
+                } else {
+                    tracer.config("Fennel support disabled");
                 }
-
-                // During shutdown, we want to reverse this process, making
-                // userRepos revert to systemRepos.  ReposSwitcher takes
-                // care of this before userRepos gets closed.
-                addAllocation(new ReposSwitcher());
-            }
-
-            // Start up timer.  This comes last so that the first thing we do
-            // in close is to cancel it, avoiding races with other shutdown
-            // activity.
-            Timer timer = new Timer("Farrago Watchdog Timer");
-            new FarragoTimerAllocation(this, timer);
-            timer.schedule(new WatchdogTask(),
-                1000,
-                1000);
-
-            if (currentConfig.getCheckpointInterval() > 0) {
-                long checkpointIntervalMillis =
-                    currentConfig.getCheckpointInterval();
-                checkpointIntervalMillis *= 1000;
-                timer.schedule(
-                    new CheckpointTask(),
-                    checkpointIntervalMillis,
-                    checkpointIntervalMillis);
-            }
-
-            ddlLockManager = new FarragoDdlLockManager();
-            txnMgr = sessionFactory.newTxnMgr();
-            sessionFactory.specializedInitialization(this);
-
-            File jaasConfigFile =
-                new File(
-                    FarragoProperties.instance().homeDir.get(),
-                    "plugin/jaas.config");
-            if (jaasConfigFile.exists()) {
-                System.setProperty(
-                    "java.security.auth.login.config",
-                    jaasConfigFile.getPath());
-                authenticationConfig = new ConfigFile();
+    
+                long codeCacheMaxBytes = getCodeCacheMaxBytes(currentConfig);
+                codeCache =
+                    new FarragoObjectCache(
+                        this,
+                        codeCacheMaxBytes,
+                        new FarragoLruVictimPolicy());
+    
+                ojRexImplementorTable =
+                    new FarragoOJRexImplementorTable(
+                        SqlStdOperatorTable.instance());
+    
+                // Create instances of plugin model extensions for shared use
+                // by all sessions.
+                loadModelPlugins();
+    
+                // REVIEW:  sequencing from this point on
+                if (currentConfig.isUserCatalogEnabled()) {
+                    userRepos = sessionFactory.newRepos(this, true);
+                    if (userRepos.getSelfAsCatalog() == null) {
+                        // REVIEW:  request this explicitly?
+                        FarragoCatalogInit.createSystemObjects(userRepos);
+                    }
+    
+                    // During shutdown, we want to reverse this process, making
+                    // userRepos revert to systemRepos.  ReposSwitcher takes
+                    // care of this before userRepos gets closed.
+                    addAllocation(new ReposSwitcher());
+                }
+    
+                // Start up timer.  This comes last so that the first thing we do
+                // in close is to cancel it, avoiding races with other shutdown
+                // activity.
+                Timer timer = new Timer("Farrago Watchdog Timer");
+                new FarragoTimerAllocation(this, timer);
+                timer.schedule(new WatchdogTask(),
+                    1000,
+                    1000);
+    
+                if (currentConfig.getCheckpointInterval() > 0) {
+                    long checkpointIntervalMillis =
+                        currentConfig.getCheckpointInterval();
+                    checkpointIntervalMillis *= 1000;
+                    timer.schedule(
+                        new CheckpointTask(),
+                        checkpointIntervalMillis,
+                        checkpointIntervalMillis);
+                }
+    
+                ddlLockManager = new FarragoDdlLockManager();
+                txnMgr = sessionFactory.newTxnMgr();
+                sessionFactory.specializedInitialization(this);
+    
+                File jaasConfigFile =
+                    new File(
+                        FarragoProperties.instance().homeDir.get(),
+                        "plugin/jaas.config");
+                if (jaasConfigFile.exists()) {
+                    System.setProperty(
+                        "java.security.auth.login.config",
+                        jaasConfigFile.getPath());
+                    authenticationConfig = new ConfigFile();
+                }
+            } finally {
+                systemRepos.endReposSession();
             }
         } catch (Throwable ex) {
             tracer.throwing("FarragoDatabase", "<init>", ex);

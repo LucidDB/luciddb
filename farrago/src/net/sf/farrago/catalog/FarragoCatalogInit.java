@@ -83,19 +83,28 @@ public class FarragoCatalogInit
         tracer.info("Creating system-owned catalog objects");
         FarragoCatalogInit init = null;
         FarragoReposTxnContext txn = repos.newTxnContext();
+        boolean rollback = true;
         try {
-            txn.beginWriteTxn();
-            init = new FarragoCatalogInit(repos);
-            init.initCatalog();
-            txn.commit();
-        } finally {
-            if (init != null) {
-                // if txn is still in progress, it means we're handling
-                // an exception, so pass rollback=true
-                init.publishObjects(txn.isTxnInProgress());
+            try {
+                txn.beginWriteTxn();
+                init = new FarragoCatalogInit(repos);
+                init.initCatalog();
+                rollback = false;
+            } finally {
+                if (init != null) {
+                    // Guarantee that publishObjects is called
+                    init.publishObjects(rollback);
+                }
             }
-            txn.rollback();
+        } finally {
+            // Guarantee that the txn is cleaned up
+            if (rollback) {
+                txn.rollback();
+            } else {
+                txn.commit();
+            }
         }
+        
         tracer.info("Creation of system-owned catalog objects committed");
     }
 

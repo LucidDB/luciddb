@@ -31,9 +31,8 @@ import net.sf.farrago.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.netbeans.api.mdr.*;
-import org.netbeans.mdr.*;
-import org.netbeans.mdr.persistence.btreeimpl.btreestorage.*;
 import org.netbeans.mdr.persistence.jdbcimpl.*;
 
 
@@ -59,7 +58,8 @@ public class FarragoModelLoader
 
     //~ Instance fields --------------------------------------------------------
 
-    protected MDRepository mdrRepos;
+    protected EnkiMDRepository mdrRepos;
+    private boolean openMdrReposSession;
     private String storageFactoryClassName;
     private final Properties storageProps;
     private final FarragoProperties farragoProperties;
@@ -82,9 +82,17 @@ public class FarragoModelLoader
     public void close()
     {
         if (mdrRepos != null) {
-            org.netbeans.jmiimpl.mof.model.NamespaceImpl.clearContains();
+            closeMdrSession();
             mdrRepos.shutdown();
             mdrRepos = null;
+        }
+    }
+
+    public void closeMdrSession()
+    {
+        if (openMdrReposSession) {
+            openMdrReposSession = false;
+            mdrRepos.endSession();
         }
     }
 
@@ -116,6 +124,9 @@ public class FarragoModelLoader
         }
         mdrRepos =
             MdrUtil.loadRepository(storageFactoryClassName, storageProps);
+        
+        mdrRepos.beginSession();
+        openMdrReposSession = true;
     }
 
     public File getSystemReposFile()
@@ -148,6 +159,8 @@ public class FarragoModelLoader
 
     private void setUserReposProperties()
     {
+        // REVIEW: SWZ: 2008-02-12: This will fail badly if used with 
+        // Enki+Hibernate.
         storageFactoryClassName = JdbcStorageFactory.class.getName();
         setStorageProperty(JdbcStorageFactory.STORAGE_URL, "jdbc:farrago:");
         setStorageProperty(JdbcStorageFactory.STORAGE_USER_NAME, "MDR");

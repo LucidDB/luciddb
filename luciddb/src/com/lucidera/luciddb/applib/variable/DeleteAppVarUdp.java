@@ -38,10 +38,11 @@ public abstract class DeleteAppVarUdp
     public static void execute(String contextId, String varId)
     {
         FarragoRepos repos = null;
-        boolean rollback = true;
+        FarragoReposTxnContext txn = null;
         try {
             repos = AppVarUtil.getRepos();
-            repos.beginReposTxn(true);
+            txn = repos.newTxnContext(true);
+            txn.beginWriteTxn();
             CwmExtent context = AppVarUtil.lookupContext(repos, contextId);
             if (varId == null) {
                 context.refDelete();
@@ -50,13 +51,13 @@ public abstract class DeleteAppVarUdp
                     repos, context, varId);
                 tag.refDelete();
             }
-            rollback = false;
+            txn.commit();
         } catch (Throwable ex) {
             throw ApplibResourceObject.get().AppVarWriteFailed.ex(
                 contextId, varId, ex);
         } finally {
-            if (repos != null) {
-                repos.endReposTxn(rollback);
+            if (txn != null) {
+                txn.rollback();
             }
         }
     }

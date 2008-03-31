@@ -37,10 +37,10 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
-
-import org.netbeans.mdr.handlers.*;
+import org.netbeans.api.mdr.MDRepository;
 
 
 /**
@@ -113,7 +113,10 @@ public abstract class FarragoReposImpl
 
     protected void initGraphOnly()
     {
-        ClassLoader classLoader = BaseObjectHandler.getDefaultClassLoader();
+        // TODO: SWZ: 2008-03-27: Obtain the classloader from
+        // EnkiMDRepository.getDefaultClassLoader().
+        ClassLoader classLoader = MDRepositoryFactory.getDefaultClassLoader();
+
         modelGraph =
             new JmiModelGraph(
                 getRootPackage(),
@@ -572,9 +575,15 @@ public abstract class FarragoReposImpl
     // implement FarragoRepos
     public FarragoReposTxnContext newTxnContext()
     {
-        return new FarragoReposTxnContext(this);
+        return newTxnContext(false);
     }
 
+    // implement FarragoRepos
+    public FarragoReposTxnContext newTxnContext(boolean manageReposSession)
+    {
+        return new FarragoReposTxnContext(this, manageReposSession);
+    }
+    
     /**
      * Places either a shared or exclusive lock on the repository. Multiple
      * shared locks are allowed from different threads when no thread holds an
@@ -620,6 +629,28 @@ public abstract class FarragoReposImpl
         } else {
             assert (false);
         }
+    }
+    
+    
+    // TODO: SWZ: 2008-03-27: implement on platform side and remove
+    // implement FarragoRepos (for red-zone components ignorant of Enki)
+    public EnkiMDRepository getEnkiMdrRepos()
+    {
+        return (EnkiMDRepository)getMdrRepos();
+    }
+    
+    // TODO: SWZ: 2008-03-27: implement on platform side and remove
+    // implement FarragoRepos (for red-zone components ignorant of Enki)
+    public void beginReposSession()
+    {
+        // ignore
+    }
+
+    // TODO: SWZ: 2008-03-27: implement on platform side and remove
+    // implement FarragoRepos (for red-zone components ignorant of Enki)
+    public void endReposSession()
+    {
+        // ignore
     }
 }
 

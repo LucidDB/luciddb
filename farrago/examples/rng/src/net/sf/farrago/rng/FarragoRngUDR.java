@@ -79,10 +79,13 @@ public abstract class FarragoRngUDR
         FarragoSessionStmtValidator stmtValidator =
             session.newStmtValidator();
 
+        FarragoReposTxnContext txn = null;
         try {
             SqlParser sqlParser = new SqlParser(rngName);
             SqlIdentifier rngId = (SqlIdentifier) sqlParser.parseExpression();
 
+            txn = session.getRepos().newTxnContext(true);
+            txn.beginReadTxn();
             RngRandomNumberGenerator rng =
                 stmtValidator.findSchemaObject(
                     rngId,
@@ -90,6 +93,10 @@ public abstract class FarragoRngUDR
             return rng_next_int_internal(n, rngName, getFilename(rng));
         } catch (Throwable ex) {
             throw FarragoJdbcUtil.newSqlException(ex, tracer);
+        } finally {
+            if (txn != null) {
+                txn.commit();
+            }
         }
 
         // NOTE jvs 7-Apr-2005:  no need for cleanup; default connection

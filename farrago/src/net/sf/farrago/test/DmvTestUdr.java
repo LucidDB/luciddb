@@ -36,6 +36,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.dmv.*;
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
@@ -102,6 +103,7 @@ public abstract class DmvTestUdr
             FarragoProperties.instance().expandProperties(
                 dotFilename);
         FileWriter dotWriter = new FileWriter(dotFilename);
+        ((EnkiMDRepository)context.getMdrRepos()).beginSession();
         try {
             String lurql = readFileAsString(lurqlFilename);
             JmiQueryProcessor queryProcessor =
@@ -135,6 +137,7 @@ public abstract class DmvTestUdr
                 dotWriter);
         } finally {
             dotWriter.close();
+            ((EnkiMDRepository)context.getMdrRepos()).endSession();
         }
     }
 

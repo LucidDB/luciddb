@@ -166,13 +166,20 @@ class FarragoDbSessionIndexMap
     // implement FarragoAllocation
     public void closeAllocation()
     {
-        // materialize deletion list to avoid ConcurrentModificationException
-        List<FemLocalIndex> list =
-            new ArrayList<FemLocalIndex>(tempIndexRootMap.keySet());
-        for (FemLocalIndex index : list) {
-            dropIndexStorage(privateDataWrapperCache, index, false);
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        txn.beginReadTxn();
+        try {
+            // materialize deletion list to avoid ConcurrentModificationException
+            List<FemLocalIndex> list =
+                new ArrayList<FemLocalIndex>(tempIndexRootMap.keySet());
+            for (FemLocalIndex index : list) {
+                dropIndexStorage(privateDataWrapperCache, index, false);
+            }
         }
-
+        finally {
+            txn.commit();
+        }
+        
         // TODO:  make Fennel drop temporary indexes on recovery also
         // NOTE:  do this last, so that we don't release data wrappers
         // until we're done using them for drops above

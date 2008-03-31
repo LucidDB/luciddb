@@ -25,6 +25,8 @@ import java.sql.*;
 
 import net.sf.farrago.session.*;
 
+import org.eigenbase.enki.mdr.*;
+
 
 /**
  * FarragoUdrInvocationFrame represents one entry on the routine invocation
@@ -38,6 +40,8 @@ class FarragoUdrInvocationFrame
     //~ Instance fields --------------------------------------------------------
 
     FarragoRuntimeContext context;
+    
+    EnkiMDSession reposSession;
 
     FarragoSessionUdrContext udrContext;
 

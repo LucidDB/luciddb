@@ -59,6 +59,10 @@
   </xsl:template>
 
   <!-- Add a Cwm prefix to the name of each generated Java class.  -->
+  <!-- Also overrides the max length tag at the class level for    -->
+  <!-- some special cases:                                         -->
+  <!--   Type.attribute            Required Size                   -->
+  <!--   Dependency.name           ModelElement.name + 4           -->
   <xsl:template
     match="Model:Package/Model:Namespace.contents/Model:Class">
     <xsl:copy>
@@ -71,6 +75,37 @@
           <Model:Tag.values>
             <xsl:value-of select="concat('Cwm',@name)"/>
           </Model:Tag.values>
+        </Model:Tag>
+        <xsl:if test="@name = 'Dependency'">
+          <Model:Tag tagId='org.eigenbase.enki.maxLength'>
+            <xsl:attribute name="elements">
+              <xsl:value-of select="@xmi.id"/>
+            </xsl:attribute>
+            <Model:Tag.values>132</Model:Tag.values>
+          </Model:Tag>
+        </xsl:if>
+      </Model:Namespace.contents>
+    </xsl:copy>
+  </xsl:template>
+
+  <!-- Apply max length tag to columns in CWM that require it: -->
+  <!--   Type.attribute            Required Size               -->
+  <!--   Expression.body           unlimited                   -->
+  <!--   Sqlindex.filterCondition  unlimited                   -->
+  <!--   DataValue.value           unlimited                   -->
+  <!--   TaggedValue.value         unlimited                   -->
+  <xsl:template match="Model:Class[@name='Expression']/Model:Namespace.contents/Model:Attribute[@name='body']
+      | Model:Class[@name='SQLIndex']/Model:Namespace.contents/Model:Attribute[@name='filterCondition']
+      | Model:Class[@name='DataValue']/Model:Namespace.contents/Model:Attribute[@name='value']
+      | Model:Class[@name='TaggedValue']/Model:Namespace.contents/Model:Attribute[@name='value']">
+    <xsl:copy>
+      <xsl:apply-templates select="@* | node()" />
+      <Model:Namespace.contents>
+        <Model:Tag tagId='org.eigenbase.enki.maxLength'>
+          <xsl:attribute name="elements">
+            <xsl:value-of select="@xmi.id"/>
+          </xsl:attribute>
+          <Model:Tag.values>unlimited</Model:Tag.values>
         </Model:Tag>
       </Model:Namespace.contents>
     </xsl:copy>

@@ -29,6 +29,7 @@ import java.util.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
@@ -97,6 +98,8 @@ public class LoptMetadataTest
 
     private RexBuilder rexBuilder;
 
+    private FarragoReposTxnContext txn;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -126,6 +129,7 @@ public class LoptMetadataTest
     {
         super.setUp();
         if (doneStaticSetup) {
+            localSetUp();
             return;
         }
         doneStaticSetup = true;
@@ -155,65 +159,78 @@ public class LoptMetadataTest
         //     bars contain about 9.9 distinct values
         stmt.executeUpdate(
             "create table EMPS (deptno int, name varchar(256), age int)");
-        FarragoStatsUtil.setTableRowCount(
-            session,
-            "",
-            "",
-            "EMPS",
-            COLSTORE_EMPS_ROWCOUNT);
-        FarragoStatsUtil.createColumnHistogram(
-            session,
-            "",
-            "",
-            "EMPS",
-            "DEPTNO",
-            150,
-            1,
-            150,
-            1,
-            "0123456789");
-        FarragoStatsUtil.createColumnHistogram(
-            session,
-            "",
-            "",
-            "EMPS",
-            "NAME",
-            90000,
-            1,
-            990,
-            0,
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
+        session.getRepos().beginReposSession();
+        try {
+            FarragoStatsUtil.setTableRowCount(
+                session,
+                "",
+                "",
+                "EMPS",
+                COLSTORE_EMPS_ROWCOUNT);
+            FarragoStatsUtil.createColumnHistogram(
+                session,
+                "",
+                "",
+                "EMPS",
+                "DEPTNO",
+                150,
+                1,
+                150,
+                1,
+                "0123456789");
+            FarragoStatsUtil.createColumnHistogram(
+                session,
+                "",
+                "",
+                "EMPS",
+                "NAME",
+                90000,
+                1,
+                990,
+                0,
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        }
+        finally {
+            session.getRepos().endReposSession();
+        }
+        
         stmt.executeUpdate(
             "create table DEPTS (deptno int, dname varchar(256))");
-        FarragoStatsUtil.setTableRowCount(
-            session,
-            "",
-            "",
-            "DEPTS",
-            COLSTORE_DEPTS_ROWCOUNT);
-        FarragoStatsUtil.createColumnHistogram(
-            session,
-            "",
-            "",
-            "DEPTS",
-            "DEPTNO",
-            150,
-            100,
-            150,
-            1,
-            "0123456789");
-        FarragoStatsUtil.createColumnHistogram(
-            session,
-            "",
-            "",
-            "DEPTS",
-            "DNAME",
-            150,
-            100,
-            150,
-            0,
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        session.getRepos().beginReposSession();
+        try {
+            FarragoStatsUtil.setTableRowCount(
+                session,
+                "",
+                "",
+                "DEPTS",
+                COLSTORE_DEPTS_ROWCOUNT);
+            FarragoStatsUtil.createColumnHistogram(
+                session,
+                "",
+                "",
+                "DEPTS",
+                "DEPTNO",
+                150,
+                100,
+                150,
+                1,
+                "0123456789");
+            FarragoStatsUtil.createColumnHistogram(
+                session,
+                "",
+                "",
+                "DEPTS",
+                "DNAME",
+                150,
+                100,
+                150,
+                0,
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        }
+        finally {
+            session.getRepos().endReposSession();
+        }
 
         // a table for testing typed values
         stmt.executeUpdate(
@@ -240,8 +257,28 @@ public class LoptMetadataTest
             + "   null, null, null)");
         stmt.executeUpdate(
             "analyze table WINES compute statistics for all columns");
+        
+        localSetUp();
     }
 
+    public void tearDown() throws Exception
+    {
+        localTearDown();
+        super.tearDown();
+    }
+    
+    private void localSetUp()
+    {
+        txn = repos.newTxnContext(true);
+        txn.beginWriteTxn();
+    }
+    
+    private void localTearDown()
+    {
+        txn.commit();
+        txn = null;
+    }
+    
     protected void checkAbstract(
         FarragoPreparingStmt stmt,
         RelNode relBefore)

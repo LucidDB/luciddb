@@ -18,6 +18,7 @@ foreign data wrapper test_mdr
 options(
     extent_name 'MOF', 
     schema_name 'Model',
+    "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
 description 'a server';
 
@@ -27,6 +28,7 @@ foreign data wrapper test_mdr
 options(
     extent_name 'MOF', 
     schema_name 'Model',
+    "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
 
 -- test name uniqueness relative to a real catalog:  should fail
@@ -35,6 +37,7 @@ foreign data wrapper test_mdr
 options(
     extent_name 'MOF', 
     schema_name 'Model',
+    "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
 
 -- test a direct table reference without creating a foreign table
