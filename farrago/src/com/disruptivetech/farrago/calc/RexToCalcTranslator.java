@@ -529,13 +529,52 @@ public class RexToCalcTranslator
      * expression into a {@link CalcProgramBuilder} calculator program using a
      * depth-first recursive algorithm when there are aggregate functions.
      *
+     * <p>The aggregate expressions are represented by two {@link RexProgram}
+     * objects. The lower <code>inputProgram</code> computes the input
+     * expressions to the calculator; the upper <code>aggProgram</code> contains
+     * calls to aggregate functions. For example, the expressions
+     *
+     * <pre>Aggs = {
+     *    SUM(a + b),
+     *    SUM(a + b + c),
+     *    COUNT(a + b) * d
+     *    SUM(a + b) + 4
+     * }</pre>
+     *
+     * would be represented by the program
+     *
+     * <pre>aggProgram = {
+     *    exprs = {
+     *       $0,         // a
+     *       $1,         // b
+     *       $2,         // c
+     *       $3,         // d
+     *       $0 + $1,    // a + b
+     *       $4 + $2     // (a + b) + c
+     *       SUM($4),    // SUM(a + b)
+     *       SUM($5),    // SUM(a + b + c)
+     *       COUNT($4),  // COUNT(a + b)
+     *       $8 * $3     // COUNT(a + b) * d
+     *       SUM($4),    // SUM(a + b)
+     *       $10 + 4,    // SUM(a + b) + 4
+     *    },
+     *    projectRefs = {
+     *       $6,         // SUM(a + b)
+     *       $7,         // SUM(a + b + c)
+     *       $9,         // COUNT(a + b) * d
+     *       $11,        // SUM(a + b) + 4
+     *    },
+     *    conditionRef = null
+     * }</pre>
+     *
      * <p>This method is NOT stateless. TODO: Make method stateless -- so you
      * can call this method several times with different inputs -- and therefore
      * the translator is re-usable.
      *
      * @param program Program, containing pre-expressions, aggregate
      * expressions, post-expressions, and optionally a filter.
-     * @param aggOp Aggregate operation (INIT, ADD, or DROP), must not be null.
+     * @param aggOp Aggregate operation (Init, Add, InitAdd or Drop),
+     * must not be null.
      */
     public String getAggProgram(
         RexProgram program,
@@ -1250,65 +1289,6 @@ public class RexToCalcTranslator
     public void setGenerateComments(boolean outputComments)
     {
         builder.setOutputComments(outputComments);
-    }
-
-    /**
-     * Generates the three programs -- init, add, and drop -- for an array of
-     * calls to aggregate functions.
-     *
-     * <p>The aggregate expressions are represented by two {@link RexProgram}
-     * objects. The lower <code>inputProgram</code> computes the input
-     * expressions to the calculator; the upper <code>aggProgram</code> contains
-     * calls to aggregate functions. For example, the expressions
-     *
-     * <pre>Aggs = {
-     *    SUM(a + b),
-     *    SUM(a + b + c),
-     *    COUNT(a + b) * d
-     *    SUM(a + b) + 4
-     * }</pre>
-     *
-     * would be represented by the program
-     *
-     * <pre>aggProgram = {
-     *    exprs = {
-     *       $0,         // a
-     *       $1,         // b
-     *       $2,         // c
-     *       $3,         // d
-     *       $0 + $1,    // a + b
-     *       $4 + $2     // (a + b) + c
-     *       SUM($4),    // SUM(a + b)
-     *       SUM($5),    // SUM(a + b + c)
-     *       COUNT($4),  // COUNT(a + b)
-     *       $8 * $3     // COUNT(a + b) * d
-     *       SUM($4),    // SUM(a + b)
-     *       $10 + 4,    // SUM(a + b) + 4
-     *    },
-     *    projectRefs = {
-     *       $6,         // SUM(a + b)
-     *       $7,         // SUM(a + b + c)
-     *       $9,         // COUNT(a + b) * d
-     *       $11,        // SUM(a + b) + 4
-     *    },
-     *    conditionRef = null
-     * }</pre>
-     *
-     * @param program Aggregate expressions to calculate. The program can
-     * compute the inputs to the aggregates, the aggregates themselves, output
-     * expressions, and an output filter.
-     * @param programs Output array of programs.
-     *
-     * @pre programs.length == 3
-     */
-    public void getAggProgram(
-        final RexProgram program,
-        String [] programs)
-    {
-        Util.pre(programs.length == 3, "programs.length == 3");
-        programs[0] = getAggProgram(program, AggOp.Init);
-        programs[1] = getAggProgram(program, AggOp.Add);
-        programs[2] = getAggProgram(program, AggOp.Drop);
     }
 
     public RexLiteral getLiteral(RexNode expr)

@@ -403,8 +403,6 @@ public class FennelWindowRel
                 RexProgram combinedProgram =
                     makeProgram(getCluster().getRexBuilder(), inputProgram, partition.overList);
 
-                String [] programs = new String[3];
-                translator.getAggProgram(combinedProgram, programs);
                 windowPartitionDef.setInitializeProgram(
                     translator.getAggProgram(combinedProgram, AggOp.Init));
                 windowPartitionDef.setAddProgram(
