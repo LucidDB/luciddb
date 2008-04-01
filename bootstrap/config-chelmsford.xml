@@ -27,7 +27,7 @@
 <!ENTITY returnaddress    "the.eng@sqlstream.com">
 <!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
-<!ENTITY subjectprefix    "ContInteg Chelmsford ">
+<!ENTITY subjectprefix    "ContInteg Chelmsford: ">
 <!ENTITY failureaddress   "build.monkey@sqlstream.com">
 <!ENTITY emailmapper      "/home/cruise/work/p4email.txt">
 
