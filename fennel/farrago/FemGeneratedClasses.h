@@ -96,6 +96,9 @@ typedef JniProxyIter<ProxyDatabaseParam> SharedProxyDatabaseParam;
 class ProxyDbHandle;
 typedef JniProxyIter<ProxyDbHandle> SharedProxyDbHandle;
 
+class ProxyDynamicParamUse;
+typedef JniProxyIter<ProxyDynamicParamUse> SharedProxyDynamicParamUse;
+
 class ProxyDynamicParameter;
 typedef JniProxyIter<ProxyDynamicParameter> SharedProxyDynamicParameter;
 
@@ -304,6 +307,8 @@ class ProxyExecutionStreamDef
 : virtual public JniProxy
 {
 public:
+SharedProxyDynamicParamUse getDynamicParamUse();
+static jmethodID meth_getDynamicParamUse;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
 std::string getName();
@@ -650,6 +655,18 @@ class ProxyDbHandle
 : virtual public JniProxy, virtual public ProxyHandle
 {
 public:
+};
+
+class ProxyDynamicParamUse
+: virtual public JniProxy
+{
+public:
+int32_t getDynamidParamId();
+static jmethodID meth_getDynamidParamId;
+SharedProxyExecutionStreamDef getExecutionStreamDef();
+static jmethodID meth_getExecutionStreamDef;
+bool isRead();
+static jmethodID meth_isRead;
 };
 
 class ProxyDynamicParameter
@@ -1331,6 +1348,8 @@ virtual void visit(ProxyDatabaseCmd &)
 virtual void visit(ProxyDatabaseParam &)
 { unhandledVisit(); }
 virtual void visit(ProxyDbHandle &)
+{ unhandledVisit(); }
+virtual void visit(ProxyDynamicParamUse &)
 { unhandledVisit(); }
 virtual void visit(ProxyDynamicParameter &)
 { unhandledVisit(); }
