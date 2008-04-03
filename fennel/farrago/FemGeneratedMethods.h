@@ -49,7 +49,7 @@ jmethodID ProxyCorrelationJoinStreamDef::meth_getCorrelations = 0;
 jmethodID ProxyDatabaseCmd::meth_getDbHandle = 0;
 jmethodID ProxyDatabaseParam::meth_getName = 0;
 jmethodID ProxyDatabaseParam::meth_getValue = 0;
-jmethodID ProxyDynamicParamUse::meth_getDynamidParamId = 0;
+jmethodID ProxyDynamicParamUse::meth_getDynamicParamId = 0;
 jmethodID ProxyDynamicParamUse::meth_getExecutionStreamDef = 0;
 jmethodID ProxyDynamicParamUse::meth_isRead = 0;
 jmethodID ProxyDynamicParameter::meth_getBarrier = 0;
@@ -353,7 +353,7 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemDynamicParamUse");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyDynamicParamUse>));
-ProxyDynamicParamUse::meth_getDynamidParamId = pEnv->GetMethodID(jClass,"getDynamidParamId","()I");
+ProxyDynamicParamUse::meth_getDynamicParamId = pEnv->GetMethodID(jClass,"getDynamicParamId","()I");
 ProxyDynamicParamUse::meth_getExecutionStreamDef = pEnv->GetMethodID(jClass,"getExecutionStreamDef","()Lnet/sf/farrago/fem/fennel/FemExecutionStreamDef;");
 ProxyDynamicParamUse::meth_isRead = pEnv->GetMethodID(jClass,"isRead","()Z");
 
@@ -1018,9 +1018,9 @@ std::string ProxyDatabaseParam::getValue()
 return constructString(pEnv->CallObjectMethod(jObject,meth_getValue));
 }
 
-int32_t ProxyDynamicParamUse::getDynamidParamId()
+int32_t ProxyDynamicParamUse::getDynamicParamId()
 {
-return pEnv->CallIntMethod(jObject,meth_getDynamidParamId);
+return pEnv->CallIntMethod(jObject,meth_getDynamicParamId);
 }
 
 SharedProxyExecutionStreamDef ProxyDynamicParamUse::getExecutionStreamDef()

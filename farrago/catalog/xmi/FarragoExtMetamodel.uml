@@ -4453,7 +4453,7 @@
                   isRoot = 'false' isLeaf = 'false' isAbstract = 'false' isActive = 'false'>
                   <UML:Classifier.feature>
                     <UML:Attribute xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E4F'
-                      name = 'dynamidParamId' visibility = 'public' isSpecification = 'false'
+                      name = 'dynamicParamId' visibility = 'public' isSpecification = 'false'
                       ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
                       <UML:StructuralFeature.multiplicity>
                         <UML:Multiplicity xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E53'>
@@ -14747,7 +14747,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >dynamidParamId : Integer</text>
+      >dynamicParamId : Integer</text>
       <text name="Fig6.4.3"
         x="233"
         y="485"

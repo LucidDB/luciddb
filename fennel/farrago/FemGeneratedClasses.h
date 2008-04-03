@@ -661,8 +661,8 @@ class ProxyDynamicParamUse
 : virtual public JniProxy
 {
 public:
-int32_t getDynamidParamId();
-static jmethodID meth_getDynamidParamId;
+int32_t getDynamicParamId();
+static jmethodID meth_getDynamicParamId;
 SharedProxyExecutionStreamDef getExecutionStreamDef();
 static jmethodID meth_getExecutionStreamDef;
 bool isRead();
