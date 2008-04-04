@@ -502,8 +502,8 @@ ${farrago.test.jvmargs}
       <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
       <then>
         <copy 
-            file="${farrago.catalog.dir}/templates/EnkiOsCache.properties"
-            tofile="${farrago.classes.dir}/oscache.properties"/>
+            file="${farrago.catalog.dir}/templates/EnkiEhCache.xml"
+            tofile="${farrago.classes.dir}/FarragoEhCache.properties"/>
       </then>
     </ac:if>
   </target>
