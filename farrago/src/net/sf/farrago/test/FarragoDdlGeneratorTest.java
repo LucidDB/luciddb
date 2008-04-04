@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2005-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 2003-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,8 +28,10 @@ import java.io.*;
 import junit.framework.*;
 
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
@@ -151,6 +153,94 @@ public class FarragoDdlGeneratorTest
         stmt.clear();
         
         getDiffRepos().assertEquals("output", "${output}", output.toString());
+    }
+    
+    public void testCascade() throws Exception
+    {
+        final String SCHEMA_NAME = "CASCADE_TEST";
+        final String TABLE_NAME = "FOO";
+        final String COLUMN_NAME = "A";
+        final String VIEW_NAME = "BAR";
+        StringBuilder output = new StringBuilder();
+        
+        // Create a DDL Generator for this test
+        DdlGenerator ddlGenerator = newDdlGenerator();
+        
+        // create a SCHEMA
+        FemLocalSchema schema = repos.newFemLocalSchema();
+        schema.setName(SCHEMA_NAME);
+        schema.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+        schema.setNamespace(repos.getCatalog("LOCALDB"));
+        
+        // create a simple TABLE
+        FemLocalTable table = repos.newFemLocalTable();
+        table.setName(TABLE_NAME);
+        table.setNamespace(schema);
+        table.setDescription("Test");
+        table.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+        FemStoredColumn column = repos.newFemStoredColumn();
+        column.setName(COLUMN_NAME);
+        table.getFeature().add(column);
+        
+        // create a VIEW off the TABLE
+        FemLocalView view = repos.newFemLocalView();
+        view.setName(VIEW_NAME);
+        view.setNamespace(schema);
+        view.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+        CwmQueryExpression query = repos.newCwmQueryExpression();
+        query.setBody("SELECT * FROM " + TABLE_NAME);
+        view.setQueryExpression(query);
+        
+        // drop the SCHEMA (with CASCADE)
+        GeneratedDdlStmt stmt = new GeneratedDdlStmt();
+        ddlGenerator.setDropCascade(true);
+        ddlGenerator.generateDrop(schema, stmt);
+        appendStatementText(output, stmt);
+        // save the statement for cleanup use
+        final File tempFile = File.createTempFile("cascade", ".sql");
+        final FileWriter fw = new FileWriter(tempFile);
+        fw.write(output.toString() + ";" + TestUtil.NL);
+        fw.close();
+        stmt.clear();
+        
+        // drop the SCHEMA (without CASCADE)
+        ddlGenerator.setDropCascade(false);
+        ddlGenerator.generateDrop(schema, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        // drop the table (with CASCADE)
+        ddlGenerator.setDropCascade(true);
+        ddlGenerator.generateDrop(table, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        // drop the table (without CASCADE)
+        ddlGenerator.setDropCascade(false);
+        ddlGenerator.generateDrop(table, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        // drop the view (with CASCADE)
+        ddlGenerator.setDropCascade(true);
+        ddlGenerator.generateDrop(view, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        // drop the view (without CASCADE)
+        ddlGenerator.setDropCascade(false);
+        ddlGenerator.generateDrop(view, stmt);
+        appendStatementText(output, stmt);
+        stmt.clear();
+        
+        getDiffRepos().assertEquals("output", "${output}", output.toString());
+        
+        // clean up afterward
+        runSqlLineTest(tempFile.getAbsolutePath(), false);
+        // If successful, delete temp file and log
+        tempFile.delete();
+        new File(tempFile.getAbsolutePath().replace(".sql", ".log")).delete();
+
     }
 
     /**

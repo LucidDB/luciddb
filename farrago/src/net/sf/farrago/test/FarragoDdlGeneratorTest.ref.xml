@@ -319,4 +319,21 @@ select decrypt_public_key(v3.y) FROM v3, v;
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testCascade">
+    	<Resource name="output">
+    		<![CDATA[DROP SCHEMA "CASCADE_TEST" CASCADE
+
+DROP SCHEMA "CASCADE_TEST"
+
+DROP TABLE "FOO" CASCADE
+
+DROP TABLE "FOO"
+
+DROP VIEW "BAR" CASCADE
+
+DROP VIEW "BAR"
+
+]]>
+    	</Resource>
+    </TestCase>
 </Root>
