@@ -765,6 +765,14 @@ deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PivotColumnsToRowsUdx.execute';
 
+-- retain top most rows
+create or replace function applib.topN(IN_CURSOR cursor, N int)
+returns table(IN_CURSOR.*)
+language java
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.TopNUdx.execute';
+
 -- collapse rows
 create or replace function collapse_rows(c cursor, delimiter varchar(1))
 returns table(
