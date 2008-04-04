@@ -228,11 +228,14 @@ if [ $cygwin = "true" ]; then
 else
     cp dist/install/install.sh $INSTALL_DIR
 fi
-cp catalog/FarragoCatalog.* $CATALOG_DIR
+
+# Make a backup to get a mysql dump in the event that HSQLDB isn't being used
+ant backupCatalog
+cp catalog/backup/FarragoCatalog.* $CATALOG_DIR
 cp catalog/ReposStorage.properties $CATALOG_DIR
  
 if $dist_fennel; then
-    cp catalog/*.dat $CATALOG_DIR
+    cp catalog/backup/*.dat $CATALOG_DIR
 fi
 
 if [ $cygwin = "true" ]; then
