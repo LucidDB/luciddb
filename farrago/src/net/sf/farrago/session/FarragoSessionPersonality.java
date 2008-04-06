@@ -209,11 +209,6 @@ public interface FarragoSessionPersonality
     public RelDataTypeFactory newTypeFactory(
         FarragoRepos repos);
 
-    // TODO jvs 6-Apr-2005:  get rid of this once Aspen stops using it
-    public void validate(
-        FarragoSessionStmtValidator stmtValidator,
-        SqlNode sqlNode);
-
     /**
      * Loads variables from the session personality into a session variables
      * object. Each personality uses on its own variables. This method allows

@@ -48,6 +48,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Illegal {0} literal {1}: {2}</text>
 </exception>
 
+<exception id="100020" name="IdentifierTooLong">
+    <text>Length of identifier ''{0}'' must be less than or equal to {1,number,#} characters</text>
+</exception>
+
 <message id="100030" name="BadFormat">
     <text>not in format ''{0}''</text>
 </message>
@@ -353,8 +357,8 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Window boundary must be constant</text>
 </exception>
 
-<exception id="120460" name="RowMustBeNumeric" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>ROWS value must be a numeric constant</text>
+<exception id="120460" name="RowMustBeNonNegativeIntegral" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>ROWS value must be a non-negative integral constant</text>
 </exception>
 
 <exception id="120470" name="OverMissingOrderBy" className="org.eigenbase.sql.validate.SqlValidatorException">

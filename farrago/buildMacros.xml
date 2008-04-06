@@ -76,6 +76,9 @@ ${farrago.test.jvmargs}
        customBuild.properties. -->
   <property name="farrago.test.jvmargs" value=""/>
 
+  <!-- Catalog schema (or database) name (for Postgres or
+       Enki+Hibernate on Mysql. -->
+  <property name="farrago.catalog.schema" value="farrago"/>
 
   <!-- forked ant verbosity control -->
   <property name="farrago.forkVerbosity" value="-e"/>
@@ -104,6 +107,7 @@ ${farrago.test.jvmargs}
   <fail unless="sqlline.dir"/>
   <fail unless="sqlline.lib.dir"/>
   <fail unless="mdrlibs.dir"/>
+  <fail unless="enki.dir"/>
   <fail unless="rmijdbc.dir"/>
   <fail unless="emma.dir"/>
   <fail unless="vjdbc.dir"/>
@@ -133,6 +137,9 @@ ${farrago.test.jvmargs}
 
   <!-- Alias for project.catalog.dir to match runtime properties convention -->
   <property name="FARRAGO_CATALOG_DIR" location="${project.catalog.dir}"/>
+
+  <!-- overridable alias for farrago.catalog.schema -->
+  <property name="project.catalog.schema" value="${farrago.catalog.schema}"/>
 
   <!-- directory for JUnit run output -->
   <property name="project.testlog.dir" location="${farrago.dir}/testlog"/>
@@ -254,6 +261,45 @@ ${farrago.test.jvmargs}
   <property name="FarragoTrace.log"
     location="${farrago.trace.dir}/FarragoTrace.log"/>
 
+  <!-- File defining Farrago MDR build tracing -->
+  <property name="FarragoMdrBuildTrace.properties"
+    location="${farrago.trace.dir}/MdrBuildTrace.properties"/>
+
+  <!-- File for Farrago trace log -->
+  <property name="FarragoMdrBuildTrace.log"
+    location="${farrago.trace.dir}/MdrBuildTrace.log"/>
+
+  <!-- Start Enki Hibernate MDR properties.  The following properties
+       are only used if the farrago.enki.provider is ENKI_HIBERNATE.
+       Override them via customBuild.properties or before importing
+       this file.  These should come after project.catalog.schema -->
+
+  <!-- Database backup executable (backup data expected on stdout) -->
+  <property 
+    name="farrago.enki.hibernate.backup.cmd"
+    value="mysqldump"/>
+
+  <property 
+    name="farrago.enki.hibernate.backup.user"
+    value="root"/>
+
+  <!-- Database backup arguments -->
+  <property 
+    name="farrago.enki.hibernate.backup.args"
+    value="-u ${farrago.enki.hibernate.backup.user} --opt ${project.catalog.schema}"/>
+
+  <!-- Database restore executable -->
+  <property 
+    name="farrago.enki.hibernate.restore.cmd"
+    value="mysql"/>
+
+  <!-- Database backup arguments (backup data provided on stdin) -->
+  <property 
+    name="farrago.enki.hibernate.restore.args"
+    value="-u ${farrago.enki.hibernate.backup.user} -D ${project.catalog.schema}"/>
+
+  <!-- End Enki Hibernate MDR properties -->
+
   <!-- Classpaths -->
 
   <!-- Set a default for this classpath in case it's not set in a
@@ -283,6 +329,7 @@ ${farrago.test.jvmargs}
 
   <!-- third-party libraries -->
   <path id="farrago.3p.classpath">
+    <fileset dir="${enki.dir}" includes="*.jar"/>
     <pathelement location="${mdrlibs.dir}/mdrant.jar"/>
     <pathelement location="${mdrlibs.dir}/nbmdr.jar"/>
     <pathelement location="${mdrlibs.dir}/mdrapi.jar"/>
@@ -290,9 +337,9 @@ ${farrago.test.jvmargs}
     <pathelement location="${mdrlibs.dir}/mof.jar"/>
     <pathelement location="${mdrlibs.dir}/jmi.jar"/>
     <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
+    <pathelement location="${mdrlibs.dir}/mdrjdbc.jar"/>
     <pathelement location="${resgen.dir}/lib/eigenbase-resgen.jar"/>
     <pathelement location="${resgen.dir}/lib/eigenbase-xom.jar"/>
-    <pathelement location="${mdrlibs.dir}/mdrjdbc.jar"/>
     <pathelement location="${junit.dir}/junit.jar"/>
     <path refid="xerces.classpath"/>
     <pathelement location="${javahome.dir}/lib/tools.jar"/>
@@ -344,6 +391,14 @@ ${farrago.test.jvmargs}
     <pathelement location="${ant.home}/lib/ant-trax.jar"/>
   </path>
   <property name="ant.classpath" refid="ant.classpath"/>
+
+  <!-- classpath for model import -->
+  <path id="farrago.model.classpath">
+    <pathelement path="${farrago.3p.classpath}"/>
+    <pathelement location="${farrago.catalog.src.dir}"/>
+    <pathelement path="${ant.classpath}"/>
+  </path>
+  <property name="farrago.model.classpath" refid="farrago.model.classpath"/>
 
   <!-- classpath for running from sqlline -->
   <path id="farrago.sqlline.classpath">
@@ -447,7 +502,7 @@ ${farrago.test.jvmargs}
         dir="@{dir}"
         classpathref="@{classpathref}" jvm="@{jvm}">
         <jvmargs/>
-        <arg value="${farrago.forkVerbosity}"/>
+        <arg line="${farrago.forkVerbosity}"/>
         <arg value="@{target}"/>
       </java>
     </sequential>
@@ -457,16 +512,24 @@ ${farrago.test.jvmargs}
   <!-- NOTE:  Logger setting squelches unwanted INFORMATIONAL messages -->
   <macrodef name="farrago.mdrFork">
     <attribute name="target" default="unspecifiedTarget"/>
+    <attribute name="classpathref" default="farrago.model.classpath"/>
     <sequential>
-      <loadproperties
-        srcFile="${project.catalog.dir}/ReposStorage.properties"/>
-      <farrago.antFork target="@{target}" jvm="java">
+      <farrago.antFork 
+          target="@{target}"
+          jvm="java"
+          classpathref="@{classpathref}">
+        <!-- REVIEW: SWZ: 2008-03-26: Remove when all callers
+             explicitly set storage properties (by file or element). -->
         <jvmargs>
-          <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
-          <syspropertyset>
-            <propertyref prefix="org.netbeans.mdr"/>
-            <propertyref prefix="MDRStorageProperty"/>
-          </syspropertyset>
+          <sysproperty 
+              key="enki.compatibility.storagePropertiesFile"
+              value="${project.catalog.dir}/ReposStorage.properties"/>
+          <sysproperty 
+              key="enki.compatibility.substPropertyName"
+              value="FARRAGO_CATALOG_DIR"/>
+          <sysproperty
+              key="enki.compatibility.substPropertyValue"
+              value="${project.catalog.dir}"/>
         </jvmargs>
       </farrago.antFork>
     </sequential>
@@ -733,7 +796,7 @@ ${farrago.test.jvmargs}
   -->
 
   <target name="farrago.mdr_taskdef">
-    <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
+    <taskdef name="mdr" classname="org.eigenbase.enki.ant.EnkiTask"
       classpathref="farrago.3p.classpath"/>
   </target>
 
@@ -761,15 +824,50 @@ ${farrago.test.jvmargs}
     </sequential>
   </macrodef>
 
+  <!-- Sets the farrago.enki.provider property -->
+  <macrodef name="farrago.setReposProvider">
+    <attribute name="reposStorageProps" default="${farrago.ReposStorage.propfile}"/>
+    <sequential>
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <not>
+          <isset property="farrago.enki.provider"/>
+        </not>
+        <then>
+          <loadproperties srcFile="@{reposStorageProps}">
+            <filterchain>
+              <linecontains>
+                <contains value="org.eigenbase.enki.implementationType"/>
+              </linecontains>
+              <tokenfilter>
+                <replacestring 
+                  from="org.eigenbase.enki.implementationType"
+                  to="farrago.enki.provider"/>
+              </tokenfilter>
+            </filterchain>
+          </loadproperties>
+      
+          <condition 
+            property="farrago.enki.generator"
+            value="org.eigenbase.enki.hibernate.codegen.HibernateGenerator"
+            else="org.eigenbase.enki.netbeans.codegen.NetbeansGenerator">
+            <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+          </condition>
+        </then>
+      </ac:if>
+    </sequential>
+  </macrodef>
+
   <!-- Macro for cleaning out a catalog directory -->
   <macrodef name="farrago.cleanCatalog">
     <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
     <sequential>
       <delete>
         <fileset dir="@{catalogDir}" includes="*.dat"/>
-        <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
         <fileset dir="@{catalogDir}" includes="*Dump.xmi"/>
         <fileset dir="@{catalogDir}" includes="FarragoBootUrls.lst"/>
+
+        <!-- Deletes HSQLDB files or MYSQL .dump files. -->
+        <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
       </delete>
     </sequential>
   </macrodef>
@@ -778,15 +876,84 @@ ${farrago.test.jvmargs}
   <macrodef name="farrago.backupCatalog">
     <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
     <attribute name="backupDir" default="${farrago.catalog.backup.dir}"/>
+    <attribute name="catalogOnly" default="false"/>
+
     <sequential>
+      <farrago.setReposProvider reposStorageProps="@{catalogDir}/ReposStorage.properties"/>
+
       <delete includeEmptyDirs="true" quiet="true">
         <fileset dir="@{backupDir}" includes="*"/>
       </delete>
       <mkdir dir="@{backupDir}"/>
+
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+        <then>
+          <!-- Backup the hibernate database to FarragoCatalog.dump. -->
+          <exec 
+              executable="${farrago.enki.hibernate.backup.cmd}"
+              output="@{backupDir}/FarragoCatalog.dump"
+              logError="true"
+              failonerror="true">
+            <arg line="${farrago.enki.hibernate.backup.args}"/>
+          </exec>
+        </then>
+      </ac:if>
+
       <copy todir="@{backupDir}">
         <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
-        <fileset dir="@{catalogDir}" includes="db.dat"/>
       </copy>
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <isfalse value="@{catalogOnly}"/>
+        <then>
+          <copy todir="@{backupDir}">
+            <fileset dir="@{catalogDir}" includes="db.dat"/>
+          </copy>
+        </then>
+      </ac:if>
+    </sequential>
+  </macrodef>
+
+  <!-- Macro for restoring a backed up catalog directory -->
+  <macrodef name="farrago.restoreCatalog">
+    <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
+    <attribute name="backupDir" default="${farrago.catalog.backup.dir}"/>
+    <attribute name="catalogOnly" default="false"/>
+
+    <sequential>
+      <farrago.setReposProvider reposStorageProps="@{catalogDir}/ReposStorage.properties"/>
+
+      <copy todir="@{catalogDir}">
+        <fileset dir="@{backupDir}">
+          <exclude name="*.dump"/>
+          <exclude name="*.dat"/>
+        </fileset>
+      </copy>
+      
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <isfalse value="@{catalogOnly}"/>
+        <then>
+          <copy todir="@{catalogDir}">
+            <fileset dir="@{backupDir}">
+              <include name="*.dat"/>
+            </fileset>
+          </copy>
+        </then>
+      </ac:if>
+      
+      <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+        <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+        <then>
+          <!-- Restore the hibernate database from FarragoCatalog.dump. -->
+          <exec 
+              executable="${farrago.enki.hibernate.restore.cmd}"
+              input="@{backupDir}/FarragoCatalog.dump"
+              logError="true"
+              failonerror="true">
+            <arg line="${farrago.enki.hibernate.restore.args}"/>
+          </exec>
+        </then>
+      </ac:if>
     </sequential>
   </macrodef>
 

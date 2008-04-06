@@ -27,6 +27,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
+import net.sf.farrago.catalog.FarragoReposTxnContext;
+import net.sf.farrago.fennel.FennelStreamHandle;
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
@@ -115,14 +117,28 @@ class FarragoExecutableFennelStmt
             FennelTupleData tupleData = new FennelTupleData(tupleDesc);
             FennelTupleReader tupleReader =
                 new FennelOnlyTupleReader(tupleDesc, tupleData);
+            FennelStreamHandle streamHandle;
+            int cachePageSize;
+            
+            FarragoReposTxnContext txn = 
+                runtimeContext.getRepos().newTxnContext(true);
+            txn.beginReadTxn();
+            try {
+                streamHandle = runtimeContext.getStreamHandle(streamName, true);
+                cachePageSize = runtimeContext.getRepos().getCurrentConfig()
+                              .getFennelConfig().getCachePageSize();
+            } 
+            finally {
+                txn.commit();
+            }
+            
             TupleIter tupleIter =
                 new FennelTupleIter(
                     tupleReader,
                     runtimeContext.getFennelStreamGraph(),
-                    runtimeContext.getStreamHandle(streamName, true),
-                    runtimeContext.getRepos().getCurrentConfig()
-                                  .getFennelConfig().getCachePageSize());
-            ResultSet resultSet =
+                    streamHandle,
+                    cachePageSize);
+            FennelOnlyResultSet resultSet =
                 new FennelOnlyResultSet(
                     tupleIter,
                     rowType,
@@ -133,6 +149,9 @@ class FarragoExecutableFennelStmt
             runtimeContext.openStreams();
 
             runtimeContext = null;
+            
+            resultSet.setOpened();
+            
             return resultSet;
         } catch (UnsupportedOperationException e) {
             throw Util.newInternal(e);

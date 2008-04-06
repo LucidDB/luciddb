@@ -85,7 +85,7 @@ public class SqlSimpleParser
      */
     public String simplifySql(String sql)
     {
-        Tokenizer tokenizer = new Tokenizer(sql);
+        Tokenizer tokenizer = new Tokenizer(sql, hintToken);
         List<Token> list = new ArrayList<Token>();
         while (true) {
             Token token = tokenizer.nextToken();
@@ -197,6 +197,7 @@ public class SqlSimpleParser
 
     public static class Tokenizer {
         final String sql;
+        private final String hintToken;
         private int pos;
         int start = 0;
 
@@ -208,14 +209,16 @@ public class SqlSimpleParser
             }
         }
 
-        public Tokenizer(String sql) {
+        public Tokenizer(String sql, String hintToken) {
             this.sql = sql;
+            this.hintToken = hintToken;
             this.pos = 0;
         }
 
         public Token nextToken() {
             while (pos < sql.length()) {
                 char c = sql.charAt(pos);
+                final String match;
                 switch (c) {
                 case ',':
                     ++pos;
@@ -251,7 +254,11 @@ public class SqlSimpleParser
                             }
                         }
                     }
-                    return new Token(TokenType.DQID, sql.substring(start, pos));
+                    match = sql.substring(start, pos);
+                    if (match.startsWith("\" " + hintToken + " ")) {
+                        return new Token(TokenType.ID, hintToken);
+                    }
+                    return new Token(TokenType.DQID, match);
 
                 case '\'':
                     // Parse single-quoted identifier.
@@ -275,7 +282,8 @@ public class SqlSimpleParser
                             }
                         }
                     }
-                    return new Token(TokenType.SQID, sql.substring(start, pos));
+                    match = sql.substring(start, pos);
+                    return new Token(TokenType.SQID, match);
 
                 case '/':
                     // possible start of '/*' or '//' comment

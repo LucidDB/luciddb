@@ -115,6 +115,7 @@ BIN_DIR=$RELEASE_DIR/bin
 mkdir $LIB_DIR
 mkdir $PLUGIN_DIR
 mkdir $LIB_DIR/mdrlibs
+mkdir $LIB_DIR/enki
 mkdir $LIB_DIR/fennel
 mkdir $INSTALL_DIR
 mkdir $CATALOG_DIR
@@ -131,6 +132,9 @@ cp resgen/COPYING $LIB_DIR/resgen.license.txt
 cp mdrlibs/* $LIB_DIR/mdrlibs
 rm -f $LIB_DIR/mdrlibs/uml*.jar
 rm -f $LIB_DIR/mdrlibs/mdrant.jar
+cp enki/*.jar enki/*.txt enki/LICENSE $LIB_DIR/enki
+rm -f $LIB_DIR/enki/eigenbase-enki-*-doc.jar
+rm -f $LIB_DIR/enki/enki-src.jar
 cp OpenJava/openjava.jar $LIB_DIR
 cp OpenJava/COPYRIGHT $LIB_DIR/openjava.license.txt
 cp RmiJdbc/dist/lib/*.jar $LIB_DIR
@@ -224,11 +228,14 @@ if [ $cygwin = "true" ]; then
 else
     cp dist/install/install.sh $INSTALL_DIR
 fi
-cp catalog/FarragoCatalog.* $CATALOG_DIR
+
+# Make a backup to get a mysql dump in the event that HSQLDB isn't being used
+ant backupCatalog
+cp catalog/backup/FarragoCatalog.* $CATALOG_DIR
 cp catalog/ReposStorage.properties $CATALOG_DIR
  
 if $dist_fennel; then
-    cp catalog/*.dat $CATALOG_DIR
+    cp catalog/backup/*.dat $CATALOG_DIR
 fi
 
 if [ $cygwin = "true" ]; then

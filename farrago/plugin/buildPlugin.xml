@@ -97,19 +97,17 @@
     <farrago.synthesizeMetamodel
       extMofBasename="${plugin.model.basename}Mof"
       xmiDir="${plugin.xmi.dir}"/>
+    <farrago.setReposProvider/>
     <farrago.antFork dir="${plugin.dir}" 
-      target="plugin.forked_importMetamodel"/>
-    <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${plugin.catalog.src.dir}" 
-        excludes="${plugin.model.package}/**"/>
-    </delete>
-    <farrago.uncommentGenerics javadir="${plugin.catalog.src.dir}"/>
+      target="plugin.forked_generateMetamodelCode"/>
     <farrago.javaCompile
       srcdir="${plugin.catalog.src.dir}"
       destdir="${plugin.catalog.src.dir}"
       classpathref="plugin.classpath">
       <include name="**/*.java"/>
     </farrago.javaCompile>
+    <farrago.antFork dir="${plugin.dir}" 
+      target="plugin.forked_importMetamodel"/>
     <farrago.javaExec
       classname="net.sf.farrago.catalog.FarragoReposUtil"
       classpathref="farrago.run.classpath">
@@ -126,14 +124,36 @@
       out="${plugin.xmi.dir}/${plugin.model.prefix}PluginModel.xmi" />
   </target>
 
-  <target name="plugin.forked_importMetamodel" depends="farrago.mdr_taskdef">
-    <mdr storageFile="${plugin.catalog.dir}/FarragoCatalog">
-      <instantiate name="FarragoMetamodel"/>
-      <readXMI
-        file="${plugin.xmi.dir}/FarragoMetamodel.xmi"
-        extent="FarragoMetamodel"/>
+  <target name="plugin.forked_generateMetamodelCode" depends="farrago.mdr_taskdef">
+    <farrago.setReposProvider/>
+
+    <mdr logConfigFile="${FarragoMdrBuildTrace.properties}">
       <mapJava
+        file="${plugin.xmi.dir}/FarragoMetamodel.xmi"
         dir="${plugin.catalog.src.dir}"
+        extent="FarragoMetamodel"
+        generatorClass="${farrago.enki.generator}"
+        generatorOptions="tablePrefix='FEM_',plugin=true,include='${plugin.model.package}'"/>
+    </mdr>
+
+    <delete quiet="true">
+      <fileset dir="." includes="mdr.bt?"/>
+    </delete>
+
+  </target>
+
+  <target name="plugin.forked_importMetamodel" depends="farrago.mdr_taskdef">
+    <mdr>
+      <storageProperty
+        name="org.eigenbase.enki.implementationType" 
+        value="NETBEANS_MDR"/>
+      <storageProperty
+        name="org.netbeans.mdr.persistence.Dir"
+        value="${plugin.catalog.dir}/FarragoCatalog"/>
+
+      <createExtent name="FarragoMetamodel"/>
+      <importXMI
+        file="${plugin.xmi.dir}/FarragoMetamodel.xmi"
         extent="FarragoMetamodel"/>
     </mdr>
   </target>
@@ -216,6 +236,8 @@
       manifest="${plugin.classes.dir}/META-INF/MANIFEST.MF">
       <fileset dir="${plugin.catalog.src.dir}">
         <include name="**/*.class"/>
+        <include name="**/*.properties"/>
+        <include name="**/*.xml"/>
       </fileset>
       <fileset dir="${plugin.xmi.dir}">
         <include name="${plugin.model.prefix}PluginModel.xmi"/>
@@ -236,6 +258,7 @@
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${plugin.xmi.dir}" includes="*.xmi"/>
       <fileset dir="${plugin.catalog.dir}" includes="FarragoCatalog.*"/>
+      <fileset dir="${plugin.catalog.src.dir}" includes="**"/>
     </delete>
   </target>
 

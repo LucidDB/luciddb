@@ -25,13 +25,14 @@ package net.sf.farrago.jdbc;
 import java.sql.*;
 
 import java.util.logging.*;
+import java.lang.reflect.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
 
 /**
- * Utility functions for the Farrago JDBC driver (refactored from FarragoUtil)
+ * Utility functions for the Farrago JDBC driver.
  *
  * @author angel
  * @version $Id$
@@ -61,6 +62,10 @@ public class FarragoJdbcUtil
         Throwable cause = ex.getCause();
         SQLException sqlExcn;
         if (ex instanceof EigenbaseException) {
+            String stmt = null;
+            if (ex instanceof EigenbaseContextException) {
+                stmt = ((EigenbaseContextException)ex).getOriginalStatement();
+            }
             // TODO:  map for SQLState
             if (cause instanceof EigenbaseValidatorException) {
                 // We're looking at
@@ -69,24 +74,30 @@ public class FarragoJdbcUtil
                 // so the message should be
                 //   "Validation error at line 5, column 10: Bad column 'FOO'"
                 final String causeMessage = cause.getMessage();
+                //noinspection ThrowableInstanceNeverThrown
                 sqlExcn =
-                    new FarragoSqlException(message + ": " + causeMessage, ex);
+                    new FarragoSqlException(message + ": " + causeMessage,
+                        ex,
+                        stmt);
 
                 // Discard this cause and move on to next.
                 cause = cause.getCause();
             } else {
-                sqlExcn = new FarragoSqlException(message, ex);
+                //noinspection ThrowableInstanceNeverThrown
+                sqlExcn = new FarragoSqlException(message, ex, stmt);
             }
         } else if (ex instanceof SQLException) {
             sqlExcn = (SQLException) ex;
         } else {
             // for anything else, include the class name
             // as part of what went wrong
+            //noinspection ThrowableInstanceNeverThrown
             sqlExcn =
                 new FarragoSqlException(
                     ex.getClass().getName() + ": "
                     + message,
-                    ex);
+                    ex,
+                    null);
         }
 
         // preserve additional attributes of the original excn
@@ -96,9 +107,9 @@ public class FarragoJdbcUtil
         // underlying cause -- that is, the exception at the end of the cause
         // chain -- comes out on top.
         //
-        // If this is a parse exception, the underlying cause will be a generated
-        // class specific to our particular parser implementation, so we stop at
-        // the SqlParseException which is just above it.
+        // If this is a parse exception, the underlying cause will be a
+        // generated class specific to our particular parser implementation, so
+        // we stop at the SqlParseException which is just above it.
         if (cause == null) {
             return sqlExcn;
         } else if (ex instanceof EigenbaseParserException) {
@@ -125,6 +136,7 @@ public class FarragoJdbcUtil
         final String message,
         Logger tracer)
     {
+        //noinspection ThrowableInstanceNeverThrown
         SQLException ex = new SQLException(message);
 
         // REVIEW: not sure tracing everything is desirable. Consider
@@ -133,6 +145,83 @@ public class FarragoJdbcUtil
         tracer.severe(message);
         tracer.throwing("FarragoJdbcUtil", "newSqlException(msg)", ex);
         return ex;
+    }
+
+    /**
+     * Walks an exception stack using reflection looking for the original SQL
+     * statement that MAY be in the exception stack.
+     *
+     * @param ex top of exception stack
+     * @return Original input text that generated the error or  <code>null</code>
+     */
+
+    public static String findInputString(final Throwable ex)
+    {
+        Class clazz = ex.getClass();
+
+        // Check to see if the current exception has the string we are looking
+        // for.
+        try {
+            // EigenbaseContextException and FarragoSqlException both have a
+            // getOriginalStatement() method.
+            Method meth =
+                clazz.getMethod("getOriginalStatement", (Class[]) null);
+            Object valObj = meth.invoke(ex, (Object[]) null);
+            if (valObj != null) {
+                return (String)valObj;
+            }
+        } catch (IllegalAccessException e) {
+            //intentionally empty
+        } catch (NoSuchMethodException e) {
+            //intentionally empty
+        } catch (InvocationTargetException e) {
+            //intentionally empty
+        }
+
+        // Here is where is starts getting tricky.  Parser and Validator chain
+        // expceptions in different ways.  Parser exceptions use the "next"
+        // field of java.lang.SQLException while the validator chains through
+        // the "original" field defined in FarragoSqlException.  None of the
+        // methods seem to use the "cause" field defined by Throwable.
+        //
+        // Since the parser can have entries in both "original" and "next" we
+        // will try "next" first.
+        try {
+            // SQLException has a method getNextException()
+            Method meth = clazz.getMethod("getNextException", (Class[]) null);
+            Object valObj = meth.invoke(ex, (Object[]) null);
+            if ((valObj != null) && ((Throwable)valObj != ex)) {
+                String query = findInputString((Throwable)valObj);
+                if (query != null) {
+                    return query;
+                }
+            }
+        } catch (IllegalAccessException e) {
+            // intentionally empty
+        } catch (NoSuchMethodException e) {
+            // intentionally empty
+        } catch (InvocationTargetException e) {
+            // intentionally empty
+        }
+
+        // Check for the original cause
+        try {
+            // FarragoSqlException has a method getOriginalThrowable().
+            Method meth =
+                clazz.getMethod("getOriginalThrowable", (Class[]) null);
+            Object valObj = meth.invoke(ex, (Object[]) null);
+            if ((valObj != null) && ((Throwable) valObj != ex)) {
+                return findInputString((Throwable)valObj);
+            }
+        } catch (IllegalAccessException e) {
+             // intentionally empty
+        } catch (NoSuchMethodException e) {
+             // intentionally empty
+        } catch (InvocationTargetException e) {
+             // intentionally empty
+        }
+
+        return null;
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -165,24 +254,44 @@ public class FarragoJdbcUtil
          */
         private transient final Throwable original;
 
+        private final String originalStatement;
+
         /**
          * Creates an exception with a message and a record of the undiluted
          * original exception.
          *
-         * @param s
-         * @param original
+         * @param reason   A description of the exception
+         * @param original Original exception
+         * @param orignalStatement Original statement
          */
         public FarragoSqlException(
-            String s,
-            Throwable original)
+            String reason,
+            Throwable original,
+            String orignalStatement)
         {
-            super(s);
+            super(reason);
             this.original = original;
+            this.originalStatement = orignalStatement;
         }
 
+        /**
+         * Returns the original exception.
+         *
+         * @return original exception
+         */
         public Throwable getOriginalThrowable()
         {
             return original;
+        }
+
+        /**
+         * Returns the original statement.
+         *
+         * @return original statement
+         */
+        public String getOriginalStatement()
+        {
+            return originalStatement;
         }
     }
 }

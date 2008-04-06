@@ -41,22 +41,23 @@ public abstract class SetAppVarUdp
             throw ApplibResourceObject.get().AppVarIdRequired.ex();
         }
         FarragoRepos repos = null;
-        boolean rollback = true;
+        FarragoReposTxnContext txn = null;
         try {
             repos = AppVarUtil.getRepos();
-            repos.beginReposTxn(true);
+            txn = repos.newTxnContext(true);
+            txn.beginWriteTxn();
             CwmExtent context = AppVarUtil.lookupContext(repos, contextId);
             repos.setTagValue(
                 context,
                 varId,
                 (newValue == null) ? AppVarUtil.NULL_APPVAR_VALUE : newValue);
-            rollback = false;
+            txn.commit();
         } catch (Throwable ex) {
             throw ApplibResourceObject.get().AppVarWriteFailed.ex(
                 contextId, varId, ex);
         } finally {
-            if (repos != null) {
-                repos.endReposTxn(rollback);
+            if (txn != null) {
+                txn.rollback();
             }
         }
     }

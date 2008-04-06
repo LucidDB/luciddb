@@ -63,19 +63,35 @@ public class FarragoReposTxnContext
 
     private State state;
     private int lockLevel;
-
+    private final boolean manageReposSession;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new inactive transaction context.
+     * Creates a new inactive transaction context with manual repository
+     * session management.
      *
      * @param repos the repos against which transactions are to be performed
      */
     public FarragoReposTxnContext(FarragoRepos repos)
     {
+        this(repos, false);
+    }
+
+    /**
+     * Creates a new inactive transaction context.
+     *
+     * @param repos the repos against which transactions are to be performed
+     * @param manageRepoSession if true, a repository session is wrapped
+     *                          around each transaction
+     */
+    public FarragoReposTxnContext(
+        FarragoRepos repos, boolean manageRepoSession)
+    {
         this.repos = repos;
         state = State.NO_TXN;
         lockLevel = 0;
+        this.manageReposSession = manageRepoSession;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -102,6 +118,11 @@ public class FarragoReposTxnContext
     public void beginReadTxn()
     {
         assert (!isTxnInProgress());
+        
+        if (manageReposSession) {
+            repos.beginReposSession();
+        }
+        
         repos.beginReposTxn(false);
         state = State.READ_TXN;
     }
@@ -112,6 +133,10 @@ public class FarragoReposTxnContext
     public void beginWriteTxn()
     {
         assert (!isTxnInProgress());
+
+        if (manageReposSession) {
+            repos.beginReposSession();
+        }
 
         // NOTE jvs 12-Jan-2007:  don't change state until AFTER successfully
         // beginning a transaction; if beginReposTxn throws an excn,
@@ -138,6 +163,10 @@ public class FarragoReposTxnContext
 
         state = State.NO_TXN;
         repos.endReposTxn(false);
+        
+        if (manageReposSession) {
+            repos.endReposSession();
+        }
     }
 
     /**
@@ -153,6 +182,10 @@ public class FarragoReposTxnContext
 
         state = State.NO_TXN;
         repos.endReposTxn(true);
+
+        if (manageReposSession) {
+            repos.endReposSession();
+        }
     }
 
     /**

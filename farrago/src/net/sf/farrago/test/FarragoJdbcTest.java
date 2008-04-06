@@ -39,6 +39,7 @@ import java.util.regex.*;
 import junit.framework.*;
 
 import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.jdbc.FarragoStatement;
 import net.sf.farrago.trace.*;
 
 import org.eigenbase.util.*;
@@ -2427,7 +2428,7 @@ public class FarragoJdbcTest
     {
         String sql = "select * from sales.emps order by name";
         preparedStmt = connection.prepareStatement(sql);
-        for (int i = 10; i >= -2; i--) {
+        for (int i = 10; i >= 0; i--) {
             preparedStmt.setQueryTimeout(i);
             resultSet = preparedStmt.executeQuery();
 
@@ -2437,6 +2438,18 @@ public class FarragoJdbcTest
                 Arrays.asList("20", "10", "40", "20"),
                 Arrays.asList("M", null, "M", "F"),
                 Arrays.asList("San Francisco", null, "Vancouver", null));
+        }
+
+        // negative timeouts should throw
+        for (int i = 0; i >= -2; i--) {
+            try {
+                preparedStmt.setQueryTimeout(i);
+                assertTrue("negative timeout=" + i + " should throw", i >= 0);
+            } catch (SQLException e) {
+                assertContains(
+                    FarragoStatement.ERRMSG_REQ_NON_NEG,
+                    e.getMessage());
+            }
         }
 
         sql = "select empid from sales.emps where name=?";
@@ -2878,6 +2891,8 @@ public class FarragoJdbcTest
             resultSet = null;
             if (flushCache) {
                 stmt.execute("call sys_boot.mgmt.flush_code_cache()");
+                // see DTBUG 1291 for info about race condition
+                // Thread.sleep(5000);
             }
         }
     }
@@ -3380,7 +3395,7 @@ public class FarragoJdbcTest
 
     //~ Inner Classes ----------------------------------------------------------
 
-    public static class FarragoJdbcTester
+    public class FarragoJdbcTester
         implements JdbcTester
     {
         FarragoTestCase testCase;
@@ -3405,6 +3420,11 @@ public class FarragoJdbcTest
             testCase.tearDown();
         }
 
+        public String getName()
+        {
+            return FarragoJdbcTest.this.getName();
+        }
+        
         public Connection getConnection()
         {
             return testCase.connection;

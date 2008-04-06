@@ -67,10 +67,22 @@ select "column \uc234\uc2bd\uc3bc\uc380\uc2b4\uc2bb\uc386\uc2b9\uc388\uc391"
     from "non-ASCII table \u00bc\uc2bb\u00c3\u00bb";
 
 -- Test long identifiers
-create table "Reallyreallyreallyreallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithmanyfunnycharacters" (
-    "veryveryverylongcolumnnamewithnofunnycharactersjustalphabeticalandnumbersabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz1234567890" integer primary key);
+create table "Reallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithpunctuation." (
+    "longcolumnnamewithnofunnycharactersabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefgABCDEFG0123456" integer primary key);
 
-insert into "Reallyreallyreallyreallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithmanyfunnycharacters"
+insert into "Reallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithpunctuation."
 values 54, 89, 32;
 
-select * from "Reallyreallyreallyreallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithmanyfunnycharacters";
+!outputformat csv
+select * from "Reallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithpunctuation.";
+
+-- fails: table identifier too long
+create table "Reallylong`1234567890-=~!@#$%^&*()_+qwertyuiop[]\asdfghjkl;'zxcvbnm,./QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?tablenamewithpunctuation..." (
+  "col" integer primary key);
+
+-- fails: column identifier too long
+create table "longcoltab" (
+  "longcolumnnamewithnofunnycharactersabcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefgABCDEFG01234567" integer primary key);
+
+-- fails: schema identifier too long
+create schema "longschemaname_mahnamahna_quitelongschemaname_mahnamahna_verylongschemaname_mahnamahna_veryveryverylongschemaname_mahnamahna_yeah";

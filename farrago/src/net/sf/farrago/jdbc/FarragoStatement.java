@@ -35,6 +35,10 @@ import java.sql.*;
 public interface FarragoStatement
     extends java.sql.Statement
 {
+    final String ERRMSG_NOT_A_QUERY = "Not a query:  ";
+    final String ERRMSG_IS_A_QUERY = "Can't executeUpdate a query:  ";
+    final String ERRMSG_REQ_NON_NEG = "Requires non-negative argument: ";
+
     //~ Methods ----------------------------------------------------------------
 
     /**

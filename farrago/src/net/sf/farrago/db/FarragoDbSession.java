@@ -138,6 +138,7 @@ public class FarragoDbSession
     private boolean isAutoCommit;
     private boolean shutDownRequested;
     private boolean catalogDumpRequested;
+    private boolean reposSessionEnded;
     private boolean wasKilled;
 
     /**
@@ -242,72 +243,88 @@ public class FarragoDbSession
         String remoteProtocol = info.getProperty("remoteProtocol", "none");
         FemUser femUser = null;
 
+        final boolean reentrantMdrSession;
         if (MDR_USER_NAME.equals(sessionVariables.sessionUserName)) {
             // This is a reentrant session from MDR.
             repos = database.getSystemRepos();
-            if (sessionVariables.sessionName == null) {
-                sessionVariables.sessionName = MDR_USER_NAME;
-            }
+            reentrantMdrSession = true;
         } else {
-            // This is a normal session.
-            // Security best practices for failed login attempts:
-            // * report only that username/password combination is invalid
-            // * use same error for "no such user" and "wrong password"
-            // * do not reveal that username exists but password wrong
             repos = database.getUserRepos();
-            femUser = FarragoCatalogUtil.getUserByName(repos, sessionUser);
-            if (femUser == null) {
-                throw FarragoResource.instance().SessionLoginFailed.ex(
-                    repos.getLocalizedObjectName(sessionUser));
-            } else if (
-                database.isAuthenticationEnabled()
-                && (database.isAuthenticateLocalConnections()
-                    || !remoteProtocol.equals("none")))
-            {
-                // authenticate; use same SessionLoginFailed if fails
-                LoginContext lc;
-                CallbackHandler cbh =
-                    new FarragoNoninteractiveCallbackHandler(
-                        info.getProperty("user", "GUEST"),
-                        info.getProperty("password"));
-                try {
-                    lc = new LoginContext(
-                        "Farrago",
-                        null,
-                        cbh,
-                        database.getAuthenticationConfig());
-                    lc.login();
-                } catch (LoginException ex) {
+            reentrantMdrSession = false;
+        }            
+
+        
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        txn.beginReadTxn();
+        try {
+            if (reentrantMdrSession) {
+                if (sessionVariables.sessionName == null) {
+                    sessionVariables.sessionName = MDR_USER_NAME;
+                }
+            } else {
+                // This is a normal session.
+                // Security best practices for failed login attempts:
+                // * report only that username/password combination is invalid
+                // * use same error for "no such user" and "wrong password"
+                // * do not reveal that username exists but password wrong
+                femUser = FarragoCatalogUtil.getUserByName(repos, sessionUser);
+                if (femUser == null) {
                     throw FarragoResource.instance().SessionLoginFailed.ex(
                         repos.getLocalizedObjectName(sessionUser));
-                }
-
-                try {
-                    lc.logout();
-                } catch (LoginException ex) {
-                    throw FarragoResource.instance().SessionLogoutFailed.ex(
-                        repos.getLocalizedObjectName(sessionUser));
+                } else if (
+                    database.isAuthenticationEnabled()
+                    && (database.isAuthenticateLocalConnections()
+                        || !remoteProtocol.equals("none")))
+                {
+                    // authenticate; use same SessionLoginFailed if fails
+                    LoginContext lc;
+                    CallbackHandler cbh =
+                        new FarragoNoninteractiveCallbackHandler(
+                            info.getProperty("user", "GUEST"),
+                            info.getProperty("password"));
+                    try {
+                        lc = new LoginContext(
+                            "Farrago",
+                            null,
+                            cbh,
+                            database.getAuthenticationConfig());
+                        lc.login();
+                    } catch (LoginException ex) {
+                        throw FarragoResource.instance().SessionLoginFailed.ex(
+                            repos.getLocalizedObjectName(sessionUser));
+                    }
+                    
+                    try {
+                        lc.logout();
+                    } catch (LoginException ex) {
+                        throw FarragoResource.instance().SessionLogoutFailed.ex(
+                            repos.getLocalizedObjectName(sessionUser));
+                    }
                 }
             }
-        }
 
-        fennelTxnContext =
-            sessionFactory.newFennelTxnContext(
-                repos,
-                database.getFennelDbHandle());
+            fennelTxnContext =
+                sessionFactory.newFennelTxnContext(
+                    repos,
+                    database.getFennelDbHandle());
 
-        CwmNamespace defaultNamespace = null;
-        if (femUser != null) {
-            defaultNamespace = femUser.getDefaultNamespace();
+            CwmNamespace defaultNamespace = null;
+            if (femUser != null) {
+                defaultNamespace = femUser.getDefaultNamespace();
+            }
+            if (defaultNamespace == null) {
+                sessionVariables.catalogName = 
+                    repos.getSelfAsCatalog().getName();
+            } else if (defaultNamespace instanceof CwmCatalog) {
+                sessionVariables.catalogName = defaultNamespace.getName();
+            } else {
+                sessionVariables.schemaName = defaultNamespace.getName();
+                sessionVariables.catalogName =
+                    defaultNamespace.getNamespace().getName();
+            }
         }
-        if (defaultNamespace == null) {
-            sessionVariables.catalogName = repos.getSelfAsCatalog().getName();
-        } else if (defaultNamespace instanceof CwmCatalog) {
-            sessionVariables.catalogName = defaultNamespace.getName();
-        } else {
-            sessionVariables.schemaName = defaultNamespace.getName();
-            sessionVariables.catalogName =
-                defaultNamespace.getNamespace().getName();
+        finally {
+            txn.commit();
         }
 
         txnCodeCache = new HashMap<String, FarragoObjectCache.Entry>();
@@ -729,7 +746,15 @@ public class FarragoDbSession
             fennelTxnContext.commit();
         }
         onEndOfTransaction(FarragoSessionTxnEnd.COMMIT);
-        sessionIndexMap.onCommit();
+
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        txn.beginReadTxn();
+        try {
+            sessionIndexMap.onCommit();
+        }
+        finally {
+            txn.commit();
+        }
     }
 
     void rollbackImpl()
@@ -925,6 +950,12 @@ public class FarragoDbSession
                 sqlTimingTracer,
                 "begin prepare");
 
+        // The local variable is necessary to insure that the repository 
+        // session can be closed if the statement causes a shutdown.
+        final FarragoRepos repos = this.repos; 
+        repos.beginReposSession();
+        reposSessionEnded = false;
+        
         FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(repos);
 
@@ -975,6 +1006,9 @@ public class FarragoDbSession
                 reposTxnContext.commit();
             }
             reposTxnContext.unlockAfterTxn();
+            if (!reposSessionEnded) {
+                repos.endReposSession();
+            }
         }
         timingTracer.traceTime("end prepare");
         return stmt;
@@ -1014,7 +1048,6 @@ public class FarragoDbSession
             pRollback[0] = false;
             ddlValidator.closeAllocation();
             ddlValidator = null;
-            personality.validate(stmtValidator, sqlNode);
             FarragoSessionExecutableStmt stmt =
                 database.prepareStmt(
                     stmtContext,
@@ -1183,6 +1216,9 @@ public class FarragoDbSession
             ddlStmt.postCommit(ddlValidator);
 
             if (shutDownRequested) {
+                repos.endReposSession();
+                reposSessionEnded = true;
+                
                 closeAllocation();
                 database.shutdown();
                 if (catalogDumpRequested) {

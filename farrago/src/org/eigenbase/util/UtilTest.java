@@ -462,7 +462,7 @@ public class UtilTest
         // NOTE jvs 31-July-2007:  First two tests are disabled since
         // not everyone may have patched their system yet for recent
         // DST change.
-        
+
         // Pacific Standard Time. Effective 2007, the local time changes from
         // PST to PDT at 02:00 LST to 03:00 LDT on the second Sunday in March
         // and returns at 02:00 LDT to 01:00 LST on the first Sunday in
@@ -484,8 +484,25 @@ public class UtilTest
         // hemisphere, daylight savings begins on the last Sunday in October at
         // 2am and ends on the last Sunday in March at 3am.
         // (Uses STANDARD_TIME time-transition mode.)
-        assertEquals("EST10EST1,M10.5.0/2,M3.5.0/3",
-            Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"), true));
+
+        // Because australia changed their daylight savings rules, some JVMs
+        // have a different (older and incorrect) timezone settings for
+        // Australia.  So we test for the older one first then do the
+        // correct assert based upon what the toPosix method returns
+        String posixTime =
+            Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"), true);
+
+        if (posixTime.equals("EST10EST1,M10.5.0/2,M3.5.0/3")) {
+
+            // older JVMs without the fix
+            assertEquals("EST10EST1,M10.5.0/2,M3.5.0/3", posixTime);
+
+        } else {
+
+            // newer JVMs with the fix
+            assertEquals("EST10EST1,M10.1.0/2,M4.1.0/3", posixTime);
+        }
+
 
         // Paris, France. (Uses UTC_TIME time-transition mode.)
         assertEquals("CET1CEST1,M3.5.0/2,M10.5.0/3",

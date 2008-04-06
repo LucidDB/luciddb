@@ -115,7 +115,13 @@ public class FarragoSequenceAccessor
      */
     synchronized public void closeAllocation()
     {
-        unreserve();
+        repos.beginReposSession();
+        try {
+            unreserve();
+        }
+        finally {
+            repos.endReposSession();
+        }
         super.closeAllocation();
     }
 

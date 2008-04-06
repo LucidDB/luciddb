@@ -118,6 +118,18 @@ public abstract class FarragoUnregisteredJdbcEngineDriver
     {
         return FarragoJdbcUtil.newSqlException(ex, tracer);
     }
+
+    /**
+     * Creates a new SQLException from the message.
+     *
+     * @param message detail message, the reason for this exception
+     *
+     * @return message as a SQLException
+     */
+    static SQLException newSqlException(String message)
+    {
+        return FarragoJdbcUtil.newSqlException(message, tracer);
+    }
 }
 
 // End FarragoUnregisteredJdbcEngineDriver.java

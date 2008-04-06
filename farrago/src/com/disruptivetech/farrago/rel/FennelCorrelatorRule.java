@@ -29,7 +29,7 @@ import org.eigenbase.relopt.*;
 
 
 /**
- * FennelCorrelateRule is a rule to implement the join of two correlated
+ * FennelCorrelatorRule is a rule to implement the join of two correlated
  * streams.
  *
  * @author Wael Chatila
@@ -59,6 +59,11 @@ public class FennelCorrelatorRule
     public void onMatch(RelOptRuleCall call)
     {
         CorrelatorRel correlatorRel = (CorrelatorRel) call.rels[0];
+        if (correlatorRel.getJoinType() != JoinRelType.INNER) {
+            // TODO: FennelPullCorrelatorRel could potentially also support
+            // LEFT JOIN, but does not at present.
+            return;
+        }
         RelNode relLeftInput = correlatorRel.getLeft();
         RelNode fennelLeftInput =
             mergeTraitsAndConvert(
@@ -84,7 +89,8 @@ public class FennelCorrelatorRule
                 correlatorRel.getCluster(),
                 fennelLeftInput,
                 fennelRightInput,
-                correlatorRel.cloneCorrelations());
+                new ArrayList<CorrelatorRel.Correlation>(
+                    correlatorRel.getCorrelations()));
         call.transformTo(fennelPullCorrelatorRel);
     }
 }

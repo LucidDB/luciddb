@@ -189,7 +189,7 @@ class MondrianReplicator implements ClosableAllocation
         processSql(sql, false);
 
         String columnDefs;
-        FarragoReposTxnContext txn = repos.newTxnContext();
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
         try {
             txn.beginReadTxn();
             columnDefs = generateColumnDefs(linkTableName, tableName);
@@ -312,11 +312,17 @@ class MondrianReplicator implements ClosableAllocation
                 String tableSchemaName = attrs.getValue("schema");
                 if (tableSchemaName != null) {
                     if (!tableSchemaName.equals(localSchemaName)) {
-                        throw ApplibResourceObject.get()
-                            .MondrianSchemaMismatch.ex(
-                                repos.getLocalizedObjectName(tableSchemaName),
-                                repos.getLocalizedObjectName(currentTableName),
-                                repos.getLocalizedObjectName(localSchemaName));
+                        FarragoReposTxnContext txn = repos.newTxnContext(true);
+                        try {
+                            txn.beginReadTxn();
+                            throw ApplibResourceObject.get()
+                                .MondrianSchemaMismatch.ex(
+                                    repos.getLocalizedObjectName(tableSchemaName),
+                                    repos.getLocalizedObjectName(currentTableName),
+                                    repos.getLocalizedObjectName(localSchemaName));
+                        } finally {
+                            txn.commit();
+                        }
                     }
                 }
                 tableNames.add(currentTableName);

@@ -918,6 +918,25 @@
 > no sql
 > external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.timestamp_to_char';
 > 
+> create or replace function perforce_changelists(
+>   file_pattern varchar(2048),
+>   maxChanges integer)
+> returns table(
+>   changelist_number varchar(128),
+>   changelist_date varchar(128),
+>   submitter varchar(128),
+>   perforce_client varchar(128),
+>   change_description varchar(2048))
+> language java
+> parameter style system defined java
+> no sql
+> external name 
+> 'class net.sf.farrago.syslib.FarragoPerforceUDR.getChangelists';
+> 
+> create or replace view perforce_submitters as
+> select distinct submitter
+> from table(perforce_changelists('.../dev/f...', -1));
+> 
 > -- retrieves a long catalog string attribute in chunks
 > create or replace function repository_lob_text(
 >   mof_id varchar(128),

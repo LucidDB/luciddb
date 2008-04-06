@@ -629,6 +629,11 @@
         <allow>
           <to pattern="util14" />
         </allow>
+        <allow>
+            <to>
+              <include class="org.eigenbase.util.EigenbaseContextException" />
+            </to>
+        </allow>
       </deny>
       <deny>
         <from pattern="jdbc" />

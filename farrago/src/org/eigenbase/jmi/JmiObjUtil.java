@@ -29,12 +29,13 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
+import org.eigenbase.enki.mdr.*;
+import org.eigenbase.enki.util.*;
 import org.eigenbase.util.*;
 
+import org.netbeans.api.mdr.*;
 import org.netbeans.api.xmi.*;
-import org.netbeans.lib.jmi.util.*;
-import org.netbeans.mdr.handlers.*;
-import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.*;
 
 /**
  * Static JMI utilities.
@@ -44,6 +45,14 @@ import org.jgrapht.graph.DefaultEdge;
  */
 public abstract class JmiObjUtil
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * Default maximum repository string length.  Must match the value used
+     * at the time the repository was generated.
+     */
+    private static final int DEFAULT_MAX_STRING_LENGTH = 128;
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -479,8 +488,7 @@ public abstract class JmiObjUtil
      */
     public static String getAccessorName(ModelElement modelElement)
     {
-        TagProvider tagProvider = new TagProvider();
-        String accessorName = tagProvider.getSubstName(modelElement);
+        String accessorName = TagUtil.getSubstName(modelElement);
         String prefix = "get";
         if (modelElement instanceof TypedElement) {
             TypedElement typedElement = (TypedElement) modelElement;
@@ -509,18 +517,36 @@ public abstract class JmiObjUtil
      */
     public static String getEnumFieldName(String enumSymbol)
     {
-        return TagProvider.mapEnumLiteral(enumSymbol);
+        return TagUtil.mapEnumLiteral(enumSymbol);
     }
 
     /**
      * Finds the Java class generated for a particular RefClass, or {@link
      * RefObject}.class if not found.
      *
+     * @param repos the MDRepository that the given RefClass belongs to
      * @param refClass the reflective JMI class representation
      *
      * @return the generated Java class, or RefObject.class if no Java class has
      * been generated
      */
+    public static Class<? extends RefObject> getClassForRefClass(
+        MDRepository repos, 
+        RefClass refClass)
+    {
+        // NOTE jvs 8-Aug-2006:  default to MDR's classloader, otherwise
+        // we get visibility problems with generated MDR classes in
+        // some contexts
+        return getClassForRefClass(
+            ((EnkiMDRepository)repos).getDefaultClassLoader(),
+            refClass,
+            false);
+    }
+
+    /**
+     * @deprecated use {@link #getClassForRefClass(MDRepository, RefClass)}
+     */
+    @Deprecated
     public static Class<? extends RefObject> getClassForRefClass(
         RefClass refClass)
     {
@@ -528,11 +554,10 @@ public abstract class JmiObjUtil
         // we get visibility problems with generated MDR classes in
         // some contexts
         return getClassForRefClass(
-            BaseObjectHandler.getDefaultClassLoader(),
+            MDRepositoryFactory.getDefaultClassLoader(),
             refClass,
             false);
     }
-
     /**
      * Finds the Java class generated for a particular RefClass.
      *
@@ -553,24 +578,16 @@ public abstract class JmiObjUtil
         assert classLoader != null : "require classLoader: use ClassLoader.getSystemClassLoader()";
 
         // Look up the Java interface generated for the class being queried.
-        TagProvider tagProvider = new TagProvider();
-        String className =
-            tagProvider.getImplFullName(
-                (ModelElement) (refClass.refMetaObject()),
-                TagProvider.INSTANCE);
-        assert (className.endsWith("Impl"));
-        className = className.substring(0, className.length() - 4);
-
-        // hack for MDR MOF implementation
-        className =
-            className.replaceFirst(
-                "org\\.netbeans\\.jmiimpl\\.mof",
-                "javax.jmi");
+        String className = TagUtil.getInterfaceFullName(refClass);
+        
         try {
-            return (Class<? extends RefObject>) Class.forName(
-                className,
-                true,
-                classLoader);
+            Class<?> cls =
+                Class.forName(
+                    className,
+                    true,
+                    classLoader);
+            
+            return cls.asSubclass(RefObject.class);
         } catch (ClassNotFoundException ex) {
             // This is possible when we're querying an external repository
             // for which we don't know the class mappings.  Do everything
@@ -668,7 +685,59 @@ public abstract class JmiObjUtil
             obj.refSetValue(attr, obj.refGetValue(attr));
         }
     }
-
+    
+    /**
+     * Limits the result of {@link #getFeatures(RefClass, Class, boolean)} to
+     * the first feature with the given name.
+     * 
+     * @param refClass class of interest
+     * @param filterClass only objects which are instances of this Class will be
+     * returned; so, for example, pass Attribute.class if you want only
+     * attributes, or StructuralFeature.class if you want everything
+     * @param featureName name of the feature to return
+     * @param includeMultiValued if true, multi-valued attributes will be
+     * included; otherwise, they will be filtered out
+     *
+     * @return the first feature matching the given parameters or null if none
+     *         are found
+     */
+    public static <T extends StructuralFeature> T getNamedFeature(
+        RefClass refClass, 
+        Class<T> filterClass, 
+        String featureName, 
+        boolean includeMultiValued)
+    {
+        for (T t: getFeatures(refClass, filterClass, false)) {
+            if (t.getName().equals(featureName)) {
+                return t;
+            }
+        }
+        
+        return null;
+    }
+    
+    public static int getMaxLength(RefClass refClass, Attribute attr)
+    {
+       Classifier cls = (Classifier)refClass.refMetaObject();
+        
+        if (!attr.isChangeable()) {
+            return Integer.MAX_VALUE;
+        }
+        
+        Classifier type = attr.getType();
+        if (type instanceof javax.jmi.model.AliasType) {
+            type = ((javax.jmi.model.AliasType)type).getType();
+        }
+        if (!type.getName().equals("String")) {
+            return Integer.MAX_VALUE;
+        }
+        
+        int maxLength = 
+            TagUtil.findMaxLengthTag(cls, attr, DEFAULT_MAX_STRING_LENGTH);
+ 
+        return maxLength;
+    }
+    
     /**
      * Tests an attribute value to see if it is blank.
      *

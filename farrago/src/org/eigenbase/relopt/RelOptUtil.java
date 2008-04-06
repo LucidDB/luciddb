@@ -1435,8 +1435,10 @@ public abstract class RelOptUtil
      * keys.
      *
      * @param inputRels inputs to a join
-     * @param leftJoinKeys
-     * @param rightJoinKeys
+     * @param leftJoinKeys expressions for LHS of join key
+     * @param rightJoinKeys expressions for RHS of join key
+     * @param systemColCount number of system columns, usually zero. These
+     *     columns are projected at the leading edge of the output row.
      * @param leftKeys on return this contains the join key positions from the
      * new project rel on the LHS.
      * @param rightKeys on return this contains the join key positions from the
@@ -1446,9 +1448,10 @@ public abstract class RelOptUtil
      * be responsible for adding projection on the new join output.
      */
     public static void projectJoinInputs(
-        RelNode [] inputRels,
+        RelNode[] inputRels,
         List<RexNode> leftJoinKeys,
         List<RexNode> rightJoinKeys,
+        int systemColCount,
         List<Integer> leftKeys,
         List<Integer> rightKeys,
         List<Integer> outputProj)
@@ -1469,6 +1472,10 @@ public abstract class RelOptUtil
         int rightKeyCount = rightJoinKeys.size();
         int i;
 
+        for (i = 0; i < systemColCount; i++) {
+            outputProj.add(i);
+        }
+
         for (i = 0; i < origLeftInputSize; i++) {
             newLeftFields.add(
                 rexBuilder.makeInputRef(
@@ -1476,7 +1483,7 @@ public abstract class RelOptUtil
                     i));
             newLeftFieldNames.add(
                 leftRel.getRowType().getFields()[i].getName());
-            outputProj.add(i);
+            outputProj.add(systemColCount + i);
         }
 
         int newLeftKeyCount = 0;
@@ -1503,7 +1510,7 @@ public abstract class RelOptUtil
                     i));
             newRightFieldNames.add(
                 rightRel.getRowType().getFields()[i].getName());
-            outputProj.add(i + leftFieldCount);
+            outputProj.add(systemColCount + leftFieldCount + i);
         }
 
         int newRightKeyCount = 0;

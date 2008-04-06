@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.7.2
+LucidDB Binary Release 0.7.3
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -45,6 +45,42 @@ http://issues.eigenbase.org
 
 ----------------------------------------------------------------------
 CHANGE HISTORY
+
+Changes since 0.7.2 include
+
+- intelligent prefetch for all access paths
+- 2Q victimization algorithm for improved data caching
+- improvements to asynchronous I/O usage on Linux
+- improvements to data cache lazy writer
+- require libaio-dev package for builds
+- fixes for TPC-H dbgen
+- fixes for transaction boundaries in some DDL statements such as ANALYZE
+- fix validation for join on top of set operator (FRG-163)
+- use ESTIMATE in ANALYZE for TPC-H
+- fix references to JVM version in installer error messages
+- fix another rare bitmap index corruption (LDB-171)
+- fix leak of java.util.logger.Logging objects
+- fix for stale temp cache pages (FNL-69)
+- fix for large rows passing from Java into native executor (FRG-305)
+- allow JDBC driver to be loaded off of the bootstrap classpath
+- truncate large rows produced by APPLIB.COLLAPSE_ROWS
+- fix sqlline to ignore repeated Control-C signals
+- improve JDBC foreign data wrapper to push down projections and
+  handle TIMESTAMP and DATE literals for SQL Server
+- add SCHEMA_MAPPING and TABLE_MAPPING options to JDBC foreign data wrapper
+- fix non-nullable TINYINT datatype in JDBC foreign data wrapper
+- add SYS_ROOT.RETRIEVE_REPOSITORY_LOB_TEXT
+- optimizations for predicates known to be always true or false
+- support column-level AS aliasing for VALUES construct
+- fix for selectivity of non-pushable filters when computing distinct
+  row counts for aggregates and projections
+- fix for determination of uniqueness for join keys in the dimension
+  table of a semijoin
+- automatically strip invalid XML characters out of catalog XMI
+  imports
+- relax input restrictions for APPLIB.INSTR; increase output length for
+  APPLIB.STR_REPLACE
+- allow null inputs to APPLIB.SPLIT_STRING_TO_ROWS
 
 Changes since 0.7.1 include
 
@@ -159,7 +195,7 @@ Changes since 0.6.0 include
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 1999-2007 The Eigenbase Project and others
+Copyright (C) 1999-2008 The Eigenbase Project and others
 
 This distribution of Eigenbase is licensed under the GNU General Public
 License; see file COPYING for details.  To obtain the source code

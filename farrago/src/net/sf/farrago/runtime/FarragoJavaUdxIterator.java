@@ -121,8 +121,16 @@ public abstract class FarragoJavaUdxIterator
     // implement ThreadIterator
     protected void doWork()
     {
+        // Start a repository session in the event that the UDX accesses the
+        // metadata repository -- the session is lightweight, so no problem
+        // if repository txn is never started
         try {
-            executeUdx();
+            runtimeContext.getSession().getRepos().beginReposSession();
+            try {
+                executeUdx();
+            } finally {
+                runtimeContext.getSession().getRepos().endReposSession();
+            }
         } finally {
             latch.countDown();
         }

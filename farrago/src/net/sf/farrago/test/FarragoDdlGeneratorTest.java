@@ -27,6 +27,7 @@ import java.io.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.fem.med.*;
@@ -89,12 +90,21 @@ public class FarragoDdlGeneratorTest
         String schemaName,
         boolean includeNonSchemaElements)
     {
-        DdlGenerator ddlGen = newDdlGenerator();
-        List<CwmModelElement> list = new ArrayList<CwmModelElement>();
-        ddlGen.gatherElements(
-            list, schemaName, includeNonSchemaElements,
-            repos.getSelfAsCatalog());
-        return ddlGen.getExportText(list, true);
+        repos.beginReposSession();
+        repos.beginReposTxn(false);
+        
+        try {
+            DdlGenerator ddlGen = newDdlGenerator();
+            List<CwmModelElement> list = new ArrayList<CwmModelElement>();
+            ddlGen.gatherElements(
+                list, schemaName, includeNonSchemaElements,
+                repos.getSelfAsCatalog());
+            return ddlGen.getExportText(list, true);
+        }
+        finally {
+            repos.endReposTxn(false);
+            repos.endReposSession();
+        }
     }
 
     /**
@@ -108,47 +118,56 @@ public class FarragoDdlGeneratorTest
         // Create a DDL Generator for this test
         DdlGenerator ddlGenerator = newDdlGenerator();
         
-        // Set up objects that do not include optional items
-        FemDataWrapper wrapper = repos.newFemDataWrapper();
-        wrapper.setName("TESTWRAPPER");
-        wrapper.setLanguage("JAVA");
-        FemDataServer server = repos.newFemDataServer();
-        server.setName("TESTSERVER");
-        server.setWrapper(wrapper);
+        FarragoReposTxnContext reposTxnContext = 
+            new FarragoReposTxnContext(repos, true);
+        reposTxnContext.beginWriteTxn();
         
-        // Generate DDL for minimal objects
-        GeneratedDdlStmt stmt = new GeneratedDdlStmt();
-        ddlGenerator.generateCreate(wrapper, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        ddlGenerator.generateCreate(server, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        
-        // add an optional element
-        wrapper.setLibraryFile("net.sf.farrago.TestWrapper");
-        ddlGenerator.generateCreate(wrapper, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        
-        server.setType("TESTTYPE");
-        ddlGenerator.generateCreate(server, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        
-        server.setVersion("TESTVERSION");
-        ddlGenerator.generateCreate(server, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-
-        // now drop 'em
-        ddlGenerator.generateDrop(server, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        
-        ddlGenerator.generateDrop(wrapper, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
+        try {
+            // Set up objects that do not include optional items
+            FemDataWrapper wrapper = repos.newFemDataWrapper();
+            wrapper.setName("TESTWRAPPER");
+            wrapper.setLanguage("JAVA");
+            FemDataServer server = repos.newFemDataServer();
+            server.setName("TESTSERVER");
+            server.setWrapper(wrapper);
+            
+            // Generate DDL for minimal objects
+            GeneratedDdlStmt stmt = new GeneratedDdlStmt();
+            ddlGenerator.generateCreate(wrapper, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+            ddlGenerator.generateCreate(server, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+            
+            // add an optional element
+            wrapper.setLibraryFile("net.sf.farrago.TestWrapper");
+            ddlGenerator.generateCreate(wrapper, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+            
+            server.setType("TESTTYPE");
+            ddlGenerator.generateCreate(server, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+            
+            server.setVersion("TESTVERSION");
+            ddlGenerator.generateCreate(server, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+    
+            // now drop 'em
+            ddlGenerator.generateDrop(server, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+            
+            ddlGenerator.generateDrop(wrapper, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+        }
+        finally {
+            reposTxnContext.rollback();
+        }
         
         getDiffRepos().assertEquals("output", "${output}", output.toString());
     }

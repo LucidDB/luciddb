@@ -32,6 +32,7 @@ import junit.extensions.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.test.*;
 import net.sf.farrago.util.*;
@@ -141,19 +142,26 @@ public class FarragoSorterTest
 
     private static void computeExternalCount()
     {
-        // compute external count dynamically based on cache size
-        FemFennelConfig fennelConfig =
-            repos.getCurrentConfig().getFennelConfig();
-
-        // first, compute number of bytes in cache
-        long nBytes = fennelConfig.getCachePageSize();
-        nBytes *= fennelConfig.getCachePagesInit();
-
-        // next, scale up to desired sort size
-        nBytes *= EXTERNAL_SCALE_FACTOR;
-
-        // finally, convert from bytes to records, assuming 16 bytes per record
-        externalCount = nBytes / 16;
+        FarragoReposTxnContext txn = new FarragoReposTxnContext(repos, true);
+        txn.beginReadTxn();
+        try {
+            // compute external count dynamically based on cache size
+            FemFennelConfig fennelConfig =
+                repos.getCurrentConfig().getFennelConfig();
+    
+            // first, compute number of bytes in cache
+            long nBytes = fennelConfig.getCachePageSize();
+            nBytes *= fennelConfig.getCachePagesInit();
+    
+            // next, scale up to desired sort size
+            nBytes *= EXTERNAL_SCALE_FACTOR;
+    
+            // finally, convert from bytes to records, assuming 16 bytes per record
+            externalCount = nBytes / 16;
+        }
+        finally {
+            txn.commit();
+        }
     }
 
     private void testDistribution(DistributionGenerator gen)

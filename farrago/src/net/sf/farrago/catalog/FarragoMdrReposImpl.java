@@ -24,6 +24,8 @@ package net.sf.farrago.catalog;
 
 import java.io.*;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.logging.*;
 
 import javax.jmi.model.*;
@@ -36,9 +38,9 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.jmi.mem.*;
-
 import org.netbeans.api.mdr.*;
 
 
@@ -75,7 +77,7 @@ public class FarragoMdrReposImpl
     /**
      * The underlying MDR repository.
      */
-    private final MDRepository mdrRepository;
+    private final EnkiMDRepository mdrRepository;
 
     /**
      * MofId for current instance of FemFarragoConfig.
@@ -134,7 +136,7 @@ public class FarragoMdrReposImpl
         super.setRootPackage(farragoPackage);
         checkModelTimestamp();
 
-        mdrRepository = modelLoader.getMdrRepos();
+        mdrRepository = (EnkiMDRepository)modelLoader.getMdrRepos();
 
         // Load configuration
         currentConfigMofId = getDefaultConfig().refMofId();
@@ -148,6 +150,9 @@ public class FarragoMdrReposImpl
             fennelPackage = transientFarragoPackage.getFem().getFennel();
         } catch (Throwable ex) {
             throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
+        } finally {
+            // End session started in modelLoader.loadModel
+            modelLoader.closeMdrSession();
         }
 
         tracer.info("Catalog successfully loaded");
@@ -183,6 +188,12 @@ public class FarragoMdrReposImpl
     }
 
     // implement FarragoRepos
+    public EnkiMDRepository getEnkiMdrRepos()
+    {
+        return mdrRepository;
+    }
+
+    // implement FarragoRepos
     public FarragoPackage getTransientFarragoPackage()
     {
         return transientFarragoPackage;
@@ -200,7 +211,18 @@ public class FarragoMdrReposImpl
     public FemFarragoConfig getCurrentConfig()
     {
         // TODO:  prevent updates
-        return (FemFarragoConfig) mdrRepository.getByMofId(currentConfigMofId);
+        Collection<?> configs =
+            getConfigPackage().getFemFarragoConfig().refAllOfType();
+        Iterator<?> iter = configs.iterator();
+        while(iter.hasNext()) {
+            FemFarragoConfig config = (FemFarragoConfig)iter.next();
+            
+            if (config.refMofId().equals(currentConfigMofId)) {
+                return config; 
+            }
+        }
+        
+        return null;        
     }
 
     // implement FarragoAllocation
@@ -221,6 +243,13 @@ public class FarragoMdrReposImpl
         tracer.info("Catalog successfully closed");
     }
 
+    // implement FarragoRepos
+    public void beginReposSession()
+    {
+        tracer.fine("Begin repository session");
+        mdrRepository.beginSession();
+    }
+    
     // implement FarragoRepos
     public void beginReposTxn(boolean writable)
     {
@@ -243,6 +272,13 @@ public class FarragoMdrReposImpl
         mdrRepository.endTrans(rollback);
     }
 
+    // implement FarragoRepos
+    public void endReposSession()
+    {
+        tracer.fine("End repository session");
+        mdrRepository.endSession();
+    }
+    
     // implement FarragoRepos
     public FarragoModelLoader getModelLoader()
     {

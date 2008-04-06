@@ -431,10 +431,26 @@ public class SqlWindowOperator
 
             // SQL03 7.10 rule 11b
             // Physical ROWS must be a numeric constant.
-            if (isRows && !(boundVal instanceof SqlNumericLiteral)) {
-                throw validator.newValidationError(
-                    boundVal,
-                    EigenbaseResource.instance().RowMustBeNumeric.ex());
+            // JR: actually it's SQL03 7.11 rule 11b "exact numeric with scale 0"
+            // means not only numeric constant but exact numeric integral constant.
+            // We also interpret the spec. to not allow negative values, but allow
+            // zero.
+            if (isRows) {
+                if (boundVal instanceof SqlNumericLiteral) {
+                    final SqlNumericLiteral boundLiteral = (SqlNumericLiteral)boundVal;
+                    if ((!boundLiteral.isExact()) ||
+                        (boundLiteral.getScale()!=0) ||
+                        (0>boundLiteral.longValue(true))) { // true==throw if not exact (we just tested that - right?)
+                    throw validator.newValidationError(
+                        boundVal,
+                        EigenbaseResource.instance().RowMustBeNonNegativeIntegral.ex());
+                    }
+                }
+                else {
+                    throw validator.newValidationError(
+                        boundVal,
+                        EigenbaseResource.instance().RowMustBeNonNegativeIntegral.ex());
+                }
             }
 
             // if this is a range spec check and make sure the boundery type

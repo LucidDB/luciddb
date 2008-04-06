@@ -28,6 +28,8 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.test.*;
 
+import org.eigenbase.enki.mdr.*;
+
 
 /**
  * LucidDbCleanup takes care of cleaning up the catalog at the start of each
@@ -114,7 +116,12 @@ public class LucidDbTestCleanup
             Runtime.getRuntime().addShutdownHook(shutdownHook);
         }
         LucidDbTestCleanup cleanup = newCleanup();
-        cleanup.execute();
+        cleanup.getRepos().getEnkiMdrRepos().beginSession();
+        try {
+            cleanup.execute();
+        } finally {
+            cleanup.getRepos().getEnkiMdrRepos().endSession();            
+        }
     }
 
     public void execute()

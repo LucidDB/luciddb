@@ -49,12 +49,16 @@ jmethodID ProxyCorrelationJoinStreamDef::meth_getCorrelations = 0;
 jmethodID ProxyDatabaseCmd::meth_getDbHandle = 0;
 jmethodID ProxyDatabaseParam::meth_getName = 0;
 jmethodID ProxyDatabaseParam::meth_getValue = 0;
+jmethodID ProxyDynamicParamUse::meth_getDynamicParamId = 0;
+jmethodID ProxyDynamicParamUse::meth_getExecutionStreamDef = 0;
+jmethodID ProxyDynamicParamUse::meth_isRead = 0;
 jmethodID ProxyDynamicParameter::meth_getBarrier = 0;
 jmethodID ProxyDynamicParameter::meth_getParameterId = 0;
 jmethodID ProxyEndTxnCmd::meth_getSvptHandle = 0;
 jmethodID ProxyExecStreamDataFlow::meth_getConsumer = 0;
 jmethodID ProxyExecStreamDataFlow::meth_isImplicit = 0;
 jmethodID ProxyExecStreamDataFlow::meth_getProducer = 0;
+jmethodID ProxyExecutionStreamDef::meth_getDynamicParamUse = 0;
 jmethodID ProxyExecutionStreamDef::meth_getInputFlow = 0;
 jmethodID ProxyExecutionStreamDef::meth_getName = 0;
 jmethodID ProxyExecutionStreamDef::meth_getOutputDesc = 0;
@@ -347,6 +351,12 @@ ProxyDatabaseParam::meth_getValue = pEnv->GetMethodID(jClass,"getValue","()Ljava
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemDbHandle");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyDbHandle>));
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemDynamicParamUse");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyDynamicParamUse>));
+ProxyDynamicParamUse::meth_getDynamicParamId = pEnv->GetMethodID(jClass,"getDynamicParamId","()I");
+ProxyDynamicParamUse::meth_getExecutionStreamDef = pEnv->GetMethodID(jClass,"getExecutionStreamDef","()Lnet/sf/farrago/fem/fennel/FemExecutionStreamDef;");
+ProxyDynamicParamUse::meth_isRead = pEnv->GetMethodID(jClass,"isRead","()Z");
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemDynamicParameter");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyDynamicParameter>));
 ProxyDynamicParameter::meth_getBarrier = pEnv->GetMethodID(jClass,"getBarrier","()Lnet/sf/farrago/fem/fennel/FemBarrierStreamDef;");
@@ -364,6 +374,7 @@ ProxyExecStreamDataFlow::meth_getProducer = pEnv->GetMethodID(jClass,"getProduce
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemExecutionStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyExecutionStreamDef>));
+ProxyExecutionStreamDef::meth_getDynamicParamUse = pEnv->GetMethodID(jClass,"getDynamicParamUse","()Ljava/util/Collection;");
 ProxyExecutionStreamDef::meth_getInputFlow = pEnv->GetMethodID(jClass,"getInputFlow","()Ljava/util/List;");
 ProxyExecutionStreamDef::meth_getName = pEnv->GetMethodID(jClass,"getName","()Ljava/lang/String;");
 ProxyExecutionStreamDef::meth_getOutputDesc = pEnv->GetMethodID(jClass,"getOutputDesc","()Lnet/sf/farrago/fem/fennel/FemTupleDescriptor;");
@@ -1007,6 +1018,25 @@ std::string ProxyDatabaseParam::getValue()
 return constructString(pEnv->CallObjectMethod(jObject,meth_getValue));
 }
 
+int32_t ProxyDynamicParamUse::getDynamicParamId()
+{
+return pEnv->CallIntMethod(jObject,meth_getDynamicParamId);
+}
+
+SharedProxyExecutionStreamDef ProxyDynamicParamUse::getExecutionStreamDef()
+{
+SharedProxyExecutionStreamDef p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getExecutionStreamDef);
+if (!p->jObject) p.reset();
+return p;
+}
+
+bool ProxyDynamicParamUse::isRead()
+{
+return pEnv->CallBooleanMethod(jObject,meth_isRead);
+}
+
 SharedProxyBarrierStreamDef ProxyDynamicParameter::getBarrier()
 {
 SharedProxyBarrierStreamDef p;
@@ -1050,6 +1080,16 @@ SharedProxyExecutionStreamDef p;
 p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getProducer);
 if (!p->jObject) p.reset();
+return p;
+}
+
+SharedProxyDynamicParamUse ProxyExecutionStreamDef::getDynamicParamUse()
+{
+SharedProxyDynamicParamUse p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getDynamicParamUse);
+p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
+++p;
 return p;
 }
 

@@ -32,6 +32,7 @@ import javax.jmi.reflect.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.test.*;
 import net.sf.farrago.util.*;
 
@@ -89,63 +90,70 @@ public class LurqlQueryTest
     protected void runTest()
         throws Exception
     {
-        // mask out source control Id
-        addDiffMask("\\$Id.*\\$");
-
-        modelView = loadModelView("MOF");
-
-        assert (getName().endsWith(".lurql"));
-        File fileSansExt =
-            new File(getName().substring(0, getName().length() - 6));
-        OutputStream outputStream = openTestLogOutputStream(fileSansExt);
-
-        FileReader reader = new FileReader(getName());
-        Writer writer = new OutputStreamWriter(outputStream);
-        PrintWriter pw = new PrintWriter(writer);
-
-        LineNumberReader lineReader = new LineNumberReader(reader);
-        StringBuffer sb = null;
-        String action = null;
-        for (;;) {
-            String line = lineReader.readLine();
-            if ((line != null) && (line.startsWith("#"))) {
-                pw.println(line);
-                continue;
-            }
-            if (action != null) {
-                if ((line == null) || (line.trim().equals(""))) {
-                    try {
-                        executeAction(
-                            action,
-                            sb.toString(),
-                            pw);
-                    } finally {
-                        pw.println("****");
-                        pw.println();
-                    }
-                    action = null;
-                } else {
-                    sb.append(line);
-                    sb.append("\n");
-                }
-            } else {
-                if (line == null) {
-                    break;
-                }
-                if (line.trim().equals("")) {
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        txn.beginReadTxn();
+        try {
+            // mask out source control Id
+            addDiffMask("\\$Id.*\\$");
+    
+            modelView = loadModelView("MOF");
+    
+            assert (getName().endsWith(".lurql"));
+            File fileSansExt =
+                new File(getName().substring(0, getName().length() - 6));
+            OutputStream outputStream = openTestLogOutputStream(fileSansExt);
+    
+            FileReader reader = new FileReader(getName());
+            Writer writer = new OutputStreamWriter(outputStream);
+            PrintWriter pw = new PrintWriter(writer);
+    
+            LineNumberReader lineReader = new LineNumberReader(reader);
+            StringBuffer sb = null;
+            String action = null;
+            for (;;) {
+                String line = lineReader.readLine();
+                if ((line != null) && (line.startsWith("#"))) {
                     pw.println(line);
+                    continue;
+                }
+                if (action != null) {
+                    if ((line == null) || (line.trim().equals(""))) {
+                        try {
+                            executeAction(
+                                action,
+                                sb.toString(),
+                                pw);
+                        } finally {
+                            pw.println("****");
+                            pw.println();
+                        }
+                        action = null;
+                    } else {
+                        sb.append(line);
+                        sb.append("\n");
+                    }
                 } else {
-                    action = line;
-                    sb = new StringBuffer();
+                    if (line == null) {
+                        break;
+                    }
+                    if (line.trim().equals("")) {
+                        pw.println(line);
+                    } else {
+                        action = line;
+                        sb = new StringBuffer();
+                    }
                 }
             }
+    
+            pw.close();
+            reader.close();
+            writer.close();
+    
+            diffTestLog();
         }
-
-        pw.close();
-        reader.close();
-        writer.close();
-
-        diffTestLog();
+        finally {
+            txn.commit();
+        }
     }
 
     private JmiModelView loadModelView(String extentName)

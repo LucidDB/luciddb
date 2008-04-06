@@ -70,14 +70,103 @@ public class SqlAdvisor
      * sql statement with cursor pointing to the position where completion hints
      * are requested.
      *
+     * <p>Writes into <code>replaced[0]</code> the string that is being
+     * replaced. Includes the cursor and the preceding identifier. For example,
+     * if <code>sql</code> is "select abc^de from t", sets
+     * <code>replaced[0]</code> to "abc". If the cursor is in the middle of
+     * whitespace, the replaced string is empty. The replaced string is never
+     * null.
+     *
      * @param sql A partial or syntatically incorrect sql statement for which to
      * retrieve completion hints
      *
      * @param cursor to indicate the 0-based cursor position in the query at
      *
+     * @param replaced String which is being replaced (output)
+     *
      * @return completion hints
      */
-    public List<SqlMoniker> getCompletionHints(String sql, int cursor)
+    public List<SqlMoniker> getCompletionHints(
+        String sql,
+        int cursor,
+        String[] replaced)
+    {
+        // search backward starting from current position to find a "word"
+        int wordStart = cursor;
+        boolean quoted = false;
+        while (wordStart > 0
+            && Character.isJavaIdentifierPart(sql.charAt(wordStart- 1))) {
+            --wordStart;
+        }
+        if (wordStart > 0
+            && sql.charAt(wordStart - 1) == '"') {
+            quoted = true;
+            --wordStart;
+        }
+
+        if (wordStart < 0) {
+            return Collections.emptyList();
+        }
+
+        // Search forwards to the end of the word we should remove. Eat up
+        // trailing double-quote, if any
+        int wordEnd = cursor;
+        while (wordEnd < sql.length()
+            && Character.isJavaIdentifierPart(sql.charAt(wordEnd))) {
+            ++wordEnd;
+        }
+        if (quoted
+            && wordEnd < sql.length()
+            && sql.charAt(wordEnd) == '"') {
+            ++wordEnd;
+        }
+
+        // remove the partially composed identifier from the
+        // sql statement - otherwise we get a parser exception
+        String word =
+            replaced[0] =
+                sql.substring(wordStart, cursor);
+        if (wordStart < wordEnd) {
+            sql = sql.substring(0, wordStart)
+                + sql.substring(wordEnd, sql.length());
+        }
+
+        final List<SqlMoniker> completionHints =
+            getCompletionHints0(sql, wordStart);
+
+        // If cursor was part of the way through a word, only include hints
+        // which start with that word in the result.
+        final List<SqlMoniker> result;
+        if (word.length() > 0) {
+            result = new ArrayList<SqlMoniker>();
+            if (quoted) {
+                // Quoted identifier. Case-sensitive match.
+                word = word.substring(1);
+                for (SqlMoniker hint : completionHints) {
+                    String cname = hint.toString();
+                    if (cname.startsWith(word)) {
+                        result.add(hint);
+                    }
+                }
+            } else {
+                // Regular identifier. Case-insensitive match.
+                for (SqlMoniker hint : completionHints) {
+                    String cname = hint.toString();
+                    if (cname.length() >= word.length()
+                        && cname.substring(0, word.length())
+                        .equalsIgnoreCase(word)) {
+                        result.add(hint);
+                    }
+                }
+            }
+        } else {
+            result = completionHints;
+        }
+
+        return result;
+    }
+
+    public List<SqlMoniker> getCompletionHints0(String sql, int cursor)
     {
         String simpleSql = simplifySql(sql, cursor);
         int idx = simpleSql.indexOf(hintToken);
@@ -383,7 +472,13 @@ public class SqlAdvisor
 
         /**
          * Creates a new ValidateErrorInfo with the position coordinates and an
-         * error string
+         * error string.
+         *
+         * @param startLineNum   Start line number
+         * @param startColumnNum Start column number
+         * @param endLineNum     End line number
+         * @param endColumnNum   End column number
+         * @param errorMsg       Error message
          */
         public ValidateErrorInfo(
             int startLineNum,
@@ -400,7 +495,9 @@ public class SqlAdvisor
         }
 
         /**
-         * Creates a new ValidateErrorInfo with an EigenbaseContextException
+         * Creates a new ValidateErrorInfo with an EigenbaseContextException.
+         *
+         * @param e Exception
          */
         public ValidateErrorInfo(
             EigenbaseContextException e)
@@ -414,7 +511,10 @@ public class SqlAdvisor
 
         /**
          * Creates a new ValidateErrorInfo with a SqlParserPos and an error
-         * string
+         * string.
+         *
+         * @param pos            Error position
+         * @param errorMsg       Error message
          */
         public ValidateErrorInfo(
             SqlParserPos pos,

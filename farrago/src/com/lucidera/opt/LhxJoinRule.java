@@ -110,11 +110,12 @@ public class LhxJoinRule
             inputRels,
             leftJoinKeys,
             rightJoinKeys,
+            0,
             leftKeys,
             rightKeys,
             outputProj);
 
-        // the new leftRel and new rightRel, afte projection is added.
+        // the new leftRel and new rightRel, after projection is added.
         leftRel = inputRels[0];
         rightRel = inputRels[1];
 

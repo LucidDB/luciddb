@@ -80,6 +80,11 @@ public interface FarragoSessionParser
     public FarragoSessionStmtValidator getStmtValidator();
 
     /**
+     * @return Last string processed by the parser.
+     */
+    public String getSourceString();
+
+    /**
      * Wraps a validation error with the current position information of the
      * parser.
      *

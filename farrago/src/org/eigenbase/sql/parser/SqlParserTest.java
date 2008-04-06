@@ -22,6 +22,8 @@
 */
 package org.eigenbase.sql.parser;
 
+import java.util.*;
+
 import junit.framework.*;
 
 import org.eigenbase.sql.*;
@@ -5266,6 +5268,32 @@ public class SqlParserTest
         checkFails(
             "SELECT *\tFROM mytable\t\tWHERE x ^=^ = y AND b = 1",
             "(?s).*Encountered \"= =\" at line 1, column 32\\..*");
+    }
+
+    public void testLongIdentifiers()
+    {
+        StringBuilder ident128Builder = new StringBuilder();
+        for(int i = 0; i < 128; i++) {
+            ident128Builder.append((char)('a' + (i % 26)));
+        }
+        String ident128 = ident128Builder.toString();
+        String ident128Upper = ident128.toUpperCase(Locale.US);
+        String ident129 = "x" + ident128;
+        String ident129Upper = ident129.toUpperCase(Locale.US);
+
+        check(
+            "select * from " + ident128,
+            "SELECT *" + NL + "FROM `" + ident128Upper + "`");
+        checkFails(
+            "select * from ^" + ident129 + "^",
+            "Length of identifier '" + ident129Upper + "' must be less than or equal to 128 characters");
+
+        check(
+            "select " + ident128 + " from mytable",
+            "SELECT `" + ident128Upper + "`" + NL + "FROM `MYTABLE`");
+        checkFails(
+            "select ^" + ident129 + "^ from mytable",
+            "Length of identifier '" + ident129Upper + "' must be less than or equal to 128 characters");
     }
 
     //~ Inner Interfaces -------------------------------------------------------
