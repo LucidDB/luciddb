@@ -1002,7 +1002,7 @@ ${farrago.test.jvmargs}
     <attribute name="propFile" default="unspecified"/>
     <attribute name="logFile" default="unspecified"/>
     <sequential>
-      <touch file="@{propFile}"/>
+      <touch file="@{propFile}" mkdirs="true"/>
       <propertyfile file="@{propFile}"
         comment="Developer tracing configuration (do not add comments)">
         <entry key="handlers" default="java.util.logging.FileHandler"/>
