@@ -24,6 +24,7 @@
   @sync
   @sync
   @sync
+  @sync
 
   set schema 'concurrency';
   select * from snapshot;
@@ -58,6 +59,14 @@
   insert into snapshot values(7, 0);
 
   -- Sync 5
+  -- give the select in the reader thread a chance to start executing the
+  -- subquery, then insert; even though the parent query starts executing
+  -- after the new row has been inserted, it shouldn't see the row just added
+  @sync
+  @sleep 2000
+  insert into snapshot values(9, 0);
+
+  -- Sync 6 -- this will cause a unique constraint violation
   @sync
   @err insert into snapshot select 10 - a, sys_boot.mgmt.sleep(1500) from snapshot;
   @sync
@@ -99,14 +108,21 @@
   insert into snapshot values(8, 0);
 
   -- Sync 5
-  -- this should see 1, 2, 3, 4, 5, 6, 7, 8
+  -- this should only see one row because the subquery and parent query
+  -- see the same snapshot
+  @sync
+  select * from snapshot where a >=
+    (select max(a) from snapshot where sys_boot.mgmt.sleep(1000) = 0);
+
+  -- Sync 6
+  -- this should see 1, 2, 3, 4, 5, 6, 7, 8, 9
   @sync
   @sleep 1000
   select * from snapshot;
   select * from snapshot where a >= 0;
 
-  -- Sync 6
-  -- this should still see 1, 2, 3, 4, 5, 6, 7, 8
+  -- Sync 7
+  -- this should still see 1, 2, 3, 4, 5, 6, 7, 8, 9
   @sync
   select * from snapshot;
   select * from snapshot where a >= 0;
@@ -134,6 +150,7 @@
   select * from snapshot;
   select * from snapshot where a > 0;
 
+  @sync
   @sync
   @sync
   @sync

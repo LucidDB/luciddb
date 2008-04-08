@@ -91,6 +91,30 @@ public abstract class FarragoDbStmtContextBase
     private FarragoDdlLockManager ddlLockManager;
 
     private FarragoSessionExecutingStmtInfo info = null;
+    
+    private final long stmtCurrentTime;
+    protected final FarragoSessionStmtContext rootStmtContext;
+    
+    /**
+     * The children statement contexts associated with a root statement
+     * context.
+     */
+    protected List<FarragoSessionStmtContext> childrenStmtContexts;
+    
+    /**
+     * If non-null, the commit sequence number to be used for all transactions
+     * associated with a root context as well as children contexts
+     * associated with that root context.  Only used if the personality
+     * supports snapshots.
+     */
+    protected Long snapshotCsn;
+    
+    /**
+     * Indicates whether the csn associated with the first txn initiated
+     * from a root context or one of its children contexts needs to be saved.
+     * Only used if the personality supports snapshots.
+     */
+    protected boolean saveFirstCsn;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -106,9 +130,43 @@ public abstract class FarragoDbStmtContextBase
         FarragoSessionStmtParamDefFactory paramDefFactory,
         FarragoDdlLockManager ddlLockManager)
     {
+        this(session, paramDefFactory, ddlLockManager, null);
+    }
+    
+    /**
+     * Creates a new FarragoDbStmtContextBase object.
+     *
+     * @param session the session creating this statement
+     * @param paramDefFactory dynamic parameter definition factory
+     * @param ddlLockManager ddl object lock manager
+     * @param rootStmtContext the root statement context for an internally
+     * prepared statement; for an externally prepared statement, this will
+     * be null
+     */
+    protected FarragoDbStmtContextBase(
+        FarragoDbSession session,
+        FarragoSessionStmtParamDefFactory paramDefFactory,
+        FarragoDdlLockManager ddlLockManager,
+        FarragoSessionStmtContext rootStmtContext)
+    {
         this.session = session;
         this.paramDefFactory = paramDefFactory;
         this.ddlLockManager = ddlLockManager;
+        this.rootStmtContext = rootStmtContext;       
+        this.snapshotCsn = null;
+        this.saveFirstCsn = false;
+        // For the root context, set the current time that will be used
+        // throughout the statement.  For non-root contexts, inherit the
+        // time from the root context.  Also, keep track of all of the
+        // children contexts associated with a root context.
+        this.childrenStmtContexts =
+            new ArrayList<FarragoSessionStmtContext>();
+        if (rootStmtContext == null) {
+            this.stmtCurrentTime = System.currentTimeMillis();           
+        } else {
+            this.stmtCurrentTime = rootStmtContext.getStmtCurrentTime();
+            rootStmtContext.addChildStmtContext(this);
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -196,6 +254,52 @@ public abstract class FarragoDbStmtContextBase
     {
         return sql;
     }
+    
+    // implement FarragoSessionStmtContext
+    public long getStmtCurrentTime()
+    {
+        return stmtCurrentTime;
+    }
+    
+    // implement FarragoSessionStmtContext
+    public void setSaveFirstTxnCsn()
+    {
+        assert(rootStmtContext == null);
+        if (session.getPersonality().supportsFeature(
+            EigenbaseResource.instance().PersonalitySupportsSnapshots))
+        {
+            saveFirstCsn = true;
+        }
+    }
+    
+    // implement FarragoSessionStmtContext
+    public boolean needToSaveFirstTxnCsn()
+    {
+        assert(rootStmtContext == null);
+        return saveFirstCsn;
+    }
+    
+    // implement FarragoSessionStmtContext
+    public void saveFirstTxnCsn(long csn)
+    {
+        assert(rootStmtContext == null);
+        // Only the very first csn needs to be saved; so if one is already
+        // set, don't overwrite it.  Also, only do this if the personality
+        // supports snapshots.
+        if (snapshotCsn == null &&
+            session.getPersonality().supportsFeature(
+                EigenbaseResource.instance().PersonalitySupportsSnapshots))
+        {
+            snapshotCsn = new Long(csn);
+        }
+    }
+    
+    // implement FarragoSessionStmtContext
+    public void addChildStmtContext(FarragoSessionStmtContext childStmtContext)
+    {
+        assert(rootStmtContext == null);
+        childrenStmtContexts.add(childStmtContext);
+    }
 
     /**
      * Starts an auto commit transaction.
@@ -216,7 +320,10 @@ public abstract class FarragoDbStmtContextBase
                 .SQLConformance_MultipleActiveAutocommitStatements.ex();
             }
         } else {
-            if (readOnly) {
+            if (snapshotCsn != null) {
+                session.getFennelTxnContext().initiateTxnWithCsn(
+                    snapshotCsn.longValue());
+            } else if (readOnly) {
                 session.getFennelTxnContext().initiateReadOnlyTxn();
             }
         }

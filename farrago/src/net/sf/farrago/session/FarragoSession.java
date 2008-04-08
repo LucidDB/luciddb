@@ -68,6 +68,20 @@ public interface FarragoSession
      */
     public FarragoSessionStmtContext newStmtContext(
         FarragoSessionStmtParamDefFactory paramDefFactory);
+    
+    /**
+     * Creates a new statement context within this session.
+     *
+     * @param paramDefFactory a factory for FarragoSessionStmtParamDef instances
+     * @param rootStmtContext the root statement context for an internally
+     * prepared statement; for an externally prepared statement, this will
+     * be null
+     *
+     * @return new statement context
+     */
+    public FarragoSessionStmtContext newStmtContext(
+        FarragoSessionStmtParamDefFactory paramDefFactory,
+        FarragoSessionStmtContext rootStmtContext);
 
     /**
      * Creates a new SQL statement validator.

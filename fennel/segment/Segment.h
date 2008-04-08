@@ -153,9 +153,31 @@ public:
     inline uint getUsablePageSize() const;
 
     /**
+     * Performs additional initialization required on the segment after it
+     * has been properly formatted.
+     */
+    virtual void initForUse();
+
+    /**
      * @return number of pages allocated from this segment
      */
     virtual BlockNum getAllocatedSizeInPages() = 0;
+
+    /**
+     * Returns the max number of pages occupied by this segment instance.
+     * In other words, pages that are allocated but subsequently deallocated,
+     * are included in this count.  Also, the count includes all pages used
+     * by the segment, including metadata pages.
+     *
+     * @return the max number of pages occupied by a segment
+     */
+    virtual BlockNum getNumPagesOccupiedHighWater() = 0;
+
+    /**
+     * @return the number of incremental pages added to this instance of the
+     * segment
+     */
+    virtual BlockNum getNumPagesExtended() = 0;
 
     /**
      * @return tracing segment associated with this segment if tracing is turned

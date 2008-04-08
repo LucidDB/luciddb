@@ -672,6 +672,7 @@ SqlNode SqlExplain() :
             SqlLiteral.createSymbol(detailLevel, SqlParserPos.ZERO),
             SqlLiteral.createSymbol(depth, SqlParserPos.ZERO),
             SqlLiteral.createBoolean(asXml, SqlParserPos.ZERO),
+            nDynamicParams,
             pos);
     }
 }
@@ -2307,16 +2308,16 @@ SqlNode AtomicRowExpression() :
         pos = getPos();
     }
     [
-        caseIdentifier = Expression(ExprContext.ACCEPT_NONQUERY)
+        caseIdentifier = Expression(ExprContext.ACCEPT_SUBQUERY)
     ]
     (
-        <WHEN> e = Expression(ExprContext.ACCEPT_NONQUERY)
+        <WHEN> e = Expression(ExprContext.ACCEPT_SUBQUERY)
         {  whenPos = getPos(); whenList.add(e); }
-        <THEN> e = Expression(ExprContext.ACCEPT_NONQUERY)
+        <THEN> e = Expression(ExprContext.ACCEPT_SUBQUERY)
         {  thenPos = getPos(); thenList.add(e); }
     ) +
     [
-        <ELSE> elseClause = Expression(ExprContext.ACCEPT_NONQUERY)
+        <ELSE> elseClause = Expression(ExprContext.ACCEPT_SUBQUERY)
     ]
     <END>
     {

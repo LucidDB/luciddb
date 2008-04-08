@@ -78,8 +78,14 @@ CacheImpl<PageT,VictimPolicyT>
         pageTable[i] = new PageBucketT();
     }
 
-    pDeviceAccessScheduler = DeviceAccessScheduler::newScheduler(
-        params.schedParams);
+    try {
+        pDeviceAccessScheduler = DeviceAccessScheduler::newScheduler(
+            params.schedParams);
+    }
+    catch (FennelExcn &ex) {
+        close();
+        throw ex;
+    }
     
     // initialize null device
     registerDevice(

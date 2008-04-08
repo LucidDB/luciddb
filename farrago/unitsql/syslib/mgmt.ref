@@ -212,50 +212,54 @@
 > select source_name, counter_name 
 > from table(sys_boot.mgmt.performance_counters())
 > order by source_name, counter_name;
-+--------------+---------------------------------------+
-| SOURCE_NAME  |             COUNTER_NAME              |
-+--------------+---------------------------------------+
-| Fennel       | CacheCheckpointWrites                 |
-| Fennel       | CacheCheckpointWritesSinceInit        |
-| Fennel       | CacheDirtyPages                       |
-| Fennel       | CacheHits                             |
-| Fennel       | CacheHitsSinceInit                    |
-| Fennel       | CacheLazyWriteCalls                   |
-| Fennel       | CacheLazyWriteCallsSinceInit          |
-| Fennel       | CacheLazyWrites                       |
-| Fennel       | CacheLazyWritesSinceInit              |
-| Fennel       | CachePageIoRetries                    |
-| Fennel       | CachePageIoRetriesSinceInit           |
-| Fennel       | CachePagePrefetchesRejected           |
-| Fennel       | CachePagePrefetchesRejectedSinceInit  |
-| Fennel       | CachePagesAllocated                   |
-| Fennel       | CachePagesAllocationLimit             |
-| Fennel       | CachePagesGoverned                    |
-| Fennel       | CachePagesPrefetched                  |
-| Fennel       | CachePagesPrefetchedSinceInit         |
-| Fennel       | CachePagesRead                        |
-| Fennel       | CachePagesReadSinceInit               |
-| Fennel       | CachePagesReserved                    |
-| Fennel       | CachePagesUnused                      |
-| Fennel       | CachePagesWritten                     |
-| Fennel       | CachePagesWrittenSinceInit            |
-| Fennel       | CacheRequests                         |
-| Fennel       | CacheRequestsSinceInit                |
-| Fennel       | CacheReservePercentage                |
-| Fennel       | CacheVictimizationWrites              |
-| Fennel       | CacheVictimizationWritesSinceInit     |
-| Fennel       | CacheVictimizations                   |
-| Fennel       | CacheVictimizationsSinceInit          |
-| Fennel       | DatabaseCheckpoints                   |
-| Fennel       | DatabaseCheckpointsSinceInit          |
-| Fennel       | DatabasePagesAllocatedAfterReclaim    |
-| Fennel       | ExpectedConcurrentStatements          |
-| Fennel       | TempPagesAllocatedAfterReclaim        |
-| JVM          | JvmMemoryAllocated                    |
-| JVM          | JvmMemoryAllocationLimit              |
-| JVM          | JvmMemoryUnused                       |
-| JVM          | JvmNanoTime                           |
-+--------------+---------------------------------------+
++--------------+------------------------------------------+
+| SOURCE_NAME  |               COUNTER_NAME               |
++--------------+------------------------------------------+
+| Fennel       | CacheCheckpointWrites                    |
+| Fennel       | CacheCheckpointWritesSinceInit           |
+| Fennel       | CacheDirtyPages                          |
+| Fennel       | CacheHits                                |
+| Fennel       | CacheHitsSinceInit                       |
+| Fennel       | CacheLazyWriteCalls                      |
+| Fennel       | CacheLazyWriteCallsSinceInit             |
+| Fennel       | CacheLazyWrites                          |
+| Fennel       | CacheLazyWritesSinceInit                 |
+| Fennel       | CachePageIoRetries                       |
+| Fennel       | CachePageIoRetriesSinceInit              |
+| Fennel       | CachePagePrefetchesRejected              |
+| Fennel       | CachePagePrefetchesRejectedSinceInit     |
+| Fennel       | CachePagesAllocated                      |
+| Fennel       | CachePagesAllocationLimit                |
+| Fennel       | CachePagesGoverned                       |
+| Fennel       | CachePagesPrefetched                     |
+| Fennel       | CachePagesPrefetchedSinceInit            |
+| Fennel       | CachePagesRead                           |
+| Fennel       | CachePagesReadSinceInit                  |
+| Fennel       | CachePagesReserved                       |
+| Fennel       | CachePagesUnused                         |
+| Fennel       | CachePagesWritten                        |
+| Fennel       | CachePagesWrittenSinceInit               |
+| Fennel       | CacheRequests                            |
+| Fennel       | CacheRequestsSinceInit                   |
+| Fennel       | CacheReservePercentage                   |
+| Fennel       | CacheVictimizationWrites                 |
+| Fennel       | CacheVictimizationWritesSinceInit        |
+| Fennel       | CacheVictimizations                      |
+| Fennel       | CacheVictimizationsSinceInit             |
+| Fennel       | DatabaseCheckpoints                      |
+| Fennel       | DatabaseCheckpointsSinceInit             |
+| Fennel       | DatabasePagesAllocated                   |
+| Fennel       | DatabasePagesExtendedSinceInit           |
+| Fennel       | DatabasePagesOccupiedHighWaterSinceInit  |
+| Fennel       | ExpectedConcurrentStatements             |
+| Fennel       | TempPagesAllocated                       |
+| Fennel       | TempPagesExtendedSinceInit               |
+| Fennel       | TempPagesOccupiedHighWaterSinceInit      |
+| JVM          | JvmMemoryAllocated                       |
+| JVM          | JvmMemoryAllocationLimit                 |
+| JVM          | JvmMemoryUnused                          |
+| JVM          | JvmNanoTime                              |
++--------------+------------------------------------------+
 > 
 > -- set code cache size to some arbitrary number
 > alter system set "codeCacheMaxBytes" = 42000;

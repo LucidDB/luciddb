@@ -49,10 +49,18 @@ RandomAllocationSegmentBase::RandomAllocationSegmentBase(
     nExtentsPerSegAlloc =
         (getUsablePageSize()-sizeof(SegmentAllocationNode))
         / sizeof(SegmentAllocationNode::ExtentEntry);
+
+    nPagesOccupiedHighWater = 0;
+    nPagesAllocated = 0;
 }
 
 RandomAllocationSegmentBase::~RandomAllocationSegmentBase()
 {
+}
+
+void RandomAllocationSegmentBase::initForUse()
+{
+    countAllocatedPages();
 }
 
 void RandomAllocationSegmentBase::format()
@@ -177,6 +185,7 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
                 // particular seat on that flight, but we're guaranteed to find
                 // a seat when we get on
                 segAllocLock.unlock();
+                incrementPageCounters();
                 return allocateFromExtent(extentNum,ownerId);
             }
         }
@@ -225,6 +234,9 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
             // about to allocate
             writableExtentEntry.nUnallocatedPages = nPagesPerExtent - 2;
             
+            incrementPageCounters();
+            // another increment for the extent page
+            incrementPagesOccupiedCounter();
             return allocateFromNewExtent(extentNum, ownerId);
         }
 
@@ -251,6 +263,8 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
         newNode.nPagesPerExtent = nPagesPerExtent;
         newNode.nExtents = 0;
         newNode.nextSegAllocPageId = NULL_PAGE_ID;
+        // increment for the segment allocation node
+        incrementPagesOccupiedCounter();
 
         // acquire a writable node to update the next page pointer
         SegmentAllocationNode &writableSegAllocNode =
@@ -281,6 +295,33 @@ void RandomAllocationSegmentBase::splitPageId(
             iPageInSegAlloc/nPagesPerExtent + nExtentsPerSegAlloc * iSegAlloc;
         iPageInExtent = iPageInSegAlloc%nPagesPerExtent;
     }
+}
+
+void RandomAllocationSegmentBase::incrementPageCounters()
+{
+    StrictMutexGuard mutexGuard(pageCounterMutex);
+
+    // If there are excess deallocations, don't increment the pages occupied
+    // counter
+    if (netDeallocations > 0) {
+        --netDeallocations;
+    } else {
+        ++nPagesOccupiedHighWater;
+    }
+    ++nPagesAllocated;
+}
+
+void RandomAllocationSegmentBase::incrementPagesOccupiedCounter()
+{
+    StrictMutexGuard mutexGuard(pageCounterMutex);
+    ++nPagesOccupiedHighWater;
+}
+
+void RandomAllocationSegmentBase::decrementPageCounters()
+{
+    StrictMutexGuard mutexGuard(pageCounterMutex);
+    ++netDeallocations;
+    --nPagesAllocated;
 }
 
 void RandomAllocationSegmentBase::deallocatePageRange(
@@ -325,6 +366,8 @@ void RandomAllocationSegmentBase::deallocatePageId(PageId pageId)
     permAssert(
         segAllocNode.getExtentEntry(relativeExtentNum).nUnallocatedPages
         <= nPagesPerExtent);
+
+    decrementPageCounters();
 }
 
 Segment::AllocationOrder RandomAllocationSegmentBase::getAllocationOrder() const
@@ -379,8 +422,12 @@ bool RandomAllocationSegmentBase::isPageIdAllocated(PageId pageId)
 
 BlockNum RandomAllocationSegmentBase::getAllocatedSizeInPages()
 {
-    BlockNum nPagesAllocated = 0;
+    return nPagesAllocated;
+}
 
+void RandomAllocationSegmentBase::countAllocatedPages()
+{
+    StrictMutexGuard mutexGuard(pageCounterMutex);
     PageId origSegAllocPageId = getFirstSegAllocPageId();
     do {
         SharedSegment allocNodeSegment;
@@ -388,25 +435,27 @@ BlockNum RandomAllocationSegmentBase::getAllocatedSizeInPages()
             getSegAllocPageIdForRead(origSegAllocPageId, allocNodeSegment);
 
         PageId nextSegAllocPageId;
-        nPagesAllocated +=
-            tallySegAllocNodePages(
-                segAllocPageId,
-                allocNodeSegment,
-                nextSegAllocPageId);
+        tallySegAllocNodePages(
+            segAllocPageId,
+            allocNodeSegment,
+            nextSegAllocPageId);
+        // count the segment allocation node page
+        ++nPagesOccupiedHighWater;
 
         origSegAllocPageId = nextSegAllocPageId;
     } while (origSegAllocPageId != NULL_PAGE_ID);
-
-    return nPagesAllocated;
 }
 
-BlockNum RandomAllocationSegmentBase::tallySegAllocNodePages(
+BlockNum RandomAllocationSegmentBase::getNumPagesOccupiedHighWater()
+{
+    return nPagesOccupiedHighWater;
+}
+
+void RandomAllocationSegmentBase::tallySegAllocNodePages(
     PageId segAllocPageId,
     SharedSegment allocNodeSegment,
     PageId &nextSegAllocPageId)
 {
-    BlockNum nPagesAllocated = 0;
-
     SegmentAccessor segAccessor(allocNodeSegment, pCache);
     SegAllocLock segAllocLock(segAccessor);
 
@@ -416,14 +465,14 @@ BlockNum RandomAllocationSegmentBase::tallySegAllocNodePages(
     SegmentAllocationNode const &node = segAllocLock.getNodeForRead();
     uint i;
     for (i = 0; i < node.nExtents; i++) {
-        // assume no partial extents; note that -1 is for extent header
-        nPagesAllocated +=
+        // assume no partial extents; the -1 is for the extent page
+        BlockNum numPages =
             nPagesPerExtent
-            - node.getExtentEntry(i).nUnallocatedPages
-            - 1;
+            - node.getExtentEntry(i).nUnallocatedPages;
+        nPagesAllocated += (numPages - 1);
+        nPagesOccupiedHighWater += numPages;
     }
     nextSegAllocPageId = node.nextSegAllocPageId;
-    return nPagesAllocated;
 }
 
 FENNEL_END_CPPFILE("$Id$");

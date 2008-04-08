@@ -150,7 +150,6 @@ void Database::init()
     tempDeviceName = databaseDir + "/temp.dat";
 
     nCheckpoints = nCheckpointsStat = 0;
-    nDataPagesAllocated = nTempPagesAllocated = -1;
 
     pSegmentFactory = SegmentFactory::newSegmentFactory(
         configMap,getSharedTraceTarget());
@@ -172,11 +171,12 @@ void Database::prepareForRecovery()
     FENNEL_TRACE(TRACE_WARNING, "recovery required");
     recoveryRequired = true;
     createTempSegment();
-    createDataDevice();
+    LinearDeviceSegmentParams dataDeviceParams;
+    createDataDevice(dataDeviceParams);
     loadHeader(true);
     writeHeader();
     SharedSegment pShadowLogSegment = createShadowLog(openMode);
-    createDataSegment(pShadowLogSegment);
+    createDataSegment(pShadowLogSegment,dataDeviceParams);
 }
 
 void Database::openSegments()
@@ -202,7 +202,8 @@ void Database::openSegments()
     txnLogMode.direct = true;
     createTxnLog(txnLogMode);
 
-    createDataDevice();
+    LinearDeviceSegmentParams dataDeviceParams;
+    createDataDevice(dataDeviceParams);
     
     if (openMode.create) {
         // online UUID will be written out by allocateHeader
@@ -220,7 +221,7 @@ void Database::openSegments()
     shadowMode.direct = true;
 
     SharedSegment pShadowLogSegment = createShadowLog(shadowMode);
-    createDataSegment(pShadowLogSegment);
+    createDataSegment(pShadowLogSegment, dataDeviceParams);
     
     FENNEL_TRACE(
         TRACE_INFO,
@@ -432,19 +433,28 @@ SharedSegment Database::createShadowLog(DeviceMode shadowLogMode)
     return pSegmentFactory->newWALSegment(pShadowSegment);
 }
 
-void Database::createDataDevice()
+void Database::createDataDevice(LinearDeviceSegmentParams &deviceParams)
 {
+    readDeviceParams(paramDatabasePrefix,openMode,deviceParams);
+
+    FileSize initialSize = FileSize(0);
+    if (shouldForceTxns()) {
+        // include +2 for the database header pages
+        initialSize = (deviceParams.nPagesMin + 2) * pCache->getPageSize();
+    }
+
     SharedRandomAccessDevice pDataDevice(
-        new RandomAccessFileDevice(dataDeviceName,openMode));
+        new RandomAccessFileDevice(
+            dataDeviceName,
+            openMode,
+            initialSize));
     pCache->registerDevice(dataDeviceId,pDataDevice);
 }
 
 void Database::createDataSegment(
-    SharedSegment pShadowLogSegment)
+    SharedSegment pShadowLogSegment,
+    LinearDeviceSegmentParams &deviceParams)
 {
-    LinearDeviceSegmentParams deviceParams;
-    readDeviceParams(paramDatabasePrefix,openMode,deviceParams);
-    
     // first data BlockId is located after the two database header pages
     CompoundId::setDeviceId(deviceParams.firstBlockId,dataDeviceId);
     CompoundId::setBlockNum(deviceParams.firstBlockId,2);
@@ -466,17 +476,21 @@ void Database::createDataSegment(
     pVersionedSegment = SegmentFactory::dynamicCast<VersionedSegment *>(
         pVersionedDataSegment);
 
+    // If recovery is required, defer initializing the data segment for use
+    // until after recovery has completed.
     if (areSnapshotsEnabled()) {
         pDataSegment =
             pSegmentFactory->newVersionedRandomAllocationSegment(
                 pVersionedDataSegment,
                 pTempSegment,
-                openMode.create);
+                openMode.create,
+                recoveryRequired);
     } else {
         pDataSegment =
             pSegmentFactory->newRandomAllocationSegment(
                 pVersionedDataSegment,
-                openMode.create);
+                openMode.create,
+                recoveryRequired);
     }
 }
 
@@ -488,15 +502,19 @@ void Database::createTempSegment()
     DeviceMode tempMode = openMode;
     tempMode.create = !FileSystem::doesFileExist(tempDeviceName.c_str());
     
+    LinearDeviceSegmentParams deviceParams;
+    readDeviceParams(paramTempPrefix,tempMode,deviceParams);
+    FileSize initialSize = FileSize(0);
+    if (shouldForceTxns()) {
+        initialSize = deviceParams.nPagesMin * pCache->getPageSize();
+    }
+
     SharedRandomAccessDevice pTempDevice(
-        new RandomAccessFileDevice(tempDeviceName,tempMode));
+        new RandomAccessFileDevice(tempDeviceName,tempMode,initialSize));
     pCache->registerDevice(tempDeviceId,pTempDevice);
 
     // This forces the full device size to be used.
     tempMode.create = false;
-    
-    LinearDeviceSegmentParams deviceParams;
-    readDeviceParams(paramTempPrefix,tempMode,deviceParams);
     
     // no header for temp device
     CompoundId::setDeviceId(deviceParams.firstBlockId,tempDeviceId);
@@ -855,9 +873,22 @@ void Database::writeStats(StatsTarget &target)
     target.writeCounter(
         "DatabaseCheckpointsSinceInit", nCheckpoints);
     target.writeCounter(
-        "DatabasePagesAllocatedAfterReclaim", nDataPagesAllocated);
+        "DatabasePagesAllocated", pDataSegment->getAllocatedSizeInPages());
     target.writeCounter(
-        "TempPagesAllocatedAfterReclaim", nTempPagesAllocated);
+        "TempPagesAllocated", pTempSegment->getAllocatedSizeInPages());
+    // +2 for the database header pages
+    target.writeCounter(
+        "DatabasePagesOccupiedHighWaterSinceInit",
+        pDataSegment->getNumPagesOccupiedHighWater() + 2);
+    target.writeCounter(
+        "TempPagesOccupiedHighWaterSinceInit",
+        pTempSegment->getNumPagesOccupiedHighWater());
+    target.writeCounter(
+        "DatabasePagesExtendedSinceInit",
+        pDataSegment->getNumPagesExtended());
+    target.writeCounter(
+        "TempPagesExtendedSinceInit",
+        pTempSegment->getNumPagesExtended());
     nCheckpointsStat = 0;
 }
 
@@ -919,8 +950,6 @@ void Database::deallocateOldPages()
             oldPageSet.clear();
         }
     } while (morePages);
-    nDataPagesAllocated = pVersionedRandomSegment->getAllocatedSizeInPages();
-    nTempPagesAllocated = pTempSegment->getAllocatedSizeInPages();
 }
 
 FENNEL_END_CPPFILE("$Id$");

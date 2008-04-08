@@ -21,13 +21,9 @@
 */
 package net.sf.farrago.query;
 
-import java.sql.*;
-
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-
-import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -46,7 +42,15 @@ public abstract class FarragoReentrantStmt
 
     private FarragoSessionPreparingStmt preparingStmt;
     private FarragoSessionStmtContext stmtContext;
+    private FarragoSessionStmtContext rootStmtContext;
 
+    //~ Constructors -----------------------------------------------------------
+    
+    public FarragoReentrantStmt(FarragoSessionStmtContext rootStmtContext)
+    {
+        this.rootStmtContext = rootStmtContext;
+    }
+    
     //~ Methods ----------------------------------------------------------------
 
     protected FarragoSessionPreparingStmt getPreparingStmt()
@@ -57,6 +61,11 @@ public abstract class FarragoReentrantStmt
     protected FarragoSessionStmtContext getStmtContext()
     {
         return stmtContext;
+    }
+    
+    protected FarragoSessionStmtContext getRootStmtContext()
+    {
+        return rootStmtContext;
     }
 
     /**
@@ -79,18 +88,30 @@ public abstract class FarragoReentrantStmt
             session = session.getSessionFactory().newReentrantSession(session);
         }
 
-        stmtContext = session.newStmtContext(null);
+        stmtContext = session.newStmtContext(null, rootStmtContext);
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        FarragoReposTxnContext reposTxnContext =
+            new FarragoReposTxnContext(session.getRepos());
+        stmtValidator.setReposTxnContext(reposTxnContext);
+        boolean rollback = true;
         try {
             preparingStmt =
                 session.getPersonality().newPreparingStmt(
                     stmtContext,
+                    rootStmtContext,
                     stmtValidator);
             preparingStmt.preImplement();
             executeImpl();
-        } catch (Throwable ex) {
+            rollback = false;
+        } catch (Throwable ex) {            
             throw FarragoResource.instance().SessionReentrantStmtFailed.ex(ex);
         } finally {
+            if (rollback && !reposTxnContext.isReadTxnInProgress()) {
+                reposTxnContext.rollback();
+            } else {
+                reposTxnContext.commit();
+            }
+            reposTxnContext.unlockAfterTxn();
             stmtContext.closeAllocation();
             stmtValidator.closeAllocation();
             if (allocateSession) {

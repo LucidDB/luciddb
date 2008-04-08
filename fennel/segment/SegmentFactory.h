@@ -119,11 +119,15 @@ public:
      * @param bFormat if true, the RandomAllocationSegment is formatted as
      * empty; otherwise, the existing formatting is read
      *
+     * @param deferInit if true, defer initialization on the segment; defaults
+     * to false
+     *
      * @return new segment
      */
     SharedSegment newRandomAllocationSegment(
         SharedSegment delegateSegment,
-        bool bFormat);
+        bool bFormat,
+        bool deferInit = false);
 
     /**
      * Opens a VersionedRandomAllocationSegment.
@@ -138,12 +142,16 @@ public:
      * @param bFormat if true, the VersionedRandomAllocationSegment is
      * formatted as empty; otherwise, the existing formatting is read
      *
+     * @param deferInit if true, defer initialization on the segment; defaults
+     * to false
+     *
      * @return new segment
      */
     SharedSegment newVersionedRandomAllocationSegment(
         SharedSegment delegateSegment,
         SharedSegment pTempSegment,
-        bool bFormat);
+        bool bFormat,
+        bool deferInit = false);
 
     /**
      * Opens a new SnapshotRandomAllocationSegment.

@@ -573,34 +573,20 @@
 '120'
 > 
 > -- 2.1 uncorrelated exists.
-> -- Need to limit to at most one row on join RHS; Broadbase inserts count(*).
-> -- LucidDB uses a aggregate function(MIN(TRUE)) that generates the value TRUE
-> -- for each group
+> -- The EXISTS is converted to a boolean.
 > explain plan without implementation for
 > select name from emps where exists(select * from depts);
 'column0'
 'ProjectRel(NAME=[$1])'
-'  FilterRel(condition=[IS TRUE($10)])'
-'    JoinRel(condition=[true], joinType=[left])'
-'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'      AggregateRel(groupCount=[0], agg#0=[MIN(0)])'
-'        ProjectRel($f0=[true])'
-'          ProjectRel(DEPTNO=[$0], NAME=[$1])'
-'            TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+'  FilterRel(condition=[?0])'
+'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > explain plan for
 > select name from emps where exists(select * from depts);
 'column0'
-'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[true]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
-'    FennelCartesianProductRel(leftouterjoin=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
-'          IteratorToFennelConverter'
-'            IterCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'              FennelToIteratorConverter'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[?0], NAME=[$t0], $condition=[$t1])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > select name from emps where exists(select * from depts) order by name;
 'NAME'
@@ -696,28 +682,17 @@
 >        (select count(*) from depts)
 > from emps;
 'column0'
-'ProjectRel(NAME=[$1], EXPR$1=[$10])'
-'  JoinRel(condition=[true], joinType=[left])'
-'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'    AggregateRel(groupCount=[0], EXPR$0=[COUNT()])'
-'      ProjectRel($f0=[true])'
-'        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+'ProjectRel(NAME=[$1], EXPR$1=[?0])'
+'  TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > explain plan for
 > select name,
 >        (select count(*) from depts)
 > from emps;
 'column0'
-'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[NAME, EXPR$1]])'
-'    FennelCartesianProductRel(leftouterjoin=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'          IteratorToFennelConverter'
-'            IterCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'              FennelToIteratorConverter'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[?0], proj#0..1=[{exprs}])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > select name, 
 >        (select count(*) from depts)
@@ -729,6 +704,66 @@
 'John','3'
 'Wilma','3'
 > 
+> -- subqueries nested inside uncorrelated subqueries
+> 
+> explain plan for
+> select name,
+>     (select name from depts where deptno =
+>         (select min(deptno) from emps))
+>     from emps;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[?1], proj#0..1=[{exprs}])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> select name,
+>     (select name from depts where deptno =
+>         (select min(deptno) from emps))
+>     from emps
+> order by name;
+'NAME','EXPR$1'
+'Eric','Sales'
+'Fred','Sales'
+'John','Sales'
+'Wilma','Sales'
+> 
+> explain plan for 
+> select empno,
+>     (select count(*) from emps where emps.deptno =
+>         (select deptno from depts where depts.deptno = emps.deptno))
+> from emps;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[?0], proj#0..1=[{exprs}])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> select empno,
+>     (select count(*) from emps where emps.deptno =
+>         (select deptno from depts where depts.deptno = emps.deptno))
+> from emps
+> order by empno;
+'EMPNO','EXPR$1'
+'100','3'
+'110','3'
+'110','3'
+'120','3'
+> 
+> explain plan for
+> select * from emps where empno =
+>     (select min(empno) from emps where deptno =
+>         (select min(deptno) from temps where deptno =
+>             (select min(deptno) from emps e2 where e2.deptno = emps.deptno)));
+'column0'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[?0], expr#11=[=($t0, $t10)], proj#0..9=[{exprs}], $condition=[$t11])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> select * from emps where empno =
+>     (select min(empno) from emps where deptno =
+>         (select min(deptno) from temps where deptno =
+>             (select min(deptno) from emps e2 where e2.deptno = emps.deptno)));
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER'
+> 
 > -- should return null in deptno
 > explain plan for
 > select name, 
@@ -738,12 +773,10 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelRenameRel(fieldNames=[[NAME, EXPR$1]])'
-'      FennelCartesianProductRel(leftouterjoin=[true])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'        FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'            FennelValuesRel(tuples=[[{ '(', 100, '+', null }]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[?0], proj#0..1=[{exprs}])'
+'        FennelToIteratorConverter'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > select name, 
 >        (select deptno from depts where deptno > 100)
@@ -861,24 +894,18 @@ Error: From line 2, column 15 to line 2, column 33: Cannot apply '$SCALAR_QUERY'
 > where deptno = (select min(deptno) from depts);
 'column0'
 'ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])'
-'  FilterRel(condition=[=($2, $10)])'
-'    JoinRel(condition=[true], joinType=[left])'
-'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'      AggregateRel(groupCount=[0], EXPR$0=[MIN(0)])'
-'        ProjectRel(DEPTNO=[$0])'
-'          TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+'  FilterRel(condition=[=($2, ?0)])'
+'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > explain plan for 
 > select * from emps
 > where deptno = (select min(deptno) from depts);
 'column0'
-'IterCalcRel(expr#0..10=[{inputs}], expr#11=[=($t2, $t10)], proj#0..9=[{exprs}], $condition=[$t11])'
-'  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[?0], expr#3=[']'], expr#4=[IS NOT NULL($t2)], expr#5=[AND($t4, $t4)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t2], $condition=[$t5])'
+'        IterOneRowRel'
 > 
 > select * from emps
 > where deptno = (select min(deptno) from depts)
@@ -892,24 +919,34 @@ Error: From line 2, column 15 to line 2, column 33: Cannot apply '$SCALAR_QUERY'
 > where deptno = (select deptno from depts);
 'column0'
 'ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])'
-'  FilterRel(condition=[=($2, $10)])'
-'    JoinRel(condition=[true], joinType=[left])'
-'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'      AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
-'        ProjectRel(DEPTNO=[$0])'
-'          TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+'  FilterRel(condition=[=($2, ?0)])'
+'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > explain plan for
 > select * from emps
 > where deptno = (select deptno from depts);
 'column0'
-'IterCalcRel(expr#0..10=[{inputs}], expr#11=[=($t2, $t10)], proj#0..9=[{exprs}], $condition=[$t11])'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[?0], expr#3=[']'], expr#4=[IS NOT NULL($t2)], expr#5=[AND($t4, $t4)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t2], $condition=[$t5])'
+'        IterOneRowRel'
+> 
+> -- more than 1 subquery
+> explain plan for
+> select * from emps where
+>     empno = (select min(empno) from emps) and
+>     deptno = (select min(deptno) from depts);
+'column0'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[?0], expr#11=[=($t0, $t10)], expr#12=[?1], expr#13=[=($t2, $t12)], expr#14=[AND($t11, $t13)], proj#0..9=[{exprs}], $condition=[$t14])'
 '  FennelToIteratorConverter'
-'    FennelCartesianProductRel(leftouterjoin=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> select * from emps where
+>     empno = (select min(empno) from emps) and
+>     deptno = (select min(deptno) from depts);
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER'
+'100','Fred','10','','','30','25','41626320','true','false'
 > 
 > -- should report runtime error
 > select * from emps
@@ -959,6 +996,34 @@ Error: From line 3, column 17 to line 3, column 35: Cannot apply '$SCALAR_QUERY'
 '                FennelRenameRel(fieldNames=[[$f0]])'
 '                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 '            LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$EMPS2$NAME]])'
+> 
+> -- the outermost subquery below cannot be converted to a constant because the
+> -- innermost subquery correlates with the outermost query
+> explain plan for
+> select * from emps where empno =
+>     (select min(deptno) from depts where deptno =
+>         (select min(deptno) from emps2 where emps2.deptno = emps.deptno));
+'column0'
+'IterCalcRel(expr#0..12=[{inputs}], expr#13=[=($t0, $t12)], proj#0..9=[{exprs}], $condition=[$t13])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[10]], rightKeys=[[0]], joinType=[LEFT])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 2]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER NOT NULL EMPID, INTEGER AGE, VARBINARY(50) PUBLIC_KEY, BOOLEAN SLACKER, BOOLEAN NOT NULL MANAGER, INTEGER CAST($2):INTEGER) NOT NULL])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], EXPR$0=[MIN(1)])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0..2=[{inputs}], expr#3=[=($t0, $t2)], $f0=[$t1], DEPTNO=[$t0], $condition=[$t3])'
+'            FennelToIteratorConverter'
+'              FennelCartesianProductRel(leftouterjoin=[true])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'                FennelBufferRel(inMemory=[false], multiPass=[true])'
+'                  LhxAggRel(groupCount=[1], EXPR$0=[MIN(1)])'
+'                    FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER DEPTNO) NOT NULL])'
+'                      LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
+'                        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                          LhxAggRel(groupCount=[1])'
+'                            FennelRenameRel(fieldNames=[[$f0]])'
+'                              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'                        LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO]])'
 > 
 > -- should report runtime error: more than one row
 > select name
@@ -1013,12 +1078,8 @@ Error: Scalar query returned more than one row (state=,code=0)
 > group by name;
 'column0'
 'AggregateRel(groupCount=[1], EXPR$1=[MIN(1)])'
-'  ProjectRel(NAME=[$1], $f0=[$10])'
-'    JoinRel(condition=[true], joinType=[left])'
-'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'      AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
-'        ProjectRel(NAME=[$1])'
-'          TableAccessRel(table=[[LOCALDB, SALES, EMPS2]])'
+'  ProjectRel(NAME=[$1], $f1=[?0])'
+'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > explain plan for
 > select name, min((select name from emps2))
@@ -1027,11 +1088,10 @@ Error: Scalar query returned more than one row (state=,code=0)
 'column0'
 'FennelToIteratorConverter'
 '  LhxAggRel(groupCount=[1], EXPR$1=[MIN(1)])'
-'    FennelCartesianProductRel(leftouterjoin=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
-'          LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$NAME]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[?0], proj#0..1=[{exprs}])'
+'        FennelToIteratorConverter'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > -- should report runtime error
 > select name, min((select name from emps2))
@@ -1046,12 +1106,8 @@ Error: Scalar query returned more than one row (state=,code=0)
 > group by name;
 'column0'
 'AggregateRel(groupCount=[1], EXPR$1=[MIN(1)])'
-'  ProjectRel(NAME=[$1], EXPR$0=[$10])'
-'    JoinRel(condition=[true], joinType=[left])'
-'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'      AggregateRel(groupCount=[0], EXPR$0=[MAX(0)])'
-'        ProjectRel(NAME=[$1])'
-'          TableAccessRel(table=[[LOCALDB, SALES, EMPS2]])'
+'  ProjectRel(NAME=[$1], $f1=[?0])'
+'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > explain plan for
 > select name, min((select max(name) from emps2))
@@ -1060,11 +1116,10 @@ Error: Scalar query returned more than one row (state=,code=0)
 'column0'
 'FennelToIteratorConverter'
 '  LhxAggRel(groupCount=[1], EXPR$1=[MIN(1)])'
-'    FennelCartesianProductRel(leftouterjoin=[true])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
-'      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], EXPR$0=[MAX(0)])'
-'          LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$NAME]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[?0], proj#0..1=[{exprs}])'
+'        FennelToIteratorConverter'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > select name, min((select max(name) from emps2))
 > from emps
@@ -1175,23 +1230,15 @@ Error: From line 2, column 21 to line 2, column 39: Cannot apply '$SCALAR_QUERY'
 > select last_value((select deptno from depts)) over (order by empno)
 > from emps;
 'column0'
-'ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST($10):BIGINT NOT NULL) OVER (ORDER BY $0 ROWS BETWEEN CURRENT ROW AND CURRENT ROW))):INTEGER])'
-'  JoinRel(condition=[true], joinType=[left])'
-'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'    AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])'
-'      ProjectRel(DEPTNO=[$0])'
-'        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+'ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST(?0):BIGINT NOT NULL) OVER (ORDER BY $0 ROWS BETWEEN CURRENT ROW AND CURRENT ROW))):INTEGER])'
+'  TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > explain plan without implementation for
 > select last_value((select min(deptno) from depts)) over w
 > from emps window w as (order by empno);
 'column0'
-'ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST($10):BIGINT NOT NULL) OVER (ORDER BY $0 ROWS BETWEEN CURRENT ROW AND CURRENT ROW))):INTEGER])'
-'  JoinRel(condition=[true], joinType=[left])'
-'    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'    AggregateRel(groupCount=[0], EXPR$0=[MIN(0)])'
-'      ProjectRel(DEPTNO=[$0])'
-'        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+'ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST(?0):BIGINT NOT NULL) OVER (ORDER BY $0 ROWS BETWEEN CURRENT ROW AND CURRENT ROW))):INTEGER])'
+'  TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > -- select list contains correlated references
 > explain plan without implementation for 
@@ -1344,14 +1391,10 @@ Error: From line 2, column 21 to line 2, column 39: Cannot apply '$SCALAR_QUERY'
 > having min(emps.name)=(select max(name) from depts);
 'column0'
 'ProjectRel(NAME=[$0])'
-'  FilterRel(condition=[=($1, $2)])'
-'    JoinRel(condition=[true], joinType=[left])'
-'      AggregateRel(groupCount=[1], agg#0=[MIN(0)])'
-'        ProjectRel(NAME=[$1])'
-'          TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'      AggregateRel(groupCount=[0], EXPR$0=[MAX(0)])'
-'        ProjectRel(NAME=[$1])'
-'          TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+'  FilterRel(condition=[=($1, ?0)])'
+'    AggregateRel(groupCount=[1], agg#0=[MIN(0)])'
+'      ProjectRel(NAME=[$1])'
+'        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > -- the above query can also be rewritten into this
 > explain plan without implementation for
@@ -1363,14 +1406,10 @@ Error: From line 2, column 21 to line 2, column 39: Cannot apply '$SCALAR_QUERY'
 > where v.min_name=(select max(name) from depts);
 'column0'
 'ProjectRel(NAME=[$0])'
-'  FilterRel(condition=[=($1, $2)])'
-'    JoinRel(condition=[true], joinType=[left])'
-'      AggregateRel(groupCount=[1], MIN_NAME=[MIN(0)])'
-'        ProjectRel(NAME=[$1])'
-'          TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'      AggregateRel(groupCount=[0], EXPR$0=[MAX(0)])'
-'        ProjectRel(NAME=[$1])'
-'          TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+'  FilterRel(condition=[=($1, ?0)])'
+'    AggregateRel(groupCount=[1], MIN_NAME=[MIN(0)])'
+'      ProjectRel(NAME=[$1])'
+'        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 > 
 > -- 3.6.1 HAVING clause with row types
 > explain plan without implementation for
@@ -2503,14 +2542,10 @@ FROM `DEPTS2` (state=,code=0)
 > where emps.deptno = (select min(deptno) from depts2);
 'column0'
 'ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11])'
-'  FilterRel(condition=[=($2, $12)])'
-'    JoinRel(condition=[true], joinType=[left])'
-'      JoinRel(condition=[=($2, $10)], joinType=[left])'
-'        TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
-'        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
-'      AggregateRel(groupCount=[0], EXPR$0=[MIN(0)])'
-'        ProjectRel(DEPTNO=[$0])'
-'          TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])'
+'  FilterRel(condition=[=($2, ?0)])'
+'    JoinRel(condition=[=($2, $10)], joinType=[left])'
+'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
+'      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
 > 
 > -- so does this
 > explain plan without implementation for
@@ -4021,6 +4056,283 @@ FROM `DEPTS2` (state=,code=0)
 '                  FennelRenameRel(fieldNames=[[$f0]])'
 '                    LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$DEPTS2$DEPTNO]])'
 > 
+> -- 11 Misc usages of uncorrelated scalar subqueries that can be converted to
+> -- constants
+> 
+> -- scalar subquery as an argument to a UDR
+> set path 'sales';
+> create function ramp(n int) 
+>     returns table(i int)
+>     language java
+>     parameter style system defined java
+>     no sql
+>     external name 'class net.sf.farrago.test.FarragoTestUDR.nullableRamp(java.lang.Integer, java.sql.PreparedStatement)';
+> 
+> explain plan for select * from table(ramp((select min(deptno) from depts)));
+'column0'
+'FarragoJavaUdxRel(invocation=[CAST(RAMP(CAST(?0):INTEGER)):RecordType(INTEGER I) NOT NULL])'
+> 
+> select * from table(ramp((select min(deptno) from depts))) order by 1;
+'I'
+'0'
+'1'
+'2'
+'3'
+'4'
+'5'
+'6'
+'7'
+'8'
+'9'
+> 
+> -- make sure this returns an exception
+> select * from table(ramp((select deptno from depts)));
+Error: Scalar query returned more than one row (state=,code=0)
+> 
+> -- pass in empty subquery result
+> select * from table(ramp((select empno from emps where empno > 1000)));
+'I'
+> 
+> -- dynamic parameters are allowed as long as they're not referenced in the
+> -- subquery
+> explain plan for
+> select * from emps where empno = (select min(empno) from emps) and deptno = ?;
+'column0'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[?1], expr#11=[=($t0, $t10)], expr#12=[?0], expr#13=[=($t2, $t12)], expr#14=[AND($t11, $t13)], proj#0..9=[{exprs}], $condition=[$t14])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select * from emps where deptno = ? and empno = (select min(empno) from emps);
+'column0'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[?1], expr#11=[=($t0, $t10)], proj#0..9=[{exprs}], $condition=[$t11])'
+'  FennelToIteratorConverter'
+'    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[?0], expr#3=[']'], expr#4=[IS NOT NULL($t2)], expr#5=[AND($t4, $t4)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t2], $condition=[$t5])'
+'          IterOneRowRel'
+> 
+> explain plan for
+> select * from emps where empno = (select min(empno) from emps where deptno = ?);
+'column0'
+'IterCalcRel(expr#0..10=[{inputs}], expr#11=[=($t0, $t10)], proj#0..9=[{exprs}], $condition=[$t11])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel(leftouterjoin=[true])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
+'          IteratorToFennelConverter'
+'            IterCalcRel(expr#0..1=[{inputs}], expr#2=[?0], expr#3=[=($t1, $t2)], EMPNO=[$t0], $condition=[$t3])'
+'              FennelToIteratorConverter'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
+> 
+> -- make sure the plan is not cached
+> select name, (select count(*) from emps2) from emps order by name;
+'NAME','EXPR$1'
+'Eric','4'
+'Fred','4'
+'John','4'
+'Wilma','4'
+> insert into emps2 values('foo', null, null);
+> select name, (select count(*) from emps2) from emps order by name;
+'NAME','EXPR$1'
+'Eric','5'
+'Fred','5'
+'John','5'
+'Wilma','5'
+> 
+> -- use non-correlated subqueries in DELETE and MERGE
+> select * from emps2 order by deptno;
+'NAME','EMPNO','DEPTNO'
+'foo','',''
+'Fred','100','10'
+'Eric','110','20'
+'Wilma','120','20'
+'John','110','40'
+> explain plan for
+>     delete from emps2 where deptno = (select max(deptno)+10 from depts);
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableDeleteRel(table=[[LOCALDB, SALES, EMPS2]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):BIGINT NOT NULL], rid=[$t1])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO]], residual columns=[[2]])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[?0], expr#3=[']'], expr#4=[IS NOT NULL($t2)], expr#5=[AND($t4, $t4)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t2], $condition=[$t5])'
+'                IterOneRowRel'
+> delete from emps2 where deptno = (select max(deptno)+10 from depts);
+> select * from emps2 order by deptno;
+'NAME','EMPNO','DEPTNO'
+'foo','',''
+'Fred','100','10'
+'Eric','110','20'
+'Wilma','120','20'
+> 
+> explain plan for
+> merge into emps2 e1
+>     using (select * from emps2) e2 on e1.name = e2.name
+>     when matched then
+>         update set deptno = e1.deptno + (select count(*) from depts2);
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, SALES, EMPS2]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..4=[{inputs}], expr#5=[?0], expr#6=[+($t3, $t5)], expr#7=[CAST($t4):BIGINT NOT NULL], expr#8=[CAST($t6):INTEGER], rid=[$t7], NAME=[$t1], EMPNO=[$t2], DEPTNO=[$t8])'
+'        FennelToIteratorConverter'
+'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'            LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$NAME]])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0..3=[{inputs}], expr#4=[ROW($t2)], expr#5=[?0], expr#6=[+($t2, $t5)], expr#7=[CAST($t6):INTEGER], expr#8=[ROW($t7)], expr#9=[$IS_DIFFERENT_FROM($t4, $t8)], proj#0..3=[{exprs}], $condition=[$t9])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[0, 1, 2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$EMPS2$EMPNO, SYS$CLUSTERED_INDEX$EMPS2$NAME]])'
+> merge into emps2 e1
+>     using (select * from emps2) e2 on e1.name = e2.name
+>     when matched then
+>         update set deptno = e1.deptno + (select count(*) from depts2);
+> select * from emps2 order by deptno;
+'NAME','EMPNO','DEPTNO'
+'foo','',''
+'Fred','100','13'
+'Eric','110','23'
+'Wilma','120','23'
+> 
+> -- make sure the time function evaluates to the same value in the parent
+> -- query and subquery; the queries will return no rows if they don't
+> select * from emps where
+>     (select current_timestamp from emps where empno = 100) =
+>     (select current_timestamp from depts where deptno = 10)
+> order by empno;
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER'
+'100','Fred','10','','','30','25','41626320','true','false'
+'110','Eric','20','M','San Francisco','3','80','416263','','false'
+'110','John','40','M','Vancouver','2','','58797A','false','true'
+'120','Wilma','20','F','','1','50','','','true'
+> 
+> select * from emps where current_time = 
+>     (select current_time from depts where deptno = 10 and current_time =
+>         (select current_time from emps where empno = 100))
+> order by empno;
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER'
+'100','Fred','10','','','30','25','41626320','true','false'
+'110','Eric','20','M','San Francisco','3','80','416263','','false'
+'110','John','40','M','Vancouver','2','','58797A','false','true'
+'120','Wilma','20','F','','1','50','','','true'
+> 
+> -- LER-7530/FRG-277
+> explain plan for
+> select
+>     case when (select count(*) from emps) = 4
+>         then (select min(empno) from emps)
+>         else (select max(empno) from emps)
+>     end,
+>     case when (select count(*) from emps) <> 4
+>         then (select min(empno) from emps)
+>         else (select max(empno) from emps)
+>     end
+> from (values(0));
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[?0], expr#2=[4], expr#3=[=($t1, $t2)], expr#4=[?1], expr#5=[?2], expr#6=[CASE($t3, $t4, $t5)], expr#7=[?3], expr#8=[<>($t7, $t2)], expr#9=[?4], expr#10=[?5], expr#11=[CASE($t8, $t9, $t10)], EXPR$0=[$t6], EXPR$1=[$t11])'
+'  FennelToIteratorConverter'
+'    FennelValuesRel(tuples=[[{ 0 }]])'
+> 
+> select
+>     case when (select count(*) from emps) = 4
+>         then (select min(empno) from emps)
+>         else (select max(empno) from emps)
+>     end,
+>     case when (select count(*) from emps) <> 4
+>         then (select min(empno) from emps)
+>         else (select max(empno) from emps)
+>     end
+> from (values(0));
+'EXPR$0','EXPR$1'
+'100','120'
+> 
+> explain plan for
+> select
+>     case (select count(*) from emps)
+>         when (select count(*) from depts)
+>         then (select min(empno) from emps)
+>         else (select max(empno) from emps)
+>     end
+> from (values(0));
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[?0], expr#2=[?1], expr#3=[=($t1, $t2)], expr#4=[?2], expr#5=[?3], expr#6=[CASE($t3, $t4, $t5)], EXPR$0=[$t6])'
+'  FennelToIteratorConverter'
+'    FennelValuesRel(tuples=[[{ 0 }]])'
+> 
+> select
+>     case (select count(*) from emps)
+>         when (select count(*) from depts)
+>         then (select min(empno) from emps)
+>         else (select max(empno) from emps)
+>     end
+> from (values(0));
+'EXPR$0'
+'120'
+> 
+> explain plan for
+> select
+>     coalesce(
+>         (select gender from emps where empno = 100), 
+>         (select name from emps where empno = 100))
+> from (values(0));
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[?0], expr#2=[IS NOT NULL($t1)], expr#3=[?1], expr#4=[?2], expr#5=[CASE($t2, $t3, $t4)], EXPR$0=[$t5])'
+'  FennelToIteratorConverter'
+'    FennelValuesRel(tuples=[[{ 0 }]])'
+> 
+> select
+>     coalesce(
+>         (select gender from emps where empno = 100), 
+>         (select name from emps where empno = 100))
+> from (values(0));
+'EXPR$0'
+'Fred'
+> 
+> -- subquery references a view
+> create view vcount as
+>     select count(*) from emps, depts where emps.deptno = depts.deptno;
+> explain plan for select * from emps where empid = (select * from vcount);
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[?0], expr#3=[']'], expr#4=[CAST($t2):INTEGER], expr#5=[IS NOT NULL($t2)], expr#6=[AND($t5, $t5)], $f0=[$t1], $f1=[$t4], $f2=[$t3], $f3=[$t4], $condition=[$t6])'
+'          IterOneRowRel'
+> select * from emps where empid = (select * from vcount);
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER'
+'110','Eric','20','M','San Francisco','3','80','416263','','false'
+> 
+> -- subquery in a view definition
+> create view vncsubq as
+>     select * from emps where empno = (select min(empno) from emps);
+> explain plan for 
+>     select * from depts where deptno = (select deptno from vncsubq);
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=['['], expr#2=[?0], expr#3=[']'], expr#4=[IS NOT NULL($t2)], expr#5=[AND($t4, $t4)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t2], $condition=[$t5])'
+'        IterOneRowRel'
+> select * from depts where deptno = (select deptno from vncsubq);
+'DEPTNO','NAME'
+'10','Sales'
+> 
+> -- disable subquery conversion
+> alter session set "reduceNonCorrelatedSubqueries" = false;
+> explain plan for select * from emps where empno = (select min(empno) from emps);
+'column0'
+'IterCalcRel(expr#0..10=[{inputs}], expr#11=[=($t0, $t10)], proj#0..9=[{exprs}], $condition=[$t11])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel(leftouterjoin=[true])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelBufferRel(inMemory=[false], multiPass=[true])'
+'        FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+> 
 > --------------
 > -- clean up --
 > --------------
@@ -4031,6 +4343,9 @@ FROM `DEPTS2` (state=,code=0)
 > drop table depts3;
 > drop table depts4;
 > drop table depts5;
+> drop view vcount;
+> drop view vncsubq;
+> drop function ramp;
 > 
 > -- End subquery.sql
 > 

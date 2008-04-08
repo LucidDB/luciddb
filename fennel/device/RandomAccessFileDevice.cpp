@@ -28,8 +28,14 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 RandomAccessFileDevice::RandomAccessFileDevice(
+    std::string filename,DeviceMode mode,FileSize initialSize)
+    : FileDevice(filename,mode,initialSize)
+{
+}
+
+RandomAccessFileDevice::RandomAccessFileDevice(
     std::string filename,DeviceMode mode)
-    : FileDevice(filename,mode)
+    : FileDevice(filename,mode,FileSize(0))
 {
 }
 

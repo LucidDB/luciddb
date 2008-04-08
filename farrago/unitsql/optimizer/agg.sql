@@ -102,6 +102,69 @@ select deptno, gender, min(age), max(age) from emps
 explain plan for
 select sum(age) from emps group by deptno;
 
+-----------------------------------------------------------------------
+-- Test non-correlated subqueries with the default Farrago personality.
+-- The subqueries are not converted to constants in this case.
+-----------------------------------------------------------------------
+
+explain plan for
+select count(*)
+from emps
+group by name
+having emps.name=(select max(name) from emps);
+
+explain plan for
+select count(*)
+from emps
+group by name
+having min(emps.name) = (select max(name) from emps);
+
+explain plan for
+SELECT
+    sum(empno),
+    (select 1 from (values(0)))
+FROM
+    emps;
+
+explain plan for
+SELECT
+    sum(empno),
+    (select 1 from (values(0)))
+FROM
+    emps
+group by deptno, name;
+
+explain plan for
+select (select deptno from depts where deptno > 100) from emps;
+
+!set outputformat table
+
+select count(*)
+from emps
+group by name
+having emps.name=(select max(name) from emps);
+
+select count(*)
+from emps
+group by name
+having min(emps.name) = (select max(name) from emps);
+
+SELECT
+    sum(empno),
+    (select 1 from (values(0)))
+FROM
+    emps;
+
+SELECT
+    sum(empno) as s,
+    (select 1 from (values(0)))
+FROM
+    emps
+group by deptno, name
+order by s;
+
+select (select deptno from depts where deptno > 100) from emps;
+
 --------------------------
 -- Test Hash Aggregates --
 --------------------------

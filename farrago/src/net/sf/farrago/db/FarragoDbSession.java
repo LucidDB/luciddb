@@ -407,16 +407,25 @@ public class FarragoDbSession
     {
         return warningQueue;
     }
-
+    
     // implement FarragoSession
     public synchronized FarragoSessionStmtContext newStmtContext(
         FarragoSessionStmtParamDefFactory paramDefFactory)
+    {
+        return newStmtContext(paramDefFactory, null);
+    }
+
+    // implement FarragoSession
+    public synchronized FarragoSessionStmtContext newStmtContext(
+        FarragoSessionStmtParamDefFactory paramDefFactory,
+        FarragoSessionStmtContext rootStmtContext)
     {
         FarragoDbStmtContext stmtContext =
             new FarragoDbStmtContext(
                 this,
                 paramDefFactory,
-                database.getDdlLockManager());
+                database.getDdlLockManager(),
+                rootStmtContext);
         addAllocation(stmtContext);
         return stmtContext;
     }

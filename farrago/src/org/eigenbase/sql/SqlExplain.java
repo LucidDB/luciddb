@@ -40,6 +40,8 @@ public class SqlExplain
     public static final int DEPTH_OPERAND = 2;
     public static final int AS_XML_OPERAND = 3;
     public static final int OPERAND_COUNT = 4;
+    
+    private final int nDynamicParams;
 
     //~ Enums ------------------------------------------------------------------
 
@@ -60,6 +62,7 @@ public class SqlExplain
         SqlLiteral detailLevel,
         SqlLiteral depth,
         SqlLiteral asXml,
+        int nDynamicParams,
         SqlParserPos pos)
     {
         super(
@@ -70,6 +73,7 @@ public class SqlExplain
         operands[DETAIL_LEVEL_OPERAND] = detailLevel;
         operands[DEPTH_OPERAND] = depth;
         operands[AS_XML_OPERAND] = asXml;
+        this.nDynamicParams = nDynamicParams;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -99,6 +103,14 @@ public class SqlExplain
         return (Depth) SqlLiteral.symbolValue(operands[DEPTH_OPERAND]);
     }
 
+    /**
+     * @return the number of dynamic parameters in the statement
+     */
+    public int getDynamicParamCount()
+    {
+        return nDynamicParams;
+    }
+    
     /**
      * @return whether physical plan implementation should be returned
      */

@@ -186,6 +186,9 @@ void DatabaseTest::testLoadData()
 void DatabaseTest::testRecoverEmpty()
 {
     testCreateEmpty();
+    // Flush the pages that have been created in the empty db,
+    // then discard the checkpoint to simulate a crash
+    pDatabase->checkpointImpl();
     pDatabase->checkpointImpl(CHECKPOINT_DISCARD);
     BOOST_CHECK(pDatabase->isRecoveryRequired());
     pDatabase.reset();

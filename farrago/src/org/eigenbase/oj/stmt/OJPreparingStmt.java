@@ -256,15 +256,17 @@ public abstract class OJPreparingStmt
         };
         ClassDeclaration decl = init(arguments);
 
+        SqlToRelConverter sqlToRelConverter =
+            getSqlToRelConverter(validator, connection);
+        
         SqlExplain sqlExplain = null;
         if (sqlQuery.isA(SqlKind.Explain)) {
             // dig out the underlying SQL statement
             sqlExplain = (SqlExplain) sqlQuery;
             sqlQuery = sqlExplain.getExplicandum();
+            sqlToRelConverter.setIsExplain(sqlExplain.getDynamicParamCount());
         }
 
-        SqlToRelConverter sqlToRelConverter =
-            getSqlToRelConverter(validator, connection);
         RelNode rootRel =
             sqlToRelConverter.convertQuery(sqlQuery, needsValidation, true);
 

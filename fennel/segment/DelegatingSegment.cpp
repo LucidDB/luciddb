@@ -49,6 +49,16 @@ BlockNum DelegatingSegment::getAllocatedSizeInPages()
     return pDelegateSegment->getAllocatedSizeInPages();
 }
 
+BlockNum DelegatingSegment::getNumPagesOccupiedHighWater()
+{
+    return pDelegateSegment->getNumPagesOccupiedHighWater();
+}
+
+BlockNum DelegatingSegment::getNumPagesExtended()
+{
+    return pDelegateSegment->getNumPagesExtended();
+}
+
 PageId DelegatingSegment::getPageSuccessor(PageId pageId)
 {
     return pDelegateSegment->getPageSuccessor(pageId);
@@ -140,6 +150,6 @@ PageId DelegatingSegment::updatePage(PageId pageId, bool needsTranslation)
     return pDelegateSegment->updatePage(pageId, needsTranslation);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/segment/DelegatingSegment.cpp#6 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End DelegatingSegment.cpp

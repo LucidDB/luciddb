@@ -39,12 +39,28 @@ class RandomAccessFileDevice : public RandomAccessDevice, public FileDevice
 {
 public:
     /**
+     * Opens a file device for random access, specifying an initial size on
+     * creation.
+     *
+     * @param filename path to file
+     * @param mode modifiers for how to open file
+     * @param initialSize the initial size (in bytes) of the device, if
+     * creating a new file
+     */
+    explicit RandomAccessFileDevice(
+        std::string filename,
+        DeviceMode mode,
+        FileSize initialSize);
+
+    /**
      * Opens a file device for random access.
      *
      * @param filename path to file
      * @param mode modifiers for how to open file
      */
-    explicit RandomAccessFileDevice(std::string filename,DeviceMode mode);
+    explicit RandomAccessFileDevice(
+        std::string filename,
+        DeviceMode mode);
     
 // ----------------------------------------------------------------------
 // Implementation of RandomAccessDevice interface (q.v.)

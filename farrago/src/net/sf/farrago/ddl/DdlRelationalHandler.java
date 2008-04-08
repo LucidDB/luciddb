@@ -572,6 +572,7 @@ public class DdlRelationalHandler
             FemLocalIndex index,
             FarragoMedLocalDataServer medDataServer)
         {
+            super(null);
             this.table = table;
             this.index = index;
             this.medDataServer = medDataServer;

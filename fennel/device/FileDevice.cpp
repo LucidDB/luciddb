@@ -27,6 +27,7 @@
 #include "fennel/common/SysCallExcn.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/file.h>
 #include <fcntl.h>
 #include <sstream>
 
@@ -37,7 +38,7 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 FileDevice::FileDevice(
-    std::string filenameInit,DeviceMode openMode)
+    std::string filenameInit,DeviceMode openMode,FileSize initialSize)
 {
     filename = filenameInit;
     mode = openMode;
@@ -98,6 +99,9 @@ FileDevice::FileDevice(
     cbLarge.LowPart = cbLow;
     cbLarge.HighPart = cbHigh;
     cbFile = cbLarge.QuadPart;
+    if (mode.create && initialSize > 0) {
+        setSizeInBytes(initialSize);
+    }
 
 #else
     
@@ -127,7 +131,20 @@ FileDevice::FileDevice(
         oss << "Failed to open file " << filename;
         throw SysCallExcn(oss.str());
     }
+    if (flock(handle, LOCK_SH|LOCK_NB) < 0) {
+        throw SysCallExcn("File lock failed");
+    }
     cbFile = ::lseek(handle,0,SEEK_END);
+
+    // Preallocate the file if we're creating the file, and an initial size
+    // is specified.
+    if (mode.create && initialSize > 0) {
+        int rc = posix_fallocate(handle, 0, initialSize);
+        if (rc) {
+            throw SysCallExcn("File allocation failed", rc);
+        }
+        cbFile = initialSize;
+    }
     
 #endif
 }

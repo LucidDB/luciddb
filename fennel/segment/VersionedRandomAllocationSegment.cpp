@@ -42,6 +42,15 @@ VersionedRandomAllocationSegment::VersionedRandomAllocationSegment(
     pTempSegment = pTempSegmentInit;
 }
 
+void VersionedRandomAllocationSegment::initForUse()
+{
+    // Since we will be accessing SegmentAllocationNode pages, we need to
+    // acquire a mutex on the allocationNodeMap.
+    SXMutexSharedGuard mapGuard(mapMutex);
+    
+    RandomAllocationSegmentBase::initForUse();
+}
+
 void VersionedRandomAllocationSegment::formatPageExtents(
     SegmentAllocationNode &segAllocNode,
     ExtentNum &extentNum)
@@ -702,15 +711,6 @@ void VersionedRandomAllocationSegment::freeTempPage(
     assert(mapMutex.isLocked(LOCKMODE_X));
     pTempSegment->deallocatePageRange(tempAllocNodePageId, tempAllocNodePageId);
     allocationNodeMap.erase(origAllocNodePageId);
-}
-
-BlockNum VersionedRandomAllocationSegment::getAllocatedSizeInPages()
-{
-    // Since we will be accessing SegmentAllocationNode pages, we need to
-    // acquire a mutex on the allocationNodeMap.
-    SXMutexSharedGuard mapGuard(mapMutex);
-
-    return RandomAllocationSegmentBase::getAllocatedSizeInPages();
 }
 
 bool VersionedRandomAllocationSegment::getOldPageIds(

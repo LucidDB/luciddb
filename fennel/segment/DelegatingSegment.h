@@ -56,6 +56,8 @@ public:
     
     // implement the Segment interface
     virtual BlockNum getAllocatedSizeInPages();
+    virtual BlockNum getNumPagesOccupiedHighWater();
+    virtual BlockNum getNumPagesExtended();
     virtual PageId getPageSuccessor(PageId pageId);
     virtual void setPageSuccessor(PageId pageId, PageId successorId);
     virtual BlockId translatePageId(PageId);

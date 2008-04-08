@@ -118,16 +118,6 @@ class Database
      */
     uint nCheckpoints;
 
-    /**
-     * Counter for number of data pages allocated
-     */
-    int64_t nDataPagesAllocated;
-
-    /**
-     * Counter for number of temporary pages allocated
-     */
-    int64_t nTempPagesAllocated;
-
     explicit Database(
         SharedCache pCache,
         ConfigMap const &configMap,
@@ -150,9 +140,9 @@ class Database
     
     SharedSegment createShadowLog(DeviceMode);
 
-    void createDataDevice();
+    void createDataDevice(LinearDeviceSegmentParams &);
     
-    void createDataSegment(SharedSegment);
+    void createDataSegment(SharedSegment, LinearDeviceSegmentParams &);
 
     void createTempSegment();
     

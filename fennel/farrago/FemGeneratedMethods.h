@@ -9,6 +9,7 @@ jmethodID ProxyAggStreamDef::meth_getAggInvocation = 0;
 jmethodID ProxyAggStreamDef::meth_getGroupingPrefixSize = 0;
 jmethodID ProxyBarrierStreamDef::meth_getDynamicParameter = 0;
 jmethodID ProxyBarrierStreamDef::meth_getReturnMode = 0;
+jmethodID ProxyBeginTxnCmd::meth_getResultHandle = 0;
 jmethodID ProxyBernoulliSamplingStreamDef::meth_getRepeatableSeed = 0;
 jmethodID ProxyBernoulliSamplingStreamDef::meth_isRepeatable = 0;
 jmethodID ProxyBernoulliSamplingStreamDef::meth_getSamplingRate = 0;
@@ -18,13 +19,14 @@ jmethodID ProxyCalcTupleStreamDef::meth_isFilter = 0;
 jmethodID ProxyCalcTupleStreamDef::meth_getProgram = 0;
 jmethodID ProxyCartesianProductStreamDef::meth_isLeftOuter = 0;
 jmethodID ProxyCmdBeginTxn::meth_isReadOnly = 0;
-jmethodID ProxyCmdBeginTxn::meth_getResultHandle = 0;
+jmethodID ProxyCmdBeginTxnWithCsn::meth_getCsnHandle = 0;
 jmethodID ProxyCmdCheckpoint::meth_isAsync = 0;
 jmethodID ProxyCmdCheckpoint::meth_isFuzzy = 0;
 jmethodID ProxyCmdCreateExecutionStreamGraph::meth_getResultHandle = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_isInput = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_getResultHandle = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_getStreamName = 0;
+jmethodID ProxyCmdGetTxnCsn::meth_getResultHandle = 0;
 jmethodID ProxyCmdOpenDatabase::meth_isCreateDatabase = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getParams = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getResultHandle = 0;
@@ -224,6 +226,10 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 ProxyBarrierStreamDef::meth_getDynamicParameter = pEnv->GetMethodID(jClass,"getDynamicParameter","()Ljava/util/List;");
 ProxyBarrierStreamDef::meth_getReturnMode = pEnv->GetMethodID(jClass,"getReturnMode","()Lnet/sf/farrago/fem/fennel/BarrierReturnMode;");
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemBeginTxnCmd");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyBeginTxnCmd>));
+ProxyBeginTxnCmd::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHandle","()Lnet/sf/farrago/fem/fennel/FemTxnHandle;");
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemBernoulliSamplingStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyBernoulliSamplingStreamDef>));
 ProxyBernoulliSamplingStreamDef::meth_getRepeatableSeed = pEnv->GetMethodID(jClass,"getRepeatableSeed","()I");
@@ -253,7 +259,10 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdBeginTxn");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdBeginTxn>));
 ProxyCmdBeginTxn::meth_isReadOnly = pEnv->GetMethodID(jClass,"isReadOnly","()Z");
-ProxyCmdBeginTxn::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHandle","()Lnet/sf/farrago/fem/fennel/FemTxnHandle;");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdBeginTxnWithCsn");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdBeginTxnWithCsn>));
+ProxyCmdBeginTxnWithCsn::meth_getCsnHandle = pEnv->GetMethodID(jClass,"getCsnHandle","()Lnet/sf/farrago/fem/fennel/FemCsnHandle;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdCheckpoint");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdCheckpoint>));
@@ -281,6 +290,10 @@ ProxyCmdCreateStreamHandle::meth_getStreamName = pEnv->GetMethodID(jClass,"getSt
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdDropIndex");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdDropIndex>));
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdGetTxnCsn");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdGetTxnCsn>));
+ProxyCmdGetTxnCsn::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHandle","()Lnet/sf/farrago/fem/fennel/FemCsnHandle;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdOpenDatabase");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdOpenDatabase>));
@@ -338,6 +351,9 @@ ProxyCorrelation::meth_getOffset = pEnv->GetMethodID(jClass,"getOffset","()I");
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCorrelationJoinStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCorrelationJoinStreamDef>));
 ProxyCorrelationJoinStreamDef::meth_getCorrelations = pEnv->GetMethodID(jClass,"getCorrelations","()Ljava/util/Collection;");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCsnHandle");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCsnHandle>));
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemDatabaseCmd");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyDatabaseCmd>));
@@ -755,6 +771,15 @@ std::string symbol = constructString(JniUtil::toString(pEnv,pEnv->CallObjectMeth
 return static_cast<BarrierReturnMode>(JniUtil::lookUpEnum(BarrierReturnMode_names,symbol));
 }
 
+SharedProxyTxnHandle ProxyBeginTxnCmd::getResultHandle()
+{
+SharedProxyTxnHandle p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getResultHandle);
+if (!p->jObject) p.reset();
+return p;
+}
+
 int32_t ProxyBernoulliSamplingStreamDef::getRepeatableSeed()
 {
 return pEnv->CallIntMethod(jObject,meth_getRepeatableSeed);
@@ -800,11 +825,11 @@ bool ProxyCmdBeginTxn::isReadOnly()
 return pEnv->CallBooleanMethod(jObject,meth_isReadOnly);
 }
 
-SharedProxyTxnHandle ProxyCmdBeginTxn::getResultHandle()
+SharedProxyCsnHandle ProxyCmdBeginTxnWithCsn::getCsnHandle()
 {
-SharedProxyTxnHandle p;
+SharedProxyCsnHandle p;
 p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getResultHandle);
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getCsnHandle);
 if (!p->jObject) p.reset();
 return p;
 }
@@ -845,6 +870,15 @@ return p;
 std::string ProxyCmdCreateStreamHandle::getStreamName()
 {
 return constructString(pEnv->CallObjectMethod(jObject,meth_getStreamName));
+}
+
+SharedProxyCsnHandle ProxyCmdGetTxnCsn::getResultHandle()
+{
+SharedProxyCsnHandle p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getResultHandle);
+if (!p->jObject) p.reset();
+return p;
 }
 
 bool ProxyCmdOpenDatabase::isCreateDatabase()

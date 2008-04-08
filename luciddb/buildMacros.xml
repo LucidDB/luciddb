@@ -55,6 +55,31 @@ ${farrago.test.jvmargs}
   <!-- directory for luciddb initialization scripts -->
   <property name="luciddb.initsql.dir" location="${luciddb.dir}/initsql" />
 
+  <if> <equals arg1="${os.name}" arg2="Linux"/>
+    <then>
+      <copy file="${luciddb.initsql.dir}/setDeviceSchedulerType.sql.tmpl"
+        tofile="${luciddb.initsql.dir}/setDeviceSchedulerType.sql"
+        overwrite="true">
+        <filterset>
+          <filter token="SCHEDULER_TYPE" value="aioLinux"/>
+        </filterset>
+      </copy>
+      <copy file="${luciddb.initsql.dir}/setDeviceSchedulerType.ref.tmpl"
+        tofile="${luciddb.initsql.dir}/setDeviceSchedulerType.ref"
+        overwrite="true">
+        <filterset>
+          <filter token="SCHEDULER_TYPE" value="aioLinux"/>
+        </filterset>
+      </copy>
+      <property name="luciddb.setDeviceSchedulerType.sql"
+        value="setDeviceSchedulerType.sql"/>
+    </then>
+    <else>
+      <property name="luciddb.setDeviceSchedulerType.sql"
+        value=""/>
+    </else>
+  </if>
+
   <!-- filelist for farrago init scripts which are run for luciddb -->
   <filelist dir="${open.dir}/farrago/initsql" id="farrago.filelist.initsql"
     files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createMgmtViews.sql"/>
@@ -75,7 +100,7 @@ ${farrago.test.jvmargs}
 
   <!-- filelist for luciddb init scripts -->
   <filelist dir="${luciddb.initsql.dir}" id="luciddb.filelist.initsql"
-    files="installApplib.sql ${luciddb.createTestHarness.sql} createDbaViews.sql ${luciddb.createForeignWrappers.sql}"/>
+    files="${luciddb.setDeviceSchedulerType.sql} installApplib.sql ${luciddb.createTestHarness.sql} createDbaViews.sql ${luciddb.createForeignWrappers.sql}"/>
 
 
   <!-- Macro to run sql scripts/tests using LucidDbSqlTest -->

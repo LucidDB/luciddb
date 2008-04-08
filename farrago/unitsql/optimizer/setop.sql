@@ -147,6 +147,70 @@ select * from s1 union all (select * from s2 where a = 1);
 -- make sure this does not fail during physical plan generation
 explain plan for select * from s1 union all (select * from s2 where a = 1);
 
+-------------------------------------------
+-- Tests for combining unions and distincts
+-------------------------------------------
+create table t1(a int);
+create table t2(a int);
+create table t3(a int);
+create table t4(a int);
+insert into t1 values(1), (1);
+insert into t2 values(2), (2);
+insert into t3 values(3), (3);
+insert into t4 values(4), (4);
+
+!set outputformat csv
+explain plan for
+    select * from t1 union all
+    select * from t2 union all
+    select * from t3 union all
+    select * from t4;
+explain plan for
+    (select * from t1 union all select * from t2) union all
+    (select * from t3 union all select * from t4);
+explain plan for
+    select * from t1 union all
+    (select * from t2 union all select * from t3 union all select * from t4);
+explain plan for
+    select * from t1 union all
+        (select * from t2 union all
+            (select * from t3 union all select * from t4));
+
+explain plan for
+    select * from t1 union
+    select * from t2 union
+    select * from t3 union
+    select * from t4;
+explain plan for
+    (select * from t1 union select * from t2) union
+    (select * from t3 union select * from t4);
+explain plan for
+    select * from t1 union
+    (select * from t2 union select * from t3 union select * from t4);
+explain plan for
+    select * from t1 union
+        (select * from t2 union
+            (select * from t3 union select * from t4));
+explain plan for
+    ((select * from t1 union select * from t2) union
+        (select * from t3 union select * from t4))
+    union
+    ((select * from t1 union select * from t2) union
+        (select * from t3 union select * from t4));
+
+!set outputformat table
+select * from t1 union all
+    select * from t2 union all
+    select * from t3 union all
+    select * from t4
+order by a;
+((select * from t1 union select * from t2) union
+    (select * from t3 union select * from t4))
+union
+    ((select * from t1 union select * from t2) union
+        (select * from t3 union select * from t4))
+order by a;
+
 --------------
 -- Clean up --
 --------------

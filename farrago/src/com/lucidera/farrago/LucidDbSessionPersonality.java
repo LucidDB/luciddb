@@ -83,6 +83,8 @@ public class LucidDbSessionPersonality
     public static final String LAST_UPSERT_ROWS_INSERTED_DEFAULT = null;
     public static final String LAST_ROWS_REJECTED = "lastRowsRejected";
     public static final String LAST_ROWS_REJECTED_DEFAULT = null;
+    public static final String
+        REDUCE_NON_CORRELATED_SUBQUERIES_LUCIDDB_DEFAULT = "true";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -172,6 +174,13 @@ public class LucidDbSessionPersonality
 
         // LucidDB updates the catalog's row count field as DML is executed
         if (feature == featureResource.PersonalityManagesRowCount) {
+            return true;
+        }
+        
+        // LucidDB only supports snapshots if this is a real LucidDB instance
+        if (feature == featureResource.PersonalitySupportsSnapshots &&
+            defaultLucidDb)
+        {
             return true;
         }
         
@@ -365,6 +374,35 @@ public class LucidDbSessionPersonality
         // projects are not beneath joins.
         builder.addRuleInstance(new PushProjectIntoMultiJoinRule());
 
+        // Eliminate UNION DISTINCT and trivial UNION.
+        // Need to do this before optimizing the join order because the
+        // metadata queries assume that UNION has been converted to a
+        // non-distinct UNION.  We also might as well apply the rules to
+        // remove unnecessary unions and distincts so the row counts are
+        // more accurate.
+        builder.addRuleInstance(new UnionToDistinctRule());
+        builder.addRuleInstance(new UnionEliminatorRule());
+
+        // Eliminate redundant SELECT DISTINCT.
+        builder.addRuleInstance(new RemoveDistinctRule());
+        
+        // If there are multiple unions in a query, combine the aggregations
+        // that remove duplicates (in the case of distinct unions)
+        // into a single aggregation.  Also combine all unions into a
+        // single union.  Both rules need to be applied in the same
+        // subprogram because in the case of distinct unions, the aggregates
+        // need to be pulled up in order for the unions to be combined.
+        // Then the unions need to be combined in order to do further pulling
+        // of aggregates.  Lastly, both of these rules already fire on the
+        // rightmost inputs first, and by applying these rules bottom-up, we're
+        // effectively converting bottom-up from right to left.  By doing so,
+        // that minimizes the patterns that the rules need to deal with. 
+        subprogramBuilder = new HepProgramBuilder();
+        subprogramBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
+        subprogramBuilder.addRuleInstance(new PullUpAggregateAboveUnionRule());
+        subprogramBuilder.addRuleInstance(new CombineUnionsRule());
+        builder.addSubprogram(subprogramBuilder.createProgram());
+        
         // Optimize join order; this will spit back out all 2-way joins and
         // semijoins.  Note that the match order is bottom-up, so we
         // can optimize lower-level joins before their ancestors.  That allows
@@ -426,14 +464,6 @@ public class LucidDbSessionPersonality
             builder.addRuleInstance(LcsIndexOnlyAccessRule.instanceSearch);
             builder.addRuleInstance(LcsIndexOnlyAccessRule.instanceMerge);
         }
-
-        // Eliminate UNION DISTINCT and trivial UNION.
-        // REVIEW:  some of this may need to happen earlier as well.
-        builder.addRuleInstance(new UnionToDistinctRule());
-        builder.addRuleInstance(new UnionEliminatorRule());
-
-        // Eliminate redundant SELECT DISTINCT.
-        builder.addRuleInstance(new RemoveDistinctRule());
 
         // We're getting close to physical implementation.  First, insert
         // type coercions for expressions which require it.
@@ -695,6 +725,9 @@ public class LucidDbSessionPersonality
         variables.setDefault(
             LAST_ROWS_REJECTED,
             LAST_ROWS_REJECTED_DEFAULT);
+        variables.set(
+            REDUCE_NON_CORRELATED_SUBQUERIES,
+            REDUCE_NON_CORRELATED_SUBQUERIES_LUCIDDB_DEFAULT);
     }
 
     // implement FarragoSessionPersonality
@@ -726,7 +759,7 @@ public class LucidDbSessionPersonality
     {
         String sql = (stmtContext == null) ? "?" : stmtContext.getSql();
         LucidDbPreparingStmt stmt =
-            new LucidDbPreparingStmt(stmtValidator, sql);
+            new LucidDbPreparingStmt(stmtContext, stmtValidator, sql);
         initPreparingStmt(stmt);
         return stmt;
     }

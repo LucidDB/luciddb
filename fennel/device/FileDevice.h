@@ -71,8 +71,10 @@ public:
      *
      * @param filename path to file
      * @param mode modifiers for how to open file
+     * @param initialSize the initial size (in bytes) of the device, if
+     * creating a new file
      */
-    FileDevice(std::string filename,DeviceMode mode);
+    FileDevice(std::string filename,DeviceMode mode,FileSize initialSize);
     virtual ~FileDevice();
 
     void transfer(RandomAccessRequest const &);

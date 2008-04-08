@@ -87,9 +87,14 @@ DeviceAccessScheduler::newScheduler(
             if (pScheduler) {
                 return pScheduler;
             } else {
-                // if dynamic load fails, fall through to use
-                // ThreadPoolScheduler as a fallback
-                break;
+                // if the aioLinux scheduler was explicitly selected (vs simply
+                // using the default type for the OS), then the AIO runtime
+                // library must be installed; otherwise, fall through to use
+                // ThreadPoolScheduler as fallback
+                if (params.usingDefaultSchedulerType) {
+                    break;
+                }
+                throw FennelExcn(FennelResource::instance().libaioRequired());
             }
         }
 #endif

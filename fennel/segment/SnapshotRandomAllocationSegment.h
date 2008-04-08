@@ -183,6 +183,11 @@ public:
         TxnId snapshotCsnInit);
 
     /**
+     * @return the csn associated with the snapshot segment
+     */
+    TxnId getSnapshotCsn();
+
+    /**
      * Commits page entry changes.
      *
      * @param commitCsn sequence number to write into pageEntry's on commit

@@ -770,7 +770,7 @@ public:
     virtual PageId getPageSuccessor(PageId pageId);
     virtual void setPageSuccessor(PageId pageId, PageId successorId);
     virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
-    virtual BlockNum getAllocatedSizeInPages();
+    virtual void initForUse();
 };
 
 FENNEL_END_NAMESPACE

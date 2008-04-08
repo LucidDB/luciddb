@@ -122,6 +122,7 @@ protected:
     static StreamGraphHandle *getStreamGraphHandle(
         SharedProxyStreamGraphHandle);
     static SavepointId getSavepointId(SharedProxySvptHandle);
+    static TxnId getCsn(SharedProxyCsnHandle);
 
     virtual DbHandle *newDbHandle();    /// factory method
     virtual TxnHandle *newTxnHandle();  /// factory method
@@ -133,12 +134,23 @@ protected:
     void setExecStreamHandle(SharedProxyStreamHandle,ExecStream *);
     void setSvptHandle(
         SharedProxySvptHandle,SavepointId);
+    void setCsnHandle(SharedProxyCsnHandle, TxnId);
 
     void getBTreeForIndexCmd(ProxyIndexCmd &,PageId,BTreeDescriptor &);
     void dropOrTruncateIndex(
         ProxyCmdDropIndex &cmd, bool drop);
 
     virtual JavaTraceTarget *newTraceTarget();  /// factory method
+
+    /**
+     * Executes a begin txn command.
+     *
+     * @param cmd the command
+     * @param readOnly true if the txn is read-only
+     * @param csn if non-null and snapshots are enabled, the commit sequence
+     * number for reads
+     */
+    void beginTxn(ProxyBeginTxnCmd &cmd, bool readOnly, TxnId csn);
 
     // Per-command overrides for FemVisitor; add new commands here
     virtual void visit(ProxyCmdCreateExecutionStreamGraph &);
@@ -153,9 +165,11 @@ protected:
     virtual void visit(ProxyCmdCheckpoint &);
     virtual void visit(ProxyCmdSetParam &);
     virtual void visit(ProxyCmdBeginTxn &);
+    virtual void visit(ProxyCmdBeginTxnWithCsn &);
     virtual void visit(ProxyCmdSavepoint &);
     virtual void visit(ProxyCmdCommit &);
     virtual void visit(ProxyCmdRollback &);
+    virtual void visit(ProxyCmdGetTxnCsn &);
     virtual void visit(ProxyCmdAlterSystemDeallocate &);
     virtual void visit(ProxyCmdVersionIndexRoot &);
 

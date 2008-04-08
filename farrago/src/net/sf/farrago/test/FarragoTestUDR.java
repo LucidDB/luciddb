@@ -203,6 +203,17 @@ public abstract class FarragoTestUDR
         }
     }
 
+    public static void nullableRamp(
+        Integer n,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        if (n == null) {
+            n = new Integer(0);
+        }
+        ramp(n.intValue(), resultInserter);
+    }
+
     public static void stringify(
         ResultSet inputSet,
         String delimiter,

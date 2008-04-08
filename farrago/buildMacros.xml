@@ -877,6 +877,7 @@ ${farrago.test.jvmargs}
     <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
     <attribute name="backupDir" default="${farrago.catalog.backup.dir}"/>
     <attribute name="catalogOnly" default="false"/>
+    <attribute name="includeTempDataFile" default="false"/>
 
     <sequential>
       <farrago.setReposProvider reposStorageProps="@{catalogDir}/ReposStorage.properties"/>
@@ -909,6 +910,14 @@ ${farrago.test.jvmargs}
           <copy todir="@{backupDir}">
             <fileset dir="@{catalogDir}" includes="db.dat"/>
           </copy>
+          <if>
+            <istrue value="@{includeTempDataFile}"/>
+            <then>
+              <copy todir="@{backupDir}">
+                <fileset dir="@{catalogDir}" includes="temp.dat"/>
+              </copy>
+            </then>
+          </if>
         </then>
       </ac:if>
     </sequential>

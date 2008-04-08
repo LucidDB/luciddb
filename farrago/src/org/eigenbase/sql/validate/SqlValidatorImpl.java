@@ -1954,12 +1954,12 @@ public class SqlValidatorImpl
             } else {
                 selectScopes.put(select, selectScope);
             }
-            registerSubqueries(selectScope, select.getGroup(), true);
+            registerSubqueries(selectScope, select.getGroup());
             registerOperandSubqueries(
                 aggScope,
                 select,
                 SqlSelect.HAVING_OPERAND);
-            registerSubqueries(aggScope, select.getSelectList(), true);
+            registerSubqueries(aggScope, select.getSelectList());
             final SqlNodeList orderList = select.getOrderList();
             if (orderList != null) {
                 OrderByScope orderScope =
@@ -1969,10 +1969,10 @@ public class SqlValidatorImpl
                     AggregatingScope aggOrderScope =
                         new AggregatingSelectScope(orderScope, select);
                     orderScopes.put(select, aggOrderScope);
-                    registerSubqueries(aggOrderScope, orderList, true);
+                    registerSubqueries(aggOrderScope, orderList);
                 } else {
                     orderScopes.put(select, orderScope);
-                    registerSubqueries(orderScope, orderList, true);
+                    registerSubqueries(orderScope, orderList);
                 }
             }
             break;
@@ -2114,7 +2114,7 @@ public class SqlValidatorImpl
                 alias,
                 procNs,
                 forceNullable);
-            registerSubqueries(parentScope, call, true);
+            registerSubqueries(parentScope, call);
             break;
 
         case SqlKind.MultisetQueryConstructorORDINAL:
@@ -2183,8 +2183,7 @@ public class SqlValidatorImpl
 
     private void registerSubqueries(
         SqlValidatorScope parentScope,
-        SqlNode node,
-        boolean coerceToScalar)
+        SqlNode node)
     {
         if (node == null) {
             return;
@@ -2203,16 +2202,14 @@ public class SqlValidatorImpl
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {
                 SqlNode listNode = list.get(i);
-                if (coerceToScalar
-                    && listNode.isA(SqlKind.Query))
-                {
+                if (listNode.isA(SqlKind.Query)) {
                     listNode =
                         SqlStdOperatorTable.scalarQueryOperator.createCall(
                             listNode.getParserPosition(),
                             listNode);
                     list.set(i, listNode);
                 }
-                registerSubqueries(parentScope, listNode, coerceToScalar);
+                registerSubqueries(parentScope, listNode);
             }
         } else {
             // atomic node -- can be ignored
@@ -2247,7 +2244,7 @@ public class SqlValidatorImpl
                     operand);
             call.setOperand(operandOrdinal, operand);
         }
-        registerSubqueries(parentScope, operand, false);
+        registerSubqueries(parentScope, operand);
     }
 
     public void validateIdentifier(SqlIdentifier id, SqlValidatorScope scope)

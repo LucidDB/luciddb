@@ -52,14 +52,16 @@ EXTRA_DIST=$(DESIGN_DOCS)
 TAGS_DEPENDENCIES=$(DESIGN_DOCS)
 ETAGS_ARGS=$(DESIGN_DOCS)
 
-# a trivial standalone test of Backtrace
+# a trivial standalone test of Backtrace and a UNIX preallocation utility
 # TODO jvs 26-June-2005:  This is a hack to suppress build on Windows;
 # if we ever get backtrace working on Windows, need to come up
 # with the proper link line.
 if !STATIC_TEST_LIBRARY
-noinst_PROGRAMS = testBacktrace
+noinst_PROGRAMS = testBacktrace allocFile
 testBacktrace_SOURCES=testBacktrace.cpp
 testBacktrace_DEPENDENCIES=Backtrace.cpp Backtrace.h libcommon.la
 testBacktrace_LDADD=-lcommon
+allocFile_SOURCES=AllocFile.cpp
+allocFile_DEPENDENCIES=libcommon.la
+allocFile_LDADD=-lcommon
 endif
-
