@@ -872,23 +872,27 @@ void Database::writeStats(StatsTarget &target)
         "DatabaseCheckpoints", nCheckpointsStat);
     target.writeCounter(
         "DatabaseCheckpointsSinceInit", nCheckpoints);
-    target.writeCounter(
-        "DatabasePagesAllocated", pDataSegment->getAllocatedSizeInPages());
-    target.writeCounter(
-        "TempPagesAllocated", pTempSegment->getAllocatedSizeInPages());
-    // +2 for the database header pages
-    target.writeCounter(
-        "DatabasePagesOccupiedHighWaterSinceInit",
-        pDataSegment->getNumPagesOccupiedHighWater() + 2);
-    target.writeCounter(
-        "TempPagesOccupiedHighWaterSinceInit",
-        pTempSegment->getNumPagesOccupiedHighWater());
-    target.writeCounter(
-        "DatabasePagesExtendedSinceInit",
-        pDataSegment->getNumPagesExtended());
-    target.writeCounter(
-        "TempPagesExtendedSinceInit",
-        pTempSegment->getNumPagesExtended());
+    if (pDataSegment) {
+        target.writeCounter(
+            "DatabasePagesAllocated", pDataSegment->getAllocatedSizeInPages());
+        // +2 for the database header pages
+        target.writeCounter(
+            "DatabasePagesOccupiedHighWaterSinceInit",
+            pDataSegment->getNumPagesOccupiedHighWater() + 2);
+        target.writeCounter(
+            "DatabasePagesExtendedSinceInit",
+            pDataSegment->getNumPagesExtended());
+    }
+    if (pTempSegment) {
+        target.writeCounter(
+            "TempPagesAllocated", pTempSegment->getAllocatedSizeInPages());
+        target.writeCounter(
+            "TempPagesOccupiedHighWaterSinceInit",
+            pTempSegment->getNumPagesOccupiedHighWater());
+        target.writeCounter(
+            "TempPagesExtendedSinceInit",
+            pTempSegment->getNumPagesExtended());
+    }
     nCheckpointsStat = 0;
 }
 
