@@ -193,7 +193,7 @@ void ExecStreamFactory::visit(ProxyIndexSearchDef &streamDef)
     assert(!(streamDef.isUniqueKey() && streamDef.isPrefetch()));
     if (streamDef.isPrefetch()) {
         BTreePrefetchSearchExecStreamParams params;
-        readBTreeSearchStreamParams(params, streamDef);
+        initBTreePrefetchSearchParams(params, streamDef);
         embryo.init(
             new BTreePrefetchSearchExecStream(),
             params);
@@ -205,6 +205,16 @@ void ExecStreamFactory::visit(ProxyIndexSearchDef &streamDef)
             ? new BTreeSearchUniqueExecStream() : new BTreeSearchExecStream(),
             params);
     }
+}
+
+void ExecStreamFactory::initBTreePrefetchSearchParams(
+    BTreePrefetchSearchExecStreamParams &params,
+    ProxyIndexSearchDef &streamDef)
+{
+    readBTreeSearchStreamParams(params, streamDef);
+    // Need a private scratch segment because scratch pages are
+    // deallocated when the stream is closed.
+    createPrivateScratchSegment(params);
 }
 
 void ExecStreamFactory::visit(ProxyJavaSinkStreamDef &streamDef)
