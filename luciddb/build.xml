@@ -1193,16 +1193,21 @@ ${farrago.test.jvmargs}
     </replace>
     <chmod file="${release.bin.dir}/${sqllineEngine}" perm="u+x" />
 
-    <copy 
-      file="${luciddb.dir}/allocFile" 
-      todir="${release.bin.dir}"
-      overwrite="true" />
-    <chmod file="${release.bin.dir}/allocFile" perm="u+x" />
-    <copy 
-      file="${luciddb.dir}/lucidDbAllocFile" 
-      todir="${release.bin.dir}"
-      overwrite="true" />
-    <chmod file="${release.bin.dir}/lucidDbAllocFile" perm="u+x" />
+    <if>
+        <equals arg1="${osfamily}" arg2="unix"/>
+      <then>
+        <copy 
+          file="${luciddb.dir}/allocFile" 
+          todir="${release.bin.dir}"
+          overwrite="true" />
+        <chmod file="${release.bin.dir}/allocFile" perm="u+x" />
+        <copy 
+          file="${luciddb.dir}/lucidDbAllocFile" 
+          todir="${release.bin.dir}"
+          overwrite="true" />
+        <chmod file="${release.bin.dir}/lucidDbAllocFile" perm="u+x" />
+      </then>
+    </if>
 
     <if>
       <not>
