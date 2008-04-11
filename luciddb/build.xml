@@ -812,7 +812,28 @@ ${farrago.test.jvmargs}
     </uptodate>
   </target>
 
-  <target name="runLuciddbInitSql">
+  <target name="convertInitSqlScripts">
+    <if> <equals arg1="${os.name}" arg2="Linux"/>
+      <then>
+        <copy file="${luciddb.initsql.dir}/setDeviceSchedulerType.sql.tmpl"
+          tofile="${luciddb.initsql.dir}/setDeviceSchedulerType.sql"
+          overwrite="true">
+          <filterset>
+            <filter token="SCHEDULER_TYPE" value="aioLinux"/>
+          </filterset>
+        </copy>
+        <copy file="${luciddb.initsql.dir}/setDeviceSchedulerType.ref.tmpl"
+          tofile="${luciddb.initsql.dir}/setDeviceSchedulerType.ref"
+          overwrite="true">
+          <filterset>
+            <filter token="SCHEDULER_TYPE" value="aioLinux"/>
+          </filterset>
+        </copy>
+      </then>
+    </if>
+  </target>
+
+  <target name="runLuciddbInitSql" depends="convertInitSqlScripts">
     <pathconvert property="luciddb.initsql.prop"
       refid="luciddb.filelist.initsql" pathsep="${line.separator}"
       dirsep="${file.separator}" />
@@ -1309,7 +1330,7 @@ ${farrago.test.jvmargs}
     </copy>
   </target>
 
-  <target name="createCatalogScript">
+  <target name="createCatalogScript" depends="convertInitSqlScripts">
     <delete file="${luciddb.initsql.dir}/catalog.sql" quiet="true"/>
     <concat destfile="${luciddb.initsql.dir}/catalog.sql">
       <filelist refid="farrago.filelist.initsql"/>
