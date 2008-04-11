@@ -49,7 +49,6 @@ public class FarragoVjdbcServer
     //~ Instance fields --------------------------------------------------------
 
     private FarragoJdbcServerDriver jdbcDriver;
-    private Remote remotedObj;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -122,17 +121,6 @@ public class FarragoVjdbcServer
         ConnectionServer server = new ConnectionServer();
         server.serve();
         locateRmiRegistry();
-
-        // REVIEW jvs 6-Apr-2008:  This is here in a pathetic attempt
-        // to fix the "no such object in table" problem.  But I
-        // think there's still a tiny window in between when
-        // ConnectionServer.serve() creates the ConnectionBrokerRmiImpl
-        // and when we create a reference to it here.  So if the
-        // garbage collector kicks in during that window, we
-        // could still see the problem.  Closing that window
-        // would require modifying or overriding VJDBC's ConnectionServer
-        // implementation.
-        remotedObj = rmiRegistry.lookup(rmiConfig.getObjectName());
 
         return rmiRegistryPort;
     }

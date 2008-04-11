@@ -91,9 +91,24 @@ public class FarragoServerTest
         return new FarragoJdbcClientDriver();
     }
 
+    protected boolean isJRockit()
+    {
+        // See http://issues.eigenbase.org/browse/FRG-316
+        
+        String vmName = System.getProperty("java.vm.name");
+        if (vmName == null) {
+            return false;
+        }
+        return vmName.indexOf("JRockit") != -1;
+    }
+
     public void testServer()
         throws Exception
     {
+        if (isJRockit()) {
+            return;
+        }
+        
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -126,6 +141,10 @@ public class FarragoServerTest
     public void testKillServer()
         throws Exception
     {
+        if (isJRockit()) {
+            return;
+        }
+        
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -153,6 +172,10 @@ public class FarragoServerTest
     public void testConnectionParams()
         throws Throwable
     {
+        if (isJRockit()) {
+            return;
+        }
+        
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -212,6 +235,10 @@ public class FarragoServerTest
     public void testExceptionContents()
         throws Throwable
     {
+        if (isJRockit()) {
+            return;
+        }
+        
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -265,12 +292,17 @@ public class FarragoServerTest
         server = null;
         assertTrue(stopped);
     }
+    
     /**
      * Tests error message when a 2nd server is started.
      */
     public void testTwoServers()
         throws Exception
     {
+        if (isJRockit()) {
+            return;
+        }
+        
         if (System.getProperty("os.name").startsWith("Windows")) {
             // TODO jvs 1-Nov-2006:  Get spawn working on Windows too.
             return;

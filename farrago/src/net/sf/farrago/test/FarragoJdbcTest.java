@@ -2766,13 +2766,6 @@ public class FarragoJdbcTest
         }
         String msg = e.toString();
 
-        if (msg.indexOf("no such object in table") > -1) {
-            // REVIEW jvs 26-Mar-2008:  I'm squelching this sporadic
-            // error, but maybe it's trying to tell us something
-            // important...
-            return;
-        }
-
         // NOTE jvs 4-June-2006:  Let regex dot match newlines
         // since sometimes error stacks include them.
         Pattern pattern = Pattern.compile(expectedPattern, Pattern.DOTALL);
