@@ -9,7 +9,6 @@
           </test-suite-call>
         </test-suite>
         <ant dir="${open.dir}/luciddb/test/sql/tpch" target="create-db"/>
-        <ant dir="${open.dir}/luciddb/test/sql/tpch" target="alloc-space"/>
       </init-hook>
 
       <test name="init">
