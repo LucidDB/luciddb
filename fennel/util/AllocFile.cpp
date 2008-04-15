@@ -22,12 +22,9 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include <sstream>
-#include <iostream>
-#include <fcntl.h>
+#include <stdio.h>
 #include <errno.h>
 #include <sys/file.h>
-#include <unistd.h>
 
 void usage();
 
@@ -46,13 +43,13 @@ int
 main(int argc, char *argv[])
 {
     if (argc != 4) {
-        std::cerr << "Invalid number of arguments" << std::endl;
+        printf("Invalid number of arguments\n");
         usage();
         exit(EINVAL);
     }
 
     char *fileName = NULL;
-    int64_t nPages = 0;
+    int nPages = 0;
     int pageSize = 0;
     for (uint argIdx = 1; argIdx < argc; argIdx++) {
         if (strncmp(argv[argIdx], "--", 2) != 0) {
@@ -64,25 +61,24 @@ main(int argc, char *argv[])
             else if (strncmp(&(argv[argIdx][2]), "pagesize=", 9) == 0) {
                 pageSize = atoi(&(argv[argIdx][11]));
             } else {
-                std::cerr << "Invalid argument " << argv[argIdx] << std::endl;
+                printf("Invalid argument %s\n", argv[argIdx]);
                 usage();
                 exit(EINVAL);
             }
         }
     }
     if (fileName == NULL) {
-        std::cerr << "Filename argument not specified" << std::endl;
+        printf("Filename argument not specified\n");
         usage();
         exit(EINVAL);
     }
     if (nPages <= 0) {
-        std::cerr << "Invalid number of pages argument: " << nPages
-            << std::endl;
+        printf("Invalid number of pages argument: %d\n", nPages);
         usage();
         exit(EINVAL);
     }
     if (pageSize <= 0) {
-        std::cerr << "Invalid pagesize argument: " << pageSize << std::endl;
+        printf("Invalid pagesize argument: %d\n", pageSize);
         usage();
         exit(EINVAL);
     }
@@ -94,24 +90,23 @@ main(int argc, char *argv[])
 
     int handle = open(fileName, access, permission);
     if (handle < 0) {
-        std::cerr << "Failed to open '" << fileName << "'" << std::endl;
+        printf("Failed to open '%s'\n", fileName); 
         exit(errno);
     }
     if (flock(handle, LOCK_EX|LOCK_NB) < 0) {
-        std::cerr << "Failed to acquire exclusive lock on '" << fileName
-            << "'" << std::endl;
+        printf("Failed to acquire exclusive lock on '%s'\n", fileName);
         close(handle);
         exit(errno);
     }
     off_t offset = lseek(handle, 0, SEEK_END);
     if (offset == -1) {
-        std::cerr << "File seek on '" << fileName << "' failed " << std::endl;
+        printf("File seek on '%s' failed\n", fileName);
         close(handle);
         exit(errno);
     }
-    int rc = posix_fallocate(handle, offset, (off_t) (nPages * pageSize));
+    int rc = posix_fallocate(handle, offset, ((off_t) nPages * pageSize));
     if (rc != 0) {
-        std::cerr << "File allocation failed for " << fileName << std::endl;
+        printf("File allocation failed for '%s'\n", fileName);
         close(handle);
         exit(rc);
     }
@@ -121,8 +116,8 @@ main(int argc, char *argv[])
 
 void usage()
 {
-    std::cerr << "Usage:  allocFile --append-pages=<number of pages> " <<
-       "--pagesize=<pageSize> <filename>" << std::endl;
+    printf("Usage:  allocFile --append-pages=<number of pages> ");
+    printf("--pagesize=<pageSize> <filename>\n");
 }
 
 // End AllocFile.cpp

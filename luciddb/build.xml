@@ -1342,7 +1342,7 @@ ${farrago.test.jvmargs}
     <if>
       <equals arg1="${osfamily}" arg2="unix"/>
       <then>
-        <copy file="${fennel.dir}/common/allocFile" overwrite="true"
+        <copy file="${fennel.dir}/util/allocFile" overwrite="true"
           tofile="${luciddb.dir}/allocFile"/>
         <chmod file="${luciddb.dir}/allocFile" perm="u+x" />
       </then>
