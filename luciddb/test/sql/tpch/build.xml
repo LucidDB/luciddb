@@ -140,8 +140,17 @@
   </target>
 
   <target name="alloc-space" depends="gen-all-sql">
+    <!-- Make sure the server isn't running by doing a dummy extend of a
+         single page.  The server can't be running while file space is
+         being extended.
+    -->
+    <exec executable="${open.dir}/luciddb/lucidDbAllocFile" failonerror="true">
+      <arg value="--append-pages=1"/>
+      <arg value="${open.dir}/luciddb/catalog/db.dat"/>
+    </exec>
     <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
-    <exec executable="${gensql.dir}/${datasize}/allocSpace.sh"/>
+    <exec executable="${gensql.dir}/${datasize}/allocSpace.sh"
+      failonerror="true"/>
   </target>
 
   <target name="clean">
