@@ -107,7 +107,7 @@ public abstract class FarragoCatalogUtil
      */
     public static boolean isRoutineMethod(FemRoutine routine)
     {
-        return routine.getSpecification().getOwner() != routine;
+        return !routine.getSpecification().getOwner().equals(routine);
     }
 
     /**

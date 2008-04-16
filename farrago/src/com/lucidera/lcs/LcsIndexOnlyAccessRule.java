@@ -183,7 +183,7 @@ public class LcsIndexOnlyAccessRule
      */
     private boolean samePrefix(FemLocalIndex a, FemLocalIndex b, int nKeys)
     {
-        if (a == b) {
+        if (a.equals(b)) {
             return true;
         }
         List<CwmIndexedFeature> aCols = a.getIndexedFeature();
@@ -192,7 +192,7 @@ public class LcsIndexOnlyAccessRule
             return false;
         }
         for (int i = 0; i < nKeys; i++) {
-            if (aCols.get(i).getFeature() != bCols.get(i).getFeature()) {
+            if (!aCols.get(i).getFeature().equals(bCols.get(i).getFeature())) {
                 return false;
             }
         }

@@ -282,7 +282,7 @@ public abstract class DdlHandler implements ReflectiveVisitor
             if (cwmNamespace instanceof FemRoutine) {
                 FemRoutine routine = (FemRoutine) cwmNamespace;
                 if (FarragoCatalogUtil.isRoutineMethod(routine)) {
-                    if (routine.getSpecification().getOwner() == type) {
+                    if (routine.getSpecification().getOwner().equals(type)) {
                         // This is a method of the type in question.  In this
                         // case, we don't create a dependency, because the
                         // circularity would foul up DROP.

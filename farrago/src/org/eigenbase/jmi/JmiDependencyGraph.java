@@ -150,7 +150,7 @@ public class JmiDependencyGraph
                     elements,
                     JmiAssocMapping.CONTRACTION);
             for (RefObject source : sources) {
-                if (source == target) {
+                if (source.equals(target)) {
                     continue;
                 }
                 JmiDependencyVertex sourceVertex = vertexMap.get(source);

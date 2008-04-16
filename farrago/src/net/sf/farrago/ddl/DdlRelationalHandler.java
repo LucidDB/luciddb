@@ -239,7 +239,7 @@ public class DdlRelationalHandler
                 // Implement constraints via system-owned indexes.
                 FemLocalIndex index =
                     createUniqueConstraintIndex(table, constraint);
-                if (constraint == primaryKey) {
+                if (primaryKey != null && constraint.equals(primaryKey)) {
                     generatedPrimaryKeyIndex = index;
                 }
 

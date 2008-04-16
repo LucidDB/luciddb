@@ -121,7 +121,7 @@ public class FarragoUserDefinedRoutineLookup
                 if (validatingRoutine == null) {
                     throw new FarragoUnvalidatedDependencyException();
                 }
-                if (femRoutine != validatingRoutine) {
+                if (!femRoutine.equals(validatingRoutine)) {
                     // just skip this one for now; if there's a conflict,
                     // we'll hit it by symmetry
                     continue;

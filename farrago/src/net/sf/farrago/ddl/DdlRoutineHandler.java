@@ -189,7 +189,7 @@ public class DdlRoutineHandler
                     "constructor methods with language "
                     + routine.getLanguage());
             }
-            if (returnParam.getType() != classifier) {
+            if (!returnParam.getType().equals(classifier)) {
                 throw validator.newPositionalError(
                     routine,
                     res.ValidatorConstructorType.ex(
