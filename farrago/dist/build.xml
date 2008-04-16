@@ -56,9 +56,11 @@
       <fileset dir="${farrago.classes.dir}">
         <include name="**/*.class"/>
         <include name="**/*.properties"/>
+        <include name="FarragoEhCache.xml"/>
       </fileset>
       <fileset dir="${farrago.catalog.src.dir}">
         <include name="**/*.class"/>
+        <include name="META-INF/enki/**"/>
       </fileset>
       <fileset dir="${dist.dir}">
         <include name="FarragoRelease.properties"/>

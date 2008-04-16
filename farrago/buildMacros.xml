@@ -112,6 +112,7 @@ ${farrago.test.jvmargs}
   <fail unless="emma.dir"/>
   <fail unless="vjdbc.dir"/>
   <fail unless="findbugs.dir"/>
+  <fail unless="mysql.dir"/>
 
   <!-- Directories -->
 
@@ -338,6 +339,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${mdrlibs.dir}/jmi.jar"/>
     <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
     <pathelement location="${mdrlibs.dir}/mdrjdbc.jar"/>
+    <pathelement location="${mysql.dir}/mysql-connector-java-3.1.14-bin.jar"/>
     <pathelement location="${resgen.dir}/lib/eigenbase-resgen.jar"/>
     <pathelement location="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement location="${junit.dir}/junit.jar"/>
@@ -860,7 +862,40 @@ ${farrago.test.jvmargs}
   <!-- Macro for cleaning out a catalog directory -->
   <macrodef name="farrago.cleanCatalog">
     <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
+    <attribute name="dropStorage" default="false"/>
+
     <sequential>
+      <property 
+          file="@{catalogDir}/ReposStorage.properties"
+          prefix="cleanCatalog"/>
+
+      <if>
+        <and>
+          <equals arg1="@{dropStorage}" arg2="true"/>
+          <isset property="cleanCatalog.net.sf.farrago.dev.dropStorage"/>
+          <isset property="cleanCatalog.net.sf.farrago.dev.createStorage"/>
+        </and>
+        <then>
+          <echo>
+            Database URL:
+            ${cleanCatalog.net.sf.farrago.dev.connection.url}
+
+            Executing:
+            ${cleanCatalog.net.sf.farrago.dev.dropStorage}
+            ${cleanCatalog.net.sf.farrago.dev.createStorage}
+          </echo>
+          <sql
+              driver="${cleanCatalog.net.sf.farrago.dev.connection.driver_class}"
+              url="${cleanCatalog.net.sf.farrago.dev.connection.url}" 
+              userid="${cleanCatalog.net.sf.farrago.dev.connection.username}"
+              password="${cleanCatalog.net.sf.farrago.dev.connection.password}"
+              classpathref="farrago.3p.classpath">
+            ${cleanCatalog.net.sf.farrago.dev.dropStorage}
+            ${cleanCatalog.net.sf.farrago.dev.createStorage}
+          </sql>
+        </then>
+      </if>
+
       <delete>
         <fileset dir="@{catalogDir}" includes="*.dat"/>
         <fileset dir="@{catalogDir}" includes="*Dump.xmi"/>
@@ -890,6 +925,7 @@ ${farrago.test.jvmargs}
         <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
         <then>
           <!-- Backup the hibernate database to FarragoCatalog.dump. -->
+          <echo message="Backing up Enki/Hibernate repository from schema '${project.catalog.schema}'"/> 
           <exec 
               executable="${farrago.enki.hibernate.backup.cmd}"
               output="@{backupDir}/FarragoCatalog.dump"
@@ -945,6 +981,7 @@ ${farrago.test.jvmargs}
         <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
         <then>
           <!-- Restore the hibernate database from FarragoCatalog.dump. -->
+          <echo message="Restoring Enki/Hibernate repository to schema '${project.catalog.schema}'"/> 
           <exec 
               executable="${farrago.enki.hibernate.restore.cmd}"
               input="@{backupDir}/FarragoCatalog.dump"
