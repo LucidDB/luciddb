@@ -460,32 +460,28 @@ public class DdlRelationalHandler
         if (FarragoCatalogUtil.isIndexPrimaryKey(index)) {
             throw validator.newPositionalError(
                 index,
-                res.ValidatorDropIndex.ex(
-                    "Primary key",
+                res.ValidatorDropPrimaryKeyIndex.ex(
                     repos.getLocalizedObjectName(index)));
         }
 
         if (index.isClustered()) {
             throw validator.newPositionalError(
                 index,
-                res.ValidatorDropIndex.ex(
-                    "Clustered",
+                res.ValidatorDropClusteredIndex.ex(
                     repos.getLocalizedObjectName(index)));
         }
 
         if (FarragoCatalogUtil.isDeletionIndex(index)) {
             throw validator.newPositionalError(
                 index,
-                res.ValidatorDropIndex.ex(
-                    "Deletion",
+                res.ValidatorDropDeletionIndex.ex(
                     repos.getLocalizedObjectName(index)));
         }
 
         if (FarragoCatalogUtil.isIndexUnique(index)) {
             throw validator.newPositionalError(
                 index,
-                res.ValidatorDropIndex.ex(
-                    "Unique constraint",
+                res.ValidatorDropUniqueConstraintIndex.ex(
                     repos.getLocalizedObjectName(index)));
         }
 
