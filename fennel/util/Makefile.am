@@ -3,12 +3,7 @@
 # these utilities dependent on shared libraries like Boost and STL.  Instead,
 # we want these utilities to be standalone.
 
-COMMON_INCLUDES=\
-	-I$(stlport_location)/stlport \
-    $(icu_include) \
-	-I$(boost_location) \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/..
+COMMON_INCLUDES=
 
 INCLUDES=$(COMMON_INCLUDES) $(EXTRA_INCLUDES)
 
@@ -16,5 +11,4 @@ INCLUDES=$(COMMON_INCLUDES) $(EXTRA_INCLUDES)
 if !STATIC_TEST_LIBRARY
 noinst_PROGRAMS = allocFile
 allocFile_SOURCES=AllocFile.cpp
-allocFile_LDFLAGS=$(ICU_LD_FLAGS) -avoid-version $(EXTRA_LDFLAGS)
 endif

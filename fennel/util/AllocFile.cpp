@@ -21,9 +21,14 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "fennel/common/CommonPreamble.h"
+#define _FILE_OFFSET_BITS 64
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
 #include <errno.h>
+#include <unistd.h>
 #include <sys/file.h>
 
 void usage();
