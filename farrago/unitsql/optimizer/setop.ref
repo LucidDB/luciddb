@@ -350,6 +350,162 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 '      LcsRowScanRel(table=[[LOCALDB, LHX, S2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$S2$A, SYS$CLUSTERED_INDEX$S2$BB]], residual columns=[[0]])'
 '        FennelValuesRel(tuples=[[{ '[', 1, ']', 1 }]])'
 > 
+> -------------------------------------------
+> -- Tests for combining unions and distincts
+> -------------------------------------------
+> create table t1(a int);
+> create table t2(a int);
+> create table t3(a int);
+> create table t4(a int);
+> insert into t1 values(1), (1);
+> insert into t2 values(2), (2);
+> insert into t3 values(3), (3);
+> insert into t4 values(4), (4);
+> 
+> !set outputformat csv
+> explain plan for
+>     select * from t1 union all
+>     select * from t2 union all
+>     select * from t3 union all
+>     select * from t4;
+'column0'
+'FennelToIteratorConverter'
+'  FennelMergeRel'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+> explain plan for
+>     (select * from t1 union all select * from t2) union all
+>     (select * from t3 union all select * from t4);
+'column0'
+'FennelToIteratorConverter'
+'  FennelMergeRel'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+> explain plan for
+>     select * from t1 union all
+>     (select * from t2 union all select * from t3 union all select * from t4);
+'column0'
+'FennelToIteratorConverter'
+'  FennelMergeRel'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+> explain plan for
+>     select * from t1 union all
+>         (select * from t2 union all
+>             (select * from t3 union all select * from t4));
+'column0'
+'FennelToIteratorConverter'
+'  FennelMergeRel'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+> 
+> explain plan for
+>     select * from t1 union
+>     select * from t2 union
+>     select * from t3 union
+>     select * from t4;
+'column0'
+'FennelToIteratorConverter'
+'  LhxAggRel(groupCount=[1])'
+'    FennelMergeRel'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+> explain plan for
+>     (select * from t1 union select * from t2) union
+>     (select * from t3 union select * from t4);
+'column0'
+'FennelToIteratorConverter'
+'  LhxAggRel(groupCount=[1])'
+'    FennelMergeRel'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+> explain plan for
+>     select * from t1 union
+>     (select * from t2 union select * from t3 union select * from t4);
+'column0'
+'FennelToIteratorConverter'
+'  LhxAggRel(groupCount=[1])'
+'    FennelMergeRel'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+> explain plan for
+>     select * from t1 union
+>         (select * from t2 union
+>             (select * from t3 union select * from t4));
+'column0'
+'FennelToIteratorConverter'
+'  LhxAggRel(groupCount=[1])'
+'    FennelMergeRel'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+> explain plan for
+>     ((select * from t1 union select * from t2) union
+>         (select * from t3 union select * from t4))
+>     union
+>     ((select * from t1 union select * from t2) union
+>         (select * from t3 union select * from t4));
+'column0'
+'FennelToIteratorConverter'
+'  LhxAggRel(groupCount=[1])'
+'    FennelMergeRel'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, T4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T4$A]])'
+> 
+> !set outputformat table
+> select * from t1 union all
+>     select * from t2 union all
+>     select * from t3 union all
+>     select * from t4
+> order by a;
++----+
+| A  |
++----+
+| 1  |
+| 1  |
+| 2  |
+| 2  |
+| 3  |
+| 3  |
+| 4  |
+| 4  |
++----+
+> ((select * from t1 union select * from t2) union
+>     (select * from t3 union select * from t4))
+> union
+>     ((select * from t1 union select * from t2) union
+>         (select * from t3 union select * from t4))
+> order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+> 
 > --------------
 > -- Clean up --
 > --------------

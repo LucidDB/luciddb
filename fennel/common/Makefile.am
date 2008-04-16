@@ -62,4 +62,3 @@ testBacktrace_SOURCES=testBacktrace.cpp
 testBacktrace_DEPENDENCIES=Backtrace.cpp Backtrace.h libcommon.la
 testBacktrace_LDADD=-lcommon
 endif
-

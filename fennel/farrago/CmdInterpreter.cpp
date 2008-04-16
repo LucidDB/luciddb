@@ -86,6 +86,11 @@ SavepointId CmdInterpreter::getSavepointId(SharedProxySvptHandle pHandle)
     return SavepointId(pHandle->getLongHandle());
 }
 
+TxnId CmdInterpreter::getCsn(SharedProxyCsnHandle pHandle)
+{
+    return TxnId(pHandle->getLongHandle());
+}
+
 void CmdInterpreter::setDbHandle(
     SharedProxyDbHandle,DbHandle *pHandle)
 {
@@ -114,6 +119,12 @@ void CmdInterpreter::setSvptHandle(
     SharedProxySvptHandle,SavepointId svptId)
 {
     resultHandle = opaqueToInt(svptId);
+}
+
+void CmdInterpreter::setCsnHandle(
+    SharedProxyCsnHandle, TxnId csnId)
+{
+    resultHandle = opaqueToInt(csnId);
 }
 
 CmdInterpreter::DbHandle* CmdInterpreter::newDbHandle()
@@ -450,10 +461,16 @@ void CmdInterpreter::dropOrTruncateIndex(
 
 void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
 {
+    beginTxn(cmd, cmd.isReadOnly(), NULL_TXN_ID);
+}
+
+void CmdInterpreter::beginTxn(ProxyBeginTxnCmd &cmd, bool readOnly, TxnId csn)
+{
+    assert(readOnly || csn == NULL_TXN_ID);
+
     // block checkpoints during this method
     DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
     SharedDatabase pDb = pDbHandle->pDb;
-    bool readOnly = cmd.isReadOnly();
 
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
@@ -478,14 +495,24 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
             scratchAccessor));
 
     if (pDb->areSnapshotsEnabled()) {
+        if (csn == NULL_TXN_ID) {
+            csn = pTxnHandle->pTxn->getTxnId();
+        }
         pTxnHandle->pSnapshotSegment =
             pDb->getSegmentFactory()->newSnapshotRandomAllocationSegment(
                 pDb->getDataSegment(),
                 pDb->getDataSegment(),
-                pTxnHandle->pTxn->getTxnId());
+                csn);
+    } else {
+        assert(csn == NULL_TXN_ID);
     }
 
     setTxnHandle(cmd.getResultHandle(),pTxnHandle.release());
+}
+
+void CmdInterpreter::visit(ProxyCmdBeginTxnWithCsn &cmd)
+{
+    beginTxn(cmd, true, getCsn(cmd.getCsnHandle()));
 }
 
 void CmdInterpreter::visit(ProxyCmdSavepoint &cmd)
@@ -583,6 +610,17 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
             pDb->recoverOnline();
         }
     }
+}
+
+void CmdInterpreter::visit(ProxyCmdGetTxnCsn &cmd)
+{
+    TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
+    SharedDatabase pDb = pTxnHandle->pDb;
+    assert(pDb->areSnapshotsEnabled());
+    SnapshotRandomAllocationSegment *pSegment =
+        SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+            pTxnHandle->pSnapshotSegment);
+    setCsnHandle(cmd.getResultHandle(), pSegment->getSnapshotCsn());
 }
 
 void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)

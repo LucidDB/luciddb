@@ -369,14 +369,14 @@ public class FarragoJdbcTest
         // test nearly immediate cancellation
         for (int i = 0; i < 10; i++) {
             int millis = (int) (rand.nextDouble() * 5);
-            testQueryCancel(millis, "JAVA");
+            testQueryCancel(millis, "JAVA", false);
         }
 
         // test more "reasonable" cancellation intervals
         rand.setSeed(seed);
         for (int i = 0; i < 10; i++) {
             int millis = (int) (rand.nextDouble() * 5000);
-            testQueryCancel(millis, "JAVA");
+            testQueryCancel(millis, "JAVA", false);
         }
     }
 
@@ -404,15 +404,28 @@ public class FarragoJdbcTest
     {
         testUdxCancel(false);
     }
+    
+    public void testSubqueryCancel()
+        throws Exception
+    {
+        // REVIEW zfong 3/28/08 - I'm not sure if this will hit FNL-30.
+        // It exercises a similar query pattern as
+        // _testFennelQueryAsynchronousCancel, except within a subquery
+        // and using a Java executor for the foreign table.
+        testQueryCancel(5000, "JAVA", true);
+    }
 
     private void testQueryCancel(boolean synchronous, String executorType)
         throws Exception
     {
         // Wait 2 seconds before cancel for asynchronous case
-        testQueryCancel(synchronous ? 0 : 2000, executorType);
+        testQueryCancel(synchronous ? 0 : 2000, executorType, false);
     }
 
-    private void testQueryCancel(int waitMillis, String executorType)
+    private void testQueryCancel(
+        int waitMillis,
+        String executorType,
+        boolean subquery)
         throws Exception
     {
         // cleanup
@@ -432,16 +445,41 @@ public class FarragoJdbcTest
             + "options(executor_impl '"
             + executorType + "', row_count '1000000000')";
         stmt.execute(sql);
-        if (executorType.equals("FENNEL")) {
-            // For Fennel, we want to make sure it's down in
-            // the ExecStreamGraph when the cancel request arrives
-            sql = "select count(*) from cancel_test.m";
+        if (subquery) {
+            // In the subquery case, we're trying to exercise cancellation
+            // of the subquery when it's reduced to a constant, at prepare
+            // time of the query.  The parent query is an empty table so
+            // cancellation shouldn't occur there.
+            sql = "create table cancel_test.empty(a int primary key)";
+            stmt.execute(sql);
+            sql =
+                "alter session set \"reduceNonCorrelatedSubqueries\" = "
+                + "true";
+            stmt.execute(sql);
+            sql =
+                "select * from cancel_test.empty where a = "
+                + "(select min(id) from cancel_test.m)";
+            prepareAndCancel(sql, waitMillis);
         } else {
-            // But for Java, we want to test the checkCancel
-            // in FarragoTupleIterResultSet, so don't count
-            sql = "select * from cancel_test.m";
+            if (executorType.equals("FENNEL")) {
+                // For Fennel, we want to make sure it's down in
+                // the ExecStreamGraph when the cancel request arrives
+                sql = "select count(*) from cancel_test.m";
+            } else {
+                // But for Java, we want to test the checkCancel
+                // in FarragoTupleIterResultSet, so don't count
+                sql = "select * from cancel_test.m";
+            }
+            executeAndCancel(sql, waitMillis);
+        }       
+        
+        // reset back to the default
+        if (subquery) {
+            sql =
+                "alter session set \"reduceNonCorrelatedSubqueries\" = "
+                + "false";
+            stmt.execute(sql);
         }
-        executeAndCancel(sql, waitMillis);
     }
 
     private void testUdxCancel(boolean synchronous)
@@ -524,7 +562,49 @@ public class FarragoJdbcTest
         }
         Assert.fail("Expected failure due to cancel request");
     }
-
+    
+    private void prepareAndCancel(String sql, int waitMillis)
+        throws SQLException
+    {
+        // Schedule timer to cancel after waitMillis before executing
+        // the query, so the cancellation can occur during query
+        // preparation
+        Timer timer = new Timer(true);
+        TimerTask task =
+            new TimerTask() {
+                public void run()
+                {
+                    Thread thread = Thread.currentThread();
+                    thread.setName("FarragoJdbcCancelThread");
+                    try {
+                        tracer.fine(
+                            "TimerTask "
+                            + toStringThreadInfo(thread)
+                            + " will cancel " + stmt);
+                        stmt.cancel();
+                    } catch (SQLException ex) {
+                        Assert.fail(
+                            "Cancel request failed:  "
+                            + ex.getMessage());
+                    }
+                }
+            };
+        tracer.fine("scheduling cancel task with delay=" + waitMillis);
+        timer.schedule(task, waitMillis);
+    
+        try {
+            resultSet = stmt.executeQuery(sql);
+        } catch (SQLException ex) {
+            // expected
+            Assert.assertTrue(
+                "Expected statement cancelled message but got '"
+                + ex.getMessage() + "'",
+                checkCancelException(ex));
+            return;
+        }
+        Assert.fail("Expected failure due to cancel request");
+    }
+    
     public void testCheckParametersSet()
         throws Exception
     {

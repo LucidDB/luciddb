@@ -1,26 +1,63 @@
-0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
-0: jdbc:luciddb:> -- using default substitutions
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 'tpch';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> SELECT YYEAR, SUM(REVENUE) AS REV
-. . . . . . . . > FROM
-. . . . . . . . >     (SELECT SUBSTRING(CAST(O_ORDERDATE AS CHAR(10)) FROM 1 FOR 4) AS YYEAR,
-. . . . . . . . >             L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS REVENUE
-. . . . . . . . >     FROM LINEITEM, ORDERS
-. . . . . . . . >     WHERE O_ORDERKEY = L_ORDERKEY
-. . . . . . . . >         AND O_CLERK = 'Clerk#000000088'
-. . . . . . . . >         AND L_RETURNFLAG = 'R'
-. . . . . . . . >     ) AS PERFORMANCE
-. . . . . . . . > GROUP BY YYEAR
-. . . . . . . . > ORDER BY YYEAR;
-+--------+---------------+
-| YYEAR  |      REV      |
-+--------+---------------+
-| 1992   | 1274237.1105  |
-| 1993   | 984781.4950   |
-| 1994   | 1565676.4706  |
-| 1995   | 221863.3650   |
-+--------+---------------+
+0: jdbc:luciddb:> select
+. . . . . . . . >     c_count, count(*) as custdist
+. . . . . . . . > from (
+. . . . . . . . >     select
+. . . . . . . . >         c_custkey,
+. . . . . . . . >         count(o_orderkey)
+. . . . . . . . >     from
+. . . . . . . . >         customer left outer join orders on
+. . . . . . . . >             c_custkey = o_custkey
+. . . . . . . . >             and o_comment not like '%special%requests%' 
+. . . . . . . . >     group by
+. . . . . . . . >         c_custkey
+. . . . . . . . >     )as c_orders (c_custkey, c_count)
+. . . . . . . . > group by
+. . . . . . . . >     c_count
+. . . . . . . . > order by
+. . . . . . . . >     custdist desc,
+. . . . . . . . >     c_count desc;
++----------+-----------+
+| C_COUNT  | CUSTDIST  |
++----------+-----------+
+| 0        | 5000      |
+| 10       | 665       |
+| 9        | 657       |
+| 11       | 621       |
+| 12       | 567       |
+| 8        | 564       |
+| 13       | 492       |
+| 18       | 482       |
+| 7        | 480       |
+| 20       | 456       |
+| 14       | 456       |
+| 16       | 449       |
+| 19       | 447       |
+| 15       | 432       |
+| 17       | 423       |
+| 21       | 412       |
+| 22       | 371       |
+| 6        | 337       |
+| 23       | 323       |
+| 24       | 256       |
+| 25       | 204       |
+| 5        | 204       |
+| 26       | 155       |
+| 27       | 141       |
+| 28       | 97        |
+| 4        | 94        |
+| 29       | 64        |
+| 3        | 48        |
+| 30       | 27        |
+| 31       | 26        |
+| 32       | 14        |
+| 33       | 11        |
+| 2        | 11        |
+| 34       | 6         |
+| 35       | 5         |
+| 1        | 2         |
+| 36       | 1         |
++----------+-----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -195,6 +195,15 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.ramp';
 
+-- UDX that allows a null argument
+create function nullableRamp(n int)
+returns table(i int)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.nullableRamp(java.lang.Integer, java.sql.PreparedStatement)';
+
 -- UDX with input
 create function stringify(c cursor, delimiter varchar(128))
 returns table(v varchar(65535))
@@ -501,6 +510,9 @@ select * from ramp_view order by 1;
 
 -- udx invocation with restart on RHS of Cartesian product
 select count(*) from sales.depts, table(ramp(5));
+
+--  udx invocation with a null argument
+select * from table(nullableRamp(cast(null as integer)));
 
 -- udx invocation with input
 select upper(v)

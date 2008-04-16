@@ -611,6 +611,11 @@ TBD: naming convention for extension features
     <text>Personality does not maintain table's row count in the catalog</text>
 </exception>
 
+<exception name="PersonalitySupportsSnapshots">
+    <property name="FeatureDefinition">Eigenbase-defined</property>
+    <text>Personality does not support snapshot reads</text>
+</exception>
+
 <!-- ====================================================================== -->
 
 <!-- End of last error section ============================================ -->

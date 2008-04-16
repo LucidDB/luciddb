@@ -113,6 +113,14 @@ public class FarragoDefaultSessionPersonality
     public static final String ENFORCE_IDENTITY_GENERATED_ALWAYS_DEFAULT =
         "true";
 
+    /**
+     * Whether non-correlated subqueries should be converted to constants 
+     */
+    public static final String REDUCE_NON_CORRELATED_SUBQUERIES =
+        "reduceNonCorrelatedSubqueries";
+    public static final String
+        REDUCE_NON_CORRELATED_SUBQUERIES_FARRAGO_DEFAULT = "false";
+    
     //~ Instance fields --------------------------------------------------------
 
     protected final FarragoDatabase database;
@@ -136,6 +144,9 @@ public class FarragoDefaultSessionPersonality
             false);
         paramValidator.registerBoolParam(
             ENFORCE_IDENTITY_GENERATED_ALWAYS,
+            false);
+        paramValidator.registerBoolParam(
+            REDUCE_NON_CORRELATED_SUBQUERIES,
             false);
     }
 
@@ -211,7 +222,16 @@ public class FarragoDefaultSessionPersonality
 
     // implement FarragoSessionPersonality
     public FarragoSessionPreparingStmt newPreparingStmt(
+        FarragoSessionStmtContext stmtContext,       
+        FarragoSessionStmtValidator stmtValidator)
+    {
+        return newPreparingStmt(stmtContext, stmtContext, stmtValidator);
+    }
+    
+    // implement FarragoSessionPersonality
+    public FarragoSessionPreparingStmt newPreparingStmt(
         FarragoSessionStmtContext stmtContext,
+        FarragoSessionStmtContext rootStmtContext,
         FarragoSessionStmtValidator stmtValidator)
     {
         // NOTE: We don't use stmtContext here (except to obtain the SQL text),
@@ -221,7 +241,10 @@ public class FarragoDefaultSessionPersonality
         // is why it is provided in the interface.
         String sql = (stmtContext == null) ? "?" : stmtContext.getSql();
         FarragoPreparingStmt stmt =
-            new FarragoPreparingStmt(stmtValidator, sql);
+            new FarragoPreparingStmt(
+                rootStmtContext,
+                stmtValidator,
+                sql);
         initPreparingStmt(stmt);
         return stmt;
     }
@@ -409,6 +432,9 @@ public class FarragoDefaultSessionPersonality
         variables.setDefault(
             ENFORCE_IDENTITY_GENERATED_ALWAYS,
             ENFORCE_IDENTITY_GENERATED_ALWAYS_DEFAULT);
+        variables.setDefault(
+            REDUCE_NON_CORRELATED_SUBQUERIES,
+            REDUCE_NON_CORRELATED_SUBQUERIES_FARRAGO_DEFAULT);
     }
 
     // implement FarragoSessionPersonality
@@ -495,6 +521,13 @@ public class FarragoDefaultSessionPersonality
 
         // Farrago doesn't automatically update row counts
         if (feature == EigenbaseResource.instance().PersonalityManagesRowCount) {
+            return false;
+        }
+        
+        // Farrago doesn't support snapshots
+        if (feature ==
+            EigenbaseResource.instance().PersonalitySupportsSnapshots)
+        {
             return false;
         }
         

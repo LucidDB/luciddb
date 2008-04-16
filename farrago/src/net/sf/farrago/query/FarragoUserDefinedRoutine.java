@@ -267,7 +267,7 @@ public class FarragoUserDefinedRoutine
                 String typeName =
                     fullMethodName.substring(
                         iNameStart,
-                        iComma);
+                        iComma).trim();
                 Class paramClass;
                 try {
                     paramClass = ReflectUtil.getClassForName(typeName);

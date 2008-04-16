@@ -265,8 +265,7 @@ class ExecStreamSubFactory_lu
     virtual void visit(ProxyLbmSearchStreamDef &streamDef)
     {
         LbmSearchExecStreamParams params;
-        pExecStreamFactory->readBTreeSearchStreamParams(params, streamDef);
-        pExecStreamFactory->createPrivateScratchSegment(params);
+        pExecStreamFactory->initBTreePrefetchSearchParams(params, streamDef);
 
         params.rowLimitParamId =
             pExecStreamFactory->readDynamicParamId(

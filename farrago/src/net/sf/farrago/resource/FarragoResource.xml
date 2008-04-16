@@ -220,7 +220,22 @@
 
 <exception id="420180" name="ValidatorDropClusteredIndex"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Clustered {0} cannot be dropped</text>
+<text>Cannot drop clustered {0}</text>
+</exception>
+
+<exception id="420181" name="ValidatorDropPrimaryKeyIndex"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Cannot drop primary key {0}</text>
+</exception>
+
+<exception id="420182" name="ValidatorDropDeletionIndex"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Cannot drop deletion {0}</text>
+</exception>
+
+<exception id="420183" name="ValidatorDropUniqueConstraintIndex"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Cannot drop unique constraint {0}</text>
 </exception>
 
 <exception id="420190" name="ValidatorNoDefaultSchema">

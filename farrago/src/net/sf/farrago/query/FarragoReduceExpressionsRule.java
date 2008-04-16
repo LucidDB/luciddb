@@ -21,24 +21,16 @@
 */
 package net.sf.farrago.query;
 
-import java.math.*;
-
-import java.sql.*;
-
 import java.util.*;
-import java.util.logging.*;
 import java.util.regex.*;
 
 import net.sf.farrago.session.*;
-import net.sf.farrago.trace.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -55,8 +47,6 @@ public abstract class FarragoReduceExpressionsRule
     extends RelOptRule
 {
     //~ Static fields/initializers ---------------------------------------------
-
-    private static final Logger tracer = FarragoTrace.getOptimizerRuleTracer();
 
     /**
      * Regular expression which matches the description of all instances of
@@ -297,6 +287,7 @@ public abstract class FarragoReduceExpressionsRule
         List<RexNode> reducedValues = new ArrayList<RexNode>();
         ReentrantValuesStmt reentrantStmt =
             new ReentrantValuesStmt(
+                preparingStmt.getRootStmtContext(),
                 rexBuilder,
                 reducibleExps,
                 reducedValues);
@@ -345,27 +336,6 @@ public abstract class FarragoReduceExpressionsRule
             gardener.analyze(exp);
         }
         return result;
-    }
-
-    // TODO jvs 26-May-2006:  Get rid of this.
-    private static SqlTypeName broadenType(SqlTypeName typeName)
-    {
-        if (SqlTypeFamily.APPROXIMATE_NUMERIC.getTypeNames().contains(
-                typeName))
-        {
-            return SqlTypeName.DOUBLE;
-        } else if (
-            SqlTypeFamily.EXACT_NUMERIC.getTypeNames().contains(
-                typeName))
-        {
-            return SqlTypeName.DECIMAL;
-        } else if (SqlTypeFamily.CHARACTER.getTypeNames().contains(typeName)) {
-            return SqlTypeName.CHAR;
-        } else if (SqlTypeFamily.BINARY.getTypeNames().contains(typeName)) {
-            return SqlTypeName.BINARY;
-        } else {
-            return typeName;
-        }
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -427,21 +397,18 @@ public abstract class FarragoReduceExpressionsRule
      * (exp1, exp2, exp3, ...)".
      */
     static class ReentrantValuesStmt
-        extends FarragoReentrantStmt
+        extends FarragoReentrantStmtExecutor
     {
-        private final RexBuilder rexBuilder;
         private final List<RexNode> exprs;
-        private final List<RexNode> results;
-        boolean failed;
 
         ReentrantValuesStmt(
+            FarragoSessionStmtContext rootStmtContext,
             RexBuilder rexBuilder,
             List<RexNode> exprs,
             List<RexNode> results)
         {
-            this.rexBuilder = rexBuilder;
+            super(rootStmtContext, rexBuilder, results);
             this.exprs = exprs;
-            this.results = results;
         }
 
         protected void executeImpl()
@@ -455,89 +422,7 @@ public abstract class FarragoReduceExpressionsRule
                     oneRowRel,
                     exprs,
                     null);
-
-            // NOTE jvs 26-May-2006: To avoid an infinite loop, we need to
-            // make sure the reentrant planner does NOT have
-            // FarragoReduceExpressionsRule enabled!
-            FarragoPreparingStmt preparingStmt =
-                (FarragoPreparingStmt) getPreparingStmt();
-            FarragoSessionPlanner reentrantPlanner = preparingStmt.getPlanner();
-            reentrantPlanner.setRuleDescExclusionFilter(
-                EXCLUSION_PATTERN);
-
-            getStmtContext().prepare(
-                projectRel,
-                SqlKind.Select,
-                true,
-                getPreparingStmt());
-            getStmtContext().execute();
-            ResultSet resultSet = getStmtContext().getResultSet();
-            if (!resultSet.next()) {
-                // This shouldn't happen, but strange things such as
-                // error recovery session settings (LER-3372)
-                // can surprise us.
-                failed = true;
-                resultSet.close();
-                return;
-            }
-            for (int i = 0; i < exprs.size(); ++i) {
-                RexNode expr = exprs.get(i);
-                SqlTypeName typeName = expr.getType().getSqlTypeName();
-                SqlTypeFamily approxFamily = SqlTypeFamily.APPROXIMATE_NUMERIC;
-                double doubleValue = 0.0;
-                String stringValue = null;
-                if (approxFamily.getTypeNames().contains(typeName)) {
-                    // Use getDouble to preserve precision.
-                    doubleValue = resultSet.getDouble(i + 1);
-                } else {
-                    // Anything else can be handled safely via string
-                    // representation.
-                    stringValue = resultSet.getString(i + 1);
-                }
-                RexNode result;
-                if (resultSet.wasNull()) {
-                    result = rexBuilder.constantNull();
-                    result =
-                        rexBuilder.makeCast(
-                            expr.getType(),
-                            result);
-                } else {
-                    // TODO jvs 26-May-2006:  See comment on RexLiteral
-                    // constructor regarding SqlTypeFamily.
-                    typeName = broadenType(typeName);
-                    RelDataType literalType =
-                        rexBuilder.getTypeFactory().createTypeWithNullability(
-                            expr.getType(),
-                            false);
-                    if (stringValue == null) {
-                        try {
-                            result =
-                                rexBuilder.makeApproxLiteral(
-                                    new BigDecimal(doubleValue),
-                                    literalType);
-                        } catch (NumberFormatException ex) {
-                            // Infinity or NaN.  For these rare cases,
-                            // just skip constant reduction.
-                            failed = true;
-                            result = null;
-                        }
-                    } else {
-                        result =
-                            RexLiteral.fromJdbcString(
-                                literalType,
-                                typeName,
-                                stringValue);
-                    }
-                }
-                if (tracer.isLoggable(Level.FINE)) {
-                    tracer.fine(
-                        "reduced expression " + expr
-                        + " to result " + result);
-                }
-                results.add(result);
-            }
-            assert (!resultSet.next());
-            resultSet.close();
+            executePlan(projectRel, exprs, false, true);
         }
     }
 
@@ -554,8 +439,6 @@ public abstract class FarragoReduceExpressionsRule
 
         private final FarragoSessionPreparingStmt preparingStmt;
 
-        private final RelDataTypeFactory typeFactory;
-
         private final List<Constancy> stack;
 
         private final List<RexNode> result;
@@ -568,7 +451,6 @@ public abstract class FarragoReduceExpressionsRule
             // go deep
             super(true);
             this.preparingStmt = preparingStmt;
-            this.typeFactory = typeFactory;
             this.result = result;
             this.stack = new ArrayList<Constancy>();
         }

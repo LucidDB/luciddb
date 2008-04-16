@@ -54,6 +54,7 @@ LinearDeviceSegment::LinearDeviceSegment(
     nPagesMax = params.nPagesMax;
     nPagesAllocated = params.nPagesAllocated;
     nPagesIncrement = params.nPagesIncrement;
+    nPagesExtended = 0;
     BlockNum nPagesActual = getAvailableDevicePages();
     if (nPagesActual < params.nPagesMin) {
         pDevice->setSizeInBytes(
@@ -93,6 +94,16 @@ PageId LinearDeviceSegment::translateBlockId(BlockId blockId)
 BlockNum LinearDeviceSegment::getAllocatedSizeInPages()
 {
     return nPagesAllocated;
+}
+
+BlockNum LinearDeviceSegment::getNumPagesOccupiedHighWater()
+{
+    return getAllocatedSizeInPages();
+}
+
+BlockNum LinearDeviceSegment::getNumPagesExtended()
+{
+    return nPagesExtended;
 }
 
 PageId LinearDeviceSegment::allocatePageId(PageOwnerId)
@@ -168,6 +179,7 @@ bool LinearDeviceSegment::ensureAllocatedSize(BlockNum nPages)
             nNewPages = nPagesMax - nPagesAvailable;
         }
         assert(nNewPages);
+        nPagesExtended += nNewPages;
         pDevice->setSizeInBytes(
             pDevice->getSizeInBytes() + nNewPages*getFullPageSize());
     }

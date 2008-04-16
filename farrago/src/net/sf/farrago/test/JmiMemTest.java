@@ -381,6 +381,12 @@ public class JmiMemTest
 
         assertTrue(table.refIsInstanceOf(femLocalTableClass, true));
         assertTrue(table.refIsInstanceOf(femLocalTableClass, false));
+
+        FemCmdOpenDatabase cmdOpenDatabase = factory.newFemCmdOpenDatabase();
+        RefObject beginTxnClass = 
+            factory.getFennelPackage().getFemCmdBeginTxn().refMetaObject();
+        assertFalse(cmdOpenDatabase.refIsInstanceOf(beginTxnClass, true));
+        assertFalse(cmdOpenDatabase.refIsInstanceOf(beginTxnClass, false));
     }
 
     public void testClone()

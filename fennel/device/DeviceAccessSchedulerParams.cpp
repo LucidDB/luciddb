@@ -54,10 +54,12 @@ DeviceAccessSchedulerParams::DeviceAccessSchedulerParams()
 #endif
     nThreads = 1;
     maxRequests = 1024;
+    usingDefaultSchedulerType = true;
 }
 
 void DeviceAccessSchedulerParams::readConfig(ConfigMap const &configMap)
 {
+    usingDefaultSchedulerType = false;
     std::string s = configMap.getStringParam(paramSchedulerType);
     if (s == valThreadPoolScheduler) {
         schedulerType = THREAD_POOL_SCHEDULER;
@@ -71,6 +73,7 @@ void DeviceAccessSchedulerParams::readConfig(ConfigMap const &configMap)
         schedulerType = IO_COMPLETION_PORT_SCHEDULER;
     } else {
         // treat unrecognized as default
+        usingDefaultSchedulerType = true;
     }
     nThreads = configMap.getIntParam(
         paramThreadCount,nThreads);

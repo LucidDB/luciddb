@@ -142,7 +142,7 @@
 | checkpointInterval              | 0                                   |
 | codeCacheMaxBytes               | 2000000                             |
 | databaseIncrementSize           | 1000                                |
-| databaseInitSize                | 1000                                |
+| databaseInitSize                | 2000                                |
 | databaseMaxSize                 | 0                                   |
 | databaseShadowLogIncrementSize  | 1000                                |
 | databaseShadowLogInitSize       | 2000                                |
@@ -157,7 +157,7 @@
 | serverRmiRegistryPort           | -1                                  |
 | serverSingleListenerPort        | -1                                  |
 | tempIncrementSize               | 1000                                |
-| tempInitSize                    | 1000                                |
+| tempInitSize                    | 3000                                |
 | tempMaxSize                     | 0                                   |
 | userCatalogEnabled              | false                               |
 +---------------------------------+-------------------------------------+

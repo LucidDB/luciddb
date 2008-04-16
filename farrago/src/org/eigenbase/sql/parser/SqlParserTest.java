@@ -906,18 +906,6 @@ public class SqlParserTest
     public void testQueryInIllegalContext()
     {
         checkFails(
-            "select case ^(^select * from emp) when 1 then 2 end from dept",
-            "Query expression encountered in illegal context");
-        checkFails(
-            "select case 1 when ^(^select * from emp) then 2 end from dept",
-            "Query expression encountered in illegal context");
-        checkFails(
-            "select case 1 when 2 then ^(^select * from emp) end from dept",
-            "Query expression encountered in illegal context");
-        checkFails(
-            "select case 1 when 2 then 3 else ^(^select * from emp) end from dept",
-            "Query expression encountered in illegal context");
-        checkFails(
             "select 0, multiset[^(^select * from emp), 2] from dept",
             "Query expression encountered in illegal context");
         checkFails(
@@ -2065,6 +2053,36 @@ public class SqlParserTest
         checkExp(
             "case col1 when \n1.2 then 'one' when 2 then 'two' else 'three' end",
             "(CASE WHEN (`COL1` = 1.2) THEN 'one' WHEN (`COL1` = 2) THEN 'two' ELSE 'three' END)");
+        
+        // subqueries as case expression operands
+        checkExp(
+            "case (select * from emp) when 1 then 2 end",
+            TestUtil.fold(
+                new String[] {
+                    "(CASE WHEN ((SELECT *",
+                    "FROM `EMP`) = 1) THEN 2 ELSE NULL END)"
+                }));
+        checkExp(
+            "case 1 when (select * from emp) then 2 end",
+            TestUtil.fold(
+                new String[] {
+                    "(CASE WHEN (1 = (SELECT *",
+                    "FROM `EMP`)) THEN 2 ELSE NULL END)"
+                }));
+        checkExp(
+            "case 1 when 2 then (select * from emp) end",
+            TestUtil.fold(
+                new String[] {
+                    "(CASE WHEN (1 = 2) THEN (SELECT *",
+                    "FROM `EMP`) ELSE NULL END)"
+                }));
+        checkExp(
+            "case 1 when 2 then 3 else (select * from emp) end",
+            TestUtil.fold(
+                new String[] {
+                    "(CASE WHEN (1 = 2) THEN 3 ELSE (SELECT *",
+                    "FROM `EMP`) END)"
+                }));
     }
 
     public void testCaseExpressionFails()

@@ -136,6 +136,7 @@ public class FarragoRuntimeContext
         this.isDml = params.isDml;
         this.resultSetTypeMap = params.resultSetTypeMap;
         this.stmtId = params.stmtId;
+        this.currentTime = params.currentTime;
 
         if (params.warningQueue == null) {
             params.warningQueue = new FarragoWarningQueue();
@@ -369,7 +370,10 @@ public class FarragoRuntimeContext
      */
     public Time getContextVariable_CURRENT_TIME()
     {
-        return new Time(getCurrentTime());
+        // Strip off the milliseconds in the time value since CURRENT_TIME
+        // doesn't return that portion of the time
+        long currTime = getCurrentTime();
+        return new Time(currTime - (currTime % 1000));
     }
 
     /**

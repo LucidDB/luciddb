@@ -471,6 +471,7 @@ ${farrago.test.jvmargs}
     <antcall target="runLuciddbInitSql"/>
     <antcall target="backupCatalog"/>
     <antcall target="createCatalogScript"/>
+    <antcall target="copyFennelFiles"/>
   </target>
 
   <target name="clean" depends="clean-dist">
@@ -579,6 +580,8 @@ ${farrago.test.jvmargs}
     <copy file="${FarragoConfTemplate.xmi}"
       tofile="${LucidDbConf.xmi}" overwrite="true"/>
     <replace file="${LucidDbConf.xmi}">
+      <replacefilter token="@databaseInitSize@" value="2000"/>
+      <replacefilter token="@tempInitSize@" value="3000"/>
       <replacefilter token="@checkpointInterval@" value="0"/>
       <replacefilter token="@cachePageSize@" value="32768"/>
       <replacefilter token="@cachePagesMax@" value="5000"/>
@@ -608,7 +611,8 @@ ${farrago.test.jvmargs}
   <!-- back up the current catalog contents -->
   <target name="backupCatalog">
     <farrago.backupCatalog
-      catalogDir="${catalog.dir}" backupDir="${catalog.backup.dir}"/>
+      catalogDir="${catalog.dir}" backupDir="${catalog.backup.dir}"
+      includeTempDataFile="true" />
   </target>
 
   <!-- restore catalog from backup -->
@@ -816,7 +820,28 @@ ${farrago.test.jvmargs}
     </uptodate>
   </target>
 
-  <target name="runLuciddbInitSql">
+  <target name="convertInitSqlScripts">
+    <if> <equals arg1="${os.name}" arg2="Linux"/>
+      <then>
+        <copy file="${luciddb.initsql.dir}/setDeviceSchedulerType.sql.tmpl"
+          tofile="${luciddb.initsql.dir}/setDeviceSchedulerType.sql"
+          overwrite="true">
+          <filterset>
+            <filter token="SCHEDULER_TYPE" value="aioLinux"/>
+          </filterset>
+        </copy>
+        <copy file="${luciddb.initsql.dir}/setDeviceSchedulerType.ref.tmpl"
+          tofile="${luciddb.initsql.dir}/setDeviceSchedulerType.ref"
+          overwrite="true">
+          <filterset>
+            <filter token="SCHEDULER_TYPE" value="aioLinux"/>
+          </filterset>
+        </copy>
+      </then>
+    </if>
+  </target>
+
+  <target name="runLuciddbInitSql" depends="convertInitSqlScripts">
     <pathconvert property="luciddb.initsql.prop"
       refid="luciddb.filelist.initsql" pathsep="${line.separator}"
       dirsep="${file.separator}" />
@@ -1121,7 +1146,9 @@ ${farrago.test.jvmargs}
     <mkdir dir="${dist.dir}/${lucidera.release.spec}/catalog"/>
     <copy todir="${dist.dir}/${lucidera.release.spec}/catalog"
       file="${farrago.ReposStorage.propfile}">
-      <fileset dir="${catalog.backup.dir}"/>
+      <fileset dir="${catalog.backup.dir}">
+        <exclude name="temp.dat"/>
+      </fileset>
     </copy>
     <copy todir="${release.plugin.dir}">
       <fileset dir="${luciddb.plugin.dir}">
@@ -1194,6 +1221,22 @@ ${farrago.test.jvmargs}
         <replacefilter token="guest" value="sa"/>
     </replace>
     <chmod file="${release.bin.dir}/${sqllineEngine}" perm="u+x" />
+
+    <if>
+        <equals arg1="${osfamily}" arg2="unix"/>
+      <then>
+        <copy 
+          file="${luciddb.dir}/allocFile" 
+          todir="${release.bin.dir}"
+          overwrite="true" />
+        <chmod file="${release.bin.dir}/allocFile" perm="u+x" />
+        <copy 
+          file="${luciddb.dir}/lucidDbAllocFile" 
+          todir="${release.bin.dir}"
+          overwrite="true" />
+        <chmod file="${release.bin.dir}/lucidDbAllocFile" perm="u+x" />
+      </then>
+    </if>
 
     <if>
       <not>
@@ -1295,12 +1338,23 @@ ${farrago.test.jvmargs}
     </copy>
   </target>
 
-  <target name="createCatalogScript">
+  <target name="createCatalogScript" depends="convertInitSqlScripts">
     <delete file="${luciddb.initsql.dir}/catalog.sql" quiet="true"/>
     <concat destfile="${luciddb.initsql.dir}/catalog.sql">
       <filelist refid="farrago.filelist.initsql"/>
       <filelist refid="luciddb.filelist.initsql"/>
     </concat>
+  </target>
+
+  <target name="copyFennelFiles">
+    <if>
+      <equals arg1="${osfamily}" arg2="unix"/>
+      <then>
+        <copy file="${fennel.dir}/util/allocFile" overwrite="true"
+          tofile="${luciddb.dir}/allocFile"/>
+        <chmod file="${luciddb.dir}/allocFile" perm="u+x" />
+      </then>
+    </if>
   </target>
 
 <!-- Begin Experiment -->

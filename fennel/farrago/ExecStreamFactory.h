@@ -36,6 +36,7 @@ FENNEL_BEGIN_NAMESPACE
 
 class BarrierExecStreamParams;
 class BTreeExecStreamParams;
+class BTreePrefetchSearchExecStreamParams;
 class BTreeReadExecStreamParams;
 class BTreeScanExecStreamParams;
 class BTreeSearchExecStreamParams;
@@ -188,6 +189,10 @@ public:
     void readTupleStreamParams(
         SingleOutputExecStreamParams &,
         ProxyTupleStreamDef &);
+
+    void initBTreePrefetchSearchParams(
+        BTreePrefetchSearchExecStreamParams &,
+        ProxyIndexSearchDef &);
 
     void readBTreeStreamParams(
         BTreeExecStreamParams &,

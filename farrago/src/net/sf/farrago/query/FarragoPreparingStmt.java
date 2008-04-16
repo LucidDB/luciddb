@@ -34,6 +34,7 @@ import java.util.logging.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
@@ -119,6 +120,8 @@ public class FarragoPreparingStmt
     private final Map<String, RelDataType> resultSetTypeMap;
     private final Map<String, RelDataType> iterCalcTypeMap;
     private boolean cachingDisabled;
+    private FarragoPreparingStmt parentStmt;
+    private final FarragoSessionStmtContext rootStmtContext;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -143,14 +146,16 @@ public class FarragoPreparingStmt
     private FarragoRelImplementor relImplementor;
 
     //~ Constructors -----------------------------------------------------------
-
+    
     /**
      * Creates a new FarragoPreparingStmt object.
      *
+     * @param rootStmtContext the root statement context
      * @param stmtValidator generic stmt validator
      * @param sql SQL text of statement being prepared
      */
     public FarragoPreparingStmt(
+        FarragoSessionStmtContext rootStmtContext,
         FarragoSessionStmtValidator stmtValidator,
         String sql)
     {
@@ -196,6 +201,9 @@ public class FarragoPreparingStmt
         // but not to override the behavior of other providers.
         relMetadataProvider.addProvider(
             new FarragoRelMetadataProvider(getRepos()));
+        
+        this.rootStmtContext = rootStmtContext;
+        this.parentStmt = null;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -215,9 +223,35 @@ public class FarragoPreparingStmt
         cachingDisabled = true;
     }
 
+    // implement FarragoSessionPreparingStmt
+    public FarragoSessionStmtContext getRootStmtContext()
+    {
+        return rootStmtContext;
+    }
+    
     public FarragoSessionStmtValidator getStmtValidator()
     {
         return stmtValidator;
+    }
+    
+    /**
+     * @return the FarragoPreparingStmt that's the parent of this one
+     */
+    public FarragoPreparingStmt getParentStmt()
+    {
+        return parentStmt;
+    }
+    
+    /**
+     * Sets the parent FarragoPreparingStmt corresponding to this statement.
+     * This is used when this is a reentrant statement.  The parent corresponds
+     * to the statement that requires the reentrant statement.
+     * 
+     * @param parentStmt the parent of this statement
+     */
+    public void setParentStmt(FarragoPreparingStmt parentStmt)
+    {
+        this.parentStmt = parentStmt;
     }
 
     public void setPlanner(FarragoSessionPlanner planner)
@@ -1031,6 +1065,13 @@ public class FarragoPreparingStmt
                     new FarragoRexBuilder(this));
             sqlToRelConverter.setDefaultValueFactory(
                 new ReposDefaultValueFactory(this));
+            if (getSession().getSessionVariables().getBoolean(
+                FarragoDefaultSessionPersonality.
+                    REDUCE_NON_CORRELATED_SUBQUERIES))
+            {
+                sqlToRelConverter.setSubqueryConverter(
+                    new ScalarSubqueryConverter(this));
+            }
             sqlToRelConverter.enableTableAccessConversion(false);
 
             // currently the only physical implementation available
@@ -1090,7 +1131,7 @@ public class FarragoPreparingStmt
     {
         return sql;
     }
-
+    
     // implement RelOptConnection
     public RelOptSchema getRelOptSchema()
     {
@@ -1426,6 +1467,14 @@ public class FarragoPreparingStmt
             }
         }
         allDependencies.add(supplier);
+        
+        // Add the dependency to all of the parent FarragoPreparingStmt's
+        // as well.
+        FarragoPreparingStmt parent = parentStmt;
+        while (parent != null) {
+            parent.addDependency(supplier, action);
+            parent = parent.getParentStmt();
+        }
     }
 
     public void mapResultSetType(

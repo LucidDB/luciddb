@@ -100,7 +100,10 @@ public abstract class FarragoSqlToRelTestBase
                     session.getDatabase().getDdlLockManager());
             allocations.addAllocation(stmtValidator);
             FarragoPreparingStmt stmt =
-                new FarragoPreparingStmt(stmtValidator, explainQuery);
+                new FarragoPreparingStmt(
+                    null,
+                    stmtValidator,
+                    explainQuery);
             stmt.enablePartialImplementation();
 
             initPlanner(stmt);

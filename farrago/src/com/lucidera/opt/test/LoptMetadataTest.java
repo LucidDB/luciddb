@@ -1030,6 +1030,25 @@ public class LoptMetadataTest
         assertTrue(result != null);
         assertEquals(COLSTORE_EMPS_ROWCOUNT, result, EPSILON);
     }
+    
+    public void testRowCountDistinctUnion()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new UnionToDistinctRule());
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from " +
+            "(select name from emps union select dname from depts)");
+
+        double expected = 90000 + 150;
+        Double result =
+            RelMetadataQuery.getRowCount(rootRel);
+        assertEquals(
+            expected,
+            result.doubleValue(),
+            EPSILON);
+    }
 
     public void testSelectivityJoin()
         throws Exception

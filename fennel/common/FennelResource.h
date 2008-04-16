@@ -91,6 +91,11 @@ class FennelResource : ResourceBundle
     std::string incompatibleDataFormat() const;
 
     /**
+     * <code>libaioRequired</code> is 'Linux requires libaio package'
+     */
+    std::string libaioRequired() const;
+
+    /**
      * <code>readDataFailed</code> is 'Could not read data file {0}'
      */
     std::string readDataFailed(const std::string &p0) const;
@@ -176,6 +181,7 @@ class FennelResource : ResourceBundle
     ResourceDefinition _scratchMemExhausted;
     ResourceDefinition _uniqueConstraintViolated;
     ResourceDefinition _incompatibleDataFormat;
+    ResourceDefinition _libaioRequired;
     ResourceDefinition _readDataFailed;
     ResourceDefinition _dataTransferFailed;
     ResourceDefinition _writeLogFailed;

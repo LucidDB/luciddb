@@ -76,6 +76,16 @@ BlockNum ScratchSegment::getAllocatedSizeInPages()
     return pages.size();
 }
 
+BlockNum ScratchSegment::getNumPagesOccupiedHighWater()
+{
+    return getAllocatedSizeInPages();
+}
+
+BlockNum ScratchSegment::getNumPagesExtended()
+{
+    return BlockNum(0);
+}
+
 PageId ScratchSegment::allocatePageId(PageOwnerId)
 {
     StrictMutexGuard mutexGuard(mutex);

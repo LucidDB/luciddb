@@ -39,10 +39,11 @@ public class LucidDbPreparingStmt
     //~ Constructors -----------------------------------------------------------
 
     public LucidDbPreparingStmt(
+        FarragoSessionStmtContext rootStmtContext,
         FarragoSessionStmtValidator stmtValidator,
         String sql)
     {
-        super(stmtValidator, sql);
+        super(rootStmtContext, stmtValidator, sql);
     }
 
     //~ Methods ----------------------------------------------------------------

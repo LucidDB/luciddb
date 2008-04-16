@@ -34,7 +34,6 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -214,8 +213,6 @@ public class DdlRelationalHandler
 
         validateAttributeSet(table);
 
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
-
         // NOTE:  don't need to validate index name uniqueness since indexes
         // live in same schema as table, so enforcement will take place at
         // schema level
@@ -282,7 +279,10 @@ public class DdlRelationalHandler
     public void validateDefinition(FemLocalView view)
     {
         FarragoSession session = validator.newReentrantSession();
-
+        // Disable subquery reduction during validation of views because
+        // errors should only be returned during the actual selection
+        // from the view
+        session.disableSubqueryReduction();
         try {
             validateViewImpl(session, view);
         } catch (FarragoUnvalidatedDependencyException ex) {
@@ -454,10 +454,34 @@ public class DdlRelationalHandler
             return;
         }
 
+        // The test for primary key should go before isClustered()
+        // or tests in unitsql/ddl/misc.sql will fail
+        // because primary key will be identified as clustered
+        if (FarragoCatalogUtil.isIndexPrimaryKey(index)) {
+            throw validator.newPositionalError(
+                index,
+                res.ValidatorDropPrimaryKeyIndex.ex(
+                    repos.getLocalizedObjectName(index)));
+        }
+
         if (index.isClustered()) {
             throw validator.newPositionalError(
                 index,
                 res.ValidatorDropClusteredIndex.ex(
+                    repos.getLocalizedObjectName(index)));
+        }
+
+        if (FarragoCatalogUtil.isDeletionIndex(index)) {
+            throw validator.newPositionalError(
+                index,
+                res.ValidatorDropDeletionIndex.ex(
+                    repos.getLocalizedObjectName(index)));
+        }
+
+        if (FarragoCatalogUtil.isIndexUnique(index)) {
+            throw validator.newPositionalError(
+                index,
+                res.ValidatorDropUniqueConstraintIndex.ex(
                     repos.getLocalizedObjectName(index)));
         }
 
@@ -544,6 +568,7 @@ public class DdlRelationalHandler
             FemLocalIndex index,
             FarragoMedLocalDataServer medDataServer)
         {
+            super(null);
             this.table = table;
             this.index = index;
             this.medDataServer = medDataServer;

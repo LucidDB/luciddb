@@ -62,6 +62,12 @@ public:
     SchedulerType schedulerType;
     
     /**
+     * True if using the default scheduler type, as opposed to the one that was
+     * explicitly specified in the configuration file
+     */
+    bool usingDefaultSchedulerType;
+
+    /**
      * Suggested number of threads to dedicate to scheduling
      * activities; the scheduler may adjust this number based on
      * maxRequests.

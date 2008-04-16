@@ -179,9 +179,7 @@ where not (name in (select name from depts))
 order by empno;
 
 -- 2.1 uncorrelated exists.
--- Need to limit to at most one row on join RHS; Broadbase inserts count(*).
--- LucidDB uses a aggregate function(MIN(TRUE)) that generates the value TRUE
--- for each group
+-- The EXISTS is converted to a boolean.
 explain plan without implementation for
 select name from emps where exists(select * from depts);
 
@@ -234,6 +232,43 @@ select name,
        (select count(*) from depts)
 from emps
 order by name;
+
+-- subqueries nested inside uncorrelated subqueries
+
+explain plan for
+select name,
+    (select name from depts where deptno =
+        (select min(deptno) from emps))
+    from emps;
+
+select name,
+    (select name from depts where deptno =
+        (select min(deptno) from emps))
+    from emps
+order by name;
+
+explain plan for 
+select empno,
+    (select count(*) from emps where emps.deptno =
+        (select deptno from depts where depts.deptno = emps.deptno))
+from emps;
+
+select empno,
+    (select count(*) from emps where emps.deptno =
+        (select deptno from depts where depts.deptno = emps.deptno))
+from emps
+order by empno;
+
+explain plan for
+select * from emps where empno =
+    (select min(empno) from emps where deptno =
+        (select min(deptno) from temps where deptno =
+            (select min(deptno) from emps e2 where e2.deptno = emps.deptno)));
+
+select * from emps where empno =
+    (select min(empno) from emps where deptno =
+        (select min(deptno) from temps where deptno =
+            (select min(deptno) from emps e2 where e2.deptno = emps.deptno)));
 
 -- should return null in deptno
 explain plan for
@@ -326,6 +361,16 @@ explain plan for
 select * from emps
 where deptno = (select deptno from depts);
 
+-- more than 1 subquery
+explain plan for
+select * from emps where
+    empno = (select min(empno) from emps) and
+    deptno = (select min(deptno) from depts);
+
+select * from emps where
+    empno = (select min(empno) from emps) and
+    deptno = (select min(deptno) from depts);
+
 -- should report runtime error
 select * from emps
 where deptno = (select deptno from depts);
@@ -350,6 +395,13 @@ explain plan for
 select name
 from emps
 where name=(select name from emps2 where emps.deptno=emps2.deptno);
+
+-- the outermost subquery below cannot be converted to a constant because the
+-- innermost subquery correlates with the outermost query
+explain plan for
+select * from emps where empno =
+    (select min(deptno) from depts where deptno =
+        (select min(deptno) from emps2 where emps2.deptno = emps.deptno));
 
 -- should report runtime error: more than one row
 select name
@@ -1406,6 +1458,153 @@ select
    (select max(name||' Jr.') from emps2 where deptno = depts2.deptno)
 from depts2;
 
+-- 11 Misc usages of uncorrelated scalar subqueries that can be converted to
+-- constants
+
+-- scalar subquery as an argument to a UDR
+set path 'sales';
+create function ramp(n int) 
+    returns table(i int)
+    language java
+    parameter style system defined java
+    no sql
+    external name 'class net.sf.farrago.test.FarragoTestUDR.nullableRamp(java.lang.Integer, java.sql.PreparedStatement)';
+
+explain plan for select * from table(ramp((select min(deptno) from depts)));
+
+select * from table(ramp((select min(deptno) from depts))) order by 1;
+
+-- make sure this returns an exception
+select * from table(ramp((select deptno from depts)));
+
+-- pass in empty subquery result
+select * from table(ramp((select empno from emps where empno > 1000)));
+
+-- dynamic parameters are allowed as long as they're not referenced in the
+-- subquery
+explain plan for
+select * from emps where empno = (select min(empno) from emps) and deptno = ?;
+
+explain plan for
+select * from emps where deptno = ? and empno = (select min(empno) from emps);
+
+explain plan for
+select * from emps where empno = (select min(empno) from emps where deptno = ?);
+
+-- make sure the plan is not cached
+select name, (select count(*) from emps2) from emps order by name;
+insert into emps2 values('foo', null, null);
+select name, (select count(*) from emps2) from emps order by name;
+
+-- use non-correlated subqueries in DELETE and MERGE
+select * from emps2 order by deptno;
+explain plan for
+    delete from emps2 where deptno = (select max(deptno)+10 from depts);
+delete from emps2 where deptno = (select max(deptno)+10 from depts);
+select * from emps2 order by deptno;
+
+explain plan for
+merge into emps2 e1
+    using (select * from emps2) e2 on e1.name = e2.name
+    when matched then
+        update set deptno = e1.deptno + (select count(*) from depts2);
+merge into emps2 e1
+    using (select * from emps2) e2 on e1.name = e2.name
+    when matched then
+        update set deptno = e1.deptno + (select count(*) from depts2);
+select * from emps2 order by deptno;
+
+-- make sure the time function evaluates to the same value in the parent
+-- query and subquery; the queries will return no rows if they don't
+select * from emps where
+    (select current_timestamp from emps where empno = 100) =
+    (select current_timestamp from depts where deptno = 10)
+order by empno;
+
+select * from emps where current_time = 
+    (select current_time from depts where deptno = 10 and current_time =
+        (select current_time from emps where empno = 100))
+order by empno;
+
+-- LER-7530/FRG-277
+explain plan for
+select
+    case when (select count(*) from emps) = 4
+        then (select min(empno) from emps)
+        else (select max(empno) from emps)
+    end,
+    case when (select count(*) from emps) <> 4
+        then (select min(empno) from emps)
+        else (select max(empno) from emps)
+    end
+from (values(0));
+
+select
+    case when (select count(*) from emps) = 4
+        then (select min(empno) from emps)
+        else (select max(empno) from emps)
+    end,
+    case when (select count(*) from emps) <> 4
+        then (select min(empno) from emps)
+        else (select max(empno) from emps)
+    end
+from (values(0));
+
+explain plan for
+select
+    case (select count(*) from emps)
+        when (select count(*) from depts)
+        then (select min(empno) from emps)
+        else (select max(empno) from emps)
+    end
+from (values(0));
+
+select
+    case (select count(*) from emps)
+        when (select count(*) from depts)
+        then (select min(empno) from emps)
+        else (select max(empno) from emps)
+    end
+from (values(0));
+
+explain plan for
+select
+    coalesce(
+        (select gender from emps where empno = 100), 
+        (select name from emps where empno = 100))
+from (values(0));
+
+select
+    coalesce(
+        (select gender from emps where empno = 100), 
+        (select name from emps where empno = 100))
+from (values(0));
+
+-- subquery references a view
+create view vcount as
+    select count(*) from emps, depts where emps.deptno = depts.deptno;
+explain plan for select * from emps where empid = (select * from vcount);
+select * from emps where empid = (select * from vcount);
+
+-- subquery in a view definition
+create view vncsubq as
+    select * from emps where empno = (select min(empno) from emps);
+explain plan for 
+    select * from depts where deptno = (select deptno from vncsubq);
+select * from depts where deptno = (select deptno from vncsubq);
+
+-- make sure reduction doesn't occur during view validation
+create view badview as
+    select (select cast(city as int) from emps where empno = 110) from depts;
+-- reduction still occurs in explain
+explain plan for select * from badview;
+-- finally, an error is returned when actually selecting from the view
+select * from badview;
+
+-- disable subquery conversion
+alter session set "reduceNonCorrelatedSubqueries" = false;
+explain plan for select * from emps where empno = (select min(empno) from emps);
+
 --------------
 -- clean up --
 --------------
@@ -1416,6 +1615,10 @@ drop table depts2;
 drop table depts3;
 drop table depts4;
 drop table depts5;
+drop view vcount;
+drop view vncsubq;
+drop view badview;
+drop function ramp;
 
 -- End subquery.sql
 

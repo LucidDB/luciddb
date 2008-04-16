@@ -81,7 +81,21 @@ public class FarragoDbStmtContext
         FarragoSessionStmtParamDefFactory paramDefFactory,
         FarragoDdlLockManager ddlLockManager)
     {
-        super(session, paramDefFactory, ddlLockManager);
+        this(session, paramDefFactory, ddlLockManager, null);
+    }
+    
+    /**
+     * Creates a new FarragoDbStmtContext object.
+     *
+     * @param session the session creating this statement
+     */
+    public FarragoDbStmtContext(
+        FarragoDbSession session,
+        FarragoSessionStmtParamDefFactory paramDefFactory,
+        FarragoDdlLockManager ddlLockManager,
+        FarragoSessionStmtContext rootStmtContext)
+    {
+        super(session, paramDefFactory, ddlLockManager, rootStmtContext);
 
         updateCount = -1;
         warningQueue = new FarragoWarningQueue();
@@ -217,6 +231,12 @@ public class FarragoDbStmtContext
             // whether the statements inside are DML, since they
             // will do their own autocommits).
             startAutocommitTxn(!isDml);
+            if (rootStmtContext != null &&
+                rootStmtContext.needToSaveFirstTxnCsn())
+            {
+                rootStmtContext.saveFirstTxnCsn(
+                    session.getFennelTxnContext().getTxnCsn());
+            }
         }
 
         session.getRepos().beginReposSession();
@@ -240,6 +260,12 @@ public class FarragoDbStmtContext
             params.resultSetTypeMap = executableStmt.getResultSetTypeMap();
             params.iterCalcTypeMap = executableStmt.getIterCalcTypeMap();
             params.dynamicParamValues = dynamicParamValues;
+            // REVIEW zfong 3/21/08 - Should this time be set to a non-zero
+            // value even if this isn't an internal statement?  Currently,
+            // it is, and therefore, it means that the current time is always
+            // set based on the time when the statement was created, rather
+            // than executed.
+            params.currentTime = getStmtCurrentTime();
             assert (runningContext == null);
 
             initExecutingStmtInfo(executableStmt);
@@ -278,7 +304,7 @@ public class FarragoDbStmtContext
                 if (resultSet == null) {
                     session.getRepos().endReposSession();
                 }
-            }
+            }         
         }
         if (isDml) {
             success = false;
@@ -347,6 +373,14 @@ public class FarragoDbStmtContext
     private void cancel(boolean wait)
     {
         tracer.info("cancel");
+        
+        // First, see if there are any children context that need to be
+        // canceled
+        for (FarragoSessionStmtContext childStmtContext : childrenStmtContexts)
+        {
+            childStmtContext.cancel();
+        }
+        
         FarragoSessionRuntimeContext contextToCancel = runningContext;
         if (contextToCancel == null) {
             return;
@@ -404,6 +438,10 @@ public class FarragoDbStmtContext
             if (allocations != null) {
                 allocations.closeAllocation();
                 allocations = null;
+            }
+            // reset the csn now that we've unprepared the root stmt context
+            if (rootStmtContext == null) {
+                snapshotCsn = null;
             }
             executableStmt = null;
             isExecDirect = false;

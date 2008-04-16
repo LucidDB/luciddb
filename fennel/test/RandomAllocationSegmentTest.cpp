@@ -68,6 +68,15 @@ void RandomAllocationSegmentTest::testAllocateAndDeallocate()
     for (uint i = 0; i < n; ++i) {
         BOOST_CHECK(pRandomSegment->isPageIdAllocated(pageList[i]));
     }
+
+    // Verify that the page count matches what's been allocated
+    uint nAllocated = pRandomSegment->getAllocatedSizeInPages();
+    BOOST_REQUIRE(nAllocated == n);
+
+    // Verify that the high water page occupied count exceeds the allocated
+    // count
+    uint highWaterMarkBefore = pRandomSegment->getNumPagesOccupiedHighWater();
+    BOOST_REQUIRE(highWaterMarkBefore > n);
     
     // Save cache stats before deallocation
     CacheStats statsBefore;
@@ -79,6 +88,10 @@ void RandomAllocationSegmentTest::testAllocateAndDeallocate()
         pRandomSegment->deallocatePageRange(pageId, pageId);
         BOOST_CHECK(!pRandomSegment->isPageIdAllocated(pageId));
     }
+
+    // Make sure the high water mark stays the same even after deallocation
+    uint highWaterMarkAfter = pRandomSegment->getNumPagesOccupiedHighWater();
+    BOOST_REQUIRE(highWaterMarkAfter == highWaterMarkBefore);
 
     // Get cache stats after deallocation and compare
     CacheStats statsAfter;
@@ -92,6 +105,14 @@ void RandomAllocationSegmentTest::testAllocateAndDeallocate()
     for (uint i = 0; i < n; ++i) {
         BOOST_CHECK(!pRandomSegment->isPageIdAllocated(pageList[i]));
     }
+
+    // Allocate the pages again, and recheck the highwater mark to make
+    // sure it's still the same
+    for (uint i = 0; i < n; ++i) {
+        PageId pageId = segPageLock.allocatePage();
+    }
+    highWaterMarkAfter = pRandomSegment->getNumPagesOccupiedHighWater();
+    BOOST_REQUIRE(highWaterMarkAfter == highWaterMarkBefore);
 }
 
 FENNEL_UNIT_TEST_SUITE(RandomAllocationSegmentTest);

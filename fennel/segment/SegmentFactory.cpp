@@ -78,12 +78,16 @@ SharedSegment SegmentFactory::newLinearDeviceSegment(
     SharedSegment pSegment(
         new LinearDeviceSegment(cache,params),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"LinearDeviceSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment,"LinearDeviceSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newRandomAllocationSegment(
     SharedSegment delegateSegment,
-    bool bFormat)
+    bool bFormat,
+    bool deferInit)
 {
     RandomAllocationSegment *pRandomSegment = 
         new RandomAllocationSegment(delegateSegment);
@@ -95,13 +99,17 @@ SharedSegment SegmentFactory::newRandomAllocationSegment(
     if (bFormat) {
         tracingSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
     }
+    if (!deferInit) {
+        tracingSegment->initForUse();
+    }
     return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
     SharedSegment delegateSegment,
     SharedSegment pTempSegment,
-    bool bFormat)
+    bool bFormat,
+    bool deferInit)
 {
     VersionedRandomAllocationSegment *pVersionedRandomSegment = 
         new VersionedRandomAllocationSegment(delegateSegment, pTempSegment);
@@ -112,6 +120,9 @@ SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
     // is traced
     if (bFormat) {
         tracingSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
+    }
+    if (!deferInit) {
+        tracingSegment->initForUse();
     }
     return tracingSegment;
 }
@@ -127,7 +138,10 @@ SharedSegment SegmentFactory::newSnapshotRandomAllocationSegment(
             versionedSegment,
             snapshotCsn);
     SharedSegment pSegment(pSnapshotSegment, ClosableObjectDestructor());
-    return newTracingSegment(pSegment, "SnapshotRandomAllocationSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "SnapshotRandomAllocationSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newDynamicDelegatingSegment(
@@ -136,7 +150,10 @@ SharedSegment SegmentFactory::newDynamicDelegatingSegment(
     DynamicDelegatingSegment *pDelegatingSegment =
         new DynamicDelegatingSegment(WeakSegment(delegateSegment));
     SharedSegment pSegment(pDelegatingSegment, ClosableObjectDestructor());
-    return newTracingSegment(pSegment, "DynamicDelegatingSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment, "DynamicDelegatingSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newWALSegment(
@@ -145,7 +162,10 @@ SharedSegment SegmentFactory::newWALSegment(
     SharedSegment pSegment(
         new WALSegment(logSegment),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"WALSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment,"WALSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newLinearViewSegment(
@@ -155,7 +175,10 @@ SharedSegment SegmentFactory::newLinearViewSegment(
     SharedSegment pSegment(
         new LinearViewSegment(delegateSegment,firstPageId),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"LinearViewSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment,"LinearViewSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newVersionedSegment(
@@ -167,7 +190,10 @@ SharedSegment SegmentFactory::newVersionedSegment(
     SharedSegment pSegment(
         new VersionedSegment(dataSegment,logSegment,onlineUuid,versionNumber),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"VersionedSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment,"VersionedSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SegmentAccessor SegmentFactory::newScratchSegment(
@@ -179,6 +205,7 @@ SegmentAccessor SegmentFactory::newScratchSegment(
         ClosableObjectDestructor());
     SegmentAccessor segmentAccessor;
     segmentAccessor.pSegment = newTracingSegment(pSegment,"ScratchSegment");
+    segmentAccessor.pSegment->initForUse();
     segmentAccessor.pCacheAccessor = pSegment;
     return segmentAccessor;
 }
@@ -195,7 +222,10 @@ SharedSegment SegmentFactory::newCircularSegment(
             pCheckpointProvider,
             oldestPageId,newestPageId),
         ClosableObjectDestructor());
-    return newTracingSegment(pSegment,"CircularSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment,"CircularSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 SharedSegment SegmentFactory::newTracingSegment(
@@ -250,7 +280,10 @@ SharedSegment SegmentFactory::newTempDeviceSegment(
     SharedSegment pSegment(
         new LinearDeviceSegment(pCache,deviceParams),
         TempSegDestructor(shared_from_this()));
-    return newTracingSegment(pSegment,"TempLinearDeviceSegment");
+    SharedSegment tracingSegment =
+        newTracingSegment(pSegment,"TempLinearDeviceSegment");
+    tracingSegment->initForUse();
+    return tracingSegment;
 }
 
 DeviceId SegmentFactory::allocateTempDeviceId()

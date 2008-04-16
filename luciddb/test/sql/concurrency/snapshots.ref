@@ -24,6 +24,7 @@
 | 6          | 0          |
 | 7          | 0          |
 | 8          | 0          |
+| 9          | 0          |
 +------------+------------+
 
 > drop table snapshot;
@@ -40,6 +41,8 @@
 > insert into snapshot select a + 3, sys_boot.mgmt.sleep(1500) from snapshot;
 3 rows affected.
 > insert into snapshot values(7, 0);
+1 row affected.
+> insert into snapshot values(9, 0);
 1 row affected.
 > insert into snapshot select 10 - a, sys_boot.mgmt.sleep(1500) from snapshot;
 net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Unique constraint violation
@@ -110,31 +113,11 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Unique constraint viola
 
 > insert into snapshot values(8, 0);
 1 row affected.
-> select * from snapshot;
+> select * from snapshot where a >=
+> (select max(a) from snapshot where sys_boot.mgmt.sleep(1000) = 0);
 +------------+------------+
 | A          | B          |
 +------------+------------+
-| 1          | 0          |
-| 2          | 0          |
-| 3          | 0          |
-| 4          | 0          |
-| 5          | 0          |
-| 6          | 0          |
-| 7          | 0          |
-| 8          | 0          |
-+------------+------------+
-
-> select * from snapshot where a >= 0;
-+------------+------------+
-| A          | B          |
-+------------+------------+
-| 1          | 0          |
-| 2          | 0          |
-| 3          | 0          |
-| 4          | 0          |
-| 5          | 0          |
-| 6          | 0          |
-| 7          | 0          |
 | 8          | 0          |
 +------------+------------+
 
@@ -150,6 +133,7 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Unique constraint viola
 | 6          | 0          |
 | 7          | 0          |
 | 8          | 0          |
+| 9          | 0          |
 +------------+------------+
 
 > select * from snapshot where a >= 0;
@@ -164,6 +148,37 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Unique constraint viola
 | 6          | 0          |
 | 7          | 0          |
 | 8          | 0          |
+| 9          | 0          |
++------------+------------+
+
+> select * from snapshot;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
+| 3          | 0          |
+| 4          | 0          |
+| 5          | 0          |
+| 6          | 0          |
+| 7          | 0          |
+| 8          | 0          |
+| 9          | 0          |
++------------+------------+
+
+> select * from snapshot where a >= 0;
++------------+------------+
+| A          | B          |
++------------+------------+
+| 1          | 0          |
+| 2          | 0          |
+| 3          | 0          |
+| 4          | 0          |
+| 5          | 0          |
+| 6          | 0          |
+| 7          | 0          |
+| 8          | 0          |
+| 9          | 0          |
 +------------+------------+
 
 -- end of thread reader

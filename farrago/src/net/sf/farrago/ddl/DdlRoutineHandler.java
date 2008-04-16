@@ -245,6 +245,7 @@ public class DdlRoutineHandler
             }
         }
         FarragoSession session = validator.newReentrantSession();
+        session.disableSubqueryReduction();
         try {
             validateRoutineBody(session, routine, returnParam);
         } catch (FarragoUnvalidatedDependencyException ex) {

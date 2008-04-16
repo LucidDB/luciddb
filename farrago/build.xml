@@ -231,6 +231,8 @@ ${farrago.test.jvmargs}
     refid="createUserRepository.classpath"/>
 
   <!-- Fennel Defaults, can override in customBuild.properties -->
+  <property name="fennel.databaseInitSize" value="1000"/>
+  <property name="fennel.tempInitSize" value="1000"/>
   <property name="fennel.checkpointInterval" value="300"/>
   <property name="fennel.cachePageSize" value="4096"/>
   <property name="fennel.cachePagesMax" value="1000"/>
@@ -604,6 +606,8 @@ ${farrago.test.jvmargs}
     <antcall target="copyFennelResources"/>
 
     <replace file="${FarragoConf.xmi}">
+      <replacefilter token="@databaseInitSize@" value="${fennel.databaseInitSize}"/>
+      <replacefilter token="@tempInitSize@" value="${fennel.tempInitSize}"/>
       <replacefilter token="@checkpointInterval@" value="${fennel.checkpointInterval}"/>
       <replacefilter token="@cachePageSize@" value="${fennel.cachePageSize}"/>
       <replacefilter token="@cachePagesMax@" value="${fennel.cachePagesMax}"/>

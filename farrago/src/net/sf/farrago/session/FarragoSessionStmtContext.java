@@ -29,7 +29,6 @@ import java.util.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 
@@ -200,6 +199,44 @@ public interface FarragoSessionStmtContext
     public int getQueryTimeout();
 
     public String getSql();
+    
+    /**
+     * @return the current time for this statement
+     */
+    long getStmtCurrentTime();
+    
+    /**
+     * Indicates that the context needs to retrieve and save the commit
+     * sequence number for the very first transaction initiated by a stmt
+     * context associated with a root context.  Can only be called on
+     * the root context.
+     */
+    public void setSaveFirstTxnCsn();
+    
+    /**
+     * @return whether the context needs to retrieve and save the commit
+     * sequence number for the very first transaction initiated by a stmt
+     * context associated with a root context; can only be called on the
+     * root context
+     */
+    public boolean needToSaveFirstTxnCsn();
+    
+    /**
+     * Saves the commit sequence number associated with the first transaction
+     * initiated by a stmt associated with a root context.  Can only be called
+     * on the root context.
+     * 
+     * @param csn the commit sequence number
+     */
+    public void saveFirstTxnCsn(long csn);
+    
+    /**
+     * Adds a child statement context to the list of children context for a
+     * statement.  Can only be called on the root context.
+     * 
+     * @param childStmtContext
+     */
+    public void addChildStmtContext(FarragoSessionStmtContext childStmtContext);
 }
 
 // End FarragoSessionStmtContext.java

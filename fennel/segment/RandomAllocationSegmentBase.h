@@ -24,6 +24,7 @@
 #ifndef Fennel_RandomAllocationSegmentBase_Included
 #define Fennel_RandomAllocationSegmentBase_Included
 
+#include "fennel/synch/SynchObj.h"
 #include "fennel/segment/DelegatingSegment.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -68,7 +69,53 @@ class RandomAllocationSegmentBase
     : public DelegatingSegment
 {
     /**
-     * Counts the number of allocated pages recorded in a SegmentAllocationNode
+     * The maximum number of pages occupied by this segment instance
+     */
+    BlockNum nPagesOccupiedHighWater;
+
+    /**
+     * The number of data pages allocated for this segment
+     */
+    BlockNum nPagesAllocated;
+
+    /**
+     * The net number of deallocations on this segment.  New page allocations
+     * that occur after a deallocation offset this count.
+     */
+    BlockNum netDeallocations;
+
+    /**
+     * Mutex used to ensure that only one thread is incrementing the page
+     * counters
+     */
+    StrictMutex pageCounterMutex;
+
+    /**
+     * Increments the page counters for this segment instance, corresponding
+     * to some page allocation.  The pages occupied counter takes into account
+     * deallocated pages.
+     */
+    void incrementPageCounters();
+
+    /**
+     * Increments the pages occupied counter
+     */
+    void incrementPagesOccupiedCounter();
+
+    /**
+     * Decrements the page counters for this segment instance, corresponding
+     * to some page deallocation.
+     */
+    void decrementPageCounters();
+
+    /**
+     * Counts the total number of allocated data pages as well as the total
+     * number of allocated pages, which includes used allocation node pages.
+     */
+    void countAllocatedPages();
+
+    /**
+     * Counts the number of allocated pages recorded in a SegmentAllocationNode.
      *
      * @param segAllocPageId the pageId of the SegmentAllocationNode
      *
@@ -76,13 +123,18 @@ class RandomAllocationSegmentBase
      *
      * @param [out] nextSegAllocPageId the pageId of the next
      * SegmentAllocationNode following this one
-     *
-     * @return count of the number of allocated pages
      */
-    BlockNum tallySegAllocNodePages(
+    void tallySegAllocNodePages(
         PageId segAllocPageId,
         SharedSegment allocNodeSegment,
         PageId &nextSegAllocPageId);
+
+    /**
+     * Deallocates a single page.
+     *
+     * @param pageId PageId of page to deallocate
+     */
+    void deallocatePageId(PageId pageId);
 
 protected:
     friend class SegmentFactory;
@@ -230,13 +282,6 @@ protected:
      */
     template <class PageEntryT>
     PageOwnerId getPageOwnerIdTemplate(PageId pageId, bool thisSegment);
-
-    /**
-     * Deallocates a single page.
-     *
-     * @param pageId PageId of page to deallocate
-     */
-    void deallocatePageId(PageId pageId);
 
     /**
      * Marks the page entry corresponding to a deallocated page as unallocated.
@@ -566,7 +611,9 @@ public:
     virtual bool isPageIdAllocated(PageId pageId);
     virtual AllocationOrder getAllocationOrder() const;
     virtual BlockNum getAllocatedSizeInPages();
+    virtual BlockNum getNumPagesOccupiedHighWater();
     virtual void deallocatePageRange(PageId startPageId, PageId endPageId);
+    virtual void initForUse();
 };
 
 FENNEL_END_NAMESPACE

@@ -25,6 +25,7 @@ import de.simplicit.vjdbc.server.config.*;
 import de.simplicit.vjdbc.server.rmi.*;
 import de.simplicit.vjdbc.util.*;
 
+import java.rmi.*;
 import java.io.*;
 
 import java.sql.*;

@@ -49,6 +49,16 @@ BlockNum DelegatingSegment::getAllocatedSizeInPages()
     return pDelegateSegment->getAllocatedSizeInPages();
 }
 
+BlockNum DelegatingSegment::getNumPagesOccupiedHighWater()
+{
+    return pDelegateSegment->getNumPagesOccupiedHighWater();
+}
+
+BlockNum DelegatingSegment::getNumPagesExtended()
+{
+    return pDelegateSegment->getNumPagesExtended();
+}
+
 PageId DelegatingSegment::getPageSuccessor(PageId pageId)
 {
     return pDelegateSegment->getPageSuccessor(pageId);

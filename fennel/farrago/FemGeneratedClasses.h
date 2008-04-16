@@ -9,6 +9,9 @@ typedef JniProxyIter<ProxyAggStreamDef> SharedProxyAggStreamDef;
 class ProxyBarrierStreamDef;
 typedef JniProxyIter<ProxyBarrierStreamDef> SharedProxyBarrierStreamDef;
 
+class ProxyBeginTxnCmd;
+typedef JniProxyIter<ProxyBeginTxnCmd> SharedProxyBeginTxnCmd;
+
 class ProxyBernoulliSamplingStreamDef;
 typedef JniProxyIter<ProxyBernoulliSamplingStreamDef> SharedProxyBernoulliSamplingStreamDef;
 
@@ -30,6 +33,9 @@ typedef JniProxyIter<ProxyCmdAlterSystemDeallocate> SharedProxyCmdAlterSystemDea
 class ProxyCmdBeginTxn;
 typedef JniProxyIter<ProxyCmdBeginTxn> SharedProxyCmdBeginTxn;
 
+class ProxyCmdBeginTxnWithCsn;
+typedef JniProxyIter<ProxyCmdBeginTxnWithCsn> SharedProxyCmdBeginTxnWithCsn;
+
 class ProxyCmdCheckpoint;
 typedef JniProxyIter<ProxyCmdCheckpoint> SharedProxyCmdCheckpoint;
 
@@ -50,6 +56,9 @@ typedef JniProxyIter<ProxyCmdCreateStreamHandle> SharedProxyCmdCreateStreamHandl
 
 class ProxyCmdDropIndex;
 typedef JniProxyIter<ProxyCmdDropIndex> SharedProxyCmdDropIndex;
+
+class ProxyCmdGetTxnCsn;
+typedef JniProxyIter<ProxyCmdGetTxnCsn> SharedProxyCmdGetTxnCsn;
 
 class ProxyCmdOpenDatabase;
 typedef JniProxyIter<ProxyCmdOpenDatabase> SharedProxyCmdOpenDatabase;
@@ -86,6 +95,9 @@ typedef JniProxyIter<ProxyCorrelation> SharedProxyCorrelation;
 
 class ProxyCorrelationJoinStreamDef;
 typedef JniProxyIter<ProxyCorrelationJoinStreamDef> SharedProxyCorrelationJoinStreamDef;
+
+class ProxyCsnHandle;
+typedef JniProxyIter<ProxyCsnHandle> SharedProxyCsnHandle;
 
 class ProxyDatabaseCmd;
 typedef JniProxyIter<ProxyDatabaseCmd> SharedProxyDatabaseCmd;
@@ -345,6 +357,28 @@ BarrierReturnMode getReturnMode();
 static jmethodID meth_getReturnMode;
 };
 
+class ProxyCmd
+: virtual public JniProxy
+{
+public:
+};
+
+class ProxyDatabaseCmd
+: virtual public JniProxy, virtual public ProxyCmd
+{
+public:
+SharedProxyDbHandle getDbHandle();
+static jmethodID meth_getDbHandle;
+};
+
+class ProxyBeginTxnCmd
+: virtual public JniProxy, virtual public ProxyDatabaseCmd
+{
+public:
+SharedProxyTxnHandle getResultHandle();
+static jmethodID meth_getResultHandle;
+};
+
 class ProxyBernoulliSamplingStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
@@ -385,20 +419,6 @@ bool isLeftOuter();
 static jmethodID meth_isLeftOuter;
 };
 
-class ProxyCmd
-: virtual public JniProxy
-{
-public:
-};
-
-class ProxyDatabaseCmd
-: virtual public JniProxy, virtual public ProxyCmd
-{
-public:
-SharedProxyDbHandle getDbHandle();
-static jmethodID meth_getDbHandle;
-};
-
 class ProxyCmdAlterSystemDeallocate
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
@@ -406,13 +426,19 @@ public:
 };
 
 class ProxyCmdBeginTxn
-: virtual public JniProxy, virtual public ProxyDatabaseCmd
+: virtual public JniProxy, virtual public ProxyBeginTxnCmd
 {
 public:
 bool isReadOnly();
 static jmethodID meth_isReadOnly;
-SharedProxyTxnHandle getResultHandle();
-static jmethodID meth_getResultHandle;
+};
+
+class ProxyCmdBeginTxnWithCsn
+: virtual public JniProxy, virtual public ProxyBeginTxnCmd
+{
+public:
+SharedProxyCsnHandle getCsnHandle();
+static jmethodID meth_getCsnHandle;
 };
 
 class ProxyCmdCheckpoint
@@ -515,6 +541,14 @@ class ProxyCmdDropIndex
 : virtual public JniProxy, virtual public ProxyIndexAccessCmd
 {
 public:
+};
+
+class ProxyCmdGetTxnCsn
+: virtual public JniProxy, virtual public ProxyTxnCmd
+{
+public:
+SharedProxyCsnHandle getResultHandle();
+static jmethodID meth_getResultHandle;
 };
 
 class ProxyCmdOpenDatabase
@@ -633,6 +667,20 @@ SharedProxyCorrelation getCorrelations();
 static jmethodID meth_getCorrelations;
 };
 
+class ProxyHandle
+: virtual public JniProxy
+{
+public:
+int64_t getLongHandle();
+static jmethodID meth_getLongHandle;
+};
+
+class ProxyCsnHandle
+: virtual public JniProxy, virtual public ProxyHandle
+{
+public:
+};
+
 class ProxyDatabaseParam
 : virtual public JniProxy
 {
@@ -641,14 +689,6 @@ std::string getName();
 static jmethodID meth_getName;
 std::string getValue();
 static jmethodID meth_getValue;
-};
-
-class ProxyHandle
-: virtual public JniProxy
-{
-public:
-int64_t getLongHandle();
-static jmethodID meth_getLongHandle;
 };
 
 class ProxyDbHandle
@@ -1291,6 +1331,8 @@ virtual void visit(ProxyAggStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyBarrierStreamDef &)
 { unhandledVisit(); }
+virtual void visit(ProxyBeginTxnCmd &)
+{ unhandledVisit(); }
 virtual void visit(ProxyBernoulliSamplingStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyBufferingTupleStreamDef &)
@@ -1305,6 +1347,8 @@ virtual void visit(ProxyCmdAlterSystemDeallocate &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdBeginTxn &)
 { unhandledVisit(); }
+virtual void visit(ProxyCmdBeginTxnWithCsn &)
+{ unhandledVisit(); }
 virtual void visit(ProxyCmdCheckpoint &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdCloseDatabase &)
@@ -1318,6 +1362,8 @@ virtual void visit(ProxyCmdCreateIndex &)
 virtual void visit(ProxyCmdCreateStreamHandle &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdDropIndex &)
+{ unhandledVisit(); }
+virtual void visit(ProxyCmdGetTxnCsn &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdOpenDatabase &)
 { unhandledVisit(); }
@@ -1342,6 +1388,8 @@ virtual void visit(ProxyColumnName &)
 virtual void visit(ProxyCorrelation &)
 { unhandledVisit(); }
 virtual void visit(ProxyCorrelationJoinStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyCsnHandle &)
 { unhandledVisit(); }
 virtual void visit(ProxyDatabaseCmd &)
 { unhandledVisit(); }

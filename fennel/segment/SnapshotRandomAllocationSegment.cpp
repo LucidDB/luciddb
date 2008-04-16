@@ -45,6 +45,11 @@ SnapshotRandomAllocationSegment::SnapshotRandomAllocationSegment(
     forceCacheUnmap = false;
 }
 
+TxnId SnapshotRandomAllocationSegment::getSnapshotCsn()
+{
+    return snapshotCsn;
+}
+
 BlockId SnapshotRandomAllocationSegment::translatePageId(PageId pageId)
 {
     PageId snapshotId = getSnapshotId(pageId);

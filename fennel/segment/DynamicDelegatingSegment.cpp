@@ -50,6 +50,18 @@ BlockNum DynamicDelegatingSegment::getAllocatedSizeInPages()
     return pDelegateSegment->getAllocatedSizeInPages();
 }
 
+BlockNum DynamicDelegatingSegment::getNumPagesOccupiedHighWater()
+{
+    SharedSegment pDelegateSegment = delegateSegment.lock();
+    return pDelegateSegment->getNumPagesOccupiedHighWater();
+}
+
+BlockNum DynamicDelegatingSegment::getNumPagesExtended()
+{
+    SharedSegment pDelegateSegment = delegateSegment.lock();
+    return pDelegateSegment->getNumPagesExtended();
+}
+
 PageId DynamicDelegatingSegment::getPageSuccessor(PageId pageId)
 {
     SharedSegment pDelegateSegment = delegateSegment.lock();

@@ -26,6 +26,14 @@ select * from
 (select name from depts union all select name from depts)
  order by 1;
 
+-- make sure the time function returns the same value; note that this test
+-- isn't repeated for Fennel calc below because Fennel calc doesn't guarantee
+-- that time functions return the same value if invoked multiple times within a
+-- statement
+select count(*) from
+    (select current_timestamp from emps union
+        select current_timestamp from depts);
+
 -- verify plans
 !set outputformat csv
 

@@ -1,0 +1,7 @@
+#!/bin/bash
+# $Id:$
+# Preallocates LucidDB data files
+
+BIN_DIR=$(cd `dirname $0`; pwd)
+
+$BIN_DIR/allocFile $1 $2 --pagesize=32768

@@ -122,6 +122,12 @@ public class FarragoSessionRuntimeParams
      * should create a private queue.
      */
     public FarragoWarningQueue warningQueue;
+    
+    /**
+     * The current time associated with the statement.  If set to zero, this
+     * indicates that no current time has yet been set for the statement.
+     */
+    public long currentTime;
 }
 
 // End FarragoSessionRuntimeParams.java

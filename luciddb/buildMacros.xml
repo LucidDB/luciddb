@@ -73,9 +73,14 @@ ${farrago.test.jvmargs}
     </not>
   </condition>
 
+  <condition property="luciddb.setDeviceSchedulerType.sql"
+    value="setDeviceSchedulerType.sql" else="">
+    <equals arg1="${os.name}" arg2="Linux"/>
+  </condition>
+
   <!-- filelist for luciddb init scripts -->
   <filelist dir="${luciddb.initsql.dir}" id="luciddb.filelist.initsql"
-    files="installApplib.sql ${luciddb.createTestHarness.sql} createDbaViews.sql ${luciddb.createForeignWrappers.sql}"/>
+    files="${luciddb.setDeviceSchedulerType.sql} installApplib.sql ${luciddb.createTestHarness.sql} createDbaViews.sql ${luciddb.createForeignWrappers.sql}"/>
 
 
   <!-- Macro to run sql scripts/tests using LucidDbSqlTest -->

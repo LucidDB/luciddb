@@ -208,7 +208,7 @@ Error: PRIMARY KEY constraint required for table "MISC"."MISSING_PK" (state=,cod
 > 
 > -- should fail:  can't drop a clustered index
 > drop index explicit_jk1;
-Error: Clustered index "MISC"."EXPLICIT_JK1" cannot be dropped (state=,code=0)
+Error: Cannot drop clustered index "MISC"."EXPLICIT_JK1" (state=,code=0)
 > 
 > -- should fail: LCS clustered indexes may not overlap
 > create table lcs_table_overlap(i int not null,j int not null,k int not null)
@@ -250,6 +250,13 @@ Error: Multiple clustered indexes contain column "J" (state=,code=0)
 > server sys_column_store_data_server
 > ;
 Error: java.lang.UnsupportedOperationException: class java.lang.String: column-store for collection type (state=,code=0)
+> 
+> -- should fail: can't drop primary key/unique indexes
+> create table testdrop(i1 int primary key, i2 int unique);
+> drop index "SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TESTDROP";
+Error: Cannot drop primary key index "MISC"."SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$TESTDROP" (state=,code=0)
+> drop index "SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$TESTDROP$I2";
+Error: Cannot drop unique constraint index "MISC"."SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$TESTDROP$I2" (state=,code=0)
 > 
 > -- End misc.sql
 > 

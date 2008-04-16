@@ -75,6 +75,7 @@ public class SqlToRelConverter
     private final Map<SqlValidatorScope, LookupContext> mapScopeToLux =
         new HashMap<SqlValidatorScope, LookupContext>();
     private DefaultValueFactory defaultValueFactory;
+    private SubqueryConverter subqueryConverter;
     protected final List<RelNode> leaves = new ArrayList<RelNode>();
     private final List<SqlDynamicParam> dynamicParamSqlNodes =
         new ArrayList<SqlDynamicParam>();
@@ -84,6 +85,8 @@ public class SqlToRelConverter
     private final SqlNodeToRexConverter exprConverter;
     private boolean decorrelationEnabled;
     private boolean shouldCreateValuesRel;
+    private boolean isExplain;
+    private int nDynamicParamsInExplain;
 
     /**
      * Fields used in name resolution for correlated subqueries.
@@ -116,6 +119,14 @@ public class SqlToRelConverter
      * TABLE(SAMPLE(&lt;datasetName&gt;, &lt;query&gt;))</code> construct.
      */
     private final Stack<String> datasetStack = new Stack<String>();
+    
+    /**
+     * Mapping of non-correlated subqueries that have been converted to their
+     * equivalent constants.  Used to avoid re-evaluating the subquery if
+     * it's already been evaluated.
+     */
+    private final Map<SqlNode, RexNode> mapConvertedNonCorrSubqs =
+        new HashMap<SqlNode, RexNode>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -148,6 +159,7 @@ public class SqlToRelConverter
         this.planner = planner;
         this.connection = connection;
         this.defaultValueFactory = new NullDefaultValueFactory();
+        this.subqueryConverter = new NoOpSubqueryConverter();
         this.rexBuilder = rexBuilder;
         this.typeFactory = rexBuilder.getTypeFactory();
         this.cluster = createCluster(env);
@@ -156,6 +168,8 @@ public class SqlToRelConverter
             new SqlNodeToRexConverterImpl(new StandardConvertletTable());
         decorrelationEnabled = true;
         shouldCreateValuesRel = true;
+        isExplain = false;
+        nDynamicParamsInExplain = 0;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -202,7 +216,46 @@ public class SqlToRelConverter
         }
         return validator.getValidatedNodeType(sqlNode);
     }
+    
+    /**
+     * Returns the current count of the number of dynamic parameters 
+     * in an EXPLAIN PLAN statement.
+     * 
+     * @param increment if true, increment the count
+     * 
+     * @return the current count before the optional increment
+     */
+    public int getDynamicParamCountInExplain(boolean increment)
+    {
+        int retVal = nDynamicParamsInExplain;
+        if (increment) {
+            ++nDynamicParamsInExplain;
+        }
+        return retVal;
+    }
 
+    /**
+     * @return mapping of non-correlated subqueries that have been converted
+     * to the constants that they evaluate to
+     */
+    public Map<SqlNode, RexNode> getMapConvertedNonCorrSubqs()
+    {
+        return mapConvertedNonCorrSubqs;
+    }
+    
+    /**
+     * Adds to the current map of non-correlated converted subqueries the
+     * elements from another map that contains non-correlated subqueries
+     * that have been converted by another SqlToRelConverter.
+     *
+     * @param alreadyConvertedNonCorrSubqs the other map
+     */
+    public void addConvertedNonCorrSubqs(
+        Map<SqlNode, RexNode> alreadyConvertedNonCorrSubqs)
+    {
+        mapConvertedNonCorrSubqs.putAll(alreadyConvertedNonCorrSubqs);
+    }
+    
     /**
      * Set a new DefaultValueFactory. To have any effect, this must be called
      * before any convert method.
@@ -213,7 +266,30 @@ public class SqlToRelConverter
     {
         defaultValueFactory = factory;
     }
+    
+    /**
+     * Sets a new SubqueryConverter.  To have any effect, this must be called
+     * before any convert method.
+     * 
+     * @param converter new SubqueryConverter
+     */
+    public void setSubqueryConverter(SubqueryConverter converter)
+    {
+        subqueryConverter = converter;
+    }
 
+    /**
+     * Indicates that the current statement is part of an EXPLAIN PLAN
+     * statement
+     * 
+     * @param nDynamicParams number of dynamic parameters in the statement
+     */
+    public void setIsExplain(int nDynamicParams)
+    {
+        isExplain = true;
+        nDynamicParamsInExplain = nDynamicParams;
+    }
+    
     /**
      * Controls whether table access references are converted to physical rels
      * immediately. The optimizer doesn't like leaf rels to have {@link
@@ -900,54 +976,34 @@ public class SqlToRelConverter
         case SqlKind.ExistsORDINAL: {
             // "select from emp where exists (select a from T)"
             //
-            // is converted to
+            // is converted to the following if the subquery is correlated:
             //
             // "select from emp left outer join (select AGG_TRUE() as indicator
             // from T group by corr_var) q where q.indicator is true"
             //
-            // Note that if there is no correlation, only one TRUE value is
-            // produced for the entire subquery.
+            // If there is no correlation, the expression is replaced with
+            // a boolean indicating whether the subquery returned 0 or >= 1 row.
             SqlCall call = (SqlCall) node;
             SqlSelect select = (SqlSelect) call.getOperands()[0];
-            converted =
-                convertExists(
-                    select,
-                    false,
-                    true,
-                    true);
+            converted = convertExists(select, false, true, true);
+            if (convertNonCorrelatedSubq(call, bb, converted, true)) {
+                return;
+            }
             joinType = JoinRelType.LEFT;
             break;
         }
-        case SqlKind.ScalarQueryORDINAL:
+        case SqlKind.ScalarQueryORDINAL:        
+            // Convert the subquery.  If it's non-correlated, convert it
+            // to a constant expression.
             SqlCall call = (SqlCall) node;
             SqlSelect select = (SqlSelect) call.getOperands()[0];
             converted = convertExists(select, false, false, true);
-            joinType = JoinRelType.LEFT;
-            SqlNodeList selectList = select.getSelectList();
-            SqlNodeList groupList = select.getGroup();
-
-            //
-            // Check whether subquery is guaranteed to produce a single value.
-            //
-            if ((selectList.size() == 1)
-                && ((groupList == null) || (groupList.size() == 0)))
-            {
-                SqlNode selectExpr = selectList.get(0);
-                if (selectExpr instanceof SqlCall) {
-                    SqlCall selectExprCall = (SqlCall) selectExpr;
-                    if (selectExprCall.getOperator()
-                        instanceof SqlAggFunction)
-                    {
-                        break;
-                    }
-                }
+            if (convertNonCorrelatedSubq(call, bb, converted, false)) {
+                return;
             }
-
-            //
-            // If not, project SingleValueAgg.
-            //
-            converted = RelOptUtil.createSingleValueAggRel(cluster, converted);
-            break;
+            converted = convertToSingleValueSubq(select, converted);
+            joinType = JoinRelType.LEFT;
+            break;         
         case SqlKind.SelectORDINAL:
 
             // This is used when converting multiset queries:
@@ -967,6 +1023,85 @@ public class SqlToRelConverter
                 joinType,
                 leftJoinKeysForIn);
         bb.mapSubqueryToExpr.put(node, expression);
+    }
+    
+    /**
+     * Determines if a subquery is non-correlated and if so, converts it to
+     * a constant.
+     * 
+     * @param call the call that references the subquery
+     * @param bb blackboard used to convert the subquery
+     * @param converted RelNode tree corresponding to the subquery
+     * @param isExists true if the subquery is part of an EXISTS expression
+     * 
+     * @return if the subquery can be converted to a constant
+     */
+    private boolean convertNonCorrelatedSubq(
+        SqlCall call,
+        Blackboard bb,
+        RelNode converted,
+        boolean isExists)
+    {
+        if (subqueryConverter.canConvertSubquery() &&
+            isSubqNonCorrelated(converted, bb))
+        {
+            // First check if the subquery has already been converted
+            // because it's a nested subquery.  If so, don't re-evaluate
+            // it again.
+            RexNode constExpr = mapConvertedNonCorrSubqs.get(call);
+            if (constExpr == null) {               
+                constExpr =
+                    subqueryConverter.convertSubquery(
+                        call,
+                        this,
+                        isExists,
+                        isExplain);
+            }
+            if (constExpr != null) {
+                bb.mapSubqueryToExpr.put(call, constExpr);
+                mapConvertedNonCorrSubqs.put(call, constExpr);
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Converts the RelNode tree for a select statement to a select that
+     * produces a single value.
+     * 
+     * @param select the statement
+     * @param plan the original RelNode tree corresponding to the statement
+     * 
+     * @return the converted RelNode tree
+     */
+    public RelNode convertToSingleValueSubq(
+        SqlSelect select,
+        RelNode plan)
+    {
+        SqlNodeList selectList = select.getSelectList();
+        SqlNodeList groupList = select.getGroup();
+
+        // Check whether query is guaranteed to produce a single value.
+        if ((selectList.size() == 1)
+            && ((groupList == null) || (groupList.size() == 0)))
+        {
+            SqlNode selectExpr = selectList.get(0);
+            if (selectExpr instanceof SqlCall) {
+                SqlCall selectExprCall = (SqlCall) selectExpr;
+                if (selectExprCall.getOperator()
+                    instanceof SqlAggFunction)
+                {
+                    return plan;
+                }
+            }
+        }
+
+        // If not, project SingleValueAgg
+        return
+            RelOptUtil.createSingleValueAggRel(
+                cluster,
+                plan);
     }
 
     /**
@@ -1808,7 +1943,55 @@ public class SqlToRelConverter
             joinType,
             variablesStopped);
     }
+    
+    /**
+     * Determines whether a subquery is non-correlated.  Note that a
+     * non-correlated subquery can contain correlated references, provided
+     * those references do not reference select statements that are parents
+     * of the subquery.
+     * 
+     * @param subq the subquery
+     * @param bb blackboard used while converting the subquery, i.e., the
+     * blackboard of the parent query of this subquery
+     * 
+     * @return true if the subquery is non-correlated.
+     */
+    private boolean isSubqNonCorrelated(RelNode subq, Blackboard bb)
+    {
+        Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(subq);
+        for (String correlName : correlatedVariables) {
+            DeferredLookup lookup = mapCorrelToDeferred.get(correlName);
+            String originalRelName = lookup.getOriginalRelName();
 
+            int [] nsIndexes = { -1 };
+            final SqlValidatorScope [] ancestorScopes = { null };
+            SqlValidatorNamespace foundNs =
+                lookup.bb.scope.resolve(
+                    originalRelName,
+                    ancestorScopes,
+                    nsIndexes);
+
+            assert (foundNs != null);
+            assert (nsIndexes.length == 1);
+
+            SqlValidatorScope ancestorScope = ancestorScopes[0];
+            // If the correlated reference is in a scope that's "above" the
+            // subquery, then this is a correlated subquery.
+            SqlValidatorScope parentScope = bb.scope;
+            do {
+                if (ancestorScope == parentScope) {
+                    return false;
+                }
+                if (parentScope instanceof DelegatingScope) {
+                    parentScope = ((DelegatingScope) parentScope).getParent();
+                } else {
+                    break;
+                }
+            } while (parentScope != null);
+        }
+        return true;
+    }
+    
     private RexNode convertJoinCondition(
         Blackboard bb,
         SqlNode condition,
@@ -3561,6 +3744,14 @@ public class SqlToRelConverter
                     // cursor reference is pre-baked
                     return rex;
                 }
+                if ((expr.getKind() == SqlKind.ScalarQuery ||
+                        expr.getKind() == SqlKind.Exists) &&
+                    isConvertedSubq(rex))
+                {
+                    // scalar subquery or EXISTS has been converted to a
+                    // constant
+                    return rex;
+                }
 
                 RexNode fieldAccess;
                 boolean needTruthTest = false;
@@ -3661,6 +3852,34 @@ public class SqlToRelConverter
             rex = expr.accept(this);
             Util.permAssert(rex != null, "conversion result not null");
             return rex;
+        }
+        
+        /**
+         * Determines whether a RexNode corresponds to a subquery that's been
+         * converted to a constant.
+         * 
+         * @param rex the expression to be examined
+         * 
+         * @return true if the expression is a dynamic parameter, a literal,
+         *  or a literal that is being cast
+         */
+        private boolean isConvertedSubq(RexNode rex)
+        {
+            if (rex instanceof RexLiteral ||
+                rex instanceof RexDynamicParam)
+            {
+                return true;
+            }
+            if (rex instanceof RexCall) {
+                RexCall call = (RexCall) rex;
+                if (call.getOperator() == SqlStdOperatorTable.castFunc) {
+                    RexNode operand = (RexNode) call.getOperands()[0];
+                    if (operand instanceof RexLiteral) {
+                        return true;
+                    }                   
+                }                    
+            }
+            return false;
         }
 
         // implement SqlRexContext
@@ -3858,6 +4077,29 @@ public class SqlToRelConverter
             RexNode [] constructorArgs)
         {
             return rexBuilder.constantNull();
+        }
+    }
+    
+    /**
+     * A default implementation of SubqueryConverter that does no conversion.
+     */
+    private class NoOpSubqueryConverter implements SubqueryConverter
+    {
+        // implement SubqueryConverter
+        public boolean canConvertSubquery()
+        {
+            return false;
+        }
+
+        // implement SubqueryConverter
+        public RexNode convertSubquery(
+            SqlCall subquery,
+            SqlToRelConverter parentConverter,
+            boolean isExists,
+            boolean isExplain)
+        {
+            assert(false);
+            return null;
         }
     }
 

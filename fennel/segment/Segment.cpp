@@ -159,6 +159,10 @@ bool Segment::isWriteVersioned()
     return false;
 }
 
+void Segment::initForUse()
+{
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End Segment.cpp
