@@ -275,7 +275,7 @@ then
 fi
 
 dnl Compiler version-specific tweaks
-if test "$fennel_gcc_version" = "4.1.1"
+if test "$fennel_gcc_version" = "4.1.1" -o "$fennel_gcc_version" = "4.1.2"
 then
     dnl gcc 4.1.1 build encounters bogus errors
     CXXFLAGS="$CXXFLAGS -Wno-uninitialized -Wno-unused"
