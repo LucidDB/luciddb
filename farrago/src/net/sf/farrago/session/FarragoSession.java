@@ -348,6 +348,11 @@ public interface FarragoSession
      * @return warning queue
      */
     public FarragoWarningQueue getWarningQueue();
+    
+    /**
+     * Disables subquery reduction for the current session.
+     */
+    public void disableSubqueryReduction();
 }
 
 // End FarragoSession.java

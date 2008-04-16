@@ -608,6 +608,14 @@ public class FarragoDbSession
             info.getStmtContext().cancel();
         }
     }
+    
+    // implement FarragoSession
+    public void disableSubqueryReduction()
+    {
+        sessionVariables.set(
+            FarragoDefaultSessionPersonality.REDUCE_NON_CORRELATED_SUBQUERIES,
+            "false");
+    }
 
     // implement FarragoAllocation
     public void closeAllocation()

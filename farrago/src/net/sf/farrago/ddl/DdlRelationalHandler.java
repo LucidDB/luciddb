@@ -34,7 +34,6 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -214,8 +213,6 @@ public class DdlRelationalHandler
 
         validateAttributeSet(table);
 
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
-
         // NOTE:  don't need to validate index name uniqueness since indexes
         // live in same schema as table, so enforcement will take place at
         // schema level
@@ -282,7 +279,10 @@ public class DdlRelationalHandler
     public void validateDefinition(FemLocalView view)
     {
         FarragoSession session = validator.newReentrantSession();
-
+        // Disable subquery reduction during validation of views because
+        // errors should only be returned during the actual selection
+        // from the view
+        session.disableSubqueryReduction();
         try {
             validateViewImpl(session, view);
         } catch (FarragoUnvalidatedDependencyException ex) {

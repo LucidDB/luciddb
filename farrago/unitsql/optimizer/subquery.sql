@@ -1593,6 +1593,14 @@ explain plan for
     select * from depts where deptno = (select deptno from vncsubq);
 select * from depts where deptno = (select deptno from vncsubq);
 
+-- make sure reduction doesn't occur during view validation
+create view badview as
+    select (select cast(city as int) from emps where empno = 110) from depts;
+-- reduction still occurs in explain
+explain plan for select * from badview;
+-- finally, an error is returned when actually selecting from the view
+select * from badview;
+
 -- disable subquery conversion
 alter session set "reduceNonCorrelatedSubqueries" = false;
 explain plan for select * from emps where empno = (select min(empno) from emps);
@@ -1609,6 +1617,7 @@ drop table depts4;
 drop table depts5;
 drop view vcount;
 drop view vncsubq;
+drop view badview;
 drop function ramp;
 
 -- End subquery.sql

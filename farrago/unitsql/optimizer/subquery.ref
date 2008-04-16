@@ -4321,6 +4321,19 @@ Error: Scalar query returned more than one row (state=,code=0)
 'DEPTNO','NAME'
 '10','Sales'
 > 
+> -- make sure reduction doesn't occur during view validation
+> create view badview as
+>     select (select cast(city as int) from emps where empno = 110) from depts;
+> -- reduction still occurs in explain
+> explain plan for select * from badview;
+'column0'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[?0], EXPR$0=[$t1])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+> -- finally, an error is returned when actually selecting from the view
+> select * from badview;
+Error: Cannot assign 'San Francisco' to a NUMERIC value: NumberFormatException (state=,code=0)
+> 
 > -- disable subquery conversion
 > alter session set "reduceNonCorrelatedSubqueries" = false;
 > explain plan for select * from emps where empno = (select min(empno) from emps);
@@ -4345,6 +4358,7 @@ Error: Scalar query returned more than one row (state=,code=0)
 > drop table depts5;
 > drop view vcount;
 > drop view vncsubq;
+> drop view badview;
 > drop function ramp;
 > 
 > -- End subquery.sql
