@@ -30,3 +30,10 @@ values (6.666666);
 !set numberformat default
 values (6.666666);
 
+-- stop after two rows
+!set rowlimit 2
+select * from sales.depts order by name;
+
+-- revert to fetching all rows
+!set rowlimit 0
+select * from sales.depts order by name;
