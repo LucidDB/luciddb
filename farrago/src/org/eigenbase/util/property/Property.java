@@ -263,10 +263,10 @@ public abstract class Property
             Object o =
                 (trigger.isPersistent())
                     ? trigger
-                    : (Object) new WeakReference<Trigger>(trigger);
+                    : (Object) new WeakReference/*<Trigger>*/(trigger);
 
             // Add a Trigger in the correct group of phases in the list
-            for (ListIterator<Object> it = listIterator(); it.hasNext();) {
+            for (ListIterator/*<Object>*/ it = listIterator(); it.hasNext();) {
                 Trigger t = convert(it.next());
 
                 if (t == null) {
@@ -326,9 +326,9 @@ public abstract class Property
             // a clone) so that we can remove any WeakReference whose
             // content has become null. Synchronize, per the locking strategy,
             // while the copy is being made.
-            List<Trigger> l = new ArrayList<Trigger>();
+            List/*<Trigger>*/ l = new ArrayList/*<Trigger>*/();
             synchronized (property) {
-                for (Iterator<Object> it = iterator(); it.hasNext();) {
+                for (Iterator/*<Object>*/ it = iterator(); it.hasNext();) {
                     Trigger t = convert(it.next());
                     if (t == null) {
                         it.remove();
@@ -338,7 +338,8 @@ public abstract class Property
                 }
             }
 
-            for (Trigger t : l) {
+            for (int i = 0; i < l.size(); i++) {
+                Trigger t = (Trigger) l.get(i);
                 t.execute(property, value);
             }
         }

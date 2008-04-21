@@ -42,8 +42,8 @@ public class TriggerableProperties
     //~ Instance fields --------------------------------------------------------
 
     protected final Map triggers = new HashMap();
-    protected final Map<String, Property> properties =
-        new HashMap<String, Property>();
+    protected final Map/*<String, Property>*/ properties =
+        new HashMap/*<String, Property>*/();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -118,8 +118,9 @@ public class TriggerableProperties
      *         name
      */
     public Property getPropertyDefinition(String path) {
-        final List<Property> propertyList = getPropertyList();
-        for (Property property : propertyList) {
+        final List/*<Property>*/ propertyList = getPropertyList();
+        for (int i = 0; i < propertyList.size(); i++) {
+            Property property = (Property) propertyList.get(i);
             if (property.getPath().equals(path)) {
                 return property;
             }
@@ -162,7 +163,7 @@ public class TriggerableProperties
      *
      * @return registered properties
      */
-    public Collection<Property> getProperties()
+    public Collection/*<Property>*/ getProperties()
     {
         return Collections.unmodifiableCollection(properties.values());
     }
@@ -172,10 +173,11 @@ public class TriggerableProperties
      *
      * @return List of properties
      */
-    public List<Property> getPropertyList() {
+    public List/*<Property>*/ getPropertyList() {
         Field[] fields = getClass().getFields();
-        List<Property> list = new ArrayList<Property>();
-        for (Field field : fields) {
+        List/*<Property>*/ list = new ArrayList/*<Property>*/();
+        for (int i = 0; i < fields.length; i++) {
+            Field field = fields[i];
             if (!Modifier.isStatic(field.getModifiers()) &&
                     Property.class.isAssignableFrom(
                             field.getType())) {
