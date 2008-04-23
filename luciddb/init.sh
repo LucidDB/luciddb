@@ -10,7 +10,7 @@ osdist ()
 
         if ( cat /etc/issue | grep -q -i ubuntu ) ; then
             echo "os=Ubuntu"
-            echo "osver=`cat /etc/issue | grep -v '^[    ]*$' | awk '{print $2;}'`"
+            echo "osver=`cat /etc/issue | grep -v '^[ \t]*$' | awk '{print $2;}'`"
 
             if ( cat /proc/cpuinfo | grep '^flags' | tail -n 1 | grep -q -w ht ); then
                 echo "ht=true"
@@ -25,7 +25,7 @@ osdist ()
 
         elif ( cat /etc/issue | grep -q -i suse ) ; then
             echo "os=SUSE"
-            echo "osver=`cat /etc/issue | grep -v '^[    ]*$' | awk '{print $7;}'`"
+            echo "osver=`cat /etc/issue | grep -v '^[ \t]*$' | awk '{print $7;}'`"
 
             if ( cat /proc/cpuinfo | grep '^flags' | tail -n 1 | grep -q -w ht ); then
                 echo "ht=true"
@@ -46,7 +46,7 @@ osdist ()
                 echo "os=RedHat"
             fi
 
-            echo "osver=`cat /etc/issue | grep -i 'red hat' | sed -e 's/^.*\(release [^     ][  ]*\)/\1/g' | awk '{print $2;}'`"
+            echo "osver=`cat /etc/issue | grep -i 'red hat' | sed -e 's/^.*\(release [^ \t][^ \t]*\).*/\1/g' | awk '{print $2;}'`"
 
             if ( cat /proc/cpuinfo | grep '^flags' | tail -n 1 | grep -q -w ht ); then
                 echo "ht=true"
@@ -92,6 +92,9 @@ osdist ()
             fi
     fi
 
+    buildarch=$(echo $(uname -o)/$(uname -m) | tr [/] '-' | tr [:upper:] [:lower:])
+    echo "buildarch=${buildarch}"
+
     if ( 2>&1 java -version | grep -i -q hotspot ); then
         echo "jvm=hotspot"
     elif ( 2>&1 java -version | grep -i -q jrockit ); then
@@ -103,15 +106,23 @@ osdist ()
 
 eval $(osdist)
 
+if [[ "${os}" =~ "RedHat.*" ]] ; then
+    case "${osver}" in
+      5.1) osver=5 ;;
+    esac
+fi
+
 if [ "$1" = "export" ]; then  # for nightly bit
   echo "export build_os=${os}"
   echo "export build_osver=${osver}"
   echo "export build_cpus=${cpus}"
   echo "export build_jvm=${jvm}"
+  echo "export build_arch=${buildarch}"
 else
   echo "build.os=${os}"
   echo "build.osver=${osver}"
   echo "build.cpus=${cpus}"
   echo "build.jvm=${jvm}"
   echo "bash.exe=${bash_exe}"
+  echo "build.arch=${buildarch}"
 fi
