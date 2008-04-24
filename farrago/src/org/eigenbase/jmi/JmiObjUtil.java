@@ -378,6 +378,20 @@ public abstract class JmiObjUtil
     }
 
     /**
+     * Gets the MofId for a given 64-bit object ID for a JMI object. Generates
+     * the MofId from the long without validating whether the associated
+     * object exists.
+     *
+     * @param objectId JMI object id (as from {@link #getObjectId(RefObject)})
+     *
+     * @return object's MofId
+     */
+    public static String toMofId(long objectId)
+    {
+        return MofIdUtil.makeMofIdStr(objectId);
+    }
+
+    /**
      * Returns the type name of an object. For example, "FemLocalView".
      *
      * @param refObject Object
