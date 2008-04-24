@@ -42,6 +42,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.enki.mdr.*;
+import org.eigenbase.enki.test.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.jmi.mem.*;
 import org.eigenbase.reltype.*;
@@ -326,11 +327,9 @@ public class JmiMemTest
         xmiWriter.write(outStream, c, "1.2");
         String xmi2 = outStream.toString();
 
-        // Now diff:  thanks to the way default XMI id generation works,
-        // the XMI content should come out the same.
-        xmi1 = xmi1.replaceFirst("timestamp = \'.*\'", "timestamp= XXX");
-        xmi2 = xmi2.replaceFirst("timestamp = \'.*\'", "timestamp= XXX");
-        assertEquals(xmi1, xmi2);
+        // Now diff:  thanks to Enki/Hibernate these don't come out the same
+        // anymore.  Borrow Enki's solution to comparing XMI files.
+        XmiFileComparator.assertEqual(xmi1, xmi2);
     }
 
     public void testRefImmediatePackage()

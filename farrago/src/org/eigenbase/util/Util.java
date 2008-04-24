@@ -1777,6 +1777,8 @@ public class Util
         final Class<E> includeFilter)
     {
         return new AbstractCollection<E>() {
+            private int size = -1;
+            
             public Iterator<E> iterator()
             {
                 return new Filterator<E>(collection.iterator(), includeFilter);
@@ -1784,7 +1786,21 @@ public class Util
 
             public int size()
             {
-                return collection.size();
+                if (size == -1) {
+                    // Compute size.  This is expensive, but the value 
+                    // collection.size() is not correct since we're 
+                    // filtering values.  (Some java.util algorithms
+                    // call next() on the result of iterator() size() times.)
+                    int s = 0;
+                    Iterator<E> iter = iterator();
+                    while(iter.hasNext()) {
+                        iter.next();
+                        s++;
+                    }
+                    size = s;
+                }
+                
+                return size;
             }
         };
     }

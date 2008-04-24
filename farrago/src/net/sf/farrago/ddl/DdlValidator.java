@@ -988,9 +988,17 @@ public class DdlValidator
         Collection<? extends CwmModelElement> collection,
         boolean includeType)
     {
+        // Sort the collection by parser position, since we depend on the 
+        // sort order later and it is NOT guaranteed.
+        ArrayList<CwmModelElement> sortedCollection = 
+            new ArrayList<CwmModelElement>(collection);
+        Collections.sort(
+            sortedCollection, 
+            new RefObjectPositionComparator());
+        
         Map<Object, CwmModelElement> nameMap =
             new LinkedHashMap<Object, CwmModelElement>();
-        for (CwmModelElement element : collection) {
+        for (CwmModelElement element : sortedCollection) {
             String nameKey = getNameKey(element, includeType);
             if (nameKey == null) {
                 continue;
@@ -1001,8 +1009,8 @@ public class DdlValidator
                 if (isNewObject(other) && isNewObject(element)) {
                     // clash between two new objects being defined
                     // simultaneously
-                    // REVIEW: error message assumes collection is sorted by
-                    // definition order, which may not be guaranteed?
+                    // Error message assumes collection is sorted by
+                    // definition order, which we guaranteed earlier.
                     throw newPositionalError(
                         element,
                         FarragoResource.instance().ValidatorDuplicateNames.ex(
@@ -1706,6 +1714,51 @@ public class DdlValidator
     private static abstract class DeferredException
     {
         abstract EigenbaseException getException();
+    }
+    
+    /**
+     * RefObjectPositionComparator compares RefObjects based on their position
+     * within the owning DdlValidator's {@link #parserContextMap}.  Handles
+     * the case where position information is not available (all comparisons
+     * return equality) and even the unlikely case where only partial position
+     * information is available (RefObjects with positions compare before those
+     * without).
+     */
+    private class RefObjectPositionComparator
+        implements Comparator<RefObject>
+    {
+        public int compare(RefObject o1, RefObject o2)
+        {
+            SqlParserPos pos1 = getParserPos(o1);
+            SqlParserPos pos2 = getParserPos(o2);
+            
+            if (pos1 == null) {
+                if (pos2 == null) {
+                    return 0;
+                }
+                
+                return 1;
+            } else if (pos2 == null) {
+                return -1;
+            } else {
+                int c = pos1.getLineNum() - pos2.getLineNum();
+                if (c != 0) {
+                    return c;
+                }
+                
+                c = pos1.getColumnNum() - pos2.getColumnNum();
+                if (c != 0) {
+                    return c;
+                }
+                
+                c = pos1.getEndLineNum() - pos2.getEndLineNum();
+                if (c != 0) {
+                    return c;
+                }
+                
+                return pos1.getEndColumnNum() - pos2.getEndColumnNum();
+            }
+        }
     }
 }
 

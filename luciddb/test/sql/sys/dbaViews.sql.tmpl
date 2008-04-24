@@ -106,7 +106,8 @@ where foreign_wrapper_name='DBATEST_FF_JDBC';
 select foreign_server_name, option_name, option_value
 from sys_root.dba_foreign_server_options
 where foreign_wrapper_name='DBATEST_FF_JDBC'
-  and option_name <> 'DIRECTORY';
+  and option_name <> 'DIRECTORY'
+order by 1,2;
 
 -- dba_foreign_tables and dba_foreign_table_options
 create foreign table EMPS
@@ -125,7 +126,8 @@ where foreign_wrapper_name='DBATEST_FF_JDBC';
 
 select foreign_table_name, option_name, option_value
 from sys_root.dba_foreign_table_options
-where foreign_server_name='DBATEST_FF_SERVER';
+where foreign_server_name='DBATEST_FF_SERVER'
+order by 1,2;
 
 -- dba_tables, dba_views, dba_stored_tables
 create table dbavtest.table1(col1 int, col2 int);
@@ -149,13 +151,15 @@ where schema_name='DBAVTEST';
 select table_name, last_analyze_row_count, 
   last_analyze_timestamp > creation_timestamp
 from sys_root.dba_stored_tables
-where schema_name='DBAVTEST';
+where schema_name='DBAVTEST'
+order by 1;
 
 -- dba_columns
 select catalog_name, table_name, column_name, ordinal_position, datatype,
   "PRECISION", dec_digits, is_nullable
 from sys_root.dba_columns
-where schema_name='DBAVTEST';
+where schema_name='DBAVTEST'
+order by 2,4;
 
 
 -- test creator field

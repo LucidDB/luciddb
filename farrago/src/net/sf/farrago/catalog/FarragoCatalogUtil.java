@@ -40,6 +40,7 @@ import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.hibernate.storage.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -407,38 +408,20 @@ public abstract class FarragoCatalogUtil
         // values, but Enki does.  Consider modifying calls to this method to
         // do the conversion as necessary.  Or perhaps introduce a 
         // getModelElementByType method.
-        return new AbstractCollection<FemLocalIndex>() {
-            private final Collection<CwmIndex> c = 
+        
+        // REVIEW: SWZ: 2008-04-23: Force deterministic order onto the indexes.
+        // Many unit tests end up depending on this for reliable ordering
+        // of output.
+        List<FemLocalIndex> result = new ArrayList<FemLocalIndex>();
+        for(CwmIndex index:
                 repos.getKeysIndexesPackage().getIndexSpansClass().getIndex(
-                    table);
-            
-            public Iterator<FemLocalIndex> iterator()
-            {
-                return new Iterator<FemLocalIndex>() {
-                    private final Iterator<CwmIndex> iter = c.iterator();
-
-                    public boolean hasNext()
-                    {
-                        return iter.hasNext();
-                    }
-
-                    public FemLocalIndex next()
-                    {
-                        return (FemLocalIndex)iter.next();
-                    }
-
-                    public void remove()
-                    {
-                        throw new UnsupportedOperationException();
-                    }  
-                };
-            }
-            
-            public int size()
-            {
-                return c.size();
-            }
-        };
+                    table))
+        {
+            result.add((FemLocalIndex)index);
+        }
+        Collections.sort(result, MofIdComparator.instance);
+        
+        return result;
     }
 
     /**
@@ -1160,6 +1143,16 @@ public abstract class FarragoCatalogUtil
         long zero = 0;
         table.setRowCount(zero);
         table.setDeletedRowCount(zero);
+    }
+    
+    private static class MofIdComparator implements Comparator<RefObject>
+    {
+        private static final MofIdComparator instance = new MofIdComparator();
+        
+        public int compare(RefObject o1, RefObject o2)
+        {
+            return o1.refMofId().compareTo(o2.refMofId());
+        }
     }
 }
 

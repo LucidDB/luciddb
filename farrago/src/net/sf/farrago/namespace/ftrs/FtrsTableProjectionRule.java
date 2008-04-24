@@ -111,12 +111,17 @@ class FtrsTableProjectionRule
         Integer [] projectedColumns =
             projectedColumnList.toArray(
                 new Integer[projectedColumnList.size()]);
-        for (
-            FemLocalIndex index
-            : FarragoCatalogUtil.getTableIndexes(
+
+        // Make sure indexes are considered in a deterministic order, since
+        // they aren't returned in one from the repository.  Also, causes us
+        // to examine simpler (fewer covered columns) indexes first.
+        TreeSet<FemLocalIndex> indexes = 
+            new TreeSet<FemLocalIndex>(new IndexLengthComparator());
+        indexes.addAll(
+            FarragoCatalogUtil.getTableIndexes(
                 repos,
-                origScan.ftrsTable.getCwmColumnSet()))
-        {
+                origScan.ftrsTable.getCwmColumnSet()));
+        for (FemLocalIndex index: indexes) {
             if (origScan.isOrderPreserving && !index.equals(origScan.index)) {
                 // can't switch indexes if original scan order needs to be
                 // preserved
@@ -171,6 +176,22 @@ class FtrsTableProjectionRule
             indexGuide.getUnclusteredCoverageArray(index);
         return Arrays.asList(indexProjection).containsAll(
             Arrays.asList(projection));
+    }
+    
+    private static class IndexLengthComparator 
+        implements Comparator<FemLocalIndex>
+    {
+        public int compare(FemLocalIndex o1, FemLocalIndex o2)
+        {
+            int c = 
+                o1.getIndexedFeature().size() - o2.getIndexedFeature().size();
+            if (c != 0) {
+                return c;
+            }
+            
+            return o1.getStorageId().compareTo(o2.getStorageId());
+        }
+        
     }
 }
 

@@ -219,12 +219,18 @@ public class DdlRelationalHandler
         // Validate unique constraints
         FemLocalIndex generatedPrimaryKeyIndex = null;
         FemPrimaryKeyConstraint primaryKey = null;
-        for (
-            FemAbstractUniqueConstraint constraint
-            : Util.filter(
-                table.getOwnedElement(),
-                FemAbstractUniqueConstraint.class))
-        {
+        
+        // Sort constraints into the order in which they were created
+        // (to keep unit tests deterministic across repository
+        // implementations).
+        List<FemAbstractUniqueConstraint> contraints =
+            new ArrayList<FemAbstractUniqueConstraint>(
+                Util.filter(
+                    table.getOwnedElement(),
+                    FemAbstractUniqueConstraint.class));
+        Collections.sort(contraints, new UniqueConstraintComparator());
+
+        for (FemAbstractUniqueConstraint constraint : contraints) {
             if (constraint instanceof FemPrimaryKeyConstraint) {
                 if (primaryKey != null) {
                     throw res.ValidatorMultiplePrimaryKeys.ex(
@@ -592,6 +598,18 @@ public class DdlRelationalHandler
                 getPreparingStmt());
             getStmtContext().execute();
         }
+    }
+    
+    private static class UniqueConstraintComparator 
+        implements Comparator<FemAbstractUniqueConstraint>
+    {
+        public int compare(
+            FemAbstractUniqueConstraint o1,
+            FemAbstractUniqueConstraint o2)
+        {
+            return o1.refMofId().compareTo(o2.refMofId());
+        }
+        
     }
 }
 

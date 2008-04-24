@@ -27,7 +27,7 @@
 +---------+
 +---------+
 > 
-> select deptno from sales.depts where true;
+> select deptno from sales.depts where true order by deptno;
 +---------+
 | DEPTNO  |
 +---------+
@@ -36,7 +36,7 @@
 | 30      |
 +---------+
 > 
-> select deptno from sales.depts where 1 > 0;
+> select deptno from sales.depts where 1 > 0 order by deptno;
 +---------+
 | DEPTNO  |
 +---------+
@@ -60,7 +60,7 @@
 +---------+
 +---------+
 > 
-> select deptno from sales.depts where true;
+> select deptno from sales.depts where true order by deptno;
 +---------+
 | DEPTNO  |
 +---------+
@@ -69,7 +69,7 @@
 | 30      |
 +---------+
 > 
-> select deptno from sales.depts where 1 > 0;
+> select deptno from sales.depts where 1 > 0 order by deptno;
 +---------+
 | DEPTNO  |
 +---------+

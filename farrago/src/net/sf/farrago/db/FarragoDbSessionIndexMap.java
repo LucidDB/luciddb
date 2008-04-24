@@ -53,14 +53,9 @@ class FarragoDbSessionIndexMap
     private FarragoDbSession dbSession;
 
     /**
-     * Map from index to root PageId for temporary tables.
+     * Map from index MOF ID to root PageId for temporary tables.
      */
-    private Map<FemLocalIndex, Long> tempIndexRootMap;
-
-    /**
-     * Map from index ID to index for all tables.
-     */
-    private Map<Long, FemLocalIndex> indexIdMap;
+    private Map<String, Long> tempIndexRootMap;
 
     /**
      * Repos for this session.
@@ -89,8 +84,7 @@ class FarragoDbSessionIndexMap
     {
         this.dbSession = dbSession;
         this.repos = repos;
-        tempIndexRootMap = new HashMap<FemLocalIndex, Long>();
-        indexIdMap = new HashMap<Long, FemLocalIndex>();
+        tempIndexRootMap = new HashMap<String, Long>();
         owner.addAllocation(this);
 
         privateDataWrapperCache =
@@ -115,7 +109,7 @@ class FarragoDbSessionIndexMap
     public long getIndexRoot(FemLocalIndex index, boolean write)
     {
         if (FarragoCatalogUtil.isIndexTemporary(index)) {
-            Long root = tempIndexRootMap.get(index);
+            Long root = tempIndexRootMap.get(index.refMofId());
             assert (root != null);
             return root.longValue();
         } else {
@@ -131,7 +125,7 @@ class FarragoDbSessionIndexMap
         if (FarragoCatalogUtil.isIndexTemporary(index)) {
             Long old =
                 tempIndexRootMap.put(
-                    index,
+                    index.refMofId(),
                     new Long(root));
             assert (old == null);
         } else {
@@ -149,7 +143,7 @@ class FarragoDbSessionIndexMap
         FemLocalIndex clusteredIndex =
             FarragoCatalogUtil.getClusteredIndex(repos, table);
 
-        if (tempIndexRootMap.containsKey(clusteredIndex)) {
+        if (tempIndexRootMap.containsKey(clusteredIndex.refMofId())) {
             // already instantiated this table
             return;
         }
@@ -158,7 +152,7 @@ class FarragoDbSessionIndexMap
             FemLocalIndex index
             : FarragoCatalogUtil.getTableIndexes(repos, table))
         {
-            assert (!tempIndexRootMap.containsKey(index));
+            assert (!tempIndexRootMap.containsKey(index.refMofId()));
             createIndexStorage(wrapperCache, index);
         }
     }
@@ -170,9 +164,11 @@ class FarragoDbSessionIndexMap
         txn.beginReadTxn();
         try {
             // materialize deletion list to avoid ConcurrentModificationException
-            List<FemLocalIndex> list =
-                new ArrayList<FemLocalIndex>(tempIndexRootMap.keySet());
-            for (FemLocalIndex index : list) {
+            List<String> list =
+                new ArrayList<String>(tempIndexRootMap.keySet());
+            for (String indexMofId : list) {
+                FemLocalIndex index = 
+                    (FemLocalIndex) repos.getMdrRepos().getByMofId(indexMofId);
                 dropIndexStorage(privateDataWrapperCache, index, false);
             }
         }
@@ -192,7 +188,10 @@ class FarragoDbSessionIndexMap
      */
     public void onCommit()
     {
-        for (FemLocalIndex index : tempIndexRootMap.keySet()) {
+        for (String indexMofId : tempIndexRootMap.keySet()) {
+            FemLocalIndex index = 
+                (FemLocalIndex) repos.getMdrRepos().getByMofId(indexMofId);
+
             String temporaryScope =
                 FarragoCatalogUtil.getIndexTable(index).getTemporaryScope();
             if (temporaryScope.endsWith("PRESERVE")) {
@@ -231,8 +230,7 @@ class FarragoDbSessionIndexMap
         if (updateMap) {
             setIndexRoot(index, indexRoot);
         }
-        indexIdMap.put(new Long(JmiObjUtil.getObjectId(index)),
-            index);
+        
         return indexRoot;
     }
 
@@ -243,7 +241,7 @@ class FarragoDbSessionIndexMap
         boolean truncate)
     {
         if (FarragoCatalogUtil.isIndexTemporary(index)) {
-            if (!tempIndexRootMap.containsKey(index)) {
+            if (!tempIndexRootMap.containsKey(index.refMofId())) {
                 // index was never created, so nothing to do
                 return;
             }
@@ -264,8 +262,7 @@ class FarragoDbSessionIndexMap
         }
 
         if (!truncate) {
-            indexIdMap.remove(new Long(JmiObjUtil.getObjectId(index)));
-            tempIndexRootMap.remove(index);
+            tempIndexRootMap.remove(index.refMofId());
         }
     }
 
@@ -293,7 +290,12 @@ class FarragoDbSessionIndexMap
     // implement FarragoSessionIndexMap
     public FemLocalIndex getIndexById(long id)
     {
-        return indexIdMap.get(id);
+        String mofId = JmiObjUtil.toMofId(id);
+
+        FemLocalIndex index = 
+            (FemLocalIndex) repos.getMdrRepos().getByMofId(mofId);
+        
+        return index;
     }
 
     private FarragoMedLocalDataServer getIndexDataServer(

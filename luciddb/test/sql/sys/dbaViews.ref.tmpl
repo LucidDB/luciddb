@@ -167,18 +167,19 @@
 0: jdbc:luciddb:> select foreign_server_name, option_name, option_value
 . . . . . . . . > from sys_root.dba_foreign_server_options
 . . . . . . . . > where foreign_wrapper_name='DBATEST_FF_JDBC'
-. . . . . . . . >   and option_name <> 'DIRECTORY';
+. . . . . . . . >   and option_name <> 'DIRECTORY'
+. . . . . . . . > order by 1,2;
 +----------------------+----------------------+---------------+
 | FOREIGN_SERVER_NAME  |     OPTION_NAME      | OPTION_VALUE  |
 +----------------------+----------------------+---------------+
-| DBATEST_FF_SERVER    | FILE_EXTENSION       | .csv          |
 | DBATEST_FF_SERVER    | CTRL_FILE_EXTENSION  | .bcp          |
-| DBATEST_FF_SERVER    | FIELD_DELIMITER      | ,             |
-| DBATEST_FF_SERVER    | LINE_DELIMITER       | \n            |
-| DBATEST_FF_SERVER    | QUOTE_CHAR           | "             |
 | DBATEST_FF_SERVER    | ESCAPE_CHAR          |               |
-| DBATEST_FF_SERVER    | WITH_HEADER          | yes           |
+| DBATEST_FF_SERVER    | FIELD_DELIMITER      | ,             |
+| DBATEST_FF_SERVER    | FILE_EXTENSION       | .csv          |
+| DBATEST_FF_SERVER    | LINE_DELIMITER       | \n            |
 | DBATEST_FF_SERVER    | NUM_ROWS_SCAN        | 1             |
+| DBATEST_FF_SERVER    | QUOTE_CHAR           | "             |
+| DBATEST_FF_SERVER    | WITH_HEADER          | yes           |
 +----------------------+----------------------+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_foreign_tables and dba_foreign_table_options
@@ -203,12 +204,13 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select foreign_table_name, option_name, option_value
 . . . . . . . . > from sys_root.dba_foreign_table_options
-. . . . . . . . > where foreign_server_name='DBATEST_FF_SERVER';
+. . . . . . . . > where foreign_server_name='DBATEST_FF_SERVER'
+. . . . . . . . > order by 1,2;
 +---------------------+--------------+---------------+
 | FOREIGN_TABLE_NAME  | OPTION_NAME  | OPTION_VALUE  |
 +---------------------+--------------+---------------+
-| EMPS                | SCHEMA_NAME  | BCP           |
 | EMPS                | FILENAME     | EMP           |
+| EMPS                | SCHEMA_NAME  | BCP           |
 +---------------------+--------------+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- dba_tables, dba_views, dba_stored_tables
@@ -250,7 +252,8 @@
 0: jdbc:luciddb:> select table_name, last_analyze_row_count, 
 . . . . . . . . >   last_analyze_timestamp > creation_timestamp
 . . . . . . . . > from sys_root.dba_stored_tables
-. . . . . . . . > where schema_name='DBAVTEST';
+. . . . . . . . > where schema_name='DBAVTEST'
+. . . . . . . . > order by 1;
 +-------------+-------------------------+---------+
 | TABLE_NAME  | LAST_ANALYZE_ROW_COUNT  | EXPR$2  |
 +-------------+-------------------------+---------+
@@ -262,7 +265,8 @@
 0: jdbc:luciddb:> select catalog_name, table_name, column_name, ordinal_position, datatype,
 . . . . . . . . >   "PRECISION", dec_digits, is_nullable
 . . . . . . . . > from sys_root.dba_columns
-. . . . . . . . > where schema_name='DBAVTEST';
+. . . . . . . . > where schema_name='DBAVTEST'
+. . . . . . . . > order by 2,4;
 +---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
 | CATALOG_NAME  | TABLE_NAME  | COLUMN_NAME  | ORDINAL_POSITION  | DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
 +---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
@@ -276,8 +280,6 @@
 | LOCALDB       | EMPS        | SAL          | 8                 | INTEGER   |            |             | true         |
 | LOCALDB       | EMPS        | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |
 | LOCALDB       | EMPS        | HOBBY        | 10                | VARCHAR   | 256        |             | true         |
-| LOCALDB       | TABLE1      | COL1         | 1                 | INTEGER   |            |             | true         |
-| LOCALDB       | TABLE1      | COL2         | 2                 | INTEGER   |            |             | true         |
 | LOCALDB       | EMPVIEW     | EMPNO        | 1                 | INTEGER   |            |             | true         |
 | LOCALDB       | EMPVIEW     | FNAME        | 2                 | VARCHAR   | 256        |             | true         |
 | LOCALDB       | EMPVIEW     | LNAME        | 3                 | VARCHAR   | 256        |             | true         |
@@ -288,6 +290,8 @@
 | LOCALDB       | EMPVIEW     | SAL          | 8                 | INTEGER   |            |             | true         |
 | LOCALDB       | EMPVIEW     | COMMISSION   | 9                 | VARCHAR   | 256        |             | true         |
 | LOCALDB       | EMPVIEW     | HOBBY        | 10                | VARCHAR   | 256        |             | true         |
+| LOCALDB       | TABLE1      | COL1         | 1                 | INTEGER   |            |             | true         |
+| LOCALDB       | TABLE1      | COL2         | 2                 | INTEGER   |            |             | true         |
 +---------------+-------------+--------------+-------------------+-----------+------------+-------------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 

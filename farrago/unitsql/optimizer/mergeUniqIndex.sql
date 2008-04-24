@@ -760,4 +760,5 @@ select * from sys_boot.mgmt.session_parameters_view
 
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
