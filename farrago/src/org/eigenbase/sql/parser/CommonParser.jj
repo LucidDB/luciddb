@@ -2793,20 +2793,27 @@ SqlDynamicParam DynamicParam() :
  */
 String Identifier() :
 {
-    String kw;
+    String id;
 }
 {
-    <IDENTIFIER>
+    (
+        <IDENTIFIER>
+        {
+            id = getToken(0).image.toUpperCase();
+        }
+        | <QUOTED_IDENTIFIER>
+        {
+            id = SqlParserUtil.strip(getToken(0).image, "\"");
+        }
+        | id = NonReservedKeyWord()
+    )
     {
-        return getToken(0).image.toUpperCase();
-    }
-    | <QUOTED_IDENTIFIER>
-    {
-        return SqlParserUtil.strip(getToken(0).image, "\"");
-    }
-    | kw = NonReservedKeyWord()
-    {
-        return kw;
+        if (id.length() > 128) {
+            throw SqlUtil.newContextException(
+                getPos(),
+                EigenbaseResource.instance().IdentifierTooLong.ex(id, 128));
+        }
+        return id;
     }
 }
 

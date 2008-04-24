@@ -129,7 +129,7 @@
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Mar 18 23:01:30 GMT-08:00 2008'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Apr 02 18:29:40 GMT-08:00 2008'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -245,6 +245,13 @@
                   <UML:TaggedValue.dataValue>FEMFennel</UML:TaggedValue.dataValue>
                   <UML:TaggedValue.type>
                     <UML:TagDefinition xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7de6'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = '127-0-0-1--798f2f62:1189eccc986:-8000:0000000000000E4C'
+                  isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>true</UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = '127-0-0-1--798f2f62:1189eccc986:-8000:0000000000000E47'/>
                   </UML:TaggedValue.type>
                 </UML:TaggedValue>
               </UML:ModelElement.taggedValue>
@@ -4441,28 +4448,17 @@
                     <UML:Class xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fc3'/>
                   </UML:Generalization.parent>
                 </UML:Generalization>
-                <UML:Class xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3B'
+                <UML:Class xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E4D'
                   name = 'DynamicParamUse' visibility = 'public' isSpecification = 'false'
                   isRoot = 'false' isLeaf = 'false' isAbstract = 'false' isActive = 'false'>
-                  <UML:ModelElement.taggedValue>
-                    <UML:TaggedValue xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E5A'
-                      isSpecification = 'false'>
-                      <UML:TaggedValue.dataValue>Use of a dynamic parameter by an execution stream.
-
-A map of which execution objects are reading and writing which dynamic parameters may allow the scheduler to be more intelligent when it starts particular execution objects.</UML:TaggedValue.dataValue>
-                      <UML:TaggedValue.type>
-                        <UML:TagDefinition xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7e0a'/>
-                      </UML:TaggedValue.type>
-                    </UML:TaggedValue>
-                  </UML:ModelElement.taggedValue>
                   <UML:Classifier.feature>
-                    <UML:Attribute xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3D'
+                    <UML:Attribute xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E4F'
                       name = 'dynamicParamId' visibility = 'public' isSpecification = 'false'
                       ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
                       <UML:StructuralFeature.multiplicity>
-                        <UML:Multiplicity xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E43'>
+                        <UML:Multiplicity xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E53'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E42'
+                            <UML:MultiplicityRange xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E52'
                               lower = '1' upper = '1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
@@ -4471,13 +4467,13 @@ A map of which execution objects are reading and writing which dynamic parameter
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
                       </UML:StructuralFeature.type>
                     </UML:Attribute>
-                    <UML:Attribute xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E44'
+                    <UML:Attribute xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E54'
                       name = 'read' visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
                       changeability = 'changeable' targetScope = 'instance'>
                       <UML:StructuralFeature.multiplicity>
-                        <UML:Multiplicity xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4C'>
+                        <UML:Multiplicity xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E58'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4B'
+                            <UML:MultiplicityRange xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E57'
                               lower = '1' upper = '1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
@@ -4488,18 +4484,18 @@ A map of which execution objects are reading and writing which dynamic parameter
                     </UML:Attribute>
                   </UML:Classifier.feature>
                 </UML:Class>
-                <UML:Association xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4D'
+                <UML:Association xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E59'
                   name = 'ParamUses' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
                   isAbstract = 'false'>
                   <UML:Association.connection>
-                    <UML:AssociationEnd xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4E'
+                    <UML:AssociationEnd xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E5A'
                       name = 'ExecutionStreamDef' visibility = 'public' isSpecification = 'false'
                       isNavigable = 'true' ordering = 'unordered' aggregation = 'composite' targetScope = 'instance'
                       changeability = 'changeable'>
                       <UML:AssociationEnd.multiplicity>
-                        <UML:Multiplicity xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E55'>
+                        <UML:Multiplicity xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E61'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E54'
+                            <UML:MultiplicityRange xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E60'
                               lower = '1' upper = '1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
@@ -4508,20 +4504,20 @@ A map of which execution objects are reading and writing which dynamic parameter
                         <UML:Class xmi.idref = 'Ilsmmsmmsmm3228a1mfaabd66bafmm7ff7'/>
                       </UML:AssociationEnd.participant>
                     </UML:AssociationEnd>
-                    <UML:AssociationEnd xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E51'
+                    <UML:AssociationEnd xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E5D'
                       name = 'DynamicParamUse' visibility = 'public' isSpecification = 'false'
                       isNavigable = 'true' ordering = 'unordered' aggregation = 'none' targetScope = 'instance'
                       changeability = 'changeable'>
                       <UML:AssociationEnd.multiplicity>
-                        <UML:Multiplicity xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E59'>
+                        <UML:Multiplicity xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E65'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E58'
+                            <UML:MultiplicityRange xmi.id = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E64'
                               lower = '0' upper = '-1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
                       </UML:AssociationEnd.multiplicity>
                       <UML:AssociationEnd.participant>
-                        <UML:Class xmi.idref = '127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3B'/>
+                        <UML:Class xmi.idref = '127-0-1-1-4475233b:119121651cb:-8000:0000000000000E4D'/>
                       </UML:AssociationEnd.participant>
                     </UML:AssociationEnd>
                   </UML:Association.connection>
@@ -4785,6 +4781,15 @@ A map of which execution objects are reading and writing which dynamic parameter
                     </UML:Attribute>
                     <UML:Attribute xmi.id = 'Ilsmmsmmsmm14e4e31mfacac3614dmm7ffa' name = 'resourceDir'
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'>
+                      <UML:ModelElement.taggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1-1eddccf9:1188bff4d94:-8000:0000000000000E38'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>unlimited</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                      </UML:ModelElement.taggedValue>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
                       </UML:StructuralFeature.type>
@@ -4792,6 +4797,15 @@ A map of which execution objects are reading and writing which dynamic parameter
                     <UML:Attribute xmi.id = 'I14103e32m107e9a04598mm5470' name = 'jniHandleTraceFile'
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                       changeability = 'changeable'>
+                      <UML:ModelElement.taggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1-1eddccf9:1188bff4d94:-8000:0000000000000E39'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>unlimited</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                      </UML:ModelElement.taggedValue>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
                       </UML:StructuralFeature.type>
@@ -5567,6 +5581,15 @@ A map of which execution objects are reading and writing which dynamic parameter
                   <UML:Classifier.feature>
                     <UML:Attribute xmi.id = 'Ilsmmsmmsmm61cd2mfaeb0c5450mm7ecc' name = 'libraryFile'
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'>
+                      <UML:ModelElement.taggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1-1eddccf9:1188bff4d94:-8000:0000000000000E37'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>unlimited</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                      </UML:ModelElement.taggedValue>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
                       </UML:StructuralFeature.type>
@@ -5728,6 +5751,15 @@ A map of which execution objects are reading and writing which dynamic parameter
                     </UML:Attribute>
                     <UML:Attribute xmi.id = 'Ilsmmsmmsmm61cd2mfaeb0c5450mm7ec6' name = 'value'
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'>
+                      <UML:ModelElement.taggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1-1c11569a:118d2a5bc93:-8000:0000000000000E4B'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>unlimited</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                      </UML:ModelElement.taggedValue>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
                       </UML:StructuralFeature.type>
@@ -6082,13 +6114,22 @@ A map of which execution objects are reading and writing which dynamic parameter
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                       changeability = 'changeable'>
                       <UML:StructuralFeature.multiplicity>
-                        <UML:Multiplicity xmi.id = 'Icf8775m10ad406445fmm4ef3'>
+                        <UML:Multiplicity xmi.id = '127-0-0-1-561e678a:118ce286d61:-8000:0000000000000E4C'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = 'Icf8775m10ad406445fmm4ef2' lower = '0'
-                              upper = '1'/>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1-561e678a:118ce286d61:-8000:0000000000000E4B'
+                              lower = '0' upper = '1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
                       </UML:StructuralFeature.multiplicity>
+                      <UML:ModelElement.taggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E33'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>32768</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                      </UML:ModelElement.taggedValue>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
                       </UML:StructuralFeature.type>
@@ -6358,13 +6399,22 @@ A map of which execution objects are reading and writing which dynamic parameter
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                       changeability = 'changeable'>
                       <UML:StructuralFeature.multiplicity>
-                        <UML:Multiplicity xmi.id = 'I64a871m101640062f8mm7fd1'>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--6dc063b6:11899fea61c:-8000:0000000000000E4F'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = 'I64a871m101640062f8mm7fd0' lower = '0'
-                              upper = '1'/>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--6dc063b6:11899fea61c:-8000:0000000000000E4E'
+                              lower = '0' upper = '1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
                       </UML:StructuralFeature.multiplicity>
+                      <UML:ModelElement.taggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1--6dc063b6:11899fea61c:-8000:0000000000000E50'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>unlimited</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                      </UML:ModelElement.taggedValue>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
                       </UML:StructuralFeature.type>
@@ -6599,6 +6649,22 @@ A map of which execution objects are reading and writing which dynamic parameter
                   <UML:Classifier.feature>
                     <UML:Attribute xmi.id = 'I54f742m10189d8df1fmm7ffb' name = 'url' visibility = 'private'
                       isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                      <UML:ModelElement.taggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1-1eddccf9:1188bff4d94:-8000:0000000000000E33'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>unlimited</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1-1eddccf9:1188bff4d94:-8000:0000000000000E34'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue></UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7de0'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                      </UML:ModelElement.taggedValue>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
                       </UML:StructuralFeature.type>
@@ -7023,10 +7089,10 @@ A map of which execution objects are reading and writing which dynamic parameter
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                       changeability = 'changeable'>
                       <UML:StructuralFeature.multiplicity>
-                        <UML:Multiplicity xmi.id = 'I39f75ed5m1062ccc9e03mm59be'>
+                        <UML:Multiplicity xmi.id = '127-0-0-1-1eddccf9:1188bff4d94:-8000:0000000000000E36'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = 'I39f75ed5m1062ccc9e03mm59bd' lower = '0'
-                              upper = '1'/>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1-1eddccf9:1188bff4d94:-8000:0000000000000E35'
+                              lower = '0' upper = '1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
                       </UML:StructuralFeature.multiplicity>
@@ -7035,6 +7101,13 @@ A map of which execution objects are reading and writing which dynamic parameter
                           <UML:TaggedValue.dataValue>&lt;p&gt;The original SQL text of this view.&lt;/p&gt; &lt;p&gt;The SQL standard says that the objects referenced by a view are fixed when the view is created. For example, if a column is added to a table referenced via &apos;select *&apos;, the view will not acquire an extra column. If the original definition contains &apos;*&apos;s and non fully-qualified object references, it may become inconsistent with the actual definition.&lt;/p&gt;</UML:TaggedValue.dataValue>
                           <UML:TaggedValue.type>
                             <UML:TagDefinition xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7e0a'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1-1eddccf9:1188bff4d94:-8000:0000000000000E32'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>unlimited</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
                           </UML:TaggedValue.type>
                         </UML:TaggedValue>
                       </UML:ModelElement.taggedValue>
@@ -7052,13 +7125,22 @@ A map of which execution objects are reading and writing which dynamic parameter
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                       changeability = 'changeable'>
                       <UML:StructuralFeature.multiplicity>
-                        <UML:Multiplicity xmi.id = 'I39f75ed5m1062ccc9e03mm59d2'>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--6dc063b6:11899fea61c:-8000:0000000000000E48'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = 'I39f75ed5m1062ccc9e03mm59d1' lower = '0'
-                              upper = '1'/>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--6dc063b6:11899fea61c:-8000:0000000000000E47'
+                              lower = '0' upper = '1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
                       </UML:StructuralFeature.multiplicity>
+                      <UML:ModelElement.taggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1--6dc063b6:11899fea61c:-8000:0000000000000E49'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>unlimited</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                      </UML:ModelElement.taggedValue>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
                       </UML:StructuralFeature.type>
@@ -7508,13 +7590,22 @@ A map of which execution objects are reading and writing which dynamic parameter
                     <UML:Attribute xmi.id = 'Im608cba14m10c8ee82629mm4963' name = 'value' visibility = 'private'
                       isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
                       <UML:StructuralFeature.multiplicity>
-                        <UML:Multiplicity xmi.id = 'Im608cba14m10c8ee82629mm4952'>
+                        <UML:Multiplicity xmi.id = '127-0-0-1-1c11569a:118d2a5bc93:-8000:0000000000000E4D'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = 'Im608cba14m10c8ee82629mm4951' lower = '0'
-                              upper = '1'/>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1-1c11569a:118d2a5bc93:-8000:0000000000000E4C'
+                              lower = '0' upper = '1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
                       </UML:StructuralFeature.multiplicity>
+                      <UML:ModelElement.taggedValue>
+                        <UML:TaggedValue xmi.id = '127-0-0-1-1c11569a:118d2a5bc93:-8000:0000000000000E4E'
+                          isSpecification = 'false'>
+                          <UML:TaggedValue.dataValue>unlimited</UML:TaggedValue.dataValue>
+                          <UML:TaggedValue.type>
+                            <UML:TagDefinition xmi.idref = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'/>
+                          </UML:TaggedValue.type>
+                        </UML:TaggedValue>
+                      </UML:ModelElement.taggedValue>
                       <UML:StructuralFeature.type>
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd4'/>
                       </UML:StructuralFeature.type>
@@ -8309,6 +8400,28 @@ A map of which execution objects are reading and writing which dynamic parameter
         <UML:DataType xmi.id = '127-0-0-1-afb3b8c:10ecf0f258b:-8000:0000000000000D8B'
           name = 'long' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
           isAbstract = 'false'/>
+        <UML:TagDefinition xmi.id = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'
+          name = 'org.eigenbase.enki.maxLength' isSpecification = 'false' tagType = 'String'>
+          <UML:TagDefinition.multiplicity>
+            <UML:Multiplicity xmi.id = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E30'>
+              <UML:Multiplicity.range>
+                <UML:MultiplicityRange xmi.id = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2F'
+                  lower = '0' upper = '1'/>
+              </UML:Multiplicity.range>
+            </UML:Multiplicity>
+          </UML:TagDefinition.multiplicity>
+        </UML:TagDefinition>
+        <UML:TagDefinition xmi.id = '127-0-0-1--798f2f62:1189eccc986:-8000:0000000000000E47'
+          name = 'org.eigenbase.enki.transientPackage' isSpecification = 'false' tagType = 'String'>
+          <UML:TagDefinition.multiplicity>
+            <UML:Multiplicity xmi.id = '127-0-0-1--798f2f62:1189eccc986:-8000:0000000000000E4B'>
+              <UML:Multiplicity.range>
+                <UML:MultiplicityRange xmi.id = '127-0-0-1--798f2f62:1189eccc986:-8000:0000000000000E4A'
+                  lower = '0' upper = '1'/>
+              </UML:Multiplicity.range>
+            </UML:Multiplicity>
+          </UML:TagDefinition.multiplicity>
+        </UML:TagDefinition>
       </UML:Namespace.ownedElement>
     </UML:Model>
   </XMI.content>
@@ -14505,8 +14618,8 @@ A map of which execution objects are reading and writing which dynamic parameter
     </path>
   </group>
   <group name="Fig6"
-       description="org.argouml.uml.diagram.static_structure.ui.FigClass[272, 392, 131, 57]pathVisible=false;operationsVisible=false;attributesVisible=true"
-       href="127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3B"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[232, 448, 132, 57]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       href="127-0-1-1-4475233b:119121651cb:-8000:0000000000000E4D"
        fill="1"
        fillcolor="white"
        stroke="1"
@@ -14516,8 +14629,8 @@ A map of which execution objects are reading and writing which dynamic parameter
     </private>
     
     <rectangle name="Fig6.0"
-      x="272"
-      y="392"
+      x="232"
+      y="448"
       width="131"
       height="57"
       fill="1"
@@ -14526,8 +14639,8 @@ A map of which execution objects are reading and writing which dynamic parameter
       strokecolor="0 255 255"
     />
     <group name="Fig6.1"
-         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[272, 392, 131, 2]"
-         href="127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E3B"
+         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[232, 448, 131, 2]"
+         href="127-0-1-1-4475233b:119121651cb:-8000:0000000000000E4D"
          fill="1"
          fillcolor="white"
          stroke="1"
@@ -14537,8 +14650,8 @@ A map of which execution objects are reading and writing which dynamic parameter
       </private>
       
       <rectangle name="Fig6.1.0"
-        x="272"
-        y="392"
+        x="232"
+        y="448"
         width="131"
         height="2"
         fill="1"
@@ -14548,8 +14661,8 @@ A map of which execution objects are reading and writing which dynamic parameter
       />
     </group>
     <text name="Fig6.2"
-      x="272"
-      y="394"
+      x="232"
+      y="450"
       fill="1"
       fillcolor="white"
       stroke="0"
@@ -14558,7 +14671,7 @@ A map of which execution objects are reading and writing which dynamic parameter
       textsize="10"
     >DynamicParamUse</text>
     <group name="Fig6.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[273, 450, 130, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[233, 506, 131, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -14569,9 +14682,9 @@ A map of which execution objects are reading and writing which dynamic parameter
       </private>
       
       <rectangle name="Fig6.3.0"
-        x="273"
-        y="450"
-        width="130"
+        x="233"
+        y="506"
+        width="131"
         height="20"
         fill="1"
         fillcolor="white"
@@ -14587,14 +14700,14 @@ A map of which execution objects are reading and writing which dynamic parameter
         strokecolor="black"
         visibility="0"
       >
-        <moveto x="273"
-                y="450" />
-        <lineto x="403"
-                y="450" />
+        <moveto x="233"
+                y="506" />
+        <lineto x="364"
+                y="506" />
       </path>
     </group>
     <group name="Fig6.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[273, 415, 130, 34]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[233, 471, 131, 34]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -14604,8 +14717,8 @@ A map of which execution objects are reading and writing which dynamic parameter
       </private>
       
       <rectangle name="Fig6.4.0"
-        x="273"
-        y="415"
+        x="233"
+        y="471"
         width="130"
         height="34"
         fill="1"
@@ -14620,14 +14733,14 @@ A map of which execution objects are reading and writing which dynamic parameter
         stroke="1"
         strokecolor="black"
       >
-        <moveto x="273"
-                y="415" />
-        <lineto x="403"
-                y="415" />
+        <moveto x="233"
+                y="471" />
+        <lineto x="363"
+                y="471" />
       </path>
       <text name="Fig6.4.2"
-        x="273"
-        y="416"
+        x="233"
+        y="472"
         fill="0"
         fillcolor="white"
         stroke="0"
@@ -14636,8 +14749,8 @@ A map of which execution objects are reading and writing which dynamic parameter
         textsize="10"
       >dynamicParamId : Integer</text>
       <text name="Fig6.4.3"
-        x="273"
-        y="429"
+        x="233"
+        y="485"
         fill="0"
         fillcolor="white"
         stroke="0"
@@ -14647,8 +14760,8 @@ A map of which execution objects are reading and writing which dynamic parameter
       >read : Boolean</text>
     </group>
     <rectangle name="Fig6.5"
-      x="272"
-      y="392"
+      x="232"
+      y="448"
       width="131"
       height="57"
       fill="0"
@@ -14659,7 +14772,7 @@ A map of which execution objects are reading and writing which dynamic parameter
   </group>
   <group name="Fig7"
        description="org.argouml.uml.diagram.ui.FigAssociation"
-       href="127-0-1-1-332c5bca:118c5cdae58:-8000:0000000000000E4D"
+       href="127-0-1-1-4475233b:119121651cb:-8000:0000000000000E59"
        stroke="1"
        strokecolor="black"
   >
@@ -14676,10 +14789,10 @@ A map of which execution objects are reading and writing which dynamic parameter
       stroke="1"
       strokecolor="black"
     >
-      <moveto x="296"
+      <moveto x="288"
               y="177" />
-      <lineto x="296"
-              y="392" />
+      <lineto x="288"
+              y="448" />
     </path>
   </group>
 </pgml>

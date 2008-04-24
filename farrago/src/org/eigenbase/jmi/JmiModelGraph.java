@@ -347,6 +347,9 @@ public class JmiModelGraph
         map.put(
             mofClass.getName(),
             vertex);
+        
+        // REVIEW: SWZ: 1/8/08: vertex.javaInterface is never set (unlike in 
+        // addRefClass).  Remove this line?
         map.put(vertex.javaInterface, vertex);
         for (Object o : mofClass.getSupertypes()) {
             MofClass superClass = (MofClass) o;

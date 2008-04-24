@@ -96,6 +96,7 @@ public class FarragoMetadataTest
     {
         super.setUp();
         if (doneStaticSetup) {
+            localSetUp();
             return;
         }
         doneStaticSetup = true;
@@ -117,8 +118,28 @@ public class FarragoMetadataTest
             + "constraint unique_null unique(c2, c3))");
         stmt.executeUpdate(
             "create index idx on tab(c4)");
+        
+        localSetUp();
     }
 
+    public void tearDown() throws Exception
+    {
+        localTearDown();
+        super.tearDown();
+    }
+    
+    private void localSetUp()
+    {
+        repos.beginReposSession();
+        repos.beginReposTxn(false);
+    }
+    
+    private void localTearDown()
+    {
+        repos.endReposTxn(false);
+        repos.endReposSession();
+    }
+    
     protected void checkAbstract(
         FarragoPreparingStmt stmt,
         RelNode relBefore)

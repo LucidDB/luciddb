@@ -25,6 +25,7 @@ import java.sql.*;
 
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
@@ -74,6 +75,9 @@ public abstract class FarragoMedUDR
         }
 
         FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn = 
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         try {
             browseConnectServerImpl(
@@ -82,6 +86,7 @@ public abstract class FarragoMedUDR
                 serverProps,
                 resultInserter);
         } finally {
+            txn.commit();
             stmtValidator.closeAllocation();
         }
     }
@@ -153,6 +158,9 @@ public abstract class FarragoMedUDR
         throws SQLException
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn = 
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         try {
             browseForeignSchemasImpl(
@@ -160,6 +168,7 @@ public abstract class FarragoMedUDR
                 serverName,
                 resultInserter);
         } finally {
+            txn.commit();
             stmtValidator.closeAllocation();
         }
     }

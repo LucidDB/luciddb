@@ -127,7 +127,7 @@ class FarragoExecutableJavaStmt
             // any data, since the Fennel streams aren't open yet. In
             // particular, Java iterator implementations must not do prefetch in
             // the constructor (always wait for hasNext/next).
-            ResultSet resultSet;
+            FarragoTupleIterResultSet resultSet;
             TupleIter iter =
                 (TupleIter) method.invoke(
                     null,
@@ -145,6 +145,9 @@ class FarragoExecutableJavaStmt
             }
 
             runtimeContext = null;
+            
+            resultSet.setOpened();
+            
             return resultSet;
         } catch (IllegalAccessException e) {
             throw Util.newInternal(e);

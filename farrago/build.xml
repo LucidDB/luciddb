@@ -103,7 +103,7 @@ ${farrago.test.jvmargs}
   <property name="FarragoConf.xmi"
     location="${farrago.xmi.dir}/FarragoConf.xmi"/>
 
-  <!-- file prefix for catalog storage -->
+  <!-- file prefix for Netbeans/HSQLDB catalog storage -->
   <property name="catalog.mdrStorage"
     location="${farrago.catalog.dir}/FarragoCatalog"/>
 
@@ -455,6 +455,7 @@ ${farrago.test.jvmargs}
   <!-- creates ReposStorage.properties from a default template unless
        it already exists -->
   <target name="configureReposStorage" unless="ReposStorage.configured">
+    <!-- Does nothing if the file already exists.  See switchTo* targets. -->
     <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties"
       tofile="${farrago.ReposStorage.propfile}"/>
   </target>
@@ -467,7 +468,22 @@ ${farrago.test.jvmargs}
         <tokenfilter>
           <replacestring
             from="jdbc:postgresql://localhost/test"
-            to="jdbc:postgresql://localhost/farrago"/>
+            to="jdbc:postgresql://localhost/${farrago.catalog.schema}"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
+  </target>
+
+  <!-- create ReposStorage.properties from the default Mysql+Hibernate
+       template -->
+  <target name="switchToMysqlHibernateReposStorage">
+    <copy file="${farrago.catalog.dir}/templates/MysqlHibernateRepos.properties"
+      tofile="${farrago.ReposStorage.propfile}" overwrite="true">
+      <filterchain>
+        <tokenfilter>
+          <replacestring
+            from="jdbc:mysql://localhost:3306/test"
+            to="jdbc:mysql://localhost:3306/${farrago.catalog.schema}"/>
         </tokenfilter>
       </filterchain>
     </copy>
@@ -477,6 +493,20 @@ ${farrago.test.jvmargs}
   <target name="switchToDefaultReposStorage">
     <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties"
       tofile="${farrago.ReposStorage.propfile}" overwrite="true"/>
+  </target>
+
+  <!-- configures the Hibernate second level cache, if necessary -->
+  <target name="configureCatalogCache">
+    <farrago.setReposProvider/>
+
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+      <then>
+        <copy 
+            file="${farrago.catalog.dir}/templates/EnkiOsCache.properties"
+            tofile="${farrago.classes.dir}/oscache.properties"/>
+      </then>
+    </ac:if>
   </target>
 
   <target name="compileCatalog"
@@ -494,49 +524,72 @@ ${farrago.test.jvmargs}
 
   <!-- initialize catalog repository -->
   <target name="createRepository"
-    depends="configureTrace, convertExtMetamodel">
+    depends="configureTrace, convertExtMetamodel, configureCatalogCache">
     <mkdir dir="${farrago.catalog.dir}"/>
     <mkdir dir="${farrago.catalog.src.dir}"/>
     <farrago.synthesizeMetamodel
       extMofBasename="ExtModel"
       extPresent=""
       xmiDir="${farrago.xmi.dir}"/>
-    <farrago.mdrFork target="forked_importMetamodel"/>
-    <farrago.uncommentGenerics javadir="${farrago.catalog.src.dir}"/>
+    <farrago.mdrFork target="forked_generateMetamodelCode"/>
     <farrago.javaCompile
       srcdir="${farrago.catalog.src.dir}"
       destdir="${farrago.catalog.src.dir}"
       classpathref="farrago.3p.classpath">
       <include name="**/*.java"/>
     </farrago.javaCompile>
+    <farrago.mdrFork target="forked_importMetamodel"/>
     <farrago.mdrFork target="forked_createCatalogRepository"/>
     <antcall target="compile.saffron.deps"/>
     <antcall target="generateMetadataFactory"/>
     <antcall target="all"/>
   </target>
 
-  <!-- NOTE:  don't use mapClass below; we want to make sure all generated
-  .java files can actually be compiled the old-fashioned way -->
+  <target name="forked_generateMetamodelCode" depends="farrago.mdr_taskdef">
+    <farrago.setReposProvider/>
+
+    <mdr logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <mapJava
+        file="${FarragoMetamodel.xmi}"
+        extent="FarragoMetamodel"
+        dir="${farrago.catalog.src.dir}"
+        generatorClass="${farrago.enki.generator}"
+        generatorOptions="tablePrefix='FEM_'"/>
+    </mdr>
+
+    <delete quiet="true">
+      <fileset dir="." includes="mdr.bt?"/>
+    </delete>
+  </target>
 
   <target name="importMetamodel">
     <farrago.mdrFork target="forked_importMetamodel"/>
   </target>
 
   <target name="forked_importMetamodel" depends="farrago.mdr_taskdef">
-    <mdr>
-      <instantiate name="FarragoMetamodel"/>
-      <readXMI
+    <farrago.setReposProvider/>
+
+    <mdr
+        propertiesFile="${farrago.ReposStorage.propfile}"
+        logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <propertyset>
+        <propertyref name="FARRAGO_CATALOG_DIR"/>
+      </propertyset>
+      <createExtent name="FarragoMetamodel"/>
+      <importXmi
         file="${FarragoMetamodel.xmi}"
-        extent="FarragoMetamodel"/>
-      <mapJava
-        dir="${farrago.catalog.src.dir}"
         extent="FarragoMetamodel"/>
     </mdr>
   </target>
 
   <target name="forked_createCatalogRepository" depends="farrago.mdr_taskdef">
-    <mdr>
-      <instantiate
+    <mdr 
+        propertiesFile="${farrago.ReposStorage.propfile}"
+        logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <propertyset>
+        <propertyref name="FARRAGO_CATALOG_DIR"/>
+      </propertyset>
+      <createExtent
         name="FarragoCatalog"
         extent="FarragoMetamodel"
         package="Farrago"/>
@@ -572,11 +625,18 @@ ${farrago.test.jvmargs}
     <mkdir dir="${farrago.trace.dir}"/>
     <farrago.configureTrace
       propFile="${FarragoTrace.properties}" logFile="${FarragoTrace.log}"/>
+    <farrago.configureTrace
+      propFile="${FarragoMdrBuildTrace.properties}" logFile="${FarragoMdrBuildTrace.log}"/>
   </target>
 
   <target name="forked_importConfig" depends="farrago.mdr_taskdef">
-    <mdr>
-      <readXMI
+    <mdr
+        propertiesFile="${farrago.ReposStorage.propfile}"
+        logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <propertyset>
+        <propertyref name="FARRAGO_CATALOG_DIR"/>
+      </propertyset>
+      <importXmi
         file="${FarragoConf.xmi}"
         extent="FarragoCatalog"/>
     </mdr>
@@ -615,13 +675,9 @@ ${farrago.test.jvmargs}
 
   <!-- save the unconfigured catalog contents -->
   <target name="saveUnconfiguredCatalog">
-    <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${farrago.catalog.unconfigured.dir}" includes="*"/>
-    </delete>
-    <mkdir dir="${farrago.catalog.unconfigured.dir}"/>
-    <copy todir="${farrago.catalog.unconfigured.dir}">
-      <fileset dir="${farrago.catalog.dir}" includes="FarragoCatalog.*"/>
-    </copy>
+    <farrago.backupCatalog
+      backupDir="${farrago.catalog.unconfigured.dir}"
+      catalogOnly="true"/>
   </target>
 
   <!-- back up the current catalog contents -->
@@ -631,9 +687,7 @@ ${farrago.test.jvmargs}
 
   <!-- restore catalog from backup -->
   <target name="restoreCatalog" depends="cleanCatalogData">
-    <copy todir="${farrago.catalog.dir}">
-      <fileset dir="${farrago.catalog.backup.dir}"/>
-    </copy>
+    <farrago.restoreCatalog/>
   </target>
 
   <!-- delete the catalog and everything generated for it -->
@@ -651,6 +705,7 @@ ${farrago.test.jvmargs}
     <delete dir="${farrago.catalog.src.dir}"/>
     <delete file="${FarragoSqlTestWrapper.java}"/>
     <delete dir="${farrago.catalog.dir}/fennel"/>
+    <delete file="${FarragoMdrBuildTrace.log}"/>
   </target>
 
   <!-- delete catalog data only -->
@@ -663,8 +718,13 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="forked_exportCatalog" depends="farrago.mdr_taskdef">
-    <mdr>
-      <writeXMI
+    <mdr
+        propertiesFile="${farrago.ReposStorage.propfile}"
+        logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <propertyset>
+        <propertyref name="FARRAGO_CATALOG_DIR"/>
+      </propertyset>
+      <exportXmi
         file="${farrago.xmi.dir}/FarragoCatalogExport.xmi"
         extent="FarragoCatalog"
         xmiVersion = "1.2"/>
@@ -676,8 +736,13 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="forked_exportMetamodel" depends="farrago.mdr_taskdef">
-    <mdr>
-      <writeXMI
+    <mdr
+        propertiesFile="${farrago.ReposStorage.propfile}"
+        logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <propertyset>
+        <propertyref name="FARRAGO_CATALOG_DIR"/>
+      </propertyset>
+      <exportXmi
         file="${farrago.xmi.dir}/FarragoMetamodelExport.xmi"
         extent="FarragoMetamodel"
         xmiVersion = "1.2"/>
@@ -885,7 +950,7 @@ ${farrago.test.jvmargs}
   <target name="junit" depends="cleanTestLogs">
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
-        <jvmarg line="-Xmx128m"/>
+        <jvmarg line="-Xmx512m"/>
         <jvmarg line="-Xss1536k"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
@@ -1012,9 +1077,11 @@ please disable it and try again.
       <fileset dir="${farrago.catalog.dir}"
         includes="*.dat,FarragoCatalogDump.xmi"/>
     </delete>
+    <!-- Restore only the Fennel files and a catalog dump from before the
+         plugin was installed. -->
     <copy todir="${farrago.catalog.dir}">
       <fileset dir="${farrago.dir}/testgen/upgrade/backup"
-        includes="*.dat"/>
+          includes="*.dat"/>
     </copy>
     <copy todir="${farrago.catalog.dir}">
       <fileset dir="${farrago.dir}/testgen/upgrade"
@@ -1125,7 +1192,12 @@ please disable it and try again.
 
   <!-- Debugging target for listing repository extents -->
   <target name="printRepositoryExtents" depends="farrago.mdr_taskdef">
-    <mdr>
+    <mdr 
+        propertiesFile="${farrago.ReposStorage.propfile}"
+        logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <propertyset>
+        <propertyref name="FARRAGO_CATALOG_DIR"/>
+      </propertyset>
       <printExtentNames/>
     </mdr>
   </target>
@@ -1273,6 +1345,7 @@ please disable it and try again.
       <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
       <link href="http://www.janino.net/javadoc"/>
       <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
+      <link href="${enki.dir}/javadoc"/>
       <doclet
           name="ydoc.doclets.YStandard"
           path="${ydoc.home}/lib/ydoc.jar${ps}${ydoc.home}/lib/class2svg.jar${ps}${ydoc.home}/resources${ps}${ydoc.home}/doc">
@@ -1319,6 +1392,7 @@ please disable it and try again.
       <link href="http://www.junit.org/junit/javadoc/3.8.1"/>
       <link href="http://www.janino.net/javadoc"/>
       <link href="http://www.csg.is.titech.ac.jp/openjava/OpenJava_1.1/htdocs"/>
+      <link href="${enki.dir}/javadoc"/>
     </javadoc>
   </target>
 
@@ -1365,8 +1439,15 @@ please disable it and try again.
     <delete quiet="true">
       <fileset dir="unitsql/ddl" includes="mdr.bt?"/>
     </delete>
-    <mdr storageFile="${farrago.dir}/unitsql/ddl/mdr">
-      <instantiate name="TestMof"/>
+    <mdr logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <storageProperty
+        name="org.eigenbase.enki.implementationType" 
+        value="NETBEANS_MDR"/>
+      <storageProperty
+        name="org.netbeans.mdr.persistence.Dir"
+        value="${farrago.dir}/unitsql/ddl/mdr"/>
+
+      <createExtent name="TestMof"/>
     </mdr>
   </target>
 
@@ -1399,25 +1480,49 @@ please disable it and try again.
   <!-- verify that ReposStorage.properties is correctly configured
        for storage via JDBC -->
   <target name="verifyReposSqlStorage" depends="configureReposStorage">
-    <loadproperties srcFile="${farrago.ReposStorage.propfile}">
-      <filterchain>
-        <tokenfilter>
-          <replacestring
-            from="MDRStorageProperty.org.netbeans.mdr.persistence."
-            to=""/>
-        </tokenfilter>
-      </filterchain>
-    </loadproperties>
-    <sql
-      driver="${jdbcimpl.driverClassName}"
-      url="${jdbcimpl.url}"
-      userid="${jdbcimpl.userName}"
-      password="${jdbcimpl.password}"
-      classpath="${farrago.3p.classpath}"
-      rdbms="nonexistentSQL">
-      <![CDATA[bogus]]>
-    </sql>
-    <echo message="Successfully connected to ${jdbcimpl.url}"/>
+    <farrago.setReposProvider/>
+
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${farrago.enki.provider}" arg2="NETBEANS_MDR"/>
+      <then>
+        <loadproperties srcFile="${farrago.ReposStorage.propfile}">
+          <filterchain>
+            <tokenfilter>
+              <replacestring
+                from="MDRStorageProperty.org.netbeans.mdr.persistence."
+                to=""/>
+            </tokenfilter>
+          </filterchain>
+        </loadproperties>
+        <sql
+          driver="${jdbcimpl.driverClassName}"
+          url="${jdbcimpl.url}"
+          userid="${jdbcimpl.userName}"
+          password="${jdbcimpl.password}"
+          classpath="${farrago.3p.classpath}"
+          rdbms="nonexistentSQL">
+          <![CDATA[bogus]]>
+        </sql>
+        <echo message="Successfully connected to ${jdbcimpl.url}"/>
+      </then>
+    </ac:if>
+
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+      <then>
+        <loadproperties srcFile="${farrago.ReposStorage.propfile}"/>
+        <sql
+          driver="${hibernate.connection.driver_class}"
+          url="${hibernate.connection.url}"
+          userid="${hibernate.connection.username}"
+          password="${hibernate.connection.password}"
+          classpath="${farrago.3p.classpath}"
+          rdbms="nonexistentSQL">
+          <![CDATA[bogus]]>
+        </sql>
+        <echo message="Successfully connected to ${hibernate.connection.url}"/>
+      </then>
+    </ac:if>
   </target>
 
   <target name="buildExamples" depends="compile">
@@ -1434,7 +1539,9 @@ please disable it and try again.
   </target>
 
   <!-- Below is all experimental stuff for the user repository -->
-
+  <!-- WARNING: With the introduction of Enki, these will not work unless
+       the MDR provider is Netbeans, and even then it is untested.
+       (SWZ, 2008-02-14) -->
   <property name="JdbcStorage.prefix"
     value="MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl"/>
 
@@ -1487,19 +1594,24 @@ please disable it and try again.
   </target>
 
   <target name="forked_createUserRepository" depends="farrago.mdr_taskdef">
-    <mdr>
-      <instantiate name="FarragoMetamodel"/>
+    <mdr
+        propertiesFile="${farrago.ReposStorage.propfile}"
+        logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <propertyset>
+        <propertyref name="FARRAGO_CATALOG_DIR"/>
+      </propertyset>
+      <createExtent name="FarragoMetamodel"/>
       <printExtentNames/>
-      <readXMI
+      <importXmi
         file="${FarragoMetamodel.xmi}"
         extent="FarragoMetamodel"/>
       <printExtentNames/>
-      <instantiate
+      <createExtent
         name="FarragoCatalog"
         extent="FarragoMetamodel"
         package="Farrago"/>
       <printExtentNames/>
-      <readXMI
+      <importXmi
         file="${FarragoConf.xmi}"
         extent="FarragoCatalog"/>
     </mdr>

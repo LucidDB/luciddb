@@ -49,6 +49,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.JmiObjUtil;
 
 
@@ -224,19 +225,27 @@ public class FarragoRuntimeContext
         String serverMofId,
         Object param)
     {
-        FemDataServer femServer =
-            (FemDataServer) repos.getMdrRepos().getByMofId(serverMofId);
-
-        FarragoMedDataServer server =
-            dataWrapperCache.loadServerFromCatalog(femServer);
+        EnkiMDRepository mdrRepos = repos.getEnkiMdrRepos();
+        mdrRepos.beginSession();
+        mdrRepos.beginTrans(false);
         try {
-            Object obj = server.getRuntimeSupport(param);
-            if (obj instanceof FarragoAllocation) {
-                addAllocation((FarragoAllocation) obj);
+            FemDataServer femServer =
+                (FemDataServer) mdrRepos.getByMofId(serverMofId);
+    
+            FarragoMedDataServer server =
+                dataWrapperCache.loadServerFromCatalog(femServer);
+            try {
+                Object obj = server.getRuntimeSupport(param);
+                if (obj instanceof FarragoAllocation) {
+                    addAllocation((FarragoAllocation) obj);
+                }
+                return obj;
+            } catch (Throwable ex) {
+                throw FarragoResource.instance().DataServerRuntimeFailed.ex(ex);
             }
-            return obj;
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().DataServerRuntimeFailed.ex(ex);
+        } finally {
+            mdrRepos.endTrans();
+            mdrRepos.endSession();
         }
     }
 
@@ -535,13 +544,19 @@ public class FarragoRuntimeContext
         assert (dummies == null);
         assert (streamGraph != null);
 
-        FennelStreamHandle streamHandle = getStreamHandle(streamName, true);
-
-        return new FennelTupleIter(
-            tupleReader,
-            streamGraph,
-            streamHandle,
-            repos.getCurrentConfig().getFennelConfig().getCachePageSize());
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        txn.beginReadTxn();
+        try {
+            FennelStreamHandle streamHandle = getStreamHandle(streamName, true);
+    
+            return new FennelTupleIter(
+                tupleReader,
+                streamGraph,
+                streamHandle,
+                repos.getCurrentConfig().getFennelConfig().getCachePageSize());
+        } finally {
+            txn.commit();
+        }
     }
 
     /**
@@ -572,30 +587,39 @@ public class FarragoRuntimeContext
         assert (streamGraph != null);
         assert (inputBindings != null);
 
-        FennelStreamHandle streamHandle = getStreamHandle(streamName, false);
-
-        FennelStreamHandle inputStreamHandle =
-            getStreamHandle(inputStreamName, true);
-
-        FarragoTransform.InputBinding inputBinding = null;
-        for (FarragoTransform.InputBinding binding : inputBindings) {
-            // The binding's input stream name may be a buffer adapter created
-            // to handle provisioning of buffers.  It's name will be the
-            // stream name we're looking for plus some addition information.
-            if (binding.getInputStreamName().startsWith(inputStreamName)) {
-                inputBinding = binding;
-                break;
+        FarragoReposTxnContext txn = repos.newTxnContext(true);
+        txn.beginReadTxn();
+        try {
+            FennelStreamHandle streamHandle = 
+                getStreamHandle(streamName, false);
+    
+            FennelStreamHandle inputStreamHandle =
+                getStreamHandle(inputStreamName, true);
+    
+            FarragoTransform.InputBinding inputBinding = null;
+            for (FarragoTransform.InputBinding binding : inputBindings) {
+                // The binding's input stream name may be a buffer adapter 
+                // created to handle provisioning of buffers.  It's name will
+                // be the stream name we're looking for plus some additional
+                // information.
+                if (binding.getInputStreamName().startsWith(inputStreamName)) {
+                    inputBinding = binding;
+                    break;
+                }
             }
+            assert (inputBinding != null);
+    
+            return new FennelTransformTupleIter(
+                tupleReader,
+                streamGraph,
+                streamHandle,
+                inputStreamHandle,
+                inputBinding.getOrdinal(),
+                repos.getCurrentConfig().getFennelConfig().getCachePageSize());
         }
-        assert (inputBinding != null);
-
-        return new FennelTransformTupleIter(
-            tupleReader,
-            streamGraph,
-            streamHandle,
-            inputStreamHandle,
-            inputBinding.getOrdinal(),
-            repos.getCurrentConfig().getFennelConfig().getCachePageSize());
+        finally {
+            txn.commit();
+        }
     }
 
     // implement FarragoSessionRuntimeContext
@@ -610,6 +634,7 @@ public class FarragoRuntimeContext
     {
         boolean success = false;
         FennelStreamGraph newStreamGraph = null;
+        repos.beginReposSession();
         try {
             Collection<RefBaseObject> collection =
                 JmiObjUtil.importFromXmiString(
@@ -643,6 +668,7 @@ public class FarragoRuntimeContext
                     newStreamGraph.closeAllocation();
                 }
             }
+            repos.endReposSession();
         }
     }
 
@@ -738,6 +764,10 @@ public class FarragoRuntimeContext
             } catch (SQLException ex) {
                 // TODO jvs 19-Jan-2005:  standard mechanism for tracing
                 // swallowed exceptions
+            } finally {
+                EnkiMDRepository mdrRepos = 
+                    frame.context.getRepos().getEnkiMdrRepos();
+                mdrRepos.reattachSession(frame.reposSession);
             }
         }
     }
@@ -854,7 +884,7 @@ public class FarragoRuntimeContext
         if (!frame.allowSql) {
             throw FarragoResource.instance().NoDefaultConnection.ex();
         }
-
+        
         if (frame.connection == null) {
             FarragoSessionConnectionSource connectionSource =
                 frame.context.session.getConnectionSource();
@@ -863,6 +893,10 @@ public class FarragoRuntimeContext
             // sure the new connection has autocommit turned off.  Need
             // to do that without disturbing the session.  And could
             // enforce READS/MODIFIES SQL DATA access.
+
+            EnkiMDRepository mdrRepos = 
+                frame.context.getRepos().getEnkiMdrRepos();
+            frame.reposSession = mdrRepos.detachSession();
         }
 
         // NOTE jvs 19-Jan-2005:  We automatically close the

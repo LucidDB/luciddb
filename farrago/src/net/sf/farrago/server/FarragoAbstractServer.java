@@ -182,12 +182,21 @@ public abstract class FarragoAbstractServer
         // Load the database instance
         FarragoDatabase db = FarragoDbSingleton.pinReference(sessionFactory);
 
-        FemFarragoConfig config = db.getSystemRepos().getCurrentConfig();
-
-        configureNetwork(
-            releaseProps,
-            config);
-
+        FarragoReposTxnContext txn = 
+            new FarragoReposTxnContext(db.getSystemRepos(), true);
+        try {
+            txn.beginReadTxn();
+            
+            FemFarragoConfig config = db.getSystemRepos().getCurrentConfig();
+    
+            configureNetwork(
+                releaseProps,
+                config);
+        }
+        finally {
+            txn.commit();
+        }
+        
         pw.println(res.ServerStartingNetwork.str());
 
         boolean success = false;

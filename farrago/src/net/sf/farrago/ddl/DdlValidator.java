@@ -496,12 +496,13 @@ public class DdlValidator
             if (createStmt.getReplaceOptions().isReplace()) {
                 CwmModelElement e = createStmt.getModelElement();
                 if (e != null) {
-                    return (object.refClass().refMetaObject()
-                                  .refGetValue(
-                            "name").toString().equals(
-                                      e.refClass().refMetaObject()
-                   .refGetValue(
-                                          "name").toString()));
+                    String newClassName = 
+                        object.refClass().refMetaObject().refGetValue(
+                            "name").toString();
+                    String targetClassName = 
+                        e.refClass().refMetaObject().refGetValue(
+                            "name").toString();
+                    return newClassName.equals(targetClassName);
                 }
             }
         }
@@ -746,6 +747,7 @@ public class DdlValidator
             clearDependencySuppliers(obj);
             scheduleDeletion(obj);
         } else if (event instanceof AttributeEvent) {
+            checkStringLength((AttributeEvent)event);
             RefObject obj = (RefObject) (event.getSource());
             scheduleModification(obj);
         } else if (event instanceof AssociationEvent) {
@@ -1049,7 +1051,7 @@ public class DdlValidator
         if (!includeType) {
             return name;
         }
-        Class<? extends Object> typeClass;
+        Class<?> typeClass;
 
         // TODO jvs 25-Feb-2005:  provide a mechanism for generalizing these
         // special cases
@@ -1058,7 +1060,14 @@ public class DdlValidator
         } else if (element instanceof CwmCatalog) {
             typeClass = CwmCatalog.class;
         } else {
-            typeClass = element.getClass();
+            try {
+                typeClass = 
+                    JmiObjUtil.getJavaInterfaceForRefObject(
+                        element.refClass());
+            }
+            catch(ClassNotFoundException e) {
+                throw Util.newInternal(e);
+            }
         }
         return typeClass.toString() + ":" + name;
     }
@@ -1233,6 +1242,12 @@ public class DdlValidator
         // txns.
         getRepos().endReposTxn(true);
 
+        // Restart the session, which is safe because we pass objects across
+        // the session boundary via MOF ID.
+        getRepos().endReposSession();
+        
+        getRepos().beginReposSession();
+        
         // TODO:  really need a lock to protect us against someone else's DDL
         // here, which could invalidate our schedulingMap.
         getRepos().beginReposTxn(true);
@@ -1279,6 +1294,72 @@ public class DdlValidator
                 ValidatedOp.MODIFICATION);
         }
         mapParserPosition(obj);
+    }
+    
+    private void checkStringLength(AttributeEvent event)
+    {
+        RefObject obj = (RefObject)event.getSource();
+        final String attrName = event.getAttributeName();
+        
+        RefClass refClass = obj.refClass();
+        
+        javax.jmi.model.Attribute attr = 
+            JmiObjUtil.getNamedFeature(
+                refClass, javax.jmi.model.Attribute.class, attrName, true);
+        if (attr == null) {
+            throw Util.newInternal(
+                "did not find attribute '" + attrName + "'");
+        }
+          
+        final int maxLength = JmiObjUtil.getMaxLength(refClass, attr);
+        if (maxLength == Integer.MAX_VALUE) {
+            // Marked unlimited or not string type.
+            return;
+        }
+        
+        Object val = event.getNewElement();
+        if (val == null) {
+            return;
+        }
+
+        if (val instanceof Collection) {
+            boolean allPass = true;
+            for(Object v: (Collection<?>)val) {
+                if (v == null) {
+                    continue;
+                }
+                
+                int length = v.toString().length();
+                
+                if (length > maxLength) {
+                    allPass = false;
+                    break;
+                }
+            }
+            
+            if (allPass) {
+                return;
+            }
+        } else {
+            int length = ((String)val).length();
+            
+            if (length <= maxLength) {
+                return;
+            }
+        }
+
+        final String name = getRepos().getLocalizedClassName(refClass);
+
+        enqueueValidationExcn(
+            new DeferredException() {
+                EigenbaseException getException()
+                {
+                    return FarragoResource.instance().ValidatorInvalidObjectAttributeDefinition.ex(
+                        name,
+                        attrName,
+                        maxLength);
+                }
+            });
     }
 
     private void startListening()
@@ -1515,16 +1596,21 @@ public class DdlValidator
 
         DependencySupplier depSupplier =
             getRepos().getCorePackage().getDependencySupplier();
-        for (Object o : depSupplier.getSupplierDependency(oldElement)) {
-            CwmDependency dep = (CwmDependency) o;
+        
+        Collection<CwmDependency> supplierDependencies = 
+            new ArrayList<CwmDependency>(
+                depSupplier.getSupplierDependency(oldElement));
+        for(CwmDependency dep: supplierDependencies) {
             depSupplier.remove(oldElement, dep);
             depSupplier.add(newElement, dep);
         }
 
         DependencyClient depClient =
             getRepos().getCorePackage().getDependencyClient();
-        for (Object o : depClient.getClientDependency(oldElement)) {
-            CwmDependency dep = (CwmDependency) o;
+        Collection<CwmDependency> clientDependencies = 
+            new ArrayList<CwmDependency>(
+                depClient.getClientDependency(oldElement));
+        for(CwmDependency dep: clientDependencies) {
             depClient.remove(oldElement, dep);
             depClient.add(newElement, dep);
         }

@@ -107,7 +107,7 @@ public class FarragoOptRulesTest
             "alter session implementation set jar"
             + " plannerviz.plannerviz_plugin");
     }
-
+    
     protected DiffRepository getDiffRepos()
     {
         return DiffRepository.lookup(FarragoOptRulesTest.class);

@@ -52,7 +52,7 @@
 
   <!-- Java package location for model-generated classes -->
   <property name="plugin.model.package" 
-    value="net/sf/farrago/rngmodel"/>
+    value="net.sf.farrago.rngmodel"/>
 
   <!-- Java package location for resource definitions -->
   <property name="plugin.resource.package" 

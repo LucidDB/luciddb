@@ -75,9 +75,9 @@ class FarragoExecutableExplainStmt
     // implement FarragoSessionExecutableStmt
     public ResultSet execute(FarragoSessionRuntimeContext runtimeContext)
     {
-        // don't need a context
+        // don't need a context or repository session
         runtimeContext.closeAllocation();
-
+        runtimeContext.getSession().getRepos().endReposSession();
         return PreparedExplanation.executeStatic(explanation);
     }
 

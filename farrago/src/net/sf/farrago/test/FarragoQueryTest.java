@@ -164,7 +164,7 @@ public class FarragoQueryTest
         String lurql = FarragoInternalQuery.instance().TestQuery.str();
 
         checkLurqlTableSchema(lurql, "DEPTS", "SALES");
-        checkLurqlTableSchema(lurql, "CATALOGS_VIEW", "JDBC_METADATA");
+        checkLurqlTableSchema(lurql, "CATALOGS_VIEW", "JDBC_METADATA");            
     }
 
     /**
@@ -233,23 +233,31 @@ public class FarragoQueryTest
         String schemaName)
         throws Exception
     {
-        Map<String, String> argMap = new HashMap<String, String>();
-        argMap.put("tableName", tableName);
-        FarragoJdbcEngineConnection farragoConnection =
-            (FarragoJdbcEngineConnection) connection;
-        FarragoSession session = farragoConnection.getSession();
-        Collection<RefObject> result =
-            session.executeLurqlQuery(
-                lurql,
-                argMap);
-        assertEquals(
-            1,
-            result.size());
-        RefObject obj = result.iterator().next();
-        assertTrue(obj instanceof CwmSchema);
-        assertEquals(
-            schemaName,
-            ((CwmSchema) obj).getName());
+        repos.beginReposSession();
+        repos.beginReposTxn(false);
+        try {
+            Map<String, String> argMap = new HashMap<String, String>();
+            argMap.put("tableName", tableName);
+            FarragoJdbcEngineConnection farragoConnection =
+                (FarragoJdbcEngineConnection) connection;
+            FarragoSession session = farragoConnection.getSession();
+            Collection<RefObject> result =
+                session.executeLurqlQuery(
+                    lurql,
+                    argMap);
+            assertEquals(
+                1,
+                result.size());
+            RefObject obj = result.iterator().next();
+            assertTrue(obj instanceof CwmSchema);
+            assertEquals(
+                schemaName,
+                ((CwmSchema) obj).getName());
+        }
+        finally {
+            repos.endReposTxn(false);
+            repos.endReposSession();
+        }            
     }
 
     /**
@@ -286,22 +294,30 @@ public class FarragoQueryTest
         String grantedRoleName)
         throws Exception
     {
-        Map<String, String> argMap = new HashMap<String, String>();
-        argMap.put("granteeName", granteeName);
-        FarragoJdbcEngineConnection farragoConnection =
-            (FarragoJdbcEngineConnection) connection;
-        FarragoSession session = farragoConnection.getSession();
-        Collection<RefObject> result =
-            session.executeLurqlQuery(
-                lurql,
-                argMap);
-        for (RefObject o : result) {
-            FemRole role = (FemRole) o;
-            if (role.getName().equals(grantedRoleName)) {
-                return true;
+        repos.beginReposSession();
+        repos.beginReposTxn(false);
+        try {
+            Map<String, String> argMap = new HashMap<String, String>();
+            argMap.put("granteeName", granteeName);
+            FarragoJdbcEngineConnection farragoConnection =
+                (FarragoJdbcEngineConnection) connection;
+            FarragoSession session = farragoConnection.getSession();
+            Collection<RefObject> result =
+                session.executeLurqlQuery(
+                    lurql,
+                    argMap);
+            for (RefObject o : result) {
+                FemRole role = (FemRole) o;
+                if (role.getName().equals(grantedRoleName)) {
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
+        finally {
+            repos.endReposTxn(false);
+            repos.endReposSession();
+        }
     }
 
     public void testAbandonedResultSet()
@@ -560,14 +576,9 @@ public class FarragoQueryTest
     {
         String schemaName = "SALES";
         
-        CwmCatalog catalog = repos.getSelfAsCatalog();
-        CwmSchema schema =
-            (CwmSchema) FarragoCatalogUtil.getModelElementByName(
-                catalog.getOwnedElement(),
-                schemaName);
+        String refMofId = getSchemaMofId(schemaName, null);
         
-        String actualDescription = fetchLobText(
-            schema.refMofId(), "description");
+        String actualDescription = fetchLobText(refMofId, "description");
         assertNull(actualDescription);
     }
 
@@ -578,16 +589,12 @@ public class FarragoQueryTest
         stmt.execute(
             "CREATE SCHEMA EMPTY_DESC DESCRIPTION ''");
         
-        CwmCatalog catalog = repos.getSelfAsCatalog();
-        FemLocalSchema schema =
-            (FemLocalSchema) FarragoCatalogUtil.getModelElementByName(
-                catalog.getOwnedElement(),
-                "EMPTY_DESC");
-
-        assertEquals("", schema.getDescription());
+        StringBuilder descriptionOut = new StringBuilder();
+        String refMofId = getSchemaMofId("EMPTY_DESC", descriptionOut);
         
-        String actualDescription = fetchLobText(
-            schema.refMofId(), "description");
+        assertEquals("", descriptionOut.toString());
+        
+        String actualDescription = fetchLobText(refMofId, "description");
         assertEquals("", actualDescription);
 
         stmt.execute("DROP SCHEMA EMPTY_DESC");
@@ -598,13 +605,9 @@ public class FarragoQueryTest
     {
         String schemaName = "SALES";
         
-        CwmCatalog catalog = repos.getSelfAsCatalog();
-        CwmSchema schema =
-            (CwmSchema) FarragoCatalogUtil.getModelElementByName(
-                catalog.getOwnedElement(),
-                schemaName);
+        String refMofId = getSchemaMofId(schemaName, null);
         
-        String actualSchemaName = fetchLobText(schema.refMofId(), "name");
+        String actualSchemaName = fetchLobText(refMofId, "name");
         assertEquals("SALES", actualSchemaName);
     }
 
@@ -620,19 +623,42 @@ public class FarragoQueryTest
         stmt.execute(
             "CREATE SCHEMA LONG_DESC DESCRIPTION '" + description + "'");
         
-        CwmCatalog catalog = repos.getSelfAsCatalog();
-        FemLocalSchema schema =
-            (FemLocalSchema) FarragoCatalogUtil.getModelElementByName(
-                catalog.getOwnedElement(),
-                "LONG_DESC");
+        StringBuilder descriptionBuf = new StringBuilder();
+        String refMofId = getSchemaMofId("LONG_DESC", descriptionBuf);
+        Assert.assertEquals(description, descriptionBuf.toString());
 
-        assertEquals(description, schema.getDescription());
-        
-        String actualDescription = fetchLobText(
-            schema.refMofId(), "description");
+        String actualDescription = fetchLobText(refMofId, "description");
         assertEquals(description, actualDescription);
 
         stmt.execute("DROP SCHEMA LONG_DESC");
+    }
+
+    private String getSchemaMofId(
+        String schemaName, StringBuilder descriptionOut)
+    {
+        String refMofId;
+        repos.beginReposSession();
+        repos.beginReposTxn(false);
+        try {
+            CwmCatalog catalog = repos.getSelfAsCatalog();
+            FemLocalSchema schema =
+                (FemLocalSchema) FarragoCatalogUtil.getModelElementByName(
+                    catalog.getOwnedElement(),
+                    schemaName);
+    
+            if (descriptionOut != null) {
+                descriptionOut.setLength(0);
+                descriptionOut.append(schema.getDescription());
+            }
+            
+            refMofId = schema.refMofId();
+        }
+        finally {
+            repos.endReposTxn(false);
+            repos.endReposSession();
+        }
+        
+        return refMofId;
     }
 
     private String fetchLobText(String mofId, String attributeName)

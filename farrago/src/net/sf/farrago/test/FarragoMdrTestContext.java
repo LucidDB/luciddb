@@ -39,6 +39,7 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 

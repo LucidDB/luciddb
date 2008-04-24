@@ -19,6 +19,7 @@ Error: DDL validation error near line 1, column 29: Target catalog "SYS_BOOT" al
 > options(
 >     extent_name 'MOF', 
 >     schema_name 'Model',
+>     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
 >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
 > description 'a server';
 > 
@@ -28,6 +29,7 @@ Error: DDL validation error near line 1, column 29: Target catalog "SYS_BOOT" al
 > options(
 >     extent_name 'MOF', 
 >     schema_name 'Model',
+>     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
 >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
 Error: DDL validation error near line 1, column 15: Target catalog "SYS_BOOT" already contains data server "MOF_SERVER" with same name (state=,code=0)
 > 
@@ -37,6 +39,7 @@ Error: DDL validation error near line 1, column 15: Target catalog "SYS_BOOT" al
 > options(
 >     extent_name 'MOF', 
 >     schema_name 'Model',
+>     "org.eigenbase.enki.implementationType" 'NETBEANS_MDR',
 >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
 Error: DDL validation error near line 1, column 15: Target catalog "SYS_BOOT" already contains catalog "LOCALDB" with same name (state=,code=0)
 > 

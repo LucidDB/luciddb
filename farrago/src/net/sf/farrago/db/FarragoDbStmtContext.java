@@ -219,6 +219,8 @@ public class FarragoDbStmtContext
             startAutocommitTxn(!isDml);
         }
 
+        session.getRepos().beginReposSession();
+
         FarragoSessionRuntimeContext newContext = null;
         try {
             checkDynamicParamsSet();
@@ -273,6 +275,9 @@ public class FarragoDbStmtContext
             }
             if (!success) {
                 session.endTransactionIfAuto(false);
+                if (resultSet == null) {
+                    session.getRepos().endReposSession();
+                }
             }
         }
         if (isDml) {
@@ -310,6 +315,9 @@ public class FarragoDbStmtContext
         // FarragoTupleIterResultSet and FennelTxnContext
         if (resultSet == null) {
             session.endTransactionIfAuto(true);
+            if (!isDml) {
+                session.getRepos().endReposSession();
+            }
         }
     }
 

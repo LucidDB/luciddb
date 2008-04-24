@@ -3388,7 +3388,7 @@ public class FarragoJdbcTest
 
     //~ Inner Classes ----------------------------------------------------------
 
-    public static class FarragoJdbcTester
+    public class FarragoJdbcTester
         implements JdbcTester
     {
         FarragoTestCase testCase;
@@ -3413,6 +3413,11 @@ public class FarragoJdbcTest
             testCase.tearDown();
         }
 
+        public String getName()
+        {
+            return FarragoJdbcTest.this.getName();
+        }
+        
         public Connection getConnection()
         {
             return testCase.connection;

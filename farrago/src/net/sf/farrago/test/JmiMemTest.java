@@ -41,6 +41,7 @@ import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.jmi.mem.*;
 import org.eigenbase.reltype.*;
@@ -119,7 +120,7 @@ public class JmiMemTest
             JmiObjUtil.exportToXmiString(
                 Collections.singleton(cmd));
 
-        Collection c =
+        Collection<RefBaseObject> c =
             JmiObjUtil.importFromXmiString(
                 factory.getImpl().getRootPackage(),
                 xmi);
@@ -260,7 +261,7 @@ public class JmiMemTest
             JmiObjUtil.exportToXmiString(
                 Collections.singleton(table));
 
-        Collection c =
+        Collection<?> c =
             JmiObjUtil.importFromXmiString(
                 factory.getImpl().getRootPackage(),
                 xmi);
@@ -295,6 +296,7 @@ public class JmiMemTest
         XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 
+        repos.beginReposSession();
         FarragoReposTxnContext txn = repos.newTxnContext();
         try {
             txn.beginReadTxn();
@@ -304,6 +306,7 @@ public class JmiMemTest
                 "1.2");
         } finally {
             txn.commit();
+            repos.endReposSession();
         }
         String xmi1 = outStream.toString();
 
@@ -311,7 +314,7 @@ public class JmiMemTest
         FarragoMemFactory factory =
             new FarragoMemFactory(
                 repos.getModelGraph());
-        Collection c =
+        Collection<RefBaseObject> c =
             JmiObjUtil.importFromXmiString(
                 factory.getImpl().getRootPackage(),
                 xmi1);
@@ -417,6 +420,11 @@ public class JmiMemTest
         }
 
         public MDRepository getMdrRepos()
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public EnkiMDRepository getEnkiMdrRepos()
         {
             throw new UnsupportedOperationException();
         }
@@ -546,12 +554,22 @@ public class JmiMemTest
             throw new UnsupportedOperationException();
         }
 
+        public void beginReposSession()
+        {
+            throw new UnsupportedOperationException();
+        }
+        
         public void beginReposTxn(boolean writable)
         {
             throw new UnsupportedOperationException();
         }
 
         public void endReposTxn(boolean rollback)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public void endReposSession()
         {
             throw new UnsupportedOperationException();
         }
@@ -598,7 +616,13 @@ public class JmiMemTest
         // implement FarragoRepos
         public FarragoReposTxnContext newTxnContext()
         {
-            return new FarragoReposTxnContext(this);
+            return newTxnContext(false);
+        }
+        
+        // implement FarragoRepos
+        public FarragoReposTxnContext newTxnContext(boolean manageReposSession)
+        {
+            return new FarragoReposTxnContext(this, manageReposSession);
         }
     }
 
