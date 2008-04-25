@@ -132,7 +132,7 @@ cp resgen/COPYING $LIB_DIR/resgen.license.txt
 cp mdrlibs/* $LIB_DIR/mdrlibs
 rm -f $LIB_DIR/mdrlibs/uml*.jar
 rm -f $LIB_DIR/mdrlibs/mdrant.jar
-cp enki/*.jar ekni/*.txt enki/LICENSE $LIB_DIR/enki
+cp enki/*.jar enki/*.txt enki/LICENSE $LIB_DIR/enki
 rm -f $LIB_DIR/enki/eigenbase-enki-*-doc.jar
 rm -f $LIB_DIR/enki/enki-src.jar
 cp OpenJava/openjava.jar $LIB_DIR
