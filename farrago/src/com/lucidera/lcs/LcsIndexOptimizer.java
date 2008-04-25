@@ -250,7 +250,7 @@ public class LcsIndexOptimizer
 
         int i;
         for (i = 0; i < indexedFeatures.size(); i++) {
-            if (indexedFeatures.get(i).getFeature() == col) {
+            if (indexedFeatures.get(i).getFeature().equals(col)) {
                 return i;
             }
         }
@@ -274,7 +274,7 @@ public class LcsIndexOptimizer
         FemAbstractColumn col)
     {
         for (SargColumnFilter filter : filterSet) {
-            if (rowScanRel.getColumnForFieldAccess(filter.columnPos) == col) {
+            if (rowScanRel.getColumnForFieldAccess(filter.columnPos).equals(col)) {
                 return filter;
             }
         }
@@ -1288,8 +1288,9 @@ public class LcsIndexOptimizer
                 // is interval filter
                 FemAbstractColumn lastFilterColumn =
                     rowScanRel.getColumnForFieldAccess(lastFilter.columnPos);
-                assert (indexedFeatures.get(mappedPos - 1).getFeature()
-                    == lastFilterColumn);
+                assert(
+                    indexedFeatures.get(mappedPos - 1).getFeature().equals(
+                        lastFilterColumn));
 
                 RelStatColumnStatistics colStats = null;
 

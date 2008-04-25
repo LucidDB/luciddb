@@ -194,7 +194,7 @@ class FtrsTableModificationRel
             boolean updateInPlace = false;
 
             if (updateCwmColumnList != null) {
-                if (index != clusteredIndex) {
+                if (!index.equals(clusteredIndex)) {
                     List<FemAbstractColumn> coverageList =
                         indexGuide.getUnclusteredCoverageColList(index);
                     if (!coverageList.removeAll(updateCwmColumnList)) {
@@ -216,14 +216,14 @@ class FtrsTableModificationRel
             FemIndexWriterDef indexWriter =
                 indexGuide.newIndexWriter(this, index);
             indexWriter.setUpdateInPlace(updateInPlace);
-            if (index != clusteredIndex) {
+            if (!index.equals(clusteredIndex)) {
                 indexWriter.setInputProj(
                     indexGuide.getCoverageProjection(index));
             }
 
             boolean prepend = false;
             if (clusteredFirst) {
-                if (index == clusteredIndex) {
+                if (index.equals(clusteredIndex)) {
                     prepend = true;
                 }
             } else {

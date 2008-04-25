@@ -810,18 +810,22 @@ public class FarragoDdlGenerator
             return;
         }
 
+        List<FemStorageOption> sortedOptions = 
+            new ArrayList<FemStorageOption>(options);
+        Collections.sort(sortedOptions, new FemStorageOptionNameComparator());
+        
         if (indent == 1) {
             sb.append(NL);
         }
         sb.append("OPTIONS (");
         sb.append(NL);
         int k = 0;
-        for (FemStorageOption option : options) {
+        for (FemStorageOption option : sortedOptions) {
             indent(sb, indent * 2);
             sb.append(quote(option.getName()));
             sb.append(" ");
             sb.append(literal(option.getValue()));
-            if (++k < options.size()) {
+            if (++k < sortedOptions.size()) {
                 sb.append(",");
             }
             sb.append(NL);
@@ -879,6 +883,21 @@ public class FarragoDdlGenerator
 
             name(sb, e.getNamespace(), e.getName());
             stmt.addStmt(sb.toString());
+        }
+    }
+    
+    protected static class FemStorageOptionNameComparator
+        implements Comparator<FemStorageOption>
+    {
+        public int compare(FemStorageOption o1, FemStorageOption o2)
+        {
+            int c = o1.getName().compareTo(o2.getName());
+            
+            if (c != 0) {
+                return c;
+            }
+            
+            return o1.getValue().compareTo(o2.getValue());
         }
     }
 }

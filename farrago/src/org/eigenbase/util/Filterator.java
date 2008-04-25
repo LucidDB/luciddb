@@ -59,6 +59,11 @@ public class Filterator<E>
      */
     public boolean hasNext()
     {
+        if (ready) {
+            // Allow hasNext() to be called repeatedly.
+            return true;
+        }
+        
         // look ahead to see if there are any additional elements
         try {
             lookAhead = next();

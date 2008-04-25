@@ -1704,21 +1704,19 @@ Warning: Statement execution encountered recoverable exceptions; errors: 3; warn
 > 
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +----------------+--------------------+--------------------+
 |   TABLE_NAME   | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +----------------+--------------------+--------------------+
 | COMIC          | 4                  | 2                  |
 | COMIC_STG      | 6                  | 0                  |
-| DEPTS          |                    |                    |
-| EMPS           |                    |                    |
 | EMPS           | 7                  | 37                 |
 | EMPS2          | 7                  | 4                  |
 | PK1            | 0                  | 0                  |
 | PK2            | 0                  | 0                  |
 | SALARYTABLE    | 6                  | 0                  |
 | TEMPEMPS       | 7                  | 1                  |
-| TEMPS          |                    |                    |
 | UK1            | 2                  | 0                  |
 | UK2            | 3                  | 0                  |
 | VILLIANS       | 1                  | 1                  |

@@ -32,6 +32,7 @@ usage() {
     echo ""
     echo "            [--without-farrago-build] (default with) "
     echo "            [--without-dist-build] (default with) "
+    echo "            [--with-repos-type=(default|mysql/hibernate|psql/netbeans)]"
 }
 
 with_fennel=true
@@ -43,6 +44,7 @@ with_nightly_tests=false
 FARRAGO_FLAGS=""
 FARRAGO_DIST_FLAGS=""
 luciddb_dir=$(cd $(dirname $0); pwd)
+with_repos_type=false
 
 # extended globbing for case statement
 shopt -sq extglob
@@ -79,12 +81,18 @@ while [ -n "$1" ]; do
             FARRAGO_DIST_FLAGS="${FARRAGO_DIST_FLAGS} $1";
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
 
+        # We match all the possibilities here so that we don't get a 
+        # confusing usage message from Farrago's initBuild.sh
+        --with-repos-type=@(default|mysql/hibernate|psql/netbeans))
+            with_repos_type=true
+            FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+
         --skip-fennel-thirdparty-build|--without-fennel-thirdparty-build) 
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --skip-fennel-build|--without-fennel-build) 
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
 
-        *) usage; exit -1;;
+        *) echo "Unknown option: $1"; usage; exit -1;;
     esac
 
     shift
@@ -114,6 +122,9 @@ fi
 
 if $without_farrago_build ; then
     echo Skipping Farrago build.
+    if $with_repos_type; then
+        echo "** Ignoring --with-repos-type"
+    fi
 else
     cd ${luciddb_dir}/../farrago
     ./initBuild.sh ${FARRAGO_FLAGS}

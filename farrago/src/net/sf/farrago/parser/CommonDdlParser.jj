@@ -477,7 +477,7 @@ void SchemaPath(FemLocalSchema schema) :
         Iterator iter = searchPath.iterator();
         while (iter.hasNext()) {
             CwmSchema searchedSchema = (CwmSchema) iter.next();
-            if (searchedSchema.getNamespace() != schema.getNamespace()) {
+            if (!searchedSchema.getNamespace().equals(schema.getNamespace())) {
                 throw FarragoResource.instance().ValidatorPathBadCatalog.ex(
                     getRepos().getLocalizedObjectName(
                         searchedSchema.getNamespace()),
@@ -705,7 +705,7 @@ FemLocalIndex IndexDefinition(CwmTable table) :
             table = specifiedTable;
         } else {
             // TODO:  move rule down into validator
-            if (table != specifiedTable) {
+            if (!table.equals(specifiedTable)) {
                 throw farragoParser.getDdlValidator().newPositionalError(
                     index,
                     FarragoResource.instance().ValidatorIndexBadTable.ex());

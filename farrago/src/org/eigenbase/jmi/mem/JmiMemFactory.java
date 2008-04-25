@@ -869,7 +869,10 @@ public abstract class JmiMemFactory
                 Collection c = (Collection) obj;
                 return c.contains(rr.referencedEnd);
             } else {
-                return obj == rr.referencedEnd;
+                return 
+                    obj != null
+                        ? obj.equals(rr.referencedEnd)
+                        : rr.referencedEnd == null;
             }
         }
 
@@ -967,7 +970,7 @@ public abstract class JmiMemFactory
                     Reference.class,
                     rr.multiValued))
             {
-                if (featureRef.getReferencedEnd() == referencedEnd) {
+                if (featureRef.getReferencedEnd().equals(referencedEnd)) {
                     rr.ref = featureRef;
                     return true;
                 }

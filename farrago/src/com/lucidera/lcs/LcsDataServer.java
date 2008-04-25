@@ -217,9 +217,10 @@ class LcsDataServer
         throws SQLException
     {
         // Verify that no column has a collection for its type, because
-        // we don't support those...yet.
+        // we don't support those...yet.  Store columns in LinkedHashSet 
+        // so we create their cluster indexes in a deterministic order.
         Set<CwmColumn> uncoveredColumns =
-            new HashSet<CwmColumn>(
+            new LinkedHashSet<CwmColumn>(
                 Util.cast(table.getFeature(), CwmColumn.class));
         for (CwmColumn col : uncoveredColumns) {
             if (col.getType() instanceof FemSqlcollectionType) {

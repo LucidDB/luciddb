@@ -1,4 +1,14 @@
 0: jdbc:luciddb:> -- test the do_for_entire_schema UDP
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Perform first test in a schema with only one table; exec order is non-deterministic
+0: jdbc:luciddb:> create schema TESTSCHEMA_SIMPLE;
+0: jdbc:luciddb:> set schema 'TESTSCHEMA_SIMPLE';
+0: jdbc:luciddb:> create table T1(col1 integer, col2 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try to do a select; should fail
+0: jdbc:luciddb:> call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'TESTSCHEMA_SIMPLE', 'TABLES_AND_VIEWS');
+Error: Can't executeUpdate a query:  select * from "TESTSCHEMA_SIMPLE"."T1" (state=,code=0)
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema TESTSCHEMA;
 0: jdbc:luciddb:> set schema 'TESTSCHEMA';
 0: jdbc:luciddb:> create user MONDRIAN_USER authorization NOPE default schema TESTSCHEMA;
@@ -6,10 +16,6 @@
 0: jdbc:luciddb:> create table T2(col3 varchar(255), col4 integer);
 0: jdbc:luciddb:> create view V1 as select * from T2;
 0: jdbc:luciddb:> create view V2 as select col2 from T1;
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- try to do a select; should fail
-0: jdbc:luciddb:> call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'TESTSCHEMA', 'TABLES_AND_VIEWS');
-Error: Can't executeUpdate a query:  select * from "TESTSCHEMA"."T1" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- connect as new user and try to do select on tables. should fail.
 0: jdbc:luciddb:> !connect jdbc:luciddb: MONDRIAN_USER NOPE

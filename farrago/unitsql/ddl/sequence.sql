@@ -164,7 +164,7 @@ insert into s values (20, 20);
 -- VIEWS
 ----------------------------------------------------------------------
 
-select * from sys_boot.mgmt.sequences_view;
+select * from sys_boot.mgmt.sequences_view order by TABLE_NAME, COLUMN_NAME;
 
 ----------------------------------------------------------------------
 -- INTERACTION WITH REBUILD (LDB-160)

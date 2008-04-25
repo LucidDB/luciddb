@@ -238,12 +238,12 @@ Error: Cannot explicitly insert value into IDENTITY column 'D' which is ALWAYS G
 > -- VIEWS
 > ----------------------------------------------------------------------
 > 
-> select * from sys_boot.mgmt.sequences_view;
+> select * from sys_boot.mgmt.sequences_view order by TABLE_NAME, COLUMN_NAME;
 +------------+--------------------+-------------+--------------+------------+------------+-----------+-----------+--------+----------+
 | TABLE_CAT  |    TABLE_SCHEM     | TABLE_NAME  | COLUMN_NAME  | baseValue  | increment  | minValue  | maxValue  | cycle  | expired  |
 +------------+--------------------+-------------+--------------+------------+------------+-----------+-----------+--------+----------+
-| LOCALDB    | SEQUENCE_DDL_TEST  | T           | B            | 0          | -2         | -10       | 0         | true   | false    |
 | LOCALDB    | SEQUENCE_DDL_TEST  | S           | D            | 100        | 1          | 100       | 100       | true   | false    |
+| LOCALDB    | SEQUENCE_DDL_TEST  | T           | B            | 0          | -2         | -10       | 0         | true   | false    |
 +------------+--------------------+-------------+--------------+------------+------------+-----------+-----------+--------+----------+
 > 
 > ----------------------------------------------------------------------

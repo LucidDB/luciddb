@@ -44,5 +44,25 @@ sqlline> !connect jdbc:farrago:;clientProcessId=bogus sa tiger
 | 6.666666  |
 +-----------+
 > 
+> -- stop after two rows
+> !set rowlimit 2
+> select * from sales.depts order by name;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 30      | Accounts   |
+| 20      | Marketing  |
++---------+------------+
+> 
+> -- revert to fetching all rows
+> !set rowlimit 0
+> select * from sales.depts order by name;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 30      | Accounts   |
+| 20      | Marketing  |
+| 10      | Sales      |
++---------+------------+
 > 
 > !quit

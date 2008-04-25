@@ -24,7 +24,16 @@
 # an existing one after syncing changes from source control.
 
 usage() {
-    echo "Usage:  initBuild.sh --with[out]-fennel [--with[out]-optimization] [--with[out]-debug] [--without-fennel[-thirdparty]-build] [--with[out]-aio-required] [--with[out]-tests] [--with-nightly-tests]"
+    echo "Usage:  initBuild.sh"
+    echo "           --with[out]-fennel (required)"
+    echo "           [--with[out]-optimization] (default without)"
+    echo "           [--with[out]-debug] (default with)"
+    echo "           [--without-fennel[-thirdparty]-build] (default w/both)"
+    echo "           [--with[out]-aio-required] (default without)"
+    echo ""
+    echo "           [--with[out]-tests] (default without)"
+    echo "           [--with-nightly-tests] (default without)"
+    echo "           [--with-repos-type=(default|mysql/hibernate|psql/netbeans)]"
 }
 
 fennel_flag_missing=true
@@ -32,6 +41,7 @@ fennel_disabled=missing
 fennel_skip_build=false
 skip_tests=true
 with_nightly_tests=false
+repos_type=missing
 
 # extended globbing for case statement
 shopt -sq extglob
@@ -56,7 +66,14 @@ while [ -n "$1" ]; do
             skip_tests=true;
             TEST_FLAG="$1";;
 
-        *) usage; exit -1;;
+        --with-repos-type=default)
+            repos_type="switchToDefaultReposStorage";;
+        --with-repos-type=mysql/hibernate)
+            repos_type="switchToMysqlHibernateReposStorage";;
+        --with-repos-type=psql/netbeans) 
+            repos_type="switchToPsqlReposStorage";;
+            
+        *) echo "Unknown option: $1"; usage; exit -1;;
     esac
     shift
 done
@@ -65,6 +82,7 @@ shopt -uq extglob
 
 # Check required options
 if [ $fennel_disabled == "missing" ] ; then
+    echo "You must specify --with-fennel or --without-fennel"
     usage
     exit -1;
 fi
@@ -119,6 +137,11 @@ fi
 # (but don't run tests when Fennel is disabled, since most fail without it)
 cd ../farrago
 ${run_ant} clean
+
+# if missing, assume repos is configured as desired (or that the default is ok)
+if [ $repos_type != "missing" ]; then
+    ${run_ant} $repos_type
+fi
 
 if $fennel_disabled || $skip_tests ; then
     ${run_ant} createCatalog

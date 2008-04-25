@@ -1618,7 +1618,7 @@ public class LcsIndexGuide
                 Util.cast(table.getFeature(), FemAbstractColumn.class);
             for (int j = 0; j < keys.size(); j++) {
                 FemAbstractColumn keyCol = columns.get(keys.get(j));
-                if (idxCol == keyCol) {
+                if (idxCol.equals(keyCol)) {
                     keyOrder[i] = j;
                     nMatches++;
                     break;

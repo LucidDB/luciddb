@@ -106,9 +106,12 @@ ${farrago.test.jvmargs}
 
   <property name="LucidDbMdrBuildTrace.log" location="${trace.dir}/LucidDbMdrBuildTrace.log" />
 
+  <!-- default LucidDb catalog schema name -->
+  <property name="luciddb.catalog.schema" value="luciddb"/>
+
   <!-- override Farrago -->
   <property name="project.catalog.dir" location="${catalog.dir}" />
-  <property name="project.catalog.schema" value="luciddb" />
+  <property name="project.catalog.schema" value="${luciddb.catalog.schema}" />
   <property name="project.trace.propfile" location="${LucidDbTrace.properties}" />
 
   <!-- directory for JUnit run output -->
@@ -512,7 +515,7 @@ ${farrago.test.jvmargs}
 
   <!-- Copies the Farrago unconfigured catalog to our catalog directory. -->
   <!-- Also copies Fennel resources to catalog/fennel. -->
-  <target name="copyFarragoCatalog" depends="cleanCatalogData">
+  <target name="copyFarragoCatalog">
     <copy 
         todir="${catalog.dir}"
         file="${farrago.ReposStorage.propfile}"
@@ -525,9 +528,14 @@ ${farrago.test.jvmargs}
           <replacestring
             from="jdbc:postgresql://localhost/${farrago.catalog.schema}"
             to="jdbc:postgresql://localhost/${project.catalog.schema}"/>
+          <replaceregex
+            pattern="(net\.sf\.farrago\.dev\.[^=]+)=(.*)${farrago.catalog.schema}(.*)"
+            replace="\1=\2${project.catalog.schema}\3"/>
         </tokenfilter>
       </filterchain>
     </copy>
+
+    <antcall target="cleanCatalogData"/>
 
     <farrago.restoreCatalog
       catalogDir="${catalog.dir}"
@@ -563,7 +571,7 @@ ${farrago.test.jvmargs}
   <!-- delete catalog data only -->
   <target name="cleanCatalogData">
     <mkdir dir="${catalog.dir}"/>
-    <farrago.cleanCatalog catalogDir="${catalog.dir}"/>
+    <farrago.cleanCatalog catalogDir="${catalog.dir}" dropStorage="true"/>
   </target>
 
   <!-- generate developer configuration file and import it -->

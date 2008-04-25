@@ -13,9 +13,9 @@ select deptno from sales.depts where false;
 
 select deptno from sales.depts where 0 > 1;
 
-select deptno from sales.depts where true;
+select deptno from sales.depts where true order by deptno;
 
-select deptno from sales.depts where 1 > 0;
+select deptno from sales.depts where 1 > 0 order by deptno;
 
 -- now test with Fennel calc
 alter system set "calcVirtualMachine"  = 'CALCVM_FENNEL';
@@ -24,9 +24,9 @@ select deptno from sales.depts where false;
 
 select deptno from sales.depts where 0 > 1;
 
-select deptno from sales.depts where true;
+select deptno from sales.depts where true order by deptno;
 
-select deptno from sales.depts where 1 > 0;
+select deptno from sales.depts where 1 > 0 order by deptno;
 
 -- test a bug (LER-3372) with the combination of constant reduction and
 -- LucidDB error recovery:  we don't want errors encountered when

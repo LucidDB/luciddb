@@ -35,6 +35,11 @@
   <property name="plugin.catalog.dir" 
     location="${plugin.dir}/catalog"/>
 
+  <!-- By default, use Farrago's repository storage properties. -->
+  <property
+    name="plugin.repos.storage.propfile" 
+    location="${farrago.ReposStorage.propfile}"/>
+
   <property name="plugin.xmi.dir" 
     location="${plugin.catalog.dir}/xmi"/>
 
@@ -97,7 +102,6 @@
     <farrago.synthesizeMetamodel
       extMofBasename="${plugin.model.basename}Mof"
       xmiDir="${plugin.xmi.dir}"/>
-    <farrago.setReposProvider/>
     <farrago.antFork dir="${plugin.dir}" 
       target="plugin.forked_generateMetamodelCode"/>
     <farrago.javaCompile
@@ -125,7 +129,12 @@
   </target>
 
   <target name="plugin.forked_generateMetamodelCode" depends="farrago.mdr_taskdef">
-    <farrago.setReposProvider/>
+    <farrago.setReposProvider
+      reposStorageProps="${plugin.repos.storage.propfile}"/>
+
+    <!-- Make sure the MDR build trace file is configured. -->
+    <farrago.configureTrace
+      propFile="${FarragoMdrBuildTrace.properties}" logFile="${FarragoMdrBuildTrace.log}"/>
 
     <!-- Make sure the MDR build trace file is configured. -->
     <farrago.configureTrace

@@ -482,9 +482,7 @@ ${farrago.test.jvmargs}
       tofile="${farrago.ReposStorage.propfile}" overwrite="true">
       <filterchain>
         <tokenfilter>
-          <replacestring
-            from="jdbc:mysql://localhost:3306/test"
-            to="jdbc:mysql://localhost:3306/${farrago.catalog.schema}"/>
+          <replacestring from="{SCHEMA}" to="${farrago.catalog.schema}"/>
         </tokenfilter>
       </filterchain>
     </copy>
@@ -505,7 +503,7 @@ ${farrago.test.jvmargs}
       <then>
         <copy 
             file="${farrago.catalog.dir}/templates/EnkiEhCache.xml"
-            tofile="${farrago.classes.dir}/FarragoEhCache.properties"/>
+            tofile="${farrago.classes.dir}/FarragoEhCache.xml"/>
       </then>
     </ac:if>
   </target>
@@ -681,6 +679,11 @@ ${farrago.test.jvmargs}
     <farrago.backupCatalog
       backupDir="${farrago.catalog.unconfigured.dir}"
       catalogOnly="true"/>
+
+    <antcall target="exportCatalog"/>
+    <copy
+      todir="${farrago.catalog.unconfigured.dir}" 
+      file="${farrago.xmi.dir}/FarragoCatalogExport.xmi"/>
   </target>
 
   <!-- back up the current catalog contents -->
@@ -713,7 +716,7 @@ ${farrago.test.jvmargs}
 
   <!-- delete catalog data only -->
   <target name="cleanCatalogData">
-    <farrago.cleanCatalog/>
+    <farrago.cleanCatalog dropStorage="true"/>
   </target>
 
   <target name="exportCatalog">

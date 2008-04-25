@@ -1,4 +1,13 @@
 -- test the do_for_entire_schema UDP
+
+-- Perform first test in a schema with only one table; exec order is non-deterministic
+create schema TESTSCHEMA_SIMPLE;
+set schema 'TESTSCHEMA_SIMPLE';
+create table T1(col1 integer, col2 integer);
+
+-- try to do a select; should fail
+call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'TESTSCHEMA_SIMPLE', 'TABLES_AND_VIEWS');
+
 create schema TESTSCHEMA;
 set schema 'TESTSCHEMA';
 create user MONDRIAN_USER authorization NOPE default schema TESTSCHEMA;
@@ -6,9 +15,6 @@ create table T1(col1 integer, col2 integer);
 create table T2(col3 varchar(255), col4 integer);
 create view V1 as select * from T2;
 create view V2 as select col2 from T1;
-
--- try to do a select; should fail
-call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'TESTSCHEMA', 'TABLES_AND_VIEWS');
 
 -- connect as new user and try to do select on tables. should fail.
 !connect jdbc:luciddb: MONDRIAN_USER NOPE
