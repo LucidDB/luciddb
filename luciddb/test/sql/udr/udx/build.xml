@@ -60,6 +60,7 @@
         <property file="run.properties"/>
       </else>
     </if>
+    <ant dir="enforceRowConstraints" target="gen-all-sql"/>
   </target>
 
   <target name="test" depends="clean-test,gen-all-sql">

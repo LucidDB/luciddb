@@ -265,6 +265,10 @@ Message: {3}</text>
 <text>Escape symbol must be a single character.</text>
 </exception>
 
+<exception id="900520" name="IncrementByMustNotBeZero">
+<text>INCREMENT_BY cannot be zero (but it was).</text>
+</exception>
+
 <exception id="900600" name="MondrianReplicationFailed">
 <text>Failed while replicating Mondrian schema.</text>
 </exception>
