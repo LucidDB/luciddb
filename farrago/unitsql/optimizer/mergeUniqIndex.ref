@@ -57,16 +57,14 @@
 > -- check rowcounts before doing any merges
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 4                  | 0                  |
 | SALARYTABLE  | 0                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -108,16 +106,14 @@
 > -- verify rowcounts after merge -- should be 2 new rows after the merge
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 4                  |
 | SALARYTABLE  | 0                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -179,16 +175,14 @@
 > 
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 4                  | 6                  |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -228,16 +222,14 @@
 +--------+---------+---------+---------+---------------------------------+------+-----------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 10                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -276,16 +268,14 @@
 +--------+---------+---------+---------+---------------------------------+------+-----------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 10                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -325,16 +315,14 @@
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 16                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -364,16 +352,14 @@
 +--------+--------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 4                  | 18                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -411,16 +397,14 @@
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 18                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -456,16 +440,14 @@
 +----------+------------+-----------+-----------+--------------------------------------+--------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 18                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -503,16 +485,14 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 19                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -553,16 +533,14 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 20                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 0                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -585,16 +563,14 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 > insert into tempemps values(160, 'Pebbles', 60, 'F', 'Foster City', 2);
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 20                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -639,16 +615,14 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 26                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -684,16 +658,14 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +--------+----------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 7                  | 26                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -725,16 +697,14 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +--------+----------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 27                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -767,16 +737,14 @@ Warning: Statement execution encountered recoverable exceptions; errors: 1; warn
 +--------+----------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 33                 |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -1394,17 +1362,15 @@ Error: Cannot update unique key column (EMPNO) (state=,code=0)
 +----------+----------+-----------+-----------+--------------------------------------+--------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 7                  | 37                 |
 | EMPS2        | 4                  | 0                  |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
@@ -1446,17 +1412,15 @@ Error: Cannot update unique key column (EMPNO) (state=,code=0)
 > -- verify rowcounts after merge -- should be 3 new rows after the merge
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
+>     where schema_name = 'M'
 >     order by 1;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
-| DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 7                  | 37                 |
 | EMPS2        | 7                  | 4                  |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
-| TEMPS        |                    |                    |
 +--------------+--------------------+--------------------+
 > select * from sys_boot.mgmt.session_parameters_view
 >     where param_name = 'lastUpsertRowsInserted';
