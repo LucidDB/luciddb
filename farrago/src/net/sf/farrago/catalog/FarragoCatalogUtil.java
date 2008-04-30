@@ -419,7 +419,7 @@ public abstract class FarragoCatalogUtil
         {
             result.add((FemLocalIndex)index);
         }
-        Collections.sort(result, MofIdComparator.instance);
+        Collections.sort(result, JmiMofIdComparator.instance);
         
         return result;
     }
@@ -1143,16 +1143,6 @@ public abstract class FarragoCatalogUtil
         long zero = 0;
         table.setRowCount(zero);
         table.setDeletedRowCount(zero);
-    }
-    
-    private static class MofIdComparator implements Comparator<RefObject>
-    {
-        private static final MofIdComparator instance = new MofIdComparator();
-        
-        public int compare(RefObject o1, RefObject o2)
-        {
-            return o1.refMofId().compareTo(o2.refMofId());
-        }
     }
 }
 
