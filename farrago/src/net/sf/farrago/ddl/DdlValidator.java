@@ -42,6 +42,7 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -123,15 +124,16 @@ public class DdlValidator
 
     /**
      * Map containing scheduled validation actions. The key is the MofId of the
-     * object scheduled for validation; the value is a ValidatedOp.
+     * object scheduled for validation; the value is a simple object containing
+     * a ValidatedOp and the object's RefClass.
      */
-    private Map<String, ValidatedOp> schedulingMap;
+    private Map<String, SchedulingDetail> schedulingMap;
 
     /**
      * Map of objects in transition between schedulingMap and validatedMap.
      * Content format is same as for schedulingMap.
      */
-    private Map<String, ValidatedOp> transitMap;
+    private Map<String, SchedulingDetail> transitMap;
 
     /**
      * Map of object validations which have already taken place. The key is the
@@ -192,7 +194,8 @@ public class DdlValidator
 
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
-        schedulingMap = new LinkedHashMap<String, ValidatedOp>();
+        schedulingMap = 
+            new LinkedHashMap<String, SchedulingDetail>();
         validatedMap = new LinkedHashMap<RefObject, ValidatedOp>();
         deleteQueue = new LinkedHashSet<RefObject>();
 
@@ -305,10 +308,21 @@ public class DdlValidator
         RefObject refObject,
         ValidatedOp status)
     {
-        return (schedulingMap.get(refObject.refMofId()) == status)
+        return (getObjectStatusFromMap(schedulingMap, refObject) == status)
             || (validatedMap.get(refObject) == status)
             || ((transitMap != null)
-                && (transitMap.get(refObject.refMofId()) == status));
+                && (getObjectStatusFromMap(transitMap, refObject) == status));
+    }
+    
+    private ValidatedOp getObjectStatusFromMap(
+        Map<String, SchedulingDetail> map, RefObject refObject)
+    {
+        SchedulingDetail detail = map.get(refObject.refMofId());
+        if (detail == null) {
+            return null;
+        }
+        
+        return detail.validatedOp;
     }
 
     // implement FarragoSessionDdlValidator
@@ -855,20 +869,24 @@ public class DdlValidator
             // Swap in a new map so new scheduling calls aren't handled until
             // the next round.
             transitMap = schedulingMap;
-            schedulingMap = new LinkedHashMap<String, ValidatedOp>();
+            schedulingMap = 
+                new LinkedHashMap<String, SchedulingDetail>();
 
             boolean progress = false;
             for (
-                Map.Entry<String, ValidatedOp> mapEntry
+                Map.Entry<String, SchedulingDetail> mapEntry
                 : transitMap.entrySet())
             {
+                SchedulingDetail scheduleDetail = mapEntry.getValue();
+                
+                RefClass cls = scheduleDetail.refClass;
                 RefObject obj =
-                    (RefObject) getRepos().getMdrRepos().getByMofId(
-                        mapEntry.getKey());
+                    ((EnkiMDRepository)getRepos().getMdrRepos()).getByMofId(
+                        mapEntry.getKey(), cls);
                 if (obj == null) {
                     continue;
                 }
-                ValidatedOp action = mapEntry.getValue();
+                ValidatedOp action = scheduleDetail.validatedOp;
 
                 // mark this object as already validated so it doesn't slip
                 // back in by updating itself
@@ -894,9 +912,7 @@ public class DdlValidator
                     // Something hit an unvalidated dependency; we'll have
                     // to retry this object later.
                     validatedMap.remove(obj);
-                    schedulingMap.put(
-                        obj.refMofId(),
-                        action);
+                    schedulingMap.put(obj.refMofId(), scheduleDetail);
                 } catch (EigenbaseException ex) {
                     tracer.info(
                         "Revalidate exception on "
@@ -1268,7 +1284,8 @@ public class DdlValidator
         // delete overrides anything else
         schedulingMap.put(
             obj.refMofId(),
-            ValidatedOp.DELETION);
+            new SchedulingDetail(
+                ValidatedOp.DELETION, obj.refClass()));
         mapParserPosition(obj);
     }
 
@@ -1288,18 +1305,20 @@ public class DdlValidator
             // integrity verification on it during executeStorage()
             schedulingMap.put(
                 obj.refMofId(),
-                ValidatedOp.MODIFICATION);
+                new SchedulingDetail(
+                    ValidatedOp.MODIFICATION, obj.refClass()));
             return;
         }
         CwmModelElement element = (CwmModelElement) obj;
         if (isNewObject(element)) {
             schedulingMap.put(
                 obj.refMofId(),
-                ValidatedOp.CREATION);
+                new SchedulingDetail(ValidatedOp.CREATION, obj.refClass()));
         } else {
             schedulingMap.put(
                 obj.refMofId(),
-                ValidatedOp.MODIFICATION);
+                new SchedulingDetail(
+                    ValidatedOp.MODIFICATION, obj.refClass()));
         }
         mapParserPosition(obj);
     }
@@ -1506,7 +1525,7 @@ public class DdlValidator
                     "");
                 schedulingMap.put(
                     e.refMofId(),
-                    ValidatedOp.CREATION);
+                    new SchedulingDetail(ValidatedOp.CREATION, e.refClass()));
             }
         }
     }
@@ -1758,6 +1777,18 @@ public class DdlValidator
                 
                 return pos1.getEndColumnNum() - pos2.getEndColumnNum();
             }
+        }
+    }
+    
+    private static class SchedulingDetail
+    {
+        private final ValidatedOp validatedOp;
+        private final RefClass refClass;
+        
+        private SchedulingDetail(ValidatedOp validatedOp, RefClass refClass)
+        {
+            this.validatedOp = validatedOp;
+            this.refClass = refClass;
         }
     }
 }
