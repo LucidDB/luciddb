@@ -39,6 +39,7 @@ select * from tempemps order by t_empno;
 -- check rowcounts before doing any merges
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -60,6 +61,7 @@ select * from emps order by empno;
 -- verify rowcounts after merge -- should be 2 new rows after the merge
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -83,6 +85,7 @@ select * from salarytable order by empno;
 
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -102,6 +105,7 @@ merge into emps e
 select * from emps order by empno;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -120,6 +124,7 @@ merge into emps
 select * from emps order by empno;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -139,6 +144,7 @@ merge into emps
 select * from emps order by empno;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -150,6 +156,7 @@ delete from emps where empno >= 140;
 select * from emps order by empno;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -167,6 +174,7 @@ merge into emps
 select * from emps order by empno;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -181,6 +189,7 @@ insert into tempemps values(130, 'JohnClone', 41, 'M', 'Vancouver', null);
 select * from tempemps order by t_empno, t_name;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -197,6 +206,7 @@ merge into emps
 select * from emps order by empno, name;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -216,6 +226,7 @@ merge into emps
 select * from emps order by empno, name;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -228,6 +239,7 @@ delete from tempemps where t_name = 'JohnClone';
 insert into tempemps values(160, 'Pebbles', 60, 'F', 'Foster City', 2);
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -241,6 +253,7 @@ merge into emps
 select * from emps order by empno, name;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -255,6 +268,7 @@ merge into emps
 select * from emps order by empno, name;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -266,6 +280,7 @@ delete from emps where empno = 130;
 select * from emps order by empno;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -278,6 +293,7 @@ merge into emps e1
 select * from emps order by empno;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -599,6 +615,7 @@ select * from emps2 order by empno;
 select * from tempemps order by t_empno;
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
@@ -619,6 +636,7 @@ select * from emps2 order by empno;
 -- verify rowcounts after merge -- should be 3 new rows after the merge
 select table_name, current_row_count, deleted_row_count
     from sys_boot.mgmt.dba_stored_tables_internal1
+    where schema_name = 'M'
     order by 1;
 select * from sys_boot.mgmt.session_parameters_view
     where param_name = 'lastUpsertRowsInserted';
