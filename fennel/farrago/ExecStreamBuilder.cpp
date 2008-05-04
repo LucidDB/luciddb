@@ -87,6 +87,25 @@ void ExecStreamBuilder::buildStream(
 {
     ExecStreamEmbryo embryo = streamFactory.visitStream(streamDef);
     graphEmbryo.saveStreamEmbryo(embryo);
+    SharedProxyDynamicParamUse pParamUse = streamDef.getDynamicParamUse();
+    for (; pParamUse; ++pParamUse) {
+        DynamicParamId dynamicParamId(pParamUse->getDynamicParamId());
+        if (pParamUse->isRead()) {
+            if (false) 
+                std::cout << "stream " << embryo.getStream()->getStreamId()
+                          << " reads param " << dynamicParamId << std::endl;
+            graphEmbryo.getGraph().declareDynamicParamReader(
+                embryo.getStream()->getStreamId(),
+                dynamicParamId);
+        } else {
+            if (false)
+                std::cout << "stream " << embryo.getStream()->getStreamId()
+                          << " writes param " << dynamicParamId << std::endl;
+            graphEmbryo.getGraph().declareDynamicParamWriter(
+                embryo.getStream()->getStreamId(), 
+                dynamicParamId);
+        }
+    }
 }
 
 void ExecStreamBuilder::buildStreamInputs(

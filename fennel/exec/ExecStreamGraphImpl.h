@@ -188,6 +188,13 @@ protected:
      * Whether to close this graph in dataflow order (producers to consumers)
      */
     bool doDataflowClose;
+
+    class DynamicParamInfo;
+
+    /**
+     * Information on readers and writers of dynamic parameters.
+     */
+    std::map<DynamicParamId, DynamicParamInfo> dynamicParamMap;
     
     virtual void closeImpl();
     virtual void sortStreams();
@@ -281,6 +288,23 @@ public:
     virtual void renderGraphviz(std::ostream &dotStream);
     virtual bool isAcyclic();
     virtual void closeProducers(ExecStreamId streamId);
+    virtual void declareDynamicParamWriter(
+        ExecStreamId streamId,
+        DynamicParamId dynamicParamId);
+    virtual void declareDynamicParamReader(
+        ExecStreamId streamId,
+        DynamicParamId dynamicParamId);
+    virtual const std::vector<ExecStreamId> &getDynamicParamWriters(
+        DynamicParamId dynamicParamId);
+    virtual const std::vector<ExecStreamId> &getDynamicParamReaders(
+        DynamicParamId dynamicParamId);
+};
+
+class ExecStreamGraphImpl::DynamicParamInfo
+{
+public:
+    std::vector<ExecStreamId> readerStreamIds;
+    std::vector<ExecStreamId> writerStreamIds;
 };
 
 inline ExecStreamGraphImpl::GraphRep const &

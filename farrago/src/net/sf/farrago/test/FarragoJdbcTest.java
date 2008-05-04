@@ -350,13 +350,13 @@ public class FarragoJdbcTest
     public void testJavaQuerySynchronousCancel()
         throws Exception
     {
-        testQueryCancel(true, "JAVA");
+        queryCancel(true, "JAVA");
     }
 
     public void testJavaQueryAsynchronousCancel()
         throws Exception
     {
-        testQueryCancel(false, "JAVA");
+        queryCancel(false, "JAVA");
     }
 
     public void testJavaQueryAsynchronousCancelRepeated()
@@ -369,40 +369,40 @@ public class FarragoJdbcTest
         // test nearly immediate cancellation
         for (int i = 0; i < 10; i++) {
             int millis = (int) (rand.nextDouble() * 5);
-            testQueryCancel(millis, "JAVA", false);
+            queryCancel(millis, "JAVA", false);
         }
 
         // test more "reasonable" cancellation intervals
         rand.setSeed(seed);
         for (int i = 0; i < 10; i++) {
             int millis = (int) (rand.nextDouble() * 5000);
-            testQueryCancel(millis, "JAVA", false);
+            queryCancel(millis, "JAVA", false);
         }
     }
 
     public void testFennelQuerySynchronousCancel()
         throws Exception
     {
-        testQueryCancel(true, "FENNEL");
+        queryCancel(true, "FENNEL");
     }
 
     // FIXME jvs 11-Apr-2006:  re-enable once FNL-30 is fixed
     public void _testFennelQueryAsynchronousCancel()
         throws Exception
     {
-        testQueryCancel(false, "FENNEL");
+        queryCancel(false, "FENNEL");
     }
 
     public void testUdxSynchronousCancel()
         throws Exception
     {
-        testUdxCancel(true);
+        udxCancel(true);
     }
 
     public void testUdxAsynchronousCancel()
         throws Exception
     {
-        testUdxCancel(false);
+        udxCancel(false);
     }
     
     public void testSubqueryCancel()
@@ -412,17 +412,17 @@ public class FarragoJdbcTest
         // It exercises a similar query pattern as
         // _testFennelQueryAsynchronousCancel, except within a subquery
         // and using a Java executor for the foreign table.
-        testQueryCancel(5000, "JAVA", true);
+        queryCancel(5000, "JAVA", true);
     }
 
-    private void testQueryCancel(boolean synchronous, String executorType)
+    protected void queryCancel(boolean synchronous, String executorType)
         throws Exception
     {
         // Wait 2 seconds before cancel for asynchronous case
-        testQueryCancel(synchronous ? 0 : 2000, executorType, false);
+        queryCancel(synchronous ? 0 : 2000, executorType, false);
     }
 
-    private void testQueryCancel(
+    protected void queryCancel(
         int waitMillis,
         String executorType,
         boolean subquery)
@@ -482,14 +482,14 @@ public class FarragoJdbcTest
         }
     }
 
-    private void testUdxCancel(boolean synchronous)
+    protected void udxCancel(boolean synchronous)
         throws Exception
     {
         // Wait 2 seconds before cancel for asynchronous case
-        testUdxCancel(synchronous ? 0 : 2000);
+        udxCancel(synchronous ? 0 : 2000);
     }
 
-    private void testUdxCancel(int waitMillis)
+    protected void udxCancel(int waitMillis)
         throws Exception
     {
         // cleanup

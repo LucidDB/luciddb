@@ -94,6 +94,7 @@ ${farrago.test.jvmargs}
 
   <!-- Files -->
 
+
   <!-- Template developer configuration file. -->
   <property name="FarragoConfTemplate.xmi"
     location="${farrago.xmi.dir}/FarragoConfTemplate.xmi"/>
@@ -957,7 +958,7 @@ ${farrago.test.jvmargs}
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="-Xmx512m"/>
-        <jvmarg line="-Xss1024k"/>
+        <jvmarg line="-Xss1536k"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <syspropertyset>
@@ -1158,10 +1159,10 @@ please disable it and try again.
 
 
     <!-- not strictly part of fem, but it is JNI code -->
-    <javah
+<!--    <javah
       classpathref="farrago.run.classpath"
       class="net.sf.farrago.fennel.FennelPseudoUuidGenerator"
-      outputFile="${open.dir}/fennel/farrago/JniPseudoUuid.h"/>
+      outputFile="${open.dir}/fennel/farrago/JniPseudoUuid.h"/> -->
   </target>
 
   <!-- Generate FarragoMetadataFactory -->

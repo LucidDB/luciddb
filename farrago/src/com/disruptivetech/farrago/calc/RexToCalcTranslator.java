@@ -40,29 +40,15 @@ import org.eigenbase.util.*;
  *
  * @author Wael Chatila
  * @version $Id$
- * @see CalcProgramBuilder
- * @since Feb 5, 2004
+ * @see RexToCalcTranslator
+ * @since Mar 25, 2008
  */
 public class RexToCalcTranslator
     implements RexVisitor<CalcReg>
 {
-    //~ Enums ------------------------------------------------------------------
-
-    /**
-     * Enumeration of aggregate operations.
-     */
-    public enum AggOp
-    {
-        None, Init, Add, Drop;
-    }
-
-    //~ Instance fields --------------------------------------------------------
-
     // The following 3 fields comprise the program; they are reset each time a
     // new program is started.
     final CalcProgramBuilder builder = new CalcProgramBuilder();
-    CalcReg trueReg = builder.newBoolLiteral(true);
-    CalcReg falseReg = builder.newBoolLiteral(false);
     private int nullRegOrdinal = -1;
 
     protected final CalcRexImplementorTable implementorTable;
@@ -89,16 +75,19 @@ public class RexToCalcTranslator
     protected int labelOrdinal = 0;
 
     /**
-     * Ordered mapping from Saffron types (representing a family of types) to
+     * Ordered mapping from types (representing a family of types) to
      * the corresponding calculator type. The ordering ensures determinacy.
      */
-    private final TypePair [] knownTypes;
+    private final List<Pair<RelDataType,CalcProgramBuilder.OpType>> knownTypes;
 
     /**
-     * @deprecated this can be removed
+     * Aggregate operation (add, drop) currently being implemented.
      */
     private AggOp aggOp;
-    private RexNode [] inputExprs = null;
+
+    /**
+     * Program being translated.
+     */
     private RexProgram program;
 
     /**
@@ -138,103 +127,108 @@ public class RexToCalcTranslator
         setGenerateComments(
             SaffronProperties.instance().generateCalcProgramComments.get());
         RelDataTypeFactory fac = this.rexBuilder.getTypeFactory();
-        knownTypes =
-            new TypePair[] {
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.TINYINT),
-                    CalcProgramBuilder.OpType.Int1),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.SMALLINT),
-                    CalcProgramBuilder.OpType.Int2),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.INTEGER),
-                    CalcProgramBuilder.OpType.Int4),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.BIGINT),
-                    CalcProgramBuilder.OpType.Int8),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.DECIMAL),
-                    CalcProgramBuilder.OpType.Int8),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.FLOAT),
-                    CalcProgramBuilder.OpType.Double),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.DOUBLE),
-                    CalcProgramBuilder.OpType.Double),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.REAL),
-                    CalcProgramBuilder.OpType.Real),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.VARBINARY, 0),
-                    CalcProgramBuilder.OpType.Varbinary),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.VARCHAR, 0),
-                    CalcProgramBuilder.OpType.Varchar),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.BOOLEAN),
-                    CalcProgramBuilder.OpType.Bool),
+        knownTypes = createTypeMap(fac);
+    }
 
-                // FIXME: not right for T/w TZ.
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.DATE),
-                    CalcProgramBuilder.OpType.Int8),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.TIME),
-                    CalcProgramBuilder.OpType.Int8),
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.TIMESTAMP),
-                    CalcProgramBuilder.OpType.Int8),
+    private static List<Pair<RelDataType,CalcProgramBuilder.OpType>>
+    createTypeMap(
+        RelDataTypeFactory fac)
+    {
+        return Arrays.asList(
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.TINYINT),
+                CalcProgramBuilder.OpType.Int1),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.SMALLINT),
+                CalcProgramBuilder.OpType.Int2),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.INTEGER),
+                CalcProgramBuilder.OpType.Int4),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.BIGINT),
+                CalcProgramBuilder.OpType.Int8),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.DECIMAL),
+                CalcProgramBuilder.OpType.Int8),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.FLOAT),
+                CalcProgramBuilder.OpType.Double),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.DOUBLE),
+                CalcProgramBuilder.OpType.Double),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.REAL),
+                CalcProgramBuilder.OpType.Real),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.VARBINARY, 0),
+                CalcProgramBuilder.OpType.Varbinary),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.VARCHAR, 0),
+                CalcProgramBuilder.OpType.Varchar),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.BOOLEAN),
+                CalcProgramBuilder.OpType.Bool),
 
-                new TypePair(
-                    fac.createSqlType(SqlTypeName.SYMBOL),
-                    CalcProgramBuilder.OpType.Int4),
+            // FIXME: not right for T/w TZ.
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.DATE),
+                CalcProgramBuilder.OpType.Int8),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.TIME),
+                CalcProgramBuilder.OpType.Int8),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.TIMESTAMP),
+                CalcProgramBuilder.OpType.Int8),
 
-                new TypePair(
-                    fac.createJavaType(Byte.class),
-                    CalcProgramBuilder.OpType.Int1),
-                new TypePair(
-                    fac.createJavaType(byte.class),
-                    CalcProgramBuilder.OpType.Int1),
-                new TypePair(
-                    fac.createJavaType(Short.class),
-                    CalcProgramBuilder.OpType.Int2),
-                new TypePair(
-                    fac.createJavaType(short.class),
-                    CalcProgramBuilder.OpType.Int2),
-                new TypePair(
-                    fac.createJavaType(Integer.class),
-                    CalcProgramBuilder.OpType.Int4),
-                new TypePair(
-                    fac.createJavaType(int.class),
-                    CalcProgramBuilder.OpType.Int4),
-                new TypePair(
-                    fac.createJavaType(Long.class),
-                    CalcProgramBuilder.OpType.Int8),
-                new TypePair(
-                    fac.createJavaType(long.class),
-                    CalcProgramBuilder.OpType.Int8),
-                new TypePair(
-                    fac.createJavaType(Double.class),
-                    CalcProgramBuilder.OpType.Double),
-                new TypePair(
-                    fac.createJavaType(double.class),
-                    CalcProgramBuilder.OpType.Double),
-                new TypePair(
-                    fac.createJavaType(Float.class),
-                    CalcProgramBuilder.OpType.Real),
-                new TypePair(
-                    fac.createJavaType(float.class),
-                    CalcProgramBuilder.OpType.Real),
-                new TypePair(
-                    fac.createJavaType(String.class),
-                    CalcProgramBuilder.OpType.Varchar),
-                new TypePair(
-                    fac.createJavaType(Boolean.class),
-                    CalcProgramBuilder.OpType.Bool),
-                new TypePair(
-                    fac.createJavaType(boolean.class),
-                    CalcProgramBuilder.OpType.Bool),
-            };
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createSqlType(SqlTypeName.SYMBOL),
+                CalcProgramBuilder.OpType.Int4),
+
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(Byte.class),
+                CalcProgramBuilder.OpType.Int1),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(byte.class),
+                CalcProgramBuilder.OpType.Int1),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(Short.class),
+                CalcProgramBuilder.OpType.Int2),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(short.class),
+                CalcProgramBuilder.OpType.Int2),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(Integer.class),
+                CalcProgramBuilder.OpType.Int4),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(int.class),
+                CalcProgramBuilder.OpType.Int4),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(Long.class),
+                CalcProgramBuilder.OpType.Int8),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(long.class),
+                CalcProgramBuilder.OpType.Int8),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(Double.class),
+                CalcProgramBuilder.OpType.Double),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(double.class),
+                CalcProgramBuilder.OpType.Double),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(Float.class),
+                CalcProgramBuilder.OpType.Real),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(float.class),
+                CalcProgramBuilder.OpType.Real),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(String.class),
+                CalcProgramBuilder.OpType.Varchar),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(Boolean.class),
+                CalcProgramBuilder.OpType.Bool),
+            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+                fac.createJavaType(boolean.class),
+                CalcProgramBuilder.OpType.Bool));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -250,11 +244,8 @@ public class RexToCalcTranslator
     private void clearProgram(RexProgram program)
     {
         builder.clear();
-        trueReg = builder.newBoolLiteral(true);
-        falseReg = builder.newBoolLiteral(false);
         scope.clear();
         nullRegOrdinal = -1;
-        inputExprs = null;
         this.program = program;
     }
 
@@ -333,10 +324,9 @@ public class RexToCalcTranslator
                 CalcProgramBuilder.OpType.Int8,
                 -1);
         }
-        for (int i = 0; i < knownTypes.length; i++) {
-            TypePair knownType = knownTypes[i];
-            if (SqlTypeUtil.sameNamedType(relDataType, knownType.relDataType)) {
-                calcType = knownType.opType;
+        for (Pair<RelDataType,CalcProgramBuilder.OpType> knownType : knownTypes) {
+            if (SqlTypeUtil.sameNamedType(relDataType, knownType.left)) {
+                calcType = knownType.right;
                 break;
             }
         }
@@ -391,7 +381,8 @@ public class RexToCalcTranslator
      * #containsResult(RexNode)}, or pass in <code>failIfNotFound =
      * false</code>.
      */
-    CalcReg getResult(RexNode node,
+    CalcReg getResult(
+        RexNode node,
         boolean failIfNotFound)
     {
         final String key = getKey(node);
@@ -412,16 +403,6 @@ public class RexToCalcTranslator
     boolean containsResult(RexNode node)
     {
         return scope.get(getKey(node)) != null;
-    }
-
-    /**
-     * @deprecated Remove all usages of this method (they all seem to have the
-     * same pattern) and put the pattern into the translator, and remove the
-     * {@link #inputExprs} field
-     */
-    protected RexNode [] getInputExprs()
-    {
-        return inputExprs;
     }
 
     protected int getNullRegisterOrdinal()
@@ -466,8 +447,7 @@ public class RexToCalcTranslator
         // regardless of whether the calcualtor program uses them.
         if (inputRowType != null) {
             final RexLocalRef [] inputRefs = RexUtil.toLocalRefs(inputRowType);
-            for (int i = 0; i < inputRefs.length; i++) {
-                RexLocalRef inputRef = inputRefs[i];
+            for (RexLocalRef inputRef : inputRefs) {
                 implement(inputRef);
             }
         }
@@ -487,10 +467,12 @@ public class RexToCalcTranslator
             builder.addLabelJumpTrue(prepareOutput, filterResult);
 
             // row didn't match
-            CalcProgramBuilder.move.add(builder, statusReg, trueReg);
+            CalcProgramBuilder.move.add(
+                builder, statusReg, builder.newBoolLiteral(true));
             builder.addReturn();
             builder.addLabel(prepareOutput);
-            CalcProgramBuilder.move.add(builder, statusReg, falseReg);
+            CalcProgramBuilder.move.add(
+                builder, statusReg, builder.newBoolLiteral(false));
         }
 
         // row matched. Now calculate all the outputs
@@ -547,22 +529,57 @@ public class RexToCalcTranslator
      * expression into a {@link CalcProgramBuilder} calculator program using a
      * depth-first recursive algorithm when there are aggregate functions.
      *
+     * <p>The aggregate expressions are represented by two {@link RexProgram}
+     * objects. The lower <code>inputProgram</code> computes the input
+     * expressions to the calculator; the upper <code>aggProgram</code> contains
+     * calls to aggregate functions. For example, the expressions
+     *
+     * <pre>Aggs = {
+     *    SUM(a + b),
+     *    SUM(a + b + c),
+     *    COUNT(a + b) * d
+     *    SUM(a + b) + 4
+     * }</pre>
+     *
+     * would be represented by the program
+     *
+     * <pre>aggProgram = {
+     *    exprs = {
+     *       $0,         // a
+     *       $1,         // b
+     *       $2,         // c
+     *       $3,         // d
+     *       $0 + $1,    // a + b
+     *       $4 + $2     // (a + b) + c
+     *       SUM($4),    // SUM(a + b)
+     *       SUM($5),    // SUM(a + b + c)
+     *       COUNT($4),  // COUNT(a + b)
+     *       $8 * $3     // COUNT(a + b) * d
+     *       SUM($4),    // SUM(a + b)
+     *       $10 + 4,    // SUM(a + b) + 4
+     *    },
+     *    projectRefs = {
+     *       $6,         // SUM(a + b)
+     *       $7,         // SUM(a + b + c)
+     *       $9,         // COUNT(a + b) * d
+     *       $11,        // SUM(a + b) + 4
+     *    },
+     *    conditionRef = null
+     * }</pre>
+     *
      * <p>This method is NOT stateless. TODO: Make method stateless -- so you
      * can call this method several times with different inputs -- and therefore
      * the translator is re-usable.
      *
      * @param program Program, containing pre-expressions, aggregate
      * expressions, post-expressions, and optionally a filter.
-     * @param aggOp Aggregate operation (INIT, ADD, or DROP), must not be null.
+     * @param aggOp Aggregate operation (Init, Add, InitAdd or Drop),
+     * must not be null.
      */
     public String getAggProgram(
         RexProgram program,
         AggOp aggOp)
     {
-        // The input expressions for the case where there are calculator
-        // expressions that should be computed prior to aggregate function
-        // calculation. For example, in SUM(a + b), inputExprs is (a + b).
-        RexNode [] inputExprs = null; // todo: remove
         RexNode [] aggs = null;
 
         // Array of expressions to be projected. Must not be null, may be
@@ -592,7 +609,6 @@ public class RexToCalcTranslator
 
         this.aggOp = aggOp;
         assert aggOp != AggOp.None;
-        this.inputExprs = inputExprs;
 
         // Validate aggOp.
         assert aggOp != null;
@@ -600,6 +616,7 @@ public class RexToCalcTranslator
         case None:
         case Init:
         case Add:
+        case InitAdd:
         case Drop:
             break;
         default:
@@ -611,8 +628,7 @@ public class RexToCalcTranslator
         // regardless of whether the calculator program uses them.
         if (inputRowType != null) {
             final RexInputRef [] inputRefs = RexUtil.toInputRefs(inputRowType);
-            for (int i = 0; i < inputRefs.length; i++) {
-                RexInputRef inputRef = inputRefs[i];
+            for (RexInputRef inputRef : inputRefs) {
                 implement(inputRef);
             }
 
@@ -626,7 +642,7 @@ public class RexToCalcTranslator
                 fixOutputExps(
                     al,
                     inputRefs.length,
-                    inputExprs,
+                    null,
                     aggs,
                     projectExprs,
                     dups);
@@ -634,13 +650,13 @@ public class RexToCalcTranslator
                     fixOutputExps(
                         al,
                         inputRefs.length,
-                        inputExprs,
+                        null,
                         aggs,
                         new RexNode[] { conditionExp },
                         dups);
                 }
-                for (int i = 0; i < al.size(); i++) {
-                    implementNode(al.get(i));
+                for (RexNode node : al) {
+                    implementNode(node);
                 }
                 break;
             default:
@@ -663,24 +679,24 @@ public class RexToCalcTranslator
             builder.addLabelJumpTrue(prepareOutput, filterResult);
 
             // row didnt match
-            CalcProgramBuilder.move.add(builder, statusReg, trueReg);
+            CalcProgramBuilder.move.add(
+                builder, statusReg, builder.newBoolLiteral(true));
             builder.addReturn();
             builder.addLabel(prepareOutput);
-            CalcProgramBuilder.move.add(builder, statusReg, falseReg);
+            CalcProgramBuilder.move.add(
+                builder, statusReg, builder.newBoolLiteral(false));
         }
 
         // row matched. Now calculate all the outputs
         // The projectExprs are the overs for a given partition.
-        for (int i = 0; i < projectExprs.length; i++) {
-            RexNode node = projectExprs[i];
+        for (RexLocalRef node : projectExprs) {
             implementNode(node);
         }
 
         // Ref instructions for output program.
         switch (aggOp) {
         case None:
-            for (int i = 0; i < projectExprs.length; i++) {
-                RexNode node = projectExprs[i];
+            for (RexLocalRef node : projectExprs) {
                 CalcProgramBuilder.RegisterDescriptor desc =
                     getCalcRegisterDescriptor(node);
                 CalcReg res = getResult(node, true);
@@ -706,6 +722,8 @@ public class RexToCalcTranslator
         RexNode [] outputExps,
         Map<String, RexNode> dups)
     {
+        assert inputExps == null;
+
         // Review (murali 2005/08/03): Notice that we are changing the contents
         // of the outputExps here. It may be better to pass a copy of the
         // outputExps to this method if FennelWindowRel's member variable
@@ -919,9 +937,11 @@ public class RexToCalcTranslator
             builder.addLabel(shortCut);
 
             if (op.getKind().isA(SqlKind.And)) {
-                CalcProgramBuilder.move.add(builder, result, falseReg);
+                CalcProgramBuilder.move.add(
+                    builder, result, builder.newBoolLiteral(false));
             } else {
-                CalcProgramBuilder.move.add(builder, result, trueReg);
+                CalcProgramBuilder.move.add(
+                    builder, result, builder.newBoolLiteral(true));
             }
 
             setResult(call, result);
@@ -957,15 +977,13 @@ public class RexToCalcTranslator
         // Do table-driven implementation if possible.
         // TODO: Put ALL operator implementation code in this table, except
         //   perhaps for the most fundamental and idiosyncratic operators.
-        CalcReg resultOfCall = null;
+        CalcReg resultOfCall;
         CalcProgramBuilder.RegisterDescriptor resultDesc =
             getCalcRegisterDescriptor(call);
 
-        /** SPECIAL CASE.  =,<>,>,<,>-=,<= already are defined in
-         * {@link CalcRexImplementorTableImpl}
-         * but need to do some acrobatics since those calc instructions are not defined
-         * against varchars
-         */
+        // SPECIAL CASE.  =,<>,>,<,>-=,<= already are defined in
+        // CalcRexImplementorTableImpl but need to do some acrobatics since
+        // those calc instructions are not defined against varchars.
         if (isStrCmp(call)) {
             CalcReg reg1 = implementNode(call.operands[0]);
             CalcReg reg2 = implementNode(call.operands[1]);
@@ -989,7 +1007,9 @@ public class RexToCalcTranslator
                     SqlCollation.getCoercibilityDyadicComparison(
                         call.operands[0].getType().getCollation(),
                         call.operands[1].getType().getCollation());
-                CalcReg colReg = builder.newVarcharLiteral(collationToUse);
+                if (false) {
+                    CalcReg colReg = builder.newVarcharLiteral(collationToUse);
+                }
 
                 // TODO: this is only for ascii cmp. Need to pump in colReg
                 // when a fennel function that can take it is born.
@@ -1060,6 +1080,10 @@ public class RexToCalcTranslator
                     aggImplementor.implementInitialize(call, register, this);
                     return setResult(call, register);
                 case Add:
+                    aggImplementor.implementAdd(call, register, this);
+                    return setResult(call, register);
+                case InitAdd:
+                    aggImplementor.implementInitialize(call, register, this);
                     aggImplementor.implementAdd(call, register, this);
                     return setResult(call, register);
                 case Drop:
@@ -1267,65 +1291,6 @@ public class RexToCalcTranslator
         builder.setOutputComments(outputComments);
     }
 
-    /**
-     * Generates the three programs -- init, add, and drop -- for an array of
-     * calls to aggregate functions.
-     *
-     * <p>The aggregate expressions are represented by two {@link RexProgram}
-     * objects. The lower <code>inputProgram</code> computes the input
-     * expressions to the calculator; the upper <code>aggProgram</code> contains
-     * calls to aggregate functions. For example, the expressions
-     *
-     * <pre>Aggs = {
-     *    SUM(a + b),
-     *    SUM(a + b + c),
-     *    COUNT(a + b) * d
-     *    SUM(a + b) + 4
-     * }</pre>
-     *
-     * would be represented by the program
-     *
-     * <pre>aggProgram = {
-     *    exprs = {
-     *       $0,         // a
-     *       $1,         // b
-     *       $2,         // c
-     *       $3,         // d
-     *       $0 + $1,    // a + b
-     *       $4 + $2     // (a + b) + c
-     *       SUM($4),    // SUM(a + b)
-     *       SUM($5),    // SUM(a + b + c)
-     *       COUNT($4),  // COUNT(a + b)
-     *       $8 * $3     // COUNT(a + b) * d
-     *       SUM($4),    // SUM(a + b)
-     *       $10 + 4,    // SUM(a + b) + 4
-     *    },
-     *    projectRefs = {
-     *       $6,         // SUM(a + b)
-     *       $7,         // SUM(a + b + c)
-     *       $9,         // COUNT(a + b) * d
-     *       $11,        // SUM(a + b) + 4
-     *    },
-     *    conditionRef = null
-     * }</pre>
-     *
-     * @param program Aggregate expressions to calculate. The program can
-     * compute the inputs to the aggregates, the aggregates themselves, output
-     * expressions, and an output filter.
-     * @param programs Output array of programs.
-     *
-     * @pre programs.length == 3
-     */
-    public void getAggProgram(
-        final RexProgram program,
-        String [] programs)
-    {
-        Util.pre(programs.length == 3, "programs.length == 3");
-        programs[0] = getAggProgram(program, AggOp.Init);
-        programs[1] = getAggProgram(program, AggOp.Add);
-        programs[2] = getAggProgram(program, AggOp.Drop);
-    }
-
     public RexLiteral getLiteral(RexNode expr)
     {
         expr = resolve(expr);
@@ -1418,20 +1383,6 @@ public class RexToCalcTranslator
         public void clear()
         {
             results.clear();
-        }
-    }
-
-    private static class TypePair
-    {
-        private final RelDataType relDataType;
-        private final CalcProgramBuilder.OpType opType;
-
-        TypePair(
-            RelDataType saffron,
-            CalcProgramBuilder.OpType op)
-        {
-            relDataType = saffron;
-            opType = op;
         }
     }
 

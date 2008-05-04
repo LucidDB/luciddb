@@ -17,7 +17,6 @@ JavaSinkExecStream.cpp \
 JavaTraceTarget.cpp \
 JavaTransformExecStream.cpp \
 JniProxy.cpp \
-JniPseudoUuid.cpp \
 JniUtil.cpp \
 NativeMethods.cpp
 

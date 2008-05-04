@@ -188,7 +188,7 @@ public class FennelCalcRel
             }
             retList.add(new RelFieldCollation(i));
         }
-        return (RelFieldCollation []) retList.toArray(
+        return retList.toArray(
             new RelFieldCollation[retList.size()]);
     }
 
@@ -207,11 +207,20 @@ public class FennelCalcRel
             new RexToCalcTranslator(
                 getCluster().getRexBuilder(),
                 this);
-        final String program =
+        final String programString =
             translator.generateProgram(
                 getChild().getRowType(),
                 getProgram());
-        calcStream.setProgram(program);
+        calcStream.setProgram(programString);
+        for (String dynamicParamIdStr : program.getCorrelVariableNames()) {
+            final FemDynamicParamUse dynamicParamUse =
+                implementor.getRepos().newFemDynamicParamUse();
+            dynamicParamUse.setRead(true);
+            final int dynamicParamId =
+                RelOptQuery.getCorrelOrdinal(dynamicParamIdStr);
+            dynamicParamUse.setDynamicParamId(dynamicParamId);
+            calcStream.getDynamicParamUse().add(dynamicParamUse);
+        }
         return calcStream;
     }
 }

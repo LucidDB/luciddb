@@ -125,11 +125,11 @@ TODO: Nope this is a disaster JR 6/07 (valueToString() returns "Unimpl");
     regOut->value( iValue );
 #endif
 
-	// Try original pointer casting code updated to new class interface
-	// This code is the same as above
+    // Try original pointer casting code updated to new class interface
+    // This code is the same as above
     uint srcL = regIn->stringLength();
     char *nullTermStr = new char [srcL+1];
-    nullTermStr[srcL+1] = 0;
+    nullTermStr[srcL] = 0;
     memcpy(nullTermStr, regIn->pointer(), srcL);
     regOut->value(strtol(nullTermStr, 0, 10));
     delete [] nullTermStr;

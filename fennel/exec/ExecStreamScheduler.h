@@ -154,8 +154,19 @@ public:
      * Requests that a specific stream be considered for execution.
      *
      * @param stream the stream to make runnable
+     *
+     * @deprecated use setRunnable
      */
-    virtual void makeRunnable(ExecStream &stream) = 0;
+    inline void makeRunnable(ExecStream &stream);
+
+    /**
+     * Sets whether that a specific stream should be considered for execution.
+     *
+     * @param stream the stream to make runnable
+     */
+    virtual void setRunnable(
+        ExecStream &stream,
+        bool runnable) = 0;
 
     /**
      * Asynchronously aborts execution of any scheduled streams contained by a
@@ -229,6 +240,12 @@ inline ExecStreamResult ExecStreamScheduler::executeStream(
     } else {
         return stream.execute(quantum);
     }
+}
+
+inline void ExecStreamScheduler::makeRunnable(
+    ExecStream &stream)
+{
+    setRunnable(stream, true); 
 }
 
 FENNEL_END_NAMESPACE

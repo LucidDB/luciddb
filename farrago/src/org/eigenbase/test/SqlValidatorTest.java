@@ -6022,27 +6022,40 @@ public class SqlValidatorTest
     public void testValuesRewrite()
     {
         SqlValidator validator = tester.getValidator();
+
+        // if the validator is expanding identifiers (as the DT validator
+        // does) then rewrites introduce table and column aliases
+        boolean expand = validator.shouldExpandIdentifiers();
         // bare VALUES should be rewritten
         tester.checkRewrite(
             validator,
             "values (3)",
             TestUtil.fold(
-                "SELECT *\n"
-                + "FROM (VALUES ROW(3))"));
+                expand
+                    ? "SELECT `EXPR$0`.`EXPR$0`\n"
+                    + "FROM (VALUES ROW(3)) AS `EXPR$0`"
+                    : "SELECT *\n"
+                    + "FROM (VALUES ROW(3))"));
         // but VALUES under FROM should not...
         tester.checkRewrite(
             validator,
             "select * from (values (3))",
             TestUtil.fold(
-                "SELECT *\n"
-                + "FROM (VALUES ROW(3))"));
+                expand
+                    ? "SELECT `EXPR$1`.`EXPR$0`\n"
+                    + "FROM (VALUES ROW(3)) AS `EXPR$1`"
+                    : "SELECT *\n"
+                    + "FROM (VALUES ROW(3))"));
         // ...even if an alias is present
         tester.checkRewrite(
             validator,
             "select * from (values (3)) as fluff",
             TestUtil.fold(
-                "SELECT *\n"
-                + "FROM (VALUES ROW(3)) AS `FLUFF`"));
+                expand
+                    ? "SELECT `FLUFF`.`EXPR$0`\n"
+                    + "FROM (VALUES ROW(3)) AS `FLUFF`"
+                    : "SELECT *\n"
+                    + "FROM (VALUES ROW(3)) AS `FLUFF`"));
     }
 
     public void _testValuesWithAggFuncs()
