@@ -1148,7 +1148,14 @@ public class FarragoJdbcEngineDatabaseMetaData
         String table)
         throws SQLException
     {
-        throw new UnsupportedOperationException("getImportedKeys");
+        QueryBuilder queryBuilder =
+            createQueryBuilder(
+                "select * from sys_boot.jdbc_metadata.imported_keys_view");
+        // For now, ignore all parameters because we always return
+        // empty set.
+        queryBuilder.addOrderBy(
+            "pktable_cat, pktable_schem, pktable_name, key_seq");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -1158,7 +1165,14 @@ public class FarragoJdbcEngineDatabaseMetaData
         String table)
         throws SQLException
     {
-        throw new UnsupportedOperationException("getExportedKeys");
+        QueryBuilder queryBuilder =
+            createQueryBuilder(
+                "select * from sys_boot.jdbc_metadata.exported_keys_view");
+        // For now, ignore all parameters because we always return
+        // empty set.
+        queryBuilder.addOrderBy(
+            "fktable_cat, fktable_schem, fktable_name, key_seq");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -1171,7 +1185,14 @@ public class FarragoJdbcEngineDatabaseMetaData
         String foreignTable)
         throws SQLException
     {
-        throw new UnsupportedOperationException("getCrossReference");
+        QueryBuilder queryBuilder =
+            createQueryBuilder(
+                "select * from sys_boot.jdbc_metadata.cross_reference_view");
+        // For now, ignore all parameters because we always return
+        // empty set.
+        queryBuilder.addOrderBy(
+            "fktable_cat, fktable_schem, fktable_name, key_seq");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData

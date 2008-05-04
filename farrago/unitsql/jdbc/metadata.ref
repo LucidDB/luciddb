@@ -74,7 +74,10 @@
 | SYS_BOOT   | JDBC_METADATA  | CATALOGS_VIEW                     | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW                      | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW_INTERNAL             | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | CROSS_REFERENCE_VIEW              | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | EMPTY_VIEW                        | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | EXPORTED_KEYS_VIEW                | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | IMPORTED_KEYS_VIEW                | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_INTERNAL               | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | PRIMARY_KEYS_VIEW                 | VIEW        |          |           |             |            |                            |                 |
@@ -496,19 +499,36 @@ usesLocalFiles                                    false
 +------------+--------------+-------------+------------------+
 +------------+--------------+-------------+------------------+
 > 
+> -- JDBC is silent on whether it is OK to return empty result sets
+> -- for these when foreign keys are not supported, but since many client
+> -- tools ask for these, it makes sense to return an empty set instead
+> -- of throwing an exception since no keys can be defined without support
+> -- for the feature
+> 
+> !importedkeys EMPS
++--------------+----------------+---------------+----------------+--------------+----------------+---------------+----------------+----------+--------------+--------------+----------+----------+----------------+
+| PKTABLE_CAT  | PKTABLE_SCHEM  | PKTABLE_NAME  | PKCOLUMN_NAME  | FKTABLE_CAT  | FKTABLE_SCHEM  | FKTABLE_NAME  | FKCOLUMN_NAME  | KEY_SEQ  | UPDATE_RULE  | DELETE_RULE  | FK_NAME  | PK_NAME  | DEFERRABILITY  |
++--------------+----------------+---------------+----------------+--------------+----------------+---------------+----------------+----------+--------------+--------------+----------+----------+----------------+
++--------------+----------------+---------------+----------------+--------------+----------------+---------------+----------------+----------+--------------+--------------+----------+----------+----------------+
+> !exportedkeys DEPTS
++--------------+----------------+---------------+----------------+--------------+----------------+---------------+----------------+----------+--------------+--------------+----------+----------+----------------+
+| PKTABLE_CAT  | PKTABLE_SCHEM  | PKTABLE_NAME  | PKCOLUMN_NAME  | FKTABLE_CAT  | FKTABLE_SCHEM  | FKTABLE_NAME  | FKCOLUMN_NAME  | KEY_SEQ  | UPDATE_RULE  | DELETE_RULE  | FK_NAME  | PK_NAME  | DEFERRABILITY  |
++--------------+----------------+---------------+----------------+--------------+----------------+---------------+----------------+----------+--------------+--------------+----------+----------+----------------+
++--------------+----------------+---------------+----------------+--------------+----------------+---------------+----------------+----------+--------------+--------------+----------+----------+----------------+
+> !metadata getCrossReference LOCALDB SALES DEPTS LOCALDB SALES EMPS
++--------------+----------------+---------------+----------------+--------------+----------------+---------------+----------------+----------+--------------+--------------+----------+----------+----------------+
+| PKTABLE_CAT  | PKTABLE_SCHEM  | PKTABLE_NAME  | PKCOLUMN_NAME  | FKTABLE_CAT  | FKTABLE_SCHEM  | FKTABLE_NAME  | FKCOLUMN_NAME  | KEY_SEQ  | UPDATE_RULE  | DELETE_RULE  | FK_NAME  | PK_NAME  | DEFERRABILITY  |
++--------------+----------------+---------------+----------------+--------------+----------------+---------------+----------------+----------+--------------+--------------+----------+----------+----------------+
++--------------+----------------+---------------+----------------+--------------+----------------+---------------+----------------+----------+--------------+--------------+----------+----------+----------------+
+> 
 > -- Implemented but not included since result depends on connection
 > -- !metadata getConnection
 > -- !metadata hashCode
 > 
 > -- Not supported
-> -- !metadata getImportKeys
-> -- !metadata getExportKeys
 > -- !metadata getColumnPrivileges
 > -- !metadata getTablePrivileges
 > -- !metadata getBestRowIdentifier
 > -- !metadata getVersionColumns
-> -- !metadata getCrossReference
-> -- !importedkeys
-> -- !exportedkeys
 > 
 > !quit
