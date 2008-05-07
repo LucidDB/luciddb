@@ -245,6 +245,19 @@ public class RelOptRuleOperand
         }
         return true;
     }
+
+    /**
+     * Dummy type, containing a single value, for parameters to overloaded
+     * forms of the {@link org.eigenbase.relopt.RelOptRuleOperand} constructor
+     * signifying operands that will be matched by relational expressions with
+     * any number of children.
+     */
+    enum Dummy {
+        /**
+         * Signifies that operand can have any number of children.
+         */
+        ANY
+    }
 }
 
 // End RelOptRuleOperand.java
