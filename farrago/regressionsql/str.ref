@@ -437,4 +437,13 @@
 | 1       |
 +---------+
 > 
+> -- FRG-319
+> alter system set "calcVirtualMachine"='CALCVM_JAVA';
+> values trim ('   ');
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+> 
 > !quit
