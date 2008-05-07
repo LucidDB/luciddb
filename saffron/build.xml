@@ -320,7 +320,7 @@
         srcdir="${examples.dir}"
         destdir="${classes.dir}"
         debug="${project.build.debug}"
-        source="1.4"
+        source="1.5"
         classpathref="saffron.build.classpath">
       <include name="**/*.java" />
       <exclude name="net/sf/saffron/runtime/Dummy_*.java" />
