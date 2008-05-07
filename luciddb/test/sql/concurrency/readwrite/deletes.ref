@@ -1,0 +1,122 @@
+-- setup
+> set schema 'rwconcur';
+0 rows affected.
+> create table s1 (i1 int);
+0 rows affected.
+> create table s2 (i1 int);
+0 rows affected.
+> create table s3 (i1 int);
+0 rows affected.
+> create table s4 (i1 int);
+0 rows affected.
+> create view v2 as select * from s2;
+0 rows affected.
+> create view v3 as select * from s2;
+0 rows affected.
+> create view v4 as select * from s4;
+0 rows affected.
+> insert into s1 values (0),(1),(2),(3),(4),(5);
+6 rows affected.
+> insert into s2 values (1),(2),(3),(4),(5);
+5 rows affected.
+> insert into s3 values (3),(4),(6);
+3 rows affected.
+> insert into s4 values (0);
+1 row affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'rwconcur';
+0 rows affected.
+> drop table s1 cascade;
+0 rows affected.
+> drop table s2 cascade;
+0 rows affected.
+> drop table s3 cascade;
+0 rows affected.
+> drop table s4 cascade;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread deletes1
+> set schema 'rwconcur';
+0 rows affected.
+> delete from s1 where
+> i1 = (select min(i1) + sys_boot.mgmt.sleep(5000) from v4) or
+> i1 = (select min(i1) from v2) or
+> i1 + sys_boot.mgmt.sleep(5000) in (
+> select i1 from v2 where i1 = 2
+> union
+> select s2.i1 from s2,s3 where s2.i1 = s3.i1);
+5 rows affected.
+> select * from s1;
++------------+
+| I1         |
++------------+
+| 5          |
++------------+
+
+-- end of thread deletes1
+
+-- thread deletes2
+> set schema 'rwconcur';
+0 rows affected.
+> delete from s2;
+5 rows affected.
+> alter table s2 rebuild;
+0 rows affected.
+> insert into s2 values (6),(7);
+2 rows affected.
+> alter table s2 rebuild;
+0 rows affected.
+> truncate table s2;
+0 rows affected.
+> alter table s2 rebuild;
+0 rows affected.
+> alter system deallocate old;
+0 rows affected.
+> select * from s2;
++------------+
+| I1         |
++------------+
++------------+
+
+-- end of thread deletes2
+
+-- thread drops4
+> set schema 'rwconcur';
+0 rows affected.
+> drop table s4 cascade;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot drop table "RWCONCUR"."S4" because it is currently in use by a statement
+-- end of thread drops4
+
+-- thread creates5
+> set schema 'rwconcur';
+0 rows affected.
+> create table s5(i1 int);
+0 rows affected.
+> insert into s5 values (1),(2);
+2 rows affected.
+> select * from s5;
++------------+
+| I1         |
++------------+
+| 1          |
+| 2          |
++------------+
+
+> drop table s5 cascade;
+0 rows affected.
+-- end of thread creates5
+
+-- thread createschema
+> set schema 'rwconcur';
+0 rows affected.
+> create schema junk;
+0 rows affected.
+> drop schema junk;
+0 rows affected.
+-- end of thread createschema
+

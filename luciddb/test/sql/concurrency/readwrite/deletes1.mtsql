@@ -1,0 +1,98 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+  create table s1 (i1 int);
+  create table s2 (i1 int);
+  create table s3 (i1 int);
+  create table s4 (i1 int);
+  create table s5 (i1 int);
+  create view v2 as select * from s2;
+  create view v3 as select * from s3
+    where i1 > (select min(i1) from s5);
+  create view v4 as select * from s4;
+  insert into s1 values (1),(2),(3),(4),(5);
+  insert into s2 values (1),(2),(3),(4),(5);
+  insert into s3 values (3),(4);
+  insert into s4 values (0);
+  insert into s5 values (0);
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+    set schema 'rwconcur';
+    drop table s1 cascade;
+    drop table s2 cascade;
+    drop table s3 cascade;
+    drop table s4 cascade;
+    drop table s5 cascade;
+    alter system deallocate old;
+
+@end
+
+-----------------------------------------------------------
+
+@thread deletes1
+    set schema 'rwconcur';
+  @sync
+    delete from s1 where 
+      i1 = (select min(i1) + sys_boot.mgmt.sleep(10000) from v2
+            where i1 > (select min(i1) + sys_boot.mgmt.sleep(10000) from v4)) or
+      i1 + sys_boot.mgmt.sleep(5000) in (select i1 from s3);
+  @sync
+    select * from s1;
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- given deletes1 takes long to run, this should see 1 row with i1 = 3
+@thread selects1
+    set schema 'rwconcur';
+  @sync
+    select * from s1 where
+      i1 = (select * from s2 where i1 + sys_boot.mgmt.sleep(10000) = 
+            (select min(v3.i1) from v3 where v3.i1 + s2.i1 > 0 )) and
+      i1 + sys_boot.mgmt.sleep(5000) in (select * from s2);
+  @sync
+    select * from s1;
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- cannot be dropped even if s4 is not referenced
+-- during execution
+@thread drops4
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    @err drop table s4;
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- cannot be dropped even if s5 is not referenced
+-- during execution
+@thread drops5
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    @err drop table s5;
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------

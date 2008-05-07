@@ -26,7 +26,7 @@
     primary key(l_orderkey, l_linenumber)
   );
 
-  create table lineitem3 (
+  create table lineitem4 (
     l_orderkey    integer,
     l_partkey     integer not null,
     l_suppkey     integer not null,
@@ -77,6 +77,12 @@
   insert into lineitem2 select * from "lineitem1";
   select count(*) from lineitem2;
 
+  insert into lineitem4 select * from "lineitem1";
+  delete from lineitem4 where l_shipmode in('MAIL','TRUCK');
+  select count(*) from lineitem4;
+  alter table lineitem4 rebuild;
+  select count(*) from lineitem4;
+
   insert into lineitem5 select * from "lineitem1";
   delete from lineitem5 where l_shipmode in('MAIL','TRUCK');
   select count(*) from lineitem5;
@@ -95,7 +101,7 @@
   @sync
     truncate table lineitem;
     drop table lineitem2;
-    drop table lineitem3;
+    drop table lineitem4;
     drop table lineitem5;
 @end
 
@@ -137,50 +143,17 @@
 
 -----------------------------------------------------------
 
-@thread merge
+@thread mergeonself
     set schema 'rwconcur';
   @sync
-    merge into lineitem3 tgt
-    using lineitem2 as src
+    merge into lineitem4 tgt 
+    using lineitem4 as src
     on tgt.l_orderkey = src.l_orderkey and
        tgt.l_linenumber = src.l_linenumber
-    when matched then update set l_orderkey = src.l_orderkey
-    when not matched then insert (
-        l_orderkey    ,
-        l_partkey     ,
-        l_suppkey     ,
-        l_linenumber  ,
-        l_quantity    ,
-        l_extendedprice  ,
-        l_discount    ,
-        l_tax         ,
-        l_returnflag  ,
-        l_linestatus  ,
-        l_shipdate    ,
-        l_commitdate  ,
-        l_receiptdate ,
-        l_shipinstruct ,
-        l_shipmode    ,
-        l_comment)
-      values(
-        src.l_orderkey    ,
-        src.l_partkey     ,
-        src.l_suppkey     ,
-        src.l_linenumber  ,
-        src.l_quantity    ,
-        src.l_extendedprice  ,
-        src.l_discount    ,
-        src.l_tax         ,
-        src.l_returnflag  ,
-        src.l_linestatus  ,
-        src.l_shipdate    ,
-        src.l_commitdate  ,
-        src.l_receiptdate ,
-        src.l_shipinstruct ,
-        src.l_shipmode    ,
-        src.l_comment);
+    when matched then
+       update set l_shipmode = 'JUNK';
   @sync
-    select count(*) from lineitem3;
+    select count(*) from lineitem4 where l_shipmode = 'JUNK';
   @sync
 @end
 

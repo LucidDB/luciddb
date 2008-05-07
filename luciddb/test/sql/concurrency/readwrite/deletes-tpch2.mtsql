@@ -1,0 +1,150 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+  insert into lineitem select * from "lineitem";
+  insert into partsupp select * from "partsupp";
+  insert into part select * from "part";
+  insert into supplier select * from "supplier";
+  insert into nation select * from "nation";
+
+  select count(*) from lineitem;
+  select count(*) from partsupp;
+  select count(*) from supplier;
+  select count(*) from orders;
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+    set schema 'rwconcur';
+    truncate table lineitem;
+    truncate table partsupp;
+    truncate table part;
+    truncate table supplier;
+    truncate table orders;
+    truncate table nation;
+@end
+
+-----------------------------------------------------------
+
+-- this should see result of tpch query 11
+@thread query11
+    set schema 'rwconcur';
+  @sync
+    select
+      ps_partkey,
+      sum(ps_supplycost * ps_availqty) as val
+    from
+      partsupp,
+      supplier,
+      nation
+    where
+      ps_suppkey = s_suppkey
+      and s_nationkey = n_nationkey
+      and n_name = 'GERMANY'
+    group by
+      ps_partkey having
+        sum(ps_supplycost * ps_availqty) > (
+          select
+            sum(ps_supplycost * ps_availqty) * 
+            (0.001000000 + sys_boot.mgmt.sleep(5000))
+          from
+            partsupp,
+            supplier,
+            nation
+          where
+            ps_suppkey = s_suppkey
+            and s_nationkey = n_nationkey
+            and n_name = 'GERMANY'
+        )
+    order by val desc;
+
+  @sync
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+-- this should see result of tpch query 16
+@thread query16
+    set schema 'rwconcur';
+  @sync
+    select
+         p_brand,
+         p_type,
+         p_size,
+         count(distinct ps_suppkey) as supplier_cnt
+    from
+         partsupp,
+         part
+    where
+         p_partkey = ps_partkey
+         and p_brand <> 'Brand#45'
+         and p_type not like 'MEDIUM POLISHED%'
+         and p_size in (49, 14, 23, 45, 19, 3, 36, 9)
+         and ps_suppkey not in (
+                  select
+                           s_suppkey
+                  from
+                           supplier
+                  where
+                           s_comment like '%Customer%Complaints%'
+         )
+    group by
+         p_brand,
+         p_type,
+         p_size
+    order by
+         supplier_cnt desc,
+         p_brand,
+         p_type,
+         p_size;
+  @sync
+  @sync
+@end
+
+------------------------------------------------------------
+
+--delete 7920 rows from partsupp
+@thread deletepartsupp
+    set schema 'rwconcur';
+  @sync
+  @sleep 500
+    delete from partsupp where ps_suppkey < 100;
+    alter table partsupp rebuild;
+    alter table lineitem rebuild;
+    alter table supplier rebuild;
+    alter table nation rebuild;
+    alter system deallocate old;
+  @sync
+    select * from partsupp where ps_suppkey < 100;
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+--delete 21703 rows from lineitem
+@thread deletelineitem
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    delete from lineitem where l_suppkey in
+      (select s_suppkey from supplier where s_nationkey =
+        (select max(n_nationkey) from nation)); 
+  @sync
+    select * from lineitem where l_suppkey in
+      (select s_suppkey from supplier where s_nationkey =
+        (select max(n_nationkey) from nation));
+  @sync
+
+@end
+
+------------------------------------------------------------
+

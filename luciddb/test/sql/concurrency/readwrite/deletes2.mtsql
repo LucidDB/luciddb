@@ -1,0 +1,85 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+  create table s1 (i1 int);
+  create table s2 (i1 int);
+  create table s3 (i1 int);
+  create table s4 (i1 int);
+  create view v2 as select * from s2;
+  create view v4 as select * from s4;
+  insert into s1 values (0),(1),(2),(3),(4),(5);
+  insert into s2 values (1),(2),(3),(4),(5);
+  insert into s3 values (3),(4);
+  insert into s4 values (0);
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+    set schema 'rwconcur';
+    drop table s1 cascade;
+    drop table s2 cascade;
+    drop table s3 cascade;
+    drop table s4 cascade;
+    alter system deallocate old;
+
+@end
+
+-----------------------------------------------------------
+
+-- make sure this sees one snapshot of s2 before completing delete
+@thread selects1
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    select * from s1 where 
+      i1 = (select min(i1) from v4) or
+      i1 = (select min(i1) + sys_boot.mgmt.sleep(5000) from v2) or
+      i1 + sys_boot.mgmt.sleep(500) in (
+        select i1 from v2 where i1 = 2
+        union
+        select s2.i1 from s2,s3 where s2.i1 = s3.i1);
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- make sure this sees one snapshot of s2 before completing delete
+@thread selects1a
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    select * from s1 where 
+      i1 = (select min(i1) from v4) or
+      i1 = (select min(i1) + sys_boot.mgmt.sleep(500) from v2) or
+      i1 + sys_boot.mgmt.sleep(500) in (
+        select i1 from v2 where i1 = 2
+        union
+        select s2.i1 from s2,s3 where s2.i1 = s3.i1);
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- this thread should not finish before selects1 starts
+@thread deletes2
+    set schema 'rwconcur';
+  @sync
+    delete from s2 where
+      i1 + sys_boot.mgmt.sleep(500) in (select * from s2);
+  @sync
+    select * from s2;
+  @sync
+
+@end
+
+------------------------------------------------------------
