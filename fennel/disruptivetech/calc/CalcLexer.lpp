@@ -30,7 +30,6 @@
  */
 %}
 
-%option noyywrap
 %option c++
 %option full
 %option backup
@@ -57,6 +56,13 @@
 
 #include "fennel/disruptivetech/calc/CalcGrammar.h"
 #include "fennel/disruptivetech/calc/CalcAssemblerException.h"
+
+#if YY_FLEX_MAJOR_VERSION < 2 || (YY_FLEX_MAJOR_VERSION == 2 && YY_FLEX_MINOR_VERSION < 5) || (YY_FLEX_MAJOR_VERSION == 2 && YY_FLEX_MINOR_VERSION == 5 && YY_FLEX_SUBMINOR_VERSION < 34)
+
+int yywrap();
+
+#endif
+
 
 /* need this for checking results of strtoull, strtoll, strtod */
 #include <errno.h>
@@ -222,5 +228,15 @@ string CalcLexer::hex2string(const char *buf, uint buflen)
     }
     return str;
 }
+
+#if YY_FLEX_MAJOR_VERSION > 2 || (YY_FLEX_MAJOR_VERSION == 2 && YY_FLEX_MINOR_VERSION > 5) || (YY_FLEX_MAJOR_VERSION == 2 && YY_FLEX_MINOR_VERSION == 5 && YY_FLEX_SUBMINOR_VERSION > 33)
+
+int CalcYYFlexLexer::yywrap() { return 1; }
+
+#else
+
+int yywrap() { return 1; }
+
+#endif
 
 /*FENNEL_END_CPPFILE("$Id$")*/
