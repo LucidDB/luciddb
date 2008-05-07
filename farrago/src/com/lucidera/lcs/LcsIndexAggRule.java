@@ -48,26 +48,19 @@ public class LcsIndexAggRule
         new LcsIndexAggRule(
             new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(
-                        LcsRowScanRel.class,
-                        RelOptRuleOperand.noOperands)
-                }),
+                new RelOptRuleOperand(
+                    LcsRowScanRel.class)),
             "row scan");
     
     public final static LcsIndexAggRule instanceNormalizer =
         new LcsIndexAggRule(
             new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    LcsNormalizerRel.class,
                     new RelOptRuleOperand(
-                        LcsNormalizerRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                LcsIndexOnlyScanRel.class,
-                                null)
-                        })
-                }),
+                        LcsIndexOnlyScanRel.class,
+                        ANY))),
             "normalizer");
 
     //~ Constructors -----------------------------------------------------------

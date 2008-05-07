@@ -22,8 +22,9 @@
 */
 package net.sf.farrago.query;
 
+import java.util.Collections;
+
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -43,9 +44,10 @@ public class FennelCartesianJoinRule
 
     public FennelCartesianJoinRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 JoinRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -176,7 +178,7 @@ public class FennelCartesianJoinRule
                     productRel,
                     joinRel.getRowType(),
                     program,
-                    RelCollation.emptyList);
+                    Collections.<RelCollation>emptyList());
         } else {
             newRel = productRel;
         }

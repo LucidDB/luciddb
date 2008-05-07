@@ -57,10 +57,8 @@ public class PushProjectPastSetOpRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(SetOpRel.class, null)
-                }));
-        this.preserveExprs = Collections.EMPTY_SET;
+                new RelOptRuleOperand(SetOpRel.class, ANY)));
+        this.preserveExprs = Collections.emptySet();
     }
 
     public PushProjectPastSetOpRule(Set<SqlOperator> preserveExprs)
@@ -68,9 +66,7 @@ public class PushProjectPastSetOpRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(SetOpRel.class, null)
-                }));
+                new RelOptRuleOperand(SetOpRel.class, ANY)));
         this.preserveExprs = preserveExprs;
     }
 

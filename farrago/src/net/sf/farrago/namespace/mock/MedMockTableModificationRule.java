@@ -22,11 +22,8 @@
 */
 package net.sf.farrago.namespace.mock;
 
-import net.sf.farrago.query.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -47,9 +44,10 @@ class MedMockTableModificationRule
      */
     public MedMockTableModificationRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 TableModificationRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

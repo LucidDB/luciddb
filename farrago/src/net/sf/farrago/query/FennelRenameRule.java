@@ -43,9 +43,10 @@ public class FennelRenameRule
      */
     public FennelRenameRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 ProjectRel.class,
-                null));
+                ANY));
     }
 
     public FennelRenameRule(RelOptRuleOperand rule)

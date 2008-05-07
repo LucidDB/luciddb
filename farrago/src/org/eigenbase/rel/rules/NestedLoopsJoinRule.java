@@ -74,7 +74,7 @@ public class NestedLoopsJoinRule
         super(
             new RelOptRuleOperand(
                 JoinRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

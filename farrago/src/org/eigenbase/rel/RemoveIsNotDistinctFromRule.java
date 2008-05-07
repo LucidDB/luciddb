@@ -48,7 +48,7 @@ public final class RemoveIsNotDistinctFromRule
 
     private RemoveIsNotDistinctFromRule()
     {
-        super(new RelOptRuleOperand(FilterRel.class, null));
+        super(new RelOptRuleOperand(FilterRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

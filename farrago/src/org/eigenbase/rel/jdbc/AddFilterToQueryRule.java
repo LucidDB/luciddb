@@ -52,9 +52,7 @@ class AddFilterToQueryRule
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JdbcQuery.class, null)
-                }));
+                new RelOptRuleOperand(JdbcQuery.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

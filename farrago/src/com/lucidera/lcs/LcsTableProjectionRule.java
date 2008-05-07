@@ -58,9 +58,7 @@ public class LcsTableProjectionRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(LcsRowScanRelBase.class, null)
-                }));
+                new RelOptRuleOperand(LcsRowScanRelBase.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

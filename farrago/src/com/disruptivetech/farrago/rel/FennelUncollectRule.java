@@ -41,9 +41,10 @@ public class FennelUncollectRule
 
     public FennelUncollectRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 UncollectRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -22,7 +22,6 @@
 */
 package org.eigenbase.rel.rules;
 
-import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
 
@@ -43,7 +42,7 @@ public class RemoveSemiJoinRule
 
     public RemoveSemiJoinRule()
     {
-        super(new RelOptRuleOperand(SemiJoinRel.class, null));
+        super(new RelOptRuleOperand(SemiJoinRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

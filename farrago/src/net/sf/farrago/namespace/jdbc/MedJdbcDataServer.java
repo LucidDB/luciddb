@@ -453,7 +453,7 @@ public class MedJdbcDataServer
                                     new RelOptRuleOperand[] {
                                         new RelOptRuleOperand(
                                             MedJdbcQueryRel.class,
-                                            null)
+                                            RelOptRule.ANY)
                                     })
                             })
                     }),
@@ -471,7 +471,7 @@ public class MedJdbcDataServer
                             new RelOptRuleOperand[] {
                                 new RelOptRuleOperand(
                                     MedJdbcQueryRel.class,
-                                    null)
+                                    RelOptRule.ANY)
                             })
                     }),
                 "filter on proj");
@@ -483,7 +483,8 @@ public class MedJdbcDataServer
                 new RelOptRuleOperand(
                     FilterRel.class,
                     new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(MedJdbcQueryRel.class, null)
+                        new RelOptRuleOperand(
+                            MedJdbcQueryRel.class, RelOptRule.ANY)
                     }),
                 "filter");
 
@@ -493,7 +494,8 @@ public class MedJdbcDataServer
                 new RelOptRuleOperand(
                     ProjectRel.class,
                     new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(MedJdbcQueryRel.class, null)
+                        new RelOptRuleOperand(
+                            MedJdbcQueryRel.class, RelOptRule.ANY)
                     }),
                 "proj");
 

@@ -50,10 +50,8 @@ class MedMdrJoinRule
         super(
             new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(RelNode.class, null),
-                    new RelOptRuleOperand(MedMdrClassExtentRel.class, null)
-                }));
+                new RelOptRuleOperand(RelNode.class, ANY),
+                new RelOptRuleOperand(MedMdrClassExtentRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

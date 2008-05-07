@@ -69,7 +69,7 @@ class MedMdrJoinRel
             right,
             condition,
             joinType,
-            Collections.EMPTY_SET);
+            Collections.<String>emptySet());
         assert ((joinType == JoinRelType.INNER)
             || (joinType == JoinRelType.LEFT));
 

@@ -47,9 +47,7 @@ public class LcsTableDeleteRule
         super(
             new RelOptRuleOperand(
                 TableModificationRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(ProjectRel.class, null)
-                }));
+                new RelOptRuleOperand(ProjectRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

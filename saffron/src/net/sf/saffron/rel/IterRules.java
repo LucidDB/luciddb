@@ -245,11 +245,10 @@ public abstract class IterRules
 
         private ProjectedFilterToIteratorRule()
         {
-            super(new RelOptRuleOperand(
+            super(
+                new RelOptRuleOperand(
                     ProjectRel.class,
-                    new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(FilterRel.class, null)
-                    }));
+                    new RelOptRuleOperand(FilterRel.class, ANY)));
         }
 
         // implement RelOptRule

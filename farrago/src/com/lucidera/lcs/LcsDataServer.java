@@ -30,7 +30,6 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
@@ -101,55 +100,39 @@ class LcsDataServer
             new LcsIndexSemiJoinRule(
                 new RelOptRuleOperand(
                     SemiJoinRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(LcsRowScanRel.class, null)
-                    }),
+                    new RelOptRuleOperand(LcsRowScanRel.class, RelOptRule.ANY)),
                 "without index child"));
         planner.addRule(
             new LcsIndexSemiJoinRule(
                 new RelOptRuleOperand(
                     SemiJoinRel.class,
-                    new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        LcsRowScanRel.class,
                         new RelOptRuleOperand(
-                            LcsRowScanRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    LcsIndexIntersectRel.class,
-                                    null)
-                            })
-                    }),
+                            LcsIndexIntersectRel.class,
+                            RelOptRule.ANY))),
                 "with intersect child"));
         planner.addRule(
             new LcsIndexSemiJoinRule(
                 new RelOptRuleOperand(
                     SemiJoinRel.class,
-                    new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        LcsRowScanRel.class,
                         new RelOptRuleOperand(
-                            LcsRowScanRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    LcsIndexSearchRel.class,
-                                    null)
-                            })
-                    }),
+                            LcsIndexSearchRel.class,
+                            RelOptRule.ANY))),
                 "with index search child"));
         planner.addRule(
             new LcsIndexSemiJoinRule(
                 new RelOptRuleOperand(
                     SemiJoinRel.class,
-                    new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        LcsRowScanRel.class,
                         new RelOptRuleOperand(
-                            LcsRowScanRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    LcsIndexMergeRel.class,
-                                    new RelOptRuleOperand[] {
-                                        new RelOptRuleOperand(
-                                            LcsIndexSearchRel.class,
-                                            null)
-                                    })
-                            })
-                    }),
+                            LcsIndexMergeRel.class,
+                            new RelOptRuleOperand(
+                                LcsIndexSearchRel.class,
+                                RelOptRule.ANY)))),
                 "with merge child"));
 
         // IndexAccess rules
@@ -157,55 +140,39 @@ class LcsDataServer
             new LcsIndexAccessRule(
                 new RelOptRuleOperand(
                     FilterRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(LcsRowScanRel.class, null)
-                    }),
+                    new RelOptRuleOperand(LcsRowScanRel.class, RelOptRule.ANY)),
                 "without index child"));
         planner.addRule(
             new LcsIndexAccessRule(
                 new RelOptRuleOperand(
                     FilterRel.class,
-                    new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        LcsRowScanRel.class,
                         new RelOptRuleOperand(
-                            LcsRowScanRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    LcsIndexIntersectRel.class,
-                                    null)
-                            })
-                    }),
+                            LcsIndexIntersectRel.class,
+                            RelOptRule.ANY))),
                 "with intersect child"));
         planner.addRule(
             new LcsIndexAccessRule(
                 new RelOptRuleOperand(
                     FilterRel.class,
-                    new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        LcsRowScanRel.class,
                         new RelOptRuleOperand(
-                            LcsRowScanRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    LcsIndexSearchRel.class,
-                                    null)
-                            })
-                    }),
+                            LcsIndexSearchRel.class,
+                            RelOptRule.ANY))),
                 "with index search child"));
         planner.addRule(
             new LcsIndexAccessRule(
                 new RelOptRuleOperand(
                     FilterRel.class,
-                    new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        LcsRowScanRel.class,
                         new RelOptRuleOperand(
-                            LcsRowScanRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    LcsIndexMergeRel.class,
-                                    new RelOptRuleOperand[] {
-                                        new RelOptRuleOperand(
-                                            LcsIndexSearchRel.class,
-                                            null)
-                                    })
-                            })
-                    }),
+                            LcsIndexMergeRel.class,
+                            new RelOptRuleOperand(
+                                LcsIndexSearchRel.class,
+                                RelOptRule.ANY)))),
                 "with merge child"));
     }
 
@@ -352,7 +319,7 @@ class LcsDataServer
                 inputValues,
                 rowType,
                 ProjectRel.Flags.Boxed,
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
 
         return new FarragoIndexBuilderRel(
             cluster,

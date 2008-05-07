@@ -72,7 +72,7 @@ public final class SemiJoinRel
             right,
             condition,
             JoinRelType.INNER,
-            Collections.EMPTY_SET);
+            Collections.<String>emptySet());
         this.leftKeys = leftKeys;
         this.rightKeys = rightKeys;
     }

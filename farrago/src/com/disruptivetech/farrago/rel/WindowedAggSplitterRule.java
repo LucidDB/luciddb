@@ -57,9 +57,10 @@ public class WindowedAggSplitterRule
      */
     private WindowedAggSplitterRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 CalcRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

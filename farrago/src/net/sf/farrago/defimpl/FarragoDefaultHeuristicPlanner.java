@@ -165,13 +165,11 @@ public class FarragoDefaultHeuristicPlanner
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(
                     FilterRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(JoinRel.class, null)
-                    }),
+                    new RelOptRuleOperand(JoinRel.class, RelOptRule.ANY)),
                 "with filter above join"));
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
-                new RelOptRuleOperand(JoinRel.class, null),
+                new RelOptRuleOperand(JoinRel.class, RelOptRule.ANY),
                 "without filter above join"));
         builder.addRuleInstance(new MergeFilterRule());
         builder.addGroupEnd();

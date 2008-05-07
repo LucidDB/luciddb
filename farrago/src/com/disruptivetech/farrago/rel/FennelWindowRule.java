@@ -58,15 +58,11 @@ public abstract class FennelWindowRule
         new FennelWindowRule(
             new RelOptRuleOperand(
                 CalcRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    WindowedAggregateRel.class,
                     new RelOptRuleOperand(
-                        WindowedAggregateRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                CalcRel.class,
-                                null)
-                        })
-                })) {
+                        CalcRel.class,
+                        ANY)))) {
             {
                 description = "FennelWindowRule.CalcOnWinOnCalc";
             }
@@ -96,15 +92,11 @@ public abstract class FennelWindowRule
         new FennelWindowRule(
             new RelOptRuleOperand(
                 CalcRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    WindowedAggregateRel.class,
                     new RelOptRuleOperand(
-                        WindowedAggregateRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                RelNode.class,
-                                null)
-                        })
-                })) {
+                        RelNode.class,
+                        ANY)))) {
             {
                 description = "FennelWindowRule.CalcOnWin";
             }
@@ -142,11 +134,9 @@ public abstract class FennelWindowRule
         new FennelWindowRule(
             new RelOptRuleOperand(
                 WindowedAggregateRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(
-                        CalcRel.class,
-                        null)
-                })) {
+                new RelOptRuleOperand(
+                    CalcRel.class,
+                    ANY))) {
             {
                 description = "FennelWindowRule.WinOnCalc";
             }
@@ -173,11 +163,9 @@ public abstract class FennelWindowRule
         new FennelWindowRule(
             new RelOptRuleOperand(
                 WindowedAggregateRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(
-                        RelNode.class,
-                        null)
-                })) {
+                new RelOptRuleOperand(
+                    RelNode.class,
+                    ANY))) {
             {
                 description = "FennelWindowRule.Win";
             }

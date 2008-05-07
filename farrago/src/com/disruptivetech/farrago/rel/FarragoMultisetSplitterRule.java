@@ -74,9 +74,10 @@ public class FarragoMultisetSplitterRule
      */
     public FarragoMultisetSplitterRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 CalcRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

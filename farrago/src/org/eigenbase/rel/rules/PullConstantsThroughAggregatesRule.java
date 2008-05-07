@@ -72,9 +72,7 @@ public class PullConstantsThroughAggregatesRule
         super(
             new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(CalcRel.class, null)
-                }));
+                new RelOptRuleOperand(CalcRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -57,8 +57,6 @@ public abstract class RelOptRule
      */
     public RelOptRuleOperand [] operands;
 
-    private RelTraitSet traits;
-
     /**
      * Shorthand for {@link RelOptRuleOperand.Dummy#ANY}.
      */

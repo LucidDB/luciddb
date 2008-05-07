@@ -43,9 +43,10 @@ public class FennelCorrelatorRule
 
     public FennelCorrelatorRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 CorrelatorRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

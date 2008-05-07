@@ -22,9 +22,10 @@
 */
 package org.eigenbase.rel;
 
+import java.util.Collections;
+
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.fun.*;
 
 
 /**
@@ -52,9 +53,7 @@ public class MergeFilterOntoCalcRule
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(CalcRel.class, null),
-                }));
+                new RelOptRuleOperand(CalcRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -95,7 +94,7 @@ public class MergeFilterOntoCalcRule
                 calc.getChild(),
                 filter.getRowType(),
                 mergedProgram,
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         call.transformTo(newCalc);
     }
 }

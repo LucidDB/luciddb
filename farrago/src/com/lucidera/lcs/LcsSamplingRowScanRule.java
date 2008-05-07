@@ -41,9 +41,7 @@ public class LcsSamplingRowScanRule
         super(
             new RelOptRuleOperand(
                 SamplingRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(LcsRowScanRel.class, null)
-                }));
+                new RelOptRuleOperand(LcsRowScanRel.class, ANY)));
     }
 
     // implement RelOptRule

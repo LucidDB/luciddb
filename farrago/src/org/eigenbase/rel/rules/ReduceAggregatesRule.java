@@ -53,7 +53,7 @@ public class ReduceAggregatesRule
 
     private ReduceAggregatesRule()
     {
-        super(new RelOptRuleOperand(AggregateRel.class, null));
+        super(new RelOptRuleOperand(AggregateRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

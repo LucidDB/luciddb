@@ -124,7 +124,7 @@ public abstract class FarragoReduceExpressionsRule
                             expList.toArray(new RexNode[expList.size()]),
                             project.getRowType(),
                             ProjectRel.Flags.Boxed,
-                            RelCollation.emptyList));
+                            Collections.<RelCollation>emptyList()));
                     // New plan is absolutely better than old plan.
                     call.getPlanner().setImportance(project, 0.0);
                 }
@@ -244,12 +244,12 @@ public abstract class FarragoReduceExpressionsRule
      *
      * @param relClass class of rels to which this rule should apply
      */
-    private FarragoReduceExpressionsRule(Class relClass)
+    private FarragoReduceExpressionsRule(Class<? extends RelNode> relClass)
     {
         super(
             new RelOptRuleOperand(
                 relClass,
-                null));
+                ANY));
         description =
             "FarragoReduceExpressionsRule:"
             + ReflectUtil.getUnqualifiedClassName(relClass);

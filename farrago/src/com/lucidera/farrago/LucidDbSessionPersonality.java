@@ -643,13 +643,11 @@ public class LucidDbSessionPersonality
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(
                     FilterRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(JoinRel.class, null)
-                    }),
+                    new RelOptRuleOperand(JoinRel.class, RelOptRule.ANY)),
                 "with filter above join"));
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
-                new RelOptRuleOperand(JoinRel.class, null),
+                new RelOptRuleOperand(JoinRel.class, RelOptRule.ANY),
                 "without filter above join"));
 
         // merge filters
@@ -681,14 +679,12 @@ public class LucidDbSessionPersonality
             new PushProjectPastFilterRule(
                 new RelOptRuleOperand(
                     ProjectRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(FilterRel.class, null)
-                    }),
+                    new RelOptRuleOperand(FilterRel.class, RelOptRule.ANY)),
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
                 "with project"));
         builder.addRuleInstance(
             new PushProjectPastFilterRule(
-                new RelOptRuleOperand(FilterRel.class, null),
+                new RelOptRuleOperand(FilterRel.class, RelOptRule.ANY),
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
                 "without project"));
         builder.addRuleInstance(new MergeProjectRule(true));

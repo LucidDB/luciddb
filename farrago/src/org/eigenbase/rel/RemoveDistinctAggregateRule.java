@@ -53,7 +53,7 @@ public final class RemoveDistinctAggregateRule
 
     private RemoveDistinctAggregateRule()
     {
-        super(new RelOptRuleOperand(AggregateRel.class, null));
+        super(new RelOptRuleOperand(AggregateRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

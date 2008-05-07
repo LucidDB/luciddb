@@ -43,6 +43,7 @@ public class RelOptRuleOperand
 {
     //~ Static fields/initializers ---------------------------------------------
 
+    @Deprecated // remove when no uses in LucidEra red-zone code
     public static final RelOptRuleOperand [] noOperands =
         new RelOptRuleOperand[0];
 
@@ -57,7 +58,7 @@ public class RelOptRuleOperand
     public int ordinalInParent;
     public int ordinalInRule;
     private final RelTrait trait;
-    private final Class clazz;
+    private final Class<? extends RelNode> clazz;
     private final RelOptRuleOperand [] children;
     public final boolean matchAnyChildren;
 
@@ -85,13 +86,16 @@ public class RelOptRuleOperand
      *
      * @param trait Trait to match, or null to match any trait
      *
-     * @param matchAnyChild Must be true
+     * @param matchAnyChild Whether child operands can be matched in any order
+     *
+     * @param children Child operands; or null, meaning match any number of
+     * children
      */
     public RelOptRuleOperand(
-        Class clazz,
+        Class<? extends RelNode> clazz,
         RelTrait trait,
         boolean matchAnyChild,
-        RelOptRuleOperand [] children)
+        RelOptRuleOperand... children)
     {
         assert (clazz != null);
         this.clazz = clazz;
@@ -109,22 +113,39 @@ public class RelOptRuleOperand
      * Creates an operand which matches a given trait and matches child
      * operands in the order they appear.
      *
-     * <p>If <code>children</code> is null, the rule matches regardless of the
+     * @param clazz Class of relational expression to match (must not be null)
+     *
+     * @param trait Trait to match, or null to match any trait
+     *
+     * @param children Child operands; must not be null
+     */
+    public RelOptRuleOperand(
+        Class<? extends RelNode> clazz,
+        RelTrait trait,
+        RelOptRuleOperand... children)
+    {
+        this(clazz, trait, false, children);
+        assert children != null;
+    }
+
+    /**
+     * Creates an operand that matches a given trait and any
      * number of children.
      *
      * @param clazz Class of relational expression to match (must not be null)
      *
      * @param trait Trait to match, or null to match any trait
      *
-     * @param children Child operands; or null, meaning match any number of
-     * children
+     * @param dummy Dummy argument to distinguish this constructor from other
+     * overloaded forms
      */
     public RelOptRuleOperand(
-        Class clazz,
+        Class<? extends RelNode> clazz,
         RelTrait trait,
-        RelOptRuleOperand [] children)
+        Dummy dummy)
     {
-        this(clazz, trait, false, children);
+        this(clazz, trait, false, (RelOptRuleOperand[]) null);
+        Util.discard(dummy);
     }
 
     /**
@@ -135,14 +156,30 @@ public class RelOptRuleOperand
      *
      * @param clazz Class of relational expression to match (must not be null)
      *
-     * @param children Child operands; or null, meaning match any number of
-     * children
+     * @param children Child operands; must not be null
      */
     public RelOptRuleOperand(
-        Class clazz,
-        RelOptRuleOperand [] children)
+        Class<? extends RelNode> clazz,
+        RelOptRuleOperand... children)
     {
         this(clazz, null, false, children);
+        assert children != null;
+    }
+
+    /**
+     * Creates an operand that matches any number of children.
+     *
+     * @param clazz Class of relational expression to match (must not be null)
+     *
+     * @param dummy Dummy argument to distinguish this constructor from other
+     * overloaded forms
+     */
+    public RelOptRuleOperand(
+        Class<? extends RelNode> clazz,
+        Dummy dummy)
+    {
+        this(clazz, null, false, (RelOptRuleOperand[]) null);
+        Util.discard(dummy);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -216,7 +253,7 @@ public class RelOptRuleOperand
     /**
      * @return relational expression class matched by this operand
      */
-    public Class getMatchedClass()
+    public Class<? extends RelNode> getMatchedClass()
     {
         return clazz;
     }

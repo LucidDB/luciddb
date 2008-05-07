@@ -46,9 +46,7 @@ public class PushSemiJoinPastFilterRule
         super(
             new RelOptRuleOperand(
                 SemiJoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FilterRel.class, null)
-                }));
+                new RelOptRuleOperand(FilterRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

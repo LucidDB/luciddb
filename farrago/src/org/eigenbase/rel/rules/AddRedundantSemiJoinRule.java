@@ -43,9 +43,10 @@ public class AddRedundantSemiJoinRule
 
     public AddRedundantSemiJoinRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 JoinRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -91,7 +92,7 @@ public class AddRedundantSemiJoinRule
                 origJoinRel.getRight(),
                 origJoinRel.getCondition(),
                 JoinRelType.INNER,
-                Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 true);
 
         call.transformTo(newJoinRel);
