@@ -70,6 +70,11 @@
           file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deallocate-write.mtsql"/>
       </test>
 
+      <test name="deallocateWrite1" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deallocate-write1.mtsql"/>
+      </test>
+
       <test name="incMergeSelect" requiresSuccess="setup">
         <test-metadata>
           <runDuration>long</runDuration>
@@ -92,6 +97,39 @@
         </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/tpch-throughput-readonly.mtsql"/>
+      </test>
+
+
+      <!-- test added for delete and sub-queries -->
+
+      <test name="deletes" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes.mtsql"/>
+      </test>
+
+      <test name="deletes1" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes1.mtsql"/>
+      </test>
+
+      <test name="deletes2" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes2.mtsql"/>
+      </test>
+
+      <test name="deletesTPCH" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes-tpch.mtsql"/>
+      </test>
+
+      <test name="deletesTPCH1" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes-tpch1.mtsql"/>
+      </test>
+
+      <test name="deletesTPCH2" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/deletes-tpch2.mtsql"/>
       </test>
 
       <cleanup-hook>

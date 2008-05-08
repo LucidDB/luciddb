@@ -793,6 +793,7 @@
 >        TRIM_TOKENS boolean)
 > returns table(OUT_STRINGS varchar(65535))
 > language java
+> specific split_string_to_rows
 > parameter style system defined java
 > deterministic
 > no sql
@@ -824,6 +825,53 @@
 > deterministic
 > no sql
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+> 
+> -- split strings with sequence number
+> create or replace function applib.split_string_to_rows(
+>        IN_STRING varchar(65535), 
+>        SEPARATOR_CHAR char(1), 
+>        ESCAPE_CHAR char(1),
+>        TRIM_TOKENS boolean,
+>        START_NUMBER bigint,
+>        INCREMENT bigint)
+> returns table(OUT_STRINGS varchar(65535), SEQ_NUM bigint)
+> language java
+> specific split_string_to_rows_sequence
+> parameter style system defined java
+> deterministic
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.splitSingleStringWithSequence(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
+> 
+> create or replace function applib.split_rows(
+>        IN_CURSOR cursor, 
+>        SEPARATOR_CHAR char(1), 
+>        ESCAPE_CHAR char(1), 
+>        TRIM_TOKENS boolean,
+>        START_NUMBER bigint,
+>        INCREMENT bigint)
+> returns table(IN_CURSOR.*, SEQ_NUM bigint)
+> language java
+> specific split_strings_singlecol_sequence
+> parameter style system defined java
+> deterministic
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.splitSingleColumnWithSequence(java.sql.ResultSet,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
+> 
+> create or replace function applib.split_rows(
+>        IN_CURSOR cursor, 
+>        COL_NAME select from IN_CURSOR, 
+>        SEPARATOR_CHAR char(1), 
+>        ESCAPE_CHAR char(1), 
+>        TRIM_TOKENS boolean,
+>        START_NUMBER bigint,
+>        INCREMENT bigint)
+> returns table(IN_CURSOR.*, SEQ_NUM bigint)
+> language java
+> specific split_strings_multicol_sequence
+> parameter style system defined java
+> deterministic
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.splitMultiColumnWithSequence(java.sql.ResultSet,java.util.List,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
 > 
 > -- enforce row constraints, default message catalog
 > create or replace function enforce_row_constraints(c cursor, r select from c)

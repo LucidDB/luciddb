@@ -594,6 +594,7 @@ bool CacheImpl<PageT,VictimPolicyT>
         if (readPageAsync(*page)) {
             successfulPrefetch();
         } else {
+            ioRetry();
             rejectedPrefetch();
             return false;
         }

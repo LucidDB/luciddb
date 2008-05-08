@@ -265,6 +265,10 @@ Message: {3}</text>
 <text>Escape symbol must be a single character.</text>
 </exception>
 
+<exception id="900520" name="IncrementByMustNotBeZero">
+<text>INCREMENT_BY cannot be zero (but it was).</text>
+</exception>
+
 <exception id="900600" name="MondrianReplicationFailed">
 <text>Failed while replicating Mondrian schema.</text>
 </exception>
@@ -276,6 +280,13 @@ Message: {3}</text>
 <exception id="900620" name="MondrianSchemaMismatch">
 <text>Schema qualifier {0} specified for table {1} does not match local_schema_name parameter {2}</text>
 </exception>
+
+<exception id="900630" name="InputRowsNotSorted">
+<text>Input cursor must be sorted by the following column(s) in ascending order: [{0}]; out of order column value(s): [{1}] </text>
+</exception>
+
+<exception id="900631" name="InvalidColumnDatatype">
+<text>Input column(s) [{0}] have invalid datatype; Datatype(s) should be: [{1}]</text></exception>
 
 <!-- ====================================================================== -->
  Messages

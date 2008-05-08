@@ -1,0 +1,114 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+  create table s1 (i1 int);
+  create table s2 (i1 int);
+  create table s3 (i1 int);
+  create table s4 (i1 int);
+  create view v2 as select * from s2;
+  create view v3 as select * from s2;
+  create view v4 as select * from s4;
+  insert into s1 values (0),(1),(2),(3),(4),(5);
+  insert into s2 values (1),(2),(3),(4),(5);
+  insert into s3 values (3),(4),(6);
+  insert into s4 values (0);
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+    set schema 'rwconcur';
+    drop table s1 cascade;
+    drop table s2 cascade;
+    drop table s3 cascade;
+    drop table s4 cascade;
+    alter system deallocate old;
+@end
+
+-----------------------------------------------------------
+
+-- make sure this sees one snapshot of s2
+@thread deletes1
+    set schema 'rwconcur';
+  @sync
+    delete from s1 where 
+      i1 = (select min(i1) + sys_boot.mgmt.sleep(5000) from v4) or
+      i1 = (select min(i1) from v2) or
+      i1 + sys_boot.mgmt.sleep(5000) in (
+        select i1 from v2 where i1 = 2
+        union
+        select s2.i1 from s2,s3 where s2.i1 = s3.i1);
+  @sync
+    select * from s1;
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+@thread deletes2
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    delete from s2;
+    alter table s2 rebuild;
+    insert into s2 values (6),(7);
+    alter table s2 rebuild;
+    truncate table s2;
+    alter table s2 rebuild;
+    alter system deallocate old;
+  @sync
+    select * from s2;
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- cannot be dropped even if s4 is not referenced
+-- during execution
+@thread drops4
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    @err drop table s4 cascade;
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+@thread creates5
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    create table s5(i1 int);
+    insert into s5 values (1),(2);
+  @sync
+    select * from s5;
+    drop table s5 cascade;
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+@thread createschema
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    create schema junk;
+  @sync
+    drop schema junk;
+  @sync
+
+@end
+
+------------------------------------------------------------

@@ -235,6 +235,30 @@
 | 91  | 92  | 93  | 94  | 95  | 96  | 97  | 98  | 99  |
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+
 > 
+> -- no-op deletes
+> delete from deltab where 1 = 0;
+> delete from deltab where false;
+> select count(*) from deltab;
++---------+
+| EXPR$0  |
++---------+
+| 9       |
++---------+
+> delete from deltab where (select count(*) from deltab) = 0;
+> select count(*) from deltab;
++---------+
+| EXPR$0  |
++---------+
+| 9       |
++---------+
+> delete from deltab where 1 = 0 and a1 in (select b1 from deltab);
+> select count(*) from deltab;
++---------+
+| EXPR$0  |
++---------+
+| 9       |
++---------+
+> 
 > !set outputformat csv
 > explain plan for
 >     delete from deltab where c1 in 
@@ -250,6 +274,32 @@
 '            LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$DELTAB$C1]])'
 '          FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
 '            LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$DELTAB$C1]])'
+> explain plan for
+>     delete from deltab where 1 = 0;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableDeleteRel(table=[[LOCALDB, LCSDEL, DELTAB]])'
+'    FennelCalcRel(expr#0..8=[{inputs}], expr#9=[null], expr#10=[CAST($t9):BIGINT], expr#11=[CAST($t10):BIGINT NOT NULL], rid=[$t11])'
+'      FennelValuesRel(tuples=[[]])'
+> explain plan for
+>     delete from deltab where (select count(*) from deltab) = 0;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableDeleteRel(table=[[LOCALDB, LCSDEL, DELTAB]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0=[{inputs}], expr#1=[?0], expr#2=[0], expr#3=[=($t1, $t2)], expr#4=[CAST($t0):BIGINT NOT NULL], rid=[$t4], $condition=[$t3])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$DELTAB$A1]])'
+> explain plan for
+>     delete from deltab where 1 = 0 and a1 in (select b1 from deltab);
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableDeleteRel(table=[[LOCALDB, LCSDEL, DELTAB]])'
+'    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t1):BIGINT NOT NULL], rid=[$t3])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[2]], joinType=[RIGHTSEMI])'
+'        LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$DELTAB$B1]])'
+'        FennelCalcRel(expr#0..8=[{inputs}], expr#9=[null], expr#10=[CAST($t9):BIGINT], expr#11=[CAST($t0):INTEGER], A1=[$t0], LCS_RID=[$t10], CAST($0):INTEGER=[$t11])'
+'          FennelValuesRel(tuples=[[]])'
 > 
 > drop server test_data cascade;
 > 

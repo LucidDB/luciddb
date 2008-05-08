@@ -3,13 +3,17 @@
 > 
 > set schema 'sales';
 > 
-> -- force usage of Fennel calculator
-> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-> 
 > --------------------------
 > -- Test Sort Aggreagtes --
 > --------------------------
 > alter session implementation set default;
+> -- for first portion, prevent usage of hash agg so that we can use
+> -- test sort-based agg instead
+> call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter('LhxAggRule');
+> 
+> -- force usage of Fennel calculator
+> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+> 
 > !set outputformat table
 > 
 > select count(distinct city) from emps;
@@ -129,6 +133,16 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 '20','130','2'
 '40','','1'
 > 
+> -- group by with mixed distinct and non-distinct aggs
+> select deptno, sum(distinct age), count(distinct gender), max(age)
+> from emps
+> group by deptno
+> order by 1;
+'DEPTNO','EXPR$1','EXPR$2','EXPR$3'
+'10','25','0','25'
+'20','130','2','80'
+'40','','1',''
+> 
 > --------
 > -- joins
 > --------
@@ -181,7 +195,7 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
-'    LhxAggRel(groupCount=[1])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for
@@ -189,7 +203,7 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
-'    LhxAggRel(groupCount=[1])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
 '      FennelReshapeRel(projection=[[1]], filterOp=[COMP_GT], filterOrdinals=[[0]], filterTuple=[[100000]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
@@ -202,18 +216,22 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 '    FennelReshapeRel(projection=[[1, 2, 3, 4, 0]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0, BIGINT NOT NULL EXPR$1, INTEGER EXPR$3, INTEGER EXPR$3, INTEGER EXPR$4) NOT NULL])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
-'            FennelAggRel(groupCount=[0], EXPR$4=[SUM(2)])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'            FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
-'              LhxAggRel(groupCount=[1])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'          FennelAggRel(groupCount=[0], EXPR$1=[COUNT(0)])'
-'            LhxAggRel(groupCount=[1])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'        FennelAggRel(groupCount=[0], EXPR$3=[SUM(0)], EXPR$3=[SUM(0)])'
-'          LhxAggRel(groupCount=[1])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'          FennelCalcRel(expr#0..1=[{inputs}], EXPR$4=[$t1], EXPR$0=[$t0])'
+'            FennelCartesianProductRel(leftouterjoin=[false])'
+'              FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'              FennelBufferRel(inMemory=[false], multiPass=[true])'
+'                FennelAggRel(groupCount=[0], EXPR$4=[SUM(2)])'
+'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'          FennelBufferRel(inMemory=[false], multiPass=[true])'
+'            FennelAggRel(groupCount=[0], EXPR$1=[COUNT(0)])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'        FennelBufferRel(inMemory=[false], multiPass=[true])'
+'          FennelAggRel(groupCount=[0], EXPR$3=[SUM(0)], EXPR$3=[SUM(0)])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > explain plan for
 > select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
@@ -226,9 +244,10 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 > select deptno, count(distinct empno) from emps group by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  LhxAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
-'    LhxAggRel(groupCount=[2])'
-'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
+'  FennelAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'      FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > explain plan for
 > select slacker, count(distinct deptno) from emps
@@ -236,9 +255,10 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    LhxAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
-'      LhxAggRel(groupCount=[2])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[8, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'    FennelAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
+'      FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'        FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[8, 2]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for
 > select deptno, count(distinct empno), count(*) from emps
@@ -247,25 +267,28 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 3, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'      LhxAggRel(groupCount=[1], EXPR$2=[COUNT()])'
-'        FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER NOT NULL EMPNO) NOT NULL])'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'            FennelValuesRel(tuples=[[{ '-', null, ')', 0 }]])'
-'      LhxAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
-'        LhxAggRel(groupCount=[2])'
+'      FennelAggRel(groupCount=[1], EXPR$2=[COUNT()])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '          FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER NOT NULL EMPNO) NOT NULL])'
 '            FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '              FennelValuesRel(tuples=[[{ '-', null, ')', 0 }]])'
+'      FennelAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER NOT NULL EMPNO) NOT NULL])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'                FennelValuesRel(tuples=[[{ '-', null, ')', 0 }]])'
 > 
 > explain plan for
 > select count(distinct e.slacker and e.manager) from emps as e group by deptno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0) NOT NULL])'
-'    LhxAggRel(groupCount=[1], EXPR$0=[COUNT(1)])'
-'      LhxAggRel(groupCount=[2])'
-'        FennelCalcRel(expr#0..2=[{inputs}], expr#3=[AND($t1, $t2)], DEPTNO=[$t0], $f1=[$t3])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'    FennelAggRel(groupCount=[1], EXPR$0=[COUNT(1)])'
+'      FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'        FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'          FennelCalcRel(expr#0..2=[{inputs}], expr#3=[AND($t1, $t2)], DEPTNO=[$t0], $f1=[$t3])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for
 > select deptno, sum(distinct age), count(distinct gender)
@@ -275,16 +298,36 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'      FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1) NOT NULL])'
+'      FennelAggRel(groupCount=[1], EXPR$1=[SUM(1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[1], EXPR$2=[COUNT(1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select deptno, sum(distinct age), count(distinct gender), max(age)
+> from emps
+> group by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 4, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2, INTEGER EXPR$3) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$3, INTEGER EXPR$1) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'          LhxAggRel(groupCount=[1])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'          LhxAggRel(groupCount=[1], EXPR$1=[SUM(1)])'
-'            LhxAggRel(groupCount=[2])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'      LhxAggRel(groupCount=[1], EXPR$2=[COUNT(1)])'
-'        LhxAggRel(groupCount=[2])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'          FennelAggRel(groupCount=[1], EXPR$3=[MAX(1)])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'          FennelAggRel(groupCount=[1], EXPR$1=[SUM(1)])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[1], EXPR$2=[COUNT(1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > -- verify plans for joins
 > 
@@ -293,7 +336,7 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
-'    LhxAggRel(groupCount=[1])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
 '      FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO0) NOT NULL])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
@@ -305,7 +348,7 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
-'    LhxAggRel(groupCount=[1])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[+($t1, $t0)], $f0=[$t2])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
@@ -319,12 +362,13 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 2, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1, INTEGER NOT NULL EMPID) NOT NULL])'
-'    LhxAggRel(groupCount=[2], EXPR$1=[COUNT(1)])'
-'      LhxAggRel(groupCount=[2])'
-'        FennelReshapeRel(projection=[[1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPID) NOT NULL])'
-'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 5]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID], preserveOrder=[false])'
+'    FennelAggRel(groupCount=[2], EXPR$1=[COUNT(1)])'
+'      FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'        FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'          FennelReshapeRel(projection=[[1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPID) NOT NULL])'
+'            LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 5]], index=[SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID], preserveOrder=[false])'
 > 
 > explain plan for
 > select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
@@ -334,28 +378,25 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'      FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1) NOT NULL])'
-'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'          LhxAggRel(groupCount=[1])'
-'            FennelCalcRel(expr#0..11=[{inputs}], expr#12=[OR($t8, $t9)], NAME=[$t11], EMPNO=[$t0], $f2=[$t12])'
+'      FennelAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FennelReshapeRel(projection=[[11, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPNO) NOT NULL])'
 '              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
 '                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'          LhxAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
-'            LhxAggRel(groupCount=[2])'
-'              FennelReshapeRel(projection=[[11, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPNO) NOT NULL])'
-'                FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'      LhxAggRel(groupCount=[1], EXPR$2=[COUNT(1)])'
-'        LhxAggRel(groupCount=[2])'
-'          FennelCalcRel(expr#0..11=[{inputs}], expr#12=[OR($t8, $t9)], NAME=[$t11], $f2=[$t12])'
-'            FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      FennelAggRel(groupCount=[1], EXPR$2=[COUNT(1)])'
+'        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'          FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
+'            FennelCalcRel(expr#0..11=[{inputs}], expr#12=[OR($t8, $t9)], NAME=[$t11], $f2=[$t12])'
+'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
+'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > --------------------------
 > -- Test Hash Aggreagtes --
 > --------------------------
 > alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 > call sys_boot.mgmt.flush_code_cache();
+> call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(null);
 > alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 > alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 > !set outputformat table
@@ -485,6 +526,15 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 '20','130','2'
 '40','','1'
 > 
+> select deptno, sum(distinct age), count(distinct gender), max(age)
+> from emps
+> group by deptno
+> order by 1;
+'DEPTNO','EXPR$1','EXPR$2','EXPR$3'
+'10','25','0','25'
+'20','130','2','80'
+'40','','1',''
+> 
 > --------
 > -- joins
 > --------
@@ -588,12 +638,9 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'column0'
 'FennelToIteratorConverter'
 '  FennelCartesianProductRel(leftouterjoin=[false])'
-'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        FennelValuesRel(tuples=[[{ 0 }]])'
-'        FennelAggRel(groupCount=[0], EXPR$0=[SUM(0)])'
-'          LhxAggRel(groupCount=[1])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'    FennelAggRel(groupCount=[0], EXPR$0=[SUM(0)])'
+'      LhxAggRel(groupCount=[1])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
 '    FennelAggRel(groupCount=[0], EXPR$1=[SUM(0)])'
 '      LhxAggRel(groupCount=[1])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
@@ -651,9 +698,24 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'      FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1) NOT NULL])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[SUM(1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], EXPR$2=[COUNT(1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> 
+> explain plan for
+> select deptno, sum(distinct age), count(distinct gender), max(age)
+> from emps
+> group by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 4, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2, INTEGER EXPR$3) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$3, INTEGER EXPR$1) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'          LhxAggRel(groupCount=[1])'
+'          LhxAggRel(groupCount=[1], EXPR$3=[MAX(1)])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 '          LhxAggRel(groupCount=[1], EXPR$1=[SUM(1)])'
 '            LhxAggRel(groupCount=[2])'
@@ -708,17 +770,11 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1, BIGINT NOT NULL EXPR$2) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'      FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, BIGINT NOT NULL EXPR$1) NOT NULL])'
-'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'          LhxAggRel(groupCount=[1])'
-'            FennelCalcRel(expr#0..5=[{inputs}], expr#6=[OR($t2, $t3)], NAME=[$t5], EMPNO=[$t0], $f2=[$t6])'
-'              FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2, 3]], inputDirectiveProj=[[]])'
-'                FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'          LhxAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
-'            LhxAggRel(groupCount=[2])'
-'              FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPNO) NOT NULL])'
-'                FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[COUNT(1)])'
+'        LhxAggRel(groupCount=[2])'
+'          FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPNO) NOT NULL])'
+'            FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])'
 '      LhxAggRel(groupCount=[1], EXPR$2=[COUNT(1)])'
 '        LhxAggRel(groupCount=[2])'
 '          FennelCalcRel(expr#0..4=[{inputs}], expr#5=[OR($t1, $t2)], NAME=[$t4], $f2=[$t5])'

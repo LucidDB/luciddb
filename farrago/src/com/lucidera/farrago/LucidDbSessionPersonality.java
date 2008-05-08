@@ -524,6 +524,9 @@ public class LucidDbSessionPersonality
         // Apply aggregation rules before the calc rules below so we can
         // call metadata queries on logical RelNodes.
         builder.addRuleInstance(new LhxAggRule());
+        
+        // Handle rid expressions being projected from EmptyRel's
+        builder.addRuleInstance(new LcsRemoveRidExprRule());
 
         // Handle trivial renames now so that they don't get
         // implemented as calculators.
