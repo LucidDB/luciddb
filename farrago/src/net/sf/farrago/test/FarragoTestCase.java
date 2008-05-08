@@ -232,8 +232,10 @@ public abstract class FarragoTestCase
         boolean endSession = false;
         try {
             cleanup.setUp();
-            getSession().getRepos().beginReposSession();
-            endSession = true;
+            if (connection instanceof FarragoJdbcEngineConnection) {
+                getSession().getRepos().beginReposSession();
+                endSession = true;
+            }
             cleanup.execute(); // let overrides see this call!
         } finally {
             if (endSession) {
