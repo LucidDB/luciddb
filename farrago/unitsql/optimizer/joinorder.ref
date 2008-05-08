@@ -899,9 +899,8 @@
 '            FennelValuesRel(tuples=[[{ '[', 1995, ']', 1995 }]])'
 > 
 > 
-> -- LER-3639 -- Projects should not be pulled up in this case because the
-> -- projection expression is used as a join key.  If this query is not properly
-> -- optimized, a cartesian join is incorrectly chosen.
+> -- LER-3639 -- If this query is not properly optimized, a cartesian join is
+> -- incorrectly chosen.
 > create table t1(t1a char(10));
 > create table t2(t2a char(10));
 > create table t3(t3a char(10));
@@ -912,10 +911,10 @@
 > select * from (select t1a||t2a as a from t1, t2 where t1a = t2a) as x, t3
 > where t3a = a;
 'column0'
-'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" A, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T3A) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[||($t1, $t0)], expr#3=[CAST($t2):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], A=[$t2], CAST($0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t3])'
+'IterCalcRel(expr#0..4=[{inputs}], expr#5=[||($t1, $t0)], A=[$t5], T3A=[$t3])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[||($t1, $t0)], expr#3=[CAST($t2):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..1=[{exprs}], CAST(||($1, $0)):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t3])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, T2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$T2A]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
@@ -935,5 +934,29 @@
 '          LcsRowScanRel(table=[[LOCALDB, JO, T1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T3A, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, T3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
+> 
+> -- LER-7778 -- Likewise for this query.  It should not result in a cartesian
+> -- join.
+> create table tab1(c1 char(1), c2 char(2), c3 char(3));
+> create table tab2(c1 char(1), c2 char(2), c3 char(3));
+> create table tab3(c1 char(1), c2 char(2), c3 char(3));
+> create view vtab1 as
+>     select cast(c1 as char(5)) as c1, cast(c2 as char(5)), cast(c3 as char(5))
+>     from tab1;
+> explain plan for
+> select vtab1.c1 from vtab1, tab2, tab3 where
+>     vtab1.c1 = tab3.c2 and tab2.c2 = tab3.c3;
+'column0'
+'IterCalcRel(expr#0..4=[{inputs}], expr#5=[CAST($t0):CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], C1=[$t5])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 3, 3]], outputRowType=[RecordType(CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C1, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C3, VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($1):VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[2]], joinType=[INNER])'
+'          FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], C1=[$t0], CAST(CAST($0):CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t2])'
+'            LcsRowScanRel(table=[[LOCALDB, JO, TAB1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB1$C1]])'
+'          FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C2, CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C3, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'            LcsRowScanRel(table=[[LOCALDB, JO, TAB3]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB3$C2, SYS$CLUSTERED_INDEX$TAB3$C3]])'
+'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C2, VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, JO, TAB2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB2$C2]])'
 > 
 > !quit

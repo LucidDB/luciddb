@@ -567,7 +567,7 @@ select aa, bb, c from
     right outer join C
     on aa = c
 order by 1, 2, 3;
--- can't pull because join condition references expression
+-- can pull even though join condition references expression
 select aa, bb, c from
     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
     left outer join C
@@ -594,7 +594,7 @@ select aa, bb, cc, dd from
     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
     on aa = cc and bb = dd
 order by 1, 2, 3, 4;
--- can't pull because join condition references expressions
+-- can pull even though join condition references expressions
 select aa, bb, cc, dd from
     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
     inner join
@@ -619,7 +619,7 @@ select a, bb, cc from
     A left outer join
     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
     on a = bb;
--- can't pull because join condition references expression
+-- can pull even though join condition references expression
 explain plan for
 select a, bb, cc from
     A right outer join
@@ -645,7 +645,7 @@ select aa, bb, c from
     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
     right outer join C
     on aa = c;
--- can't pull because join condition references expression
+-- can pull even though join condition references expression
 explain plan for
 select aa, bb, c from
     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
@@ -672,7 +672,7 @@ select aa, bb, cc, dd from
     full outer join
     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
     on aa = cc and bb = dd;
--- can't pull because join condition references expressions
+-- can pull even though join condition references expressions
 explain plan for
 select aa, bb, cc, dd from
     (select a*1 as aa, b*1 as bb from A inner join B on a = b)

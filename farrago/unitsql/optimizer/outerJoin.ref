@@ -1230,7 +1230,7 @@
 | 2   | 2   | 2  |
 | 3   | 3   | 3  |
 +-----+-----+----+
-> -- can't pull because join condition references expression
+> -- can pull even though join condition references expression
 > select aa, bb, c from
 >     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
 >     left outer join C
@@ -1282,7 +1282,7 @@
 | 2   | 2   |     |     |
 | 3   | 3   | 3   | 3   |
 +-----+-----+-----+-----+
-> -- can't pull because join condition references expressions
+> -- can pull even though join condition references expressions
 > select aa, bb, cc, dd from
 >     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
 >     inner join
@@ -1325,21 +1325,22 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-> -- can't pull because join condition references expression
+> -- can pull even though join condition references expression
 > explain plan for
 > select a, bb, cc from
 >     A right outer join
 >     (select b*1 as bb, c*1 as cc from B inner join C on b = c)
 >     on a = bb;
 'column0'
-'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[2, 0, 1]], outputRowType=[RecordType(INTEGER A, INTEGER NOT NULL BB, INTEGER NOT NULL CC) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[*($t0, $t2)], expr#4=[*($t1, $t2)], BB=[$t3], CC=[$t4])'
-'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-'          LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-'      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[*($t0, $t3)], expr#5=[*($t2, $t3)], A=[$t1], BB=[$t4], CC=[$t5])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL B, INTEGER A) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])'
+'          FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[*($t0, $t1)], B=[$t0], *($0, 1)=[$t2])'
+'            LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 > -- can pull
 > explain plan for
 > select a, bb, cc from
@@ -1388,20 +1389,21 @@
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-> -- can't pull because join condition references expression
+> -- can pull even though join condition references expression
 > explain plan for
 > select aa, bb, c from
 >     (select a*1 as aa, b*1 as bb from A inner join b on a = b)
 >     left outer join C
 >     on aa = c;
 'column0'
-'FennelToIteratorConverter'
-'  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
-'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[*($t0, $t2)], expr#4=[*($t1, $t2)], AA=[$t3], BB=[$t4])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
-'        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-'    LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[1], expr#5=[*($t0, $t4)], expr#6=[*($t1, $t4)], AA=[$t5], BB=[$t6], C=[$t3])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[LEFT])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[*($t0, $t2)], proj#0..1=[{exprs}], *($0, 1)=[$t3])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 > -- can pull
 > explain plan for
 > select aa, bb, c from
@@ -1453,7 +1455,7 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
-> -- can't pull because join condition references expressions
+> -- can pull even though join condition references expressions
 > explain plan for
 > select aa, bb, cc, dd from
 >     (select a*1 as aa, b*1 as bb from A inner join B on a = b)
@@ -1461,15 +1463,19 @@
 >     (select c*1 as cc, d*1 as dd from C inner join D on c = d)
 >     on aa = cc and bb = dd;
 'column0'
-'FennelToIteratorConverter'
-'  LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[INNER])'
-'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[*($t0, $t2)], expr#4=[*($t1, $t2)], AA=[$t3], BB=[$t4])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
-'        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[*($t0, $t2)], expr#4=[*($t1, $t2)], CC=[$t3], DD=[$t4])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
+'IterCalcRel(expr#0..5=[{inputs}], expr#6=[1], expr#7=[*($t1, $t6)], expr#8=[*($t0, $t6)], expr#9=[*($t2, $t6)], expr#10=[*($t4, $t6)], AA=[$t7], BB=[$t8], CC=[$t9], DD=[$t10])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[3, 2]], rightKeys=[[1, 0]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[1], expr#4=[*($t0, $t3)], proj#0..2=[{exprs}], *($0, 1)=[$t4])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
+'          FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER NOT NULL C) NOT NULL])'
+'            LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
+'              FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[*($t0, $t1)], A=[$t0], *($0, 1)=[$t2])'
+'                LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'              FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[*($t0, $t1)], C=[$t0], *($0, 1)=[$t2])'
+'                LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[*($t0, $t1)], D=[$t0], *($0, 1)=[$t2])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
 > -- can pull
 > explain plan for
