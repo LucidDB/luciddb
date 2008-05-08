@@ -3,13 +3,17 @@
 
 set schema 'sales';
 
--- force usage of Fennel calculator
-alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
-
 --------------------------
 -- Test Sort Aggreagtes --
 --------------------------
 alter session implementation set default;
+-- for first portion, prevent usage of hash agg so that we can use
+-- test sort-based agg instead
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter('LhxAggRule');
+
+-- force usage of Fennel calculator
+alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+
 !set outputformat table
 
 select count(distinct city) from emps;
@@ -81,6 +85,12 @@ JOIN (
 ON de.deptno = adage.deptno
 order by 1,2,3;
 
+-- group by with mixed distinct and non-distinct aggs
+select deptno, sum(distinct age), count(distinct gender), max(age)
+from emps
+group by deptno
+order by 1;
+
 --------
 -- joins
 --------
@@ -148,6 +158,11 @@ select deptno, sum(distinct age), count(distinct gender)
 from emps
 group by deptno;
 
+explain plan for
+select deptno, sum(distinct age), count(distinct gender), max(age)
+from emps
+group by deptno;
+
 -- verify plans for joins
 
 explain plan for
@@ -171,6 +186,7 @@ group by d.name;
 --------------------------
 alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 call sys_boot.mgmt.flush_code_cache();
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(null);
 alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 !set outputformat table
@@ -247,6 +263,11 @@ JOIN (
 ON de.deptno = adage.deptno
 order by 1,2,3;
 
+select deptno, sum(distinct age), count(distinct gender), max(age)
+from emps
+group by deptno
+order by 1;
+
 --------
 -- joins
 --------
@@ -318,6 +339,11 @@ select count(distinct e.slacker and e.manager) from emps as e group by deptno;
 
 explain plan for
 select deptno, sum(distinct age), count(distinct gender)
+from emps
+group by deptno;
+
+explain plan for
+select deptno, sum(distinct age), count(distinct gender), max(age)
 from emps
 group by deptno;
 

@@ -70,6 +70,11 @@ select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;
 select lcs_rid(t.c0), c0 from tencols t, (values(1)) order by 2; 
 select lcs_rid(t.c0), c0 from (values(1)), tencols t order by 2; 
 
+-- no-op selects
+select lcs_rid(c0), lcs_rid(c1)+1 from tencols where 1 = 0;
+select lcs_rid(t1.c0)*lcs_rid(t2.c1) from tencols t1, tencols t2
+    where 1 = 0 and t1.c2 = t2.c2;
+
 --------------
 -- Error cases
 --------------
@@ -117,3 +122,8 @@ explain plan for
     select lcs_rid(t.c0), c0 from tencols t, (values(1)) order by 2;
 explain plan for
     select lcs_rid(t.c0), c0 from (values(1)), tencols t order by 2;
+explain plan for
+    select lcs_rid(c0), lcs_rid(c1)+1 from tencols where 1 = 0;
+explain plan for
+    select lcs_rid(t1.c0)*lcs_rid(t2.c1) from tencols t1, tencols t2
+        where 1 = 0 and t1.c2 = t2.c2;

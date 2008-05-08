@@ -301,6 +301,18 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Aggregate expression is illegal in WHERE clause</text>
 </exception>
 
+<exception id="120342" name="AggregateIllegalInGroupBy" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Aggregate expression is illegal in GROUP BY clause</text>
+</exception>
+
+<exception id="120345" name="NestedAggIllegal" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Aggregate expressions cannot be nested</text>
+</exception>
+
+<exception id="120348" name="AggregateIllegalInOrderBy" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Aggregate expression is illegal in ORDER BY clause of non-aggregating SELECT</text>
+</exception>
+
 <exception id="120350" name="WhereMustBeBoolean" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>WHERE clause must be a condition</text>
 </exception>
