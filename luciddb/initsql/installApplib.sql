@@ -478,8 +478,8 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.exec
 -- The initial value for a new variable is null.  It is an error
 -- to attempt to create a context or variable which already exists.
 create or replace procedure applib.create_var(
-    context_id varchar(128), 
-    var_id varchar(128),
+    context_id varchar(255), 
+    var_id varchar(255),
     description varchar(65535))
 language java
 no sql
@@ -488,8 +488,8 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.e
 -- Deletes a variable (or a context if var_id is null), which must
 -- currently exist.
 create or replace procedure applib.delete_var(
-    context_id varchar(128), 
-    var_id varchar(128))
+    context_id varchar(255), 
+    var_id varchar(255))
 language java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeDelete';
@@ -497,8 +497,8 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.e
 -- Sets the value for a variable.  var_id must not be null, and must
 -- reference a previously created variable.
 create or replace procedure applib.set_var(
-    context_id varchar(128), 
-    var_id varchar(128), 
+    context_id varchar(255), 
+    var_id varchar(255), 
     new_value varchar(65535))
 language java
 no sql
@@ -508,8 +508,8 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.e
 -- Before flush, there is no guarantee that modifications have
 -- been made permanent.
 create or replace procedure applib.flush_var(
-    context_id varchar(128), 
-    var_id varchar(128))
+    context_id varchar(255), 
+    var_id varchar(255))
 language java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeFlush';
@@ -520,8 +520,8 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.e
 -- be evaluated once per statement (rather than once per row) when
 -- the arguments are constant literals.
 create or replace function applib.get_var(
-    context_id varchar(128), 
-    var_id varchar(128)) 
+    context_id varchar(255), 
+    var_id varchar(255)) 
 returns varchar(65535)
 language java
 deterministic
@@ -909,6 +909,19 @@ not deterministic
 no sql
 specific enforce_row_constraints_with_tag
 external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
+
+create or replace function penultimate_values(
+  input_table cursor,
+  grouping_columns select from input_table,
+  designated_value_and_timestamp select from input_table)
+returns table(
+  input_table.*,
+  until_timestamp timestamp)
+language java
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PenultimateValuesUdx.execute';
 
 ----
 -- System procedures

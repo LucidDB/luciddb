@@ -286,7 +286,28 @@ Message: {3}</text>
 </exception>
 
 <exception id="900631" name="InvalidColumnDatatype">
-<text>Input column(s) [{0}] have invalid datatype; Datatype(s) should be: [{1}]</text></exception>
+<text>Input column(s) [{0}] have invalid datatype; Datatype(s) should be: [{1}]</text>
+</exception>
+
+<exception id="900640" name="PenValDesignatedColsMustBeTwoCols">
+<text>DESIGNATED_VALUE_AND_TIMESTAMP must have two columns</text>
+</exception>
+
+<exception id="900641" name="PenValDesignatedTsColInvalidType">
+<text>Second column in DESIGNATED_VALUE_AND_TIMESTAMP must have TIMESTAMP datatype; column name: [{0}]</text>
+</exception>
+
+<exception id="900642" name="PenValGroupColsMustNotContainDesCols">
+<text>GROUPING_COLUMNS must not contain any of the columns in DESIGNATED_VALUE_AND_TIMESTAMP</text>
+</exception>
+
+<exception id="900643" name="PenValTsColMustNotBeNull">
+<text>Second column in DESIGNATED_VALUE_AND_TIMESTAMP must not contain NULL values; column name [{0}]</text>
+</exception>
+
+<exception id="900644" name="PenValIncomparableKeys">
+<text>Key values must be the same size to be compared</text>
+</exception>
 
 <!-- ====================================================================== -->
  Messages
