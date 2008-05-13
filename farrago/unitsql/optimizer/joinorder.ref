@@ -365,14 +365,13 @@
 >     where f.f_d1 + d1.d1_f = d2.d2_f;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 4, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2) NOT NULL])'
-'    FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[1, 3]], joinKeyParamIds=[[1, 2]])'
-'      FennelCartesianProductRel(leftouterjoin=[false])'
-'        LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
-'        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
-'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[+($t2, $t1)], expr#5=[=($t4, $t3)], proj#0..1=[{exprs}], $condition=[$t5])'
-'        FennelReshapeRel(projection=[[0, 1]], dynamicParameters=[[1, 2]], paramCompareOffsets=[[-1, -1]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F, INTEGER F_D1, INTEGER D2_F) NOT NULL])'
+'  FennelReshapeRel(projection=[[0, 2, 5]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[4]], rightKeys=[[1]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[+($t1, $t3)], proj#0..4=[{exprs}])'
+'        FennelCartesianProductRel(leftouterjoin=[false])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D1$D1, SYS$CLUSTERED_INDEX$D1$D1_F]])'
+'      LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D2$D2, SYS$CLUSTERED_INDEX$D2$D2_F]])'
 > 
 > -- filter with 2 tables but both on one side of the comparison operator
 > explain plan for select f, d1 from f, d1
@@ -958,5 +957,32 @@
 '            LcsRowScanRel(table=[[LOCALDB, JO, TAB3]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB3$C2, SYS$CLUSTERED_INDEX$TAB3$C3]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C2, VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CAST($0):VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, TAB2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB2$C2]])'
+> 
+> -- LER-7807 -- Tables A and B should be joined together before joining with C.
+> -- This allows the joins to be completely processed using hash joins without
+> -- post-processing of the filter referencing all 3 tables.
+> create table A(a int, b int, c int);
+> create table B(a int, b int, c int);
+> create table C(a int, b int, c int);
+> 
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','A',1000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','B',500);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','C',400);
+> 
+> explain plan for
+> select * from A, B, C
+> where A.a = B.a and
+> A.b + B.b = C.b and
+> A.c = C.c;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 7, 8, 9]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER C, INTEGER A0, INTEGER B0, INTEGER C0, INTEGER A1, INTEGER B1, INTEGER C1) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[6, 2]], rightKeys=[[1, 2]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..5=[{inputs}], expr#6=[+($t1, $t4)], proj#0..6=[{exprs}])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$B, SYS$CLUSTERED_INDEX$A$C]])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, B]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$B$A, SYS$CLUSTERED_INDEX$B$B, SYS$CLUSTERED_INDEX$B$C]])'
+'      LcsRowScanRel(table=[[LOCALDB, JO, C]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$C$A, SYS$CLUSTERED_INDEX$C$B, SYS$CLUSTERED_INDEX$C$C]])'
+> 
 > 
 > !quit

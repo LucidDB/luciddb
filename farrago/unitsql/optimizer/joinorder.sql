@@ -413,3 +413,21 @@ create view vtab1 as
 explain plan for
 select vtab1.c1 from vtab1, tab2, tab3 where
     vtab1.c1 = tab3.c2 and tab2.c2 = tab3.c3;
+
+-- LER-7807 -- Tables A and B should be joined together before joining with C.
+-- This allows the joins to be completely processed using hash joins without
+-- post-processing of the filter referencing all 3 tables.
+create table A(a int, b int, c int);
+create table B(a int, b int, c int);
+create table C(a int, b int, c int);
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','A',1000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','B',500);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','C',400);
+
+explain plan for
+select * from A, B, C
+where A.a = B.a and
+A.b + B.b = C.b and
+A.c = C.c;
+
