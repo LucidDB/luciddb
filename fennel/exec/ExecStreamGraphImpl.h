@@ -189,7 +189,12 @@ protected:
      */
     bool doDataflowClose;
 
-    class DynamicParamInfo;
+    class DynamicParamInfo
+    {
+    public:
+      std::vector<ExecStreamId> readerStreamIds;
+      std::vector<ExecStreamId> writerStreamIds;
+    };
 
     /**
      * Information on readers and writers of dynamic parameters.
@@ -298,13 +303,6 @@ public:
         DynamicParamId dynamicParamId);
     virtual const std::vector<ExecStreamId> &getDynamicParamReaders(
         DynamicParamId dynamicParamId);
-};
-
-class ExecStreamGraphImpl::DynamicParamInfo
-{
-public:
-    std::vector<ExecStreamId> readerStreamIds;
-    std::vector<ExecStreamId> writerStreamIds;
 };
 
 inline ExecStreamGraphImpl::GraphRep const &
