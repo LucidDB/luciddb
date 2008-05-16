@@ -281,7 +281,6 @@ void Database::closeImpl()
 
 void Database::closeDevices()
 {
-    StrictMutexGuard mutexGuard(mutex);
     pVersionedSegment = NULL;
     pTxnLog.reset();
     // REVIEW: have to explicitly close in case someone (like a recovery

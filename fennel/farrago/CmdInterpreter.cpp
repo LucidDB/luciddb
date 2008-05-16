@@ -237,11 +237,6 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
                 pDbHandle->pTraceTarget,
                 "xo.resourceGovernor"));
 
-    pDbHandle->statsTimer.setTarget(*pJavaTraceTarget);
-    pDbHandle->statsTimer.addSource(pDb);
-    pDbHandle->statsTimer.addSource(pDbHandle->pResourceGovernor);
-    pDbHandle->statsTimer.start();
-
     if (pDb->isRecoveryRequired()) {
         SegmentAccessor scratchAccessor =
             pDb->getSegmentFactory()->newScratchSegment(pDb->getCache());
@@ -251,6 +246,11 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
             pDb->getTypeFactory(),
             scratchAccessor);
         pDb->recover(recoveryFactory);
+
+        pDbHandle->statsTimer.setTarget(*pJavaTraceTarget);
+        pDbHandle->statsTimer.addSource(pDb);
+        pDbHandle->statsTimer.addSource(pDbHandle->pResourceGovernor);
+        pDbHandle->statsTimer.start();
     }
 
     // Cache initialization may have been unable to allocate the requested
