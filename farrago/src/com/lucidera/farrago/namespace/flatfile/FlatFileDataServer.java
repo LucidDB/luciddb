@@ -136,24 +136,47 @@ class FlatFileDataServer
         String schemaName = getSchemaName(localName);
         FlatFileParams.SchemaType schemaType =
             FlatFileParams.getSchemaType(schemaName, true);
+
+        String filename =
+            tableProps.getProperty(
+                FlatFileColumnSet.PROP_FILENAME);
+        if (filename == null) {
+            filename = getTableName(localName);
+        }
+
+        String dataFilePath =
+            params.getDirectory() + filename
+            + params.getFileExtenstion();
+        File dataFile = new File(dataFilePath);
+
+        // Estimate number of rows in a file
+        long numRows = -1;
+        try {
+            if (schemaType == FlatFileParams.SchemaType.QUERY) {
+                String [] foreignName =
+                    {
+                        this.getProperties().getProperty("NAME"),
+                        FlatFileParams.SchemaType.QUERY.getSchemaName(),
+                        filename
+                    };
+                long rowSize = 1;
+                List<Integer> fieldSizes = getFieldSizes(foreignName);
+                for (Integer size : fieldSizes) {
+                    rowSize = rowSize + size.intValue();
+                }
+                
+                // Estimated number of rows == file length / length of one row
+                numRows = dataFile.length() / rowSize;
+            }
+        } catch (Exception e) {
+        }
+
         if (rowType == null) {
             // scan control file/data file for metadata (Phase II)
-            String filename =
-                tableProps.getProperty(
-                    FlatFileColumnSet.PROP_FILENAME);
-            if (filename == null) {
-                filename = getTableName(localName);
-            }
-
             // check data file exists
-            String dataFilePath =
-                params.getDirectory() + filename
-                + params.getFileExtenstion();
-            File dataFile = new File(dataFilePath);
             if (!dataFile.exists()) {
                 return null;
             }
-
             String ctrlFilePath =
                 params.getDirectory() + filename
                 + params.getControlFileExtenstion();
@@ -175,6 +198,7 @@ class FlatFileDataServer
             rowType,
             params,
             tableProps,
+            numRows,
             schemaType);
     }
 
