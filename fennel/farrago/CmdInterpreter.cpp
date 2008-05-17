@@ -246,12 +246,11 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
             pDb->getTypeFactory(),
             scratchAccessor);
         pDb->recover(recoveryFactory);
-
-        pDbHandle->statsTimer.setTarget(*pJavaTraceTarget);
-        pDbHandle->statsTimer.addSource(pDb);
-        pDbHandle->statsTimer.addSource(pDbHandle->pResourceGovernor);
-        pDbHandle->statsTimer.start();
     }
+    pDbHandle->statsTimer.setTarget(*pJavaTraceTarget);
+    pDbHandle->statsTimer.addSource(pDb);
+    pDbHandle->statsTimer.addSource(pDbHandle->pResourceGovernor);
+    pDbHandle->statsTimer.start();
 
     // Cache initialization may have been unable to allocate the requested
     // number of pages -- check for this case and report it in the log.
