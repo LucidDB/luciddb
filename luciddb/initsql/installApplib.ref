@@ -954,6 +954,26 @@
 > reads sql data
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.ComputeStatisticsForSchemaUdp.execute';
 > 
+> -- UDP for estimating statistics for all tables in a schema
+> create or replace procedure estimate_statistics_for_schema(
+> in schemaName varchar(255))
+> language java
+> specific estimate_statistics_for_schema_no_samplingrate
+> parameter style java
+> reads sql data
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.EstimateStatisticsForSchemaUdp.execute';
+> 
+> -- UDP for estimating statistics for all tables in a schema with a fixed sampling rate
+> create or replace procedure estimate_statistics_for_schema(
+> in schemaName varchar(255),
+> in samplingRate decimal)
+> language java
+> specific estimate_statistics_for_schema_decimal_samplingrate
+> parameter style java
+> reads sql data
+> called on null input
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.EstimateStatisticsForSchemaUdp.execute';
+> 
 > -- UDP for dropping a schema if it exists
 > create or replace procedure drop_schema_if_exists(
 > in schemaname varchar(255),
