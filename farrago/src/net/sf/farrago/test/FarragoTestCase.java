@@ -361,6 +361,10 @@ public abstract class FarragoTestCase
             savedFarragoConfig.remove("connectionTimeoutMillis");
             savedFennelConfig.remove("resourceDir");
             savedFennelConfig.remove("deviceSchedulerType");
+            savedFennelConfig.remove("freshmenPageQueuePercentage");
+            savedFennelConfig.remove("pageHistoryQueuePercentage");
+            savedFennelConfig.remove("prefetchPagesMax");
+            savedFennelConfig.remove("prefetchThrottleRate");
         } finally {
             reposTxn.commit();
         }
