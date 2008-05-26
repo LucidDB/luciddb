@@ -68,7 +68,9 @@ alter system set "cacheReservePercentage" = 100;
 -- should work
 select * from sys_boot.mgmt.session_parameters_view
   where param_name in 
-    ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric')
+    ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric',
+     'validateDdlOnPrepare', 'enforceIdentityGeneratedAlways', 
+     'cacheStatements', 'reduceNonCorrelatedSubqueries')
   order by 1;
 
 -- should fail (farrago does not have this parameter)

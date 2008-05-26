@@ -1,0 +1,18 @@
+-- setup
+-- end of setup
+
+-- thread t1
+> values sys_boot.mgmt.sleep(60000);
++------------+
+| EXPR$0     |
++------------+
+Execution aborted
++------------+
+
+-- end of thread t1
+
+-- thread t2
+> call sys_boot.mgmt.kill_statement_match('values sys_boot.mgmt.sleep(60000)');
+0 rows affected.
+-- end of thread t2
+

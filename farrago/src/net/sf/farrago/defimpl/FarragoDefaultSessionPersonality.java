@@ -101,7 +101,7 @@ public class FarragoDefaultSessionPersonality
      * Whether DDL validation should be done at prepare time
      */
     public static final String VALIDATE_DDL_ON_PREPARE = "validateDdlOnPrepare";
-    public static final String VALIDATE_DDL_ON_PREPARE_DEFAULT = "true";
+    public static final String VALIDATE_DDL_ON_PREPARE_DEFAULT = "false";
 
     /**
      * Whether the GENERATED ALWAYS option for identity columns should be

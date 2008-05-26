@@ -136,24 +136,44 @@ class FlatFileDataServer
         String schemaName = getSchemaName(localName);
         FlatFileParams.SchemaType schemaType =
             FlatFileParams.getSchemaType(schemaName, true);
+
+        String filename =
+            tableProps.getProperty(
+                FlatFileColumnSet.PROP_FILENAME);
+        if (filename == null) {
+            filename = getTableName(localName);
+        }
+
+        String dataFilePath =
+            params.getDirectory() + filename
+            + params.getFileExtenstion();
+        File dataFile = new File(dataFilePath);
+
+        // Estimate number of rows in a file
+        long numRows = -1;
+        try {
+            if (schemaType == FlatFileParams.SchemaType.QUERY) {
+                String [] foreignName =
+                    {
+                        this.getProperties().getProperty("NAME"),
+                        FlatFileParams.SchemaType.QUERY.getSchemaName(),
+                        filename
+                    };
+                long avgRowSize = sampleAndCreateBcp(foreignName, null);
+                // Estimated number of rows == file length / avg row length
+                if (avgRowSize > 0) {
+                    numRows = dataFile.length() / avgRowSize;
+                }
+            }
+        } catch (Exception e) {
+        }
+
         if (rowType == null) {
             // scan control file/data file for metadata (Phase II)
-            String filename =
-                tableProps.getProperty(
-                    FlatFileColumnSet.PROP_FILENAME);
-            if (filename == null) {
-                filename = getTableName(localName);
-            }
-
             // check data file exists
-            String dataFilePath =
-                params.getDirectory() + filename
-                + params.getFileExtenstion();
-            File dataFile = new File(dataFilePath);
             if (!dataFile.exists()) {
                 return null;
             }
-
             String ctrlFilePath =
                 params.getDirectory() + filename
                 + params.getControlFileExtenstion();
@@ -175,6 +195,7 @@ class FlatFileDataServer
             rowType,
             params,
             tableProps,
+            numRows,
             schemaType);
     }
 
@@ -268,7 +289,7 @@ class FlatFileDataServer
         case QUERY:
             synchronized (FlatFileBCPFile.class) {
                 if (!bcpFile.exists()) {
-                    if (!sampleAndCreateBcp(foreignName, bcpFile)) {
+                    if (sampleAndCreateBcp(foreignName, bcpFile) == -1) {
                         return null;
                     }
                 }
@@ -342,7 +363,7 @@ class FlatFileDataServer
     /**
      * Creates the given control file based on an internal sample query.
      */
-    public boolean sampleAndCreateBcp(
+    public long sampleAndCreateBcp(
         String [] localName,
         FlatFileBCPFile bcpFile)
         throws SQLException
@@ -363,31 +384,48 @@ class FlatFileDataServer
                 String [] numRows =
                 { Integer.toString(rsmeta.getColumnCount()) };
 
-                if (!bcpFile.create()) { // write version
-                    throw FarragoResource.instance().FileWriteFailed.ex(
-                        bcpFile.fileName);
-                }
-                if (!bcpFile.write(numRows, null)) { // write numCols
-                    throw FarragoResource.instance().FileWriteFailed.ex(
-                        bcpFile.fileName);
+                if (bcpFile != null) {
+                    if (!bcpFile.create()) { // write version
+                        throw FarragoResource.instance().FileWriteFailed.ex(
+                            bcpFile.fileName);
+                    }
+                    if (!bcpFile.write(numRows, null)) { // write numCols
+                        throw FarragoResource.instance().FileWriteFailed.ex(
+                            bcpFile.fileName);
+                    }
                 }
                 boolean skipNext = params.getWithHeader();
+                long sumRows = 0;
+                long numRowsScan = 1;
                 while (resultSet.next()) {
+                    numRowsScan++;
                     for (int j = 0; j < cols.length; j++) {
                         cols[j] = resultSet.getString(j + 1);
                     }
-                    if (skipNext) {
-                        skipNext = false;
-                        bcpFile.update(cols, true);
-                    } else {
-                        bcpFile.update(cols, false);
+                    for (String col : cols) {
+                        if (col != null) {
+                            sumRows += col.length();
+                        }
+                    }
+                    // add one per column for delimiter size
+                    sumRows += cols.length;
+
+                    if (bcpFile != null) {
+                        if (skipNext) {
+                            skipNext = false;
+                            bcpFile.update(cols, true);
+                        } else {
+                            bcpFile.update(cols, false);
+                        }
                     }
                 }
-                if (!bcpFile.write(cols, params)) {
-                    throw FarragoResource.instance().FileWriteFailed.ex(
-                        bcpFile.fileName);
+                if (bcpFile != null) {
+                    if (!bcpFile.write(cols, params)) {
+                        throw FarragoResource.instance().FileWriteFailed.
+                            ex(bcpFile.fileName);
+                    }
                 }
-                return true;
+                return sumRows / numRowsScan;
             } finally {
                 // It's OK not to clean up stmt and resultSet;
                 // connection.close() will do that for us.
@@ -400,7 +438,7 @@ class FlatFileDataServer
                 }
             }
         }
-        return false;
+        return -1;
     }
 
     /**

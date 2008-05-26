@@ -20,6 +20,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/compute_statistics_for_schema.sql"/>
       </test>
 
+      <test name="estimateStatisticsForSchema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/estimate_statistics_for_schema.sql"/>
+      </test>
+
       <test name="dropSchemaIfExists">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/drop_schema_if_exists.sql"/>
       </test>

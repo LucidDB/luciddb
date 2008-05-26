@@ -432,6 +432,37 @@ Error: Invalid row 5 in control file unitsql/med/flatfiles/invalidbcpcolumns.bcp
 | 3          | 2                | 1                            |
 +------------+------------------+------------------------------+
 > 
+> --
+> -- 3.13 test estimating row count of a file
+> --
+> explain plan including all attributes without implementation for
+> select * from flatfile_server.BCP."decimal";
++------------------------------------------------------------------------------------------------------------+
+|                                                  column0                                                   |
++------------------------------------------------------------------------------------------------------------+
+| ProjectRel(F1=[$0], F2=[$1], F3=[$2], F4=[$3], F5=[$4], F6=[$5]): rowcount = 35.0, cumulative cost = 70.0  |
+|   TableAccessRel(table=[[FLATFILE_SERVER, BCP, decimal]]): rowcount = 35.0, cumulative cost = 35.0         |
++------------------------------------------------------------------------------------------------------------+
+> 
+> explain plan including all attributes without implementation for
+> select * from flatfile_server.BCP."example";
++-----------------------------------------------------------------------------------------------------+
+|                                               column0                                               |
++-----------------------------------------------------------------------------------------------------+
+| ProjectRel(ID=[$0], NAME=[$1], EXTRA_FIELD=[$2]): rowcount = 10.0, cumulative cost = 20.0           |
+|   TableAccessRel(table=[[FLATFILE_SERVER, BCP, example]]): rowcount = 10.0, cumulative cost = 10.0  |
++-----------------------------------------------------------------------------------------------------+
+> 
+> explain plan including all attributes without implementation for
+> select * from flatfile_server_empty.BCP."empty";
++-----------------------------------------------------------------------------------------------------------+
+|                                                  column0                                                  |
++-----------------------------------------------------------------------------------------------------------+
+| ProjectRel(ID=[$0], NAME=[$1], EXTRA_FIELD=[$2]): rowcount = 100.0, cumulative cost = 200.0               |
+|   TableAccessRel(table=[[FLATFILE_SERVER_EMPTY, BCP, empty]]): rowcount = 100.0, cumulative cost = 100.0  |
++-----------------------------------------------------------------------------------------------------------+
+> 
+> 
 > ---------------------------------------------------------------------------
 > -- Part 4. Reading metadata from bcp files                               --
 > ---------------------------------------------------------------------------

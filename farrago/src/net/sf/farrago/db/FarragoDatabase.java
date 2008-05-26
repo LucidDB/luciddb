@@ -685,7 +685,17 @@ public class FarragoDatabase
         if (cancelOnly) {
             stmt.cancel();
         } else {
-            stmt.kill();
+            // LER-7874 - kill comes from another thread, make sure we've 
+            // detached that thread's session (if any) so we can attach the 
+            // to the running statement's session and end it.
+            EnkiMDRepository mdrRepos = systemRepos.getEnkiMdrRepos(); 
+            EnkiMDSession detachedReposSession = mdrRepos.detachSession();
+            try {
+                stmt.kill();
+            } finally {
+                mdrRepos.reattachSession(
+                    detachedReposSession);
+            }
         }
     }
 

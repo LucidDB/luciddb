@@ -1,0 +1,94 @@
+0: jdbc:luciddb:> -- test the estimate_statistics_for_schema UDP
+0: jdbc:luciddb:> create schema TESTSCHEMA;
+0: jdbc:luciddb:> set schema 'TESTSCHEMA';
+0: jdbc:luciddb:> set path 'TESTSCHEMA';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function ramp(n int) 
+. . . . . . . . >     returns table(i int)
+. . . . . . . . >     language java
+. . . . . . . . >     parameter style system defined java
+. . . . . . . . >     no sql
+. . . . . . . . >     external name 'class net.sf.farrago.test.FarragoTestUDR.nullableRamp(java.lang.Integer, java.sql.PreparedStatement)';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table T1(col1 integer, col2 integer);
+0: jdbc:luciddb:> create table T2(col3 varchar(255), col4 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should be empty
+0: jdbc:luciddb:> select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T1' order by COLUMN_NAME;
++--------------+------------------+--------------+
+| COLUMN_NAME  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
++--------------+------------------+--------------+
++--------------+------------------+--------------+
+0: jdbc:luciddb:> select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T2' order by COLUMN_NAME;
++--------------+------------------+--------------+
+| COLUMN_NAME  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
++--------------+------------------+--------------+
++--------------+------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create some data
+0: jdbc:luciddb:> insert into T1 (col1, col2) select I, I from table(ramp(10000));
+0: jdbc:luciddb:> insert into T2 (col3, col4) 
+. . . . . . . . >     select 'row: ' || cast(I as varchar(5)), I from table(ramp(1000));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- analyze them
+0: jdbc:luciddb:> call applib.estimate_statistics_for_schema('TESTSCHEMA');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should be non-empty
+0: jdbc:luciddb:> select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T1' order by COLUMN_NAME;
++--------------+------------------+--------------+
+| COLUMN_NAME  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
++--------------+------------------+--------------+
+| COL1         | 50.0             | 5000         |
+| COL2         | 50.0             | 5000         |
++--------------+------------------+--------------+
+0: jdbc:luciddb:> select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T2' order by COLUMN_NAME;
++--------------+------------------+--------------+
+| COLUMN_NAME  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
++--------------+------------------+--------------+
+| COL3         | 100.0            | 1000         |
+| COL4         | 100.0            | 1000         |
++--------------+------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- re-analyze them with fixed sampling rate
+0: jdbc:luciddb:> call applib.estimate_statistics_for_schema('TESTSCHEMA', 25.0);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should be non-empty
+0: jdbc:luciddb:> select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T1' order by COLUMN_NAME;
++--------------+------------------+--------------+
+| COLUMN_NAME  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
++--------------+------------------+--------------+
+| COL1         | 25.0             | 2500         |
+| COL2         | 25.0             | 2500         |
++--------------+------------------+--------------+
+0: jdbc:luciddb:> select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T2' order by COLUMN_NAME;
++--------------+------------------+--------------+
+| COLUMN_NAME  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
++--------------+------------------+--------------+
+| COL3         | 25.0             | 250          |
+| COL4         | 25.0             | 250          |
++--------------+------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that no read lock lingered from ANALYZE (FRG-141)
+0: jdbc:luciddb:> insert into T1 values (3, 3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try using invalid sampling rates
+0: jdbc:luciddb:> call applib.estimate_statistics_for_schema('TESTSCHEMA', 0.0);
+Error: org.eigenbase.sql.parser.SqlParseException: TABLESAMPLE percentage must be between 0 and 100, inclusive (state=,code=0)
+0: jdbc:luciddb:> call applib.estimate_statistics_for_schema('TESTSCHEMA', 101.0);
+Error: org.eigenbase.sql.parser.SqlParseException: TABLESAMPLE percentage must be between 0 and 100, inclusive (state=,code=0)
+0: jdbc:luciddb:> call applib.estimate_statistics_for_schema('TESTSCHEMA', -1.0);
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 76.
+Was expecting one of:
+    <UNSIGNED_INTEGER_LITERAL> ...
+    <APPROX_NUMERIC_LITERAL> ...
+    <DECIMAL_NUMERIC_LITERAL> ... (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema TESTSCHEMA cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try using on a nonexisting schemas, should get error (LER-2608)
+0: jdbc:luciddb:> call applib.estimate_statistics_for_schema('IMAGINARY_SCHEMA');
+Error: Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
+0: jdbc:luciddb:> call applib.estimate_statistics_for_schema('IMAGINARY_SCHEMA', 50.0);
+Error: Schema 'IMAGINARY_SCHEMA' could not be found (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
