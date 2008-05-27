@@ -56,20 +56,21 @@ public abstract class EstimateStatisticsForSchemaUdp
      * @param schemaName name of schema to estimate statistics for
      * @param samplingRate sampling rate to use for statistics estimation
      */
-    public static void execute(String schemaName, BigDecimal samplingRate)
+    public static void execute(String schemaName, Double samplingRate)
         throws SQLException
     {
         analyze(schemaName, samplingRate);
     }
 
-    private static void analyze(String schemaName, BigDecimal samplingRate)
+    private static void analyze(String schemaName, Double samplingRate)
         throws SQLException
     {
         // build statement, forward it to DoForEntireSchemaUdp
         String sql =
             "analyze table %TABLE_NAME% estimate statistics for all columns";
         if (samplingRate != null) {
-            sql += " sample " + samplingRate.toPlainString() + " percent";
+            BigDecimal dec = new BigDecimal(samplingRate);
+            sql += " sample " + dec.toPlainString() + " percent";
         }
 
         DoForEntireSchemaUdp.execute(sql, schemaName, "TABLES");
