@@ -966,13 +966,12 @@
 > -- UDP for estimating statistics for all tables in a schema with a fixed sampling rate
 > create or replace procedure estimate_statistics_for_schema(
 > in schemaName varchar(255),
-> in samplingRate decimal)
+> in samplingRate float)
 > language java
-> specific estimate_statistics_for_schema_decimal_samplingrate
+> specific estimate_statistics_for_schema_float_samplingrate
 > parameter style java
 > reads sql data
-> called on null input
-> external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.EstimateStatisticsForSchemaUdp.execute';
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.EstimateStatisticsForSchemaUdp.execute(java.lang.String, java.lang.Double)';
 > 
 > -- UDP for dropping a schema if it exists
 > create or replace procedure drop_schema_if_exists(

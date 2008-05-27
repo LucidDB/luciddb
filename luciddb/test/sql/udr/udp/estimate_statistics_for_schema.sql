@@ -36,6 +36,13 @@ call applib.estimate_statistics_for_schema('TESTSCHEMA', 25.0);
 select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T1' order by COLUMN_NAME;
 select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T2' order by COLUMN_NAME;
 
+-- re-analyze once more with default sample rates via null parameter
+call applib.estimate_statistics_for_schema('TESTSCHEMA', null);
+
+-- should be non-empty
+select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T1' order by COLUMN_NAME;
+select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T2' order by COLUMN_NAME;
+
 -- verify that no read lock lingered from ANALYZE (FRG-141)
 insert into T1 values (3, 3);
 

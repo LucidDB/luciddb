@@ -68,6 +68,25 @@
 | COL4         | 25.0             | 250          |
 +--------------+------------------+--------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- re-analyze once more with default sample rates via null parameter
+0: jdbc:luciddb:> call applib.estimate_statistics_for_schema('TESTSCHEMA', null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should be non-empty
+0: jdbc:luciddb:> select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T1' order by COLUMN_NAME;
++--------------+------------------+--------------+
+| COLUMN_NAME  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
++--------------+------------------+--------------+
+| COL1         | 50.0             | 5000         |
+| COL2         | 50.0             | 5000         |
++--------------+------------------+--------------+
+0: jdbc:luciddb:> select COLUMN_NAME, PERCENT_SAMPLED, SAMPLE_SIZE from SYS_ROOT.DBA_COLUMN_STATS where TABLE_NAME = 'T2' order by COLUMN_NAME;
++--------------+------------------+--------------+
+| COLUMN_NAME  | PERCENT_SAMPLED  | SAMPLE_SIZE  |
++--------------+------------------+--------------+
+| COL3         | 100.0            | 1000         |
+| COL4         | 100.0            | 1000         |
++--------------+------------------+--------------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- verify that no read lock lingered from ANALYZE (FRG-141)
 0: jdbc:luciddb:> insert into T1 values (3, 3);
 0: jdbc:luciddb:> 
