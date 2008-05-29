@@ -663,6 +663,12 @@ public class CalcRexImplementorTableImpl
         registerAgg(
             SqlStdOperatorTable.countOperator,
             new CountCalcRexImplementor());
+        registerAgg(
+            SqlStdOperatorTable.minOperator,
+            new MinMaxCalcRexImplementor(SqlStdOperatorTable.minOperator));
+        registerAgg(
+            SqlStdOperatorTable.maxOperator,
+            new MinMaxCalcRexImplementor(SqlStdOperatorTable.minOperator));
 
         // Register histogram and related functions required to make min and
         // max work over windows.
@@ -2375,6 +2381,14 @@ public class CalcRexImplementorTableImpl
     public static abstract class AbstractCalcRexAggImplementor
         implements CalcRexAggImplementor
     {
+        public void implementInitAdd(RexCall call, CalcReg accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            implementInitialize(call, accumulatorRegister, translator);
+            implementAdd(call, accumulatorRegister, translator);
+            
+        }
+
         public boolean canImplement(RexCall call)
         {
             return true;
@@ -2406,7 +2420,65 @@ public class CalcRexImplementorTableImpl
                 zeroReg);
         }
 
-        public void implementAdd(
+        @Override
+		public void implementInitAdd(RexCall call, CalcReg accumulatorRegister,
+				RexToCalcTranslator translator) {
+            assert (call.operands.length == 0) || (call.operands.length == 1);
+
+            final CalcReg oneReg =
+                translator.builder.newLiteral(
+                    translator.getCalcRegisterDescriptor(call),
+                    1);
+
+            // If operand is null, then it is like count(*).
+            // Otherwise, it is like count(x).
+            RexNode operand = null;
+            if (call.operands.length == 1) {
+                operand = call.operands[0];
+            }
+            // Minor optimization where count(*) = count(x) if x cannot be null.
+            // See the help for SumCalcRexImplementor.implementAdd()
+            if ((operand != null) && operand.getType().isNullable()) {
+                final CalcReg zeroReg =
+                    translator.builder.newLiteral(
+                        translator.getCalcRegisterDescriptor(call),
+                        0);
+                CalcReg isNullReg  = translator.getTempBoolRegister();
+                String wasNotNull = translator.newLabel();
+                String next = translator.newLabel();
+
+                CalcReg input = translator.implementNode(operand);
+
+                CalcProgramBuilder.boolNativeIsNull.add(
+                    translator.builder,
+                    isNullReg,
+                    input);
+                CalcProgramBuilder.jumpFalseInstruction.add(
+                    translator.builder,
+                    new CalcProgramBuilder.Line(wasNotNull),
+                    isNullReg);
+                CalcProgramBuilder.refInstruction.add(
+                        translator.builder,
+                        accumulatorRegister,
+                        zeroReg);
+                translator.builder.addLabelJump(next);
+                translator.builder.addLabel(wasNotNull);
+                CalcProgramBuilder.refInstruction.add(
+                    translator.builder,
+                    accumulatorRegister,
+                    oneReg);
+                translator.builder.addLabel(next);
+            } else {
+            	// Use ref instead of move. Streaming agg marshalls and unmarshalls
+                CalcProgramBuilder.refInstruction.add(
+                    translator.builder,
+                    accumulatorRegister,
+                    oneReg);
+            }
+
+		}
+
+		public void implementAdd(
             RexCall call,
             CalcReg accumulatorRegister,
             RexToCalcTranslator translator)
@@ -2429,25 +2501,9 @@ public class CalcRexImplementorTableImpl
             // Minor optimization where count(*) = count(x) if x cannot be null.
             // See the help for SumCalcRexImplementor.implementAdd()
             if ((operand != null) && operand.getType().isNullable()) {
-                int ordinal = translator.getNullRegisterOrdinal();
-                CalcReg isNullReg;
+                CalcReg isNullReg  = translator.getTempBoolRegister();
                 String wasNotNull = translator.newLabel();
                 String next = translator.newLabel();
-                if (ordinal == -1) {
-                    isNullReg =
-                        translator.builder.newLocal(
-                            CalcProgramBuilder.OpType.Bool,
-                            -1);
-                    final List<CalcReg> regList =
-                        translator.builder.registerSets.getRegisterList(
-                            CalcProgramBuilder.RegisterSetType.Local);
-                    translator.setNullRegisterOrdinal(regList.size() - 1);
-                } else {
-                    isNullReg =
-                        translator.builder.getRegister(
-                            ordinal,
-                            CalcProgramBuilder.RegisterSetType.Local);
-                }
 
                 CalcReg input = translator.implementNode(operand);
 
@@ -2499,7 +2555,7 @@ public class CalcRexImplementorTableImpl
             // Minor optimization where count(*) = count(x) if x cannot be null.
             // See the help for SumCalcRexImplementor.implementDrop()
             if ((operand != null) && operand.getType().isNullable()) {
-                int ordinal = translator.getNullRegisterOrdinal();
+                int ordinal = translator.getTempBoolRegisterOrdinal();
                 CalcReg isNullReg;
                 String wasNotNull = translator.newLabel();
                 String next = translator.newLabel();
@@ -2511,7 +2567,7 @@ public class CalcRexImplementorTableImpl
                     final List<CalcReg> regList =
                         translator.builder.registerSets.getRegisterList(
                             CalcProgramBuilder.RegisterSetType.Local);
-                    translator.setNullRegisterOrdinal(regList.size() - 1);
+                    translator.setTempBoolRegisterOrdinal(regList.size() - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(
@@ -2582,7 +2638,59 @@ public class CalcRexImplementorTableImpl
                 zeroReg);
         }
 
-        public void implementAdd(
+        @Override
+		public void implementInitAdd(RexCall call, CalcReg accumulatorRegister,
+				RexToCalcTranslator translator) {
+            assert call.operands.length == 1;
+            final RexNode operand = call.operands[0];
+            CalcReg input = translator.implementNode(operand);
+            final CalcProgramBuilder.RegisterDescriptor desc =
+                translator.getCalcRegisterDescriptor(call);
+            final CalcProgramBuilder.OpType opType = desc.getType();
+            assert (opType.isNumeric());
+            if (operand.getType().isNullable()) {
+                final Object initValue;
+                if (opType.isExact()) {
+                    initValue = 0;
+                } else {
+                    initValue = 0.0;
+                }
+                final CalcReg zeroReg =
+                    translator.builder.newLiteral(
+                        desc,
+                        initValue);
+                CalcReg isNullReg = translator.getTempBoolRegister();
+                String wasNotNull = translator.newLabel();
+                String next = translator.newLabel();
+                CalcProgramBuilder.boolNativeIsNull.add(
+                    translator.builder,
+                    isNullReg,
+                    translator.implementNode(operand));
+                CalcProgramBuilder.jumpFalseInstruction.add(
+                    translator.builder,
+                    new CalcProgramBuilder.Line(wasNotNull),
+                    isNullReg);
+                CalcProgramBuilder.refInstruction.add(
+                        translator.builder,
+                        accumulatorRegister,
+                        zeroReg);
+                translator.builder.addLabelJump(next);
+                translator.builder.addLabel(wasNotNull);
+                CalcProgramBuilder.refInstruction.add(
+                    translator.builder,
+                    accumulatorRegister,
+                    input);
+                translator.builder.addLabel(next);
+            } else {
+            	// Use ref instead of move. Streaming agg marshalls and unmarshalls
+                CalcProgramBuilder.refInstruction.add(
+                    translator.builder,
+                    accumulatorRegister,
+                    input);
+            }
+		}
+
+		public void implementAdd(
             RexCall call,
             CalcReg accumulatorRegister,
             RexToCalcTranslator translator)
@@ -2608,7 +2716,7 @@ public class CalcRexImplementorTableImpl
             // any instruction. This is critical both when there is sum(col2) or
             // simply a return statement.
             if (operand.getType().isNullable()) {
-                int ordinal = translator.getNullRegisterOrdinal();
+                int ordinal = translator.getTempBoolRegisterOrdinal();
                 CalcReg isNullReg;
                 String wasNotNull = translator.newLabel();
                 String next = translator.newLabel();
@@ -2620,7 +2728,7 @@ public class CalcRexImplementorTableImpl
                     final List<CalcReg> regList =
                         translator.builder.registerSets.getRegisterList(
                             CalcProgramBuilder.RegisterSetType.Local);
-                    translator.setNullRegisterOrdinal(regList.size() - 1);
+                    translator.setTempBoolRegisterOrdinal(regList.size() - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(
@@ -2670,7 +2778,7 @@ public class CalcRexImplementorTableImpl
             // SUB O0, O0, col1        /* 3 */
             //                         /* 4 */
             if (operand.getType().isNullable()) {
-                int ordinal = translator.getNullRegisterOrdinal();
+                int ordinal = translator.getTempBoolRegisterOrdinal();
                 CalcReg isNullReg;
                 String wasNotNull = translator.newLabel();
                 String next = translator.newLabel();
@@ -2682,7 +2790,7 @@ public class CalcRexImplementorTableImpl
                     final List<CalcReg> regList =
                         translator.builder.registerSets.getRegisterList(
                             CalcProgramBuilder.RegisterSetType.Local);
-                    translator.setNullRegisterOrdinal(regList.size() - 1);
+                    translator.setTempBoolRegisterOrdinal(regList.size() - 1);
                 } else {
                     isNullReg =
                         translator.builder.getRegister(
@@ -2713,6 +2821,99 @@ public class CalcRexImplementorTableImpl
                     input);
             }
         }
+    }
+
+    /**
+     * Implementation of the <code>MIN and MAX</code> aggregate function, {@link
+     * SqlStdOperatorTable#sumOperator}.
+     */
+    private static class MinMaxCalcRexImplementor
+        extends AbstractCalcRexAggImplementor
+    {
+
+        private final SqlAggFunction function;
+
+        private boolean isMin()
+        {
+            return function==SqlStdOperatorTable.minOperator;
+        }
+        
+        public MinMaxCalcRexImplementor(SqlAggFunction function) {
+            this.function = function;
+        }
+
+        public void implementInitialize(
+            RexCall call,
+            CalcReg accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            assert false; //we should be calling initAdd()
+        }
+
+        @Override
+        public void implementInitAdd(RexCall call, CalcReg accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            assert call.operands.length == 1;
+            final RexNode operand = call.operands[0];
+            CalcReg input = translator.implementNode(operand);
+            CalcProgramBuilder.refInstruction.add(
+                translator.builder,
+                accumulatorRegister, input);
+        }
+        
+        public void implementAdd(
+            RexCall call,
+            CalcReg accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            assert call.operands.length == 1;
+            final RexNode operand = call.operands[0];
+            final CalcProgramBuilder builder = translator.builder;
+            CalcReg input = translator.implementNode(operand);
+            CalcReg tempBoolReg = translator.getTempBoolRegister();
+
+            
+            //check operand for null if it is nullable
+            String noReplaceLabel = translator.newLabel();;
+            if (operand.getType().isNullable()) {
+                CalcProgramBuilder.boolNativeIsNull.add(
+                    translator.builder,
+                    tempBoolReg,
+                    input);
+                builder.addLabelJumpTrue(noReplaceLabel, tempBoolReg);
+            }
+            String doReplaceLabel = translator.newLabel();
+            CalcProgramBuilder.boolNativeIsNull.add(
+                translator.builder,
+                tempBoolReg,
+                accumulatorRegister);
+            builder.addLabelJumpTrue(doReplaceLabel, tempBoolReg);
+            if (isMin()) {
+                CalcProgramBuilder.boolLessThan.add(
+                    builder, tempBoolReg,
+                    translator.implementNode(operand), accumulatorRegister);
+            } else {
+                CalcProgramBuilder.boolGreaterThan.add(
+                    builder, tempBoolReg,
+                    translator.implementNode(operand), accumulatorRegister);
+            }
+            builder.addLabelJumpFalse(noReplaceLabel, tempBoolReg);
+            
+            builder.addLabel(doReplaceLabel);
+            // Use ref instead of move since could be replacing a null 
+            CalcProgramBuilder.refInstruction.add(
+                translator.builder,
+                accumulatorRegister, input);
+            builder.addLabel(noReplaceLabel);
+        }
+
+        public void implementDrop(RexCall call, CalcReg accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            // do nothing
+        }
+
     }
 
     /**

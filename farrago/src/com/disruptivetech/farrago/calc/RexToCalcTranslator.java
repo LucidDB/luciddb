@@ -49,7 +49,7 @@ public class RexToCalcTranslator
     // The following 3 fields comprise the program; they are reset each time a
     // new program is started.
     final CalcProgramBuilder builder = new CalcProgramBuilder();
-    private int nullRegOrdinal = -1;
+    private int tempBoolRegOrdinal = -1;
 
     protected final CalcRexImplementorTable implementorTable;
 
@@ -245,7 +245,7 @@ public class RexToCalcTranslator
     {
         builder.clear();
         scope.clear();
-        nullRegOrdinal = -1;
+        tempBoolRegOrdinal = -1;
         this.program = program;
     }
 
@@ -405,16 +405,38 @@ public class RexToCalcTranslator
         return scope.get(getKey(node)) != null;
     }
 
-    protected int getNullRegisterOrdinal()
+    protected int getTempBoolRegisterOrdinal()
     {
-        return nullRegOrdinal;
+        return tempBoolRegOrdinal;
     }
 
-    protected void setNullRegisterOrdinal(int ordinal)
+    protected void setTempBoolRegisterOrdinal(int ordinal)
     {
-        nullRegOrdinal = ordinal;
+        tempBoolRegOrdinal = ordinal;
     }
 
+    protected CalcReg getTempBoolRegister()
+    {
+        int ordinal = getTempBoolRegisterOrdinal();
+        CalcReg isNullReg;
+        if (ordinal == -1) {
+            isNullReg =
+                builder.newLocal(
+                    CalcProgramBuilder.OpType.Bool,
+                    -1);
+            final List<CalcReg> regList =
+                builder.registerSets.getRegisterList(
+                    CalcProgramBuilder.RegisterSetType.Local);
+            setTempBoolRegisterOrdinal(regList.size() - 1);
+        } else {
+            isNullReg =
+                builder.getRegister(
+                    ordinal,
+                    CalcProgramBuilder.RegisterSetType.Local);
+        }
+        return isNullReg;
+    }
+    
     /**
      * Translates an array of project expressions and an optional filter
      * expression into a {@link CalcProgramBuilder} calculator program using a
@@ -1083,8 +1105,7 @@ public class RexToCalcTranslator
                     aggImplementor.implementAdd(call, register, this);
                     return setResult(call, register);
                 case InitAdd:
-                    aggImplementor.implementInitialize(call, register, this);
-                    aggImplementor.implementAdd(call, register, this);
+                    aggImplementor.implementInitAdd(call, register, this);
                     return setResult(call, register);
                 case Drop:
                     aggImplementor.implementDrop(call, register, this);
