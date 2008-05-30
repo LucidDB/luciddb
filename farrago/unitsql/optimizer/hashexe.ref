@@ -1522,7 +1522,44 @@ Error: Row size (6017 bytes) exceeds maximum (4092 bytes); row data:  [ 'abc    
 | 1  | 2  | 3  |
 +----+----+----+
 > 
-> --------------
+> -- LER-7927 -- To reproduce this bug, there needs to be a RIGHTSEMI join
+> -- with a filter on top of it.  The RIGHTSEMI join should be generated for
+> -- the IN predicate with tab2 as the left input into the join because it's the
+> -- bigger table.
+> create table tab2(a int primary key, b int);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','LHX','TAB',100);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB','LHX','TAB2',10000);
+> !set outputformat csv
+> explain plan for
+>     select * from tab as t1,
+>         (select tab.a from tab where a in (select tab2.a from tab2)
+>             union
+>         (select * from
+>             (select distinct tab.a from tab
+>                 where a in (select tab2.a from tab2))
+>             where a is not null)) as t2
+>     where t1.a = t2.a;
+'column0'
+'FennelToIteratorConverter'
+'  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'    LcsRowScanRel(table=[[LOCALDB, LHX, TAB]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB$A, SYS$CLUSTERED_INDEX$TAB$B, SYS$CLUSTERED_INDEX$TAB$C]])'
+'    LhxAggRel(groupCount=[1])'
+'      FennelMergeRel'
+'        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER A) NOT NULL])'
+'          LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[RIGHTSEMI])'
+'            FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER CAST($0):INTEGER) NOT NULL])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, TAB2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB2$A]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, TAB]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB$A]])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[IS NOT NULL($t0)], A=[$t0], $condition=[$t1])'
+'            FennelToIteratorConverter'
+'              LhxAggRel(groupCount=[1])'
+'                FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER A) NOT NULL])'
+'                  LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[RIGHTSEMI])'
+'                    FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER CAST($0):INTEGER) NOT NULL])'
+'                      LcsRowScanRel(table=[[LOCALDB, LHX, TAB2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB2$A]])'
+'                    LcsRowScanRel(table=[[LOCALDB, LHX, TAB]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TAB$A]])'
+> 
 > -- Clean up --
 > --------------
 > !set outputformat table

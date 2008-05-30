@@ -1612,6 +1612,13 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
+> -- multiple tables that can be removed
+> explain plan for
+>     select A.* from A left outer join Buniq B1 on A.a = B1.b
+>         left outer join Buniq B2 on B2.b = B1.k;
+'column0'
+'FennelToIteratorConverter'
+'  LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A, SYS$CLUSTERED_INDEX$A$K]])'
 > 
 > !set outputformat table
 > select A.* from A left outer join BUniq on a = b order by a;
@@ -1647,6 +1654,16 @@
 | 3  |
 +----+
 > select A.* from A left outer join BUniq B on a = b and A.k = B.k order by a;
++----+----+
+| K  | A  |
++----+----+
+| 1  | 1  |
+| 2  | 2  |
+| 3  | 3  |
++----+----+
+> select A.* from A left outer join Buniq B1 on A.a = B1.b
+>     left outer join Buniq B2 on B2.b = B1.k
+>     order by a;
 +----+----+
 | K  | A  |
 +----+----+

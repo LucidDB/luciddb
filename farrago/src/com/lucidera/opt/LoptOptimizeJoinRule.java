@@ -95,16 +95,24 @@ public class LoptOptimizeJoinRule
      */
     private void findRemovableOuterJoins(LoptMultiJoin multiJoin)
     {
-outerLoop:
-        for (
-            int factIdx = 0;
+        List<Integer> removalCandidates = new ArrayList<Integer>();
+        for (int factIdx = 0;
             factIdx < multiJoin.getNumJoinFactors();
             factIdx++)
         {
             if (multiJoin.isNullGenerating(factIdx)) {
+                removalCandidates.add(factIdx);
+            }
+        }
+        
+        while (!removalCandidates.isEmpty()) {
+            Set<Integer> retryCandidates = new HashSet<Integer>();
+            
+outerForLoop:
+            for (int factIdx : removalCandidates) {
                 // reject the factor if it is referenced in the projection list
                 BitSet projFields = multiJoin.getProjFields(factIdx);
-                if ((projFields == null) || (projFields.cardinality() > 0)) {
+                if ((projFields == null) || (projFields.cardinality() > 0)) {     
                     continue;
                 }
 
@@ -117,6 +125,8 @@ outerLoop:
                 RelOptUtil.decomposeConjunction(outerJoinCond, ojFilters);
                 int numFields = multiJoin.getNumFieldsInJoinFactor(factIdx);
                 BitSet joinKeys = new BitSet(numFields);
+                BitSet otherJoinKeys =
+                    new BitSet(multiJoin.getNumTotalFields());
                 int firstFieldNum = multiJoin.getJoinStart(factIdx);
                 int lastFieldNum = firstFieldNum + numFields;
                 for (RexNode filter : ojFilters) {
@@ -139,6 +149,7 @@ outerLoop:
                         ((RexInputRef) filterCall.getOperands()[1]).getIndex();
                     setJoinKey(
                         joinKeys,
+                        otherJoinKeys,
                         leftRef,
                         rightRef,
                         firstFieldNum,
@@ -147,7 +158,7 @@ outerLoop:
                 }
 
                 if (joinKeys.cardinality() == 0) {
-                    continue outerLoop;
+                    continue;
                 }
 
                 // make sure the only join fields referenced are the ones in
@@ -155,8 +166,10 @@ outerLoop:
                 int [] joinFieldRefCounts =
                     multiJoin.getJoinFieldRefCounts(factIdx);
                 for (int i = 0; i < joinFieldRefCounts.length; i++) {
-                    if ((joinFieldRefCounts[i] > 1) || !joinKeys.get(i)) {
-                        continue outerLoop;
+                    if ((joinFieldRefCounts[i] > 1) ||
+                        (!joinKeys.get(i) && joinFieldRefCounts[i] == 1))
+                    {
+                        continue outerForLoop;
                     }
                 }
 
@@ -166,16 +179,38 @@ outerLoop:
                         joinKeys))
                 {
                     multiJoin.addRemovableOuterJoinFactor(factIdx);
+                    // Since we are no longer joining this factor,
+                    // decrement the reference counters corresponding to
+                    // the join keys from the other factors that join with
+                    // this one.  Later, in the outermost loop, we'll have
+                    // the opportunity to retry removing those factors.
+                    for (int otherKey = otherJoinKeys.nextSetBit(0);
+                        otherKey >= 0;
+                        otherKey = otherJoinKeys.nextSetBit(otherKey + 1))
+                    {
+                        int otherFactor = multiJoin.findRef(otherKey);
+                        if (multiJoin.isNullGenerating(otherFactor)) {
+                            retryCandidates.add(otherFactor);
+                        }
+                        int [] otherJoinFieldRefCounts =
+                            multiJoin.getJoinFieldRefCounts(otherFactor);
+                        int offset = multiJoin.getJoinStart(otherFactor);
+                        --otherJoinFieldRefCounts[otherKey - offset];
+                    }
                 }
             }
+            removalCandidates.clear();
+            removalCandidates.addAll(retryCandidates);
         }
     }
 
     /**
      * Sets a join key if only one of the specified input references corresponds
-     * to a specified factor as determined by its field numbers
+     * to a specified factor as determined by its field numbers.  Also keeps
+     * track of the keys from the other factor.
      *
      * @param joinKeys join keys to be set if a key is found
+     * @param otherJoinKeys join keys for the other join factor
      * @param ref1 first input reference
      * @param ref2 second input reference
      * @param firstFieldNum first field number of the factor
@@ -186,6 +221,7 @@ outerLoop:
      */
     private void setJoinKey(
         BitSet joinKeys,
+        BitSet otherJoinKeys,
         int ref1,
         int ref2,
         int firstFieldNum,
@@ -195,12 +231,14 @@ outerLoop:
         if ((ref1 >= firstFieldNum) && (ref1 < lastFieldNum)) {
             if (!((ref2 >= firstFieldNum) && (ref2 < lastFieldNum))) {
                 joinKeys.set(ref1 - firstFieldNum);
+                otherJoinKeys.set(ref2);
             }
             return;
         }
         if (swap) {
             setJoinKey(
                 joinKeys,
+                otherJoinKeys,
                 ref2,
                 ref1,
                 firstFieldNum,

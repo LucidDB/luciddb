@@ -97,6 +97,10 @@ void ReshapeExecStream::initCompareData(
     assert(params.inputCompareProj.size() > 0);
     TupleProjection inputCompareProj = params.inputCompareProj;
     compTupleDesc.projectFrom(inputDesc, inputCompareProj);
+    // Adjust the descriptor to allow NULLs in case we're filtering out NULLs
+    for (uint i = 0; i < compTupleDesc.size(); i++) {
+        compTupleDesc[i].isNullable = true;
+    }
 
     // Setup the projection of the columns for comparison
     inputCompareProjAccessor.bind(inputAccessor, inputCompareProj);

@@ -403,17 +403,21 @@ public class LoptMetadataProvider
         // TODO zfong 8/29/06 - if we support mapping of physical relnodes to
         // logical relnodes, then this method may not be needed
         LhxJoinRelType joinType = rel.getJoinType();
-        int nFieldsLeft = rel.getLeft().getRowType().getFieldCount();
         if (joinType == LhxJoinRelType.LEFTSEMI) {
-            assert (groupKey.nextSetBit(nFieldsLeft) < 0);
+            assert (
+                groupKey.nextSetBit(
+                    rel.getLeft().getRowType().getFieldCount()) < 0);
             return RelMetadataQuery.getDistinctRowCount(
                 rel.getLeft(),
                 groupKey,
                 predicate);
-        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
-            // the key references all columns on the left, so we can reuse
-            // it to represent the columns on the right
-            assert (groupKey.nextSetBit(nFieldsLeft) < 0);
+        } else if (joinType == LhxJoinRelType.RIGHTANTI ||
+            joinType == LhxJoinRelType.RIGHTSEMI)
+        {
+            // the key references only columns on the right
+            assert (
+                groupKey.nextSetBit(
+                    rel.getRight().getRowType().getFieldCount()) < 0);
             return RelMetadataQuery.getDistinctRowCount(
                 rel.getRight(),
                 groupKey,
