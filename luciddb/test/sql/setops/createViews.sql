@@ -156,3 +156,12 @@ from    accounts a, cyfull cyf
 where   cyf.account = a.acct_no and
         a.acct_no = 10
 ;
+
+-- LER-8051:  problem with digests for EmptyRel
+create schema ler8051;
+set schema 'ler8051';
+create table y (y varchar(10) NOT NULL);
+create view yy as select cast(y.y as varchar(10)) as blah from y;
+create table x (x varchar(10));
+create view yx as select * from yy union all select * from x; 
+select * from yx where false;
