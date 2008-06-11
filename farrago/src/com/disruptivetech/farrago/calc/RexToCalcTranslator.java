@@ -49,7 +49,7 @@ public class RexToCalcTranslator
     // The following 3 fields comprise the program; they are reset each time a
     // new program is started.
     final CalcProgramBuilder builder = new CalcProgramBuilder();
-    private int tempBoolRegOrdinal = -1;
+    private final Map<String,CalcReg> namedTempRegisters = new HashMap<String,CalcReg>();
 
     protected final CalcRexImplementorTable implementorTable;
 
@@ -245,7 +245,7 @@ public class RexToCalcTranslator
     {
         builder.clear();
         scope.clear();
-        tempBoolRegOrdinal = -1;
+        namedTempRegisters.clear();
         this.program = program;
     }
 
@@ -405,36 +405,21 @@ public class RexToCalcTranslator
         return scope.get(getKey(node)) != null;
     }
 
-    protected int getTempBoolRegisterOrdinal()
+    protected CalcReg getTempRegister(String name, CalcProgramBuilder.OpType opType)
     {
-        return tempBoolRegOrdinal;
-    }
-
-    protected void setTempBoolRegisterOrdinal(int ordinal)
-    {
-        tempBoolRegOrdinal = ordinal;
-    }
-
-    protected CalcReg getTempBoolRegister()
-    {
-        int ordinal = getTempBoolRegisterOrdinal();
-        CalcReg isNullReg;
-        if (ordinal == -1) {
-            isNullReg =
-                builder.newLocal(
-                    CalcProgramBuilder.OpType.Bool,
-                    -1);
-            final List<CalcReg> regList =
-                builder.registerSets.getRegisterList(
-                    CalcProgramBuilder.RegisterSetType.Local);
-            setTempBoolRegisterOrdinal(regList.size() - 1);
-        } else {
-            isNullReg =
-                builder.getRegister(
-                    ordinal,
-                    CalcProgramBuilder.RegisterSetType.Local);
+        CalcReg result = namedTempRegisters.get(name);
+        if (result == null) {
+            result = builder.newLocal( opType, -1);
         }
-        return isNullReg;
+        return result;
+    }
+    
+    protected CalcReg getTempBoolRegister() {
+        return getTempRegister("TempBool", CalcProgramBuilder.OpType.Bool);
+    }
+    
+    protected CalcReg getTempInt4Register() {
+        return getTempRegister("TempInt4", CalcProgramBuilder.OpType.Int4);
     }
     
     /**
