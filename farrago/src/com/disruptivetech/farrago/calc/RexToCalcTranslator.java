@@ -405,11 +405,20 @@ public class RexToCalcTranslator
         return scope.get(getKey(node)) != null;
     }
 
+    /**
+     * Return a local variable named <code>name<code>. Create it using the
+     * specified type if it does not already exist.
+     * 
+     * @param name name of variable
+     * @param opType Type of variable to create
+     * @return
+     */
     protected CalcReg getTempRegister(String name, CalcProgramBuilder.OpType opType)
     {
         CalcReg result = namedTempRegisters.get(name);
         if (result == null) {
             result = builder.newLocal( opType, -1);
+            namedTempRegisters.put(name, result);
         }
         return result;
     }
