@@ -406,12 +406,12 @@ public class RexToCalcTranslator
     }
 
     /**
-     * Return a local variable named <code>name<code>. Create it using the
+     * Return a local variable named "name". Create it using the
      * specified type if it does not already exist.
      * 
      * @param name name of variable
      * @param opType Type of variable to create
-     * @return
+     * @return register named "name"
      */
     protected CalcReg getTempRegister(String name, CalcProgramBuilder.OpType opType)
     {
