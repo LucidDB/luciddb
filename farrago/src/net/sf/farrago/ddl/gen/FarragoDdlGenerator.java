@@ -471,20 +471,7 @@ public class FarragoDdlGenerator
             sb.append(type.getNamespace().getName());
             sb.append('.');
         }
-        sb.append(type.getName());
-
-        SqlTypeName stn = getSqlTypeName(type);
-        if ((precision != null) && stn.allowsPrec()) {
-            sb.append("(").append(precision);
-            if ((scale != null) && stn.allowsScale()) {
-                sb.append(",").append(scale);
-            }
-            sb.append(")");
-        } else {
-            if (length != null) {
-                sb.append("(").append(length).append(")");
-            }
-        }
+        formatTypeInfo(sb, type, precision, scale, length);
 
         if (defaultValue != null) {
             String val = defaultValue.getBody();
@@ -502,6 +489,56 @@ public class FarragoDdlGenerator
             if (NullableTypeEnum.COLUMN_NO_NULLS.toString().equals(
                 nullable.toString())) {
                 sb.append(" NOT NULL");
+            }
+        }
+    }
+    
+    /**
+     * Format the core elements of a column's type (type name, precision, scale,
+     * length) into SQL format.
+     * 
+     * @param col CwmColumn object we want type info for
+     * @return String containing formatted type info
+     */
+    public static String formatTypeInfo(CwmColumn col)
+    {
+        StringBuilder sb = new StringBuilder();
+        formatTypeInfo(sb, col.getType(), col.getPrecision(), col.getScale(), col.getLength());
+        return sb.toString();
+    }
+
+    /**
+     * Format the core elements of a column's type (type name, precision, scale,
+     * length) into SQL format.<p>
+     * 
+     * Note that this was refactored out of {@link #appendType(StringBuilder, CwmClassifier, Integer, Integer, Integer, NullableType, CwmExpression, boolean)}
+     * to allow separate access.
+     * 
+     * @param sb StringBuilder to hold the formatted type information
+     * @param type CwmClassifier object representing the column type
+     * @param precision Integer specifying the column's precision
+     * @param scale Integer specifying the column's scale 
+     * @param length Integer specifying the column's length
+     */
+    public static void formatTypeInfo(
+        StringBuilder sb,
+        CwmClassifier type,
+        Integer precision,
+        Integer scale,
+        Integer length)
+    {
+        sb.append(type.getName());
+        
+        SqlTypeName stn = getSqlTypeName(type);
+        if ((precision != null) && stn.allowsPrec()) {
+            sb.append("(").append(precision);
+            if ((scale != null) && stn.allowsScale()) {
+                sb.append(",").append(scale);
+            }
+            sb.append(")");
+        } else {
+            if (length != null) {
+                sb.append("(").append(length).append(")");
             }
         }
     }
