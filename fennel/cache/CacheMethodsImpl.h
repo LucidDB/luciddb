@@ -594,7 +594,6 @@ bool CacheImpl<PageT,VictimPolicyT>
         if (readPageAsync(*page)) {
             successfulPrefetch();
         } else {
-            ioRetry();
             rejectedPrefetch();
             return false;
         }
@@ -1353,7 +1352,6 @@ inline bool CacheImpl<PageT,VictimPolicyT>
     page.dataStatus = CachePage::DATA_WRITE;
     incrementStatsCounter(nPageWrites);
     if (!transferPageAsync(page)) {
-        ioRetry();
         return false;
     } else {
         return true;

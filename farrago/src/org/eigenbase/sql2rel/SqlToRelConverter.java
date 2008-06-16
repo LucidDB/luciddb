@@ -849,7 +849,7 @@ public class SqlToRelConverter
         final Blackboard bb,
         final SqlNode expr)
     {
-        findSubqueries(bb, expr);
+        findSubqueries(bb, expr, false);
         for (SqlNode node : bb.subqueryList) {
             substituteSubquery(bb, node);
         }
@@ -1460,22 +1460,34 @@ public class SqlToRelConverter
     /**
      * Builds a list of all <code>IN</code> or <code>EXISTS</code> operators
      * inside SQL parse tree. Does not traverse inside queries.
+     * 
+     * @param bb blackboard
+     * @param node the SQL parse tree
+     * @param registerOnlyScalarSubqueries if set to true and the parse tree
+     * corresponds to a variation of a select node, only register it if it's
+     * a scalar subquery
      */
     private void findSubqueries(
         Blackboard bb,
-        SqlNode node)
-    {
+        SqlNode node,
+        boolean registerOnlyScalarSubqueries)
+    {   
         switch (node.getKind().getOrdinal()) {
-        case SqlKind.InORDINAL:
         case SqlKind.ExistsORDINAL:
         case SqlKind.SelectORDINAL:
         case SqlKind.MultisetQueryConstructorORDINAL:
         case SqlKind.MultisetValueConstructorORDINAL:
         case SqlKind.CursorConstructorORDINAL:
         case SqlKind.ScalarQueryORDINAL:
-            bb.registerSubquery(node);
-            return;
+            if (!registerOnlyScalarSubqueries ||
+                node.getKind().getOrdinal() == SqlKind.ScalarQueryORDINAL)
+            {
+                bb.registerSubquery(node);
+            }
+            return;          
         default:
+            boolean inOrdinal =
+                node.getKind().getOrdinal() == SqlKind.InORDINAL;
             if (node instanceof SqlCall) {
                 SqlOperator operator = ((SqlCall) node).getOperator();
                 if ((operator.getKind() == SqlKind.Or)
@@ -1489,15 +1501,30 @@ public class SqlToRelConverter
                 final SqlNode [] operands = ((SqlCall) node).getOperands();
                 for (SqlNode operand : operands) {
                     if (operand != null) {
-                        findSubqueries(bb, operand);
+                        // In the case of an IN expression, locate scalar
+                        // subqueries so we can convert them to constants
+                        findSubqueries(
+                            bb,
+                            operand,
+                            inOrdinal || registerOnlyScalarSubqueries);
                     }
                 }
             } else if (node instanceof SqlNodeList) {
                 final SqlNodeList nodes = (SqlNodeList) node;
                 for (int i = 0; i < nodes.size(); i++) {
                     SqlNode child = nodes.get(i);
-                    findSubqueries(bb, child);
+                    findSubqueries(
+                        bb,
+                        child,
+                        inOrdinal || registerOnlyScalarSubqueries);
                 }
+            }
+            // Now that we've located any scalar subqueries inside the IN
+            // expression, register the IN expression itself.  We need to
+            // register the scalar subqueries first so they can be converted
+            // before the IN expression is converted.
+            if (inOrdinal) {
+                bb.registerSubquery(node);
             }
         }
     }

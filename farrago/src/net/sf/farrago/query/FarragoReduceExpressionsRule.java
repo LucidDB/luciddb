@@ -30,6 +30,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
 
@@ -274,11 +275,13 @@ public abstract class FarragoReduceExpressionsRule
         FarragoSessionPlanner planner =
             (FarragoSessionPlanner) rel.getCluster().getPlanner();
         FarragoSessionPreparingStmt preparingStmt = planner.getPreparingStmt();
+        List<Boolean> addCasts = new ArrayList<Boolean>();
         List<RexNode> reducibleExps =
             findReducibleExps(
                 preparingStmt,
                 rel.getCluster().getTypeFactory(),
-                expList);
+                expList,
+                addCasts);
         if (reducibleExps.isEmpty()) {
             return false;
         }
@@ -298,10 +301,17 @@ public abstract class FarragoReduceExpressionsRule
         }
 
         // For ProjectRel, we have to be sure to preserve the result
-        // types, so add casts as needed.  For FilterRel, this isn't
-        // necessary, and the presence of casts could hinder other
-        // rules such as sarg analysis, which require bare literals.
-        boolean addCasts = (rel instanceof ProjectRel);
+        // types, so always cast regardless of the expression type.
+        // For other RelNodes like FilterRel, in general, this isn't necessary,
+        // and the presence of casts could hinder other rules such as sarg
+        // analysis, which require bare literals.  But there are special cases,
+        // like when the expression is a UDR argument, that need to be
+        // handled as special cases.
+        if (rel instanceof ProjectRel) {
+            for (int i = 0; i < reducedValues.size(); i++) {
+                addCasts.set(i, true);
+            }
+        }
 
         RexReplacer replacer =
             new RexReplacer(
@@ -324,17 +334,20 @@ public abstract class FarragoReduceExpressionsRule
     private static List<RexNode> findReducibleExps(
         FarragoSessionPreparingStmt preparingStmt,
         RelDataTypeFactory typeFactory,
-        List<RexNode> exps)
+        List<RexNode> exps,
+        List<Boolean> addCasts)
     {
         List<RexNode> result = new ArrayList<RexNode>();
         ConstantGardener gardener =
             new ConstantGardener(
                 preparingStmt,
                 typeFactory,
-                result);
+                result,
+                addCasts);
         for (RexNode exp : exps) {
             gardener.analyze(exp);
         }
+        assert(result.size() == addCasts.size());
         return result;
     }
 
@@ -350,13 +363,13 @@ public abstract class FarragoReduceExpressionsRule
         private final RexBuilder rexBuilder;
         private final List<RexNode> reducibleExps;
         private final List<RexNode> reducedValues;
-        private final boolean addCasts;
+        private final List<Boolean> addCasts;
 
         RexReplacer(
             RexBuilder rexBuilder,
             List<RexNode> reducibleExps,
             List<RexNode> reducedValues,
-            boolean addCasts)
+            List<Boolean> addCasts)
         {
             this.rexBuilder = rexBuilder;
             this.reducibleExps = reducibleExps;
@@ -372,7 +385,7 @@ public abstract class FarragoReduceExpressionsRule
                 return super.visitCall(call);
             }
             RexNode replacement = reducedValues.get(i);
-            if (addCasts
+            if (addCasts.get(i)
                 && (replacement.getType() != call.getType()))
             {
                 // Handle change from nullable to NOT NULL by claiming
@@ -442,17 +455,24 @@ public abstract class FarragoReduceExpressionsRule
         private final List<Constancy> stack;
 
         private final List<RexNode> result;
+        
+        private final List<Boolean> addCasts;
+        
+        private final List<SqlOperator> parentCallTypeStack;
 
         ConstantGardener(
             FarragoSessionPreparingStmt preparingStmt,
             RelDataTypeFactory typeFactory,
-            List<RexNode> result)
+            List<RexNode> result,
+            List<Boolean> addCasts)
         {
             // go deep
             super(true);
             this.preparingStmt = preparingStmt;
             this.result = result;
+            this.addCasts = addCasts;
             this.stack = new ArrayList<Constancy>();
+            this.parentCallTypeStack = new ArrayList<SqlOperator>();
         }
 
         public void analyze(RexNode exp)
@@ -463,12 +483,13 @@ public abstract class FarragoReduceExpressionsRule
 
             // Deal with top of stack
             assert (stack.size() == 1);
+            assert(parentCallTypeStack.isEmpty());
             Constancy rootConstancy = stack.get(0);
             if (rootConstancy == Constancy.REDUCIBLE_CONSTANT) {
                 // The entire subtree was constant, so add it to the result.
                 addResult(exp);
             }
-            stack.clear();
+            stack.clear();           
         }
 
         private Void pushVariable()
@@ -489,6 +510,21 @@ public abstract class FarragoReduceExpressionsRule
                 }
             }
             result.add(exp);
+            
+            // In the case where the expression corresponds to a UDR argument,
+            // we need to preserve casts.  Note that this only applies to
+            // the topmost argument, not expressions nested within the UDR
+            // call.
+            // 
+            // REVIEW zfong 6/13/08 - Are there other expressions where we
+            // also need to preserve casts?
+            if (parentCallTypeStack.isEmpty()) {
+                addCasts.add(false);
+            } else {
+                addCasts.add(
+                    parentCallTypeStack.get(parentCallTypeStack.size() - 1)
+                        instanceof FarragoUserDefinedRoutine);
+            }
         }
 
         public Void visitInputRef(RexInputRef inputRef)
@@ -523,6 +559,8 @@ public abstract class FarragoReduceExpressionsRule
 
         private void analyzeCall(RexCall call, Constancy callConstancy)
         {
+            parentCallTypeStack.add(call.getOperator());
+            
             // visit operands, pushing their states onto stack
             super.visitCall(call);
 
@@ -570,6 +608,9 @@ public abstract class FarragoReduceExpressionsRule
 
             // pop operands off of the stack
             operandStack.clear();
+            
+            // pop this parent call operator off the stack
+            parentCallTypeStack.remove(parentCallTypeStack.size() - 1);
 
             // push constancy result for this call onto stack
             stack.add(callConstancy);
