@@ -189,7 +189,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement path="${mdrlibs.dir}/jmi.jar"/>
     <pathelement path="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
-    <pathelement location="${openjava.dir}/openjava.jar"/>
+    <pathelement path="${openjava.dir}/openjava.jar"/>
   </path>
   <property name="applib.build.classpath" refid="applib.build.classpath"/>
 
@@ -207,6 +207,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement path="${mdrlibs.dir}/jmi.jar"/>
     <pathelement path="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
+    <pathelement path="${openjava.dir}/openjava.jar"/>
   </path>
   <property name="mbean.build.classpath" refid="mbean.build.classpath"/>
 

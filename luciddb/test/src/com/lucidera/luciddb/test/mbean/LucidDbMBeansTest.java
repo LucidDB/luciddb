@@ -168,8 +168,60 @@ public class LucidDbMBeansTest extends TestCase
         server.getAttribute(name, "SystemParameters");
     }
 
+    public void testStorageManagement()
+        throws Exception
+    {
+        ObjectName name =
+            new ObjectName("com.lucidera.luciddb.mbean:name=StorageManagement");
 
+        server.registerMBean(new StorageManagement(), name);
 
+        Object result;
+
+        // for a very large threshold, growth should be expected
+        result = server.invoke(
+            name,
+            "checkDatabaseGrowth",
+            new Object [] { 1000000000L },
+            new String [] { "long" } );
+
+        assertEquals(StorageManagement.FILE_GROW, result);
+        
+        result = server.invoke(
+            name,
+            "checkTempGrowth",
+            new Object [] { 1000000000L },
+            new String [] { "long" } );
+
+        assertEquals(StorageManagement.FILE_GROW, result);
+        
+        // for a very small threshold, growth should NOT be expected
+        result = server.invoke(
+            name,
+            "checkDatabaseGrowth",
+            new Object [] { 100L },
+            new String [] { "long" } );
+
+        assertEquals(StorageManagement.FILE_KEEP, result);
+        
+        // for a very small threshold, growth should NOT be expected
+        result = server.invoke(
+            name,
+            "checkTempGrowth",
+            new Object [] { 100L },
+            new String [] { "long" } );
+
+        assertEquals(StorageManagement.FILE_KEEP, result);
+        
+        // for a negative threshold, growth should NOT be expected
+        result = server.invoke(
+            name,
+            "checkDatabaseGrowth",
+            new Object [] { -100L },
+            new String [] { "long" } );
+
+        assertEquals(StorageManagement.FILE_KEEP, result);
+    }
 }
 
 // End LucidDbMBeansTest.java
