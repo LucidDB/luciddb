@@ -49,6 +49,8 @@ public class FarragoDbSessionPrivilegeChecker
 
     private final Map<List<FemAuthId>, Set<FemAuthId>> authMap;
 
+    private FemRole publicRole;
+    
     //~ Constructors -----------------------------------------------------------
 
     public FarragoDbSessionPrivilegeChecker(FarragoSession session)
@@ -86,10 +88,8 @@ public class FarragoDbSessionPrivilegeChecker
                 inheritRoles(role, authSet);
             }
 
-            authSet.add(
-                FarragoCatalogUtil.getRoleByName(
-                    session.getRepos(),
-                    FarragoCatalogInit.PUBLIC_ROLE_NAME));
+            
+            authSet.add(getPublicRole());
         }
 
         // Now, let's check their papers...
@@ -104,6 +104,18 @@ public class FarragoDbSessionPrivilegeChecker
             session.getRepos().getLocalizedObjectName(obj));
     }
 
+    private FemRole getPublicRole()
+    {
+        if (publicRole == null) {
+            publicRole = 
+                FarragoCatalogUtil.getRoleByName(
+                    session.getRepos(),
+                    FarragoCatalogInit.PUBLIC_ROLE_NAME);
+        }
+        
+        return publicRole;
+    }
+    
     // implement FarragoSessionPrivilegeChecker
     public void checkAccess()
     {

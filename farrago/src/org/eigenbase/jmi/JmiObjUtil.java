@@ -696,7 +696,7 @@ public abstract class JmiObjUtil
                 // Not a primitive
                 continue;
             }
-            obj.refSetValue(attr, obj.refGetValue(attr));
+            obj.refSetValue(attr, val);
         }
     }
     

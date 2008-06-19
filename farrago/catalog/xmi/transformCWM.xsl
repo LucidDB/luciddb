@@ -111,6 +111,25 @@
     </xsl:copy>
   </xsl:template>
 
+  <!-- Apply lazy association tag to some associations: -->
+  <!--   ParameterType             -->
+  <!--   StructuralFeatureType     -->
+  <xsl:template match="Model:Association[@name='ParameterType']
+      | Model:Association[@name='StructuralFeatureType']">
+    <xsl:copy>
+      <xsl:apply-templates select="@* | node()" />
+      <Model:Namespace.contents>
+        <Model:Tag tagId='org.eigenbase.enki.lazyAssociation'>
+          <xsl:attribute name="elements">
+            <xsl:value-of select="@xmi.id"/>
+          </xsl:attribute>
+          <Model:Tag.values>true</Model:Tag.values>
+        </Model:Tag>
+      </Model:Namespace.contents>
+    </xsl:copy>
+  </xsl:template>
+
+
   <!-- Rename Java keyword default to defaultValue -->
   <xsl:template match="Model:Attribute[@name='default']">
     <xsl:copy>

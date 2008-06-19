@@ -129,7 +129,7 @@
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Thu May 22 18:54:39 PDT 2008'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue May 27 15:35:33 PDT 2008'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -5448,6 +5448,15 @@
                 </UML:Class>
                 <UML:Association xmi.id = 'Ilsmmsmmsmm278e83mfaa30dba10mm7f78' name = 'PrivilegeIsGrantedToGrantee'
                   isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E82'
+                      isSpecification = 'false'>
+                      <UML:TaggedValue.dataValue>true</UML:TaggedValue.dataValue>
+                      <UML:TaggedValue.type>
+                        <UML:TagDefinition xmi.idref = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7B'/>
+                      </UML:TaggedValue.type>
+                    </UML:TaggedValue>
+                  </UML:ModelElement.taggedValue>
                   <UML:Association.connection>
                     <UML:AssociationEnd xmi.id = 'Ilsmmsmmsmm278e83mfaa30dba10mm7f77' name = 'Grantee'
                       visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
@@ -5637,6 +5646,15 @@
                 </UML:Association>
                 <UML:Association xmi.id = 'Ilsmmsmmsmm278e83mfaa30dba10mm7f7f' name = 'PrivilegeIsGrantedByGrantor'
                   isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E81'
+                      isSpecification = 'false'>
+                      <UML:TaggedValue.dataValue>true</UML:TaggedValue.dataValue>
+                      <UML:TaggedValue.type>
+                        <UML:TagDefinition xmi.idref = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7B'/>
+                      </UML:TaggedValue.type>
+                    </UML:TaggedValue>
+                  </UML:ModelElement.taggedValue>
                   <UML:Association.connection>
                     <UML:AssociationEnd xmi.id = 'Ilsmmsmmsmm278e83mfaa30dba10mm7f7e' name = 'Grantor'
                       visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
@@ -5672,6 +5690,15 @@
                 </UML:Association>
                 <UML:Association xmi.id = 'Ilsmmsmmsmm278e83mfaa30dba10mm7f86' name = 'PrivilegeIsGrantedOnElement'
                   isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E80'
+                      isSpecification = 'false'>
+                      <UML:TaggedValue.dataValue>true</UML:TaggedValue.dataValue>
+                      <UML:TaggedValue.type>
+                        <UML:TagDefinition xmi.idref = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7B'/>
+                      </UML:TaggedValue.type>
+                    </UML:TaggedValue>
+                  </UML:ModelElement.taggedValue>
                   <UML:Association.connection>
                     <UML:AssociationEnd xmi.id = 'Ilsmmsmmsmm278e83mfaa30dba10mm7f85' name = 'Privilege'
                       visibility = 'public' isSpecification = 'false' isNavigable = 'true' ordering = 'unordered'
@@ -8542,9 +8569,9 @@
         <UML:TagDefinition xmi.id = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2C'
           name = 'org.eigenbase.enki.maxLength' isSpecification = 'false' tagType = 'String'>
           <UML:TagDefinition.multiplicity>
-            <UML:Multiplicity xmi.id = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E30'>
+            <UML:Multiplicity xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7A'>
               <UML:Multiplicity.range>
-                <UML:MultiplicityRange xmi.id = '127-0-0-1-483fef1b:1188bdc9f07:-8000:0000000000000E2F'
+                <UML:MultiplicityRange xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E79'
                   lower = '0' upper = '1'/>
               </UML:Multiplicity.range>
             </UML:Multiplicity>
@@ -8556,6 +8583,17 @@
             <UML:Multiplicity xmi.id = '127-0-0-1--798f2f62:1189eccc986:-8000:0000000000000E4B'>
               <UML:Multiplicity.range>
                 <UML:MultiplicityRange xmi.id = '127-0-0-1--798f2f62:1189eccc986:-8000:0000000000000E4A'
+                  lower = '0' upper = '1'/>
+              </UML:Multiplicity.range>
+            </UML:Multiplicity>
+          </UML:TagDefinition.multiplicity>
+        </UML:TagDefinition>
+        <UML:TagDefinition xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7B'
+          name = 'org.eigenbase.enki.lazyAssociation' isSpecification = 'false' tagType = 'String'>
+          <UML:TagDefinition.multiplicity>
+            <UML:Multiplicity xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7F'>
+              <UML:Multiplicity.range>
+                <UML:MultiplicityRange xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7E'
                   lower = '0' upper = '1'/>
               </UML:Multiplicity.range>
             </UML:Multiplicity>
@@ -10943,7 +10981,7 @@
       textsize="10"
     >FennelConfig</text>
     <group name="Fig1.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[681, 433, 218, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[681, 433, 232, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -10956,7 +10994,7 @@
       <rectangle name="Fig1.3.0"
         x="681"
         y="433"
-        width="218"
+        width="232"
         height="20"
         fill="1"
         fillcolor="white"
@@ -10974,7 +11012,7 @@
       >
         <moveto x="681"
                 y="433" />
-        <lineto x="899"
+        <lineto x="913"
                 y="433" />
       </path>
     </group>
@@ -11019,7 +11057,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >databaseInitSize : Integer { frozen }</text>
+      >databaseInitSize : Integer</text>
       <text name="Fig1.4.3"
         x="681"
         y="149"
@@ -11139,7 +11177,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >cachePageSize : Integer { frozen }</text>
+      >cachePageSize : Integer</text>
       <text name="Fig1.4.15"
         x="681"
         y="305"
@@ -11199,7 +11237,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >deviceSchedulerType [0..1] : String</text>
+      >deviceSchedulerType : String</text>
       <text name="Fig1.4.21"
         x="681"
         y="383"
@@ -11209,7 +11247,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >freshmenPageQueuePercentage [0..1] : Integer</text>
+      >freshmenPageQueuePercentage : Integer</text>
       <text name="Fig1.4.22"
         x="681"
         y="396"
@@ -11219,7 +11257,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >pageHistoryQueuePercentage [0..1] : Integer</text>
+      >pageHistoryQueuePercentage : Integer</text>
       <text name="Fig1.4.23"
         x="681"
         y="409"
@@ -11229,7 +11267,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >prefetchPagesMax [0..1] : Integer</text>
+      >prefetchPagesMax : Integer</text>
       <text name="Fig1.4.24"
         x="681"
         y="422"
@@ -11239,7 +11277,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >prefetchThrottleRate [0..1] : Integer</text>
+      >prefetchThrottleRate : Integer</text>
     </group>
     <rectangle name="Fig1.5"
       x="680"

@@ -322,7 +322,7 @@ public abstract class ReflectUtil
      */
     public static Method lookupVisitMethod(
         Class<?> visitorClass,
-        Class visiteeClass,
+        Class<?> visiteeClass,
         String visitMethodName)
     {
         return lookupVisitMethod(
@@ -348,55 +348,93 @@ public abstract class ReflectUtil
      */
     public static Method lookupVisitMethod(
         Class<?> visitorClass,
-        Class visiteeClass,
+        Class<?> visiteeClass,
         String visitMethodName,
         List<Class> additionalParameterTypes)
     {
-        Class [] paramTypes = new Class[1 + additionalParameterTypes.size()];
+        // Prepare an array to re-use in recursive calls.  The first argument
+        // will have the visitee class substituted into it.
+        Class<?>[] paramTypes = new Class[1 + additionalParameterTypes.size()];
         int iParam = 0;
-        paramTypes[iParam++] = visiteeClass;
-        for (Class paramType : additionalParameterTypes) {
+        paramTypes[iParam++] = null;
+        for (Class<?> paramType : additionalParameterTypes) {
             paramTypes[iParam++] = paramType;
         }
-
-        try {
-            return visitorClass.getMethod(
-                visitMethodName,
-                paramTypes);
-        } catch (NoSuchMethodException ex) {
-            // not found:  carry on with lookup
+        
+        // Cache Class to candidate Methods, to optimize the case where
+        // the original visiteeClass has a diamond-shaped interface inheritance
+        // graph. (This is common, for example, in JMI.) The idea is to avoid 
+        // iterating over a single interface's method more than once in a call.
+        Map<Class<?>, Method> cache = new HashMap<Class<?>, Method>();
+        
+        return lookupVisitMethod(
+            visitorClass,
+            visiteeClass,
+            visitMethodName,
+            paramTypes,
+            cache);
+    }
+    
+    private static Method lookupVisitMethod(
+        final Class<?> visitorClass,
+        final Class<?> visiteeClass,
+        final String visitMethodName,
+        final Class<?>[] paramTypes,
+        final Map<Class<?>, Method> cache)
+    {
+        // Use containsKey since the result for a Class might be null.
+        if (cache.containsKey(visiteeClass)) {
+            return cache.get(visiteeClass);
         }
 
         Method candidateMethod = null;
 
-        Class superClass = visiteeClass.getSuperclass();
+        paramTypes[0] = visiteeClass;
+
+        try {
+            candidateMethod = visitorClass.getMethod(
+                visitMethodName,
+                paramTypes);
+            
+            cache.put(visiteeClass, candidateMethod);
+            
+            return candidateMethod;
+        } catch (NoSuchMethodException ex) {
+            // not found:  carry on with lookup
+        }
+
+        Class<?> superClass = visiteeClass.getSuperclass();
         if (superClass != null) {
             candidateMethod =
                 lookupVisitMethod(
                     visitorClass,
                     superClass,
                     visitMethodName,
-                    additionalParameterTypes);
+                    paramTypes,
+                    cache);
         }
 
-        Class [] interfaces = visiteeClass.getInterfaces();
+        Class<?>[] interfaces = visiteeClass.getInterfaces();
         for (int i = 0; i < interfaces.length; ++i) {
             Method method =
                 lookupVisitMethod(
                     visitorClass,
                     interfaces[i],
                     visitMethodName,
-                    additionalParameterTypes);
+                    paramTypes,
+                    cache);
             if (method != null) {
                 if (candidateMethod != null) {
                     if (!method.equals(candidateMethod)) {
-                        Class c1 = method.getParameterTypes()[0];
-                        Class c2 = candidateMethod.getParameterTypes()[0];
+                        Class<?> c1 = method.getParameterTypes()[0];
+                        Class<?> c2 = candidateMethod.getParameterTypes()[0];
                         if (c1.isAssignableFrom(c2)) {
                             // c2 inherits from c1, so keep candidateMethod
+                            // (which is more specific than method)
                             continue;
                         } else if (c2.isAssignableFrom(c1)) {
-                            // c1 inherits from c2, so fall through
+                            // c1 inherits from c2 (method is more specific
+                            // than candidate method), so fall through
                             // to set candidateMethod = method
                         } else {
                             // c1 and c2 are not directly related
@@ -412,6 +450,8 @@ public abstract class ReflectUtil
             }
         }
 
+        cache.put(visiteeClass, candidateMethod);
+        
         return candidateMethod;
     }
 
@@ -495,7 +535,7 @@ public abstract class ReflectUtil
      *
      * @return class
      */
-    public static Class getClassForName(String name)
+    public static Class<?> getClassForName(String name)
         throws Exception
     {
         if (name.equals("boolean")) {

@@ -32,6 +32,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
@@ -178,6 +179,9 @@ public class DdlValidator
         dispatcher =
         ReflectUtil.createDispatcher(DdlHandler.class, CwmModelElement.class);
 
+    private FemAuthId systemUserAuthId;
+    private FemAuthId currentUserAuthId;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -714,12 +718,28 @@ public class DdlValidator
     {
         boolean isNew = isNewObject(element);
         if (isNew) {
+            // Retrieve and cache the system and current user FemAuthId 
+            // objects rather than looking them up every time.
+            if (systemUserAuthId == null) {
+                systemUserAuthId = 
+                    FarragoCatalogUtil.getAuthIdByName(
+                        getRepos(), FarragoCatalogInit.SYSTEM_USER_NAME);
+            }
+            
+            String currentUserName = 
+                getInvokingSession().getSessionVariables().currentUserName;
+            if (currentUserAuthId == null) {
+                currentUserAuthId =
+                    FarragoCatalogUtil.getAuthIdByName(
+                        getRepos(), currentUserName);
+            }
+            
             // Define a pseudo-grant representing the element's relationship to
             // its creator.
             FarragoCatalogUtil.newCreationGrant(
                 getRepos(),
-                FarragoCatalogInit.SYSTEM_USER_NAME,
-                getInvokingSession().getSessionVariables().currentUserName,
+                systemUserAuthId,
+                currentUserAuthId,
                 element);
         }
 
@@ -769,16 +789,29 @@ public class DdlValidator
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine("end name = " + associationEvent.getEndName());
             }
-            scheduleModification(associationEvent.getFixedElement());
-            if (associationEvent.getOldElement() != null) {
-                scheduleModification(associationEvent.getNewElement());
+            boolean touchEnds = true;
+            DependencySupplier depSupplier =
+                getRepos().getCorePackage().getDependencySupplier();
+            RefAssociation refAssoc =
+                (RefAssociation) associationEvent.getSource();
+            if (refAssoc.equals(depSupplier)) {
+                // REVIEW jvs 3-Jun-2008:  make a special case for
+                // the supplier end of dependencies.  For example,
+                // when we create a view which depends on a table,
+                // there's no need to revalidate the table at
+                // that time.
+                touchEnds = false;
             }
-            if (associationEvent.getNewElement() != null) {
-                scheduleModification(associationEvent.getNewElement());
+            if (touchEnds) {
+                scheduleModification(associationEvent.getFixedElement());
+                if (associationEvent.getOldElement() != null) {
+                    scheduleModification(associationEvent.getNewElement());
+                }
+                if (associationEvent.getNewElement() != null) {
+                    scheduleModification(associationEvent.getNewElement());
+                }
             }
             if (event.getType() == AssociationEvent.EVENT_ASSOCIATION_REMOVE) {
-                RefAssociation refAssoc =
-                    (RefAssociation) associationEvent.getSource();
                 List<FarragoSessionDdlDropRule> rules =
                     dropRules.getMulti(refAssoc.getClass());
                 for (FarragoSessionDdlDropRule rule : rules) {
