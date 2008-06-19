@@ -955,15 +955,37 @@ public abstract class FarragoCatalogUtil
         String granteeName,
         CwmModelElement grantedObject)
     {
-        FemAuthId grantorAuthId;
-        FemAuthId granteeAuthId;
+        // Find the authId by name for grantor and grantee
+        FemAuthId grantorAuthId = 
+            FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
+        FemAuthId granteeAuthId = 
+            FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
 
+        assert(grantorAuthId != null);
+        assert(granteeAuthId != null);
+        
+        return newCreationGrant(
+            repos, grantorAuthId, granteeAuthId, grantedObject);
+    }
+
+    /**
+     * Creates a new grant representing ownership of an object by its creator.
+     *
+     * @param repos repository storing the objects
+     * @param grantorAuthId a FemAuthId representing the creator of the grant
+     * @param granteeAuthId a FemAuthId representing the grantee of the grant
+     * @param grantedObject element being created
+     *
+     * @return new grant object
+     */
+    public static FemGrant newCreationGrant(
+        FarragoRepos repos,
+        FemAuthId grantorAuthId,
+        FemAuthId granteeAuthId,
+        CwmModelElement grantedObject)
+    {
         // create a creation grant and set its properties
         FemGrant grant = repos.newFemGrant();
-
-        // Find the authId by name for grantor and grantee
-        grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
-        granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
 
         // set the privilege name (i.e. action) and properties.
         grant.setAction(PrivilegedActionEnum.CREATION.toString());
@@ -975,7 +997,7 @@ public abstract class FarragoCatalogUtil
         grant.setElement(grantedObject);
         return grant;
     }
-
+    
     /**
      * Determines the allowed access for a table
      *

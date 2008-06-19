@@ -35,6 +35,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
@@ -84,6 +85,11 @@ public class FarragoStmtValidator
     private FarragoReposTxnContext reposTxnContext;
     private FarragoWarningQueue warningQueue;
 
+    private FemUser currentUser;
+    private FemRole currentRole;
+    
+    private Map<String, CwmSqldataType> sqldataTypeCache;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -137,6 +143,8 @@ public class FarragoStmtValidator
                 fennelDbHandle,
                 new FarragoSessionDataSource(session));
         privilegeChecker = session.newPrivilegeChecker();
+        
+        sqldataTypeCache = new HashMap<String, CwmSqldataType>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -230,15 +238,27 @@ public class FarragoStmtValidator
         CwmModelElement obj,
         String action)
     {
-        // TODO jvs 27-Aug-2005:  cache user/role
+        if (currentUser == null) {
+            currentUser = 
+                FarragoCatalogUtil.getUserByName(
+                    getRepos(),
+                    sessionVariables.currentUserName);
+        }
+        
+        // Load the current role, but only if the role name has been set.
+        if (currentRole == null && 
+            sessionVariables.currentRoleName.length() > 0)
+        {
+            currentRole =
+                FarragoCatalogUtil.getRoleByName(
+                    getRepos(),
+                    sessionVariables.currentRoleName);
+        }
+        
         privilegeChecker.requestAccess(
             obj,
-            FarragoCatalogUtil.getUserByName(
-                getRepos(),
-                sessionVariables.currentUserName),
-            FarragoCatalogUtil.getRoleByName(
-                getRepos(),
-                sessionVariables.currentRoleName),
+            currentUser,
+            currentRole,
             action);
     }
 
@@ -582,6 +602,21 @@ public class FarragoStmtValidator
 
     // implement FarragoSessionStmtValidator
     public CwmSqldataType findSqldataType(SqlIdentifier typeName)
+    {
+        String fullName = typeName.toString();
+        CwmSqldataType type = sqldataTypeCache.get(fullName);
+        if (type != null) {
+            return type;
+        }
+
+        type = findSqldataTypeImpl(typeName);
+        
+        sqldataTypeCache.put(fullName, type);
+        
+        return type;
+    }
+    
+    private CwmSqldataType findSqldataTypeImpl(SqlIdentifier typeName)
     {
         if (!typeName.isSimple()) {
             FemUserDefinedType udt =
@@ -957,6 +992,15 @@ public class FarragoStmtValidator
         } else {
             throw Util.needToImplement(type);
         }
+    }
+    
+    public void closeAllocation()
+    {
+        super.closeAllocation();
+        
+        currentUser = null;
+        currentRole = null;
+        sqldataTypeCache.clear();
     }
 }
 
