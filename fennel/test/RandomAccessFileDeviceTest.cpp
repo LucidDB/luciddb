@@ -63,7 +63,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
 
     void testDeviceCreation()
     {
-        char *devName = "test.dat";
+        const char *devName = "test.dat";
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);
@@ -81,7 +81,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
 
     void testGrow()
     {
-        char *devName = "grow.dat";
+        const char *devName = "grow.dat";
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);
@@ -100,7 +100,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
 
     void testShrink()
     {
-        char *devName = "shrink.dat";
+        const char *devName = "shrink.dat";
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);
@@ -240,7 +240,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         DeviceAccessScheduler *pScheduler =
             DeviceAccessScheduler::newScheduler(schedParams);
 
-        char *devName = "async.dat";
+        const char *devName = "async.dat";
         DeviceMode openMode = baseMode;
         openMode.create = 1;
         openDevice(openMode,devName);

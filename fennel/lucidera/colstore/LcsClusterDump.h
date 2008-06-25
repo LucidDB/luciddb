@@ -46,7 +46,7 @@ class LcsClusterDump : public LcsClusterAccessBase, public TraceSource
      */
     TupleDescriptor colTupleDesc;
 
-    void callTrace(char *format, ...);
+    void callTrace(const char *format, ...);
 
     PBuffer fprintVal(uint idx, PBuffer pV, uint col);
 

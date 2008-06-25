@@ -67,8 +67,8 @@ class CalcExtStringTest : virtual public TestBase, public TraceSource
                      Calculator const & calc);
     void refLocalOutput(ostringstream& pg, 
                         int count);
-    static char* truncErr;
-    static char* substrErr;
+    static const char* truncErr;
+    static const char* substrErr;
     
 public:
     explicit CalcExtStringTest()
@@ -100,10 +100,10 @@ public:
     }
 };
 
-char *
+const char *
 CalcExtStringTest::truncErr = "22001";
 
-char *
+const char *
 CalcExtStringTest::substrErr = "22011";
 
 int

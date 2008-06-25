@@ -172,7 +172,7 @@ CalcExtMathTest::testCalcExtMathLogarithmsFails()
         "CALL '%s(L0, C0);\n"
         "REF O0, L0;\n";
 
-    char* tests[][3] = {
+    const char* tests[][3] = {
         {"LN","s8","0"},{"LN","d","0.0"},{"LN","s8","-1"},{"LN","d","-1.0"},
         {"LOG10","s8","0"},{"LOG10","d","0.0"},{"LOG10","s8","-1"},{"LOG10","d","-1.0"}
     };
@@ -273,7 +273,7 @@ CalcExtMathTest::testCalcExtMathPow()
     char buff[1024];
 
 
-    char* tests[][4] = {
+    const char* tests[][4] = {
         {"d","d","2.0","2.2"}
         ,{"d","d","2.0","-2.2"} 
         ,{"d","d","-2.0","2.0"} 
@@ -312,7 +312,7 @@ CalcExtMathTest::testCalcExtMathPowFails()
 {
     char buff[1024];
 
-    char* tests[][4] = {
+    const char* tests[][4] = {
         {"d","d","0.0","-1.0"}
         ,{"d","d","-2.0","2.2"} 
         ,{"d","d","-2.0","-2.2"} 
