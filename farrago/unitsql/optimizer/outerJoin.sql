@@ -749,6 +749,10 @@ explain plan for
 -- two join keys
 explain plan for 
     select A.* from A left outer join BUniq B on a = b and A.k = B.k;
+-- multiple tables that can be removed
+explain plan for
+    select A.* from A left outer join Buniq B1 on A.a = B1.b
+        left outer join Buniq B2 on B2.b = B1.k;
 
 !set outputformat table
 select A.* from A left outer join BUniq on a = b order by a;
@@ -757,6 +761,9 @@ select A.* from BUniq right outer join A on a = b order by a;
 select a from (select a, b from A left outer join BUniq on a = b), C
     where a = c order by a;
 select A.* from A left outer join BUniq B on a = b and A.k = B.k order by a;
+select A.* from A left outer join Buniq B1 on A.a = B1.b
+    left outer join Buniq B2 on B2.b = B1.k
+    order by a;
 
 ----------------------------
 -- non-removable outer joins

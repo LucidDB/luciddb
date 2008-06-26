@@ -96,7 +96,7 @@ public class PushProjector
 
     /**
      * Expressions referenced in the projection/filter that should be preserved.
-     * In the case where the projection is being pushed past a join, then theis
+     * In the case where the projection is being pushed past a join, then the
      * list only contains the expressions corresponding to the left hand side of
      * the join.
      */
@@ -303,38 +303,34 @@ public class PushProjector
             nProject++;
         }
         nRightProject = projRefs.cardinality() - nProject;
-
-        if (((projRefs.cardinality() == nChildFields)
-                && (childPreserveExprs.size() == 0)
-                && (rightPreserveExprs.size() == 0)))
-        {
-            return true;
-        }
-
+        
         if ((childRel instanceof JoinRelBase)
             || (childRel instanceof SetOpRel))
         {
-            // if nothing is projected from child, arbitrarily project
-            // the first column unless there is only one column in the child;
-            // this is necessary since Fennel doesn't handle 0-column
-            // projections
+            // if nothing is projected from the children, arbitrarily project
+            // the first columns; this is necessary since Fennel doesn't
+            // handle 0-column projections
             if ((nProject == 0) && (childPreserveExprs.size() == 0)) {
-                if ((nFields == 1) && (rightPreserveExprs.size() == 0)) {
-                    return true;
-                }
                 projRefs.set(0);
                 nProject = 1;
             }
-            if (childRel instanceof SetOpRel) {
-                return false;
-            }
-            if ((nRightProject == 0) && (rightPreserveExprs.size() == 0)) {
-                if ((nFieldsRight == 1) && (childPreserveExprs.size() == 0)) {
-                    return true;
+            if (childRel instanceof JoinRelBase) {
+                if ((nRightProject == 0) && (rightPreserveExprs.size() == 0)) {
+                    projRefs.set(nFields);
+                    nRightProject = 1;
                 }
-                projRefs.set(nFields);
-                nRightProject = 1;
             }
+        }
+        
+        // no need to push projections if all children fields are being
+        // referenced and there are no special preserve expressions; note
+        // that we need to do this check after we've handled the 0-column
+        // project cases
+        if (((projRefs.cardinality() == nChildFields)
+            && (childPreserveExprs.size() == 0)
+            && (rightPreserveExprs.size() == 0)))
+        {
+            return true;
         }
 
         return false;

@@ -1580,6 +1580,27 @@ select
         (select name from emps where empno = 100))
 from (values(0));
 
+-- LER-7693 -- scalar subqueries in IN expressions
+select * from emps where deptno in
+    ((select min(empid)*10 from emps),
+        (select empid*10 from emps where city = 'Vancouver'))
+    order by empno;
+select * from emps where deptno/(select min(deptno) from emps) in
+    ((select min(empid) from emps), (select max(empid)/10+1 from emps))
+    order by empno;
+
+-- make sure cast to nullable type is preserved after constant reduction;
+-- otherwise, the select below will generate a java compiler error
+create function prim_int_to_hex_string(i int)
+returns varchar(128)
+language java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.toHexString';
+
+select * from emps
+    where prim_int_to_hex_string((select min(empno) from emps)) = '64'
+    order by empno;
+
 -- subquery references a view
 create view vcount as
     select count(*) from emps, depts where emps.deptno = depts.deptno;
@@ -1619,6 +1640,7 @@ drop view vcount;
 drop view vncsubq;
 drop view badview;
 drop function ramp;
+drop function prim_int_to_hex_string;
 
 -- End subquery.sql
 

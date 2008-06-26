@@ -59,6 +59,23 @@ osdist ()
                 echo "cpus=$cpus"
             fi
 
+        elif ( cat /etc/issue | grep -q -i 'CentOS' ) ; then
+            if [ "$(uname -m)" = "x86_64" ]; then
+                echo "os=CentOS_64"
+            else
+                echo "os=CentOS"
+            fi
+
+            echo "osver=`cat /etc/issue | grep -i 'CentOS' | sed -e 's/^.*\(release [^ \t][^ \t]*\).*/\1/g' | awk '{print $2;}'`"
+
+            if ( cat /proc/cpuinfo | grep '^flags' | tail -n 1 | grep -q -w ht ); then
+                echo "ht=true"
+            else
+                echo "ht=false"
+            fi
+            cpus=`cat /proc/cpuinfo | grep '^processor' | wc -l`
+            echo "cpus=$cpus"
+
 
         else
             echo "os=Unknown"
@@ -106,7 +123,7 @@ osdist ()
 
 eval $(osdist)
 
-if [[ "${os}" =~ "RedHat.*" ]] ; then
+if [[ "${os}" == RedHat* ]] ; then
     case "${osver}" in
       5.1) osver=5 ;;
     esac

@@ -8,4 +8,5 @@
   <mbean code="com.lucidera.luciddb.mbean.sysviews.PerfCounters" name="com.lucidera.luciddb.mbean:service=PerfCounters"/>
   <mbean code="com.lucidera.luciddb.mbean.sysviews.ForeignSources" name="com.lucidera.luciddb.mbean:service=ForeignSources"/>
   <mbean code="com.lucidera.luciddb.mbean.server.PingServer" name="com.lucidera.luciddb.mbean:service=PingServer"/>
+  <mbean code="com.lucidera.luciddb.mbean.server.StorageManagement" name="com.lucidera.luciddb.mbean:service=StorageManagement"/>
 </server>

@@ -2093,8 +2093,8 @@
 >                              S_COMMENT     VARCHAR(101) NOT NULL);
 > CREATE INDEX C_NATIONKEY_IDX ON TPCHCUSTOMER(C_NATIONKEY);
 > CREATE INDEX S_NATIONKEY_IDX ON SUPPLIER(S_NATIONKEY);
-> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'TPCHCUSTOMER', 10000);
-> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SUPPLIER', 100);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'TPCHCUSTOMER', 150000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SUPPLIER', 10000);
 > explain plan for
 >     select * from
 >         tpchcustomer c, supplier s where
@@ -2112,5 +2112,93 @@
 '                FennelValuesRel(tuples=[[{ '[', 'foo', ']', 'foo' }]])'
 '    LcsRowScanRel(table=[[LOCALDB, SJ, SUPPLIER]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SUPPLIER$S_ACCTBAL, SYS$CLUSTERED_INDEX$SUPPLIER$S_ADDRESS, SYS$CLUSTERED_INDEX$SUPPLIER$S_COMMENT, SYS$CLUSTERED_INDEX$SUPPLIER$S_NAME, SYS$CLUSTERED_INDEX$SUPPLIER$S_NATIONKEY, SYS$CLUSTERED_INDEX$SUPPLIER$S_PHONE, SYS$CLUSTERED_INDEX$SUPPLIER$S_SUPPKEY]], residual columns=[[1]])'
 '      FennelValuesRel(tuples=[[{ '[', 'foo', ']', 'foo' }]])'
+> 
+> -- LER-8251 -- In the resulting query plan, you should NOT see a cast of a
+> -- NULL literal to a NOT NULL type
+> CREATE TABLE ORDERS  ( O_ORDERKEY       INTEGER PRIMARY KEY,
+>                            O_CUSTKEY        INTEGER NOT NULL,
+>                            O_ORDERSTATUS    VARCHAR(1) NOT NULL,
+>                            O_TOTALPRICE     DECIMAL(15,2) NOT NULL,
+>                            O_ORDERDATE      DATE NOT NULL,
+>                            O_ORDERPRIORITY  VARCHAR(15) NOT NULL,
+>                            O_CLERK          VARCHAR(15) NOT NULL,
+>                            O_SHIPPRIORITY   INTEGER NOT NULL,
+>                            O_COMMENT        VARCHAR(79) NOT NULL);
+> CREATE TABLE NATION  ( N_NATIONKEY  INTEGER PRIMARY KEY,
+>                             N_NAME       VARCHAR(25) NOT NULL,
+>                             N_REGIONKEY  INTEGER NOT NULL,
+>                             N_COMMENT    VARCHAR(152));
+> CREATE TABLE REGION  ( R_REGIONKEY  INTEGER PRIMARY KEY,
+>                             R_NAME       VARCHAR(25) NOT NULL,
+>                             R_COMMENT    VARCHAR(152));
+> CREATE TABLE LINEITEM (
+> L_ORDERKEY    INTEGER,
+> L_PARTKEY     INTEGER NOT NULL,
+> L_SUPPKEY     INTEGER NOT NULL,
+> L_LINENUMBER  INTEGER,
+> L_QUANTITY    DECIMAL(15,2) NOT NULL,
+> L_EXTENDEDPRICE  DECIMAL(15,2) NOT NULL,
+> L_DISCOUNT    DECIMAL(15,2) NOT NULL,
+> L_TAX         DECIMAL(15,2) NOT NULL,
+> L_RETURNFLAG  VARCHAR(1) NOT NULL,
+> L_LINESTATUS  VARCHAR(1) NOT NULL,
+> L_SHIPDATE    DATE NOT NULL,
+> L_COMMITDATE  DATE NOT NULL,
+> L_RECEIPTDATE DATE NOT NULL,
+> L_SHIPINSTRUCT VARCHAR(25) NOT NULL, 
+> L_SHIPMODE    VARCHAR(10) NOT NULL,
+> L_COMMENT      VARCHAR(44) NOT NULL,
+> PRIMARY KEY(L_ORDERKEY, L_LINENUMBER)
+> );
+> CREATE TABLE PART  ( P_PARTKEY     INTEGER PRIMARY KEY,
+>                           P_NAME        VARCHAR(55) NOT NULL,
+>                           P_MFGR        VARCHAR(25) NOT NULL,
+>                           P_BRAND       VARCHAR(10) NOT NULL,
+>                           P_TYPE        VARCHAR(25) NOT NULL,
+>                           P_SIZE        INTEGER NOT NULL,
+>                           P_CONTAINER   VARCHAR(10) NOT NULL,
+>                           P_RETAILPRICE DECIMAL(15,2) NOT NULL,
+>                           P_COMMENT     VARCHAR(23) NOT NULL );
+> create index O_CUSTKEY_IDX on ORDERS(O_CUSTKEY);
+> create index N_REGIONKEY_IDX on NATION(N_REGIONKEY);
+> create index L_PARTKEY_IDX on LINEITEM(L_PARTKEY);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'ORDERS', 1500000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'NATION', 250);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'REGION', 50);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'LINEITEM', 6000000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'PART', 200000);
+> explain plan for 
+> select count(*) from orders, tpchcustomer, nation, region, lineitem, part
+>     where o_custkey = c_custkey and c_nationkey = n_nationkey and
+>         n_regionkey = r_regionkey and r_name = 'AMERICA' and
+>         O_ORDERDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31' and 
+>         l_partkey = p_partkey and p_type = 'ECONOMY ANODIZED STEEL';
+'column0'
+'FennelToIteratorConverter'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, SJ, LINEITEM]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LINEITEM$L_PARTKEY]])'
+'          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'            LcsIndexSearchRel(table=[[LOCALDB, SJ, LINEITEM]], index=[L_PARTKEY_IDX], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                LcsRowScanRel(table=[[LOCALDB, SJ, PART]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PART$P_PARTKEY, SYS$CLUSTERED_INDEX$PART$P_TYPE]], residual columns=[[4]])'
+'                  FennelValuesRel(tuples=[[{ '[', 'ECONOMY ANODIZED STEEL', ']', 'ECONOMY ANODIZED STEEL' }]])'
+'        FennelBufferRel(inMemory=[false], multiPass=[true])'
+'          LcsRowScanRel(table=[[LOCALDB, SJ, ORDERS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$ORDERS$O_ORDERDATE, SYS$CLUSTERED_INDEX$ORDERS$O_ORDERKEY]], residual columns=[[4]])'
+'            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'              LcsIndexSearchRel(table=[[LOCALDB, SJ, ORDERS]], index=[O_CUSTKEY_IDX], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                  LcsRowScanRel(table=[[LOCALDB, SJ, TPCHCUSTOMER]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$TPCHCUSTOMER$C_CUSTKEY]])'
+'                    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                      LcsIndexSearchRel(table=[[LOCALDB, SJ, TPCHCUSTOMER]], index=[C_NATIONKEY_IDX], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                        FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                          LcsRowScanRel(table=[[LOCALDB, SJ, NATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$NATION$N_NATIONKEY]])'
+'                            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[4])'
+'                              LcsIndexSearchRel(table=[[LOCALDB, SJ, NATION]], index=[N_REGIONKEY_IDX], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                                FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                                  LcsRowScanRel(table=[[LOCALDB, SJ, REGION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$REGION$R_NAME, SYS$CLUSTERED_INDEX$REGION$R_REGIONKEY]], residual columns=[[1]])'
+'                                    FennelValuesRel(tuples=[[{ '[', 'AMERICA', ']', 'AMERICA' }]])'
+'            FennelValuesRel(tuples=[[{ '[', 1995-01-01, ']', 1996-12-31 }]])'
 > 
 > !quit

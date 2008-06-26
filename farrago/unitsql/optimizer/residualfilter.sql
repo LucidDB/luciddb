@@ -251,3 +251,18 @@ explain plan for select * from t1 where c = 20 and a > 10;
 
 explain plan for select * from t1 where (a > 1 and a < 30) and c in (5, 10);
 explain plan for select * from t1 where (c > 1 and c < 30) and a in (5, 10);
+
+-- Make sure casting is not preserved on the UDR call itself, even though it
+-- is for the UDR argument, so the column level filter can be pushed to the
+-- row scan
+
+create function prim_int_to_hex_string(i int)
+returns varchar(128)
+language java
+deterministic
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.toHexString';
+
+set path 'res';
+create table ldb(a char(10), b int);
+explain plan for select * from ldb where a = prim_int_to_hex_string(1+1);

@@ -4287,6 +4287,39 @@ Error: Scalar query returned more than one row (state=,code=0)
 'EXPR$0'
 'Fred'
 > 
+> -- LER-7693 -- scalar subqueries in IN expressions
+> select * from emps where deptno in
+>     ((select min(empid)*10 from emps),
+>         (select empid*10 from emps where city = 'Vancouver'))
+>     order by empno;
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER'
+'100','Fred','10','','','30','25','41626320','true','false'
+'110','Eric','20','M','San Francisco','3','80','416263','','false'
+'120','Wilma','20','F','','1','50','','','true'
+> select * from emps where deptno/(select min(deptno) from emps) in
+>     ((select min(empid) from emps), (select max(empid)/10+1 from emps))
+>     order by empno;
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER'
+'100','Fred','10','','','30','25','41626320','true','false'
+'110','John','40','M','Vancouver','2','','58797A','false','true'
+> 
+> -- make sure cast to nullable type is preserved after constant reduction;
+> -- otherwise, the select below will generate a java compiler error
+> create function prim_int_to_hex_string(i int)
+> returns varchar(128)
+> language java
+> no sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.toHexString';
+> 
+> select * from emps
+>     where prim_int_to_hex_string((select min(empno) from emps)) = '64'
+>     order by empno;
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER'
+'100','Fred','10','','','30','25','41626320','true','false'
+'110','Eric','20','M','San Francisco','3','80','416263','','false'
+'110','John','40','M','Vancouver','2','','58797A','false','true'
+'120','Wilma','20','F','','1','50','','','true'
+> 
 > -- subquery references a view
 > create view vcount as
 >     select count(*) from emps, depts where emps.deptno = depts.deptno;
@@ -4356,6 +4389,7 @@ Error: Cannot assign 'San Francisco' to a NUMERIC value: NumberFormatException (
 > drop view vncsubq;
 > drop view badview;
 > drop function ramp;
+> drop function prim_int_to_hex_string;
 > 
 > -- End subquery.sql
 > 

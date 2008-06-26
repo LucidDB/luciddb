@@ -809,10 +809,71 @@ CREATE TABLE SUPPLIER ( S_SUPPKEY     INTEGER PRIMARY KEY,
                              S_COMMENT     VARCHAR(101) NOT NULL);
 CREATE INDEX C_NATIONKEY_IDX ON TPCHCUSTOMER(C_NATIONKEY);
 CREATE INDEX S_NATIONKEY_IDX ON SUPPLIER(S_NATIONKEY);
-call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'TPCHCUSTOMER', 10000);
-call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SUPPLIER', 100);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'TPCHCUSTOMER', 150000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SUPPLIER', 10000);
 explain plan for
     select * from
         tpchcustomer c, supplier s where
             c.c_nationkey = s.s_nationkey and
             s.s_name = 'foo';
+
+-- LER-8251 -- In the resulting query plan, you should NOT see a cast of a
+-- NULL literal to a NOT NULL type
+CREATE TABLE ORDERS  ( O_ORDERKEY       INTEGER PRIMARY KEY,
+                           O_CUSTKEY        INTEGER NOT NULL,
+                           O_ORDERSTATUS    VARCHAR(1) NOT NULL,
+                           O_TOTALPRICE     DECIMAL(15,2) NOT NULL,
+                           O_ORDERDATE      DATE NOT NULL,
+                           O_ORDERPRIORITY  VARCHAR(15) NOT NULL,
+                           O_CLERK          VARCHAR(15) NOT NULL,
+                           O_SHIPPRIORITY   INTEGER NOT NULL,
+                           O_COMMENT        VARCHAR(79) NOT NULL);
+CREATE TABLE NATION  ( N_NATIONKEY  INTEGER PRIMARY KEY,
+                            N_NAME       VARCHAR(25) NOT NULL,
+                            N_REGIONKEY  INTEGER NOT NULL,
+                            N_COMMENT    VARCHAR(152));
+CREATE TABLE REGION  ( R_REGIONKEY  INTEGER PRIMARY KEY,
+                            R_NAME       VARCHAR(25) NOT NULL,
+                            R_COMMENT    VARCHAR(152));
+CREATE TABLE LINEITEM (
+L_ORDERKEY    INTEGER,
+L_PARTKEY     INTEGER NOT NULL,
+L_SUPPKEY     INTEGER NOT NULL,
+L_LINENUMBER  INTEGER,
+L_QUANTITY    DECIMAL(15,2) NOT NULL,
+L_EXTENDEDPRICE  DECIMAL(15,2) NOT NULL,
+L_DISCOUNT    DECIMAL(15,2) NOT NULL,
+L_TAX         DECIMAL(15,2) NOT NULL,
+L_RETURNFLAG  VARCHAR(1) NOT NULL,
+L_LINESTATUS  VARCHAR(1) NOT NULL,
+L_SHIPDATE    DATE NOT NULL,
+L_COMMITDATE  DATE NOT NULL,
+L_RECEIPTDATE DATE NOT NULL,
+L_SHIPINSTRUCT VARCHAR(25) NOT NULL, 
+L_SHIPMODE    VARCHAR(10) NOT NULL,
+L_COMMENT      VARCHAR(44) NOT NULL,
+PRIMARY KEY(L_ORDERKEY, L_LINENUMBER)
+);
+CREATE TABLE PART  ( P_PARTKEY     INTEGER PRIMARY KEY,
+                          P_NAME        VARCHAR(55) NOT NULL,
+                          P_MFGR        VARCHAR(25) NOT NULL,
+                          P_BRAND       VARCHAR(10) NOT NULL,
+                          P_TYPE        VARCHAR(25) NOT NULL,
+                          P_SIZE        INTEGER NOT NULL,
+                          P_CONTAINER   VARCHAR(10) NOT NULL,
+                          P_RETAILPRICE DECIMAL(15,2) NOT NULL,
+                          P_COMMENT     VARCHAR(23) NOT NULL );
+create index O_CUSTKEY_IDX on ORDERS(O_CUSTKEY);
+create index N_REGIONKEY_IDX on NATION(N_REGIONKEY);
+create index L_PARTKEY_IDX on LINEITEM(L_PARTKEY);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'ORDERS', 1500000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'NATION', 250);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'REGION', 50);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'LINEITEM', 6000000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'PART', 200000);
+explain plan for 
+select count(*) from orders, tpchcustomer, nation, region, lineitem, part
+    where o_custkey = c_custkey and c_nationkey = n_nationkey and
+        n_regionkey = r_regionkey and r_name = 'AMERICA' and
+        O_ORDERDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31' and 
+        l_partkey = p_partkey and p_type = 'ECONOMY ANODIZED STEEL';

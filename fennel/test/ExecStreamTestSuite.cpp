@@ -436,11 +436,11 @@ void ExecStreamTestSuite::testReshapeExecStream(
         rsParams.compOp = COMP_NOOP;
     } else {
         rsParams.compOp = COMP_EQ;
-        pBuffer.reset(new FixedBuffer[16]);
         TupleDescriptor compareDesc;
-        compareDesc.push_back(notNullAttrDesc);
+        // comparison type needs to be nullable to allow filtering of nulls
+        compareDesc.push_back(nullAttrDesc);
         if (!compareParam) {
-            compareDesc.push_back(notNullAttrDesc);
+            compareDesc.push_back(nullAttrDesc);
         }
         TupleData compareData;
         compareData.compute(compareDesc);
@@ -452,6 +452,7 @@ void ExecStreamTestSuite::testReshapeExecStream(
         }
         TupleAccessor tupleAccessor;
         tupleAccessor.compute(compareDesc);
+        pBuffer.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
         tupleAccessor.marshal(compareData, pBuffer.get());
     }
     rsParams.pCompTupleBuffer = pBuffer;
@@ -607,6 +608,9 @@ void ExecStreamTestSuite::testMergeImplicitPullInputs()
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    TupleAttributeDescriptor nullAttrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64),
+        true, sizeof(int64_t));
 
     // Initial input stream is a repeating sequence of
     // 0, 1, 2, ... nInputs - 1, 0, 1, 2, ..., nInputs - 1, 0, 1, 2, ...
@@ -644,15 +648,16 @@ void ExecStreamTestSuite::testMergeImplicitPullInputs()
         ReshapeExecStreamParams rsParams;
         boost::shared_array<FixedBuffer> pBuffer;
         rsParams.compOp = COMP_EQ;
-        pBuffer.reset(new FixedBuffer[8]);
         int64_t key = i;
         TupleDescriptor compareDesc;
-        compareDesc.push_back(attrDesc);
+        // comparison type needs to be nullable to allow filtering of nulls
+        compareDesc.push_back(nullAttrDesc);
         TupleData compareData;
         compareData.compute(compareDesc);
         compareData[0].pData = (PConstBuffer) &key;
         TupleAccessor tupleAccessor;
         tupleAccessor.compute(compareDesc);
+        pBuffer.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
         tupleAccessor.marshal(compareData, pBuffer.get());
         rsParams.pCompTupleBuffer = pBuffer;
         TupleProjection tupleProj;

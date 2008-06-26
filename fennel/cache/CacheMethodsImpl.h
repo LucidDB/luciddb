@@ -594,7 +594,6 @@ bool CacheImpl<PageT,VictimPolicyT>
         if (readPageAsync(*page)) {
             successfulPrefetch();
         } else {
-            ioRetry();
             rejectedPrefetch();
             return false;
         }
@@ -736,15 +735,27 @@ uint CacheImpl<PageT,VictimPolicyT>
                     writePageAsync(page);
                 }
             } else if (flushPhase == phaseWait) {
+                BlockId origBlockId = page.getBlockId();
+                MappedPageListener *origListener = page.pMappedPageListener;
                 while (page.dataStatus == CachePage::DATA_WRITE) {
                     page.waitForPendingIO(pageGuard);
                 }
 
-                // Reset the listener if called for by the original listener.
-                // Note that by doing so, if we're later going to be unmapping
-                // cache entries, we will not unmap this page because its
-                // listener has changed.
-                if (page.pMappedPageListener) {
+                // If this page has been remapped during sleeps that occurred
+                // while waiting for the page I/O to complete, then there's
+                // no need to reset the listener, since the remap has
+                // effectively reset the listener.  (TODO: zfong 6/23/08 -
+                // Add a unit testcase for this.)
+                //
+                // Otherwise, reset the listener, if called for by the original
+                // listener.  Note that by doing so, during the next iteration
+                // in the outermost for loop in this method when we're
+                // unmapping cache entries, we will not unmap this page
+                // because we've changed the listener.
+                if (page.pMappedPageListener &&
+                    page.pMappedPageListener == origListener &&
+                    page.getBlockId() == origBlockId)
+                {
                     MappedPageListener *newListener =
                     page.pMappedPageListener->notifyAfterPageCheckpointFlush(
                         page);
@@ -1353,7 +1364,6 @@ inline bool CacheImpl<PageT,VictimPolicyT>
     page.dataStatus = CachePage::DATA_WRITE;
     incrementStatsCounter(nPageWrites);
     if (!transferPageAsync(page)) {
-        ioRetry();
         return false;
     } else {
         return true;

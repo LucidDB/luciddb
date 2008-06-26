@@ -477,7 +477,7 @@ insert into null_src values
 (null, 10, null, 'ten', null),
 (4, 40, 'four', 'forty', 160);
 
-alter session set "errorMax"=5;
+alter session set "errorMax"=10;
 alter session set "logDir" = 'testlog';
 
 create table null_uc_sk(
@@ -540,6 +540,12 @@ create table u(a int unique);
 insert into u values(1);
 insert into u values(1);
 insert into u values(1);
+
+-- LER-8002
+insert into u values (2),(3),(4),(5),(6),(7),(8),(9),(10);
+delete from u where a = 10;
+insert into u select * from u;
+select * from u order by a;
 
 -- cleanup
 drop server test_data cascade;
