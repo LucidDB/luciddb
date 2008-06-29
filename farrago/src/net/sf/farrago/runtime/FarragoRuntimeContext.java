@@ -43,6 +43,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.plugin.FarragoPluginClassLoader;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -124,6 +125,7 @@ public class FarragoRuntimeContext
      */
     public FarragoRuntimeContext(FarragoSessionRuntimeParams params)
     {
+        tracer.info("starting FarragoRuntimeContext constructor");
         this.session = params.session;
         this.repos = params.repos;
         this.codeCache = params.codeCache;
@@ -145,15 +147,32 @@ public class FarragoRuntimeContext
 
         cursorMonitor = new Object();
 
+        FarragoPluginClassLoader classLoader = null;
+
+        if (session != null) {
+
+            classLoader = session.getPluginClassLoader();
+
+        } else {
+
+            statementClassLoader = classLoader = params.pluginClassLoader;
+            tracer.info("on RMP using statement classloader " +
+                        statementClassLoader);
+        }
+
         dataWrapperCache =
             new FarragoDataWrapperCache(
                 this,
                 params.sharedDataWrapperCache,
-                session.getPluginClassLoader(),
+                classLoader,
                 params.repos,
                 params.fennelTxnContext.getFennelDbHandle(),
-                new FarragoSessionDataSource(session));
+                session != null ? new FarragoSessionDataSource(session) :
+                null);
 
+        // TODO figure out another way to make a loopback data source!!!
+        // or does a RMP need a loopback data source at all???
+        tracer.info("made data wrapper cache " + dataWrapperCache);
         streamOwner = new StreamOwner();
     }
 
@@ -193,7 +212,7 @@ public class FarragoRuntimeContext
         streamOwner.closeAllocation();
         if (!isDml) {
             // For queries, this is called when the cursor is closed.
-            session.endTransactionIfAuto(true);
+            if (session != null) session.endTransactionIfAuto(true);
         }
         statementClassLoader = null;
 
@@ -232,7 +251,7 @@ public class FarragoRuntimeContext
         try {
             FemDataServer femServer =
                 (FemDataServer) mdrRepos.getByMofId(serverMofId);
-    
+
             FarragoMedDataServer server =
                 dataWrapperCache.loadServerFromCatalog(femServer);
             try {
@@ -431,7 +450,7 @@ public class FarragoRuntimeContext
     {
         streamIdToHandleMap.put(
             new Integer(streamId),
-            FennelDbHandle.allocateNewObjectHandle(streamOwner, stream));
+            FennelDbHandleImpl.allocateNewObjectHandle(streamOwner, stream));
     }
 
     /**
@@ -487,7 +506,7 @@ public class FarragoRuntimeContext
                         FarragoUtil.getFennelMemoryUsage(xmiFennelPlan);
                     entry.initialize(streamGraph, memUsage, true);
                 }
-                
+
                 public boolean isStale(Object value)
                 {
                     return false;
@@ -552,7 +571,7 @@ public class FarragoRuntimeContext
         txn.beginReadTxn();
         try {
             FennelStreamHandle streamHandle = getStreamHandle(streamName, true);
-    
+
             return new FennelTupleIter(
                 tupleReader,
                 streamGraph,
@@ -594,15 +613,15 @@ public class FarragoRuntimeContext
         FarragoReposTxnContext txn = repos.newTxnContext(true);
         txn.beginReadTxn();
         try {
-            FennelStreamHandle streamHandle = 
+            FennelStreamHandle streamHandle =
                 getStreamHandle(streamName, false);
-    
+
             FennelStreamHandle inputStreamHandle =
                 getStreamHandle(inputStreamName, true);
-    
+
             FarragoTransform.InputBinding inputBinding = null;
             for (FarragoTransform.InputBinding binding : inputBindings) {
-                // The binding's input stream name may be a buffer adapter 
+                // The binding's input stream name may be a buffer adapter
                 // created to handle provisioning of buffers.  It's name will
                 // be the stream name we're looking for plus some additional
                 // information.
@@ -612,7 +631,7 @@ public class FarragoRuntimeContext
                 }
             }
             assert (inputBinding != null);
-    
+
             return new FennelTransformTupleIter(
                 tupleReader,
                 streamGraph,
@@ -769,7 +788,7 @@ public class FarragoRuntimeContext
                 // TODO jvs 19-Jan-2005:  standard mechanism for tracing
                 // swallowed exceptions
             } finally {
-                EnkiMDRepository mdrRepos = 
+                EnkiMDRepository mdrRepos =
                     frame.context.getRepos().getEnkiMdrRepos();
                 mdrRepos.reattachSession(frame.reposSession);
             }
@@ -888,7 +907,7 @@ public class FarragoRuntimeContext
         if (!frame.allowSql) {
             throw FarragoResource.instance().NoDefaultConnection.ex();
         }
-        
+
         if (frame.connection == null) {
             FarragoSessionConnectionSource connectionSource =
                 frame.context.session.getConnectionSource();
@@ -898,7 +917,7 @@ public class FarragoRuntimeContext
             // to do that without disturbing the session.  And could
             // enforce READS/MODIFIES SQL DATA access.
 
-            EnkiMDRepository mdrRepos = 
+            EnkiMDRepository mdrRepos =
                 frame.context.getRepos().getEnkiMdrRepos();
             frame.reposSession = mdrRepos.detachSession();
         }
@@ -913,17 +932,34 @@ public class FarragoRuntimeContext
 
     public void setStatementClassLoader(ClassLoader statementClassLoader)
     {
+        tracer.info("setting statement context classloader to " +
+                    statementClassLoader);
         this.statementClassLoader = statementClassLoader;
     }
 
     public Class statementClassForName(String statementClassName)
     {
         try {
-            return Class.forName(
-                statementClassName,
-                true,
-                statementClassLoader);
+
+            tracer.info("loading statement for classname " +
+                        statementClassName);
+
+            // hack to see if we are in standalone mode
+            if (null == statementClassLoader) {
+
+                return Class.forName(
+                    statementClassName,
+                    true,
+                    statementClassLoader);
+            }
+
+            // we should be in the CN here
+            tracer.info("loading statement class " + statementClassName +
+                        " from " + statementClassLoader);
+            return statementClassLoader.loadClass(statementClassName);
+
         } catch (ClassNotFoundException e) {
+
             tracer.log(
                 Level.SEVERE,
                 "Could not load statement class: " + statementClassName,

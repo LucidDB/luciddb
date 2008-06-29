@@ -153,7 +153,7 @@ public class DdlValidator
     /**
      * DDL statement being validated.
      */
-    private FarragoSessionDdlStmt ddlStmt;
+    protected FarragoSessionDdlStmt ddlStmt;
 
     /**
      * List of handlers to be invoked.
@@ -172,7 +172,7 @@ public class DdlValidator
 
     private String timestamp;
 
-    private final ReflectiveVisitDispatcher<DdlHandler, CwmModelElement>
+    protected final ReflectiveVisitDispatcher<DdlHandler, CwmModelElement>
         dispatcher =
         ReflectUtil.createDispatcher(DdlHandler.class, CwmModelElement.class);
 
@@ -348,7 +348,7 @@ public class DdlValidator
     // implement FarragoSessionDdlValidator
     public String setParserOffset(
         RefObject obj,
-        SqlParserPos pos, 
+        SqlParserPos pos,
         String body)
     {
         int n = 0;
@@ -496,10 +496,10 @@ public class DdlValidator
             if (createStmt.getReplaceOptions().isReplace()) {
                 CwmModelElement e = createStmt.getModelElement();
                 if (e != null) {
-                    String newClassName = 
+                    String newClassName =
                         object.refClass().refMetaObject().refGetValue(
                             "name").toString();
-                    String targetClassName = 
+                    String targetClassName =
                         e.refClass().refMetaObject().refGetValue(
                             "name").toString();
                     return newClassName.equals(targetClassName);
@@ -866,6 +866,10 @@ public class DdlValidator
                     (RefObject) getRepos().getMdrRepos().getByMofId(
                         mapEntry.getKey());
                 if (obj == null) {
+                    progress = progress ||
+                        ValidatedOp.DELETION == mapEntry.getValue();
+                    // technically it is progress, and
+                    // the object might already have been deleted
                     continue;
                 }
                 ValidatedOp action = mapEntry.getValue();
@@ -891,6 +895,7 @@ public class DdlValidator
                     }
                     progress = true;
                 } catch (FarragoUnvalidatedDependencyException ex) {
+
                     // Something hit an unvalidated dependency; we'll have
                     // to retry this object later.
                     validatedMap.remove(obj);
@@ -988,14 +993,14 @@ public class DdlValidator
         Collection<? extends CwmModelElement> collection,
         boolean includeType)
     {
-        // Sort the collection by parser position, since we depend on the 
+        // Sort the collection by parser position, since we depend on the
         // sort order later and it is NOT guaranteed.
-        ArrayList<CwmModelElement> sortedCollection = 
+        ArrayList<CwmModelElement> sortedCollection =
             new ArrayList<CwmModelElement>(collection);
         Collections.sort(
-            sortedCollection, 
+            sortedCollection,
             new RefObjectPositionComparator());
-        
+
         Map<Object, CwmModelElement> nameMap =
             new LinkedHashMap<Object, CwmModelElement>();
         for (CwmModelElement element : sortedCollection) {
@@ -1069,7 +1074,7 @@ public class DdlValidator
             typeClass = CwmCatalog.class;
         } else {
             try {
-                typeClass = 
+                typeClass =
                     JmiObjUtil.getJavaInterfaceForRefObject(
                         element.refClass());
             }
@@ -1253,9 +1258,9 @@ public class DdlValidator
         // Restart the session, which is safe because we pass objects across
         // the session boundary via MOF ID.
         getRepos().endReposSession();
-        
+
         getRepos().beginReposSession();
-        
+
         // TODO:  really need a lock to protect us against someone else's DDL
         // here, which could invalidate our schedulingMap.
         getRepos().beginReposTxn(true);
@@ -1303,28 +1308,28 @@ public class DdlValidator
         }
         mapParserPosition(obj);
     }
-    
+
     private void checkStringLength(AttributeEvent event)
     {
         RefObject obj = (RefObject)event.getSource();
         final String attrName = event.getAttributeName();
-        
+
         RefClass refClass = obj.refClass();
-        
-        javax.jmi.model.Attribute attr = 
+
+        javax.jmi.model.Attribute attr =
             JmiObjUtil.getNamedFeature(
                 refClass, javax.jmi.model.Attribute.class, attrName, true);
         if (attr == null) {
             throw Util.newInternal(
                 "did not find attribute '" + attrName + "'");
         }
-          
+
         final int maxLength = JmiObjUtil.getMaxLength(refClass, attr);
         if (maxLength == Integer.MAX_VALUE) {
             // Marked unlimited or not string type.
             return;
         }
-        
+
         Object val = event.getNewElement();
         if (val == null) {
             return;
@@ -1336,21 +1341,21 @@ public class DdlValidator
                 if (v == null) {
                     continue;
                 }
-                
+
                 int length = v.toString().length();
-                
+
                 if (length > maxLength) {
                     allPass = false;
                     break;
                 }
             }
-            
+
             if (allPass) {
                 return;
             }
         } else {
             int length = ((String)val).length();
-            
+
             if (length <= maxLength) {
                 return;
             }
@@ -1417,11 +1422,14 @@ public class DdlValidator
         invokeHandler(modelElement, "postCommit" + command);
     }
 
-    private boolean invokeHandler(
+    protected boolean invokeHandler(
         CwmModelElement modelElement,
         String action)
     {
         for (DdlHandler handler : actionHandlers) {
+
+            tracer.info("invoking " + action + " on " + handler +
+                        " with arg " + modelElement);
             boolean handled =
                 dispatcher.invokeVisitor(
                     handler,
@@ -1604,8 +1612,8 @@ public class DdlValidator
 
         DependencySupplier depSupplier =
             getRepos().getCorePackage().getDependencySupplier();
-        
-        Collection<CwmDependency> supplierDependencies = 
+
+        Collection<CwmDependency> supplierDependencies =
             new ArrayList<CwmDependency>(
                 depSupplier.getSupplierDependency(oldElement));
         for(CwmDependency dep: supplierDependencies) {
@@ -1615,7 +1623,7 @@ public class DdlValidator
 
         DependencyClient depClient =
             getRepos().getCorePackage().getDependencyClient();
-        Collection<CwmDependency> clientDependencies = 
+        Collection<CwmDependency> clientDependencies =
             new ArrayList<CwmDependency>(
                 depClient.getClientDependency(oldElement));
         for(CwmDependency dep: clientDependencies) {
@@ -1715,7 +1723,7 @@ public class DdlValidator
     {
         abstract EigenbaseException getException();
     }
-    
+
     /**
      * RefObjectPositionComparator compares RefObjects based on their position
      * within the owning DdlValidator's {@link #parserContextMap}.  Handles
@@ -1731,12 +1739,12 @@ public class DdlValidator
         {
             SqlParserPos pos1 = getParserPos(o1);
             SqlParserPos pos2 = getParserPos(o2);
-            
+
             if (pos1 == null) {
                 if (pos2 == null) {
                     return 0;
                 }
-                
+
                 return 1;
             } else if (pos2 == null) {
                 return -1;
@@ -1745,17 +1753,17 @@ public class DdlValidator
                 if (c != 0) {
                     return c;
                 }
-                
+
                 c = pos1.getColumnNum() - pos2.getColumnNum();
                 if (c != 0) {
                     return c;
                 }
-                
+
                 c = pos1.getEndLineNum() - pos2.getEndLineNum();
                 if (c != 0) {
                     return c;
                 }
-                
+
                 return pos1.getEndColumnNum() - pos2.getEndColumnNum();
             }
         }

@@ -122,7 +122,7 @@ public class FarragoDatabase
         if (instance == null) {
             instance = this;
         }
-        
+
         try {
             FarragoCompoundAllocation startOfWorldAllocation =
                 new FarragoCompoundAllocation();
@@ -164,24 +164,24 @@ public class FarragoDatabase
 
             systemRepos = sessionFactory.newRepos(this, false);
             systemRepos.beginReposSession();
-            
+
             try {
                 userRepos = systemRepos;
                 if (init) {
                     FarragoCatalogInit.createSystemObjects(systemRepos);
                 }
-    
+
                 // REVIEW:  system/user configuration
                 FemFarragoConfig currentConfig = systemRepos.getCurrentConfig();
-    
+
                 tracer.config(
                     "java.class.path = "
                     + System.getProperty("java.class.path"));
-    
+
                 tracer.config(
                     "java.library.path = "
                     + System.getProperty("java.library.path"));
-    
+
                 if (systemRepos.isFennelEnabled()) {
                     FarragoReposTxnContext txn = systemRepos.newTxnContext();
                     try {
@@ -197,22 +197,22 @@ public class FarragoDatabase
                 } else {
                     tracer.config("Fennel support disabled");
                 }
-    
+
                 long codeCacheMaxBytes = getCodeCacheMaxBytes(currentConfig);
                 codeCache =
                     new FarragoObjectCache(
                         this,
                         codeCacheMaxBytes,
                         new FarragoLruVictimPolicy());
-    
+
                 ojRexImplementorTable =
                     new FarragoOJRexImplementorTable(
                         SqlStdOperatorTable.instance());
-    
+
                 // Create instances of plugin model extensions for shared use
                 // by all sessions.
                 loadModelPlugins();
-    
+
                 // REVIEW:  sequencing from this point on
                 if (currentConfig.isUserCatalogEnabled()) {
                     userRepos = sessionFactory.newRepos(this, true);
@@ -220,13 +220,13 @@ public class FarragoDatabase
                         // REVIEW:  request this explicitly?
                         FarragoCatalogInit.createSystemObjects(userRepos);
                     }
-    
+
                     // During shutdown, we want to reverse this process, making
                     // userRepos revert to systemRepos.  ReposSwitcher takes
                     // care of this before userRepos gets closed.
                     addAllocation(new ReposSwitcher());
                 }
-    
+
                 // Start up timer.  This comes last so that the first thing we do
                 // in close is to cancel it, avoiding races with other shutdown
                 // activity.
@@ -235,7 +235,7 @@ public class FarragoDatabase
                 timer.schedule(new WatchdogTask(),
                     1000,
                     1000);
-    
+
                 if (currentConfig.getCheckpointInterval() > 0) {
                     long checkpointIntervalMillis =
                         currentConfig.getCheckpointInterval();
@@ -245,11 +245,11 @@ public class FarragoDatabase
                         checkpointIntervalMillis,
                         checkpointIntervalMillis);
                 }
-    
+
                 ddlLockManager = new FarragoDdlLockManager();
                 txnMgr = sessionFactory.newTxnMgr();
                 sessionFactory.specializedInitialization(this);
-    
+
                 File jaasConfigFile =
                     new File(
                         FarragoProperties.instance().homeDir.get(),
@@ -456,7 +456,7 @@ public class FarragoDatabase
         FemCmdOpenDatabase cmd = systemRepos.newFemCmdOpenDatabase();
         FemFennelConfig fennelConfig =
             systemRepos.getCurrentConfig().getFennelConfig();
-        
+
         SortedMap<String, Object> configMap =
             JmiObjUtil.getAttributeValues(fennelConfig);
 
@@ -507,7 +507,7 @@ public class FarragoDatabase
         NativeTrace.createInstance("net.sf.fennel.");
 
         fennelDbHandle =
-            new FennelDbHandle(systemRepos,
+            new FennelDbHandleImpl(systemRepos,
                 this,
                 cmdExecutor,
                 cmd);
@@ -578,6 +578,16 @@ public class FarragoDatabase
     public FennelDbHandle getFennelDbHandle()
     {
         return fennelDbHandle;
+    }
+
+    /**
+     * Sets the fennel DB handle used by the database.  Allows non fennel
+     * implementations to override the handle and substitute your own
+     * implementation
+     */
+    public void setFennelDbHandle(FennelDbHandle handle)
+    {
+        fennelDbHandle = handle;
     }
 
     /**
@@ -909,7 +919,7 @@ public class FarragoDatabase
                         memUsage,
                         stmt.mayCacheImplementation());
                 }
-                
+
                 public boolean isStale(Object value)
                 {
                     FarragoSessionExecutableStmt executableStmt =
@@ -923,7 +933,7 @@ public class FarragoDatabase
         // sharing of executable statements depends on session personality;
         // default for vanilla Farrago personality is that statements
         // are sharable
-        final boolean sharable = 
+        final boolean sharable =
             stmt.getSession().getPersonality().supportsFeature(
                 EigenbaseResource.instance().SharedStatementPlans);
 
@@ -1006,7 +1016,7 @@ public class FarragoDatabase
         {
             int cachePagesMax = ddlStmt.getParamValue().intValue(false);
 
-            String upperBound = 
+            String upperBound =
                 paramName.equals("cachePagesMax")
                 ? String.valueOf(Integer.MAX_VALUE)
                 : "'cachePagesMax'";
@@ -1016,18 +1026,18 @@ public class FarragoDatabase
                     "1", upperBound);
             }
         }
-        
+
         if (paramName.equals("prefetchPagesMax")) {
             int paramVal = ddlStmt.getParamValue().intValue(false);
             FemFennelConfig config =
                 systemRepos.getCurrentConfig().getFennelConfig();
-            int cachePages = config.getCachePagesInit();           
+            int cachePages = config.getCachePagesInit();
             if (paramVal < 0 || paramVal > cachePages) {
                 throw FarragoResource.instance().InvalidParam.ex(
                     "0", "'cachePagesInit'");
             }
         }
-        
+
         if (paramName.equals("prefetchThrottleRate")) {
             int paramVal = ddlStmt.getParamValue().intValue(false);
             if (paramVal < 1) {
@@ -1198,7 +1208,7 @@ public class FarragoDatabase
         {
             super(tracer);
         }
-        
+
         // implement FarragoTimerTask
         public void runTimer()
         {

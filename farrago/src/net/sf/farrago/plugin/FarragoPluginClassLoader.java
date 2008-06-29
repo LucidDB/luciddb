@@ -25,10 +25,11 @@ import java.net.*;
 
 import java.util.*;
 import java.util.jar.*;
+import java.util.logging.Logger;
 
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
-
+import net.sf.farrago.trace.FarragoTrace;
 
 /**
  * FarragoPluginClassLoader allows plugin jars to be added to the ClassLoader
@@ -40,6 +41,8 @@ import net.sf.farrago.util.*;
 public class FarragoPluginClassLoader
     extends URLClassLoader
 {
+    private static final Logger tracer =
+        FarragoTrace.getRuntimeContextTracer();
     //~ Static fields/initializers ---------------------------------------------
 
     /**
@@ -81,6 +84,12 @@ public class FarragoPluginClassLoader
         urlSet = new HashSet();
     }
 
+    public FarragoPluginClassLoader(ClassLoader parentClassLoader)
+    {
+        super(new URL[0], parentClassLoader);
+        urlSet = new HashSet();
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -95,6 +104,7 @@ public class FarragoPluginClassLoader
         }
         addURL(url);
         urlSet.add(url);
+        tracer.info("added url " + url);
     }
 
     /**
@@ -131,6 +141,19 @@ public class FarragoPluginClassLoader
             throw FarragoResource.instance().PluginJarLoadFailed.ex(
                 libraryName,
                 ex);
+        }
+    }
+
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+
+        try {
+
+            //tracer.info("finding pluging class " + name);
+            return super.findClass(name);
+
+        } catch (ClassNotFoundException cnfe) {
+
+            return getParent().loadClass(name);
         }
     }
 
