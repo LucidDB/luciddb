@@ -125,7 +125,6 @@ public class FarragoRuntimeContext
      */
     public FarragoRuntimeContext(FarragoSessionRuntimeParams params)
     {
-        tracer.info("starting FarragoRuntimeContext constructor");
         this.session = params.session;
         this.repos = params.repos;
         this.codeCache = params.codeCache;
@@ -156,8 +155,6 @@ public class FarragoRuntimeContext
         } else {
 
             statementClassLoader = classLoader = params.pluginClassLoader;
-            tracer.info("on RMP using statement classloader " +
-                        statementClassLoader);
         }
 
         dataWrapperCache =
@@ -169,10 +166,6 @@ public class FarragoRuntimeContext
                 params.fennelTxnContext.getFennelDbHandle(),
                 session != null ? new FarragoSessionDataSource(session) :
                 null);
-
-        // TODO figure out another way to make a loopback data source!!!
-        // or does a RMP need a loopback data source at all???
-        tracer.info("made data wrapper cache " + dataWrapperCache);
         streamOwner = new StreamOwner();
     }
 
@@ -932,8 +925,6 @@ public class FarragoRuntimeContext
 
     public void setStatementClassLoader(ClassLoader statementClassLoader)
     {
-        tracer.info("setting statement context classloader to " +
-                    statementClassLoader);
         this.statementClassLoader = statementClassLoader;
     }
 
@@ -941,10 +932,6 @@ public class FarragoRuntimeContext
     {
         try {
 
-            tracer.info("loading statement for classname " +
-                        statementClassName);
-
-            // hack to see if we are in standalone mode
             if (null == statementClassLoader) {
 
                 return Class.forName(
@@ -953,9 +940,6 @@ public class FarragoRuntimeContext
                     statementClassLoader);
             }
 
-            // we should be in the CN here
-            tracer.info("loading statement class " + statementClassName +
-                        " from " + statementClassLoader);
             return statementClassLoader.loadClass(statementClassName);
 
         } catch (ClassNotFoundException e) {

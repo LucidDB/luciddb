@@ -104,7 +104,6 @@ public class FarragoPluginClassLoader
         }
         addURL(url);
         urlSet.add(url);
-        tracer.info("added url " + url);
     }
 
     /**
@@ -148,7 +147,6 @@ public class FarragoPluginClassLoader
 
         try {
 
-            //tracer.info("finding pluging class " + name);
             return super.findClass(name);
 
         } catch (ClassNotFoundException cnfe) {

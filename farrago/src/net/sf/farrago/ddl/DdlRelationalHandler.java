@@ -503,16 +503,6 @@ public class DdlRelationalHandler
     // implement FarragoSessionDdlHandler
     public void executeCreation(FemLocalIndex index)
     {
-        tracer.info("creating new index " + index + " named " +
-                    index.getName() + " with table ");
-        tracer.info(((FemLocalTable)index.getSpannedClass()).getName() +
-                    " with server ");
-        tracer.info(((FemLocalTable)index.getSpannedClass()).
-                    getServer().getName() + " and features ");
-        tracer.info("" + ((FemLocalTable)index.getSpannedClass()).getFeature()+
-                    " of size " + ((FemLocalTable)index.
-                                   getSpannedClass()).getFeature().size());
-
         if (FarragoCatalogUtil.isIndexTemporary(index)) {
             // definition of a temporary table should't create any real storage
             return;

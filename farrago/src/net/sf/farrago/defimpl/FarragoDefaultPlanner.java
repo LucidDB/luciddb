@@ -89,7 +89,6 @@ public class FarragoDefaultPlanner
         final boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
         final CalcVirtualMachine calcVM =
             stmt.getRepos().getCurrentConfig().getCalcVirtualMachine();
-        //tracer.info("got calc vm " + calcVM);
         addStandardRules(this, fennelEnabled, calcVM);
     }
 

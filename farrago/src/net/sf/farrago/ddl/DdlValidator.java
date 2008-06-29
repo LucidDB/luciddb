@@ -1428,8 +1428,6 @@ public class DdlValidator
     {
         for (DdlHandler handler : actionHandlers) {
 
-            tracer.info("invoking " + action + " on " + handler +
-                        " with arg " + modelElement);
             boolean handled =
                 dispatcher.invokeVisitor(
                     handler,
