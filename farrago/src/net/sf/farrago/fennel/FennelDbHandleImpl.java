@@ -158,7 +158,7 @@ public class FennelDbHandleImpl implements FennelDbHandle
                 JmiObjUtil.exportToXmiString(Collections.singleton(tupleDesc));
             tracer.fine(xmiInput);
         }
-        tracer.info("getting accessor XMI for tuple " + tupleDesc);
+        tracer.finest("getting accessor XMI for tuple " + tupleDesc);
         String xmiOutput =
             FennelStorage.getAccessorXmiForTupleDescriptor(tupleDesc);
         tracer.fine(xmiOutput);
@@ -237,9 +237,9 @@ public class FennelDbHandleImpl implements FennelDbHandle
         }
         long resultHandleLong;
         try {
-            tracer.info("executing command " + cmd);
+            tracer.finest("executing command " + cmd);
             resultHandleLong = cmdExecutor.executeJavaCmd(cmd);
-            tracer.info("finished executing command " + cmd);
+            tracer.finest("finished executing command " + cmd);
         } catch (SQLException ex) {
             throw handleNativeException(ex);
         }
