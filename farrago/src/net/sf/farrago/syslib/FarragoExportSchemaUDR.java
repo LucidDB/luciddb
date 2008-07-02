@@ -1476,6 +1476,10 @@ public abstract class FarragoExportSchemaUDR
         if (tableNames == null) {
             // For a successful single-query export, delete when done
             // to reduce clutter.
+            
+            // REVIEW jvs 17-Jun-2008:  but we don't even check that
+            // it was successful!
+
             logFile.delete();
         }
     }

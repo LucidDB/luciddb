@@ -344,10 +344,12 @@ public abstract class FarragoReposImpl
                 allOfType(CwmCatalog.class),
                 catalogName);
             
-            catalogDesc = 
-                new Pair<RefClass, String>(
-                    catalog.refClass(), catalog.refMofId());
-            cache.put(catalogName, catalogDesc);
+            if (catalog != null) {
+                catalogDesc = 
+                    new Pair<RefClass, String>(
+                        catalog.refClass(), catalog.refMofId());
+                cache.put(catalogName, catalogDesc);
+            }
         }
 
         return catalog;
