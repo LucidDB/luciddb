@@ -54,6 +54,81 @@ public abstract class Bug
 {
     //~ Static fields/initializers ---------------------------------------------
 
+    // -----------------------------------------------------------------------
+    // Developers should create new fields here, in their own section. This
+    // will make merge conflicts much less likely than if everyone is
+    // appending.
+
+    public static final boolean Dt239Fixed = false;
+
+    /**
+     * Window Rank functions are supported through the validator but
+     * not implenmented by calculator.  Disable tests and modified
+     * SqlRankFunction to return "Unknown Function".
+     */
+    public static final boolean Dt561Fixed = false;
+
+    public static final boolean Dt591Fixed = false;
+
+    public static final boolean Dt785Fixed = false;
+
+    // angel
+
+    public static final boolean Dt1446Fixed = false;
+
+    // jhyde
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-3">issue
+     * Fnl-3</a> is fixed.
+     */
+    public static final boolean Fnl3Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-66">issue
+     * FNL-66: Cinderella bug</a> is fixed.
+     */
+    public static final boolean Fnl66Fixed = false;
+
+    // kkrueger
+
+    // mberkowitz
+
+    // murali
+
+    // rchen
+
+    // schoi
+
+    // stephan
+
+    // tleung
+
+    // xluo
+
+    // zfong
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-25">issue
+     * FNL-25</a> is fixed. (also filed as dtbug 153)
+     */
+    public static final boolean Fnl25Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-54">issue FNL-54:
+     * cast time to timestamp should initialize date to current_date</a> is
+     * fixed.
+     */
+    public static final boolean Fnl54Fixed = false;
+
+    // johnk
+
+    // jouellette
+
+    // jpham
+
+    // jvs
+
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-26">issue
      * FRG-26</a> is fixed.
@@ -66,27 +141,31 @@ public abstract class Bug
     public static final boolean Frg65Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FNL-3">issue
-     * Fnl-3</a> is fixed.
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-73">issue FRG-73:
+     * miscellaneous bugs with nested comments</a> is fixed.
      */
-    public static final boolean Fnl3Fixed = false;
+    public static final boolean Frg73Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FNL-25">issue
-     * FNL-25</a> is fixed. (also filed as dtbug 153)
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-78">issue FRG-78:
+     * collation clause should be on expression instead of identifier</a> is
+     * fixed.
      */
-    public static final boolean Fnl25Fixed = false;
+    public static final boolean Frg78Fixed = false;
 
-    public static final boolean Dt591Fixed = false;
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-103">issue
+     * FRG-103: validator allows duplicate target columns in insert</a> is
+     * fixed.
+     */
+    public static final boolean Frg103Fixed = false;
 
-    public static final boolean Dt785Fixed = false;
-
-    // -----------------------------------------------------------------------
-    // Developers should create new fields here, in their own section. This
-    // will make merge conflicts much less likely than if everyone is
-    // appending.
-
-    // angel
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-140">issue
+     * FRG-140: validator does not accept column qualified by schema name</a> is
+     * fixed.
+     */
+    public static final boolean Frg140Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-187">issue
@@ -117,43 +196,8 @@ public abstract class Bug
     // hersker
 
     // jack
-    /**
-     * Window Rank functions are supported through the validator but
-     * not implenmented by calculator.  Disable tests and modified
-     * SqlRankFunction to return "Unknown Function". 
-     */
-    public static final boolean Dt1446Fixed = false;
 
-    // jhyde
 
-    public static final boolean Dt561Fixed = false;
-
-    /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-73">issue FRG-73:
-     * miscellaneous bugs with nested comments</a> is fixed.
-     */
-    public static final boolean Frg73Fixed = false;
-
-    /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-78">issue FRG-78:
-     * collation clause should be on expression instead of identifier</a> is
-     * fixed.
-     */
-    public static final boolean Frg78Fixed = false;
-
-    /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-103">issue
-     * FRG-103: validator allows duplicate target columns in insert</a> is
-     * fixed.
-     */
-    public static final boolean Frg103Fixed = false;
-
-    /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-140">issue
-     * FRG-140: validator does not accept column qualified by schema name</a> is
-     * fixed.
-     */
-    public static final boolean Frg140Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-216">issue
@@ -161,6 +205,13 @@ public abstract class Bug
      * fixed.
      */
     public static final boolean Frg216Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-254">issue
+     * FRG-254: environment-dependent failure for
+     * SqlOperatorTest.testPrefixPlusOperator</a> is fixed.
+     */
+    public static final boolean Frg254Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-282">issue
@@ -183,50 +234,6 @@ public abstract class Bug
      */
     public static final boolean Frg296Fixed = false;
 
-    /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FNL-54">issue FNL-54:
-     * cast time to timestamp should initialize date to current_date</a> is
-     * fixed.
-     */
-    public static final boolean Fnl54Fixed = false;
-
-    // johnk
-
-    // jouellette
-
-    // jpham
-
-    // jvs
-    /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-254">issue
-     * FRG-254: environment-dependent failure for
-     * SqlOperatorTest.testPrefixPlusOperator</a> is fixed.
-     */
-    public static final boolean Frg254Fixed = false;
-
-    /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FNL-66">issue
-     * FNL-66: Cinderella bug</a> is fixed.
-     */
-    public static final boolean Fnl66Fixed = false;
-
-    // kkrueger
-
-    // mberkowitz
-
-    // murali
-
-    // rchen
-
-    // schoi
-
-    // stephan
-
-    // tleung
-
-    // xluo
-
-    // zfong
 }
 
 // End Bug.java
