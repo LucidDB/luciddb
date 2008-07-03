@@ -15,7 +15,7 @@ set SQLLINE_JAVA_ARGS=sqlline.SqlLine
 
 set JAVA_EXEC=%JAVA_HOME%\bin\java
 
-set PATH=%PATH%;%MAIN_DIR%\lib\fennel
+set PATH=%PATH%;%MAIN_DIR%\plugin;%MAIN_DIR%\lib\fennel
 
 goto done
 
