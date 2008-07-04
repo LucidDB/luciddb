@@ -1,0 +1,47 @@
+<project name="bh" default="mbean-neg">
+  <target name="mbean-neg">
+    <test-suite name="mbean-neg">
+
+      <test name="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansNegTest"
+          methodnames="testPingServer"/>
+      </test>
+
+      <test name="testForeignSources">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansNegTest"
+          methodnames="testForeignSources"/>
+      </test>
+
+      <test name="testObjectsInUse">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansNegTest"
+          methodnames="testObjectsInUse"/>
+      </test>
+
+      <test name="testPerfCounters">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansNegTest"
+          methodnames="testPerfCounters"/>
+      </test>
+
+      <test name="testSessions">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansNegTest"
+          methodnames="testSessions"/>
+      </test>
+
+      <test name="testSqlStatements">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansNegTest"
+          methodnames="testSqlStatements"/>
+      </test>
+
+      <test name="testSystemParameters">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansNegTest"
+          methodnames="testSystemParameters"/>
+      </test>
+
+      <test name="testStorageManagement">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansNegTest"
+          methodnames="testStorageManagement"/>
+      </test>
+
+    </test-suite>
+  </target>
+</project>

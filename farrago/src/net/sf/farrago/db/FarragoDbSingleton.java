@@ -24,6 +24,7 @@ package net.sf.farrago.db;
 import java.util.*;
 import java.util.logging.*;
 
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
@@ -97,6 +98,31 @@ public abstract class FarragoDbSingleton
             }
         }
         return instance;
+    }
+
+    /**
+     * Establishes a database reference. If requireExistingEngine,
+     * a new database will not be loaded, even if this is the
+     * first reference.
+     *
+     * @param sessionFactory factory for various database-level objects
+     * @param requireExistingEngine true if require an already created reference
+     *
+     * @return loaded database
+     */
+    public static synchronized FarragoDatabase pinReference(
+        FarragoSessionFactory sessionFactory,
+        boolean requireExistingEngine)
+    {
+        if (requireExistingEngine) {
+            tracer.info("connect");
+            if (instance == null) {
+                throw FarragoResource.instance().NoDatabaseLoaded.ex();
+            }
+            ++nReferences;
+            return instance;
+        }
+        return pinReference(sessionFactory);
     }
 
     static synchronized void addSession(

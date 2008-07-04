@@ -118,7 +118,11 @@ public class MBeanUtil
             Class clazz = Class.forName("com.lucidera.jdbc.LucidDbLocalDriver");
             LucidDbLocalDriver driver = (LucidDbLocalDriver) clazz.newInstance();
             String urlPrefix = driver.getUrlPrefix();
-            c = DriverManager.getConnection(urlPrefix,"sa","");
+            Properties props = new Properties();
+            props.setProperty("user", "sa");
+            props.setProperty("password", "");
+            props.setProperty("requireExistingEngine", "true");
+            c = DriverManager.getConnection(urlPrefix, props);
         }
         return c;
     }
