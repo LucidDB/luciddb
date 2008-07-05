@@ -194,7 +194,11 @@ public class FarragoDbSession
         warningQueue = new FarragoWarningQueue();
         txnIdRef = new TxnIdRef();
 
-        database = FarragoDbSingleton.pinReference(sessionFactory);
+        boolean requireExistingEngine = info.getProperty(
+            "requireExistingEngine", "false").equalsIgnoreCase("true");
+        database = FarragoDbSingleton.pinReference(
+            sessionFactory,
+            requireExistingEngine);
         FarragoDbSingleton.addSession(database, this);
         boolean success = false;
         try {

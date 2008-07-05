@@ -51,7 +51,14 @@
           methodnames="testStorageManagement"/>
       </test>
 
-      <cleanup-hook/>
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <custom-task>
+            <junit-utility testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+              methodnames="shutdownLucidDb"/>
+          </custom-task>
+        </test-suite>
+      </cleanup-hook>
 
     </test-suite>
   </target>
