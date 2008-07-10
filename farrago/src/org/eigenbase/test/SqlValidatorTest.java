@@ -841,6 +841,10 @@ public class SqlValidatorTest
     {
         checkFails("values 1.0 + ^NULL^", "(?s).*Illegal use of .NULL.*");
         checkExpFails("1.0 + ^NULL^", "(?s).*Illegal use of .NULL.*");
+        // FIXME: SQL:2003 does not allow raw NULL in IN clause
+        checkExp("1 in (1, null, 2)");
+        checkExp("1 in (null, 1, null, 2)");
+        checkExp("1 in (null, null)");
     }
 
     public void testNullCast()

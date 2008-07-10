@@ -609,10 +609,6 @@ public class CalcRexImplementorTableImpl
             CalcProgramBuilder.nativeNeg);
 
         register(
-            SqlStdOperatorTable.prefixPlusOperator,
-            new IdentityImplementor());
-
-        register(
             SqlStdOperatorTable.reinterpretOperator,
             new ReinterpretCastImplementor());
 

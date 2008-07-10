@@ -683,16 +683,14 @@ public class SqlValidatorTestCase
                 throw new AssertionFailedError(
                     "Error while parsing query [" + sql + "]");
             }
-            SqlNode n = validator.validate(sqlNode);
-            return n;
+            return validator.validate(sqlNode);
         }
 
         public SqlNode parseQuery(String sql)
             throws SqlParseException
         {
             SqlParser parser = new SqlParser(sql);
-            SqlNode sqlNode = parser.parseQuery();
-            return sqlNode;
+            return parser.parseQuery();
         }
 
         public void checkColumnType(String sql, String expected)
@@ -774,7 +772,8 @@ public class SqlValidatorTestCase
 
         // SqlTester methods
 
-        public void setFor(SqlOperator operator)
+        public void setFor(
+            SqlOperator operator, VmName... unimplementedVmNames)
         {
             // do nothing
         }
@@ -783,10 +782,24 @@ public class SqlValidatorTestCase
             String expr,
             String [] inputValues,
             Object result,
-            int delta)
+            double delta)
         {
             String query =
                 AbstractSqlTester.generateAggQuery(expr, inputValues);
+            check(query, AbstractSqlTester.AnyTypeChecker, result, delta);
+        }
+
+        public void checkWinAgg(
+            String expr,
+            String[] inputValues,
+            String windowSpec,
+            String type,
+            Object result,
+            double delta)
+        {
+            String query =
+                AbstractSqlTester.generateWinAggQuery(
+                    expr, windowSpec, inputValues);
             check(query, AbstractSqlTester.AnyTypeChecker, result, delta);
         }
 

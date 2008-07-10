@@ -173,10 +173,6 @@ public class FarragoOJRexImplementorTable
             new FarragoOJRexSimilarLikeImplementor(false, false));
 
         registerOperator(
-            SqlStdOperatorTable.notLikeOperator,
-            new FarragoOJRexSimilarLikeImplementor(false, true));
-
-        registerOperator(
             SqlStdOperatorTable.caseOperator,
             new FarragoOJRexCaseImplementor());
 
@@ -186,11 +182,19 @@ public class FarragoOJRexImplementorTable
 
         registerOperator(
             SqlStdOperatorTable.isTrueOperator,
-            new FarragoOJRexTruthTestImplementor(true));
+            new FarragoOJRexTruthTestImplementor(true, false));
+
+        registerOperator(
+            SqlStdOperatorTable.isNotTrueOperator,
+            new FarragoOJRexTruthTestImplementor(true, true));
 
         registerOperator(
             SqlStdOperatorTable.isFalseOperator,
-            new FarragoOJRexTruthTestImplementor(false));
+            new FarragoOJRexTruthTestImplementor(false, false));
+
+        registerOperator(
+            SqlStdOperatorTable.isNotFalseOperator,
+            new FarragoOJRexTruthTestImplementor(false, true));
 
         registerOperator(
             SqlStdOperatorTable.isNullOperator,

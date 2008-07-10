@@ -59,8 +59,9 @@ import org.eigenbase.util.*;
  * </ul>
  *
  * <p>A typical method will be named after the operator it is testing (say
- * <code>testSubstringFunc</code>). It first calls {@link
- * SqlTester#setFor(SqlOperator)} to declare which operator it is testing.
+ * <code>testSubstringFunc</code>). It first calls
+ * {@link SqlTester#setFor(org.eigenbase.sql.SqlOperator, org.eigenbase.sql.test.SqlTester.VmName...)}
+ * to declare which operator it is testing.
  * <blockqoute>
  *
  * <pre><code>
@@ -213,6 +214,9 @@ public abstract class SqlOperatorTests
             "1e309"
         };
     private static final boolean [] FalseTrue = new boolean[] { false, true };
+    private static final SqlTester.VmName VM_FENNEL = SqlTester.VmName.FENNEL;
+    private static final SqlTester.VmName VM_JAVA = SqlTester.VmName.JAVA;
+    private static final SqlTester.VmName VM_EXPAND = SqlTester.VmName.EXPAND;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -239,23 +243,47 @@ public abstract class SqlOperatorTests
      * Methods that use getTester()
      */
 
-    protected void check(String query, SqlTester.TypeChecker typeChecker,
-        Object result, double delta)
+    protected void check(
+        String query,
+        SqlTester.TypeChecker typeChecker,
+        Object result,
+        double delta)
     {
         getTester().check(query, typeChecker, result, delta);
     }
 
-    protected void checkAgg(String expr, String[] inputValues, Object result, int delta)
+    protected void checkAgg(
+        String expr,
+        String[] inputValues,
+        Object result,
+        double delta)
     {
         getTester().checkAgg(expr, inputValues, result, delta);
     }
 
-    protected void checkBoolean(String expression, Boolean result)
+    protected void checkWinAgg(
+        String expr,
+        String[] inputValues,
+        String windowSpec,
+        String type,
+        Object result,
+        double delta)
+    {
+        getTester().checkWinAgg(
+            expr, inputValues, windowSpec, type, result, delta);
+    }
+
+    protected void checkBoolean(
+        String expression,
+        Boolean result)
     {
         getTester().checkBoolean(expression, result);
     }
 
-    protected void checkFails(String expression, String expectedError, Boolean runtime)
+    protected void checkFails(
+        String expression,
+        String expectedError,
+        Boolean runtime)
     {
         getTester().checkFails(expression, expectedError, runtime);
     }
@@ -265,48 +293,65 @@ public abstract class SqlOperatorTests
         getTester().checkNull(expression);
     }
 
-    protected void checkScalar(String expression, Object result, String resultType)
+    protected void checkScalar(
+        String expression,
+        Object result,
+        String resultType)
     {
         getTester().checkScalar(expression, result, resultType);
     }
 
-    protected void checkScalarApprox(String expression, String expectedType,
-        double expectedResult, double delta)
+    protected void checkScalarApprox(
+        String expression,
+        String expectedType,
+        double expectedResult,
+        double delta)
     {
         getTester().checkScalarApprox(expression, expectedType,
             expectedResult, delta);
     }
 
-    protected void checkScalarExact(String expression, String expectedType,
+    protected void checkScalarExact(
+        String expression,
+        String expectedType,
         String result)
     {
         getTester().checkScalarExact(expression, expectedType, result);
     }
 
-    protected void checkScalarExact(String expression, String result)
+    protected void checkScalarExact(
+        String expression,
+        String result)
     {
         getTester().checkScalarExact(expression, result);
     }
 
-    protected void checkString(String expression, String result, String resultType)
+    protected void checkString(
+        String expression,
+        String result,
+        String resultType)
     {
         getTester().checkString(expression, result, resultType);
     }
 
-    protected void checkType(String expression, String type)
+    protected void checkType(
+        String expression,
+        String type)
     {
         getTester().checkType(expression, type);
     }
 
-    protected void setFor(SqlOperator operator)
+    protected void setFor(
+        SqlOperator operator,
+        SqlTester.VmName... unimplementedVmNames)
     {
-        getTester().setFor(operator);
+        getTester().setFor(operator, unimplementedVmNames);
     }
 
     //--- Tests -----------------------------------------------------------
     public void testBetween()
     {
-        setFor(SqlStdOperatorTable.betweenOperator);
+        setFor(SqlStdOperatorTable.betweenOperator, VM_EXPAND);
         checkBoolean("2 between 1 and 3", Boolean.TRUE);
         checkBoolean("2 between 3 and 2", Boolean.FALSE);
         checkBoolean("2 between symmetric 3 and 2", Boolean.TRUE);
@@ -337,7 +382,7 @@ public abstract class SqlOperatorTests
 
     public void testNotBetween()
     {
-        setFor(SqlStdOperatorTable.notBetweenOperator);
+        setFor(SqlStdOperatorTable.notBetweenOperator, VM_EXPAND);
         checkBoolean("2 not between 1 and 3", Boolean.FALSE);
         checkBoolean("3 not between 1 and 3", Boolean.FALSE);
         checkBoolean("4 not between 1 and 3", Boolean.TRUE);
@@ -1216,7 +1261,7 @@ public abstract class SqlOperatorTests
 
     public void testSelect()
     {
-        setFor(SqlStdOperatorTable.selectOperator);
+        setFor(SqlStdOperatorTable.selectOperator, VM_EXPAND);
         check(
             "select * from (values(1))",
             AbstractSqlTester.IntegerTypeChecker,
@@ -1257,7 +1302,7 @@ public abstract class SqlOperatorTests
 
     public void testLiteralChain()
     {
-        setFor(SqlStdOperatorTable.literalChainOperator);
+        setFor(SqlStdOperatorTable.literalChainOperator, VM_EXPAND);
         checkString(
             "'buttered'\n' toast'",
             "buttered toast",
@@ -1277,7 +1322,7 @@ public abstract class SqlOperatorTests
 
     public void testRow()
     {
-        setFor(SqlStdOperatorTable.rowConstructor);
+        setFor(SqlStdOperatorTable.rowConstructor, VM_FENNEL);
     }
 
     public void testAndOperator()
@@ -1483,7 +1528,7 @@ public abstract class SqlOperatorTests
 
     public void testIsDistinctFromOperator()
     {
-        setFor(SqlStdOperatorTable.isDistinctFromOperator);
+        setFor(SqlStdOperatorTable.isDistinctFromOperator, VM_EXPAND);
         checkBoolean("1 is distinct from 1", Boolean.FALSE);
         checkBoolean("1 is distinct from 1.0", Boolean.FALSE);
         checkBoolean("1 is distinct from 2", Boolean.TRUE);
@@ -1513,7 +1558,7 @@ public abstract class SqlOperatorTests
 
     public void testIsNotDistinctFromOperator()
     {
-        setFor(SqlStdOperatorTable.isNotDistinctFromOperator);
+        setFor(SqlStdOperatorTable.isNotDistinctFromOperator, VM_EXPAND);
         checkBoolean("1 is not distinct from 1", Boolean.TRUE);
         checkBoolean("1 is not distinct from 1.0", Boolean.TRUE);
         checkBoolean("1 is not distinct from 2", Boolean.FALSE);
@@ -1599,12 +1644,39 @@ public abstract class SqlOperatorTests
 
     public void testInOperator()
     {
-        setFor(SqlStdOperatorTable.inOperator);
+        setFor(SqlStdOperatorTable.inOperator, VM_EXPAND);
+        checkBoolean("1 in (0, 1, 2)", Boolean.TRUE);
+        checkBoolean("3 in (0, 1, 2)", Boolean.FALSE);
+        checkBoolean("cast(null as integer) in (0, 1, 2)", null);
+        checkBoolean("cast(null as integer) in (0, cast(null as integer), 2)", null);
+        if (Bug.Frg327Fixed) {
+            checkBoolean("cast(null as integer) in (0, null, 2)", null);
+            checkBoolean("1 in (0, null, 2)", null);
+        }
+        // AND has lower precedence than IN
+        checkBoolean("false and true in (false, false)", Boolean.FALSE);
+        checkFails("'foo' in (^)^", "(?s).*Encountered \"\\)\" at .*", false);
+    }
+
+    public void testNotInOperator()
+    {
+        setFor(SqlStdOperatorTable.notInOperator, VM_EXPAND);
+        checkBoolean("1 not in (0, 1, 2)", Boolean.FALSE);
+        checkBoolean("3 not in (0, 1, 2)", Boolean.TRUE);
+        checkBoolean("cast(null as integer) not in (0, 1, 2)", null);
+        checkBoolean("cast(null as integer) not in (0, cast(null as integer), 2)", null);
+        if (Bug.Frg327Fixed) {
+            checkBoolean("cast(null as integer) not in (0, null, 2)", null);
+            checkBoolean("1 not in (0, null, 2)", null);
+        }
+        // AND has lower precedence than NOT IN
+        checkBoolean("true and false not in (true, true)", Boolean.TRUE);
+        checkFails("'foo' not in (^)^", "(?s).*Encountered \"\\)\" at .*", false);
     }
 
     public void testOverlapsOperator()
     {
-        setFor(SqlStdOperatorTable.overlapsOperator);
+        setFor(SqlStdOperatorTable.overlapsOperator, VM_EXPAND);
         if (Bug.Frg187Fixed) {
             checkBoolean(
                 "(date '1-2-3', date '1-2-3') overlaps (date '1-2-3', interval '1' year)",
@@ -2129,7 +2201,7 @@ public abstract class SqlOperatorTests
 
     public void testDescendingOperator()
     {
-        setFor(SqlStdOperatorTable.descendingOperator);
+        setFor(SqlStdOperatorTable.descendingOperator, VM_EXPAND);
     }
 
     public void testIsNotNullOperator()
@@ -2195,7 +2267,7 @@ public abstract class SqlOperatorTests
 
     public void testIsNotUnknownOperator()
     {
-        setFor(SqlStdOperatorTable.isNotUnknownOperator);
+        setFor(SqlStdOperatorTable.isNotUnknownOperator, VM_EXPAND);
         checkBoolean("false is not unknown", Boolean.TRUE);
         checkBoolean("true is not unknown", Boolean.TRUE);
         checkBoolean(
@@ -2210,7 +2282,7 @@ public abstract class SqlOperatorTests
 
     public void testIsUnknownOperator()
     {
-        setFor(SqlStdOperatorTable.isUnknownOperator);
+        setFor(SqlStdOperatorTable.isUnknownOperator, VM_EXPAND);
         checkBoolean("false is unknown", Boolean.FALSE);
         checkBoolean("true is unknown", Boolean.FALSE);
         checkBoolean(
@@ -2225,12 +2297,12 @@ public abstract class SqlOperatorTests
 
     public void testIsASetOperator()
     {
-        setFor(SqlStdOperatorTable.isASetOperator);
+        setFor(SqlStdOperatorTable.isASetOperator, VM_EXPAND);
     }
 
     public void testExistsOperator()
     {
-        setFor(SqlStdOperatorTable.existsOperator);
+        setFor(SqlStdOperatorTable.existsOperator, VM_EXPAND);
     }
 
     public void testNotOperator()
@@ -2277,7 +2349,7 @@ public abstract class SqlOperatorTests
 
     public void testPrefixPlusOperator()
     {
-        setFor(SqlStdOperatorTable.prefixPlusOperator);
+        setFor(SqlStdOperatorTable.prefixPlusOperator, VM_EXPAND);
         checkScalarExact("+1", "1");
         checkScalarExact("+1.23", "DECIMAL(3, 2) NOT NULL", "1.23");
         checkScalarApprox("+1.0e0", "DOUBLE NOT NULL", 1, 0);
@@ -2307,12 +2379,12 @@ public abstract class SqlOperatorTests
 
     public void testExplicitTableOperator()
     {
-        setFor(SqlStdOperatorTable.explicitTableOperator);
+        setFor(SqlStdOperatorTable.explicitTableOperator, VM_EXPAND);
     }
 
     public void testValuesOperator()
     {
-        setFor(SqlStdOperatorTable.valuesOperator);
+        setFor(SqlStdOperatorTable.valuesOperator, VM_EXPAND);
         check(
             "select 'abc' from (values(true))",
             new AbstractSqlTester.StringTypeChecker("CHAR(3) NOT NULL"),
@@ -2322,7 +2394,7 @@ public abstract class SqlOperatorTests
 
     public void testNotLikeOperator()
     {
-        setFor(SqlStdOperatorTable.notLikeOperator);
+        setFor(SqlStdOperatorTable.notLikeOperator, VM_EXPAND);
         checkBoolean("'abc' not like '_b_'", Boolean.FALSE);
     }
 
@@ -2348,7 +2420,7 @@ public abstract class SqlOperatorTests
 
     public void testNotSimilarToOperator()
     {
-        setFor(SqlStdOperatorTable.notSimilarOperator);
+        setFor(SqlStdOperatorTable.notSimilarOperator, VM_FENNEL); // TODO: implement in fennel
         checkBoolean("'ab' not similar to 'a_'", Boolean.FALSE);
     }
 
@@ -2414,17 +2486,17 @@ public abstract class SqlOperatorTests
 
     public void testEscapeOperator()
     {
-        setFor(SqlStdOperatorTable.escapeOperator);
+        setFor(SqlStdOperatorTable.escapeOperator, VM_EXPAND);
     }
 
     public void testConvertFunc()
     {
-        setFor(SqlStdOperatorTable.convertFunc);
+        setFor(SqlStdOperatorTable.convertFunc, VM_FENNEL, VM_JAVA);
     }
 
     public void testTranslateFunc()
     {
-        setFor(SqlStdOperatorTable.translateFunc);
+        setFor(SqlStdOperatorTable.translateFunc, VM_FENNEL, VM_JAVA);
     }
 
     public void testOverlayFunc()
@@ -2518,7 +2590,7 @@ public abstract class SqlOperatorTests
     {
         // Note: the initcap function is an Oracle defined function and is not
         // defined in the '03 standard
-        setFor(SqlStdOperatorTable.initcapFunc);
+        setFor(SqlStdOperatorTable.initcapFunc, VM_FENNEL); // todo: implement in fennel
         checkString("initcap('aA')", "Aa", "CHAR(2) NOT NULL");
         checkString("initcap('Aa')", "Aa", "CHAR(2) NOT NULL");
         checkString("initcap('1a')", "1a", "CHAR(2) NOT NULL");
@@ -2545,7 +2617,7 @@ public abstract class SqlOperatorTests
 
     public void testExpFunc()
     {
-        setFor(SqlStdOperatorTable.expFunc);
+        setFor(SqlStdOperatorTable.expFunc, VM_FENNEL); // todo: implement in fennel
         checkScalarApprox(
             "exp(2)",
             "DOUBLE NOT NULL",
@@ -2714,7 +2786,7 @@ public abstract class SqlOperatorTests
 
     public void testNullifFunc()
     {
-        setFor(SqlStdOperatorTable.nullIfFunc);
+        setFor(SqlStdOperatorTable.nullIfFunc, VM_FENNEL, VM_JAVA);
         checkNull("nullif(1,1)");
         checkScalarExact(
             "nullif(1.5, 13.56)",
@@ -2782,7 +2854,7 @@ public abstract class SqlOperatorTests
 
     public void testCoalesceFunc()
     {
-        setFor(SqlStdOperatorTable.coalesceFunc);
+        setFor(SqlStdOperatorTable.coalesceFunc, VM_FENNEL, VM_JAVA);
         checkString("coalesce('a','b')", "a", "CHAR(1) NOT NULL");
         checkScalarExact("coalesce(null,null,3)", "3");
         checkFails(
@@ -2793,38 +2865,38 @@ public abstract class SqlOperatorTests
 
     public void testUserFunc()
     {
-        setFor(SqlStdOperatorTable.userFunc);
+        setFor(SqlStdOperatorTable.userFunc, VM_FENNEL);
         checkString("USER", "sa", "VARCHAR(2000) NOT NULL");
     }
 
     public void testCurrentUserFunc()
     {
-        setFor(SqlStdOperatorTable.currentUserFunc);
+        setFor(SqlStdOperatorTable.currentUserFunc, VM_FENNEL);
         checkString("CURRENT_USER", "sa", "VARCHAR(2000) NOT NULL");
     }
 
     public void testSessionUserFunc()
     {
-        setFor(SqlStdOperatorTable.sessionUserFunc);
+        setFor(SqlStdOperatorTable.sessionUserFunc, VM_FENNEL);
         checkString("SESSION_USER", "sa", "VARCHAR(2000) NOT NULL");
     }
 
     public void testSystemUserFunc()
     {
-        setFor(SqlStdOperatorTable.systemUserFunc);
+        setFor(SqlStdOperatorTable.systemUserFunc, VM_FENNEL);
         String user = System.getProperty("user.name"); // e.g. "jhyde"
         checkString("SYSTEM_USER", user, "VARCHAR(2000) NOT NULL");
     }
 
     public void testCurrentPathFunc()
     {
-        setFor(SqlStdOperatorTable.currentPathFunc);
+        setFor(SqlStdOperatorTable.currentPathFunc, VM_FENNEL);
         checkString("CURRENT_PATH", "", "VARCHAR(2000) NOT NULL");
     }
 
     public void testCurrentRoleFunc()
     {
-        setFor(SqlStdOperatorTable.currentRoleFunc);
+        setFor(SqlStdOperatorTable.currentRoleFunc, VM_FENNEL);
 
         // By default, the CURRENT_ROLE function returns
         // the empty string because a role has to be set explicitly.
@@ -2906,7 +2978,7 @@ public abstract class SqlOperatorTests
 
     public void testCurrentDateFunc()
     {
-        setFor(SqlStdOperatorTable.currentDateFunc);
+        setFor(SqlStdOperatorTable.currentDateFunc, VM_FENNEL);
         checkScalar("CURRENT_DATE", datePattern, "DATE NOT NULL");
         checkFails(
             "^CURRENT_DATE()^",
@@ -2983,19 +3055,17 @@ public abstract class SqlOperatorTests
 
     public void testWindow()
     {
-        setFor(SqlStdOperatorTable.windowOperator);
-        if (Bug.Frg188Fixed) {
-            check(
-                "select sum(1) over (order by x) from (select 1 as x, 2 as y from (values (true)))",
-                new AbstractSqlTester.StringTypeChecker("INTEGER"),
-                "1",
-                0);
-        }
+        setFor(SqlStdOperatorTable.windowOperator, VM_FENNEL, VM_JAVA);
+        check(
+            "select sum(1) over (order by x) from (select 1 as x, 2 as y from (values (true)))",
+            new AbstractSqlTester.StringTypeChecker("INTEGER"),
+            "1",
+            0);
     }
 
     public void testElementFunc()
     {
-        setFor(SqlStdOperatorTable.elementFunc);
+        setFor(SqlStdOperatorTable.elementFunc, VM_FENNEL, VM_JAVA);
         if (todo) {
             checkString(
                 "element(multiset['abc']))",
@@ -3007,7 +3077,7 @@ public abstract class SqlOperatorTests
 
     public void testCardinalityFunc()
     {
-        setFor(SqlStdOperatorTable.cardinalityFunc);
+        setFor(SqlStdOperatorTable.cardinalityFunc, VM_FENNEL, VM_JAVA);
         if (todo) {
             checkScalarExact(
                 "cardinality(multiset[cast(null as integer),2]))",
@@ -3017,7 +3087,7 @@ public abstract class SqlOperatorTests
 
     public void testMemberOfOperator()
     {
-        setFor(SqlStdOperatorTable.memberOfOperator);
+        setFor(SqlStdOperatorTable.memberOfOperator, VM_FENNEL, VM_JAVA);
         if (todo) {
             checkBoolean("1 member of multiset[1]", Boolean.TRUE);
             checkBoolean(
@@ -3037,17 +3107,17 @@ public abstract class SqlOperatorTests
 
     public void testCollectFunc()
     {
-        setFor(SqlStdOperatorTable.collectFunc);
+        setFor(SqlStdOperatorTable.collectFunc, VM_FENNEL, VM_JAVA);
     }
 
     public void testFusionFunc()
     {
-        setFor(SqlStdOperatorTable.fusionFunc);
+        setFor(SqlStdOperatorTable.fusionFunc, VM_FENNEL, VM_JAVA);
     }
 
     public void testExtractFunc()
     {
-        setFor(SqlStdOperatorTable.extractFunc);
+        setFor(SqlStdOperatorTable.extractFunc, VM_FENNEL, VM_JAVA);
 
         // Intervals
         checkScalar(
@@ -3082,7 +3152,7 @@ public abstract class SqlOperatorTests
 
     public void testCeilFunc()
     {
-        setFor(SqlStdOperatorTable.ceilFunc);
+        setFor(SqlStdOperatorTable.ceilFunc, VM_FENNEL);
         checkScalarApprox("ceil(10.1e0)", "DOUBLE NOT NULL", 11, 0);
         checkScalarApprox(
             "ceil(cast(-11.2e0 as real))",
@@ -3124,7 +3194,7 @@ public abstract class SqlOperatorTests
 
     public void testFloorFunc()
     {
-        setFor(SqlStdOperatorTable.floorFunc);
+        setFor(SqlStdOperatorTable.floorFunc, VM_FENNEL);
         checkScalarApprox("floor(2.5e0)", "DOUBLE NOT NULL", 2, 0);
         checkScalarApprox(
             "floor(cast(-1.2e0 as real))",
@@ -3166,205 +3236,307 @@ public abstract class SqlOperatorTests
 
     public void testDenseRankFunc()
     {
-        setFor(SqlStdOperatorTable.denseRankFunc);
+        setFor(SqlStdOperatorTable.denseRankFunc, VM_FENNEL, VM_JAVA);
     }
 
     public void testPercentRankFunc()
     {
-        setFor(SqlStdOperatorTable.percentRankFunc);
+        setFor(SqlStdOperatorTable.percentRankFunc, VM_FENNEL, VM_JAVA);
     }
 
     public void testRankFunc()
     {
-        setFor(SqlStdOperatorTable.rankFunc);
+        setFor(SqlStdOperatorTable.rankFunc, VM_FENNEL, VM_JAVA);
     }
 
     public void testCumeDistFunc()
     {
-        setFor(SqlStdOperatorTable.cumeDistFunc);
+        setFor(SqlStdOperatorTable.cumeDistFunc, VM_FENNEL, VM_JAVA);
     }
 
     public void testRowNumberFunc()
     {
-        setFor(SqlStdOperatorTable.rowNumberFunc);
+        setFor(SqlStdOperatorTable.rowNumberFunc, VM_FENNEL, VM_JAVA);
     }
 
     public void testCountFunc()
     {
-        if (Bug.Frg188Fixed) {
-            setFor(SqlStdOperatorTable.countOperator);
-            checkType("count(*)", "BIGINT NOT NULL");
-            checkType("count('name')", "BIGINT NOT NULL");
-            checkType("count(1)", "BIGINT NOT NULL");
-            checkType("count(1.2)", "BIGINT NOT NULL");
-            checkType("COUNT(DISTINCT 'x')", "BIGINT NOT NULL");
-            checkFails(
-                "^COUNT()^",
-                "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments",
-                false);
-            checkFails(
-                "^COUNT(1, 2)^",
-                "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments",
-                false);
-            final String [] values = { "0", "CAST(null AS INTEGER)", "1", "0" };
-            checkAgg(
-                "COUNT(x)",
-                values,
-                3,
-                0);
-            checkAgg(
-                "COUNT(CASE x WHEN 0 THEN NULL ELSE -1 END)",
-                values,
-                2,
-                0);
-            checkAgg(
-                "COUNT(DISTINCT x)",
-                values,
-                2,
-                0);
+        setFor(SqlStdOperatorTable.countOperator, VM_EXPAND);
+        checkType("count(*)", "BIGINT NOT NULL");
+        checkType("count('name')", "BIGINT NOT NULL");
+        checkType("count(1)", "BIGINT NOT NULL");
+        checkType("count(1.2)", "BIGINT NOT NULL");
+        checkType("COUNT(DISTINCT 'x')", "BIGINT NOT NULL");
+        checkFails(
+            "^COUNT()^",
+            "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments",
+            false);
+        checkFails(
+            "^COUNT(1, 2)^",
+            "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments",
+            false);
+        final String [] values = { "0", "CAST(null AS INTEGER)", "1", "0" };
+        checkAgg(
+            "COUNT(x)",
+            values,
+            3,
+            0);
+        checkAgg(
+            "COUNT(CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            2,
+            0);
+        checkAgg(
+            "COUNT(DISTINCT x)",
+            values,
+            2,
+            0);
 
-            // string values -- note that empty string is not null
-            final String [] stringValues =
-            { "'a'", "CAST(NULL AS VARCHAR(1))", "''" };
-            checkAgg(
-                "COUNT(*)",
-                stringValues,
-                3,
-                0);
-            checkAgg(
-                "COUNT(x)",
-                stringValues,
-                2,
-                0);
-            checkAgg(
-                "COUNT(DISTINCT x)",
-                stringValues,
-                2,
-                0);
-            checkAgg(
-                "COUNT(DISTINCT 123)",
-                stringValues,
-                1,
-                0);
-        }
+        // string values -- note that empty string is not null
+        final String [] stringValues =
+        { "'a'", "CAST(NULL AS VARCHAR(1))", "''" };
+        checkAgg(
+            "COUNT(*)",
+            stringValues,
+            3,
+            0);
+        checkAgg(
+            "COUNT(x)",
+            stringValues,
+            2,
+            0);
+        checkAgg(
+            "COUNT(DISTINCT x)",
+            stringValues,
+            2,
+            0);
+        checkAgg(
+            "COUNT(DISTINCT 123)",
+            stringValues,
+            1,
+            0);
     }
 
     public void testSumFunc()
     {
-        if (Bug.Frg188Fixed) {
-            setFor(SqlStdOperatorTable.sumOperator);
-            checkFails(
-                "sum(^*^)",
-                "Unknown identifier '\\*'",
-                false);
-            checkFails(
-                "^sum('name')^",
-                "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<CHAR\\(4\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*",
-                false);
-            checkType("sum(1)", "INTEGER");
-            checkType("sum(1.2)", "DECIMAL(2, 1)");
-            checkType("sum(DISTINCT 1.5)", "DECIMAL(2, 1)");
-            checkFails(
-                "^sum()^",
-                "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments",
-                false);
-            checkFails(
-                "^sum(1, 2)^",
-                "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments",
-                false);
-            checkFails(
-                "^sum(cast(null as varchar(2)))^",
-                "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*",
-                false);
-            final String [] values = { "0", "CAST(null AS INTEGER)", "2", "2" };
-            checkAgg(
-                "sum(x)",
-                values,
-                4,
-                0);
-            checkAgg(
-                "sum(CASE x WHEN 0 THEN NULL ELSE -1 END)",
-                values,
-                -3,
-                0);
-            checkAgg(
-                "sum(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
-                values,
-                -1,
-                0);
-            checkAgg(
-                "sum(DISTINCT x)",
-                values,
-                2,
-                0);
-        }
+        setFor(SqlStdOperatorTable.sumOperator, VM_EXPAND);
+        checkFails(
+            "sum(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        checkFails(
+            "^sum('name')^",
+            "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<CHAR\\(4\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*",
+            false);
+        checkType("sum(1)", "INTEGER");
+        checkType("sum(1.2)", "DECIMAL(2, 1)");
+        checkType("sum(DISTINCT 1.5)", "DECIMAL(2, 1)");
+        checkFails(
+            "^sum()^",
+            "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments",
+            false);
+        checkFails(
+            "^sum(1, 2)^",
+            "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments",
+            false);
+        checkFails(
+            "^sum(cast(null as varchar(2)))^",
+            "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*",
+            false);
+        final String [] values = { "0", "CAST(null AS INTEGER)", "2", "2" };
+        checkAgg(
+            "sum(x)",
+            values,
+            4,
+            0);
+        checkAgg(
+            "sum(CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            -3,
+            0);
+        checkAgg(
+            "sum(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            -1,
+            0);
+        checkAgg(
+            "sum(DISTINCT x)",
+            values,
+            2,
+            0);
     }
 
     public void testAvgFunc()
     {
-        if (Bug.Frg188Fixed) {
-            setFor(SqlStdOperatorTable.avgOperator);
-            checkFails(
-                "avg(^*^)",
-                "Unknown identifier '\\*'",
-                false);
-            checkFails(
-                "^avg(cast(null as varchar(2)))^",
-                "(?s)Cannot apply 'AVG' to arguments of type 'AVG\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'AVG\\(<NUMERIC>\\)'.*",
-                false);
-            checkType("AVG(CAST(NULL AS INTEGER))", "INTEGER");
-            checkType("AVG(DISTINCT 1.5)", "DECIMAL(2, 1)");
-            final String [] values = { "0", "CAST(null AS INTEGER)", "3", "3" };
-            checkAgg(
-                "AVG(x)",
-                values,
-                new Double(1),
-                0);
-            checkAgg(
-                "AVG(DISTINCT x)",
-                values,
-                new Double(1.5),
-                0);
-            checkAgg(
-                "avg(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
-                values,
-                -1,
-                0);
-        }
+        setFor(SqlStdOperatorTable.avgOperator, VM_EXPAND);
+        checkFails(
+            "avg(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        checkFails(
+            "^avg(cast(null as varchar(2)))^",
+            "(?s)Cannot apply 'AVG' to arguments of type 'AVG\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'AVG\\(<NUMERIC>\\)'.*",
+            false);
+        checkType("AVG(CAST(NULL AS INTEGER))", "INTEGER");
+        checkType("AVG(DISTINCT 1.5)", "DECIMAL(2, 1)");
+        final String [] values = { "0", "CAST(null AS FLOAT)", "3", "3" };
+        checkAgg(
+            "AVG(x)",
+            values,
+            2d,
+            0d);
+        checkAgg(
+            "AVG(DISTINCT x)",
+            values,
+            1.5d,
+            0d);
+        checkAgg(
+            "avg(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            -1,
+            0d);
+    }
+
+    public void testMinFunc()
+    {
+        setFor(SqlStdOperatorTable.minOperator, VM_EXPAND);
+        checkFails(
+            "min(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        checkType("min(1)", "INTEGER");
+        checkType("min(1.2)", "DECIMAL(2, 1)");
+        checkType("min(DISTINCT 1.5)", "DECIMAL(2, 1)");
+        checkFails(
+            "^min()^",
+            "Invalid number of arguments to function 'MIN'. Was expecting 1 arguments",
+            false);
+        checkFails(
+            "^min(1, 2)^",
+            "Invalid number of arguments to function 'MIN'. Was expecting 1 arguments",
+            false);
+        final String [] values = { "0", "CAST(null AS INTEGER)", "2", "2" };
+        checkAgg(
+            "min(x)",
+            values,
+            "0",
+            0d);
+        checkAgg(
+            "min(CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            "-1",
+            0d);
+        checkAgg(
+            "min(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            "-1",
+            0d);
+        checkAgg(
+            "min(DISTINCT x)",
+            values,
+            "0",
+            0d);
+    }
+
+    public void testMaxFunc()
+    {
+        setFor(SqlStdOperatorTable.maxOperator, VM_EXPAND);
+        checkFails(
+            "max(^*^)",
+            "Unknown identifier '\\*'",
+            false);
+        checkType("max(1)", "INTEGER");
+        checkType("max(1.2)", "DECIMAL(2, 1)");
+        checkType("max(DISTINCT 1.5)", "DECIMAL(2, 1)");
+        checkFails(
+            "^max()^",
+            "Invalid number of arguments to function 'MAX'. Was expecting 1 arguments",
+            false);
+        checkFails(
+            "^max(1, 2)^",
+            "Invalid number of arguments to function 'MAX'. Was expecting 1 arguments",
+            false);
+        final String [] values = { "0", "CAST(null AS INTEGER)", "2", "2" };
+        checkAgg(
+            "max(x)",
+            values,
+            "2",
+            0d);
+        checkAgg(
+            "max(CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            "-1",
+            0d);
+        checkAgg(
+            "max(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values,
+            "-1",
+            0d);
+        checkAgg(
+            "max(DISTINCT x)",
+            values,
+            "2",
+            0d);
     }
 
     public void testLastValueFunc()
     {
-        if (Bug.Frg188Fixed) {
-            setFor(SqlStdOperatorTable.lastValueOperator);
-            checkScalarExact("last_value(1)", "1");
-            checkScalarExact(
-                "last_value(1.2)",
-                "DECIMAL(2, 1) NOT NULL",
-                "1.2");
-            checkType("last_value('name')", "CHAR(4) NOT NULL");
-            checkString(
-                "last_value('name')",
-                "name",
-                "CHAR(4) NOT NULL");
-        }
+        setFor(SqlStdOperatorTable.lastValueOperator, VM_EXPAND);
+        final String [] values = { "0", /* "CAST(null AS FLOAT)", */ "3", "3" };
+        checkWinAgg(
+            "last_value(x)",
+            values,
+            "ROWS 3 PRECEDING",
+            "INTEGER",
+            Arrays.asList("3", "0"),
+            0d);
+        final String [] values2 = { "1.6", "1.2" };
+        checkWinAgg(
+            "last_value(x)",
+            values2,
+            "ROWS 3 PRECEDING",
+            "DECIMAL(2, 1) NOT NULL",
+            // Should be Arrays.asList("1.6", "1.2"),
+            Arrays.asList("2.0", "1.0"),
+            0d);
+        final String [] values3 = { "'foo'", "'bar'", "'name'" };
+        checkWinAgg(
+            "last_value(x)",
+            values3,
+            "ROWS 3 PRECEDING",
+            "CHAR(4) NOT NULL",
+            Arrays.asList("foo ", "bar ", "name"),
+            0d);
     }
 
     public void testFirstValueFunc()
     {
-        if (Bug.Frg188Fixed) {
-            setFor(SqlStdOperatorTable.firstValueOperator);
-            checkScalarExact("first_value(1)", "1");
-            checkScalarExact(
-                "first_value(1.2)",
-                "DECIMAL(2, 1) NOT NULL",
-                "1.2");
-            checkType("first_value('name')", "CHAR(4) NOT NULL");
-            checkString(
-                "first_value('name')",
-                "name",
-                "CHAR(4) NOT NULL");
-        }
+        setFor(SqlStdOperatorTable.firstValueOperator, VM_EXPAND);
+        final String [] values = { "0", /* "CAST(null AS FLOAT)", */ "3", "3" };
+        checkWinAgg(
+            "first_value(x)",
+            values,
+            "ROWS 3 PRECEDING",
+            "INTEGER",
+            Arrays.asList("0"),
+            0d);
+        final String [] values2 = { "1.6", "1.2" };
+        checkWinAgg(
+            "first_value(x)",
+            values2,
+            "ROWS 3 PRECEDING",
+            "DECIMAL(2, 1) NOT NULL",
+            // Should be Arrays.asList("1.6"),
+            Arrays.asList("2.0"),
+            0d);
+        final String [] values3 = { "'foo'", "'bar'", "'name'" };
+        checkWinAgg(
+            "first_value(x)",
+            values3,
+            "ROWS 3 PRECEDING",
+            "CHAR(4) NOT NULL",
+            Arrays.asList("foo "),
+            0d);
     }
 
     /**
