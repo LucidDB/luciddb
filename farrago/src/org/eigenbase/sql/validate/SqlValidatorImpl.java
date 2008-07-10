@@ -1949,7 +1949,8 @@ public class SqlValidatorImpl
             // columns which are in the GROUP BY clause.
             SqlValidatorScope aggScope = selectScope;
             if (isAggregate(select)) {
-                aggScope = new AggregatingSelectScope(selectScope, select);
+                aggScope =
+                    new AggregatingSelectScope(selectScope, select, false);
                 selectScopes.put(select, aggScope);
             } else {
                 selectScopes.put(select, selectScope);
@@ -1962,18 +1963,16 @@ public class SqlValidatorImpl
             registerSubqueries(aggScope, select.getSelectList());
             final SqlNodeList orderList = select.getOrderList();
             if (orderList != null) {
+                // If the query is 'SELECT DISTINCT', restrict the columns
+                // available to the ORDER BY clause.
+                if (select.isDistinct()) {
+                    aggScope =
+                        new AggregatingSelectScope(selectScope, select, true);
+                }
                 OrderByScope orderScope =
                     new OrderByScope(aggScope, orderList, select);
-                if (isAggregate(select)) {
-                    orderScopes.put(select, orderScope);
-                    AggregatingScope aggOrderScope =
-                        new AggregatingSelectScope(orderScope, select);
-                    orderScopes.put(select, aggOrderScope);
-                    registerSubqueries(aggOrderScope, orderList);
-                } else {
-                    orderScopes.put(select, orderScope);
-                    registerSubqueries(orderScope, orderList);
-                }
+                orderScopes.put(select, orderScope);
+                registerSubqueries(orderScope, orderList);
             }
             break;
 

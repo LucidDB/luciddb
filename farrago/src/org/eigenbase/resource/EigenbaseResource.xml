@@ -297,6 +297,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Expression ''{0}'' is not being grouped</text>
 </exception>
 
+<exception id="120335" name="NotSelectDistinctExpr" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Expression ''{0}'' is not in the select clause</text>
+</exception>
+
 <exception id="120340" name="AggregateIllegalInWhere" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Aggregate expression is illegal in WHERE clause</text>
 </exception>

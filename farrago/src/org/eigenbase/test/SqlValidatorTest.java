@@ -26,8 +26,6 @@ import java.nio.charset.*;
 
 import java.util.logging.*;
 
-import junit.framework.*;
-
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
@@ -475,7 +473,6 @@ public class SqlValidatorTest
         checkExpType(
             "CASE 1 WHEN 1 THEN cast(null as integer) WHEN 2 THEN cast(cast(null as tinyint) as integer) END",
             "INTEGER");
-        ;
     }
 
     public void testCaseExpressionFails()
@@ -4669,15 +4666,16 @@ public class SqlValidatorTest
         check("select * from emp cross join dept");
     }
 
-    // TODO: is this legal? check that standard
-    public void _testDuplicateColumnAliasFails()
+    public void testDuplicateColumnAliasIsOK()
     {
-        checkFails("select 1 as a, 2 as b, 3 as a from emp", "xyz");
+        // duplicate column aliases are daft, but SQL:2003 allows them
+        check("select 1 as a, 2 as b, 3 as a from emp");
     }
 
-    public void testInvalidGroupBy(TestCase test)
+    public void testInvalidGroupBy()
     {
-        checkFails("select empno, deptno from emp group by deptno", "xyz");
+        checkFails("select ^empno^, deptno from emp group by deptno",
+            "Expression 'EMPNO' is not being grouped");
     }
 
     public void testSingleNoAlias()
@@ -5227,7 +5225,11 @@ public class SqlValidatorTest
 
         checkFails(
             "select distinct deptno from emp group by deptno order by ^empno^",
-            "Expression 'EMPNO' is not being grouped");
+            "Expression 'EMPNO' is not in the select clause");
+
+        checkFails(
+            "select distinct deptno from emp group by deptno order by deptno, ^empno^",
+            "Expression 'EMPNO' is not in the select clause");
 
         check(
             "select distinct deptno from emp group by deptno order by deptno");
@@ -5303,6 +5305,17 @@ public class SqlValidatorTest
         // constant expressions
         check("select cast(1 as integer) + 2 from emp group by deptno");
         check("select localtime, deptno + 3 from emp group by deptno");
+    }
+
+    public void testGroupByCorrelatedColumnFails()
+    {
+        // -- this is not sql 2003 standard
+        // -- see sql2003 part2,  7.9
+        checkFails(
+            "select count(*)\n" +
+                "from emp\n" +
+                "where exists (select count(*) from dept group by ^emp^.empno)",
+            "Table 'EMP' not found");
     }
 
     public void testGroupExpressionEquivalence()
@@ -5744,6 +5757,28 @@ public class SqlValidatorTest
         checkFails(
             "SELECT DISTINCT ^*^ from emp GROUP BY deptno",
             "Expression 'EMP\\.EMPNO' is not being grouped");
+
+        // similar validation for SELECT DISTINCT and GROUP BY
+        checkFails(
+            "SELECT deptno FROM emp GROUP BY deptno ORDER BY deptno, ^empno^",
+            "Expression 'EMPNO' is not being grouped");
+        checkFails(
+            "SELECT DISTINCT deptno from emp ORDER BY deptno, ^empno^",
+            "Expression 'EMPNO' is not in the select clause");
+        check("SELECT DISTINCT deptno from emp ORDER BY deptno + 2");
+        checkFails(
+            "SELECT DISTINCT deptno from emp ORDER BY deptno, ^sum(empno)^",
+            "Expression 'SUM\\(`EMP`\\.`EMPNO`\\)' is not in the select clause");
+
+        // The ORDER BY clause works on what is projected by DISTINCT - even if
+        // GROUP BY is present.
+        checkFails(
+            "SELECT DISTINCT deptno FROM emp GROUP BY deptno, empno ORDER BY deptno, ^empno^",
+            "Expression 'EMPNO' is not in the select clause");
+
+        // redundant distinct; same query is in unitsql/optimizer/distinct.sql
+        check("select distinct * from (select distinct deptno from emp) order by 1");
+
         check("SELECT DISTINCT 5, 10+5, 'string' from emp");
     }
 
