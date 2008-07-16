@@ -1974,7 +1974,7 @@ public abstract class SqlOperatorTests
                 " (timestamp '2008-07-15 15:28:00' - " +
                 "  timestamp '1969-04-29 0:0:0') day to second / 2",
             "1988-12-06 07:44:00.0",
-            "TIMESTAMP NOT NULL");
+            "TIMESTAMP(0) NOT NULL");
 
         checkScalar(
             "date '1969-04-29' +" +
@@ -1988,7 +1988,7 @@ public abstract class SqlOperatorTests
                 " (time '15:28:00' - " +
                 "  time '01:23:44') hour to second / 2",
             "08:25:52",
-            "TIME NOT NULL");
+            "TIME(0) NOT NULL");
 
         if (Bug.Dt1684Fixed)
         checkBoolean(
