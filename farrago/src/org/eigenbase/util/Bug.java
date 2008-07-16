@@ -74,6 +74,10 @@ public abstract class Bug
 
     // angel
 
+    /**
+     * Whether dtbug1446 "Window Rank Functions not fully implemented"
+     * is fixed.
+     */
     public static final boolean Dt1446Fixed = false;
 
     // jhyde
@@ -96,6 +100,12 @@ public abstract class Bug
      * is fixed.
      */
     public static final boolean Frg327Fixed = false;
+
+    /**
+     * Whether dtbug1684 "CURRENT_DATE not implemented in fennel calc"
+     * is fixed.
+     */
+    public static final boolean Dt1684Fixed = false;
 
     // kkrueger
 
@@ -141,11 +151,6 @@ public abstract class Bug
      * FRG-26</a> is fixed.
      */
     public static final boolean Frg26Fixed = false;
-
-    /**
-     * Also filed as dtbug324
-     */
-    public static final boolean Frg65Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-73">issue FRG-73:

@@ -1268,9 +1268,11 @@ public abstract class SqlOperatorTests
             "1",
             0);
 
-        // check return type on scalar subquery in select list.  Note return
+        // Check return type on scalar subquery in select list.  Note return
         // type is always nullable even if subquery select value is NOT NULL.
-        if (Bug.Frg189Fixed) {
+        // Bug FRG-189 causes this test to fail only in SqlOperatorTest; not
+        // in subtypes.
+        if (Bug.Frg189Fixed || getClass() != SqlOperatorTest.class) {
             checkType(
                 "SELECT *,(SELECT * FROM (VALUES(1))) FROM (VALUES(2))",
                 "RecordType(INTEGER NOT NULL EXPR$0, INTEGER EXPR$1) NOT NULL");
@@ -1966,6 +1968,35 @@ public abstract class SqlOperatorTests
         checkNull(
             "(cast(null as date) - date '2003-12-01') day");
 
+        // combine '<datetime> + <interval>' with '<datetime> - <datetime>'
+        checkScalar(
+            "timestamp '1969-04-29 0:0:0' +" +
+                " (timestamp '2008-07-15 15:28:00' - " +
+                "  timestamp '1969-04-29 0:0:0') day to second / 2",
+            "1988-12-06 07:44:00.0",
+            "TIMESTAMP NOT NULL");
+
+        checkScalar(
+            "date '1969-04-29' +" +
+                " (date '2008-07-15' - " +
+                "  date '1969-04-29') day / 2",
+            "1988-12-06",
+            "DATE NOT NULL");
+
+        checkScalar(
+            "time '01:23:44' +" +
+                " (time '15:28:00' - " +
+                "  time '01:23:44') hour to second / 2",
+            "08:25:52",
+            "TIME NOT NULL");
+
+        if (Bug.Dt1684Fixed)
+        checkBoolean(
+            "(date '1969-04-29' +" +
+                " (CURRENT_DATE - " +
+                "  date '1969-04-29') day / 2) is not null",
+            Boolean.TRUE);
+
         // TODO: Add tests for year month intervals (currently not supported)
     }
 
@@ -2420,8 +2451,13 @@ public abstract class SqlOperatorTests
 
     public void testNotSimilarToOperator()
     {
-        setFor(SqlStdOperatorTable.notSimilarOperator, VM_FENNEL); // TODO: implement in fennel
+        setFor(SqlStdOperatorTable.notSimilarOperator, VM_EXPAND);
         checkBoolean("'ab' not similar to 'a_'", Boolean.FALSE);
+        checkBoolean("'aabc' not similar to 'ab*c+d'", Boolean.TRUE);
+        checkBoolean("'ab' not similar to 'a' || '_'", Boolean.FALSE);
+        checkBoolean("'ab' not similar to 'ba_'", Boolean.TRUE);
+        checkBoolean("cast(null as varchar(2)) not similar to 'a_'", null);
+        checkBoolean("cast(null as varchar(3)) not similar to cast(null as char(2))", null);
     }
 
     public void testSimilarToOperator()
@@ -2786,7 +2822,7 @@ public abstract class SqlOperatorTests
 
     public void testNullifFunc()
     {
-        setFor(SqlStdOperatorTable.nullIfFunc, VM_FENNEL, VM_JAVA);
+        setFor(SqlStdOperatorTable.nullIfFunc, VM_EXPAND);
         checkNull("nullif(1,1)");
         checkScalarExact(
             "nullif(1.5, 13.56)",
@@ -2831,13 +2867,10 @@ public abstract class SqlOperatorTests
             "(?s)Cannot apply '=' to arguments of type '<INTEGER> = <DATE>'\\..*",
             false);
 
-        // TODO: fix frg 65 (dtbug 324).
-        if (Bug.Frg65Fixed) {
-            checkFails(
-                "1 + ^nullif(1, 2, 3)^ + 2",
-                "invalid number of arguments to NULLIF",
-                false);
-        }
+        checkFails(
+            "1 + ^nullif(1, 2, 3)^ + 2",
+            "Invalid number of arguments to function 'NULLIF'\\. Was expecting 2 arguments",
+            false);
 
         // Intervals
         checkScalar(
@@ -2854,7 +2887,7 @@ public abstract class SqlOperatorTests
 
     public void testCoalesceFunc()
     {
-        setFor(SqlStdOperatorTable.coalesceFunc, VM_FENNEL, VM_JAVA);
+        setFor(SqlStdOperatorTable.coalesceFunc, VM_EXPAND);
         checkString("coalesce('a','b')", "a", "CHAR(1) NOT NULL");
         checkScalarExact("coalesce(null,null,3)", "3");
         checkFails(
@@ -2980,6 +3013,9 @@ public abstract class SqlOperatorTests
     {
         setFor(SqlStdOperatorTable.currentDateFunc, VM_FENNEL);
         checkScalar("CURRENT_DATE", datePattern, "DATE NOT NULL");
+        checkScalar(
+            "(CURRENT_DATE - CURRENT_DATE) DAY", "+0", "INTERVAL DAY NOT NULL");
+        checkBoolean("CURRENT_DATE IS NULL", Boolean.FALSE);
         checkFails(
             "^CURRENT_DATE()^",
             "No match found for function signature CURRENT_DATE\\(\\)",
