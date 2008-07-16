@@ -136,7 +136,7 @@ Grant role R3_L1, R4_L1, R1_L3 to U5, U6, U7;
 select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 from grant_view
 where grantee = 'U5' or grantee = 'U6' or grantee = 'U7'
-order by grantee;
+order by grantee, granted_element;
 
 
 -- Alter user to make Role R1_L1 the default

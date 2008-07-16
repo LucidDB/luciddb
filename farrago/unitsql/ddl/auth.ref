@@ -193,19 +193,19 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 > select  granted_element,  grantee,  grantor, "action", "withGrantOption"
 > from grant_view
 > where grantee = 'U5' or grantee = 'U6' or grantee = 'U7'
-> order by grantee;
+> order by grantee, granted_element;
 +------------------+----------+----------+---------------+------------------+
 | GRANTED_ELEMENT  | GRANTEE  | GRANTOR  |    action     | withGrantOption  |
 +------------------+----------+----------+---------------+------------------+
+| R1_L3            | U5       | SECMAN   | INHERIT_ROLE  | false            |
 | R3_L1            | U5       | SECMAN   | INHERIT_ROLE  | false            |
 | R4_L1            | U5       | SECMAN   | INHERIT_ROLE  | false            |
-| R1_L3            | U5       | SECMAN   | INHERIT_ROLE  | false            |
 | R1_L3            | U6       | SECMAN   | INHERIT_ROLE  | false            |
-| R4_L1            | U6       | SECMAN   | INHERIT_ROLE  | false            |
 | R3_L1            | U6       | SECMAN   | INHERIT_ROLE  | false            |
+| R4_L1            | U6       | SECMAN   | INHERIT_ROLE  | false            |
+| R1_L3            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 | R3_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 | R4_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
-| R1_L3            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
 > 
 > 
