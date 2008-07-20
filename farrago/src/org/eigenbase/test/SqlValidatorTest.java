@@ -3898,7 +3898,32 @@ public class SqlValidatorTest
         // <query specification> or <select statement: single row>,
         // or the <order by clause> of a simple table query.
         // See 4.15.3 for detail
-        // todo: test case for rule 1
+        checkWin(
+            "select *\n" +
+                " from emp\n" +
+                " where ^sum(sal) over (partition by deptno\n" +
+                "    order by empno\n" +
+                "    rows 3 preceding)^ > 10",
+            "Windowed aggregate expression is illegal in WHERE clause");
+
+        checkWin(
+            "select *\n" +
+                " from emp\n" +
+                " group by ename, ^sum(sal) over (partition by deptno\n" +
+                "    order by empno\n" +
+                "    rows 3 preceding)^ + 10\n" +
+                "order by deptno",
+            "Windowed aggregate expression is illegal in GROUP BY clause");
+
+        checkWin(
+            "select *\n" +
+                " from emp\n" +
+                " join dept on emp.deptno = dept.deptno\n" +
+                " and ^sum(sal) over (partition by deptno\n" +
+                "    order by empno\n" +
+                "    rows 3 preceding)^ = dept.deptno + 40\n" +
+                "order by deptno",
+            "Windowed aggregate expression is illegal in ON clause");
 
         // rule 3, a)
         checkWin(

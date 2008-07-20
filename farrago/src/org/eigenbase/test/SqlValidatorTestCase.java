@@ -137,7 +137,8 @@ public class SqlValidatorTestCase
     }
 
     /**
-     * Checks that a SQL query gives a particular error.
+     * Checks that a SQL query gives a particular error, or succeeds if
+     * {@code expected} is null.
      */
     public final void checkFails(
         String sql,

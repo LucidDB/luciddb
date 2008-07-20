@@ -158,7 +158,8 @@ public class SqlValidatorImpl
      */
     private final Map<SqlNode, RelDataType> nodeToTypeMap =
         new IdentityHashMap<SqlNode, RelDataType>();
-    private final AggFinder aggFinder = new AggFinder();
+    private final AggFinder aggFinder = new AggFinder(false);
+    private final AggFinder aggOrOverFinder = new AggFinder(true);
     private final SqlConformance conformance;
     private final Map<SqlNode, SqlNode> originalExprs =
         new HashMap<SqlNode, SqlNode>();
@@ -2475,6 +2476,7 @@ public class SqlValidatorImpl
             break;
         case On:
             Util.permAssert(condition != null, "condition != null");
+            validateNoAggs(condition, "ON");
             condition.validate(this, joinScope);
             break;
         case Using:
@@ -2529,6 +2531,32 @@ public class SqlValidatorImpl
             break;
         default:
             throw Util.unexpected(joinType);
+        }
+    }
+
+    /**
+     * Throws an error if there is an aggregate or windowed aggregate in
+     * the given clause.
+     *
+     * @param condition Parse tree
+     * @param clause Name of clause: "WHERE", "GROUP BY", "ON"
+     */
+    private void validateNoAggs(SqlNode condition, String clause)
+    {
+        final SqlNode agg = aggOrOverFinder.findAgg(condition);
+        if (agg != null) {
+            if (SqlUtil.isCallTo(agg, SqlStdOperatorTable.overOperator)) {
+                throw newValidationError(
+                    agg,
+                    EigenbaseResource.instance()
+                        .WindowedAggregateIllegalInClause.ex(clause));
+
+            } else {
+                throw newValidationError(
+                    agg,
+                    EigenbaseResource.instance().AggregateIllegalInClause.ex(
+                        clause));
+            }
         }
     }
 
@@ -2730,6 +2758,7 @@ public class SqlValidatorImpl
         if (group == null) {
             return;
         }
+        validateNoAggs(group, "GROUP BY");
         final SqlValidatorScope groupScope = getGroupScope(select);
         inferUnknownTypes(unknownType, groupScope, group);
         group.validate(this, groupScope);
@@ -2743,12 +2772,7 @@ public class SqlValidatorImpl
             return;
         }
         final SqlValidatorScope whereScope = getWhereScope(select);
-        final SqlNode agg = aggFinder.findAgg(where);
-        if (agg != null) {
-            throw newValidationError(
-                agg,
-                EigenbaseResource.instance().AggregateIllegalInWhere.ex());
-        }
+        validateNoAggs(where, "WHERE");
         inferUnknownTypes(
             booleanType,
             whereScope,
