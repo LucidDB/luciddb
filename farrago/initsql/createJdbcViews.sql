@@ -218,8 +218,7 @@ create or replace view columns_view_internal as
         convert_cwm_nullable_to_string(c."isNullable") as is_nullable,
         c."description" as remarks,
         c."mofId",
-        c."lineageId",
-        c."Histogram"
+        c."lineageId"
     from 
         tables_view_internal t 
     inner join 
