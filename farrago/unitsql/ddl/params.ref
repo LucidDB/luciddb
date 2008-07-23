@@ -75,6 +75,10 @@ Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesInit
 > alter system set "cacheReservePercentage" = 100;
 Error: Invalid parameter setting.  Setting must be between 1 and 99. (state=,code=0)
 > 
+> -- should fail
+> alter system set "deviceSchedulerType" = 'foo';
+Error: Type mismatch in value ''foo'' for system parameter "deviceSchedulerType" (state=,code=0)
+> 
 > -- Test session parameters
 > 
 > -- should work

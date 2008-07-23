@@ -250,16 +250,19 @@ public class LcsIndexSemiJoinRule
         // Add the new semi join filtering index to the access path.
         int rowScanRelPosInCall = 1;
 
+        Double rowScanInputSelectivity =
+            RelMdUtil.computeSemiJoinSelectivity(semiJoin);
+        
         RelNode [] inputRels =
             addNewIndexAccessRel(
                 call,
                 rowScanRelPosInCall,
                 sort,
-                index);
+                index,
+                rowScanInputSelectivity);
 
-        Double rowScanInputSelectivity =
-            RelMdUtil.computeSemiJoinSelectivity(semiJoin);
-
+        // Create a new row scan with the new inputs and the selectivity of
+        // the new semijoin index factored into the existing selectivity.
         LcsRowScanRel newRowScan =
             new LcsRowScanRel(
                 origRowScan.getCluster(),
@@ -271,7 +274,7 @@ public class LcsIndexSemiJoinRule
                 false,
                 origRowScan.hasResidualFilter,
                 origRowScan.residualColumns,
-                rowScanInputSelectivity);
+                rowScanInputSelectivity * origRowScan.getInputSelectivity());
 
         call.transformTo(newRowScan);
     }
@@ -323,6 +326,7 @@ public class LcsIndexSemiJoinRule
      * LcsRowScanRel in the sequence of rels matched by this rule
      * @param sort input to the index search rel to be created
      * @param index the index to use in the index search rel
+     * @param indexSelectivity selectivity of the index being added
      *
      * @return the new input rels, after adding the new index search rel, to the
      * row scan rel.
@@ -331,7 +335,8 @@ public class LcsIndexSemiJoinRule
         RelOptRuleCall call,
         int rowScanRelPosInCall,
         FennelSortRel sort,
-        FemLocalIndex index)
+        FemLocalIndex index,
+        Double indexSelectivity)
     {
         assert (call.rels[rowScanRelPosInCall] instanceof LcsRowScanRel);
         LcsRowScanRel origRowScanRel =
@@ -362,7 +367,8 @@ public class LcsIndexSemiJoinRule
                 sort,
                 inputKeyProj,
                 inputDirectiveProj,
-                requireMerge);
+                requireMerge,
+                indexSelectivity);
 
         // Number of existing residual filters
         int origResidualColumnCount = 0;

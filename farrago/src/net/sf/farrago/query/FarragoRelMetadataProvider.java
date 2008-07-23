@@ -104,7 +104,13 @@ public class FarragoRelMetadataProvider
         if (table == null) {
             return null;
         }
-
+        return getStatistics(table, repos);
+    }
+    
+    private static RelStatSource getStatistics(
+        RelOptTable table,
+        FarragoRepos repos)
+    {
         String [] qualifiedName = table.getQualifiedName();
         assert (qualifiedName.length == 3) : "qualified name did not have three parts";
         String catalogName = qualifiedName[0];
@@ -146,6 +152,25 @@ public class FarragoRelMetadataProvider
     {
         Double result = null;
         RelStatSource source = getStatistics(rel, repos);
+        if (source != null) {
+            result = source.getRowCount();
+        }
+        return result;
+    }
+    
+    /**
+     * Retrieves the row count of a relational table using statistics stored
+     * in the catalog
+     * 
+     * @param table the relational table
+     * @param repos repository
+     * 
+     * @return the row count, or null if stats aren't available
+     */
+    public static Double getRowCountStat(RelOptTable table, FarragoRepos repos)
+    {
+        Double result = null;
+        RelStatSource source = getStatistics(table, repos);
         if (source != null) {
             result = source.getRowCount();
         }

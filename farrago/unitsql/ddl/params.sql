@@ -63,6 +63,9 @@ alter system set "cacheReservePercentage" = 5;
 -- should fail
 alter system set "cacheReservePercentage" = 100;
 
+-- should fail
+alter system set "deviceSchedulerType" = 'foo';
+
 -- Test session parameters
 
 -- should work

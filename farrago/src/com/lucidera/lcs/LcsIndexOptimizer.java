@@ -234,31 +234,6 @@ public class LcsIndexOptimizer
     }
 
     /**
-     * Find the index position for an indexed column col
-     *
-     * @param index index that could contain col in its key
-     * @param col the column for which to look up index position
-     *
-     * @return index key position, or -1 if the column is not part of the index
-     * key
-     */
-    private static int getIndexColumnPos(
-        FemLocalIndex index,
-        FemAbstractColumn col)
-    {
-        List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
-
-        int i;
-        for (i = 0; i < indexedFeatures.size(); i++) {
-            if (indexedFeatures.get(i).getFeature().equals(col)) {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    /**
      * From a list of filters on distinct columns, find the one on a given
      * column.
      *
@@ -1536,6 +1511,8 @@ public class LcsIndexOptimizer
      * @param startRidParamId
      * @param rowLimitParamId
      * @param requireMerge
+     * @param indexSelectivity the selectivity of the index scan; null if
+     * unknown
      *
      * @return the new index access rel created
      */
@@ -1549,7 +1526,8 @@ public class LcsIndexOptimizer
         Integer [] inputDirectiveProj,
         FennelRelParamId startRidParamId,
         FennelRelParamId rowLimitParamId,
-        boolean requireMerge)
+        boolean requireMerge,
+        Double indexSelectivity)
     {
         FennelRelParamId startRidParamIdForSearch =
             requireMerge ? null : startRidParamId;
@@ -1571,7 +1549,8 @@ public class LcsIndexOptimizer
                 null,
                 inputDirectiveProj,
                 startRidParamIdForSearch,
-                rowLimitParamIdForSearch);
+                rowLimitParamIdForSearch,
+                indexSelectivity);
 
         FennelSingleRel indexRel = indexSearch;
 
@@ -1612,6 +1591,8 @@ public class LcsIndexOptimizer
      * known to search to just one bitmap, then no merge is required. All other
      * cases, for example, when the input comes from a sort, a merge is
      * required.
+     * @param indexSelectivity the selectivity of the index being added; null
+     * if unknown
      *
      * @return the new index intersect rel created
      */
@@ -1625,7 +1606,8 @@ public class LcsIndexOptimizer
         Integer [] inputDirectiveProj,
         FennelRelParamId startRidParamId,
         FennelRelParamId rowLimitParamId,
-        boolean requireMerge)
+        boolean requireMerge,
+        Double indexSelectivity)
     {
         RelNode rowScanRel = call.rels[rowScanRelPosInCall];
         assert (rowScanRel instanceof LcsRowScanRel);
@@ -1739,10 +1721,15 @@ public class LcsIndexOptimizer
                 inputDirectiveProj,
                 startRidParamId,
                 rowLimitParamId,
-                requireMerge);
+                requireMerge,
+                indexSelectivity);
 
+        // Sort the index inputs based on their rowcounts, which effectively
+        // orders them based on their selectivities since they're all being
+        // applied on the same table.
         inputRelsToIntersect[numInputRelsToIntersect - 1] = newIndexAccessRel;
-
+        Arrays.sort(inputRelsToIntersect, new RowCountComparator());
+        
         LcsIndexIntersectRel intersectRel =
             new LcsIndexIntersectRel(
                 cluster,
@@ -1773,6 +1760,8 @@ public class LcsIndexOptimizer
      * known to search to just one bitmap, then no merge is required. All other
      * cases, for example, when the input comes from a sort, a merge is
      * required.
+     * @param indexSelectivity selectivity of the new index being added; null
+     * if unknown
      *
      * @return the new index access rel created
      */
@@ -1784,7 +1773,8 @@ public class LcsIndexOptimizer
         RelNode keyInput,
         Integer [] inputKeyProj,
         Integer [] inputDirectiveProj,
-        boolean requireMerge)
+        boolean requireMerge,
+        Double indexSelectivity)
     {
         RelNode rowScanRel = call.rels[rowScanRelPosInCall];
         assert (rowScanRel instanceof LcsRowScanRel);
@@ -1842,7 +1832,8 @@ public class LcsIndexOptimizer
                     inputDirectiveProj,
                     startRidParamId,
                     rowLimitParamId,
-                    requireMerge);
+                    requireMerge,
+                    indexSelectivity);
         } else {
             newIndexAccessRel =
                 newIndexRel(
@@ -1855,7 +1846,8 @@ public class LcsIndexOptimizer
                     inputDirectiveProj,
                     startRidParamId,
                     rowLimitParamId,
-                    requireMerge);
+                    requireMerge,
+                    indexSelectivity);
         }
 
         return newIndexAccessRel;
@@ -2358,6 +2350,30 @@ public class LcsIndexOptimizer
         public boolean equals(Object obj)
         {
             return (obj instanceof MappedFilterSelectivityComparator);
+        }
+    }
+    
+    /**
+     * RowCountComparator is used to sort RelNodes based on their rowcounts,
+     * provided the counts are known.  Unknown rowcounts are always sorted 
+     * last.
+     */
+    private static class RowCountComparator
+        implements Comparator<RelNode>
+    {
+        public int compare(RelNode r1, RelNode r2)
+        {
+            Double rows1 = RelMetadataQuery.getRowCount(r1);
+            Double rows2 = RelMetadataQuery.getRowCount(r2);
+            if (rows1 != null && rows2 != null) {
+                return rows1.compareTo(rows2);
+            } else if (rows1 != null) {
+                return -1;
+            } else if (rows2 != null) {
+                return 1;
+            } else {
+                return 0;
+            }
         }
     }
 }

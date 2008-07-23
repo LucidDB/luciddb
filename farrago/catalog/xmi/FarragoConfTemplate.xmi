@@ -37,6 +37,7 @@
           jniHandleTraceFile='@jniHandleTraceFile@'
           expectedConcurrentStatements='4'
           cacheReservePercentage='5'
+          deviceSchedulerType='default'
           />
       </FEMConfig:FarragoConfig.FennelConfig>
     </FEMConfig:FarragoConfig>

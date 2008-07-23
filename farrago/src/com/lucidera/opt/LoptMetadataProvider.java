@@ -550,6 +550,24 @@ public class LoptMetadataProvider
         // Include selectivity of inputs into the rowscan
         return result * rel.getInputSelectivity();
     }
+    
+    public Double getRowCount(LcsIndexSearchRel rel)
+    {
+        // This row count only includes the effects of applying this
+        // index search.  Therefore, to compute that, we need to first
+        // retrieve the unfiltered rowcount of the row scan corresponding
+        // to this index search, and then apply the selectivity of just this
+        // index search.
+        Double result =
+            FarragoRelMetadataProvider.getRowCountStat(
+                rel.getLcsTable(),
+                repos);
+        Double selec = rel.getIndexSelectivity();
+        if (result == null || selec == null) {
+            return null;
+        }
+        return result * selec;
+    }
 
     public Double getRowCount(JoinRel rel)
     {
