@@ -93,7 +93,7 @@ public class FarragoRuntimeContext
      */
     private final Map<Integer, FennelJavaHandle> streamIdToHandleMap =
         new HashMap<Integer, FennelJavaHandle>();
-    private final Object [] dynamicParamValues;
+    protected final Object [] dynamicParamValues;
 
     protected FennelStreamGraph streamGraph;
 
@@ -111,7 +111,7 @@ public class FarragoRuntimeContext
     private boolean isCanceled;
     protected boolean isClosed;
     private ClassLoader statementClassLoader;
-    private Map<String, RelDataType> resultSetTypeMap;
+    protected Map<String, RelDataType> resultSetTypeMap;
     protected long stmtId;
 
     private NativeRuntimeContext nativeContext;
@@ -194,6 +194,7 @@ public class FarragoRuntimeContext
     // override FarragoCompoundAllocation
     public synchronized void closeAllocation()
     {
+        tracer.info("closing allocation " + isClosed);
         if (isClosed) {
             return;
         }
@@ -1146,6 +1147,7 @@ public class FarragoRuntimeContext
         {
             // traverse in reverse order
             ListIterator iter = allocations.listIterator(allocations.size());
+            tracer.info("closing stream owner with " + allocations);
             while (iter.hasPrevious()) {
                 FennelStreamGraph streamGraph =
                     (FennelStreamGraph) iter.previous();

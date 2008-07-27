@@ -21,6 +21,8 @@
 */
 package net.sf.farrago.session;
 
+import net.sf.farrago.catalog.FarragoRepos;
+
 /**
  * This class provides internal support for the implementation of {@link
  * net.sf.farrago.runtime.FarragoUdrRuntime}. One instance is allocated to
@@ -37,6 +39,7 @@ public class FarragoSessionUdrContext
     private final String serverMofId;
 
     private FarragoSession session;
+    private FarragoRepos repos;
     private Object obj;
 
     //~ Constructors -----------------------------------------------------------
@@ -49,6 +52,7 @@ public class FarragoSessionUdrContext
         this.serverMofId = serverMofId;
         this.obj = null;
         this.session = null;
+        this.repos = null;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -68,9 +72,20 @@ public class FarragoSessionUdrContext
         return session;
     }
 
+    public FarragoRepos getRepos()
+    {
+        if (repos != null) return repos;
+        return session.getRepos();
+    }
+
     public void setSession(FarragoSession session)
     {
         this.session = session;
+    }
+
+    public void setRepos(FarragoRepos repos)
+    {
+        this.repos = repos;
     }
 
     public Object getObject()

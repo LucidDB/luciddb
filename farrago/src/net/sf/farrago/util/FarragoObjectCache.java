@@ -61,7 +61,7 @@ public class FarragoObjectCache
      * on either map or entry but not both at once.  See code comments in
      * tryPin for more info on this.
      */
-    private MultiMap<Object, FarragoCacheEntry> mapKeyToEntry;
+    protected MultiMap<Object, FarragoCacheEntry> mapKeyToEntry;
     private long bytesMax;
 
     /**
@@ -152,7 +152,7 @@ public class FarragoObjectCache
             }
         }
     }
-    
+
     private Entry tryPin(
         Object key,
         CachedObjectFactory factory,
@@ -165,7 +165,7 @@ public class FarragoObjectCache
         // since construction work below may be time-consuming.
         FarragoCacheEntry entry =
             findOrCreateEntry(currentThread, key, factory, exclusive);
-        
+
         boolean unpinEntry = false;
         try {
             synchronized (entry) {
@@ -476,6 +476,32 @@ public class FarragoObjectCache
 
         // in case too much was pinned
         adjustMemoryUsage(0);
+    }
+
+    public void tryUnpin(String key)
+    {
+        List<FarragoCacheEntry> entryList = mapKeyToEntry.getMulti(key);
+        assert(entryList != null);
+        tracer.info("unpinning cache entries " + entryList);
+
+        Iterator<FarragoCacheEntry> it = entryList.iterator();
+
+        while (it.hasNext()) {
+
+            FarragoCacheEntry entry = it.next();
+            tracer.info("unpinning cache entry " + entry + " with pin count " +
+                        entry.pinCount);
+
+            if (1 == entry.pinCount) {
+
+                if (entry.getValue() instanceof FarragoAllocation)
+                    ((FarragoAllocation)entry.getValue()).closeAllocation();
+
+            } else {
+
+                entry.pinCount--;
+            }
+        }
     }
 
     /**
