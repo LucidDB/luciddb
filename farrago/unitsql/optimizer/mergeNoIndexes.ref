@@ -49,13 +49,13 @@
 > -- check rowcounts before doing any merges
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 4                  | 0                  |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 0                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
 | TEMPS        |                    |                    |
@@ -93,13 +93,13 @@
 > -- verify rowcounts after merge -- should be 2 new rows after the merge
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 4                  |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 0                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
 | TEMPS        |                    |                    |
@@ -157,13 +157,13 @@
 > 
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 4                  | 6                  |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
 | TEMPS        |                    |                    |
@@ -199,13 +199,13 @@
 +--------+---------+---------+---------+---------------------------------+------+-----------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 10                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
 | TEMPS        |                    |                    |
@@ -240,13 +240,13 @@
 +--------+---------+---------+---------+---------------------------------+------+-----------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 10                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
 | TEMPS        |                    |                    |
@@ -282,13 +282,13 @@
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 16                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
 | TEMPS        |                    |                    |
@@ -314,13 +314,13 @@
 +--------+--------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 4                  | 18                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
 | TEMPS        |                    |                    |
@@ -354,13 +354,13 @@
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 18                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 6                  | 0                  |
 | TEMPS        |                    |                    |
@@ -390,13 +390,13 @@
 +----------+------------+-----------+-----------+--------------------------------------+--------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 18                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 0                  |
 | TEMPS        |                    |                    |
@@ -430,13 +430,13 @@
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 7                  | 19                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 0                  |
 | TEMPS        |                    |                    |
@@ -475,13 +475,13 @@
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 9                  | 21                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 0                  |
 | TEMPS        |                    |                    |
@@ -500,13 +500,13 @@
 > insert into tempemps values(160, 'Pebbles', 60, 'F', 'Foster City', 2);
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 9                  | 21                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
 | TEMPS        |                    |                    |
@@ -550,13 +550,13 @@
 +--------+---------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 9                  | 30                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
 | TEMPS        |                    |                    |
@@ -591,13 +591,13 @@
 +--------+----------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 10                 | 30                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
 | TEMPS        |                    |                    |
@@ -625,13 +625,13 @@
 +--------+----------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 34                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
 | TEMPS        |                    |                    |
@@ -660,13 +660,13 @@
 +--------+----------+---------+---------+---------------------------------+------+------------+
 > select table_name, current_row_count, deleted_row_count
 >     from sys_boot.mgmt.dba_stored_tables_internal1
->     order by 1;
+>     order by table_name, schema_name;
 +--------------+--------------------+--------------------+
 |  TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +--------------+--------------------+--------------------+
 | DEPTS        |                    |                    |
-| EMPS         |                    |                    |
 | EMPS         | 6                  | 40                 |
+| EMPS         |                    |                    |
 | SALARYTABLE  | 6                  | 0                  |
 | TEMPEMPS     | 7                  | 1                  |
 | TEMPS        |                    |                    |
