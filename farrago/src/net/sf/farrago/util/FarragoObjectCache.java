@@ -478,28 +478,41 @@ public class FarragoObjectCache
         adjustMemoryUsage(0);
     }
 
+    /**
+     * Just like unpin except that it takes only the key to the cache entry
+     * and doesn't call adjustMemoryUsage.  It is used just like unpin but
+     * it is a bit more forgiving and calls closeAllocation on the cache
+     * entry if it is truely unpinned.  It is currently used only by a specific
+     * extention to Farrago and not Farrago itself.
+     *
+     * @param key the key to the pinned Entry
+     */
     public void tryUnpin(String key)
     {
-        List<FarragoCacheEntry> entryList = mapKeyToEntry.getMulti(key);
-        assert(entryList != null);
-        tracer.info("unpinning cache entries " + entryList);
+        synchronized (mapKeyToEntry) {
 
-        Iterator<FarragoCacheEntry> it = entryList.iterator();
+            List<FarragoCacheEntry> entryList = mapKeyToEntry.getMulti(key);
+            assert(entryList != null);
+            tracer.fine("unpinning cache entries " + entryList);
 
-        while (it.hasNext()) {
+            Iterator<FarragoCacheEntry> it = entryList.iterator();
 
-            FarragoCacheEntry entry = it.next();
-            tracer.info("unpinning cache entry " + entry + " with pin count " +
-                        entry.pinCount);
+            while (it.hasNext()) {
 
-            if (1 == entry.pinCount) {
+                FarragoCacheEntry entry = it.next();
+                tracer.finest("unpinning cache entry " + entry +
+                              " with pin count " + entry.pinCount);
 
-                if (entry.getValue() instanceof FarragoAllocation)
-                    ((FarragoAllocation)entry.getValue()).closeAllocation();
+                if (1 >= entry.pinCount) {
 
-            } else {
+                    if (entry.getValue() instanceof FarragoAllocation)
+                        ((FarragoAllocation)entry.getValue()).
+                            closeAllocation();
 
-                entry.pinCount--;
+                } else {
+
+                    entry.pinCount--;
+                }
             }
         }
     }

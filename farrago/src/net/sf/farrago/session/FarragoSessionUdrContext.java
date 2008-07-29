@@ -39,7 +39,10 @@ public class FarragoSessionUdrContext
     private final String serverMofId;
 
     private FarragoSession session;
-    private FarragoRepos repos;
+    private FarragoRepos repos; // allows for overridding of the repository
+    // that UDX's use.  Useful in a distributed extension of Farrago where
+    // UDX might run in a variety of environments (especially for environments
+    // without a FarragoSession)
     private Object obj;
 
     //~ Constructors -----------------------------------------------------------

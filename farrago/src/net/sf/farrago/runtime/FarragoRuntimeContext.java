@@ -194,7 +194,7 @@ public class FarragoRuntimeContext
     // override FarragoCompoundAllocation
     public synchronized void closeAllocation()
     {
-        tracer.info("closing allocation " + isClosed);
+        tracer.fine("closing allocation " + isClosed);
         if (isClosed) {
             return;
         }
