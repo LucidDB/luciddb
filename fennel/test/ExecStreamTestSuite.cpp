@@ -176,7 +176,7 @@ void ExecStreamTestSuite::testSegBufferExecStream()
     
     SegBufferExecStreamParams bufParams;
     bufParams.scratchAccessor.pSegment = pRandomSegment;
-    bufParams.scratchAccessor.pCacheAccessor = pCache;
+    bufParams.scratchAccessor.pCacheAccessor = pCacheAccessor;
     bufParams.multipass = false;
 
     ExecStreamEmbryo bufStreamEmbryo;
@@ -680,7 +680,7 @@ void ExecStreamTestSuite::testMergeImplicitPullInputs()
         if (i != 0) {
             SegBufferExecStreamParams bufParams;
             bufParams.scratchAccessor.pSegment = pRandomSegment;
-            bufParams.scratchAccessor.pCacheAccessor = pCache;
+            bufParams.scratchAccessor.pCacheAccessor = pCacheAccessor;
             bufParams.multipass = false;
 
             ExecStreamEmbryo bufStreamEmbryo;
@@ -750,7 +750,7 @@ void ExecStreamTestSuite::testBTreeInsertExecStream(
     descriptor.tupleDescriptor.push_back(attrDesc);
     descriptor.keyProjection.push_back(0);
     descriptor.segmentAccessor.pSegment = pRandomSegment;
-    descriptor.segmentAccessor.pCacheAccessor = pCache;
+    descriptor.segmentAccessor.pCacheAccessor = pCacheAccessor;
     BTreeBuilder builder(descriptor, pRandomSegment);
     if (!useDynamicBTree) {
         builder.createEmptyRoot();
@@ -763,11 +763,11 @@ void ExecStreamTestSuite::testBTreeInsertExecStream(
 
     bTreeInsertParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 10);
-    bTreeInsertParams.pCacheAccessor = pCache;
+    bTreeInsertParams.pCacheAccessor = pCacheAccessor;
     bTreeInsertParams.distinctness = DUP_FAIL;
     bTreeInsertParams.monotonic = true;
     bTreeInsertParams.pSegment = pRandomSegment;
-    bTreeInsertParams.pCacheAccessor = pCache;
+    bTreeInsertParams.pCacheAccessor = pCacheAccessor;
     bTreeInsertParams.rootPageId = descriptor.rootPageId;
     bTreeInsertParams.segmentId = descriptor.segmentId;
     bTreeInsertParams.pageOwnerId = descriptor.pageOwnerId;

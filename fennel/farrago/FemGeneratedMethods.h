@@ -30,6 +30,7 @@ jmethodID ProxyCmdGetTxnCsn::meth_getResultHandle = 0;
 jmethodID ProxyCmdOpenDatabase::meth_isCreateDatabase = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getParams = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getResultHandle = 0;
+jmethodID ProxyCmdPrepareExecutionStreamGraph::meth_getDegreeOfParallelism = 0;
 jmethodID ProxyCmdPrepareExecutionStreamGraph::meth_getStreamDefs = 0;
 jmethodID ProxyCmdSavepoint::meth_getResultHandle = 0;
 jmethodID ProxyCmdSetParam::meth_getParam = 0;
@@ -303,6 +304,7 @@ ProxyCmdOpenDatabase::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResult
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdPrepareExecutionStreamGraph");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdPrepareExecutionStreamGraph>));
+ProxyCmdPrepareExecutionStreamGraph::meth_getDegreeOfParallelism = pEnv->GetMethodID(jClass,"getDegreeOfParallelism","()I");
 ProxyCmdPrepareExecutionStreamGraph::meth_getStreamDefs = pEnv->GetMethodID(jClass,"getStreamDefs","()Ljava/util/Collection;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdRollback");
@@ -903,6 +905,11 @@ p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getResultHandle);
 if (!p->jObject) p.reset();
 return p;
+}
+
+int32_t ProxyCmdPrepareExecutionStreamGraph::getDegreeOfParallelism()
+{
+return pEnv->CallIntMethod(jObject,meth_getDegreeOfParallelism);
 }
 
 SharedProxyExecutionStreamDef ProxyCmdPrepareExecutionStreamGraph::getStreamDefs()

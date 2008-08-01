@@ -1,10 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2008-2008 The Eigenbase Project
+// Copyright (C) 2008-2008 Disruptive Tech
+// Copyright (C) 2008-2008 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,26 +21,36 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/farrago/JavaThreadTracker.h"
+#include "fennel/farrago/JniUtil.h"
 #include "fennel/farrago/JavaExcn.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-JavaExcn::JavaExcn(jthrowable javaExceptionInit)
-    : FennelExcn("FennelJavaExcn")
+void JavaThreadTracker::onThreadStart()
 {
-    javaException = javaExceptionInit;
+    JniEnvAutoRef pEnv;
+    // We want to stay attached for the duration of the timer thread,
+    // so suppress detach here and do it explicitly in onThreadEnd
+    // instead.  See comments on suppressDetach about the need for a
+    // cleaner approach to attaching native-spawned threads.
+    pEnv.suppressDetach();
 }
 
-jthrowable JavaExcn::getJavaException() const
+void JavaThreadTracker::onThreadEnd()
 {
-    return javaException;
+    JniUtil::detachJavaEnv();
 }
 
-void JavaExcn::throwSelf()
+FennelExcn *JavaThreadTracker::cloneExcn(std::exception &ex)
 {
-    throw *this;
+    JavaExcn *pJavaExcn = dynamic_cast<JavaExcn *>(&ex);
+    if (!pJavaExcn) {
+        return ThreadTracker::cloneExcn(ex);
+    }
+    return new JavaExcn(pJavaExcn->getJavaException());
 }
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End JavaExcn.cpp
+// End JavaThreadTracker.cpp

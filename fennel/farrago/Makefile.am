@@ -14,6 +14,7 @@ Fem.cpp \
 JavaErrorTarget.cpp \
 JavaExcn.cpp \
 JavaSinkExecStream.cpp \
+JavaThreadTracker.cpp \
 JavaTraceTarget.cpp \
 JavaTransformExecStream.cpp \
 JniProxy.cpp \

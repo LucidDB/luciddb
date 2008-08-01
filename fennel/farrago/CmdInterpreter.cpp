@@ -42,6 +42,7 @@
 #include "fennel/tuple/StoredTypeDescriptorFactory.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/segment/SnapshotRandomAllocationSegment.h"
+#include "fennel/exec/ParallelExecStreamScheduler.h"
 #include "fennel/exec/DfsTreeExecStreamScheduler.h"
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/farrago/ExecStreamFactory.h"
@@ -668,10 +669,21 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
         cmd.getStreamGraphHandle());
     TxnHandle *pTxnHandle = pStreamGraphHandle->pTxnHandle;
     // NOTE:  sequence is important here
-    SharedExecStreamScheduler pScheduler(
-        new DfsTreeExecStreamScheduler(
-            pTxnHandle->pDb->getSharedTraceTarget(),
-            "xo.scheduler"));
+    SharedExecStreamScheduler pScheduler;
+    std::string schedulerName = "xo.scheduler";
+    if (cmd.getDegreeOfParallelism() == 1) {
+        pScheduler.reset(
+            new DfsTreeExecStreamScheduler(
+                pTxnHandle->pDb->getSharedTraceTarget(),
+                schedulerName));
+    } else {
+        pScheduler.reset(
+            new ParallelExecStreamScheduler(
+                pTxnHandle->pDb->getSharedTraceTarget(),
+                schedulerName,
+                JniUtil::getThreadTracker(),
+                cmd.getDegreeOfParallelism()));
+    }
     ExecStreamGraphEmbryo graphEmbryo(
         pStreamGraphHandle->pExecStreamGraph,
         pScheduler,

@@ -31,6 +31,7 @@
 #include "fennel/segment/Segment.h"
 #include "fennel/exec/ScratchBufferExecStream.h"
 #include "fennel/common/Backtrace.h"
+#include "fennel/txn/LogicalTxn.h"
 
 #include <boost/bind.hpp>
 #include <boost/graph/strong_components.hpp>
@@ -64,6 +65,7 @@ ExecStreamGraphImpl::ExecStreamGraphImpl()
     isPrepared = false;
     isOpen = false;
     doDataflowClose = false;
+    allowDummyTxnId = false;
 }
 
 void ExecStreamGraphImpl::setTxn(SharedLogicalTxn pTxnInit)
@@ -91,6 +93,20 @@ void ExecStreamGraphImpl::setResourceGovernor(
 SharedLogicalTxn ExecStreamGraphImpl::getTxn()
 {
     return pTxn;
+}
+
+TxnId ExecStreamGraphImpl::getTxnId()
+{
+    if (pTxn) {
+        return pTxn->getTxnId();
+    }
+    assert(allowDummyTxnId);
+    return FIRST_TXN_ID;
+}
+
+void ExecStreamGraphImpl::enableDummyTxnId(bool enabled)
+{
+    allowDummyTxnId = enabled;
 }
 
 SharedExecStreamGovernor ExecStreamGraphImpl::getResourceGovernor()

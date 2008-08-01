@@ -32,6 +32,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 class PooledThread;
+class ThreadTracker;
 
 /**
  * ThreadPoolBase defines the non-templated portion of ThreadPool.
@@ -51,6 +52,7 @@ protected:
     std::vector<PooledThread *> threads;
     State state;
     LocalCondition stoppingCondition;
+    ThreadTracker *pThreadTracker;
     
     explicit ThreadPoolBase();
     virtual ~ThreadPoolBase();
@@ -71,6 +73,13 @@ public:
      * simultaneously.
      */
     void stop();
+    
+    /**
+     * Sets a tracker to use for created threads.
+     *
+     * @param threadTracker tracker to use
+     */
+    void setThreadTracker(ThreadTracker &threadTracker);
 };
 
 /**
@@ -107,6 +116,7 @@ public:
      */
     explicit ThreadPool()
     {
+        pThreadTracker = NULL;
     }
 
     /**

@@ -28,6 +28,7 @@
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/DfsTreeExecStreamScheduler.h"
 #include "fennel/exec/SimpleExecStreamGovernor.h"
+#include "fennel/cache/Cache.h"
 
 #include <boost/test/test_tools.hpp>
 
@@ -35,7 +36,9 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 SharedExecStreamGraph ExecStreamTestBase::newStreamGraph()
 {
-    return ExecStreamGraph::newExecStreamGraph();
+    SharedExecStreamGraph pGraph = ExecStreamGraph::newExecStreamGraph();
+    pGraph->enableDummyTxnId(true);
+    return pGraph;
 }
 
 SharedExecStreamGraphEmbryo
@@ -82,6 +85,7 @@ void ExecStreamTestBase::testCaseTearDown()
     if (pScheduler) {
         pScheduler->stop();
     }
+    pCacheAccessor.reset();
     // destroy the graph
     tearDownExecStreamTest();
     // free the scheduler last, since an ExecStreamGraph holds a raw Scheduler

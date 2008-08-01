@@ -33,11 +33,11 @@ TimerThread::TimerThread(
 {
     bStop = false;
 }
-    
+
 void TimerThread::run()
 {
     // TODO jvs 13-Oct-2006:  resource acquisition as initialization
-    client.onTimerStart();
+    client.onThreadStart();
     try {
         for (;;) {
             uint millis = client.getTimerIntervalMillis();
@@ -58,10 +58,10 @@ void TimerThread::run()
             client.onTimerInterval();
         }
     } catch (...) {
-        client.onTimerStop();
+        client.onThreadEnd();
         throw;
     }
-    client.onTimerStop();
+    client.onThreadEnd();
 }
 
 void TimerThread::stop()
@@ -84,14 +84,8 @@ void TimerThread::signalImmediate()
     condition.notify_all();
 }
 
-void TimerThreadClient::onTimerStart()
+TimerThreadClient::~TimerThreadClient()
 {
-    // do nothing by default
-}
-
-void TimerThreadClient::onTimerStop()
-{
-    // do nothing by default
 }
 
 FENNEL_END_CPPFILE("$Id$");

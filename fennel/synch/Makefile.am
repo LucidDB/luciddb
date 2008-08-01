@@ -9,4 +9,5 @@ SynchObj.cpp \
 SXMutex.cpp \
 Thread.cpp \
 ThreadPool.cpp \
+ThreadTracker.cpp \
 TimerThread.cpp

@@ -21,6 +21,7 @@ MockConsumerExecStream.cpp \
 MockProducerExecStream.cpp \
 MockResourceExecStream.cpp \
 NestedLoopJoinExecStream.cpp \
+ParallelExecStreamScheduler.cpp \
 ScratchBufferExecStream.cpp \
 SegBufferExecStream.cpp \
 SimpleExecStreamGovernor.cpp \

@@ -124,12 +124,13 @@ void ExecStream::open(bool restart)
     }
     if (pGraph) {
         pTxn = pGraph->getTxn();
-        if (pTxn) {
+        TxnId txnId = pGraph->getTxnId();
+        if (txnId != NULL_TXN_ID) {
             if (pQuotaAccessor) {
-                pQuotaAccessor->setTxnId(pTxn->getTxnId());
+                pQuotaAccessor->setTxnId(txnId);
             }
             if (pScratchQuotaAccessor) {
-                pScratchQuotaAccessor->setTxnId(pTxn->getTxnId());
+                pScratchQuotaAccessor->setTxnId(txnId);
             }
         }
     }

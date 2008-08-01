@@ -26,16 +26,18 @@
 
 #include "fennel/synch/Thread.h"
 #include "fennel/synch/SynchMonitoredObject.h"
+#include "fennel/synch/ThreadTracker.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
  * TimerThreadClient receives callbacks from a TimerThread.
  */
-class TimerThreadClient 
+class TimerThreadClient : public ThreadTracker
 {
 public:
-    virtual ~TimerThreadClient() {};
+    virtual ~TimerThreadClient();
+    
     /**
      * Calculates the interval which should elapse before the next call to
      * onTimerInterval.  This can be different each time.  A return value of 0
@@ -44,19 +46,9 @@ public:
     virtual uint getTimerIntervalMillis() = 0;
 
     /**
-     * Receives notification that the TimerThread has started.
-     */
-    virtual void onTimerStart();
-
-    /**
      * Receives notification from TimerThread that interval has elapsed.
      */
     virtual void onTimerInterval() = 0;
-
-    /**
-     * Receives notification that the TimerThread is ending.
-     */
-    virtual void onTimerStop();
 };
 
 /**

@@ -1,10 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2008-2008 The Eigenbase Project
+// Copyright (C) 2008-2008 Disruptive Tech
+// Copyright (C) 2008-2008 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,30 +20,29 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "fennel/common/CommonPreamble.h"
-#include "fennel/common/FennelExcn.h"
+#ifndef Fennel_JavaThreadTracker_Included
+#define Fennel_JavaThreadTracker_Included
 
-FENNEL_BEGIN_CPPFILE("$Id$");
+#include "fennel/synch/ThreadTracker.h"
 
-FennelExcn::FennelExcn(std::string msgInit)
-    : msg(msgInit)
+FENNEL_BEGIN_NAMESPACE
+
+/**
+ * JavaThreadTracker implements ThreadTracker by attaching and detaching
+ * the Java environment.
+ *
+ * @author John Sichi
+ * @version $Id$
+ */
+class JavaThreadTracker : public ThreadTracker
 {
-}
+    virtual void onThreadStart();
+    virtual void onThreadEnd();
+    virtual FennelExcn *cloneExcn(std::exception &ex);
+};
 
-FennelExcn::~FennelExcn() throw()
-{
-}
+FENNEL_END_NAMESPACE
 
-const char *FennelExcn::what() const throw()
-{
-    return msg.c_str();
-}
+#endif
 
-void FennelExcn::throwSelf()
-{
-    throw *this;
-}
-
-FENNEL_END_CPPFILE("$Id$");
-
-// End FennelExcn.cpp
+// End JavaThreadTracker.h

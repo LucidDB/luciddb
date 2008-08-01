@@ -1,10 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2008-2008 The Eigenbase Project
+// Copyright (C) 2008-2008 Disruptive Tech
+// Copyright (C) 2008-2008 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,28 +22,29 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/FennelExcn.h"
+#include "fennel/synch/ThreadTracker.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-FennelExcn::FennelExcn(std::string msgInit)
-    : msg(msgInit)
+ThreadTracker::~ThreadTracker()
 {
 }
 
-FennelExcn::~FennelExcn() throw()
+void ThreadTracker::onThreadStart()
 {
+    // do nothing by default
 }
 
-const char *FennelExcn::what() const throw()
+void ThreadTracker::onThreadEnd()
 {
-    return msg.c_str();
+    // do nothing by default
 }
 
-void FennelExcn::throwSelf()
+FennelExcn *ThreadTracker::cloneExcn(std::exception &ex)
 {
-    throw *this;
+    return new FennelExcn(ex.what());
 }
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End FennelExcn.cpp
+// End ThreadTracker.cpp
