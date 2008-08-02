@@ -40,6 +40,7 @@
 #include "fennel/exec/SortedAggExecStream.h"
 #include "fennel/exec/ReshapeExecStream.h"
 #include "fennel/exec/SplitterExecStream.h"
+#include "fennel/exec/BarrierExecStream.h"
 #include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/NestedLoopJoinExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -913,6 +914,60 @@ void ExecStreamTestSuite::testNestedLoopJoinExecStream(
     CompositeExecStreamGenerator resultGenerator(columnGenerators);
     verifyOutput(
         *pOutputStream, std::min(nRowsLeft, nRowsRight), resultGenerator);
+}
+
+void ExecStreamTestSuite::testSplitterPlusBarrier()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    uint nRows = 10000;
+    mockParams.nRows = nRows;
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+    
+    SplitterExecStreamParams splitterParams;
+    ExecStreamEmbryo splitterStreamEmbryo;
+    splitterStreamEmbryo.init(new SplitterExecStream(), splitterParams);
+    splitterStreamEmbryo.getStream()->setName("SplitterExecStream");
+
+    vector<vector<ExecStreamEmbryo> > aggEmbryoStreamList;
+    for (int i = 0; i < 10; i++) {
+        SortedAggExecStreamParams aggParams;
+        aggParams.groupByKeyCount = 0;
+        aggParams.outputTupleDesc.push_back(attrDesc);
+        AggInvocation countInvocation;
+        countInvocation.aggFunction = AGG_FUNC_COUNT;
+        countInvocation.iInputAttr = -1;
+        aggParams.aggInvocations.push_back(countInvocation);
+    
+        ExecStreamEmbryo aggStreamEmbryo;
+        aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+        aggStreamEmbryo.getStream()->setName("AggExecStream " + i);
+        vector<ExecStreamEmbryo> v;
+        v.push_back(aggStreamEmbryo);
+        aggEmbryoStreamList.push_back(v);
+    }
+    
+    BarrierExecStreamParams barrierParams;
+    barrierParams.outputTupleDesc.push_back(attrDesc);
+    barrierParams.returnMode = BARRIER_RET_ANY_INPUT;
+    ExecStreamEmbryo barrierStreamEmbryo;
+    barrierStreamEmbryo.init(new BarrierExecStream(), barrierParams);
+    barrierStreamEmbryo.getStream()->setName("BarrierExecStream");
+
+    SharedExecStream pOutputStream =
+        prepareDAG(
+            mockStreamEmbryo,
+            splitterStreamEmbryo,
+            aggEmbryoStreamList,
+            barrierStreamEmbryo);
+
+    ConstExecStreamGenerator expectedResultGenerator(nRows);
+    verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
 
 // End ExecStreamTest.cpp

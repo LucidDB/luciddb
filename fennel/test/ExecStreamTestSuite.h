@@ -94,6 +94,9 @@ public:
             FENNEL_UNIT_TEST_CASE(
                 ExecStreamTestSuite,
                 testNestedLoopJoinExecStream2);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testSplitterPlusBarrier);
         }
     }
 
@@ -106,6 +109,7 @@ public:
     void testReshapeExecStream();
     void testSingleValueAggExecStream();
     void testMergeImplicitPullInputs();
+    void testSplitterPlusBarrier();
     
     void testCartesianJoinExecStreamOuter()
     {
