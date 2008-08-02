@@ -1211,7 +1211,7 @@ SqlNode FromClause() :
                     e2,
                     SqlLiteral.createSymbol(
                         SqlJoinOperator.ConditionType.Using, usingPos),
-                    new SqlNodeList(list, getPos()),
+                    new SqlNodeList(list, usingPos),
                     joinTypePos);
             }
             |

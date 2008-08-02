@@ -4893,12 +4893,54 @@ public class SqlValidatorTest
             "INNER, LEFT, RIGHT or FULL join requires a condition \\(NATURAL keyword or ON or USING clause\\)");
     }
 
+    public void testNaturalJoinWithOnFails()
+    {
+        checkFails(
+            "select * from emp natural join dept on ^emp.deptno = dept.deptno^",
+            "Cannot specify NATURAL keyword with ON or USING clause");
+    }
+
+    public void testNaturalJoinWithUsing()
+    {
+        checkFails(
+            "select * from emp natural join dept ^using (deptno)^",
+            "Cannot specify NATURAL keyword with ON or USING clause");
+    }
+
+    public void testNaturalJoinIncompatibleDatatype()
+    {
+        checkFails(
+            "select * from emp natural ^join^\n" +
+                "(select deptno, name as sal from dept)",
+            "Column 'SAL' matched using NATURAL keyword or USING clause has incompatible types: cannot compare 'INTEGER' to 'VARCHAR\\(10\\)'");
+
+        // make sal occur more than once on rhs, it is ignored and therefore
+        // there is no error about incompatible types
+        check(
+            "select * from emp natural join\n" +
+                " (select deptno, name as sal, 'foo' as sal from dept)");
+    }
+
+    public void testJoinUsingIncompatibleDatatype()
+    {
+        checkFails(
+            "select * from emp join (select deptno, name as sal from dept) using (deptno, ^sal^)",
+            "Column 'SAL' matched using NATURAL keyword or USING clause has incompatible types: cannot compare 'INTEGER' to 'VARCHAR\\(10\\)'");
+    }
+
     public void testJoinUsingInvalidColsFails()
     {
         // todo: Improve error msg
         checkFails(
             "select * from emp left join dept using (^gender^)",
             "Column 'GENDER' not found in any table");
+    }
+
+    public void testJoinUsingDupColsFails()
+    {
+        checkFails(
+            "select * from emp left join (select deptno, name as deptno from dept) using (^deptno^)",
+            "Column name 'DEPTNO' in USING clause is not unique on one side of join");
     }
 
     public void testJoinRowType()

@@ -1701,17 +1701,22 @@ public class SqlToRelConverter
             RelNode leftRel = leftBlackboard.root;
             convertFrom(rightBlackboard, right);
             RelNode rightRel = rightBlackboard.root;
-            if (isNatural) {
-                throw Util.needToImplement("natural join");
-            }
             JoinRelType convertedJoinType = convertJoinType(joinType);
-            RexNode conditionExp =
-                convertJoinCondition(
+            RexNode conditionExp;
+            if (isNatural) {
+                final List<String> columnList =
+                    SqlValidatorUtil.deriveNaturalJoinColumnList(
+                        validator.getNamespace(left).getRowType(),
+                        validator.getNamespace(right).getRowType());
+                conditionExp = convertUsing(leftRel, rightRel, columnList);
+            } else {
+                conditionExp = convertJoinCondition(
                     fromBlackboard,
                     join.getCondition(),
                     join.getConditionType(),
                     leftRel,
                     rightRel);
+            }
 
             final RelNode joinRel =
                 createJoin(
@@ -2008,38 +2013,62 @@ public class SqlToRelConverter
             return bb.convertExpression(condition);
         case Using:
             SqlNodeList list = (SqlNodeList) condition;
-            RexNode conditionExp = null;
+            List<String> nameList = new ArrayList<String>();
             for (SqlNode columnName : list) {
                 final SqlIdentifier id = (SqlIdentifier) columnName;
                 String name = id.getSimple();
-                RelDataType leftRowType = leftRel.getRowType();
-                int leftField =
-                    SqlValidatorUtil.lookupField(leftRowType, name);
-                RexNode left = rexBuilder.makeInputRef(
-                    leftRowType.getFieldList().get(leftField).getType(),
-                    leftField);
-                RelDataType rightRowType = rightRel.getRowType();
-                int rightField =
-                    SqlValidatorUtil.lookupField(rightRowType, name);
-                RexNode right = rexBuilder.makeInputRef(
-                    rightRowType.getFieldList().get(rightField).getType(),
-                    rightField + leftRowType.getFieldList().size());
-                RexNode equalsCall = rexBuilder.makeCall(
-                    SqlStdOperatorTable.equalsOperator,
-                    left, right);
-                if (conditionExp == null) {
-                    conditionExp = equalsCall;
-                } else {
-                    conditionExp = rexBuilder.makeCall(
-                        SqlStdOperatorTable.andOperator,
-                        conditionExp, equalsCall);
-                }
+                nameList.add(name);
             }
-            assert conditionExp != null;
-            return conditionExp;
+            return convertUsing(leftRel, rightRel, nameList);
         default:
             throw Util.unexpected(conditionType);
         }
+    }
+
+    /**
+     * Returns an expression for matching columns of a USING clause or inferred
+     * from NATURAL JOIN.
+     *
+     * "a JOIN b USING (x, y)" becomes "a.x = b.x AND a.y = b.y". Returns null
+     * if the column list is empty.
+     *
+     * @param leftRel Left input to the join
+     * @param rightRel Right input to the join
+     * @param nameList List of column names to join on
+     * @return Expression to match columns from name list, or null if name list
+     * is empty
+     */
+    private RexNode convertUsing(
+        RelNode leftRel,
+        RelNode rightRel,
+        List<String> nameList)
+    {
+        RexNode conditionExp = null;
+        for (String name : nameList) {
+            RelDataType leftRowType = leftRel.getRowType();
+            int leftField =
+                SqlValidatorUtil.lookupField(leftRowType, name);
+            RexNode left = rexBuilder.makeInputRef(
+                leftRowType.getFieldList().get(leftField).getType(),
+                leftField);
+            RelDataType rightRowType = rightRel.getRowType();
+            int rightField =
+                SqlValidatorUtil.lookupField(rightRowType, name);
+            RexNode right = rexBuilder.makeInputRef(
+                rightRowType.getFieldList().get(rightField).getType(),
+                rightField + leftRowType.getFieldList().size());
+            RexNode equalsCall = rexBuilder.makeCall(
+                SqlStdOperatorTable.equalsOperator,
+                left, right);
+            if (conditionExp == null) {
+                conditionExp = equalsCall;
+            } else {
+                conditionExp = rexBuilder.makeCall(
+                    SqlStdOperatorTable.andOperator,
+                    conditionExp, equalsCall);
+            }
+        }
+        return conditionExp;
     }
 
     private static JoinRelType convertJoinType(

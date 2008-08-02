@@ -2486,8 +2486,17 @@ public class SqlValidatorImpl
             Util.permAssert(list.size() > 0, "Empty USING clause");
             for (int i = 0; i < list.size(); i++) {
                 SqlIdentifier id = (SqlIdentifier) list.get(i);
-                validateUsingCol(id, left);
-                validateUsingCol(id, right);
+                final RelDataType leftColType = validateUsingCol(id, left);
+                final RelDataType rightColType = validateUsingCol(id, right);
+                if (!SqlTypeUtil.isComparable(leftColType, rightColType)) {
+                    throw newValidationError(
+                        id,
+                        EigenbaseResource.instance()
+                            .NaturalOrUsingColumnNotCompatible.ex(
+                            id.getSimple(),
+                            leftColType.toString(),
+                            rightColType.toString()));
+                }
             }
             break;
         default:
@@ -2495,10 +2504,36 @@ public class SqlValidatorImpl
         }
 
         // Validate NATURAL.
-        if (natural && (condition != null)) {
-            throw newValidationError(
-                condition,
-                EigenbaseResource.instance().NaturalDisallowsOnOrUsing.ex());
+        if (natural) {
+            if (condition != null) {
+                throw newValidationError(
+                    condition,
+                    EigenbaseResource.instance().NaturalDisallowsOnOrUsing
+                        .ex());
+            }
+            // Join on fields that occur exactly once on each side. Ignore
+            // fields that occur more than once on either side.
+            final RelDataType leftRowType = getNamespace(left).getRowType();
+            final RelDataType rightRowType = getNamespace(right).getRowType();
+            List<String> naturalColumnNames =
+                SqlValidatorUtil.deriveNaturalJoinColumnList(
+                    leftRowType, rightRowType);
+            // Check compatibility of the chosen columns.
+            for (String name : naturalColumnNames) {
+                final RelDataType leftColType =
+                    leftRowType.getField(name).getType();
+                final RelDataType rightColType =
+                    rightRowType.getField(name).getType();
+                if (!SqlTypeUtil.isComparable(leftColType, rightColType)) {
+                    throw newValidationError(
+                        join,
+                        EigenbaseResource.instance()
+                            .NaturalOrUsingColumnNotCompatible.ex(
+                            name,
+                            leftColType.toString(),
+                            rightColType.toString()));
+                }
+            }
         }
 
         // Which join types require/allow a ON/USING condition, or allow
@@ -2560,14 +2595,23 @@ public class SqlValidatorImpl
         }
     }
 
-    private void validateUsingCol(SqlIdentifier id, SqlNode leftOrRight)
+    private RelDataType validateUsingCol(SqlIdentifier id, SqlNode leftOrRight)
     {
         if (id.names.length == 1) {
             String name = id.names[0];
             final SqlValidatorNamespace namespace = getNamespace(leftOrRight);
-            boolean exists = namespace.fieldExists(name);
-            if (exists) {
-                return;
+            final RelDataType rowType = namespace.getRowType();
+            final RelDataTypeField field = rowType.getField(name);
+            if (field != null) {
+                if (SqlValidatorUtil.countOccurrences(
+                    name, SqlTypeUtil.getFieldNames(rowType)) > 1)
+                {
+                    throw newValidationError(
+                        id,
+                        EigenbaseResource.instance().ColumnInUsingNotUnique.ex(
+                            id.toString()));
+                }
+                return field.getType();
             }
         }
         throw newValidationError(

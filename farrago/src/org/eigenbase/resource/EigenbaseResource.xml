@@ -289,6 +289,14 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Cannot specify NATURAL keyword with ON or USING clause</text>
 </exception>
 
+<exception id="120312" name="ColumnInUsingNotUnique" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Column name ''{0}'' in USING clause is not unique on one side of join</text>
+</exception>
+
+<exception id="120314" name="NaturalOrUsingColumnNotCompatible" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Column ''{0}'' matched using NATURAL keyword or USING clause has incompatible types: cannot compare ''{1}'' to ''{2}''</text>
+</exception>
+
 <exception id="120320" name="WindowNotFound" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Window ''{0}'' not found</text>
 </exception>

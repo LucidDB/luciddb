@@ -96,13 +96,32 @@ public class SqlToRelConverterTest
     {
         check("SELECT * FROM emp JOIN dept USING (deptno)", "${plan}");
     }
+
     public void testJoinUsingCompound()
     {
         check("SELECT * FROM emp LEFT JOIN (" +
             "SELECT *, deptno * 5 as empno FROM dept) " +
             "USING (deptno,empno)", "${plan}");
     }
-    
+
+    public void testJoinNatural()
+    {
+        check("SELECT * FROM emp NATURAL JOIN dept",
+            "${plan}");
+    }
+
+    public void testJoinNaturalNoCommonColumn()
+    {
+        check("SELECT * FROM emp NATURAL JOIN (SELECT deptno AS foo, name FROM dept) AS d",
+            "${plan}");
+    }
+
+    public void testJoinNaturalMultipleCommonColumn()
+    {
+        check("SELECT * FROM emp NATURAL JOIN (SELECT deptno, name AS ename FROM dept) AS d",
+            "${plan}");
+    }
+
     public void testJoinWithUnion()
     {
         check(
