@@ -793,6 +793,7 @@ Error: error while fetching from cursor (state=,code=0)
 | Rusmore, Spangle, and Crowder  | Peninsula Trails                               | 14.95  |
 | Steve Jones                    | (leading spaces) Darwin's Ghost                | 15.00  |
 +--------------------------------+------------------------------------------------+--------+
+Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > 
 > -- we can select the errors from the log directory
 > create server log_server
@@ -869,6 +870,7 @@ Error: Mapping source columns in data files to target columns specified by contr
 | 21  | 0                     | 0.00                   | 0                 | 9999999999999.99   | max dec(15.2)  |
 | 23  | 0                     | 0.00                   | 0                 | -9999999999999.99  | min dec(15.2)  |
 +-----+-----------------------+------------------------+-------------------+--------------------+----------------+
+Warning: Statement execution encountered recoverable exceptions; errors: 12; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > 
 > -- test "DEFAULT" schema name
 > select count(*) from flatfile_server."DEFAULT"."example";

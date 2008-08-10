@@ -250,12 +250,11 @@ public class FarragoDbStmtContext
                 // only use txnCodeCache for real DML, not CALL
                 params.txnCodeCache = null;
             }
-            if (isDml) {
-                // if we're going to be executing the entire
-                // statement here, then warnings get returned via
-                // this Statement (not ResultSet)
-                params.warningQueue = warningQueue;
-            }
+
+            // FIXME: using Statement-level queue, but should use
+            // ResultSet-level queue for isDml=false
+            params.warningQueue = warningQueue;
+
             params.isDml = isDml;
             params.resultSetTypeMap = executableStmt.getResultSetTypeMap();
             params.iterCalcTypeMap = executableStmt.getIterCalcTypeMap();
