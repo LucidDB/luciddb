@@ -143,6 +143,7 @@ public:
     static ParamName paramTraceLevel;
     static ParamName paramStatsFileName;
     static ParamName paramTraceStdout;
+    static ParamName paramDegreeOfParallelism;
     
     /**
      * Configuration parameters.  The reason this is static is so that no

@@ -36,12 +36,68 @@ class ParallelExecStreamSchedulerTest : public ExecStreamTestSuite
     // override ExecStreamTestBase
     virtual ExecStreamScheduler *newScheduler()
     {
-        // hard-code two threads (TODO jvs 22-Jul-2008:  test parameter)
+        uint degreeOfParallelism =
+            configMap.getIntParam(paramDegreeOfParallelism, 4);
+        
         return new ParallelExecStreamScheduler(
             shared_from_this(),
             "ParallelExecStreamScheduler",
             threadTracker,
-            2);
+            degreeOfParallelism);
+    }
+
+public:
+
+    // we have to be selective about inheritance of test cases
+    // since some of them are not parallel-safe yet
+    explicit ParallelExecStreamSchedulerTest()
+        : ExecStreamTestSuite(false)
+    {
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testScratchBufferExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamInner);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCountAggExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSumAggExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream1);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream2);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream3);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream4);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,testReshapeExecStreamCastFilter);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,testReshapeExecStreamNoCastFilter);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,testReshapeExecStreamDynamicParams);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testSingleValueAggExecStream);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testMergeImplicitPullInputs);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testBTreeInsertExecStreamStaticBTree);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testBTreeInsertExecStreamDynamicBTree);
+
+            // TODO jvs 4-Aug-2008:  enable these once
+            // NLJ is parallel-safe
+            /*
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testNestedLoopJoinExecStream1);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testNestedLoopJoinExecStream2);
+            */
+            
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testSplitterPlusBarrier);
     }
 };
 

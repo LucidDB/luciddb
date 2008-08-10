@@ -62,6 +62,31 @@ public:
 };
 
 /**
+ * ParallelExecResult represents the result of a task submitted
+ * to ParallelExecStreamScheduler's thread pool.
+ */
+class ParallelExecResult 
+{
+    ExecStream &stream;
+    ExecStreamResult rc;
+    
+public:
+    explicit ParallelExecResult(
+        ExecStream &stream,
+        ExecStreamResult rc);
+    
+    inline ExecStreamId getStreamId() const
+    {
+        return stream.getStreamId();
+    }
+
+    inline ExecStreamResult getResultCode() const
+    {
+        return rc;
+    }
+};
+
+/**
  * ParallelExecStreamScheduler is a parallel implementation of the
  * ExecStreamScheduler interface.  For more information, see <a
  * href="http://pub.eigenbase.org/wiki/FennelParallelExecStreamScheduler">the
@@ -76,7 +101,6 @@ class ParallelExecStreamScheduler
     enum StreamState
     {
         SS_SLEEPING,
-        SS_RUNNABLE,
         SS_RUNNING,
         SS_INHIBITED
     };
@@ -89,6 +113,7 @@ class ParallelExecStreamScheduler
     SharedExecStreamGraph pGraph;
 
     ThreadPool<ParallelExecTask> threadPool;
+    std::deque<ParallelExecResult> completedQueue;
 
     ThreadTracker &threadTracker;
 
@@ -106,6 +131,7 @@ class ParallelExecStreamScheduler
     void addToQueue(ExecStreamId streamId);
     bool isInhibited(ExecStreamId streamId);
     void retryInhibitedQueue();
+    void processCompletedTask(ParallelExecResult const &task);
 
 public:
     /**
@@ -137,6 +163,8 @@ public:
     virtual void abort(ExecStreamGraph &graph);
     virtual void stop();
     virtual ExecStreamBufAccessor &readStream(ExecStream &stream);
+    virtual void createBufferProvisionAdapter(
+        ExecStreamEmbryo &embryo);
 };
 
 FENNEL_END_NAMESPACE

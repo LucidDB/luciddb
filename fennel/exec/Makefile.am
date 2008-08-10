@@ -8,6 +8,7 @@ ConduitExecStream.cpp \
 ConfluenceExecStream.cpp \
 CopyExecStream.cpp \
 DfsTreeExecStreamScheduler.cpp \
+DoubleBufferExecStream.cpp \
 DynamicParam.cpp \
 ErrorSource.cpp \
 ErrorTarget.cpp \

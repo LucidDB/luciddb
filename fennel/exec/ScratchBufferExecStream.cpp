@@ -94,10 +94,12 @@ ExecStreamResult ScratchBufferExecStream::execute(ExecStreamQuantum const &)
     switch(pInAccessor->getState()) {
     case EXECBUF_OVERFLOW:
     case EXECBUF_NONEMPTY:
-        pLastConsumptionEnd = pInAccessor->getConsumptionEnd();
-        pOutAccessor->provideBufferForConsumption(
-            pInAccessor->getConsumptionStart(),
-            pLastConsumptionEnd);
+        if (!pLastConsumptionEnd) {
+            pLastConsumptionEnd = pInAccessor->getConsumptionEnd();
+            pOutAccessor->provideBufferForConsumption(
+                pInAccessor->getConsumptionStart(),
+                pLastConsumptionEnd);
+        }
         return EXECRC_BUF_OVERFLOW;
     case EXECBUF_UNDERFLOW:
         return EXECRC_BUF_UNDERFLOW;

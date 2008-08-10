@@ -946,7 +946,9 @@ void ExecStreamTestSuite::testSplitterPlusBarrier()
     
         ExecStreamEmbryo aggStreamEmbryo;
         aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
-        aggStreamEmbryo.getStream()->setName("AggExecStream " + i);
+        std::ostringstream oss;
+        oss << "AggExecStream" << "#" << i;
+        aggStreamEmbryo.getStream()->setName(oss.str());
         vector<ExecStreamEmbryo> v;
         v.push_back(aggStreamEmbryo);
         aggEmbryoStreamList.push_back(v);

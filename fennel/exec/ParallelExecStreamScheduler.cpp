@@ -25,6 +25,8 @@
 #include "fennel/exec/ExecStreamGraphImpl.h"
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/exec/DoubleBufferExecStream.h"
+#include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/common/AbortExcn.h"
 #include "fennel/synch/ThreadTracker.h"
 
@@ -76,7 +78,7 @@ void ParallelExecStreamScheduler::start()
 
     ExecStreamGraphImpl &graphImpl =
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
-    ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
+    ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
     ExecStreamGraphImpl::VertexIterPair vertices = boost::vertices(graphRep);
     while (vertices.first != vertices.second) {
         ExecStreamId streamId = *vertices.first;
@@ -118,6 +120,20 @@ void ParallelExecStreamScheduler::stop()
     pPendingExcn.reset();
 }
 
+void ParallelExecStreamScheduler::createBufferProvisionAdapter(
+    ExecStreamEmbryo &embryo)
+{
+    // use double buffering so that producers and consumers can run
+    // in parallel
+    DoubleBufferExecStreamParams adapterParams;
+    embryo.init(
+        new DoubleBufferExecStream(),
+        adapterParams);
+}
+
+// FIXME jvs 6-Aug-2008:  Need to deal with concurrent invocations
+// to readStream on different parts of the graph (any plan with UDX)
+
 ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
     ExecStream &stream)
 {
@@ -128,7 +144,7 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
     ExecStreamId current = stream.getStreamId();
     ExecStreamGraphImpl &graphImpl =
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
-    ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
+    ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
 
     // assert that we're reading from a designated output stream
     assert(boost::out_degree(current,graphRep) == 1);
@@ -139,12 +155,10 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
     assert(!graphImpl.getStreamFromVertex(current));
 
     // mark reader as sleeping so that producers can run
-    StrictMutexGuard mutexGuard(mutex);
     streamStateMap[current] = SS_SLEEPING;
 
-    while (((bufAccessor.getState() == EXECBUF_EMPTY)
-               || (bufAccessor.getState() == EXECBUF_UNDERFLOW))
-        && !pPendingExcn)
+    while ((bufAccessor.getState() == EXECBUF_EMPTY)
+        || (bufAccessor.getState() == EXECBUF_UNDERFLOW))
     {
         // get the ball rolling
         addToQueue(stream.getStreamId());
@@ -154,17 +168,82 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
         // REVIEW jvs 5-Jul-2008:  only retry this stream, not all?
         retryInhibitedQueue();
 
-        condition.wait(mutexGuard);
+        StrictMutexGuard mutexGuard(mutex);
+        while (completedQueue.empty()) {
+            condition.wait(mutexGuard);
+            if (pPendingExcn) {
+                // REVIEW jvs 6-Aug-2008:  need to update streamStateMap?
+                pPendingExcn->throwSelf();
+            }
+        }
+        while (!completedQueue.empty()) {
+            ParallelExecResult result = completedQueue.front();
+            completedQueue.pop_front();
+            // don't hold lock while doing expensive state maintenance
+            mutexGuard.unlock();
+            processCompletedTask(result);
+            mutexGuard.lock();
+            if (pPendingExcn) {
+                // REVIEW jvs 6-Aug-2008:  need to update streamStateMap?
+                pPendingExcn->throwSelf();
+            }
+        }
     }
     
     // inhibit producers while caller is accessing returned data
     streamStateMap[current] = SS_RUNNING;
 
-    if (pPendingExcn) {
-        pPendingExcn->throwSelf();
-    }
-    
     return bufAccessor;
+}
+
+void ParallelExecStreamScheduler::processCompletedTask(
+    ParallelExecResult const &result)
+{
+    ExecStreamId current = result.getStreamId();
+    ExecStreamGraphImpl &graphImpl =
+        dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
+    ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
+    
+    streamStateMap[current] = SS_SLEEPING;
+
+    switch (result.getResultCode()) {
+    case EXECRC_EOS:
+    case EXECRC_BUF_OVERFLOW:
+    case EXECRC_BUF_UNDERFLOW:
+        {
+            ExecStreamGraphImpl::OutEdgeIterPair outEdges =
+                boost::out_edges(current, graphRep);
+            for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
+                ExecStreamGraphImpl::Edge edge = *(outEdges.first);
+                ExecStreamBufAccessor &bufAccessor =
+                    graphImpl.getBufAccessorFromEdge(edge);
+                if (bufAccessor.getState() != EXECBUF_UNDERFLOW) {
+                    ExecStreamId consumer = boost::target(edge, graphRep);
+                    addToQueue(consumer);
+                }
+            }
+            ExecStreamGraphImpl::InEdgeIterPair inEdges =
+                boost::in_edges(current, graphRep);
+            for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
+                ExecStreamGraphImpl::Edge edge = *(inEdges.first);
+                ExecStreamBufAccessor &bufAccessor =
+                    graphImpl.getBufAccessorFromEdge(edge);
+                if (bufAccessor.getState() == EXECBUF_UNDERFLOW) {
+                    ExecStreamId producer = boost::source(edge, graphRep);
+                    addToQueue(producer);
+                }
+            }
+        }
+        break;
+    case EXECRC_QUANTUM_EXPIRED:
+        addToQueue(current);
+        break;
+    default:
+        permAssert(false);
+    }
+
+    // REVIEW jvs 4-Jul-2008:  only reschedule inhibited neighbors?
+    retryInhibitedQueue();
 }
 
 void ParallelExecStreamScheduler::executeTask(ExecStream &stream)
@@ -189,78 +268,13 @@ void ParallelExecStreamScheduler::executeTask(ExecStream &stream)
 
 void ParallelExecStreamScheduler::tryExecuteTask(ExecStream &stream)
 {
-    StrictMutexGuard mutexGuard(mutex);
-    assert(streamStateMap[stream.getStreamId()] == SS_RUNNABLE);
-
-    if (isInhibited(stream.getStreamId())) {
-        streamStateMap[stream.getStreamId()] = SS_INHIBITED;
-        inhibitedQueue.push_back(stream.getStreamId());
-        return;
-    }
-    
-    streamStateMap[stream.getStreamId()] = SS_RUNNING;
-    mutexGuard.unlock();
-
     ExecStreamQuantum quantum;
     ExecStreamResult rc = executeStream(stream, quantum);
-    ExecStreamId current = stream.getStreamId();
-    ExecStreamGraphImpl &graphImpl =
-        dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
-    ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
+    ParallelExecResult result(stream, rc);
     
-    mutexGuard.lock();
-    streamStateMap[stream.getStreamId()] = SS_SLEEPING;
-
-    bool signalReadStream = false;
-    
-    switch (rc) {
-    case EXECRC_EOS:
-    case EXECRC_BUF_OVERFLOW:
-    case EXECRC_BUF_UNDERFLOW:
-        {
-            ExecStreamGraphImpl::OutEdgeIterPair outEdges =
-                boost::out_edges(current, graphRep);
-            for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
-                ExecStreamGraphImpl::Edge edge = *(outEdges.first);
-                ExecStreamBufAccessor &bufAccessor =
-                    graphImpl.getBufAccessorFromEdge(edge);
-                if (bufAccessor.getState() != EXECBUF_UNDERFLOW) {
-                    ExecStreamId consumer = boost::target(edge, graphRep);
-                    SharedExecStream pStream =
-                        graphImpl.getStreamFromVertex(consumer);
-                    if (!pStream) {
-                        signalReadStream = true;
-                    }
-                    addToQueue(consumer);
-                }
-            }
-            ExecStreamGraphImpl::InEdgeIterPair inEdges =
-                boost::in_edges(current, graphRep);
-            for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
-                ExecStreamGraphImpl::Edge edge = *(inEdges.first);
-                ExecStreamBufAccessor &bufAccessor =
-                    graphImpl.getBufAccessorFromEdge(edge);
-                if (bufAccessor.getState() == EXECBUF_UNDERFLOW) {
-                    ExecStreamId producer = boost::source(edge, graphRep);
-                    addToQueue(producer);
-                }
-            }
-        }
-        break;
-    case EXECRC_QUANTUM_EXPIRED:
-        addToQueue(stream.getStreamId());
-        break;
-    default:
-        permAssert(false);
-    }
-
-    // REVIEW jvs 4-Jul-2008:  only reschedule inhibited neighbors?
-    retryInhibitedQueue();
-
-    // only notify if graph output is in EOS or overflow
-    if (signalReadStream) {
-        condition.notify_all();
-    }
+    StrictMutexGuard mutexGuard(mutex);
+    completedQueue.push_back(result);
+    condition.notify_all();
 }
 
 void ParallelExecStreamScheduler::retryInhibitedQueue()
@@ -281,7 +295,7 @@ bool ParallelExecStreamScheduler::isInhibited(ExecStreamId streamId)
 {
     ExecStreamGraphImpl &graphImpl =
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
-    ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
+    ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
     ExecStreamGraphImpl::OutEdgeIterPair outEdges =
         boost::out_edges(streamId, graphRep);
     for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
@@ -324,7 +338,7 @@ void ParallelExecStreamScheduler::addToQueue(ExecStreamId streamId)
                 streamStateMap[streamId] = SS_INHIBITED;
                 inhibitedQueue.push_back(streamId);
             } else {
-                streamStateMap[streamId] = SS_RUNNABLE;
+                streamStateMap[streamId] = SS_RUNNING;
                 ParallelExecTask task(*this, *pStream);
                 threadPool.submitTask(task);
             }
@@ -332,7 +346,6 @@ void ParallelExecStreamScheduler::addToQueue(ExecStreamId streamId)
         break;
     case SS_INHIBITED:
     case SS_RUNNING:
-    case SS_RUNNABLE:
         // ignore request
         break;
     default:
@@ -353,6 +366,14 @@ void ParallelExecTask::execute()
     scheduler.executeTask(stream);
 }
 
-FENNEL_END_CPPFILE("$Id$");
+ParallelExecResult::ParallelExecResult(
+    ExecStream &streamInit,
+    ExecStreamResult rcInit)
+    : stream(streamInit)
+{
+    rc = rcInit;
+}
+
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/exec/ParallelExecStreamScheduler.cpp#2 $");
 
 // End ParallelExecStreamScheduler.cpp
