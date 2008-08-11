@@ -104,8 +104,15 @@ class ParallelExecStreamScheduler
         SS_RUNNING,
         SS_INHIBITED
     };
+
+    struct StreamStateMapEntry
+    {
+        StreamState state;
+        int inhibitionCount;
+    };
     
-    typedef std::hash_map<ExecStreamId, StreamState> StreamStateMap;
+    typedef std::hash_map<ExecStreamId, StreamStateMapEntry>
+        StreamStateMap;
     typedef std::deque<ExecStreamId> InhibitedQueue;
 
     friend class ParallelExecTask;
@@ -129,9 +136,10 @@ class ParallelExecStreamScheduler
     void tryExecuteTask(ExecStream &);
     void executeTask(ExecStream &);
     void addToQueue(ExecStreamId streamId);
-    bool isInhibited(ExecStreamId streamId);
     void retryInhibitedQueue();
     void processCompletedTask(ParallelExecResult const &task);
+    inline bool isInhibited(ExecStreamId streamId);
+    inline void alterNeighborInhibition(ExecStreamId streamId, int delta);
 
 public:
     /**

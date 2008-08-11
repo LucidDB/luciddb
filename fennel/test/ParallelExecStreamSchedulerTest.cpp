@@ -54,6 +54,7 @@ public:
         : ExecStreamTestSuite(false)
     {
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testScratchBufferExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testDoubleBufferExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
@@ -86,14 +87,12 @@ public:
 
             // TODO jvs 4-Aug-2008:  enable these once
             // NLJ is parallel-safe
-            /*
-            FENNEL_UNIT_TEST_CASE(
+            FENNEL_EXTRA_UNIT_TEST_CASE(
                 ExecStreamTestSuite,
                 testNestedLoopJoinExecStream1);
-            FENNEL_UNIT_TEST_CASE(
+            FENNEL_EXTRA_UNIT_TEST_CASE(
                 ExecStreamTestSuite,
                 testNestedLoopJoinExecStream2);
-            */
             
             FENNEL_UNIT_TEST_CASE(
                 ExecStreamTestSuite,

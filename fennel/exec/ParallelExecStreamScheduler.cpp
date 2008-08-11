@@ -52,6 +52,35 @@ ParallelExecStreamScheduler::~ParallelExecStreamScheduler()
 {
 }
 
+inline void ParallelExecStreamScheduler::alterNeighborInhibition(
+    ExecStreamId streamId, int delta)
+{
+    ExecStreamGraphImpl &graphImpl =
+        dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
+    ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
+    ExecStreamGraphImpl::OutEdgeIterPair outEdges =
+        boost::out_edges(streamId, graphRep);
+    for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
+        ExecStreamGraphImpl::Edge edge = *(outEdges.first);
+        ExecStreamId consumer = boost::target(edge, graphRep);
+        streamStateMap[consumer].inhibitionCount += delta;
+        assert(streamStateMap[consumer].inhibitionCount >= 0);
+    }
+    ExecStreamGraphImpl::InEdgeIterPair inEdges =
+        boost::in_edges(streamId, graphRep);
+    for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
+        ExecStreamGraphImpl::Edge edge = *(inEdges.first);
+        ExecStreamId producer = boost::source(edge, graphRep);
+        streamStateMap[producer].inhibitionCount += delta;
+        assert(streamStateMap[producer].inhibitionCount >= 0);
+    }
+}
+
+inline bool ParallelExecStreamScheduler::isInhibited(ExecStreamId streamId)
+{
+    return streamStateMap[streamId].inhibitionCount > 0;
+}
+
 void ParallelExecStreamScheduler::addGraph(
     SharedExecStreamGraph pGraphInit)
 {
@@ -82,12 +111,19 @@ void ParallelExecStreamScheduler::start()
     ExecStreamGraphImpl::VertexIterPair vertices = boost::vertices(graphRep);
     while (vertices.first != vertices.second) {
         ExecStreamId streamId = *vertices.first;
-        if (graphImpl.getStreamFromVertex(streamId)) {
-            streamStateMap[streamId] = SS_SLEEPING;
-        } else {
+        streamStateMap[streamId].state = SS_SLEEPING;
+        streamStateMap[streamId].inhibitionCount = 0;
+        ++vertices.first;
+    }
+
+    vertices = boost::vertices(graphRep);
+    while (vertices.first != vertices.second) {
+        ExecStreamId streamId = *vertices.first;
+        if (!graphImpl.getStreamFromVertex(streamId)) {
             // mark output nodes as running so that producers will
             // be inhibited except while we're in readStream
-            streamStateMap[streamId] = SS_RUNNING;
+            streamStateMap[streamId].state = SS_RUNNING;
+            alterNeighborInhibition(streamId, +1);
         }
         ++vertices.first;
     }
@@ -108,7 +144,7 @@ void ParallelExecStreamScheduler::abort(ExecStreamGraph &graph)
     if (!pPendingExcn) {
         pPendingExcn.reset(new AbortExcn());
     }
-    condition.notify_all();
+    condition.notify_one();
 }
 
 void ParallelExecStreamScheduler::stop()
@@ -117,7 +153,14 @@ void ParallelExecStreamScheduler::stop()
 
     threadPool.stop();
 
+    // NOTE jvs 10-Aug-2008:  This is how we keep the cloned excn
+    // from becoming a memory leak.  It assumes that the caller
+    // doesn't invoke pScheduler->stop() until *after* the exception
+    // has been completely handled and is no longer referenced.
     pPendingExcn.reset();
+    
+    completedQueue.clear();
+    inhibitedQueue.clear();
 }
 
 void ParallelExecStreamScheduler::createBufferProvisionAdapter(
@@ -154,12 +197,18 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
     current = boost::target(edge, graphRep);
     assert(!graphImpl.getStreamFromVertex(current));
 
-    // mark reader as sleeping so that producers can run
-    streamStateMap[current] = SS_SLEEPING;
-
-    while ((bufAccessor.getState() == EXECBUF_EMPTY)
-        || (bufAccessor.getState() == EXECBUF_UNDERFLOW))
+    if ((bufAccessor.getState() != EXECBUF_EMPTY)
+        && (bufAccessor.getState() != EXECBUF_UNDERFLOW))
     {
+        // data already available
+        return bufAccessor;
+    }
+    
+    // mark reader as sleeping so that producers can run
+    streamStateMap[current].state = SS_SLEEPING;
+    alterNeighborInhibition(current, -1);
+
+    do {
         // get the ball rolling
         addToQueue(stream.getStreamId());
 
@@ -188,10 +237,13 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
                 pPendingExcn->throwSelf();
             }
         }
-    }
+    } while ((bufAccessor.getState() == EXECBUF_EMPTY)
+        || (bufAccessor.getState() == EXECBUF_UNDERFLOW)
+        || (streamStateMap[current].inhibitionCount != 0));
     
     // inhibit producers while caller is accessing returned data
-    streamStateMap[current] = SS_RUNNING;
+    streamStateMap[current].state = SS_RUNNING;
+    alterNeighborInhibition(current, +1);
 
     return bufAccessor;
 }
@@ -204,7 +256,8 @@ void ParallelExecStreamScheduler::processCompletedTask(
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
     ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
     
-    streamStateMap[current] = SS_SLEEPING;
+    streamStateMap[current].state = SS_SLEEPING;
+    alterNeighborInhibition(current, -1);
 
     switch (result.getResultCode()) {
     case EXECRC_EOS:
@@ -255,14 +308,14 @@ void ParallelExecStreamScheduler::executeTask(ExecStream &stream)
         if (!pPendingExcn) {
             pPendingExcn.reset(threadTracker.cloneExcn(ex));
         }
-        condition.notify_all();
+        condition.notify_one();
     } catch (...) {
         // REVIEW jvs 22-Jul-2008:  panic instead?
         StrictMutexGuard mutexGuard(mutex);
         if (!pPendingExcn) {
             pPendingExcn.reset(new FennelExcn("Unknown error"));
         }
-        condition.notify_all();
+        condition.notify_one();
     }
 }
 
@@ -274,7 +327,7 @@ void ParallelExecStreamScheduler::tryExecuteTask(ExecStream &stream)
     
     StrictMutexGuard mutexGuard(mutex);
     completedQueue.push_back(result);
-    condition.notify_all();
+    condition.notify_one();
 }
 
 void ParallelExecStreamScheduler::retryInhibitedQueue()
@@ -286,35 +339,9 @@ void ParallelExecStreamScheduler::retryInhibitedQueue()
     while (!transitQueue.empty()) {
         ExecStreamId inhibitedStreamId = transitQueue.front();
         transitQueue.pop_front();
-        streamStateMap[inhibitedStreamId] = SS_SLEEPING;
+        streamStateMap[inhibitedStreamId].state = SS_SLEEPING;
         addToQueue(inhibitedStreamId);
     }
-}
-
-bool ParallelExecStreamScheduler::isInhibited(ExecStreamId streamId)
-{
-    ExecStreamGraphImpl &graphImpl =
-        dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
-    ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
-    ExecStreamGraphImpl::OutEdgeIterPair outEdges =
-        boost::out_edges(streamId, graphRep);
-    for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
-        ExecStreamGraphImpl::Edge edge = *(outEdges.first);
-        ExecStreamId consumer = boost::target(edge, graphRep);
-        if (streamStateMap[consumer] == SS_RUNNING) {
-            return true;
-        }
-    }
-    ExecStreamGraphImpl::InEdgeIterPair inEdges =
-        boost::in_edges(streamId, graphRep);
-    for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
-        ExecStreamGraphImpl::Edge edge = *(inEdges.first);
-        ExecStreamId producer = boost::source(edge, graphRep);
-        if (streamStateMap[producer] == SS_RUNNING) {
-            return true;
-        }
-    }
-    return false;
 }
 
 void ParallelExecStreamScheduler::addToQueue(ExecStreamId streamId)
@@ -322,7 +349,7 @@ void ParallelExecStreamScheduler::addToQueue(ExecStreamId streamId)
     if (pPendingExcn) {
         return;
     }
-    switch(streamStateMap[streamId]) {
+    switch(streamStateMap[streamId].state) {
     case SS_SLEEPING:
         {
             ExecStreamGraphImpl &graphImpl =
@@ -333,12 +360,11 @@ void ParallelExecStreamScheduler::addToQueue(ExecStreamId streamId)
                 return;
             }
             if (isInhibited(streamId)) {
-                // don't bother scheduling if we already know it's
-                // inhibited
-                streamStateMap[streamId] = SS_INHIBITED;
+                streamStateMap[streamId].state = SS_INHIBITED;
                 inhibitedQueue.push_back(streamId);
             } else {
-                streamStateMap[streamId] = SS_RUNNING;
+                streamStateMap[streamId].state = SS_RUNNING;
+                alterNeighborInhibition(streamId, +1);
                 ParallelExecTask task(*this, *pStream);
                 threadPool.submitTask(task);
             }
@@ -374,6 +400,6 @@ ParallelExecResult::ParallelExecResult(
     rc = rcInit;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/exec/ParallelExecStreamScheduler.cpp#2 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End ParallelExecStreamScheduler.cpp

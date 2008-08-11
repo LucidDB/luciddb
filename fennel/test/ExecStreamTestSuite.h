@@ -60,6 +60,7 @@ public:
     {
         if (initTestCases) {
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testScratchBufferExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testDoubleBufferExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
@@ -102,6 +103,7 @@ public:
     }
 
     void testScratchBufferExecStream();
+    void testDoubleBufferExecStream();
     void testCopyExecStream();
     void testMergeExecStream();
     void testSegBufferExecStream();

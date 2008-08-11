@@ -33,6 +33,7 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ScratchBufferExecStream.h"
+#include "fennel/exec/DoubleBufferExecStream.h"
 #include "fennel/exec/CopyExecStream.h"
 #include "fennel/exec/MergeExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
@@ -71,6 +72,39 @@ void ExecStreamTestSuite::testScratchBufferExecStream()
     ExecStreamEmbryo bufStreamEmbryo;
     bufStreamEmbryo.init(new ScratchBufferExecStream(),bufParams);
     bufStreamEmbryo.getStream()->setName("ScratchBufferExecStream");
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, bufStreamEmbryo);
+
+    verifyOutput(
+        *pOutputStream,
+        mockParams.nRows,
+        *(mockParams.pGenerator));
+}
+
+
+void ExecStreamTestSuite::testDoubleBufferExecStream()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = 25000;     // cycle through a few buffers
+    mockParams.pGenerator.reset(new RampExecStreamGenerator());
+    
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+    
+    DoubleBufferExecStreamParams bufParams;
+    bufParams.scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache,1);
+
+    ExecStreamEmbryo bufStreamEmbryo;
+    bufStreamEmbryo.init(new DoubleBufferExecStream(),bufParams);
+    bufStreamEmbryo.getStream()->setName("DoubleBufferExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, bufStreamEmbryo);

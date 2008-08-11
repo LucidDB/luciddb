@@ -111,7 +111,7 @@ void ThreadPoolBase::runPooledThread()
                 condition.wait(guard);
             }
             if (state == STATE_STOPPED) {
-                return;
+                break;
             }
             runOneTask(guard);
             stoppingCondition.notify_one();
