@@ -673,6 +673,18 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 | minded  |
 +---------+
 > 
+> -- should fail:  numeric can't be implicitly cast to any integer type
+> values generate_random_number(42.0);
+Error: From line 1, column 8 to line 1, column 35: No match found for function signature GENERATE_RANDOM_NUMBER(<NUMERIC>) (state=,code=0)
+> 
+> -- should pass
+> values generate_random_number(cast(42.0 as int));
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| -5025562857975149833  |
++-----------------------+
+> 
 > !set outputformat csv
 > 
 > -- verify that constant reduction is NOT used for non-deterministic functions

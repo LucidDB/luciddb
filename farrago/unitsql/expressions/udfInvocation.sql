@@ -466,6 +466,12 @@ values get_java_property('feeble');
 values gargle();
 values get_java_property('feeble');
 
+-- should fail:  numeric can't be implicitly cast to any integer type
+values generate_random_number(42.0);
+
+-- should pass
+values generate_random_number(cast(42.0 as int));
+
 !set outputformat csv
 
 -- verify that constant reduction is NOT used for non-deterministic functions
