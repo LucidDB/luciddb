@@ -128,7 +128,33 @@ public class SqlToRelConverter
     private final Map<SqlNode, RexNode> mapConvertedNonCorrSubqs =
         new HashMap<SqlNode, RexNode>();
 
-    //~ Constructors -----------------------------------------------------------
+//    private final Map<AggregateCallWithContext, RexNode> aggCallMapping =
+//        new HashMap<AggregateCallWithContext, RexNode>();
+//
+//    private class AggregateCallWithContext
+//    {
+//        private final AggregateCall call;
+//        private final SqlValidatorNamespace context;
+//        AggregateCallWithContext(
+//                AggregateCall call,
+//                SqlValidatorNamespace context) {
+//            this.call = call;
+//            this.context = context;
+//        }
+//        public boolean equals(Object other)
+//        {
+//            if  (!(other instanceof AggregateCallWithContext)) return false;
+//            AggregateCallWithContext otherCall = (AggregateCallWithContext) other;
+//            return call.equals(otherCall.call) && (context==otherCall.context ||
+//                    (context !=null && context.equals(otherCall.context)));
+//        }
+//        public int hashCode()
+//        {
+//             return call.hashCode();
+//        }
+//     }
+
+//~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a converter.
@@ -4197,7 +4223,10 @@ public class SqlToRelConverter
         private final Map<SqlNode, RexNode> aggMapping =
             new HashMap<SqlNode, RexNode>();
 
-        /**
+        private final Map<AggregateCall, RexNode> aggCallMapping =
+            new HashMap<AggregateCall, RexNode>();
+
+            /**
          * Creates an AggConverter.
          *
          * <p>The <code>select</code> parameter provides enough context to
@@ -4340,14 +4369,20 @@ public class SqlToRelConverter
                 {
                     distinct = true;
                 }
-                int index = aggCalls.size() + groupExprs.size();
                 final AggregateCall aggCall =
                     new AggregateCall(
                         aggregation, distinct, args, type,
                         nameMap.get(call.toString()));
-                aggCalls.add(aggCall);
-                final RexNode rex = rexBuilder.makeInputRef(type, index);
-                aggMapping.put(call, rex);
+//                AggregateCallWithContext aggCallWithContext = new
+//                   AggregateCallWithContext(aggCall, null);//validator.getNamespace(call));
+                RexNode rex =aggCallMapping.get(aggCall);
+                if (rex==null){
+                    int index = aggCalls.size() + groupExprs.size();
+                    aggCalls.add(aggCall);
+                    rex = rexBuilder.makeInputRef(type, index);
+                    aggCallMapping.put(aggCall, rex);
+                }
+		aggMapping.put(call, rex);
             } else if (call instanceof SqlSelect) {
                 // rchen 2006-10-17:
                 // for now do not detect aggregates in subqueries.
