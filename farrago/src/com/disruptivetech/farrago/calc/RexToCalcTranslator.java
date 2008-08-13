@@ -33,8 +33,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
-import com.disruptivetech.farrago.rel.FennelWindowRel.RexWinAggCall;
-
 
 /**
  * Converts expressions in logical format ({@link RexNode}) into calculator
@@ -498,7 +496,7 @@ public class RexToCalcTranslator
             // This could probably be optimized by writing to the outputs
             // directly instead of temp registers but harder to (java)
             // implement.
-           implementNode(projectRef);
+            implementNode(projectRef);
         }
 
         // all outputs calculated, now assign results to outputs by reference
@@ -708,9 +706,10 @@ public class RexToCalcTranslator
         // row matched. Now calculate all the outputs
         // The projectExprs are the overs for a given partition.
         for (RexLocalRef node : projectExprs) {
-            assert(getResult(node, false)==null) : "Common subexpressions should pulled into projection calc.";
+            assert(getResult(node, false)==null) : "Common subexpressions should pushed into outer projection.";
             implementNode(node);
         }
+
         // Ref instructions for output program.
         switch (aggOp) {
         case None:
@@ -1340,7 +1339,6 @@ public class RexToCalcTranslator
         scope = scope.popScope();
     }
 
-    
     //~ Inner Classes ----------------------------------------------------------
 
     /**

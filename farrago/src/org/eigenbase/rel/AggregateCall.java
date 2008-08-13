@@ -170,7 +170,7 @@ public class AggregateCall
             && argList.equals(other.argList);
     }
 
-    @Override
+    // override Object
     public int hashCode()
     {
         return aggregation.hashCode()+argList.hashCode();
