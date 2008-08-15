@@ -179,7 +179,10 @@ public class FarragoRuntimeContext
         throw new AssertionError();
     }
 
-    // override FarragoCompoundAllocation
+    // TODO jvs 13-Aug-2008:  introduce an abstract base
+    // SynchronizedCompoundClosableAllocation and inherit from that
+
+    // override CompoundClosableAllocation
     public synchronized void closeAllocation()
     {
         if (isClosed) {
@@ -189,6 +192,22 @@ public class FarragoRuntimeContext
 
         isCanceled = true;
 
+        // Override CompoundClosableAllocation behavior, because we
+        // need special synchronization to account for the fact
+        // that FarragoJavaUdxIterator instances may be adding themselves
+        // concurrently during this shutdown.  Question:  is it possible
+        // for one to leak due to a race?
+        for (;;) {
+            ClosableAllocation allocation;
+            synchronized (allocations) {
+                if (allocations.isEmpty()) {
+                    break;
+                }
+                allocation = allocations.remove(allocations.size() - 1);
+            }
+            allocation.closeAllocation();
+        }
+        
         // make sure all streams get closed BEFORE they are deallocated
         streamOwner.closeAllocation();
         if (!isDml) {
@@ -197,14 +216,36 @@ public class FarragoRuntimeContext
         }
         statementClassLoader = null;
 
-        // FRG-253:  nullify this, so that once we release its pinned
-        // entry from the cache, we don't try to abort it after someone
-        // else starts to reuse it!
+        // FRG-253: nullify this, so that once we release its pinned entry from
+        // the cache, we don't try to abort it after someone else starts to
+        // reuse it!
         streamGraph = null;
-
-        super.closeAllocation();
     }
 
+    // override CompoundClosableAllocation
+    public void addAllocation(ClosableAllocation allocation)
+    {
+        synchronized (allocations) {
+            super.addAllocation(allocation);
+        }
+    }
+    
+    // override CompoundClosableAllocation
+    public boolean forgetAllocation(ClosableAllocation allocation)
+    {
+        synchronized (allocations) {
+            return super.forgetAllocation(allocation);
+        }
+    }
+    
+    // override CompoundClosableAllocation
+    public boolean hasAllocations()
+    {
+        synchronized (allocations) {
+            return !allocations.isEmpty();
+        }
+    }
+    
     // implement RelOptConnection
     public Object contentsAsArray(
         String qualifier,

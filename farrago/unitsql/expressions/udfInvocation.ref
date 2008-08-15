@@ -1182,4 +1182,71 @@ Error: From line 1, column 8 to line 1, column 27: No match found for function s
 > values confusing(true);
 Error: From line 1, column 8 to line 1, column 22: No match found for function signature CONFUSING(<BOOLEAN>) (state=,code=0)
 > 
+> 
+> -- FRG-331
+> 
+> create schema FRG_331;
+> 
+> set schema 'FRG_331';
+> set path 'udftest,FRG_331';
+> 
+> create function uniq(c cursor)
+> returns table(c.*)
+> language java
+> parameter style system defined java
+> no sql
+> external name 
+> 'class net.sf.farrago.test.FarragoTestUDR.removeDupsFromPresortedCursor';
+> 
+> -- use LucidDB optimizer to avoid buffering on the cartesian join RHS
+> -- (since that would cover up the original bug)
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> -- before the bugfix, this returned 20 instead of 200
+> select count(*) from
+> (select * from table(uniq(cursor(select * from table(ramp(10)) order by 1)))),
+> (select * from table(uniq(cursor(select * from table(ramp(20)) order by 1))));
++---------+
+| EXPR$0  |
++---------+
+| 200     |
++---------+
+> 
+> -- before the bugfix, this resulted in a ConcurrentModificationException
+> select count(*) from
+> (select * from table(uniq(cursor(select * from table(ramp(10)))))),
+> (select * from table(uniq(cursor(select * from table(ramp(20))))));
++---------+
+| EXPR$0  |
++---------+
+| 200     |
++---------+
+> 
+> -- make sure there is no buffering
+> !set outputformat csv
+> explain plan excluding attributes for
+> select count(*) from
+> (select * from table(uniq(cursor(select * from table(ramp(10)) order by 1)))),
+> (select * from table(uniq(cursor(select * from table(ramp(20)) order by 1))));
+'column0'
+'FennelToIteratorConverter'
+'  FennelAggRel'
+'    FennelCalcRel'
+'      FennelCartesianProductRel'
+'        IteratorToFennelConverter'
+'          FarragoJavaUdxRel'
+'            FennelToIteratorConverter'
+'              FennelSortRel'
+'                IteratorToFennelConverter'
+'                  FarragoJavaUdxRel'
+'        IteratorToFennelConverter'
+'          FarragoJavaUdxRel'
+'            FennelToIteratorConverter'
+'              FennelSortRel'
+'                IteratorToFennelConverter'
+'                  FarragoJavaUdxRel'
+> 
+> alter session implementation set default;
+> 
+> 
 > !quit
