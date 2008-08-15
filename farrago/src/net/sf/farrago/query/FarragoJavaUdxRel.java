@@ -243,29 +243,11 @@ public class FarragoJavaUdxRel
                 outputRowType,
                 implementor.getTypeFactory());
 
-        StatementList executeMethodBody = new StatementList();
-
         // Translate relational inputs to ResultSet expressions.
         final Expression [] childExprs = new Expression[inputs.length];
         for (int i = 0; i < inputs.length; ++i) {
             childExprs[i] =
                 implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
-            
-            Variable varChild = implementor.newVariable();
-            executeMethodBody.add(
-                new VariableDeclaration(
-                    new ModifierList(ModifierList.FINAL),
-                    TypeName.forOJClass(OJClass.forClass(TupleIter.class)),
-                    varChild.toString(),
-                    childExprs[i]));
-            childExprs[i] = varChild;
-            executeMethodBody.add(
-                new ExpressionStatement(
-                    new MethodCall(
-                        "addRestartableInput",
-                        new ExpressionList(
-                            varChild))));
-            
             OJClass rowClass =
                 OJUtil.typeToOJClass(
                     inputs[i].getRowType(),
@@ -304,6 +286,8 @@ public class FarragoJavaUdxRel
         RexNode rewrittenCall = getCall().accept(shuttle);
 
         MemberDeclarationList memberList = new MemberDeclarationList();
+
+        StatementList executeMethodBody = new StatementList();
 
         // Set up server MOFID context while generating method call
         // so that it will be available to the UDX at runtime in case
