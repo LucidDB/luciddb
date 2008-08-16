@@ -136,12 +136,12 @@
 '                          FennelValuesRel'
 '            FennelReshapeRel'
 '              LcsRowScanRel'
-'                FennelValuesRel'
+'                LcsIndexMergeRel'
+'                  LcsIndexSearchRel'
+'                    FennelValuesRel'
 '        FennelReshapeRel'
 '          LcsRowScanRel'
-'            LcsIndexMergeRel'
-'              LcsIndexSearchRel'
-'                FennelValuesRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- multiple dimension tables but filter on only one
 0: jdbc:luciddb:> explain plan excluding attributes for
