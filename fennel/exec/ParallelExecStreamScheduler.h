@@ -46,16 +46,16 @@ class ThreadTracker;
 class ParallelExecTask 
 {
     ParallelExecStreamScheduler &scheduler;
-    ExecStream &stream;
+    ExecStream *pStream;
     
 public:
     explicit ParallelExecTask(
         ParallelExecStreamScheduler &scheduler,
-        ExecStream &stream);
+        ExecStream *pStream);
 
     inline ExecStreamId getStreamId() const
     {
-        return stream.getStreamId();
+        return pStream->getStreamId();
     }
     
     void execute();
@@ -67,17 +67,17 @@ public:
  */
 class ParallelExecResult 
 {
-    ExecStream &stream;
+    ExecStreamId streamId;
     ExecStreamResult rc;
     
 public:
     explicit ParallelExecResult(
-        ExecStream &stream,
+        ExecStreamId streamId,
         ExecStreamResult rc);
     
     inline ExecStreamId getStreamId() const
     {
-        return stream.getStreamId();
+        return streamId;
     }
 
     inline ExecStreamResult getResultCode() const
@@ -110,6 +110,12 @@ class ParallelExecStreamScheduler
         StreamState state;
         int inhibitionCount;
     };
+
+    enum ManagerState {
+        MGR_RUNNING,
+        MGR_STOPPING,
+        MGR_STOPPED
+    };
     
     typedef std::hash_map<ExecStreamId, StreamStateMapEntry>
         StreamStateMap;
@@ -125,17 +131,22 @@ class ParallelExecStreamScheduler
     ThreadTracker &threadTracker;
 
     StreamStateMap streamStateMap;
+    ManagerState mgrState;
 
     InhibitedQueue inhibitedQueue;
     InhibitedQueue transitQueue;
+    LocalCondition sentinelCondition;
 
     uint degreeOfParallelism;
 
     boost::scoped_ptr<FennelExcn> pPendingExcn;
 
+    void tryExecuteManager();
+    void executeManager();
     void tryExecuteTask(ExecStream &);
     void executeTask(ExecStream &);
-    void addToQueue(ExecStreamId streamId);
+    bool addToQueue(ExecStreamId streamId);
+    void signalSentinel(ExecStreamId sentinelId);
     void retryInhibitedQueue();
     void processCompletedTask(ParallelExecResult const &task);
     inline bool isInhibited(ExecStreamId streamId);
