@@ -71,6 +71,8 @@ public abstract class FarragoJavaUdxIterator
 
     private final ParameterMetaData parameterMetaData;
 
+    private List<TupleIter> restartableInputs;
+
     //~ Constructors -----------------------------------------------------------
 
     protected FarragoJavaUdxIterator(
@@ -102,6 +104,7 @@ public abstract class FarragoJavaUdxIterator
                 null,
                 new Class[] { PreparedStatement.class },
                 new PreparedStatementInvocationHandler(rowType));
+        restartableInputs = new ArrayList<TupleIter>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -116,6 +119,17 @@ public abstract class FarragoJavaUdxIterator
             startWithLatch();
         }
         return super.hasNext();
+    }
+
+    /**
+     * Called by generated code to add an input cursor's iterator so
+     * that it can be restarted as needed.
+     *
+     * @param inputIter input cursor's iterator
+     */
+    protected void addRestartableInput(TupleIter inputIter)
+    {
+        restartableInputs.add(inputIter);
     }
 
     // implement ThreadIterator
@@ -159,6 +173,13 @@ public abstract class FarragoJavaUdxIterator
 
         // Toss anything it was producing.
         queue.clear();
+
+        // Input cursors are currently "throwaway", but this is still
+        // needed so that we correctly invoke a restart on Fennel streams.
+        for (TupleIter inputIter : restartableInputs) {
+            inputIter.restart();
+        }
+        restartableInputs.clear();
 
         // Restart a new thread.
         startWithLatch();
