@@ -262,10 +262,6 @@ outerForLoop:
     {
         List<RelNode> plans = new ArrayList<RelNode>();
 
-        Double [] cardJoinCols =
-            computeJoinCardinalities(
-                multiJoin,
-                semiJoinOpt);
         String [] fieldNames =
             RelOptUtil.getFieldNames(
                 multiJoin.getMultiJoinRel().getRowType());
@@ -280,8 +276,7 @@ outerForLoop:
                 createOrdering(
                     multiJoin,
                     semiJoinOpt,
-                    i,
-                    cardJoinCols);
+                    i);
             if (joinTree == null) {
                 continue;
             }
@@ -363,61 +358,69 @@ outerForLoop:
     }
 
     /**
-     * Computes the cardinality of the columns that participate in join filters
+     * Computes the cardinality of the join columns from a particular factor,
+     * when that factor is joined with another join tree.
      *
      * @param multiJoin join factors being optimized
      * @param semiJoinOpt optimal semijoins chosen for each factor
+     * @param joinTree the join tree that the factor is being joined with
+     * @param filters possible join filters to select from
+     * @param factor the factor being added
      *
-     * @return computed cardinalities
+     * @return computed cardinality
      */
-    private Double [] computeJoinCardinalities(
+    private Double computeJoinCardinality(
         LoptMultiJoin multiJoin,
-        LoptSemiJoinOptimizer semiJoinOpt)
+        LoptSemiJoinOptimizer semiJoinOpt,
+        LoptJoinTree joinTree,
+        List<RexNode> filters,
+        int factor)
     {
-        // OR together all fields referenced by all join filters
-        int nTotalFields = multiJoin.getNumTotalFields();
-        BitSet allJoinFields = new BitSet(nTotalFields);
-        for (RexNode joinFilter : multiJoin.getJoinFilters()) {
-            allJoinFields.or(multiJoin.getFieldsRefByJoinFilter(joinFilter));
-        }
-
-        // AND the fields referenced by all join filters with the fields
-        // corresponding to each factor in order to get the join fields
-        // referenced by that factor; then use that to determine the
-        // cardinality of the factor, relative to the join columns it
-        // references
-        int fieldStart = 0;
+        // loop through the filters and pick out the ones that reference
+        // only the factors in either the join tree or the factor that will
+        // be added
+        ListIterator<RexNode> filterIter = filters.listIterator();
         int nJoinFactors = multiJoin.getNumJoinFactors();
-        Double [] cardJoinCols = new Double[nJoinFactors];
-        for (int i = 0; i < nJoinFactors; i++) {
-            BitSet factorFields = new BitSet(nTotalFields);
-            int numFields = multiJoin.getNumFieldsInJoinFactor(i);
-            RelOptUtil.setRexInputBitmap(
-                factorFields,
-                fieldStart,
-                numFields);
-            factorFields.and(allJoinFields);
+        BitSet childFactors = new BitSet(nJoinFactors);
+        multiJoin.getChildFactors(joinTree, childFactors);  
+        childFactors.set(factor);
 
-            // except for the first factor, need to adjust the bits to the left
-            if (i > 0) {
-                for (
-                    int bit = factorFields.nextSetBit(fieldStart);
-                    bit >= fieldStart;
-                    bit = factorFields.nextSetBit(bit + 1))
+        int factorStart = multiJoin.getJoinStart(factor);
+        int nFields = multiJoin.getNumFieldsInJoinFactor(factor);
+        BitSet joinKeys = new BitSet(nFields);
+        
+        while (filterIter.hasNext()) {
+            RexNode joinFilter = filterIter.next();
+            BitSet filterFactors =
+                multiJoin.getFactorsRefByJoinFilter(joinFilter);
+
+            // if all factors in the join filter are in the join tree and
+            // factor to be added, add the fields corresponding to the factor
+            // to be added to the join key, adjusting the join key to start
+            // at offset 0
+            if (RelOptUtil.contains(childFactors, filterFactors)) {
+                BitSet joinFields =
+                    multiJoin.getFieldsRefByJoinFilter(joinFilter);
+                for (int field = joinFields.nextSetBit(factorStart);
+                    field >= 0 && field < factorStart + nFields;
+                    field = joinFields.nextSetBit(field + 1))
                 {
-                    factorFields.clear(bit);
-                    factorFields.set(bit - fieldStart);
+                    joinKeys.set(field - factorStart);
                 }
             }
-            cardJoinCols[i] =
-                RelMetadataQuery.getDistinctRowCount(
-                    semiJoinOpt.getChosenSemiJoin(i),
-                    factorFields,
-                    null);
-            fieldStart += numFields;
         }
-
-        return cardJoinCols;
+        
+        // if the join tree doesn't contain all the necessary factors in 
+        // any of the join filters, then joinKeys will be empty, so return
+        // null in that case
+        if (joinKeys.isEmpty()) {
+            return null;
+        } else {
+            return RelMetadataQuery.getDistinctRowCount(
+                semiJoinOpt.getChosenSemiJoin(factor),
+                joinKeys,
+                null);
+        }
     }
 
     /**
@@ -427,8 +430,6 @@ outerForLoop:
      * @param multiJoin join factors being optimized
      * @param semiJoinOpt optimal semijoins for each factor
      * @param firstFactor first factor in the tree
-     * @param cardinalities cardinalities of each of the factors, relative to
-     * the join fields each references
      *
      * @return constructed join tree or null if it is not possible for
      * firstFactor to appear as the first factor in the join
@@ -436,8 +437,7 @@ outerForLoop:
     private LoptJoinTree createOrdering(
         LoptMultiJoin multiJoin,
         LoptSemiJoinOptimizer semiJoinOpt,
-        int firstFactor,
-        Double [] cardinalities)
+        int firstFactor)
     {
         LoptJoinTree joinTree = null;
         int nJoinFactors = multiJoin.getNumJoinFactors();
@@ -498,18 +498,35 @@ outerForLoop:
                         }
                     }
 
+                    // only compute the join cardinality if we know that
+                    // this factor joins with some part of the current join
+                    // tree and is potentially better than other factors
+                    // already considered
+                    Double cardinality = null;
+                    if (dimWeight > 0 &&
+                        (dimWeight > bestWeight || dimWeight == bestWeight))
+                    {
+                        cardinality = 
+                            computeJoinCardinality(
+                                multiJoin,
+                                semiJoinOpt,
+                                joinTree,
+                                filtersToAdd,
+                                factor);
+                    }
+                    
                     // if two factors have the same weight, pick the one
-                    // with the higher cardinality join key
+                    // with the higher cardinality join key, relative to
+                    // the join being considered
                     if ((dimWeight > bestWeight)
                         || ((dimWeight == bestWeight)
                             && ((bestCardinality == null)
-                                || ((cardinalities[factor] != null)
-                                    && (cardinalities[factor]
-                                        > bestCardinality)))))
+                                || ((cardinality != null)
+                                    && (cardinality > bestCardinality)))))
                     {
                         nextFactor = factor;
                         bestWeight = dimWeight;
-                        bestCardinality = cardinalities[factor];
+                        bestCardinality = cardinality;
                     }
                 }
             }

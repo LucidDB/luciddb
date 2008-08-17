@@ -24,6 +24,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
 
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
 
@@ -93,6 +94,14 @@ class LcsIndexMergeRel
     {
         // TODO:  the real thing(sorter costing + merge cost)
         return planner.makeTinyCost();
+    }
+    
+    // override RelNode
+    public double getRows()
+    {
+        // the number of rows returned is the number of rows that the
+        // index search input will return
+        return RelMetadataQuery.getRowCount(getInput(0));
     }
 
     // implement FennelRel

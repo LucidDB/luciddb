@@ -289,7 +289,8 @@ public class LcsIndexAccessRule
                         newIndexAccessRel,
                         call,
                         rowScanRelPosInCall,
-                        candidate);
+                        candidate,
+                        rowScanInputSelectivity);
             }
             rowScanInputRels[0] = newIndexAccessRel;
         } else if (origIndexRelCount == 1) {
@@ -526,7 +527,8 @@ public class LcsIndexAccessRule
         RelNode oldIndexAccessRel,
         RelOptRuleCall call,
         int rowScanRelPosInCall,
-        LcsIndexOptimizer.CandidateIndex candidate)
+        LcsIndexOptimizer.CandidateIndex candidate,
+        Double rowScanInputSelectivity)
     {
         assert (call.rels[rowScanRelPosInCall] instanceof LcsRowScanRel);
         LcsRowScanRel rowScanRel =
@@ -575,7 +577,8 @@ public class LcsIndexAccessRule
                 keyInput,
                 inputKeyProj,
                 inputDirectiveProj,
-                requireMerge);
+                requireMerge,
+                rowScanInputSelectivity);
 
         return indexRel;
     }

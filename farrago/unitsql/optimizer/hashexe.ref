@@ -294,15 +294,16 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 9, 10, 7, 8, 5, 6, 3, 4]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO, INTEGER DEPTNOA, INTEGER DEPTNOB, INTEGER DEPTNOC, INTEGER DEPTNOD, INTEGER DEPTNOE, INTEGER DEPTNOF, INTEGER DEPTNOG, INTEGER DEPTNOH) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
 '        LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
 '          LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
+'            LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHXEMPS$ENAME]])'
+'              LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS4$DEPTNOG, SYS$CLUSTERED_INDEX$LHXDEPTS4$DEPTNOH]])'
+'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS3$DEPTNOE, SYS$CLUSTERED_INDEX$LHXDEPTS3$DEPTNOF]])'
 '          LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS2$DEPTNOC, SYS$CLUSTERED_INDEX$LHXDEPTS2$DEPTNOD]])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS3$DEPTNOE, SYS$CLUSTERED_INDEX$LHXDEPTS3$DEPTNOF]])'
-'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS4$DEPTNOG, SYS$CLUSTERED_INDEX$LHXDEPTS4$DEPTNOH]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHXDEPTS$DEPTNOB]])'
 > 
 > select * from lhxemps, lhxdepts, lhxdepts2, lhxdepts3, lhxdepts4
 > where lhxemps.deptno = lhxdepts.deptnoB and lhxemps.deptno = lhxdepts2.deptnoC

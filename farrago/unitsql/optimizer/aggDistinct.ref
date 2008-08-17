@@ -612,21 +612,21 @@ Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in an
 >    sum(distinct empno), sum(distinct empno), sum(empno) from emps;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1, 2, 3, 4, 0]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0, BIGINT NOT NULL EXPR$1, INTEGER EXPR$2, INTEGER EXPR$3, INTEGER EXPR$4) NOT NULL])'
+'  FennelReshapeRel(projection=[[4, 3, 1, 2, 0]], outputRowType=[RecordType(BIGINT NOT NULL EXPR$0, BIGINT NOT NULL EXPR$1, INTEGER EXPR$2, INTEGER EXPR$3, INTEGER EXPR$4) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
 '          FennelAggRel(groupCount=[0], EXPR$4=[SUM(2)])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9, 3, 0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'          FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'          FennelAggRel(groupCount=[0], EXPR$3=[SUM(0)], EXPR$3=[SUM(0)])'
 '            LhxAggRel(groupCount=[1])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
 '        FennelAggRel(groupCount=[0], EXPR$1=[COUNT(0)])'
 '          LhxAggRel(groupCount=[1])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'      FennelAggRel(groupCount=[0], EXPR$3=[SUM(0)], EXPR$3=[SUM(0)])'
+'      FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
 '        LhxAggRel(groupCount=[1])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[9]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for
 > select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
@@ -711,18 +711,18 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 > group by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 2, 4, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2, INTEGER EXPR$3) NOT NULL])'
+'  FennelReshapeRel(projection=[[0, 4, 2, 1]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$1, BIGINT NOT NULL EXPR$2, INTEGER EXPR$3) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
-'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$3, INTEGER EXPR$1) NOT NULL])'
+'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER EXPR$3, BIGINT NOT NULL EXPR$2) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], filterNulls=[[]], joinType=[INNER])'
 '          LhxAggRel(groupCount=[1], EXPR$3=[MAX(1)])'
 '            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'          LhxAggRel(groupCount=[1], EXPR$1=[SUM(1)])'
+'          LhxAggRel(groupCount=[1], EXPR$2=[COUNT(1)])'
 '            LhxAggRel(groupCount=[2])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
-'      LhxAggRel(groupCount=[1], EXPR$2=[COUNT(1)])'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'      LhxAggRel(groupCount=[1], EXPR$1=[SUM(1)])'
 '        LhxAggRel(groupCount=[2])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 3]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > -- verify plans for joins
 > 

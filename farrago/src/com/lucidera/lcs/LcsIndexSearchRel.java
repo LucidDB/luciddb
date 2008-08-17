@@ -80,6 +80,8 @@ public class LcsIndexSearchRel
     final boolean isUniqueKey;
     final boolean isOuter;
     final boolean isVisibleInExplain;
+    
+    public final Double indexSelectivity;
 
     final Integer [] inputKeyProj;
     final Integer [] inputJoinProj;
@@ -116,6 +118,7 @@ public class LcsIndexSearchRel
      * of the key
      * @param rowLimitParamId parameter ID to limit the number of rows fetched
      * in one execute
+     * @param indexSelectivity the selectivity of the index search
      */
     public LcsIndexSearchRel(
         RelOptCluster cluster,
@@ -131,7 +134,8 @@ public class LcsIndexSearchRel
         Integer [] inputJoinProj,
         Integer [] inputDirectiveProj,
         FennelRelParamId startRidParamId,
-        FennelRelParamId rowLimitParamId)
+        FennelRelParamId rowLimitParamId,
+        Double indexSelectivity)
     {
         super(cluster, child);
         assert ((isOuter == false) && (inputJoinProj == null));
@@ -152,6 +156,8 @@ public class LcsIndexSearchRel
 
         this.startRidParamId = startRidParamId;
         this.rowLimitParamId = rowLimitParamId;
+        
+        this.indexSelectivity = indexSelectivity;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -182,7 +188,8 @@ public class LcsIndexSearchRel
                 inputJoinProj,
                 inputDirectiveProj,
                 startRidParamId,
-                rowLimitParamId);
+                rowLimitParamId,
+                indexSelectivity);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -217,7 +224,8 @@ public class LcsIndexSearchRel
                 inputJoinProj,
                 inputDirectiveProj,
                 startRidParamId,
-                rowLimitParamId);
+                rowLimitParamId,
+                indexSelectivity);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -425,6 +433,16 @@ public class LcsIndexSearchRel
 
         // two key format
         return inputKeyProj.length / 2;
+    }
+    
+    public LcsTable getLcsTable()
+    {
+        return lcsTable;
+    }
+    
+    public Double getIndexSelectivity()
+    {
+        return indexSelectivity;
     }
 }
 

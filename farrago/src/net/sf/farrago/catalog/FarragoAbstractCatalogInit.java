@@ -191,6 +191,10 @@ public abstract class FarragoAbstractCatalogInit
                     new Integer(
                         FarragoCatalogInit.DEFAULT_PREFETCH_THROTTLE_RATE));
             }
+            if (fennelConfig.getDeviceSchedulerType() == null) {
+                fennelConfig.setDeviceSchedulerType(
+                    DeviceSchedulerTypeEnum.DEFAULT);
+            }
         }
     }
 
