@@ -548,7 +548,8 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
         SnapshotRandomAllocationSegment *pSnapshotSegment =
             SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
                 pTxnHandle->pSnapshotSegment);
-        pSnapshotSegment->commitChanges(pTxnHandle->pTxn->getTxnId());
+        TxnId commitTxnId = pTxnHandle->pTxn->getTxnId();
+        pSnapshotSegment->commitChanges(commitTxnId);
 
         // Flush pages associated with the snapshot segment.  Note that we
         // don't need to flush the underlying versioned segment first since
@@ -560,6 +561,8 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
         if (txnBlocksCheckpoint) {
             pTxnHandle->pSnapshotSegment->checkpoint(CHECKPOINT_FLUSH_ALL);
         }
+
+        pDb->setLastCommittedTxnId(commitTxnId);
     }
 
     if (cmd.getSvptHandle()) {
@@ -621,6 +624,13 @@ void CmdInterpreter::visit(ProxyCmdGetTxnCsn &cmd)
         SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
             pTxnHandle->pSnapshotSegment);
     setCsnHandle(cmd.getResultHandle(), pSegment->getSnapshotCsn());
+}
+
+void CmdInterpreter::visit(ProxyCmdGetLastCommittedTxnId &cmd)
+{
+    DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    SharedDatabase pDb = pDbHandle->pDb;
+    setCsnHandle(cmd.getResultHandle(), pDb->getLastCommittedTxnId());
 }
 
 void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
@@ -756,7 +766,9 @@ void CmdInterpreter::visit(ProxyCmdAlterSystemDeallocate &cmd)
         // Nothing to do if snapshots aren't enabled
         return;
     } else {
-        pDb->deallocateOldPages();
+        uint64_t paramVal = cmd.getOldestLabelCsn();
+        TxnId labelCsn = isMAXU(paramVal) ? NULL_TXN_ID : TxnId(paramVal);
+        pDb->deallocateOldPages(labelCsn);
     }
 }
 

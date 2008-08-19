@@ -57,6 +57,9 @@ typedef JniProxyIter<ProxyCmdCreateStreamHandle> SharedProxyCmdCreateStreamHandl
 class ProxyCmdDropIndex;
 typedef JniProxyIter<ProxyCmdDropIndex> SharedProxyCmdDropIndex;
 
+class ProxyCmdGetLastCommittedTxnId;
+typedef JniProxyIter<ProxyCmdGetLastCommittedTxnId> SharedProxyCmdGetLastCommittedTxnId;
+
 class ProxyCmdGetTxnCsn;
 typedef JniProxyIter<ProxyCmdGetTxnCsn> SharedProxyCmdGetTxnCsn;
 
@@ -98,6 +101,9 @@ typedef JniProxyIter<ProxyCorrelationJoinStreamDef> SharedProxyCorrelationJoinSt
 
 class ProxyCsnHandle;
 typedef JniProxyIter<ProxyCsnHandle> SharedProxyCsnHandle;
+
+class ProxyCsnHandleReturningCmd;
+typedef JniProxyIter<ProxyCsnHandleReturningCmd> SharedProxyCsnHandleReturningCmd;
 
 class ProxyDatabaseCmd;
 typedef JniProxyIter<ProxyDatabaseCmd> SharedProxyDatabaseCmd;
@@ -423,6 +429,8 @@ class ProxyCmdAlterSystemDeallocate
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
 public:
+int64_t getOldestLabelCsn();
+static jmethodID meth_getOldestLabelCsn;
 };
 
 class ProxyCmdBeginTxn
@@ -543,12 +551,24 @@ class ProxyCmdDropIndex
 public:
 };
 
-class ProxyCmdGetTxnCsn
-: virtual public JniProxy, virtual public ProxyTxnCmd
+class ProxyCsnHandleReturningCmd
+: virtual public JniProxy
 {
 public:
 SharedProxyCsnHandle getResultHandle();
 static jmethodID meth_getResultHandle;
+};
+
+class ProxyCmdGetLastCommittedTxnId
+: virtual public JniProxy, virtual public ProxyCsnHandleReturningCmd, virtual public ProxyDatabaseCmd
+{
+public:
+};
+
+class ProxyCmdGetTxnCsn
+: virtual public JniProxy, virtual public ProxyTxnCmd, virtual public ProxyCsnHandleReturningCmd
+{
+public:
 };
 
 class ProxyCmdOpenDatabase
@@ -1363,6 +1383,8 @@ virtual void visit(ProxyCmdCreateStreamHandle &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdDropIndex &)
 { unhandledVisit(); }
+virtual void visit(ProxyCmdGetLastCommittedTxnId &)
+{ unhandledVisit(); }
 virtual void visit(ProxyCmdGetTxnCsn &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdOpenDatabase &)
@@ -1390,6 +1412,8 @@ virtual void visit(ProxyCorrelation &)
 virtual void visit(ProxyCorrelationJoinStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyCsnHandle &)
+{ unhandledVisit(); }
+virtual void visit(ProxyCsnHandleReturningCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyDatabaseCmd &)
 { unhandledVisit(); }

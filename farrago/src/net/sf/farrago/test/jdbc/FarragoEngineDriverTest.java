@@ -30,7 +30,8 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.test.*;
-import org.eigenbase.sql.parser.SqlParseException;
+
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -357,6 +358,26 @@ public class FarragoEngineDriverTest
         }
     }
 
+    public void testLabelInFarragoConnection()
+        throws Exception
+    {
+        final String driverURI = "jdbc:farrago:";
+        FarragoAbstractJdbcDriver driver =
+            FarragoTestCase.newJdbcEngineDriver();
+        Properties props = newProperties();
+        props.setProperty("label", "foo");
+        try {
+            driver.connect(driverURI, props);     
+            fail(
+                "connection should fail because snapshots aren't supported " +
+                "in Farrago");
+        } catch (Exception ex) {
+            FarragoJdbcTest.assertExceptionMatches(
+                ex,
+                ".*Personality does not support snapshot reads");
+        }
+    }
+    
     /**
      * creates test connection properties.
      */

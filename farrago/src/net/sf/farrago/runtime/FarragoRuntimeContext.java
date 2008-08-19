@@ -1113,6 +1113,19 @@ public class FarragoRuntimeContext
             byteBuffer,
             index);
     }
+    
+    /**
+     * @return true if a UDR is currently being executed
+     */
+    public static boolean inUdr()
+    {
+        List<FarragoUdrInvocationFrame> stack = threadInvocationStack.get();
+        if ((stack == null) || (stack.isEmpty())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
 
     //~ Inner Classes ----------------------------------------------------------
 

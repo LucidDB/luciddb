@@ -677,4 +677,46 @@ ProjectRel(EXPR$0=[$0], EXPR$1=[$1])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testReduceCasts">
+        <Resource name="sql">
+            <![CDATA[select cast(d.name as varchar(128)), cast(e.empno as integer) from sales.depts d inner join sales.emps e on cast(d.deptno as integer) = cast(e.deptno as integer) where cast(e.gender as char(1)) = 'M']]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EXPR$0=[CAST($1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$1=[CAST($2):INTEGER NOT NULL])
+  FilterRel(condition=[=(CAST($5):CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary", 'M')])
+    JoinRel(condition=[=(CAST($0):INTEGER NOT NULL, CAST($4):INTEGER NOT NULL)], joinType=[inner])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EXPR$0=[$1], EXPR$1=[$2])
+  FilterRel(condition=[=($5, 'M')])
+    JoinRel(condition=[=($0, $4)], joinType=[inner])
+      TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testReduceCastAndConsts">
+        <Resource name="sql">
+            <![CDATA[select * from sales.emps where cast((empno + (10/2)) as int) = 13]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
+  FilterRel(condition=[=(CAST(+($0, /(10, 2))):INTEGER NOT NULL, 13)])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])
+  FilterRel(condition=[=(+($0, 5), 13)])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

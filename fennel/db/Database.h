@@ -118,6 +118,11 @@ class Database
      */
     uint nCheckpoints;
 
+    /**
+     * Id of the last committed transaction
+     */
+    TxnId lastCommittedTxnId;
+
     explicit Database(
         SharedCache pCache,
         ConfigMap const &configMap,
@@ -247,9 +252,25 @@ public:
 
     /**
      * Deallocates old snapshot pages that are no longer referenced by
-     * any active transactions
+     * any active transactions, as well as active labels marking snapshots
+     * in time.
+     *
+     * @param oldestLabelCsn the csn of the oldest active label; set to 
+     * NULL_TXN_ID if there are no active labels
      */
-    void deallocateOldPages();
+    void deallocateOldPages(TxnId oldestLabelCsn);
+
+    /**
+     * Saves the id of the last committed transaction.
+     *
+     * @param txnId id of the last committed transaction
+     */
+    void setLastCommittedTxnId(TxnId txnId);
+
+    /**
+     * Retrieves the id of the last committed transaction.
+     */
+    TxnId getLastCommittedTxnId();
 };
 
 FENNEL_END_NAMESPACE

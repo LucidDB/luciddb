@@ -898,6 +898,14 @@ public class FarragoDatabase
 
             return null;
         }
+        
+        String key = sql + ";label=";
+        FarragoDbSession session = (FarragoDbSession) stmt.getSession();
+        Long labelCsn = session.getSessionLabelCsn();
+        if (labelCsn != null) {
+            key += labelCsn;
+        }
+        final String stmtKey = key;
 
         FarragoObjectCache.Entry cacheEntry;
         FarragoObjectCache.CachedObjectFactory stmtFactory =
@@ -908,7 +916,7 @@ public class FarragoDatabase
                 {
                     timingTracer.traceTime("code cache miss");
 
-                    assert (key.equals(sql));
+                    assert (key.equals(stmtKey));
                     FarragoSessionExecutableStmt executableStmt =
                         stmt.prepare(validatedSqlNode, sqlNode);
                     long memUsage =
@@ -938,7 +946,7 @@ public class FarragoDatabase
                 EigenbaseResource.instance().SharedStatementPlans);
 
         // prepare the statement, caching the results in codeCache
-        cacheEntry = codeCache.pin(sql, stmtFactory, !sharable);
+        cacheEntry = codeCache.pin(stmtKey, stmtFactory, !sharable);
         FarragoSessionExecutableStmt executableStmt =
             (FarragoSessionExecutableStmt) cacheEntry.getValue();
         owner.addAllocation(cacheEntry);
@@ -1098,9 +1106,21 @@ public class FarragoDatabase
         if (!systemRepos.isFennelEnabled()) {
             return;
         }
+        
+        // Find the csn of the oldest label.  Since the catalog is locked
+        // for the duration of this statement, it isn't possible for 
+        // a CREATE LABEL statement to sneak in and invalidate the result of
+        // this call.
+        Long labelCsn = FarragoCatalogUtil.getOldestLabelCsn(userRepos);
+        
         FemCmdAlterSystemDeallocate cmd =
             systemRepos.newFemCmdAlterSystemDeallocate();
         cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
+        if (labelCsn == null) {
+            cmd.setOldestLabelCsn(-1);
+        } else {
+            cmd.setOldestLabelCsn(labelCsn);
+        }
         fennelDbHandle.executeCmd(cmd);
     }
 

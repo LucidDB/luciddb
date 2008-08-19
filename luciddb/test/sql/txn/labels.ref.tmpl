@@ -1,0 +1,888 @@
+0: jdbc:luciddb:> -- $Id$
+0: jdbc:luciddb:> -- Tests LucidDB support for labels
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> alter system deallocate old;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> -- Setup schema, tables, data, labels, etc.
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema label;
+0: jdbc:luciddb:> set schema 'label';
+0: jdbc:luciddb:> set path 'label';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create procedure setLabel(labelName varchar(128)) language java reads sql data
+. . . . . . . . >     external name 'class net.sf.farrago.test.FarragoTestUDR.setLabel';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t(a int);
+0: jdbc:luciddb:> create index it on t(a);
+0: jdbc:luciddb:> create label l0 description 'empty table';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t values(1);
+0: jdbc:luciddb:> create label l1 description 'one row';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t values(2);
+0: jdbc:luciddb:> analyze table t compute statistics for all columns;
+0: jdbc:luciddb:> create function times2(a int)
+. . . . . . . . >     returns int
+. . . . . . . . >     contains sql
+. . . . . . . . >     return a*2;
+0: jdbc:luciddb:> create label l2 description 'two rows';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t values(3);
+0: jdbc:luciddb:> create view v as select * from t;
+0: jdbc:luciddb:> create label l3 description 'three rows';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> analyze table t compute statistics for all columns;
+0: jdbc:luciddb:> insert into t values(4);
+0: jdbc:luciddb:> create table t2(a int);
+0: jdbc:luciddb:> insert into t2 values(-1);
+0: jdbc:luciddb:> create label l4 description 'four rows';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t values(5);
+0: jdbc:luciddb:> insert into t values(6);
+0: jdbc:luciddb:> analyze table t compute statistics for all columns;
+0: jdbc:luciddb:> delete from t where a = 6;
+0: jdbc:luciddb:> analyze table t compute statistics for all columns;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that the labels got created
+0: jdbc:luciddb:> select label_name, creator, remarks from sys_root.dba_labels
+. . . . . . . . >     order by label_name;
++-------------+----------+--------------+
+| LABEL_NAME  | CREATOR  |   REMARKS    |
++-------------+----------+--------------+
+| L0          | sa       | empty table  |
+| L1          | sa       | one row      |
+| L2          | sa       | two rows     |
+| L3          | sa       | three rows   |
+| L4          | sa       | four rows    |
++-------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create a foreign table
+0: jdbc:luciddb:> create server ff_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options(
+. . . . . . . . >     directory '@DIR@',
+. . . . . . . . >     file_extension '.csv',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter ',',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '1'
+. . . . . . . . > );
+0: jdbc:luciddb:> create foreign table EMPS
+. . . . . . . . > server ff_server
+. . . . . . . . > options(
+. . . . . . . . >     SCHEMA_NAME 'BCP',
+. . . . . . . . >     filename 'EMP'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> -- Validate stats
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- make sure the rowcount in dba_stored_tables reflects all rows inserted
+0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
+. . . . . . . . >     from sys_root.dba_stored_tables where table_name like 'T%';
++-------------+--------------------+--------------------+
+| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++-------------+--------------------+--------------------+
+| T           | 5                  | 1                  |
+| T2          | 1                  | 0                  |
++-------------+--------------------+--------------------+
+0: jdbc:luciddb:> -- make sure there are 6 rows corresponding to T in RowCountStatistics,
+0: jdbc:luciddb:> -- corresponding to each of the labels plus 1 for the DML statements that
+0: jdbc:luciddb:> -- occurred after the last label was created
+0: jdbc:luciddb:> select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" like 'T%'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+------------------+------------------+
+| name  | rowCount  | deletedRowCount  | analyzeRowCount  |
++-------+-----------+------------------+------------------+
+| T     | 0         | 0                |                  |
+| T     | 1         | 0                |                  |
+| T     | 2         | 0                | 2                |
+| T     | 3         | 0                | 2                |
+| T     | 4         | 0                | 3                |
+| T     | 5         | 1                | 5                |
+| T2    | 1         | 0                |                  |
++-------+-----------+------------------+------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify the number of rows for column stats
+0: jdbc:luciddb:> -- the latest set of histogram bars for T should number 5; but there should be
+0: jdbc:luciddb:> -- 3 sets of histograms for T -- one for each of the 3 analyze's
+0: jdbc:luciddb:> select count(*) from sys_root.dba_column_histograms where table_name = 'T';
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select table_name, "barCount" 
+. . . . . . . . >     from
+. . . . . . . . >         sys_boot.jdbc_metadata.columns_view_internal c
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."ColumnHistogram" h
+. . . . . . . . >     on c."mofId" = h."Column"
+. . . . . . . . >     where c.table_name = 'T'
+. . . . . . . . >     order by "barCount";
++-------------+-----------+
+| TABLE_NAME  | barCount  |
++-------------+-----------+
+| T           | 2         |
+| T           | 3         |
+| T           | 5         |
++-------------+-----------+
+0: jdbc:luciddb:> -- the count of the number of records in ColumnHistogramBar should match the
+0: jdbc:luciddb:> -- sum of the barcounts from above
+0: jdbc:luciddb:> select count(*) from sys_fem.med."ColumnHistogramBar";
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify the number of rows for index stats -- there should be 9 because there
+0: jdbc:luciddb:> -- are 3 clusters (1 column cluster, 1 index cluster, 1 deletion index) times
+0: jdbc:luciddb:> -- 3 analyzes
+0: jdbc:luciddb:> select "name", s."pageCount"
+. . . . . . . . >     from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+. . . . . . . . >     on i."mofId" = s."LocalIndex"
+. . . . . . . . >     where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+. . . . . . . . >     order by 1, 2;
++--------------------------+------------+
+|           name           | pageCount  |
++--------------------------+------------+
+| IT                       | 1          |
+| IT                       | 1          |
+| IT                       | 1          |
+| SYS$CLUSTERED_INDEX$T$A  | 2          |
+| SYS$CLUSTERED_INDEX$T$A  | 2          |
+| SYS$CLUSTERED_INDEX$T$A  | 2          |
+| SYS$DELETION_INDEX$T     | 1          |
+| SYS$DELETION_INDEX$T     | 1          |
+| SYS$DELETION_INDEX$T     | 1          |
++--------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> -- Validate that the correct data is returned and the behavior is correct
+0: jdbc:luciddb:> -- with various label settings, including the case where no label is set
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- default setting -- should return all rows
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
+| 5  |
++----+
+0: jdbc:luciddb:> -- make sure the row count stats used by the optimizer correctly reflect the
+0: jdbc:luciddb:> -- latest row counts; the row count for the second query should be > 1
+0: jdbc:luciddb:> !set outputformat csv
+0: jdbc:luciddb:> explain plan including all attributes for select * from t;
+'column0'
+'FennelToIteratorConverter: rowcount = 5.0, cumulative cost = 10.0'
+'  LcsRowScanRel(table=[[LOCALDB, LABEL, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A]]): rowcount = 5.0, cumulative cost = 5.0'
+'    LcsIndexSearchRel(table=[[LOCALDB, LABEL, T]], index=[SYS$DELETION_INDEX$T], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0]): rowcount = 5.0, cumulative cost = 6.0'
+'      FennelValuesRel(tuples=[[{ '-', null, '+', null }]]): rowcount = 1.0, cumulative cost = 1.0'
+0: jdbc:luciddb:> explain plan including all attributes for select * from t where a >= 4;
+'column0'
+'FennelToIteratorConverter: rowcount = 2.5, cumulative cost = 6.035533905932738'
+'  LcsRowScanRel(table=[[LOCALDB, LABEL, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A]], residual columns=[[0]]): rowcount = 2.5, cumulative cost = 3.5355339059327378'
+'    LcsIndexSearchRel(table=[[LOCALDB, LABEL, T]], index=[SYS$DELETION_INDEX$T], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0]): rowcount = 5.0, cumulative cost = 6.0'
+'      FennelValuesRel(tuples=[[{ '-', null, '+', null }]]): rowcount = 1.0, cumulative cost = 1.0'
+'    FennelValuesRel(tuples=[[{ '[', 4, '+', null }]]): rowcount = 1.0, cumulative cost = 1.0'
+0: jdbc:luciddb:> !set outputformat table
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- try setting the label to a non-existent label
+0: jdbc:luciddb:> alter session set "label" = 'NONE';
+Error: DDL validation error: Reference to unknown label "NONE" (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should return 1 row
+0: jdbc:luciddb:> alter session set "label" = 'L1';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
++----+
+0: jdbc:luciddb:> -- can access UDF even though it was created after L1
+0: jdbc:luciddb:> select * from t where a*2 = times2(a);
++----+
+| A  |
++----+
+| 1  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should return no rows
+0: jdbc:luciddb:> alter session set "label" = 'L0';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
++----+
+0: jdbc:luciddb:> -- make sure we handle the case where there are no analyze stats yet
+0: jdbc:luciddb:> select * from t where a >= 4;
++----+
+| A  |
++----+
++----+
+0: jdbc:luciddb:> -- access the foreign table, even though it was created after L1
+0: jdbc:luciddb:> select * from EMPS order by empno;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should return 2 rows
+0: jdbc:luciddb:> alter session set "label" = 'L2';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:luciddb:> -- can see V, even though it was created after L2
+0: jdbc:luciddb:> select * from v order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should return 4 rows
+0: jdbc:luciddb:> alter session set "label" = 'L4';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
++----+
+0: jdbc:luciddb:> -- can see T2 since it was created before L4
+0: jdbc:luciddb:> select * from t2 order by a;
++-----+
+|  A  |
++-----+
+| -1  |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should return 3 rows
+0: jdbc:luciddb:> alter session set "label" = 'L3';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
++----+
+0: jdbc:luciddb:> !set outputformat csv
+0: jdbc:luciddb:> -- make sure the row count stats used by the optimizer correctly reflect the
+0: jdbc:luciddb:> -- label setting (i.e., 3 rows)
+0: jdbc:luciddb:> explain plan including all attributes for select * from t;
+'column0'
+'FennelToIteratorConverter: rowcount = 3.0, cumulative cost = 6.0'
+'  LcsRowScanRel(table=[[LOCALDB, LABEL, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A]]): rowcount = 3.0, cumulative cost = 3.0'
+'    LcsIndexSearchRel(table=[[LOCALDB, LABEL, T]], index=[SYS$DELETION_INDEX$T], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0]): rowcount = 3.0, cumulative cost = 4.0'
+'      FennelValuesRel(tuples=[[{ '-', null, '+', null }]]): rowcount = 1.0, cumulative cost = 1.0'
+0: jdbc:luciddb:> -- make sure the right column level stats are used by the optimizer; the row
+0: jdbc:luciddb:> -- count in the plan should be only 1 row vs > 1 if the latest stats were used
+0: jdbc:luciddb:> explain plan including all attributes for select * from t where a >= 4;
+'column0'
+'FennelToIteratorConverter: rowcount = 1.0, cumulative cost = 2.732050807568877'
+'  LcsRowScanRel(table=[[LOCALDB, LABEL, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$T$A]], residual columns=[[0]]): rowcount = 1.0, cumulative cost = 1.7320508075688772'
+'    LcsIndexSearchRel(table=[[LOCALDB, LABEL, T]], index=[SYS$DELETION_INDEX$T], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0]): rowcount = 3.0, cumulative cost = 4.0'
+'      FennelValuesRel(tuples=[[{ '-', null, '+', null }]]): rowcount = 1.0, cumulative cost = 1.0'
+'    FennelValuesRel(tuples=[[{ '[', 4, '+', null }]]): rowcount = 1.0, cumulative cost = 1.0'
+0: jdbc:luciddb:> !set outputformat table
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- can't see T2, since it was created after L3
+0: jdbc:luciddb:> select * from t2;
+Error: Attempt to access table "LABEL"."T2", which is not visible to the current session label setting. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- replace an existing label and make sure its point in time now reflects
+0: jdbc:luciddb:> -- the latest point in time; also make sure the stats associated with the
+0: jdbc:luciddb:> -- original label have been removed
+0: jdbc:luciddb:> alter session set "label" = null;
+0: jdbc:luciddb:> create or replace label l4 description 'all rows';
+0: jdbc:luciddb:> alter session set "label" = 'L4';
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
+| 5  |
++----+
+0: jdbc:luciddb:> select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" = 'T'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+------------------+------------------+
+| name  | rowCount  | deletedRowCount  | analyzeRowCount  |
++-------+-----------+------------------+------------------+
+| T     | 0         | 0                |                  |
+| T     | 1         | 0                |                  |
+| T     | 2         | 0                | 2                |
+| T     | 3         | 0                | 2                |
+| T     | 5         | 1                | 5                |
++-------+-----------+------------------+------------------+
+0: jdbc:luciddb:> select table_name, "barCount" 
+. . . . . . . . >     from
+. . . . . . . . >         sys_boot.jdbc_metadata.columns_view_internal c
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."ColumnHistogram" h
+. . . . . . . . >     on c."mofId" = h."Column"
+. . . . . . . . >     where c.table_name = 'T'
+. . . . . . . . >     order by "barCount";
++-------------+-----------+
+| TABLE_NAME  | barCount  |
++-------------+-----------+
+| T           | 2         |
+| T           | 5         |
++-------------+-----------+
+0: jdbc:luciddb:> select count(*) from sys_fem.med."ColumnHistogramBar";
++---------+
+| EXPR$0  |
++---------+
+| 7       |
++---------+
+0: jdbc:luciddb:> select "name", s."pageCount"
+. . . . . . . . >     from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+. . . . . . . . >     on i."mofId" = s."LocalIndex"
+. . . . . . . . >     where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+. . . . . . . . >     order by 1, 2;
++--------------------------+------------+
+|           name           | pageCount  |
++--------------------------+------------+
+| IT                       | 1          |
+| IT                       | 1          |
+| SYS$CLUSTERED_INDEX$T$A  | 2          |
+| SYS$CLUSTERED_INDEX$T$A  | 2          |
+| SYS$DELETION_INDEX$T     | 1          |
+| SYS$DELETION_INDEX$T     | 1          |
++--------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ok to execute these SET statements even though there is a label setting
+0: jdbc:luciddb:> set schema 'label';
+0: jdbc:luciddb:> set path 'label';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that DML and DDL statements are disallowed since there is a label
+0: jdbc:luciddb:> -- setting
+0: jdbc:luciddb:> insert into t values(6);
+Error: Session is read-only because it has a label setting. (state=,code=0)
+0: jdbc:luciddb:> truncate table t;
+Error: Session is read-only because it has a label setting. (state=,code=0)
+0: jdbc:luciddb:> analyze table t compute statistics for all columns;
+Error: Session is read-only because it has a label setting. (state=,code=0)
+0: jdbc:luciddb:> call applib.compute_statistics_for_schema('LABEL');
+Error: Session is read-only because it has a label setting. (state=,code=0)
+0: jdbc:luciddb:> alter system deallocate old;
+Error: Session is read-only because it has a label setting. (state=,code=0)
+0: jdbc:luciddb:> alter table t rebuild;
+Error: Session is read-only because it has a label setting. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- verify that you can't set a label inside a UDR
+0: jdbc:luciddb:> call setLabel('L0');
+Error: A label cannot be set inside a UDR. (state=,code=0)
+0: jdbc:luciddb:> call setLabel(null);
+Error: A label cannot be set inside a UDR. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- go back to the default
+0: jdbc:luciddb:> alter session set "label" = null;
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
+| 5  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DML should now be allowed since there's no longer a label setting
+0: jdbc:luciddb:> insert into t values(6);
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
+| 5  |
+| 6  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Verify label setting via JDBC connect string
+0: jdbc:luciddb:> !closeall
+sqlline> !connect jdbc:luciddb:;schema="LABEL";label="L3" sa sa
+0: jdbc:luciddb:> -- Make sure the label is set
+0: jdbc:luciddb:> select * from sys_root.user_session_parameters where param_name = 'label';
++-------------+--------------+
+| PARAM_NAME  | PARAM_VALUE  |
++-------------+--------------+
+| label       | L3           |
++-------------+--------------+
+0: jdbc:luciddb:> select * from t order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> -- Verify that ALTER SYSTEM DEALLOCATE can't deallocate any pages until certain
+0: jdbc:luciddb:> -- labels have been dropped.  Use an appvar to temporarily store the before
+0: jdbc:luciddb:> -- pageCount.  Make sure to sleep before getting the pages allocated counter
+0: jdbc:luciddb:> -- to give the stats a chance to be updated.  
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Note that we can call these UDP's even though there is a label setting
+0: jdbc:luciddb:> -- because these UDP's don't execute any DDL and DML statements as part of
+0: jdbc:luciddb:> -- their execution.
+0: jdbc:luciddb:> call applib.create_var('LABEL', null, 'Label context');
+0: jdbc:luciddb:> call applib.create_var('LABEL', 'pageCount', 'used as a page counter');
+0: jdbc:luciddb:> call applib.set_var(
+. . . . . . . . >     'LABEL',
+. . . . . . . . >     'pageCount',
+. . . . . . . . >     (select counter_value from sys_root.dba_performance_counters
+. . . . . . . . >         where counter_name = 'DatabasePagesAllocated'));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Unset the label
+0: jdbc:luciddb:> alter session set "label" = null;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nothing can be deallocated because no labels have been dropped
+0: jdbc:luciddb:> alter system deallocate old;
+0: jdbc:luciddb:> select sys_boot.mgmt.sleep(1000) from t where a = 1;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select (counter_value = applib.get_var('LABEL', 'pageCount'))
+. . . . . . . . >    from sys_root.dba_performance_counters
+. . . . . . . . >         where counter_name = 'DatabasePagesAllocated';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- drop a label that's not the oldest and make sure no pages are deallocated;
+0: jdbc:luciddb:> -- and make sure only the associated row count stat has been removed since
+0: jdbc:luciddb:> -- there are no column stats associated with L3
+0: jdbc:luciddb:> drop label l3;
+0: jdbc:luciddb:> select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" like 'T%'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+------------------+------------------+
+| name  | rowCount  | deletedRowCount  | analyzeRowCount  |
++-------+-----------+------------------+------------------+
+| T     | 0         | 0                |                  |
+| T     | 1         | 0                |                  |
+| T     | 2         | 0                | 2                |
+| T     | 5         | 1                | 5                |
+| T     | 6         | 1                | 5                |
+| T2    | 1         | 0                |                  |
++-------+-----------+------------------+------------------+
+0: jdbc:luciddb:> select table_name, "barCount" 
+. . . . . . . . >     from
+. . . . . . . . >         sys_boot.jdbc_metadata.columns_view_internal c
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."ColumnHistogram" h
+. . . . . . . . >     on c."mofId" = h."Column"
+. . . . . . . . >     where c.table_name = 'T'
+. . . . . . . . >     order by "barCount";
++-------------+-----------+
+| TABLE_NAME  | barCount  |
++-------------+-----------+
+| T           | 2         |
+| T           | 5         |
++-------------+-----------+
+0: jdbc:luciddb:> select count(*) from sys_fem.med."ColumnHistogramBar";
++---------+
+| EXPR$0  |
++---------+
+| 7       |
++---------+
+0: jdbc:luciddb:> select "name", s."pageCount"
+. . . . . . . . >     from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+. . . . . . . . >     on i."mofId" = s."LocalIndex"
+. . . . . . . . >     where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+. . . . . . . . >     order by 1, 2;
++--------------------------+------------+
+|           name           | pageCount  |
++--------------------------+------------+
+| IT                       | 1          |
+| IT                       | 1          |
+| SYS$CLUSTERED_INDEX$T$A  | 2          |
+| SYS$CLUSTERED_INDEX$T$A  | 2          |
+| SYS$DELETION_INDEX$T     | 1          |
+| SYS$DELETION_INDEX$T     | 1          |
++--------------------------+------------+
+0: jdbc:luciddb:> alter system deallocate old;
+0: jdbc:luciddb:> select sys_boot.mgmt.sleep(1000) from t where a = 1;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select (counter_value = applib.get_var('LABEL', 'pageCount'))
+. . . . . . . . >     from sys_root.dba_performance_counters
+. . . . . . . . >         where counter_name = 'DatabasePagesAllocated';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Drop the three oldest label.  Pages SHOULD be deallocated.  Note that we
+0: jdbc:luciddb:> -- have to drop 3 labels because L0 corresponds to the empty table.  L1
+0: jdbc:luciddb:> -- corresponds to an anchor page, which can't be dropped.  Therefore,
+0: jdbc:luciddb:> -- deallocations can only start after dropping L2.
+0: jdbc:luciddb:> drop label l0;
+0: jdbc:luciddb:> select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" like 'T%'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+------------------+------------------+
+| name  | rowCount  | deletedRowCount  | analyzeRowCount  |
++-------+-----------+------------------+------------------+
+| T     | 1         | 0                |                  |
+| T     | 2         | 0                | 2                |
+| T     | 5         | 1                | 5                |
+| T     | 6         | 1                | 5                |
+| T2    | 1         | 0                |                  |
++-------+-----------+------------------+------------------+
+0: jdbc:luciddb:> drop label l1;
+0: jdbc:luciddb:> select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" like 'T%'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+------------------+------------------+
+| name  | rowCount  | deletedRowCount  | analyzeRowCount  |
++-------+-----------+------------------+------------------+
+| T     | 2         | 0                | 2                |
+| T     | 5         | 1                | 5                |
+| T     | 6         | 1                | 5                |
+| T2    | 1         | 0                |                  |
++-------+-----------+------------------+------------------+
+0: jdbc:luciddb:> drop label l2;
+0: jdbc:luciddb:> select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" like 'T%'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+------------------+------------------+
+| name  | rowCount  | deletedRowCount  | analyzeRowCount  |
++-------+-----------+------------------+------------------+
+| T     | 5         | 1                | 5                |
+| T     | 6         | 1                | 5                |
+| T2    | 1         | 0                |                  |
++-------+-----------+------------------+------------------+
+0: jdbc:luciddb:> alter system deallocate old;
+0: jdbc:luciddb:> select sys_boot.mgmt.sleep(1000) from t where a = 1;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select (counter_value < applib.get_var('LABEL', 'pageCount'))
+. . . . . . . . >     from sys_root.dba_performance_counters
+. . . . . . . . >         where counter_name = 'DatabasePagesAllocated';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call applib.delete_var('LABEL', 'pageCount');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Verify that stats have been removed from the other stat tables.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Should be 1 row instead of 3 since L2 and the original L4 have been removed.
+0: jdbc:luciddb:> -- (There are no column stats associated with L0, L1, L3, and the new L4
+0: jdbc:luciddb:> -- since analyzes weren't done for those labels.)
+0: jdbc:luciddb:> select table_name, "barCount" 
+. . . . . . . . >     from
+. . . . . . . . >         sys_boot.jdbc_metadata.columns_view_internal c
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."ColumnHistogram" h
+. . . . . . . . >     on c."mofId" = h."Column"
+. . . . . . . . >     where c.table_name = 'T';
++-------------+-----------+
+| TABLE_NAME  | barCount  |
++-------------+-----------+
+| T           | 5         |
++-------------+-----------+
+0: jdbc:luciddb:> -- the count of the number of records in ColumnHistogramBar should match the
+0: jdbc:luciddb:> -- sum of the barcounts from above
+0: jdbc:luciddb:> select count(*) from sys_fem.med."ColumnHistogramBar";
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> -- Should be 3 rows instead of 9 since L2 and the original L4 were dropped.
+0: jdbc:luciddb:> -- The 3 rows correspond to the latest set of stats, which weren't removed.
+0: jdbc:luciddb:> select "name", s."pageCount"
+. . . . . . . . >     from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+. . . . . . . . >     on i."mofId" = s."LocalIndex"
+. . . . . . . . >     where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+. . . . . . . . >     order by 1, 2;
++--------------------------+------------+
+|           name           | pageCount  |
++--------------------------+------------+
+| IT                       | 1          |
+| SYS$CLUSTERED_INDEX$T$A  | 2          |
+| SYS$DELETION_INDEX$T     | 1          |
++--------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Make sure we can still select from the table
+0: jdbc:luciddb:> select * from t where a >= 0 order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
+| 5  |
+| 6  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Drop the remaining label and make sure one set of stats still remains
+0: jdbc:luciddb:> -- for all stats.
+0: jdbc:luciddb:> drop label l4;
+0: jdbc:luciddb:> select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" like 'T%'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+------------------+------------------+
+| name  | rowCount  | deletedRowCount  | analyzeRowCount  |
++-------+-----------+------------------+------------------+
+| T     | 6         | 1                | 5                |
+| T2    | 1         | 0                |                  |
++-------+-----------+------------------+------------------+
+0: jdbc:luciddb:> select table_name, "barCount" 
+. . . . . . . . >     from
+. . . . . . . . >         sys_boot.jdbc_metadata.columns_view_internal c
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."ColumnHistogram" h
+. . . . . . . . >     on c."mofId" = h."Column"
+. . . . . . . . >     where c.table_name = 'T';
++-------------+-----------+
+| TABLE_NAME  | barCount  |
++-------------+-----------+
+| T           | 5         |
++-------------+-----------+
+0: jdbc:luciddb:> select count(*) from sys_fem.med."ColumnHistogramBar";
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select "name", s."pageCount"
+. . . . . . . . >     from sys_fem.med."LocalIndex" i inner join sys_fem.med."IndexStatistics" s
+. . . . . . . . >     on i."mofId" = s."LocalIndex"
+. . . . . . . . >     where "name" in ('IT', 'SYS$CLUSTERED_INDEX$T$A', 'SYS$DELETION_INDEX$T')
+. . . . . . . . >     order by "name";
++--------------------------+------------+
+|           name           | pageCount  |
++--------------------------+------------+
+| IT                       | 1          |
+| SYS$CLUSTERED_INDEX$T$A  | 2          |
+| SYS$DELETION_INDEX$T     | 1          |
++--------------------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Make sure we can still select from the table
+0: jdbc:luciddb:> select * from t where a >= -1 order by a;
++----+
+| A  |
++----+
+| 1  |
+| 2  |
+| 3  |
+| 4  |
+| 5  |
+| 6  |
++----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> -- One more stat-related test to exercise a scenario not covered by the above
+0: jdbc:luciddb:> -- tests.  The setup is as follows:
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Stat0, L0, L1, Stat2, L2, L3
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Dropping L0 should not remove Stat0 because it's still needed by L1.
+0: jdbc:luciddb:> -- Likewise for the drop of L2 because Stat2 is now associated with L3.
+0: jdbc:luciddb:> --------------------------------------------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table stat(a int);
+0: jdbc:luciddb:> insert into stat values(1);
+0: jdbc:luciddb:> create label l0;
+0: jdbc:luciddb:> create label l1;
+0: jdbc:luciddb:> insert into stat values(2);
+0: jdbc:luciddb:> create label l2;
+0: jdbc:luciddb:> create label l3;
+0: jdbc:luciddb:> select t."name", st."rowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" = 'STAT'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+
+| name  | rowCount  |
++-------+-----------+
+| STAT  | 1         |
+| STAT  | 2         |
++-------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop label l0;
+0: jdbc:luciddb:> select t."name", st."rowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" = 'STAT'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+
+| name  | rowCount  |
++-------+-----------+
+| STAT  | 1         |
+| STAT  | 2         |
++-------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop label l2;
+0: jdbc:luciddb:> select t."name", st."rowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" = 'STAT'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+
+| name  | rowCount  |
++-------+-----------+
+| STAT  | 1         |
+| STAT  | 2         |
++-------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Still, nothing's removed because Stat2 is now the latest
+0: jdbc:luciddb:> drop label l3;
+0: jdbc:luciddb:> select t."name", st."rowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" = 'STAT'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+
+| name  | rowCount  |
++-------+-----------+
+| STAT  | 1         |
+| STAT  | 2         |
++-------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Finally, something's removed
+0: jdbc:luciddb:> drop label l1;
+0: jdbc:luciddb:> select t."name", st."rowCount"
+. . . . . . . . >     from
+. . . . . . . . >         sys_fem.med."StoredTable" t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem.med."RowCountStatistics" st
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = st."ColumnSet"
+. . . . . . . . >     where
+. . . . . . . . >         t."name" = 'STAT'
+. . . . . . . . >     order by t."name", st."rowCount";
++-------+-----------+
+| name  | rowCount  |
++-------+-----------+
+| STAT  | 2         |
++-------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

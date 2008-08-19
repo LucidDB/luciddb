@@ -169,7 +169,13 @@ public class DdlAnalyzeStmt
         // Cast abstract catalog objects to required types
         List<FemAbstractColumn> femColumnList = checkCatalogTypes();
 
-        femTableRowCount = femTable.getRowCount();
+        Long[] rowCountStats = new Long[2];
+        FarragoCatalogUtil.getRowCounts(
+            femTable, 
+            null, 
+            rowCountStats);
+        
+        femTableRowCount = rowCountStats[0];
         femTableDeletedRowCount = 0;
         // Computing row count implies running a query to calculate row count
         // and then later storing the value in the catalog.  If we don't
@@ -183,7 +189,7 @@ public class DdlAnalyzeStmt
             // maintains the catalog's row count
             computeRowCount = false;
 
-            Long delRowCnt = femTable.getDeletedRowCount();
+            Long delRowCnt = rowCountStats[1];
             if (delRowCnt != null) {
                 femTableDeletedRowCount = delRowCnt.longValue();
             }
@@ -943,7 +949,10 @@ public class DdlAnalyzeStmt
     {
         // If possible, try to reuse the original histogram
         FemColumnHistogram origHistogram = 
-            histogram.column.column.getHistogram();
+            FarragoCatalogUtil.getHistogramForUpdate(
+                repos,
+                histogram.column.column,
+                false);
         int origBarCount = 0;
         List<FemColumnHistogramBar> origBars = null;
         if (origHistogram != null) {
@@ -1136,7 +1145,7 @@ public class DdlAnalyzeStmt
             estimate ? samplePercent.bigDecimalValue().floatValue() : 100.0f;
         
         FarragoCatalogUtil.updateRowCount(
-            femTable, rowCount, updateRowCount, true);
+            femTable, rowCount, updateRowCount, true, repos);
 
         for (Histogram histogram : histograms) {
             List<FemColumnHistogramBar> femBars =
@@ -1158,7 +1167,8 @@ public class DdlAnalyzeStmt
         for(IndexDetail indexDetail: indexDetails) {
             FarragoCatalogUtil.updatePageCount(
                 indexDetail.index,
-                indexDetail.indexStats.getPageCount());
+                indexDetail.indexStats.getPageCount(),
+                repos);
         }
     }
 

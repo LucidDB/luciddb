@@ -835,8 +835,8 @@ Warning: Statement execution encountered recoverable exceptions; errors: 2; warn
 Error: Exceeded limit of 1 errors. Last error was:
 Could not calculate result column 2 for the following row:
 [Gary Larsen, null, 5.00]
-Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value
-Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
+Messages: Target CAST($1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value
+Target CAST($1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
 Error: error while fetching from cursor (state=,code=0)
 > !set shownestederrs false
 > 

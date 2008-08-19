@@ -406,7 +406,8 @@
 > schema_name as current_schema_name,
 > is_closed,
 > is_auto_commit,
-> is_txn_in_progress
+> is_txn_in_progress,
+> current_label
 > from sys_boot.mgmt.sessions_view;
 > 
 > grant select on dba_sessions to public;
@@ -467,6 +468,27 @@
 > select * from sys_boot.mgmt.session_parameters_view;
 > 
 > grant select on user_session_parameters to public;
+> 
+> create or replace view dba_labels as
+>   select
+>     lbl.label_name,
+>     lbl.parent_label_name,
+>     lbl.csn,
+>     cast(ai."name" as varchar(128)) as creator,
+>     lbl.creation_timestamp,
+>     lbl.last_modified_timestamp,
+>     lbl.remarks,
+>     cast(lbl."mofId" as varchar(128)) as mof_id,
+>     cast(lbl."lineageId" as varchar(128)) as lineage_id
+>   from
+>     sys_boot.mgmt.dba_labels_internal as lbl
+>   inner join
+>     sys_fem."Security"."AuthId" ai
+>   on
+>     lbl."Grantee" = ai."mofId"
+> ;
+> 
+> grant select on dba_labels to public;
 > 
 > -- Flush all entries from the global code cache
 > create or replace procedure flush_code_cache()

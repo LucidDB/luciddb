@@ -665,6 +665,41 @@ public class FarragoOptRulesTest
                 ")\n" +
                 "where x + y > 30");
     }
+    
+    public void testReduceCasts()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.PROJECT_INSTANCE);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.FILTER_INSTANCE);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.JOIN_INSTANCE);
+
+        // The resulting plan should have no cast expressions
+        check(
+            programBuilder.createProgram(),
+            "select cast(d.name as varchar(128)), cast(e.empno as integer) " +
+            "from sales.depts d inner join sales.emps e " +
+            "on cast(d.deptno as integer) = cast(e.deptno as integer) " +
+            "where cast(e.gender as char(1)) = 'M'");
+    }
+    
+    public void testReduceCastAndConsts()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.FILTER_INSTANCE);
+        
+        // Make sure constant expressions inside the cast can be reduced
+        // in addition to the casts.
+        check(
+            programBuilder.createProgram(),
+            "select * from sales.emps " +
+            "where cast((empno + (10/2)) as int) = 13");
+    }
 }
 
 // End FarragoOptRulesTest.java

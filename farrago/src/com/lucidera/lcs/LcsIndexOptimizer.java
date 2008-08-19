@@ -22,6 +22,7 @@ package com.lucidera.lcs;
 
 import com.lucidera.query.*;
 
+import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -91,18 +92,21 @@ public class LcsIndexOptimizer
     // best index mappings and its cost
     private Filter2IndexMapping bestMapping;
     private Double bestCost;
+    
+    // The creation timestamp of the label setting; null if there is no label
+    // set
+    private Timestamp labelTimestamp;
 
     Logger tracer;
 
     //~ Constructors -----------------------------------------------------------
 
-    public LcsIndexOptimizer()
-    {
-    }
-
     public LcsIndexOptimizer(LcsRowScanRel rowScanRel)
     {
         this.rowScanRel = rowScanRel;
+        labelTimestamp =
+            FennelRelUtil.getPreparingStmt(rowScanRel).getSession().
+                getSessionLabelCreationTimestamp();
         usableIndexes = new ArrayList<FemLocalIndex>();
 
         for (
@@ -177,7 +181,7 @@ public class LcsIndexOptimizer
                 tableRowCount
                 / (ByteLength * LcsIndexGuide.LbmBitmapSegMaxSize);
         }
-        bestMapping = new Filter2IndexMapping();
+        bestMapping = new Filter2IndexMapping();     
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -205,7 +209,7 @@ public class LcsIndexOptimizer
      *
      * @return if an index is valid
      */
-    private static boolean isValid(FemLocalIndex index)
+    private boolean isValid(FemLocalIndex index)
     {
         return index.getVisibility() == VisibilityKindEnum.VK_PUBLIC;
     }
@@ -243,7 +247,7 @@ public class LcsIndexOptimizer
      *
      * @return the filter on the given column
      */
-    private static SargColumnFilter findSargFilterForColumn(
+    private SargColumnFilter findSargFilterForColumn(
         LcsRowScanRel rowScanRel,
         Set<SargColumnFilter> filterSet,
         FemAbstractColumn col)
@@ -1127,10 +1131,11 @@ public class LcsIndexOptimizer
      *
      * @return the cost of performing index search.
      */
-    private static Double getIndexBitmapScanCost(
+    private Double getIndexBitmapScanCost(
         FemLocalIndex index)
     {
-        Long blockCount = index.getPageCount();
+        Long blockCount =
+            FarragoCatalogUtil.getPageCount(index, labelTimestamp);
 
         if (blockCount == null) {
             return null;
@@ -1154,7 +1159,8 @@ public class LcsIndexOptimizer
         Double scannedBitmapCount)
     {
         assert (useCost);
-        Long blockCount = index.getPageCount();
+        Long blockCount =
+            FarragoCatalogUtil.getPageCount(index, labelTimestamp);
 
         if (blockCount == null) {
             return null;
@@ -1330,12 +1336,12 @@ public class LcsIndexOptimizer
      * @return disk blocks used o null if the clustered indexes are not
      * analyzed.
      */
-    private static Double getLcsTableBlockCount(LcsTable lcsTable)
+    private Double getLcsTableBlockCount(LcsTable lcsTable)
     {
         Double lcsTableBlockCount = 0.0;
         Long pageCount;
         for (FemLocalIndex index : lcsTable.getClusteredIndexes()) {
-            pageCount = index.getPageCount();
+            pageCount = FarragoCatalogUtil.getPageCount(index, labelTimestamp);
             if (pageCount == null) {
                 return null;
             }
@@ -1475,23 +1481,26 @@ public class LcsIndexOptimizer
     }
 
     /**
-     * Selects from a list of indexes the one with the fewest number of pages.
-     * If more than one has the fewest pages, pick based on the one that sorts
-     * alphabetically earliest, based on the index names.
+     * Selects from the clustered indexes on a table the one with the fewest
+     * number of pages.  If more than one has the fewest pages, pick based on
+     * the one that sorts alphabetically earliest, based on the index names.
      *
-     * @param indexList list of indexes to choose from
+     * @param rowScan the table
      *
      * @return the best index
      */
     public static FemLocalIndex getIndexWithMinDiskPages(
-        List<FemLocalIndex> indexList)
+        LcsRowScanRelBase rowScan)
     {
+        List<FemLocalIndex> indexList = rowScan.clusteredIndexes;
         if (indexList.isEmpty()) {
             return null;
         } else {
             Collections.sort(
                 indexList,
-                IndexPageCountComparator.instance);
+                new IndexPageCountComparator(
+                    FennelRelUtil.getPreparingStmt(rowScan).getSession().
+                        getSessionLabelCreationTimestamp()));
             return indexList.get(0);
         }
     }
@@ -1886,22 +1895,25 @@ public class LcsIndexOptimizer
     }
 
     /*
-     * A comparator class to sort index based on number of disk pages used.
+     * A comparator class to sort indexes based on the disk pages stats for a
+     * specified label setting.
      */
     private static class IndexPageCountComparator
         implements Comparator<FemLocalIndex>
     {
-        static final IndexPageCountComparator instance =
-            new IndexPageCountComparator();
+        private Timestamp labelTimestamp;
         
-        IndexPageCountComparator()
+        IndexPageCountComparator(Timestamp labelTimestamp)
         {
+            this.labelTimestamp = labelTimestamp;
         }
 
         public int compare(FemLocalIndex index1, FemLocalIndex index2)
         {
-            Long pageCount1 = index1.getPageCount();
-            Long pageCount2 = index2.getPageCount();
+            Long pageCount1 =
+                FarragoCatalogUtil.getPageCount(index1, labelTimestamp);
+            Long pageCount2 =
+                FarragoCatalogUtil.getPageCount(index2, labelTimestamp);
 
             int compRes = 0;
 

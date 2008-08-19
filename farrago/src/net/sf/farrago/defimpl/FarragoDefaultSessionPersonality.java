@@ -121,6 +121,12 @@ public class FarragoDefaultSessionPersonality
     public static final String
         REDUCE_NON_CORRELATED_SUBQUERIES_FARRAGO_DEFAULT = "false";
     
+    /**
+     * The label for the current session
+     */
+    public static final String LABEL = "label";
+    public static final String LABEL_DEFAULT = null;
+    
     //~ Instance fields --------------------------------------------------------
 
     protected final FarragoDatabase database;
@@ -148,6 +154,7 @@ public class FarragoDefaultSessionPersonality
         paramValidator.registerBoolParam(
             REDUCE_NON_CORRELATED_SUBQUERIES,
             false);
+        paramValidator.registerStringParam(LABEL, true);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -353,6 +360,15 @@ public class FarragoDefaultSessionPersonality
                 "Element",
                 null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
+        
+        // Drop the corresponding label aliases if the cascade option
+        // was specified
+        ddlValidator.defineDropRule(
+            repos.getMedPackage().getLabelHasAlias(),
+            new FarragoSessionDdlDropRule(
+                "ParentLabel",
+                null,
+                ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
     }
 
     // implement FarragoSessionPersonality
@@ -435,6 +451,7 @@ public class FarragoDefaultSessionPersonality
         variables.setDefault(
             REDUCE_NON_CORRELATED_SUBQUERIES,
             REDUCE_NON_CORRELATED_SUBQUERIES_FARRAGO_DEFAULT);
+        variables.setDefault(LABEL, LABEL_DEFAULT);
     }
 
     // implement FarragoSessionPersonality
@@ -452,7 +469,7 @@ public class FarragoDefaultSessionPersonality
         String value)
     {
         String validatedValue =
-            paramValidator.validate(ddlValidator, name, value);
+            paramValidator.validate(ddlValidator, name, value);     
         variables.set(name, validatedValue);
     }
 
@@ -527,6 +544,11 @@ public class FarragoDefaultSessionPersonality
         // Farrago doesn't support snapshots
         if (feature ==
             EigenbaseResource.instance().PersonalitySupportsSnapshots)
+        {
+            return false;
+        }
+        
+        if (feature == EigenbaseResource.instance().PersonalitySupportsLabels)
         {
             return false;
         }
@@ -711,8 +733,19 @@ public class FarragoDefaultSessionPersonality
                     ddlValidator.getRepos().getLocalizedObjectName(name));
             } else if (value == null) {
                 return null;
+            };
+            
+            // If this is the label variable, make sure snapshots are enabled.
+            if (name.equals(FarragoDefaultSessionPersonality.LABEL)) {
+                if (!supportsFeature(
+                    EigenbaseResource.instance().PersonalitySupportsSnapshots))
+                {
+                    throw 
+                        EigenbaseResource.instance().
+                            PersonalitySupportsSnapshots.ex();
+                }
             }
-
+            
             Object o;
             switch (paramDesc.type) {
             case BOOLEAN_TYPE:

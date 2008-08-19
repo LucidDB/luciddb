@@ -628,6 +628,11 @@ TBD: naming convention for extension features
     <text>Personality does not support snapshot reads</text>
 </exception>
 
+<exception name="PersonalitySupportsLabels">
+    <property name="FeatureDefinition">Eigenbase-defined</property>
+    <text>Personality does not support labels</text>
+</exception>
+
 <!-- ====================================================================== -->
 
 <!-- End of last error section ============================================ -->

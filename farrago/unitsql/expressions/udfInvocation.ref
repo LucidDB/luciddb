@@ -498,6 +498,40 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 | ff      |
 +---------+
 > 
+> !set outputformat csv
+> -- make sure the cast to a non-null type is preserved in the UDF argument
+> explain plan for
+> select * from sales.emps
+>     where obj_int_to_hex_string(cast(empno as int)) = '64';
+'column0'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[CAST($t0):INTEGER], expr#11=[OBJ_INT_TO_HEX_STRING($t10)], expr#12=['64'], expr#13=[=($t11, $t12)], proj#0..9=[{exprs}], $condition=[$t13])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> -- whereas in this case, the cast can be removed because the argument is 
+> -- nullable
+> explain plan for
+> select * from sales.emps
+>     where obj_int_to_hex_string(cast(age as int)) = '64';
+'column0'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[OBJ_INT_TO_HEX_STRING($t6)], expr#11=['64'], expr#12=[=($t10, $t11)], proj#0..9=[{exprs}], $condition=[$t12])'
+'  FennelToIteratorConverter'
+'    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+> !set outputformat table
+> select * from sales.emps
+>     where obj_int_to_hex_string(cast(empno as int)) = '64';
++--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
+| EMPNO  | NAME  | DEPTNO  | GENDER  | CITY  | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
++--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
+| 100    | Fred  | 10      |         |       | 30     | 25   | 41626320    | true     | false    |
++--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
+> select * from sales.emps
+>     where obj_int_to_hex_string(cast(age as int)) = '50';
++--------+-------+---------+---------+----------------+--------+------+-------------+----------+----------+
+| EMPNO  | NAME  | DEPTNO  | GENDER  |      CITY      | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
++--------+-------+---------+---------+----------------+--------+------+-------------+----------+----------+
+| 110    | Eric  | 20      | M       | San Francisco  | 3      | 80   | 416263      |          | false    |
++--------+-------+---------+---------+----------------+--------+------+-------------+----------+----------+
+> 
 > -- this should fail with an SQL exception for NULL detected
 > values prim_int_to_hex_string(cast(null as integer));
 Error: Target "I" cannot be assigned null value (state=,code=0)
@@ -678,7 +712,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 > -- verify that constant reduction is NOT used for non-deterministic functions
 > explain plan for values generate_random_number(42);
 'column0'
-'IterCalcRel(expr#0=[{inputs}], expr#1=[42], expr#2=[CAST($t1):BIGINT], expr#3=[GENERATE_RANDOM_NUMBER($t2)], expr#4=[CAST($t3):BIGINT], EXPR$0=[$t4])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[42], expr#2=[CAST($t1):BIGINT], expr#3=[GENERATE_RANDOM_NUMBER($t2)], EXPR$0=[$t3])'
 '  IterOneRowRel'
 > 
 > -- verify that constant reduction IS used for deterministic functions
@@ -693,7 +727,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 > -- with non-constant input
 > explain plan for select atoi(name) from sales.depts;
 'column0'
-'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#2=[ATOI($t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#2=[ATOI($t1)], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 > 

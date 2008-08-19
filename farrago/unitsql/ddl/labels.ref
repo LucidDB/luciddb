@@ -1,0 +1,117 @@
+> -- $Id$
+> -- Test creating and dropping labels
+> 
+> create label label0;
+Error: Personality does not support labels (state=,code=0)
+> drop label label0;
+Error: DDL validation error near line 1, column 12: Reference to unknown label "LABEL0" (state=,code=0)
+> 
+> -- Labels can only be created and dropped in the LucidDB personality.  Switch
+> -- to that personality so we can exercise the create/drop label code in Farrago
+> -- tests.  Note, however, that we cannot test setting a label in a Farrago
+> -- test, even if the personality is set to LucidDB because you need to have
+> -- a snapshot-enabled Fennel engine.
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create label label0;
+> create label label1;
+> create label l0alias from label label0;
+> create label l0alalias from label l0alias;
+> create label l1alias from label label1;
+> select label_name, parent_label_name, remarks
+>     from sys_boot.mgmt.dba_labels_internal order by label_name;
++-------------+--------------------+----------+
+| LABEL_NAME  | PARENT_LABEL_NAME  | REMARKS  |
++-------------+--------------------+----------+
+| L0ALALIAS   | L0ALIAS            |          |
+| L0ALIAS     | LABEL0             |          |
+| L1ALIAS     | LABEL1             |          |
+| LABEL0      |                    |          |
+| LABEL1      |                    |          |
++-------------+--------------------+----------+
+> 
+> -- should fail, same name
+> create label label0 description 'this one fails';
+Error: DDL validation error near line 1, column 14: Target catalog "SYS_BOOT" already contains label "LABEL0" with same name (state=,code=0)
+> create label label1 from label label0;
+Error: DDL validation error near line 1, column 14: Target catalog "SYS_BOOT" already contains label "LABEL1" with same name (state=,code=0)
+> 
+> -- replace the existing label
+> create or replace label label0 description 'the new one';
+> select label_name, parent_label_name, remarks
+>     from sys_boot.mgmt.dba_labels_internal order by label_name;
++-------------+--------------------+--------------+
+| LABEL_NAME  | PARENT_LABEL_NAME  |   REMARKS    |
++-------------+--------------------+--------------+
+| L0ALALIAS   | L0ALIAS            |              |
+| L0ALIAS     | LABEL0             |              |
+| L1ALIAS     | LABEL1             |              |
+| LABEL0      |                    | the new one  |
+| LABEL1      |                    |              |
++-------------+--------------------+--------------+
+> 
+> -- should fail, non-existent label
+> create label bad from label foo;
+Error: DDL validation error near line 1, column 29: Reference to unknown label "FOO" (state=,code=0)
+> 
+> -- should fail, circular labels
+> create label label2 from label label2;
+Error: Cannot create a circular label chain. (state=,code=0)
+> create or replace label label0 from label l0alalias;
+Error: Cannot create a circular label chain. (state=,code=0)
+> 
+> -- can't set label because snapshot reads aren't supported in Farrago
+> alter session set "label" = 'LABEL0';
+Error: Personality does not support snapshot reads (state=,code=0)
+> 
+> -- drop a non-existent label
+> drop label nolabel;
+Error: DDL validation error near line 1, column 12: Reference to unknown label "NOLABEL" (state=,code=0)
+> 
+> -- the following should fail
+> drop label label0;
+Error: Dropping label "SYS_BOOT"."LABEL0" requires CASCADE because other objects still reference it (state=,code=0)
+> drop label label0 restrict;
+Error: Dropping label "SYS_BOOT"."LABEL0" requires CASCADE because other objects still reference it (state=,code=0)
+> drop label l0alias;
+Error: Dropping label "SYS_BOOT"."L0ALIAS" requires CASCADE because other objects still reference it (state=,code=0)
+> drop label l0alias restrict;
+Error: Dropping label "SYS_BOOT"."L0ALIAS" requires CASCADE because other objects still reference it (state=,code=0)
+> 
+> drop label l0alalias;
+> select label_name, parent_label_name, remarks
+>     from sys_boot.mgmt.dba_labels_internal order by label_name;
++-------------+--------------------+--------------+
+| LABEL_NAME  | PARENT_LABEL_NAME  |   REMARKS    |
++-------------+--------------------+--------------+
+| L0ALIAS     | LABEL0             |              |
+| L1ALIAS     | LABEL1             |              |
+| LABEL0      |                    | the new one  |
+| LABEL1      |                    |              |
++-------------+--------------------+--------------+
+> drop label label0 cascade;
+> select label_name, parent_label_name, remarks
+>     from sys_boot.mgmt.dba_labels_internal order by label_name;
++-------------+--------------------+----------+
+| LABEL_NAME  | PARENT_LABEL_NAME  | REMARKS  |
++-------------+--------------------+----------+
+| L1ALIAS     | LABEL1             |          |
+| LABEL1      |                    |          |
++-------------+--------------------+----------+
+> drop label l1alias cascade;
+> select label_name, parent_label_name, remarks
+>     from sys_boot.mgmt.dba_labels_internal;
++-------------+--------------------+----------+
+| LABEL_NAME  | PARENT_LABEL_NAME  | REMARKS  |
++-------------+--------------------+----------+
+| LABEL1      |                    |          |
++-------------+--------------------+----------+
+> drop label label1;
+> select label_name, parent_label_name, remarks
+>     from sys_boot.mgmt.dba_labels_internal;
++-------------+--------------------+----------+
+| LABEL_NAME  | PARENT_LABEL_NAME  | REMARKS  |
++-------------+--------------------+----------+
++-------------+--------------------+----------+
+> 
+> !quit

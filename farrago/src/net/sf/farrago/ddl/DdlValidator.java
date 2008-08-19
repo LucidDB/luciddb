@@ -545,8 +545,21 @@ public class DdlValidator
                         deps.addAll(getDependencies(e));
                     }
                 }
+            } else if (replacementTarget instanceof FemLabel) {
+                deps.addAll(((FemLabel) replacementTarget).getAlias());
+                try {
+                    // remove stats associated with the replaced label
+                    FarragoCatalogUtil.removeObsoleteStatistics(
+                        (FemLabel) replacementTarget,
+                        getRepos());
+                } catch (Exception ex) {
+                    throw Util.newInternal(
+                        ex,
+                        "error removing replaced label's statistics: " +
+                        ex.getMessage());
+                }
             }
-
+            
             scheduleRevalidation(deps);
 
             SqlIdentifier newName = getNewName();
@@ -556,7 +569,7 @@ public class DdlValidator
 
             stopListening();
 
-            // special cases - FemBaseColumnSet, FemDataServer
+            // special cases - FemBaseColumnSet, FemDataServer, FemLabel
             for (CwmModelElement e : deps) {
                 if (e instanceof FemBaseColumnSet) {
                     // must reset server to newElement
@@ -564,6 +577,8 @@ public class DdlValidator
                         (FemDataServer) newElement);
                 } else if (e instanceof FemDataServer) {
                     ((FemDataServer) e).setWrapper((FemDataWrapper) newElement);
+                } else if (e instanceof FemLabel) {
+                    ((FemLabel) e).setParentLabel((FemLabel) newElement);
                 }
             }
 
@@ -812,17 +827,45 @@ public class DdlValidator
                 }
             }
             if (event.getType() == AssociationEvent.EVENT_ASSOCIATION_REMOVE) {
+                // MDR's event loses some information, namely which end the
+                // association is being removed from.  event.getEndName() is
+                // chosen arbitrarily.  To work around this, we use our
+                // knowledge of which side has already been scheduled for
+                // deleted to infer what we need.  (TODO jvs 9-Aug-2008: once
+                // we've completely migrated off of MDR, enhance enki to
+                // deliver the full information as part of the event.)
+
+                // By default, or if we can't do any better, rely on MDR.
+                String endName = associationEvent.getEndName();
+                RefObject droppedEnd = associationEvent.getFixedElement();
+                RefObject otherEnd = associationEvent.getOldElement();
+
+                if (!isDeletedObject(droppedEnd) && isDeletedObject(otherEnd)) {
+                    // Swap ends.
+                    RefObject tmp = droppedEnd;
+                    droppedEnd = otherEnd;
+                    otherEnd = tmp;
+                    JmiAssocEdge assocEdge =
+                        getRepos().getModelGraph().getEdgeForRefAssoc(refAssoc);
+                    if (endName.equals(assocEdge.getSourceEnd().getName())) {
+                        endName = assocEdge.getTargetEnd().getName();
+                    } else {
+                        assert(endName.equals(
+                                   assocEdge.getTargetEnd().getName()));
+                        endName = assocEdge.getSourceEnd().getName();
+                    }
+                }
+                
                 List<FarragoSessionDdlDropRule> rules =
                     dropRules.getMulti(refAssoc.getClass());
                 for (FarragoSessionDdlDropRule rule : rules) {
                     if ((rule != null)
-                        && rule.getEndName().equals(
-                            associationEvent.getEndName()))
+                        && rule.getEndName().equals(endName))
                     {
                         fireDropRule(
                             rule,
-                            associationEvent.getFixedElement(),
-                            associationEvent.getOldElement());
+                            droppedEnd,
+                            otherEnd);
                     }
                 }
             }
