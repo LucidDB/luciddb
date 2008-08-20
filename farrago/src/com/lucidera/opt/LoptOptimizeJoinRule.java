@@ -376,10 +376,6 @@ outerForLoop:
         List<RexNode> filters,
         int factor)
     {
-        // loop through the filters and pick out the ones that reference
-        // only the factors in either the join tree or the factor that will
-        // be added
-        ListIterator<RexNode> filterIter = filters.listIterator();
         int nJoinFactors = multiJoin.getNumJoinFactors();
         BitSet childFactors = new BitSet(nJoinFactors);
         multiJoin.getChildFactors(joinTree, childFactors);  
@@ -389,26 +385,29 @@ outerForLoop:
         int nFields = multiJoin.getNumFieldsInJoinFactor(factor);
         BitSet joinKeys = new BitSet(nFields);
         
-        while (filterIter.hasNext()) {
-            RexNode joinFilter = filterIter.next();
-            BitSet filterFactors =
-                multiJoin.getFactorsRefByJoinFilter(joinFilter);
-
-            // if all factors in the join filter are in the join tree and
-            // factor to be added, add the fields corresponding to the factor
-            // to be added to the join key, adjusting the join key to start
-            // at offset 0
-            if (RelOptUtil.contains(childFactors, filterFactors)) {
-                BitSet joinFields =
-                    multiJoin.getFieldsRefByJoinFilter(joinFilter);
-                for (int field = joinFields.nextSetBit(factorStart);
-                    field >= 0 && field < factorStart + nFields;
-                    field = joinFields.nextSetBit(field + 1))
-                {
-                    joinKeys.set(field - factorStart);
-                }
-            }
-        }
+        // first loop through the inner join filters, picking out the ones
+        // that reference only the factors in either the join tree or the factor that will
+        // be added
+        setFactorJoinKeys(
+            multiJoin,
+            filters,
+            childFactors,
+            factorStart,
+            nFields,
+            joinKeys);
+        
+        // then loop through the outer join filters where the factor being
+        // added is the null generating factor in the outer join
+        RexNode outerJoinCond = multiJoin.getOuterJoinCond(factor);
+        List<RexNode> outerJoinFilters = new ArrayList<RexNode>();
+        RelOptUtil.decomposeConjunction(outerJoinCond, outerJoinFilters);
+        setFactorJoinKeys(
+            multiJoin,
+            outerJoinFilters,
+            childFactors,
+            factorStart,
+            nFields,
+            joinKeys);
         
         // if the join tree doesn't contain all the necessary factors in 
         // any of the join filters, then joinKeys will be empty, so return
@@ -420,6 +419,53 @@ outerForLoop:
                 semiJoinOpt.getChosenSemiJoin(factor),
                 joinKeys,
                 null);
+        }
+    }
+    
+    /**
+     * Locates from a list of filters those that correspond to a particular
+     * join tree.  Then, for each of those filters, extracts the fields
+     * corresponding to a particular factor, setting them in a bitmap.
+     * 
+     * @param multiJoin join factors being optimized
+     * @param filters list of join filters
+     * @param joinFactors bitmap containing the factors in a particular join
+     * tree
+     * @param factorStart the initial offset of the factor whose join keys
+     * will be extracted
+     * @param nFields the number of fields in the factor whose join keys will
+     * be extracted
+     * @param joinKeys the bitmap that will be set with the join keys
+     */
+    private void setFactorJoinKeys(
+        LoptMultiJoin multiJoin,
+        List<RexNode> filters,
+        BitSet joinFactors,
+        int factorStart,
+        int nFields,
+        BitSet joinKeys)
+    {
+        ListIterator<RexNode> filterIter = filters.listIterator();
+        while (filterIter.hasNext()) {
+            RexNode joinFilter = filterIter.next();
+            BitSet filterFactors =
+                multiJoin.getFactorsRefByJoinFilter(joinFilter);
+
+            // if all factors in the join filter are in the bitmap containing
+            // the factors in a join tree, then from that filter, add the
+            // fields corresponding to the specified factor to the join key
+            // bitmap; in doing so, adjust the join keys so they start at
+            // offset 0
+            if (RelOptUtil.contains(joinFactors, filterFactors)) {
+                BitSet joinFields =
+                    multiJoin.getFieldsRefByJoinFilter(joinFilter);
+                for (int field = joinFields.nextSetBit(factorStart);
+                    field >= 0 && field < factorStart + nFields;
+                    field = joinFields.nextSetBit(field + 1))
+                {
+                    joinKeys.set(field - factorStart);
+                }
+            }
         }
     }
 
@@ -664,16 +710,49 @@ outerForLoop:
         }
         RelOptCost costTop =
             RelMetadataQuery.getCumulativeCost(topTree.getJoinTree());
-        if ((costPushDown != null)
-            && (costTop != null)
-            && costPushDown.isLt(costTop))
-        {
-            bestTree = pushDownTree;
-        } else {
-            bestTree = topTree;
+        
+        bestTree = topTree;
+        if ((costPushDown != null) && (costTop != null))  {
+            if (costPushDown.equals(costTop)) {
+                // if both plans cost the same, favor the one that passes
+                // around the wider rows further up in the tree
+                if (rowWidthCost(pushDownTree.getJoinTree()) <
+                    rowWidthCost(topTree.getJoinTree()))
+                {
+                    bestTree = pushDownTree;
+                }
+            } else if (costPushDown.isLt(costTop)) {
+                bestTree = pushDownTree;
+            }
         }
-
+        
         return bestTree;
+    }
+        
+    /**
+     * Computes a cost for a join tree based on the row widths of the
+     * inputs into the join.  Joins where the inputs have the fewest number
+     * of columns lower in the tree are better than equivalent joins where
+     * the inputs with the larger number of columns are lower in the tree.
+     * 
+     * @param tree a tree of RelNodes
+     * 
+     * @return the cost associated with the width of the tree
+     */
+    private int rowWidthCost(RelNode tree)
+    {
+        // The width cost is the width of the tree itself plus the widths
+        // of its children.  Hence, skinnier rows are better when they're
+        // lower in the tree since the width of a RelNode contributes to
+        // the cost of each JoinRel that appears above that RelNode.
+        int width = tree.getRowType().getFieldCount();
+        if (isJoinTree(tree)) {
+            JoinRel joinRel = (JoinRel) tree;
+            width +=
+                rowWidthCost(joinRel.getLeft()) +
+                rowWidthCost(joinRel.getRight());
+        }
+        return width;
     }
 
     /**
