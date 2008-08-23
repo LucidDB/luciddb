@@ -21,6 +21,7 @@
 */
 package net.sf.farrago.catalog;
 
+import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.fem.med.*;
@@ -28,9 +29,7 @@ import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.stat.*;
-import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
 
@@ -63,6 +62,7 @@ public class FarragoColumnHistogram
 
     private FemAbstractColumn column;
     private SargIntervalSequence sequence;
+    private Timestamp labelTimestamp;
     private FemColumnHistogram histogram;
     private int barCount;
     private List<FemColumnHistogramBar> bars;
@@ -76,6 +76,8 @@ public class FarragoColumnHistogram
      * Initializes a column statistics reader. The statistics are not actually
      * analyzed until the user calls {@link #evaluate()}.
      *
+     * @deprecated
+     * 
      * @param column column to analyze
      * @param sequence optional predicate on the column
      */
@@ -83,8 +85,27 @@ public class FarragoColumnHistogram
         FemAbstractColumn column,
         SargIntervalSequence sequence)
     {
+        this(column, sequence, null);
+    }
+    
+    /**
+     * Initializes a column statistics reader. The statistics are not actually
+     * analyzed until the user calls {@link #evaluate()}.
+     *
+     * @param column column to analyze
+     * @param sequence optional predicate on the column
+     * @param labelTimestamp the creation timestamp of the label setting that
+     * determines which set of stats should be used; null if there is no label
+     * setting
+     */
+    protected FarragoColumnHistogram(
+        FemAbstractColumn column,
+        SargIntervalSequence sequence,
+        Timestamp labelTimestamp)
+    {
         this.column = column;
         this.sequence = sequence;
+        this.labelTimestamp = labelTimestamp;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -107,7 +128,7 @@ public class FarragoColumnHistogram
      */
     protected void evaluate()
     {
-        histogram = column.getHistogram();
+        histogram = FarragoCatalogUtil.getHistogram(column, labelTimestamp);
         if (histogram == null) {
             return;
         }

@@ -394,6 +394,22 @@ values substring24(cast(null as varchar(128)));
 
 values prim_int_to_hex_string(255);
 
+!set outputformat csv
+-- make sure the cast to a non-null type is preserved in the UDF argument
+explain plan for
+select * from sales.emps
+    where obj_int_to_hex_string(cast(empno as int)) = '64';
+-- whereas in this case, the cast can be removed because the argument is 
+-- nullable
+explain plan for
+select * from sales.emps
+    where obj_int_to_hex_string(cast(age as int)) = '64';
+!set outputformat table
+select * from sales.emps
+    where obj_int_to_hex_string(cast(empno as int)) = '64';
+select * from sales.emps
+    where obj_int_to_hex_string(cast(age as int)) = '50';
+
 -- this should fail with an SQL exception for NULL detected
 values prim_int_to_hex_string(cast(null as integer));
 

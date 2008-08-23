@@ -38,6 +38,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.defimpl.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.plugin.*;
@@ -174,6 +175,8 @@ public class FarragoDbSession
     private FarragoDbSessionInfo sessionInfo;
 
     private Pattern optRuleDescExclusionFilter;
+    
+    private FemLabel sessionLabel;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -193,6 +196,7 @@ public class FarragoDbSession
         this.url = url;
         warningQueue = new FarragoWarningQueue();
         txnIdRef = new TxnIdRef();
+        sessionLabel = null;
 
         boolean requireExistingEngine = info.getProperty(
             "requireExistingEngine", "false").equalsIgnoreCase("true");
@@ -343,6 +347,37 @@ public class FarragoDbSession
         defaultPersonality = personality;
         personality.loadDefaultSessionVariables(sessionVariables);
 
+        // If a session label has been specified, make sure the personality
+        // supports snapshot reads and the label is valid             
+        String labelName = info.getProperty("label", null);
+        if (labelName != null) {
+            if (!getPersonality().supportsFeature(
+                EigenbaseResource.instance().PersonalitySupportsSnapshots))
+            {
+                throw 
+                    EigenbaseResource.instance().PersonalitySupportsSnapshots.
+                        ex();
+            }
+            txn.beginReadTxn();
+            try {        
+                FemLabel label =
+                    (FemLabel) FarragoCatalogUtil.getModelElementByName(
+                        repos.allOfType(FemLabel.class),
+                        labelName);
+                if (label == null) {
+                    throw FarragoResource.instance().InvalidLabelProperty.ex(
+                        labelName);
+                }
+                sessionVariables.set(
+                    FarragoDefaultSessionPersonality.LABEL,
+                    labelName);
+                setSessionLabel(label);
+            }
+            finally {
+                txn.commit();
+            }
+        }
+        
         sessionInfo = new FarragoDbSessionInfo(this, database);
     }
 
@@ -633,6 +668,12 @@ public class FarragoDbSession
             // statement context, and then tries to acquire
             // FarragoDbSingleton.class lock
             super.closeAllocation();
+            // The following will unlock any session labels set by the
+            // reentrant session.
+            // NOTE zfong 8/6/08 - In the case of a UDR session, this is
+            // currently a no-op because session labels cannot be set
+            // inside UDR's.
+            setSessionLabel(null);
             return;
         }
         synchronized (FarragoDbSingleton.class) {
@@ -656,6 +697,8 @@ public class FarragoDbSession
                     }
                 }
                 try {
+                    // unlock the session label, if it has been set
+                    setSessionLabel(null);
                     FarragoDbSingleton.disconnectSession(this);
                 } finally {
                     database = null;
@@ -727,7 +770,69 @@ public class FarragoDbSession
         }
         return analyzedSql;
     }
-
+    
+    private void setSessionLabel(FemLabel label)
+    {
+       FarragoDdlLockManager ddlLockManager = getDatabase().getDdlLockManager();
+     
+       // Unlock the current label
+       if (sessionLabel != null) {
+           ddlLockManager.removeObjectsInUse(this);
+           tracer.info("Session label reset to null");
+       }
+       
+       // If the label is an alias, determine the base label that the
+       // alias maps to.  This will make it possible to reset the alias to
+       // a new base label even though the original base label is still
+       // in-use.
+       if (label != null) {
+           FemLabel parentLabel = label.getParentLabel();
+           while (parentLabel != null) {
+               label = parentLabel;
+               parentLabel = label.getParentLabel();
+           }
+       }
+       
+       sessionLabel = label;
+       if (sessionLabel != null) {
+           // Lock the new label
+           Set<String> mofId = new HashSet<String>();
+           CwmModelElement refObj = (CwmModelElement) sessionLabel;
+           mofId.add(refObj.refMofId());
+           ddlLockManager.addObjectsInUse(this, mofId);
+           tracer.info("Session label set to \"" + sessionLabel.getName() + "\"");
+       }
+    }
+    
+    // implement FarragoSession
+    public Long getSessionLabelCsn()
+    {
+        if (sessionLabel == null) {
+            return null;
+        } else {
+            return sessionLabel.getCommitSequenceNumber();
+        }
+    }
+    
+    // implement FarragoSession
+    public Timestamp getSessionLabelCreationTimestamp()
+    {      
+        if (sessionLabel == null) {
+            return null;
+        } else {
+            return Timestamp.valueOf(sessionLabel.getCreationTimestamp());
+        }
+    }
+    
+    /**
+     * @return true if the session has a label setting and it is not
+     * temporarily disabled
+     */
+    private boolean isSessionLabelEnabled()
+    {
+        return (sessionLabel != null);
+    }
+    
     public FarragoSessionAnalyzedSql getAnalysisBlock(
         RelDataTypeFactory typeFactory)
     {
@@ -1076,17 +1181,37 @@ public class FarragoDbSession
                     sqlNode,
                     owner,
                     analyzedSql);
-            if (isExecDirect
-                && (stmt.getDynamicParamRowType().getFieldList().size() > 0))
-            {
-                owner.closeAllocation();
-                throw FarragoResource.instance()
-                .SessionNoExecuteImmediateParameters.ex(sql);
+            if (isExecDirect) {
+                if (stmt.getDynamicParamRowType().getFieldList().size() > 0) {
+                    owner.closeAllocation();
+                    throw FarragoResource.instance()
+                        .SessionNoExecuteImmediateParameters.ex(sql);
+                }
+                // DML statements are disallowed if a session label is set.
+                // For CALL statements, the contents of the UDP determines
+                // whether the call can be executed.
+                if (stmt.isDml() && stmt.getTableModOp() != null &&
+                    isSessionLabelEnabled())
+                {
+                    owner.closeAllocation();
+                    throw FarragoResource.instance().ReadOnlySession.ex();
+                }
             }
             return stmt;
         }
 
         FarragoSessionDdlStmt ddlStmt = (FarragoSessionDdlStmt) parsedObj;
+        
+        // DDL statements are disallowed if a session label is set.  The
+        // exceptions are the SET statements that only impact the current
+        // session.
+        if (isSessionLabelEnabled() &&
+            !(ddlStmt instanceof DdlSetContextStmt ||
+            ddlStmt instanceof DdlSetSessionParamStmt ||
+            ddlStmt instanceof DdlSetSessionImplementationStmt))
+        {
+            throw FarragoResource.instance().ReadOnlySession.ex();
+        }
 
         // If !isExecDirect and we don't need to validate on prepare, then
         // we only need to parse the statement
@@ -1406,6 +1531,16 @@ public class FarragoDbSession
                 stmt.completeAfterExecuteUnlocked(ddlValidator, session);
             } finally {
                 ddlValidator.releaseReentrantSession(session);
+            }
+        }
+        
+        // implement DdlVisitor
+        public void visit(DdlSetSessionParamStmt stmt)
+        {
+            if (stmt.getParamName().equals(
+                FarragoDefaultSessionPersonality.LABEL))
+            {
+                setSessionLabel(stmt.getLabelParamValue());
             }
         }
     }

@@ -431,3 +431,25 @@ where A.a = B.a and
 A.b + B.b = C.b and
 A.c = C.c;
 
+-- The following query *MUST* produce a join ordering where the row scan
+-- that selects all columns from BIG (i.e., B2) *DOES NOT* appear in the
+-- innermost join in the query plan.  That would be non-optimal because it
+-- entails passing around the most data across exec streams.  The joins in
+-- this query are all 1-1, so to avoid putting B2 in the innermost join,
+-- the widths of the rows in the intermediate joins need to be taken into
+-- account.
+create table big(a int, b int, c int, d int, e int, f int);
+create table small(a int, b int);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','BIG',100000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','SMALL',10);
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'BIG', 'A', 100000, 100, 100000, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'BIG', 'B', 10, 100, 10, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'SMALL', 'A', 10, 100, 10, 0, '0123456789');
+explain plan for
+    select b2.*, b1.a, s1.b, s2.b
+        from big b2 inner join big b1 on b1.a = b2.a
+        left outer join small s1 on b1.b = s1.a
+        left outer join small s2 on b1.b = s2.a;

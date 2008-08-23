@@ -320,7 +320,11 @@ public abstract class FarragoDbStmtContextBase
                 .SQLConformance_MultipleActiveAutocommitStatements.ex();
             }
         } else {
-            if (snapshotCsn != null) {
+            Long sessionLabelCsn = session.getSessionLabelCsn();
+            if (sessionLabelCsn != null) {
+                session.getFennelTxnContext().initiateTxnWithCsn(
+                    sessionLabelCsn.longValue());
+            } else if (snapshotCsn != null) {
                 session.getFennelTxnContext().initiateTxnWithCsn(
                     snapshotCsn.longValue());
             } else if (readOnly) {

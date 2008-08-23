@@ -184,6 +184,11 @@ public class LucidDbSessionPersonality
             return true;
         }
         
+        // LucidDB supports labels
+        if (feature == featureResource.PersonalitySupportsLabels) {
+            return true;
+        }
+        
         return super.supportsFeature(feature);
     }
 
@@ -827,8 +832,15 @@ public class LucidDbSessionPersonality
                 stmtValidator.findSchemaObject(
                     qualifiedName,
                     FemAbstractColumnSet.class);
-            long currRowCount = columnSet.getRowCount();
-            long currDeletedRowCount = columnSet.getDeletedRowCount();
+            Long[] rowCountStats = new Long[2];
+            Timestamp labelTimestamp =
+                session.getSessionLabelCreationTimestamp();
+            FarragoCatalogUtil.getRowCounts(
+                columnSet, 
+                labelTimestamp, 
+                rowCountStats);
+            long currRowCount = rowCountStats[0];
+            long currDeletedRowCount = rowCountStats[1];
 
             // categorize the rowcounts returned by the statement
             long insertedRowCount = 0;
@@ -892,10 +904,12 @@ public class LucidDbSessionPersonality
             if (currRowCount < 0) {
                 currRowCount = 0;
             }
-            columnSet.setRowCount(currRowCount);
             assert (currDeletedRowCount >= 0);
-            columnSet.setDeletedRowCount(currDeletedRowCount);
-
+            FarragoCatalogUtil.updateRowCounts(
+                columnSet,
+                currRowCount,
+                currDeletedRowCount,
+                database.getUserRepos());
             txn.commit();
         } finally {
             txn.rollback();
@@ -908,7 +922,7 @@ public class LucidDbSessionPersonality
     // implement FarragoSessionPersonality
     public void resetRowCounts(FemAbstractColumnSet table)
     {
-        FarragoCatalogUtil.resetRowCounts(table);
+        FarragoCatalogUtil.resetRowCounts(table, database.getUserRepos());
     }
 
     // implement FarragoStreamFactoryProvider

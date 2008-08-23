@@ -92,8 +92,11 @@
 > 
 > alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 > 
-> -- allow hash joins again
+> -- allow hash joins again, but disable expression reduction to preserve casts
+> -- to ensure that casts in the join keys are handled
 > call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(null);
+> call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(
+>     'FarragoReduceExpressionsRule.*');
 > 
 > create table lhxemps(
 >     empno integer not null,

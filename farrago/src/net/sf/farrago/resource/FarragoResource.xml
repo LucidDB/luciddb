@@ -674,6 +674,18 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot create {0} because columns must be distinct.</text>
 </exception>
 
+<exception id="421120" name="ValidatorAccessObjectNonVisibleToLabel">
+    <text>Attempt to access {0}, which is not visible to the current session label setting.</text>
+</exception>
+
+<exception id="421130" name="ValidatorSetLabelInUdr">
+<text>A label cannot be set inside a UDR.</text>
+</exception>
+
+<exception id="421140" name="ValidatorCircularLabelChain">
+<text>Cannot create a circular label chain.</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -1136,6 +1148,14 @@ Messages: {1}</text>
 <text>Existing database server required</text>
 </exception>
 
+<exception id="470170" name="InvalidLabelProperty">
+<text>Invalid label property "{0}".</text>
+</exception>
+
+<exception id="470180" name="ReadOnlySession">
+<text>Session is read-only because it has a label setting.</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Server resources 480,000 - 490,000 -->
 <!-- ====================================================================== -->
@@ -1473,6 +1493,10 @@ Messages: {1}</text>
 
 <message id="510056" name="UmlColumnListRoutineParameter">
 <text>routine parameter</text>
+</message>
+
+<message id="510057" name="UmlLabel">
+<text>label</text>
 </message>
 
 <!-- ====================================================================== -->

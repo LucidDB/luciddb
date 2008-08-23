@@ -4089,6 +4089,7 @@ TOKEN :
     | < KEY: "KEY" >
     | < KEY_MEMBER: "KEY_MEMBER" >
     | < KEY_TYPE: "KEY_TYPE" >
+    | < LABEL: "LABEL" >
     | < LANGUAGE: "LANGUAGE" >
     | < LARGE: "LARGE" >
     | < LAST: "LAST" >
@@ -4495,6 +4496,7 @@ String CommonNonReservedKeyWord() :
         | <KEY>
         | <KEY_MEMBER>
         | <KEY_TYPE>
+        | <LABEL>
         | <LAST>
         | <LENGTH>
         | <LEVEL>

@@ -31,6 +31,7 @@ import java.util.regex.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
@@ -172,6 +173,8 @@ public abstract class FarragoManagementUDR
                 s.isAutoCommit());
             resultInserter.setBoolean(++i,
                 s.isTxnInProgress());
+            resultInserter.setString(
+                ++i, v.get(FarragoDefaultSessionPersonality.LABEL));
             resultInserter.executeUpdate();
         }
     }

@@ -21,6 +21,7 @@
 */
 package net.sf.farrago.query;
 
+import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -103,13 +104,19 @@ public class FarragoRelMetadataProvider
         RelOptTable table = rel.getTable();
         if (table == null) {
             return null;
-        }
-        return getStatistics(table, repos);
+        }      
+        return
+            getStatistics(
+                table,
+                repos,
+                FennelRelUtil.getPreparingStmt(rel).getSession().
+                    getSessionLabelCreationTimestamp());
     }
     
     private static RelStatSource getStatistics(
         RelOptTable table,
-        FarragoRepos repos)
+        FarragoRepos repos,
+        Timestamp labelTimestamp)
     {
         String [] qualifiedName = table.getQualifiedName();
         assert (qualifiedName.length == 3) : "qualified name did not have three parts";
@@ -135,7 +142,11 @@ public class FarragoRelMetadataProvider
             return null;
         }
 
-        RelStatSource result = new FarragoTableStatistics(repos, columnSet);
+        RelStatSource result =
+            new FarragoTableStatistics(
+                repos,
+                columnSet,
+                labelTimestamp);
         return result;
     }
 
@@ -167,10 +178,31 @@ public class FarragoRelMetadataProvider
      * 
      * @return the row count, or null if stats aren't available
      */
-    public static Double getRowCountStat(RelOptTable table, FarragoRepos repos)
+    public static Double getRowCountStat(
+        RelOptTable table,
+        FarragoRepos repos)
+    {
+        return getRowCountStat(table, repos, null);
+    }
+    
+    /**
+     * Retrieves the row count of a relational table for a specific label,
+     * using statistics stored in the catalog.
+     * 
+     * @param table the relational table
+     * @param repos repository
+     * @param labelTimestamp creation timestamp of the label that determines
+     * which stats to retrieve; null if there is no label setting
+     * 
+     * @return the row count, or null if stats aren't available
+     */
+    public static Double getRowCountStat(
+        RelOptTable table,
+        FarragoRepos repos,
+        Timestamp labelTimestamp)
     {
         Double result = null;
-        RelStatSource source = getStatistics(table, repos);
+        RelStatSource source = getStatistics(table, repos, labelTimestamp);
         if (source != null) {
             result = source.getRowCount();
         }

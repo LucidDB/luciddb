@@ -26,6 +26,8 @@ import java.io.*;
 
 import java.net.*;
 
+import java.sql.*;
+
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.*;
@@ -1391,6 +1393,22 @@ public class FarragoPreparingStmt
             }
         }
 
+        // If the session has a label setting, only allow access to local
+        // tables that were created prior to when the label was created.
+        Timestamp labelTimestamp =
+            getSession().getSessionLabelCreationTimestamp();
+        if (labelTimestamp != null && table instanceof FemLocalTable) {
+            FemAnnotatedElement annotated = (FemAnnotatedElement) table;
+            Timestamp objectCreateTimestamp =
+                Timestamp.valueOf(annotated.getCreationTimestamp());
+            if (objectCreateTimestamp.compareTo(labelTimestamp) > 0) {
+                throw
+                    FarragoResource.instance().
+                        ValidatorAccessObjectNonVisibleToLabel.
+                            ex(getRepos().getLocalizedObjectName(table));
+            }
+        }
+        
         addDependency(table, action);
 
         if (table.getVisibility() == null) {

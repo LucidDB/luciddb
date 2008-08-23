@@ -598,6 +598,7 @@ void Database::allocateHeader()
         
     PageId pageId;
     pTxnLog->setNextTxnId(FIRST_TXN_ID);
+    lastCommittedTxnId = FIRST_TXN_ID;
     pageId = headerPageLock.allocatePage();
     assert(pageId == headerPageId1);
     headerPageLock.getNodeForWrite() = header;
@@ -648,8 +649,26 @@ void Database::loadHeader(bool recovery)
         header = header1;
     }
     if (pTxnLog) {
-        pTxnLog->setNextTxnId(header.txnLogCheckpointMemento.nextTxnId);
+        TxnId nextTxnId = header.txnLogCheckpointMemento.nextTxnId;
+        pTxnLog->setNextTxnId(nextTxnId);
+        // The last committed txn should always be one smaller than the
+        // next txnId, unless we haven't initiated a txn yet
+        if (nextTxnId == FIRST_TXN_ID) {
+            lastCommittedTxnId = nextTxnId;
+        } else {
+            lastCommittedTxnId = nextTxnId - 1;
+        }
     }
+}
+
+TxnId Database::getLastCommittedTxnId()
+{
+    return lastCommittedTxnId;
+}
+
+void Database::setLastCommittedTxnId(TxnId txnId)
+{
+    lastCommittedTxnId = txnId;
 }
 
 void Database::checkpointImpl(CheckpointType checkpointType)
@@ -906,7 +925,7 @@ bool Database::areSnapshotsEnabled() const
     return (forceTxns && !disableSnapshots);
 }
 
-void Database::deallocateOldPages()
+void Database::deallocateOldPages(TxnId oldestLabelCsn)
 {
     uint iSegAlloc = 0;
     ExtentNum extentNum = 0;
@@ -921,6 +940,17 @@ void Database::deallocateOldPages()
 
     // Determine the oldest active txnId.
     TxnId oldestActiveTxnId = pTxnLog->getOldestActiveTxnId();
+
+    // Take the minimum of the oldest active txnId and the
+    // oldest active label + 1, if there are any active labels.
+    // +1 because txns using that label will have ids bigger than that
+    // label's csn.
+    TxnId oldestTxnId;
+    if (oldestLabelCsn == NULL_TXN_ID) {
+        oldestTxnId = oldestActiveTxnId;
+    } else {
+        oldestTxnId = std::min(oldestActiveTxnId, oldestLabelCsn + 1);
+    }
 
     // Gather a batch of old pageIds and then deallocate them.  After each 
     // deallocation, issue a checkpoint to flush the modified allocation
@@ -937,7 +967,7 @@ void Database::deallocateOldPages()
             pVersionedRandomSegment->getOldPageIds(
                 iSegAlloc,
                 extentNum,
-                oldestActiveTxnId,
+                oldestTxnId,
                 numPages,
                 oldPageSet);
 
@@ -947,7 +977,7 @@ void Database::deallocateOldPages()
             pCheckpointThread->getActionMutex().waitFor(LOCKMODE_S);
             pVersionedRandomSegment->deallocateOldPages(
                 oldPageSet,
-                oldestActiveTxnId);
+                oldestTxnId);
 
             pCheckpointThread->getActionMutex().release(LOCKMODE_S);
             requestCheckpoint(CHECKPOINT_FLUSH_ALL, false);

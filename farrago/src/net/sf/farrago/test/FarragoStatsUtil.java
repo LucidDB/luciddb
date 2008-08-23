@@ -68,7 +68,12 @@ public class FarragoStatsUtil
                     catalogName,
                     schemaName,
                     tableName);
-            FarragoCatalogUtil.updateRowCount(columnSet, rowCount, true, true);
+            FarragoCatalogUtil.updateRowCount(
+                columnSet,
+                rowCount,
+                true,
+                true,
+                repos);
 
             txn.commit();
         } finally {
@@ -175,7 +180,7 @@ public class FarragoStatsUtil
             CwmCatalog catalog = lookupCatalog(session, repos, catalogName);
             FemLocalSchema schema = lookupSchema(session, catalog, schemaName);
             FemLocalIndex index = lookupIndex(schema, indexName);
-            FarragoCatalogUtil.updatePageCount(index, pageCount);
+            FarragoCatalogUtil.updatePageCount(index, pageCount, repos);
 
             txn.commit();
         } finally {
@@ -214,7 +219,12 @@ public class FarragoStatsUtil
                     tableName);
             FemAbstractColumn column = lookupColumn(columnSet, columnName);
 
-            long rowCount = columnSet.getRowCount();
+            Long[] rowCountStats = new Long[2];
+            FarragoCatalogUtil.getRowCounts(
+                columnSet, 
+                null, 
+                rowCountStats);
+            long rowCount = rowCountStats[0];
             long sampleRows = (rowCount * samplePercent) / 100;
             assert (distinctValues <= rowCount);
             assert (sampleDistinctValues <= distinctValues);
@@ -275,7 +285,8 @@ public class FarragoStatsUtil
         int distributionType,
         String valueDigits)
     {
-        FemColumnHistogram origHistogram = column.getHistogram();
+        FemColumnHistogram origHistogram =
+            FarragoCatalogUtil.getHistogram(column, null);
         int origBarCount = 0;
         List<FemColumnHistogramBar> origBars = null;
         if (origHistogram != null) {

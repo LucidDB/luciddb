@@ -474,7 +474,27 @@ public abstract class FarragoTestUDR
         } catch (Throwable e) {
             throw new SQLException(e.getMessage());
         }
-    }    
+    }
+    
+    /**
+     * Sets a label within a UDR.  This currently results in an exception.
+     * 
+     * @param labelName name of the label or null
+     */
+    public static void setLabel(String labelName)
+    throws Exception
+    {
+        Connection conn =
+            DriverManager.getConnection("jdbc:default:connection");
+        Statement stmt = conn.createStatement();
+
+        if (labelName == null) {
+            labelName = "null";
+        } else {
+            labelName = "'" + labelName + "'";
+        }
+        stmt.executeUpdate("alter session set \"label\" = " + labelName);
+    }
 }
 
 // End FarragoTestUDR.java

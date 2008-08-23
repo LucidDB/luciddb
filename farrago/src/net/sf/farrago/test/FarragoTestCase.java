@@ -285,7 +285,7 @@ public abstract class FarragoTestCase
         }
     }
 
-    private static Connection newConnection()
+    protected static Connection newConnection()
         throws Exception
     {
         FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();
@@ -787,6 +787,7 @@ public abstract class FarragoTestCase
             dropSchemas();
             dropDataWrappers();
             dropDataServers();
+            dropLabels();
             dropAuthIds();
         }
 
@@ -872,6 +873,32 @@ public abstract class FarragoTestCase
             return name.startsWith("SYS_");
         }
 
+        /**
+         * Decides where a label should be preserved because it's a global
+         * fixture or because it's a label alias.  Label aliases are
+         * preserved (temporarily) because they will be dropped, as needed,
+         * by the cascaded drop of the parent label.  Extension project test
+         * case can override this method to bless additional labels or use
+         * attributes other than the name to make the determination.
+         * 
+         * @param label label to check
+         * 
+         * @return true iff label should be preseved as fixture
+         */
+        protected boolean isBlessedLabel(FemLabel label)
+        {
+            if (label.getParentLabel() != null) {
+                return true;
+            }
+            return isBlessedLabel(label.getName());
+        }
+        
+        protected boolean isBlessedLabel(String name)
+        {
+            tracer.finer("checking name: " + name);
+            return false;
+        }
+        
         /**
          * Decides whether authId should be preserved as a global fixture.
          * Extension project test case can override this method to bless
@@ -1024,6 +1051,49 @@ public abstract class FarragoTestCase
                 String sql =  "drop server "
                     + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
                     + " cascade";
+                tracer.finer(sql);
+                getStmt().execute(sql);
+            }
+        }
+        
+        private void dropLabels() throws Exception
+        {
+            tracer.fine("Dropping Labels.");
+            List<String> list = new ArrayList<String>();
+            final FarragoRepos repos = getRepos();
+            if (repos != null) {
+                for (
+                    FemLabel label
+                    : repos.allOfClass(FemLabel.class))
+                {
+                    if (isBlessedLabel(label)) {
+                        continue;
+                    }
+                    list.add(label.getName());
+                }
+            } else if (stmt != null) {
+                // Ignore label aliases, as they'll get dropped by the
+                // cascaded drop of the base labels.
+                if (stmt.execute(
+                    "select \"name\" from sys_fem.med.\"Label\" +" +
+                    "where \"ParentLabel\" is null"))
+                {
+                    ResultSet rset = stmt.getResultSet();
+                    while (rset.next()) {
+                        String name = rset.getString(1);
+                        if (isBlessedLabel(name)) {
+                            continue;
+                        }
+                        list.add(name);
+                    }
+                }
+            }
+
+            tracer.finer("Label name list has " + list.size() + " entries");
+            for (String name : list) {
+                String sql =  "drop label "
+                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name) +
+                    " cascade";
                 tracer.finer(sql);
                 getStmt().execute(sql);
             }

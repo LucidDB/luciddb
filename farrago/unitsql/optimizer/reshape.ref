@@ -9,6 +9,11 @@
 > 
 > alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 > 
+> -- exclude the constant/cast reduction rules so we can exercise the ReshapeRel
+> -- transforming no-op casts
+> call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(
+>     'FarragoReduceExpressionsRule.*');
+> 
 > create table t1(
 >     t1id int not null,
 >     t1a char(5) not null,

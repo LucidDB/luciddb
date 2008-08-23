@@ -353,6 +353,24 @@ public interface FarragoSession
      * Disables subquery reduction for the current session.
      */
     public void disableSubqueryReduction();
+    
+    /**
+     * Retrieves the commit sequence number associated with a session's label,
+     * if it's set.
+     * 
+     * @return the commit sequence number of a session's label; null if the
+     * session does not have a label setting
+     */
+    public Long getSessionLabelCsn();
+    
+    /**
+     * Retrieves the creation timestamp for the session's label setting, if
+     * a label setting is set.
+     * 
+     * @return the creation timestamp; null if the session does not have a
+     * label setting
+     */
+    public Timestamp getSessionLabelCreationTimestamp();
 }
 
 // End FarragoSession.java

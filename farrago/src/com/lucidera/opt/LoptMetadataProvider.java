@@ -561,7 +561,9 @@ public class LoptMetadataProvider
         Double result =
             FarragoRelMetadataProvider.getRowCountStat(
                 rel.getLcsTable(),
-                repos);
+                repos,
+                FennelRelUtil.getPreparingStmt(rel).getSession().
+                    getSessionLabelCreationTimestamp());
         Double selec = rel.getIndexSelectivity();
         if (result == null || selec == null) {
             return null;
