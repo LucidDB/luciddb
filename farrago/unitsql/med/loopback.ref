@@ -80,8 +80,8 @@ Error: From line 1, column 15 to line 1, column 29: Table 'SALES.FUDGE' not foun
 > -- change the foreign table to produce a new cast-compatible type and value
 > create or replace view x.foo as select '  500  ' from (values(0));
 > 
-> -- should not fail, but should cast to original type type frozen when
-> -- bar was created
+> -- should not fail, but should cast to original type
+> -- which was frozen when bar was created
 > select * from x.bar;
 +---------+
 | EXPR$0  |
