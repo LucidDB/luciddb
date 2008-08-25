@@ -67,6 +67,10 @@
 -- thread cleanup
 > drop schema sales cascade;
 0 rows affected.
+> drop schema s cascade;
+0 rows affected.
+> drop label l1;
+0 rows affected.
 -- end of thread cleanup
 
 -- thread r1

@@ -64,6 +64,8 @@
    @sync
    @sync
    drop schema sales cascade;
+   drop schema s cascade;
+   drop label l1;
 
 @end
 
