@@ -49,7 +49,7 @@ select * from loopback_localdb.x.foo;
 -- change the foreign table to produce a new cast-compatible type and value
 create or replace view x.foo as select '  500  ' from (values(0));
 
--- should not fail, but should cast to the original type
+-- should not fail, but should cast to original type
 -- which was frozen when bar was created
 select * from x.bar;
 
