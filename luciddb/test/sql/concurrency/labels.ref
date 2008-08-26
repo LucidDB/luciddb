@@ -21,6 +21,11 @@
 0 rows affected.
 -- end of setup
 
+-- thread cleanup
+> drop schema s cascade;
+0 rows affected.
+-- end of thread cleanup
+
 -- thread labeluser1
 > alter session set "label" = 'L1';
 0 rows affected.

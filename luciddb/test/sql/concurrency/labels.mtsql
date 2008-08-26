@@ -21,6 +21,12 @@
 
 @thread cleanup
 
+  @sync
+  @sync
+  @sync
+  @sync
+  drop schema s cascade;
+
 @end
 
 --------------------------------------------------------------------------------
