@@ -78,6 +78,7 @@ public class FarragoJdbcEnginePreparedNonDdl
     public ResultSet executeQuery()
         throws SQLException
     {
+        validateSession();
         if (stmtContext.isPreparedDml()) {
             throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
         }
@@ -95,6 +96,7 @@ public class FarragoJdbcEnginePreparedNonDdl
     public int executeUpdate()
         throws SQLException
     {
+        validateSession();
         if (!stmtContext.isPreparedDml()) {
             throw new SQLException(ERRMSG_IS_A_QUERY + sql);
         }

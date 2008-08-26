@@ -40,7 +40,9 @@ import junit.framework.*;
 
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.jdbc.FarragoStatement;
+import net.sf.farrago.jdbc.FarragoAbstractJdbcDriver;
 import net.sf.farrago.trace.*;
+import net.sf.farrago.catalog.FarragoCatalogInit;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -404,7 +406,7 @@ public class FarragoJdbcTest
     {
         udxCancel(false);
     }
-    
+
     public void testSubqueryCancel()
         throws Exception
     {
@@ -471,8 +473,8 @@ public class FarragoJdbcTest
                 sql = "select * from cancel_test.m";
             }
             executeAndCancel(sql, waitMillis);
-        }       
-        
+        }
+
         // reset back to the default
         if (subquery) {
             sql =
@@ -562,7 +564,7 @@ public class FarragoJdbcTest
         }
         Assert.fail("Expected failure due to cancel request");
     }
-    
+
     private void prepareAndCancel(String sql, int waitMillis)
         throws SQLException
     {
@@ -591,7 +593,7 @@ public class FarragoJdbcTest
             };
         tracer.fine("scheduling cancel task with delay=" + waitMillis);
         timer.schedule(task, waitMillis);
-    
+
         try {
             resultSet = stmt.executeQuery(sql);
         } catch (SQLException ex) {
@@ -604,7 +606,7 @@ public class FarragoJdbcTest
         }
         Assert.fail("Expected failure due to cancel request");
     }
-    
+
     public void testCheckParametersSet()
         throws Exception
     {
@@ -2559,6 +2561,78 @@ public class FarragoJdbcTest
     }
 
     /**
+     * Tests orphan statement and resultset cleanup.
+     * REVIEW: test ALL Statement methods?
+     */
+    public void testOrphans() throws Exception
+    {
+        final String sql1 = "SELECT * FROM sales.emps";
+        final String sql2 = "SELECT * FROM sales.depts";
+
+        // create a new connection and statements, don't use the globals
+        FarragoAbstractJdbcDriver driver =
+            FarragoTestCase.newJdbcEngineDriver();
+        final String uri = FarragoTestCase.getJdbcUri(driver);
+        Properties props = new Properties();
+        props.put("user", FarragoCatalogInit.SA_USER_NAME);
+        props.put("password", "mumble");
+        Connection conn = driver.connect(uri, props);
+
+        // abandon prepared statements before executing the query
+        PreparedStatement pstmt1 = conn.prepareStatement(sql1);
+        PreparedStatement pstmt2 = conn.prepareStatement(sql2);
+        tracer.fine("orphaning two new prepared statements");
+        conn.close();
+        // orphaned statements should have been closed
+        // and should now throw exceptions if used.
+        assertFalse("executeQuery pstmt1", tryExecuteQuery(pstmt1));
+        assertFalse("executeQuery pstmt2", tryExecuteQuery(pstmt2));
+
+        // abandon prepared statements after executing the query
+        conn = driver.connect(uri, props);
+        conn.setAutoCommit(false);  // allow two open cursors at once
+        pstmt1 = conn.prepareStatement(sql1);
+        ResultSet rs1 = pstmt1.executeQuery();
+        assertNotNull("rs1 null", rs1);
+        pstmt2 = conn.prepareStatement(sql2);
+        ResultSet rs2 = pstmt2.executeQuery();
+        assertNotNull("rs2 null", rs2);
+        tracer.fine("orphaning two used prepared statements");
+        conn.close();
+        // orphaned statements should have been closed along with resultsets
+        // and should now throw exceptions if used.
+        // REVIEW (hersker): FarragoTupleIterResultSet has "detached sessions"
+        // and I'm not sure if throwing an exception would be correct.
+        // assertFalse("rs1.next", tryResultSet(rs1));
+        // assertFalse("rs2.next", tryResultSet(rs2));
+        assertFalse("executeQuery pstmt1", tryExecuteQuery(pstmt1));
+        assertFalse("executeQuery pstmt2", tryExecuteQuery(pstmt2));
+
+        // abandon plain statements before executing the query
+        conn = driver.connect(uri, props);
+        Statement stmt1 = conn.createStatement();
+        Statement stmt2 = conn.createStatement();
+        tracer.fine("orphaning two new plain statements");
+        conn.close();
+        assertFalse("executeQuery stmt1", tryExecuteQuery(stmt1, sql1));
+        assertFalse("executeQuery stmt2", tryExecuteQuery(stmt2, sql2));
+
+        // abandon plain statements after executing the query
+        conn = driver.connect(uri, props);
+        conn.setAutoCommit(false);  // allow two open cursors at once
+        stmt1 = conn.createStatement();
+        rs1 = stmt1.executeQuery(sql1);
+        assertNotNull("rs1 null", rs1);
+        stmt2 = conn.createStatement();
+        rs2 = stmt2.executeQuery(sql2);
+        assertNotNull("rs2 null", rs2);
+        tracer.fine("orphaning two used plain statements");
+        conn.close();
+        assertFalse("executeQuery stmt1", tryExecuteQuery(stmt1, sql1));
+        assertFalse("executeQuery stmt2", tryExecuteQuery(stmt2, sql2));
+    }
+
+    /**
      * Tests char and varchar Data Type in JDBC.
      *
      * @throws Exception .
@@ -3451,6 +3525,39 @@ public class FarragoJdbcTest
         }
     }
 
+    /** attempts executeQuery on a plain Statement. */
+    private boolean tryExecuteQuery(Statement stmt, String sql)
+    {
+        try {
+            ResultSet rset = stmt.executeQuery(sql);
+            return rset != null;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+    /** attempts executeQuery on a PreparedStatement. */
+    private boolean tryExecuteQuery(PreparedStatement stmt)
+    {
+        try {
+            ResultSet rset = stmt.executeQuery();
+            return rset != null;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    /** attempts to use a ResultSet. */
+    private boolean tryResultSet(ResultSet rset)
+    {
+        try {
+            boolean bool = rset.next();     // should not return
+            fail("ResultSet did not throw, bool=" + bool);
+            return bool;                    // keep compiler happy
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
     //~ Inner Interfaces -------------------------------------------------------
 
     public static interface JdbcTester
@@ -3497,7 +3604,7 @@ public class FarragoJdbcTest
         {
             return FarragoJdbcTest.this.getName();
         }
-        
+
         public Connection getConnection()
         {
             return testCase.connection;
