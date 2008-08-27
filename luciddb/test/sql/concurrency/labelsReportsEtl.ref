@@ -23,9 +23,9 @@
 > (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
 > (120,'Wilma',20,'F',null,1,50,null,null,true);
 4 rows affected.
-> create schema s;
+> create schema "labelsReportsEtl";
 0 rows affected.
-> set schema 's';
+> set schema '"labelsReportsEtl"';
 0 rows affected.
 > create table emps(
 > empno int not null unique, name varchar(20) not null, deptno int,
@@ -67,14 +67,10 @@
 -- thread cleanup
 > drop schema sales cascade;
 0 rows affected.
-> drop schema s cascade;
-0 rows affected.
-> drop label l1;
-0 rows affected.
 -- end of thread cleanup
 
 -- thread r1
-> set schema 's';
+> set schema '"labelsReportsEtl"';
 0 rows affected.
 > alter session set "label" = 'L0';
 0 rows affected.
@@ -214,7 +210,7 @@
 -- end of thread r1
 
 -- thread r2
-> set schema 's';
+> set schema '"labelsReportsEtl"';
 0 rows affected.
 > alter session set "label" = 'L0';
 0 rows affected.
@@ -354,7 +350,7 @@
 -- end of thread r2
 
 -- thread r3
-> set schema 's';
+> set schema '"labelsReportsEtl"';
 0 rows affected.
 > alter session set "label" = 'L0';
 0 rows affected.
@@ -494,7 +490,7 @@
 -- end of thread r3
 
 -- thread etl
-> set schema 's';
+> set schema '"labelsReportsEtl"';
 0 rows affected.
 > merge into emps e
 > using tempemps t on t.t_empno = e.empno

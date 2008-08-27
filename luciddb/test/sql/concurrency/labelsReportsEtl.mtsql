@@ -26,8 +26,8 @@
         (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
         (120,'Wilma',20,'F',null,1,50,null,null,true);
 
-    create schema s;
-    set schema 's';
+    create schema "labelsReportsEtl";
+    set schema '"labelsReportsEtl"';
 
     create table emps(
         empno int not null unique, name varchar(20) not null, deptno int,
@@ -64,8 +64,6 @@
    @sync
    @sync
    drop schema sales cascade;
-   drop schema s cascade;
-   drop label l1;
 
 @end
 
@@ -77,7 +75,7 @@
 @thread r1,r2,r3
     @sync
 
-    set schema 's';
+    set schema '"labelsReportsEtl"';
 
     -- First, run with the original label
     alter session set "label" = 'L0';
@@ -113,7 +111,7 @@
 @thread etl
     @sync
 
-    set schema 's';
+    set schema '"labelsReportsEtl"';
 
     merge into emps e
         using tempemps t on t.t_empno = e.empno

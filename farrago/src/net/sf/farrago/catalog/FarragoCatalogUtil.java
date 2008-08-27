@@ -1674,6 +1674,10 @@ public abstract class FarragoCatalogUtil
         Collection<FemLabel> labels = repos.allOfType(FemLabel.class);
         Long oldestCsn = null;
         for (FemLabel label : labels) {
+            // Ignore label aliases
+            if (label.getParentLabel() != null) {
+                continue;
+            }
             long csn = label.getCommitSequenceNumber();
             if (oldestCsn == null || csn < oldestCsn) {
                 oldestCsn = csn;
