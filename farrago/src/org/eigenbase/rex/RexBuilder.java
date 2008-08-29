@@ -28,6 +28,7 @@ import java.nio.*;
 
 import java.util.*;
 
+import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -257,6 +258,26 @@ public class RexBuilder
         RexNode [] exprs)
     {
         return op.inferReturnType(new RexCallBinding(typeFactory, op, exprs));
+    }
+
+    /**
+     * Creates a reference to an aggregate call, checking for repeated
+     * calls.
+     */
+    public RexNode addAggCall(
+        AggregateCall aggCall,
+        int groupCount,
+        List<AggregateCall> aggCalls,
+        Map<AggregateCall, RexNode> aggCallMapping)
+    {
+        RexNode rex = aggCallMapping.get(aggCall);
+        if (rex == null) {
+            int index = aggCalls.size() + groupCount;
+            aggCalls.add(aggCall);
+            rex = makeInputRef(aggCall.getType(), index);
+            aggCallMapping.put(aggCall, rex);
+        }
+        return rex;
     }
 
     /**
