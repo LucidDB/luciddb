@@ -121,6 +121,14 @@ public class RelOptRulesTest
             "select e.sal + b.comm from emp e inner join bonus b "
             + "on e.ename = b.ename and e.deptno = 10");
     }
+
+    public void testPushProjectPastSetOp()
+    {
+        checkPlanning(
+            new PushProjectPastSetOpRule(),
+            "select sal from "
+            + "(select * from emp e1 union all select * from emp e2)");
+    }
 }
 
 // End RelOptRulesTest.java

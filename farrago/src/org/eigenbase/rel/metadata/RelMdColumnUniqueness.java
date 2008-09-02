@@ -200,7 +200,12 @@ public class RelMdColumnUniqueness
             }
             return RelOptUtil.contains(columns, groupKey);
         } else {
-            return false;
+            // interpret an empty set as asking whether the aggregation is full
+            // table (in which case it returns at most one row);
+            // TODO jvs 1-Sept-2008:  apply this convention consistently
+            // to other relational expressions, as well as to
+            // RelMetadataQuery.getUniqueKeys
+            return columns.isEmpty();
         }
     }
 

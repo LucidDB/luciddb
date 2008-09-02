@@ -1005,6 +1005,7 @@ ${farrago.test.jvmargs}
     <antcall target="testRngPlugin"/>
     <antcall target="exportCatalog"/>
     <antcall target="testDmv"/>
+    <antcall target="testMiniplanner"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="testCleanup"/>
@@ -1102,6 +1103,11 @@ please disable it and try again.
   <target name="testDmv">
     <farrago.runSqlTest
       file="${farrago.dir}/examples/dmv/test.sql"/>
+  </target>
+
+  <target name="testMiniplanner">
+    <farrago.runSqlTest
+      file="${farrago.dir}/examples/miniplan/unitsql/miniplan.sql"/>
   </target>
 
   <target name="testCleanup">
@@ -1339,6 +1345,9 @@ please disable it and try again.
       <packageset dir="${farrago.dir}/examples/plannerviz/src">
         <include name="**"/>
       </packageset>
+      <packageset dir="${farrago.dir}/examples/miniplan/src">
+        <include name="**"/>
+      </packageset>
       <packageset dir="${farrago.dir}/examples/rng/src">
         <include name="**"/>
       </packageset>
@@ -1384,6 +1393,9 @@ please disable it and try again.
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/plannerviz/src">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.dir}/examples/miniplan/src">
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/rng/src">
@@ -1535,12 +1547,16 @@ please disable it and try again.
     <ant antfile="examples/plannerviz/build.xml" inheritAll="false"/>
     <ant antfile="examples/rng/build.xml" target="createPlugin"
       inheritAll="false"/>
+    <ant antfile="examples/miniplan/build.xml"
+      inheritAll="false"/>
   </target>
 
   <target name="cleanExamples">
     <ant antfile="examples/plannerviz/build.xml" target="clean"
       inheritAll="false"/>
     <ant antfile="examples/rng/build.xml" target="clean"
+      inheritAll="false"/>
+    <ant antfile="examples/miniplan/build.xml" target="clean"
       inheritAll="false"/>
   </target>
 

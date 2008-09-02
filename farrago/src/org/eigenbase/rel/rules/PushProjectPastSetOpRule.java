@@ -87,40 +87,38 @@ public class PushProjectPastSetOpRule
             return;
         }
 
-        // locate all fields referenced in the projection; if all fields are
-        // being projected and there are no special expressions, no point in
-        // proceeding any further
+        // locate all fields referenced in the projection
         PushProjector pushProject =
             new PushProjector(origProj, null, setOpRel, preserveExprs);
-        if (pushProject.locateAllRefs()) {
-            return;
-        }
+        pushProject.locateAllRefs();
 
         RelNode [] setOpInputs = setOpRel.getInputs();
         int nSetOpInputs = setOpInputs.length;
         RelNode [] newSetOpInputs = new RelNode[nSetOpInputs];
+        int [] adjustments = pushProject.getAdjustments();
 
-        // project the input references, referenced in the original projection,
-        // from each setop child
+        // push the projects completely below the setop; this
+        // is different from pushing below a join, where we decompose
+        // to try to keep expensive expressions above the join,
+        // because UNION ALL does not have any filtering effect,
+        // and it is the only operator this rule currently acts on
         for (int i = 0; i < nSetOpInputs; i++) {
+            // be lazy:  produce two ProjectRels, and let another rule
+            // merge them (could probably just clone origProj instead?)
             newSetOpInputs[i] =
                 pushProject.createProjectRefsAndExprs(
                     setOpInputs[i],
                     true,
                     false);
+            newSetOpInputs[i] =
+                pushProject.createNewProject(newSetOpInputs[i], adjustments);
         }
 
         // create a new setop whose children are the ProjectRels created above
         SetOpRel newSetOpRel =
             RelOptUtil.createNewSetOpRel(setOpRel, newSetOpInputs);
-
-        // put the original project on top of the new setop, converting it to
-        // reference the modified projection list
-        int [] adjustments = pushProject.getAdjustments();
-        ProjectRel newProject =
-            pushProject.createNewProject(newSetOpRel, adjustments);
-
-        call.transformTo(newProject);
+        
+        call.transformTo(newSetOpRel);
     }
 }
 

@@ -56,7 +56,7 @@ public class FarragoDefaultHeuristicPlanner
 
     //~ Constructors -----------------------------------------------------------
 
-    private FarragoDefaultHeuristicPlanner(
+    public FarragoDefaultHeuristicPlanner(
         HepProgram program,
         FarragoSessionPreparingStmt stmt,
         Collection<RelOptRule> medPluginRules)

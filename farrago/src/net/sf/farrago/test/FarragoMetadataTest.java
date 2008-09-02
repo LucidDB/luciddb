@@ -36,9 +36,9 @@ import org.eigenbase.relopt.hep.*;
 
 
 /**
- * FarragoMetadata tests the relational expression metadata queries that require
- * additional sql statement support in order to test, above and beyond what can
- * be tested in {@link org.eigenbase.test.RelMetadataTest}.
+ * FarragoMetadataTest tests the relational expression metadata queries that
+ * require additional sql statement support in order to test, above and beyond
+ * what can be tested in {@link org.eigenbase.test.RelMetadataTest}.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -486,6 +486,20 @@ public class FarragoMetadataTest
             expected,
             nonUniqueKey,
             false);
+    }
+
+    public void testUniqueKeysFullTableAgg()
+        throws Exception
+    {
+        String sql = "select count(*) from tab";
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            sql);
+        BitSet emptyKey = new BitSet();
+        boolean result = RelMdUtil.areColumnsDefinitelyUnique(
+            rootRel, emptyKey);
+        assertTrue(result);
     }
 
     public void testUniqueKeysCorrelateRel()
