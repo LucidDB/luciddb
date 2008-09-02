@@ -189,6 +189,8 @@ public class FarragoRuntimeContext
 
         isCanceled = true;
 
+        boolean streamGraphClosed = false;
+
         // Override CompoundClosableAllocation behavior, because we
         // need special synchronization to account for the fact
         // that FarragoJavaUdxIterator instances may be adding themselves
@@ -202,9 +204,32 @@ public class FarragoRuntimeContext
                 }
                 allocation = allocations.remove(allocations.size() - 1);
             }
+            if (allocation instanceof FarragoObjectCache.Entry) {
+                Object cachedObj =
+                    ((FarragoObjectCache.Entry) allocation).getValue();
+                if (cachedObj == streamGraph) {
+                    // REVIEW jvs 1-Sep-2008: This is really gross.  We're
+                    // between a rock (FRG-251) and a hard place (FRG-331).
+                    // This (FRG-338) is the temporary resolution, but we really
+                    // need to straighten out the UDX thread lifecycle once and
+                    // for all.
+                    assert(!streamGraphClosed);
+                    streamGraphClosed = true;
+                    closeStreamGraph();
+                }
+            }
             allocation.closeAllocation();
         }
-        
+        if (!streamGraphClosed) {
+            // For txnCodeCache != null, or for a pure-Java statement, we
+            // haven't actually unpinned any stream graph cache entry, but we
+            // still have some cleanup to do.
+            closeStreamGraph();
+        }
+    }
+
+    private void closeStreamGraph()
+    {
         // make sure all streams get closed BEFORE they are deallocated
         streamOwner.closeAllocation();
         if (!isDml) {
@@ -465,11 +490,11 @@ public class FarragoRuntimeContext
     protected void registerJavaStream(
         int streamId,
         Object stream,
-        FarragoCompoundAllocation streamOwner)
+        FarragoCompoundAllocation owner)
     {
         streamIdToHandleMap.put(
             new Integer(streamId),
-            FennelDbHandle.allocateNewObjectHandle(streamOwner, stream));
+            FennelDbHandle.allocateNewObjectHandle(owner, stream));
     }
 
     /**
