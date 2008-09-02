@@ -108,6 +108,15 @@ public class RexToSqlNodeConverterImpl
                 ((NlsString) (literal.getValue())).getValue(),
                 SqlParserPos.ZERO);
         }
+        
+        // Boolean
+        if (SqlTypeFamily.BOOLEAN.getTypeNames().contains(
+                literal.getTypeName()))
+        {
+            return SqlLiteral.createBoolean(
+                (Boolean) literal.getValue(),
+                SqlParserPos.ZERO);
+        }
         throw Util.unexpected(literal.getTypeName());
     }
 
