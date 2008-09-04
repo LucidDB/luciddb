@@ -32,7 +32,7 @@ values false||'a';
 values 1/0;
 values 1.1/0.0;
 values MOD(1, 0);
-values pow(0.0, -1.0);
+values power(0.0, -1.0);
 values ln(0.0);
 values log10(0.0);
 
