@@ -478,11 +478,11 @@ public abstract class SqlOperatorTests
         checkCastToStringOkay(value, "VARCHAR(" + (len + 5) + ")", expected);
 
         //currently no exception thrown for truncation
-        if (Bug.Dt239Fixed) { 
+        if (Bug.Dt239Fixed) {
             checkCastFails(value, "CHAR(" + (len - 1) + ")",
                 stringTruncMessage, true);
         }
-        
+
         checkCastToStringOkay(value, "CHAR(" + len + ")", expected);
         checkCastToStringOkay(value, "CHAR(" + (len + 5) + ")",
             expected + spaces);
@@ -2643,12 +2643,18 @@ public abstract class SqlOperatorTests
             false);
     }
 
-    public void testPowFunc()
+    public void testPowerFunc()
     {
-        setFor(SqlStdOperatorTable.powFunc);
-        checkScalarApprox("pow(2,-2)", "DOUBLE NOT NULL", 0.25, 0);
-        checkNull("pow(cast(null as integer),2)");
-        checkNull("pow(2,cast(null as double))");
+        setFor(SqlStdOperatorTable.powerFunc);
+        checkScalarApprox("power(2,-2)", "DOUBLE NOT NULL", 0.25, 0);
+        checkNull("power(cast(null as integer),2)");
+        checkNull("power(2,cast(null as double))");
+
+        // 'power' is an obsolete form of the 'power' function
+        checkFails(
+            "^pow(2,-2)^",
+            "No match found for function signature POW\\(<NUMERIC>, <NUMERIC>\\)",
+            false);
     }
 
     public void testExpFunc()
@@ -3206,7 +3212,7 @@ public abstract class SqlOperatorTests
             "-1");
         checkNull("ceiling(cast(null as decimal(2,0)))");
         checkNull("ceiling(cast(null as double))");
-                            
+
         // Intervals
         checkScalar(
             "ceil(interval '3:4:5' hour to second)",
@@ -3329,8 +3335,9 @@ public abstract class SqlOperatorTests
             0);
 
         // string values -- note that empty string is not null
-        final String [] stringValues =
-        { "'a'", "CAST(NULL AS VARCHAR(1))", "''" };
+        final String [] stringValues = {
+            "'a'", "CAST(NULL AS VARCHAR(1))", "''"
+        };
         checkAgg(
             "COUNT(*)",
             stringValues,

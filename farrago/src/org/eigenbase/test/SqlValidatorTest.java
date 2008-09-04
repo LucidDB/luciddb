@@ -388,7 +388,7 @@ public class SqlValidatorTest
 
     public void testArithmeticOperators()
     {
-        checkExp("pow(2,3)");
+        checkExp("power(2,3)");
         checkExp("aBs(-2.3e-2)");
         checkExp("MOD(5             ,\t\f\r\n2)");
         checkExp("ln(5.43  )");
@@ -402,11 +402,11 @@ public class SqlValidatorTest
     public void testArithmeticOperatorsFails()
     {
         checkExpFails(
-            "^pow(2,'abc')^",
-            "(?s).*Cannot apply 'POW' to arguments of type 'POW.<INTEGER>, <CHAR.3.>.*");
+            "^power(2,'abc')^",
+            "(?s).*Cannot apply 'POWER' to arguments of type 'POWER.<INTEGER>, <CHAR.3.>.*");
         checkExpFails(
-            "^pow(true,1)^",
-            "(?s).*Cannot apply 'POW' to arguments of type 'POW.<BOOLEAN>, <INTEGER>.*");
+            "^power(true,1)^",
+            "(?s).*Cannot apply 'POWER' to arguments of type 'POWER.<BOOLEAN>, <INTEGER>.*");
         checkExpFails(
             "^mod(x'1100',1)^",
             "(?s).*Cannot apply 'MOD' to arguments of type 'MOD.<BINARY.2.>, <INTEGER>.*");
@@ -3998,9 +3998,7 @@ public class SqlValidatorTest
                 "select percent_rank() over (rows 2 preceding ) from emp",
                 null);
             checkWin("select cume_dist() over (rows 2 preceding ) from emp ", null);
-        }
-        else {
-
+        } else {
             // Check for Rank function failure.
             checkWinFuncExpWithWinClause("^dense_rank()^", "Function 'DENSE_RANK\\(\\)' is not defined");
             checkWinFuncExpWithWinClause("^percent_rank()^", "Function 'PERCENT_RANK\\(\\)' is not defined");
@@ -4679,7 +4677,7 @@ public class SqlValidatorTest
             "select * from emp where (empno,deptno)"
             + " in (select deptno,deptno from dept)");
 
-        // NOTE: jhyde: The closing caret should be one character to the right 
+        // NOTE: jhyde: The closing caret should be one character to the right
         // ("dept)^"), but it's difficult to achieve, because parentheses are
         // discarded during the parsing process.
         checkFails(

@@ -601,7 +601,7 @@ public class CalcRexImplementorTableImpl
                 ExtInstructionDefTable.position));
 
         register(
-            SqlStdOperatorTable.powFunc,
+            SqlStdOperatorTable.powerFunc,
             new MakeOperandsDoubleImplementor(ExtInstructionDefTable.pow));
 
         registerInstr(
@@ -787,7 +787,8 @@ public class CalcRexImplementorTableImpl
         CalcProgramBuilder.RegisterDescriptor resultDesc =
             translator.getCalcRegisterDescriptor(toType);
         switch (roundingMode) {
-        case HALF_UP: {
+        case HALF_UP:
+        {
             // Code generated for HALF_UP:
             //
             //                          34567 -34567
@@ -852,7 +853,8 @@ public class CalcRexImplementorTableImpl
                 modReg);
             return resReg;
         }
-        case DOWN: {
+        case DOWN:
+        {
             // Code generated for DOWN:
             //
             //                          34567 -34567
@@ -875,7 +877,8 @@ public class CalcRexImplementorTableImpl
                 modReg);
             return resReg;
         }
-        case FLOOR: {
+        case FLOOR:
+        {
             // Code generated for FLOOR:
             //
             //                          34567 -34567 -34000
@@ -1232,8 +1235,7 @@ public class CalcRexImplementorTableImpl
         static final CastImplementor instance = new CastImplementor();
         private final Map<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>
             doubleKeyMap =
-                new HashMap<Pair<SqlTypeName, SqlTypeName>,
-                    CalcRexImplementor>();
+                new HashMap<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>();
 
         private CastImplementor()
         {
@@ -2384,7 +2386,6 @@ public class CalcRexImplementorTableImpl
         {
             implementInitialize(call, accumulatorRegister, translator);
             implementAdd(call, accumulatorRegister, translator);
-            
         }
 
         public boolean canImplement(RexCall call)
@@ -2785,9 +2786,9 @@ public class CalcRexImplementorTableImpl
 
         private boolean isMin()
         {
-            return function==SqlStdOperatorTable.minOperator;
+            return function == SqlStdOperatorTable.minOperator;
         }
-        
+
         public MinMaxCalcRexImplementor(SqlAggFunction function) {
             this.function = function;
         }
@@ -2811,7 +2812,7 @@ public class CalcRexImplementorTableImpl
                 translator.builder,
                 accumulatorRegister, input);
         }
-        
+
         public void implementAdd(
             RexCall call,
             CalcReg accumulatorRegister,
@@ -2823,7 +2824,6 @@ public class CalcRexImplementorTableImpl
             CalcReg input = translator.implementNode(operand);
             CalcReg tempBoolReg = translator.getTempBoolRegister();
 
-            
             //check operand for null if it is nullable
             String noReplaceLabel = translator.newLabel();;
             String doReplaceLabel = translator.newLabel();
@@ -2845,20 +2845,21 @@ public class CalcRexImplementorTableImpl
             if (SqlTypeUtil.inCharFamily(operand.getType())) {
                 final CalcReg tempInt4 = translator.getTempInt4Register();
                 final CalcReg zeroReg = translator.builder.newInt4Literal(0);
-                ExtInstructionDefTable.strCmpA.add(builder, tempInt4, 
-                        translator.implementNode(operand), accumulatorRegister);
+                ExtInstructionDefTable.strCmpA.add(
+                    builder, tempInt4,
+                    translator.implementNode(operand), accumulatorRegister);
                 compareInstruction.add(
-                            builder, tempBoolReg,
-                            tempInt4, zeroReg);
+                    builder, tempBoolReg,
+                    tempInt4, zeroReg);
             } else {
                 compareInstruction.add(
-                        builder, tempBoolReg,
-                        translator.implementNode(operand), accumulatorRegister);
+                    builder, tempBoolReg,
+                    translator.implementNode(operand), accumulatorRegister);
             }
             builder.addLabelJumpFalse(noReplaceLabel, tempBoolReg);
-            
+
             builder.addLabel(doReplaceLabel);
-            // Use ref instead of move since could be replacing a null 
+            // Use ref instead of move since could be replacing a null
             CalcProgramBuilder.refInstruction.add(
                 translator.builder,
                 accumulatorRegister, input);
@@ -3058,7 +3059,7 @@ public class CalcRexImplementorTableImpl
             // optional precision operand.
             regList.add(timeReg);
 
-            // The LocalTimestamp and LocalTime instructions take the POSIX 
+            // The LocalTimestamp and LocalTime instructions take the POSIX
             // description of the timezone (e.g. "PST-8PDT,M4.1.0,M10.1.0")
             // as an implicit first argument.
             //

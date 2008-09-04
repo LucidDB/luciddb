@@ -43,6 +43,8 @@ public class FarragoOJRexImplementorTable
 
     /**
      * Creates a table with all supported standard operators registered.
+     *
+     * @param opTab Operator table
      */
     public FarragoOJRexImplementorTable(SqlStdOperatorTable opTab)
     {
@@ -64,57 +66,57 @@ public class FarragoOJRexImplementorTable
         registerOperator(
             SqlStdOperatorTable.lnFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.LN_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.LN));
 
         registerOperator(
             SqlStdOperatorTable.log10Func,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.LOG10_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.LOG10));
 
         registerOperator(
             SqlStdOperatorTable.absFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.ABS_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.ABS));
 
         registerOperator(
             SqlStdOperatorTable.ceilFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.CEIL_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.CEIL));
 
         registerOperator(
             SqlStdOperatorTable.floorFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.FLOOR_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.FLOOR));
 
         registerOperator(
             SqlStdOperatorTable.expFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.EXP_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.EXP));
 
         registerOperator(
             SqlStdOperatorTable.modFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.MOD_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.MOD));
 
         registerOperator(
             SqlStdOperatorTable.substringFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.SUBSTRING_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.SUBSTRING));
 
         registerOperator(
             SqlStdOperatorTable.overlayFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.OVERLAY_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.OVERLAY));
 
         registerOperator(
-            SqlStdOperatorTable.powFunc,
+            SqlStdOperatorTable.powerFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.POW_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.POWER));
 
         registerOperator(
             SqlStdOperatorTable.concatOperator,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.CONCAT_OPERATOR));
+                FarragoOJRexBuiltinImplementor.Function.CONCAT));
 
         /*
         registerOperator( SqlStdOperatorTable.convertFunc, new FarragoOJRexBuiltinImplementor(
@@ -128,37 +130,37 @@ public class FarragoOJRexImplementorTable
         registerOperator(
             SqlStdOperatorTable.positionFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.POSITION_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.POSITION));
 
         registerOperator(
             SqlStdOperatorTable.trimFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.TRIM_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.TRIM));
 
         registerOperator(
             SqlStdOperatorTable.charLengthFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.CHAR_LENGTH_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.CHAR_LENGTH));
 
         registerOperator(
             SqlStdOperatorTable.characterLengthFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.CHARACTER_LENGTH_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.CHARACTER_LENGTH));
 
         registerOperator(
             SqlStdOperatorTable.upperFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.UPPER_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.UPPER));
 
         registerOperator(
             SqlStdOperatorTable.lowerFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.LOWER_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.LOWER));
 
         registerOperator(
             SqlStdOperatorTable.initcapFunc,
             new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.INITCAP_FUNCTION));
+                FarragoOJRexBuiltinImplementor.Function.INITCAP));
 
         registerOperator(
             SqlStdOperatorTable.similarOperator,

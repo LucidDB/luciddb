@@ -759,7 +759,7 @@ public class SqlJdbcFunctionCall
                 new MakeCall(SqlStdOperatorTable.modFunc, 2));
             map.put(
                 "POWER",
-                new MakeCall(SqlStdOperatorTable.powFunc, 2));
+                new MakeCall(SqlStdOperatorTable.powerFunc, 2));
 
             map.put(
                 "CONCAT",

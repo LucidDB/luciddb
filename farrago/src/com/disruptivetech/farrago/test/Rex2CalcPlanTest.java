@@ -216,14 +216,14 @@ public class Rex2CalcPlanTest
     public void testArithmeticOperators()
     {
         String sql =
-            "SELECT POW(1.0,1.0), MOD(1,1), ABS(5000000000), ABS(1), "
+            "SELECT POWER(1.0,1.0), MOD(1,1), ABS(5000000000), ABS(1), "
             + "ABS(1.1), LN(1), LOG10(1) FROM emp WHERE empno > 10";
         tester.check(sql, false, false);
     }
 
     public void testFunctionInFunction()
     {
-        String sql = "SELECT POW(3.0, ABS(2)+1) FROM emp WHERE empno > 10";
+        String sql = "SELECT POWER(3.0, ABS(2)+1) FROM emp WHERE empno > 10";
         tester.check(sql, false, false);
     }
 
@@ -339,7 +339,7 @@ public class Rex2CalcPlanTest
             + "substring(cast('a' as char(2)) from 1),"
             + "substring('a' from 1 for 10),"
             + (
-                Bug.Frg296Fixed 
+                Bug.Frg296Fixed
                     ? "substring('a' from 'a' for '\\' ),"
                     : "")
             + "'a'||'a'||'b'"
