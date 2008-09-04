@@ -5,11 +5,11 @@
 -- and another time to use java. The caller of this script is setting the flag so no need
 -- to do it directly unless you need to do acrobatics.
 
-select pow(2.0,2.0) as exponential from sales.emps where empno=100 ;
-select -pow(2.0,2.0) as exponential from sales.emps where empno=100 ;
+select power(2.0,2.0) as exponential from sales.emps where empno=100 ;
+select -power(2.0,2.0) as exponential from sales.emps where empno=100 ;
 select mod(age,9) from sales.emps order by 1;
 --values abs(-5000000000);
-select abs(-pow(2.0,-2.0)) as res from sales.emps where empno=100 ;
+select abs(-power(2.0,-2.0)) as res from sales.emps where empno=100 ;
 select ln(2.71828) as res from sales.emps where empno=100;
 select log10(10.0) from sales.emps;
 select log10(10) from sales.emps;
