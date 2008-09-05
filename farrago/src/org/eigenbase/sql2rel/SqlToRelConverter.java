@@ -2670,9 +2670,20 @@ public class SqlToRelConverter
             }
             sourceExps[i] =
                 defaultValueFactory.newColumnDefaultValue(targetTable, i);
+            // bare nulls are dangerous in the wrong hands
+            sourceExps[i] = castNullLiteralIfNeeded(
+                sourceExps[i], targetRowType.getFields()[i].getType());
         }
 
         return CalcRel.createProject(sourceRel, sourceExps, fieldNames, true);
+    }
+
+    private RexNode castNullLiteralIfNeeded(RexNode node, RelDataType type)
+    {
+        if (!RexLiteral.isNullLiteral(node)) {
+            return node;
+        }
+        return rexBuilder.makeCast(type, node);
     }
 
     /**
