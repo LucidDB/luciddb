@@ -155,10 +155,10 @@ public:
 #define FENNEL_TRACE(level,msg) FENNEL_DELEGATE_TRACE(level,this,msg)
 #define FENNEL_DELEGATE_TRACE(level,tracer,msg) \
 do { \
-    if (tracer->isTracingLevel(level)) { \
+    if ((tracer)->isTracingLevel(level)) { \
         std::ostringstream oss; \
         oss << msg; \
-        tracer->trace(level,oss.str()); \
+        (tracer)->trace(level,oss.str()); \
     } \
 } while (false)
 
