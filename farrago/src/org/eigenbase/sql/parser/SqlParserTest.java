@@ -5314,6 +5314,27 @@ public class SqlParserTest
             "Length of identifier '" + ident129Upper + "' must be less than or equal to 128 characters");
     }
 
+    /**
+     * Tests that you can't quote the names of builtin functions.
+     *
+     * @see org.eigenbase.test.SqlValidatorTest#testQuotedFunction()
+     */
+    public void testQuotedFunction()
+    {
+        checkExpFails(
+            "\"CAST\"(1 ^as^ double)",
+            "(?s).*Encountered \"as\" at .*");
+        checkExpFails(
+            "\"POSITION\"('b' ^in^ 'alphabet')",
+            "(?s).*Encountered \"in \\\\'alphabet\\\\'\" at .*");
+        checkExpFails(
+            "\"OVERLAY\"('a' ^PLAcing^ 'b' from 1)",
+            "(?s).*Encountered \"PLAcing\" at.*");
+        checkExpFails(
+            "\"SUBSTRING\"('a' ^from^ 1)",
+            "(?s).*Encountered \"from\" at .*");
+    }
+
     //~ Inner Interfaces -------------------------------------------------------
 
     /**

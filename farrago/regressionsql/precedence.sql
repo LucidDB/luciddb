@@ -17,7 +17,7 @@ values (not not false);
 values (1+2*3*10/2-3*2);
 values ((1+2)*3);
 values (2.0*power(2.0, 2.0)+3.0*power(2.0, 2.0));
-values (2.0*{fn pow(2.0, 2.0)}+3.0*{fn pow(2.0, 2.0)});
+values (2.0*{fn power(2.0, 2.0)}+3.0*{fn power(2.0, 2.0)});
 
 values (true is unknown is not unknown);
 values (not true is unknown is not unknown);
@@ -30,3 +30,4 @@ values (true and 3<3);
 
 values (true and 1 between 2 and 3);
 
+-- End precedence.sql

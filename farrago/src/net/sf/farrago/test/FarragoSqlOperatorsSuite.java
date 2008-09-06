@@ -123,13 +123,16 @@ public class FarragoSqlOperatorsSuite
             super.setFor(operator, unimplementedVmNames);
             if (operator != null) {
                 final boolean expanded =
-                    contains(unimplementedVmNames, "EXPAND")
-                    || operator instanceof SqlJdbcFunctionCall;
+                    contains(unimplementedVmNames, "EXPAND");
                 vmCanImplement =
                     expanded
                         || vm.canImplement(operator);
                 if (vm.getName().equals("AUTO")) {
                     // ignore
+                } else if (operator instanceof SqlJdbcFunctionCall) {
+                    // Ignore JDBC functions. They are implemented by
+                    // expansion, but sometimes they expand to something that
+                    // is only available in Java.
                 } else if (contains(unimplementedVmNames, vm.getName())) {
                     assert !vmCanImplement
                         : "VM " + vm.getName() +

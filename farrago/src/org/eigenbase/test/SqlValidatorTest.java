@@ -1108,6 +1108,15 @@ public class SqlValidatorTest
         checkExp("{fn log10(1)}");
         checkExp("{fn locate('','')}");
         checkExp("{fn insert('',1,2,'')}");
+
+        // 'lower' is a valid SQL function but not valid JDBC fn; the JDBC
+        // equivalent is 'lcase'
+        checkWholeExpFails(
+            "{fn lower('Foo' || 'Bar')}",
+            "Function '\\{fn LOWER\\}' is not defined");
+        checkExp("{fn lcase('Foo' || 'Bar')}");
+
+        checkExp("{fn power(2, 3)}");
         checkWholeExpFails("{fn insert('','',1,2)}", "(?s).*.*");
         checkWholeExpFails("{fn insert('','',1)}", "(?s).*4.*");
 
@@ -1128,21 +1137,29 @@ public class SqlValidatorTest
             "(?s).*Function '.fn HAHAHA.' is not defined.*");
     }
 
-    // REVIEW jvs 2-Feb-2005:  I am disabling this test because I removed
-    // the corresponding support from the parser.  Where in the standard
-    // does it state that you're supposed to be able to quote keywords
-    // for builtin functions?
-    public void _testQuotedFunction()
+    public void testQuotedFunction()
     {
-        checkExp("\"CAST\"(1 as double)");
-        checkExp("\"POSITION\"('b' in 'alphabet')");
+        if (false) {
+            // REVIEW jvs 2-Feb-2005:  I am disabling this test because I
+            // removed the corresponding support from the parser.  Where in the
+            // standard does it state that you're supposed to be able to quote
+            // keywords for builtin functions?
+            checkExp("\"CAST\"(1 as double)");
+            checkExp("\"POSITION\"('b' in 'alphabet')");
 
-        //convert and translate not yet implemented
-        //        checkExp("\"CONVERT\"('b' using converstion)");
-        //        checkExp("\"TRANSLATE\"('b' using translation)");
-        checkExp("\"OVERLAY\"('a' PLAcing 'b' from 1)");
-        checkExp("\"SUBSTRING\"('a' from 1)");
-        checkExp("\"TRIM\"('b')");
+            //convert and translate not yet implemented
+            //        checkExp("\"CONVERT\"('b' using converstion)");
+            //        checkExp("\"TRANSLATE\"('b' using translation)");
+            checkExp("\"OVERLAY\"('a' PLAcing 'b' from 1)");
+            checkExp("\"SUBSTRING\"('a' from 1)");
+            checkExp("\"TRIM\"('b')");
+        } else {
+            // Very poor error message. JVS's above remarks notwithstanding,
+            // the parser creates a call to TRIM with 1 rather than the
+            // expected 3 args, and the remaining two args are filled in with
+            // NULL literals so that we get as far as validation.
+            checkExpFails("\"TRIM\"('b')", "(?s).*Illegal use of 'NULL'.*");
+        }
     }
 
     public void testRowtype()

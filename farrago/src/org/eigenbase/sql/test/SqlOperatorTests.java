@@ -1254,9 +1254,194 @@ public abstract class SqlOperatorTests
             "DECIMAL(11, 1)");
     }
 
+    /**
+     * Tests support JDBC functions.
+     *
+     * <p>See FRG-97 "Support for JDBC escape syntax is incomplete".
+     */
     public void testJdbcFn()
     {
         setFor(new SqlJdbcFunctionCall("dummy"));
+
+        // There follows one test for each function in appendix C of the JDBC
+        // 3.0 specification. The test is 'if-false'd out if the function is
+        // not implemented or is broken.
+
+        // Numeric Functions
+        checkScalar("{fn ABS(-3)}", 3, "INTEGER NOT NULL");
+        if (false) {
+            checkScalar("{fn ACOS(float)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn ASIN(float)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn ATAN(float)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn ATAN2(float1, float2)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn CEILING(-2.6)}", 2, "");
+        }
+        if (false) {
+            checkScalar("{fn COS(float)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn COT(float)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn DEGREES(number)}", null, "");
+        }
+        checkScalarApprox("{fn EXP(2)}", "DOUBLE NOT NULL", 7.389, 0.001);
+        if (false) {
+            checkScalar("{fn FLOOR(2.6)}", 2, "DOUBLE NOT NULL");
+        }
+        checkScalarApprox("{fn LOG(10)}", "DOUBLE NOT NULL", 2.30258, 0.001);
+        checkScalarApprox("{fn LOG10(100)}", "DOUBLE NOT NULL", 2, 0);
+        checkScalar("{fn MOD(19, 4)}", 3, "INTEGER NOT NULL");
+        if (false) {
+            checkScalar("{fn PI()}", null, "");
+        }
+        checkScalar("{fn POWER(2, 3)}", 8.0, "DOUBLE NOT NULL");
+        if (false) {
+            checkScalar("{fn RADIANS(number)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn RAND(integer)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn ROUND(number, places)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn SIGN(number)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn SIN(float)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn SQRT(float)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn TAN(float)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn TRUNCATE(number, places)}", null, "");
+        }
+
+        // String Functions
+        if (false) {
+            checkScalar("{fn ASCII(string)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn CHAR(code)}", null, "");
+        }
+        checkScalar("{fn CONCAT('foo', 'bar')}", "foobar", "CHAR(6) NOT NULL");
+        if (false) {
+            checkScalar("{fn DIFFERENCE(string1, string2)}", null, "");
+        }
+        // REVIEW: is this result correct? I think it should be "abcCdef"
+        checkScalar("{fn INSERT('abc', 1, 2, 'ABCdef')}", "ABCdefc", "VARCHAR(9) NOT NULL");
+        checkScalar("{fn LCASE('foo' || 'bar')}", "foobar", "CHAR(6) NOT NULL");
+        if (false) {
+            checkScalar("{fn LEFT(string, count)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn LENGTH(string)}", null, "");
+        }
+        checkScalar("{fn LOCATE('ha', 'alphabet')}", 4, "INTEGER NOT NULL");
+        // only the 2 arg version of locate is implemented
+        if (false) {
+            checkScalar("{fn LOCATE(string1, string2[, start])}", null, "");
+        }
+        // ltrim is implemented but has a bug in arg checking
+        if (false) {
+            checkScalar("{fn LTRIM(' xxx  ')}", "xxx", "VARCHAR(6)");
+        }
+        if (false) {
+            checkScalar("{fn REPEAT(string, count)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn REPLACE(string1, string2, string3)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn RIGHT(string, count)}", null, "");
+        }
+        // rtrim is implemented but has a bug in arg checking
+        if (false) {
+            checkScalar("{fn RTRIM(' xxx  ')}", "xxx", "VARCHAR(6)");
+        }
+        if (false) {
+            checkScalar("{fn SOUNDEX(string)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn SPACE(count)}", null, "");
+        }
+        checkScalar("{fn SUBSTRING('abcdef', 2, 3)}", "bcd", "VARCHAR(6) NOT NULL");
+        checkScalar("{fn UCASE('xxx')}", "XXX", "CHAR(3) NOT NULL");
+
+        // Time and Date Functions
+        checkType("{fn CURDATE()}", "DATE NOT NULL");
+        checkType("{fn CURTIME()}", "TIME(0) NOT NULL");
+        if (false) {
+            checkScalar("{fn DAYNAME(date)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn DAYOFMONTH(date)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn DAYOFWEEK(date)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn DAYOFYEAR(date)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn HOUR(time)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn MINUTE(time)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn MONTH(date)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn MONTHNAME(date)}", null, "");
+        }
+        checkType("{fn NOW()}", "TIMESTAMP(0) NOT NULL");
+        if (false) {
+            checkScalar("{fn QUARTER(date)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn SECOND(time)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn TIMESTAMPADD(interval, count, timestamp)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn TIMESTAMPDIFF(interval, timestamp1, timestamp2)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn WEEK(date)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn YEAR(date)}", null, "");
+        }
+
+        // System Functions
+        if (false) {
+            checkScalar("{fn DATABASE()}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn IFNULL(expression, value)}", null, "");
+        }
+        if (false) {
+            checkScalar("{fn USER()}", null, "");
+        }
+
+        // Conversion Functions
+        if (false) {
+            checkScalar("{fn CONVERT(value, SQLtype)}", null, "");
+        }
     }
 
     public void testSelect()
