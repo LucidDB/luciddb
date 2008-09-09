@@ -1,22 +1,27 @@
--- TPC-D Parameter Substitution (Version 1.1.0D)
--- using default substitutions
+-- Q8 (tpch2.6.1)
 
--- COULD NOT CAST TO FLOAT
-
-set schema 'tpch';
-
-SELECT YYEAR, CAST(SUM(CASE WHEN NATION = 'BRAZIL'
-                               THEN VOLUME
-                               ELSE 0
-                      END) AS DECIMAL(19,4))*1.0000 / 
-             CAST(SUM(VOLUME) AS DECIMAL(19,4)) AS MKT_SHARE
+SELECT
+     YYEAR,
+     CAST(SUM(CASE WHEN NATION = 'BRAZIL'
+                   THEN VOLUME
+                   ELSE 0
+              END) AS DECIMAL(19,4))*1.0000 / 
+     CAST(SUM(VOLUME) AS DECIMAL(19,4)) AS MKT_SHARE
 FROM (SELECT
-        SUBSTRING (CAST(O_ORDERDATE AS CHAR(10)) FROM 1 FOR 4) AS YYEAR,
+        APPLIB.DATE_TO_CHAR('yyyy', O_ORDERDATE) AS YYEAR,
         L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS VOLUME,
         N2.N_NAME AS NATION
-    FROM PART, SUPPLIER, LINEITEM, ORDERS, CUSTOMER, NATION N1, NATION N2,
-         REGION
-    WHERE P_PARTKEY = L_PARTKEY
+    FROM 
+        TPCH.PART,
+        TPCH.SUPPLIER,
+        TPCH.LINEITEM,
+        TPCH.ORDERS,
+        TPCH.CUSTOMER,
+        TPCH.NATION N1,
+        TPCH.NATION N2,
+        TPCH.REGION
+    WHERE
+        P_PARTKEY = L_PARTKEY
         AND S_SUPPKEY = L_SUPPKEY
         AND L_ORDERKEY = O_ORDERKEY
         AND O_CUSTKEY = C_CUSTKEY

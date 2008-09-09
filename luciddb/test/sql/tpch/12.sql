@@ -1,7 +1,4 @@
--- TPC-D Parameter Substitution (Version 1.1.0D)
--- using default substitutions
-
-set schema 'tpch';
+-- Q12 (tpch2.6.1)
 
 SELECT
     L_SHIPMODE,
@@ -15,7 +12,7 @@ SELECT
                     THEN 1
                     ELSE 0
                 END) AS LOW_LINE_COUNT
-FROM ORDERS, LINEITEM
+FROM TPCH.ORDERS, TPCH.LINEITEM
 WHERE
        O_ORDERKEY = L_ORDERKEY
 AND L_SHIPMODE IN ('MAIL', 'SHIP')
