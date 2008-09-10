@@ -179,7 +179,7 @@ public class FarragoRuntimeContext
         throw new AssertionError();
     }
 
-    // override FarragoCompoundAllocation
+    // override CompoundClosableAllocation
     public synchronized void closeAllocation()
     {
         if (isClosed) {
@@ -189,6 +189,47 @@ public class FarragoRuntimeContext
 
         isCanceled = true;
 
+        boolean streamGraphClosed = false;
+
+        // Override CompoundClosableAllocation behavior, because we
+        // need special synchronization to account for the fact
+        // that FarragoJavaUdxIterator instances may be adding themselves
+        // concurrently during this shutdown.  Question:  is it possible
+        // for one to leak due to a race?
+        for (;;) {
+            ClosableAllocation allocation;
+            synchronized (allocations) {
+                if (allocations.isEmpty()) {
+                    break;
+                }
+                allocation = allocations.remove(allocations.size() - 1);
+            }
+            if (allocation instanceof FarragoObjectCache.Entry) {
+                Object cachedObj =
+                    ((FarragoObjectCache.Entry) allocation).getValue();
+                if (cachedObj == streamGraph) {
+                    // REVIEW jvs 1-Sep-2008: This is really gross.  We're
+                    // between a rock (FRG-251) and a hard place (FRG-331).
+                    // This (FRG-338) is the temporary resolution, but we really
+                    // need to straighten out the UDX thread lifecycle once and
+                    // for all.
+                    assert(!streamGraphClosed);
+                    streamGraphClosed = true;
+                    closeStreamGraph();
+                }
+            }
+            allocation.closeAllocation();
+        }
+        if (!streamGraphClosed) {
+            // For txnCodeCache != null, or for a pure-Java statement, we
+            // haven't actually unpinned any stream graph cache entry, but we
+            // still have some cleanup to do.
+            closeStreamGraph();
+        }
+    }
+
+    private void closeStreamGraph()
+    {
         // make sure all streams get closed BEFORE they are deallocated
         streamOwner.closeAllocation();
         if (!isDml) {
@@ -197,14 +238,36 @@ public class FarragoRuntimeContext
         }
         statementClassLoader = null;
 
-        // FRG-253:  nullify this, so that once we release its pinned
-        // entry from the cache, we don't try to abort it after someone
-        // else starts to reuse it!
+        // FRG-253: nullify this, so that once we release its pinned entry from
+        // the cache, we don't try to abort it after someone else starts to
+        // reuse it!
         streamGraph = null;
-
-        super.closeAllocation();
     }
 
+    // override CompoundClosableAllocation
+    public void addAllocation(ClosableAllocation allocation)
+    {
+        synchronized (allocations) {
+            super.addAllocation(allocation);
+        }
+    }
+    
+    // override CompoundClosableAllocation
+    public boolean forgetAllocation(ClosableAllocation allocation)
+    {
+        synchronized (allocations) {
+            return super.forgetAllocation(allocation);
+        }
+    }
+    
+    // override CompoundClosableAllocation
+    public boolean hasAllocations()
+    {
+        synchronized (allocations) {
+            return !allocations.isEmpty();
+        }
+    }
+    
     // implement RelOptConnection
     public Object contentsAsArray(
         String qualifier,
@@ -427,11 +490,11 @@ public class FarragoRuntimeContext
     protected void registerJavaStream(
         int streamId,
         Object stream,
-        FarragoCompoundAllocation streamOwner)
+        FarragoCompoundAllocation owner)
     {
         streamIdToHandleMap.put(
             new Integer(streamId),
-            FennelDbHandle.allocateNewObjectHandle(streamOwner, stream));
+            FennelDbHandle.allocateNewObjectHandle(owner, stream));
     }
 
     /**

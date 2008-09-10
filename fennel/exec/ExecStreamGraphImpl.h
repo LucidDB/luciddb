@@ -188,6 +188,11 @@ protected:
      * Whether to close this graph in dataflow order (producers to consumers)
      */
     bool doDataflowClose;
+
+    /**
+     * Whether to allow execution without a real transaction.
+     */
+    bool allowDummyTxnId;
     
     virtual void closeImpl();
     virtual void sortStreams();
@@ -233,6 +238,8 @@ public:
     virtual void setResourceGovernor(
         SharedExecStreamGovernor pResourceGovernor);
     virtual SharedLogicalTxn getTxn();
+    virtual TxnId getTxnId();
+    virtual void enableDummyTxnId(bool enabled);
     virtual SharedExecStreamGovernor getResourceGovernor();
     virtual void prepare(ExecStreamScheduler &scheduler);
     virtual void open();

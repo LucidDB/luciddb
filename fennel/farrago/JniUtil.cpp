@@ -88,6 +88,9 @@ bool JniUtil::traceHandleCountEnabled = false;
 bool JniUtil::closeHandleCountTraceOnZero = false;
 std::ofstream JniUtil::handleCountTraceStream;
 
+JavaThreadTracker JniUtil::threadTracker;
+
+
 #ifndef __MINGW32__
 static void debugger_signalHandler(int signum)
 {
@@ -478,6 +481,11 @@ std::string JniUtil::getXmi(const TupleDescriptor &tupleDescriptor)
     oss << "</XMI>" << std::endl;
     std::string s = oss.str();
     return s;
+}
+
+ThreadTracker &JniUtil::getThreadTracker()
+{
+    return threadTracker;
 }
 
 void JniExceptionChecker::checkExceptions()

@@ -633,15 +633,14 @@ public class DdlValidator
             RefObject obj = mapEntry.getKey();
             ValidatedOp action = mapEntry.getValue();
 
-            if (obj instanceof CwmStructuralFeature) {
-                // Set some mandatory but irrelevant attributes.
-                CwmStructuralFeature feature = (CwmStructuralFeature) obj;
-
-                feature.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
-            }
-
-            if (action == ValidatedOp.DELETION) {
-                clearDependencySuppliers(obj);
+            if (action != ValidatedOp.DELETION) {
+                if (obj instanceof CwmStructuralFeature) {
+                    // Set some mandatory but irrelevant attributes.
+                    CwmStructuralFeature feature = (CwmStructuralFeature) obj;
+    
+                    feature.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
+                }
+            } else {
                 RefFeatured container = obj.refImmediateComposite();
                 if (container != null) {
                     ValidatedOp containerAction = validatedMap.get(container);
@@ -698,12 +697,7 @@ public class DdlValidator
         // now we can finally consummate any requested deletions, since we're
         // all done referencing the objects
         Collections.reverse(deletionList);
-        for (RefObject refObj : deletionList) {
-            if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("really deleting " + refObj);
-            }
-            refObj.refDelete();
-        }
+        getRepos().getEnkiMdrRepos().delete(deletionList);
 
         // verify repository integrity post-delete
         for (
@@ -793,7 +787,6 @@ public class DdlValidator
         // exception will be thrown when validate() is called.
         if (event.getType() == InstanceEvent.EVENT_INSTANCE_DELETE) {
             RefObject obj = (RefObject) (event.getSource());
-            clearDependencySuppliers(obj);
             scheduleDeletion(obj);
         } else if (event instanceof AttributeEvent) {
             checkStringLength((AttributeEvent)event);
@@ -1058,19 +1051,6 @@ public class DdlValidator
     {
         if (ex != null) {
             throw ex;
-        }
-    }
-
-    private void clearDependencySuppliers(RefObject refObj)
-    {
-        // REVIEW: We have to break dependencies explicitly
-        // before object deletion, or all kinds of nasty internal
-        // MDR errors result.  Should find out if that's expected
-        // behavior.
-        if (refObj instanceof CwmDependency) {
-            CwmDependency dependency = (CwmDependency) refObj;
-            dependency.getSupplier().clear();
-            dependency.getClient().clear();
         }
     }
 

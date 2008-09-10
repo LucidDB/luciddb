@@ -69,7 +69,9 @@ ExecStreamResult CopyExecStream::execute(ExecStreamQuantum const &quantum)
     // to give us a fresh one next time
     pOutAccessor->requestConsumption();
     
-    if (rc == EXECRC_BUF_UNDERFLOW) {
+    if ((rc == EXECRC_BUF_UNDERFLOW)
+        && (pInAccessor->getState() != EXECBUF_EOS))
+    {
         pInAccessor->requestProduction();
     }
     

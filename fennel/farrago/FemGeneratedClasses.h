@@ -587,6 +587,8 @@ class ProxyCmdPrepareExecutionStreamGraph
 : virtual public JniProxy, virtual public ProxyTupleStreamGraphCmd
 {
 public:
+int32_t getDegreeOfParallelism();
+static jmethodID meth_getDegreeOfParallelism;
 SharedProxyExecutionStreamDef getStreamDefs();
 static jmethodID meth_getStreamDefs;
 };

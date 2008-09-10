@@ -24,6 +24,7 @@ package org.eigenbase.rel;
 import java.util.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
@@ -143,7 +144,10 @@ public abstract class AggregateRelBase
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        return planner.makeTinyCost();
+        // REVIEW jvs 24-Aug-2008:  This is bogus, but no more bogus
+        // than what's currently in JoinRelBase.
+        double rowCount = RelMetadataQuery.getRowCount(this);
+        return planner.makeCost(rowCount, 0, 0);
     }
 
     protected RelDataType deriveRowType()

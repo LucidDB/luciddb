@@ -105,7 +105,7 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
 
     ExecStreamGraphImpl &graphImpl =
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
-    ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
+    ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
 
     // assert that we're reading from a designated output stream
     assert(boost::out_degree(current,graphRep) == 1);

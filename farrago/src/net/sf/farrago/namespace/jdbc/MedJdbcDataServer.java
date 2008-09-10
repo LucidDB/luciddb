@@ -243,6 +243,11 @@ public class MedJdbcDataServer
             }
         }
 
+        // Subclasses may obtain or modify the username and password stored in
+        // the properties. Give them their chance here.
+        String userName = getUserName();
+        String password = getPassword();
+
         if (connectProps != null) {
             if (userName != null) {
                 connectProps.setProperty("user", userName);
@@ -273,6 +278,28 @@ public class MedJdbcDataServer
                         "UNKNOWN",
                         ""));
         }
+    }
+
+    /**
+     * Retrieve the configured user name for this data server.  Subclasses may
+     * override this method to obtain the user name from an alternate source.
+     * 
+     * @return user name for this data server
+     */
+    protected String getUserName()
+    {
+        return userName;
+    }
+    
+    /**
+     * Retrieve the configured password for this data server.  Subclasses may
+     * override this method to obtain the password from an alternate source.
+     * 
+     * @return password for this data server
+     */
+    protected String getPassword()
+    {
+        return password;
     }
 
     public Connection getConnection()

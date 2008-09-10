@@ -133,6 +133,12 @@ class MedJdbcPushDownRule
         final FilterRel filterRel = filter;
         SqlNode filterNode = null;
         if (!projectOnly) {
+            // REVIEW: SWZ: 2008-08-29: Doesn't handle the case where the
+            // filter is simply a boolean value: 
+            // select * from sales.emps where slacker
+            // (slacker = true or where slacker is true work fine, though)
+            // In my example, the cast to RexCell fails. (Logged as FRG-339.)
+            
             // push down filter
             RexCall filterCall = (RexCall) filter.getCondition();
 

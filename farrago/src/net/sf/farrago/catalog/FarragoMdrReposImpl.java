@@ -211,18 +211,9 @@ public class FarragoMdrReposImpl
     public FemFarragoConfig getCurrentConfig()
     {
         // TODO:  prevent updates
-        Collection<?> configs =
-            getConfigPackage().getFemFarragoConfig().refAllOfType();
-        Iterator<?> iter = configs.iterator();
-        while(iter.hasNext()) {
-            FemFarragoConfig config = (FemFarragoConfig)iter.next();
-            
-            if (config.refMofId().equals(currentConfigMofId)) {
-                return config; 
-            }
-        }
         
-        return null;        
+        return (FemFarragoConfig)getEnkiMdrRepos().getByMofId(
+            currentConfigMofId, getConfigPackage().getFemFarragoConfig());
     }
 
     // implement FarragoAllocation

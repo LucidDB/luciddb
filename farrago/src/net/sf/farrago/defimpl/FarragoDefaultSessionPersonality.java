@@ -120,6 +120,14 @@ public class FarragoDefaultSessionPersonality
         "reduceNonCorrelatedSubqueries";
     public static final String
         REDUCE_NON_CORRELATED_SUBQUERIES_FARRAGO_DEFAULT = "false";
+
+    /**
+     * Whether non-correlated subqueries should be converted to constants 
+     */
+    public static final String DEGREE_OF_PARALLELISM =
+        "degreeOfParallelism";
+    public static final String
+        DEGREE_OF_PARALLELISM_DEFAULT = "1";
     
     /**
      * The label for the current session
@@ -155,6 +163,11 @@ public class FarragoDefaultSessionPersonality
             REDUCE_NON_CORRELATED_SUBQUERIES,
             false);
         paramValidator.registerStringParam(LABEL, true);
+        paramValidator.registerIntParam(
+            DEGREE_OF_PARALLELISM,
+            false,
+            1,
+            Integer.MAX_VALUE);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -452,6 +465,9 @@ public class FarragoDefaultSessionPersonality
             REDUCE_NON_CORRELATED_SUBQUERIES,
             REDUCE_NON_CORRELATED_SUBQUERIES_FARRAGO_DEFAULT);
         variables.setDefault(LABEL, LABEL_DEFAULT);
+        variables.setDefault(
+            DEGREE_OF_PARALLELISM,
+            DEGREE_OF_PARALLELISM_DEFAULT);
     }
 
     // implement FarragoSessionPersonality

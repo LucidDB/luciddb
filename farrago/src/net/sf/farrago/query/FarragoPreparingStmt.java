@@ -571,6 +571,16 @@ public class FarragoPreparingStmt
             if (!streamDefSet.isEmpty()) {
                 FemCmdPrepareExecutionStreamGraph cmdPrepareStream =
                     getRepos().newFemCmdPrepareExecutionStreamGraph();
+                
+                // FIXME jvs 22-Jul-2008:  this does not play well
+                // with statement caching, since different sessions
+                // may have different settings for DOP, but the DOP
+                // is not part of the cache key
+                cmdPrepareStream.setDegreeOfParallelism(
+                    getSession().getSessionVariables().getInteger(
+                        FarragoDefaultSessionPersonality.DEGREE_OF_PARALLELISM)
+                    );
+                
                 Collection<FemExecutionStreamDef> streamDefs =
                     cmdPrepareStream.getStreamDefs();
                 streamDefs.addAll(streamDefSet);

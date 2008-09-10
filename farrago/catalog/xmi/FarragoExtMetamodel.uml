@@ -482,15 +482,30 @@
                     <UML:Attribute xmi.id = 'Ilsmmsmmsmm4fe91emf85207efd8mm7f6c' name = 'streamDefs'
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'>
                       <UML:StructuralFeature.multiplicity>
-                        <UML:Multiplicity xmi.id = 'Ilsmmsmmsmm3228a1mfaabd66bafmm7f83'>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--71fcba98:11b4c109beb:-8000:0000000000000E80'>
                           <UML:Multiplicity.range>
-                            <UML:MultiplicityRange xmi.id = 'Ilsmmsmmsmm3228a1mfaabd66bafmm7f82' lower = '1'
-                              upper = '-1'/>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--71fcba98:11b4c109beb:-8000:0000000000000E7F'
+                              lower = '1' upper = '-1'/>
                           </UML:Multiplicity.range>
                         </UML:Multiplicity>
                       </UML:StructuralFeature.multiplicity>
                       <UML:StructuralFeature.type>
                         <UML:Class xmi.idref = 'Ilsmmsmmsmm3228a1mfaabd66bafmm7ff7'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1--71fcba98:11b4c109beb:-8000:0000000000000E81'
+                      name = 'degreeOfParallelism' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--71fcba98:11b4c109beb:-8000:0000000000000E85'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--71fcba98:11b4c109beb:-8000:0000000000000E84'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
                       </UML:StructuralFeature.type>
                     </UML:Attribute>
                   </UML:Classifier.feature>
@@ -14555,7 +14570,7 @@
     </path>
   </group>
   <group name="Fig15"
-       description="org.argouml.uml.diagram.static_structure.ui.FigClass[592, 376, 197, 44]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[592, 376, 197, 57]pathVisible=false;operationsVisible=false;attributesVisible=true"
        href="Ilsmmsmmsmm4fe91emf85207efd8mm7f66"
        fill="1"
        fillcolor="white"
@@ -14569,7 +14584,7 @@
       x="592"
       y="376"
       width="197"
-      height="44"
+      height="57"
       fill="1"
       fillcolor="white"
       stroke="0"
@@ -14644,7 +14659,7 @@
       </path>
     </group>
     <group name="Fig15.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[593, 399, 196, 21]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[593, 399, 196, 34]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -14657,7 +14672,7 @@
         x="593"
         y="399"
         width="196"
-        height="21"
+        height="34"
         fill="1"
         fillcolor="white"
         stroke="0"
@@ -14684,13 +14699,23 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >streamDefs : ExecutionStreamDef</text>
+      >streamDefs [1..*] : ExecutionStreamDef</text>
+      <text name="Fig15.4.3"
+        x="593"
+        y="413"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >degreeOfParallelism : Integer</text>
     </group>
     <rectangle name="Fig15.5"
       x="592"
       y="376"
       width="197"
-      height="44"
+      height="57"
       fill="0"
       fillcolor="white"
       stroke="1"

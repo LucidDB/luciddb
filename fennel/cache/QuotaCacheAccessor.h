@@ -24,7 +24,7 @@
 #ifndef Fennel_QuotaCacheAccessor_Included
 #define Fennel_QuotaCacheAccessor_Included
 
-#include "fennel/cache/DelegatingCacheAccessor.h"
+#include "fennel/cache/TransactionalCacheAccessor.h"
 #include "fennel/common/AtomicCounter.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -41,16 +41,13 @@ typedef boost::shared_ptr<QuotaCacheAccessor> SharedQuotaCacheAccessor;
  *
  *<p>
  *
- * QuotaCacheAccessor supports the CacheAccessor::setTxnId method, allowing
- * it to be used to lock pages on behalf of a particular transaction
- * without the caller being aware of the association.
+ * QuotaCacheAccessor inherits TransactionalCacheAccessor functionality.
  */
-class QuotaCacheAccessor : public DelegatingCacheAccessor
+class QuotaCacheAccessor : public TransactionalCacheAccessor
 {
     SharedQuotaCacheAccessor pSuperQuotaAccessor;
     uint maxLockedPages;
     AtomicCounter nPagesLocked;
-    TxnId implicitTxnId;
 
     void incrementUsage();
     void decrementUsage();
@@ -97,8 +94,6 @@ public:
         TxnId txnId = IMPLICIT_TXN_ID);
     virtual void unlockPage(
         CachePage &page,LockMode lockMode,TxnId txnId = IMPLICIT_TXN_ID);
-    virtual void setTxnId(TxnId txnId);
-    virtual TxnId getTxnId() const;
 };
 
 FENNEL_END_NAMESPACE

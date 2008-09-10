@@ -44,6 +44,7 @@ ParamName TestBase::paramDictionaryFileName = "testDictionaryFileName";
 ParamName TestBase::paramTraceLevel = "testTraceLevel";
 ParamName TestBase::paramStatsFileName = "testStatsFileName";
 ParamName TestBase::paramTraceStdout = "testTraceStdout";
+ParamName TestBase::paramDegreeOfParallelism = "degreeOfParallelism";
 
 TestBase::TestBase()
     : statsTarget(

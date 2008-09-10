@@ -11,4 +11,5 @@ FuzzyCheckpointSet.cpp \
 MappedPageListener.cpp \
 PagePredicate.cpp \
 QuotaCacheAccessor.cpp \
+TransactionalCacheAccessor.cpp \
 VMAllocator.cpp

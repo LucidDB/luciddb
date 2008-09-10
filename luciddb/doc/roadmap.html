@@ -13,13 +13,14 @@
 
 <h3>Current Release</h3>
 
-The current open-source release (0.7.3) of LucidDB is available for
+The current open-source release (0.7.4) of LucidDB is available for
 download.  It is packed with <a href="features.html">advanced
 features</a>; there are also some limitations you should be aware of:
 
 <ul>
 
-<li>subquery support is still under development
+<li>support for correlated subqueries is still under development
+(uncorrelated subqueries are now fully optimized via constant reduction)
 
 <li>security features are incomplete
 
@@ -59,7 +60,7 @@ listed here or items of your own.)
 
 <li>complete subquery support</li>
 
-<li>tablespaces and hot backup</li>
+<li>tablespaces and hot/incremental backup</li>
 
 <li>point-in-time queries</li>
 

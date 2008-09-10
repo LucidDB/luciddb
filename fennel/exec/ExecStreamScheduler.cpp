@@ -144,7 +144,7 @@ void ExecStreamScheduler::traceStreamBuffers(
 {
     ExecStreamGraphImpl &graphImpl =
         dynamic_cast<ExecStreamGraphImpl&>(stream.getGraph());
-    ExecStreamGraphImpl::GraphRep graphRep = graphImpl.getGraphRep();
+    ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
 
     ExecStreamGraphImpl::InEdgeIterPair inEdges =
         boost::in_edges(stream.getStreamId(),graphRep);
