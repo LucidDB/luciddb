@@ -3710,7 +3710,7 @@ public abstract class SqlOperatorTests
     public void testLastValueFunc()
     {
         setFor(SqlStdOperatorTable.lastValueOperator, VM_EXPAND);
-        final String [] values = { "0",  "CAST(null AS FLOAT)",  "3", "3" };
+        final String [] values = { "0", "CAST(null AS INTEGER)", "3", "3" };
         checkWinAgg(
             "last_value(x)",
             values,
@@ -3740,7 +3740,7 @@ public abstract class SqlOperatorTests
     public void testFirstValueFunc()
     {
         setFor(SqlStdOperatorTable.firstValueOperator, VM_EXPAND);
-        final String [] values = { "0",  "CAST(null AS FLOAT)",  "3", "3" };
+        final String [] values = { "0", "CAST(null AS INTEGER)", "3", "3" };
         checkWinAgg(
             "first_value(x)",
             values,
