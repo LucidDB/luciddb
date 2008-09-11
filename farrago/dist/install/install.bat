@@ -23,6 +23,7 @@ echo set JAVA_HOME="%JAVA_HOME%"> "%BIN_DIR%\classpath.bat"
 echo set LCP="%JAVA_HOME%\lib\tools.jar">> "%BIN_DIR%\classpath.bat"
 for %%j in ("%LIB_DIR%\*.jar") do echo set LCP=%%LCP%%;"%%j">> "%BIN_DIR%\classpath.bat"
 for %%j in ("%LIB_DIR%\mdrlibs\*.jar") do echo set LCP=%%LCP%%;"%%j">> "%BIN_DIR%\classpath.bat"
+for %%j in ("%LIB_DIR%\enki\*.jar") do echo set LCP=%%LCP%%;"%%j">> "%BIN_DIR%\classpath.bat"
 
 echo Installation successful
 
