@@ -223,10 +223,10 @@ public abstract class JmiMemFactory
      *
      * @return new RefPackage
      */
-    public RefPackage newRefPackage(Class ifacePackage)
+    public <T extends RefPackage> T newRefPackage(Class<T> ifacePackage)
     {
         ElementImpl impl = createImpl(ifacePackage, rootPackageImpl, true);
-        RefPackage refPackage = (RefPackage) impl.wrap();
+        T refPackage = ifacePackage.cast(impl.wrap());
         RefObject refMetaObj = null;
         if (metaMap != null) {
             refMetaObj = metaMap.get(ifacePackage);
@@ -1259,7 +1259,7 @@ public abstract class JmiMemFactory
             return super.add(o);
         }
 
-        public boolean addAll(Collection<? extends Object> c)
+        public boolean addAll(Collection<?> c)
         {
             for (Object o : c) {
                 this.add(o);
@@ -1305,7 +1305,7 @@ public abstract class JmiMemFactory
             return super.add(o);
         }
 
-        public boolean addAll(Collection<? extends Object> c)
+        public boolean addAll(Collection<?> c)
         {
             for (Object o : c) {
                 this.add(o);

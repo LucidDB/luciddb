@@ -211,17 +211,11 @@ public class FarragoMdrReposImpl
     public FemFarragoConfig getCurrentConfig()
     {
         // TODO:  prevent updates
-        Collection<?> configs =
-            getConfigPackage().getFemFarragoConfig().refAllOfType();
-        Iterator<?> iter = configs.iterator();
-        while(iter.hasNext()) {
-            FemFarragoConfig config = (FemFarragoConfig)iter.next();
-            
+        for (FemFarragoConfig config : allOfType(FemFarragoConfig.class)) {
             if (config.refMofId().equals(currentConfigMofId)) {
                 return config; 
             }
         }
-        
         return null;        
     }
 
@@ -303,7 +297,7 @@ public class FarragoMdrReposImpl
             return factoryImpl;
         }
 
-        public RefPackage newRefPackage(Class ifacePackage)
+        public <T extends RefPackage> T newRefPackage(Class<T> ifacePackage)
         {
             return factoryImpl.newRefPackage(ifacePackage);
         }
