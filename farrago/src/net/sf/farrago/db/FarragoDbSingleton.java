@@ -197,14 +197,14 @@ public abstract class FarragoDbSingleton
     public static boolean shutdownConditional(int groundReferences)
     {
     	boolean flushCodeCache = false;
-
+    	boolean success = false;
     	synchronized(FarragoDbSingleton.class) {
+        	if (inShutdownConditional || inShutdown) {
+        		return false;
+        	}
+        	inShutdownConditional = true;
+        	
 	        try {
-	        	if (inShutdownConditional || inShutdown) {
-	        		return false;
-	        	}
-	        	inShutdownConditional = true;
-	        	
 	            assert (instance != null);
 	            tracer.fine("ground reference count = " + groundReferences);
 	            tracer.fine("actual reference count = " + nReferences);
@@ -214,8 +214,13 @@ public abstract class FarragoDbSingleton
 	            if (nReferences - numLoopbackSessions <= groundReferences) {
 	            	flushCodeCache = true;
 	            }
+	            
+	            success = true;
 	        } finally {
-	        	inShutdownConditional = false;
+	        	// Clean up if an exception is being thrown
+	        	if (!success) {
+	        		inShutdownConditional = false;
+	        	}
 	        }
     	}
     	
