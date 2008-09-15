@@ -29,6 +29,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.*;
 
+import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
@@ -261,6 +262,13 @@ public class MedJdbcDataServer
         } else {
             connection = DriverManager.getConnection(url, userName, password);
         }
+
+        if (connection instanceof FarragoJdbcEngineConnection) {
+            FarragoJdbcEngineConnection fjec =
+                (FarragoJdbcEngineConnection)connection;
+            fjec.getSession().setLoopback();
+        }
+
         if (!autocommit) {
             connection.setAutoCommit(false);
         }

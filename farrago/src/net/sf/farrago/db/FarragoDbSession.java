@@ -178,6 +178,8 @@ public class FarragoDbSession
     
     private FemLabel sessionLabel;
 
+    private boolean isLoopback;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -1383,6 +1385,18 @@ public class FarragoDbSession
                 rollbackImpl();
             }
         }
+    }
+
+    // implement FarragoSession
+    public void setLoopback()
+    {
+        isLoopback = true;
+    }
+
+    // implement FarragoSession
+    public boolean isLoopback()
+    {
+        return isLoopback;
     }
 
     //~ Inner Classes ----------------------------------------------------------

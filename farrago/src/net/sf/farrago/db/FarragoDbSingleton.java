@@ -65,6 +65,12 @@ public abstract class FarragoDbSingleton
      */
     private static boolean inShutdown;
 
+    /**
+     * Flag indicating whether FarragoDbSingleton is already in 
+     * {@link #shutdownConditional(int)}, to help prevent recursive shutdown.
+     */
+    private static boolean inShutdownConditional;
+    
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -188,24 +194,60 @@ public abstract class FarragoDbSingleton
      *
      * @return whether shutdown took place
      */
-    public static synchronized boolean shutdownConditional(
-        int groundReferences)
+    public static boolean shutdownConditional(int groundReferences)
     {
-        assert (instance != null);
-        tracer.fine("ground reference count = " + groundReferences);
-        tracer.fine("actual reference count = " + nReferences);
-        if (nReferences <= groundReferences) {
-            shutdown();
-            return true;
-        } else {
-            return false;
-        }
+    	boolean flushCodeCache = false;
+
+    	synchronized(FarragoDbSingleton.class) {
+	        try {
+	        	if (inShutdownConditional || inShutdown) {
+	        		return false;
+	        	}
+	        	inShutdownConditional = true;
+	        	
+	            assert (instance != null);
+	            tracer.fine("ground reference count = " + groundReferences);
+	            tracer.fine("actual reference count = " + nReferences);
+	        
+	            int numLoopbackSessions = countLoopbackSessions();
+	        
+	            if (nReferences - numLoopbackSessions <= groundReferences) {
+	            	flushCodeCache = true;
+	            }
+	        } finally {
+	        	inShutdownConditional = false;
+	        }
+    	}
+    	
+    	// Release the monitor on FarragoDbSingleton: Allows loopback sessions
+    	// to be closed from other threads.  It is possible that a new
+    	// connection (or even loopback session) will created while the
+    	// monitor is free.  In that case, we will not shut down.  It is also
+    	// possible some loopback sessions will not actually be closed by
+    	// the flush (connection resource leak, timing, etc.), in which case
+    	// we will not shut down.
+    	if (flushCodeCache) {
+            instance.flushCodeCache();
+    	}
+    	
+    	synchronized(FarragoDbSingleton.class) {
+    		try {
+	            if (nReferences <= groundReferences) {
+	                shutdown();
+	                return true;
+	            } else {
+	                return false;
+	            }
+	        } finally {
+	            inShutdownConditional = false;
+	        }        
+    	}
     }
 
     /**
      * Shuts down the database, killing any running sessions.
      */
-    public static synchronized void shutdown()
+    public static void shutdown()
     {
         // REVIEW: SWZ 12/31/2004: If an extension project adds "specialized
         // initialization" that ends up pinning a reference to FarragoDatabase
@@ -217,21 +259,55 @@ public abstract class FarragoDbSingleton
         // there's probably a better way -- maybe a new implementation of
         // Connection that represents an internal connection and avoids the
         // extra reference count and cleanupSessions() call.
-        if (inShutdown) {
-            return;
-        }
-        inShutdown = true;
+    	
+    	// SWZ: 09/12/2008: Note that loopback sessions don't really solve
+    	// the above problem.  Loopback sessions are sessions (connections)
+    	// owned by data wrappers/servers which can be closed by flushing 
+    	// the code cache.
 
-        tracer.info("shutdown");
-        assert (instance != null);
-        try {
-            instance.sessionFactory.specializedShutdown();
-            instance.close(false);
-        } finally {
-            instance = null;
-            nReferences = 0;
-            inShutdown = false;
+    	boolean flushCodeCache = false;
+    	synchronized(FarragoDbSingleton.class) {
+	        if (inShutdown) {
+	            return;
+	        }
+	        inShutdown = true;
+	
+	        tracer.info("shutdown");
+	        assert (instance != null);
+    	
+	        if (countLoopbackSessions() > 0) {
+	            flushCodeCache = true;
+	        }
+    	}
+
+    	// Attempt to close loopback sessions.  We will shut down even if 
+    	// none close.
+    	if (flushCodeCache) {
+    		instance.flushCodeCache();
+    	}
+        
+        synchronized(FarragoDbSingleton.class) {
+	        assert (instance != null);
+	        try {
+	            instance.sessionFactory.specializedShutdown();
+	            instance.close(false);
+	        } finally {
+	            instance = null;
+	            nReferences = 0;
+	            inShutdown = false;
+	        }
         }
+    }
+
+    private static int countLoopbackSessions()
+    {
+        int numLoopbackSessions = 0;
+        for(FarragoSession session: getSessions()) {
+        	if (session.isLoopback()) {
+        		numLoopbackSessions++;
+        	}
+        }
+        return numLoopbackSessions;
     }
 
     /**

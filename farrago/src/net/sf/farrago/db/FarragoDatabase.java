@@ -281,6 +281,20 @@ public class FarragoDatabase
     }
 
     /**
+     * Flushes unpinned entries from the cache cache for this database.
+     */
+    public void flushCodeCache()
+    {
+        // REVIEW: SWZ 2008-09-15: Seems to me that this (and other changes 
+    	// to code cache size) should be synchronized.
+
+        // Flush code cache in an attempt to close loopback sessions.
+    	long maxBytes = codeCache.getBytesMax();
+        codeCache.setMaxBytes(0);
+        codeCache.setMaxBytes(maxBytes);
+    }
+
+    /**
      * @return the shared data wrapper cache for this database
      */
     public FarragoObjectCache getDataWrapperCache()

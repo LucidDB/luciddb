@@ -371,6 +371,20 @@ public interface FarragoSession
      * label setting
      */
     public Timestamp getSessionLabelCreationTimestamp();
+
+    /**
+     * Flags this FarragoSession as being a loopback session. Loopback
+     * sessions do not block server shutdown.
+     */
+    public void setLoopback();
+
+    /**
+     * Tests whether this session is loopback session.
+     *
+     * @return true if this is a loopback session, false otherwise
+     * @see #setLoopback()
+     */
+    public boolean isLoopback();
 }
 
 // End FarragoSession.java
