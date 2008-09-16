@@ -52,13 +52,13 @@
 +---------+
 | 0       |
 +---------+
-> SELECT sum(empno), deptno, count(*) FROM emp GROUP BY deptno;
+> SELECT sum(empno), deptno, count(*) FROM emp GROUP BY deptno ORDER BY 1;
 +---------+---------+---------+
 | EXPR$0  | DEPTNO  | EXPR$2  |
 +---------+---------+---------+
+| 23555   | 10      | 3       |
 | 38501   | 20      | 5       |
 | 46116   | 30      | 6       |
-| 23555   | 10      | 3       |
 +---------+---------+---------+
 > SELECT 1 FROM emp HAVING max(empno) > 4;
 +---------+
@@ -66,7 +66,7 @@
 +---------+
 | 1       |
 +---------+
-> SELECT min(empno) FROM emp GROUP BY deptno HAVING max(empno) > 4;
+> SELECT min(empno) FROM emp GROUP BY deptno HAVING max(empno) > 4 ORDER BY 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -141,10 +141,15 @@
 > --  SELECT deptno FROM dept WHERE sal >= 800);
 > SELECT empno FROM emp
 > UNION ALL
-> SELECT deptno FROM dept;
+> SELECT deptno FROM dept
+> ORDER BY 1;
 +--------+
 | EMPNO  |
 +--------+
+| 10     |
+| 20     |
+| 30     |
+| 40     |
 | 7369   |
 | 7499   |
 | 7521   |
@@ -159,10 +164,6 @@
 | 7900   |
 | 7902   |
 | 7934   |
-| 10     |
-| 20     |
-| 30     |
-| 40     |
 +--------+
 > 
 > -- End scott.sql

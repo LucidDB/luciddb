@@ -24,9 +24,9 @@ SELECT * FROM orcl.emp;
 SET SCHEMA 'orcl';
 SELECT count(*) FROM emp;
 SELECT count(*) FROM emp WHERE deptno > 30;
-SELECT sum(empno), deptno, count(*) FROM emp GROUP BY deptno;
+SELECT sum(empno), deptno, count(*) FROM emp GROUP BY deptno ORDER BY 1;
 SELECT 1 FROM emp HAVING max(empno) > 4;
-SELECT min(empno) FROM emp GROUP BY deptno HAVING max(empno) > 4;
+SELECT min(empno) FROM emp GROUP BY deptno HAVING max(empno) > 4 ORDER BY 1;
 SELECT * FROM emp LEFT JOIN dept ON emp.deptno = dept.deptno;
 SELECT * FROM emp RIGHT JOIN dept ON emp.deptno = dept.deptno;
 SELECT * FROM emp FULL JOIN dept ON emp.deptno = dept.deptno;
@@ -38,7 +38,8 @@ SELECT * FROM emp FULL JOIN dept ON emp.deptno = dept.deptno;
 --  SELECT deptno FROM dept WHERE sal >= 800);
 SELECT empno FROM emp
 UNION ALL
-SELECT deptno FROM dept;
+SELECT deptno FROM dept
+ORDER BY 1;
 
 -- End scott.sql
 
