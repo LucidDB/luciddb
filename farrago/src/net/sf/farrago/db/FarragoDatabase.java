@@ -286,10 +286,10 @@ public class FarragoDatabase
     public void flushCodeCache()
     {
         // REVIEW: SWZ 2008-09-15: Seems to me that this (and other changes 
-    	// to code cache size) should be synchronized.
+        // to code cache size) should be synchronized.
 
         // Flush code cache in an attempt to close loopback sessions.
-    	long maxBytes = codeCache.getBytesMax();
+        long maxBytes = codeCache.getBytesMax();
         codeCache.setMaxBytes(0);
         codeCache.setMaxBytes(maxBytes);
     }
