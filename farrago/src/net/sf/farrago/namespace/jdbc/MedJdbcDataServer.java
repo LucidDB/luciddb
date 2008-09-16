@@ -117,8 +117,8 @@ public class MedJdbcDataServer
     protected Pattern disabledPushdownPattern;
     private int fetchSize;
     private boolean autocommit;
-    protected HashMap schemaMaps;
-    protected HashMap tableMaps;
+    protected HashMap<String, Map<String, String>> schemaMaps;
+    protected HashMap<String, Map<String, Source>> tableMaps;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -144,8 +144,8 @@ public class MedJdbcDataServer
         catalogName = props.getProperty(PROP_CATALOG_NAME);
         loginTimeout = props.getProperty(PROP_LOGIN_TIMEOUT);
         validationQuery = props.getProperty(PROP_VALIDATION_QUERY);
-        schemaMaps = new HashMap<String, HashMap>();
-        tableMaps = new HashMap<String, HashMap>();
+        schemaMaps = new HashMap<String, Map<String, String>>();
+        tableMaps = new HashMap<String, Map<String, Source>>();
 
         if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
             connectProps = (Properties) props.clone();
@@ -444,19 +444,13 @@ public class MedJdbcDataServer
             new MedJdbcPushDownRule(
                 new RelOptRuleOperand(
                     ProjectRel.class,
-                    new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        FilterRel.class,
                         new RelOptRuleOperand(
-                            FilterRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    ProjectRel.class,
-                                    new RelOptRuleOperand[] {
-                                        new RelOptRuleOperand(
-                                            MedJdbcQueryRel.class,
-                                            RelOptRule.ANY)
-                                    })
-                            })
-                    }),
+                            ProjectRel.class,
+                            new RelOptRuleOperand(
+                                MedJdbcQueryRel.class,
+                                RelOptRule.ANY)))),
                 "proj on filter on proj");
 
         // case 2: filter with push down projection
@@ -465,15 +459,11 @@ public class MedJdbcDataServer
             new MedJdbcPushDownRule(
                 new RelOptRuleOperand(
                     FilterRel.class,
-                    new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        ProjectRel.class,
                         new RelOptRuleOperand(
-                            ProjectRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    MedJdbcQueryRel.class,
-                                    RelOptRule.ANY)
-                            })
-                    }),
+                            MedJdbcQueryRel.class,
+                            RelOptRule.ANY))),
                 "filter on proj");
 
         // case 3: filter with no projection to push down.
@@ -482,10 +472,9 @@ public class MedJdbcDataServer
             new MedJdbcPushDownRule(
                 new RelOptRuleOperand(
                     FilterRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(
-                            MedJdbcQueryRel.class, RelOptRule.ANY)
-                    }),
+                    new RelOptRuleOperand(
+                        MedJdbcQueryRel.class,
+                        RelOptRule.ANY)),
                 "filter");
 
         // case 4: only projection, no filter
@@ -493,14 +482,13 @@ public class MedJdbcDataServer
             new MedJdbcPushDownRule(
                 new RelOptRuleOperand(
                     ProjectRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(
-                            MedJdbcQueryRel.class, RelOptRule.ANY)
-                    }),
+                    new RelOptRuleOperand(
+                        MedJdbcQueryRel.class,
+                        RelOptRule.ANY)),
                 "proj");
 
         // all pushdown rules
-        ArrayList<MedJdbcPushDownRule> pushdownRuleList =
+        List<MedJdbcPushDownRule> pushdownRuleList =
             new ArrayList<MedJdbcPushDownRule>();
         pushdownRuleList.add(r1);
         pushdownRuleList.add(r2);
@@ -665,9 +653,9 @@ public class MedJdbcDataServer
         }
 
         if (!key.equals("") && !value.equals("")) {
-            HashMap h = new HashMap();
+            Map<String, String> h = new HashMap<String, String>();
             if (schemaMaps.get(value) != null) {
-                h = (HashMap) schemaMaps.get(value);
+                h = schemaMaps.get(value);
             }
             ResultSet resultSet = null;
             try {
@@ -695,36 +683,40 @@ public class MedJdbcDataServer
         }
     }
 
-    private void createTableMaps(String src_schema, String src_table,
-        String target_schema, String target_table)
+    private void createTableMaps(
+        String srcSchema,
+        String srcTable,
+        String targetSchema,
+        String targetTable)
         throws SQLException
     {
-        if (src_schema == null ||
-            src_table == null ||
-            target_schema == null ||
-            target_table == null) {
+        if (srcSchema == null ||
+            srcTable == null ||
+            targetSchema == null ||
+            targetTable == null) {
             return;
         }
-        HashMap h = new HashMap();
-        if (tableMaps.get(target_schema) != null) {
-            h = (HashMap) tableMaps.get(target_schema);
+        Map<String, Source> h = tableMaps.get(targetSchema);
+        if (h == null) {
+            h = new HashMap<String, Source>();
         }
 
         // validate that the same table name is not mapped to the same schema
         // name
-        Source src = (Source)h.get(target_table);
+        Source src = h.get(targetTable);
         if (src != null) {
             // forgive the instance where the same source_schema and
             // source_table are mapped again
-            if (!src.getSchema().equals(src_schema) ||
-                !src.getTable().equals(src_table)) {
+            if (!src.getSchema().equals(srcSchema) ||
+                !src.getTable().equals(srcTable)) {
                 throw FarragoResource.instance().MedJdbc_InvalidTableMapping
-                    .ex(src.getSchema(), src.getTable(), src_schema, src_table,
-                        target_schema, target_table);
+                    .ex(
+                        src.getSchema(), src.getTable(), srcSchema, srcTable,
+                        targetSchema, targetTable);
             }
         }
-        h.put(target_table, new Source(src_schema, src_table));
-        tableMaps.put(target_schema, h);
+        h.put(targetTable, new Source(srcSchema, srcTable));
+        tableMaps.put(targetSchema, h);
     }
 
     private boolean isQuoteChar(String mapping, int index)
@@ -743,8 +735,8 @@ public class MedJdbcDataServer
 
     public static class Source
     {
-        String schema;
-        String table;
+        final String schema;
+        final String table;
 
         Source(String sch, String tab)
         {

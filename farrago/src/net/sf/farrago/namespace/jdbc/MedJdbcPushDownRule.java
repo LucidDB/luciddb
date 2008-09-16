@@ -44,25 +44,26 @@ import org.eigenbase.sql.parser.*;
 class MedJdbcPushDownRule
     extends RelOptRule
 {
-    //~ Instance fields --------------------------------------------------------
-
-    boolean projOnFilter = false;
-    boolean filterOnProj = false;
-    boolean filterOnly = false;
-    boolean projectOnly = false;
-
-    // ~ Constructors ---------------------------------------------------------
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new MedJdbcPushDownRule object.
      */
-
-    public MedJdbcPushDownRule(RelOptRuleOperand rule, String id)
+    public MedJdbcPushDownRule(RelOptRuleOperand operand, String id)
     {
-        super(rule);
+        super(operand);
         description = "MedJdbcPushDownRule: " + id;
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
+    {
+        boolean projOnFilter = false;
+        boolean filterOnProj = false;
+        boolean filterOnly = false;
+        boolean projectOnly = false;
         if (description.contains("proj on filter")) {
             projOnFilter = true;
         } else if (description.contains("filter on proj")) {
@@ -72,15 +73,7 @@ class MedJdbcPushDownRule
         } else {
             projectOnly = true;
         }
-    }
 
-    //~ Methods ----------------------------------------------------------------
-
-    // ~ Methods --------------------------------------------------------------
-
-    // implement RelOptRule
-    public void onMatch(RelOptRuleCall call)
-    {
         int relLength = call.rels.length;
         final MedJdbcQueryRel queryRel =
             (MedJdbcQueryRel) call.rels[relLength - 1];
@@ -162,7 +155,7 @@ class MedJdbcPushDownRule
         }
 
         List<SqlIdentifier> projList = null;
-        String[] fieldNames= null;
+        String[] fieldNames = null;
         RelDataType[] fieldTypes = null;
 
         // push down projection
@@ -329,4 +322,5 @@ class MedJdbcPushDownRule
         return fieldName;
     }
 }
-//End MedJdbcPushDownRule.java
+
+// End MedJdbcPushDownRule.java
