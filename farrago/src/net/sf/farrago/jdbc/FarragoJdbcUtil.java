@@ -229,9 +229,9 @@ public class FarragoJdbcUtil
      * used if possible; and the new throwable has the same stack trace.
      *
      * @param throwable Exception
-     * @return Exception of the same general type that is serializable
+     * @return Exception that is serializable and of the same general type
      */
-    private static <T extends Throwable> T makeSerializable(T throwable)
+    private static Throwable makeSerializable(Throwable throwable)
     {
         // REVIEW: Is serializability sufficient? The class may not be
         // available on the client.
@@ -263,13 +263,7 @@ public class FarragoJdbcUtil
         }
         serializable.setStackTrace(throwable.getStackTrace());
 
-        // It is a half truth to say that serializable is of type T: it is only
-        // true if T in {Throwable, RuntimeException, Exception, Error}. But
-        // those are the only types for which this method is ever called. By
-        // making this a generic method, we indicate that the method will try
-        // to return a similar type of exception to the one it is given.
-        //noinspection unchecked
-        return (T) serializable;
+        return serializable;
     }
 
     /**
@@ -394,7 +388,7 @@ public class FarragoJdbcUtil
                 && !isSerializable(next))
             {
                 needNewException = true;
-                serializableNext = makeSerializable(next);
+                serializableNext = (SQLException) makeSerializable(next);
             } else {
                 serializableNext = next;
             }
