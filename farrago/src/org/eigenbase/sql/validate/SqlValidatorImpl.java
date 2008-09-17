@@ -183,7 +183,7 @@ public class SqlValidatorImpl
      * @param catalogReader  Catalog reader
      * @param typeFactory    Type factory
      * @param conformance     Compatibility mode
-     * 
+     *
      * @pre opTab != null
      * @pre // node is a "query expression" (per SQL standard)
      * @pre catalogReader != null
@@ -732,7 +732,7 @@ public class SqlValidatorImpl
             SqlSampleSpec sampleSpec = SqlLiteral.sampleValue(operands[1]);
             if (sampleSpec instanceof SqlSampleSpec.SqlTableSampleSpec) {
                 validateFeature(
-                    EigenbaseResource.instance().SQLFeature_T613, 
+                    EigenbaseResource.instance().SQLFeature_T613,
                     node.getParserPosition());
             } else if (sampleSpec
                 instanceof SqlSampleSpec.SqlSubstitutionSampleSpec)
@@ -742,7 +742,7 @@ public class SqlValidatorImpl
                     node.getParserPosition());
             }
         }
-        
+
         validateNamespace(ns);
         validateAccess(
             node,
@@ -2454,7 +2454,7 @@ public class SqlValidatorImpl
 
     protected void validateOver(SqlCall call, SqlValidatorScope scope)
     {
-        throw Util.newInternal("OVER unexpected in this context");
+         throw Util.newInternal("OVER unexpected in this context");
     }
 
     protected void validateJoin(SqlJoin join, SqlValidatorScope scope)
@@ -2566,6 +2566,13 @@ public class SqlValidatorImpl
             break;
         default:
             throw Util.unexpected(joinType);
+        }
+    }
+
+    public void validateAggregateParams(SqlCall aggFunction, SqlValidatorScope scope)
+    {
+        for (SqlNode param : aggFunction.getOperands()) {
+            validateNoAggs(param, aggFunction.getOperator().getName());
         }
     }
 
@@ -3641,7 +3648,7 @@ public class SqlValidatorImpl
      *
      * <p>A namespace is necessary only if there is a column list, in order to
      * re-map column names; a <code>relation AS t</code> clause just uses the
-     * same namespace as <code>relation</code>. 
+     * same namespace as <code>relation</code>.
      */
     protected static class AliasNamespace extends AbstractNamespace
     {

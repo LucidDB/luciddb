@@ -437,6 +437,30 @@ having exists (select * from depts where depts.deptno = max(emps.deptno));
 explain plan for
 select cast(sum(empno) as decimal(10, 2)) from emps;
 
+--------------------------------------------------------
+-- Aggregate queries, with invalid nested aggregates  --
+--------------------------------------------------------
+explain plan for
+SELECT 
+    sum(count(empno))
+FROM 
+    emps
+group by deptno;
+
+explain plan for
+SELECT 
+    sum(count(empno)) over (order by deptno rows 1 preceding)
+FROM 
+    emps
+group by deptno;
+
+explain plan for
+SELECT 
+    sum(count(empno) over (order by deptno rows 1 preceding))
+FROM 
+    emps
+group by deptno;
+
 ------------------------------------------------------------------
 -- Aggregate queries, with scalar subqueries in the select list --
 ------------------------------------------------------------------

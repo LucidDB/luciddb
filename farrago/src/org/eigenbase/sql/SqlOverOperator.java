@@ -79,6 +79,7 @@ public class SqlOverOperator
                 EigenbaseResource.instance().OverNonAggregate.ex());
         }
         validator.validateWindow(operands[1], scope, aggCall);
+        validator.validateAggregateParams(aggCall, scope);
     }
 
     public RelDataType deriveType(

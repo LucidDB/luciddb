@@ -24,7 +24,11 @@ package org.eigenbase.sql;
 import openjava.mop.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 
 /**
@@ -68,6 +72,27 @@ public abstract class SqlAggFunction
     {
         return true;
     }
+
+    @Override
+    public void validateCall(SqlCall call, SqlValidator validator,
+        SqlValidatorScope scope, SqlValidatorScope operandScope)
+    {
+       super.validateCall(call, validator, scope, operandScope);
+       validator.validateAggregateParams(call, operandScope);
+    }
+
+    public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public RelDataType getReturnType(RelDataTypeFactory typeFactory)
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }
 
 // End SqlAggFunction.java
