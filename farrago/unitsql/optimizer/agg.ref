@@ -963,33 +963,6 @@ Error: From line 5, column 57 to line 5, column 72: Aggregate expression is ille
 '    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
 > 
-> --------------------------------------------------------
-> -- Aggregate queries, with invalid nested aggregates  --
-> --------------------------------------------------------
-> explain plan for
-> SELECT 
->     sum(count(empno))
-> FROM 
->     emps
-> group by deptno;
-Error: From line 3, column 9 to line 3, column 20: Aggregate expression is illegal in SUM clause (state=,code=0)
-> 
-> explain plan for
-> SELECT 
->     sum(count(empno)) over (order by deptno rows 1 preceding)
-> FROM 
->     emps
-> group by deptno;
-Error: From line 3, column 9 to line 3, column 20: Aggregate expression is illegal in SUM clause (state=,code=0)
-> 
-> explain plan for
-> SELECT 
->     sum(count(empno) over (order by deptno rows 1 preceding))
-> FROM 
->     emps
-> group by deptno;
-Error: From line 3, column 9 to line 3, column 60: Windowed aggregate expression is illegal in SUM clause (state=,code=0)
-> 
 > ------------------------------------------------------------------
 > -- Aggregate queries, with scalar subqueries in the select list --
 > ------------------------------------------------------------------

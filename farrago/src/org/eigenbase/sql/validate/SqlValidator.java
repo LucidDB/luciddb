@@ -232,14 +232,6 @@ public interface SqlValidator
     void validateCall(SqlCall call, SqlValidatorScope scope);
 
     /**
-     * Validates parameters for aggregate function.
-     *
-     * @param aggFunction function containing COLUMN_LIST parameter
-     * @param scope Syntactic scope
-     */
-    void validateAggregateParams(SqlCall aggFunction, SqlValidatorScope scope);
-
-    /**
      * Validates a COLUMN_LIST parameter
      *
      * @param function function containing COLUMN_LIST parameter
@@ -577,7 +569,7 @@ public interface SqlValidator
      * @deprecated This class is for backwards-compatibility with
      * the previous incarnation of SqlConformance.
      */
-    public static class Compatible
+    public static class Compatible 
     {
         /**
          * @deprecated This symbol is for backwards-compatibility with
