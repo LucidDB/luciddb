@@ -221,11 +221,25 @@ JAVACODE SqlParseException convertException(Throwable ex)
             int column = Integer.parseInt(matcher.group(2));
             pos = new SqlParserPos(line, column, line, column);
         }
+    } else if (ex instanceof org.eigenbase.util.EigenbaseContextException) {
+        // EigenbaseContextException is the standard wrapper for exceptions
+        // produced by the validator, but in the parser, the standard is
+        // SqlParseException; so, strip it away. In case you were wondering,
+        // the EigenbaseContextException appears because the parser
+        // occasionally calls into validator-style code such as
+        // SqlSpecialOperator.reduceExpr.
+        org.eigenbase.util.EigenbaseContextException ece =
+            (org.eigenbase.util.EigenbaseContextException) ex;
+        pos = new SqlParserPos(
+            ece.getPosLine(),
+            ece.getPosColumn(),
+            ece.getEndPosLine(),
+            ece.getEndPosColumn());
+        ex = ece.getCause();
     }
 
-    SqlParseException spex = new SqlParseException(
+    return new SqlParseException(
         ex.getMessage(), pos, expectedTokenSequences, tokenImage, ex);
-    return spex;
 }
 
 /**
