@@ -43,9 +43,10 @@ public class TableAccessRule
 
     private TableAccessRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 TableAccessRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

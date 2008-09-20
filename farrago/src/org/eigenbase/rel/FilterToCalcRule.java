@@ -22,6 +22,8 @@
 */
 package org.eigenbase.rel;
 
+import java.util.Collections;
+
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -51,9 +53,10 @@ public class FilterToCalcRule
 
     private FilterToCalcRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 FilterRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -81,7 +84,7 @@ public class FilterToCalcRule
                 rel,
                 inputRowType,
                 program,
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         call.transformTo(calc);
     }
 }

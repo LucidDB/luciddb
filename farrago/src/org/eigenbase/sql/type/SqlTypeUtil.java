@@ -1238,6 +1238,63 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * Returns whether two types are comparable. They need to be scalar types
+     * of the same family, or struct types whose fields are pairwise
+     * comparable.
+     *
+     * @param type1 First type
+     * @param type2 Second type
+     * @return Whether types are comparable
+     */
+    public static boolean isComparable(RelDataType type1, RelDataType type2)
+    {
+        if (type1.isStruct() != type2.isStruct()) {
+            return false;
+        }
+
+        if (type1.isStruct()) {
+            int n = type1.getFieldCount();
+            if (n != type2.getFieldCount()) {
+                return false;
+            }
+            for (int i = 0; i < n; ++i) {
+                RelDataTypeField field1 =
+                    (RelDataTypeField) type1.getFieldList().get(i);
+                RelDataTypeField field2 =
+                    (RelDataTypeField) type2.getFieldList().get(i);
+                if (!isComparable(
+                        field1.getType(),
+                        field2.getType()))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        RelDataTypeFamily family1 = null;
+        RelDataTypeFamily family2 = null;
+
+        // REVIEW jvs 2-June-2005:  This is needed to keep
+        // the Saffron type system happy.
+        if (type1.getSqlTypeName() != null) {
+            family1 = type1.getSqlTypeName().getFamily();
+        }
+        if (type2.getSqlTypeName() != null) {
+            family2 = type2.getSqlTypeName().getFamily();
+        }
+        if (family1 == null) {
+            family1 = type1.getFamily();
+        }
+        if (family2 == null) {
+            family2 = type2.getFamily();
+        }
+        if (family1 == family2) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Convenience class for building a struct type with several fields.
      *
      * <p>TypeBuilder is more convenient because it supports chained calls to

@@ -15,7 +15,7 @@ AM_INIT_AUTOMAKE(fennel, 0.7.4)
 dnl Define CXXFLAGS before AC_PROG_CXX to suppress the default autoconf
 dnl compiler options
 CXXFLAGS="-pipe -ftemplate-depth-64 \
--Wall -Wno-unused-parameter -Wno-sign-compare -Werror \
+-Wall -Wno-unused-parameter -Wno-unused -Wno-sign-compare -Werror \
 -D_REENTRANT -D_STLP_USE_DYNAMIC_LIB=1 -D_STLP_NO_ANACHRONISMS=1 -DBOOST_NO_HASH=1"
 
 dnl Checks for programs.
@@ -213,7 +213,7 @@ AM_CONDITIONAL(STATIC_TEST_LIBRARY,\
 test "$target_os" = "cygwin" -o "$target_os" = "mingw32")
 
 AM_CONDITIONAL(HAVE_LIBAIO,test "$found_libaio" = "true")
-AM_CONDITIONAL(HAVE_LIBUUID,test "$found_old_libuuid" = "true" || "$found_new_libuuid" = "true")
+AM_CONDITIONAL(HAVE_LIBUUID,test "$found_old_libuuid" = "true" -o "$found_new_libuuid" = "true")
 AM_CONDITIONAL(HAVE_LIBUUID_NEW,test "$found_new_libuuid" = "true")
 
 dnl TODO:  combine common mingw/cygwin stuff under host rather than target.

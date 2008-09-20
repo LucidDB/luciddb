@@ -32,7 +32,7 @@ import org.eigenbase.rex.*;
 
 
 /**
- * LcsSemiJoinRule implements the rule for converting a join(which evaluates a
+ * LcsSemiJoinRule implements the rule for converting a join (which evaluates a
  * semi join) expression into the a hash semi join.
  *
  * @author Rushan Chen
@@ -41,9 +41,6 @@ import org.eigenbase.rex.*;
 public class LhxSemiJoinRule
     extends RelOptRule
 {
-    //      ~ Constructors
-    // ----------------------------------------------------------
-
     //~ Constructors -----------------------------------------------------------
 
     public LhxSemiJoinRule()
@@ -51,14 +48,10 @@ public class LhxSemiJoinRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(
-                        JoinRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(RelNode.class, null),
-                            new RelOptRuleOperand(RelNode.class, null)
-                        })
-                }));
+                new RelOptRuleOperand(
+                    JoinRel.class,
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(RelNode.class, ANY))));
     }
 
     //~ Methods ----------------------------------------------------------------

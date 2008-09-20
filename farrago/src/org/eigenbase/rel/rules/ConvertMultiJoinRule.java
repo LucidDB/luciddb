@@ -81,10 +81,8 @@ public class ConvertMultiJoinRule
         super(
             new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(RelNode.class, null),
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                new RelOptRuleOperand(RelNode.class, ANY),
+                new RelOptRuleOperand(RelNode.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

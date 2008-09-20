@@ -50,9 +50,7 @@ public class PushSemiJoinPastProjectRule
         super(
             new RelOptRuleOperand(
                 SemiJoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(ProjectRel.class, null)
-                }));
+                new RelOptRuleOperand(ProjectRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

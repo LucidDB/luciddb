@@ -393,11 +393,51 @@ public:
     virtual bool isAcyclic() = 0;
 
     /**
-     * Close the producers of a stream given its stream id
+     * Closes the producers of a stream with a given id.
      *
      * @param streamId stream id of the stream whose producers will be closed
      */
     virtual void closeProducers(ExecStreamId streamId) = 0;
+
+    /**
+     * Declares that a given stream writes a given dynamic parameter.
+     *
+     * @param streamId Stream id
+     * @param dynamicParamId Dynamic parameter id
+     */
+    virtual void declareDynamicParamWriter(
+        ExecStreamId streamId,
+        DynamicParamId dynamicParamId) = 0;
+
+    /**
+     * Declares that a given stream reads a given dynamic parameter.
+     *
+     * @param streamId Stream id
+     * @param dynamicParamId Dynamic parameter id
+     */
+    virtual void declareDynamicParamReader(
+        ExecStreamId streamId,
+        DynamicParamId dynamicParamId) = 0;
+
+    /**
+     * Returns a list of stream ids that write a given dynamic parameter.
+     *
+     * @param dynamicParamId Dynamic parameter id
+     * @return List of ids of streams that write the parameter
+     */
+    virtual const std::vector<ExecStreamId> &getDynamicParamWriters(
+        DynamicParamId dynamicParamId) = 0;
+
+
+    /**
+     * Returns a list of stream ids that read a given dynamic parameter.
+     *
+     * @param dynamicParamId Dynamic parameter id
+     * @return List of ids of streams that read the parameter
+     */
+    virtual const std::vector<ExecStreamId> &getDynamicParamReaders(
+        DynamicParamId dynamicParamId) = 0;
+
 };
 
 inline ExecStreamScheduler *ExecStreamGraph::getScheduler() const

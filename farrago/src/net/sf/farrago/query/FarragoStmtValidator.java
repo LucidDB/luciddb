@@ -127,24 +127,36 @@ public class FarragoStmtValidator
         // session resets queue to the one from stmt context
         this.warningQueue = new FarragoWarningQueue();
 
-        parser = session.getPersonality().newParser(session);
+        if (session != null) {
 
-        // clone session variables so that any context changes we make during
-        // validation are transient
-        sessionVariables = session.getSessionVariables().cloneVariables();
-        typeFactory =
-            (FarragoTypeFactory) session.getPersonality().newTypeFactory(repos);
-        dataWrapperCache =
-            new FarragoDataWrapperCache(
-                this,
-                sharedDataWrapperCache,
-                session.getPluginClassLoader(),
-                repos,
-                fennelDbHandle,
-                new FarragoSessionDataSource(session));
-        privilegeChecker = session.newPrivilegeChecker();
-        
-        sqldataTypeCache = new HashMap<String, CwmSqldataType>();
+            parser = session.getPersonality().newParser(session);
+
+            // clone session variables so that any context changes we make
+            // during validation are transient
+            sessionVariables = session.getSessionVariables().cloneVariables();
+            typeFactory =
+                (FarragoTypeFactory)session.getPersonality().
+                newTypeFactory(repos);
+            dataWrapperCache =
+                new FarragoDataWrapperCache(
+                    this,
+                    sharedDataWrapperCache,
+                    session.getPluginClassLoader(),
+                    repos,
+                    fennelDbHandle,
+                    new FarragoSessionDataSource(session));
+            privilegeChecker = session.newPrivilegeChecker();
+            sqldataTypeCache = new HashMap<String, CwmSqldataType>();
+
+        } else {
+
+            typeFactory = null;
+            sessionVariables = null;
+            dataWrapperCache = null;
+            parser = null;
+            privilegeChecker = null;
+            sqldataTypeCache = null;
+        }
     }
 
     //~ Methods ----------------------------------------------------------------

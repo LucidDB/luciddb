@@ -1,5 +1,6 @@
 > -- $Id$
-> -- Testing the USING clause of the JOIN statement.
+> -- Testing the USING clause of the JOIN statement; also CROSS JOIN and
+> -- NATURAL JOIN.
 > 
 > set schema 'sales';
 > !set outputformat csv
@@ -30,6 +31,36 @@
 '110','Eric','20','M','San Francisco','3','80','416263','','false','20','Marketing'
 '120','Wilma','20','F','','1','50','','','true','20','Marketing'
 > 
+> -- NATURAL JOIN is equivalent to USING(deptno,name) and gives empty result
+> select * from emps natural join depts;
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER','DEPTNO0','NAME0'
+> -- Rename NAME and it's equivalent to USING(deptno)
+> select * from emps natural join (select deptno, name as dname from depts);
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER','DEPTNO0','DNAME'
+'100','Fred','10','','','30','25','41626320','true','false','10','Sales'
+'110','Eric','20','M','San Francisco','3','80','416263','','false','20','Marketing'
+'120','Wilma','20','F','','1','50','','','true','20','Marketing'
+> -- Rename DEPTNO too and it's equivalent to CROSS JOIN
+> select * from emps natural join (select deptno, name as dname from depts);
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER','DEPTNO0','DNAME'
+'100','Fred','10','','','30','25','41626320','true','false','10','Sales'
+'110','Eric','20','M','San Francisco','3','80','416263','','false','20','Marketing'
+'120','Wilma','20','F','','1','50','','','true','20','Marketing'
+> -- CROSS JOIN
+> select * from emps cross join depts;
+'EMPNO','NAME','DEPTNO','GENDER','CITY','EMPID','AGE','PUBLIC_KEY','SLACKER','MANAGER','DEPTNO0','NAME0'
+'100','Fred','10','','','30','25','41626320','true','false','10','Sales'
+'100','Fred','10','','','30','25','41626320','true','false','20','Marketing'
+'100','Fred','10','','','30','25','41626320','true','false','30','Accounts'
+'110','Eric','20','M','San Francisco','3','80','416263','','false','10','Sales'
+'110','Eric','20','M','San Francisco','3','80','416263','','false','20','Marketing'
+'110','Eric','20','M','San Francisco','3','80','416263','','false','30','Accounts'
+'120','Wilma','20','F','','1','50','','','true','10','Sales'
+'120','Wilma','20','F','','1','50','','','true','20','Marketing'
+'120','Wilma','20','F','','1','50','','','true','30','Accounts'
+'110','John','40','M','Vancouver','2','','58797A','false','true','10','Sales'
+'110','John','40','M','Vancouver','2','','58797A','false','true','20','Marketing'
+'110','John','40','M','Vancouver','2','','58797A','false','true','30','Accounts'
 > -- End joinUsing.sql
 > 
 > 

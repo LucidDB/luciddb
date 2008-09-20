@@ -133,9 +133,10 @@ public class FarragoAutoCalcRule
      */
     private FarragoAutoCalcRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 CalcRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

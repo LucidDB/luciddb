@@ -188,12 +188,11 @@ public class ObjectSchemaTest extends SaffronTestCase
     {
         public ExtentJoinRule()
         {
-            super(new RelOptRuleOperand(
+            super(
+                new RelOptRuleOperand(
                     JoinRel.class,
-                    new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(RelNode.class, null),
-                        new RelOptRuleOperand(ExtentRel.class, null)
-                    }));
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(ExtentRel.class, ANY)));
         }
 
         public void onMatch(final RelOptRuleCall call)
@@ -422,7 +421,7 @@ public class ObjectSchemaTest extends SaffronTestCase
                                     oneRel,
                                     rexBuilder.makeLiteral(true),
                                     JoinRelType.INNER,
-                                    Collections.EMPTY_SET);
+                                    Collections.<String>emptySet());
                             newJoin.registerStoppedVariable(correl);
                             call.transformTo(newJoin);
                         }
@@ -507,11 +506,10 @@ public class ObjectSchemaTest extends SaffronTestCase
             RelOptTable table,
             RexPattern pattern)
         {
-            super(new RelOptRuleOperand(
+            super(
+                new RelOptRuleOperand(
                     FilterRel.class, // todo: constructor which takes a table
-                    new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(RelNode.class, null)
-                    }));
+                    new RelOptRuleOperand(RelNode.class, ANY)));
             this.table = table;
             this.pattern = pattern;
         }
@@ -547,12 +545,11 @@ public class ObjectSchemaTest extends SaffronTestCase
             RelOptTable toTable,
             RexPattern pattern)
         {
-            super(new RelOptRuleOperand(
+            super(
+                new RelOptRuleOperand(
                     JoinRel.class, // todo: constructor which takes a table
-                    new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(RelNode.class, null),
-                        new RelOptRuleOperand(RelNode.class, null)
-                    }));
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(RelNode.class, ANY)));
             this.fromTable = fromTable;
             this.toTable = toTable;
             this.pattern = pattern;

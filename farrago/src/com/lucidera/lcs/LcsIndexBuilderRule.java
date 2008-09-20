@@ -49,9 +49,10 @@ class LcsIndexBuilderRule
      */
     public LcsIndexBuilderRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 FarragoIndexBuilderRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

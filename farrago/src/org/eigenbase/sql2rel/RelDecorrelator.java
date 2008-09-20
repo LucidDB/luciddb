@@ -1746,10 +1746,15 @@ public class RelDecorrelator
         }
     }
 
-    // add one more rule to remove single_value rel for cases like
-    // AggRel single_value
-    //   proj/filter/agg/ join on unique LHS key
-    //     AggRel single group
+    /**
+     * Rule to remove single_value rel. For cases like
+     *
+     * <blockquote>
+     * AggRel single_value
+     *   proj/filter/agg/ join on unique LHS key
+     *     AggRel single group
+     * </blockquote>
+     */
     private final class RemoveSingleAggregateRule
         extends RelOptRule
     {
@@ -1758,13 +1763,9 @@ public class RelDecorrelator
             super(
                 new RelOptRuleOperand(
                     AggregateRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(
-                            ProjectRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(AggregateRel.class, null)
-                            })
-                    }));
+                    new RelOptRuleOperand(
+                        ProjectRel.class,
+                        new RelOptRuleOperand(AggregateRel.class, ANY))));
         }
 
         public void onMatch(RelOptRuleCall call)
@@ -1821,20 +1822,14 @@ public class RelDecorrelator
             super(
                 new RelOptRuleOperand(
                     CorrelatorRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(RelNode.class, null),
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(
+                        AggregateRel.class,
                         new RelOptRuleOperand(
-                            AggregateRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    ProjectRel.class,
-                                    new RelOptRuleOperand[] {
-                                        new RelOptRuleOperand(
-                                            RelNode.class,
-                                            null)
-                                    })
-                            })
-                    }));
+                            ProjectRel.class,
+                            new RelOptRuleOperand(
+                                RelNode.class,
+                                ANY)))));
         }
 
         public void onMatch(RelOptRuleCall call)
@@ -2048,24 +2043,16 @@ public class RelDecorrelator
             super(
                 new RelOptRuleOperand(
                     CorrelatorRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(RelNode.class, null),
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(
+                        ProjectRel.class,
                         new RelOptRuleOperand(
-                            ProjectRel.class,
-                            new RelOptRuleOperand[] {
+                            AggregateRel.class,
+                            new RelOptRuleOperand(
+                                ProjectRel.class,
                                 new RelOptRuleOperand(
-                                    AggregateRel.class,
-                                    new RelOptRuleOperand[] {
-                                        new RelOptRuleOperand(
-                                            ProjectRel.class,
-                                            new RelOptRuleOperand[] {
-                                                new RelOptRuleOperand(
-                                                    RelNode.class,
-                                                    null)
-                                            })
-                                    })
-                            })
-                    }));
+                                    RelNode.class,
+                                    ANY))))));
         }
 
         public void onMatch(RelOptRuleCall call)
@@ -2480,24 +2467,14 @@ public class RelDecorrelator
                 flavor
                     ? new RelOptRuleOperand(
                     CorrelatorRel.class,
-                    new RelOptRuleOperand[]{
-                        new RelOptRuleOperand(RelNode.class, null),
-                        new RelOptRuleOperand(
-                            ProjectRel.class,
-                            new RelOptRuleOperand[]{
-                                new RelOptRuleOperand(
-                                    AggregateRel.class,
-                                    null)
-                            })
-                    })
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(
+                        ProjectRel.class,
+                        new RelOptRuleOperand(AggregateRel.class, ANY)))
                     : new RelOptRuleOperand(
                     CorrelatorRel.class,
-                    new RelOptRuleOperand[]{
-                        new RelOptRuleOperand(RelNode.class, null),
-                        new RelOptRuleOperand(
-                            AggregateRel.class,
-                            null)
-                    }));
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(AggregateRel.class, ANY)));
             this.flavor = flavor;
         }
 

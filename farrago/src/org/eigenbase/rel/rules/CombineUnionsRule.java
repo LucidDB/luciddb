@@ -42,10 +42,8 @@ public class CombineUnionsRule
         super(
             new RelOptRuleOperand(
                 UnionRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(RelNode.class, null),
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                new RelOptRuleOperand(RelNode.class, ANY),
+                new RelOptRuleOperand(RelNode.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

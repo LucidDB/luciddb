@@ -26,6 +26,7 @@ import java.sql.*;
 
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.resource.FarragoResource;
 
 import org.eigenbase.util14.*;
 
@@ -104,6 +105,7 @@ public class FarragoJdbcEngineStatement
     public boolean execute(String sql)
         throws SQLException
     {
+        validateSession();
         boolean unprepare = true;
         try {
             stmtContext.prepare(sql, true);
@@ -135,6 +137,7 @@ public class FarragoJdbcEngineStatement
     public int executeUpdate(String sql)
         throws SQLException
     {
+        validateSession();
         try {
             stmtContext.prepare(sql, true);
             if (stmtContext.isPrepared()) {
@@ -164,11 +167,13 @@ public class FarragoJdbcEngineStatement
     public ResultSet executeQuery(String sql)
         throws SQLException
     {
+        validateSession();
         boolean unprepare = true;
         try {
             stmtContext.prepare(sql, true);
             if (!stmtContext.isPrepared() || stmtContext.isPreparedDml()) {
-                throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
+                throw FarragoJdbcEngineDriver.
+                    newSqlException(ERRMSG_NOT_A_QUERY + sql);
             }
             stmtContext.execute();
             ResultSet resultSet = openCursorResultSet();
@@ -473,6 +478,21 @@ public class FarragoJdbcEngineStatement
             return;
         }
         stmtContext.getWarningQueue().clearWarnings();
+    }
+
+    /**
+     * Validates statement's session and throws if session closed.
+     *
+     * @throws SQLException {@link FarragoResource#JdbcConnSessionClosed}
+     */
+    protected void validateSession()
+        throws SQLException
+    {
+        final FarragoSession sess = stmtContext.getSession();
+        if (sess.isClosed()) {
+            throw FarragoJdbcEngineDriver.newSqlException(
+                FarragoResource.instance().JdbcConnSessionClosed.ex());
+        }
     }
 }
 

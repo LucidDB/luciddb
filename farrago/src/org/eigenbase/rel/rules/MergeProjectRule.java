@@ -39,8 +39,6 @@ import org.eigenbase.rex.*;
 public class MergeProjectRule
     extends RelOptRule
 {
-    // ~ Instance fields -------------------------------------------------------
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -62,9 +60,7 @@ public class MergeProjectRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(ProjectRel.class, null)
-                }));
+                new RelOptRuleOperand(ProjectRel.class, ANY)));
         force = false;
     }
 

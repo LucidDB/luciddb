@@ -690,7 +690,7 @@ ProjectRel(EXPR$0=[$0])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$2=[CASE(>=(COUNT() OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 3 PRECEDING AND CURRENT ROW), 2), SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 3 PRECEDING AND CURRENT ROW), null)])
-  FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 999)])
+  FilterRel(condition=[>(-($7, $5), 999)])
     TableAccessRel(table=[[CATALOG, SALES, EMP]])
 ]]>
         </Resource>
@@ -699,7 +699,7 @@ ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PREC
   sum(deptno) over w1,
   sum(deptno) over w2
 from emp
-where sum(deptno - sal) over w1 > 999
+where deptno - sal > 999
 window w1 as (partition by job order by hiredate rows 2 preceding),
   w2 as (partition by job order by hiredate rows 3 preceding disallow partial),
   w3 as (partition by job order by hiredate range interval '1' second preceding)]]>
@@ -1365,6 +1365,47 @@ ProjectRel(GRADE=[$1])
       ProjectRel(DEPTNO=[$0])
         TableAccessRel(table=[[CATALOG, SALES, DEPT]])
     TableAccessRel(table=[[CATALOG, SALES, SALGRADE]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinNatural">
+        <Resource name="sql">
+            <![CDATA[SELECT * FROM emp NATURAL JOIN dept]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
+  JoinRel(condition=[=($7, $9)], joinType=[inner])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinNaturalNoCommonColumn">
+        <Resource name="sql">
+            <![CDATA[SELECT * FROM emp NATURAL JOIN (SELECT deptno AS foo, name FROM dept) AS d]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], FOO=[$9], NAME=[$10])
+  JoinRel(condition=[true], joinType=[inner])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    ProjectRel(FOO=[$0], NAME=[$1])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJoinNaturalMultipleCommonColumn">
+        <Resource name="sql">
+            <![CDATA[SELECT * FROM emp NATURAL JOIN (SELECT deptno, name AS ename FROM dept) AS d]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], ENAME0=[$10])
+  JoinRel(condition=[AND(=($1, $10), =($7, $9))], joinType=[inner])
+    TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    ProjectRel(DEPTNO=[$0], ENAME=[$1])
+      TableAccessRel(table=[[CATALOG, SALES, DEPT]])
 ]]>
         </Resource>
     </TestCase>

@@ -46,9 +46,10 @@ public class LhxIntersectRule
      */
     public LhxIntersectRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 IntersectRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

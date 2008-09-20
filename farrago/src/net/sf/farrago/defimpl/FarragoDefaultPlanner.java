@@ -119,7 +119,7 @@ public class FarragoDefaultPlanner
     // NOTE jvs 22-Mar-2007: separate method from
     // FarragoStandardPlannerRules.addStandardRules to avoid direct dependency
     // on com.disruptivetech from there
-    static void addFennelCalcRules(
+    public static void addFennelCalcRules(
         FarragoSessionPlanner planner,
         boolean auto)
     {

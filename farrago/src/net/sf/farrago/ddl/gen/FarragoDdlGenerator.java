@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2005-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 2003-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -471,20 +471,7 @@ public class FarragoDdlGenerator
             sb.append(type.getNamespace().getName());
             sb.append('.');
         }
-        sb.append(type.getName());
-
-        SqlTypeName stn = getSqlTypeName(type);
-        if ((precision != null) && stn.allowsPrec()) {
-            sb.append("(").append(precision);
-            if ((scale != null) && stn.allowsScale()) {
-                sb.append(",").append(scale);
-            }
-            sb.append(")");
-        } else {
-            if (length != null) {
-                sb.append("(").append(length).append(")");
-            }
-        }
+        formatTypeInfo(sb, type, precision, scale, length);
 
         if (defaultValue != null) {
             String val = defaultValue.getBody();
@@ -502,6 +489,56 @@ public class FarragoDdlGenerator
             if (NullableTypeEnum.COLUMN_NO_NULLS.toString().equals(
                 nullable.toString())) {
                 sb.append(" NOT NULL");
+            }
+        }
+    }
+    
+    /**
+     * Format the core elements of a column's type (type name, precision, scale,
+     * length) into SQL format.
+     * 
+     * @param col CwmColumn object we want type info for
+     * @return String containing formatted type info
+     */
+    public static String formatTypeInfo(CwmColumn col)
+    {
+        StringBuilder sb = new StringBuilder();
+        formatTypeInfo(sb, col.getType(), col.getPrecision(), col.getScale(), col.getLength());
+        return sb.toString();
+    }
+
+    /**
+     * Format the core elements of a column's type (type name, precision, scale,
+     * length) into SQL format.<p>
+     * 
+     * Note that this was refactored out of {@link #appendType(StringBuilder, CwmClassifier, Integer, Integer, Integer, NullableType, CwmExpression, boolean)}
+     * to allow separate access.
+     * 
+     * @param sb StringBuilder to hold the formatted type information
+     * @param type CwmClassifier object representing the column type
+     * @param precision Integer specifying the column's precision
+     * @param scale Integer specifying the column's scale 
+     * @param length Integer specifying the column's length
+     */
+    public static void formatTypeInfo(
+        StringBuilder sb,
+        CwmClassifier type,
+        Integer precision,
+        Integer scale,
+        Integer length)
+    {
+        sb.append(type.getName());
+        
+        SqlTypeName stn = getSqlTypeName(type);
+        if ((precision != null) && stn.allowsPrec()) {
+            sb.append("(").append(precision);
+            if ((scale != null) && stn.allowsScale()) {
+                sb.append(",").append(scale);
+            }
+            sb.append(")");
+        } else {
+            if (length != null) {
+                sb.append("(").append(length).append(")");
             }
         }
     }
@@ -622,7 +659,9 @@ public class FarragoDdlGenerator
         StringBuilder sb = new StringBuilder();
         sb.append("DROP SCHEMA ");
         name(sb, null, schema.getName());
-        sb.append(" CASCADE");
+        if (dropCascade) {
+            sb.append(" CASCADE");
+        }
         stmt.addStmt(sb.toString());
     }
 
@@ -647,7 +686,9 @@ public class FarragoDdlGenerator
         StringBuilder sb = new StringBuilder();
         sb.append("DROP TABLE ");
         name(sb, table.getNamespace(), table.getName());
-        sb.append(" CASCADE");
+        if (dropCascade) {
+            sb.append(" CASCADE");
+        }
         stmt.addStmt(sb.toString());
     }
 
@@ -882,6 +923,9 @@ public class FarragoDdlGenerator
             sb.append("DROP ").append(elementType).append(" ");
 
             name(sb, e.getNamespace(), e.getName());
+            if (dropCascade) {
+                sb.append(" CASCADE");
+            }
             stmt.addStmt(sb.toString());
         }
     }

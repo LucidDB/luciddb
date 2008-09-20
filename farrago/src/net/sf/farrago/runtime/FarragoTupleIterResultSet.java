@@ -60,7 +60,7 @@ public class FarragoTupleIterResultSet
     private FarragoSessionRuntimeContext runtimeContext;
     private RelDataType rowType;
     private EnkiMDSession detachedSession;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     public FarragoTupleIterResultSet(
@@ -205,10 +205,9 @@ public class FarragoTupleIterResultSet
             // FarragoSessionRuntimeContext.closeAllocation().
             synchronized (allocationToClose.getSession()) {
                 allocationToClose.closeAllocation();
-                
+
                 FarragoRepos repos = allocationToClose.getSession().getRepos();
-                repos.getEnkiMdrRepos().reattachSession(detachedSession);
-                repos.endReposSession();
+                repos.getEnkiMdrRepos().endDetachedSession(detachedSession);
             }
         }
         super.close();

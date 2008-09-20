@@ -541,7 +541,7 @@ public class RelStructuredTypeFlattener
                 newChild,
                 newProgram.getOutputRowType(),
                 newProgram,
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         setNewForOldRel(rel, newRel);
     }
 

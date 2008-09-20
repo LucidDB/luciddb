@@ -38,7 +38,7 @@ public class FennelBernoulliSamplingRule
 {
     public FennelBernoulliSamplingRule()
     {
-        super(new RelOptRuleOperand(SamplingRel.class, null));
+        super(new RelOptRuleOperand(SamplingRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

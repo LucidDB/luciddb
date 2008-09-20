@@ -45,9 +45,7 @@ public class PushFilterPastSetOpRule
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(SetOpRel.class, null)
-                }));
+                new RelOptRuleOperand(SetOpRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -52,9 +52,10 @@ public class SwapJoinRule
 
     public SwapJoinRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 JoinRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -113,7 +114,7 @@ public class SwapJoinRule
                 join.getLeft(),
                 condition,
                 joinType,
-                Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 join.isSemiJoinDone());
         if (!join.getVariablesStopped().isEmpty()) {
             newJoin.setVariablesStopped(

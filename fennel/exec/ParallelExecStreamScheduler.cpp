@@ -144,6 +144,11 @@ void ParallelExecStreamScheduler::start()
     threadPool.submitTask(managerTask);
 }
 
+void ParallelExecStreamScheduler::setRunnable(ExecStream &stream, bool runnable)
+{
+    permAssert(false);
+}
+
 void ParallelExecStreamScheduler::makeRunnable(ExecStream &stream)
 {
     permAssert(false);

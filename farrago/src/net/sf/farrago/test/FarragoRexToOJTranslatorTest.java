@@ -24,26 +24,17 @@ package net.sf.farrago.test;
 
 import java.io.*;
 
-import java.util.regex.*;
-
 import junit.framework.*;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.db.*;
-import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
 
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
-import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql2rel.*;
 
 
@@ -659,7 +650,7 @@ public class FarragoRexToOJTranslatorTest
     public void testPower()
         throws Exception
     {
-        checkTranslation("pow(2, empid)");
+        checkTranslation("power(2, empid)");
     }
 
     public void testMod()

@@ -88,7 +88,7 @@ public:
     // Pre-Execution Configuration
     //
 
-    //! Pre-execution: Configure output register to be set by reference 
+    //! Pre-execution: Configure output register to be set by reference
     //! (default), or by value.
     //!
     //! <p>
@@ -102,11 +102,11 @@ public:
     //! Reading from the output register in this mode is possible,
     //! but should only occur after the appropriate REF instruction.
     //! Output register may be passed to the Calculator in a don't
-    //! care state. 
+    //! care state.
     //!
     //! <p>
-    //! If flag is false, output register is assumed to point to 
-    //! appropriately allocated memory and is set using copy by value 
+    //! If flag is false, output register is assumed to point to
+    //! appropriately allocated memory and is set using copy by value
     //! instructions.
     //!
     //! <p>
@@ -114,7 +114,7 @@ public:
     void outputRegisterByReference(bool flag);
 
     //! Pre-execution: Appends an Instruction to the Calculator
-    void appendInstruction(Instruction* newInst) 
+    void appendInstruction(Instruction* newInst)
     {
         assert(mIsUsingAssembler ? mIsAssembling : true);
         mCode.push_back(newInst);
@@ -138,7 +138,7 @@ public:
         mRegisterRef[newRef->setIndex()].push_back(newRef);
         newRef->setCalc(this);
     }
-    
+
     //! Pre-execution: Given a serialized program, populates Calculator
     //!
     //! Given a serialized program, creates register sets, sets up literals
@@ -152,9 +152,9 @@ public:
     //! memory tuples. Used only when tuples are allocated by XO, not
     //! by Assembler
     void bind(RegisterReference::ERegisterSet regset,
-              TupleData* data, 
+              TupleData* data,
               const TupleDescriptor& desc);
-  
+
     //! Determines Output Tuple format
     //!
     //! When assemble() is used, an XO learns the format of its
@@ -167,7 +167,7 @@ public:
     //!
     //! When assemble() is used, an XO <b>may</b> learn the format of its
     //! input from Calculator. The XO could use this information to
-    //! double-check the integrity of the TupleDescriptor via 
+    //! double-check the integrity of the TupleDescriptor via
     //! asserts. Typically called before exec().
     TupleDescriptor getInputRegisterDescriptor() const;
 
@@ -185,8 +185,8 @@ public:
     //! Typically called once after Calculator configuration, as
     //! this tuple never changes.
     TupleData const * const getStatusRegister() const;
-    
-    //! Zeroes out the values of all TupleDatum within the Staus Register 
+
+    //! Zeroes out the values of all TupleDatum within the Staus Register
     //! Tuple.
     //!
     //! Typically this is called before the first call to exec() and should
@@ -197,7 +197,7 @@ public:
 
     //! Binds the commonly changing Register Sets Input and Output.
     //!
-    //! Binding or rebinding of varying externally allocated 
+    //! Binding or rebinding of varying externally allocated
     //! register memory tuples. This is the common case call to
     //! bind, where input and output tuples are rebound between
     //! exec() calls. Typically called to advance to the next row.
@@ -209,7 +209,7 @@ public:
     //!   which is null in \c output.
     //! @param takeOwnership When true, the Calculator owns these TupleData, and will
     //!   delete them in its destructor.
-    void bind(TupleData* input, TupleData* output, bool takeOwnwership = false, 
+    void bind(TupleData* input, TupleData* output, bool takeOwnwership = false,
               const TupleData* outputWrite = 0);
 
 
@@ -257,7 +257,7 @@ protected:
     //! All active registers, indexed by register set
     //!
     //! Note: Referenced in class CalcAssembler
-    vector<RegisterReference *> mRegisterRef[RegisterReference::ELastSet]; 
+    vector<RegisterReference *> mRegisterRef[RegisterReference::ELastSet];
 
     //! A list of registers to be reset by next call to exec()
     //!
@@ -281,7 +281,7 @@ protected:
     //! Exceptions cause calculator to return immediately, or do they
     //! allow execution to conitnue?
     bool mContinueOnException;
-    
+
     //! Actual storage used by the CalcAssembler for the literal, local
     //! and status registers
     vector<FixedBuffer*> mBuffers;
@@ -293,6 +293,9 @@ private:
     //! Helper function for constructors.
     void init(int codeSize, int literalSize, int inputSize,
               int outputSize, int localSize, int statusSize);
+
+    //! Free up memory from bind.
+    void unbind(RegisterReference::ERegisterSet regset, bool unbindDescriptor = true);
 };
 
 FENNEL_END_NAMESPACE

@@ -51,7 +51,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 }
 
 int  CalcYYlex(YYSTYPE*, YYLTYPE*, void*);
-void CalcYYerror(char*);
+void CalcYYerror(const char*);
 
 %}
 
@@ -238,7 +238,7 @@ int CalcYYlex (YYSTYPE *lvalp, YYLTYPE *llocp, void* parm)
     return token;  
 }
 
-void CalcYYerror(char *s)
+void CalcYYerror(const char *s)
 {
     throw CalcAssemblerException(s);
 }

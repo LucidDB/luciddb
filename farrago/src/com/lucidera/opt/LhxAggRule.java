@@ -46,9 +46,10 @@ public class LhxAggRule
      */
     public LhxAggRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 AggregateRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

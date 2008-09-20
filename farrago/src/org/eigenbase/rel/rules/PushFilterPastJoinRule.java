@@ -39,8 +39,6 @@ import org.eigenbase.rex.*;
 public class PushFilterPastJoinRule
     extends RelOptRule
 {
-    //  ~ Constructors --------------------------------------------------------
-
     //~ Constructors -----------------------------------------------------------
 
     public PushFilterPastJoinRule()
@@ -48,9 +46,7 @@ public class PushFilterPastJoinRule
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JoinRel.class, null)
-                }));
+                new RelOptRuleOperand(JoinRel.class, ANY)));
     }
 
     public PushFilterPastJoinRule(RelOptRuleOperand rule, String id)
@@ -59,8 +55,7 @@ public class PushFilterPastJoinRule
         //
         // RelOptRuleOperand(
         //     FilterRel.class,
-        //     new RelOptRuleOperand [] {
-        //         new RelOptRuleOperand(JoinRel.class, null)})
+        //     new RelOptRuleOperand(JoinRel.class, ANY))
         //
         // RelOptRuleOperand(JoinRel.class, null)
         //

@@ -130,7 +130,7 @@ public abstract class ConverterRule
     {
         public ConverterRelOptRuleOperand(Class clazz, RelTrait in)
         {
-            super(clazz, in, null);
+            super(clazz, in, RelOptRule.ANY);
         }
 
         public boolean matches(RelNode rel)

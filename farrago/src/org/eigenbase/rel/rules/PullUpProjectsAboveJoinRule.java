@@ -50,29 +50,23 @@ public class PullUpProjectsAboveJoinRule
         new PullUpProjectsAboveJoinRule(
             new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(ProjectRel.class, null),
-                    new RelOptRuleOperand(ProjectRel.class, null)
-                }),
+                new RelOptRuleOperand(ProjectRel.class, ANY),
+                new RelOptRuleOperand(ProjectRel.class, ANY)),
             "with two ProjectRel children");
 
     public static final PullUpProjectsAboveJoinRule instanceLeftProjectChild =
         new PullUpProjectsAboveJoinRule(
             new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(ProjectRel.class, null)
-                }),
+                new RelOptRuleOperand(ProjectRel.class, ANY)),
             "with ProjectRel on left");
 
     public static final PullUpProjectsAboveJoinRule instanceRightProjectChild =
         new PullUpProjectsAboveJoinRule(
             new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(RelNode.class, null),
-                    new RelOptRuleOperand(ProjectRel.class, null)
-                }),
+                new RelOptRuleOperand(RelNode.class, ANY),
+                new RelOptRuleOperand(ProjectRel.class, ANY)),
             "with ProjectRel on right");
 
     //~ Constructors -----------------------------------------------------------

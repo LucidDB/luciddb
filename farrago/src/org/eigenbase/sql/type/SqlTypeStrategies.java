@@ -703,7 +703,7 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy for Histogram agg support
      */
     public static final SqlReturnTypeInference rtiHistogram =
-        new ExplicitReturnTypeInference(SqlTypeName.VARBINARY, 4);
+        new ExplicitReturnTypeInference(SqlTypeName.VARBINARY, 8);
 
     /**
      * Type-inference strategy which always returns "CURSOR".

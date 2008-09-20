@@ -755,6 +755,36 @@ void ExecStreamGraphImpl::closeProducers(ExecStreamId streamId)
     }
 }
 
+void ExecStreamGraphImpl::declareDynamicParamWriter(
+    ExecStreamId streamId,
+    DynamicParamId dynamicParamId)
+{
+    DynamicParamInfo &info = dynamicParamMap[dynamicParamId];
+    info.writerStreamIds.push_back(streamId);
+}
+
+void ExecStreamGraphImpl::declareDynamicParamReader(
+    ExecStreamId streamId,
+    DynamicParamId dynamicParamId)
+{
+    DynamicParamInfo &info = dynamicParamMap[dynamicParamId];
+    info.readerStreamIds.push_back(streamId);
+}
+
+const std::vector<ExecStreamId> &ExecStreamGraphImpl::getDynamicParamWriters(
+    DynamicParamId dynamicParamId)
+{
+    DynamicParamInfo &info = dynamicParamMap[dynamicParamId];
+    return info.writerStreamIds;
+}
+
+const std::vector<ExecStreamId> &ExecStreamGraphImpl::getDynamicParamReaders(
+    DynamicParamId dynamicParamId)
+{
+    DynamicParamInfo &info = dynamicParamMap[dynamicParamId];
+    return info.readerStreamIds;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ExecStreamGraph.cpp

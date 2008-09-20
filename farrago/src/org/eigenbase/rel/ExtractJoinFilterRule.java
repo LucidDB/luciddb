@@ -54,7 +54,7 @@ public final class ExtractJoinFilterRule
 
     private ExtractJoinFilterRule()
     {
-        super(new RelOptRuleOperand(JoinRel.class, null));
+        super(new RelOptRuleOperand(JoinRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -81,7 +81,7 @@ public final class ExtractJoinFilterRule
                 joinRel.getRight(),
                 joinRel.getCluster().getRexBuilder().makeLiteral(true),
                 joinRel.getJoinType(),
-                (Set<String>) Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 joinRel.isSemiJoinDone());
 
         RelNode filterRel =

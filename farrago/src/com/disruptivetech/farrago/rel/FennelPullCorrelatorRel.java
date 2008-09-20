@@ -79,14 +79,9 @@ public class FennelPullCorrelatorRel
                 getCluster(),
                 left.clone(),
                 right.clone(),
-                cloneCorrelations());
+                new ArrayList<CorrelatorRel.Correlation>(correlations));
         clone.inheritTraitsFrom(this);
         return clone;
-    }
-
-    public List<CorrelatorRel.Correlation> cloneCorrelations()
-    {
-        return new ArrayList<CorrelatorRel.Correlation>(correlations);
     }
 
     // override RelNode
@@ -136,6 +131,13 @@ public class FennelPullCorrelatorRel
             newFemCorrelation.setId(correlation.getId());
             newFemCorrelation.setOffset(correlation.getOffset());
             streamDef.getCorrelations().add(newFemCorrelation);
+
+            // Tell the graph which variable(s) we write.
+            final FemDynamicParamUse dynamicParamUse =
+                repos.newFemDynamicParamUse();
+            dynamicParamUse.setDynamicParamId(correlation.getId());
+            dynamicParamUse.setRead(false);
+            streamDef.getDynamicParamUse().add(dynamicParamUse);
         }
 
         FemExecutionStreamDef leftInput =

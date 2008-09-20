@@ -38,32 +38,24 @@ public class LcsAddDeletionScanRule
     public final static LcsAddDeletionScanRule instanceNoInputs =
         new LcsAddDeletionScanRule(
             new RelOptRuleOperand(
-                LcsRowScanRelBase.class,
-                RelOptRuleOperand.noOperands),
+                LcsRowScanRelBase.class),
             "no inputs");
     
     public final static LcsAddDeletionScanRule instanceMinusInput =
         new LcsAddDeletionScanRule(
             new RelOptRuleOperand(
                 LcsRowScanRelBase.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(
-                        LcsIndexMinusRel.class,
-                        new RelOptRuleOperand [] {
-                            new RelOptRuleOperand(RelNode.class, null),
-                            new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-                })}),
+                new RelOptRuleOperand(
+                    LcsIndexMinusRel.class,
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(LcsIndexSearchRel.class, ANY))),
             "minus input");
     
     public final static LcsAddDeletionScanRule instanceAnyInput =
         new LcsAddDeletionScanRule(
             new RelOptRuleOperand(
                 LcsRowScanRelBase.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(
-                        RelNode.class,
-                        null)
-                }),
+                new RelOptRuleOperand(RelNode.class, ANY)),
             "any input"); 
     
     //~ Constructors -----------------------------------------------------------

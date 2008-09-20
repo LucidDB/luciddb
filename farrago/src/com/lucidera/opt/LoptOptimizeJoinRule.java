@@ -45,7 +45,7 @@ public class LoptOptimizeJoinRule
 
     public LoptOptimizeJoinRule()
     {
-        super(new RelOptRuleOperand(MultiJoinRel.class, null));
+        super(new RelOptRuleOperand(MultiJoinRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -1407,7 +1407,7 @@ outerForLoop:
                 right.getJoinTree(),
                 condition,
                 joinType,
-                Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 true);
 
         // if this is a left or right outer join, and additional filters can

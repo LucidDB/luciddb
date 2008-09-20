@@ -27,6 +27,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.plugin.FarragoPluginClassLoader;
 
 import org.eigenbase.reltype.*;
 
@@ -46,6 +47,12 @@ public class FarragoSessionRuntimeParams
      * Controlling session.
      */
     public FarragoSession session;
+
+    /**
+     * If no session is available to provide the plugin classloader, use this
+     * classloader instead.
+     */
+    public FarragoPluginClassLoader pluginClassLoader;
 
     /**
      * Repos storing object definitions.
@@ -122,7 +129,7 @@ public class FarragoSessionRuntimeParams
      * should create a private queue.
      */
     public FarragoWarningQueue warningQueue;
-    
+
     /**
      * The current time associated with the statement.  If set to zero, this
      * indicates that no current time has yet been set for the statement.

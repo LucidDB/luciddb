@@ -53,8 +53,8 @@ public abstract class FennelTupleWriter
 
     /**
      * Marshals one tuple if it can fit; otherwise, throws either
-     * BufferOverflowException or IndexOutOfBoundsException (depending on
-     * whether absolute or relative puts are used).
+     * {@link BufferOverflowException} or {@link IndexOutOfBoundsException}
+     * (depending on whether absolute or relative puts are used).
      *
      * @param sliceBuffer buffer to be filled with marshalled tuple data; on
      * entry, the buffer position is 0; on return, the buffer position should be
@@ -62,7 +62,7 @@ public abstract class FennelTupleWriter
      * @param object subclass-specific object to be marshalled
      *
      * @exception BufferOverflowException see above
-     * @exception IndexOutOfBoundException see above
+     * @exception IndexOutOfBoundsException see above
      */
     protected abstract void marshalTupleOrThrow(
         ByteBuffer sliceBuffer,

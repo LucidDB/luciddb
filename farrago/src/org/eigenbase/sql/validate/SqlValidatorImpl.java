@@ -158,7 +158,8 @@ public class SqlValidatorImpl
      */
     private final Map<SqlNode, RelDataType> nodeToTypeMap =
         new IdentityHashMap<SqlNode, RelDataType>();
-    private final AggFinder aggFinder = new AggFinder();
+    private final AggFinder aggFinder = new AggFinder(false);
+    private final AggFinder aggOrOverFinder = new AggFinder(true);
     private final SqlConformance conformance;
     private final Map<SqlNode, SqlNode> originalExprs =
         new HashMap<SqlNode, SqlNode>();
@@ -1949,7 +1950,8 @@ public class SqlValidatorImpl
             // columns which are in the GROUP BY clause.
             SqlValidatorScope aggScope = selectScope;
             if (isAggregate(select)) {
-                aggScope = new AggregatingSelectScope(selectScope, select);
+                aggScope =
+                    new AggregatingSelectScope(selectScope, select, false);
                 selectScopes.put(select, aggScope);
             } else {
                 selectScopes.put(select, selectScope);
@@ -1962,18 +1964,18 @@ public class SqlValidatorImpl
             registerSubqueries(aggScope, select.getSelectList());
             final SqlNodeList orderList = select.getOrderList();
             if (orderList != null) {
+                // If the query is 'SELECT DISTINCT', restrict the columns
+                // available to the ORDER BY clause.
+                if (select.isDistinct()) {
+                    aggScope =
+                        new AggregatingSelectScope(selectScope, select, true);
+                }
                 OrderByScope orderScope =
                     new OrderByScope(aggScope, orderList, select);
-                if (isAggregate(select)) {
-                    orderScopes.put(select, orderScope);
-                    AggregatingScope aggOrderScope =
-                        new AggregatingSelectScope(orderScope, select);
-                    orderScopes.put(select, aggOrderScope);
-                    registerSubqueries(aggOrderScope, orderList);
-                } else {
-                    orderScopes.put(select, orderScope);
-                    registerSubqueries(orderScope, orderList);
+                orderScopes.put(select, orderScope);
+                registerSubqueries(orderScope, orderList);
 
+                if (!isAggregate(select)) {
                     // Since this is not an aggregating query,
                     // there cannot be any aggregates in the ORDER BY clause.
                     SqlNode agg = aggFinder.findAgg(orderList);
@@ -2486,6 +2488,7 @@ public class SqlValidatorImpl
             break;
         case On:
             Util.permAssert(condition != null, "condition != null");
+            validateNoAggs(condition, "ON");
             condition.validate(this, joinScope);
             break;
         case Using:
@@ -2495,8 +2498,17 @@ public class SqlValidatorImpl
             Util.permAssert(list.size() > 0, "Empty USING clause");
             for (int i = 0; i < list.size(); i++) {
                 SqlIdentifier id = (SqlIdentifier) list.get(i);
-                validateUsingCol(id, left);
-                validateUsingCol(id, right);
+                final RelDataType leftColType = validateUsingCol(id, left);
+                final RelDataType rightColType = validateUsingCol(id, right);
+                if (!SqlTypeUtil.isComparable(leftColType, rightColType)) {
+                    throw newValidationError(
+                        id,
+                        EigenbaseResource.instance()
+                            .NaturalOrUsingColumnNotCompatible.ex(
+                            id.getSimple(),
+                            leftColType.toString(),
+                            rightColType.toString()));
+                }
             }
             break;
         default:
@@ -2504,10 +2516,36 @@ public class SqlValidatorImpl
         }
 
         // Validate NATURAL.
-        if (natural && (condition != null)) {
-            throw newValidationError(
-                condition,
-                EigenbaseResource.instance().NaturalDisallowsOnOrUsing.ex());
+        if (natural) {
+            if (condition != null) {
+                throw newValidationError(
+                    condition,
+                    EigenbaseResource.instance().NaturalDisallowsOnOrUsing
+                        .ex());
+            }
+            // Join on fields that occur exactly once on each side. Ignore
+            // fields that occur more than once on either side.
+            final RelDataType leftRowType = getNamespace(left).getRowType();
+            final RelDataType rightRowType = getNamespace(right).getRowType();
+            List<String> naturalColumnNames =
+                SqlValidatorUtil.deriveNaturalJoinColumnList(
+                    leftRowType, rightRowType);
+            // Check compatibility of the chosen columns.
+            for (String name : naturalColumnNames) {
+                final RelDataType leftColType =
+                    leftRowType.getField(name).getType();
+                final RelDataType rightColType =
+                    rightRowType.getField(name).getType();
+                if (!SqlTypeUtil.isComparable(leftColType, rightColType)) {
+                    throw newValidationError(
+                        join,
+                        EigenbaseResource.instance()
+                            .NaturalOrUsingColumnNotCompatible.ex(
+                            name,
+                            leftColType.toString(),
+                            rightColType.toString()));
+                }
+            }
         }
 
         // Which join types require/allow a ON/USING condition, or allow
@@ -2543,14 +2581,49 @@ public class SqlValidatorImpl
         }
     }
 
-    private void validateUsingCol(SqlIdentifier id, SqlNode leftOrRight)
+    /**
+     * Throws an error if there is an aggregate or windowed aggregate in
+     * the given clause.
+     *
+     * @param condition Parse tree
+     * @param clause Name of clause: "WHERE", "GROUP BY", "ON"
+     */
+    private void validateNoAggs(SqlNode condition, String clause)
+    {
+        final SqlNode agg = aggOrOverFinder.findAgg(condition);
+        if (agg != null) {
+            if (SqlUtil.isCallTo(agg, SqlStdOperatorTable.overOperator)) {
+                throw newValidationError(
+                    agg,
+                    EigenbaseResource.instance()
+                        .WindowedAggregateIllegalInClause.ex(clause));
+
+            } else {
+                throw newValidationError(
+                    agg,
+                    EigenbaseResource.instance().AggregateIllegalInClause.ex(
+                        clause));
+            }
+        }
+    }
+
+    private RelDataType validateUsingCol(SqlIdentifier id, SqlNode leftOrRight)
     {
         if (id.names.length == 1) {
             String name = id.names[0];
             final SqlValidatorNamespace namespace = getNamespace(leftOrRight);
-            boolean exists = namespace.fieldExists(name);
-            if (exists) {
-                return;
+            final RelDataType rowType = namespace.getRowType();
+            final RelDataTypeField field = rowType.getField(name);
+            if (field != null) {
+                if (SqlValidatorUtil.countOccurrences(
+                    name, SqlTypeUtil.getFieldNames(rowType)) > 1)
+                {
+                    throw newValidationError(
+                        id,
+                        EigenbaseResource.instance().ColumnInUsingNotUnique.ex(
+                            id.toString()));
+                }
+                return field.getType();
             }
         }
         throw newValidationError(
@@ -2741,6 +2814,7 @@ public class SqlValidatorImpl
         if (group == null) {
             return;
         }
+        validateNoAggs(group, "GROUP BY");
         final SqlValidatorScope groupScope = getGroupScope(select);
         inferUnknownTypes(unknownType, groupScope, group);
         group.validate(this, groupScope);
@@ -2761,12 +2835,7 @@ public class SqlValidatorImpl
             return;
         }
         final SqlValidatorScope whereScope = getWhereScope(select);
-        final SqlNode agg = aggFinder.findAgg(where);
-        if (agg != null) {
-            throw newValidationError(
-                agg,
-                EigenbaseResource.instance().AggregateIllegalInWhere.ex());
-        }
+        validateNoAggs(where, "WHERE");
         inferUnknownTypes(
             booleanType,
             whereScope,

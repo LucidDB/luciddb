@@ -44,8 +44,6 @@ import org.eigenbase.rex.*;
 public class PushSemiJoinPastJoinRule
     extends RelOptRule
 {
-    //  ~ Constructors --------------------------------------------------------
-
     //~ Constructors -----------------------------------------------------------
 
     public PushSemiJoinPastJoinRule()
@@ -53,9 +51,7 @@ public class PushSemiJoinPastJoinRule
         super(
             new RelOptRuleOperand(
                 SemiJoinRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JoinRel.class, null)
-                }));
+                new RelOptRuleOperand(JoinRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -177,7 +173,7 @@ public class PushSemiJoinPastJoinRule
                 rightJoinRel,
                 joinRel.getCondition(),
                 joinRel.getJoinType(),
-                (Set<String>) Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 joinRel.isSemiJoinDone());
 
         call.transformTo(newJoinRel);

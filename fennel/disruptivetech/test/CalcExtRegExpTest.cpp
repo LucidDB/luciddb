@@ -69,8 +69,8 @@ class CalcExtRegExpTest : virtual public TestBase, public TraceSource
                      Calculator const & calc);
     void refLocalOutput(ostringstream& pg, 
                         int count);
-    static char* truncErr;
-    static char* substrErr;
+    static const char* truncErr;
+    static const char* substrErr;
     
 public:
     explicit CalcExtRegExpTest()
@@ -89,10 +89,10 @@ public:
     }
 };
 
-char *
+const char *
 CalcExtRegExpTest::truncErr = "22001";
 
-char *
+const char *
 CalcExtRegExpTest::substrErr = "22011";
 
 int

@@ -44,11 +44,11 @@ typedef TupleDescriptor ** TRegisterSetDescP;
 typedef uint32_t TRegisterRefProp;
 
 
-//! How a register set is bound to data. 
+//! How a register set is bound to data.
 class RegisterSetBinding
 {
     const bool ownTheBase;              // we own (and will delete) the base
-    uint ncols; 
+    uint ncols;
     TupleData *const base;              // the underlying data
     PConstBuffer *datumAddr;            // we allocate
     // In this set, the nth register is bound to TupleDatum d = (*base)[n].
@@ -95,11 +95,11 @@ public:
 //! non-templated interface to RegisterRef.
 //!
 //! Optionally optimizes subsequent reads and writes and resets pointers.
-//! 
+//!
 //! To provide different properties in RegisterReferences, such as
 //! read-only access, and resetability, in a "clean" way would require
 //! run-time-polymorphism in the Instruction tree. At this point the
-//! extra overhead of function pointers and vtables doesn't seem like 
+//! extra overhead of function pointers and vtables doesn't seem like
 //! the best choice for this performance critical object. So, for
 //! the moment, object properties will be internal-state-based vs.
 //! object-type-based.
@@ -108,7 +108,7 @@ class RegisterReference
 public:
     //! Index all register sets
     enum ERegisterSet {
-        EFirstSet = 0,  
+        EFirstSet = 0,
         ELiteral =  0,
         EInput =    1,
         EOutput =   2,
@@ -128,7 +128,7 @@ public:
           mCbData(0),
           mCbStorage(0),
           mPDynamicParamManager(0)
-    { 
+    {
         mProp = EPropNone;
     }
 
@@ -153,7 +153,7 @@ public:
         assert(mSetIndex >= EFirstSet);
         setDefaultProperties();
     }
-  
+
     virtual
     ~RegisterReference() { }
 
@@ -187,7 +187,7 @@ public:
     static const uint32_t KStatusSetDefault  = EPropNone;
 
     //! Provides a pointer to encapsulating Calculator
-    //! 
+    //!
     //! Must be in .cpp file for recursive include requirement reasons.
     //! Refers to Calculator and RegisterReference objects. See
     //! also Calculator#outputRegisterByReference().
@@ -205,13 +205,13 @@ public:
         return mSetIndex;
     }
     //! Returns register index within a set.
-    unsigned long index() const 
+    unsigned long index() const
     {
         return mIndex;
     }
     //! Is this a valid RegisterReference?
     bool isValid() const
-    { 
+    {
         return ((mSetIndex < ELastSet) ? true : false);
     }
     //! Returns type information.
@@ -220,7 +220,7 @@ public:
     }
 
     //! Returns a string describing the register set
-    static inline string getSetName(ERegisterSet set) 
+    static inline string getSetName(ERegisterSet set)
     {
         switch (set) {
         case ELiteral:
@@ -235,10 +235,10 @@ public:
             return "S";
         default:
             throw std::invalid_argument(
-                "fennel/disruptivetech/calc/RegisterReference::getSetName"); 
+                "fennel/disruptivetech/calc/RegisterReference::getSetName");
         }
     }
-    
+
 
     //! Provides a nicely formatted string describing the register for the
     //! specified set and index
@@ -281,11 +281,11 @@ public:
 
 protected:
     //! Register set index
-    const ERegisterSet mSetIndex;       
-    
+    const ERegisterSet mSetIndex;
+
     //! Register index within a register set.
     const unsigned long mIndex;
-    
+
     //! Underlying type of register.
     const StandardTypeDescriptorOrdinal mType;
 
@@ -306,7 +306,7 @@ protected:
 
     //! Cached pointer was set to null or moved
     bool mCachePtrModified;
-    
+
     //! Cached and/or duplicated data pointer.
     //!
     //! Only valid if CachePointer or PtrReset property is set.
@@ -323,7 +323,7 @@ protected:
     TupleStorageByteLength mCbStorage;
 
     //! Behavior properties of this register.
-    TRegisterRefProp mProp; 
+    TRegisterRefProp mProp;
 
     //! The DynamicParamManager set after a call to setCalc
     DynamicParamManager* mPDynamicParamManager;
@@ -379,7 +379,7 @@ public:
         if (0) {
             assert(!(mProp & EPropReadOnly));
         }
-        
+
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             assert(mPData);
             *(reinterpret_cast<TMPLT*>(mPData)) = newV;
@@ -388,6 +388,12 @@ public:
             assert(bind->pData);
             *(reinterpret_cast<TMPLT*>(const_cast<PBuffer>(bind->pData))) = newV;
         }
+    }
+
+    //! Returns true if the register can be set to null.
+    bool isNullable()
+    {
+        return !(mProp & EPropReadOnly);
     }
 
     //! Sets a register to null.
@@ -406,7 +412,7 @@ public:
             TupleDatum *bind = getBinding();
             bind->pData = NULL;
         }
-        
+
     }
     //! Checks if register is null.
     bool isNull() const {
@@ -416,11 +422,11 @@ public:
             TupleDatum *bind = getBinding();
             return (bind->pData ? false : true );
         }
-        
+
     }
     //! Gets pointer value, rather than what pointer references.
     //!
-    //! Used by PointerInstruction, where TMPLT is a pointer 
+    //! Used by PointerInstruction, where TMPLT is a pointer
     //! type, never in other Instruction types, where TMPLT
     //! is not a pointer.
     TMPLT
@@ -437,7 +443,7 @@ public:
     }
     //! Sets pointer value, rather than what pointer references.
     //!
-    //! Used by PointerInstruction, where TMPLT is a pointer 
+    //! Used by PointerInstruction, where TMPLT is a pointer
     //! type, never in other Instruction types, where TMPLT
     //! is not a pointer.
     //! Will append to mResetP to allow register to be reset.
@@ -457,7 +463,7 @@ public:
         } else {
             TupleDatum *bind = getBinding();
             bind->pData = reinterpret_cast<PConstBuffer>(newP);
-            bind->cbData = len; 
+            bind->cbData = len;
         }
     }
     //! Gets reference by pointer for non-pointer types
@@ -592,7 +598,7 @@ public:
         }
     }
 protected:
-    
+
 };
 
 FENNEL_END_NAMESPACE

@@ -42,9 +42,10 @@ public class FennelAggRule
      */
     public FennelAggRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 AggregateRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

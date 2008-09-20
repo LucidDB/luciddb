@@ -521,8 +521,8 @@ public class CalcProgramBuilder
         int ordinal,
         CalcProgramBuilder.RegisterSetType registerType)
     {
-        List<CalcReg> registerSet = registerSets.getSet(registerType);
-        return registerSet.get(ordinal);
+        List<CalcReg> regList = registerSets.getRegisterList(registerType);
+        return regList.get(ordinal);
     }
 
     /**
@@ -597,19 +597,19 @@ public class CalcProgramBuilder
         PrintWriter writer,
         RegisterSetType registerSetType)
     {
-        List<CalcReg> list = registerSets.getSet(registerSetType);
-        if (null == list) {
+        List<CalcReg> regList = registerSets.getRegisterList(registerSetType);
+        if (regList.isEmpty()) {
             return;
         }
         writer.print(registerSetType.prefix);
         writer.print(" ");
 
         // Iterate over every register in the current set
-        for (int j = 0; j < list.size(); j++) {
+        for (int j = 0; j < regList.size(); j++) {
             if (j > 0) {
                 writer.print(", ");
             }
-            CalcReg reg = list.get(j);
+            CalcReg reg = regList.get(j);
             assert reg.getRegisterType() == registerSetType;
             writer.print(reg.getOpType());
             switch (reg.getOpType()) {
@@ -641,16 +641,17 @@ public class CalcProgramBuilder
 
     private void generateRegValues(PrintWriter writer)
     {
-        List<CalcReg> list = registerSets.getSet(RegisterSetType.Literal);
-        if (null == list) {
+        List<CalcReg> regList =
+            registerSets.getRegisterList(RegisterSetType.Literal);
+        if (regList.isEmpty()) {
             return;
         }
         writer.print("V ");
-        for (int j = 0; j < list.size(); j++) {
+        for (int j = 0; j < regList.size(); j++) {
             if (j > 0) {
                 writer.print(", ");
             }
-            CalcReg reg = list.get(j);
+            CalcReg reg = regList.get(j);
 
             //final Object value = reg.getValue();
             //assert value != null;
@@ -1543,28 +1544,39 @@ public class CalcProgramBuilder
      */
     protected class RegisterSets
     {
-        private final List<CalcReg> [] sets =
-            new ArrayList[RegisterSetType.ValueCount];
+        private final List<List<CalcReg>> sets =
+            new ArrayList<List<CalcReg>>(RegisterSetType.ValueCount);
 
-        public void clear()
+        RegisterSets()
         {
-            for (int i = 0; i < sets.length; i++) {
-                if (sets[i] != null) {
-                    sets[i].clear();
-                }
+            for (int i = 0; i < RegisterSetType.ValueCount; ++i) {
+                sets.add(new ArrayList<CalcReg>());
             }
         }
 
-        public final List<CalcReg> getSet(RegisterSetType registerSetType)
+        public void clear()
         {
-            return sets[registerSetType.ordinal()];
+            for (List<CalcReg> set : sets) {
+                set.clear();
+            }
+        }
+
+        /**
+         * Returns the list of registers of a given type.
+         *
+         * @param registerSetType Type of register
+         * @return list of registers of given type, never null
+         */
+        public final List<CalcReg> getRegisterList(RegisterSetType registerSetType)
+        {
+            return sets.get(registerSetType.ordinal());
         }
 
         /**
          * Creates a register in a register set
          *
          * @param opType what type the value in the register should have
-         * @param initValue
+         * @param initValue initial value
          * @param registerType specifies in which register set the register
          * should live
          *
@@ -1581,19 +1593,16 @@ public class CalcProgramBuilder
                 registerType != null,
                 "null is an invalid RegisterSetType");
 
-            int set = registerType.ordinal();
-            if (null == sets[set]) {
-                sets[set] = new ArrayList<CalcReg>();
-            }
-
+            int ordinal = registerType.ordinal();
+            final List<CalcReg> set = sets.get(ordinal);
             CalcReg newReg =
                 new CalcReg(
                     opType,
                     initValue,
                     registerType,
                     storageBytes,
-                    sets[set].size());
-            sets[set].add(newReg);
+                    set.size());
+            set.add(newReg);
             return newReg;
         }
     }

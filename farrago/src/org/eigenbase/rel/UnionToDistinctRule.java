@@ -37,7 +37,7 @@ public class UnionToDistinctRule
 
     public UnionToDistinctRule()
     {
-        super(new RelOptRuleOperand(UnionRel.class, null));
+        super(new RelOptRuleOperand(UnionRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -51,15 +51,15 @@ public final class CorrelatorRel
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a Correlator.
+     * Creates a CorrelatorRel.
      *
-     * @param cluster {@link RelOptCluster}  this relational expression belongs
-     * to
-     * @param left left input relational expression
-     * @param right right input relational expression
-     * @param correlations set of expressions to set as variables each time a
-     * row arrives from the left input
-     * @param joinType
+     * @param cluster       cluster this relational expression belongs to
+     * @param left          left input relational expression
+     * @param right         right input relational expression
+     * @param joinCond      join condition
+     * @param correlations  set of expressions to set as variables each time a
+     *                      row arrives from the left input
+     * @param joinType      join type
      */
     public CorrelatorRel(
         RelOptCluster cluster,
@@ -76,12 +76,22 @@ public final class CorrelatorRel
             right,
             joinCond,
             joinType,
-            (Set<String>) Collections.EMPTY_SET);
+            Collections.<String>emptySet());
         this.correlations = correlations;
         assert (joinType == JoinRelType.LEFT)
             || (joinType == JoinRelType.INNER);
     }
 
+    /**
+     * Creates a CorrelatorRel with no join condition.
+     *
+     * @param cluster       cluster this relational expression belongs to
+     * @param left          left input relational expression
+     * @param right         right input relational expression
+     * @param correlations  set of expressions to set as variables each time a
+     *                      row arrives from the left input
+     * @param joinType      join type
+     */
     public CorrelatorRel(
         RelOptCluster cluster,
         RelNode left,
@@ -107,7 +117,7 @@ public final class CorrelatorRel
                 getCluster(),
                 left.clone(),
                 right.clone(),
-                cloneCorrelations(),
+                new ArrayList<Correlation>(correlations),
                 joinType);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -131,14 +141,14 @@ public final class CorrelatorRel
             });
     }
 
+    /**
+     * Returns the correlating expressions.
+     *
+     * @return correlating expressions
+     */
     public List<Correlation> getCorrelations()
     {
         return correlations;
-    }
-
-    public List<Correlation> cloneCorrelations()
-    {
-        return new ArrayList<Correlation>(correlations);
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -154,17 +164,33 @@ public final class CorrelatorRel
         private final int id;
         private final int offset;
 
+        /**
+         * Creates a correlation.
+         *
+         * @param id       Identifier
+         * @param offset   Offset
+         */
         public Correlation(int id, int offset)
         {
             this.id = id;
             this.offset = offset;
         }
 
+        /**
+         * Returns the identifier.
+         *
+         * @return identifier
+         */
         public int getId()
         {
             return id;
         }
 
+        /**
+         * Returns this correlation's offset.
+         *
+         * @return offset
+         */
         public int getOffset()
         {
             return offset;

@@ -54,7 +54,7 @@ public class FarragoJavaUdxRule
      */
     public FarragoJavaUdxRule()
     {
-        super(new RelOptRuleOperand(TableFunctionRel.class, null));
+        super(new RelOptRuleOperand(TableFunctionRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

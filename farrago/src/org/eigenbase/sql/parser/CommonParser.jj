@@ -1211,7 +1211,7 @@ SqlNode FromClause() :
                     e2,
                     SqlLiteral.createSymbol(
                         SqlJoinOperator.ConditionType.Using, usingPos),
-                    new SqlNodeList(list, getPos()),
+                    new SqlNodeList(list, usingPos),
                     joinTypePos);
             }
             |
@@ -3561,6 +3561,21 @@ SqlNode StandardFloorCeilOptions(SqlParserPos pos, boolean floorFlag) :
 }
 
 /**
+ * Parses the name of a JDBC function that is a token but is not reserved.
+ */
+String NonReservedJdbcFunctionName() :
+{
+}
+{
+    (
+        <SUBSTRING>
+    )
+    {
+        return getToken(0).image.toUpperCase();
+    }
+}
+
+/**
  * Parses the name of a function (either a compound identifier or
  * a reserved word which can be used as a function name).
  */
@@ -3661,6 +3676,7 @@ SqlIdentifier ContextVariable() :
 SqlNode JdbcFunctionCall() :
 {
     String name;
+    SqlIdentifier id;
     SqlNodeList args;
     SqlParserPos pos;
     SqlParserPos starPos;
@@ -3672,8 +3688,14 @@ SqlNode JdbcFunctionCall() :
             pos = getPos();
         }
         (
-            // SPECIAL CASE WHEN WE HAVE a {fn insert} call
+            // INSERT is a reserved word, but we need to handle {fn insert}
             <INSERT> { name = getToken(0).image.toUpperCase(); }
+            |
+            // For cases like {fn power(1,2)} and {fn lower('a')}
+            id = ReservedFunctionName() { name = id.getSimple(); }
+            |
+            // For cases like {fn substring('foo', 1,2)}
+            name = NonReservedJdbcFunctionName()
             |
             name = Identifier()
         )

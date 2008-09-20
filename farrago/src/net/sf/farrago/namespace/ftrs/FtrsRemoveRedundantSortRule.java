@@ -50,9 +50,7 @@ class FtrsRemoveRedundantSortRule
         super(
             new RelOptRuleOperand(
                 FennelSortRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FtrsIndexScanRel.class, null)
-                }));
+                new RelOptRuleOperand(FtrsIndexScanRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -126,7 +126,18 @@ public class SqlTrimFunction
         SqlNode ... operands)
     {
         assert functionQualifier == null;
-        assert (3 == operands.length);
+
+        // Be defensive, in case the parser instantiates a call using say
+        // "TRIM"('a').
+        if (operands.length != 3) {
+            operands = new SqlNode[] {
+                operands.length > 0 ? operands[0] : null,
+                operands.length > 1 ? operands[1] : null,
+                operands.length > 2
+                    ? operands[2]
+                    : SqlLiteral.createNull(SqlParserPos.ZERO)
+            };
+        }
         if (null == operands[0]) {
             operands[0] = SqlLiteral.createSymbol(Flag.BOTH, pos);
         }
@@ -142,9 +153,6 @@ public class SqlTrimFunction
         boolean throwOnFailure)
     {
         SqlCall call = callBinding.getCall();
-        SqlValidator validator = callBinding.getValidator();
-        SqlValidatorScope scope = callBinding.getScope();
-
         for (int i = 1; i < 3; i++) {
             if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                     callBinding,

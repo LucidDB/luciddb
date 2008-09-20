@@ -189,6 +189,18 @@ protected:
      */
     bool doDataflowClose;
 
+    class DynamicParamInfo
+    {
+    public:
+      std::vector<ExecStreamId> readerStreamIds;
+      std::vector<ExecStreamId> writerStreamIds;
+    };
+
+    /**
+     * Information on readers and writers of dynamic parameters.
+     */
+    std::map<DynamicParamId, DynamicParamInfo> dynamicParamMap;
+
     /**
      * Whether to allow execution without a real transaction.
      */
@@ -288,6 +300,16 @@ public:
     virtual void renderGraphviz(std::ostream &dotStream);
     virtual bool isAcyclic();
     virtual void closeProducers(ExecStreamId streamId);
+    virtual void declareDynamicParamWriter(
+        ExecStreamId streamId,
+        DynamicParamId dynamicParamId);
+    virtual void declareDynamicParamReader(
+        ExecStreamId streamId,
+        DynamicParamId dynamicParamId);
+    virtual const std::vector<ExecStreamId> &getDynamicParamWriters(
+        DynamicParamId dynamicParamId);
+    virtual const std::vector<ExecStreamId> &getDynamicParamReaders(
+        DynamicParamId dynamicParamId);
 };
 
 inline ExecStreamGraphImpl::GraphRep const &

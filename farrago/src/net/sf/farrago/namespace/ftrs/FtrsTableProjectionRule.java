@@ -31,6 +31,7 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.sql.SqlOperator;
 
 
 /**
@@ -53,9 +54,7 @@ class FtrsTableProjectionRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FtrsIndexScanRel.class, null)
-                }));
+                new RelOptRuleOperand(FtrsIndexScanRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -88,7 +87,7 @@ class FtrsTableProjectionRule
                 origScan,
                 origProject,
                 projectedColumnList,
-                Collections.EMPTY_SET,
+                Collections.<SqlOperator>emptySet(),
                 null,
                 newProjList);
 

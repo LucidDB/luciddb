@@ -82,7 +82,7 @@ void LcsClusterDump::dump(
     uint iV;                        // number of bit vectors
     uint8_t *pBit;
     uint16_t v[MaxReadBatch];       // temporary space to store row indexes
-    char *mode;
+    const char *mode;
 
     // set pointers for various offset arrays
 
@@ -224,7 +224,7 @@ void LcsClusterDump::dump(
 }
 
 // Interface into fennel trace to print a formatted string
-void LcsClusterDump::callTrace(char *format, ...)
+void LcsClusterDump::callTrace(const char *format, ...)
 {
     char buf[lnLen + 1];
     string str;

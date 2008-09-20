@@ -75,7 +75,7 @@ void
 CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
 {
     ostringstream pg("");
-    char* typesArray[] = {"s4", "u4", "s8", "u8", "s1", "u1", "s2","u2", "bo", "r", "d", "c,4", "vc,4", "b,4"};
+    const char* typesArray[] = {"s4", "u4", "s8", "u8", "s1", "u1", "s2","u2", "bo", "r", "d", "c,4", "vc,4", "b,4"};
     const uint N = sizeof(typesArray)/sizeof(typesArray[0]);
     string types;
     for (int i=0; i<N; i++) {
@@ -179,19 +179,19 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     dpm.createParam(DynamicParamId(10), outTupleDesc[10]);
     dpm.writeParam(DynamicParamId(10), dynamicData[10]);
 
-    char* data11 = "abc";
+    const char* data11 = "abc";
     dynamicData[11].pData = (PConstBuffer) data11;
     dynamicData[11].cbData = strlen(data11);
     dpm.createParam(DynamicParamId(11), outTupleDesc[11]);
     dpm.writeParam(DynamicParamId(11), dynamicData[11]);
 
-    char* data12 = "def";
+    const char* data12 = "def";
     dynamicData[12].pData = (PConstBuffer) data12;
     dynamicData[12].cbData = strlen(data12);
     dpm.createParam(DynamicParamId(12), outTupleDesc[12]);
     dpm.writeParam(DynamicParamId(12), dynamicData[12]);
 
-    char* data13 = "ghi";
+    const char* data13 = "ghi";
     dynamicData[13].pData = (PConstBuffer) data13;
     dynamicData[13].cbData = strlen(data13);
     dpm.createParam(DynamicParamId(13), outTupleDesc[13]);

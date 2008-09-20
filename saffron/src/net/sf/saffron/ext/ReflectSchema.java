@@ -20,7 +20,7 @@
 package net.sf.saffron.ext;
 
 import java.lang.reflect.Field;
-import java.util.List;
+import java.util.*;
 
 import net.sf.saffron.oj.OJConnectionRegistry;
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
@@ -133,7 +133,7 @@ public class ReflectSchema implements RelOptSchema
 
                     public List<RelCollation> getCollationList()
                     {
-                        return RelCollation.emptyList;
+                        return Collections.<RelCollation>emptyList();
                     }
 
                     public RelNode toRel(

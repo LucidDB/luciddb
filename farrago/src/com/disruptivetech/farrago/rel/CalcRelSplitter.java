@@ -646,7 +646,7 @@ levelLoop:
                 child,
                 rowType,
                 program,
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         }
 
         /**

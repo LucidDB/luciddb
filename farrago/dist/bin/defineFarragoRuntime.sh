@@ -18,4 +18,4 @@ SQLLINE_JAVA_ARGS="sqlline.SqlLine"
 
 JAVA_EXEC=${JAVA_HOME}/bin/java
 
-export LD_LIBRARY_PATH=$MAIN_DIR/lib/fennel
+export LD_LIBRARY_PATH=$MAIN_DIR/plugin:$MAIN_DIR/lib/fennel

@@ -41,9 +41,10 @@ public class UnionEliminatorRule
 
     public UnionEliminatorRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 UnionRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

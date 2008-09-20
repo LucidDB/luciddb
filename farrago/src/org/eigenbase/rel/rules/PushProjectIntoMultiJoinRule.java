@@ -44,9 +44,7 @@ public class PushProjectIntoMultiJoinRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(MultiJoinRel.class, null)
-                }));
+                new RelOptRuleOperand(MultiJoinRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

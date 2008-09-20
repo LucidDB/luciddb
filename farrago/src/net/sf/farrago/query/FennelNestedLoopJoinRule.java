@@ -58,9 +58,10 @@ public class FennelNestedLoopJoinRule
 
     public FennelNestedLoopJoinRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
             JoinRel.class,
-            null));
+            ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

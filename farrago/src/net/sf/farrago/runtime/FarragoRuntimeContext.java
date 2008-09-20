@@ -43,6 +43,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.plugin.FarragoPluginClassLoader;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -92,7 +93,7 @@ public class FarragoRuntimeContext
      */
     private final Map<Integer, FennelJavaHandle> streamIdToHandleMap =
         new HashMap<Integer, FennelJavaHandle>();
-    private final Object [] dynamicParamValues;
+    protected final Object [] dynamicParamValues;
 
     protected FennelStreamGraph streamGraph;
 
@@ -110,7 +111,7 @@ public class FarragoRuntimeContext
     private boolean isCanceled;
     protected boolean isClosed;
     private ClassLoader statementClassLoader;
-    private Map<String, RelDataType> resultSetTypeMap;
+    protected Map<String, RelDataType> resultSetTypeMap;
     protected long stmtId;
 
     private NativeRuntimeContext nativeContext;
@@ -145,15 +146,26 @@ public class FarragoRuntimeContext
 
         cursorMonitor = new Object();
 
+        FarragoPluginClassLoader classLoader = null;
+
+        if (session != null) {
+
+            classLoader = session.getPluginClassLoader();
+
+        } else {
+
+            statementClassLoader = classLoader = params.pluginClassLoader;
+        }
+
         dataWrapperCache =
             new FarragoDataWrapperCache(
                 this,
                 params.sharedDataWrapperCache,
-                session.getPluginClassLoader(),
+                classLoader,
                 params.repos,
                 params.fennelTxnContext.getFennelDbHandle(),
-                new FarragoSessionDataSource(session));
-
+                session != null ? new FarragoSessionDataSource(session) :
+                null);
         streamOwner = new StreamOwner();
     }
 
@@ -182,6 +194,7 @@ public class FarragoRuntimeContext
     // override CompoundClosableAllocation
     public synchronized void closeAllocation()
     {
+        tracer.fine("closing allocation " + isClosed);
         if (isClosed) {
             return;
         }
@@ -234,7 +247,7 @@ public class FarragoRuntimeContext
         streamOwner.closeAllocation();
         if (!isDml) {
             // For queries, this is called when the cursor is closed.
-            session.endTransactionIfAuto(true);
+            if (session != null) session.endTransactionIfAuto(true);
         }
         statementClassLoader = null;
 
@@ -295,7 +308,7 @@ public class FarragoRuntimeContext
         try {
             FemDataServer femServer =
                 (FemDataServer) mdrRepos.getByMofId(serverMofId);
-    
+
             FarragoMedDataServer server =
                 dataWrapperCache.loadServerFromCatalog(femServer);
             try {
@@ -494,7 +507,7 @@ public class FarragoRuntimeContext
     {
         streamIdToHandleMap.put(
             new Integer(streamId),
-            FennelDbHandle.allocateNewObjectHandle(owner, stream));
+            FennelDbHandleImpl.allocateNewObjectHandle(owner, stream));
     }
 
     /**
@@ -550,7 +563,7 @@ public class FarragoRuntimeContext
                         FarragoUtil.getFennelMemoryUsage(xmiFennelPlan);
                     entry.initialize(streamGraph, memUsage, true);
                 }
-                
+
                 public boolean isStale(Object value)
                 {
                     return false;
@@ -615,7 +628,7 @@ public class FarragoRuntimeContext
         txn.beginReadTxn();
         try {
             FennelStreamHandle streamHandle = getStreamHandle(streamName, true);
-    
+
             return new FennelTupleIter(
                 tupleReader,
                 streamGraph,
@@ -657,15 +670,15 @@ public class FarragoRuntimeContext
         FarragoReposTxnContext txn = repos.newTxnContext(true);
         txn.beginReadTxn();
         try {
-            FennelStreamHandle streamHandle = 
+            FennelStreamHandle streamHandle =
                 getStreamHandle(streamName, false);
-    
+
             FennelStreamHandle inputStreamHandle =
                 getStreamHandle(inputStreamName, true);
-    
+
             FarragoTransform.InputBinding inputBinding = null;
             for (FarragoTransform.InputBinding binding : inputBindings) {
-                // The binding's input stream name may be a buffer adapter 
+                // The binding's input stream name may be a buffer adapter
                 // created to handle provisioning of buffers.  It's name will
                 // be the stream name we're looking for plus some additional
                 // information.
@@ -675,7 +688,7 @@ public class FarragoRuntimeContext
                 }
             }
             assert (inputBinding != null);
-    
+
             return new FennelTransformTupleIter(
                 tupleReader,
                 streamGraph,
@@ -832,7 +845,7 @@ public class FarragoRuntimeContext
                 // TODO jvs 19-Jan-2005:  standard mechanism for tracing
                 // swallowed exceptions
             } finally {
-                EnkiMDRepository mdrRepos = 
+                EnkiMDRepository mdrRepos =
                     frame.context.getRepos().getEnkiMdrRepos();
                 mdrRepos.reattachSession(frame.reposSession);
             }
@@ -951,7 +964,7 @@ public class FarragoRuntimeContext
         if (!frame.allowSql) {
             throw FarragoResource.instance().NoDefaultConnection.ex();
         }
-        
+
         if (frame.connection == null) {
             FarragoSessionConnectionSource connectionSource =
                 frame.context.session.getConnectionSource();
@@ -961,7 +974,7 @@ public class FarragoRuntimeContext
             // to do that without disturbing the session.  And could
             // enforce READS/MODIFIES SQL DATA access.
 
-            EnkiMDRepository mdrRepos = 
+            EnkiMDRepository mdrRepos =
                 frame.context.getRepos().getEnkiMdrRepos();
             frame.reposSession = mdrRepos.detachSession();
         }
@@ -982,11 +995,19 @@ public class FarragoRuntimeContext
     public Class statementClassForName(String statementClassName)
     {
         try {
-            return Class.forName(
-                statementClassName,
-                true,
-                statementClassLoader);
+
+            if (null == statementClassLoader) {
+
+                return Class.forName(
+                    statementClassName,
+                    true,
+                    statementClassLoader);
+            }
+
+            return statementClassLoader.loadClass(statementClassName);
+
         } catch (ClassNotFoundException e) {
+
             tracer.log(
                 Level.SEVERE,
                 "Could not load statement class: " + statementClassName,
@@ -1202,6 +1223,7 @@ public class FarragoRuntimeContext
         {
             // traverse in reverse order
             ListIterator iter = allocations.listIterator(allocations.size());
+            tracer.info("closing stream owner with " + allocations);
             while (iter.hasPrevious()) {
                 FennelStreamGraph streamGraph =
                     (FennelStreamGraph) iter.previous();
