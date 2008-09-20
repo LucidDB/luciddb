@@ -243,7 +243,8 @@ public abstract class SqlOperatorTests
 
     public void testBetween()
     {
-        getTester().setFor(SqlStdOperatorTable.betweenOperator);
+        getTester().setFor(
+            SqlStdOperatorTable.betweenOperator, SqlTester.VmName.EXPAND);
         getTester().checkBoolean("2 between 1 and 3", Boolean.TRUE);
         getTester().checkBoolean("2 between 3 and 2", Boolean.FALSE);
         getTester().checkBoolean("2 between symmetric 3 and 2", Boolean.TRUE);
@@ -763,24 +764,20 @@ public abstract class SqlOperatorTests
                 null,
                 isFloat ? null : "1.79769313486231E308");
 
-            /*
-            // TODO: The following tests are slightly different depending on //
-             whether the java or fennel calc are used. //       Try to make them
-             the same            if (FennelCalc) { // Treated as FLOAT or DOUBLE
-             checkCastToString(maxNumericStrings[i], type, isFloat?
-             "3.402824E38": "1.797693134862316E308"); // Treated as DOUBLE
-             checkCastToString(minNumericStrings[i], null,     isFloat? null:
-             "4.940656458412465E-324"); // Treated as FLOAT or DOUBLE
-             checkCastToString(minNumericStrings[i], type,     isFloat?
-             "1.401299E-45": "4.940656458412465E-324"); } else if (JavaCalc) {
+            // TODO: The following tests are slightly different depending on
+            // whether the java or fennel calc are used.
+            // Try to make them the same
+            if (false /* fennel calc*/) { // Treated as FLOAT or DOUBLE
+                checkCastToString(maxNumericStrings[i], type, isFloat? "3.402824E38": "1.797693134862316E308"); // Treated as DOUBLE
+                checkCastToString(minNumericStrings[i], null, isFloat ? null : "4.940656458412465E-324"); // Treated as FLOAT or DOUBLE
+                checkCastToString(minNumericStrings[i], type, isFloat ? "1.401299E-45": "4.940656458412465E-324");
+            } else if (false /* JavaCalc */) {
              // Treated as FLOAT or DOUBLE
-             checkCastToString(maxNumericStrings[i], type,     isFloat?
-             "3.402823E38": "1.797693134862316E308"); // Treated as DOUBLE
-             checkCastToString(minNumericStrings[i], null,     isFloat? null:
-             null); // Treated as FLOAT or DOUBLE
-             checkCastToString(minNumericStrings[i], type,     isFloat?
-             "1.401298E-45": null); }
-             */
+             checkCastToString(maxNumericStrings[i], type, isFloat ? "3.402823E38": "1.797693134862316E308"); // Treated as DOUBLE
+             checkCastToString(minNumericStrings[i], null, isFloat ? null : null); // Treated as FLOAT or DOUBLE
+             checkCastToString(minNumericStrings[i], type, isFloat ? "1.401298E-45": null);
+            }
+
             checkCastFails("'notnumeric'", type, invalidCharMessage, true);
         }
 
@@ -3445,7 +3442,6 @@ public abstract class SqlOperatorTests
         getTester().checkType("count(1)", "BIGINT NOT NULL");
         getTester().checkType("count(1.2)", "BIGINT NOT NULL");
         getTester().checkType("COUNT(DISTINCT 'x')", "BIGINT NOT NULL");
-        if (true) return;	// Hersker 20080917: short-term fix for integration, TODO: Julian to fix
         getTester().checkFails(
             "^COUNT()^",
             "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments",
@@ -3511,7 +3507,6 @@ public abstract class SqlOperatorTests
         getTester().checkType("sum(1)", "INTEGER");
         getTester().checkType("sum(1.2)", "DECIMAL(2, 1)");
         getTester().checkType("sum(DISTINCT 1.5)", "DECIMAL(2, 1)");
-        if (true) return;	// Hersker 20080917: short-term fix for integration, TODO: Julian to fix
         getTester().checkFails(
             "^sum()^",
             "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments",
@@ -3591,7 +3586,6 @@ public abstract class SqlOperatorTests
         getTester().checkType("min(1)", "INTEGER");
         getTester().checkType("min(1.2)", "DECIMAL(2, 1)");
         getTester().checkType("min(DISTINCT 1.5)", "DECIMAL(2, 1)");
-        if (true) return;	// Hersker 20080917: short-term fix for integration, TODO: Julian to fix
         getTester().checkFails(
             "^min()^",
             "Invalid number of arguments to function 'MIN'. Was expecting 1 arguments",
@@ -3633,7 +3627,6 @@ public abstract class SqlOperatorTests
         getTester().checkType("max(1)", "INTEGER");
         getTester().checkType("max(1.2)", "DECIMAL(2, 1)");
         getTester().checkType("max(DISTINCT 1.5)", "DECIMAL(2, 1)");
-        if (true) return;	// Hersker 20080917: short-term fix for integration, TODO: Julian to fix
         getTester().checkFails(
             "^max()^",
             "Invalid number of arguments to function 'MAX'. Was expecting 1 arguments",

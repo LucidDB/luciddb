@@ -79,16 +79,18 @@ public abstract class SqlAggFunction
         SqlValidatorScope operandScope)
     {
         super.validateCall(call, validator, scope, operandScope);
-        assert(call.getOperands().length == 1);
+
         // For agg(expr), expr cannot itself contain aggregate function
         // invocations.  For example, SUM(2*MAX(x)) is illegal; when
         // we see it, we'll report the error for the SUM (not the MAX).
         // For more than one level of nesting, the error which results
         // depends on the traversal order for validation.
-        if (validator.isAggregate(call.getOperands()[0])) {
-            throw validator.newValidationError(
-                call,
-                EigenbaseResource.instance().NestedAggIllegal.ex());
+        for (SqlNode operand : call.getOperands()) {
+            if (validator.isAggregate(operand)) {
+                throw validator.newValidationError(
+                    call,
+                    EigenbaseResource.instance().NestedAggIllegal.ex());
+            }
         }
     }
 }
