@@ -134,6 +134,7 @@ ${farrago.test.jvmargs}
   <fileset dir="${unitsql.dir}" id="fileset.unitsql">
     <include name="**/*.sql"/>
     <exclude name="runner/**/*.sql"/>
+    <exclude name="med/scott.sql" unless="oracle.available"/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
@@ -213,6 +214,8 @@ ${farrago.test.jvmargs}
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${test.emma.classpath}" />
     <pathelement location="${diffj.dir}/share/diffj/diffj.jar" />
+    <!-- If the Oracle driver is available we will enable certain tests. -->
+    <pathelement location="${env.ORACLE_HOME}/jdbc/lib/ojdbc14.jar" />
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
@@ -239,6 +242,16 @@ ${farrago.test.jvmargs}
   <property name="fennel.cachePagesMax" value="1000"/>
   <property name="fennel.cachePagesInit" value="1000"/>
   <property name="fennel.groupCommitInterval" value="30"/>
+
+  <!-- Detect whether Oracle is available. If the Oracle driver is on the test
+       classpath, we assume that there is an Oracle database at
+       'jdbc:oracle:thin:@localhost:1521:xe', and that the scott/tiger schema
+       is populated, then we enable certain SQL/MED test(s). -->
+  <condition property="oracle.available">
+    <available
+      classname="oracle.jdbc.driver.OracleDriver"
+      classpathref="test.classpath"/>
+  </condition>
 
   <!-- Targets -->
 

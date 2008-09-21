@@ -147,13 +147,13 @@ public class FarragoModelLoader
             propsStream.close();
         }
 
-        Iterator iter = props.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
+        //noinspection unchecked
+        final Map<String, String> map = (Map) props;
+        for (Map.Entry<String, String> entry : map.entrySet()) {
             setStorageProperty(
-                entry.getKey().toString(),
+                entry.getKey(),
                 farragoProperties.expandProperties(
-                    entry.getValue().toString()));
+                    entry.getValue()));
         }
     }
 

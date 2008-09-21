@@ -93,6 +93,30 @@ class FarragoJdbcApproxParamDef
         }
     }
 
+    private Float getFloat(Object value)
+    {
+        if (value instanceof Number) {
+            Number n = (Number) value;
+            checkRange(
+                n.floatValue(),
+                min,
+                max);
+            return new Float(n.floatValue());
+        } else if (value instanceof Boolean) {
+            return (((Boolean) value).booleanValue() ? new Float(1)
+                : new Float(0));
+        } else if (value instanceof String) {
+            try {
+                BigDecimal bd = new BigDecimal(value.toString().trim());
+                return getFloat(bd);
+            } catch (NumberFormatException ex) {
+                throw newInvalidFormat(value);
+            }
+        } else {
+            throw newInvalidType(value);
+        }
+    }
+
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
@@ -100,7 +124,15 @@ class FarragoJdbcApproxParamDef
             checkNullable();
             return null;
         } else {
-            return getDouble(x);
+            switch (paramMetaData.type) {
+            case Types.REAL:
+                return getFloat(x);
+            case Types.FLOAT:
+            case Types.DOUBLE:
+                return getDouble(x);
+            default:
+                throw new AssertionError("bad type " + paramMetaData.type);
+            }
         }
     }
 }

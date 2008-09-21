@@ -119,15 +119,15 @@ class MedJdbcNameDirectory
             foreignQualifiedName = new String[] { foreignName };
         } else {
             // schema mapping
-            HashMap map = (HashMap) server.schemaMaps.get(schemaName);
-            if (map != null) {
-                schemaName = (String) map.get(foreignName);
+            Map<String, String> schemaMap = server.schemaMaps.get(schemaName);
+            if (schemaMap != null) {
+                schemaName = schemaMap.get(foreignName);
             }
             // table mapping
-            map = (HashMap) server.tableMaps.get(schemaName);
-            if (map != null) {
-                MedJdbcDataServer.Source sources =
-                    (MedJdbcDataServer.Source) map.get(foreignName);
+            Map<String, MedJdbcDataServer.Source> tableMap =
+                server.tableMaps.get(schemaName);
+            if (tableMap != null) {
+                MedJdbcDataServer.Source sources = tableMap.get(foreignName);
                 if (sources != null) {
                     schemaName = sources.getSchema();
                     foreignName = sources.getTable();
@@ -323,9 +323,9 @@ class MedJdbcNameDirectory
             boolean wantColumns =
                 query.getResultObjectTypes().contains(
                     FarragoMedMetadataQuery.OTN_COLUMN);
-            List tableListActual = new ArrayList();
-            List schemaListActual = new ArrayList();
-            List tableListOptimized = new ArrayList();
+            List<String> tableListActual = new ArrayList<String>();
+            List<String> schemaListActual = new ArrayList<String>();
+            List<String> tableListOptimized = new ArrayList<String>();
 
             // FRG-137: Since we rely on queryTable to populate the lists, we
             // need to do it for wantColumns even when !wantTables.
@@ -399,9 +399,9 @@ class MedJdbcNameDirectory
     private boolean queryTables(
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
-        List tableListActual,
-        List schemaListActual,
-        List tableListOptimized)
+        List<String> tableListActual,
+        List<String> schemaListActual,
+        List<String> tableListOptimized)
         throws SQLException
     {
         assert (schemaName != null);
@@ -496,9 +496,9 @@ class MedJdbcNameDirectory
     private boolean queryColumns(
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
-        List tableListActual,
-        List schemaListActual,
-        List tableListOptimized)
+        List<String> tableListActual,
+        List<String> schemaListActual,
+        List<String> tableListOptimized)
         throws SQLException
     {
         if (tableListOptimized.equals(Collections.singletonList("*"))) {
@@ -507,13 +507,13 @@ class MedJdbcNameDirectory
                 sink,
                 null,
                 null,
-                new HashSet(tableListActual));
+                new HashSet<String>(tableListActual));
         } else {
-            Iterator iter = tableListOptimized.iterator();
-            Iterator iter2 = schemaListActual.iterator();
+            Iterator<String> iter = tableListOptimized.iterator();
+            Iterator<String> iter2 = schemaListActual.iterator();
             while (iter.hasNext()) {
-                String tableName = (String) iter.next();
-                String actualSchemaName = (String) iter2.next();
+                String tableName = iter.next();
+                String actualSchemaName = iter2.next();
                 if (!queryColumnsImpl(
                         query, sink, tableName, actualSchemaName, null)) {
                     return false;
@@ -528,7 +528,7 @@ class MedJdbcNameDirectory
         FarragoMedMetadataSink sink,
         String tableName,
         String actualSchemaName,
-        Set tableSet)
+        Set<String> tableSet)
         throws SQLException
     {
         String [] schemaPatterns = getSchemaPattern();
@@ -618,15 +618,15 @@ class MedJdbcNameDirectory
             return new String[] { null };
         }
 
-        ArrayList allSchemas = new ArrayList();
+        List<String> allSchemas = new ArrayList<String>();
 
         // schema mapping
         if (server.getProperties().getProperty(
                 MedJdbcDataServer.PROP_SCHEMA_MAPPING) != null) {
-            HashMap map = (HashMap) server.schemaMaps.get(schemaName);
+            Map<String, String> map = server.schemaMaps.get(schemaName);
             if (map != null) {
-                for (Object s : map.values().toArray()) {
-                    if (!allSchemas.contains((String) s)) {
+                for (String s : map.values()) {
+                    if (!allSchemas.contains(s)) {
                         allSchemas.add(s);
                     }
                 }
@@ -636,11 +636,11 @@ class MedJdbcNameDirectory
         // table mapping
         if (server.getProperties().getProperty(
                 MedJdbcDataServer.PROP_TABLE_MAPPING) != null) {
-            HashMap map = (HashMap) server.tableMaps.get(schemaName);
+            Map<String, MedJdbcDataServer.Source> map =
+                server.tableMaps.get(schemaName);
             if (map != null) {
-                for (Iterator i = map.values().iterator(); i.hasNext();) {
-                    String sch =
-                        ((MedJdbcDataServer.Source) i.next()).getSchema();
+                for (MedJdbcDataServer.Source source : map.values()) {
+                    String sch = source.getSchema();
                     if (!allSchemas.contains(sch)) {
                         allSchemas.add(sch);
                     }
@@ -649,7 +649,7 @@ class MedJdbcNameDirectory
         }
 
         if (allSchemas.size() > 0) {
-            return (String []) allSchemas.toArray(
+            return allSchemas.toArray(
                 new String[allSchemas.size()]);
         } else {
             return new String[] { schemaName };
@@ -662,18 +662,17 @@ class MedJdbcNameDirectory
         String typeName,
         String schema)
     {
-        ArrayList allTables = new ArrayList();
+        List<String> allTables = new ArrayList<String>();
         String mapping = server.getProperties().getProperty(
             MedJdbcDataServer.PROP_TABLE_MAPPING);
         if (mapping != null) {
-            HashMap map = (HashMap) server.tableMaps.get(schemaName);
+            Map<String, MedJdbcDataServer.Source> map =
+                server.tableMaps.get(schemaName);
             if (map != null) {
-                for (Iterator i = map.values().iterator(); i.hasNext();) {
-                    MedJdbcDataServer.Source value =
-                        (MedJdbcDataServer.Source) i.next();
-                    String sch = value.getSchema();
+                for (MedJdbcDataServer.Source source : map.values()) {
+                    String sch = source.getSchema();
                     if (sch.equals(schema)) {
-                        allTables.add(value.getTable());
+                        allTables.add(source.getTable());
                     }
                 }
             }
@@ -681,7 +680,7 @@ class MedJdbcNameDirectory
         if (allTables.size() == 0) {
             return new String[] {getFilterPattern(query, typeName)};
         }
-        return (String []) allTables.toArray(
+        return allTables.toArray(
             new String[allTables.size()]);
     }
 
@@ -701,21 +700,22 @@ class MedJdbcNameDirectory
     }
 
     private String getMappedTableName(
-        String schema, String table, String origSchema)
+        String schema,
+        String table,
+        String origSchema)
     {
-        HashMap map = (HashMap) server.tableMaps.get(origSchema);
+        Map<String, MedJdbcDataServer.Source> map =
+            server.tableMaps.get(origSchema);
         if (map == null) {
             return table;
         }
 
-        Object[] keys = map.keySet().toArray();
-        Object[] sources = map.values().toArray();
-
-        for (int i = 0; i < sources.length; i++) {
-            String sch = ((MedJdbcDataServer.Source)sources[i]).getSchema();
-            String tab = ((MedJdbcDataServer.Source)sources[i]).getTable();
-            if (schema.equals(sch) && table.equals(tab)) {
-                return (String) keys[i];
+        for (Map.Entry<String, MedJdbcDataServer.Source> entry
+            : map.entrySet())
+        {
+            if (schema.equals(entry.getValue().getSchema())
+                && table.equals(entry.getValue().getTable())) {
+                return entry.getKey();
             }
         }
         return table;
@@ -751,38 +751,26 @@ class MedJdbcNameDirectory
         RelDataType currRowType,
         RelDataType srcRowType)
     {
-        HashMap<String, RelDataType> srcMap =
+        Map<String, RelDataType> srcMap =
             new HashMap<String, RelDataType>();
         for (RelDataTypeField srcField : srcRowType.getFieldList()) {
             srcMap.put(srcField.getName(), srcField.getType());
         }
 
-        ArrayList<String> fieldsVector = new ArrayList<String>();
-        ArrayList<RelDataType> typesVector = new ArrayList<RelDataType>();
+        List<String> fieldList = new ArrayList<String>();
+        List<RelDataType> typeList = new ArrayList<RelDataType>();
 
         for (RelDataTypeField currField : currRowType.getFieldList()) {
-            RelDataType type;
-            if (((type = srcMap.get(currField.getName())) != null)
-                && SqlTypeUtil.canCastFrom(
-                    currField.getType(),
-                    type,
-                    true))
+            RelDataType type = srcMap.get(currField.getName());
+            if (type != null
+                && SqlTypeUtil.canCastFrom(currField.getType(), type, true))
             {
-                fieldsVector.add(currField.getName());
-                typesVector.add(type);
+                fieldList.add(currField.getName());
+                typeList.add(type);
             }
         }
 
-        typesVector.trimToSize();
-        fieldsVector.trimToSize();
-        RelDataType [] types =
-            (RelDataType []) typesVector.toArray(
-                new RelDataType[typesVector.size()]);
-        String [] fields =
-            (String []) fieldsVector.toArray(new String[fieldsVector.size()]);
-
-        RelDataType rowType = typeFactory.createStructType(types, fields);
-        return rowType;
+        return typeFactory.createStructType(typeList, fieldList);
     }
 
     private void validateRowType(RelDataType rowType, RelDataType srcRowType)

@@ -59,8 +59,8 @@ public class FennelPipeTupleIter
     // byteBuffer is the current buffer, and belongs exclusively to the reader
     // (this object)
 
-    private ArrayQueue moreBuffers = null; // buffers from the writer, not yet
-                                           // read
+    /** buffers from the writer, not yet read */
+    private final ArrayQueue<ByteBuffer> moreBuffers;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -74,7 +74,7 @@ public class FennelPipeTupleIter
         super(tupleReader);
 
         // start with an empty buffer queue
-        moreBuffers = new ArrayQueue(2);
+        moreBuffers = new ArrayQueue<ByteBuffer>(2);
 
         // Create an empty byteBuffer which will cause us to fetch new rows the
         // first time our consumer tries to fetch. TODO: Add a new state 'have
