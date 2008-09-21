@@ -45,30 +45,6 @@ import org.eigenbase.util.*;
 public class FarragoOJRexBuiltinImplementor
     extends FarragoOJRexImplementor
 {
-    //~ Static fields/initializers ---------------------------------------------
-
-    // jhyde: The following constants are obsolete and are not used in aspen.
-    // TODO: remove the constants if they are not used in farrago.
-    public static final int FLOOR_FUNCTION = Function.FLOOR.ordinal();
-    public static final int CEIL_FUNCTION = Function.CEIL.ordinal();
-    public static final int ABS_FUNCTION = Function.ABS.ordinal();
-    public static final int POWER_FUNCTION = Function.POWER.ordinal();
-    public static final int LN_FUNCTION = Function.LN.ordinal();
-    public static final int LOG10_FUNCTION = Function.LOG10.ordinal();
-    public static final int SUBSTRING_FUNCTION = Function.SUBSTRING.ordinal();
-    public static final int OVERLAY_FUNCTION = Function.OVERLAY.ordinal();
-    public static final int MOD_FUNCTION = Function.MOD.ordinal();
-    public static final int EXP_FUNCTION = Function.EXP.ordinal();
-    public static final int CONCAT_OPERATOR = Function.CONCAT.ordinal();
-    public static final int TRIM_FUNCTION = Function.TRIM.ordinal();
-    public static final int POSITION_FUNCTION = Function.POSITION.ordinal();
-    public static final int CHAR_LENGTH_FUNCTION = Function.CHAR_LENGTH.ordinal();
-    public static final int CHARACTER_LENGTH_FUNCTION = Function.CHARACTER_LENGTH.ordinal();
-    public static final int UPPER_FUNCTION = Function.UPPER.ordinal();
-    public static final int LOWER_FUNCTION = Function.LOWER.ordinal();
-    public static final int INITCAP_FUNCTION = Function.INITCAP.ordinal();
-    public static final int CONVERT_FUNCTION = Function.CONVERT.ordinal();
-    public static final int TRANSLATE_FUNCTION = Function.TRANSLATE.ordinal();
 
     /**
      * Enumeration of SQL operators that can be implemented in OJ.
@@ -117,10 +93,6 @@ public class FarragoOJRexBuiltinImplementor
     {
         Variable varResult;
         Expression nullTest = null;
-        /*
-        System.out.println(operands[0]); System.out.println(call.operands[0]);
-         System.out.println(call.operands[0].getType());
-         */
 
         RelDataType retType = call.getType();
 
