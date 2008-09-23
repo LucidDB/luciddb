@@ -336,7 +336,7 @@ public abstract class FarragoReposImpl
         Pair<RefClass, String> catalogDesc = catalogCache.get(catalogName);
 
         CwmCatalog catalog;
-        if (catalogDesc != null && false) { // temporarily disable catalog cache to allow integration to proceed; jhyde 2008/9/20; TODO: re-enable
+        if (catalogDesc != null) {
             catalog = 
                 (CwmCatalog)getEnkiMdrRepos().getByMofId(
                     catalogDesc.right, catalogDesc.left);

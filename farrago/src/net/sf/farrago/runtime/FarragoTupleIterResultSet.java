@@ -207,7 +207,8 @@ public class FarragoTupleIterResultSet
                 allocationToClose.closeAllocation();
 
                 FarragoRepos repos = allocationToClose.getSession().getRepos();
-                repos.getEnkiMdrRepos().endDetachedSession(detachedSession);
+                repos.getEnkiMdrRepos().reattachSession(detachedSession);
+                repos.endReposSession();
             }
         }
         super.close();
