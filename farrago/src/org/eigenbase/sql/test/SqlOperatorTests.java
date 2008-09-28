@@ -3675,8 +3675,7 @@ public abstract class SqlOperatorTests
             values2,
             "ROWS 3 PRECEDING",
             "DECIMAL(2, 1) NOT NULL",
-            // Should be Arrays.asList("1.6", "1.2")
-            Arrays.asList("2.0", "1.0"),
+            Arrays.asList("1.6", "1.2"),
             0d);
         final String [] values3 = { "'foo'", "'bar'", "'name'" };
         getTester().checkWinAgg(
@@ -3705,8 +3704,7 @@ public abstract class SqlOperatorTests
             values2,
             "ROWS 3 PRECEDING",
             "DECIMAL(2, 1) NOT NULL",
-            // Should be Arrays.asList("1.6")
-            Arrays.asList("2.0"),
+            Arrays.asList("1.6"),
             0d);
         final String [] values3 = { "'foo'", "'bar'", "'name'" };
         getTester().checkWinAgg(
