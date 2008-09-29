@@ -1752,7 +1752,6 @@ public abstract class FarragoCatalogUtil
     public static void removeObsoleteStatistics(
         FemLabel label,
         FarragoRepos repos)
-        throws Exception
     {   
         // Locate the stats associated with the label by determining the
         // timestamps of the two labels that bound the specified label.
@@ -1772,32 +1771,36 @@ public abstract class FarragoCatalogUtil
             onlyLabel = true;
         }
         
-        // Start with RowCountStatistics
-        removeObsoleteStatisticsFromTable(
-            repos.allOfType(FemAbstractColumnSet.class),
-            FemAbstractColumnSet.class.getMethod("getRowCountStats"),
-            null,
-            lowerBound,
-            upperBound,
-            onlyLabel);
-
-        // Move on to ColumnHistogram
-        removeObsoleteStatisticsFromTable(
-            repos.allOfType(FemAbstractColumn.class),
-            FemAbstractColumn.class.getMethod("getHistogram"),
-            FemColumnHistogram.class.getMethod("getAnalyzeTime"),
-            lowerBound,
-            upperBound,
-            onlyLabel);
-        
-        // Finally, IndexStatistics
-        removeObsoleteStatisticsFromTable(
-            repos.allOfType(FemLocalIndex.class),
-            FemLocalIndex.class.getMethod("getIndexStats"),
-            FemIndexStatistics.class.getMethod("getAnalyzeTime"),
-            lowerBound,
-            upperBound,
-            onlyLabel);
+        try {
+            // Start with RowCountStatistics
+            removeObsoleteStatisticsFromTable(
+                repos.allOfType(FemAbstractColumnSet.class),
+                FemAbstractColumnSet.class.getMethod("getRowCountStats"),
+                null,
+                lowerBound,
+                upperBound,
+                onlyLabel);
+    
+            // Move on to ColumnHistogram
+            removeObsoleteStatisticsFromTable(
+                repos.allOfType(FemAbstractColumn.class),
+                FemAbstractColumn.class.getMethod("getHistogram"),
+                FemColumnHistogram.class.getMethod("getAnalyzeTime"),
+                lowerBound,
+                upperBound,
+                onlyLabel);
+            
+            // Finally, IndexStatistics
+            removeObsoleteStatisticsFromTable(
+                repos.allOfType(FemLocalIndex.class),
+                FemLocalIndex.class.getMethod("getIndexStats"),
+                FemIndexStatistics.class.getMethod("getAnalyzeTime"),
+                lowerBound,
+                upperBound,
+                onlyLabel);
+        } catch(Exception e) {
+            throw Util.newInternal(e);
+        }
     }   
    
     /**

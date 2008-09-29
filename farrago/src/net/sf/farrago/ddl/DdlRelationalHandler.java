@@ -617,17 +617,6 @@ public class DdlRelationalHandler
             false);
     }
     
-    // implement FarragoSessionDdlHandler
-    public void executeDrop(FemLabel label)
-        throws Exception
-    {
-        // Remove stats associated with the label being dropped.  Note that
-        // this needs to be done before the label is deleted from the
-        // catalog.
-        FarragoCatalogUtil.removeObsoleteStatistics(label, repos);
-    }
-    
-
     protected boolean isReplacingType(CwmModelElement obj)
     {
         return ((DdlValidator) medHandler.getValidator()).isReplacingType(obj);
