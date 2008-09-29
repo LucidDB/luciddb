@@ -114,7 +114,7 @@ public class FarragoTupleIterResultSet
         if (runtimeContext != null) {
             // Immediately detach session.  Another thread (think RMI) may be
             // the one to call next, we'll re-attach this session then.
-            detachMdrSession();
+            runtimeContext.detachMdrSession();
         }
     }
     
@@ -134,7 +134,7 @@ public class FarragoTupleIterResultSet
                 // the cursor.  This also checks for any pending cancel.
                 runtimeContext.setCursorState(true);
 
-                reattachMdrSession();
+                runtimeContext.reattachMdrSession();
                 reattachedMdrSession = true;
             }
             boolean rc = super.next();
@@ -148,7 +148,7 @@ public class FarragoTupleIterResultSet
                         // the transaction.
                         if(reattachedMdrSession) {
                             // Close expects the session to be detached.
-                            detachMdrSession();
+                            runtimeContext.detachMdrSession();
                             reattachedMdrSession = false;
                         }
                         runtimeContext.setCursorState(false);
@@ -163,7 +163,7 @@ public class FarragoTupleIterResultSet
         } finally {
             if (runtimeContext != null) {
                 if (reattachedMdrSession) {
-                    detachMdrSession();
+                    runtimeContext.detachMdrSession();
                     reattachedMdrSession = false;
                 }
                 
@@ -205,10 +205,7 @@ public class FarragoTupleIterResultSet
             // FarragoSessionRuntimeContext.closeAllocation().
             synchronized (allocationToClose.getSession()) {
                 allocationToClose.closeAllocation();
-
-                FarragoRepos repos = allocationToClose.getSession().getRepos();
-                repos.getEnkiMdrRepos().reattachSession(detachedSession);
-                repos.endReposSession();
+                allocationToClose.getRepos().endReposSession();
             }
         }
         super.close();
@@ -230,18 +227,6 @@ public class FarragoTupleIterResultSet
             wasNull = false;
         }
         return obj;
-    }
-    
-    private void detachMdrSession()
-    {
-        detachedSession = 
-            runtimeContext.getRepos().getEnkiMdrRepos().detachSession();
-    }
-    
-    private void reattachMdrSession()
-    {
-        runtimeContext.getRepos().getEnkiMdrRepos().reattachSession(
-            detachedSession);
     }
 }
 

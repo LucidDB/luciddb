@@ -919,6 +919,10 @@ Messages: {1}</text>
 <text>''{0}.{1}'' and ''{2}.{3}'' cannot both map to ''{4}.{5}''.</text>
 </exception>
 
+<exception id="460250" name="MedJdbc_InvalidDataSource">
+<text>Cannot find JNDI resource ''{0}''</text>
+</exception>
+
 <!-- NOTE:  Mock resources don't really need localization; this one is
      just here as an example of how to do i18n for wrapper properties.  -->
 
@@ -940,6 +944,10 @@ Messages: {1}</text>
 
 <message name="MedJdbc_PASSWORD_Description">
 <text>Password for authentication in source DBMS</text>
+</message>
+
+<message name="MedJdbc_JNDI_NAME_Description">
+<text>Name of the JNDI resource containing the DataSource for the source DBMS</text>
 </message>
 
 <message name="MedJdbc_EXTENDED_OPTIONS_Description">
@@ -1224,6 +1232,10 @@ Messages: {1}</text>
 <text>Invalid value ''{0}'' for byte property {1}</text>
 </exception>
 
+<exception id="490006" name="PluginInvalidStringProp">
+<text>Invalid value ''{0}'' for string property {1}</text>
+</exception>
+
 <exception id="490010" name="PluginJarLoadFailed">
 <text>Failed to load plugin jar ''{0}''</text>
 </exception>
@@ -1246,6 +1258,10 @@ Messages: {1}</text>
 
 <exception id="490060" name="PluginPropRequired">
 <text>Value required for property {0}</text>
+</exception>
+
+<exception id="490070" name="PluginPropsConflict">
+<text>Property {0} conflicts with property {1}</text>
 </exception>
 
 <!-- ====================================================================== -->

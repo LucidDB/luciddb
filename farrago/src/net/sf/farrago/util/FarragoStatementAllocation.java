@@ -37,6 +37,7 @@ public class FarragoStatementAllocation
 {
     //~ Instance fields --------------------------------------------------------
 
+    private Connection conn;
     private Statement stmt;
     private ResultSet resultSet;
 
@@ -47,6 +48,12 @@ public class FarragoStatementAllocation
         this.stmt = stmt;
     }
 
+    public FarragoStatementAllocation(Connection conn, Statement stmt)
+    {
+        this.conn = conn;
+        this.stmt = stmt;
+    }
+    
     //~ Methods ----------------------------------------------------------------
 
     public void setResultSet(ResultSet resultSet)
@@ -64,6 +71,14 @@ public class FarragoStatementAllocation
             stmt.close();
         } catch (SQLException ex) {
             // REVIEW:  is it OK to suppress?  Should at least trace.
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch(SQLException e) {
+                    // REVIEW:  is it OK to suppress?  Should at least trace.
+                }
+            }
         }
     }
 

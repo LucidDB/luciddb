@@ -157,6 +157,23 @@ public interface FarragoSessionRuntimeContext
     public FarragoRepos getRepos();
 
     /**
+     * Detaches the current MDR session from the running thread.  The detached
+     * session is stored for later re-attachment and is automatically
+     * re-attached and closed if when the runtime context is closed. 
+     */
+    public void detachMdrSession();
+    
+    /**
+     * Re-attaches a detachd MDR session to the currently running thread,
+     * if any.
+     */
+    public void reattachMdrSession();
+    
+    /**
+     * 
+     */
+    
+    /**
      * @return queue of warnings posted to this runtime context
      */
     public FarragoWarningQueue getWarningQueue();

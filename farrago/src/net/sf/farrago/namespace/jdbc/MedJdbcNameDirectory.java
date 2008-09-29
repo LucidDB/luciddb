@@ -150,7 +150,7 @@ class MedJdbcNameDirectory
         RelDataType origRowType = null;
         RelDataType mdRowType = null;
 
-        SqlDialect dialect = new SqlDialect(server.databaseMetaData);
+        SqlDialect dialect = new SqlDialect(server.getDatabaseMetaData());
         SqlSelect select =
             SqlStdOperatorTable.selectOperator.createCall(
                 null,
@@ -364,7 +364,7 @@ class MedJdbcNameDirectory
 
         ResultSet resultSet;
         try {
-            resultSet = server.databaseMetaData.getSchemas();
+            resultSet = server.getDatabaseMetaData().getSchemas();
             if (resultSet == null) {
                 return false;
             }
@@ -423,7 +423,7 @@ class MedJdbcNameDirectory
                 for (String tablePattern : tablePatterns) {
                     try {
                         resultSet =
-                            server.databaseMetaData.getTables(
+                            server.getDatabaseMetaData().getTables(
                                 server.catalogName,
                                 schemaPattern,
                                 tablePattern,
@@ -556,7 +556,7 @@ class MedJdbcNameDirectory
                 }
                 try {
                     resultSet =
-                        server.databaseMetaData.getColumns(
+                        server.getDatabaseMetaData().getColumns(
                             server.catalogName,
                             schemaPattern,
                             tablePattern,

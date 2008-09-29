@@ -115,6 +115,8 @@ public class FarragoRuntimeContext
     protected long stmtId;
 
     private NativeRuntimeContext nativeContext;
+    
+    private EnkiMDSession detachedSession;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -239,6 +241,10 @@ public class FarragoRuntimeContext
             // still have some cleanup to do.
             closeStreamGraph();
         }
+
+        if (detachedSession != null) {
+            reattachMdrSession();
+        }
     }
 
     private void closeStreamGraph()
@@ -305,24 +311,25 @@ public class FarragoRuntimeContext
         EnkiMDRepository mdrRepos = repos.getEnkiMdrRepos();
         mdrRepos.beginSession();
         mdrRepos.beginTrans(false);
+        FarragoMedDataServer server;
         try {
             FemDataServer femServer =
                 (FemDataServer) mdrRepos.getByMofId(serverMofId);
-
-            FarragoMedDataServer server =
-                dataWrapperCache.loadServerFromCatalog(femServer);
-            try {
-                Object obj = server.getRuntimeSupport(param);
-                if (obj instanceof FarragoAllocation) {
-                    addAllocation((FarragoAllocation) obj);
-                }
-                return obj;
-            } catch (Throwable ex) {
-                throw FarragoResource.instance().DataServerRuntimeFailed.ex(ex);
-            }
+            
+            server = dataWrapperCache.loadServerFromCatalog(femServer);
         } finally {
             mdrRepos.endTrans();
             mdrRepos.endSession();
+        }
+    
+        try {
+            Object obj = server.getRuntimeSupport(param);
+            if (obj instanceof FarragoAllocation) {
+                addAllocation((FarragoAllocation) obj);
+            }
+            return obj;
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().DataServerRuntimeFailed.ex(ex);
         }
     }
 
@@ -1209,6 +1216,21 @@ public class FarragoRuntimeContext
         } else {
             return true;
         }
+    }
+    
+    public void detachMdrSession()
+    {
+        Util.permAssert(
+            detachedSession == null,
+            "FarragoRuntimeContext only supports a single detached session");
+
+        detachedSession = getRepos().getEnkiMdrRepos().detachSession();
+    }
+    
+    public void reattachMdrSession()
+    {
+        getRepos().getEnkiMdrRepos().reattachSession(detachedSession);
+        detachedSession = null;
     }
 
     //~ Inner Classes ----------------------------------------------------------

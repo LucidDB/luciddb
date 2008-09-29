@@ -27,16 +27,25 @@ import java.lang.reflect.*;
 import java.sql.*;
 
 import java.util.*;
+import java.util.logging.*;
 import java.util.regex.*;
+
+import javax.naming.*;
+import javax.sql.*;
 
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.apache.commons.dbcp.*;
+import org.apache.commons.pool.*;
+import org.apache.commons.pool.impl.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
@@ -44,14 +53,54 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
+import sun.nio.ch.*;
 
 // TODO:  throw exception on unknown option?
 
 /**
  * MedJdbcDataServer implements the {@link FarragoMedDataServer} interface for
  * JDBC data.
- *
+ * 
+ * <p>MedJdbcDataServer provides three modes of operation:
+ * <ol>
+ * <li>
+ * When a JNDI resource name is provided, it obtains a {@link DataSource} 
+ * object from JNDI and obtains database connections from it.  The DataSource
+ * is assumed to represent a connection pool.  Validation queries and login
+ * timeouts are the responsibility of the data source.  When
+ * {@link #getConnection()} (or {@link #getDatabaseMetaData()}) are invoked, 
+ * a single {@link Connection} is borrowed from the pool and held until
+ * {@link #releaseResources()} or {@link #closeAllocation()} is invoked. A
+ * separate Connection is borrowed from the pool for each call to 
+ * {@link #getRuntimeSupport(Object)} and is returned when the associated
+ * {@link FarragoStatementAllocation} object is closed.
+ * </li>
+ * <li>
+ * When JDBC connection information is given (e.g., driver, URL, username,
+ * password), MedJdbcDataServer uses Apache Commons-DBCP to create a DataSource
+ * backed by a connection pool.  If a validation query is specified,the 
+ * DataSource is configured to execute it.  When {@link #getConnection()} 
+ * (or {@link #getDatabaseMetaData()}) are invoked, a single {@link Connection}
+ * is borrowed from the pool and held until {@link #releaseResources()} or 
+ * {@link #closeAllocation()} is invoked. A separate Connection is borrowed 
+ * from the pool for each call to {@link #getRuntimeSupport(Object)} and is 
+ * returned when the associated {@link FarragoStatementAllocation} object is 
+ * closed.
+ * </li>
+ * <li>
+ * When JDBC connection information is given and connection pooling is 
+ * {@link #PROP_DISABLE_CONNECTION_POOL disabled}, MedJdbcDataServer behaves 
+ * as it did before the introduction of connection pooling.  A single 
+ * {@link Connection} is obtained using the {@link DriverManager}. Validation
+ * queries are executed when the Connection is next used after a call to 
+ * {@link #releaseResources()}.  The same Connection is also used for 
+ * {@link #getRuntimeSupport(Object)}.  The Connection is held until 
+ * {@link #closeAllocation()} is invoked.
+ * </li>
+ * </ol>
+ * 
  * @author John V. Sichi
  * @version $Id$
  */
@@ -64,6 +113,7 @@ public class MedJdbcDataServer
     public static final String PROP_DRIVER_CLASS = "DRIVER_CLASS";
     public static final String PROP_USER_NAME = "USER_NAME";
     public static final String PROP_PASSWORD = "PASSWORD";
+    public static final String PROP_JNDI_NAME = "JNDI_NAME";
     public static final String PROP_CATALOG_NAME = "QUALIFYING_CATALOG_NAME";
     public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
     public static final String PROP_TABLE_NAME = "TABLE_NAME";
@@ -83,7 +133,22 @@ public class MedJdbcDataServer
         "DISABLED_PUSHDOWN_REL_PATTERN";
     public static final String PROP_SCHEMA_MAPPING = "SCHEMA_MAPPING";
     public static final String PROP_TABLE_MAPPING = "TABLE_MAPPING";
-
+    public static final String PROP_MAX_IDLE_CONNECTIONS = 
+        "MAX_IDLE_CONNECTIONS";
+    public static final String PROP_EVICTION_TIMER_PERIOD_MILLIS =
+        "EVICTION_TIMER_PERIOD_MILLIS";
+    public static final String PROP_MIN_EVICTION_IDLE_MILLIS =
+        "MIN_EVICTION_IDLE_MILLIS";
+    public static final String PROP_VALIDATION_TIMING = "VALIDATION_TIMING";
+    public static final String PROP_VALIDATION_TIMING_ON_BORROW = 
+        "ON_BORROW";
+    public static final String PROP_VALIDATION_TIMING_ON_RETURN = 
+        "ON_RETURN";
+    public static final String PROP_VALIDATION_TIMING_WHILE_IDLE = 
+        "WHILE_IDLE";
+    public static final String PROP_DISABLE_CONNECTION_POOL = 
+        "DISABLE_CONNECTION_POOL";
+    
     // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
     public static final String PROP_NAME = "NAME";
@@ -95,24 +160,61 @@ public class MedJdbcDataServer
     public static final String DEFAULT_DISABLED_PUSHDOWN_REL_PATTERN = "";
     public static final int DEFAULT_FETCH_SIZE = -1;
     public static final boolean DEFAULT_AUTOCOMMIT = true;
+    public static final int DEFAULT_MAX_IDLE_CONNECTIONS = 1;
+    public static final long DEFAULT_EVICTION_TIMER_PERIOD = -1L;
+    public static final long DEFAULT_MIN_EVICTION_IDLE_MILLIS = -1L;
+    public static final String DEFAULT_VALIDATION_TIMING = 
+        PROP_VALIDATION_TIMING_ON_BORROW;
+    public static final boolean DEFAULT_DISABLE_CONNECTION_POOL = false;
+    
+    private static final Logger logger = 
+        FarragoTrace.getClassTracer(MedJdbcDataServer.class);
 
+    
     //~ Instance fields --------------------------------------------------------
 
-    // TODO:  add a parameter for JNDI lookup of a DataSource so we can support
-    // app servers and distributed txns
-    protected Connection connection;
+    // TODO:  add support for distributed txns
+
+    protected DataSource dataSource;
+    
+    // Generic connection pool support
     protected Properties connectProps;
     protected String userName;
     protected String password;
     protected String url;
+    private GenericObjectPool connectionPool;
+    private int maxIdleConnections;
+    private long evictionTimerPeriodMillis;
+    private long minEvictionIdleMillis;
+
+    // JNDI DataSource name
+    protected String jndiName;
+    
+    // Prepare-time connection and metadata
+    private Connection connection;
+    protected boolean supportsMetaData;
+    private DatabaseMetaData databaseMetaData;
+    
+    /*
+     * When set to true, MedJdbcDataServer behaves as it did prior to the
+     * introduction of connection pooling.
+     */
+    private boolean disableConnectionPool;
+    
+    /**
+     * If {@link #disableConnectionPool} is true, used to determine when to
+     * re-validate the connection.
+     */
+    private boolean validateConnection = false;
+    
     protected String catalogName;
     protected String schemaName;
     protected String [] tableTypes;
     protected String loginTimeout;
-    protected boolean supportsMetaData;
-    protected DatabaseMetaData databaseMetaData;
-    protected boolean validateConnection = false;
     protected String validationQuery;
+    private boolean validateOnBorrow;
+    private boolean validateOnReturn;
+    private boolean validateWhileIdle;
     protected boolean useSchemaNameAsForeignQualifier;
     protected boolean lenient;
     protected Pattern disabledPushdownPattern;
@@ -137,22 +239,88 @@ public class MedJdbcDataServer
     {
         Properties props = getProperties();
         connectProps = null;
-        requireProperty(props, PROP_URL);
+
+        jndiName = props.getProperty(PROP_JNDI_NAME);
+
+        if (jndiName == null) {
+            requireProperty(props, PROP_URL);
+        }
+        
         url = props.getProperty(PROP_URL);
         userName = props.getProperty(PROP_USER_NAME);
         password = props.getProperty(PROP_PASSWORD);
+        
+        disableConnectionPool = 
+            getBooleanProperty(
+                props, 
+                PROP_DISABLE_CONNECTION_POOL,
+                DEFAULT_DISABLE_CONNECTION_POOL);
+        
+        if (jndiName != null) {
+            if (url != null) {
+                throw FarragoResource.instance().PluginPropsConflict.ex(
+                    PROP_JNDI_NAME, PROP_URL);
+            }
+            if (userName != null) {
+                throw FarragoResource.instance().PluginPropsConflict.ex(
+                    PROP_JNDI_NAME, PROP_USER_NAME);                
+            }
+            if (password != null) {
+                throw FarragoResource.instance().PluginPropsConflict.ex(
+                    PROP_JNDI_NAME, PROP_PASSWORD);                
+            }
+            if (disableConnectionPool) {
+                throw FarragoResource.instance().PluginPropsConflict.ex(
+                    PROP_JNDI_NAME, PROP_DISABLE_CONNECTION_POOL);                
+            }
+        }
+        
         schemaName = props.getProperty(PROP_SCHEMA_NAME);
         catalogName = props.getProperty(PROP_CATALOG_NAME);
-        loginTimeout = props.getProperty(PROP_LOGIN_TIMEOUT);
-        validationQuery = props.getProperty(PROP_VALIDATION_QUERY);
+        if (jndiName == null) {
+            loginTimeout = props.getProperty(PROP_LOGIN_TIMEOUT);
+            validationQuery = props.getProperty(PROP_VALIDATION_QUERY);
+            
+            if (!disableConnectionPool) {
+                String validationTimingProp = 
+                    props.getProperty(
+                        PROP_VALIDATION_TIMING, DEFAULT_VALIDATION_TIMING);
+                for(String validationTiming: validationTimingProp.split(",")) {
+                    validationTiming = validationTiming.trim().toUpperCase();
+                    if (validationTiming.equals(
+                            PROP_VALIDATION_TIMING_ON_BORROW))
+                    {
+                        validateOnBorrow = true;
+                    } else if (validationTiming.equals(
+                        PROP_VALIDATION_TIMING_ON_RETURN))
+                    {
+                        validateOnReturn = true;
+                    } else if (validationTiming.equals(
+                        PROP_VALIDATION_TIMING_WHILE_IDLE)) 
+                    {
+                        validateWhileIdle = true;
+                    } else {
+                        throw 
+                            FarragoResource.instance().PluginInvalidStringProp.ex(
+                                validationTiming, PROP_VALIDATION_TIMING);
+                    }
+                }
+            }
+        }
+        
         schemaMaps = new HashMap<String, Map<String, String>>();
         tableMaps = new HashMap<String, Map<String, Source>>();
 
         if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
+            if (jndiName != null) {
+                throw FarragoResource.instance().PluginPropsConflict.ex(
+                    PROP_JNDI_NAME, PROP_EXT_OPTIONS);                                
+            }
+            
             connectProps = (Properties) props.clone();
             removeNonDriverProps(connectProps);
         }
-
+        
         useSchemaNameAsForeignQualifier =
             getBooleanProperty(
                 props,
@@ -178,8 +346,13 @@ public class MedJdbcDataServer
             tableTypes = tableTypeString.split(",");
         }
 
-        if (loginTimeout != null) {
+        // Ignore login timeout if JNDI lookup will be used.
+        if (loginTimeout != null && jndiName == null) {
             try {
+                // REVIEW: SWZ: 2008-09-03: This is a global setting. If
+                // multiple MedJdbcDataServers are configured with different
+                // values they'll step on each other.  Not to mention other
+                // plugins which may make their own calls! (See FRG-343)
                 DriverManager.setLoginTimeout(Integer.parseInt(loginTimeout));
             } catch (NumberFormatException ne) {
                 // ignore the timeout
@@ -190,92 +363,69 @@ public class MedJdbcDataServer
         autocommit =
             getBooleanProperty(props, PROP_AUTOCOMMIT, DEFAULT_AUTOCOMMIT);
 
-        createConnection();
-
-        String schemaMapping = props.getProperty(PROP_SCHEMA_MAPPING);
-        String tableMapping = props.getProperty(PROP_TABLE_MAPPING);
-
-        if (schemaMapping != null &&
-            tableMapping != null) {
-            throw FarragoResource.instance().MedJdbc_InvalidTableSchemaMapping
-                .ex();
+        if (!disableConnectionPool) {
+            maxIdleConnections = 
+                getIntProperty(
+                    props,
+                    PROP_MAX_IDLE_CONNECTIONS, 
+                    DEFAULT_MAX_IDLE_CONNECTIONS);
+            evictionTimerPeriodMillis =
+                getLongProperty(
+                    props,
+                    PROP_EVICTION_TIMER_PERIOD_MILLIS,
+                    DEFAULT_EVICTION_TIMER_PERIOD);
+            minEvictionIdleMillis =
+                getLongProperty(
+                    props, 
+                    PROP_MIN_EVICTION_IDLE_MILLIS,
+                    DEFAULT_MIN_EVICTION_IDLE_MILLIS);
+    
+            initializeDataSource();
         }
-
-        // schema mapping
-        if (schemaMapping != null) {
-            parseMapping(schemaMapping, false);
-        }
-
-        // table mapping
-        if (tableMapping != null) {
-            parseMapping(tableMapping, true);
+        
+        Connection conn = getConnection();
+        DatabaseMetaData databaseMetaData = getDatabaseMetaData();
+        
+        try {
+            String schemaMapping = props.getProperty(PROP_SCHEMA_MAPPING);
+            String tableMapping = props.getProperty(PROP_TABLE_MAPPING);
+    
+            if (schemaMapping != null &&
+                tableMapping != null) {
+                throw FarragoResource.instance().MedJdbc_InvalidTableSchemaMapping
+                    .ex();
+            }
+    
+            // schema mapping
+            if (schemaMapping != null) {
+                parseMapping(databaseMetaData, schemaMapping, false);
+            }
+    
+            // table mapping
+            if (tableMapping != null) {
+                parseMapping(databaseMetaData, tableMapping, true);
+            }
+        } catch(SQLException e) {
+            logger.log(Level.SEVERE, "Error initializing MedJdbc mappings", e);
+            closeAllocation();
+            throw e;
+        } catch(RuntimeException e) {
+            logger.log(Level.SEVERE, "Error initializing MedJdbc mappings", e);
+            closeAllocation();
+            throw e;
         }
     }
 
-    protected void createConnection()
-        throws SQLException
+    private void initMetaData()
     {
-        if ((connection != null) && !connection.isClosed()) {
-            if (validateConnection && (validationQuery != null)) {
-                Statement testStatement = connection.createStatement();
-                try {
-                    testStatement.executeQuery(validationQuery);
-                } catch (Exception ex) {
-                    // need to re-create connection
-                    closeAllocation();
-                    connection = null;
-                    validateConnection = false;
-                } finally {
-                    if (testStatement != null) {
-                        try {
-                            testStatement.close();
-                        } catch (SQLException ex) {
-                            // do nothing
-                        }
-                    }
-                }
-            } else {
-                return;
-            }
-
-            if (validateConnection) { // validation query successful
-                validateConnection = false;
-                return;
-            }
-        }
-
-        // Subclasses may obtain or modify the username and password stored in
-        // the properties. Give them their chance here.
-        String userName = getUserName();
-        String password = getPassword();
-
-        if (connectProps != null) {
-            if (userName != null) {
-                connectProps.setProperty("user", userName);
-            }
-            if (password != null) {
-                connectProps.setProperty("password", password);
-            }
-            connection = DriverManager.getConnection(url, connectProps);
-        } else if (userName == null) {
-            connection = DriverManager.getConnection(url);
-        } else {
-            connection = DriverManager.getConnection(url, userName, password);
-        }
-
-        if (connection instanceof FarragoJdbcEngineConnection) {
-            FarragoJdbcEngineConnection fjec =
-                (FarragoJdbcEngineConnection)connection;
-            fjec.getSession().setLoopback();
-        }
-
-        if (!autocommit) {
-            connection.setAutoCommit(false);
-        }
         try {
             databaseMetaData = connection.getMetaData();
             supportsMetaData = true;
         } catch (Exception ex) {
+            Util.swallow(ex, logger);
+        }
+        
+        if (databaseMetaData == null) {
             // driver can't even support getMetaData(); treat it
             // as brain-damaged
             databaseMetaData =
@@ -285,9 +435,97 @@ public class MedJdbcDataServer
                     new SqlUtil.DatabaseMetaDataInvocationHandler(
                         "UNKNOWN",
                         ""));
+            supportsMetaData = false;
         }
     }
+    
+    private void initializeDataSource() throws SQLException
+    {
+        assert(!disableConnectionPool);
+        
+        if (jndiName != null) {
+            try {
+                InitialContext initCtx = new InitialContext();
+                dataSource = (DataSource)initCtx.lookup(jndiName);
+                return;
+            } catch(NamingException e) {
+                throw FarragoResource.instance().MedJdbc_InvalidDataSource.ex(
+                    jndiName);
+            }
+        }
+        
+        String userName = getUserName();
+        String password = getPassword();
+        
+        ConnectionFactory connectionFactory;
+        if (connectProps != null) {
+            if (userName != null) {
+                connectProps.setProperty("user", userName);
+            }
+            if (password != null) {
+                connectProps.setProperty("password", password);
+            }
 
+            connectionFactory = 
+                new DriverManagerConnectionFactory(url, connectProps);
+        } else if (userName == null) {
+            connectionFactory = 
+                new DriverManagerConnectionFactory(url, new Properties());
+        } else {
+            if (password == null) {
+                password = "";
+            }
+            
+            connectionFactory = 
+                new DriverManagerConnectionFactory(
+                    url, userName, password);
+        }
+
+        if (validateWhileIdle && evictionTimerPeriodMillis <= 0L) {
+            logger.warning(
+                "Request to validate on idle ignored: property " +
+                PROP_EVICTION_TIMER_PERIOD_MILLIS +
+                " must be > 0");
+            
+            if (validationQuery != null &&
+                !validateOnBorrow &&
+                !validateOnReturn)
+            {
+                validateOnBorrow = true;
+                
+                logger.warning("Enabling validation on request");
+            }
+        }
+
+        connectionPool = new GenericObjectPool();
+        connectionPool.setWhenExhaustedAction(
+            GenericObjectPool.WHEN_EXHAUSTED_GROW);
+        connectionPool.setMaxActive(-1);
+        
+        connectionPool.setTestOnBorrow(validateOnBorrow);
+        connectionPool.setTestOnReturn(validateOnReturn);
+        connectionPool.setTestWhileIdle(validateWhileIdle);
+        
+        connectionPool.setMaxIdle(maxIdleConnections);
+        connectionPool.setTimeBetweenEvictionRunsMillis(
+            evictionTimerPeriodMillis);
+        connectionPool.setMinEvictableIdleTimeMillis(minEvictionIdleMillis);
+        
+        CustomPoolableConnectionFactory poolableConnectionFactory =
+            new CustomPoolableConnectionFactory(
+                connectionFactory,
+                connectionPool,
+                validationQuery,
+                autocommit,
+                null);
+        
+        connectionPool.setFactory(poolableConnectionFactory);
+        PoolingDataSource pds = new PoolingDataSource(connectionPool);
+        pds.setAccessToUnderlyingConnectionAllowed(true);
+        dataSource = pds;
+        
+    }
+    
     /**
      * Retrieve the configured user name for this data server.  Subclasses may
      * override this method to obtain the user name from an alternate source.
@@ -309,12 +547,180 @@ public class MedJdbcDataServer
     {
         return password;
     }
-
-    public Connection getConnection()
+    
+    /**
+     * Retrieve a Connection to this data server's configured database.
+     * The Connection returned by the first call to this method will continue
+     * to be returned until {@link #releaseResources()} is invoked.
+     * 
+     * <p>This Connection is <b>not</b> to be used for runtime query support,
+     * although DDL (such as IMPORT FOREIGN SCHEMA) may use it.
+     * 
+     * <p><b>NOTE:</b> if connection pooling is 
+     * {@link #PROP_DISABLE_CONNECTION_POOL disabled}, the Connection returned
+     * by this method will be re-used for runtime support and will be
+     * returned even after a call to {@link #releaseResources()}.
+     * 
+     * @return Connection to the database
+     * @throws SQLException if there's an error obtaining a connection
+     */
+    protected Connection getConnection()
         throws SQLException
     {
-        createConnection();
+        if (connection == null || connection.isClosed()) {
+            connection = newConnection();
+            initMetaData();
+        } else if (disableConnectionPool && 
+                   validateConnection && 
+                   validationQuery != null)
+        {
+            boolean validated = false;
+            Statement testStatement = connection.createStatement();
+            try {
+                testStatement.executeQuery(validationQuery);
+                validated = true;
+            } catch (Exception ex) {
+                // need to re-create connection
+                closeAllocation();
+            } finally {
+                if (testStatement != null) {
+                    try {
+                        testStatement.close();
+                    } catch (SQLException ex) {
+                        // do nothing
+                    }
+                }
+            }
+            
+            if (!validated) {
+                // Validation failed.
+                connection = newConnection();
+                initMetaData();
+            }
+            
+            validateConnection = false;
+        }
+        
         return connection;
+    }
+    
+    /**
+     * Retrieve a Connection object from the DataSource and set auto-commit
+     * mode if necessary.
+     * 
+     * @return a connection from the datasource
+     */
+    private Connection newConnection() throws SQLException
+    {
+        if (disableConnectionPool) {
+            // Subclasses may obtain or modify the username and password stored
+            // in the properties. Give them their chance here.
+            String userName = getUserName();
+            String password = getPassword();
+
+            Connection conn;
+            if (connectProps != null) {
+                if (userName != null) {
+                    connectProps.setProperty("user", userName);
+                }
+                if (password != null) {
+                    connectProps.setProperty("password", password);
+                }
+                conn = DriverManager.getConnection(url, connectProps);
+            } else if (userName == null) {
+                conn = DriverManager.getConnection(url);
+            } else {
+                conn = DriverManager.getConnection(url, userName, password);
+            }
+
+            markLoopbackConnection(conn);
+            
+            if (!autocommit) {
+                conn.setAutoCommit(false);
+            }
+
+            return conn;
+        } else {
+            Connection conn = dataSource.getConnection();
+    
+            // Skip fiddling with auto-commit if we've made our own connection
+            // pool: it's already calling setAutoCommit for us.
+            if (connectionPool == null && !autocommit) {
+                conn.setAutoCommit(false);
+            }
+    
+            return conn;
+        }
+    }
+
+    private void markLoopbackConnection(Connection conn)
+    {
+        if (conn instanceof FarragoJdbcEngineConnection) {
+            FarragoSession session =
+                ((FarragoJdbcEngineConnection)conn).getSession();
+            session.setLoopback();
+        }
+    }
+
+    
+    /**
+     * Retrieve database metadata for this data server's configured database.
+     * This method automatically invoked {@link #getConnection()} to obtain
+     * a Connection to the database.  The same {@link DatabaseMetaData} object
+     * will be returned for each call to this method until 
+     * {@link #releaseResources()} is invoked.
+     * 
+     * <p>This {@link DatabaseMetaData} object is <b>not</b> to be used for 
+     * runtime query support, although DDL (such as IMPORT FOREIGN SCHEMA) may
+     * use it.
+     * 
+     * <p><b>NOTE:</b> if connection pooling is 
+     * {@link #PROP_DISABLE_CONNECTION_POOL disabled}, the 
+     * {@link DatabaseMetaData} object returned by this method will be re-used 
+     * even after a call to {@link #releaseResources()}.
+     * 
+     * @return database metadata
+     * @throws SQLException if there's an error obtaining a connection or 
+     *                      metadata
+     */
+    protected DatabaseMetaData getDatabaseMetaData() throws SQLException
+    {
+        if (connection == null) {
+            getConnection();
+
+            assert(connection != null);
+        }
+        
+        assert(databaseMetaData != null);
+
+        return databaseMetaData;
+    }
+    
+    // implement FarragoMedDataServer
+    public void releaseResources()
+    {
+        if (disableConnectionPool) {
+            validateConnection = true;
+        } else {
+            // TODO: release connection pool's conn?  double check that
+            // auto commit is only being set once for prep and once for exec
+            closeConnection();
+        }
+    }
+
+    private void closeConnection()
+    {
+        if (connection != null) {
+            Connection conn = connection;
+            databaseMetaData = null;
+            connection = null;
+            try {
+                conn.close();
+            } catch(SQLException e) {
+                logger.log(
+                    Level.SEVERE, "Error closing resource connection", e);
+            }
+        }
     }
 
     protected static void removeNonDriverProps(Properties props)
@@ -341,6 +747,12 @@ public class MedJdbcDataServer
         props.remove(PROP_AUTOCOMMIT);
         props.remove(PROP_SCHEMA_MAPPING);
         props.remove(PROP_TABLE_MAPPING);
+        props.remove(PROP_JNDI_NAME);
+        props.remove(PROP_MAX_IDLE_CONNECTIONS);
+        props.remove(PROP_EVICTION_TIMER_PERIOD_MILLIS);
+        props.remove(PROP_MIN_EVICTION_IDLE_MILLIS);
+        props.remove(PROP_VALIDATION_TIMING);
+        props.remove(PROP_DISABLE_CONNECTION_POOL);
     }
 
     // implement FarragoMedDataServer
@@ -361,10 +773,10 @@ public class MedJdbcDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String, Properties> columnPropMap)
         throws SQLException
     {
-        assert (connection != null);
+        assert (dataSource != null);
         if (schemaName == null) {
             requireProperty(tableProps, PROP_SCHEMA_NAME);
         }
@@ -398,12 +810,29 @@ public class MedJdbcDataServer
     public Object getRuntimeSupport(Object param)
         throws SQLException
     {
-        assert (connection != null);
-
         String sql = (String) param;
-        Statement stmt = getConnection().createStatement();
-        FarragoStatementAllocation stmtAlloc =
-            new FarragoStatementAllocation(stmt);
+        
+        FarragoStatementAllocation stmtAlloc;
+        Statement stmt;
+        if (disableConnectionPool) {
+            Connection conn = getConnection();
+            stmt = conn.createStatement();
+            
+            // Leave connection open (closed by release resources)
+            stmtAlloc = new FarragoStatementAllocation(stmt);            
+        } else {
+            // N.B.: do not invoke getConnection(): We want to obtain multiple
+            // connections if there are multiple XOs requiring runtime support.
+            // MySQL (with streaming results) and loopback connections require 
+            // this behavior.
+            Connection conn = newConnection();
+            stmt = conn.createStatement();
+            
+            // Closes connection when no longer needed, which returns it to the 
+            // pool.
+            stmtAlloc = new FarragoStatementAllocation(conn, stmt);            
+        }
+        
         try {
             if (fetchSize != DEFAULT_FETCH_SIZE) {
                 stmt.setFetchSize(fetchSize);
@@ -550,23 +979,25 @@ public class MedJdbcDataServer
     // implement FarragoAllocation
     public void closeAllocation()
     {
-        if (connection != null) {
+        closeConnection();
+        
+        if (connectionPool != null) {
             try {
-                connection.close();
-            } catch (SQLException ex) {
-                // TODO:  trace?
+                dataSource = null;
+                GenericObjectPool pool = connectionPool;
+                connectionPool = null;
+                pool.close();
+            } catch(Exception e) {
+                logger.log(Level.SEVERE, "Error closing connection pool", e);
             }
         }
     }
 
-    // implement FarragoMedDataServer
-    public void releaseResources()
-    {
-        validateConnection = true;
-    }
-
-    private void parseMapping(String mapping, boolean isTableMapping)
-        throws SQLException
+    private void parseMapping(
+        DatabaseMetaData databaseMetaData,
+        String mapping,
+        boolean isTableMapping)
+    throws SQLException
     {
         String srcSchema = null;
         String srcTable = null;
@@ -649,6 +1080,7 @@ public class MedJdbcDataServer
                             targetTable);
                     } else {
                         createSchemaMaps(
+                            databaseMetaData,
                             srcTable,
                             targetTable);
                     }
@@ -673,6 +1105,7 @@ public class MedJdbcDataServer
                         targetTable);
                 } else {
                     createSchemaMaps(
+                        databaseMetaData,
                         srcTable,
                         targetTable);
                 }
@@ -680,8 +1113,9 @@ public class MedJdbcDataServer
         }
     }
 
-    private void createSchemaMaps(String key, String value)
-        throws SQLException
+    private void createSchemaMaps(
+        DatabaseMetaData databaseMetaData, String key, String value)
+    throws SQLException
     {
         if (key == null || value == null) {
             return;
@@ -790,6 +1224,146 @@ public class MedJdbcDataServer
         }
     }
 
+    /**
+     * CustomPoolableConnectionFactory is similar to DBCP's
+     * {@link PoolableConnectionFactory}, but allows us to better control
+     * when {@link Connection#setAutoCommit(boolean)} and 
+     * {@link Connection#setReadOnly(boolean)} are called. DBCP's 
+     * implementation always calls at least <code>setAutoCommit</code>.
+     * 
+     * <p>Examples: HSQLDB's <code>setReadOnly(false)</code> throws if 
+     * read-only mode is enabled in the URL.  CsvJdbc's 
+     * <code>setAutoCommit(boolean)</code> always throws.
+     */
+    private class CustomPoolableConnectionFactory
+        implements PoolableObjectFactory
+    {
+        private ConnectionFactory connectionFactory;
+        private ObjectPool objectPool;
+        private String validationQuery;
+        private boolean autoCommit;
+        private Boolean readOnly;
+        
+        public CustomPoolableConnectionFactory(
+            ConnectionFactory connectionFactory,
+            ObjectPool objectPool,
+            String validationQuery,
+            boolean autoCommit,
+            Boolean readOnly)
+        {
+            this.connectionFactory = connectionFactory;
+            this.objectPool = objectPool;
+            this.validationQuery = validationQuery;
+            this.autoCommit = autoCommit;
+            this.readOnly = readOnly;
+        }
+        
+        public Object makeObject() throws Exception 
+        {
+            Connection connection = connectionFactory.createConnection();
+            
+            markLoopbackConnection(connection);
+            
+            return new CustomPoolableConnection(connection, objectPool);
+        }
+
+        public void destroyObject(Object obj) throws Exception
+        {
+            if (obj instanceof PoolableConnection) {
+                ((PoolableConnection)obj).reallyClose();
+            }
+        }
+
+        public boolean validateObject(Object obj)
+        {
+            CustomPoolableConnection connection = 
+                (CustomPoolableConnection)obj;
+            try {
+                return validateConnection((Connection)obj);
+            } catch(Exception e) {
+                return false;
+            }           
+        }
+
+        private boolean validateConnection(Connection conn) 
+            throws SQLException
+        {
+            if (conn.isClosed()) {
+                return false;
+            }
+            
+            if (validationQuery != null) {
+                Statement stmt = conn.createStatement();
+                try {
+                    stmt.executeQuery(validationQuery);
+                } finally {
+                    stmt.close();
+                }
+            }
+            
+            return true;
+        }
+        
+        public void activateObject(Object obj) throws Exception
+        {
+            CustomPoolableConnection connection = 
+                (CustomPoolableConnection)obj;
+            
+            connection.activate();
+
+            if (getAutoCommit(connection) != autoCommit) {
+                connection.setAutoCommit(autoCommit);
+            }
+            
+            if (readOnly != null && connection.isReadOnly() != readOnly) {
+                connection.setReadOnly(readOnly);
+            }
+        }
+        
+        public void passivateObject(Object obj) throws Exception
+        {
+            CustomPoolableConnection connection = 
+                (CustomPoolableConnection)obj;
+
+            // Only rollback if transactions and writes are enabled.
+            if (!getAutoCommit(connection) && !connection.isReadOnly()) {
+                connection.rollback();
+            }
+            
+            connection.clearWarnings();
+            
+            connection.passivate();
+        }
+        
+        // Handle drivers that don't support reading autocommit state
+        private boolean getAutoCommit(Connection connection)
+        {
+            try {
+                return connection.getAutoCommit();
+            } finally {
+                return true;
+            }
+        }        
+    }
+    
+    private static class CustomPoolableConnection
+        extends PoolableConnection
+    {
+        public CustomPoolableConnection(Connection connection, ObjectPool pool)
+        {
+            super(connection, pool);
+        }
+        
+        protected void activate()
+        {
+            super.activate();
+        }
+        
+        protected void passivate() throws SQLException
+        {
+            super.passivate();
+        }
+    }
 }
 
 // End MedJdbcDataServer.java
