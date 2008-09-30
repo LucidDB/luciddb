@@ -826,4 +826,23 @@
 | WHERE "c_varchar" = 'varchar-03' OR "c_tinyint" > 127 OR "c_char" LIKE '%05%'])                                                                                                                                                                                                   |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FRG-339
+0: jdbc:luciddb:> select j from test.datatype where j;
++-------+
+|   J   |
++-------+
+| true  |
+| true  |
+| true  |
++-------+
+0: jdbc:luciddb:> explain plan for select j from test.datatype where j;
++------------------------------------------------------------+
+|                          column0                           |
++------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], J=[$t0], $condition=[$t0])  |
+|   ResultSetToFarragoIteratorConverter                      |
+|     MedJdbcQueryRel(foreignSql=[SELECT "c_boolean"         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                           |
++------------------------------------------------------------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
