@@ -162,17 +162,13 @@ public interface FarragoSessionRuntimeContext
      * re-attached and closed if when the runtime context is closed. 
      */
     public void detachMdrSession();
-    
+
     /**
-     * Re-attaches a detachd MDR session to the currently running thread,
-     * if any.
+     * Re-attaches a detached MDR session to the currently running thread,
+     * if any was previously detached.
      */
     public void reattachMdrSession();
-    
-    /**
-     * 
-     */
-    
+
     /**
      * @return queue of warnings posted to this runtime context
      */
