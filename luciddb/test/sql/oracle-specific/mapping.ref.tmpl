@@ -256,7 +256,7 @@ Error: From line 1, column 15 to line 1, column 25: Table 'TESTING3.T1' not foun
 . . . . . . . . >     table_mapping 'SCHOI.BILL:DEFAULT.T1;SCOTT.ADDR:DEFAULT.T3',
 . . . . . . . . >     schema_mapping 'SCHOI:DEFAULT;SCOTT.DEFAULT'
 . . . . . . . . > );
-Error: Cannot specify both a TABLE_MAPPING and a SCHEMA_MAPPING (state=,code=0)
+Error: Cannot specify more than one of SCHEMA_MAPPING, TABLE_MAPPING, or TABLE_PREFIX_MAPPING (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- table mapping with target_schema.target_table mapped 2x
 0: jdbc:luciddb:> -- allow this

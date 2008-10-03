@@ -55,8 +55,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
-import sun.nio.ch.*;
-
 // TODO:  throw exception on unknown option?
 
 /**
@@ -133,6 +131,8 @@ public class MedJdbcDataServer
         "DISABLED_PUSHDOWN_REL_PATTERN";
     public static final String PROP_SCHEMA_MAPPING = "SCHEMA_MAPPING";
     public static final String PROP_TABLE_MAPPING = "TABLE_MAPPING";
+    public static final String PROP_TABLE_PREFIX_MAPPING = 
+        "TABLE_PREFIX_MAPPING";
     public static final String PROP_MAX_IDLE_CONNECTIONS = 
         "MAX_IDLE_CONNECTIONS";
     public static final String PROP_EVICTION_TIMER_PERIOD_MILLIS =
@@ -222,7 +222,8 @@ public class MedJdbcDataServer
     private boolean autocommit;
     protected HashMap<String, Map<String, String>> schemaMaps;
     protected HashMap<String, Map<String, Source>> tableMaps;
-
+    protected Map<String, List<WildcardMapping>> tablePrefixMaps;
+    
     //~ Constructors -----------------------------------------------------------
 
     protected MedJdbcDataServer(
@@ -310,6 +311,7 @@ public class MedJdbcDataServer
         
         schemaMaps = new HashMap<String, Map<String, String>>();
         tableMaps = new HashMap<String, Map<String, Source>>();
+        tablePrefixMaps = new HashMap<String, List<WildcardMapping>>();
 
         if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
             if (jndiName != null) {
@@ -383,27 +385,29 @@ public class MedJdbcDataServer
             initializeDataSource();
         }
         
-        Connection conn = getConnection();
         DatabaseMetaData databaseMetaData = getDatabaseMetaData();
         
+        String schemaMapping = props.getProperty(PROP_SCHEMA_MAPPING);
+        String tableMapping = props.getProperty(PROP_TABLE_MAPPING);
+        String tablePrefix = props.getProperty(PROP_TABLE_PREFIX_MAPPING);
+        String tablePrefixMapping = 
+            props.getProperty(PROP_TABLE_PREFIX_MAPPING);
+
         try {
-            String schemaMapping = props.getProperty(PROP_SCHEMA_MAPPING);
-            String tableMapping = props.getProperty(PROP_TABLE_MAPPING);
-    
-            if (schemaMapping != null &&
-                tableMapping != null) {
+            if ((schemaMapping != null && tableMapping != null) ||
+                (schemaMapping != null && tablePrefixMapping != null) ||
+                (tableMapping != null && tablePrefixMapping != null))
+            {
                 throw FarragoResource.instance().MedJdbc_InvalidTableSchemaMapping
                     .ex();
             }
-    
-            // schema mapping
+
             if (schemaMapping != null) {
-                parseMapping(databaseMetaData, schemaMapping, false);
-            }
-    
-            // table mapping
-            if (tableMapping != null) {
-                parseMapping(databaseMetaData, tableMapping, true);
+                parseMapping(databaseMetaData, schemaMapping, false, false);
+            } else if (tableMapping != null) {
+                parseMapping(databaseMetaData, tableMapping, true, false);
+            } else if (tablePrefix != null) {
+                parseMapping(databaseMetaData, tablePrefixMapping, true, true);
             }
         } catch(SQLException e) {
             logger.log(Level.SEVERE, "Error initializing MedJdbc mappings", e);
@@ -414,6 +418,7 @@ public class MedJdbcDataServer
             closeAllocation();
             throw e;
         }
+        
     }
 
     private void initMetaData()
@@ -527,7 +532,7 @@ public class MedJdbcDataServer
     }
     
     /**
-     * Retrieve the configured user name for this data server.  Subclasses may
+     * Retrieves the configured user name for this data server.  Subclasses may
      * override this method to obtain the user name from an alternate source.
      * 
      * @return user name for this data server
@@ -538,7 +543,7 @@ public class MedJdbcDataServer
     }
     
     /**
-     * Retrieve the configured password for this data server.  Subclasses may
+     * Retrieves the configured password for this data server.  Subclasses may
      * override this method to obtain the password from an alternate source.
      * 
      * @return password for this data server
@@ -549,7 +554,7 @@ public class MedJdbcDataServer
     }
     
     /**
-     * Retrieve a Connection to this data server's configured database.
+     * Retrieves a Connection to this data server's configured database.
      * The Connection returned by the first call to this method will continue
      * to be returned until {@link #releaseResources()} is invoked.
      * 
@@ -605,7 +610,7 @@ public class MedJdbcDataServer
     }
     
     /**
-     * Retrieve a Connection object from the DataSource and set auto-commit
+     * Retrieves a Connection object from the DataSource and set auto-commit
      * mode if necessary.
      * 
      * @return a connection from the datasource
@@ -664,7 +669,7 @@ public class MedJdbcDataServer
 
     
     /**
-     * Retrieve database metadata for this data server's configured database.
+     * Retrieves database metadata for this data server's configured database.
      * This method automatically invoked {@link #getConnection()} to obtain
      * a Connection to the database.  The same {@link DatabaseMetaData} object
      * will be returned for each call to this method until 
@@ -747,6 +752,7 @@ public class MedJdbcDataServer
         props.remove(PROP_AUTOCOMMIT);
         props.remove(PROP_SCHEMA_MAPPING);
         props.remove(PROP_TABLE_MAPPING);
+        props.remove(PROP_TABLE_PREFIX_MAPPING);
         props.remove(PROP_JNDI_NAME);
         props.remove(PROP_MAX_IDLE_CONNECTIONS);
         props.remove(PROP_EVICTION_TIMER_PERIOD_MILLIS);
@@ -803,7 +809,8 @@ public class MedJdbcDataServer
             typeFactory,
             tableName,
             localName,
-            rowType);
+            rowType,
+            true);
     }
 
     // implement FarragoMedDataServer
@@ -996,9 +1003,15 @@ public class MedJdbcDataServer
     private void parseMapping(
         DatabaseMetaData databaseMetaData,
         String mapping,
-        boolean isTableMapping)
+        boolean isTableMapping,
+        boolean isTablePrefixMapping)
     throws SQLException
     {
+        if (!isTableMapping) {
+            // Force valid parameters.
+            isTablePrefixMapping = false;
+        }
+        
         String srcSchema = null;
         String srcTable = null;
         String targetSchema = null;
@@ -1009,7 +1022,7 @@ public class MedJdbcDataServer
 
         boolean insideQuotes = false;
         boolean atSource = true;
-
+        
         int len = mapping.length();
         int i = 0;
 
@@ -1073,11 +1086,19 @@ public class MedJdbcDataServer
                     atSource = true;
                     buffer.setLength(0);
                     if (isTableMapping) {
-                        createTableMaps(
-                            srcSchema,
-                            srcTable,
-                            targetSchema,
-                            targetTable);
+                        if (isTablePrefixMapping) {
+                            createTablePrefixMaps(
+                                srcSchema,
+                                srcTable,
+                                targetSchema,
+                                targetTable);
+                        } else {
+                            createTableMaps(
+                                srcSchema,
+                                srcTable,
+                                targetSchema,
+                                targetTable);
+                        }
                     } else {
                         createSchemaMaps(
                             databaseMetaData,
@@ -1098,11 +1119,19 @@ public class MedJdbcDataServer
                 targetTable = targetTable.trim();
                 buffer.setLength(0);
                 if (isTableMapping) {
-                    createTableMaps(
-                        srcSchema,
-                        srcTable,
-                        targetSchema,
-                        targetTable);
+                    if (isTablePrefixMapping) {
+                        createTablePrefixMaps(
+                            srcSchema,
+                            srcTable,
+                            targetSchema,
+                            targetTable);
+                    } else {
+                        createTableMaps(
+                            srcSchema,
+                            srcTable,
+                            targetSchema,
+                            targetTable);
+                    }
                 } else {
                     createSchemaMaps(
                         databaseMetaData,
@@ -1157,7 +1186,7 @@ public class MedJdbcDataServer
         String srcTable,
         String targetSchema,
         String targetTable)
-        throws SQLException
+    throws SQLException
     {
         if (srcSchema == null ||
             srcTable == null ||
@@ -1165,6 +1194,7 @@ public class MedJdbcDataServer
             targetTable == null) {
             return;
         }
+        
         Map<String, Source> h = tableMaps.get(targetSchema);
         if (h == null) {
             h = new HashMap<String, Source>();
@@ -1188,6 +1218,64 @@ public class MedJdbcDataServer
         tableMaps.put(targetSchema, h);
     }
 
+    private void createTablePrefixMaps(
+        String srcSchema,
+        String srcTablePrefix,
+        String targetSchema,
+        String targetTablePrefix)
+    throws SQLException
+    {
+        if (srcSchema == null ||
+            srcTablePrefix == null ||
+            targetSchema == null ||
+            targetTablePrefix == null)
+        {
+            return;
+        }
+        
+        if (srcTablePrefix.endsWith("%")) {
+            srcTablePrefix = 
+                srcTablePrefix.substring(0, srcTablePrefix.length() - 1);
+        }
+        
+        if (targetTablePrefix.endsWith("%")) {
+            targetTablePrefix = 
+                targetTablePrefix.substring(0, targetTablePrefix.length() - 1);
+        }
+        
+        List<WildcardMapping> list = tablePrefixMaps.get(targetSchema);
+        if (list == null) {
+            list = new ArrayList<WildcardMapping>();
+            tablePrefixMaps.put(targetSchema, list);
+        }
+        
+        WildcardMapping mapping = 
+            new WildcardMapping(
+                targetTablePrefix,
+                srcSchema,
+                srcTablePrefix);
+        
+        for(WildcardMapping m: list) {
+            if (m.targetTablePrefix.equals(targetTablePrefix)) {
+                // forgive the instance where the same source_schema and
+                // souoce_table are mapped again
+                if (!m.getSourceSchema().equals(srcSchema) ||
+                    !m.getSourceTablePrefix().equals(srcTablePrefix)) {
+                    throw FarragoResource.instance().MedJdbc_InvalidTablePrefixMapping
+                        .ex(
+                            m.getSourceSchema(), 
+                            m.getSourceTablePrefix(), 
+                            srcSchema, 
+                            srcTablePrefix,
+                            targetSchema, 
+                            targetTablePrefix);
+                }
+            }
+        }
+        
+        list.add(mapping);
+    }
+    
     private boolean isQuoteChar(String mapping, int index)
     {
         boolean isQuote = false;
@@ -1224,6 +1312,74 @@ public class MedJdbcDataServer
         }
     }
 
+    public static class WildcardMapping
+    {
+        final String targetTablePrefix;
+        final String sourceSchema;
+        final String sourceTablePrefix;
+        
+        WildcardMapping(
+            String targetTablePrefix, 
+            String sourceSchema, 
+            String sourceTablePrefix)
+        {
+            this.targetTablePrefix = targetTablePrefix;
+            this.sourceSchema = sourceSchema;
+            this.sourceTablePrefix = sourceTablePrefix;
+        }
+        
+        public String getTargetTablePrefix()
+        {
+            return targetTablePrefix;
+        }
+        
+        public String getSourceSchema()
+        {
+            return sourceSchema;
+        }
+        
+        public String getSourceTablePrefix()
+        {
+            return sourceTablePrefix;
+        }
+        
+        public boolean equals(Object o)
+        {
+            WildcardMapping that = (WildcardMapping)o;
+            
+            return 
+                this.targetTablePrefix.equals(that.targetTablePrefix) &&
+                this.sourceSchema.equals(that.sourceSchema) &&
+                this.sourceTablePrefix.equals(that.sourceTablePrefix);
+        }
+    }
+    
+    public static class WildcardTarget
+    {
+        final String tablePrefix;
+        
+        WildcardTarget(String tablePrefix)
+        {
+            this.tablePrefix = tablePrefix;
+        }
+        
+        public String getTablePrefix()
+        {
+            return tablePrefix;
+        }
+        public int hashCode()
+        {
+            return tablePrefix.hashCode();
+        }
+        
+        public boolean equals(Object o)
+        {
+            WildcardTarget that = (WildcardTarget)o;
+            
+            return this.tablePrefix.equals(that.tablePrefix);
+        }
+    }
+    
     /**
      * CustomPoolableConnectionFactory is similar to DBCP's
      * {@link PoolableConnectionFactory}, but allows us to better control
@@ -1279,7 +1435,7 @@ public class MedJdbcDataServer
             CustomPoolableConnection connection = 
                 (CustomPoolableConnection)obj;
             try {
-                return validateConnection((Connection)obj);
+                return validateConnection(connection);
             } catch(Exception e) {
                 return false;
             }           
@@ -1340,7 +1496,7 @@ public class MedJdbcDataServer
         {
             try {
                 return connection.getAutoCommit();
-            } finally {
+            } catch(Exception e) {
                 return true;
             }
         }        

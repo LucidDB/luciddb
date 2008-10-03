@@ -1,0 +1,174 @@
+0: jdbc:luciddb:> create foreign data wrapper MYSQL_WRAPPER
+. . . . . . . . > library '/home/szuercher/enki/open/dev/luciddb/plugin/FarragoMedJdbc3p.jar'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server MYSQL_MAPPING_1
+. . . . . . . . > foreign data wrapper MYSQL_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     schema_name '@SCHEMA@',
+. . . . . . . . >     table_types '@TABLE_TYPES@',
+. . . . . . . . >     lenient 'true',
+. . . . . . . . >     table_prefix_mapping '%.MAPPING_%:TEST.%'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server MYSQL_MAPPING_2
+. . . . . . . . > foreign data wrapper MYSQL_WRAPPER
+. . . . . . . . > options(
+. . . . . . . . >     url '@URL@',
+. . . . . . . . >     user_name '@USERNAME@',
+. . . . . . . . >     password '@PASSWORD@',
+. . . . . . . . >     driver_class '@DRIVER_CLASS@',
+. . . . . . . . >     schema_name '@SCHEMA@',
+. . . . . . . . >     table_types '@TABLE_TYPES@',
+. . . . . . . . >     lenient 'true',
+. . . . . . . . >     table_prefix_mapping '%.MAPPING_T%:TEST.TABLE%'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mapped to MAPPING_T1/T2
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_1.TEST.T1;
++-----+------+
+| id  | msg  |
++-----+------+
+| 1   | a    |
+| 2   | b    |
+| 3   | c    |
++-----+------+
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_1.TEST.T2;
++-----+------+
+| id  | msg  |
++-----+------+
+| 1   | d    |
+| 2   | e    |
+| 3   | f    |
++-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- fails because name matches target prefix 
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_1.TEST.MAPPING_T1;
+Error: Table 'MEDJDBC_TEST.MAPPING_MAPPING_T1' doesn't exist (state=42S02,code=1146)
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_1.TEST.MAPPING_T2;
+Error: Table 'MEDJDBC_TEST.MAPPING_MAPPING_T2' doesn't exist (state=42S02,code=1146)
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_1.TEST.@DATATYPE_TABLE@;
+Error: Table 'MEDJDBC_TEST.MAPPING_DATATYPES' doesn't exist (state=42S02,code=1146)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- mapped to MAPPING_T1/T2
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_2.TEST.TABLE1;
++-----+------+
+| id  | msg  |
++-----+------+
+| 1   | a    |
+| 2   | b    |
+| 3   | c    |
++-----+------+
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_2.TEST.TABLE2;
++-----+------+
+| id  | msg  |
++-----+------+
+| 1   | d    |
+| 2   | e    |
+| 3   | f    |
++-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ok because name does not match target prefix
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_2.TEST.MAPPING_T1;
++-----+------+
+| id  | msg  |
++-----+------+
+| 1   | a    |
+| 2   | b    |
+| 3   | c    |
++-----+------+
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_2.TEST.MAPPING_T2;
++-----+------+
+| id  | msg  |
++-----+------+
+| 1   | d    |
+| 2   | e    |
+| 3   | f    |
++-----+------+
+0: jdbc:luciddb:> select * from MYSQL_MAPPING_2.TEST.@DATATYPE_TABLE@ order by 5;
++---------------------+-------------+-----------+------------------------+--------+
+|      c_varchar      |   c_date    |  c_time   |      c_timestamp       | c_int  |
++---------------------+-------------+-----------+------------------------+--------+
+| varchar the first   |             |           | 2005-10-12 03:00:00.0  | 1      |
+| varchar the second  |             |           | 2005-10-12 04:00:00.0  | 2      |
+| varchar the third   |             | 03:00:00  | 2005-10-12 03:00:00.0  | 3      |
+| varchar the fourth  | 2005-10-12  | 04:00:00  | 2005-10-12 04:00:00.0  | 4      |
+| varchar the fifth   | 2005-10-12  |           | 2005-10-12 03:00:00.0  | 5      |
++---------------------+-------------+-----------+------------------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema test;
+0: jdbc:luciddb:> import foreign schema TEST from server MYSQL_MAPPING_1 into test;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select table_name, table_type from sys_boot.jdbc_metadata.tables_view
+. . . . . . . . > where table_schem = 'TEST'
+. . . . . . . . > order by table_name;
++-------------+----------------+
+| TABLE_NAME  |   TABLE_TYPE   |
++-------------+----------------+
+| DATATYPES   | FOREIGN TABLE  |
+| T1          | FOREIGN TABLE  |
+| T2          | FOREIGN TABLE  |
++-------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from test.@DATATYPE_TABLE@;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from test.t1;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+0: jdbc:luciddb:> select count(*) from test.t2;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema test2;
+0: jdbc:luciddb:> import foreign schema TEST from server MYSQL_MAPPING_2 into test2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select table_name, table_type from sys_boot.jdbc_metadata.tables_view
+. . . . . . . . > where table_schem = 'TEST2'
+. . . . . . . . > order by table_name;
++-------------+----------------+
+| TABLE_NAME  |   TABLE_TYPE   |
++-------------+----------------+
+| DATATYPES   | FOREIGN TABLE  |
+| TABLE1      | FOREIGN TABLE  |
+| TABLE2      | FOREIGN TABLE  |
++-------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from test2.@DATATYPE_TABLE@;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from test2.table1;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+0: jdbc:luciddb:> select count(*) from test2.table2;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema test cascade;
+0: jdbc:luciddb:> drop schema test2 cascade;
+0: jdbc:luciddb:> drop foreign data wrapper MYSQL_WRAPPER cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -98,14 +98,30 @@ class MedJdbcNameDirectory
             typeFactory,
             foreignName,
             localName,
-            null);
+            null,
+            false);
     }
 
+    /**
+     * Looks up the FarragoMedColumnSet for the given table.
+     * 
+     * @param typeFactory typeFactory to use for type mapping
+     * @param foreignName foreign table name
+     * @param localName fully qualified local table name
+     * @param rowType expected row type
+     * @param tableAlreadyMapped if true, foreignName has already been 
+     *                           mapped to the foreign database name; if false
+     *                           the mapping has not yet been applied
+     * @return a FarragoMedColumnSet representing the table
+     * @throws SQLException if there is an error querying metadata in the
+     *                      underlying database
+     */
     FarragoMedColumnSet lookupColumnSetAndImposeType(
         FarragoTypeFactory typeFactory,
         String foreignName,
         String [] localName,
-        RelDataType rowType)
+        RelDataType rowType,
+        boolean tableAlreadyMapped)
         throws SQLException
     {
         if (schemaName == null) {
@@ -116,23 +132,70 @@ class MedJdbcNameDirectory
         if ((server.schemaName != null)
             && !server.useSchemaNameAsForeignQualifier)
         {
-            foreignQualifiedName = new String[] { foreignName };
-        } else {
-            // schema mapping
-            Map<String, String> schemaMap = server.schemaMaps.get(schemaName);
-            if (schemaMap != null) {
-                schemaName = schemaMap.get(foreignName);
-            }
-            // table mapping
-            Map<String, MedJdbcDataServer.Source> tableMap =
-                server.tableMaps.get(schemaName);
-            if (tableMap != null) {
-                MedJdbcDataServer.Source sources = tableMap.get(foreignName);
-                if (sources != null) {
-                    schemaName = sources.getSchema();
-                    foreignName = sources.getTable();
+            if (!tableAlreadyMapped) {
+                List<MedJdbcDataServer.WildcardMapping> tablePrefixMappings =
+                    server.tablePrefixMaps.get(schemaName);
+                if (tablePrefixMappings != null) {
+                    for(MedJdbcDataServer.WildcardMapping m: 
+                            tablePrefixMappings)
+                    {
+                        String targetTablePrefix = m.getTargetTablePrefix();
+                        if (foreignName.startsWith(targetTablePrefix)) {
+                            foreignName = 
+                                m.getSourceTablePrefix() + 
+                                foreignName.substring(
+                                    targetTablePrefix.length());
+                            break;
+                        }
+                    }
                 }
             }
+            
+            foreignQualifiedName = new String[] { foreignName };
+        } else {
+            if (!tableAlreadyMapped) {
+                // Expect only one of schema mapping, table mapping and table
+                // prefix to be non-empty/null.
+                
+                // schema mapping
+                Map<String, String> schemaMap = 
+                    server.schemaMaps.get(schemaName);
+                if (schemaMap != null) {
+                    schemaName = schemaMap.get(foreignName);
+                }
+                
+                // table mapping
+                Map<String, MedJdbcDataServer.Source> tableMap =
+                    server.tableMaps.get(schemaName);
+                if (tableMap != null) {
+                    MedJdbcDataServer.Source sources = 
+                        tableMap.get(foreignName);
+                    if (sources != null) {
+                        schemaName = sources.getSchema();
+                        foreignName = sources.getTable();
+                    }
+                }
+                
+                // table name prefix
+                List<MedJdbcDataServer.WildcardMapping> tablePrefixMappings =
+                    server.tablePrefixMaps.get(schemaName);
+                if (tablePrefixMappings != null) {
+                    for(MedJdbcDataServer.WildcardMapping m: 
+                            tablePrefixMappings)
+                    {
+                        String targetTablePrefix = m.getTargetTablePrefix();
+                        if (foreignName.startsWith(targetTablePrefix)) {
+                            schemaName = m.getSourceSchema();
+                            foreignName = 
+                                m.getSourceTablePrefix() + 
+                                foreignName.substring(
+                                    targetTablePrefix.length());
+                            break;
+                        }
+                    }
+                }
+            }
+            
             if (schemaName == null || foreignName == null) {
                 return null;
             }
@@ -575,13 +638,13 @@ class MedJdbcNameDirectory
                         continue;
                     }
                     String returnedTableName = resultSet.getString(3);
-                    returnedTableName = getMappedTableName(
-                        schemaName, returnedTableName, this.schemaName);
                     if (tableSet != null) {
                         if (!tableSet.contains(returnedTableName)) {
                             continue;
                         }
                     }
+                    returnedTableName = getMappedTableName(
+                        schemaName, returnedTableName, this.schemaName);
                     String columnName = resultSet.getString(4);
                     RelDataType type =
                         sink.getTypeFactory().createJdbcColumnType(
@@ -647,6 +710,21 @@ class MedJdbcNameDirectory
                 }
             }
         }
+        
+        // table prefix mapping
+        if (server.getProperties().getProperty(
+                MedJdbcDataServer.PROP_TABLE_PREFIX_MAPPING) != null) {
+            List<MedJdbcDataServer.WildcardMapping> list = 
+                server.tablePrefixMaps.get(schemaName);
+            if (list != null) {
+                for(MedJdbcDataServer.WildcardMapping mapping: list) {
+                    String sch = mapping.getSourceSchema();
+                    if (!allSchemas.contains(sch)) {
+                        allSchemas.add(sch);
+                    }
+                }
+            }
+        }
 
         if (allSchemas.size() > 0) {
             return allSchemas.toArray(
@@ -654,7 +732,6 @@ class MedJdbcNameDirectory
         } else {
             return new String[] { schemaName };
         }
-
     }
 
     private String [] getTablePattern(
@@ -699,6 +776,16 @@ class MedJdbcNameDirectory
         return pattern;
     }
 
+    /**
+     * Convert the foreign database's schema and table into the "foreign"
+     * name used locally by Farrago in <code>origSchema</code>.
+     *  
+     * @param schema foreign database's schema
+     * @param table foreign database's table
+     * @param origSchema Farrago schema to which the table is mapped
+     * @return the Farrago foreign table to which schema.table is mapped,
+     *         of <code>table</code> if no mapping is found
+     */
     private String getMappedTableName(
         String schema,
         String table,
@@ -706,18 +793,33 @@ class MedJdbcNameDirectory
     {
         Map<String, MedJdbcDataServer.Source> map =
             server.tableMaps.get(origSchema);
-        if (map == null) {
-            return table;
-        }
-
-        for (Map.Entry<String, MedJdbcDataServer.Source> entry
-            : map.entrySet())
-        {
-            if (schema.equals(entry.getValue().getSchema())
-                && table.equals(entry.getValue().getTable())) {
-                return entry.getKey();
+        if (map != null) {
+            for (Map.Entry<String, MedJdbcDataServer.Source> entry
+                : map.entrySet())
+            {
+                if (schema.equals(entry.getValue().getSchema())
+                    && table.equals(entry.getValue().getTable())) {
+                    return entry.getKey();
+                }
             }
         }
+
+        List<MedJdbcDataServer.WildcardMapping> list =
+            server.tablePrefixMaps.get(origSchema);
+        if (list != null) {
+            for(MedJdbcDataServer.WildcardMapping mapping: list) {
+                String sourceTablePrefix = mapping.getSourceTablePrefix();
+                if ((!server.useSchemaNameAsForeignQualifier || 
+                        schema.equals(mapping.getSourceSchema())) &&
+                    table.startsWith(sourceTablePrefix))
+                {
+                    return 
+                        mapping.getTargetTablePrefix() +
+                        table.substring(sourceTablePrefix.length());
+                }
+            }
+        }
+
         return table;
     }
 

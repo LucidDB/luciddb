@@ -912,10 +912,14 @@ Messages: {1}</text>
 </exception>
 
 <exception id="460230" name="MedJdbc_InvalidTableSchemaMapping">
-<text>Cannot specify both a TABLE_MAPPING and a SCHEMA_MAPPING</text>
+<text>Cannot specify more than one of SCHEMA_MAPPING, TABLE_MAPPING, or TABLE_PREFIX_MAPPING</text>
 </exception>
 
 <exception id="460240" name="MedJdbc_InvalidTableMapping">
+<text>''{0}.{1}'' and ''{2}.{3}'' cannot both map to ''{4}.{5}''.</text>
+</exception>
+
+<exception id="460245" name="MedJdbc_InvalidTablePrefixMapping">
 <text>''{0}.{1}'' and ''{2}.{3}'' cannot both map to ''{4}.{5}''.</text>
 </exception>
 

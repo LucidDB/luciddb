@@ -21,9 +21,11 @@
 -->
 
 <project name="mysql" basedir="." default="test">
-  <dirname property="mysql.dir" file="${ant.file.mysql}" />
+  <!-- N.B.: mysql.dir is a property in farrago/buildMacros.xml, don't reuse
+       that name here or we break the classpath. -->
+  <dirname property="mysqltest.dir" file="${ant.file.mysql}" />
 
-  <property name="open.dir" location="${mysql.dir}/../../../.."/>
+  <property name="open.dir" location="${mysqltest.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
@@ -38,9 +40,9 @@
   <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
 
   <!-- directory where sql is generated -->
-  <property name="gensql.dir" value="${mysql.dir}/gen" />
+  <property name="gensql.dir" value="${mysqltest.dir}/gen" />
   <!-- directory where blackhawk output should go -->
-  <property name="bh.log.basedir" value="${mysql.dir}/testlog" />
+  <property name="bh.log.basedir" value="${mysqltest.dir}/testlog" />
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -76,14 +78,14 @@
 
     <!-- generate sql -->
     <copy todir="${gensql.dir}" overwrite="true">
-      <fileset dir="${mysql.dir}" includes="*.tmpl"/>
+      <fileset dir="${mysqltest.dir}" includes="*.tmpl"/>
       <globmapper from="*.tmpl" to="*"/>
       <filterset>
         <filtersfile file="config.properties"/>
       </filterset>
     </copy>
     <copy todir="${gensql.dir}" overwrite="true">
-      <fileset dir="${mysql.dir}">
+      <fileset dir="${mysqltest.dir}">
         <include name="*.sql"/>
         <include name="*.ref"/>
         <exclude name="mysql.init.sql"/>
@@ -93,7 +95,7 @@
 
   <target name="test" depends="clean-test,gen-all-sql">
     <blackhawk.fork
-      basedir="${mysql.dir}"
+      basedir="${mysqltest.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>

@@ -38,6 +38,50 @@ LOCK TABLES `DATATYPES` WRITE;
 INSERT INTO `DATATYPES` VALUES ('varchar the first',NULL,NULL,'2005-10-12 03:00:00',1),('varchar the second',NULL,NULL,'2005-10-12 04:00:00',2),('varchar the third',NULL,'03:00:00','2005-10-12 03:00:00',3),('varchar the fourth','2005-10-12','04:00:00','2005-10-12 04:00:00',4),('varchar the fifth','2005-10-12',NULL,'2005-10-12 03:00:00',5);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `DATATYPES` ENABLE KEYS */;
+
+--
+-- Table structure for table `MAPPING_T1`
+--
+
+DROP TABLE IF EXISTS `MAPPING_T1`;
+CREATE TABLE `MAPPING_T1` (
+  `id` int(11) NOT NULL,
+  `msg` varchar(16) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `MAPPING_T1`
+--
+
+
+/*!40000 ALTER TABLE `MAPPING_T1` DISABLE KEYS */;
+LOCK TABLES `MAPPING_T1` WRITE;
+INSERT INTO `MAPPING_T1` VALUES (1,'a'),(2,'b'),(3,'c');
+UNLOCK TABLES;
+/*!40000 ALTER TABLE `MAPPING_T1` ENABLE KEYS */;
+
+--
+-- Table structure for table `MAPPING_T2`
+--
+
+DROP TABLE IF EXISTS `MAPPING_T2`;
+CREATE TABLE `MAPPING_T2` (
+  `id` int(11) NOT NULL,
+  `msg` varchar(16) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `MAPPING_T2`
+--
+
+
+/*!40000 ALTER TABLE `MAPPING_T2` DISABLE KEYS */;
+LOCK TABLES `MAPPING_T2` WRITE;
+INSERT INTO `MAPPING_T2` VALUES (1,'d'),(2,'e'),(3,'f');
+UNLOCK TABLES;
+/*!40000 ALTER TABLE `MAPPING_T2` ENABLE KEYS */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
