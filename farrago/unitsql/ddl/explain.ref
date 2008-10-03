@@ -98,7 +98,7 @@
 > timestamp '2006-11-08 15:05:05', X'CAFEBABE');
 'column0'
 'FennelToIteratorConverter'
-'  FennelValuesRel(tuples=[[{ 1, -1.25, 1.0E50, true, 'bonjour', 'bonjour', _US-ASCII'bonjour', 2006-11-08, 15:05:05, 2006-11-08 15:05:05.0, X'CAFEBABE' }]])'
+'  FennelValuesRel(tuples=[[{ 1, -1.25, 1.0E50, true, 'bonjour', 'bonjour', _US-ASCII'bonjour', 2006-11-08, 15:05:05, 2006-11-08 15:05:05, X'CAFEBABE' }]])'
 > 
 > -- Apply a tweak to the session personality and verify that
 > -- the costing and rel visibility changes accordingly.

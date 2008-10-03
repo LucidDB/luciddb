@@ -141,12 +141,12 @@ public abstract class SqlOperatorTests
             "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]");
 
     /**
-     * Regular expression for a SQL TIMESTAMP(3) value.
+     * Regular expression for a SQL TIMESTAMP(0) value.
      */
     public static final Pattern timestampPattern =
         Pattern.compile(
             "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] "
-            + "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]\\.[0-9]+");
+            + "[0-9][0-9]:[0-9][0-9]:[0-9][0-9]");
 
     /**
      * Regular expression for a SQL DATE value.
@@ -217,6 +217,8 @@ public abstract class SqlOperatorTests
     private static final SqlTester.VmName VM_FENNEL = SqlTester.VmName.FENNEL;
     private static final SqlTester.VmName VM_JAVA = SqlTester.VmName.JAVA;
     private static final SqlTester.VmName VM_EXPAND = SqlTester.VmName.EXPAND;
+    protected static final TimeZone gmtTimeZone = TimeZone.getTimeZone("GMT");
+    protected static final TimeZone defaultTimeZone = TimeZone.getDefault();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -453,9 +455,14 @@ public abstract class SqlOperatorTests
         // date & time
         checkCastToString("date '2008-01-01'", "CHAR(10)", "2008-01-01");
         checkCastToString("time '1:2:3'", "CHAR(8)", "01:02:03");
-        checkCastToString("timestamp '2008-1-1 1:2:3'",
-                          "CHAR(19)",
-                          "2008-01-01 01:02:03");
+        checkCastToString(
+            "timestamp '2008-1-1 1:2:3'",
+            "CHAR(19)",
+            "2008-01-01 01:02:03");
+        checkCastToString(
+            "timestamp '2008-1-1 1:2:3'",
+            "VARCHAR(30)",
+            "2008-01-01 01:02:03");
 
         // todo: cast of intervals to strings not supported
         if (todo) {
@@ -469,7 +476,7 @@ public abstract class SqlOperatorTests
                 "+1 02:03:04");
         }
 
-        //boolean
+        // boolean
         checkCastToString("True","CHAR(4)","TRUE");
         checkCastToString("False","CHAR(5)","FALSE");
         getTester().checkFails(
@@ -768,19 +775,18 @@ public abstract class SqlOperatorTests
             // whether the java or fennel calc are used.
             // Try to make them the same
             if (false /* fennel calc*/) { // Treated as FLOAT or DOUBLE
-                checkCastToString(maxNumericStrings[i], type, isFloat? "3.402824E38": "1.797693134862316E308"); // Treated as DOUBLE
+                checkCastToString(maxNumericStrings[i], type, isFloat ? "3.402824E38" : "1.797693134862316E308"); // Treated as DOUBLE
                 checkCastToString(minNumericStrings[i], null, isFloat ? null : "4.940656458412465E-324"); // Treated as FLOAT or DOUBLE
-                checkCastToString(minNumericStrings[i], type, isFloat ? "1.401299E-45": "4.940656458412465E-324");
+                checkCastToString(minNumericStrings[i], type, isFloat ? "1.401299E-45" : "4.940656458412465E-324");
             } else if (false /* JavaCalc */) {
-             // Treated as FLOAT or DOUBLE
-             checkCastToString(maxNumericStrings[i], type, isFloat ? "3.402823E38": "1.797693134862316E308"); // Treated as DOUBLE
-             checkCastToString(minNumericStrings[i], null, isFloat ? null : null); // Treated as FLOAT or DOUBLE
-             checkCastToString(minNumericStrings[i], type, isFloat ? "1.401298E-45": null);
+                // Treated as FLOAT or DOUBLE
+                checkCastToString(maxNumericStrings[i], type, isFloat ? "3.402823E38" : "1.797693134862316E308"); // Treated as DOUBLE
+                checkCastToString(minNumericStrings[i], null, isFloat ? null : null); // Treated as FLOAT or DOUBLE
+                checkCastToString(minNumericStrings[i], type, isFloat ? "1.401298E-45" : null);
             }
 
             checkCastFails("'notnumeric'", type, invalidCharMessage, true);
         }
-
     }
 
     public void testCastToApproxNumeric()
@@ -821,7 +827,7 @@ public abstract class SqlOperatorTests
 
         getTester().checkScalar(
             "cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIMESTAMP)",
-            "1945-02-24 12:42:25.0",
+            "1945-02-24 12:42:25",
             "TIMESTAMP(0) NOT NULL");
 
         getTester().checkScalar(
@@ -857,23 +863,9 @@ public abstract class SqlOperatorTests
         // Generate the current date as a string, e.g. "2007-04-18". The value
         // is guaranteed to be good for at least 2 minutes, which should give
         // us time to run the rest of the tests.
-        final String today;
-        while (true) {
-            final Calendar cal = Calendar.getInstance();
-            if ((cal.get(Calendar.HOUR_OF_DAY) == 23)
-                && (cal.get(Calendar.MINUTE) >= 58))
-            {
-                try {
-                    Thread.sleep(60 * 1000);
-                } catch (InterruptedException e) {
-                    // ignore
-                }
-            } else {
-                today =
-                    new SimpleDateFormat("yyyy-MM-dd").format(cal.getTime());
-                break;
-            }
-        }
+        final String today =
+            new SimpleDateFormat("yyyy-MM-dd").format(
+                getCalendarNotTooNear(Calendar.DAY_OF_MONTH).getTime());
 
         // Note: Casting to time(0) should lose date info and fractional
         // seconds, then casting back to timestamp should initialize to
@@ -881,12 +873,12 @@ public abstract class SqlOperatorTests
         if (Bug.Fnl66Fixed) {
             getTester().checkScalar(
                 "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
-                today + " 12:42:25.0",
+                today + " 12:42:25",
                 "TIMESTAMP(0) NOT NULL");
 
             getTester().checkScalar(
                 "cast(TIME '12:42:25.34' as TIMESTAMP)",
-                today + " 12:42:25.0",
+                today + " 12:42:25",
                 "TIMESTAMP(0) NOT NULL");
         }
 
@@ -899,13 +891,12 @@ public abstract class SqlOperatorTests
         // Note: casting to Date discards Time fields
         getTester().checkScalar(
             "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as DATE) as TIMESTAMP)",
-            "1945-02-24 00:00:00.0",
+            "1945-02-24 00:00:00",
             "TIMESTAMP(0) NOT NULL");
 
-        // TODO: precision should not be included
         getTester().checkScalar(
             "cast(DATE '1945-02-24' as TIMESTAMP)",
-            "1945-02-24 00:00:00.0",
+            "1945-02-24 00:00:00",
             "TIMESTAMP(0) NOT NULL");
 
         // time <-> string
@@ -956,13 +947,12 @@ public abstract class SqlOperatorTests
             true);
 
         // timestamp <-> string
-        if (todo) {
-            // TODO: Java calc displays ".0" while Fennel does not
-            checkCastToString(
-                "TIMESTAMP '1945-02-24 12:42:25'",
-                null,
-                "1945-02-24 12:42:25.0");
+        checkCastToString(
+            "TIMESTAMP '1945-02-24 12:42:25'",
+            null,
+            "1945-02-24 12:42:25");
 
+        if (todo) {
             // TODO: casting allows one to discard precision without error
             checkCastToString(
                 "TIMESTAMP '1945-02-24 12:42:25.34'",
@@ -972,19 +962,19 @@ public abstract class SqlOperatorTests
 
         getTester().checkScalar(
             "cast('1945-02-24 12:42:25' as TIMESTAMP)",
-            "1945-02-24 12:42:25.0",
+            "1945-02-24 12:42:25",
             "TIMESTAMP(0) NOT NULL");
         getTester().checkScalar(
             "cast('1945-2-2 12:2:5' as TIMESTAMP)",
-            "1945-02-02 12:02:05.0",
+            "1945-02-02 12:02:05",
             "TIMESTAMP(0) NOT NULL");
         getTester().checkScalar(
             "cast('  1945-02-24 12:42:25  ' as TIMESTAMP)",
-            "1945-02-24 12:42:25.0",
+            "1945-02-24 12:42:25",
             "TIMESTAMP(0) NOT NULL");
         getTester().checkScalar(
             "cast('1945-02-24 12:42:25.34' as TIMESTAMP)",
-            "1945-02-24 12:42:25.0",
+            "1945-02-24 12:42:25",
             "TIMESTAMP(0) NOT NULL");
 
         if (Bug.Frg282Fixed) {
@@ -1046,6 +1036,43 @@ public abstract class SqlOperatorTests
         getTester().checkNull("cast(cast(null as time) as timestamp)");
         getTester().checkNull("cast(cast(null as timestamp) as date)");
         getTester().checkNull("cast(cast(null as timestamp) as time)");
+    }
+
+    /**
+     * Returns a Calendar that is the current time, pausing if we are within
+     * 2 minutes of midnight or the top of the hour.
+     *
+     * @param timeUnit Time unit
+     * @return calendar
+     */
+    protected static Calendar getCalendarNotTooNear(int timeUnit)
+    {
+        while (true) {
+            final Calendar cal = Calendar.getInstance();
+            try {
+                switch (timeUnit) {
+                case Calendar.DAY_OF_MONTH:
+                    // Within two minutes of the end of the day, wait.
+                    if ((cal.get(Calendar.HOUR_OF_DAY) == 23)
+                        && (cal.get(Calendar.MINUTE) >= 58)) {
+                        Thread.sleep(60 * 1000);
+                        continue;
+                    }
+                    return cal;
+                case Calendar.HOUR_OF_DAY:
+                    // Within two minutes of the top of the hour, wait.
+                    if ((cal.get(Calendar.MINUTE) >= 58)) {
+                        Thread.sleep(60 * 1000);
+                        continue;
+                    }
+                    return cal;
+                default:
+                    throw Util.newInternal("unexpected time unit " + timeUnit);
+                }
+            } catch (InterruptedException e) {
+                throw Util.newInternal(e);
+            }
+        }
     }
 
     public void testCastToBoolean()
@@ -2047,7 +2074,7 @@ public abstract class SqlOperatorTests
             "DATE NOT NULL");
         getTester().checkScalar(
             "timestamp '2003-08-02 12:54:01' - interval '-4 2:4' day to minute",
-            "2003-08-06 14:58:01.0",
+            "2003-08-06 14:58:01",
             "TIMESTAMP(0) NOT NULL");
 
         // TODO: Tests with interval year months (not supported)
@@ -2088,7 +2115,7 @@ public abstract class SqlOperatorTests
             "timestamp '1969-04-29 0:0:0' +" +
                 " (timestamp '2008-07-15 15:28:00' - " +
                 "  timestamp '1969-04-29 0:0:0') day to second / 2",
-            "1988-12-06 07:44:00.0",
+            "1988-12-06 07:44:00",
             "TIMESTAMP(0) NOT NULL");
 
         getTester().checkScalar(
@@ -2105,13 +2132,13 @@ public abstract class SqlOperatorTests
             "08:25:52",
             "TIME(0) NOT NULL");
 
-        if (Bug.Dt1684Fixed)
+        if (Bug.Dt1684Fixed) {
         getTester().checkBoolean(
             "(date '1969-04-29' +" +
                 " (CURRENT_DATE - " +
                 "  date '1969-04-29') day / 2) is not null",
             Boolean.TRUE);
-
+        }
         // TODO: Add tests for year month intervals (currently not supported)
     }
 
@@ -2339,7 +2366,7 @@ public abstract class SqlOperatorTests
             "DATE NOT NULL");
         getTester().checkScalar(
             "timestamp '2003-08-02 12:54:01' + interval '-4 2:4' day to minute",
-            "2003-07-29 10:50:01.0",
+            "2003-07-29 10:50:01",
             "TIMESTAMP(0) NOT NULL");
 
         // TODO: Tests with interval year months (not supported)
@@ -3076,6 +3103,13 @@ public abstract class SqlOperatorTests
             "LOCALTIME(1)",
             timePattern,
             "TIME(1) NOT NULL");
+
+        getTester().checkScalar(
+            "CAST(LOCALTIME AS VARCHAR(30))",
+            Pattern.compile(
+                currentTimeString(defaultTimeZone).substring(11)
+                    + "[0-9][0-9]:[0-9][0-9]"),
+            "VARCHAR(30) NOT NULL");
     }
 
     public void testLocalTimestampFunc()
@@ -3097,6 +3131,15 @@ public abstract class SqlOperatorTests
             "LOCALTIMESTAMP(1)",
             timestampPattern,
             "TIMESTAMP(1) NOT NULL");
+
+        // Check that timestamp is being generated in the right timezone by
+        // generating a specific timestamp.
+        getTester().checkScalar(
+            "CAST(LOCALTIMESTAMP AS VARCHAR(30))",
+            Pattern.compile(
+                currentTimeString(defaultTimeZone)
+                    + "[0-9][0-9]:[0-9][0-9]"),
+            "VARCHAR(30) NOT NULL");
     }
 
     public void testCurrentTimeFunc()
@@ -3114,6 +3157,17 @@ public abstract class SqlOperatorTests
             "CURRENT_TIME(1)",
             timePattern,
             "TIME(1) NOT NULL");
+
+        if (Bug.Fnl77Fixed) {
+            // Currently works with Java calc, but fennel calc returns time in
+            // GMT time zone.
+        getTester().checkScalar(
+            "CAST(CURRENT_TIME AS VARCHAR(30))",
+            Pattern.compile(
+                currentTimeString(defaultTimeZone).substring(11)
+                    + "[0-9][0-9]:[0-9][0-9]"),
+            "VARCHAR(30) NOT NULL");
+        }
     }
 
     public void testCurrentTimestampFunc()
@@ -3135,6 +3189,40 @@ public abstract class SqlOperatorTests
             "CURRENT_TIMESTAMP(1)",
             timestampPattern,
             "TIMESTAMP(1) NOT NULL");
+
+        // Check that timestamp is being generated in the right timezone by
+        // generating a specific timestamp. We truncate to hours so that minor
+        // delays don't generate false negatives.
+        if (Bug.Fnl77Fixed) {
+            // Currently works with Java calc, but fennel calc returns time in
+            // GMT time zone.
+        getTester().checkScalar(
+            "CAST(CURRENT_TIMESTAMP AS VARCHAR(30))",
+            Pattern.compile(
+                currentTimeString(defaultTimeZone)
+                    + "[0-9][0-9]:[0-9][0-9]"),
+            "VARCHAR(30) NOT NULL");
+        }
+    }
+
+    /**
+     * Returns a time string, in GMT, that will be valid for at least 2
+     * minutes.
+     *
+     * <p>For example, at "2005-01-01 12:34:56 PST", returns "2005-01-01 20:".
+     * At "2005-01-01 12:34:59 PST", waits a minute, then returns
+     * "2005-01-01 21:".
+     *
+     * @param tz Time zone
+     * @return Time string
+     */
+    protected static String currentTimeString(TimeZone tz)
+    {
+        final Calendar calendar = getCalendarNotTooNear(Calendar.HOUR_OF_DAY);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:");
+        sdf.setTimeZone(tz);
+        return sdf.format(calendar.getTime());
     }
 
     public void testCurrentDateFunc()
@@ -3842,11 +3930,12 @@ public abstract class SqlOperatorTests
             "ABCD",
             "BINARY(2) NOT NULL");
 
-        if (Bug.Frg283Fixed)
+        if (Bug.Frg283Fixed) {
         tester.checkScalar(
             "CAST(x'ABCDEF12' AS VARBINARY(2))",
             "ABCD",
             "VARBINARY(2) NOT NULL");
+        }
 
         tester.checkBoolean(
             "CAST(X'' AS BINARY(3)) = X'000000'",

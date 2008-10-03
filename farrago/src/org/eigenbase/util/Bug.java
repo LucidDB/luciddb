@@ -95,6 +95,13 @@ public abstract class Bug
     public static final boolean Fnl66Fixed = false;
 
     /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-77">issue
+     * FNL-77: Fennel calc returns CURRENT_TIMESTAMP in UTC, should be local
+     * time</a> is fixed.
+     */
+    public static final boolean Fnl77Fixed = false;
+
+    /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-327">issue
      * FRG-327: AssertionError while translating IN list that contains null</a>
      * is fixed.

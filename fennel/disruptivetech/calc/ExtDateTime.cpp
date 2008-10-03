@@ -135,8 +135,8 @@ CastStrAToTimestamp(
 
 // for debugging - see the millisec value passed through to fennel.
 void CastDateTimeToInt64(
-        RegisterRef<int64_t>* result,
-        RegisterRef<int64_t>* dtime )
+    RegisterRef<int64_t>* result,
+    RegisterRef<int64_t>* dtime)
 {
     assert(result->type() == STANDARD_TYPE_INT_64);
     assert(dtime->type() == STANDARD_TYPE_INT_64);
@@ -151,13 +151,13 @@ void CastDateTimeToInt64(
 void CurrentTime(RegisterRef<int64_t>* result)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
-    result->value(CurrentTime());
+    result->value(UniversalTime());
 }
 
 void CurrentTimestamp(RegisterRef<int64_t>* result)
 {
     assert (result->type() == STANDARD_TYPE_INT_64);
-    result->value(CurrentTimestamp());
+    result->value(UniversalTimestamp());
 }
 
 void CurrentTime(
@@ -168,7 +168,7 @@ void CurrentTime(
     assert (precision->type() == STANDARD_TYPE_INT_32);
 
     // precision is ignored for now
-    result->value(CurrentTime());
+    result->value(UniversalTime());
 }
 
 void CurrentTimestamp(
@@ -179,7 +179,7 @@ void CurrentTimestamp(
     assert (precision->type() == STANDARD_TYPE_INT_32);
 
     // precision is ignored for now
-    result->value(CurrentTimestamp());
+    result->value(UniversalTimestamp());
 }
 
 void LocalTime(
@@ -371,6 +371,7 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
 
 }
 
-
 FENNEL_END_CPPFILE("$Id$");
+
+// End ExtDateTime.cpp
 

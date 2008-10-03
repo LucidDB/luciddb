@@ -45,7 +45,7 @@ using namespace boost::gregorian;
 typedef boost::date_time::c_local_adjustor<boost::posix_time::ptime> local_adj;
 
 int DateToIsoString(char *dest, boost::posix_time::ptime t)
-{ 
+{
     int y = t.date().year();
     int m =  t.date().month();
     int dy = t.date().day();
@@ -88,7 +88,7 @@ static inline void trimSpaces(std::string &s)
     } else {
         s.resize(n + 1);
         n = s.find_first_not_of(' ');
-        s.erase(0, n);        
+        s.erase(0, n);
     }
 }
 
@@ -105,7 +105,7 @@ int64_t IsoStringToDate(const char * const src, int len)
         } catch (...) {
             // Fall through to throw
         }
-    } 
+    }
 
     // Parse of date failed
     // SQL2003 Part 2 Section 6.12 General Rule 13 data
@@ -113,7 +113,7 @@ int64_t IsoStringToDate(const char * const src, int len)
     throw "22007";
 }
 
-int64_t IsoStringToTime(const char * const src, int len) 
+int64_t IsoStringToTime(const char * const src, int len)
 {
     std::string s(src, len);
     trimSpaces(s);
@@ -128,8 +128,8 @@ int64_t IsoStringToTime(const char * const src, int len)
             int hour = atoi(what[1].first);
             int min = atoi(what[2].first);
             int sec = atoi(what[3].first);
-            
-            if ((hour >= 0) && (hour < 24) && 
+
+            if ((hour >= 0) && (hour < 24) &&
                 (min >= 0) && (min < 60) &&
                 (sec >= 0) && (sec < 60)) {
                 time_duration td = duration_from_string(s);
@@ -138,7 +138,7 @@ int64_t IsoStringToTime(const char * const src, int len)
         } catch (...) {
             // Fall through to throw
         }
-    } 
+    }
 
     // Parse of time failed
     // SQL2003 Part 2 Section 6.12 General Rule 15,16 data
@@ -146,7 +146,7 @@ int64_t IsoStringToTime(const char * const src, int len)
     throw "22007";
 }
 
-int64_t IsoStringToTimestamp(const char * const src, int len) 
+int64_t IsoStringToTimestamp(const char * const src, int len)
 {
 
     std::string s(src, len);
@@ -155,7 +155,7 @@ int64_t IsoStringToTimestamp(const char * const src, int len)
     // TODO: Boost library doesn't catch invalid hour, min, sec
     // TODO: Try updated boost library to see if we can get
     // TODO: rid of this tiresome check
-    cmatch what;    
+    cmatch what;
     regex timestampExp("\\d+-\\d+-\\d+ +"
                        "(\\d+):(\\d+):(\\d+)(\\.\\d+)?");
     if (regex_match(s.c_str(), what, timestampExp)) {
@@ -163,18 +163,18 @@ int64_t IsoStringToTimestamp(const char * const src, int len)
             int hour = atoi(what[1].first);
             int min = atoi(what[2].first);
             int sec = atoi(what[3].first);
-            
-            if ((hour >= 0) && (hour < 24) && 
+
+            if ((hour >= 0) && (hour < 24) &&
                 (min >= 0) && (min < 60) &&
                 (sec >= 0) && (sec < 60)) {
                 ptime p(time_from_string(s));
-                time_duration td = p - epoc; 
+                time_duration td = p - epoc;
                 return td.total_milliseconds();
             }
         } catch (...) {
             // Fall through to throw
         }
-    } 
+    }
 
     // Parse of timestamp failed
     // SQL2003 Part 2 Section 6.12 General Rule 17,18 data
@@ -182,13 +182,13 @@ int64_t IsoStringToTimestamp(const char * const src, int len)
     throw "22007";
 }
 
-int64_t CurrentTime()
+int64_t UniversalTime()
 {
     ptime p = second_clock::universal_time();
     return p.time_of_day().total_milliseconds();
 }
 
-int64_t CurrentTimestamp()
+int64_t UniversalTimestamp()
 {
     // REVIEW: SWZ: 4/30/2006: In practice, we should return the micro
     // second delta (or as much precision as we can muster) and let
@@ -221,3 +221,4 @@ int64_t LocalTimestamp(boost::local_time::time_zone_ptr tzPtr)
 
 FENNEL_END_NAMESPACE
 
+// End SqlDate.cpp

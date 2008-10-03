@@ -3558,6 +3558,88 @@ public class FarragoJdbcTest
         }
     }
 
+    /**
+     * Tests inserting timestamp values via a dynamic parameter with and
+     * without a calendar object.
+     *
+     * @see PreparedStatement#setTimestamp(int, java.sql.Timestamp)
+     * @see PreparedStatement#setTimestamp(int, java.sql.Timestamp, java.util.Calendar)
+     */
+    public void testSetTimestamp() throws SQLException
+    {
+        Calendar calendar;
+        Timestamp ts;
+        final String insert =
+            "insert into datatypes_schema.dataTypes_table" +
+                " (id, \"Column 15: timestamp(0)\") values (1, ?)";
+        preparedStmt = connection.prepareStatement(insert);
+        stmt = connection.createStatement();
+
+        // Case 1. No calendar.
+        // With no calendar, timestamp is interpreted in local time.
+        // Timestamp(0) is the 1970-01-01 00:00:00 UTC,
+        // which is 1969-12-31 16:00:00 PDT.
+        // In the server it is a zoneless timestamp: timestamp is converted
+        // to a string without timezone conversion, regardless of the server's
+        // time zone. Value remains "1969-12-31 16:00:00.0".
+        ts = new Timestamp(0);
+        assertTrue(ts.getTime() == 0);
+        final String defaultTzName = TimeZone.getDefault().getDisplayName();
+        if (defaultTzName.equals("GMT-08:00")) {
+            preparedStmt.setTimestamp(1, ts);
+            assertTimestampBecomes("1969-12-31 16:00:00");
+        }
+
+        // Case 2. Calendar in Tokyo time.
+        // Timestamp is interpreted in Tokyo time.
+        // Timestamp(0) is 1970-01-01 00:00:00 UTC,
+        // which is 1970-01-01 09:00:00 Tokyo time.
+        final TimeZone tzTokyo = TimeZone.getTimeZone("Asia/Tokyo");
+        assertNotNull(tzTokyo);
+        calendar = Calendar.getInstance(tzTokyo);
+        calendar.setTimeInMillis(0);
+        ts = new Timestamp(calendar.getTimeInMillis());
+        assertTrue(ts.getTime() == 0);
+        preparedStmt.setTimestamp(1, ts, calendar);
+        assertTimestampBecomes("1970-01-01 09:00:00");
+
+        // Case 3. Calendar in Pacific time.
+        // Timestamp is interpreted in Pacific time.
+        // Timestamp(0) is 1970-01-01 00:00:00 UTC,
+        // which is 1969-12-31 16:00:00 Pacific time.
+        final TimeZone tzPacific = TimeZone.getTimeZone("America/Los_Angeles");
+        assertNotNull(tzPacific);
+        calendar = Calendar.getInstance(tzPacific);
+        calendar.setTimeInMillis(0);
+        ts = new Timestamp(calendar.getTimeInMillis());
+        assertTrue(ts.getTime() == 0);
+        preparedStmt.setTimestamp(1, ts, calendar);
+        assertTimestampBecomes("1969-12-31 16:00:00");
+
+        // Case 4. null calendar means local time, which is the same as case 1.
+        ts = new Timestamp(0);
+        if (defaultTzName.equals("GMT-08:00")) {
+            preparedStmt.setTimestamp(1, ts, null);
+            assertTimestampBecomes("1969-12-31 16:00:00");
+        }
+    }
+
+    private void assertTimestampBecomes(String expected) throws SQLException
+    {
+        final String delete =
+            "delete from datatypes_schema.dataTypes_table";
+        final String select =
+            "select cast(\"Column 15: timestamp(0)\" as varchar(30)) " +
+                "from datatypes_schema.dataTypes_table";
+
+        stmt.executeUpdate(delete);
+        final int rowCount = preparedStmt.executeUpdate();
+        assertEquals(1, rowCount);
+        resultSet = stmt.executeQuery(select);
+        assertTrue(resultSet.next());
+        assertEquals(expected, resultSet.getString(1));
+    }
+
     //~ Inner Interfaces -------------------------------------------------------
 
     public static interface JdbcTester
@@ -4162,10 +4244,12 @@ public class FarragoJdbcTest
         private static final TestSqlType [] typesChar = {
             Char, Varchar
         };
-        private static final TestSqlType [] typesBinary =
-        { Binary, Varbinary, };
-        private static final TestSqlType [] typesDateTime =
-        { Time, Date, Timestamp };
+        private static final TestSqlType [] typesBinary = {
+            Binary, Varbinary
+        };
+        private static final TestSqlType [] typesDateTime = {
+            Time, Date, Timestamp
+        };
         public static final int VALID = 0;
         public static final int INVALID = 1;
         public static final int OUTOFRANGE = 2;

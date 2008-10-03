@@ -57,10 +57,17 @@ abstract public class AbstractResultSet
 
     /**
      * Returns the raw value of a column as an object.
+     *
+     * @param columnIndex Column index, 1-based
      */
     abstract protected Object getRaw(int columnIndex)
         throws SQLException;
 
+    /**
+     * Returns the raw value of a column as an object.
+     *
+     * @param columnName Column name
+     */
     protected Object getRaw(String columnName)
         throws SQLException
     {
@@ -641,7 +648,7 @@ abstract public class AbstractResultSet
     public Timestamp getTimestamp(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
-        return toTimestamp(getRaw(columnIndex), cal.getTimeZone());
+        return toTimestamp(getRaw(columnIndex), DateTimeUtil.getTimeZone(cal));
     }
 
     /**
