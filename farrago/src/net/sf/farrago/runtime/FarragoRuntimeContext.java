@@ -206,18 +206,6 @@ public class FarragoRuntimeContext
 
         boolean streamGraphClosed = false;
 
-        if (detachedSession != null) {
-            EnkiMDRepository mdrepos = getRepos().getEnkiMdrRepos();
-            EnkiMDSession callerSession = mdrepos.detachSession();
-            
-            reattachMdrSession();
-            getRepos().endReposSession();
-            
-            if (callerSession != null) {
-                mdrepos.reattachSession(callerSession);
-            }
-        }
-        
         // Override CompoundClosableAllocation behavior, because we
         // need special synchronization to account for the fact
         // that FarragoJavaUdxIterator instances may be adding themselves
@@ -255,8 +243,16 @@ public class FarragoRuntimeContext
         }
 
         if (detachedSession != null) {
+            EnkiMDRepository mdrepos = getRepos().getEnkiMdrRepos();
+            EnkiMDSession callerSession = mdrepos.detachSession();
+            
             reattachMdrSession();
-        }
+            getRepos().endReposSession();
+            
+            if (callerSession != null) {
+                mdrepos.reattachSession(callerSession);
+            }
+        }        
     }
 
     private void closeStreamGraph()
