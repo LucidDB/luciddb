@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2002-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 2003-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -870,17 +870,15 @@ public abstract class SqlOperatorTests
         // Note: Casting to time(0) should lose date info and fractional
         // seconds, then casting back to timestamp should initialize to
         // current_date.
-        if (Bug.Fnl66Fixed) {
-            getTester().checkScalar(
-                "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
-                today + " 12:42:25",
-                "TIMESTAMP(0) NOT NULL");
+        getTester().checkScalar(
+            "cast(cast(TIMESTAMP '1945-02-24 12:42:25.34' as TIME) as TIMESTAMP)",
+            today + " 12:42:25",
+            "TIMESTAMP(0) NOT NULL");
 
-            getTester().checkScalar(
-                "cast(TIME '12:42:25.34' as TIMESTAMP)",
-                today + " 12:42:25",
-                "TIMESTAMP(0) NOT NULL");
-        }
+        getTester().checkScalar(
+            "cast(TIME '12:42:25.34' as TIMESTAMP)",
+            today + " 12:42:25",
+            "TIMESTAMP(0) NOT NULL");
 
         // timestamp <-> date
         getTester().checkScalar(
@@ -3132,7 +3130,6 @@ public abstract class SqlOperatorTests
             timestampPattern,
             "TIMESTAMP(1) NOT NULL");
 
-        if (Bug.Fnl66Fixed) { // Seems to fail on some machines... time is one hour off... suspect this is the Cinderalla bug
         // Check that timestamp is being generated in the right timezone by
         // generating a specific timestamp.
         getTester().checkScalar(
@@ -3141,7 +3138,6 @@ public abstract class SqlOperatorTests
                 currentTimeString(defaultTimeZone)
                     + "[0-9][0-9]:[0-9][0-9]"),
             "VARCHAR(30) NOT NULL");
-        }
     }
 
     public void testCurrentTimeFunc()
@@ -3239,6 +3235,12 @@ public abstract class SqlOperatorTests
             "^CURRENT_DATE()^",
             "No match found for function signature CURRENT_DATE\\(\\)",
             false);
+
+        // Check the actual value.
+        getTester().checkScalar(
+            "CAST(CURRENT_DATE AS VARCHAR(30))",
+            currentTimeString(defaultTimeZone).substring(0, 10),
+            "VARCHAR(30) NOT NULL");
     }
 
     public void testSubstringFunction()

@@ -210,12 +210,30 @@ int64_t LocalTimestamp(boost::local_time::time_zone_ptr tzPtr)
 {
     // Create a local epoch. For PST, for example, the epoch is 1970/1/1 PST,
     // which occurred 8 hrs after the UTC epoch.
-    date d(1970, 1, 1);           // could be static
-    time_duration td(0, 0, 0);    // could be static
-    local_date_time local_epoc(d, td, tzPtr, false);
+    date d(1970, 1, 1);
+    time_duration td(0, 0, 0);
+    local_date_time local_epoc(
+        d, td, tzPtr, local_date_time::NOT_DATE_TIME_ON_ERROR);
 
     local_date_time plocal = local_microsec_clock::local_time(tzPtr);
-    return (plocal - local_epoc).total_milliseconds();
+    time_duration diff = plocal - local_epoc;
+
+    // Adjust the difference if we are now in DST and the epoch is not, or vice
+    // versa.
+    if (plocal.is_dst()) {
+        if (local_epoc.is_dst()) {
+            // same offset: nothing to do
+        } else {
+            diff += tzPtr->dst_offset();
+        }
+    } else {
+        if (local_epoc.is_dst()) {
+            diff -= tzPtr->dst_offset();
+        } else {
+            // same offset: nothing to do
+        }
+    }
+    return diff.total_milliseconds();
 }
 
 
