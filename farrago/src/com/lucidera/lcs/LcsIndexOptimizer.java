@@ -22,6 +22,7 @@ package com.lucidera.lcs;
 
 import com.lucidera.query.*;
 
+import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -91,18 +92,21 @@ public class LcsIndexOptimizer
     // best index mappings and its cost
     private Filter2IndexMapping bestMapping;
     private Double bestCost;
+    
+    // The creation timestamp of the label setting; null if there is no label
+    // set
+    private Timestamp labelTimestamp;
 
     Logger tracer;
 
     //~ Constructors -----------------------------------------------------------
 
-    public LcsIndexOptimizer()
-    {
-    }
-
     public LcsIndexOptimizer(LcsRowScanRel rowScanRel)
     {
         this.rowScanRel = rowScanRel;
+        labelTimestamp =
+            FennelRelUtil.getPreparingStmt(rowScanRel).getSession().
+                getSessionLabelCreationTimestamp();
         usableIndexes = new ArrayList<FemLocalIndex>();
 
         for (
@@ -177,7 +181,7 @@ public class LcsIndexOptimizer
                 tableRowCount
                 / (ByteLength * LcsIndexGuide.LbmBitmapSegMaxSize);
         }
-        bestMapping = new Filter2IndexMapping();
+        bestMapping = new Filter2IndexMapping();     
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -205,7 +209,7 @@ public class LcsIndexOptimizer
      *
      * @return if an index is valid
      */
-    private static boolean isValid(FemLocalIndex index)
+    private boolean isValid(FemLocalIndex index)
     {
         return index.getVisibility() == VisibilityKindEnum.VK_PUBLIC;
     }
@@ -234,31 +238,6 @@ public class LcsIndexOptimizer
     }
 
     /**
-     * Find the index position for an indexed column col
-     *
-     * @param index index that could contain col in its key
-     * @param col the column for which to look up index position
-     *
-     * @return index key position, or -1 if the column is not part of the index
-     * key
-     */
-    private static int getIndexColumnPos(
-        FemLocalIndex index,
-        FemAbstractColumn col)
-    {
-        List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
-
-        int i;
-        for (i = 0; i < indexedFeatures.size(); i++) {
-            if (indexedFeatures.get(i).getFeature().equals(col)) {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
-    /**
      * From a list of filters on distinct columns, find the one on a given
      * column.
      *
@@ -268,7 +247,7 @@ public class LcsIndexOptimizer
      *
      * @return the filter on the given column
      */
-    private static SargColumnFilter findSargFilterForColumn(
+    private SargColumnFilter findSargFilterForColumn(
         LcsRowScanRel rowScanRel,
         Set<SargColumnFilter> filterSet,
         FemAbstractColumn col)
@@ -1152,10 +1131,11 @@ public class LcsIndexOptimizer
      *
      * @return the cost of performing index search.
      */
-    private static Double getIndexBitmapScanCost(
+    private Double getIndexBitmapScanCost(
         FemLocalIndex index)
     {
-        Long blockCount = index.getPageCount();
+        Long blockCount =
+            FarragoCatalogUtil.getPageCount(index, labelTimestamp);
 
         if (blockCount == null) {
             return null;
@@ -1179,7 +1159,8 @@ public class LcsIndexOptimizer
         Double scannedBitmapCount)
     {
         assert (useCost);
-        Long blockCount = index.getPageCount();
+        Long blockCount =
+            FarragoCatalogUtil.getPageCount(index, labelTimestamp);
 
         if (blockCount == null) {
             return null;
@@ -1355,12 +1336,12 @@ public class LcsIndexOptimizer
      * @return disk blocks used o null if the clustered indexes are not
      * analyzed.
      */
-    private static Double getLcsTableBlockCount(LcsTable lcsTable)
+    private Double getLcsTableBlockCount(LcsTable lcsTable)
     {
         Double lcsTableBlockCount = 0.0;
         Long pageCount;
         for (FemLocalIndex index : lcsTable.getClusteredIndexes()) {
-            pageCount = index.getPageCount();
+            pageCount = FarragoCatalogUtil.getPageCount(index, labelTimestamp);
             if (pageCount == null) {
                 return null;
             }
@@ -1500,23 +1481,26 @@ public class LcsIndexOptimizer
     }
 
     /**
-     * Selects from a list of indexes the one with the fewest number of pages.
-     * If more than one has the fewest pages, pick based on the one that sorts
-     * alphabetically earliest, based on the index names.
+     * Selects from the clustered indexes on a table the one with the fewest
+     * number of pages.  If more than one has the fewest pages, pick based on
+     * the one that sorts alphabetically earliest, based on the index names.
      *
-     * @param indexList list of indexes to choose from
+     * @param rowScan the table
      *
      * @return the best index
      */
     public static FemLocalIndex getIndexWithMinDiskPages(
-        List<FemLocalIndex> indexList)
+        LcsRowScanRelBase rowScan)
     {
+        List<FemLocalIndex> indexList = rowScan.clusteredIndexes;
         if (indexList.isEmpty()) {
             return null;
         } else {
             Collections.sort(
                 indexList,
-                IndexPageCountComparator.instance);
+                new IndexPageCountComparator(
+                    FennelRelUtil.getPreparingStmt(rowScan).getSession().
+                        getSessionLabelCreationTimestamp()));
             return indexList.get(0);
         }
     }
@@ -1536,6 +1520,8 @@ public class LcsIndexOptimizer
      * @param startRidParamId
      * @param rowLimitParamId
      * @param requireMerge
+     * @param indexSelectivity the selectivity of the index scan; null if
+     * unknown
      *
      * @return the new index access rel created
      */
@@ -1549,7 +1535,8 @@ public class LcsIndexOptimizer
         Integer [] inputDirectiveProj,
         FennelRelParamId startRidParamId,
         FennelRelParamId rowLimitParamId,
-        boolean requireMerge)
+        boolean requireMerge,
+        Double indexSelectivity)
     {
         FennelRelParamId startRidParamIdForSearch =
             requireMerge ? null : startRidParamId;
@@ -1571,7 +1558,8 @@ public class LcsIndexOptimizer
                 null,
                 inputDirectiveProj,
                 startRidParamIdForSearch,
-                rowLimitParamIdForSearch);
+                rowLimitParamIdForSearch,
+                indexSelectivity);
 
         FennelSingleRel indexRel = indexSearch;
 
@@ -1612,6 +1600,8 @@ public class LcsIndexOptimizer
      * known to search to just one bitmap, then no merge is required. All other
      * cases, for example, when the input comes from a sort, a merge is
      * required.
+     * @param indexSelectivity the selectivity of the index being added; null
+     * if unknown
      *
      * @return the new index intersect rel created
      */
@@ -1625,7 +1615,8 @@ public class LcsIndexOptimizer
         Integer [] inputDirectiveProj,
         FennelRelParamId startRidParamId,
         FennelRelParamId rowLimitParamId,
-        boolean requireMerge)
+        boolean requireMerge,
+        Double indexSelectivity)
     {
         RelNode rowScanRel = call.rels[rowScanRelPosInCall];
         assert (rowScanRel instanceof LcsRowScanRel);
@@ -1739,10 +1730,15 @@ public class LcsIndexOptimizer
                 inputDirectiveProj,
                 startRidParamId,
                 rowLimitParamId,
-                requireMerge);
+                requireMerge,
+                indexSelectivity);
 
+        // Sort the index inputs based on their rowcounts, which effectively
+        // orders them based on their selectivities since they're all being
+        // applied on the same table.
         inputRelsToIntersect[numInputRelsToIntersect - 1] = newIndexAccessRel;
-
+        Arrays.sort(inputRelsToIntersect, new RowCountComparator());
+        
         LcsIndexIntersectRel intersectRel =
             new LcsIndexIntersectRel(
                 cluster,
@@ -1773,6 +1769,8 @@ public class LcsIndexOptimizer
      * known to search to just one bitmap, then no merge is required. All other
      * cases, for example, when the input comes from a sort, a merge is
      * required.
+     * @param indexSelectivity selectivity of the new index being added; null
+     * if unknown
      *
      * @return the new index access rel created
      */
@@ -1784,7 +1782,8 @@ public class LcsIndexOptimizer
         RelNode keyInput,
         Integer [] inputKeyProj,
         Integer [] inputDirectiveProj,
-        boolean requireMerge)
+        boolean requireMerge,
+        Double indexSelectivity)
     {
         RelNode rowScanRel = call.rels[rowScanRelPosInCall];
         assert (rowScanRel instanceof LcsRowScanRel);
@@ -1842,7 +1841,8 @@ public class LcsIndexOptimizer
                     inputDirectiveProj,
                     startRidParamId,
                     rowLimitParamId,
-                    requireMerge);
+                    requireMerge,
+                    indexSelectivity);
         } else {
             newIndexAccessRel =
                 newIndexRel(
@@ -1855,7 +1855,8 @@ public class LcsIndexOptimizer
                     inputDirectiveProj,
                     startRidParamId,
                     rowLimitParamId,
-                    requireMerge);
+                    requireMerge,
+                    indexSelectivity);
         }
 
         return newIndexAccessRel;
@@ -1894,22 +1895,25 @@ public class LcsIndexOptimizer
     }
 
     /*
-     * A comparator class to sort index based on number of disk pages used.
+     * A comparator class to sort indexes based on the disk pages stats for a
+     * specified label setting.
      */
     private static class IndexPageCountComparator
         implements Comparator<FemLocalIndex>
     {
-        static final IndexPageCountComparator instance =
-            new IndexPageCountComparator();
+        private Timestamp labelTimestamp;
         
-        IndexPageCountComparator()
+        IndexPageCountComparator(Timestamp labelTimestamp)
         {
+            this.labelTimestamp = labelTimestamp;
         }
 
         public int compare(FemLocalIndex index1, FemLocalIndex index2)
         {
-            Long pageCount1 = index1.getPageCount();
-            Long pageCount2 = index2.getPageCount();
+            Long pageCount1 =
+                FarragoCatalogUtil.getPageCount(index1, labelTimestamp);
+            Long pageCount2 =
+                FarragoCatalogUtil.getPageCount(index2, labelTimestamp);
 
             int compRes = 0;
 
@@ -2358,6 +2362,30 @@ public class LcsIndexOptimizer
         public boolean equals(Object obj)
         {
             return (obj instanceof MappedFilterSelectivityComparator);
+        }
+    }
+    
+    /**
+     * RowCountComparator is used to sort RelNodes based on their rowcounts,
+     * provided the counts are known.  Unknown rowcounts are always sorted 
+     * last.
+     */
+    private static class RowCountComparator
+        implements Comparator<RelNode>
+    {
+        public int compare(RelNode r1, RelNode r2)
+        {
+            Double rows1 = RelMetadataQuery.getRowCount(r1);
+            Double rows2 = RelMetadataQuery.getRowCount(r2);
+            if (rows1 != null && rows2 != null) {
+                return rows1.compareTo(rows2);
+            } else if (rows1 != null) {
+                return -1;
+            } else if (rows2 != null) {
+                return 1;
+            } else {
+                return 0;
+            }
         }
     }
 }

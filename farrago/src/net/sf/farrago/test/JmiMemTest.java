@@ -327,18 +327,6 @@ public class JmiMemTest
         xmiWriter.write(outStream, c, "1.2");
         String xmi2 = outStream.toString();
 
-        if (true) {
-            // We get StackOverflowException when this runs under aspen.
-            // Please add the following lines to XmiFileComparator, at the
-            // start of the method ElementComparator.compare(Element,Element):
-            //
-            //   if (o1 == o2) {
-            //       return 0;
-            //   }
-            //
-            // then re-enable this test.
-            return;
-        }
         // Now diff:  thanks to Enki/Hibernate these don't come out the same
         // anymore.  Borrow Enki's solution to comparing XMI files.
         XmiFileComparator.assertEqual(xmi1, xmi2);

@@ -20,7 +20,9 @@ insert into tree values
 ;
 
 select * 
-from table( applib.collapse_rows(cursor (select * from tree), '~'))
+from table( 
+  applib.collapse_rows(
+    cursor (select * from tree order by parent, child),'~'))
 order by parent_value;
 
 -- with null values
@@ -34,7 +36,9 @@ insert into tree values
 ;
 
 select * 
-from table( applib.collapse_rows(cursor (select * from tree), '|'))
+from table(
+  applib.collapse_rows(
+    cursor (select * from tree order by parent, child), '|'))
 order by parent_value;
 
 -- with repeats
@@ -47,56 +51,87 @@ insert into tree values
 ;
     
 select * 
-from table( applib.collapse_rows(cursor (select * from tree), ' '))
+from table(
+  applib.collapse_rows(
+    cursor (select * from tree order by parent, child), ' '))
+order by parent_value;
+
+-- with spaces and empty strings
+insert into tree values
+  ('', '06'),
+  ('01   ', '  05'),
+  ('02', ''),
+  ('    ', '05'),
+  ('11', ''),
+  ('08', '    ')
+;
+
+select *
+from table(
+  applib.collapse_rows(
+    cursor (select * from tree order by parent, child), '~'))
 order by parent_value;
 
 --
--- input table with non-string types
+-- input table with non-string children
 --
-create table typetable(parent float, child date);
+create table typetable(parent varchar(50), child date);
+
+-- with no rows
+select * 
+from table(
+  applib.collapse_rows(
+    cursor (select * from typetable order by parent, child), '$'))
+order by parent_value;
 
 insert into typetable values
-  (1.115, DATE'2006-12-13'),
-  (1.114, DATE'2006-12-13'),
-  (1.115, DATE'1900-05-15'),
-  (123213.3249024800, DATE'2001-1-19'),
-  (123213.32490248, DATE'1977-2-22'),
-  (56, DATE'1867-8-8'),
+  ('1.115', DATE'2006-12-13'),
+  ('1.114', DATE'2006-12-13'),
+  ('1.115', DATE'1900-05-15'),
+  ('123213.32490248  ', DATE'2001-1-19'),
+  ('123213.32490248', DATE'1977-2-22'),
+  ('56', DATE'1867-8-8'),
   (null, DATE'2001-1-19'),
   (null, null),
-  (1.115, DATE'2002-6-17'),
-  (56.00001, DATE'1977-2-9'),
-  (7291.08371, null)
+  ('1.115', DATE'2002-6-17'),
+  ('56.00001', DATE'1977-2-9'),
+  ('7291.08371', null)
 ;
 
 select * 
-from table( applib.collapse_rows(cursor (select * from typetable), '~'))
+from table(
+  applib.collapse_rows(
+    cursor (select * from typetable order by parent, child), '~'))
 order by parent_value;
+
 
 -- long concatenation
 insert into typetable values
-  (1.115, DATE'1111-11-11'),
-  (1.115000, DATE'1989-9-11'),
-  (1.115, DATE'1670-4-27'),
-  (1.115, DATE'1212-12-12'),
-  (1.115, DATE'2001-1-1')
+  ('1.115', DATE'1111-11-11'),
+  ('1.115   ', DATE'1989-9-11'),
+  ('1.115', DATE'1670-4-27'),
+  ('1.115', DATE'1212-12-12'),
+  ('1.115', DATE'2001-1-1')
 ;
 
--- FRG-209 (floating point differs for VM)
 select * 
-from table( applib.collapse_rows(cursor (select * from typetable), '~'))
-where parent_value = cast(1.115 as varchar(65535));
+from table(
+  applib.collapse_rows(
+    cursor (select * from typetable order by parent, child), '~'))
+where parent_value = '1.115';
 
 -- with view
 create view vv as 
 select *
-from table( applib.collapse_rows( cursor (select * from typetable), '|'));
+from table(
+  applib.collapse_rows(
+    cursor (select * from typetable order by parent, child), '|'));
 
--- FRG-209 (floating point differs for VM)
 select * 
 from table(
   applib.collapse_rows( cursor(
-    select collapsed_row_count, parent_value from vv),
+    select cast(collapsed_row_count as varchar(20)), parent_value 
+    from vv order by 1,2),
     '*'))
 order by parent_value;
  
@@ -105,10 +140,12 @@ select *
 from table( 
   applib.collapse_rows(cursor (
     select 
-      collapsed_row_count,
+      cast(collapsed_row_count as varchar(20)),
       parent_value || ':' || concatenated_child_values 
     from table( 
-      applib.collapse_rows(cursor( select * from typetable), '#'))),
+      applib.collapse_rows(
+        cursor( select * from typetable order by 1,2 ), '#'))
+    order by 1,2),
     '|'))
 order by parent_value;
 
@@ -118,7 +155,9 @@ order by parent_value;
 
 -- delimiter over one character will get truncated
 select * 
-from table( applib.collapse_rows(cursor ( select * from tree), '~~||**'))
+from table(
+  applib.collapse_rows(
+    cursor ( select * from tree order by parent, child), '~~||**'))
 order by parent_value;
 
 -- concatenations greater than 16384 characters will get truncated (LER-7174),
@@ -129,8 +168,8 @@ select
     collapsed_row_count
 from table(applib.collapse_rows(
 cursor(select * from (values 
-(0, applib.repeater('X',10000)), 
-(0, applib.repeater('Y',10000)))),
+('0', applib.repeater('X',10000)), 
+('0', applib.repeater('Y',10000)))),
 '|'
 ));
 
@@ -141,9 +180,9 @@ select
     collapsed_row_count
 from table(applib.collapse_rows(
 cursor(select * from (values 
-(0, applib.repeater('X',6000)),
-(0, applib.repeater('Y',6000)),
-(0, applib.repeater('Z',6000)))),
+('0', applib.repeater('X',6000)),
+('0', applib.repeater('Y',6000)),
+('0', applib.repeater('Z',6000)))),
 '|'
 ));
 
@@ -155,15 +194,34 @@ select
     collapsed_row_count
 from table(applib.collapse_rows(
 cursor(select * from (values 
-(0, applib.repeater('X',20000)))),
+('0', applib.repeater('X',20000)))),
 '|'
 ));
 
 
 -- input table with incorrect number of columns
 select * 
-from table( applib.collapse_rows(cursor (select *, parent||'lolo' from tree), '|'))
+from table(
+  applib.collapse_rows(
+    cursor (select *, parent||'lolo' from tree order by 1,2), '|'))
 order by parent_value;
+
+-- improperly sorted input table
+select * 
+from table(
+  applib.collapse_rows(
+    cursor(select * from tree order by child, parent), '~'))
+order by parent_value;
+
+
+-- parent column of input table is not VARCHAR datatype
+select *
+from table(applib.collapse_rows(
+  cursor(select * from (values
+    (56.3, 'fiftys'),
+    (30.3, 'thirtys'),
+    (57.9, 'fiftys'))),
+    '#'));
 
 -- cleanup
 drop table tree cascade;

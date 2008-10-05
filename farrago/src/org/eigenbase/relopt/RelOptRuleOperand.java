@@ -41,12 +41,6 @@ import org.eigenbase.util.*;
  */
 public class RelOptRuleOperand
 {
-    //~ Static fields/initializers ---------------------------------------------
-
-    @Deprecated // remove when no uses in LucidEra red-zone code
-    public static final RelOptRuleOperand [] noOperands =
-        new RelOptRuleOperand[0];
-
     //~ Instance fields --------------------------------------------------------
 
     private RelOptRuleOperand parent;

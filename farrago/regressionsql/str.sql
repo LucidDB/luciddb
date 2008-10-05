@@ -81,3 +81,7 @@ insert into test.customers values (0,'Locicero');
 select 1
 FROM test.CUSTOMERS M, test.CUSTOMERS F
 WHERE M.LNAME = F.LNAME;
+
+-- FRG-319
+alter system set "calcVirtualMachine"='CALCVM_JAVA';
+values trim ('   ');

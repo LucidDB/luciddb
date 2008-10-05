@@ -446,6 +446,11 @@ public class BytePointer
             }
         }
         if (trailing) {
+            if (pos == cnt) {
+                // already trimmed away an entire empty string;
+                // don't do it twice!  (FRG-319)
+                return;
+            }
             for (i = cnt - 1; i >= 0; i--) {
                 if (buf[i] == trimChar) {
                     count--;

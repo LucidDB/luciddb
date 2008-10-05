@@ -120,7 +120,12 @@ public abstract class FarragoStatsUDR
                     tableName);
             }
 
-            Long rowcount = columnSet.getRowCount();
+            Long[] rowCountStats = new Long[2];
+            FarragoCatalogUtil.getRowCounts(
+                columnSet, 
+                null, 
+                rowCountStats);
+            Long rowcount = rowCountStats[0];
             if (rowcount == null) {
                 return 0;
             }
@@ -329,7 +334,10 @@ public abstract class FarragoStatsUDR
             }
             
             FarragoTableStatistics tableStats = 
-                new FarragoTableStatistics(repos, columnSet);
+                new FarragoTableStatistics(
+                    repos,
+                    columnSet,
+                    sess.getSessionLabelCreationTimestamp());
             RelStatColumnStatistics columnStats = 
                 tableStats.getColumnStatistics(
                     col.getOrdinal(), expr.evaluate());

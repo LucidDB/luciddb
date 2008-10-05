@@ -193,6 +193,8 @@ DdlStmt DdlStmtEof() :
                 modelElement = RoleDefinition()
                 |
                 modelElement = ExtensionModelDefinition()
+                |
+                modelElement = LabelDefinition()
             )
             {
                 ddlStmt = new DdlCreateStmt(modelElement, replaceOptions);
@@ -208,39 +210,46 @@ DdlStmt DdlStmtEof() :
                 dropRestrict = true;
             }
             (
-                modelElement = SchemaDrop()
+                (
+                    modelElement = SchemaDrop()
+                    |
+                    modelElement = TableDrop()
+                    |
+                    modelElement = IndexDrop()
+                    |
+                    modelElement = ViewDrop()
+                    |
+                    modelElement = RoutineDrop()
+                    |
+                    modelElement = UserDefinedTypeDrop()
+                    |
+                    modelElement = UserDefinedOrderingDrop()
+                    |
+                    modelElement = JarDrop()
+                    |
+                    modelElement = DataServerDrop()
+                    |
+                    LOOKAHEAD(2)
+                    modelElement = DataWrapperDrop()
+                    |
+                    LOOKAHEAD(2)
+                    modelElement = ForeignTableDrop()
+                    |
+                    modelElement = UserDrop()
+                    |
+                    modelElement = RoleDrop()
+                    |
+                    modelElement = ExtensionModelDrop()
+                )
+                {
+                    ddlStmt = newDdlDropStmt(modelElement,dropRestrict);
+                }
                 |
-                modelElement = TableDrop()
-                |
-                modelElement = IndexDrop()
-                |
-                modelElement = ViewDrop()
-                |
-                modelElement = RoutineDrop()
-                |
-                modelElement = UserDefinedTypeDrop()
-                |
-                modelElement = UserDefinedOrderingDrop()
-                |
-                modelElement = JarDrop()
-                |
-                modelElement = DataServerDrop()
-                |
-                LOOKAHEAD(2)
-                modelElement = DataWrapperDrop()
-                |
-                LOOKAHEAD(2)
-                modelElement = ForeignTableDrop()
-                |
-                modelElement = UserDrop()
-                |
-                modelElement = RoleDrop()
-                |
-                modelElement = ExtensionModelDrop()
+                modelElement = LabelDrop()
+                {
+                    ddlStmt = newDdlDropLabelStmt(modelElement,dropRestrict);
+                }
             )
-            {
-                ddlStmt = newDdlDropStmt(modelElement,dropRestrict);
-            }
         )
         |
         (
@@ -813,6 +822,35 @@ FemRole RoleDefinition() :
     ]
     {
         return role;
+    }
+}
+
+FemLabel LabelDefinition() :
+{
+    FemLabel label;
+    SqlIdentifier labelName;
+    SqlIdentifier parentLabel;
+}
+{
+    <LABEL> labelName = SimpleIdentifier()
+    {
+        label = getRepos().newFemLabel();
+        label.setName(labelName.getSimple());
+        label.setNamespace(
+            getRepos().getCatalog(
+                FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
+    }
+    [
+        <FROM> <LABEL> parentLabel = SimpleIdentifier()
+        {
+            label.setParentLabel(
+                farragoParser.getStmtValidator().findUnqualifiedObject(
+                    parentLabel, FemLabel.class));
+        }
+    ]
+    OptionalDescription(label)
+    {
+        return label;
     }
 }
 
@@ -2769,6 +2807,23 @@ CwmModelElement RoleDrop() :
     {
         return farragoParser.getStmtValidator().findUnqualifiedObject(
             name, FemRole.class);
+    }
+}
+
+CwmModelElement LabelDrop() :
+{
+    SqlIdentifier name;
+    FemLabel label;
+}
+{
+    <LABEL> name = SimpleIdentifier()
+    {
+        label = farragoParser.getStmtValidator().findUnqualifiedObject(
+            name, FemLabel.class);
+    }
+    CascadeOption()
+    {
+        return label;
     }
 }
 

@@ -126,6 +126,14 @@ create view vjoin(vja, vjb, vjc) as
     select t1.t1b - 10, t2.t2c - 100, t3.t3d - 1000
         from t1, t2, t3 where t1.t1a = t2.t2a and t2.t2a = t3.t3a;
 
+-- verify a bug which used to be caused by the fact that we
+-- did not wrap default null values in a cast, so pushing them down
+-- through a union could end up with a bare null (whereas without
+-- the union, the bug was covered up by the fact that we coerce
+-- the inputs to an INSERT to the target types)
+create table t4(i int, j int);
+insert into t4(i) select i from t4 union all select i from t4;
+
 select * from vjoin order by vja;
 select vjc/1000, vja/10, vjb/100 from vjoin order by 1;
 select count(*) from vjoin;

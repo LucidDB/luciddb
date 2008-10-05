@@ -30,15 +30,20 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
 
 
 /**
  * Collection of planner rules that apply various simplifying transformations on
- * RexNode trees. Currently, the only transformation is constant reduction,
- * which evaluates constant subtrees, replacing them with a corresponding
- * RexLiteral.
+ * RexNode trees. Currently, there are two transformations:
+ * <ul>
+ * <li>Constant reduction, which evaluates constant subtrees, replacing them
+ * with a corresponding RexLiteral
+ * <li>Removal of redundant casts, which occurs when the argument into the
+ * cast is the same as the type of the resulting cast expression
+ * </ul>
  *
  * @author John V. Sichi
  * @version $Id$
@@ -274,22 +279,52 @@ public abstract class FarragoReduceExpressionsRule
         FarragoSessionPlanner planner =
             (FarragoSessionPlanner) rel.getCluster().getPlanner();
         FarragoSessionPreparingStmt preparingStmt = planner.getPreparingStmt();
-        List<RexNode> reducibleExps =
-            findReducibleExps(
-                preparingStmt,
-                rel.getCluster().getTypeFactory(),
-                expList);
-        if (reducibleExps.isEmpty()) {
+        List<RexNode> constExps = new ArrayList<RexNode>();
+        List<Boolean> addCasts = new ArrayList<Boolean>();        
+        List<RexNode> removableCasts = new ArrayList<RexNode>();
+        findReducibleExps(
+            preparingStmt,
+            rel.getCluster().getTypeFactory(),
+            expList,
+            constExps,
+            addCasts,
+            removableCasts);
+        if (constExps.isEmpty() && removableCasts.isEmpty()) {
             return false;
         }
 
+        // Remove redundant casts before reducing constant expressions.
+        // If the argument to the redundant cast is a reducible constant,
+        // reducing that argument to a constant first will result in not being
+        // able to locate the original cast expression.
+        if (!removableCasts.isEmpty()) {
+            List<RexNode> reducedExprs = new ArrayList<RexNode>();
+            List<Boolean> noCasts = new ArrayList<Boolean>();
+            for (RexNode exp : removableCasts) {
+                RexCall call = (RexCall) exp;
+                reducedExprs.add(call.getOperands()[0]);
+                noCasts.add(false);
+            }
+            RexReplacer replacer =
+                new RexReplacer(
+                    rexBuilder,
+                    removableCasts,
+                    reducedExprs,
+                    noCasts);
+            replacer.apply(expList);
+        }
+        
+        if (constExps.isEmpty()) {
+            return true;
+        }
+        
         // Compute the values they reduce to.
         List<RexNode> reducedValues = new ArrayList<RexNode>();
         ReentrantValuesStmt reentrantStmt =
             new ReentrantValuesStmt(
                 preparingStmt.getRootStmtContext(),
                 rexBuilder,
-                reducibleExps,
+                constExps,
                 reducedValues);
         FarragoSession session = getSession(rel);
         reentrantStmt.execute(session, true);
@@ -298,15 +333,22 @@ public abstract class FarragoReduceExpressionsRule
         }
 
         // For ProjectRel, we have to be sure to preserve the result
-        // types, so add casts as needed.  For FilterRel, this isn't
-        // necessary, and the presence of casts could hinder other
-        // rules such as sarg analysis, which require bare literals.
-        boolean addCasts = (rel instanceof ProjectRel);
+        // types, so always cast regardless of the expression type.
+        // For other RelNodes like FilterRel, in general, this isn't necessary,
+        // and the presence of casts could hinder other rules such as sarg
+        // analysis, which require bare literals.  But there are special cases,
+        // like when the expression is a UDR argument, that need to be
+        // handled as special cases.
+        if (rel instanceof ProjectRel) {
+            for (int i = 0; i < reducedValues.size(); i++) {
+                addCasts.set(i, true);
+            }
+        }
 
         RexReplacer replacer =
             new RexReplacer(
                 rexBuilder,
-                reducibleExps,
+                constExps,
                 reducedValues,
                 addCasts);
         replacer.apply(expList);
@@ -321,21 +363,40 @@ public abstract class FarragoReduceExpressionsRule
         return preparingStmt.getSession();
     }
 
-    private static List<RexNode> findReducibleExps(
+    /**
+     * Locates expressions that can be reduced to literals or converted
+     * to expressions with redundant casts removed.
+     * 
+     * @param preparingStmt the statement containing the expressions
+     * @param typeFactory type factory
+     * @param exps list of candidate expressions to be examined for reduction
+     * @param constExps returns the list of expressions that can be constant
+     * reduced
+     * @param addCasts indicator for each expression that can be constant
+     * reduced, whether a cast of the resulting reduced expression is
+     * potentially necessary
+     * @param removableCasts returns the list of cast expressions where the
+     * cast can be removed
+     */
+    private static void findReducibleExps(
         FarragoSessionPreparingStmt preparingStmt,
         RelDataTypeFactory typeFactory,
-        List<RexNode> exps)
+        List<RexNode> exps,       
+        List<RexNode> constExps,
+        List<Boolean> addCasts,
+        List<RexNode> removableCasts)
     {
-        List<RexNode> result = new ArrayList<RexNode>();
-        ConstantGardener gardener =
-            new ConstantGardener(
+        ReducibleExprLocator gardener =
+            new ReducibleExprLocator(
                 preparingStmt,
                 typeFactory,
-                result);
+                constExps,
+                addCasts,
+                removableCasts);
         for (RexNode exp : exps) {
             gardener.analyze(exp);
         }
-        return result;
+        assert(constExps.size() == addCasts.size());
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -350,13 +411,13 @@ public abstract class FarragoReduceExpressionsRule
         private final RexBuilder rexBuilder;
         private final List<RexNode> reducibleExps;
         private final List<RexNode> reducedValues;
-        private final boolean addCasts;
+        private final List<Boolean> addCasts;
 
         RexReplacer(
             RexBuilder rexBuilder,
             List<RexNode> reducibleExps,
             List<RexNode> reducedValues,
-            boolean addCasts)
+            List<Boolean> addCasts)
         {
             this.rexBuilder = rexBuilder;
             this.reducibleExps = reducibleExps;
@@ -372,7 +433,7 @@ public abstract class FarragoReduceExpressionsRule
                 return super.visitCall(call);
             }
             RexNode replacement = reducedValues.get(i);
-            if (addCasts
+            if (addCasts.get(i)
                 && (replacement.getType() != call.getType()))
             {
                 // Handle change from nullable to NOT NULL by claiming
@@ -427,9 +488,10 @@ public abstract class FarragoReduceExpressionsRule
     }
 
     /**
-     * Beware of the 3 Bees.
+     * Helper class used to locate expressions that either can be reduced
+     * to literals or contain redundant casts.
      */
-    private static class ConstantGardener
+    private static class ReducibleExprLocator
         extends RexVisitorImpl<Void>
     {
         enum Constancy
@@ -441,18 +503,29 @@ public abstract class FarragoReduceExpressionsRule
 
         private final List<Constancy> stack;
 
-        private final List<RexNode> result;
+        private final List<RexNode> constExprs;
+        
+        private final List<Boolean> addCasts;
+        
+        private final List<RexNode> removableCasts;
+        
+        private final List<SqlOperator> parentCallTypeStack;
 
-        ConstantGardener(
+        ReducibleExprLocator(
             FarragoSessionPreparingStmt preparingStmt,
             RelDataTypeFactory typeFactory,
-            List<RexNode> result)
+            List<RexNode> constExprs,
+            List<Boolean> addCasts,
+            List<RexNode> removableCasts)
         {
             // go deep
             super(true);
             this.preparingStmt = preparingStmt;
-            this.result = result;
+            this.constExprs = constExprs;
+            this.addCasts = addCasts;
+            this.removableCasts = removableCasts;
             this.stack = new ArrayList<Constancy>();
+            this.parentCallTypeStack = new ArrayList<SqlOperator>();
         }
 
         public void analyze(RexNode exp)
@@ -463,12 +536,13 @@ public abstract class FarragoReduceExpressionsRule
 
             // Deal with top of stack
             assert (stack.size() == 1);
+            assert(parentCallTypeStack.isEmpty());
             Constancy rootConstancy = stack.get(0);
             if (rootConstancy == Constancy.REDUCIBLE_CONSTANT) {
                 // The entire subtree was constant, so add it to the result.
                 addResult(exp);
             }
-            stack.clear();
+            stack.clear();           
         }
 
         private Void pushVariable()
@@ -488,7 +562,22 @@ public abstract class FarragoReduceExpressionsRule
                     return;
                 }
             }
-            result.add(exp);
+            constExprs.add(exp);
+            
+            // In the case where the expression corresponds to a UDR argument,
+            // we need to preserve casts.  Note that this only applies to
+            // the topmost argument, not expressions nested within the UDR
+            // call.
+            // 
+            // REVIEW zfong 6/13/08 - Are there other expressions where we
+            // also need to preserve casts?
+            if (parentCallTypeStack.isEmpty()) {
+                addCasts.add(false);
+            } else {
+                addCasts.add(
+                    parentCallTypeStack.get(parentCallTypeStack.size() - 1)
+                        instanceof FarragoUserDefinedRoutine);
+            }
         }
 
         public Void visitInputRef(RexInputRef inputRef)
@@ -523,6 +612,8 @@ public abstract class FarragoReduceExpressionsRule
 
         private void analyzeCall(RexCall call, Constancy callConstancy)
         {
+            parentCallTypeStack.add(call.getOperator());
+            
             // visit operands, pushing their states onto stack
             super.visitCall(call);
 
@@ -566,10 +657,23 @@ public abstract class FarragoReduceExpressionsRule
                         addResult(call.getOperands()[iOperand]);
                     }
                 }
+                // if this cast expression can't be reduced to a literal,
+                // then see if we can remove the cast
+                if (call.getOperator() == SqlStdOperatorTable.castFunc) {
+                    RexNode[] operands = call.getOperands();
+                    if (operands.length == 1 && operands[0].getType().equals(
+                        call.getType()))
+                    {
+                        removableCasts.add(call);
+                    }
+                }
             }
 
             // pop operands off of the stack
             operandStack.clear();
+            
+            // pop this parent call operator off the stack
+            parentCallTypeStack.remove(parentCallTypeStack.size() - 1);
 
             // push constancy result for this call onto stack
             stack.add(callConstancy);

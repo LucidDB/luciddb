@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server>
+  <mbean code="com.yoyodyne.LucidDbService" name="com.yoyodyne:service=LucidDbService"/>
+  <mbean code="com.lucidera.luciddb.mbean.sysviews.SqlStatements" name="com.lucidera.luciddb.mbean:service=SqlStatements"/>
+  <mbean code="com.lucidera.luciddb.mbean.sysviews.Sessions" name="com.lucidera.luciddb.mbean:service=Sessions"/>
+  <mbean code="com.lucidera.luciddb.mbean.sysviews.SystemParameters" name="com.lucidera.luciddb.mbean:service=SystemParameters"/>
+  <mbean code="com.lucidera.luciddb.mbean.sysviews.ObjectsInUse" name="com.lucidera.luciddb.mbean:service=ObjectsInUse"/>
+  <mbean code="com.lucidera.luciddb.mbean.sysviews.PerfCounters" name="com.lucidera.luciddb.mbean:service=PerfCounters"/>
+  <mbean code="com.lucidera.luciddb.mbean.sysviews.ForeignSources" name="com.lucidera.luciddb.mbean:service=ForeignSources"/>
+  <mbean code="com.lucidera.luciddb.mbean.server.PingServer" name="com.lucidera.luciddb.mbean:service=PingServer"/>
+  <mbean code="com.lucidera.luciddb.mbean.server.StorageManagement" name="com.lucidera.luciddb.mbean:service=StorageManagement"/>
+</server>

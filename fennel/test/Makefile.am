@@ -30,6 +30,7 @@ TupleTest \
 StandardTypeTest \
 RandomAllocationSegmentTest \
 ExecStreamTest \
+ParallelExecStreamSchedulerTest \
 DatabaseTest \
 LogicalTxnTest \
 SegStreamTest \
@@ -58,6 +59,8 @@ ResourceTest_SOURCES=ResourceTest.cpp
 LocalConditionTest_SOURCES=LocalConditionTest.cpp
 
 ExecStreamTest_SOURCES=ExecStreamTest.cpp
+
+ParallelExecStreamSchedulerTest_SOURCES=ParallelExecStreamSchedulerTest.cpp
 
 RandomAccessFileDeviceTest_SOURCES=RandomAccessFileDeviceTest.cpp
 

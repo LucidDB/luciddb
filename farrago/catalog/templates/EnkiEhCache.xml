@@ -3,7 +3,7 @@
 <ehcache>
 
   <defaultCache
-    maxElementsInMemory="10000"
+    maxElementsInMemory="35000"
     eternal="true"
     overflowToDisk="false"
     diskPersistent="false"/>

@@ -53,7 +53,6 @@ public abstract class FarragoPerforceUDR
         boolean readingChanges = false;
 
         int iField = 1;
-        StringBuilder description = new StringBuilder();
 
         try {
             inputStream = url.openStream();
@@ -107,15 +106,14 @@ public abstract class FarragoPerforceUDR
                     continue;
                 }
 
-                if (line.equals("</pre>")) {
-                    String s = description.toString();
+                if (line.endsWith("<br></td>")) {
+                    String s = line;
                     if (s.length() > 2044) {
                         s = s.substring(0, 2044) + " ...";
                     }
                     resultInserter.setString(iField, s);
                     resultInserter.executeUpdate();
                     iField = 1;
-                    description = new StringBuilder();
                     continue;
                 }
 
@@ -132,13 +130,8 @@ public abstract class FarragoPerforceUDR
                     line = line.substring(0, line.length() - 5);
                 }
 
-                if (iField == 5) {
-                    description.append(line);
-                    description.append("\n");
-                } else {
-                    resultInserter.setString(iField, line);
-                    ++iField;
-                }
+                resultInserter.setString(iField, line);
+                ++iField;
             }
         } finally {
             if (inputStream != null) {

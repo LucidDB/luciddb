@@ -261,7 +261,6 @@ bool LbmDeletionIndexReader::searchForRid(LcsRid rid)
     btreeReader->searchForKey(searchEntry, DUP_SEEK_BEGIN, false);
     btreeReader->getTupleAccessorForRead().unmarshal(*pBitmapSegTuple);
     LcsRid foundSrid = LbmEntry::getStartRid(*pBitmapSegTuple);
-    assert(LbmSegment::roundToByteBoundary(foundSrid) <= rid);
 
     // determine whether the tuple rid reader must be restarted. it should
     // be restarted if the tuple has changed or if the rid we are searching
@@ -282,6 +281,6 @@ bool LbmDeletionIndexReader::searchForRid(LcsRid rid)
     return (btreeRid == rid);
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmRidReader.cpp#7 $");
 
 // End LbmRidReader.cpp

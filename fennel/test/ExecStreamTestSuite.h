@@ -60,10 +60,12 @@ public:
     {
         if (initTestCases) {
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testScratchBufferExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testDoubleBufferExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamInner);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCountAggExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSumAggExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream1);
@@ -94,10 +96,14 @@ public:
             FENNEL_UNIT_TEST_CASE(
                 ExecStreamTestSuite,
                 testNestedLoopJoinExecStream2);
+            FENNEL_UNIT_TEST_CASE(
+                ExecStreamTestSuite,
+                testSplitterPlusBarrier);
         }
     }
 
     void testScratchBufferExecStream();
+    void testDoubleBufferExecStream();
     void testCopyExecStream();
     void testMergeExecStream();
     void testSegBufferExecStream();
@@ -106,6 +112,7 @@ public:
     void testReshapeExecStream();
     void testSingleValueAggExecStream();
     void testMergeImplicitPullInputs();
+    void testSplitterPlusBarrier();
     
     void testCartesianJoinExecStreamOuter()
     {

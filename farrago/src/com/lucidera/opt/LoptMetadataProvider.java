@@ -317,8 +317,9 @@ public class LoptMetadataProvider
         // computed by a formula that favors asymmetry between input sizes,
         // since hash join does better in that case (only the build side needs
         // to fit in memory).  This is bogus in cases where we can't even use
-        // hash join so we special case cartesian product joins.  Anyway, the
-        // factor works out to 10 in the case of a cartesian product join or if
+        // hash join so we special case cartesian product joins and joins
+        // that can't be fully processed using hash joins.  Anyway, the
+        // factor works out to 10 in those non-hash-joinable cases or if
         // the two inputs are of equal size.  It decreases exponentially down to
         // to an asymptote of 1 representing one side being infinitely larger
         // than the other.  If one input is twice as big as the other, the
@@ -336,21 +337,43 @@ public class LoptMetadataProvider
         double maxInputRowCount = Math.max(leftRowCount, rightRowCount);
         if (maxInputRowCount > 0) {
             double joinRowCount = RelMetadataQuery.getRowCount(rel);
-
-            // REVIEW jvs 2-Jan-2006:  What about the case of a
-            // a real join which can't be implemented via hash join?
-            // Instead of testing for isAlwaysTrue(), we could
-            // try to analyze the join condition to predict whether
-            // we'll be able to implement it via hash join.
-
             double factor =
-                (rel.getCondition().isAlwaysTrue()) ? 1.0
-                : (minInputRowCount / maxInputRowCount);
+                (rel.getCondition().isAlwaysTrue() ||
+                    !hashJoinable(rel)) ?
+                1.0 : (minInputRowCount / maxInputRowCount);
             joinRowCount *= Math.pow(10.0, factor);
             result += joinRowCount;
         }
 
         return result;
+    }
+    
+    /**
+     * Determines whether the join condition in a join can be fully processed
+     * using a hash join.
+     * 
+     * @param joinRel the join
+     * 
+     * @return true if the join can be fully processed using a hash join
+     */
+    private boolean hashJoinable(JoinRel joinRel)
+    {
+        List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
+        List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
+        List<Integer> filterNulls = new ArrayList<Integer>();
+
+        // Determine whether there are any join conditions that can't be
+        // handled by hash join
+        RexNode nonEquiCondition =
+            RelOptUtil.splitJoinCondition(
+                joinRel.getLeft(),
+                joinRel.getRight(),
+                joinRel.getCondition(),
+                leftJoinKeys,
+                rightJoinKeys,
+                filterNulls,
+                null);
+        return (nonEquiCondition == null);
     }
 
     public Double getCostWithFilters(AggregateRel rel, RexNode filter)
@@ -380,17 +403,21 @@ public class LoptMetadataProvider
         // TODO zfong 8/29/06 - if we support mapping of physical relnodes to
         // logical relnodes, then this method may not be needed
         LhxJoinRelType joinType = rel.getJoinType();
-        int nFieldsLeft = rel.getLeft().getRowType().getFieldCount();
         if (joinType == LhxJoinRelType.LEFTSEMI) {
-            assert (groupKey.nextSetBit(nFieldsLeft) < 0);
+            assert (
+                groupKey.nextSetBit(
+                    rel.getLeft().getRowType().getFieldCount()) < 0);
             return RelMetadataQuery.getDistinctRowCount(
                 rel.getLeft(),
                 groupKey,
                 predicate);
-        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
-            // the key references all columns on the left, so we can reuse
-            // it to represent the columns on the right
-            assert (groupKey.nextSetBit(nFieldsLeft) < 0);
+        } else if (joinType == LhxJoinRelType.RIGHTANTI ||
+            joinType == LhxJoinRelType.RIGHTSEMI)
+        {
+            // the key references only columns on the right
+            assert (
+                groupKey.nextSetBit(
+                    rel.getRight().getRowType().getFieldCount()) < 0);
             return RelMetadataQuery.getDistinctRowCount(
                 rel.getRight(),
                 groupKey,
@@ -522,6 +549,26 @@ public class LoptMetadataProvider
         }
         // Include selectivity of inputs into the rowscan
         return result * rel.getInputSelectivity();
+    }
+    
+    public Double getRowCount(LcsIndexSearchRel rel)
+    {
+        // This row count only includes the effects of applying this
+        // index search.  Therefore, to compute that, we need to first
+        // retrieve the unfiltered rowcount of the row scan corresponding
+        // to this index search, and then apply the selectivity of just this
+        // index search.
+        Double result =
+            FarragoRelMetadataProvider.getRowCountStat(
+                rel.getLcsTable(),
+                repos,
+                FennelRelUtil.getPreparingStmt(rel).getSession().
+                    getSessionLabelCreationTimestamp());
+        Double selec = rel.getIndexSelectivity();
+        if (result == null || selec == null) {
+            return null;
+        }
+        return result * selec;
     }
 
     public Double getRowCount(JoinRel rel)

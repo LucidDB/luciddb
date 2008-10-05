@@ -63,6 +63,26 @@ public class FarragoCatalogInit
      */
     public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 86400000;
 
+    /**
+     * Default freshmen page queue percentage
+     */
+    public static final int DEFAULT_FRESHMEN_PAGE_QUEUE_PERCENTAGE = 25;
+
+    /**
+     * Default page history queue percentage
+     */
+    public static final int DEFAULT_PAGE_HISTORY_QUEUE_PERCENTAGE = 100;
+
+    /**
+     * Default maximum number of pages to prefetch
+     */
+    public static final int DEFAULT_PREFETCH_PAGES_MAX = 12;
+
+    /**
+     * Default prefetch throttle rate
+     */
+    public static final int DEFAULT_PREFETCH_THROTTLE_RATE = 10;
+
     //~ Constructors -----------------------------------------------------------
 
     protected FarragoCatalogInit(FarragoRepos repos)

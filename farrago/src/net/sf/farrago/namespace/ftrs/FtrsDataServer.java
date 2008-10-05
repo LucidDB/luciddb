@@ -31,6 +31,7 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
@@ -38,6 +39,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -206,6 +208,118 @@ class FtrsDataServer
         FemLocalIndex index)
     {
         return false;
+    }
+    
+    // implement FarragoMedDataServer
+    public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
+    {
+        super.registerRelMetadataProviders(chain);
+        RelMetadataProvider ftrsProvider = new FtrsRelMetadataProvider(repos);
+        chain.addProvider(ftrsProvider);
+    }
+
+    // REVIEW jvs 24-Aug-2008:  do stuff for FtrsIndexSearchRel too?
+
+    public static class FtrsRelMetadataProvider
+        extends ReflectiveRelMetadataProvider
+    {
+        private final FarragoRepos repos;
+
+        private final FtrsColumnMetadata columnMd;
+
+        FtrsRelMetadataProvider(FarragoRepos repos)
+        {
+            this.repos = repos;
+            columnMd = new FtrsColumnMetadata();
+            
+            List<Class> args = new ArrayList<Class>();
+            args.add((Class) BitSet.class);
+            args.add((Class) RexNode.class);
+            mapParameterTypes("getDistinctRowCount", args);
+
+            mapParameterTypes(
+                "getPopulationSize",
+                Collections.singletonList((Class) BitSet.class));
+
+            mapParameterTypes(
+                "areColumnsUnique",
+                Collections.singletonList((Class) BitSet.class));
+        }
+        
+        public Double getDistinctRowCount(
+            FtrsIndexScanRel rel,
+            BitSet groupKey,
+            RexNode predicate)
+        {
+            return columnMd.getDistinctRowCount(rel, groupKey, predicate);
+        }
+
+        public Double getPopulationSize(FtrsIndexScanRel rel, BitSet groupKey)
+        {
+            return columnMd.getPopulationSize(rel, groupKey);
+        }
+
+        public Set<BitSet> getUniqueKeys(FtrsIndexScanRel rel)
+        {
+            return columnMd.getUniqueKeys(rel, repos);
+        }
+
+        public Boolean areColumnsUnique(FtrsIndexScanRel rel, BitSet columns)
+        {
+            return columnMd.areColumnsUnique(rel, columns, repos);
+        }
+    }
+
+    private static class FtrsColumnMetadata
+        extends MedAbstractColumnMetadata
+    {
+        // implement MedAbstractColumnMetadata
+        protected int mapColumnToField(
+            RelNode rel,
+            FemAbstractColumn keyCol)
+        {
+            FtrsIndexScanRel scanRel = (FtrsIndexScanRel) rel;
+            int origColOrdinal = keyCol.getOrdinal();
+            // TODO zfong 5/29/06 - The code below does not account for UDTs.
+            // origColOrdinal represents an unflattened column ordinal.  It
+            // needs to be converted to a flattened ordinal.  Furthermore, the
+            // flattened ordinal may map to multiple fields.
+            if (scanRel.projectedColumns == null) {
+                return origColOrdinal;
+            }
+            for (int i = 0; i < scanRel.projectedColumns.length; i++) {
+                if (scanRel.projectedColumns[i] == origColOrdinal) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        // implement MedAbstractColumnMetadata
+        protected int mapFieldToColumnOrdinal(RelNode rel, int fieldNo)
+        {
+            FemAbstractColumn col = mapFieldToColumn(rel, fieldNo);
+            if (col == null) {
+                return -1;
+            }
+            return col.getOrdinal();
+        }
+
+        // implement MedAbstractColumnMetadata
+        protected FemAbstractColumn mapFieldToColumn(RelNode rel, int fieldNo)
+        {
+            FtrsIndexScanRel scanRel = (FtrsIndexScanRel) rel;
+            assert fieldNo >= 0;
+
+            if (scanRel.projectedColumns != null) {
+                fieldNo = scanRel.projectedColumns[fieldNo];
+            }
+
+            int columnOrdinal =
+                scanRel.getIndexGuide().unFlattenOrdinal(fieldNo);
+            return (FemAbstractColumn) scanRel.ftrsTable.getCwmColumnSet()
+                .getFeature().get(columnOrdinal);
+        }
     }
 }
 

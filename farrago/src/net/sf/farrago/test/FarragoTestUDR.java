@@ -30,6 +30,7 @@ import java.util.*;
 
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.syslib.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -375,6 +376,71 @@ public abstract class FarragoTestUDR
             resultInserter);
     }
 
+    public static void removeDupsFromPresortedCursor(
+        ResultSet inputSet,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        int nInput = inputSet.getMetaData().getColumnCount();
+        int nOutput = resultInserter.getParameterMetaData().getParameterCount();
+        assert (nOutput == nInput);
+        boolean first = true;
+        Object [] prevRow = new Object[nInput];
+        Object [] currRow = new Object[nInput];
+        Object [] tmp;
+        while (inputSet.next()) {
+            for (int i = 0; i < nInput; ++i) {
+                currRow[i] = inputSet.getObject(i + 1);
+            }
+            if (first) {
+                // skip comparison on first row, since we have no
+                // prev to compare it with yet
+                first = false;
+            } else {
+                for (int i = 0; i < nInput; ++i) {
+                    int c =
+                        FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
+                            prevRow[i],
+                            currRow[i]);
+                    if (c < 0) {
+                        // we've seen the start of a new group, so
+                        // emit the row for the last one
+                        emitUdxRow(resultInserter, prevRow);
+                    } else if (c > 0) {
+                        // out of order row detected (for a real UDX, this
+                        // should have proper i18n)
+                        throw new SQLException(
+                            "input row not presorted correctly:  "
+                            + Arrays.asList(currRow));
+                    } else {
+                        // rows are equal, so do nothing; keep going
+                        // until we see a difference or EOS
+                    }
+                }
+            }
+            // swap prev/curr row buffers
+            tmp = prevRow;
+            prevRow = currRow;
+            currRow = tmp;
+        }
+        if (!first) {
+            // unless set was empty, we have one last row buffered;
+            // need to emit it now
+            emitUdxRow(resultInserter, prevRow);
+        }
+    }
+
+    private static void emitUdxRow(
+        PreparedStatement resultInserter,
+        Object [] row)
+        throws SQLException
+    {
+        for (int i = 0; i < row.length; ++i) {
+            resultInserter.setObject(i + 1, row[i]);
+        }
+        resultInserter.executeUpdate();
+    }
+
     public static void foreignTime(
         Timestamp ts,
         String tsZoneId,
@@ -408,7 +474,27 @@ public abstract class FarragoTestUDR
         } catch (Throwable e) {
             throw new SQLException(e.getMessage());
         }
-    }    
+    }
+    
+    /**
+     * Sets a label within a UDR.  This currently results in an exception.
+     * 
+     * @param labelName name of the label or null
+     */
+    public static void setLabel(String labelName)
+    throws Exception
+    {
+        Connection conn =
+            DriverManager.getConnection("jdbc:default:connection");
+        Statement stmt = conn.createStatement();
+
+        if (labelName == null) {
+            labelName = "null";
+        } else {
+            labelName = "'" + labelName + "'";
+        }
+        stmt.executeUpdate("alter session set \"label\" = " + labelName);
+    }
 }
 
 // End FarragoTestUDR.java

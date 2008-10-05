@@ -478,8 +478,8 @@
 > -- The initial value for a new variable is null.  It is an error
 > -- to attempt to create a context or variable which already exists.
 > create or replace procedure applib.create_var(
->     context_id varchar(128), 
->     var_id varchar(128),
+>     context_id varchar(255), 
+>     var_id varchar(255),
 >     description varchar(65535))
 > language java
 > no sql
@@ -488,8 +488,8 @@
 > -- Deletes a variable (or a context if var_id is null), which must
 > -- currently exist.
 > create or replace procedure applib.delete_var(
->     context_id varchar(128), 
->     var_id varchar(128))
+>     context_id varchar(255), 
+>     var_id varchar(255))
 > language java
 > no sql
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeDelete';
@@ -497,8 +497,8 @@
 > -- Sets the value for a variable.  var_id must not be null, and must
 > -- reference a previously created variable.
 > create or replace procedure applib.set_var(
->     context_id varchar(128), 
->     var_id varchar(128), 
+>     context_id varchar(255), 
+>     var_id varchar(255), 
 >     new_value varchar(65535))
 > language java
 > no sql
@@ -508,8 +508,8 @@
 > -- Before flush, there is no guarantee that modifications have
 > -- been made permanent.
 > create or replace procedure applib.flush_var(
->     context_id varchar(128), 
->     var_id varchar(128))
+>     context_id varchar(255), 
+>     var_id varchar(255))
 > language java
 > no sql
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.AppVarApi.executeFlush';
@@ -520,8 +520,8 @@
 > -- be evaluated once per statement (rather than once per row) when
 > -- the arguments are constant literals.
 > create or replace function applib.get_var(
->     context_id varchar(128), 
->     var_id varchar(128)) 
+>     context_id varchar(255), 
+>     var_id varchar(255)) 
 > returns varchar(65535)
 > language java
 > deterministic
@@ -793,6 +793,7 @@
 >        TRIM_TOKENS boolean)
 > returns table(OUT_STRINGS varchar(65535))
 > language java
+> specific split_string_to_rows
 > parameter style system defined java
 > deterministic
 > no sql
@@ -824,6 +825,53 @@
 > deterministic
 > no sql
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.execute';
+> 
+> -- split strings with sequence number
+> create or replace function applib.split_string_to_rows(
+>        IN_STRING varchar(65535), 
+>        SEPARATOR_CHAR char(1), 
+>        ESCAPE_CHAR char(1),
+>        TRIM_TOKENS boolean,
+>        START_NUMBER bigint,
+>        INCREMENT bigint)
+> returns table(OUT_STRINGS varchar(65535), SEQ_NUM bigint)
+> language java
+> specific split_string_to_rows_sequence
+> parameter style system defined java
+> deterministic
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.splitSingleStringWithSequence(java.lang.String,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
+> 
+> create or replace function applib.split_rows(
+>        IN_CURSOR cursor, 
+>        SEPARATOR_CHAR char(1), 
+>        ESCAPE_CHAR char(1), 
+>        TRIM_TOKENS boolean,
+>        START_NUMBER bigint,
+>        INCREMENT bigint)
+> returns table(IN_CURSOR.*, SEQ_NUM bigint)
+> language java
+> specific split_strings_singlecol_sequence
+> parameter style system defined java
+> deterministic
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.splitSingleColumnWithSequence(java.sql.ResultSet,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
+> 
+> create or replace function applib.split_rows(
+>        IN_CURSOR cursor, 
+>        COL_NAME select from IN_CURSOR, 
+>        SEPARATOR_CHAR char(1), 
+>        ESCAPE_CHAR char(1), 
+>        TRIM_TOKENS boolean,
+>        START_NUMBER bigint,
+>        INCREMENT bigint)
+> returns table(IN_CURSOR.*, SEQ_NUM bigint)
+> language java
+> specific split_strings_multicol_sequence
+> parameter style system defined java
+> deterministic
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.string.SplitStringUdx.splitMultiColumnWithSequence(java.sql.ResultSet,java.util.List,java.lang.String,java.lang.String,boolean,java.lang.Long,java.lang.Long,java.sql.PreparedStatement)';
 > 
 > -- enforce row constraints, default message catalog
 > create or replace function enforce_row_constraints(c cursor, r select from c)
@@ -862,6 +910,19 @@
 > specific enforce_row_constraints_with_tag
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.util.EnforceRowConstraintsUdx.execute';
 > 
+> create or replace function penultimate_values(
+>   input_table cursor,
+>   grouping_columns select from input_table,
+>   designated_value_and_timestamp select from input_table)
+> returns table(
+>   input_table.*,
+>   until_timestamp timestamp)
+> language java
+> parameter style system defined java
+> deterministic
+> no sql
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PenultimateValuesUdx.execute';
+> 
 > ----
 > -- System procedures
 > ----
@@ -892,6 +953,25 @@
 > parameter style java
 > reads sql data
 > external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.ComputeStatisticsForSchemaUdp.execute';
+> 
+> -- UDP for estimating statistics for all tables in a schema
+> create or replace procedure estimate_statistics_for_schema(
+> in schemaName varchar(255))
+> language java
+> specific estimate_statistics_for_schema_no_samplingrate
+> parameter style java
+> reads sql data
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.EstimateStatisticsForSchemaUdp.execute';
+> 
+> -- UDP for estimating statistics for all tables in a schema with a fixed sampling rate
+> create or replace procedure estimate_statistics_for_schema(
+> in schemaName varchar(255),
+> in samplingRate float)
+> language java
+> specific estimate_statistics_for_schema_float_samplingrate
+> parameter style java
+> reads sql data
+> external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.EstimateStatisticsForSchemaUdp.execute(java.lang.String, java.lang.Double)';
 > 
 > -- UDP for dropping a schema if it exists
 > create or replace procedure drop_schema_if_exists(

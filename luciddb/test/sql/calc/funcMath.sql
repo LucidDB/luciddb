@@ -60,18 +60,18 @@ select mod(0,3) from boris1
 ;
 
 
-select pow(10,2), pow(0,0), pow(nnull, 0), pow(0, nnull),
-       pow(1000,5) from boris1
+select power(10,2), power(0,0), power(nnull, 0), power(0, nnull),
+       power(1000,5) from boris1
 ;
-select pow(2,0.5), pow(3,0.5), pow(-2,1), pow(-2,2) from boris1
+select power(2,0.5), power(3,0.5), power(-2,1), power(-2,2) from boris1
 ;
-select pow(-2.0,-1.0), pow(-2,-2) from boris1
+select power(-2.0,-1.0), power(-2,-2) from boris1
 ;
-select pow(-1,-1/3), pow(-1,-1/5) from boris1
+select power(-1,-1/3), power(-1,-1/5) from boris1
 ;
-select pow(-1,-0.5) from boris1
+select power(-1,-0.5) from boris1
 ;
-select pow(-1,-0.25) from boris1
+select power(-1,-0.25) from boris1
 ;
 
 

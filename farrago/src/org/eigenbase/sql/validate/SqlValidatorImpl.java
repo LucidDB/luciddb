@@ -1974,6 +1974,18 @@ public class SqlValidatorImpl
                     new OrderByScope(aggScope, orderList, select);
                 orderScopes.put(select, orderScope);
                 registerSubqueries(orderScope, orderList);
+
+                if (!isAggregate(select)) {
+                    // Since this is not an aggregating query,
+                    // there cannot be any aggregates in the ORDER BY clause.
+                    SqlNode agg = aggFinder.findAgg(orderList);
+                    if (agg != null) {
+                        throw newValidationError(
+                            agg,
+                            EigenbaseResource.instance().
+                            AggregateIllegalInOrderBy.ex());
+                    }
+                }
             }
             break;
 
@@ -2806,6 +2818,13 @@ public class SqlValidatorImpl
         final SqlValidatorScope groupScope = getGroupScope(select);
         inferUnknownTypes(unknownType, groupScope, group);
         group.validate(this, groupScope);
+
+        SqlNode agg = aggFinder.findAgg(group);
+        if (agg != null) {
+            throw newValidationError(
+                agg,
+                EigenbaseResource.instance().AggregateIllegalInGroupBy.ex());
+        }
     }
 
     protected void validateWhereClause(SqlSelect select)

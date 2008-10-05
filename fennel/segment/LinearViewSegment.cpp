@@ -126,6 +126,6 @@ PageId LinearViewSegment::updatePage(PageId pageId, bool needsTranslation)
     return DelegatingSegment::updatePage(underlyingPageId, needsTranslation);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/segment/LinearViewSegment.cpp#6 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/segment/LinearViewSegment.cpp#7 $");
 
 // End LinearViewSegment.cpp

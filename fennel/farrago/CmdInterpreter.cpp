@@ -42,6 +42,7 @@
 #include "fennel/tuple/StoredTypeDescriptorFactory.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/segment/SnapshotRandomAllocationSegment.h"
+#include "fennel/exec/ParallelExecStreamScheduler.h"
 #include "fennel/exec/DfsTreeExecStreamScheduler.h"
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/farrago/ExecStreamFactory.h"
@@ -547,7 +548,8 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
         SnapshotRandomAllocationSegment *pSnapshotSegment =
             SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
                 pTxnHandle->pSnapshotSegment);
-        pSnapshotSegment->commitChanges(pTxnHandle->pTxn->getTxnId());
+        TxnId commitTxnId = pTxnHandle->pTxn->getTxnId();
+        pSnapshotSegment->commitChanges(commitTxnId);
 
         // Flush pages associated with the snapshot segment.  Note that we
         // don't need to flush the underlying versioned segment first since
@@ -559,6 +561,8 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
         if (txnBlocksCheckpoint) {
             pTxnHandle->pSnapshotSegment->checkpoint(CHECKPOINT_FLUSH_ALL);
         }
+
+        pDb->setLastCommittedTxnId(commitTxnId);
     }
 
     if (cmd.getSvptHandle()) {
@@ -622,6 +626,13 @@ void CmdInterpreter::visit(ProxyCmdGetTxnCsn &cmd)
     setCsnHandle(cmd.getResultHandle(), pSegment->getSnapshotCsn());
 }
 
+void CmdInterpreter::visit(ProxyCmdGetLastCommittedTxnId &cmd)
+{
+    DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    SharedDatabase pDb = pDbHandle->pDb;
+    setCsnHandle(cmd.getResultHandle(), pDb->getLastCommittedTxnId());
+}
+
 void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
 {
 #if 0
@@ -667,10 +678,21 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
         cmd.getStreamGraphHandle());
     TxnHandle *pTxnHandle = pStreamGraphHandle->pTxnHandle;
     // NOTE:  sequence is important here
-    SharedExecStreamScheduler pScheduler(
-        new DfsTreeExecStreamScheduler(
-            pTxnHandle->pDb->getSharedTraceTarget(),
-            "xo.scheduler"));
+    SharedExecStreamScheduler pScheduler;
+    std::string schedulerName = "xo.scheduler";
+    if (cmd.getDegreeOfParallelism() == 1) {
+        pScheduler.reset(
+            new DfsTreeExecStreamScheduler(
+                pTxnHandle->pDb->getSharedTraceTarget(),
+                schedulerName));
+    } else {
+        pScheduler.reset(
+            new ParallelExecStreamScheduler(
+                pTxnHandle->pDb->getSharedTraceTarget(),
+                schedulerName,
+                JniUtil::getThreadTracker(),
+                cmd.getDegreeOfParallelism()));
+    }
     ExecStreamGraphEmbryo graphEmbryo(
         pStreamGraphHandle->pExecStreamGraph,
         pScheduler,
@@ -755,7 +777,9 @@ void CmdInterpreter::visit(ProxyCmdAlterSystemDeallocate &cmd)
         // Nothing to do if snapshots aren't enabled
         return;
     } else {
-        pDb->deallocateOldPages();
+        uint64_t paramVal = cmd.getOldestLabelCsn();
+        TxnId labelCsn = isMAXU(paramVal) ? NULL_TXN_ID : TxnId(paramVal);
+        pDb->deallocateOldPages(labelCsn);
     }
 }
 

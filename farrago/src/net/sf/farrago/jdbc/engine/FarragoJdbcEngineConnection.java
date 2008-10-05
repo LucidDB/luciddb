@@ -356,7 +356,9 @@ public class FarragoJdbcEngineConnection
         int resultSetConcurrency)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        // NOTE jvs 3-May-2008:  We don't currently throw
+        // UnsupportedOperationException
+        return prepareStatement(sql);
     }
 
     // implement Connection
@@ -367,7 +369,7 @@ public class FarragoJdbcEngineConnection
         int resultSetHoldability)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        return prepareStatement(sql, resultSetType, resultSetConcurrency);
     }
 
     // implement Connection
@@ -409,7 +411,7 @@ public class FarragoJdbcEngineConnection
     public int getHoldability()
         throws SQLException
     {
-        return 0;
+        return ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
     public void setReadOnly(boolean readOnly)
@@ -462,12 +464,14 @@ public class FarragoJdbcEngineConnection
         int resultSetConcurrency)
         throws SQLException
     {
-        if (resultSetType != ResultSet.TYPE_FORWARD_ONLY) {
-            throw new UnsupportedOperationException();
-        }
-        if (resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) {
-            throw new UnsupportedOperationException();
-        }
+        // NOTE jvs 3-May-2008:  Rather than throwing
+        // UnsupportedOperationException here and elsewhere when
+        // clients ask for things we don't support, such as
+        // scroll cursors, just ignore the modifiers.  They'll
+        // find out about it if they actually try to use the
+        // feature.  The reason for this is that often client applications
+        // ask for things they never use, so being too strict
+        // prevents them from working.
         return createStatement();
     }
 
@@ -477,7 +481,7 @@ public class FarragoJdbcEngineConnection
         int resultSetHoldability)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        return createStatement();
     }
 
     public String nativeSQL(String sql)

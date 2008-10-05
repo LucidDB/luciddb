@@ -1,0 +1,742 @@
+0: jdbc:luciddb:> -- test methods from SplitStringUdx with START_NUM=NULL
+0: jdbc:luciddb:> create schema SPLITTEST;
+0: jdbc:luciddb:> set schema 'SPLITTEST';
+0: jdbc:luciddb:> create table "T1" (COL1 integer, COL2 varchar(255), COL3 varchar(255));
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (10, 'AA~BB~ ', 'b!ah');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (20, '~', 'bl~~h');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (30, '\~', 'bl~~h');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (40, 'CC~\~\~~\~DD', '~meh');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (50, 'EE ~ F\~F\F', '~heh');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- don't strip whitespace
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
++---------+----------+
+|  COL2   | SEQ_NUM  |
++---------+----------+
+| AA      | 1        |
+| BB      | 2        |
+|         | 3        |
+|         | 4        |
+| ~       | 5        |
+| CC      | 6        |
+| ~~      | 7        |
+| ~DD     | 8        |
+| EE      | 9        |
+|  F~F\F  | 10       |
++---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- strip whitespace
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
++--------+----------+
+|  COL2  | SEQ_NUM  |
++--------+----------+
+| AA     | 1        |
+| BB     | 2        |
+|        | 3        |
+| ~      | 4        |
+| CC     | 5        |
+| ~~     | 6        |
+| ~DD    | 7        |
+| EE     | 8        |
+| F~F\F  | 9        |
++--------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace view V1 as (select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     row(COL2),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > ));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should have two rows with trailing space
+0: jdbc:luciddb:> select * from V1 where COL2 like '% ';
++-------+-------+-------+----------+
+| COL1  | COL2  | COL3  | SEQ_NUM  |
++-------+-------+-------+----------+
+| 10    |       | b!ah  | 3        |
+| 50    | EE    | ~heh  | 9        |
++-------+-------+-------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should have two rows with leading space
+0: jdbc:luciddb:> select * from V1 where COL2 like ' %';
++-------+---------+-------+----------+
+| COL1  |  COL2   | COL3  | SEQ_NUM  |
++-------+---------+-------+----------+
+| 10    |         | b!ah  | 3        |
+| 50    |  F~F\F  | ~heh  | 10       |
++-------+---------+-------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- following three should give the same output
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'AA~BB~CC',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
+| AA           | 1        |
+| BB           | 2        |
+| CC           | 3        |
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'AA~BB~CC~ ~~ ',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
+| AA           | 1        |
+| BB           | 2        |
+| CC           | 3        |
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '~~  ~ AA~BB~CC',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
+| AA           | 1        |
+| BB           | 2        |
+| CC           | 3        |
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test with whitespace-only string input
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '  ',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '  ',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
+|              | 1        |
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test with empty input
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test with null input
+0: jdbc:luciddb:> call applib.create_var('splittest', null, 'xyz');
+0: jdbc:luciddb:> call applib.set_var('splittest', 'var', null);
+0: jdbc:luciddb:> select * from table(applib.split_string_to_rows(applib.get_var('splittest', 'var'), ',', '!',TRUE, CAST(NULL as bigint),
+. . . . . . . . > CAST(NULL as bigint)));
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one escape char
+0: jdbc:luciddb:> -- enable when LER-4686 is fixed
+0: jdbc:luciddb:> --select * from table(
+0: jdbc:luciddb:> --  applib.split_string_to_rows(
+0: jdbc:luciddb:> --    '~~  ~ AA~BB~CC',
+0: jdbc:luciddb:> --    '~',
+0: jdbc:luciddb:> --    '\a',
+0: jdbc:luciddb:> --    TRUE)
+0: jdbc:luciddb:> --);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one separator char
+0: jdbc:luciddb:> -- enable when LER-4686 is fixed
+0: jdbc:luciddb:> --select * from table(
+0: jdbc:luciddb:> --  applib.split_string_to_rows(
+0: jdbc:luciddb:> --    '~~  ~ AA~BB~CC',
+0: jdbc:luciddb:> --    '~a',
+0: jdbc:luciddb:> --    '\',
+0: jdbc:luciddb:> --    TRUE)
+0: jdbc:luciddb:> --);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one col to split in multicol mode
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     row(COL2,COL3),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
+Error: Can only split a single column at a time. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one col as input in singlecol mode
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     CAST(NULL as bigint),
+. . . . . . . . >     CAST(NULL as bigint))
+. . . . . . . . > );
+Error: Input cursor must be one single column. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema SPLITTEST cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test methods from SplitStringUdx with START_NUM=1337
+0: jdbc:luciddb:> create schema SPLITTEST;
+0: jdbc:luciddb:> set schema 'SPLITTEST';
+0: jdbc:luciddb:> create table "T1" (COL1 integer, COL2 varchar(255), COL3 varchar(255));
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (10, 'AA~BB~ ', 'b!ah');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (20, '~', 'bl~~h');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (30, '\~', 'bl~~h');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (40, 'CC~\~\~~\~DD', '~meh');
+0: jdbc:luciddb:> insert into T1 (COL1, COL2, COL3) values (50, 'EE ~ F\~F\F', '~heh');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- don't strip whitespace
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
++---------+----------+
+|  COL2   | SEQ_NUM  |
++---------+----------+
+| AA      | 1337     |
+| BB      | 1339     |
+|         | 1341     |
+|         | 1343     |
+| ~       | 1345     |
+| CC      | 1347     |
+| ~~      | 1349     |
+| ~DD     | 1351     |
+| EE      | 1353     |
+|  F~F\F  | 1355     |
++---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- strip whitespace
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
++--------+----------+
+|  COL2  | SEQ_NUM  |
++--------+----------+
+| AA     | 1337     |
+| BB     | 1339     |
+|        | 1341     |
+| ~      | 1343     |
+| CC     | 1345     |
+| ~~     | 1347     |
+| ~DD    | 1349     |
+| EE     | 1351     |
+| F~F\F  | 1353     |
++--------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create or replace view V1 as (select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     row(COL2),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > ));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should have two rows with trailing space
+0: jdbc:luciddb:> select * from V1 where COL2 like '% ';
++-------+-------+-------+----------+
+| COL1  | COL2  | COL3  | SEQ_NUM  |
++-------+-------+-------+----------+
+| 10    |       | b!ah  | 1341     |
+| 50    | EE    | ~heh  | 1353     |
++-------+-------+-------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should have two rows with leading space
+0: jdbc:luciddb:> select * from V1 where COL2 like ' %';
++-------+---------+-------+----------+
+| COL1  |  COL2   | COL3  | SEQ_NUM  |
++-------+---------+-------+----------+
+| 10    |         | b!ah  | 1341     |
+| 50    |  F~F\F  | ~heh  | 1355     |
++-------+---------+-------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- following three should give the same output
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'AA~BB~CC',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
+| AA           | 1337     |
+| BB           | 1339     |
+| CC           | 1341     |
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'AA~BB~CC~ ~~ ',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
+| AA           | 1337     |
+| BB           | 1339     |
+| CC           | 1341     |
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '~~  ~ AA~BB~CC',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
+| AA           | 1337     |
+| BB           | 1339     |
+| CC           | 1341     |
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test with whitespace-only string input
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '  ',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '  ',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
+|              | 1337     |
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test with empty input
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     '',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test with null input
+0: jdbc:luciddb:> call applib.create_var('splittest', null, 'xyz');
+0: jdbc:luciddb:> call applib.set_var('splittest', 'var', null);
+0: jdbc:luciddb:> select * from table(applib.split_string_to_rows(applib.get_var('splittest', 'var'), ',', '!',TRUE, 1337, 2));
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one escape char
+0: jdbc:luciddb:> -- enable when LER-4686 is fixed
+0: jdbc:luciddb:> --select * from table(
+0: jdbc:luciddb:> --  applib.split_string_to_rows(
+0: jdbc:luciddb:> --    '~~  ~ AA~BB~CC',
+0: jdbc:luciddb:> --    '~',
+0: jdbc:luciddb:> --    '\a',
+0: jdbc:luciddb:> --    TRUE)
+0: jdbc:luciddb:> --);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one separator char
+0: jdbc:luciddb:> -- enable when LER-4686 is fixed
+0: jdbc:luciddb:> --select * from table(
+0: jdbc:luciddb:> --  applib.split_string_to_rows(
+0: jdbc:luciddb:> --    '~~  ~ AA~BB~CC',
+0: jdbc:luciddb:> --    '~a',
+0: jdbc:luciddb:> --    '\',
+0: jdbc:luciddb:> --    TRUE)
+0: jdbc:luciddb:> --);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one col to split in multicol mode
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     row(COL2,COL3),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
+Error: Can only split a single column at a time. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception when more than one col as input in singlecol mode
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     1337, 2)
+. . . . . . . . > );
+Error: Input cursor must be one single column. (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test overflowing numbers, should wrap around
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     9223372036854775805, 1)
+. . . . . . . . > );
++---------+-----------------------+
+|  COL2   |        SEQ_NUM        |
++---------+-----------------------+
+| AA      | 9223372036854775805   |
+| BB      | 9223372036854775806   |
+|         | 9223372036854775807   |
+|         | -9223372036854775808  |
+| ~       | -9223372036854775807  |
+| CC      | -9223372036854775806  |
+| ~~      | -9223372036854775805  |
+| ~DD     | -9223372036854775804  |
+| EE      | -9223372036854775803  |
+|  F~F\F  | -9223372036854775802  |
++---------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test missing increment, should say "no match found for function signature..."
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     1)
+. . . . . . . . > );
+Error: From line 2, column 10 to line 7, column 6: No match found for function signature SPLIT_ROWS(<CURSOR>, <CHARACTER>, <CHARACTER>, <BOOLEAN>, <NUMERIC>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test negative start_num, should be -3, -2, -1, etc.
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     -3, 1)
+. . . . . . . . > );
++---------+----------+
+|  COL2   | SEQ_NUM  |
++---------+----------+
+| AA      | -3       |
+| BB      | -2       |
+|         | -1       |
+|         | 0        |
+| ~       | 1        |
+| CC      | 2        |
+| ~~      | 3        |
+| ~DD     | 4        |
+| EE      | 5        |
+|  F~F\F  | 6        |
++---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test negative start_num with negative increment, should be -3, -4, -5, etc.
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     FALSE,
+. . . . . . . . >     -3, -1)
+. . . . . . . . > );
++---------+----------+
+|  COL2   | SEQ_NUM  |
++---------+----------+
+| AA      | -3       |
+| BB      | -4       |
+|         | -5       |
+|         | -6       |
+| ~       | -7       |
+| CC      | -8       |
+| ~~      | -9       |
+| ~DD     | -10      |
+| EE      | -11      |
+|  F~F\F  | -12      |
++---------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test single string, NULL separator (should return empty)
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'abc~def',
+. . . . . . . . >     CAST(NULL as CHAR(1)),
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1, 1)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test single string, NULL escape (should return empty)
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'abc~def',
+. . . . . . . . >     '~',
+. . . . . . . . >     CAST(NULL as CHAR(1)),
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1, 1)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test single column, NULL separator (should return empty)
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     CAST(NULL as CHAR(1)),
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1, 1)
+. . . . . . . . > );
++-------+----------+
+| COL2  | SEQ_NUM  |
++-------+----------+
++-------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test single column, NULL escape (should return empty)
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     CAST(NULL as CHAR(1)),
+. . . . . . . . >     TRUE,
+. . . . . . . . >     1, 1)
+. . . . . . . . > );
++-------+----------+
+| COL2  | SEQ_NUM  |
++-------+----------+
++-------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception for 0 increment, single string
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'abc~def',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     5000, 0)
+. . . . . . . . > );
+Error: INCREMENT_BY cannot be zero (but it was). (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test exception for 0 increment, single column
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     -5000, 0)
+. . . . . . . . > );
+Error: INCREMENT_BY cannot be zero (but it was). (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test scalar subquery for START_NUM (should be two rows: 60, 70)
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'abc~gg',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     (select MAX(COL1)+10 from T1),
+. . . . . . . . >     10)
+. . . . . . . . > );
++--------------+----------+
+| OUT_STRINGS  | SEQ_NUM  |
++--------------+----------+
+| abc          | 60       |
+| gg           | 70       |
++--------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test error scalar query returned more than one row
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_string_to_rows(
+. . . . . . . . >     'abc~gg',
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     (select COL1 from T1),
+. . . . . . . . >     10)
+. . . . . . . . > );
+Error: Scalar query returned more than one row (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test empty subquery for START_NUM (should be the same as NULL, i.e. 1)
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select COL2 from T1),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     (select 10 from table(applib.split_string_to_rows('','~','\',TRUE))),
+. . . . . . . . >     12)
+. . . . . . . . > );
++--------+----------+
+|  COL2  | SEQ_NUM  |
++--------+----------+
+| AA     | 1        |
+| BB     | 13       |
+|        | 25       |
+| ~      | 37       |
+| CC     | 49       |
+| ~~     | 61       |
+| ~DD    | 73       |
+| EE     | 85       |
+| F~F\F  | 97       |
++--------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test same table for input columns and subquery
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.split_rows(
+. . . . . . . . >     cursor(select * from T1),
+. . . . . . . . >     row(COL2),
+. . . . . . . . >     '~',
+. . . . . . . . >     '\',
+. . . . . . . . >     TRUE,
+. . . . . . . . >     (select max(COL1)+10 from T1),
+. . . . . . . . >     10)
+. . . . . . . . > );
++-------+--------+--------+----------+
+| COL1  |  COL2  |  COL3  | SEQ_NUM  |
++-------+--------+--------+----------+
+| 10    | AA     | b!ah   | 60       |
+| 10    | BB     | b!ah   | 70       |
+| 20    |        | bl~~h  | 80       |
+| 30    | ~      | bl~~h  | 90       |
+| 40    | CC     | ~meh   | 100      |
+| 40    | ~~     | ~meh   | 110      |
+| 40    | ~DD    | ~meh   | 120      |
+| 50    | EE     | ~heh   | 130      |
+| 50    | F~F\F  | ~heh   | 140      |
++-------+--------+--------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema SPLITTEST cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

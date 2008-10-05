@@ -20,7 +20,9 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * 
-. . . . . . . . > from table( applib.collapse_rows(cursor (select * from tree), '~'))
+. . . . . . . . > from table( 
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor (select * from tree order by parent, child),'~'))
 . . . . . . . . > order by parent_value;
 +---------------+----------------------------+----------------------+
 | PARENT_VALUE  | CONCATENATED_CHILD_VALUES  | COLLAPSED_ROW_COUNT  |
@@ -44,7 +46,9 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * 
-. . . . . . . . > from table( applib.collapse_rows(cursor (select * from tree), '|'))
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor (select * from tree order by parent, child), '|'))
 . . . . . . . . > order by parent_value;
 +---------------+----------------------------+----------------------+
 | PARENT_VALUE  | CONCATENATED_CHILD_VALUES  | COLLAPSED_ROW_COUNT  |
@@ -69,13 +73,15 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:>     
 0: jdbc:luciddb:> select * 
-. . . . . . . . > from table( applib.collapse_rows(cursor (select * from tree), ' '))
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor (select * from tree order by parent, child), ' '))
 . . . . . . . . > order by parent_value;
 +---------------+----------------------------+----------------------+
 | PARENT_VALUE  | CONCATENATED_CHILD_VALUES  | COLLAPSED_ROW_COUNT  |
 +---------------+----------------------------+----------------------+
 |               | 01 07 07                   | 3                    |
-| 01            | 02 03 04 03                | 4                    |
+| 01            | 02 03 03 04                | 4                    |
 | 02            | 05 06                      | 2                    |
 | 04            |                            | 0                    |
 | 07            | 08                         | 1                    |
@@ -84,74 +90,122 @@
 | 11            | 12 13                      | 2                    |
 +---------------+----------------------------+----------------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with spaces and empty strings
+0: jdbc:luciddb:> insert into tree values
+. . . . . . . . >   ('', '06'),
+. . . . . . . . >   ('01   ', '  05'),
+. . . . . . . . >   ('02', ''),
+. . . . . . . . >   ('    ', '05'),
+. . . . . . . . >   ('11', ''),
+. . . . . . . . >   ('08', '    ')
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select *
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor (select * from tree order by parent, child), '~'))
+. . . . . . . . > order by parent_value;
++---------------+----------------------------+----------------------+
+| PARENT_VALUE  | CONCATENATED_CHILD_VALUES  | COLLAPSED_ROW_COUNT  |
++---------------+----------------------------+----------------------+
+|               | 01~07~07                   | 3                    |
+|               | 05~06                      | 2                    |
+| 01            |   05~02~03~03~04           | 5                    |
+| 02            | ~05~06                     | 3                    |
+| 04            |                            | 0                    |
+| 07            | 08                         | 1                    |
+| 08            |     ~09~10                 | 3                    |
+| 09            | 11~11                      | 2                    |
+| 11            | ~12~13                     | 3                    |
++---------------+----------------------------+----------------------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> -- input table with non-string types
+0: jdbc:luciddb:> -- input table with non-string children
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> create table typetable(parent float, child date);
+0: jdbc:luciddb:> create table typetable(parent varchar(50), child date);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with no rows
+0: jdbc:luciddb:> select * 
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor (select * from typetable order by parent, child), '$'))
+. . . . . . . . > order by parent_value;
++---------------+----------------------------+----------------------+
+| PARENT_VALUE  | CONCATENATED_CHILD_VALUES  | COLLAPSED_ROW_COUNT  |
++---------------+----------------------------+----------------------+
++---------------+----------------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> insert into typetable values
-. . . . . . . . >   (1.115, DATE'2006-12-13'),
-. . . . . . . . >   (1.114, DATE'2006-12-13'),
-. . . . . . . . >   (1.115, DATE'1900-05-15'),
-. . . . . . . . >   (123213.3249024800, DATE'2001-1-19'),
-. . . . . . . . >   (123213.32490248, DATE'1977-2-22'),
-. . . . . . . . >   (56, DATE'1867-8-8'),
+. . . . . . . . >   ('1.115', DATE'2006-12-13'),
+. . . . . . . . >   ('1.114', DATE'2006-12-13'),
+. . . . . . . . >   ('1.115', DATE'1900-05-15'),
+. . . . . . . . >   ('123213.32490248  ', DATE'2001-1-19'),
+. . . . . . . . >   ('123213.32490248', DATE'1977-2-22'),
+. . . . . . . . >   ('56', DATE'1867-8-8'),
 . . . . . . . . >   (null, DATE'2001-1-19'),
 . . . . . . . . >   (null, null),
-. . . . . . . . >   (1.115, DATE'2002-6-17'),
-. . . . . . . . >   (56.00001, DATE'1977-2-9'),
-. . . . . . . . >   (7291.08371, null)
+. . . . . . . . >   ('1.115', DATE'2002-6-17'),
+. . . . . . . . >   ('56.00001', DATE'1977-2-9'),
+. . . . . . . . >   ('7291.08371', null)
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * 
-. . . . . . . . > from table( applib.collapse_rows(cursor (select * from typetable), '~'))
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor (select * from typetable order by parent, child), '~'))
 . . . . . . . . > order by parent_value;
 +------------------+-----------------------------------+----------------------+
 |   PARENT_VALUE   |     CONCATENATED_CHILD_VALUES     | COLLAPSED_ROW_COUNT  |
 +------------------+-----------------------------------+----------------------+
 |                  | 2001-01-19                        | 1                    |
 | 1.114            | 2006-12-13                        | 1                    |
-| 1.115            | 2006-12-13~1900-05-15~2002-06-17  | 3                    |
-| 123213.32490248  | 2001-01-19~1977-02-22             | 2                    |
-| 56.0             | 1867-08-08                        | 1                    |
+| 1.115            | 1900-05-15~2002-06-17~2006-12-13  | 3                    |
+| 123213.32490248  | 1977-02-22~2001-01-19             | 2                    |
+| 56               | 1867-08-08                        | 1                    |
 | 56.00001         | 1977-02-09                        | 1                    |
 | 7291.08371       |                                   | 0                    |
 +------------------+-----------------------------------+----------------------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- long concatenation
 0: jdbc:luciddb:> insert into typetable values
-. . . . . . . . >   (1.115, DATE'1111-11-11'),
-. . . . . . . . >   (1.115000, DATE'1989-9-11'),
-. . . . . . . . >   (1.115, DATE'1670-4-27'),
-. . . . . . . . >   (1.115, DATE'1212-12-12'),
-. . . . . . . . >   (1.115, DATE'2001-1-1')
+. . . . . . . . >   ('1.115', DATE'1111-11-11'),
+. . . . . . . . >   ('1.115   ', DATE'1989-9-11'),
+. . . . . . . . >   ('1.115', DATE'1670-4-27'),
+. . . . . . . . >   ('1.115', DATE'1212-12-12'),
+. . . . . . . . >   ('1.115', DATE'2001-1-1')
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * 
-. . . . . . . . > from table( applib.collapse_rows(cursor (select * from typetable), '~'))
-. . . . . . . . > where parent_value = cast(1.115 as varchar(65535));
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor (select * from typetable order by parent, child), '~'))
+. . . . . . . . > where parent_value = '1.115';
 +---------------+------------------------------------------------------------------------------------------+----------------------+
 | PARENT_VALUE  |                                CONCATENATED_CHILD_VALUES                                 | COLLAPSED_ROW_COUNT  |
 +---------------+------------------------------------------------------------------------------------------+----------------------+
-| 1.115         | 2006-12-13~1900-05-15~2002-06-17~1111-11-11~1989-09-11~1670-04-27~1212-12-12~2001-01-01  | 8                    |
+| 1.115         | 1111-11-11~1212-12-12~1670-04-27~1900-05-15~1989-09-11~2001-01-01~2002-06-17~2006-12-13  | 8                    |
 +---------------+------------------------------------------------------------------------------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- with view
 0: jdbc:luciddb:> create view vv as 
 . . . . . . . . > select *
-. . . . . . . . > from table( applib.collapse_rows( cursor (select * from typetable), '|'));
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor (select * from typetable order by parent, child), '|'));
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * 
 . . . . . . . . > from table(
 . . . . . . . . >   applib.collapse_rows( cursor(
-. . . . . . . . >     select collapsed_row_count, parent_value from vv),
+. . . . . . . . >     select cast(collapsed_row_count as varchar(20)), parent_value 
+. . . . . . . . >     from vv order by 1,2),
 . . . . . . . . >     '*'))
 . . . . . . . . > order by parent_value;
 +---------------+----------------------------+----------------------+
 | PARENT_VALUE  | CONCATENATED_CHILD_VALUES  | COLLAPSED_ROW_COUNT  |
 +---------------+----------------------------+----------------------+
 | 0             | 7291.08371                 | 1                    |
-| 1             | 1.114*56.0*56.00001        | 3                    |
+| 1             | 1.114*56*56.00001          | 3                    |
 | 2             | 123213.32490248            | 1                    |
 | 8             | 1.115                      | 1                    |
 +---------------+----------------------------+----------------------+
@@ -161,19 +215,21 @@
 . . . . . . . . > from table( 
 . . . . . . . . >   applib.collapse_rows(cursor (
 . . . . . . . . >     select 
-. . . . . . . . >       collapsed_row_count,
+. . . . . . . . >       cast(collapsed_row_count as varchar(20)),
 . . . . . . . . >       parent_value || ':' || concatenated_child_values 
 . . . . . . . . >     from table( 
-. . . . . . . . >       applib.collapse_rows(cursor( select * from typetable), '#'))),
+. . . . . . . . >       applib.collapse_rows(
+. . . . . . . . >         cursor( select * from typetable order by 1,2 ), '#'))
+. . . . . . . . >     order by 1,2),
 . . . . . . . . >     '|'))
 . . . . . . . . > order by parent_value;
 +---------------+------------------------------------------------------------------------------------------------+----------------------+
 | PARENT_VALUE  |                                   CONCATENATED_CHILD_VALUES                                    | COLLAPSED_ROW_COUNT  |
 +---------------+------------------------------------------------------------------------------------------------+----------------------+
 | 0             |                                                                                                | 0                    |
-| 1             | 1.114:2006-12-13|56.0:1867-08-08|56.00001:1977-02-09                                           | 3                    |
-| 2             | 123213.32490248:2001-01-19#1977-02-22                                                          | 1                    |
-| 8             | 1.115:2006-12-13#1900-05-15#2002-06-17#1111-11-11#1989-09-11#1670-04-27#1212-12-12#2001-01-01  | 1                    |
+| 1             | 1.114:2006-12-13|56.00001:1977-02-09|56:1867-08-08                                             | 3                    |
+| 2             | 123213.32490248:1977-02-22#2001-01-19                                                          | 1                    |
+| 8             | 1.115:1111-11-11#1212-12-12#1670-04-27#1900-05-15#1989-09-11#2001-01-01#2002-06-17#2006-12-13  | 1                    |
 +---------------+------------------------------------------------------------------------------------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- 
@@ -182,19 +238,22 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- delimiter over one character will get truncated
 0: jdbc:luciddb:> select * 
-. . . . . . . . > from table( applib.collapse_rows(cursor ( select * from tree), '~~||**'))
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor ( select * from tree order by parent, child), '~~||**'))
 . . . . . . . . > order by parent_value;
 +---------------+----------------------------+----------------------+
 | PARENT_VALUE  | CONCATENATED_CHILD_VALUES  | COLLAPSED_ROW_COUNT  |
 +---------------+----------------------------+----------------------+
 |               | 01~07~07                   | 3                    |
-| 01            | 02~03~04~03                | 4                    |
-| 02            | 05~06                      | 2                    |
+|               | 05~06                      | 2                    |
+| 01            |   05~02~03~03~04           | 5                    |
+| 02            | ~05~06                     | 3                    |
 | 04            |                            | 0                    |
 | 07            | 08                         | 1                    |
-| 08            | 09~10                      | 2                    |
+| 08            |     ~09~10                 | 3                    |
 | 09            | 11~11                      | 2                    |
-| 11            | 12~13                      | 2                    |
+| 11            | ~12~13                     | 3                    |
 +---------------+----------------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- concatenations greater than 16384 characters will get truncated (LER-7174),
@@ -205,8 +264,8 @@
 . . . . . . . . >     collapsed_row_count
 . . . . . . . . > from table(applib.collapse_rows(
 . . . . . . . . > cursor(select * from (values 
-. . . . . . . . > (0, applib.repeater('X',10000)), 
-. . . . . . . . > (0, applib.repeater('Y',10000)))),
+. . . . . . . . > ('0', applib.repeater('X',10000)), 
+. . . . . . . . > ('0', applib.repeater('Y',10000)))),
 . . . . . . . . > '|'
 . . . . . . . . > ));
 +---------------+-------------+----------------------+
@@ -222,9 +281,9 @@
 . . . . . . . . >     collapsed_row_count
 . . . . . . . . > from table(applib.collapse_rows(
 . . . . . . . . > cursor(select * from (values 
-. . . . . . . . > (0, applib.repeater('X',6000)),
-. . . . . . . . > (0, applib.repeater('Y',6000)),
-. . . . . . . . > (0, applib.repeater('Z',6000)))),
+. . . . . . . . > ('0', applib.repeater('X',6000)),
+. . . . . . . . > ('0', applib.repeater('Y',6000)),
+. . . . . . . . > ('0', applib.repeater('Z',6000)))),
 . . . . . . . . > '|'
 . . . . . . . . > ));
 +---------------+-------------+----------------------+
@@ -241,7 +300,7 @@
 . . . . . . . . >     collapsed_row_count
 . . . . . . . . > from table(applib.collapse_rows(
 . . . . . . . . > cursor(select * from (values 
-. . . . . . . . > (0, applib.repeater('X',20000)))),
+. . . . . . . . > ('0', applib.repeater('X',20000)))),
 . . . . . . . . > '|'
 . . . . . . . . > ));
 +---------------+-------------+----------------------+
@@ -253,9 +312,30 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- input table with incorrect number of columns
 0: jdbc:luciddb:> select * 
-. . . . . . . . > from table( applib.collapse_rows(cursor (select *, parent||'lolo' from tree), '|'))
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor (select *, parent||'lolo' from tree order by 1,2), '|'))
 . . . . . . . . > order by parent_value;
 Error: Database access error while getting number of input and output columns (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- improperly sorted input table
+0: jdbc:luciddb:> select * 
+. . . . . . . . > from table(
+. . . . . . . . >   applib.collapse_rows(
+. . . . . . . . >     cursor(select * from tree order by child, parent), '~'))
+. . . . . . . . > order by parent_value;
+Error: Input cursor must be sorted by the following column(s) in ascending order: [PARENT]; out of order column value(s): [02] (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- parent column of input table is not VARCHAR datatype
+0: jdbc:luciddb:> select *
+. . . . . . . . > from table(applib.collapse_rows(
+. . . . . . . . >   cursor(select * from (values
+. . . . . . . . >     (56.3, 'fiftys'),
+. . . . . . . . >     (30.3, 'thirtys'),
+. . . . . . . . >     (57.9, 'fiftys'))),
+. . . . . . . . >     '#'));
+Error: Input column(s) [EXPR$0] have invalid datatype; Datatype(s) should be: [VARCHAR] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop table tree cascade;

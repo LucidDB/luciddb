@@ -9,6 +9,11 @@
 > 
 > alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 > 
+> -- exclude the constant/cast reduction rules so we can exercise the ReshapeRel
+> -- transforming no-op casts
+> call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(
+>     'FarragoReduceExpressionsRule.*');
+> 
 > create table t1(
 >     t1id int not null,
 >     t1a char(5) not null,
@@ -535,5 +540,34 @@
 +------+------+
 | 1.1  | 1.1  |
 +------+------+
+> 
+> -- LER-8000 -- Make sure ReshapeRel handles comparing null values against
+> -- non-nullable columns
+> !set outputformat csv
+> explain plan for
+> select "name" from sys_fem."SQL2003"."KeyComponent" where "name" is null;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[null]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL name) NOT NULL])'
+'    IteratorToFennelConverter'
+'      MedMdrClassExtentRel(table=[[SYS_FEM, SQL2003, KeyComponent]])'
+> !set outputformat table
+> select "name" from sys_fem."SQL2003"."KeyComponent" where "name" is null;
++-------+
+| name  |
++-------+
++-------+
+> -- make sure data is returned when the query is supposed to return data
+> select distinct "name" from sys_fem."SQL2003"."KeyComponent" where "ordinal" = 0
+>     order by "name";
++---------+
+|  name   |
++---------+
+| A       |
+| DEPTNO  |
+| EMPID   |
+| NAME    |
+| PK      |
++---------+
 > 
 > !quit

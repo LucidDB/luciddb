@@ -1,0 +1,74 @@
+@nolockstep
+
+@setup
+
+  set schema 'rwconcur';
+  insert into nation select * from "nation";
+  insert into customer select * from "customer";
+  insert into lineitem select * from "lineitem";
+  insert into orders select * from "orders";
+  select count(*) from lineitem;
+  select count(*) from orders;
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+    set schema 'rwconcur';
+    truncate table nation;
+    truncate table customer;
+    truncate table lineitem;
+    truncate table orders;
+    alter system deallocate old;
+
+@end
+
+-----------------------------------------------------------
+
+-- 21373 rows should be gone
+@thread deletelineitem
+    set schema 'rwconcur';
+  @sync
+    delete from lineitem where l_orderkey in
+      (select o_orderkey from orders 
+       where o_orderdate < date '1998-01-01' and
+             o_custkey in
+         (select c_custkey from customer where c_nationkey =
+           (select n_nationkey from nation where n_name = 'ALGERIA')));
+  @sync
+    select count(*) from lineitem, "orders", customer, nation
+    where l_orderkey = "orders".f1 and
+          "orders".f2 = c_custkey and
+          c_nationkey = n_nationkey and
+          "orders".f5 < date '1998-01-01' and
+          n_name = 'ALGERIA';
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+-- delete 5339 rows
+@thread deleteorders
+    set schema 'rwconcur';
+  @sync
+  @sleep 1000
+    delete from orders
+    where o_orderdate < date '1998-01-01' and
+          o_custkey in
+      (select c_custkey from customer where c_nationkey =
+        (select n_nationkey from nation where n_name = 'ALGERIA'));
+  @sync
+    select count(*) from orders
+    where o_orderdate < date '1998-01-01' and
+          o_custkey in
+      (select c_custkey from customer where c_nationkey =
+        (select n_nationkey from nation where n_name = 'ALGERIA'));
+  @sync
+
+@end
+
+------------------------------------------------------------

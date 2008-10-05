@@ -56,6 +56,9 @@ public:
      * @return the wrapped Java exception
      */
     jthrowable getJavaException() const;
+
+    // override FennelExcn
+    virtual void throwSelf();
 };
 
 FENNEL_END_NAMESPACE

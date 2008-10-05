@@ -1098,6 +1098,7 @@
       <include pattern="namespace.mdr.deps" />
       <include pattern="fennel.tuple" />
       <include pattern="ddl.gen" />
+      <include pattern="syslib" />
       <include pattern="test" />
     </pattern>
 

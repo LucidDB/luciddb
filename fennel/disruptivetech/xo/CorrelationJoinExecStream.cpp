@@ -148,39 +148,26 @@ ExecStreamResult CorrelationJoinExecStream::execute(
         for (;;) { 
             if (!pRightBufAccessor->isTupleConsumptionPending()) {
                 if (pRightBufAccessor->getState() == EXECBUF_EOS) {
-std::cout << __LINE__ << std::endl;
                     pLeftBufAccessor->consumeTuple();
                     break;
                 }
                 if (!pRightBufAccessor->demandData()) {
-std::cout << __LINE__ << std::endl;
                     return EXECRC_BUF_UNDERFLOW;
                 }
-std::cout << __LINE__ << std::endl;
                 pRightBufAccessor->unmarshalTuple(
                     outputData, nLeftAttributes);
                 break;
             }
 
-std::cout << __LINE__ << std::endl;
             if (pOutAccessor->produceTuple(outputData)) {
-#if 1
-    TupleDescriptor statusDesc = pOutAccessor->getTupleDesc();
-    TuplePrinter tuplePrinter;
-    tuplePrinter.print(std::cout, statusDesc, outputData);
-    std::cout << std::endl;
-#endif
-
                 ++nTuplesProduced;
             } else {
-std::cout << __LINE__ << std::endl;
                 return EXECRC_BUF_OVERFLOW;
             }
             
             pRightBufAccessor->consumeTuple();
             
             if (nTuplesProduced >= quantum.nTuplesMax) {
-std::cout << __LINE__ << std::endl;
                 return EXECRC_QUANTUM_EXPIRED;
             }
         }

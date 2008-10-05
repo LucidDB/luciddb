@@ -123,7 +123,7 @@ public class SqlMerge
      */
     public SqlNode getCondition()
     {
-        return (SqlNode) operands[CONDITION_OPERAND];
+        return operands[CONDITION_OPERAND];
     }
 
     /**

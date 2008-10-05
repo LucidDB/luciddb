@@ -145,8 +145,7 @@ public class LcsTableProjectionRule
         // pick based on alphabetical order of the cluster name
         if (indexList.size() == 0) {
             indexList.add(
-                LcsIndexOptimizer.getIndexWithMinDiskPages(
-                    origScan.clusteredIndexes));
+                LcsIndexOptimizer.getIndexWithMinDiskPages(origScan));
         }
 
         // REVIEW:  should cluster be from origProject or origScan?

@@ -300,6 +300,7 @@ class FennelReshapeRel
     {
         FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemReshapeStreamDef streamDef = repos.newFemReshapeStreamDef();
+        RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
 
         FemExecutionStreamDef childInput =
             implementor.visitFennelChild((FennelRel) getChild(), 0);
@@ -314,7 +315,7 @@ class FennelReshapeRel
         streamDef.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
                 repos,
-                getCluster().getRexBuilder().getTypeFactory(),
+                typeFactory,
                 outputRowType));
 
         streamDef.setInputCompareProjection(
@@ -329,13 +330,16 @@ class FennelReshapeRel
             RelDataTypeField [] inputFields =
                 getChild().getRowType().getFields();
             for (int i = 0; i < nFilters; i++) {
-                types[i] = inputFields[filterOrdinals[i]].getType();
+                // the type needs to be nullable in case the filter is a
+                // IS NULL filter
+                types[i] =
+                    typeFactory.createTypeWithNullability(
+                        inputFields[filterOrdinals[i]].getType(),
+                        true);
                 fieldNames[i] = inputFields[i].getName();
             }
             RelDataType filterRowType =
-                getCluster().getTypeFactory().createStructType(
-                    types,
-                    fieldNames);
+                typeFactory.createStructType(types, fieldNames);
             List<List<RexLiteral>> compareTuple =
                 new ArrayList<List<RexLiteral>>();
             compareTuple.add(filterLiterals);

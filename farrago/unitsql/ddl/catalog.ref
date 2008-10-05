@@ -1,0 +1,39 @@
+> -- $Id$
+> -- Test catalog access
+> 
+> create schema "S";
+> 
+> create table "S"."T" (i int not null primary key);
+> 
+> !metadata getCatalogs
++-------------------------------+
+|           TABLE_CAT           |
++-------------------------------+
+| HSQLDB_DEMO                   |
+| LOCALDB                       |
+| SYS_BOOT                      |
+| SYS_COLUMN_STORE_DATA_SERVER  |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_FTRS_DATA_SERVER          |
+| SYS_MOCK_DATA_SERVER          |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
++-------------------------------+
+> 
+> -- okay
+> select * from "LOCALDB"."S"."T";
++----+
+| I  |
++----+
++----+
+> 
+> -- nonexistent catalog
+> select * from "NONEXISTENT"."S"."T";
+Error: From line 1, column 15 to line 1, column 35: Table 'NONEXISTENT.S.T' not found (state=,code=0)
+> 
+> -- nonexistent catalog
+> create table "NONEXISTENT"."S"."T" (i int not null primary key);
+Error: DDL validation error near line 1, column 32: Reference to unknown catalog "NONEXISTENT" (state=,code=0)
+> 
+> !quit

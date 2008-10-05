@@ -218,8 +218,7 @@ create or replace view columns_view_internal as
         convert_cwm_nullable_to_string(c."isNullable") as is_nullable,
         c."description" as remarks,
         c."mofId",
-        c."lineageId",
-        c."Histogram"
+        c."lineageId"
     from 
         tables_view_internal t 
     inner join 
@@ -620,6 +619,63 @@ create or replace view super_types_view as
         null_identifier() as supertype_name
     from empty_view;
 grant select on super_types_view to public;
+
+create or replace view exported_keys_view as
+    select
+        null_identifier() as pktable_cat,
+        null_identifier() as pktable_schem,
+        null_identifier() as pktable_name,
+        null_identifier() as pkcolumn_name,
+        null_identifier() as fktable_cat,
+        null_identifier() as fktable_schem,
+        null_identifier() as fktable_name,
+        null_identifier() as fkcolumn_name,
+        cast(null as smallint) as key_seq,
+        cast(null as smallint) as update_rule,
+        cast(null as smallint) as delete_rule,
+        null_identifier() as fk_name,
+        null_identifier() as pk_name,
+        cast(null as smallint) as deferrability
+    from empty_view;
+grant select on exported_keys_view to public;
+
+create or replace view imported_keys_view as
+    select
+        null_identifier() as pktable_cat,
+        null_identifier() as pktable_schem,
+        null_identifier() as pktable_name,
+        null_identifier() as pkcolumn_name,
+        null_identifier() as fktable_cat,
+        null_identifier() as fktable_schem,
+        null_identifier() as fktable_name,
+        null_identifier() as fkcolumn_name,
+        cast(null as smallint) as key_seq,
+        cast(null as smallint) as update_rule,
+        cast(null as smallint) as delete_rule,
+        null_identifier() as fk_name,
+        null_identifier() as pk_name,
+        cast(null as smallint) as deferrability
+    from empty_view;
+grant select on imported_keys_view to public;
+
+create or replace view cross_reference_view as
+    select
+        null_identifier() as pktable_cat,
+        null_identifier() as pktable_schem,
+        null_identifier() as pktable_name,
+        null_identifier() as pkcolumn_name,
+        null_identifier() as fktable_cat,
+        null_identifier() as fktable_schem,
+        null_identifier() as fktable_name,
+        null_identifier() as fkcolumn_name,
+        cast(null as smallint) as key_seq,
+        cast(null as smallint) as update_rule,
+        cast(null as smallint) as delete_rule,
+        null_identifier() as fk_name,
+        null_identifier() as pk_name,
+        cast(null as smallint) as deferrability
+    from empty_view;
+grant select on cross_reference_view to public;
 
 -- TODO:  all the rest
 

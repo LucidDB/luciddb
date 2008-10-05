@@ -83,6 +83,8 @@ public abstract class FarragoReposImpl
 
     private final ReentrantReadWriteLock sxLock = new ReentrantReadWriteLock();
 
+    private ThreadLocal<ReposCache> cache;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -93,6 +95,13 @@ public abstract class FarragoReposImpl
     {
         owner.addAllocation(this);
         sequenceMap = new HashMap<String, FarragoSequenceAccessor>();
+        cache = new ThreadLocal<ReposCache>() {
+            @Override
+            protected ReposCache initialValue()
+            {
+                return new ReposCache();
+            }
+        };
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -322,9 +331,29 @@ public abstract class FarragoReposImpl
      */
     public CwmCatalog getCatalog(String catalogName)
     {
-        return FarragoCatalogUtil.getModelElementByName(
-            allOfType(CwmCatalog.class),
-            catalogName);
+        Map<String, Pair<RefClass, String>> catalogCache = 
+            cache.get().catalogCache;
+        Pair<RefClass, String> catalogDesc = catalogCache.get(catalogName);
+
+        CwmCatalog catalog;
+        if (catalogDesc != null) {
+            catalog = 
+                (CwmCatalog)getEnkiMdrRepos().getByMofId(
+                    catalogDesc.right, catalogDesc.left);
+        } else {
+            catalog = FarragoCatalogUtil.getModelElementByName(
+                allOfType(CwmCatalog.class),
+                catalogName);
+            
+            if (catalog != null) {
+                catalogDesc = 
+                    new Pair<RefClass, String>(
+                        catalog.refClass(), catalog.refMofId());
+                catalogCache.put(catalogName, catalogDesc);
+            }
+        }
+
+        return catalog;
     }
 
     // implement FarragoRepos
@@ -639,18 +668,41 @@ public abstract class FarragoReposImpl
         return (EnkiMDRepository)getMdrRepos();
     }
     
-    // TODO: SWZ: 2008-03-27: implement on platform side and remove
-    // implement FarragoRepos (for red-zone components ignorant of Enki)
+    // TODO: SWZ: 2008-03-27: implement on platform side and call this
     public void beginReposSession()
     {
-        // ignore
+        cache.get().beginSession();
     }
 
-    // TODO: SWZ: 2008-03-27: implement on platform side and remove
-    // implement FarragoRepos (for red-zone components ignorant of Enki)
+    // TODO: SWZ: 2008-03-27: implement on platform side and call this
     public void endReposSession()
     {
-        // ignore
+        cache.get().endSession();
+    }
+    
+    private static class ReposCache
+    {
+        protected int sessionDepth;
+        protected Map<String, Pair<RefClass, String>> catalogCache;
+        
+        private ReposCache()
+        {
+            this.sessionDepth = 0;
+        }
+        
+        private void beginSession()
+        {
+            if (sessionDepth++ == 0) {
+                catalogCache = new HashMap<String, Pair<RefClass,String>>();
+            }
+        }
+        
+        protected void endSession()
+        {
+            if (--sessionDepth == 0) {
+                catalogCache.clear();
+            }
+        }
     }
 }
 

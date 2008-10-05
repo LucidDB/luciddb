@@ -37,6 +37,11 @@ jthrowable JavaExcn::getJavaException() const
     return javaException;
 }
 
+void JavaExcn::throwSelf()
+{
+    throw *this;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End JavaExcn.cpp

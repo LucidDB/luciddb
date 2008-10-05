@@ -33,6 +33,7 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ScratchBufferExecStream.h"
+#include "fennel/exec/DoubleBufferExecStream.h"
 #include "fennel/exec/CopyExecStream.h"
 #include "fennel/exec/MergeExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
@@ -40,6 +41,7 @@
 #include "fennel/exec/SortedAggExecStream.h"
 #include "fennel/exec/ReshapeExecStream.h"
 #include "fennel/exec/SplitterExecStream.h"
+#include "fennel/exec/BarrierExecStream.h"
 #include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/NestedLoopJoinExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -70,6 +72,39 @@ void ExecStreamTestSuite::testScratchBufferExecStream()
     ExecStreamEmbryo bufStreamEmbryo;
     bufStreamEmbryo.init(new ScratchBufferExecStream(),bufParams);
     bufStreamEmbryo.getStream()->setName("ScratchBufferExecStream");
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, bufStreamEmbryo);
+
+    verifyOutput(
+        *pOutputStream,
+        mockParams.nRows,
+        *(mockParams.pGenerator));
+}
+
+
+void ExecStreamTestSuite::testDoubleBufferExecStream()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = 25000;     // cycle through a few buffers
+    mockParams.pGenerator.reset(new RampExecStreamGenerator());
+    
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+    
+    DoubleBufferExecStreamParams bufParams;
+    bufParams.scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache,1);
+
+    ExecStreamEmbryo bufStreamEmbryo;
+    bufStreamEmbryo.init(new DoubleBufferExecStream(),bufParams);
+    bufStreamEmbryo.getStream()->setName("DoubleBufferExecStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, bufStreamEmbryo);
@@ -176,7 +211,7 @@ void ExecStreamTestSuite::testSegBufferExecStream()
     
     SegBufferExecStreamParams bufParams;
     bufParams.scratchAccessor.pSegment = pRandomSegment;
-    bufParams.scratchAccessor.pCacheAccessor = pCache;
+    bufParams.scratchAccessor.pCacheAccessor = pCacheAccessor;
     bufParams.multipass = false;
 
     ExecStreamEmbryo bufStreamEmbryo;
@@ -436,11 +471,11 @@ void ExecStreamTestSuite::testReshapeExecStream(
         rsParams.compOp = COMP_NOOP;
     } else {
         rsParams.compOp = COMP_EQ;
-        pBuffer.reset(new FixedBuffer[16]);
         TupleDescriptor compareDesc;
-        compareDesc.push_back(notNullAttrDesc);
+        // comparison type needs to be nullable to allow filtering of nulls
+        compareDesc.push_back(nullAttrDesc);
         if (!compareParam) {
-            compareDesc.push_back(notNullAttrDesc);
+            compareDesc.push_back(nullAttrDesc);
         }
         TupleData compareData;
         compareData.compute(compareDesc);
@@ -452,6 +487,7 @@ void ExecStreamTestSuite::testReshapeExecStream(
         }
         TupleAccessor tupleAccessor;
         tupleAccessor.compute(compareDesc);
+        pBuffer.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
         tupleAccessor.marshal(compareData, pBuffer.get());
     }
     rsParams.pCompTupleBuffer = pBuffer;
@@ -607,6 +643,9 @@ void ExecStreamTestSuite::testMergeImplicitPullInputs()
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    TupleAttributeDescriptor nullAttrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64),
+        true, sizeof(int64_t));
 
     // Initial input stream is a repeating sequence of
     // 0, 1, 2, ... nInputs - 1, 0, 1, 2, ..., nInputs - 1, 0, 1, 2, ...
@@ -644,15 +683,16 @@ void ExecStreamTestSuite::testMergeImplicitPullInputs()
         ReshapeExecStreamParams rsParams;
         boost::shared_array<FixedBuffer> pBuffer;
         rsParams.compOp = COMP_EQ;
-        pBuffer.reset(new FixedBuffer[8]);
         int64_t key = i;
         TupleDescriptor compareDesc;
-        compareDesc.push_back(attrDesc);
+        // comparison type needs to be nullable to allow filtering of nulls
+        compareDesc.push_back(nullAttrDesc);
         TupleData compareData;
         compareData.compute(compareDesc);
         compareData[0].pData = (PConstBuffer) &key;
         TupleAccessor tupleAccessor;
         tupleAccessor.compute(compareDesc);
+        pBuffer.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
         tupleAccessor.marshal(compareData, pBuffer.get());
         rsParams.pCompTupleBuffer = pBuffer;
         TupleProjection tupleProj;
@@ -675,7 +715,7 @@ void ExecStreamTestSuite::testMergeImplicitPullInputs()
         if (i != 0) {
             SegBufferExecStreamParams bufParams;
             bufParams.scratchAccessor.pSegment = pRandomSegment;
-            bufParams.scratchAccessor.pCacheAccessor = pCache;
+            bufParams.scratchAccessor.pCacheAccessor = pCacheAccessor;
             bufParams.multipass = false;
 
             ExecStreamEmbryo bufStreamEmbryo;
@@ -745,7 +785,7 @@ void ExecStreamTestSuite::testBTreeInsertExecStream(
     descriptor.tupleDescriptor.push_back(attrDesc);
     descriptor.keyProjection.push_back(0);
     descriptor.segmentAccessor.pSegment = pRandomSegment;
-    descriptor.segmentAccessor.pCacheAccessor = pCache;
+    descriptor.segmentAccessor.pCacheAccessor = pCacheAccessor;
     BTreeBuilder builder(descriptor, pRandomSegment);
     if (!useDynamicBTree) {
         builder.createEmptyRoot();
@@ -758,11 +798,11 @@ void ExecStreamTestSuite::testBTreeInsertExecStream(
 
     bTreeInsertParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 10);
-    bTreeInsertParams.pCacheAccessor = pCache;
+    bTreeInsertParams.pCacheAccessor = pCacheAccessor;
     bTreeInsertParams.distinctness = DUP_FAIL;
     bTreeInsertParams.monotonic = true;
     bTreeInsertParams.pSegment = pRandomSegment;
-    bTreeInsertParams.pCacheAccessor = pCache;
+    bTreeInsertParams.pCacheAccessor = pCacheAccessor;
     bTreeInsertParams.rootPageId = descriptor.rootPageId;
     bTreeInsertParams.segmentId = descriptor.segmentId;
     bTreeInsertParams.pageOwnerId = descriptor.pageOwnerId;
@@ -908,6 +948,62 @@ void ExecStreamTestSuite::testNestedLoopJoinExecStream(
     CompositeExecStreamGenerator resultGenerator(columnGenerators);
     verifyOutput(
         *pOutputStream, std::min(nRowsLeft, nRowsRight), resultGenerator);
+}
+
+void ExecStreamTestSuite::testSplitterPlusBarrier()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    uint nRows = 10000;
+    mockParams.nRows = nRows;
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+    
+    SplitterExecStreamParams splitterParams;
+    ExecStreamEmbryo splitterStreamEmbryo;
+    splitterStreamEmbryo.init(new SplitterExecStream(), splitterParams);
+    splitterStreamEmbryo.getStream()->setName("SplitterExecStream");
+
+    vector<vector<ExecStreamEmbryo> > aggEmbryoStreamList;
+    for (int i = 0; i < 10; i++) {
+        SortedAggExecStreamParams aggParams;
+        aggParams.groupByKeyCount = 0;
+        aggParams.outputTupleDesc.push_back(attrDesc);
+        AggInvocation countInvocation;
+        countInvocation.aggFunction = AGG_FUNC_COUNT;
+        countInvocation.iInputAttr = -1;
+        aggParams.aggInvocations.push_back(countInvocation);
+    
+        ExecStreamEmbryo aggStreamEmbryo;
+        aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+        std::ostringstream oss;
+        oss << "AggExecStream" << "#" << i;
+        aggStreamEmbryo.getStream()->setName(oss.str());
+        vector<ExecStreamEmbryo> v;
+        v.push_back(aggStreamEmbryo);
+        aggEmbryoStreamList.push_back(v);
+    }
+    
+    BarrierExecStreamParams barrierParams;
+    barrierParams.outputTupleDesc.push_back(attrDesc);
+    barrierParams.returnMode = BARRIER_RET_ANY_INPUT;
+    ExecStreamEmbryo barrierStreamEmbryo;
+    barrierStreamEmbryo.init(new BarrierExecStream(), barrierParams);
+    barrierStreamEmbryo.getStream()->setName("BarrierExecStream");
+
+    SharedExecStream pOutputStream =
+        prepareDAG(
+            mockStreamEmbryo,
+            splitterStreamEmbryo,
+            aggEmbryoStreamList,
+            barrierStreamEmbryo);
+
+    ConstExecStreamGenerator expectedResultGenerator(nRows);
+    verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
 
 // End ExecStreamTest.cpp
