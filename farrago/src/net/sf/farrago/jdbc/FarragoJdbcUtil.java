@@ -25,6 +25,7 @@ package net.sf.farrago.jdbc;
 import java.sql.*;
 
 import java.util.logging.*;
+import java.util.*;
 import java.lang.reflect.*;
 import java.io.*;
 
@@ -35,12 +36,26 @@ import org.eigenbase.util14.*;
 /**
  * Utility functions for the Farrago JDBC driver.
  *
+ * <p>This class is JDK 1.4 compatible.
+ *
  * @author angel
  * @version $Id$
  * @since Mar 18, 2006
  */
 public class FarragoJdbcUtil
 {
+    /**
+     * Contains the serialization checker for each thread.
+     */
+    private static final ThreadLocal/*<SerializationChecker>*/ threadChecker =
+        new ThreadLocal/*<SerializationChecker>*/()
+        {
+            protected Object /*SerializationChecker*/ initialValue()
+            {
+                return new SerializationChecker();
+            }
+        };
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -226,89 +241,107 @@ public class FarragoJdbcUtil
         return null;
     }
 
-    /**
-     * Converts a {@code Throwable} into a similar exception that is
-     * serializable. The original object, or at least its cause, is
-     * used if possible; and the new throwable has the same stack trace.
-     *
-     * @param throwable Exception
-     * @return Exception that is serializable and of the same general type
-     */
-    private static Throwable makeSerializable(Throwable throwable)
-    {
-        // REVIEW: Is serializability sufficient? The class may not be
-        // available on the client.
-        if (isSerializable(throwable)) {
-            return throwable;
-        }
-        Throwable cause = throwable.getCause();
-        if (cause == throwable) {
-            cause = null;
-        }
-        if (cause != null) {
-            cause = makeSerializable(cause);
-        }
-        String message =
-            throwable.getClass().getName() + ": " + throwable.getMessage();
-        Throwable serializable;
-        if (throwable instanceof RuntimeException) {
-            //noinspection ThrowableInstanceNeverThrown
-            serializable = new RuntimeException(message, cause);
-        } else if (throwable instanceof Exception) {
-            //noinspection ThrowableInstanceNeverThrown
-            serializable = new Exception(message, cause);
-        } else if (throwable instanceof Error) {
-            //noinspection ThrowableInstanceNeverThrown
-            serializable = new Error(message, cause);
-        } else {
-            //noinspection ThrowableInstanceNeverThrown
-            serializable = new Throwable(message, cause);
-        }
-        serializable.setStackTrace(throwable.getStackTrace());
-
-        return serializable;
-    }
-
-    /**
-     * Returns whether an object is serializable.
-     *
-     * @param o Object
-     * @return Whether object is serializable
-     */
-    private static boolean isSerializable(Object o)
-    {
-        try {
-            ObjectOutputStream oos =
-                new ObjectOutputStream(
-                    new ByteArrayOutputStream());
-            oos.writeObject(o);
-            return true;
-        } catch (NotSerializableException e) {
-            if (o instanceof EigenbaseParserException) {
-                // We know there are problems serializing
-                // EigenbaseParserException: specifically, the cause of a
-                // SqlParseException is usually a ParseException generated
-                // by JavaCC, and this is not serializable because it contains
-                // Token.
-            } else if (o instanceof Serializable) {
-                // If you get this error, you should fix the class and make
-                // sure all of its fields are types that extend Serializable.
-                // Then as long as the instances of those types are being
-                // honest, everything should be hunky dory.
-                System.out.println(
-                    "Warning: Object [" + o + "] of class " + o.getClass()
-                        + " implements Serializable but is not serializable. "
-                        + "Error is as follows:");
-                e.printStackTrace(System.out);
-            }
-            return false;
-        } catch (IOException e) {
-            throw new RuntimeException(
-                "Error while testing serializability", e);
-        }
-    }
-
     //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * Tests whether an object (in particular an exception) is serializable.
+     * Maintains a list of objects actively being tested so that we do not
+     * recursively test the same object.
+     */
+    private static class SerializationChecker
+    {
+        private final Set/*<Object>*/ active = new HashSet/*<Object>*/();
+
+        /**
+         * Converts a {@code Throwable} into a similar exception that is
+         * serializable. The original object, or at least its cause, is
+         * used if possible; and the new throwable has the same stack trace.
+         *
+         * @param throwable Exception
+         * @return Exception that is serializable and of the same general type
+         */
+        Throwable makeSerializable(Throwable throwable)
+        {
+            // REVIEW: Is serializability sufficient? The class may not be
+            // available on the client.
+            if (isSerializable(throwable)) {
+                return throwable;
+            }
+            Throwable cause = throwable.getCause();
+            if (cause == throwable) {
+                cause = null;
+            }
+            if (cause != null) {
+                cause = makeSerializable(cause);
+            }
+            String message =
+                throwable.getClass().getName() + ": " + throwable.getMessage();
+            Throwable serializable;
+            if (throwable instanceof RuntimeException) {
+                //noinspection ThrowableInstanceNeverThrown
+                serializable = new RuntimeException(message, cause);
+            } else if (throwable instanceof Exception) {
+                //noinspection ThrowableInstanceNeverThrown
+                serializable = new Exception(message, cause);
+            } else if (throwable instanceof Error) {
+                //noinspection ThrowableInstanceNeverThrown
+                serializable = new Error(message, cause);
+            } else {
+                //noinspection ThrowableInstanceNeverThrown
+                serializable = new Throwable(message, cause);
+            }
+            serializable.setStackTrace(throwable.getStackTrace());
+
+            return serializable;
+        }
+
+        /**
+         * Returns whether an object is serializable.
+         *
+         * @param o Object
+         * @return Whether object is serializable
+         */
+        boolean isSerializable(Object o)
+        {
+            if (!active.add(o)) {
+                // The object is already being tested for serialization. Tell a
+                // white lie and say that it is serializable. If it is not
+                // serializable, the first call will find out.
+                return true;
+            }
+            try {
+                ObjectOutputStream oos =
+                    new ObjectOutputStream(
+                        new ByteArrayOutputStream());
+                oos.writeObject(o);
+                return true;
+            } catch (NotSerializableException e) {
+                if (o instanceof EigenbaseParserException) {
+                    // We know there are problems serializing
+                    // EigenbaseParserException: specifically, the cause of a
+                    // SqlParseException is usually a ParseException generated
+                    // by JavaCC, and this is not serializable because it contains
+                    // Token.
+                } else if (o instanceof Serializable) {
+                    // If you get this error, you should fix the class and make
+                    // sure all of its fields are types that extend Serializable.
+                    // Then as long as the instances of those types are being
+                    // honest, everything should be hunky dory.
+                    System.out.println(
+                        "Warning: Object [" + o + "] of class " + o.getClass()
+                            + " implements Serializable but is not serializable. "
+                            + "Error is as follows:");
+                    e.printStackTrace(System.out);
+                }
+                return false;
+            } catch (IOException e) {
+                throw new RuntimeException(
+                    "Error while testing serializability", e);
+            } finally {
+                active.remove(o);
+            }
+        }
+    }
 
     /**
      * Exception thrown by Farrago JDBC driver.
@@ -390,14 +423,16 @@ public class FarragoJdbcUtil
         {
             boolean needNewException = false;
             Throwable serializableOriginal;
+            final SerializationChecker checker =
+                (SerializationChecker) threadChecker.get();
 
             // Replace original if it is not serializable.
             if (original != null
                 && original != this
-                && !isSerializable(original))
+                && !checker.isSerializable(original))
             {
                 needNewException = true;
-                serializableOriginal = makeSerializable(original);
+                serializableOriginal = checker.makeSerializable(original);
             } else {
                 serializableOriginal = original;
             }
@@ -407,10 +442,11 @@ public class FarragoJdbcUtil
             SQLException serializableNext;
             if (next != null
                 && next != this
-                && !isSerializable(next))
+                && !checker.isSerializable(next))
             {
                 needNewException = true;
-                serializableNext = (SQLException) makeSerializable(next);
+                serializableNext =
+                    (SQLException) checker.makeSerializable(next);
             } else {
                 serializableNext = next;
             }
@@ -419,9 +455,9 @@ public class FarragoJdbcUtil
             Throwable serializableCause;
             if (cause != null
                 && cause != this
-                && !isSerializable(cause)) {
+                && !checker.isSerializable(cause)) {
                 needNewException = true;
-                serializableCause = makeSerializable(cause);
+                serializableCause = checker.makeSerializable(cause);
             } else {
                 serializableCause = cause;
             }
