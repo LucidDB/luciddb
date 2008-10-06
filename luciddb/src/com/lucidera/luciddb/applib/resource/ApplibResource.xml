@@ -309,6 +309,27 @@ Message: {3}</text>
 <text>Key values must be the same size to be compared</text>
 </exception>
 
+<exception id="900650" name="CVIInvalidTsCol">
+<text>TIMESTAMP_COLUMN must be one column and of type TIMESTAMP</text>
+</exception>
+
+<exception id="900651" name="CVIInvalidInputTable">
+<text>Input table must consist of the PARTITIONING_COLUMNS, a TIMESTAMP_COLUMN, and one clumping column</text>
+</exception>
+
+<exception id="900652" name="CVIInOutNumColsMismatch">
+<text>Number of columns of output table must be five plus number of columns of input table</text>
+</exception>
+
+<exception id="900653" name="CVITsInPartition">
+<text>Timestamp column must not be in partition columns</text>
+</exception>
+
+<exception id="900654" name="CVITsMustNotBeNull">
+<text>Timestamp column must not be NULL</text>
+</exception>
+
+
 <!-- ====================================================================== -->
  Messages
 <!-- ====================================================================== -->
