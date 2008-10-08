@@ -87,9 +87,19 @@ ${farrago.test.jvmargs}
   <property name="javahome.dir" location="${env.JAVA_HOME}"/>
 
   <!-- Java source version -->
+  <!-- NOTE jvs 8-Oct-2008:  farrago.javasrc.14 is not actually supported -->
+  <!-- any more; delete it once red zone dependencies are gone.  -->
   <property name="farrago.javasrc.version" value="1.5"/>
   <condition property="farrago.javasrc.14">
     <equals arg1="${farrago.javasrc.version}" arg2="1.4"/>
+  </condition>
+
+  <!-- Java source version for client dependencies; this -->
+  <!-- tends to lag the server by one version.  So when we're building -->
+  <!-- Farrago with JDK 1.5, we want JVM 1.4 client compatibility; -->
+  <!-- building with JDK 1.6, we want JVM 1.5 client compatibility; -->
+  <condition property="farrago.client.javasrc.version" value="1.4" else="1.5">
+    <equals arg1="${ant.java.version}" arg2="1.5"/>
   </condition>
 
   <!-- JRE location for test execution -->
@@ -189,6 +199,10 @@ ${farrago.test.jvmargs}
 
   <!-- directory for initialization scripts -->
   <property name="farrago.initsql.dir" location="${farrago.dir}/initsql"/>
+
+  <!-- target directory for JDBC4 compatibility gunk -->
+  <property name="farrago.jdbc4.gen.dir"
+    location="${farrago.src.dir}/org/eigenbase/jdbc4"/>
 
   <!-- We direct SqlLine to squelch its history file by setting the system
        property sqlline.historyFile. This keeps the normal history
@@ -543,12 +557,10 @@ ${farrago.test.jvmargs}
   </presetdef>
 
   <!-- Customization for javac task for compiling client-side code -->
-  <!-- NOTE jvs 2-Oct-2005:  We keep all client-side code 1.4-compatible -->
-  <!-- NOTE hersker 2007-06-06: the JDK 1.6 compiler actually enforces
-       the source="1.4" attribute, revealing that creeping generics have 
-       forced us to abandon 1.4-compatibility. -->
   <presetdef name="farrago.javaCompileClient">
-    <javac debug="on" deprecation="on" source="1.4" target="1.4"/>
+    <javac debug="on" deprecation="on" 
+      source="${farrago.client.javasrc.version}" 
+      target="${farrago.client.javasrc.version}"/>
   </presetdef>
 
   <!-- Customization for java task -->

@@ -468,6 +468,29 @@ ${farrago.test.jvmargs}
     <antcall target="createJaasConfig"/>
   </target>
 
+  <!-- see http://pub.eigenbase.org/wiki/Jdbc4Transition -->
+  <target name="mungeJdbc">
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${ant.java.version}" arg2="1.5"/>
+      <then>
+        <copy todir="${farrago.jdbc4.gen.dir}">
+          <fileset dir="${farrago.dir}/jdbc4" includes="*.java"
+            excludes="Unwrappable*.java"/>
+        </copy>
+        <copy file="${farrago.dir}/jdbc4/Unwrappable14.java"
+          tofile="${farrago.jdbc4.gen.dir}/Unwrappable.java"/>
+        <copy file="${farrago.dir}/jdbc4/UnwrappableRJConnection14.java"
+          tofile="${farrago.jdbc4.gen.dir}/UnwrappableRJConnection.java"/>
+      </then>
+      <else>
+        <copy file="${farrago.dir}/jdbc4/Unwrappable16.java"
+          tofile="${farrago.jdbc4.gen.dir}/Unwrappable.java"/>
+        <copy file="${farrago.dir}/jdbc4/UnwrappableRJConnection16.java"
+          tofile="${farrago.jdbc4.gen.dir}/UnwrappableRJConnection.java"/>
+      </else>
+    </ac:if>
+  </target>
+
   <target name="createCatalogIfNotUptodate" depends="checkCatalogUptodate"
       unless="catalog.uptodate">
     <antcall target="createCatalog"/>
@@ -529,7 +552,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="compileCatalog"
-    depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
+    depends="cleanCatalog,mungeJdbc,generateSqlTestWrapper,createRepository"/>
 
   <!-- creates the plugin/jaas.config file from template -->
   <target name="createJaasConfig">
@@ -732,6 +755,9 @@ ${farrago.test.jvmargs}
     <delete file="${FarragoSqlTestWrapper.java}"/>
     <delete dir="${farrago.catalog.dir}/fennel"/>
     <delete file="${FarragoMdrBuildTrace.log}"/>
+    <delete quiet="true">
+      <fileset dir="${farrago.jdbc4.gen.dir}" includes="*.java"/>
+    </delete>
   </target>
 
   <!-- delete catalog data only -->

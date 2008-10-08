@@ -24,9 +24,14 @@ package org.eigenbase.util14;
 
 import java.math.*;
 
+import java.io.*;
 import java.sql.*;
 
-import java.util.TimeZone;
+import java.util.*;
+
+import java.sql.Date;
+
+import org.eigenbase.jdbc4.*;
 
 
 /**
@@ -38,7 +43,7 @@ import java.util.TimeZone;
  * @version $Id$
  * @since Jan 8, 2006
  */
-abstract public class AbstractResultSet
+abstract public class AbstractResultSet extends Unwrappable
     implements ResultSet
 {
     //~ Static fields/initializers ---------------------------------------------
@@ -2003,6 +2008,384 @@ abstract public class AbstractResultSet
             throw newConversionError(o, Timestamp.class);
         }
     }
+
+    // begin JDBC 4 methods
+
+    // implement ResultSet
+    public void updateBinaryStream(
+        int columnIndex, InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBinaryStream");
+    }
+
+    // implement ResultSet
+    public void updateBinaryStream(
+        String columnName, InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBinaryStream");
+    }
+
+    // implement ResultSet
+    public void updateBinaryStream(
+        int columnIndex, InputStream inputStream, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBinaryStream");
+    }
+
+    // implement ResultSet
+    public void updateBinaryStream(
+        String columnName, InputStream inputStream, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBinaryStream");
+    }
+
+    // implement ResultSet
+    public void updateBlob(
+        int columnIndex, InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBlob");
+    }
+
+    // implement ResultSet
+    public void updateBlob(
+        String columnName, InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBlob");
+    }
+
+    // implement ResultSet
+    public void updateBlob(
+        int columnIndex, InputStream inputStream, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBlob");
+    }
+
+    // implement ResultSet
+    public void updateBlob(
+        String columnName, InputStream inputStream, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateBlob");
+    }
+
+    // implement ResultSet
+    public void updateAsciiStream(
+        int columnIndex, InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateAsciiStream");
+    }
+
+    // implement ResultSet
+    public void updateAsciiStream(
+        String columnName, InputStream inputStream, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateAsciiStream");
+    }
+
+    // implement ResultSet
+    public void updateAsciiStream(
+        int columnIndex, InputStream inputStream, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateAsciiStream");
+    }
+
+    // implement ResultSet
+    public void updateAsciiStream(
+        String columnName, InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateAsciiStream");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        int columnIndex, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        String columnName, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        int columnIndex, NClob nclob)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        String columnName, NClob nclob)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        int columnIndex, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateNClob(
+        String columnName, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNClob");
+    }
+
+    // implement ResultSet
+    public void updateCharacterStream(
+        int columnIndex, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateCharacterStream(
+        String columnName, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateCharacterStream(
+        int columnIndex, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateCharacterStream(
+        String columnName, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateClob(
+        int columnIndex, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateClob");
+    }
+
+    // implement ResultSet
+    public void updateClob(
+        String columnName, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateClob");
+    }
+
+    // implement ResultSet
+    public void updateClob(
+        int columnIndex, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateClob");
+    }
+
+    // implement ResultSet
+    public void updateClob(
+        String columnName, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateClob");
+    }
+
+    // implement ResultSet
+    public void updateSQLXML(
+        int columnIndex, SQLXML sqlxml)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateSQLXML");
+    }
+
+    // implement ResultSet
+    public void updateSQLXML(
+        String columnName, SQLXML sqlxml)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateSQLXML");
+    }
+
+    // implement ResultSet
+    public void updateNCharacterStream(
+        int columnIndex, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateNCharacterStream(
+        String columnName, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateNCharacterStream(
+        int columnIndex, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateNCharacterStream(
+        String columnName, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNCharacterStream");
+    }
+
+    // implement ResultSet
+    public void updateNString(
+        int columnIndex, String s)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNString");
+    }
+
+    // implement ResultSet
+    public void updateNString(
+        String columnName, String s)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateNString");
+    }
+
+    // implement ResultSet
+    public void updateRowId(
+        int columnIndex, RowId rowId)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateRowId");
+    }
+
+    // implement ResultSet
+    public void updateRowId(
+        String columnName, RowId rowId)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("updateRowId");
+    }
+
+    // implement ResultSet
+    public Reader getNCharacterStream(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNCharacterStream");
+    }
+
+    // implement ResultSet
+    public Reader getNCharacterStream(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNCharacterStream");
+    }
+    
+    // implement ResultSet
+    public String getNString(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNString");
+    }
+    
+    // implement ResultSet
+    public String getNString(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNString");
+    }
+    
+    // implement ResultSet
+    public SQLXML getSQLXML(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getSQLXML");
+    }
+    
+    // implement ResultSet
+    public SQLXML getSQLXML(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getSQLXML");
+    }
+    
+    // implement ResultSet
+    public NClob getNClob(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNClob");
+    }
+    
+    // implement ResultSet
+    public NClob getNClob(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getNClob");
+    }
+    
+    // implement ResultSet
+    public RowId getRowId(String columnName)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getRowId");
+    }
+    
+    // implement ResultSet
+    public RowId getRowId(int columnIndex)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getRowId");
+    }
+    
+    // implement ResultSet
+    public boolean isClosed()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("isClosed");
+    }
+
+    // implement ResultSet
+    public int getHoldability()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getHoldability");
+    }
+
+    //
+    // end JDBC 4 methods
+    //
 }
 
 // End AbstractResultSet.java

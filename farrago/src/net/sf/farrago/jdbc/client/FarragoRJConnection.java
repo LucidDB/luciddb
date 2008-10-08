@@ -33,6 +33,7 @@ import net.sf.farrago.jdbc.rmi.*;
 
 import org.objectweb.rmijdbc.*;
 
+import org.eigenbase.jdbc4.*;
 
 /**
  * JDBC connection to Farrago across an RMI transport.
@@ -43,7 +44,7 @@ import org.objectweb.rmijdbc.*;
  * @version $Id$
  */
 public class FarragoRJConnection
-    extends RJConnection
+    extends UnwrappableRJConnection
     implements java.io.Serializable,
         FarragoConnection
 {
@@ -111,6 +112,88 @@ public class FarragoRJConnection
             throw new SQLException(e.getMessage());
         }
     }
+
+    //
+    // begin JDBC 4 methods
+    //
+
+    // implement Connection
+    public Struct createStruct(String typeName, Object [] attributes)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createStruct");
+    }
+
+    // implement Connection
+    public Array createArrayOf(String typeName, Object [] elements)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createArrayOf");
+    }
+
+    // implement Connection
+    public Properties getClientInfo()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public String getClientInfo(String name)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(String name, String value)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(Properties props)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public boolean isValid(int timeout)
+    {
+        throw new UnsupportedOperationException("isValid");
+    }
+
+    // implement Connection
+    public SQLXML createSQLXML()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createSQLXML");
+    }
+
+    // implement Connection
+    public NClob createNClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createNClob");
+    }
+
+    // implement Connection
+    public Clob createClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createClob");
+    }
+
+    // implement Connection
+    public Blob createBlob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createBlob");
+    }
+
+    //
+    // end JDBC 4 methods
+    //
 }
 
 // End FarragoRJConnection.java
