@@ -47,9 +47,10 @@ class UnnestNamespace
     UnnestNamespace(
         SqlValidatorImpl validator,
         SqlCall unnest,
-        SqlValidatorScope scope)
+        SqlValidatorScope scope,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         assert scope != null;
         assert unnest.getOperator() == SqlStdOperatorTable.unnestOperator;
         this.unnest = unnest;

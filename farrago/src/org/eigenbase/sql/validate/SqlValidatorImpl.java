@@ -183,7 +183,7 @@ public class SqlValidatorImpl
      * @param catalogReader  Catalog reader
      * @param typeFactory    Type factory
      * @param conformance     Compatibility mode
-     * 
+     *
      * @pre opTab != null
      * @pre // node is a "query expression" (per SQL standard)
      * @pre catalogReader != null
@@ -278,7 +278,8 @@ public class SqlValidatorImpl
         // with a scope corresponding to the cursor
         SelectScope cursorScope = new SelectScope(parentScope, null, select);
         cursorScopes.put(select, cursorScope);
-        final SelectNamespace selectNs = createSelectNamespace(select);
+        final SelectNamespace selectNs =
+            createSelectNamespace(select, select);
         String alias = deriveAlias(select, nextGeneratedId++);
         registerNamespace(cursorScope, alias, selectNs, false);
     }
@@ -432,7 +433,13 @@ public class SqlValidatorImpl
             performUnconditionalRewrites(topNode, false);
         cursorSet.add(outermostNode);
         if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
-            registerQuery(scope, null, outermostNode, null, false);
+            registerQuery(
+                scope,
+                null,
+                outermostNode,
+                outermostNode,
+                null,
+                false);
         }
         final SqlValidatorNamespace ns = getNamespace(outermostNode);
         if (ns == null) {
@@ -482,7 +489,9 @@ public class SqlValidatorImpl
     }
 
     private void lookupSelectHints(
-        SqlValidatorNamespace ns, SqlParserPos pos, List<SqlMoniker> hintList)
+        SqlValidatorNamespace ns,
+        SqlParserPos pos,
+        List<SqlMoniker> hintList)
     {
         final SqlNode node = ns.getNode();
         if (node instanceof SqlSelect) {
@@ -643,7 +652,8 @@ public class SqlValidatorImpl
     private static void findAllValidFunctionNames(
         List<String> names,
         SqlValidator validator,
-        List<SqlMoniker> result, SqlParserPos pos)
+        List<SqlMoniker> result,
+        SqlParserPos pos)
     {
         // a function name can only be 1 part
         if (names.size() > 1) {
@@ -706,7 +716,13 @@ public class SqlValidatorImpl
                 + outermostNode.toString());
         }
         if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
-            registerQuery(scope, null, outermostNode, null, false);
+            registerQuery(
+                scope,
+                null,
+                outermostNode,
+                outermostNode,
+                null,
+                false);
         }
         outermostNode.validate(this, scope);
         if (!outermostNode.getKind().isA(SqlKind.TopLevel)) {
@@ -732,7 +748,7 @@ public class SqlValidatorImpl
             SqlSampleSpec sampleSpec = SqlLiteral.sampleValue(operands[1]);
             if (sampleSpec instanceof SqlSampleSpec.SqlTableSampleSpec) {
                 validateFeature(
-                    EigenbaseResource.instance().SQLFeature_T613, 
+                    EigenbaseResource.instance().SQLFeature_T613,
                     node.getParserPosition());
             } else if (sampleSpec
                 instanceof SqlSampleSpec.SqlSubstitutionSampleSpec)
@@ -742,7 +758,7 @@ public class SqlValidatorImpl
                     node.getParserPosition());
             }
         }
-        
+
         validateNamespace(ns);
         validateAccess(
             node,
@@ -1572,6 +1588,7 @@ public class SqlValidatorImpl
      * this namespace)
      * @param alias Alias by which parent will refer to this namespace
      * @param ns Namespace
+     * @param forceNullable Whether to force the type of namespace to be
      */
     protected void registerNamespace(
         SqlValidatorScope usingScope,
@@ -1590,10 +1607,36 @@ public class SqlValidatorImpl
         }
     }
 
+    /**
+     * Registers scopes and namespaces implied a relational expression in the
+     * FROM clause.
+     *
+     * <p>{@code parentScope} and {@code usingScope} are often the same. They
+     * differ when the namespace are not visible within the parent. (Example
+     * needed.)
+     *
+     * <p>Likewise, {@code enclosingNode} and {@code node} are often the same.
+     * {@code enclosingNode} is the topmost node within the FROM clause,
+     * from which any decorations like an alias (<code>AS alias</code>) or
+     * a table sample clause are stripped away to get {@code node}. Both are
+     * recorded in the namespace.
+     *
+     * @param parentScope Parent scope which this scope turns to in order to
+     * resolve objects
+     * @param usingScope Scope whose child list this scope should add itself to
+     * @param node Node which namespace is based on
+     * @param enclosingNode Outermost node for namespace, including decorations
+     * such as alias and sample clause
+     * @param alias Alias
+     * @param forceNullable Whether to force the type of namespace to be
+     * nullable because it is in an outer join
+     * @return registered node, usually the same as {@code node}
+     */
     private SqlNode registerFrom(
         SqlValidatorScope parentScope,
         SqlValidatorScope usingScope,
         final SqlNode node,
+        SqlNode enclosingNode,
         String alias,
         boolean forceNullable)
     {
@@ -1638,7 +1681,8 @@ public class SqlValidatorImpl
         }
 
         switch (kind.getOrdinal()) {
-        case SqlKind.AsORDINAL: {
+        case SqlKind.AsORDINAL:
+        {
             final SqlCall call = (SqlCall) node;
             if (alias == null) {
                 alias = call.operands[1].toString();
@@ -1653,6 +1697,7 @@ public class SqlValidatorImpl
                     parentScope,
                     usingScope2,
                     expr,
+                    enclosingNode,
                     alias,
                     forceNullable);
             if (newExpr != expr) {
@@ -1664,13 +1709,14 @@ public class SqlValidatorImpl
                 registerNamespace(
                     usingScope,
                     alias,
-                    new AliasNamespace(this, call),
+                    new AliasNamespace(this, call, enclosingNode),
                     false);
             }
             return node;
         }
 
-        case SqlKind.TableSampleORDINAL: {
+        case SqlKind.TableSampleORDINAL:
+        {
             final SqlCall call = (SqlCall) node;
             final SqlNode expr = call.operands[0];
             final SqlNode newExpr =
@@ -1678,6 +1724,7 @@ public class SqlValidatorImpl
                     parentScope,
                     usingScope,
                     expr,
+                    enclosingNode,
                     alias,
                     forceNullable);
             if (newExpr != expr) {
@@ -1719,6 +1766,7 @@ public class SqlValidatorImpl
                     parentScope,
                     joinScope,
                     left,
+                    left,
                     null,
                     forceLeftNullable);
             if (newLeft != left) {
@@ -1735,6 +1783,7 @@ public class SqlValidatorImpl
                     rightParentScope,
                     joinScope,
                     right,
+                    right,
                     null,
                     forceRightNullable);
             if (newRight != right) {
@@ -1749,7 +1798,8 @@ public class SqlValidatorImpl
             final IdentifierNamespace newNs =
                 new IdentifierNamespace(
                     this,
-                    id);
+                    id,
+                    enclosingNode);
             registerNamespace(usingScope, alias, newNs, forceNullable);
             return newNode;
 
@@ -1758,10 +1808,12 @@ public class SqlValidatorImpl
                 parentScope,
                 usingScope,
                 ((SqlCall) node).operands[0],
+                enclosingNode,
                 alias,
                 forceNullable);
 
-        case SqlKind.CollectionTableORDINAL: {
+        case SqlKind.CollectionTableORDINAL:
+        {
             SqlCall call = (SqlCall) node;
             final SqlNode operand = call.operands[0];
             final SqlNode newOperand =
@@ -1769,6 +1821,7 @@ public class SqlValidatorImpl
                     parentScope,
                     usingScope,
                     operand,
+                    enclosingNode,
                     alias,
                     forceNullable);
             if (newOperand != operand) {
@@ -1784,7 +1837,13 @@ public class SqlValidatorImpl
         case SqlKind.ValuesORDINAL:
         case SqlKind.UnnestORDINAL:
         case SqlKind.FunctionORDINAL:
-            registerQuery(parentScope, usingScope, node, alias, forceNullable);
+            registerQuery(
+                parentScope,
+                usingScope,
+                node,
+                enclosingNode,
+                alias,
+                forceNullable);
             return newNode;
 
         case SqlKind.OverORDINAL:
@@ -1800,6 +1859,7 @@ public class SqlValidatorImpl
                     parentScope,
                     overScope,
                     operand,
+                    enclosingNode,
                     alias,
                     forceNullable);
             if (newOperand != operand) {
@@ -1834,11 +1894,15 @@ public class SqlValidatorImpl
      *
      * @param select Select node
      *
+     * @param enclosingNode Enclosing node
+     *
      * @return Select namespace
      */
-    protected SelectNamespace createSelectNamespace(SqlSelect select)
+    protected SelectNamespace createSelectNamespace(
+        SqlSelect select,
+        SqlNode enclosingNode)
     {
-        return new SelectNamespace(this, select);
+        return new SelectNamespace(this, select, enclosingNode);
     }
 
     /**
@@ -1848,11 +1912,15 @@ public class SqlValidatorImpl
      *
      * @param call Call to set operation
      *
+     * @param enclosingNode Enclosing node
+     *
      * @return Set operation namespace
      */
-    protected SetopNamespace createSetopNamespace(SqlCall call)
+    protected SetopNamespace createSetopNamespace(
+        SqlCall call,
+        SqlNode enclosingNode)
     {
-        return new SetopNamespace(this, call);
+        return new SetopNamespace(this, call, enclosingNode);
     }
 
     /**
@@ -1871,6 +1939,7 @@ public class SqlValidatorImpl
         SqlValidatorScope parentScope,
         SqlValidatorScope usingScope,
         SqlNode node,
+        SqlNode enclosingNode,
         String alias,
         boolean forceNullable)
     {
@@ -1878,6 +1947,7 @@ public class SqlValidatorImpl
             parentScope,
             usingScope,
             node,
+            enclosingNode,
             alias,
             forceNullable,
             true);
@@ -1901,10 +1971,13 @@ public class SqlValidatorImpl
         SqlValidatorScope parentScope,
         SqlValidatorScope usingScope,
         SqlNode node,
+        SqlNode enclosingNode,
         String alias,
         boolean forceNullable,
         boolean checkUpdate)
     {
+        assert node != null;
+        assert enclosingNode != null;
         Util.pre(
             (usingScope == null)
             || (alias != null),
@@ -1915,7 +1988,8 @@ public class SqlValidatorImpl
         switch (node.getKind().getOrdinal()) {
         case SqlKind.SelectORDINAL:
             final SqlSelect select = (SqlSelect) node;
-            final SelectNamespace selectNs = createSelectNamespace(select);
+            final SelectNamespace selectNs =
+                createSelectNamespace(select, enclosingNode);
             registerNamespace(usingScope, alias, selectNs, forceNullable);
             final SqlValidatorScope windowParentScope =
                 (usingScope != null) ? usingScope : parentScope;
@@ -1938,6 +2012,7 @@ public class SqlValidatorImpl
                 registerFrom(
                     parentScope,
                     selectScope,
+                    from,
                     from,
                     null,
                     false);
@@ -1981,24 +2056,46 @@ public class SqlValidatorImpl
             validateFeature(
                 EigenbaseResource.instance().SQLFeature_F302,
                 node.getParserPosition());
-            registerSetop(parentScope, usingScope, node, alias, forceNullable);
+            registerSetop(
+                parentScope,
+                usingScope,
+                node,
+                node,
+                alias,
+                forceNullable);
             break;
 
         case SqlKind.ExceptORDINAL:
             validateFeature(
                 EigenbaseResource.instance().SQLFeature_E071_03,
                 node.getParserPosition());
-            registerSetop(parentScope, usingScope, node, alias, forceNullable);
+            registerSetop(
+                parentScope,
+                usingScope,
+                node,
+                node,
+                alias,
+                forceNullable);
             break;
 
         case SqlKind.UnionORDINAL:
-            registerSetop(parentScope, usingScope, node, alias, forceNullable);
+            registerSetop(
+                parentScope,
+                usingScope,
+                node,
+                node,
+                alias,
+                forceNullable);
             break;
 
         case SqlKind.ValuesORDINAL:
             call = (SqlCall) node;
             final TableConstructorNamespace tableConstructorNamespace =
-                new TableConstructorNamespace(this, call, parentScope);
+                new TableConstructorNamespace(
+                    this,
+                    call,
+                    parentScope,
+                    enclosingNode);
             registerNamespace(
                 usingScope,
                 alias,
@@ -2017,24 +2114,34 @@ public class SqlValidatorImpl
 
         case SqlKind.InsertORDINAL:
             SqlInsert insertCall = (SqlInsert) node;
-            InsertNamespace insertNs = new InsertNamespace(this, insertCall);
+            InsertNamespace insertNs =
+                new InsertNamespace(
+                    this,
+                    insertCall,
+                    enclosingNode);
             registerNamespace(usingScope, null, insertNs, forceNullable);
             registerQuery(
                 parentScope,
                 usingScope,
                 insertCall.getSource(),
+                enclosingNode,
                 null,
                 false);
             break;
 
         case SqlKind.DeleteORDINAL:
             SqlDelete deleteCall = (SqlDelete) node;
-            DeleteNamespace deleteNs = new DeleteNamespace(this, deleteCall);
+            DeleteNamespace deleteNs =
+                new DeleteNamespace(
+                    this,
+                    deleteCall,
+                    enclosingNode);
             registerNamespace(usingScope, null, deleteNs, forceNullable);
             registerQuery(
                 parentScope,
                 usingScope,
                 deleteCall.getSourceSelect(),
+                enclosingNode,
                 null,
                 false);
             break;
@@ -2046,12 +2153,17 @@ public class SqlValidatorImpl
                     node.getParserPosition());
             }
             SqlUpdate updateCall = (SqlUpdate) node;
-            UpdateNamespace updateNs = new UpdateNamespace(this, updateCall);
+            UpdateNamespace updateNs =
+                new UpdateNamespace(
+                    this,
+                    updateCall,
+                    enclosingNode);
             registerNamespace(usingScope, null, updateNs, forceNullable);
             registerQuery(
                 parentScope,
                 usingScope,
                 updateCall.getSourceSelect(),
+                enclosingNode,
                 null,
                 false);
             break;
@@ -2061,12 +2173,17 @@ public class SqlValidatorImpl
                 EigenbaseResource.instance().SQLFeature_F312,
                 node.getParserPosition());
             SqlMerge mergeCall = (SqlMerge) node;
-            MergeNamespace mergeNs = new MergeNamespace(this, mergeCall);
+            MergeNamespace mergeNs =
+                new MergeNamespace(
+                    this,
+                    mergeCall,
+                    enclosingNode);
             registerNamespace(usingScope, null, mergeNs, forceNullable);
             registerQuery(
                 parentScope,
                 usingScope,
                 mergeCall.getSourceSelect(),
+                enclosingNode,
                 null,
                 false);
 
@@ -2079,6 +2196,7 @@ public class SqlValidatorImpl
                     whereScopes.get(mergeCall.getSourceSelect()),
                     null,
                     mergeCall.getUpdateCall(),
+                    enclosingNode,
                     null,
                     false,
                     false);
@@ -2088,6 +2206,7 @@ public class SqlValidatorImpl
                     parentScope,
                     null,
                     mergeCall.getInsertCall(),
+                    enclosingNode,
                     null,
                     false);
             }
@@ -2096,7 +2215,7 @@ public class SqlValidatorImpl
         case SqlKind.UnnestORDINAL:
             call = (SqlCall) node;
             final UnnestNamespace unnestNs =
-                new UnnestNamespace(this, call, usingScope);
+                new UnnestNamespace(this, call, usingScope, enclosingNode);
             registerNamespace(
                 usingScope,
                 alias,
@@ -2108,7 +2227,11 @@ public class SqlValidatorImpl
         case SqlKind.FunctionORDINAL:
             call = (SqlCall) node;
             ProcedureNamespace procNs =
-                new ProcedureNamespace(this, parentScope, call);
+                new ProcedureNamespace(
+                    this,
+                    parentScope,
+                    call,
+                    enclosingNode);
             registerNamespace(
                 usingScope,
                 alias,
@@ -2124,7 +2247,7 @@ public class SqlValidatorImpl
             call = (SqlCall) node;
             CollectScope cs = new CollectScope(parentScope, usingScope, call);
             final CollectNamespace ttableConstructorNs =
-                new CollectNamespace(call, cs);
+                new CollectNamespace(call, cs, enclosingNode);
             final String alias2 = deriveAlias(node, nextGeneratedId++);
             registerNamespace(
                 usingScope,
@@ -2146,17 +2269,26 @@ public class SqlValidatorImpl
         SqlValidatorScope parentScope,
         SqlValidatorScope usingScope,
         SqlNode node,
+        SqlNode enclosingNode,
         String alias,
         boolean forceNullable)
     {
         SqlCall call = (SqlCall) node;
-        final SetopNamespace setopNamespace = createSetopNamespace(call);
+        final SetopNamespace setopNamespace =
+            createSetopNamespace(call, enclosingNode);
         registerNamespace(usingScope, alias, setopNamespace, forceNullable);
 
         // A setop is in the same scope as its parent.
         scopes.put(call, parentScope);
-        registerQuery(parentScope, null, call.operands[0], null, false);
-        registerQuery(parentScope, null, call.operands[1], null, false);
+        for (SqlNode operand : call.operands) {
+            registerQuery(
+                parentScope,
+                null,
+                operand,
+                operand,
+                null,
+                false);
+        }
     }
 
     public boolean isAggregate(SqlSelect select)
@@ -2188,9 +2320,9 @@ public class SqlValidatorImpl
         if (node == null) {
             return;
         } else if (node.isA(SqlKind.Query)) {
-            registerQuery(parentScope, null, node, null, false);
+            registerQuery(parentScope, null, node, node, null, false);
         } else if (node.isA(SqlKind.MultisetQueryConstructor)) {
-            registerQuery(parentScope, null, node, null, false);
+            registerQuery(parentScope, null, node, node, null, false);
         } else if (node instanceof SqlCall) {
             validateNodeFeature(node);
             SqlCall call = (SqlCall) node;
@@ -2667,7 +2799,21 @@ public class SqlValidatorImpl
                 }
             }
         }
+
+        // Make sure that items in FROM clause have distinct aliases.
         final SqlValidatorScope fromScope = getFromScope(select);
+        final List<String> childrenNames =
+            ((SelectScope) fromScope).childrenNames;
+        int duplicateAliasOrdinal = firstDuplicate(childrenNames);
+        if (duplicateAliasOrdinal >= 0) {
+            final SqlValidatorNamespace child =
+                ((SelectScope) fromScope).children.get(duplicateAliasOrdinal);
+            throw newValidationError(
+                child.getEnclosingNode(),
+                EigenbaseResource.instance().FromAliasDuplicate.ex(
+                    childrenNames.get(duplicateAliasOrdinal)));
+        }
+
         validateFrom(
             select.getFrom(),
             fromType,
@@ -2689,6 +2835,37 @@ public class SqlValidatorImpl
         // dialects you can refer to columns of the select list, e.g.
         // "SELECT empno AS x FROM emp ORDER BY x"
         validateOrderList(select);
+    }
+
+    /**
+     * Returns the ordinal of the first element in the list which is equal to
+     * a previous element in the list.
+     *
+     * <p>For example,
+     * <code>firstDuplicate(Arrays.asList("a", "b", "c", "b", "a"))</code>
+     * returns 3, the ordinal of the 2nd "b".
+     *
+     * @param list List
+     * @return Ordinal of first duplicate, or -1 if not found
+     */
+    private static <T> int firstDuplicate(List<T> list)
+    {
+        // For large lists, it's more efficient to build a set to do a quick
+        // check for duplicates before we do an O(n^2) search.
+        if (list.size() > 10
+            && new HashSet<T>(list).size() == list.size()) {
+            return -1;
+        }
+        for (int i = 1; i < list.size(); i++) {
+            final T e0 = list.get(i);
+            for (int j = 0; j < i; j++) {
+                final T e1 = list.get(j);
+                if (e0.equals(e1)) {
+                    return i; // ordinal of the later item
+                }
+            }
+        }
+        return -1;
     }
 
     protected void validateWindowClause(SqlSelect select)
@@ -3546,11 +3723,13 @@ public class SqlValidatorImpl
 
         public InsertNamespace(
             SqlValidatorImpl validator,
-            SqlInsert node)
+            SqlInsert node,
+            SqlNode enclosingNode)
         {
             super(
                 validator,
-                node.getTargetTable());
+                node.getTargetTable(),
+                enclosingNode);
             this.node = node;
             assert node != null;
         }
@@ -3571,11 +3750,13 @@ public class SqlValidatorImpl
 
         public UpdateNamespace(
             SqlValidatorImpl validator,
-            SqlUpdate node)
+            SqlUpdate node,
+            SqlNode enclosingNode)
         {
             super(
                 validator,
-                node.getTargetTable());
+                node.getTargetTable(),
+                enclosingNode);
             this.node = node;
             assert node != null;
         }
@@ -3596,11 +3777,13 @@ public class SqlValidatorImpl
 
         public DeleteNamespace(
             SqlValidatorImpl validator,
-            SqlDelete node)
+            SqlDelete node,
+            SqlNode enclosingNode)
         {
             super(
                 validator,
-                node.getTargetTable());
+                node.getTargetTable(),
+                enclosingNode);
             this.node = node;
             assert node != null;
         }
@@ -3621,11 +3804,13 @@ public class SqlValidatorImpl
 
         public MergeNamespace(
             SqlValidatorImpl validator,
-            SqlMerge node)
+            SqlMerge node,
+            SqlNode enclosingNode)
         {
             super(
                 validator,
-                node.getTargetTable());
+                node.getTargetTable(),
+                enclosingNode);
             this.node = node;
             assert node != null;
         }
@@ -3633,98 +3818,6 @@ public class SqlValidatorImpl
         public SqlNode getNode()
         {
             return node;
-        }
-    }
-
-    /**
-     * Namespace for an <code>AS t(c1, c2, ...)</code> clause.
-     *
-     * <p>A namespace is necessary only if there is a column list, in order to
-     * re-map column names; a <code>relation AS t</code> clause just uses the
-     * same namespace as <code>relation</code>. 
-     */
-    protected static class AliasNamespace extends AbstractNamespace
-    {
-        protected final SqlCall call;
-
-        /**
-         * Creates an AliasNamespace.
-         *
-         * @param validator Validator
-         * @param call Call to AS operator
-         */
-        protected AliasNamespace(SqlValidatorImpl validator, SqlCall call)
-        {
-            super(validator);
-            this.call = call;
-            assert call.getOperator() == SqlStdOperatorTable.asOperator;
-        }
-
-        protected RelDataType validateImpl()
-        {
-            final List<String> nameList = new ArrayList<String>();
-            final SqlValidatorNamespace childNs =
-                validator.getNamespace(call.getOperands()[0]);
-            final RelDataType rowType =
-                childNs.getRowTypeSansSystemColumns();
-            for (int i = 2; i < call.getOperands().length; ++i) {
-                final SqlNode operand = call.getOperands()[i];
-                String name = ((SqlIdentifier) operand).getSimple();
-                if (nameList.contains(name)) {
-                    throw validator.newValidationError(
-                        operand,
-                        EigenbaseResource.instance().AliasListDuplicate.ex(
-                            name));
-                }
-                nameList.add(name);
-            }
-            if (nameList.size() != rowType.getFieldCount()) {
-                StringBuilder buf = new StringBuilder();
-                buf.append("(");
-                int k = 0;
-                for (RelDataTypeField field : rowType.getFieldList()) {
-                    if (k++ > 0) {
-                        buf.append(", ");
-                    }
-                    buf.append("'");
-                    buf.append(field.getName());
-                    buf.append("'");
-                }
-                buf.append(")");
-                // Position error at first name in list.
-                throw validator.newValidationError(
-                    call.getOperands()[2],
-                    EigenbaseResource.instance().AliasListDegree.ex(
-                        rowType.getFieldCount(),
-                        buf.toString(),
-                        nameList.size()));
-            }
-            final List<RelDataType> typeList = new ArrayList<RelDataType>();
-            for (RelDataTypeField field : rowType.getFieldList()) {
-                typeList.add(field.getType());
-            }
-            return validator.getTypeFactory().createStructType(
-                typeList, nameList);
-        }
-
-        public SqlNode getNode()
-        {
-            return call;
-        }
-
-        public String translate(String name)
-        {
-            final RelDataType underlyingRowType =
-                validator.getValidatedNodeType(call.getOperands()[0]);
-            int i = 0;
-            for (RelDataTypeField field : rowType.getFieldList()) {
-                if (field.getName().equals(name)) {
-                    return underlyingRowType.getFieldList().get(i).getName();
-                }
-                ++i;
-            }
-            throw new AssertionError("unknown field '" + name +
-                "' in rowtype " + underlyingRowType);
         }
     }
 

@@ -43,7 +43,7 @@ class JoinNamespace
 
     JoinNamespace(SqlValidatorImpl validator, SqlJoin join)
     {
-        super(validator);
+        super(validator, null);
         this.join = join;
     }
 

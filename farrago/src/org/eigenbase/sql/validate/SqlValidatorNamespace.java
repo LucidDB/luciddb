@@ -113,6 +113,13 @@ public interface SqlValidatorNamespace
     SqlNode getNode();
 
     /**
+     * Returns the parse tree node that at is at the root of this namespace
+     * and includes all decorations. If there are no decorations, returns the
+     * same as {@link #getNode()}.
+     */
+    SqlNode getEnclosingNode();
+
+    /**
      * Looks up a child namespace of a given name.
      *
      * <p>For example, in the query <code>select e.name from emps as e</code>,

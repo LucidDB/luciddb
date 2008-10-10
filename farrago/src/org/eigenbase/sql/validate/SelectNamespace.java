@@ -44,9 +44,19 @@ public class SelectNamespace
 
     //~ Constructors -----------------------------------------------------------
 
-    public SelectNamespace(SqlValidatorImpl validator, SqlSelect select)
+    /**
+     * Creates a SelectNamespace.
+     *
+     * @param validator Validate
+     * @param select Select node
+     * @param enclosingNode Enclosing node
+     */
+    public SelectNamespace(
+        SqlValidatorImpl validator,
+        SqlSelect select,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         this.select = select;
     }
 

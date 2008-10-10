@@ -481,6 +481,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Interval fractional second precision ''{0}'' out of range for {1}</text>
 </exception>
 
+<exception id="120700" name="FromAliasDuplicate" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Duplicate relation name ''{0}'' in FROM clause</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->

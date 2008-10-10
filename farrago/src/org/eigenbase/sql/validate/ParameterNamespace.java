@@ -44,7 +44,7 @@ class ParameterNamespace
 
     public ParameterNamespace(SqlValidatorImpl validator, RelDataType type)
     {
-        super(validator);
+        super(validator, null);
         this.type = type;
     }
 
