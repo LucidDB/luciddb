@@ -921,6 +921,11 @@ public abstract class FarragoTestCase
             } else if (connection != null) {
                 ResultSet schemas = connection.getMetaData().getSchemas();
                 while(schemas.next()) {
+                    // ignore schemas not in the default catalog
+                    String catalog = schemas.getString(2);
+                    if (catalog.startsWith("SYS_")) {
+                        continue;
+                    }
                     String name = schemas.getString(1);
                     if (!isBlessedSchema(name))
                     {
