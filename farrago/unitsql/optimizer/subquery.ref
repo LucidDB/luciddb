@@ -1508,7 +1508,7 @@ Error: From line 3, column 51 to line 3, column 54: Table 'EMPS' not found (stat
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0..3=[{inputs}], expr#4=[true], $f00=[$t1], $f01=[$t3], $f0=[$t4])'
 '            FennelToIteratorConverter'
-'              FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[2, 0]], joinKeyParamIds=[[2, 1]])'
+'              FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[0, 2]], joinKeyParamIds=[[1, 2]])'
 '                FennelReshapeRel(projection=[[0, 3, 4]], outputRowType=[RecordType(INTEGER NOT NULL DEPTNO, INTEGER $f00, BOOLEAN $f2) NOT NULL])'
 '                  LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])'
 '                    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'

@@ -353,7 +353,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 3]], outputRowType=[RecordType(INTEGER F, INTEGER D1) NOT NULL])'
-'    FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[2, 1]], joinKeyParamIds=[[2, 1]])'
+'    FennelNestedLoopJoinRel(joinType=[INNER], leftJoinKeys=[[1, 2]], joinKeyParamIds=[[1, 2]])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$F$F, SYS$CLUSTERED_INDEX$F$F_D1, SYS$CLUSTERED_INDEX$F$F_D2]])'
 '      FennelCalcRel(expr#0..3=[{inputs}], expr#4=[=($t2, $t1)], expr#5=[=($t3, $t1)], expr#6=[OR($t4, $t5)], proj#0..1=[{exprs}], $condition=[$t6])'
 '        FennelReshapeRel(projection=[[0, 1]], dynamicParameters=[[1, 2]], paramCompareOffsets=[[-1, -1]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F, INTEGER F_D1, INTEGER F_D2) NOT NULL])'
