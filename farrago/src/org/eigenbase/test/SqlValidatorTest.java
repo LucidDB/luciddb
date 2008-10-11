@@ -4716,6 +4716,50 @@ public class SqlValidatorTest
         check("select 1 as a, 2 as b, 3 as a from emp");
     }
 
+    public void testDuplicateTableAliasFails()
+    {
+        // implicit alias clashes with implicit alias
+        checkFails(
+            "select 1 from emp, ^emp^",
+            "Duplicate relation name 'EMP' in FROM clause");
+        // implicit alias clashes with implicit alias, using join syntax
+        checkFails(
+            "select 1 from emp join ^emp^ on emp.empno = emp.mgrno",
+            "Duplicate relation name 'EMP' in FROM clause");
+        // explicit alias clashes with implicit alias
+        checkFails(
+            "select 1 from emp join ^dept as emp^ on emp.empno = emp.deptno",
+            "Duplicate relation name 'EMP' in FROM clause");
+        // implicit alias does not clash with overridden alias
+        check("select 1 from emp as e join emp on emp.empno = e.deptno");
+        // explicit alias does not clash with overridden alias
+        check("select 1 from emp as e join dept as emp on e.empno = emp.deptno");
+        // more than 2 in from clause
+        checkFails(
+            "select 1 from emp, dept, emp as e, ^dept as emp^, emp",
+            "Duplicate relation name 'EMP' in FROM clause");
+        // alias applied to subquery
+        checkFails(
+            "select 1 from emp, (^select 1 as x from (values (true))) as emp^",
+            "Duplicate relation name 'EMP' in FROM clause");
+        checkFails(
+            "select 1 from emp, (^values (true,false)) as emp (b, c)^, dept as emp",
+            "Duplicate relation name 'EMP' in FROM clause");
+        // alias applied to table function. doesn't matter that table fn
+        // doesn't exist - should find the alias problem first
+        checkFails(
+            "select 1 from emp, ^table(foo()) as emp^",
+            "Duplicate relation name 'EMP' in FROM clause");
+        // explicit table
+        checkFails(
+            "select 1 from emp, ^(table foo.bar.emp) as emp^",
+            "Duplicate relation name 'EMP' in FROM clause");
+        // alias does not clash with alias inherited from enclosing context
+        check(
+            "select 1 from emp, dept where exists (\n" +
+                "  select 1 from emp where emp.empno = emp.deptno)");
+    }
+
     public void testInvalidGroupBy()
     {
         checkFails("select ^empno^, deptno from emp group by deptno",
@@ -6002,6 +6046,15 @@ public class SqlValidatorTest
 
         // scalar subquery inside WHERE
         check("select * from emp where (select true from dept)");
+    }
+
+    public void _testSubqueryInOnClause()
+    {
+        // Currently not supported. Should give validator error, but gives
+        // internal error.
+        check("select * from emp as emps left outer join dept as depts\n" +
+            "on emps.deptno = depts.deptno and emps.deptno = (\n" +
+            "select min(deptno) from dept as depts2)");
     }
 
     public void testRecordType()

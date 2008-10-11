@@ -57,14 +57,22 @@ abstract class AbstractNamespace
 
     private boolean forceNullable;
 
+    protected final SqlNode enclosingNode;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an AbstractNamespace.
+     *
+     * @param validator Validator
+     * @param enclosingNode Enclosing node
      */
-    AbstractNamespace(SqlValidatorImpl validator)
+    AbstractNamespace(
+        SqlValidatorImpl validator,
+        SqlNode enclosingNode)
     {
         this.validator = validator;
+        this.enclosingNode = enclosingNode;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -139,6 +147,11 @@ abstract class AbstractNamespace
         this.rowType = rowType;
     }
 
+    public SqlNode getEnclosingNode()
+    {
+        return enclosingNode;
+    }
+
     public SqlValidatorTable getTable()
     {
         return null;
@@ -148,8 +161,7 @@ abstract class AbstractNamespace
     {
         return validator.lookupFieldNamespace(
             getRowType(),
-            name
-        );
+            name);
     }
 
     public boolean fieldExists(String name)

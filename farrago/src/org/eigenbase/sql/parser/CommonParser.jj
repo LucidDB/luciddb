@@ -384,7 +384,7 @@ SqlNode LeafQuery(ExprContext exprContext) :
     {
         return e;
     }
-    | e = ExplicitTable()
+    | e = ExplicitTable(getPos())
     {
         return e;
     }
@@ -1326,8 +1326,8 @@ SqlNode TableRef() :
                     pos.plus(getPos()), args.toArray());
         }
     |
-        <TABLE> <LPAREN>
-        tableRef = TableFunctionCall()
+        <TABLE> { pos = getPos(); } <LPAREN>
+        tableRef = TableFunctionCall(pos)
         <RPAREN>
         {
         }
@@ -1419,12 +1419,11 @@ SqlNode TableRef() :
     }
 }
 
-SqlNode TableFunctionCall() :
+SqlNode TableFunctionCall(SqlParserPos pos) :
 {
     SqlNode call;
     SqlFunctionCategory funcType =
         SqlFunctionCategory.UserDefinedFunction;
-    SqlParserPos pos = getPos();
 }
 {
     [
@@ -1464,15 +1463,13 @@ SqlNode TableFunctionCall() :
 /**
  * Parses an explicit TABLE t reference.
  */
-SqlNode ExplicitTable() :
+SqlNode ExplicitTable(SqlParserPos pos) :
 {
     SqlNode tableRef;
-    SqlParserPos pos;
 }
 {
     <TABLE> tableRef = CompoundIdentifier()
     {
-        pos = getPos();
         return SqlStdOperatorTable.explicitTableOperator.createCall(
             pos, tableRef);
     }

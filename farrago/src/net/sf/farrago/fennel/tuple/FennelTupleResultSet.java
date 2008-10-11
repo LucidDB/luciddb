@@ -68,17 +68,27 @@ abstract public class FennelTupleResultSet
     protected FennelTupleAccessor accessor = null;
     protected FennelTupleData data = null;
     protected boolean tupleComputed = false;
-    protected final int tupleAlignment = FennelTupleAccessor.TUPLE_ALIGN_JVM;
-    protected final int tupleAlignmentMask = tupleAlignment - 1;
+    protected final int tupleAlignment;
+    protected final int tupleAlignmentMask;
 
     //~ Constructors -----------------------------------------------------------
 
     public FennelTupleResultSet(
         FennelTupleDescriptor desc,
-        ResultSetMetaData metaData)
+        ResultSetMetaData metaData,
+        int tupleAlignment)
     {
         this.desc = desc;
         this.metaData = metaData;
+        this.tupleAlignment = tupleAlignment ;
+        this.tupleAlignmentMask = tupleAlignment - 1;
+    }
+
+    public FennelTupleResultSet(
+        FennelTupleDescriptor desc,
+        ResultSetMetaData metaData)
+    {
+        this(desc,metaData,FennelTupleAccessor.TUPLE_ALIGN_JVM);
     }
 
     //~ Methods ----------------------------------------------------------------
