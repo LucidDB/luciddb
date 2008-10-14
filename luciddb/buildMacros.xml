@@ -57,7 +57,7 @@ ${farrago.test.jvmargs}
 
   <!-- filelist for farrago init scripts which are run for luciddb -->
   <filelist dir="${open.dir}/farrago/initsql" id="farrago.filelist.initsql"
-    files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createMgmtViews.sql"/>
+    files="createStorageWrappers.sql,createReposStorageServers.sql,createSqljSchema.sql,createJdbcViews.sql,createMgmtViews.sql"/>
 
   <condition property="luciddb.createForeignWrappers.sql" 
     value="createForeignWrappers.sql" else="">

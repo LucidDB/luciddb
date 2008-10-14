@@ -697,8 +697,31 @@ ${farrago.test.jvmargs}
 
   <!-- determine list of all SQL scripts to run during catalog init -->
   <target name="determineInitSql" >
+    <farrago.setReposProvider/>
+
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+      <then>
+        <copy todir="${farrago.initsql.dir}" overwrite="true">
+          <fileset dir="${farrago.initsql.dir}/templates">
+            <include name="*.hibernate.tmpl"/>
+          </fileset>
+          <mapper type="glob" from="*.hibernate.tmpl" to="*"/>
+        </copy>
+      </then>
+      <else>
+        <copy todir="${farrago.initsql.dir}" overwrite="true">
+          <fileset dir="${farrago.initsql.dir}/templates">
+            <include name="*.default.tmpl"/>
+          </fileset>
+          <mapper type="glob" from="*.default.tmpl" to="*"/>
+        </copy>
+      </else>
+    </ac:if>
+          
+
     <filelist dir="${farrago.initsql.dir}" id="filelist.initsql"
-      files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createSalesSchema.sql,createMgmtViews.sql"/>
+      files="createStorageWrappers.sql,createReposStorageServers.sql,createSqljSchema.sql,createJdbcViews.sql,createSalesSchema.sql,createMgmtViews.sql"/>
     <pathconvert property="filelist.initsql" refid="filelist.initsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
   </target>

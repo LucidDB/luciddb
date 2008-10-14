@@ -46,6 +46,7 @@ import net.sf.farrago.util.*;
 import org.apache.commons.dbcp.*;
 import org.apache.commons.pool.*;
 import org.apache.commons.pool.impl.*;
+import org.eigenbase.enki.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
@@ -389,7 +390,7 @@ public class MedJdbcDataServer
         
         String schemaMapping = props.getProperty(PROP_SCHEMA_MAPPING);
         String tableMapping = props.getProperty(PROP_TABLE_MAPPING);
-        String tablePrefix = props.getProperty(PROP_TABLE_PREFIX_MAPPING);
+
         String tablePrefixMapping = 
             props.getProperty(PROP_TABLE_PREFIX_MAPPING);
 
@@ -406,7 +407,7 @@ public class MedJdbcDataServer
                 parseMapping(databaseMetaData, schemaMapping, false, false);
             } else if (tableMapping != null) {
                 parseMapping(databaseMetaData, tableMapping, true, false);
-            } else if (tablePrefix != null) {
+            } else if (tablePrefixMapping != null) {
                 parseMapping(databaseMetaData, tablePrefixMapping, true, true);
             }
         } catch(SQLException e) {
@@ -450,12 +451,33 @@ public class MedJdbcDataServer
         
         if (jndiName != null) {
             try {
-                InitialContext initCtx = new InitialContext();
-                dataSource = (DataSource)initCtx.lookup(jndiName);
+                // TODO: Allow specification of initial context factory and
+                // provider URL via addition options.  These should be stored
+                // in jndiEnv before the initJndi call and the names (keys) of
+                // the those properties would be used in the JndiUtil 
+                // constructor. Can also allow artibrary env properties.
+                JndiUtil jndiUtil = 
+                    new JndiUtil(
+                        "",
+                        Context.INITIAL_CONTEXT_FACTORY,
+                        Context.PROVIDER_URL);
+                
+                Properties jndiEnv = new Properties();
+                jndiUtil.initJndi(jndiEnv);
+                InitialContext initCtx = jndiUtil.newInitialContext(jndiEnv);
+
+                dataSource = 
+                    jndiUtil.lookup(initCtx, jndiName, DataSource.class);
+                
+                if (dataSource == null) {
+                    throw FarragoResource.instance().MedJdbc_InvalidDataSource.ex(
+                        jndiName);
+                }
+                
                 return;
             } catch(NamingException e) {
                 throw FarragoResource.instance().MedJdbc_InvalidDataSource.ex(
-                    jndiName);
+                    jndiName, e);
             }
         }
         
@@ -1351,32 +1373,6 @@ public class MedJdbcDataServer
                 this.targetTablePrefix.equals(that.targetTablePrefix) &&
                 this.sourceSchema.equals(that.sourceSchema) &&
                 this.sourceTablePrefix.equals(that.sourceTablePrefix);
-        }
-    }
-    
-    public static class WildcardTarget
-    {
-        final String tablePrefix;
-        
-        WildcardTarget(String tablePrefix)
-        {
-            this.tablePrefix = tablePrefix;
-        }
-        
-        public String getTablePrefix()
-        {
-            return tablePrefix;
-        }
-        public int hashCode()
-        {
-            return tablePrefix.hashCode();
-        }
-        
-        public boolean equals(Object o)
-        {
-            WildcardTarget that = (WildcardTarget)o;
-            
-            return this.tablePrefix.equals(that.tablePrefix);
         }
     }
     

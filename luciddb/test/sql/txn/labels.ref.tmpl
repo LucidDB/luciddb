@@ -85,7 +85,8 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- make sure the rowcount in dba_stored_tables reflects all rows inserted
 0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
-. . . . . . . . >     from sys_root.dba_stored_tables where table_name like 'T%';
+. . . . . . . . >     from sys_root.dba_stored_tables where table_name like 'T%'
+. . . . . . . . >     order by table_name;
 +-------------+--------------------+--------------------+
 | TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
 +-------------+--------------------+--------------------+

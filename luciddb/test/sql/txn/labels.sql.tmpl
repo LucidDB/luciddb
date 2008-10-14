@@ -76,7 +76,8 @@ options(
 
 -- make sure the rowcount in dba_stored_tables reflects all rows inserted
 select table_name, current_row_count, deleted_row_count
-    from sys_root.dba_stored_tables where table_name like 'T%';
+    from sys_root.dba_stored_tables where table_name like 'T%'
+    order by table_name;
 -- make sure there are 6 rows corresponding to T in RowCountStatistics,
 -- corresponding to each of the labels plus 1 for the DML statements that
 -- occurred after the last label was created

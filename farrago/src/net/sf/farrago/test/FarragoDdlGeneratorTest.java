@@ -34,6 +34,7 @@ import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
 
@@ -85,7 +86,18 @@ public class FarragoDdlGeneratorTest
     public void testExportSales()
     {
         String output = exportSchema("SALES", true);
-        getDiffRepos().assertEquals("output", "${output}", output);
+        
+        // REVIEW: SWZ: 2008-10-07: Output varies based on repository 
+        // configuration.  Handle the variance by repository type.  When
+        // all repositories switch to Enki/Hibernate we can remove the
+        // else case and conditional.
+        MdrProvider providerType = repos.getEnkiMdrRepos().getProviderType();
+        if (providerType == MdrProvider.ENKI_HIBERNATE) {
+            getDiffRepos().assertEquals(
+                "output-hibernate", "${output-hibernate}", output);
+        } else {
+            getDiffRepos().assertEquals("output", "${output}", output);
+        }
     }
 
     private String exportSchema(
