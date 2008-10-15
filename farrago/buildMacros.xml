@@ -307,14 +307,22 @@ ${farrago.test.jvmargs}
        properties file.  The properties file will take precedence. -->
   <property name="farrago.custom.classpath" value=""/>
 
- <!-- set test.emma.classpath for emma test only -->
+  <path id="emma.classpath">
+    <fileset dir="${emma.dir}" includes="lib/*.jar"/>
+  </path>
+  <property name="emma.classpath" refid="emma.classpath"/>
+
+  <taskdef resource="emma_ant.properties" classpathref="emma.classpath"/>
+
+  <!-- set test.emma.classpath for emma test only -->
   <if>
-    <not>
-      <isset property="test.emma.classpath"/>
-    </not>
+    <isset property="codecov.build"/>
     <then>
-	    <property name="test.emma.classpath" value=""/>
+	    <property name="test.emma.classpath" value="${emma.classpath}"/>
     </then>
+    <else>
+	    <property name="test.emma.classpath" value=""/>
+    </else>
   </if>
 
   <!-- xerces path -->
@@ -417,13 +425,6 @@ ${farrago.test.jvmargs}
     <pathelement location="${farrago.plugin.dir}/classes"/>
   </path>
   <property name="farrago.jalopy.classpath" refid="farrago.jalopy.classpath"/>
-
-  <path id="emma.classpath">
-    <fileset dir="${emma.dir}" includes="lib/*.jar"/>
-  </path>
-  <property name="emma.classpath" refid="emma.classpath"/>
-
-  <taskdef resource="emma_ant.properties" classpathref="emma.classpath"/>
 
   <!-- classpath for running blackhawk based tests -->
   <property name="bh.home" location="${thirdparty.dir}/blackhawk"/>
