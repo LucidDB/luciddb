@@ -287,7 +287,7 @@ public abstract class FarragoTestCase
         }
     }
 
-    private static Connection newConnection()
+    protected static Connection newConnection()
         throws Exception
     {
         FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();

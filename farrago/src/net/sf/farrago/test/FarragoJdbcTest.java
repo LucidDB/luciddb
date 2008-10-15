@@ -40,9 +40,7 @@ import junit.framework.*;
 
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.jdbc.FarragoStatement;
-import net.sf.farrago.jdbc.FarragoAbstractJdbcDriver;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.catalog.FarragoCatalogInit;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -2570,13 +2568,7 @@ public class FarragoJdbcTest
         final String sql2 = "SELECT * FROM sales.depts";
 
         // create a new connection and statements, don't use the globals
-        FarragoAbstractJdbcDriver driver =
-            FarragoTestCase.newJdbcEngineDriver();
-        final String uri = FarragoTestCase.getJdbcUri(driver);
-        Properties props = new Properties();
-        props.put("user", FarragoCatalogInit.SA_USER_NAME);
-        props.put("password", "mumble");
-        Connection conn = driver.connect(uri, props);
+        Connection conn = tester.newConnection();
 
         // abandon prepared statements before executing the query
         PreparedStatement pstmt1 = conn.prepareStatement(sql1);
@@ -2589,7 +2581,7 @@ public class FarragoJdbcTest
         assertFalse("executeQuery pstmt2", tryExecuteQuery(pstmt2));
 
         // abandon prepared statements after executing the query
-        conn = driver.connect(uri, props);
+        conn = tester.newConnection();
         conn.setAutoCommit(false);  // allow two open cursors at once
         pstmt1 = conn.prepareStatement(sql1);
         ResultSet rs1 = pstmt1.executeQuery();
@@ -2609,7 +2601,7 @@ public class FarragoJdbcTest
         assertFalse("executeQuery pstmt2", tryExecuteQuery(pstmt2));
 
         // abandon plain statements before executing the query
-        conn = driver.connect(uri, props);
+        conn = tester.newConnection();
         Statement stmt1 = conn.createStatement();
         Statement stmt2 = conn.createStatement();
         tracer.fine("orphaning two new plain statements");
@@ -2618,7 +2610,7 @@ public class FarragoJdbcTest
         assertFalse("executeQuery stmt2", tryExecuteQuery(stmt2, sql2));
 
         // abandon plain statements after executing the query
-        conn = driver.connect(uri, props);
+        conn = tester.newConnection();
         conn.setAutoCommit(false);  // allow two open cursors at once
         stmt1 = conn.createStatement();
         rs1 = stmt1.executeQuery(sql1);
@@ -3652,6 +3644,8 @@ public class FarragoJdbcTest
 
         public Connection getConnection();
 
+        public Connection newConnection() throws Exception;
+
         public Statement getStatement();
     }
 
@@ -3689,7 +3683,13 @@ public class FarragoJdbcTest
 
         public Connection getConnection()
         {
-            return testCase.connection;
+            return FarragoTestCase.connection;
+        }
+
+        public Connection newConnection() throws Exception
+        {
+            // return new connection for which caller is responsible
+            return FarragoTestCase.newConnection();
         }
 
         public Statement getStatement()
