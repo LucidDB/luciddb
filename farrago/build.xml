@@ -1253,7 +1253,7 @@ please disable it and try again.
   </target>
 
   <!-- Ensure that javadoc has no warnings/errors. -->
-  <target name="checkJavadoc">
+  <target name="checkJavadoc" unless="codecov.build">
     <record name="javadoc-complaints.log" action="start" 
       emacsmode="true" loglevel="warn"/>
     <antcall target="javadoc"/>

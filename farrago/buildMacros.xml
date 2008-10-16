@@ -399,6 +399,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${ant.home}/lib/ant-junit.jar"/>
     <pathelement location="${ant.home}/lib/ant-nodeps.jar"/>
     <pathelement location="${ant.home}/lib/ant-trax.jar"/>
+    <pathelement path="${test.emma.classpath}"/>
   </path>
   <property name="ant.classpath" refid="ant.classpath"/>
 
