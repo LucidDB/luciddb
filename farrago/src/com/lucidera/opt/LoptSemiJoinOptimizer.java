@@ -660,14 +660,23 @@ public class LoptSemiJoinOptimizer
         RelNode dimRel,
         SemiJoinRel semiJoin)
     {
-        // estimate savings as a result of applying semijoin filter on fact
-        // table
+        // Estimate savings as a result of applying semijoin filter on fact
+        // table.  As a heuristic, the selectivity of the semijoin needs to
+        // be less than half.  There may be instances where an even smaller
+        // selectivity value is required because of the overhead of
+        // index lookups on a very large fact table.  Half was chosen as
+        // a middle ground based on testing that was done with a large
+        // dataset.
         BitSet dimCols = new BitSet();
         for (int dimCol : semiJoin.getRightKeys()) {
             dimCols.set(dimCol);
         }
         double selectivity =
             RelMdUtil.computeSemiJoinSelectivity(factRel, dimRel, semiJoin);
+        if (selectivity > .5) {
+            return 0;
+        }
+        
         RelOptCost factCost = RelMetadataQuery.getCumulativeCost(factRel);
 
         // if not enough information, return a low score
