@@ -1,0 +1,14 @@
+-- This restore should fail because the schema is modified in between the
+-- full and incremental restores
+
+@nolockstep
+
+@thread restore
+
+set schema 'br';
+
+create table newtable(a int);
+
+@err call sys_root.restore_database('@TEST_DIR@/incrArchive1');
+
+@end

@@ -1,0 +1,23 @@
+-- Run as a .mtsql script to avoid auto-execution of SQL statements prior to
+-- the start of the actual test
+
+@nolockstep
+
+@thread validate
+
+-- There should be 2 records -- one last and one full, both completed, with
+-- different csn values
+select cast(backup_type as varchar(10)), cast(status as varchar(10))
+    from sys_root.dba_system_backups order by backup_type;
+select count(distinct csn) from sys_root.dba_system_backups;
+
+-- Validate the results of the restore of the first incremental backup
+
+set schema 'br';
+select * FROM EMP order by empno;
+select * from DEPT order by deptno;
+
+-- this should fail
+@err select * from LOCATION;
+
+@end

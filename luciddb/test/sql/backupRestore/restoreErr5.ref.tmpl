@@ -1,0 +1,8 @@
+-- setup
+-- end of setup
+
+-- thread restore
+> call sys_root.restore_database('@TEST_DIR@/tmpArchive');
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: java.io.FileNotFoundException: @TEST_DIR@/tmpArchive/backup.properties (No such file or directory)
+-- end of thread restore
+

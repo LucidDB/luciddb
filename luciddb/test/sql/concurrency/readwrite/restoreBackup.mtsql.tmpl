@@ -1,0 +1,12 @@
+-- Run as a .mtsql script to avoid auto-execution of SQL statements prior to
+-- the start of the actual test
+
+@nolockstep
+
+-- Restore the full backup
+
+@thread restore
+
+call sys_root.restore_database('@TEST_DIR@/fullArchive');
+
+@end

@@ -1,0 +1,81 @@
+-- Execute the different types of backups, doing a mix of uncompressed and
+-- compressed backups
+
+create schema br;
+set schema 'br';
+
+create server ff_server
+foreign data wrapper sys_file_wrapper
+options(
+    directory '@DIR@',
+    file_extension '.csv',
+    ctrl_file_extension '.bcp',
+    field_delimiter ',',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '9'
+);
+
+create table EMP (
+    EMPNO numeric(5,0),
+    FNAME varchar(20),
+    LNAME varchar(20),
+    SEX char(1),
+    DEPTNO integer,
+    MANAGER numeric(5,0),
+    LOCID CHAR(2),
+    SAL integer,
+    COMMISSION integer,
+    HOBBY varchar(20)
+);
+insert into EMP select * from ff_server.bcp.EMP;
+select * from EMP order by empno;
+
+-- attempt to create an incremental or differential archive when no full
+-- archive has been created yet
+call sys_root.backup_database
+    ('@TEST_DIR@/incrArchive1', 'INCREMENTAL', 'UNCOMPRESSED');
+call sys_root.backup_database
+    ('@TEST_DIR@/incrArchive1', 'DIFFERENTIAL', 'UNCOMPRESSED');
+
+call sys_root.backup_database_if_space_available(
+    '@TEST_DIR@/fullArchive', 'FULL', 'UNCOMPRESSED', 0);
+
+create table DEPT (
+    DEPTNO integer,
+    DNAME varchar(20),
+    LOCID CHAR(2)
+);
+insert into DEPT select * from ff_server.bcp.DEPT;
+select * from DEPT order by deptno;
+
+call sys_root.backup_database_if_space_available(
+    '@TEST_DIR@/incrArchive1', 'INCREMENTAL', 'COMPRESSED', 327680);
+
+create table LOCATION(
+    LOCID char(2),
+    STREET varchar(50),
+    CITY varchar(20),
+    STATE char(2),
+    ZIP numeric(5,0)
+);
+insert into LOCATION select * from ff_server.bcp.LOCATION;
+select * from LOCATION order by locid;
+
+call sys_root.backup_database(
+    '@TEST_DIR@/incrArchive2', 'INCREMENTAL', 'UNCOMPRESSED');
+
+call sys_root.backup_database(
+    '@TEST_DIR@/diffArchive', 'DIFFERENTIAL', 'COMPRESSED');
+
+-- there should be 2 records -- one last and one full, both completed, with
+-- different csn values
+select backup_type, status from sys_root.dba_system_backups
+    order by backup_type;
+select count(distinct csn) from sys_root.dba_system_backups;
+
+drop schema br cascade;
+drop server ff_server;
+

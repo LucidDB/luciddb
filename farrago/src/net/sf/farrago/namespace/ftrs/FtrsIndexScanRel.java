@@ -276,6 +276,7 @@ class FtrsIndexScanRel
             // the plan.
             scanStream.setRootPageId(-1);
         }
+        scanStream.setReadOnlyCommittedData(false);
         scanStream.setRootPageIdParamId(0);
         scanStream.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
         scanStream.setIndexId(JmiObjUtil.getObjectId(index));

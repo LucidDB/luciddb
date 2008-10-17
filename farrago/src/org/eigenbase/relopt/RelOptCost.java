@@ -73,6 +73,16 @@ public interface RelOptCost
     public boolean equals(RelOptCost cost);
 
     /**
+     * Compares this to another cost, allowing for slight roundoff errors.
+     * 
+     * @param cost another cost
+     * 
+     * @return true iff this is the same as the other cost within a roundoff
+     * margin of error
+     */
+    public boolean isEqWithEpsilon(RelOptCost cost);
+    
+    /**
      * Compares this to another cost.
      *
      * @param cost another cost

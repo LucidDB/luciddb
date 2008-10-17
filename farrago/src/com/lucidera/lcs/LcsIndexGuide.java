@@ -886,7 +886,7 @@ public class LcsIndexGuide
         //
         // Setup Btree accessor parameters
         //
-        defineIndexAccessor(generator, rel, index, false, true);
+        defineIndexAccessor(generator, rel, index, false, true, false);
 
         //
         // Set up FemExecutionStreamDef
@@ -967,16 +967,20 @@ public class LcsIndexGuide
             rel,
             index,
             false,
-            true);
+            true,
+            false);
         splicer.getIndexAccessor().add(indexAccessor);
 
-        // Setup the deletion index if the splicer will be reading from it
+        // Setup the deletion index if the splicer will be reading from it.
+        // This deletion index scan needs to read data inserted upstream, so
+        // it needs to be able to see uncommitted data.
         if (deletionIndex != null) {
             indexAccessor = repos.newFemSplicerIndexAccessorDef();
             defineIndexAccessor(
                 indexAccessor,
                 rel,
                 deletionIndex,
+                false,
                 false,
                 false);
             splicer.getIndexAccessor().add(indexAccessor);
@@ -1098,7 +1102,7 @@ public class LcsIndexGuide
                 typeFactory,
                 rel.getRowType()));
 
-        defineIndexAccessor(indexStream, rel, index, clustered, write);
+        defineIndexAccessor(indexStream, rel, index, clustered, write, !write);
     }
 
     private void defineIndexAccessor(
@@ -1106,7 +1110,8 @@ public class LcsIndexGuide
         FennelRel rel,
         FemLocalIndex index,
         boolean clustered,
-        boolean write)
+        boolean write,
+        boolean readOnlyCommittedData)
     {
         final FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
 
@@ -1147,6 +1152,7 @@ public class LcsIndexGuide
             femProj = createUnclusteredBTreeKeyProj(index);
         }
         indexAccessor.setKeyProj(femProj);
+        indexAccessor.setReadOnlyCommittedData(readOnlyCommittedData);
     }
 
     /**
@@ -1190,11 +1196,15 @@ public class LcsIndexGuide
         if (!FarragoCatalogUtil.isIndexTemporary(index)) {
             clusterScan.setRootPageId(
                 stmt.getIndexMap().getIndexRoot(index, write));
+            // If we're writing to the cluster, then we want to be able
+            // to read that data.
+            clusterScan.setReadOnlyCommittedData(!write);
         } else {
             // For a temporary index, each execution needs to bind to
             // a session-private root.  So don't burn anything into
             // the plan.
             clusterScan.setRootPageId(-1);
+            clusterScan.setReadOnlyCommittedData(false);
         }
         clusterScan.setRootPageIdParamId(0);
 

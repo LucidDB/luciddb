@@ -57,6 +57,7 @@ public abstract class RelOptUtil
     private static final Variable var0 = new Variable(makeName(0));
     private static final Variable var1 = new Variable(makeName(1));
     public static final String NL = System.getProperty("line.separator");
+    public static final double EPSILON = 1.0e-5;
 
     //~ Methods ----------------------------------------------------------------
 

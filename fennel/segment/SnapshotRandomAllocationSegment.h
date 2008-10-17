@@ -97,6 +97,13 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
     TxnId snapshotCsn;
 
     /**
+     * True if only committed data should be read by the segment.  This
+     * includes not reading uncommitted data created by the current
+     * transaction.
+     */
+    bool readOnlyCommittedData;
+
+    /**
      * If true, some snapshot page has been modified and therefore pages
      * need to be flushed during a checkpoint call
      */
@@ -180,7 +187,8 @@ public:
     explicit SnapshotRandomAllocationSegment(
         SharedSegment delegateSegment,
         SharedSegment versionedSegment,
-        TxnId snapshotCsnInit);
+        TxnId snapshotCsnInit,
+        bool readOnlyCommittedData);
 
     /**
      * @return the csn associated with the snapshot segment

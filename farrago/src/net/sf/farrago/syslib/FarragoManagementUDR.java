@@ -258,16 +258,29 @@ public abstract class FarragoManagementUDR
     public static void exportCatalog(String xmiFile)
         throws Exception
     {
+        exportCatalog(xmiFile, false);
+    }
+    
+    /**
+     * Exports the catalog repository contents as an XMI file.
+     *
+     * @param xmiFile name of file to create
+     * @param isCompressed if true, compress the XMI file
+     */
+    public static void exportCatalog(String xmiFile, boolean isCompressed)
+        throws Exception
+    {
         xmiFile = FarragoProperties.instance().expandProperties(xmiFile);
         File file = new File(xmiFile);
         FarragoModelLoader modelLoader = getModelLoader();
         FarragoReposUtil.exportExtent(
             modelLoader.getMdrRepos(),
             file,
-            "FarragoCatalog");
+            "FarragoCatalog",
+            isCompressed);
     }
 
-    private static FarragoModelLoader getModelLoader()
+    public static FarragoModelLoader getModelLoader()
     {
         FarragoSession callerSession = FarragoUdrRuntime.getSession();
         FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
@@ -675,6 +688,79 @@ public abstract class FarragoManagementUDR
         } else {
             sess.setOptRuleDescExclusionFilter(Pattern.compile(regex));
         }
+    }
+    
+    /**
+     * Backs up the database, but without checking that there's enough space
+     * to perform the backup.
+     * 
+     * @param archiveDirectory the pathname of the directory where the backup
+     * files will be created
+     * @param backupType string value indicating whether the backup is a FULL,
+     * INCREMENTAL, or DIFFERENTIAL backup
+     * @param compressionMode string value indicating whether the backup is
+     * COMPRESSED or UNCOMPRESSED
+     */
+    public static void backupDatabaseWithoutSpaceCheck(
+        String archiveDirectory,
+        String backupType,
+        String compressionMode)
+        throws Exception
+    {
+        FarragoSystemBackup backup =
+            new FarragoSystemBackup(
+                archiveDirectory,
+                backupType,
+                compressionMode,
+                false,
+                0);
+        backup.backupDatabase();
+    }
+    
+    /**
+     * Backs up the database, checking that there's enough space to perform
+     * the backup.
+     * 
+     * @param archiveDirectory the pathname of the directory where the backup
+     * files will be created
+     * @param backupType string value indicating whether the backup is a FULL,
+     * INCREMENTAL, or DIFFERENTIAL backup
+     * @param compressionMode string value indicating whether the backup is
+     * COMPRESSED or UNCOMPRESSED
+     * @param padding number of bytes of additional space required on top of
+     * what's estimated based on the number of data pages allocated
+     */
+    public static void backupDatabaseWithSpaceCheck(
+        String archiveDirectory,
+        String backupType,
+        String compressionMode,
+        long padding)
+        throws Exception
+    {
+        if (padding < 0) {
+           throw FarragoResource.instance().PaddingLessThanZero.ex(); 
+        }
+        FarragoSystemBackup backup =
+            new FarragoSystemBackup(
+                archiveDirectory,
+                backupType,
+                compressionMode,
+                true,
+                padding);
+        backup.backupDatabase();
+    }
+    
+    /**
+     * Restores a database from backup.
+     * 
+     * @param archiveDirectory the directory containing the backup
+     */
+    public static void restoreDatabase(String archiveDirectory)
+        throws Exception
+    {
+        FarragoSystemRestore restore =
+            new FarragoSystemRestore(archiveDirectory);
+        restore.restoreDatabase();
     }
 }
 

@@ -920,6 +920,15 @@ Error: From line 1, column 15 to line 1, column 42: Table 'FLATFILE_SERVER..exam
 | 6      |       | 5      |
 +--------+-------+--------+
 > 
+> -- LER-8712 -- bcp contains fewer columns than the csv file with the
+> -- missing columns specified as null in the csv header row
+> select * from mapped_server.bcp."missing_columns";
++------+------+------+
+|  A   |  C   |  E   |
++------+------+------+
+| abc  | def  | ghi  |
++------+------+------+
+> 
 > drop schema test_schema cascade;
 > 
 > !quit

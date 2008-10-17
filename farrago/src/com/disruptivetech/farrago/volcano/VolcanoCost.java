@@ -134,6 +134,18 @@ class VolcanoCost
                 && (this.dCpu == that.dCpu)
                 && (this.dIo == that.dIo));
     }
+    
+    public boolean isEqWithEpsilon(RelOptCost other)
+    {
+        if (!(other instanceof VolcanoCost)) {
+            return false;
+        }
+        VolcanoCost that = (VolcanoCost) other;
+        return (this == that)
+            || (Math.abs(this.dRows - that.dRows) < RelOptUtil.EPSILON
+                && Math.abs(this.dCpu - that.dCpu) < RelOptUtil.EPSILON
+                && Math.abs(this.dIo - that.dIo) < RelOptUtil.EPSILON);
+    }
 
     public RelOptCost minus(RelOptCost other)
     {

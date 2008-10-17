@@ -130,13 +130,15 @@ SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
 SharedSegment SegmentFactory::newSnapshotRandomAllocationSegment(
     SharedSegment delegateSegment,
     SharedSegment versionedSegment,
-    TxnId snapshotCsn)
+    TxnId snapshotCsn,
+    bool readOnlyCommittedData)
 {
     SnapshotRandomAllocationSegment *pSnapshotSegment =
         new SnapshotRandomAllocationSegment(
             delegateSegment,
             versionedSegment,
-            snapshotCsn);
+            snapshotCsn,
+            readOnlyCommittedData);
     SharedSegment pSegment(pSnapshotSegment, ClosableObjectDestructor());
     SharedSegment tracingSegment =
         newTracingSegment(pSegment, "SnapshotRandomAllocationSegment");

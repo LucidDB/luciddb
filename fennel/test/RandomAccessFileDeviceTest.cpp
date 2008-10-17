@@ -222,20 +222,26 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         uint cbSector = HALF_SIZE;
         VMAllocator allocator(cbSector*n);
         void *pBuf = allocator.allocate();
+        void *pBuf2 = allocator.allocate();
         BOOST_REQUIRE(pBuf != NULL);
         try {
             testAsyncIOImpl(
-                n, cbSector, reinterpret_cast<PBuffer>(pBuf),
+                n, cbSector,
+                reinterpret_cast<PBuffer>(pBuf),
+                reinterpret_cast<PBuffer>(pBuf2),
                 cbOffset);
         } catch (...) {
             allocator.deallocate(pBuf);
+            allocator.deallocate(pBuf2);
             throw;
         }
         allocator.deallocate(pBuf);
+        allocator.deallocate(pBuf2);
     }
     
     void testAsyncIOImpl(
-        int n, uint cbSector, PBuffer pBuf, FileSize cbOffset = 0)
+        int n, uint cbSector,
+        PBuffer pBuf, PBuffer pBuf2, FileSize cbOffset = 0)
     {
         DeviceAccessScheduler *pScheduler =
             DeviceAccessScheduler::newScheduler(schedParams);
@@ -294,11 +300,11 @@ class RandomAccessFileDeviceTest : virtual public TestBase
             pScheduler->registerDevice(pRandomAccessDevice);
         }
         
-        Listener readListener(n);
+        Listener readListener(n + 1);
         RandomAccessRequest readRequest;
         readRequest.pDevice = pRandomAccessDevice.get();
         readRequest.cbOffset = cbOffset;
-        readRequest.cbTransfer=n*cbSector;
+        readRequest.cbTransfer = n*cbSector;
         readRequest.type = RandomAccessRequest::READ;
         for (int i = 0; i < n; i++) {
             Binding *pBinding = new Binding(
@@ -306,13 +312,30 @@ class RandomAccessFileDeviceTest : virtual public TestBase
                 pBuf + i*cbSector);
             readRequest.bindingList.push_back(*pBinding);
         }
+
+        // Test a simultaneous read on the same device which intersects
+        // with the reads above; this simulates something like an online
+        // backup reading into private buffers, aliasing the cache.
+        RandomAccessRequest readRequest2;
+        readRequest2.pDevice = pRandomAccessDevice.get();
+        readRequest2.cbOffset = cbOffset;
+        readRequest2.cbTransfer = cbSector;
+        readRequest2.type = RandomAccessRequest::READ;
+        Binding *pBinding = new Binding(
+            readListener, cbSector, pBuf2);
+        readRequest2.bindingList.push_back(*pBinding);
+        
         pScheduler->schedule(readRequest);
+        pScheduler->schedule(readRequest2);
         readListener.waitForAll();
-        BOOST_CHECK_EQUAL(n, readListener.nSuccess);
+        BOOST_CHECK_EQUAL(n + 1, readListener.nSuccess);
         for (int i = 0; i < n; i++) {
             std::string s2(reinterpret_cast<char *>(pBuf + i*cbSector),cb);
             BOOST_CHECK_EQUAL(s,s2);
         }
+        std::string s3(reinterpret_cast<char *>(pBuf2),cb);
+        BOOST_CHECK_EQUAL(s,s3);
+        
         pScheduler->unregisterDevice(pRandomAccessDevice);
         closeDevice();
 

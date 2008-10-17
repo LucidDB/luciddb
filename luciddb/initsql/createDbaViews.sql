@@ -407,7 +407,7 @@ schema_name as current_schema_name,
 is_closed,
 is_auto_commit,
 is_txn_in_progress,
-current_label
+label_name as current_label_name
 from sys_boot.mgmt.sessions_view;
 
 grant select on dba_sessions to public;
@@ -489,6 +489,16 @@ create or replace view dba_labels as
 ;
 
 grant select on dba_labels to public;
+
+create or replace view dba_system_backups as
+  select
+    cast("type" as varchar(128)) as backup_type,
+    "commitSequenceNumber" as csn,
+    cast("startTimestamp" as timestamp) as start_timestamp,
+    cast("endTimestamp" as timestamp) as end_timestamp,
+    cast("status" as varchar(128)) as status,
+    cast("mofId" as varchar(128)) as mof_id
+  from sys_fem.med."SystemBackup";
 
 -- Flush all entries from the global code cache
 create or replace procedure flush_code_cache()
@@ -823,3 +833,31 @@ reads sql data
 specific export_query_to_file_3
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+
+create or replace procedure backup_database(
+    in archive_directory varchar(65535),
+    in backup_type varchar(16),
+    in compression_mode varchar(16))
+language java
+parameter style java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoManagementUDR.backupDatabaseWithoutSpaceCheck';
+
+create or replace procedure backup_database_if_space_available(
+    in archive_directory varchar(65535),
+    in backup_type varchar(16),
+    in compression_mode varchar(16),
+    in padding_byte_count bigint)
+language java
+parameter style java
+no sql
+external name
+'class net.sf.farrago.syslib.FarragoManagementUDR.backupDatabaseWithSpaceCheck';
+
+create or replace procedure restore_database(
+    in archive_directory varchar(65535))
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.restoreDatabase';

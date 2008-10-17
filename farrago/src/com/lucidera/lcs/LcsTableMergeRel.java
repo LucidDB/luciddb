@@ -223,6 +223,10 @@ public class LcsTableMergeRel
         //
         // 1) SourceBuffer is used to buffer the source rows so reading of the
         //    target rows doesn't conflict with writing the target table.
+        //    It is omitted if real snapshot support is available.  If
+        //    so, then the input streams just need to be setup so they only
+        //    read committed data, i.e., a snapshot of the data before the
+        //    merge has done any mods.
         // 2) The RidSplitter, NotNullReshape, NullReshape, NullRidBuffer,
         //    Merge substream is used to rearrange the order of the source rows
         //    so rows with null target rids (corresponding to new insert rows)
@@ -240,8 +244,15 @@ public class LcsTableMergeRel
         // 5) If this is an INSERT-only merge, then the substream described in
         //    #3 above omits the deletion substream.
 
-        FemBufferingTupleStreamDef sourceBuffer = newInputBuffer(repos);
-        implementor.addDataFlowFromProducerToConsumer(childInput, sourceBuffer);
+        FemExecutionStreamDef sourceStream;
+        if (!inputNeedBuffer(childFennelRel)) {
+            sourceStream = childInput;
+        } else {
+            sourceStream = newInputBuffer(repos);
+            implementor.addDataFlowFromProducerToConsumer(
+                childInput,
+                sourceStream);
+        }
 
         // if MERGE with both insert and update, create the substream to
         // separate the non-null rids from the null rids; then connect that
@@ -250,18 +261,18 @@ public class LcsTableMergeRel
         FemExecutionStreamDef insertDeleteProducer;
         if (insertOnly) {
             insertDeleteSplitter = null;
-            insertDeleteProducer = sourceBuffer;
+            insertDeleteProducer = sourceStream;
         } else {
             FemExecutionStreamDef splitterInput;
             if (updateOnly) {
-                splitterInput = sourceBuffer;
+                splitterInput = sourceStream;
             } else {
                 splitterInput =
                     createRidSplitterStream(
                         implementor,
                         indexGuide,
                         childFennelRel,
-                        sourceBuffer);
+                        sourceStream);
             }
             insertDeleteSplitter =
                 indexGuide.newSplitter(childFennelRel.getRowType());
@@ -373,7 +384,7 @@ public class LcsTableMergeRel
      * @param indexGuide index guide
      * @param childFennelRel FennelRel corresponding to the source input for the
      * MERGE
-     * @param sourceBuffer the stream def corresponding to the input into the
+     * @param sourceStream the stream def corresponding to the input into the
      * substream to be created
      *
      * @return a MergeStreamDef that outputs the rows with rows containing
@@ -383,12 +394,12 @@ public class LcsTableMergeRel
         FennelRelImplementor implementor,
         LcsIndexGuide indexGuide,
         FennelRel childFennelRel,
-        FemBufferingTupleStreamDef sourceBuffer)
+        FemExecutionStreamDef sourceStream)
     {
         FemSplitterStreamDef ridSplitter =
             indexGuide.newSplitter(childFennelRel.getRowType());
         implementor.addDataFlowFromProducerToConsumer(
-            sourceBuffer,
+            sourceStream,
             ridSplitter);
 
         FemReshapeStreamDef notNullReshape =

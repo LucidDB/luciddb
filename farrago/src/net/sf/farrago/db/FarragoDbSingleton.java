@@ -64,6 +64,11 @@ public abstract class FarragoDbSingleton
      * #shutdown()}, to help prevent recursive shutdown.
      */
     private static boolean inShutdown;
+    
+    /**
+     * Flag indicating whether a database backup is already in progress
+     */
+    private static boolean backupInProgress;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -246,6 +251,25 @@ public abstract class FarragoDbSingleton
             assert (instance == null);
             return false;
         }
+    }
+    
+    /**
+     * Sets a flag indicating whether a backup is in progress.  If the flag
+     * is true and a backup is already in progress, then false is returned.
+     * Otherwise, true is returned.
+     * 
+     * @param inProgress true if the flag is to be set, indicating that a
+     * backup is in progress
+     * 
+     * @return true if setting of the flag was successful
+     */
+    public static synchronized boolean setBackupFlag(boolean inProgress)
+    {
+        if (inProgress && backupInProgress) {
+            return false;
+        }
+        backupInProgress = inProgress;
+        return true;
     }
 }
 

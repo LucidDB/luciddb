@@ -24,7 +24,6 @@ import junit.framework.*;
 
 import net.sf.farrago.db.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.test.*;
 
 import org.eigenbase.util.*;
 
@@ -56,6 +55,8 @@ public class LucidDbTestHarness extends TestCase
     
     private static boolean haveSavedParameters;
     
+    private static boolean noAutoStart;
+    
     public LucidDbTestHarness(String testName) throws Exception
     {
         super(testName);
@@ -73,6 +74,10 @@ public class LucidDbTestHarness extends TestCase
         String urlPrefix, String username, String passwd)
         throws Exception
     {
+        if (noAutoStart) {
+            return null;
+        }
+        
         if (connection != null) {
             // Already started.  TODO:  if parameters don't match,
             // force restart.
@@ -118,6 +123,23 @@ public class LucidDbTestHarness extends TestCase
         tracer.info("testSuiteInit");
         ++testDepth;
         needCleanup = true;
+        noAutoStart = false;
+    }
+    
+    /**
+     * Called from tinitSingleTest.xml.  Use this if you want to execute a
+     * single test within a LucidDB server instance.  LucidDB will start
+     * when the test is initiated, rather than automatically, as is normally
+     * the case when you want multiple tests to execute within the same
+     * LucidDB server instance.  As a result, tests that use this
+     * initialization won't execute automatic cleanup and restore of system
+     * parameters.
+     */
+    public void testSuiteInitSingleTest()
+    {
+        tracer.info("testSuiteInitSingleTest");
+        ++testDepth;
+        noAutoStart = true;
     }
 
     /**

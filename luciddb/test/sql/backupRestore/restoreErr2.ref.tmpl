@@ -1,0 +1,8 @@
+-- setup
+-- end of setup
+
+-- thread restore
+> call sys_root.restore_database('@TEST_DIR@/nonReadableArchive');
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: The backup archive directory '@TEST_DIR@/nonReadableArchive' is not readable
+-- end of thread restore
+

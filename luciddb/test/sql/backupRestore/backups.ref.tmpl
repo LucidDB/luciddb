@@ -1,0 +1,128 @@
+0: jdbc:luciddb:> -- Execute the different types of backups, doing a mix of uncompressed and
+0: jdbc:luciddb:> -- compressed backups
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema br;
+0: jdbc:luciddb:> set schema 'br';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ff_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options(
+. . . . . . . . >     directory '@DIR@',
+. . . . . . . . >     file_extension '.csv',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter ',',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '9'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table EMP (
+. . . . . . . . >     EMPNO numeric(5,0),
+. . . . . . . . >     FNAME varchar(20),
+. . . . . . . . >     LNAME varchar(20),
+. . . . . . . . >     SEX char(1),
+. . . . . . . . >     DEPTNO integer,
+. . . . . . . . >     MANAGER numeric(5,0),
+. . . . . . . . >     LOCID CHAR(2),
+. . . . . . . . >     SAL integer,
+. . . . . . . . >     COMMISSION integer,
+. . . . . . . . >     HOBBY varchar(20)
+. . . . . . . . > );
+0: jdbc:luciddb:> insert into EMP select * from ff_server.bcp.EMP;
+0: jdbc:luciddb:> select * from EMP order by empno;
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| EMPNO  | FNAME  |   LNAME   | SEX  | DEPTNO  | MANAGER  | LOCID  |  SAL   | COMMISSION  |     HOBBY      |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+| 100    | Bill   | Bush      | M    | 30      |          | HQ     | 50000  |             | Piano          |
+| 101    | Bob    | Brown     | M    | 50      | 100      | SJ     | 50000  |             | Skiing         |
+| 102    | Julie  | Andrews   | F    | 30      | 104      | MP     | 50000  |             | Rugby          |
+| 103    | Frank  | Webber    | M    | 20      | 102      | MP     | 50000  |             | Piano          |
+| 104    | Fritz  | Fratz     | M    | 10      | 100      | HQ     | 50000  |             | Rugby          |
+| 105    | Rich   | Guy       | M    | 30      | 102      | HQ     | 50000  |             | Gambling       |
+| 106    | Rob    | Roy       | M    | 40      | 102      | SF     | 50000  | 7           | Karate         |
+| 107    | Robin  | Williams  | M    | 40      | 103      | HQ     | 50000  | 10          | Telling Jokes  |
+| 108    | Mary   | Reynolds  | F    | 50      | 104      | SF     | 50000  |             |                |
+| 109    | Jack   | Nife      | M    | 40      | 100      | SF     | 50000  | 5           |                |
+| 110    | Jill   | Jones     | F    | 30      | 101      | MP     | 50000  |             |                |
++--------+--------+-----------+------+---------+----------+--------+--------+-------------+----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- attempt to create an incremental or differential archive when no full
+0: jdbc:luciddb:> -- archive has been created yet
+0: jdbc:luciddb:> call sys_root.backup_database
+. . . . . . . . >     ('@TEST_DIR@/incrArchive1', 'INCREMENTAL', 'UNCOMPRESSED');
+Error: A full backup has not been executed yet (state=,code=0)
+0: jdbc:luciddb:> call sys_root.backup_database
+. . . . . . . . >     ('@TEST_DIR@/incrArchive1', 'DIFFERENTIAL', 'UNCOMPRESSED');
+Error: A full backup has not been executed yet (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call sys_root.backup_database_if_space_available(
+. . . . . . . . >     '@TEST_DIR@/fullArchive', 'FULL', 'UNCOMPRESSED', 0);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table DEPT (
+. . . . . . . . >     DEPTNO integer,
+. . . . . . . . >     DNAME varchar(20),
+. . . . . . . . >     LOCID CHAR(2)
+. . . . . . . . > );
+0: jdbc:luciddb:> insert into DEPT select * from ff_server.bcp.DEPT;
+0: jdbc:luciddb:> select * from DEPT order by deptno;
++---------+--------------+--------+
+| DEPTNO  |    DNAME     | LOCID  |
++---------+--------------+--------+
+| 10      | Accounting   | SF     |
+| 20      | Marketing    | SF     |
+| 30      | Development  | HQ     |
+| 40      | Sales        | HQ     |
+| 50      | Support      | MP     |
++---------+--------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call sys_root.backup_database_if_space_available(
+. . . . . . . . >     '@TEST_DIR@/incrArchive1', 'INCREMENTAL', 'COMPRESSED', 327680);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table LOCATION(
+. . . . . . . . >     LOCID char(2),
+. . . . . . . . >     STREET varchar(50),
+. . . . . . . . >     CITY varchar(20),
+. . . . . . . . >     STATE char(2),
+. . . . . . . . >     ZIP numeric(5,0)
+. . . . . . . . > );
+0: jdbc:luciddb:> insert into LOCATION select * from ff_server.bcp.LOCATION;
+0: jdbc:luciddb:> select * from LOCATION order by locid;
++--------+---------------------------+----------------+--------+--------+
+| LOCID  |          STREET           |      CITY      | STATE  |  ZIP   |
++--------+---------------------------+----------------+--------+--------+
+| HQ     | 1730 South Amphlett Blvd  | San Mateo      | CA     | 94042  |
+| MP     | 770 Coleman               | Menlo Park     | CA     | 94025  |
+| SF     | 100 Market                | San Francisco  | CA     | 94987  |
+| SJ     | Main Street               | Los Angeles    | CA     | 92123  |
++--------+---------------------------+----------------+--------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call sys_root.backup_database(
+. . . . . . . . >     '@TEST_DIR@/incrArchive2', 'INCREMENTAL', 'UNCOMPRESSED');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call sys_root.backup_database(
+. . . . . . . . >     '@TEST_DIR@/diffArchive', 'DIFFERENTIAL', 'COMPRESSED');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- there should be 2 records -- one last and one full, both completed, with
+0: jdbc:luciddb:> -- different csn values
+0: jdbc:luciddb:> select backup_type, status from sys_root.dba_system_backups
+. . . . . . . . >     order by backup_type;
++--------------+------------+
+| BACKUP_TYPE  |   STATUS   |
++--------------+------------+
+| FULL         | COMPLETED  |
+| LAST         | COMPLETED  |
++--------------+------------+
+0: jdbc:luciddb:> select count(distinct csn) from sys_root.dba_system_backups;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema br cascade;
+0: jdbc:luciddb:> drop server ff_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

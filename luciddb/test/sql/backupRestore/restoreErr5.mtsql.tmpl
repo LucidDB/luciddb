@@ -1,0 +1,7 @@
+-- Attempt to use a restore directory that has no backup files
+
+@nolockstep
+
+@thread restore
+@err call sys_root.restore_database('@TEST_DIR@/tmpArchive');
+@end

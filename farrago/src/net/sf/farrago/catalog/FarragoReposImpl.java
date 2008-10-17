@@ -34,13 +34,13 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
-import org.netbeans.api.mdr.MDRepository;
 
 
 /**
@@ -85,6 +85,8 @@ public abstract class FarragoReposImpl
 
     private ThreadLocal<ReposCache> cache;
     
+    private Boolean exclusiveAccess;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -102,6 +104,7 @@ public abstract class FarragoReposImpl
                 return new ReposCache();
             }
         };
+        exclusiveAccess = false;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -634,6 +637,11 @@ public abstract class FarragoReposImpl
      */
     public void lockRepos(int lockLevel)
     {
+        synchronized(exclusiveAccess) {
+            if (exclusiveAccess.booleanValue()) {
+                throw FarragoResource.instance().NeedExclusiveAccess.ex();
+            }
+        }
         if (lockLevel == 1) {
             sxLock.readLock().lock();
         } else if (lockLevel == 2) {
@@ -678,6 +686,32 @@ public abstract class FarragoReposImpl
     public void endReposSession()
     {
         cache.get().endSession();
+    }
+    
+    /**
+     * Puts the repository in exclusive access mode.  When in this mode,
+     * subsequent attempts to lock the repository will return an exception
+     * immediately rather than wait for a required repository lock to
+     * become available.
+     */
+    public void beginExclusiveAccess()
+    {
+        synchronized(exclusiveAccess) {
+            if (exclusiveAccess.booleanValue()) {
+                throw FarragoResource.instance().NeedExclusiveAccess.ex();
+            }
+            exclusiveAccess = true;
+        }
+    }
+    
+    /**
+     * Ends exclusive access mode for the repository.
+     */
+    public void endExclusiveAccess()
+    {
+        synchronized(exclusiveAccess) {
+            exclusiveAccess = false;
+        }
     }
     
     private static class ReposCache

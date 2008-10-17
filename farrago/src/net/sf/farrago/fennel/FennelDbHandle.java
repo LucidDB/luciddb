@@ -166,14 +166,30 @@ public class FennelDbHandle
     }
 
     /**
-     * Executes a FemCmd object. If the command produces a resultHandle, it will
-     * be set after successful execution.
+     * Executes a FemCmd object. If the command produces a resultHandle,
+     * it will be set after successful execution.
      *
      * @param cmd instance of FemCmd with all parameters set
      *
      * @return return handle as primitive
      */
     public long executeCmd(FemCmd cmd)
+    {
+        return executeCmd(cmd, null);
+    }
+    
+    /**
+     * Executes a FemCmd object, associating an optional execution handle
+     * with the command. If the command produces a resultHandle,
+     * it will be set after successful execution.
+     *
+     * @param cmd instance of FemCmd with all parameters set
+     * @param execHandle the execution handle associated with the command;
+     * null if there is no associated execution handle
+     *
+     * @return return handle as primitive
+     */
+    public long executeCmd(FemCmd cmd, FennelExecutionHandle execHandle)
     {
         List<RefObject> exportList = null;
         FemHandle resultHandle = null;
@@ -237,7 +253,7 @@ public class FennelDbHandle
         }
         long resultHandleLong;
         try {
-            resultHandleLong = cmdExecutor.executeJavaCmd(cmd);
+            resultHandleLong = cmdExecutor.executeJavaCmd(cmd, execHandle);
         } catch (SQLException ex) {
             throw handleNativeException(ex);
         }

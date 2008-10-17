@@ -275,6 +275,16 @@ void VersionedSegment::prepareOnlineRecovery()
 void VersionedSegment::recover(
     SharedSegment pDelegatingSegment,
     PageId firstLogPageId,
+    SegVersionNum versionNumberInit,
+    PseudoUuid const &onlineUuidInit)
+{
+    onlineUuid = onlineUuidInit;
+    recover(pDelegatingSegment, firstLogPageId, versionNumberInit);
+}
+
+void VersionedSegment::recover(
+    SharedSegment pDelegatingSegment,
+    PageId firstLogPageId,
     SegVersionNum versionNumberInit)
 {
     assert(dataToLogMap.empty());

@@ -1,0 +1,8 @@
+-- Attempt to restore a differential archive when there has been no restore
+-- of a full archive
+
+@nolockstep
+
+@thread restore
+@err call sys_root.restore_database('@TEST_DIR@/diffArchive');
+@end

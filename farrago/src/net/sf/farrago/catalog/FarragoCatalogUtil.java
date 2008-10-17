@@ -1949,6 +1949,137 @@ public abstract class FarragoCatalogUtil
     }
     
     /**
+     * Retrieves current backup data stored in the catalog.  Information
+     * on the full backup, if it exists, is always returned first, followed
+     * by information on the last backup.
+     * 
+     * @param repos repository
+     * 
+     * @return list containing current backup data
+     */
+    public static List<BackupData> getCurrentBackupData(FarragoRepos repos)
+    {
+        List<BackupData> retList = new ArrayList<BackupData>();
+        Collection<FemSystemBackup> backups =
+            repos.allOfType(FemSystemBackup.class);
+        assert(backups.size() == 0 || backups.size() == 2);
+        
+        for (FemSystemBackup backup : backups) {
+            assert(backup.getStatus() == BackupStatusTypeEnum.COMPLETED);
+            BackupData backupData =
+                new BackupData(
+                    backup.getType(),
+                    backup.getCommitSequenceNumber(),
+                    backup.getStartTimestamp());
+            if (backup.getType() == BackupTypeEnum.FULL) {
+                retList.add(0, backupData);
+            } else {
+                retList.add(backupData);
+            }
+        }
+        
+        return retList;
+    }
+    
+    /**
+     * Adds new records to the system backup catalog corresponding to
+     * a pending backup.
+     * 
+     * @param repos repository
+     * @param type type of backup
+     * @param csn commit sequence number corresponding to the backup
+     * @param startTime start time of the backup
+     */
+    public static void addPendingSystemBackup(
+        FarragoRepos repos,
+        String type,
+        Long csn,
+        String startTime)
+    {
+        for (int i = 0; i < 2; i++) {
+            FemSystemBackup backup = repos.newFemSystemBackup();
+            if (i == 0) {
+                backup.setType(BackupTypeEnum.LAST);
+            } else {
+                backup.setType(BackupTypeEnum.FULL);
+            }
+            backup.setCommitSequenceNumber(csn);
+            backup.setStartTimestamp(startTime);
+            backup.setStatus(BackupStatusTypeEnum.PENDING);
+            if (!type.equals("FULL")) {
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Updates the system backup catalog data depending on whether the
+     * last pending backup (if any) succeeded or failed.
+     * 
+     * @param repos repository
+     * @param backupSucceeded true if the last backup succeeded
+     * @param setEndTimestamp if true, record the current timestamp as
+     * the ending timestamp when updating pending data to completed
+     */
+    public static void updatePendingBackupData(
+        FarragoRepos repos,
+        boolean backupSucceeded,
+        boolean setEndTimestamp)
+    {
+        Collection<FemSystemBackup> backups =
+            repos.allOfType(FemSystemBackup.class);
+        
+        // First see which pending records exist
+        boolean pendingFull = false;
+        boolean pendingLast = false;
+        for (FemSystemBackup backup : backups) {
+            if (backup.getStatus() == BackupStatusTypeEnum.PENDING) {
+                if (backup.getType() == BackupTypeEnum.LAST) {
+                    pendingLast = true;
+                } else {
+                    assert(backup.getType() == BackupTypeEnum.FULL);
+                    pendingFull = true;
+                }
+            }
+        }
+        // If no pending records, there's no work to do
+        if (!pendingFull && !pendingLast) {
+            return;
+        }
+        if (pendingFull) {
+            assert(pendingLast);
+        }
+        
+        // If the last backup succeeded, delete the completed records
+        // corresponding to the pending records, then update the pending
+        // records to completed.  Otherwise, just delete the pending records.
+        if (backupSucceeded) {
+            for (FemSystemBackup backup : backups) {
+                if (backup.getStatus() == BackupStatusTypeEnum.COMPLETED &&
+                    ((pendingFull && backup.getType() == BackupTypeEnum.FULL)
+                    || (pendingLast &&
+                        backup.getType() == BackupTypeEnum.LAST)))
+                {
+                    backup.refDelete();
+                }
+            }
+        }
+        backups = repos.allOfType(FemSystemBackup.class);
+        for (FemSystemBackup backup : backups) {
+            if (backup.getStatus() == BackupStatusTypeEnum.PENDING) {
+                if (backupSucceeded) {
+                    backup.setStatus(BackupStatusTypeEnum.COMPLETED);
+                    if (setEndTimestamp) {
+                        backup.setEndTimestamp(createTimestamp().toString());
+                    }
+                } else {
+                    backup.refDelete();
+                }
+            }
+        }
+    }
+    
+    /**
      * Enumeration of the different type of row count statistics
      */
     private enum RowCountStatType
@@ -1970,6 +2101,24 @@ public abstract class FarragoCatalogUtil
         {
             this.type = type;
             this.count = count;
+        }
+    }
+    
+    /**
+     * Helper class used to represent backup information stored in the
+     * backup catalog.
+     */
+    public static class BackupData
+    {
+        public BackupType type;
+        public long csn;
+        public String startTimestamp;
+        
+        BackupData(BackupType type, long csn, String startTimestamp)
+        {
+            this.type = type;
+            this.csn = csn;
+            this.startTimestamp = startTimestamp;
         }
     }
 }

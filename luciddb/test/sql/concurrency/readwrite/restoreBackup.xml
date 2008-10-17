@@ -1,0 +1,27 @@
+<project name="bh" default="rwconcurrency">
+  <target name="rwconcurrency">
+    <test-suite name="rwconcurrency">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinitSingleTest.xml">
+            <test-suite-modifier value="rwconcurrency"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
+      <test name="restore">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/restoreBackup.mtsql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="rwconcurrency"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

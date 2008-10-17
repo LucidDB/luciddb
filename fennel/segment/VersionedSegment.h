@@ -88,6 +88,23 @@ public:
         SegVersionNum versionNumber = MAXU);
 
     /**
+     * Recovers to a specific version from the log and resets the online uuid.
+     *
+     * @param pDelegatingSegment segment from which pages to recover originate
+     *
+     * @param firstLogPageId starting PageId in log segment
+     *
+     * @param versionNumber version number to recover to
+     *
+     * @param onlineUuid online uuid corresponding to the recovered instance
+     */
+    void recover(
+        SharedSegment pDelegatingSegment,
+        PageId firstLogPageId,
+        SegVersionNum versionNumber,
+        PseudoUuid const &onlineUuid);
+
+    /**
      * Prepares for "online" recovery, meaning a revert back to the last
      * checkpointed version.  Call getOnlineRecoveryPageId() first.
      */

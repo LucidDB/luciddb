@@ -142,12 +142,13 @@ public class LcsTableAppendRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
+        RelNode childInput = getChild();
         FemExecutionStreamDef input =
-            implementor.visitFennelChild((FennelRel) getChild(), 0);
+            implementor.visitFennelChild((FennelRel) childInput, 0);
 
         FarragoRepos repos = FennelRelUtil.getRepos(this);
 
-        if (inputNeedBuffer()) {
+        if (inputNeedBuffer(childInput)) {
             FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
             implementor.addDataFlowFromProducerToConsumer(
                 input,
@@ -161,7 +162,7 @@ public class LcsTableAppendRel
                 lcsTable,
                 input,
                 this,
-                RelMetadataQuery.getRowCount(getChild()));
+                RelMetadataQuery.getRowCount(childInput));
 
         // create the top half of the insertion stream
         FemBarrierStreamDef clusterAppendBarrier =

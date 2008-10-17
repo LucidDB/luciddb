@@ -65,7 +65,14 @@ public interface FarragoSessionRuntimeContext
      * Throws an exception if execution has been canceled.
      */
     public void checkCancel();
-
+    
+    /**
+     * Associates an execution handle with the runtime context.
+     * 
+     * @param execHandle the execution handle
+     */
+    public void setExecutionHandle(FennelExecutionHandle execHandle);
+    
     /**
      * Sets the state of the top-level cursor associated with this context.
      * {@link #checkCancel} is called both before the fetch request

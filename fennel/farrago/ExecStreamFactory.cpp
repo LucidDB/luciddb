@@ -531,10 +531,20 @@ void ExecStreamFactory::readBTreeParams(
         params.segmentId = SegmentId(streamDef.getSegmentId());
         params.pageOwnerId = PageOwnerId(streamDef.getIndexId());
         assert(VALID_PAGE_OWNER_ID(params.pageOwnerId));
-        params.pSegment =
-            pDatabase->getSegmentById(
-                params.segmentId,
-                pStreamGraphHandle->pSegment);
+        // Set the btree to read from the appropriate segment, depending
+        // on whether or not the reader needs to see uncommitted data
+        // created upstream in the stream graph.
+        if (streamDef.isReadOnlyCommittedData()) {
+            params.pSegment =
+                pDatabase->getSegmentById(
+                    params.segmentId,
+                    pStreamGraphHandle->pReadCommittedSegment);
+        } else {
+            params.pSegment =
+                pDatabase->getSegmentById(
+                    params.segmentId,
+                    pStreamGraphHandle->pSegment);
+        }
         if (streamDef.getRootPageId() != -1) {
             params.rootPageId = PageId(streamDef.getRootPageId());
             params.pRootMap = NULL;
