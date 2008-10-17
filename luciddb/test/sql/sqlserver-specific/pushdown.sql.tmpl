@@ -381,3 +381,7 @@ explain plan for select b from test.datatype where b = 'varchar-03' order by 1;
 
 select m,b,a,c from test.datatype where b = 'varchar-03' OR d > 127 OR a like '%05%' order by 1,2,3,4;
 explain plan for select m,b,a,c from test.datatype where b = 'varchar-03' OR d > 127 OR a like '%05%' order by 1,2,3,4;
+
+-- FRG-339
+select j from test.datatype where j;
+explain plan for select j from test.datatype where j;

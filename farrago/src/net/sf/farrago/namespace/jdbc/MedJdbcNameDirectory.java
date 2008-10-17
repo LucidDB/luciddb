@@ -314,12 +314,7 @@ class MedJdbcNameDirectory
                 } else {
                     // Server is strict: make sure the inferred
                     // row type is compatible with the imposed row type
-                    validateRowType(
-                        rowType,
-                        typeFactory.createResultSetType(
-                            md,
-                            true,
-                            typeMapping));
+                    validateRowType(origRowType, mdRowType);
                 }
             }
         } finally {

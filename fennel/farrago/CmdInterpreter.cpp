@@ -247,6 +247,9 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
             pDb->getTypeFactory(),
             scratchAccessor);
         pDb->recover(recoveryFactory);
+        cmd.setResultRecoveryRequired(true);
+    } else {
+        cmd.setResultRecoveryRequired(false);
     }
     pDbHandle->statsTimer.setTarget(*pJavaTraceTarget);
     pDbHandle->statsTimer.addSource(pDb);
@@ -494,6 +497,10 @@ void CmdInterpreter::beginTxn(ProxyBeginTxnCmd &cmd, bool readOnly, TxnId csn)
             pDb->getTypeFactory(),
             scratchAccessor));
 
+    // If snapshots are enabled, set up 2 snapshot segments -- one of which
+    // only reads committed data.  This will be used for streams that need to
+    // read a snapshot of the data before other portions of the stream graph
+    // have modified the segment.
     if (pDb->areSnapshotsEnabled()) {
         if (csn == NULL_TXN_ID) {
             csn = pTxnHandle->pTxn->getTxnId();
@@ -502,7 +509,14 @@ void CmdInterpreter::beginTxn(ProxyBeginTxnCmd &cmd, bool readOnly, TxnId csn)
             pDb->getSegmentFactory()->newSnapshotRandomAllocationSegment(
                 pDb->getDataSegment(),
                 pDb->getDataSegment(),
-                csn);
+                csn,
+                false);
+        pTxnHandle->pReadCommittedSnapshotSegment =
+            pDb->getSegmentFactory()->newSnapshotRandomAllocationSegment(
+                pDb->getDataSegment(),
+                pDb->getDataSegment(),
+                csn,
+                true);
     } else {
         assert(csn == NULL_TXN_ID);
     }
@@ -561,8 +575,6 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
         if (txnBlocksCheckpoint) {
             pTxnHandle->pSnapshotSegment->checkpoint(CHECKPOINT_FLUSH_ALL);
         }
-
-        pDb->setLastCommittedTxnId(commitTxnId);
     }
 
     if (cmd.getSvptHandle()) {
@@ -658,7 +670,7 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
             pDb,
             pTxnHandle->pFtrsTableWriterFactory,
             pStreamGraphHandle.get()));
-    // When snapshots are enabled, allocate a DynamicDelegatingSegment for the
+    // When snapshots are enabled, allocate DynamicDelegatingSegments for the
     // stream graph so if the stream graph is executed in different txns,
     // we can reset the delegate to whatever is the snapshot segment associated
     // with the current txn.
@@ -666,6 +678,9 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
         pStreamGraphHandle->pSegment =
             pDb->getSegmentFactory()->newDynamicDelegatingSegment(
                 pTxnHandle->pSnapshotSegment);
+        pStreamGraphHandle->pReadCommittedSegment =
+            pDb->getSegmentFactory()->newDynamicDelegatingSegment(
+                pTxnHandle->pReadCommittedSnapshotSegment);
     }
     setStreamGraphHandle(
         cmd.getResultHandle(),
@@ -795,6 +810,64 @@ void CmdInterpreter::visit(ProxyCmdVersionIndexRoot &cmd)
     pSnapshotSegment->versionPage(
         PageId(cmd.getOldRootPageId()),
         PageId(cmd.getNewRootPageId()));
+}
+
+void CmdInterpreter::visit(ProxyCmdInitiateBackup &cmd)
+{
+    DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    SharedDatabase pDb = pDbHandle->pDb;
+    uint64_t paramVal = cmd.getLowerBoundCsn();
+    TxnId lowerBoundCsn = isMAXU(paramVal) ? NULL_TXN_ID : TxnId(paramVal);
+    FileSize dataDeviceSize;
+
+    volatile bool abortFlag = false;
+    TxnId csn =
+        pDb->initiateBackup(
+            cmd.getBackupPathname(),
+            cmd.isCheckSpaceRequirements(),
+            FileSize(cmd.getSpacePadding()),
+            lowerBoundCsn,
+            cmd.getCompressionProgram(),
+            dataDeviceSize,
+            (pExecHandle == NULL) ? abortFlag : pExecHandle->aborted);
+    cmd.setResultDataDeviceSize(dataDeviceSize);
+    setCsnHandle(cmd.getResultHandle(), csn);
+}
+
+void CmdInterpreter::visit(ProxyCmdCompleteBackup &cmd)
+{
+    DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    SharedDatabase pDb = pDbHandle->pDb;
+    uint64_t paramVal = cmd.getLowerBoundCsn();
+    TxnId lowerBoundCsn = isMAXU(paramVal) ? NULL_TXN_ID : TxnId(paramVal);
+    volatile bool abortFlag = false;
+    pDb->completeBackup(
+        lowerBoundCsn,
+        TxnId(cmd.getUpperBoundCsn()),
+        (pExecHandle == NULL) ? abortFlag : pExecHandle->aborted);
+}
+
+void CmdInterpreter::visit(ProxyCmdAbandonBackup &cmd)
+{
+    DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    SharedDatabase pDb = pDbHandle->pDb;
+    pDb->abortBackup();
+}
+
+void CmdInterpreter::visit(ProxyCmdRestoreFromBackup &cmd)
+{
+    DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    SharedDatabase pDb = pDbHandle->pDb;
+    uint64_t paramVal = cmd.getLowerBoundCsn();
+    TxnId lowerBoundCsn = isMAXU(paramVal) ? NULL_TXN_ID : TxnId(paramVal);
+    volatile bool abortFlag = false;
+    pDb->restoreFromBackup(
+        cmd.getBackupPathname(),
+        cmd.getFileSize(),
+        cmd.getCompressionProgram(),
+        lowerBoundCsn,
+        TxnId(cmd.getUpperBoundCsn()),
+        (pExecHandle == NULL) ? abortFlag : pExecHandle->aborted);
 }
 
 FENNEL_END_CPPFILE("$Id$");

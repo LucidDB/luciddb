@@ -68,6 +68,12 @@ typedef boost::shared_ptr<ByteArrayOutputStream> SharedByteArrayOutputStream;
 class ByteArrayInputStream;
 typedef boost::shared_ptr<ByteArrayInputStream> SharedByteArrayInputStream;
 
+class SegPageBackupRestoreDevice;
+typedef boost::shared_ptr<SegPageBackupRestoreDevice>
+    SharedSegPageBackupRestoreDevice;
+typedef boost::weak_ptr<SegPageBackupRestoreDevice>
+    WeakSegPageBackupRestoreDevice;
+
 class StatsSource;
 typedef boost::shared_ptr<StatsSource> SharedStatsSource;
 

@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <fcntl.h>
 //#include <dirent.h>
 //#include <fnmatch.h>
@@ -64,6 +65,20 @@ bool FileSystem::setFileAttributes(char const *filename,bool readOnly)
         mode |= S_IWUSR;
     }
     return ::chmod(filename,mode) ? 0 : 1;
+}
+
+void FileSystem::getDiskFreeSpace(char const *path, FileSize &availableSpace)
+{
+#ifdef __MINGW32__
+    throw FennelExcn(FennelResource.instance().unsupportedOperation("statvfs"));
+#else
+    struct statvfs buf;
+    int rc = statvfs(path, &buf);
+    if (rc == -1) {
+        throw SysCallExcn("statvfs call failed");
+    }
+    availableSpace = buf.f_bsize * buf.f_bavail;
+#endif
 }
 
 FENNEL_END_CPPFILE("$Id$");

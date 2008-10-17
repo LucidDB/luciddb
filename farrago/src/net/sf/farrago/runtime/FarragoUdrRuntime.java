@@ -21,8 +21,9 @@
 */
 package net.sf.farrago.runtime;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.catalog.FarragoRepos;
 
 import org.eigenbase.util.*;
 
@@ -105,6 +106,19 @@ public abstract class FarragoUdrRuntime
         FarragoUdrInvocationFrame frame =
             FarragoRuntimeContext.getUdrInvocationFrame();
         frame.context.checkCancel();
+    }
+    
+    /**
+     * Associates an execution handle with the context associated with the
+     * executing UDR.
+     * 
+     * @param execHandle the execution handle
+     */
+    public static void setExecutionHandle(FennelExecutionHandle execHandle)
+    {
+        FarragoUdrInvocationFrame frame =
+            FarragoRuntimeContext.getUdrInvocationFrame();
+        frame.context.setExecutionHandle(execHandle);
     }
 
     /**

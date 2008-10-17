@@ -90,13 +90,20 @@ JNI_OnLoad(JavaVM *vm,void *reserved)
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_executeJavaCmd(
-    JNIEnv *pEnvInit, jclass, jobject jCmd)
+    JNIEnv *pEnvInit, jclass, jobject jCmd, jlong jExecHandle)
 {
     JniEnvRef pEnv(pEnvInit);
     try {
         ProxyCmd cmd;
         cmd.init(pEnv,jCmd);
         CmdInterpreter cmdInterpreter;
+        if (jExecHandle == 0) {
+            cmdInterpreter.pExecHandle = NULL;
+        } else {
+            CmdInterpreter::ExecutionHandle &execHandle =
+                CmdInterpreter::getExecutionHandleFromLong(jExecHandle);
+            cmdInterpreter.pExecHandle = &execHandle;
+        }
         return cmdInterpreter.executeCommand(cmd);
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
@@ -214,6 +221,11 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
                     streamGraphHandle.pSegment);
             pSegment->setDelegatingSegment(
                 WeakSegment(txnHandle.pSnapshotSegment));
+            pSegment =
+                SegmentFactory::dynamicCast<DynamicDelegatingSegment *>(
+                    streamGraphHandle.pReadCommittedSegment);
+            pSegment->setDelegatingSegment(
+                WeakSegment(txnHandle.pReadCommittedSnapshotSegment));
         }
         streamGraphHandle.pExecStreamGraph->setErrorTarget(
             CmdInterpreter::newErrorTarget(hJavaErrorTarget));
@@ -417,6 +429,36 @@ Java_net_sf_farrago_fennel_FennelStorage_getHandleCount(
     JNIEnv *pEnvInit, jclass)
 {
     return JniUtil::getHandleCount();
+}
+
+extern "C" JNIEXPORT jlong JNICALL
+Java_net_sf_farrago_fennel_FennelStorage_newExecutionHandle(
+    JNIEnv *pEnvInit, jclass)
+{
+    CmdInterpreter::ExecutionHandle *pExecHandle =
+        new CmdInterpreter::ExecutionHandle();
+    JniUtil::incrementHandleCount(EXECHANDLE_TRACE_TYPE_STR, pExecHandle);
+    return reinterpret_cast<int64_t>(pExecHandle);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_net_sf_farrago_fennel_FennelStorage_deleteExecutionHandle(
+    JNIEnv *pEnvInit, jclass, jlong handle)
+{
+    CmdInterpreter::ExecutionHandle &execHandle =
+        CmdInterpreter::getExecutionHandleFromLong(handle);
+    CmdInterpreter::ExecutionHandle *pExecHandle = &execHandle;
+    JniUtil::decrementHandleCount(EXECHANDLE_TRACE_TYPE_STR, pExecHandle);
+    deleteAndNullify(pExecHandle);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_net_sf_farrago_fennel_FennelStorage_cancelExecution(
+    JNIEnv *pEnvInit, jclass, jlong handle)
+{
+    CmdInterpreter::ExecutionHandle &execHandle =
+        CmdInterpreter::getExecutionHandleFromLong(handle);
+    execHandle.aborted = true;
 }
 
 FENNEL_END_CPPFILE("$Id$");

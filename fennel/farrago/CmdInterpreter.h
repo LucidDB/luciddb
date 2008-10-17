@@ -76,7 +76,18 @@ public:
         SharedFtrsTableWriterFactory pFtrsTableWriterFactory;
         bool readOnly;
         SharedExecStreamGovernor pResourceGovernor;
+        /**
+         * If the database supports snapshots, the snapshot segment associated
+         * with the current transaction
+         */
         SharedSegment pSnapshotSegment;
+        /**
+         * If the database supports snapshots, the snapshot segment associated
+         * with the current transaction that is used in cases where reads
+         * ignore uncommitted data, including those created by the current
+         * transaction
+         */
+        SharedSegment pReadCommittedSnapshotSegment;
 
         explicit TxnHandle()
             : readOnly(false)
@@ -93,8 +104,15 @@ public:
         SharedExecStreamGraph pExecStreamGraph;
         SharedExecStreamScheduler pScheduler;
         TxnHandle *pTxnHandle;
-        // Segment associated with the stream graph
+        /**
+         * Segment associated with the stream graph
+         */
         SharedSegment pSegment;
+        /**
+         * Segment associated with the stream graph that only reads
+         * committed data, if the underlying segment supports this
+         */
+        SharedSegment pReadCommittedSegment;
         // a global ref to the FarragoRuntimeContext
         jobject javaRuntimeContext;
 
@@ -108,6 +126,23 @@ public:
         // implement BTreeOwnerRootMap
         virtual PageId getRoot(PageOwnerId pageOwnerId);
     };
+
+    /**
+     * Handle type for storing execution state information.
+     */
+    struct ExecutionHandle
+    {
+        /**
+         * True if the command associated with this handle needs to be canceled
+         */
+        volatile bool aborted;
+    };
+
+    /**
+     * Pointer to the execution handle associated with a command.  NULL if
+     * there is no handle.
+     */
+    ExecutionHandle *pExecHandle;
 
 protected:
     /**
@@ -173,6 +208,10 @@ protected:
     virtual void visit(ProxyCmdGetLastCommittedTxnId &);
     virtual void visit(ProxyCmdAlterSystemDeallocate &);
     virtual void visit(ProxyCmdVersionIndexRoot &);
+    virtual void visit(ProxyCmdInitiateBackup &);
+    virtual void visit(ProxyCmdCompleteBackup &);
+    virtual void visit(ProxyCmdAbandonBackup &);
+    virtual void visit(ProxyCmdRestoreFromBackup &);
 
 public:
     /**
@@ -187,6 +226,7 @@ public:
     static inline StreamGraphHandle &getStreamGraphHandleFromLong(jlong);
     static inline ExecStream &getExecStreamFromLong(jlong);
     static inline TxnHandle &getTxnHandleFromLong(jlong);
+    static inline ExecutionHandle &getExecutionHandleFromLong(jlong);
     static inline jobject getObjectFromLong(jlong jHandle);
 
     /**
@@ -241,6 +281,13 @@ inline CmdInterpreter::TxnHandle &CmdInterpreter::getTxnHandleFromLong(
     return *reinterpret_cast<TxnHandle *>(jHandle);
 }
 
+inline CmdInterpreter::ExecutionHandle
+&CmdInterpreter::getExecutionHandleFromLong(
+    jlong jHandle)
+{
+    return *reinterpret_cast<ExecutionHandle *>(jHandle);
+}
+
 // The following macros are used for tracing the JniUtil handle count.
 // They are defined here to allow for the allocation of these handle 
 // types from other locations while still deallocating them in the 
@@ -249,6 +296,7 @@ inline CmdInterpreter::TxnHandle &CmdInterpreter::getTxnHandleFromLong(
 #define DBHANDLE_TRACE_TYPE_STR ("DbHandle")
 #define TXNHANDLE_TRACE_TYPE_STR ("TxnHandle")
 #define STREAMGRAPHHANDLE_TRACE_TYPE_STR ("StreamGraphHandle")
+#define EXECHANDLE_TRACE_TYPE_STR ("ExecutionHandle")
 
 
 FENNEL_END_NAMESPACE

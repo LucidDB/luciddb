@@ -190,6 +190,9 @@ class FennelTempIdxSearchRel
                 searchStream,
                 FennelDynamicParamId.StreamType.CONSUMER).intValue());
         searchStream.setRootPageId(-1);
+        // Even though this stream reads data, it needs to be able to see
+        // the data that was created by the same stream graph.
+        searchStream.setReadOnlyCommittedData(false);
 
         RelDataType sourceRowType = sourceRel.getRowType();
         FemTupleDescriptor tupleDesc =

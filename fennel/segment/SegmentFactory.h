@@ -165,12 +165,17 @@ public:
      * @param snapshotCsn the commit sequence number associated with the segment
      * that determines which pages to read
      *
+     * @param readOnlyCommittedData if true, read only committed data, even
+     * ignoring uncommitted data created by the current transaction; defaults
+     * to false
+     *
      * @return new segment
      */
     SharedSegment newSnapshotRandomAllocationSegment(
         SharedSegment delegateSegment,
         SharedSegment versionedSegment,
-        TxnId snapshotCsn);
+        TxnId snapshotCsn,
+        bool readOnlyCommittedData = false);
 
     /**
      * Opens a new DynamicDelegatingSegment.

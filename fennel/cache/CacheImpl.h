@@ -360,15 +360,6 @@ class CacheImpl : public Cache, private TimerThreadClient
     void flushSomePages();
 
     /**
-     * Gets the correct access scheduler for a given device.  Currently
-     * the same scheduler is used for all devices.
-     */
-    DeviceAccessScheduler &getDeviceAccessScheduler(RandomAccessDevice &)
-    {
-        return *pDeviceAccessScheduler;
-    }
-    
-    /**
      * Performs an asynchronous I/O operation on the given page.  The page's ID
      * and dataStatus should already be defined.
      *
@@ -620,6 +611,12 @@ public:
     virtual void getPrefetchParams(
         uint &prefetchPagesMax,
         uint &prefetchThrottleRate);
+    virtual DeviceAccessScheduler &getDeviceAccessScheduler(
+        RandomAccessDevice &)
+    {
+        return *pDeviceAccessScheduler;
+    }
+    
 };
 
 FENNEL_END_NAMESPACE

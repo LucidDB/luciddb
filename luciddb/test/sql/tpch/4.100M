@@ -1,20 +1,43 @@
-0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
-0: jdbc:luciddb:> -- using default substitutions
+0: jdbc:luciddb:> -- Q4 (tpch2.6.1)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> set schema 'tpch';
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- rewritten query before subquery support
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> --SELECT O_ORDERPRIORITY, COUNT(*) AS ORDER_COUNT
+0: jdbc:luciddb:> --FROM ORDERS,
+0: jdbc:luciddb:> --     (SELECT L_ORDERKEY
+0: jdbc:luciddb:> --      FROM LINEITEM
+0: jdbc:luciddb:> --      WHERE L_COMMITDATE < L_RECEIPTDATE
+0: jdbc:luciddb:> --      GROUP BY L_ORDERKEY) AS TEMP
+0: jdbc:luciddb:> --WHERE
+0: jdbc:luciddb:> --    O_ORDERDATE >= DATE'1993-07-01' AND
+0: jdbc:luciddb:> --    O_ORDERDATE < DATE'1993-10-01' AND
+0: jdbc:luciddb:> --    O_ORDERKEY = TEMP.L_ORDERKEY
+0: jdbc:luciddb:> --GROUP BY
+0: jdbc:luciddb:> --    O_ORDERPRIORITY
+0: jdbc:luciddb:> --ORDER BY
+0: jdbc:luciddb:> --    O_ORDERPRIORITY;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> SELECT O_ORDERPRIORITY, COUNT(*) AS ORDER_COUNT
-. . . . . . . . > FROM ORDERS,
-. . . . . . . . >      (SELECT L_ORDERKEY
-. . . . . . . . >       FROM LINEITEM
-. . . . . . . . >       WHERE L_COMMITDATE < L_RECEIPTDATE
-. . . . . . . . >       GROUP BY L_ORDERKEY) AS TEMP
+0: jdbc:luciddb:> SELECT
+. . . . . . . . >     O_ORDERPRIORITY,
+. . . . . . . . >     COUNT(*) AS ORDER_COUNT
+. . . . . . . . > FROM TPCH.ORDERS
 . . . . . . . . > WHERE
-. . . . . . . . >     O_ORDERDATE >= DATE'1993-07-01' AND
-. . . . . . . . >     O_ORDERDATE < DATE'1993-10-01' AND
-. . . . . . . . >     O_ORDERKEY = TEMP.L_ORDERKEY
-. . . . . . . . > GROUP BY O_ORDERPRIORITY
-. . . . . . . . > ORDER BY O_ORDERPRIORITY;
+. . . . . . . . >     O_ORDERDATE >= DATE '1993-07-01'
+. . . . . . . . >     AND O_ORDERDATE < DATE '1993-10-01'
+. . . . . . . . >     AND EXISTS (
+. . . . . . . . >         SELECT
+. . . . . . . . >             *
+. . . . . . . . >         FROM
+. . . . . . . . >             TPCH.LINEITEM
+. . . . . . . . >         WHERE
+. . . . . . . . >             L_ORDERKEY = O_ORDERKEY
+. . . . . . . . >             AND L_COMMITDATE < L_RECEIPTDATE
+. . . . . . . . >     )
+. . . . . . . . > GROUP BY
+. . . . . . . . >     O_ORDERPRIORITY
+. . . . . . . . > ORDER BY
+. . . . . . . . >     O_ORDERPRIORITY;
 +------------------+--------------+
 | O_ORDERPRIORITY  | ORDER_COUNT  |
 +------------------+--------------+
@@ -24,7 +47,5 @@
 | 4-NOT SPECIFIED  | 989          |
 | 5-LOW            | 1077         |
 +------------------+--------------+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

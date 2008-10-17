@@ -76,7 +76,6 @@ void LogicalTxnLog::setNextTxnId(TxnId nextTxnIdInit)
 {
     nextTxnId = nextTxnIdInit;
     logSegmentAccessor.pCacheAccessor->setTxnId(nextTxnId);
-    nextTxnId++;
 }
 
 SharedLogicalTxnLog LogicalTxnLog::newLogicalTxnLog(
@@ -334,6 +333,6 @@ TxnId LogicalTxnLog::getOldestActiveTxnId()
     }
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/txn/LogicalTxnLog.cpp#14 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End LogicalTxnLog.cpp

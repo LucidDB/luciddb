@@ -75,7 +75,7 @@ public class FarragoReposTxnContext
      */
     public FarragoReposTxnContext(FarragoRepos repos)
     {
-        this(repos, false);
+        this(repos, false);       
     }
 
     /**
@@ -199,13 +199,15 @@ public class FarragoReposTxnContext
      */
     public void beginLockedTxn(boolean readOnly)
     {
-        lockLevel = (readOnly) ? 1 : 2;
+        int level = (readOnly) ? 1 : 2;
 
         // TODO jvs 24-Jan-2007:  Get rid of downcast here and below by
         // making all creation of FarragoReposTxnContext go through
         // factory method interface on FarragoRepos.
 
-        ((FarragoReposImpl) repos).lockRepos(lockLevel);
+        ((FarragoReposImpl) repos).lockRepos(level);
+        // Don't set lockLevel until we've successfully acquired the lock
+        lockLevel = level;
 
         if (readOnly) {
             beginReadTxn();
@@ -223,7 +225,26 @@ public class FarragoReposTxnContext
         if (lockLevel != 0) {
             ((FarragoReposImpl) repos).unlockRepos(lockLevel);
             lockLevel = 0;
-        }
+        }    
+    }
+    
+    /**
+     * Puts the repository in exclusive access mode.  When in this mode,
+     * subsequent attempts to lock the repository will return an exception
+     * immediately rather than wait for a required repository lock to
+     * become available.
+     */
+    public void beginExclusiveAccess()
+    {
+        ((FarragoReposImpl) repos).beginExclusiveAccess();
+    }
+    
+    /**
+     * Ends exclusive access mode for the repository.
+     */
+    public void endExclusiveAccess()
+    {
+        ((FarragoReposImpl) repos).endExclusiveAccess();
     }
 }
 

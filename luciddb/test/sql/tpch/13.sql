@@ -1,20 +1,20 @@
-set schema 'tpch';
+-- Q13 (tpch2.6.1)
 
-select
-    c_count, count(*) as custdist
-from (
-    select
-        c_custkey,
-        count(o_orderkey)
-    from
-        customer left outer join orders on
-            c_custkey = o_custkey
-            and o_comment not like '%special%requests%' 
-    group by
-        c_custkey
-    )as c_orders (c_custkey, c_count)
-group by
-    c_count
-order by
-    custdist desc,
-    c_count desc;
+SELECT
+    C_COUNT, COUNT(*) AS CUSTDIST
+FROM (
+    SELECT
+        C_CUSTKEY,
+        COUNT(O_ORDERKEY)
+    FROM
+        TPCH.CUSTOMER LEFT OUTER JOIN TPCH.ORDERS ON
+            C_CUSTKEY = O_CUSTKEY
+            AND O_COMMENT NOT LIKE '%special%requests%' 
+    GROUP BY
+        C_CUSTKEY
+    )AS C_ORDERS (C_CUSTKEY, C_COUNT)
+GROUP BY
+    C_COUNT
+ORDER BY
+    CUSTDIST DESC,
+    C_COUNT DESC;

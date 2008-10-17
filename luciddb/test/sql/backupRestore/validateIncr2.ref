@@ -1,0 +1,62 @@
+-- setup
+-- end of setup
+
+-- thread validate
+> select cast(backup_type as varchar(10)), cast(status as varchar(10))
+> from sys_root.dba_system_backups order by backup_type;
++------------+------------+
+| EXPR$0     | EXPR$1     |
++------------+------------+
+| FULL       | COMPLETED  |
+| LAST       | COMPLETED  |
++------------+------------+
+
+> select count(distinct csn) from sys_root.dba_system_backups;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 2                   |
++---------------------+
+
+> set schema 'br';
+0 rows affected.
+> select * FROM EMP order by empno;
++-------+----------------------+----------------------+-----+------------+---------+-------+------------+------------+----------------------+
+| EMPNO | FNAME                | LNAME                | SEX | DEPTNO     | MANAGER | LOCID | SAL        | COMMISSION | HOBBY                |
++-------+----------------------+----------------------+-----+------------+---------+-------+------------+------------+----------------------+
+| 100   | Bill                 | Bush                 | M   | 30         |         | HQ    | 50000      |            | Piano                |
+| 101   | Bob                  | Brown                | M   | 50         | 100     | SJ    | 50000      |            | Skiing               |
+| 102   | Julie                | Andrews              | F   | 30         | 104     | MP    | 50000      |            | Rugby                |
+| 103   | Frank                | Webber               | M   | 20         | 102     | MP    | 50000      |            | Piano                |
+| 104   | Fritz                | Fratz                | M   | 10         | 100     | HQ    | 50000      |            | Rugby                |
+| 105   | Rich                 | Guy                  | M   | 30         | 102     | HQ    | 50000      |            | Gambling             |
+| 106   | Rob                  | Roy                  | M   | 40         | 102     | SF    | 50000      | 7          | Karate               |
+| 107   | Robin                | Williams             | M   | 40         | 103     | HQ    | 50000      | 10         | Telling Jokes        |
+| 108   | Mary                 | Reynolds             | F   | 50         | 104     | SF    | 50000      |            |                      |
+| 109   | Jack                 | Nife                 | M   | 40         | 100     | SF    | 50000      | 5          |                      |
+| 110   | Jill                 | Jones                | F   | 30         | 101     | MP    | 50000      |            |                      |
++-------+----------------------+----------------------+-----+------------+---------+-------+------------+------------+----------------------+
+
+> select * from DEPT order by deptno;
++------------+----------------------+-------+
+| DEPTNO     | DNAME                | LOCID |
++------------+----------------------+-------+
+| 10         | Accounting           | SF    |
+| 20         | Marketing            | SF    |
+| 30         | Development          | HQ    |
+| 40         | Sales                | HQ    |
+| 50         | Support              | MP    |
++------------+----------------------+-------+
+
+> select * from LOCATION order by locid;
++-------+----------------------------------------------------+----------------------+-------+-------+
+| LOCID | STREET                                             | CITY                 | STATE | ZIP   |
++-------+----------------------------------------------------+----------------------+-------+-------+
+| HQ    | 1730 South Amphlett Blvd                           | San Mateo            | CA    | 94042 |
+| MP    | 770 Coleman                                        | Menlo Park           | CA    | 94025 |
+| SF    | 100 Market                                         | San Francisco        | CA    | 94987 |
+| SJ    | Main Street                                        | Los Angeles          | CA    | 92123 |
++-------+----------------------------------------------------+----------------------+-------+-------+
+
+-- end of thread validate
+

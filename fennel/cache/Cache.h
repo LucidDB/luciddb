@@ -223,6 +223,13 @@ public:
      */
     virtual CachePage &lockScratchPage(BlockNum blockNum = 0) = 0;
 
+    /**
+     * Gets the correct access scheduler for a given device.  Currently
+     * the same scheduler is used for all devices.
+     */
+    virtual DeviceAccessScheduler &getDeviceAccessScheduler(
+        RandomAccessDevice &) = 0;
+
     // partial implementation of CacheAccessor
     virtual SharedCache getCache();
     virtual uint getMaxLockedPages();

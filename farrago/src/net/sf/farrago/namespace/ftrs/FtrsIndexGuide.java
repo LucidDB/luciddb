@@ -360,6 +360,7 @@ class FtrsIndexGuide
         } else {
             indexWriter.setRootPageId(-1);
         }
+        indexWriter.setReadOnlyCommittedData(false);
         indexWriter.setRootPageIdParamId(0);
         indexWriter.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
         indexWriter.setIndexId(JmiObjUtil.getObjectId(index));

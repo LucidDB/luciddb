@@ -96,6 +96,51 @@ class FennelResource : ResourceBundle
     std::string libaioRequired() const;
 
     /**
+     * <code>unsupportedOperation</code> is 'Unsupported operation: {0}'
+     */
+    std::string unsupportedOperation(const std::string &p0) const;
+
+    /**
+     * <code>outOfBackupSpace</code> is 'Insufficient space to execute system backup'
+     */
+    std::string outOfBackupSpace() const;
+
+    /**
+     * <code>mismatchedRestore</code> is 'Commit sequence number in the restore does not match the expected value of ''{0}'''
+     */
+    std::string mismatchedRestore(const std::string &p0) const;
+
+    /**
+     * <code>openBackupFileFailed</code> is 'Open of backup file {0} failed'
+     */
+    std::string openBackupFileFailed(const std::string &p0) const;
+
+    /**
+     * <code>readBackupFileFailed</code> is 'Read from backup file {0} failed'
+     */
+    std::string readBackupFileFailed(const std::string &p0) const;
+
+    /**
+     * <code>writeBackupFileFailed</code> is 'Write to backup file {0} failed'
+     */
+    std::string writeBackupFileFailed(const std::string &p0) const;
+
+    /**
+     * <code>readDataPageFailed</code> is 'Read of data page failed'
+     */
+    std::string readDataPageFailed() const;
+
+    /**
+     * <code>writeDataPageFailed</code> is 'Write of data page failed'
+     */
+    std::string writeDataPageFailed() const;
+
+    /**
+     * <code>outOfSpaceDuringRestore</code> is 'Insufficient disk space to restore backup'
+     */
+    std::string outOfSpaceDuringRestore() const;
+
+    /**
      * <code>readDataFailed</code> is 'Could not read data file {0}'
      */
     std::string readDataFailed(const std::string &p0) const;
@@ -182,6 +227,15 @@ class FennelResource : ResourceBundle
     ResourceDefinition _uniqueConstraintViolated;
     ResourceDefinition _incompatibleDataFormat;
     ResourceDefinition _libaioRequired;
+    ResourceDefinition _unsupportedOperation;
+    ResourceDefinition _outOfBackupSpace;
+    ResourceDefinition _mismatchedRestore;
+    ResourceDefinition _openBackupFileFailed;
+    ResourceDefinition _readBackupFileFailed;
+    ResourceDefinition _writeBackupFileFailed;
+    ResourceDefinition _readDataPageFailed;
+    ResourceDefinition _writeDataPageFailed;
+    ResourceDefinition _outOfSpaceDuringRestore;
     ResourceDefinition _readDataFailed;
     ResourceDefinition _dataTransferFailed;
     ResourceDefinition _writeLogFailed;

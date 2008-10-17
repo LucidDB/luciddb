@@ -159,6 +159,7 @@ class FennelIdxWriteRel
                 indexWriter,
                 FennelDynamicParamId.StreamType.PRODUCER).intValue());
         indexWriter.setRootPageId(-1);
+        indexWriter.setReadOnlyCommittedData(false);
 
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild(), 0),

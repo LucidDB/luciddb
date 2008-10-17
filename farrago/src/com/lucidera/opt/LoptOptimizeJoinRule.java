@@ -386,8 +386,8 @@ outerForLoop:
         BitSet joinKeys = new BitSet(nFields);
         
         // first loop through the inner join filters, picking out the ones
-        // that reference only the factors in either the join tree or the factor that will
-        // be added
+        // that reference only the factors in either the join tree or the
+        // factor that will be added
         setFactorJoinKeys(
             multiJoin,
             filters,
@@ -713,8 +713,9 @@ outerForLoop:
         
         bestTree = topTree;
         if ((costPushDown != null) && (costTop != null))  {
-            if (costPushDown.equals(costTop)) {
-                // if both plans cost the same, favor the one that passes
+            if (costPushDown.isEqWithEpsilon(costTop)) {
+                // if both plans cost the same (with an allowable round-off
+                // margin of error), favor the one that passes
                 // around the wider rows further up in the tree
                 if (rowWidthCost(pushDownTree.getJoinTree()) <
                     rowWidthCost(topTree.getJoinTree()))

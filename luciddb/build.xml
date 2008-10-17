@@ -297,6 +297,23 @@ ${farrago.test.jvmargs}
       classpathref="test.classpath"/>
   </target>
 
+  <target name="test-nondb-backupRestore" depends="gen-properties">
+    <ant dir="${luciddb.dir}/test/sql/backupRestore" target="test" inheritAll="false">
+      <property name="foreign.db" value="nondb"/>
+      <property name="bh.log.gtlf.env.ForeignDb" value="ldb-nondb"/>
+      <property name="testlog.dir" value="${testlog.dir}"/>
+    </ant>
+  </target>
+
+  <target name="test-nondb-concurrency-backupRestore" depends="gen-properties">
+    <ant dir="${luciddb.dir}/test/sql/concurrency/readwrite"
+       target="testBackupRestore" inheritAll="false">
+      <property name="foreign.db" value="nondb"/>
+      <property name="bh.log.gtlf.env.ForeignDb" value="ldb-nondb"/>
+      <property name="testlog.dir" value="${testlog.dir}"/>
+    </ant>
+  </target>
+
   <target name="test-flatfile" depends="gen-properties">
     <property name="bh.filter.runDuration" value="short,medium,null"/>
     <property name="foreign.db" value="flatfile"/>
@@ -482,6 +499,7 @@ ${farrago.test.jvmargs}
     </delete>
 
     <!-- call clean target in sub dirs -->
+    <ant dir="test/sql/backupRestore" target="clean"/>
     <ant dir="test/sql/bench" target="clean"/>    
     <ant dir="test/sql/calc" target="clean"/>
     <ant dir="test/sql/company" target="clean"/>

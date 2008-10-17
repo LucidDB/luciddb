@@ -72,14 +72,27 @@ public interface FennelDbHandle extends FarragoAllocation
         FemTupleDescriptor tupleDesc);
 
     /**
-     * Executes a FemCmd object. If the command produces a resultHandle, it will
-     * be set after successful execution.
+     * Executes a FemCmd object. If the command produces a resultHandle,
+     * it will be set after successful execution.
      *
      * @param cmd instance of FemCmd with all parameters set
      *
      * @return return handle as primitive
      */
     public long executeCmd(FemCmd cmd);
+
+    /**
+     * Executes a FemCmd object, associating an optional execution handle
+     * with the command. If the command produces a resultHandle,
+     * it will be set after successful execution.
+     *
+     * @param cmd instance of FemCmd with all parameters set
+     * @param execHandle the execution handle associated with the command;
+     * null if there is no associated execution handle
+     *
+     * @return return handle as primitive
+     */
+    public long executeCmd(FemCmd cmd, FennelExecutionHandle execHandle);
 
     /**
      * Changes the object referenced by a handle.

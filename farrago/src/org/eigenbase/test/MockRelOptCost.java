@@ -70,6 +70,11 @@ public class MockRelOptCost
     {
         return true;
     }
+    
+    public boolean isEqWithEpsilon(RelOptCost cost)
+    {
+        return true;
+    }
 
     public RelOptCost minus(RelOptCost cost)
     {

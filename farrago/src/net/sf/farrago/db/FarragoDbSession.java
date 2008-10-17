@@ -139,6 +139,7 @@ public class FarragoDbSession
     private boolean isAutoCommit;
     private boolean shutDownRequested;
     private boolean catalogDumpRequested;
+    private boolean metamodelDumpRequested;
     private boolean reposSessionEnded;
     private boolean wasKilled;
 
@@ -1385,6 +1386,25 @@ public class FarragoDbSession
                 rollbackImpl();
             }
         }
+    }
+    
+    /**
+     * Turns on a flag indicating whether a metamodel dump request has been
+     * made.
+     * 
+     * @param val whether to set the flag to true or false
+     */
+    public void setMetamodelDump(boolean val)
+    {
+        metamodelDumpRequested = val;
+    }
+    
+    /**
+     * @return true if a metamodel dump has been requested
+     */
+    public boolean metamodelDumpRequested()
+    {
+        return metamodelDumpRequested;
     }
 
     // implement FarragoSession

@@ -40,6 +40,7 @@ RandomAccessFileDeviceTest \
 CacheTest \
 LinearDeviceSegmentTest \
 LinearViewSegmentTest \
+BackupRestoreTest \
 SnapshotSegmentTest \
 VersionedSegmentTest \
 ExecStreamGovernorTest \
@@ -71,6 +72,8 @@ LinearDeviceSegmentTest_SOURCES=LinearDeviceSegmentTest.cpp
 LinearViewSegmentTest_SOURCES=LinearViewSegmentTest.cpp
 
 VersionedSegmentTest_SOURCES=VersionedSegmentTest.cpp
+
+BackupRestoreTest_SOURCES=BackupRestoreTest.cpp
 
 SnapshotSegmentTest_SOURCES=SnapshotSegmentTest.cpp
 

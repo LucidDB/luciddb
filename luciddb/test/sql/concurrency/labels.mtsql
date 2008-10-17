@@ -3,8 +3,8 @@
 @setup
 -- Test concurrent usage of labels
 
-  create schema s;
-  set schema 's';
+  create schema label;
+  set schema 'label';
   create table t(a int);
   create label l1;
   insert into t values(1);
@@ -28,7 +28,7 @@
 @thread labeluser1
 
   alter session set "label" = 'L1';
-  set schema 's';
+  set schema 'label';
   select * from t;
   @sync
   @sync
@@ -41,7 +41,7 @@
 @thread labeluser2
  
   alter session set "label" = 'L2';
-  set schema 's';
+  set schema 'label';
   select * from t;
   -- make sure the scalar subquery also executes based on the label setting
   select * from t where a = (select count(*) from t);
@@ -61,7 +61,7 @@
 @thread labeluser3
  
   alter session set "label" = 'L3';
-  set schema 's';
+  set schema 'label';
   select * from t order by a;
   @sync
   @sync
@@ -71,7 +71,7 @@
 
 @thread labeluser4
 
-  set schema 's';
+  set schema 'label';
   alter session set "label" = 'LALIAS1';
   select * from t;
   @sync
@@ -126,7 +126,7 @@
   @sync
   @sync
   create or replace label lalias2 from label l2;
-  set schema 's';
+  set schema 'label';
   alter session set "label" = 'LALIAS2';
   -- should now return 1 row instead of 0
   select * from t;

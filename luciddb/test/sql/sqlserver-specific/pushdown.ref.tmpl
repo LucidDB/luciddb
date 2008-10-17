@@ -640,17 +640,17 @@
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select "c_date" from test.datatype where "c_date" >= APPLIB.ADD_DAYS("c_timestamp", -100) order by 1
 . . . . . . . . > );
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                    column0                                                                                                    |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                                     |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                                                                         |
-|     IteratorToFennelConverter                                                                                                                                                                                 |
-|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t0):TIMESTAMP(0)], expr#3=[-8640000000], expr#4=[+($t2, $t3)], expr#5=[CAST($t4):TIMESTAMP(0)], expr#6=[>=($t1, $t5)], c_date=[$t1], $condition=[$t6])  |
-|         ResultSetToFarragoIteratorConverter                                                                                                                                                                   |
-|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date"                                                                                                                                          |
-| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                                                                              |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                   column0                                                                   |
++---------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                   |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                       |
+|     IteratorToFennelConverter                                                                                                               |
+|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[-8640000000], expr#3=[+($t0, $t2)], expr#4=[>=($t1, $t3)], c_date=[$t1], $condition=[$t4])  |
+|         ResultSetToFarragoIteratorConverter                                                                                                 |
+|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp", "c_date"                                                                        |
+| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- lenient = true && columns deleted
@@ -695,17 +695,16 @@
 +-----------------+
 +-----------------+
 0: jdbc:luciddb:> explain plan for select "deleted_column" from test.datatype where"deleted_column" > 10 order by 1;
-+------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                       column0                                                                        |
-+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                            |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                |
-|     IteratorToFennelConverter                                                                                                                        |
-|       IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER], expr#3=[CAST($t1):BOOLEAN], deleted_column=[$t2], $condition=[$t3])  |
-|         ResultSetToFarragoIteratorConverter                                                                                                          |
-|           MedJdbcQueryRel(foreignSql=[SELECT "c_timestamp"                                                                                           |
-| FROM "BENCHMARK"."dbo"."TYPES"])                                                                                                                     |
-+------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------+
+|                                                  column0                                                  |
++-----------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                 |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                     |
+|     IteratorToFennelConverter                                                                             |
+|       IterCalcRel(expr#0..2=[{inputs}], expr#3=[null], expr#4=[CAST($t3):INTEGER], deleted_column=[$t4])  |
+|         FennelToIteratorConverter                                                                         |
+|           FennelValuesRel(tuples=[[]])                                                                    |
++-----------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- date pushdown
 0: jdbc:luciddb:> select "c_date" from test.datatype where "c_date" >= TIMESTAMP '2005-01-01 00:00:00' order by 1;
@@ -826,5 +825,24 @@
 | FROM "BENCHMARK"."dbo"."TYPES"                                                                                                                                                                                                                                                    |
 | WHERE "c_varchar" = 'varchar-03' OR "c_tinyint" > 127 OR "c_char" LIKE '%05%'])                                                                                                                                                                                                   |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FRG-339
+0: jdbc:luciddb:> select j from test.datatype where j;
++-------+
+|   J   |
++-------+
+| true  |
+| true  |
+| true  |
++-------+
+0: jdbc:luciddb:> explain plan for select j from test.datatype where j;
++------------------------------------------------------------+
+|                          column0                           |
++------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], J=[$t0], $condition=[$t0])  |
+|   ResultSetToFarragoIteratorConverter                      |
+|     MedJdbcQueryRel(foreignSql=[SELECT "c_boolean"         |
+| FROM "BENCHMARK"."dbo"."TYPES"])                           |
++------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

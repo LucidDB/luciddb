@@ -132,9 +132,9 @@ public:
         SharedSegmentFactory pSegmentFactory);
         
     virtual ~LogicalTxnLog();
-    
+
     /**
-     * Sets and increments the nextTxnId
+     * Sets the nextTxnId.
      *
      * @param nextTxnIdInit nextTxnId to be set
      */

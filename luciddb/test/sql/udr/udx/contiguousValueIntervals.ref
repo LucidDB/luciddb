@@ -1,0 +1,857 @@
+0: jdbc:luciddb:> -- tests for ContiguousValueIntervals UDX
+0: jdbc:luciddb:> create schema cvi;
+0: jdbc:luciddb:> set schema 'cvi';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table OptyHist(
+. . . . . . . . >   id varchar(20),
+. . . . . . . . >   changeTimestamp timestamp,
+. . . . . . . . >   stage varchar(50),
+. . . . . . . . >   amount decimal(10,2),
+. . . . . . . . >   expectedRevenue decimal(10,2),
+. . . . . . . . >   probability int,
+. . . . . . . . >   isDeleted boolean);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- empty table
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++-----+------------------+--------+------------------+-----------------+--------------------------+-------------+-----------------------+
+| ID  | CHANGETIMESTAMP  | STAGE  | UNTIL_TIMESTAMP  | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  | NEXT_CLUMP  | NEXT_UNTIL_TIMESTAMP  |
++-----+------------------+--------+------------------+-----------------+--------------------------+-------------+-----------------------+
++-----+------------------+--------+------------------+-----------------+--------------------------+-------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table with 1 row
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 00:00:00', '0 - Prospect', 150, 100.0, 10,
+. . . . . . . . >    false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+---------------+------------------+-----------------+--------------------------+-------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |     STAGE     | UNTIL_TIMESTAMP  | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  | NEXT_CLUMP  | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+---------------+------------------+-----------------+--------------------------+-------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect  |                  |                 |                          |             |                       |
++--------+----------------------+---------------+------------------+-----------------+--------------------------+-------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table with one partition and one clump
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 01:00:00', '0 - Prospect', 150, 100.0, 10,
+. . . . . . . . >    false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+---------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |     STAGE     | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+---------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect  | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 01:00:00  | 0 - Prospect  | 150.00  | 100.00           | 10           | false      |
++--------+----------------------+---------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+---------------+------------------+-----------------+--------------------------+-------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |     STAGE     | UNTIL_TIMESTAMP  | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  | NEXT_CLUMP  | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+---------------+------------------+-----------------+--------------------------+-------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect  |                  |                 |                          |             |                       |
++--------+----------------------+---------------+------------------+-----------------+--------------------------+-------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table with one partition and multiple clumps
+0: jdbc:luciddb:> delete from OptyHist where changeTimestamp = timestamp'2007-10-14 01:00:00';
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 01:00:00', '1 - Qualified', 150, 100.0, 10,
+. . . . . . . . >    false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |     STAGE      | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect   | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified  | 150.00  | 100.00           | 10           | false      |
++--------+----------------------+----------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------+----------------------+-----------------+--------------------------+----------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |     STAGE      |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |   NEXT_CLUMP   | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------+----------------------+-----------------+--------------------------+----------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect   | 2007-10-14 01:00:00  |                 |                          | 1 - Qualified  |                       |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified  |                      | 0 - Prospect    | 2007-10-14 00:00:00      |                |                       |
++--------+----------------------+----------------+----------------------+-----------------+--------------------------+----------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 02:00:00', '2 - Mtg Schd / NDA Signed', 150, 100.0, 10,
+. . . . . . . . >    false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified              | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 02:00:00  | 2 - Mtg Schd / NDA Signed  | 150.00  | 100.00           | 10           | false      |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 2007-10-14 01:00:00  |                 |                          | 1 - Qualified              | 2007-10-14 02:00:00   |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified              | 2007-10-14 02:00:00  | 0 - Prospect    | 2007-10-14 00:00:00      | 2 - Mtg Schd / NDA Signed  |                       |
+| AA100  | 2007-10-14 02:00:00  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-10-14 01:00:00      |                            |                       |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 00:30:00', '0 - Prospect', 150, 100.0, 10,
+. . . . . . . . >    false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 00:30:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified              | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 02:00:00  | 2 - Mtg Schd / NDA Signed  | 150.00  | 100.00           | 10           | false      |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 2007-10-14 01:00:00  |                 |                          | 1 - Qualified              | 2007-10-14 02:00:00   |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified              | 2007-10-14 02:00:00  | 0 - Prospect    | 2007-10-14 00:00:00      | 2 - Mtg Schd / NDA Signed  |                       |
+| AA100  | 2007-10-14 02:00:00  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-10-14 01:00:00      |                            |                       |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 01:30:00', '1 - Qualified', 150, 100.0, 10,
+. . . . . . . . >    false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 00:30:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified              | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 01:30:00  | 1 - Qualified              | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 02:00:00  | 2 - Mtg Schd / NDA Signed  | 150.00  | 100.00           | 10           | false      |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 2007-10-14 01:00:00  |                 |                          | 1 - Qualified              | 2007-10-14 02:00:00   |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified              | 2007-10-14 02:00:00  | 0 - Prospect    | 2007-10-14 00:00:00      | 2 - Mtg Schd / NDA Signed  |                       |
+| AA100  | 2007-10-14 02:00:00  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-10-14 01:00:00      |                            |                       |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 02:30:00', '2 - Mtg Schd / NDA Signed', 150, 100.0, 10,
+. . . . . . . . >    false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 00:30:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified              | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 01:30:00  | 1 - Qualified              | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 02:00:00  | 2 - Mtg Schd / NDA Signed  | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-10-14 02:30:00  | 2 - Mtg Schd / NDA Signed  | 150.00  | 100.00           | 10           | false      |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 2007-10-14 01:00:00  |                 |                          | 1 - Qualified              | 2007-10-14 02:00:00   |
+| AA100  | 2007-10-14 01:00:00  | 1 - Qualified              | 2007-10-14 02:00:00  | 0 - Prospect    | 2007-10-14 00:00:00      | 2 - Mtg Schd / NDA Signed  |                       |
+| AA100  | 2007-10-14 02:00:00  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-10-14 01:00:00      |                            |                       |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- table with multiple partitions each with one clump
+0: jdbc:luciddb:> truncate table OptyHist;
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 00:00:00', '0 - Prospect', 150, 100.0, 10,
+. . . . . . . . >    false),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', '0 - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('DD400', timestamp'2007-12-04 16:56:09', '1 - Qualified', 10, 15, 99, false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |     STAGE      | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect   | 150.00  | 100.00           | 10           | false      |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect   | 10.00   | 90.00            | 40           | true       |
+| DD400  | 2007-12-04 16:56:09  | 1 - Qualified  | 10.00   | 15.00            | 99           | false      |
++--------+----------------------+----------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------+------------------+-----------------+--------------------------+-------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |     STAGE      | UNTIL_TIMESTAMP  | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  | NEXT_CLUMP  | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------+------------------+-----------------+--------------------------+-------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect   |                  |                 |                          |             |                       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect   |                  |                 |                          |             |                       |
+| DD400  | 2007-12-04 16:56:09  | 1 - Qualified  |                  |                 |                          |             |                       |
++--------+----------------------+----------------+------------------+-----------------+--------------------------+-------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- basic table
+0: jdbc:luciddb:> truncate table OptyHist;
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 00:00:00', '0 - Prospect', 150, 100.0, 10,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 09:00:00', '1 - Qualified', 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-29 11:45:00', '2 - Mtg Schd / NDA Signed', 
+. . . . . . . . >    150.05, 100, 20, false),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', '0 - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('BB200', timestamp'2008-01-01 07:27:00', '1 - Qualified', 900.99, 2000, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-04 16:56:09', '0 - Prospect', 10, 15, 99, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:00', '1 - Qualified', 10, 15, 80,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:04', '2 - Mtg Schd / NDA Signed', 15,
+. . . . . . . . >    15, 90, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:02:00', '2 - Mtg Schd / NDA Signed', 20,
+. . . . . . . . >    20, 95, true),
+. . . . . . . . >   ('AA100', timestamp'2007-10-12 12:23:41', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, false),
+. . . . . . . . >   ('AA100', timestamp'2007-10-13 00:00:00', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 15:00:00', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-12 12:23:41  | 0 - Prospect               | 20.00   | 20.00            | 95           | false      |
+| AA100  | 2007-10-13 00:00:00  | 0 - Prospect               | 20.00   | 20.00            | 95           | false      |
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 150.00  | 200.00           | 20           | false      |
+| AA100  | 2007-12-01 15:00:00  | 0 - Prospect               | 20.00   | 20.00            | 95           | true       |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  | 150.05  | 100.00           | 20           | false      |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               | 10.00   | 90.00            | 40           | true       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              | 900.99  | 2000.00          | 20           | false      |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | 10.00   | 15.00            | 99           | false      |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 10.00   | 15.00            | 80           | false      |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  | 15.00   | 15.00            | 90           | false      |
+| DD400  | 2007-12-05 00:02:00  | 2 - Mtg Schd / NDA Signed  | 20.00   | 20.00            | 95           | true       |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+| AA100  | 2007-10-12 12:23:41  | 0 - Prospect               | 2007-12-01 09:00:00  |                 |                          | 1 - Qualified              | 2007-12-01 15:00:00   |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 2007-12-01 15:00:00  | 0 - Prospect    | 2007-10-12 12:23:41      | 0 - Prospect               | 2007-12-29 11:45:00   |
+| AA100  | 2007-12-01 15:00:00  | 0 - Prospect               | 2007-12-29 11:45:00  | 1 - Qualified   | 2007-12-01 09:00:00      | 2 - Mtg Schd / NDA Signed  |                       |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  |                      | 0 - Prospect    | 2007-12-01 15:00:00      |                            |                       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               |                      |                 |                          |                            |                       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              |                      |                 |                          |                            |                       |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | 2007-12-05 00:00:00  |                 |                          | 1 - Qualified              | 2007-12-05 00:00:04   |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 2007-12-05 00:00:04  | 0 - Prospect    | 2007-12-04 16:56:09      | 2 - Mtg Schd / NDA Signed  |                       |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-12-05 00:00:00      |                            |                       |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multi-column key
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, isDeleted, changeTimestamp;
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-12 12:23:41  | 0 - Prospect               | 20.00   | 20.00            | 95           | false      |
+| AA100  | 2007-10-13 00:00:00  | 0 - Prospect               | 20.00   | 20.00            | 95           | false      |
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 150.00  | 200.00           | 20           | false      |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  | 150.05  | 100.00           | 20           | false      |
+| AA100  | 2007-12-01 15:00:00  | 0 - Prospect               | 20.00   | 20.00            | 95           | true       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               | 10.00   | 90.00            | 40           | true       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              | 900.99  | 2000.00          | 20           | false      |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | 10.00   | 15.00            | 99           | false      |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 10.00   | 15.00            | 80           | false      |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  | 15.00   | 15.00            | 90           | false      |
+| DD400  | 2007-12-05 00:02:00  | 2 - Mtg Schd / NDA Signed  | 20.00   | 20.00            | 95           | true       |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage, isDeleted  from OptyHist
+. . . . . . . . >         order by id, isDeleted, changeTimestamp),
+. . . . . . . . >     row(id, isDeleted),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------------+------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | ISDELETED  |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------------+------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+| AA100  | 2007-10-12 12:23:41  | 0 - Prospect               | false      | 2007-12-01 09:00:00  |                 |                          | 1 - Qualified              | 2007-12-29 11:45:00   |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | false      | 2007-12-29 11:45:00  | 0 - Prospect    | 2007-10-12 12:23:41      | 2 - Mtg Schd / NDA Signed  |                       |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  | false      |                      | 1 - Qualified   | 2007-12-01 09:00:00      |                            |                       |
+| AA100  | 2007-12-01 15:00:00  | 0 - Prospect               | true       |                      |                 |                          |                            |                       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               | true       |                      |                 |                          |                            |                       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              | false      |                      |                 |                          |                            |                       |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | false      | 2007-12-05 00:00:00  |                 |                          | 1 - Qualified              | 2007-12-05 00:00:04   |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | false      | 2007-12-05 00:00:04  | 0 - Prospect    | 2007-12-04 16:56:09      | 2 - Mtg Schd / NDA Signed  |                       |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  | false      |                      | 1 - Qualified   | 2007-12-05 00:00:00      |                            |                       |
+| DD400  | 2007-12-05 00:02:00  | 2 - Mtg Schd / NDA Signed  | true       |                      |                 |                          |                            |                       |
++--------+----------------------+----------------------------+------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with empty strings and spaces
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('  ', timestamp'1999-10-10 04:29:09', '0 - Prospect', 34229.8, 67, 8,
+. . . . . . . . >    false),
+. . . . . . . . >   ('', timestamp'2020-01-01 00:59:59', '1 - Qualified', 10, 67, 9, true),
+. . . . . . . . >   ('AA100  ', timestamp'2007-12-29 22:45:00', '3 - Data received / Analyzed',
+. . . . . . . . >    150.00, 30000, 90, true),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:21', '', 20, 90, 50, null),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:01:02', '2 - Mtg Schd / NDA Signed     ',
+. . . . . . . . >    755.05, 20, 99, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++----------+----------------------+---------------------------------+-----------+------------------+--------------+------------+
+|    ID    |   CHANGETIMESTAMP    |              STAGE              |  AMOUNT   | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++----------+----------------------+---------------------------------+-----------+------------------+--------------+------------+
+|          | 1999-10-10 04:29:09  | 0 - Prospect                    | 34229.80  | 67.00            | 8            | false      |
+|          | 2020-01-01 00:59:59  | 1 - Qualified                   | 10.00     | 67.00            | 9            | true       |
+| AA100    | 2007-10-12 12:23:41  | 0 - Prospect                    | 20.00     | 20.00            | 95           | false      |
+| AA100    | 2007-10-13 00:00:00  | 0 - Prospect                    | 20.00     | 20.00            | 95           | false      |
+| AA100    | 2007-10-14 00:00:00  | 0 - Prospect                    | 150.00    | 100.00           | 10           | false      |
+| AA100    | 2007-12-01 09:00:00  | 1 - Qualified                   | 150.00    | 200.00           | 20           | false      |
+| AA100    | 2007-12-01 15:00:00  | 0 - Prospect                    | 20.00     | 20.00            | 95           | true       |
+| AA100    | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed       | 150.05    | 100.00           | 20           | false      |
+| AA100    | 2007-12-29 22:45:00  | 3 - Data received / Analyzed    | 150.00    | 30000.00         | 90           | true       |
+| BB100    | 2007-09-09 05:00:21  |                                 | 20.00     | 90.00            | 50           |            |
+| BB100    | 2007-09-09 05:00:23  | 0 - Prospect                    | 10.00     | 90.00            | 40           | true       |
+| BB200    | 2008-01-01 07:27:00  | 1 - Qualified                   | 900.99    | 2000.00          | 20           | false      |
+| DD400    | 2007-12-04 16:56:09  | 0 - Prospect                    | 10.00     | 15.00            | 99           | false      |
+| DD400    | 2007-12-05 00:00:00  | 1 - Qualified                   | 10.00     | 15.00            | 80           | false      |
+| DD400    | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed       | 15.00     | 15.00            | 90           | false      |
+| DD400    | 2007-12-05 00:01:02  | 2 - Mtg Schd / NDA Signed       | 755.05    | 20.00            | 99           | true       |
+| DD400    | 2007-12-05 00:02:00  | 2 - Mtg Schd / NDA Signed       | 20.00     | 20.00            | 95           | true       |
++----------+----------------------+---------------------------------+-----------+------------------+--------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+-------------------------------+----------------------+----------------------------+--------------------------+-------------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |             STAGE             |   UNTIL_TIMESTAMP    |       PREVIOUS_CLUMP       | PREVIOUS_FROM_TIMESTAMP  |          NEXT_CLUMP           | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+-------------------------------+----------------------+----------------------------+--------------------------+-------------------------------+-----------------------+
+|        | 1999-10-10 04:29:09  | 0 - Prospect                  | 2020-01-01 00:59:59  |                            |                          | 1 - Qualified                 |                       |
+|        | 2020-01-01 00:59:59  | 1 - Qualified                 |                      | 0 - Prospect               | 1999-10-10 04:29:09      |                               |                       |
+| AA100  | 2007-10-12 12:23:41  | 0 - Prospect                  | 2007-12-01 09:00:00  |                            |                          | 1 - Qualified                 | 2007-12-01 15:00:00   |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified                 | 2007-12-01 15:00:00  | 0 - Prospect               | 2007-10-12 12:23:41      | 0 - Prospect                  | 2007-12-29 11:45:00   |
+| AA100  | 2007-12-01 15:00:00  | 0 - Prospect                  | 2007-12-29 11:45:00  | 1 - Qualified              | 2007-12-01 09:00:00      | 2 - Mtg Schd / NDA Signed     | 2007-12-29 22:45:00   |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed     | 2007-12-29 22:45:00  | 0 - Prospect               | 2007-12-01 15:00:00      | 3 - Data received / Analyzed  |                       |
+| AA100  | 2007-12-29 22:45:00  | 3 - Data received / Analyzed  |                      | 2 - Mtg Schd / NDA Signed  | 2007-12-29 11:45:00      |                               |                       |
+| BB100  | 2007-09-09 05:00:21  |                               | 2007-09-09 05:00:23  |                            |                          | 0 - Prospect                  |                       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect                  |                      |                            | 2007-09-09 05:00:21      |                               |                       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified                 |                      |                            |                          |                               |                       |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect                  | 2007-12-05 00:00:00  |                            |                          | 1 - Qualified                 | 2007-12-05 00:00:04   |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified                 | 2007-12-05 00:00:04  | 0 - Prospect               | 2007-12-04 16:56:09      | 2 - Mtg Schd / NDA Signed     |                       |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed     |                      | 1 - Qualified              | 2007-12-05 00:00:00      |                               |                       |
++--------+----------------------+-------------------------------+----------------------+----------------------------+--------------------------+-------------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- with nulls
+0: jdbc:luciddb:> truncate table OptyHist;
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   (null, timestamp'2007-10-14 00:00:00', null, 150, 100.0, 10,
+. . . . . . . . >    false),
+. . . . . . . . >   (null, timestamp'2007-12-01 09:00:00', null, 150.0, 200, 20,
+. . . . . . . . >    false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++-----+----------------------+--------+---------+------------------+--------------+------------+
+| ID  |   CHANGETIMESTAMP    | STAGE  | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++-----+----------------------+--------+---------+------------------+--------------+------------+
+|     | 2007-10-14 00:00:00  |        | 150.00  | 100.00           | 10           | false      |
+|     | 2007-12-01 09:00:00  |        | 150.00  | 200.00           | 20           | false      |
++-----+----------------------+--------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:>   
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++-----+----------------------+--------+------------------+-----------------+--------------------------+-------------+-----------------------+
+| ID  |   CHANGETIMESTAMP    | STAGE  | UNTIL_TIMESTAMP  | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  | NEXT_CLUMP  | NEXT_UNTIL_TIMESTAMP  |
++-----+----------------------+--------+------------------+-----------------+--------------------------+-------------+-----------------------+
+|     | 2007-10-14 00:00:00  |        |                  |                 |                          |             |                       |
++-----+----------------------+--------+------------------+-----------------+--------------------------+-------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> truncate table OptyHist;
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   (null, timestamp'2007-10-14 00:00:00', null, 150, 100.0, 10,
+. . . . . . . . >    false),
+. . . . . . . . >   (null, timestamp'2007-12-01 09:00:00', null, 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   (null, timestamp'2007-12-29 11:45:00', '0 - Prospect', 150.05, 100, 20, false),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', null, 10, 90, 40, true),
+. . . . . . . . >   ('BB200', timestamp'2008-01-01 07:27:00', '1 - Qualified', 900.99, 2000, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-04 16:56:09', '0 - Prospect', 10, 15, 99, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:00', '1 - Qualified', 10, 15, 80,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:04', '2 - Mtg Schd / NDA Signed', 15,
+. . . . . . . . >    15, 90, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:02:00', null, 20, 20, 95, true),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:03:00', '2 - Mtg Schd / NDA Signed', 20, 20, 95, true),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:04:00', null, 20, 20, 95, true),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:05:00', null, 20, 20, 95, true),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:06:00', '2 - Mtg Schd / NDA Signed', 20, 20, 95, true),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:07:00', null, 20, 20, 95, true),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:08:00', null, 20, 20, 95, true),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:09:00', null, 20, 20, 95, true),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:10:00', '2 - Mtg Schd / NDA Signed', 20, 20, 95, true),
+. . . . . . . . >   ('AA100', timestamp'2007-10-12 12:23:41', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, false),
+. . . . . . . . >   ('AA100', timestamp'2007-10-13 00:00:00', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 15:00:00', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|        | 2007-10-14 00:00:00  |                            | 150.00  | 100.00           | 10           | false      |
+|        | 2007-12-01 09:00:00  |                            | 150.00  | 200.00           | 20           | false      |
+|        | 2007-12-29 11:45:00  | 0 - Prospect               | 150.05  | 100.00           | 20           | false      |
+| AA100  | 2007-10-12 12:23:41  | 0 - Prospect               | 20.00   | 20.00            | 95           | false      |
+| AA100  | 2007-10-13 00:00:00  | 0 - Prospect               | 20.00   | 20.00            | 95           | false      |
+| AA100  | 2007-12-01 15:00:00  | 0 - Prospect               | 20.00   | 20.00            | 95           | true       |
+| BB100  | 2007-09-09 05:00:23  |                            | 10.00   | 90.00            | 40           | true       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              | 900.99  | 2000.00          | 20           | false      |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | 10.00   | 15.00            | 99           | false      |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 10.00   | 15.00            | 80           | false      |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  | 15.00   | 15.00            | 90           | false      |
+| DD400  | 2007-12-05 00:02:00  |                            | 20.00   | 20.00            | 95           | true       |
+| DD400  | 2007-12-05 00:03:00  | 2 - Mtg Schd / NDA Signed  | 20.00   | 20.00            | 95           | true       |
+| DD400  | 2007-12-05 00:04:00  |                            | 20.00   | 20.00            | 95           | true       |
+| DD400  | 2007-12-05 00:05:00  |                            | 20.00   | 20.00            | 95           | true       |
+| DD400  | 2007-12-05 00:06:00  | 2 - Mtg Schd / NDA Signed  | 20.00   | 20.00            | 95           | true       |
+| DD400  | 2007-12-05 00:07:00  |                            | 20.00   | 20.00            | 95           | true       |
+| DD400  | 2007-12-05 00:08:00  |                            | 20.00   | 20.00            | 95           | true       |
+| DD400  | 2007-12-05 00:09:00  |                            | 20.00   | 20.00            | 95           | true       |
+| DD400  | 2007-12-05 00:10:00  | 2 - Mtg Schd / NDA Signed  | 20.00   | 20.00            | 95           | true       |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:>   
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------------+----------------------+----------------------------+--------------------------+----------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            |   UNTIL_TIMESTAMP    |       PREVIOUS_CLUMP       | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------------+----------------------+----------------------------+--------------------------+----------------------------+-----------------------+
+|        | 2007-10-14 00:00:00  |                            | 2007-12-29 11:45:00  |                            |                          | 0 - Prospect               |                       |
+|        | 2007-12-29 11:45:00  | 0 - Prospect               |                      |                            | 2007-10-14 00:00:00      |                            |                       |
+| AA100  | 2007-10-12 12:23:41  | 0 - Prospect               |                      |                            |                          |                            |                       |
+| BB100  | 2007-09-09 05:00:23  |                            |                      |                            |                          |                            |                       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              |                      |                            |                          |                            |                       |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | 2007-12-05 00:00:00  |                            |                          | 1 - Qualified              | 2007-12-05 00:00:04   |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 2007-12-05 00:00:04  | 0 - Prospect               | 2007-12-04 16:56:09      | 2 - Mtg Schd / NDA Signed  | 2007-12-05 00:02:00   |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  | 2007-12-05 00:02:00  | 1 - Qualified              | 2007-12-05 00:00:00      |                            | 2007-12-05 00:03:00   |
+| DD400  | 2007-12-05 00:02:00  |                            | 2007-12-05 00:03:00  | 2 - Mtg Schd / NDA Signed  | 2007-12-05 00:00:04      | 2 - Mtg Schd / NDA Signed  | 2007-12-05 00:04:00   |
+| DD400  | 2007-12-05 00:03:00  | 2 - Mtg Schd / NDA Signed  | 2007-12-05 00:04:00  |                            | 2007-12-05 00:02:00      |                            | 2007-12-05 00:06:00   |
+| DD400  | 2007-12-05 00:04:00  |                            | 2007-12-05 00:06:00  | 2 - Mtg Schd / NDA Signed  | 2007-12-05 00:03:00      | 2 - Mtg Schd / NDA Signed  | 2007-12-05 00:07:00   |
+| DD400  | 2007-12-05 00:06:00  | 2 - Mtg Schd / NDA Signed  | 2007-12-05 00:07:00  |                            | 2007-12-05 00:04:00      |                            | 2007-12-05 00:10:00   |
+| DD400  | 2007-12-05 00:07:00  |                            | 2007-12-05 00:10:00  | 2 - Mtg Schd / NDA Signed  | 2007-12-05 00:06:00      | 2 - Mtg Schd / NDA Signed  |                       |
+| DD400  | 2007-12-05 00:10:00  | 2 - Mtg Schd / NDA Signed  |                      |                            | 2007-12-05 00:07:00      |                            |                       |
++--------+----------------------+----------------------------+----------------------+----------------------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- same timestamp same clumping values
+0: jdbc:luciddb:> truncate table OptyHist;
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 00:00:00', '0 - Prospect', 150, 100.0, 10,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 09:00:00', '1 - Qualified', 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 09:00:00', '1 - Qualified', 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 09:00:00', '1 - Qualified', 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-29 11:45:00', '2 - Mtg Schd / NDA Signed', 
+. . . . . . . . >    150.05, 100, 20, false),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', '0 - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', '0 - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', '0 - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('BB200', timestamp'2008-01-01 07:27:00', '1 - Qualified', 900.99, 2000, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-04 16:56:09', '0 - Prospect', 10, 15, 99, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:00', '1 - Qualified', 10, 15, 80,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:04', '2 - Mtg Schd / NDA Signed', 15,
+. . . . . . . . >    15, 90, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:02:00', '2 - Mtg Schd / NDA Signed', 20,
+. . . . . . . . >    20, 95, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 150.00  | 200.00           | 20           | false      |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 150.00  | 200.00           | 20           | false      |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 150.00  | 200.00           | 20           | false      |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  | 150.05  | 100.00           | 20           | false      |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               | 10.00   | 90.00            | 40           | true       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               | 10.00   | 90.00            | 40           | true       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               | 10.00   | 90.00            | 40           | true       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              | 900.99  | 2000.00          | 20           | false      |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | 10.00   | 15.00            | 99           | false      |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 10.00   | 15.00            | 80           | false      |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  | 15.00   | 15.00            | 90           | false      |
+| DD400  | 2007-12-05 00:02:00  | 2 - Mtg Schd / NDA Signed  | 20.00   | 20.00            | 95           | true       |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:>   
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 2007-12-01 09:00:00  |                 |                          | 1 - Qualified              | 2007-12-29 11:45:00   |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 2007-12-29 11:45:00  | 0 - Prospect    | 2007-10-14 00:00:00      | 2 - Mtg Schd / NDA Signed  |                       |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-12-01 09:00:00      |                            |                       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               |                      |                 |                          |                            |                       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              |                      |                 |                          |                            |                       |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | 2007-12-05 00:00:00  |                 |                          | 1 - Qualified              | 2007-12-05 00:00:04   |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 2007-12-05 00:00:04  | 0 - Prospect    | 2007-12-04 16:56:09      | 2 - Mtg Schd / NDA Signed  |                       |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-12-05 00:00:00      |                            |                       |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- same timestamp different clumping values
+0: jdbc:luciddb:> truncate table OptyHist;
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 00:00:00', '0 - Prospect', 150, 100.0, 10,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 09:00:00', '1 - Qualified', 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 09:00:00', '1a - Qualified', 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 09:00:00', '1 - Qualified', 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-29 11:45:00', '2 - Mtg Schd / NDA Signed', 
+. . . . . . . . >    150.05, 100, 20, false),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', '0 - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', '0 - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', '0a - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('BB200', timestamp'2008-01-01 07:27:00', '1 - Qualified', 900.99, 2000, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-04 16:56:09', '0 - Prospect', 10, 15, 99, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:00', '1 - Qualified', 10, 15, 80,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:04', '2 - Mtg Schd / NDA Signed', 15,
+. . . . . . . . >    15, 90, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:02:00', '2 - Mtg Schd / NDA Signed', 20,
+. . . . . . . . >    20, 95, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHist order by id, changeTimestamp;
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 150.00  | 200.00           | 20           | false      |
+| AA100  | 2007-12-01 09:00:00  | 1a - Qualified             | 150.00  | 200.00           | 20           | false      |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 150.00  | 200.00           | 20           | false      |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  | 150.05  | 100.00           | 20           | false      |
+| BB100  | 2007-09-09 05:00:23  | 0a - Prospect              | 10.00   | 90.00            | 40           | true       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               | 10.00   | 90.00            | 40           | true       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               | 10.00   | 90.00            | 40           | true       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              | 900.99  | 2000.00          | 20           | false      |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | 10.00   | 15.00            | 99           | false      |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 10.00   | 15.00            | 80           | false      |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  | 15.00   | 15.00            | 90           | false      |
+| DD400  | 2007-12-05 00:02:00  | 2 - Mtg Schd / NDA Signed  | 20.00   | 20.00            | 95           | true       |
++--------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:>   
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+|   ID   |   CHANGETIMESTAMP    |           STAGE            |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 0 - Prospect               | 2007-12-01 09:00:00  |                 |                          | 1 - Qualified              | 2007-12-01 09:00:00   |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 2007-12-01 09:00:00  | 0 - Prospect    | 2007-10-14 00:00:00      | 1a - Qualified             | 2007-12-01 09:00:00   |
+| AA100  | 2007-12-01 09:00:00  | 1a - Qualified             | 2007-12-01 09:00:00  | 1 - Qualified   | 2007-12-01 09:00:00      | 1 - Qualified              | 2007-12-29 11:45:00   |
+| AA100  | 2007-12-01 09:00:00  | 1 - Qualified              | 2007-12-29 11:45:00  | 1a - Qualified  | 2007-12-01 09:00:00      | 2 - Mtg Schd / NDA Signed  |                       |
+| AA100  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-12-01 09:00:00      |                            |                       |
+| BB100  | 2007-09-09 05:00:23  | 0a - Prospect              | 2007-09-09 05:00:23  |                 |                          | 0 - Prospect               |                       |
+| BB100  | 2007-09-09 05:00:23  | 0 - Prospect               |                      | 0a - Prospect   | 2007-09-09 05:00:23      |                            |                       |
+| BB200  | 2008-01-01 07:27:00  | 1 - Qualified              |                      |                 |                          |                            |                       |
+| DD400  | 2007-12-04 16:56:09  | 0 - Prospect               | 2007-12-05 00:00:00  |                 |                          | 1 - Qualified              | 2007-12-05 00:00:04   |
+| DD400  | 2007-12-05 00:00:00  | 1 - Qualified              | 2007-12-05 00:00:04  | 0 - Prospect    | 2007-12-04 16:56:09      | 2 - Mtg Schd / NDA Signed  |                       |
+| DD400  | 2007-12-05 00:00:04  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-12-05 00:00:00      |                            |                       |
++--------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- input table has more than one columns of type timestamp
+0: jdbc:luciddb:> -- notes that only one of those can be served as timestamp column
+0: jdbc:luciddb:> create table OptyHistMTS(
+. . . . . . . . >   id varchar(20),
+. . . . . . . . >   changeTimestamp timestamp,
+. . . . . . . . >   moreTimeStamp timestamp,
+. . . . . . . . >   stage varchar(50),
+. . . . . . . . >   amount decimal(10,2),
+. . . . . . . . >   expectedRevenue decimal(10,2),
+. . . . . . . . >   probability int,
+. . . . . . . . >   isDeleted boolean);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into OptyHistMTS values
+. . . . . . . . >   ('AA100', timestamp'2007-10-14 00:00:00', timestamp'2007-10-14 00:00:00', '0 - Prospect', 150, 100.0, 10,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 09:00:00', timestamp'2007-10-14 00:00:00', '1 - Qualified', 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-29 11:45:00', timestamp'2007-10-14 00:00:00', '2 - Mtg Schd / NDA Signed', 
+. . . . . . . . >    150.05, 100, 20, false),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', timestamp'2007-09-09 05:00:23', '0 - Prospect', 10, 90, 40, true),
+. . . . . . . . >   ('BB200', timestamp'2008-01-01 07:27:00', timestamp'2008-01-01 07:27:00', '1 - Qualified', 900.99, 2000, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-04 16:56:09', timestamp'2007-12-04 16:56:09', '0 - Prospect', 10, 15, 99, false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from OptyHistMTS order by id, changeTimestamp;
++--------+----------------------+----------------------+----------------------------+---------+------------------+--------------+------------+
+|   ID   |   CHANGETIMESTAMP    |    MORETIMESTAMP     |           STAGE            | AMOUNT  | EXPECTEDREVENUE  | PROBABILITY  | ISDELETED  |
++--------+----------------------+----------------------+----------------------------+---------+------------------+--------------+------------+
+| AA100  | 2007-10-14 00:00:00  | 2007-10-14 00:00:00  | 0 - Prospect               | 150.00  | 100.00           | 10           | false      |
+| AA100  | 2007-12-01 09:00:00  | 2007-10-14 00:00:00  | 1 - Qualified              | 150.00  | 200.00           | 20           | false      |
+| AA100  | 2007-12-29 11:45:00  | 2007-10-14 00:00:00  | 2 - Mtg Schd / NDA Signed  | 150.05  | 100.00           | 20           | false      |
+| BB100  | 2007-09-09 05:00:23  | 2007-09-09 05:00:23  | 0 - Prospect               | 10.00   | 90.00            | 40           | true       |
+| BB200  | 2008-01-01 07:27:00  | 2008-01-01 07:27:00  | 1 - Qualified              | 900.99  | 2000.00          | 20           | false      |
+| DD400  | 2007-12-04 16:56:09  | 2007-12-04 16:56:09  | 0 - Prospect               | 10.00   | 15.00            | 99           | false      |
++--------+----------------------+----------------------+----------------------------+---------+------------------+--------------+------------+
+0: jdbc:luciddb:>   
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, moreTimestamp, changeTimestamp, stage  from OptyHistMTS
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id, moreTimestamp),
+. . . . . . . . >     row(changeTimestamp)));
++--------+----------------------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+|   ID   |    MORETIMESTAMP     |   CHANGETIMESTAMP    |           STAGE            |   UNTIL_TIMESTAMP    | PREVIOUS_CLUMP  | PREVIOUS_FROM_TIMESTAMP  |         NEXT_CLUMP         | NEXT_UNTIL_TIMESTAMP  |
++--------+----------------------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+| AA100  | 2007-10-14 00:00:00  | 2007-10-14 00:00:00  | 0 - Prospect               | 2007-12-01 09:00:00  |                 |                          | 1 - Qualified              | 2007-12-29 11:45:00   |
+| AA100  | 2007-10-14 00:00:00  | 2007-12-01 09:00:00  | 1 - Qualified              | 2007-12-29 11:45:00  | 0 - Prospect    | 2007-10-14 00:00:00      | 2 - Mtg Schd / NDA Signed  |                       |
+| AA100  | 2007-10-14 00:00:00  | 2007-12-29 11:45:00  | 2 - Mtg Schd / NDA Signed  |                      | 1 - Qualified   | 2007-12-01 09:00:00      |                            |                       |
+| BB100  | 2007-09-09 05:00:23  | 2007-09-09 05:00:23  | 0 - Prospect               |                      |                 |                          |                            |                       |
+| BB200  | 2008-01-01 07:27:00  | 2008-01-01 07:27:00  | 1 - Qualified              |                      |                 |                          |                            |                       |
+| DD400  | 2007-12-04 16:56:09  | 2007-12-04 16:56:09  | 0 - Prospect               |                      |                 |                          |                            |                       |
++--------+----------------------+----------------------+----------------------------+----------------------+-----------------+--------------------------+----------------------------+-----------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Negative tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> truncate table OptyHist;
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   (null, timestamp'2007-10-14 00:00:00', null, 150, 100.0, 10,
+. . . . . . . . >    false),
+. . . . . . . . >   (null, timestamp'2007-12-01 09:00:00', null, 150.0, 200, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   (null, timestamp'2007-12-29 11:45:00', '0 - Prospect', 150.05, 100, 20, false),
+. . . . . . . . >   ('BB100', timestamp'2007-09-09 05:00:23', null, 10, 90, 40, true),
+. . . . . . . . >   ('BB200', timestamp'2008-01-01 07:27:00', '1 - Qualified', 900.99, 2000, 20,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-04 16:56:09', '0 - Prospect', 10, 15, 99, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:00', '1 - Qualified', 10, 15, 80,
+. . . . . . . . >    false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:00:04', '2 - Mtg Schd / NDA Signed', 15,
+. . . . . . . . >    15, 90, false),
+. . . . . . . . >   ('DD400', timestamp'2007-12-05 00:02:00', null, 20, 20, 95, true),
+. . . . . . . . >   ('AA100', timestamp'2007-10-12 12:23:41', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, false),
+. . . . . . . . >   ('AA100', timestamp'2007-10-13 00:00:00', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 15:00:00', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- timestamp column is not one column
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp, stage)));
+Error: TIMESTAMP_COLUMN must be one column and of type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- timestamp column is not of type timestamp
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, amount, stage from OptyHist
+. . . . . . . . >         order by id, amount),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(amount)));
+Error: TIMESTAMP_COLUMN must be one column and of type TIMESTAMP (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- timestamp input column contains a null value
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', null, '3 - Data received / Analyzed', 200, 200, 100, false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage  from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
+Error: Timestamp column must not be NULL (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from OptyHist where changeTimestamp is null;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- timestamp column is in partition columns
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(changeTimestamp),
+. . . . . . . . >     row(changeTimestamp)));
+Error: Timestamp column must not be in partition columns (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- column not in input table
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, stage, isDeleted from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
+Error: From line 7, column 9 to line 7, column 23: Column 'CHANGETIMESTAMP' not found in any table (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- input table does not have exactly one clumping column
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage, amount from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
+Error: Input table must consist of the PARTITIONING_COLUMNS, a TIMESTAMP_COLUMN, and one clumping column (state=,code=0)
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id, stage),
+. . . . . . . . >     row(changeTimestamp)));
+Error: Input table must consist of the PARTITIONING_COLUMNS, a TIMESTAMP_COLUMN, and one clumping column (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- clumping column is not of type char or varchar
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, amount from OptyHist
+. . . . . . . . >         order by id, changeTimestamp),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
+Error: Input column(s) [CLUMPING COLUMN] have invalid datatype; Datatype(s) should be: [CHAR or VARCHAR] (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- input table not presorted correctly
+0: jdbc:luciddb:> -- partitioning column not sorted
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, isDeleted, changeTimestamp, stage from OptyHist),
+. . . . . . . . >     row(id, isDeleted),
+. . . . . . . . >     row(changeTimestamp)));
+Error: Input cursor must be sorted by the following column(s) in ascending order: [ID, ISDELETED]; out of order column value(s): [AA100, false] (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- timestamp column not sorted
+0: jdbc:luciddb:> truncate table OptyHist;
+0: jdbc:luciddb:> insert into OptyHist values
+. . . . . . . . >   ('AA100', timestamp'2007-10-13 12:23:41', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, false),
+. . . . . . . . >   ('AA100', timestamp'2007-10-13 00:00:00', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, false),
+. . . . . . . . >   ('AA100', timestamp'2007-12-01 15:00:00', '0 - Prospect', 20,
+. . . . . . . . >    20, 95, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   applib.contiguous_value_intervals(
+. . . . . . . . >     cursor(
+. . . . . . . . >         select id, changeTimestamp, stage from OptyHist),
+. . . . . . . . >     row(id),
+. . . . . . . . >     row(changeTimestamp)));
+Error: Input cursor must be sorted by the following column(s) in ascending order: [CHANGETIMESTAMP]; out of order column value(s): [2007-10-13 00:00:00.0] (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop table OptyHist cascade;
+0: jdbc:luciddb:> drop schema cvi cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

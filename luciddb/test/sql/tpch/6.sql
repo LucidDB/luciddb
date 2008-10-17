@@ -1,13 +1,9 @@
--- TPC-D Parameter Substitution (Version 1.1.0D)
--- using default substitutions
-
-set schema 'tpch';
+-- Q6 (tpch2.6.1)
 
 SELECT SUM(L_EXTENDEDPRICE * L_DISCOUNT) AS REVENUE
-FROM LINEITEM
+FROM TPCH.LINEITEM
 WHERE
     L_SHIPDATE >= DATE '1994-01-01' AND
     L_SHIPDATE < date '1995-01-01' AND
     L_DISCOUNT BETWEEN .06 - 0.01 AND .06 + 0.01 AND
     L_QUANTITY <  24;
-

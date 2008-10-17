@@ -69,11 +69,6 @@
       </test>
 
       <test name="10" requiresRun="createIndexes">
-        <!-- TODO: LDB-64 -->
-        <!-- ref file too large, not added until find way to reduce size -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/tpch/gen/${datasize}/10.sql"/>
       </test>
 
@@ -109,8 +104,20 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/tpch/gen/${datasize}/18.sql"/>
       </test>
 
+      <test name="19" requiresRun="createIndexes">
+        <junit-sql file="${open.dir}/luciddb/test/sql/tpch/gen/${datasize}/19.sql"/>
+      </test>
+
       <test name="20" requiresRun="createIndexes">
         <junit-sql file="${open.dir}/luciddb/test/sql/tpch/gen/${datasize}/20.sql"/>
+      </test>
+<!--
+      <test name="21" requiresRun="createIndexes">
+        <junit-sql file="${open.dir}/luciddb/test/sql/tpch/gen/${datasize}/21.sql"/>
+      </test>
+-->
+      <test name="22" requiresRun="createIndexes">
+        <junit-sql file="${open.dir}/luciddb/test/sql/tpch/gen/${datasize}/22.sql"/>
       </test>
 
       <cleanup-hook>

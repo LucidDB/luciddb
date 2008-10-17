@@ -1,30 +1,49 @@
-0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
-0: jdbc:luciddb:> -- using default substitutions
+0: jdbc:luciddb:> -- Q15 (tpch2.6.1)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> set schema 'tpch';
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> CREATE VIEW REVENUE0 (SUPPLIER_NO, TOTAL_REVENUE) AS
+0: jdbc:luciddb:> CREATE VIEW TPCH.REVENUE0 (SUPPLIER_NO, TOTAL_REVENUE) AS
 . . . . . . . . >     SELECT L_SUPPKEY, SUM(L_EXTENDEDPRICE * (1 - L_DISCOUNT))
-. . . . . . . . >     FROM LINEITEM
+. . . . . . . . >     FROM TPCH.LINEITEM
 . . . . . . . . >     WHERE
 . . . . . . . . >         L_SHIPDATE >= DATE'1996-01-01' AND
 . . . . . . . . >         L_SHIPDATE < DATE'1996-04-01'
 . . . . . . . . >     GROUP BY L_SUPPKEY;
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- rewritten query before subquery support
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> --SELECT S_SUPPKEY, S_NAME, S_ADDRESS,  S_PHONE, TOTAL_REVENUE
+0: jdbc:luciddb:> --FROM SUPPLIER, REVENUE0,
+0: jdbc:luciddb:> --     (SELECT MAX(TOTAL_REVENUE) AS MAXREV FROM REVENUE0) AS TEMP
+0: jdbc:luciddb:> --WHERE S_SUPPKEY = SUPPLIER_NO AND
+0: jdbc:luciddb:> --      TOTAL_REVENUE = TEMP.MAXREV
+0: jdbc:luciddb:> --ORDER BY S_SUPPKEY;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> SELECT S_SUPPKEY, S_NAME, S_ADDRESS,  S_PHONE, TOTAL_REVENUE
-. . . . . . . . > FROM SUPPLIER, REVENUE0,
-. . . . . . . . >      (SELECT MAX(TOTAL_REVENUE) AS MAXREV FROM REVENUE0) AS TEMP
-. . . . . . . . > WHERE S_SUPPKEY = SUPPLIER_NO AND
-. . . . . . . . >       TOTAL_REVENUE = TEMP.MAXREV
-. . . . . . . . > ORDER BY S_SUPPKEY;
+0: jdbc:luciddb:> SELECT
+. . . . . . . . >     S_SUPPKEY,
+. . . . . . . . >     S_NAME,
+. . . . . . . . >     S_ADDRESS,
+. . . . . . . . >     S_PHONE,
+. . . . . . . . >     TOTAL_REVENUE
+. . . . . . . . > FROM
+. . . . . . . . >     TPCH.SUPPLIER,
+. . . . . . . . >     TPCH.REVENUE0
+. . . . . . . . > WHERE
+. . . . . . . . >     S_SUPPKEY = SUPPLIER_NO
+. . . . . . . . >     AND TOTAL_REVENUE = (
+. . . . . . . . >         SELECT
+. . . . . . . . >             MAX(TOTAL_REVENUE)
+. . . . . . . . >         FROM
+. . . . . . . . >             TPCH.REVENUE0
+. . . . . . . . >     )
+. . . . . . . . > ORDER BY
+. . . . . . . . >     S_SUPPKEY;
 +------------+---------------------+------------------------+------------------+----------------+
 | S_SUPPKEY  |       S_NAME        |       S_ADDRESS        |     S_PHONE      | TOTAL_REVENUE  |
 +------------+---------------------+------------------------+------------------+----------------+
 | 677        | Supplier#000000677  | 8mhrffG7D2WJBSQbOGstQ  | 23-290-639-3315  | 1614410.2928   |
 +------------+---------------------+------------------------+------------------+----------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> DROP VIEW REVENUE0;
+0: jdbc:luciddb:> DROP VIEW TPCH.REVENUE0;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

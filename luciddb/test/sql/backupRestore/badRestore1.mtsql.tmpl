@@ -1,0 +1,7 @@
+-- This restore should fail because it's being executed out of sequence.
+
+@nolockstep
+
+@thread restore
+@err call sys_root.restore_database('@TEST_DIR@/incrArchive2');
+@end

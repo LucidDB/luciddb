@@ -1583,6 +1583,62 @@ Messages: {1}</text>
 <text>Caller type ''{0}'' for datetime conversion functions is unknown</text>
 </exception>
 
+<exception id="520015" name="InvalidBackupType">
+<text>Invalid backup type ''{0}''.  Must be either FULL, INCREMENTAL, or DIFFERENTIAL.</text>
+</exception>
+
+<exception id="520016" name="InvalidCompressionMode">
+<text>Invalid compression mode ''{0}''.  Must be either COMPRESSED or UNCOMPRESSED.</text>
+</exception>
+
+<exception id="520017" name="InvalidBackupPropertyValue">
+<text>Invalid backup property value ''{0}''</text>
+</exception>
+
+<exception id="520018" name="InvalidBackupPropertySetting">
+<text>Invalid backup property setting ''{0}''</text>
+</exception>
+
+<exception id="520019" name="NoFullBackup">
+<text>A full backup has not been executed yet</text>
+</exception>
+
+<exception id="520020" name="BackupInProgress">
+<text>Another database backup is already in progress</text>
+</exception>
+
+<exception id="520021" name="NeedExclusiveAccess">
+<text>Exclusive database access required</text>
+</exception>
+
+<exception id="520022" name="MissingPropertySetting">
+<text>Backup property file is missing a property setting for ''{0}''</text>
+</exception>
+
+<exception id="520023" name="PaddingLessThanZero">
+<text>Padding-byte-count parameter must be greater than or equal to 0</text>
+</exception>
+
+<exception id="520024" name="BackupFileAlreadyExists">
+<text>The file ''{0}'' already exists in the archive directory</text>
+</exception>
+
+<exception id="520025" name="BackupFileDoesNotExist">
+<text>The file ''{0}'' does not exist in the archive directory</text>
+</exception>
+
+<exception id="520026" name="BackupFileNotReadable">
+<text>The file ''{0}'' is not readable in the archive directory</text>
+</exception>
+
+<exception id="520027" name="BackupArchiveDirNotWritable">
+<text>The backup archive directory ''{0}'' is not writable</text>
+</exception>
+
+<exception id="520028" name="BackupArchiveDirNotReadable">
+<text>The backup archive directory ''{0}'' is not readable</text>
+</exception>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>

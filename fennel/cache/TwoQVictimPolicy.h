@@ -105,7 +105,7 @@ public:
     /**
      * Moves a page from its current position to the head of the queue.
      *
-     * @param the page being moved
+     * @param page the page being moved
      */
     void moveToHead(IntrusiveDListNode &page) 
     {
