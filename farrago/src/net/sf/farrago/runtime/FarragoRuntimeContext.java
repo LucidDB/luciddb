@@ -1271,7 +1271,9 @@ public class FarragoRuntimeContext
         {
             // traverse in reverse order
             ListIterator iter = allocations.listIterator(allocations.size());
-            tracer.info("closing stream owner with " + allocations);
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine("closing stream owner with " + allocations);
+            }
             while (iter.hasPrevious()) {
                 FennelStreamGraph streamGraph =
                     (FennelStreamGraph) iter.previous();
