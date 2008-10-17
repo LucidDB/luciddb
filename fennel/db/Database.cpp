@@ -1149,10 +1149,8 @@ void Database::restoreFromBackup(
     if (lowerBoundCsn != NULL_TXN_ID) {
         TxnId headerTxnId = getLastCommittedTxnId();
         if (headerTxnId != lowerBoundCsn) {
-            std::ostringstream oss;
-            oss << headerTxnId;
             throw FennelExcn(
-                FennelResource::instance().mismatchedRestore(oss.str()));
+                FennelResource::instance().mismatchedRestore());
         }
     }
 

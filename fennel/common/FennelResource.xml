@@ -90,7 +90,7 @@
   </message>
 
   <message id="440130" name="mismatchedRestore">
-    <text>Commit sequence number in the restore does not match the expected value of ''{0}''</text>
+    <text>Commit sequence number in the restore does not match the expected value</text>
   </message>
 
   <message id="440140" name="openBackupFileFailed">
