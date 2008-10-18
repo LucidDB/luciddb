@@ -1,10 +1,5 @@
 0: jdbc:luciddb:> -- Test error conditions for backups
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- negative padding parameter
-0: jdbc:luciddb:> call sys_root.backup_database_if_space_available(
-. . . . . . . . >     '@TEST_DIR@/tmpArchive', 'FULL', 'UNCOMPRESSED', -1);
-Error: Padding-byte-count parameter must be greater than or equal to 0 (state=,code=0)
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- non-existent archive directory
 0: jdbc:luciddb:> call sys_root.backup_database('@TEST_DIR@/badArchive', 'FULL', 'UNCOMPRESSED');
 Error: Directory @TEST_DIR@/badArchive does not exist (state=,code=0)

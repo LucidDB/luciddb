@@ -737,9 +737,6 @@ public abstract class FarragoManagementUDR
         long padding)
         throws Exception
     {
-        if (padding < 0) {
-           throw FarragoResource.instance().PaddingLessThanZero.ex(); 
-        }
         FarragoSystemBackup backup =
             new FarragoSystemBackup(
                 archiveDirectory,
