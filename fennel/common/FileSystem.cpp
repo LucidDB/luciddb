@@ -31,7 +31,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef __MINGW32__
+#include "fennel/common/FennelResource.h"
+#else
 #include <sys/statvfs.h>
+#endif
 #include <fcntl.h>
 //#include <dirent.h>
 //#include <fnmatch.h>
