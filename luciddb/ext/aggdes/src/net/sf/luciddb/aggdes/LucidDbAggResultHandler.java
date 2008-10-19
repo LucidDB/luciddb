@@ -76,6 +76,9 @@ public class LucidDbAggResultHandler extends ResultHandlerImpl
         CreateTableGenerator tgen = new CreateTableGenerator();
         for (Output output : outputs) {
             String sql = tgen.generate(schema, output);
+            sql = sql.replaceAll("INTEGER\\(.*\\)", "INTEGER");
+            sql = sql.replaceAll("BIGINT\\(.*\\)", "BIGINT");
+            sql = sql.replaceAll("SMALLINT\\(.*\\)", "SMALLINT");
             executeSql(stmt, sql);
         }
 
