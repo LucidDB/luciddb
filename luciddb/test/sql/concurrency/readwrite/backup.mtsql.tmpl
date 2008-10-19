@@ -39,7 +39,8 @@ truncate table lineitemu1;
 
 -- the purge should now be reenabled
 alter system deallocate old;
-select (counter_value < applib.get_var('RWCONCUR', 'pageCount'))
+select (cast(counter_value as bigint) <
+        cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
     from sys_root.dba_performance_counters
     where counter_name = 'DatabasePagesAllocated';
 
@@ -84,7 +85,8 @@ alter system deallocate old;
 -- was truncated and alter system deallocate old was run.  We need the greater
 -- than check because the number of pages allocated will actually grow slightly
 -- as a result of the truncate.
-select (counter_value > applib.get_var('RWCONCUR', 'pageCount'))
+select (cast(counter_value as bigint) > 
+        cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
     from sys_root.dba_performance_counters
     where counter_name = 'DatabasePagesAllocated';
 
