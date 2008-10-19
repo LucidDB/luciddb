@@ -12,6 +12,7 @@ fi
 
 JAVA_ARGS="-Xms256m -Xmx256m -cp `cat $MAIN_DIR/bin/classpath.gen` \
   -Dnet.sf.farrago.home=$MAIN_DIR \
+  -Dorg.eigenbase.util.AWT_WORKAROUND=off \
   -Djava.util.logging.config.file=$MAIN_DIR/trace/Trace.properties"
 
 SQLLINE_JAVA_ARGS="sqlline.SqlLine"
