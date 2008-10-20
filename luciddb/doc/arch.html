@@ -241,15 +241,17 @@ Because LucidDB has a Java top-half, it can be deployed into <a
 target="_top" href="http://docs.eigenbase.org/LucidDbAsManagedBean">a
 J2EE application server</a>.  This means it is very easy to make it
 run side-by-side with the <a target="_top"
-href="http://mondrian.sf.net">Mondrian</a> pure-Java OLAP engine,
+href="http://mondrian.pentaho.org">Mondrian</a> pure-Java OLAP engine,
 enabling direct in-process JDBC calls from Mondrian into LucidDB with
 no communications overhead.  And the SQL queries issued by Mondrian
 for implementing MDX statements from an OLAP client are of exactly the
 form LucidDB's optimizer was designed for.  The LucidDB roadmap
 includes proposed features for tighter integration, such as unified
-metadata management and DDL statements for cube creation.  The first
-installment is available in the form of <a target="_top"
+metadata management and DDL statements for cube creation.  First steps
+on this roadmap are available in the form of <a target="_top"
 href="http://docs.eigenbase.org/LucidDbMondrianReplication">Mondrian
-source replication</a> support.
+source replication</a> support, along with <a target="_top"
+href="http://docs.eigenbase.org/LucidDbAggregateDesigner">automatic
+aggregate table generation</a>.
 
 </body>
