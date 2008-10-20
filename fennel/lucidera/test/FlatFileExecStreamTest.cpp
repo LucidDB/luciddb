@@ -125,19 +125,20 @@ void FlatFileExecStreamTest::testBuffer()
     FixedBuffer fixedBuffer[8];
     std::string path = "flatfile/buffer";
     
-    FlatFileBuffer fileBuffer(path);
-    fileBuffer.open();
-    fileBuffer.setStorage((char *) fixedBuffer, (uint)8);
+    SharedFlatFileBuffer pFileBuffer;
+    pFileBuffer.reset(new FlatFileBuffer(path), ClosableObjectDestructor());
+    pFileBuffer->open();
+    pFileBuffer->setStorage((char *) fixedBuffer, (uint)8);
 
-    checkRead(fileBuffer, "12345671");
-    BOOST_CHECK_EQUAL(fileBuffer.getReadPtr(), (char *)fixedBuffer);
+    checkRead(*pFileBuffer, "12345671");
+    BOOST_CHECK_EQUAL(pFileBuffer->getReadPtr(), (char *)fixedBuffer);
 
-    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+7);
-    checkRead(fileBuffer, "12345676");
+    pFileBuffer->setReadPtr(pFileBuffer->getReadPtr()+7);
+    checkRead(*pFileBuffer, "12345676");
 
-    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+6);
-    checkRead(fileBuffer, "7654\n");
-    BOOST_CHECK(fileBuffer.isComplete());
+    pFileBuffer->setReadPtr(pFileBuffer->getReadPtr()+6);
+    checkRead(*pFileBuffer, "7654\n");
+    BOOST_CHECK(pFileBuffer->isComplete());
 }
 
 void FlatFileExecStreamTest::testParser()

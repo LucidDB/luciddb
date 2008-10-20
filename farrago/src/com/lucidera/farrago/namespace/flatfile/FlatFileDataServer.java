@@ -159,13 +159,17 @@ class FlatFileDataServer
                         FlatFileParams.SchemaType.QUERY.getSchemaName(),
                         filename
                     };
-                long avgRowSize = sampleAndCreateBcp(foreignName, null);
-                // Estimated number of rows == file length / avg row length
-                if (avgRowSize > 0) {
-                    numRows = dataFile.length() / avgRowSize;
+                if (params.getNumRowsScan() > 0) {
+                    long avgRowSize = sampleAndCreateBcp(foreignName, null);
+                    // Estimated number of rows == file length / avg row length
+                    if (avgRowSize > 0) {
+                        numRows = dataFile.length() / avgRowSize;
+                    }
                 }
             }
         } catch (Exception e) {
+            // REVIEW jvs 17-Oct-2008:  swallowing exceptions without
+            // explanation is a bad idea
         }
 
         if (rowType == null) {
