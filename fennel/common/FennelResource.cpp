@@ -133,9 +133,9 @@ string FennelResource::outOfBackupSpace() const
 {
     return _outOfBackupSpace.format();
 }
-string FennelResource::mismatchedRestore(const std::string &p0) const
+string FennelResource::mismatchedRestore() const
 {
-    return _mismatchedRestore.format(p0);
+    return _mismatchedRestore.format();
 }
 string FennelResource::openBackupFileFailed(const std::string &p0) const
 {

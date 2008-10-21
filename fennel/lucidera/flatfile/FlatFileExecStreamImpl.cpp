@@ -145,13 +145,13 @@ void FlatFileExecStreamImpl::open(bool restart)
             for (uint i = 0; i < nFields; i++) {
                 char *n = lastResult.getColumn(i);
                 if (n == NULL) {
-                    columnMap[i] = -1;
+                    columnMap[i] = MAXU;
                 } else {
                     std::string name(
                         n,
                         lastResult.getColumnSize(i));
                     columnMap[i] = findField(name);
-                    if (columnMap[i] != -1) {
+                    if (!isMAXU(columnMap[i])) {
                         found++;
                     }
                 }
@@ -273,14 +273,14 @@ FlatFileRowDescriptor FlatFileExecStreamImpl::readTupleDescriptor(
     return rowDesc;
 }
 
-int FlatFileExecStreamImpl::findField(const std::string &name)
+uint FlatFileExecStreamImpl::findField(const std::string &name)
 {
     for (uint i = 0; i < columnNames.size(); i++) {
         if (strcasecmp(name.c_str(), columnNames[i].c_str()) == 0) {
             return i;
         }
     }
-    return -1;
+    return MAXU;
 }
 
 void FlatFileExecStreamImpl::handleTuple(

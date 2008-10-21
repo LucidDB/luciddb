@@ -100,9 +100,9 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     /**
      * Finds an output column by its name and returns the column's index.
      * Performs a case insensitive comparison and uses the first matching
-     * column. If no column could not be found, this function returns -1.
+     * column. If column could not be found, this function returns MAXU.
      */
-    int findField(const std::string &name);
+    uint findField(const std::string &name);
 
     /**
      * Translates a TupleDescriptor into a FlatFileRowDescriptor. The major

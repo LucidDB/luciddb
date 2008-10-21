@@ -106,9 +106,9 @@ class FennelResource : ResourceBundle
     std::string outOfBackupSpace() const;
 
     /**
-     * <code>mismatchedRestore</code> is 'Commit sequence number in the restore does not match the expected value of ''{0}'''
+     * <code>mismatchedRestore</code> is 'Commit sequence number in the restore does not match the expected value'
      */
-    std::string mismatchedRestore(const std::string &p0) const;
+    std::string mismatchedRestore() const;
 
     /**
      * <code>openBackupFileFailed</code> is 'Open of backup file {0} failed'

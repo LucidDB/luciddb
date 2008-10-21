@@ -652,7 +652,8 @@ sqlline> !connect jdbc:luciddb:;schema="LABEL";label="L3" sa sa
 +---------+
 | 0       |
 +---------+
-0: jdbc:luciddb:> select (counter_value < applib.get_var('LABEL', 'pageCount'))
+0: jdbc:luciddb:> select (cast(counter_value as bigint) < 
+. . . . . . . . >         cast(applib.get_var('LABEL', 'pageCount') as bigint))
 . . . . . . . . >     from sys_root.dba_performance_counters
 . . . . . . . . >         where counter_name = 'DatabasePagesAllocated';
 +---------+

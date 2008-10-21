@@ -45,7 +45,8 @@
 0 rows affected.
 > alter system deallocate old;
 0 rows affected.
-> select (counter_value < applib.get_var('RWCONCUR', 'pageCount'))
+> select (cast(counter_value as bigint) <
+> cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
 > from sys_root.dba_performance_counters
 > where counter_name = 'DatabasePagesAllocated';
 +--------+
@@ -73,7 +74,8 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Another database backup
 0 rows affected.
 > alter system deallocate old;
 0 rows affected.
-> select (counter_value > applib.get_var('RWCONCUR', 'pageCount'))
+> select (cast(counter_value as bigint) >
+> cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
 > from sys_root.dba_performance_counters
 > where counter_name = 'DatabasePagesAllocated';
 +--------+

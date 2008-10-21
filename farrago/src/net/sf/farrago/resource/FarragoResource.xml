@@ -1615,10 +1615,6 @@ Messages: {1}</text>
 <text>Backup property file is missing a property setting for ''{0}''</text>
 </exception>
 
-<exception id="520023" name="PaddingLessThanZero">
-<text>Padding-byte-count parameter must be greater than or equal to 0</text>
-</exception>
-
 <exception id="520024" name="BackupFileAlreadyExists">
 <text>The file ''{0}'' already exists in the archive directory</text>
 </exception>
