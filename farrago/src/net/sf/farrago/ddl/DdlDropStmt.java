@@ -70,7 +70,7 @@ public class DdlDropStmt
 
         // Delete the top-level object.  DdlValidator will take care of the
         // rest.
-        getModelElement().refDelete();
+        ddlValidator.deleteObject(getModelElement());
     }
     
     // implement DdlStmt

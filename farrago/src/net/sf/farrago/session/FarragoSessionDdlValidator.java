@@ -283,6 +283,16 @@ public interface FarragoSessionDdlValidator
         SqlValidatorException ex);
 
     /**
+     * Deletes the given object and cascades deletion as necessary to 
+     * subordinate objects.  Implementation of deletion is handled with
+     * the highest performance possible given the underlying repository
+     * implementation.
+     * 
+     * @param obj object to delete
+     */
+    public void deleteObject(RefObject obj);
+    
+    /**
      * Adds a {@link FarragoSessionDdlDropRule}.
      *
      * @param refAssoc model association to which the rule relates

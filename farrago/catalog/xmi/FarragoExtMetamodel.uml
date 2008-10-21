@@ -129,7 +129,7 @@
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Oct 14 08:53:02 PDT 2008'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Oct 17 16:02:40 PDT 2008'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -9493,11 +9493,12 @@
           </UML:TagDefinition.multiplicity>
         </UML:TagDefinition>
         <UML:TagDefinition xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7B'
-          name = 'org.eigenbase.enki.lazyAssociation' isSpecification = 'false' tagType = 'String'>
+          name = 'org.eigenbase.enki.highCardinalityAssociation' isSpecification = 'false'
+          tagType = 'String'>
           <UML:TagDefinition.multiplicity>
-            <UML:Multiplicity xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7F'>
+            <UML:Multiplicity xmi.id = '127-0-0-1-66298aad:11d0d0a7546:-8000:0000000000000F32'>
               <UML:Multiplicity.range>
-                <UML:MultiplicityRange xmi.id = '127-0-0-1-1ae38e56:11a2c836548:-8000:0000000000000E7E'
+                <UML:MultiplicityRange xmi.id = '127-0-0-1-66298aad:11d0d0a7546:-8000:0000000000000F31'
                   lower = '0' upper = '1'/>
               </UML:Multiplicity.range>
             </UML:Multiplicity>
@@ -12430,7 +12431,7 @@
       textsize="10"
     >CmdAbandonBackup</text>
     <group name="Fig32.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[833, 458, 91, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[833, 458, 107, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -12443,7 +12444,7 @@
       <rectangle name="Fig32.3.0"
         x="833"
         y="458"
-        width="91"
+        width="107"
         height="20"
         fill="1"
         fillcolor="white"
@@ -12461,7 +12462,7 @@
       >
         <moveto x="833"
                 y="458" />
-        <lineto x="924"
+        <lineto x="940"
                 y="458" />
       </path>
     </group>
@@ -42276,7 +42277,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >FULL : BackupType { frozen }</text>
+      >FULL : BackupType</text>
       <text name="Fig49.4.3"
         x="81"
         y="586"
@@ -42286,7 +42287,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >LAST : BackupType { frozen }</text>
+      >LAST : BackupType</text>
     </group>
     <rectangle name="Fig49.5"
       x="80"
@@ -42439,7 +42440,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >COMPLETED : BackupStatusType { frozen }</text>
+      >COMPLETED : BackupStatusType</text>
       <text name="Fig50.4.3"
         x="65"
         y="682"
@@ -42449,7 +42450,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >PENDING : BackupStatusType { frozen }</text>
+      >PENDING : BackupStatusType</text>
     </group>
     <rectangle name="Fig50.5"
       x="64"

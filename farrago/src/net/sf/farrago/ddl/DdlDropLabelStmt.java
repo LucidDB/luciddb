@@ -54,11 +54,15 @@ public class DdlDropLabelStmt
     // override DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
+        FarragoRepos repos = ddlValidator.getRepos();
+        boolean usePreviewRefDelete = 
+            repos.getEnkiMdrRepos().supportsPreviewRefDelete();
+
         // Remove stats associated with the label being dropped.  Note that
         // this needs to be done before the label is deleted from the
         // catalog.
         FarragoCatalogUtil.removeObsoleteStatistics(
-            (FemLabel)getModelElement(), ddlValidator.getRepos());
+            (FemLabel)getModelElement(), repos, usePreviewRefDelete);
         
         super.preValidate(ddlValidator);
     }
