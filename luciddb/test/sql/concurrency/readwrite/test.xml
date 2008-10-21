@@ -22,16 +22,6 @@
           file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/analyze.mtsql"/>
       </test>
 
-      <test name="backup" requiresSuccess="setup">
-        <junit-sql 
-          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/backup.mtsql"/>
-      </test>
-
-      <test name="restore" requiresSuccess="setup">
-        <junit-sql 
-          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/restore.mtsql"/>
-      </test>
-
       <test name="insertSelect" requiresSuccess="setup">
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/insert-select.mtsql"/>
