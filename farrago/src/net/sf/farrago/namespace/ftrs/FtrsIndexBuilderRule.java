@@ -28,9 +28,9 @@ import org.eigenbase.relopt.*;
 
 
 /**
- * FtrsTableModificationRule is a rule for converting an abstract {@link
- * net.sf.farrago.query.FarragoIndexBuilderRel} into a corresponding {@link
- * FtrsIndexBuilderRel}.
+ * FtrsTableModificationRule is a rule for converting an abstract
+ * {@link net.sf.farrago.query.FarragoIndexBuilderRel} into a corresponding
+ * {@link net.sf.farrago.namespace.ftrs.FtrsIndexBuilderRel}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -45,9 +45,10 @@ public class FtrsIndexBuilderRule
      */
     public FtrsIndexBuilderRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 FarragoIndexBuilderRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

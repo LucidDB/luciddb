@@ -79,9 +79,8 @@ public:
     void addRow(RegisterRef<STDTYPE>* node)
     {
         // Add the new node to the histogram strucuture
-        TupleDatum *pDatum = node->getBinding();
 
-        if (!pDatum->isNull()) {
+        if (!node->isNull()) {
             STDTYPE val = node->value();
             (void) currentWindow.insert(val);
             currentSum += val;
@@ -93,7 +92,7 @@ public:
             ++nullRows;
         }
     }
-    
+
     //! dropRow - Removes a value from the tree and updates
     //! the running sum..
     //!
@@ -101,9 +100,8 @@ public:
     //
     void dropRow(RegisterRef<STDTYPE>* node)
     {
-        TupleDatum *pDatum = node->getBinding();
 
-        if (!pDatum->isNull()) {
+        if (!node->isNull()) {
             assert(0 != currentWindow.size());
             STDTYPE* pData = node->refer();
 
@@ -179,7 +177,7 @@ public:
             (currentSum / static_cast<STDTYPE>(currentWindow.size())) :
             0);
     }
-    
+
     //! getFirstValue - returns the first value which entered the tree
     //!
     //! Returns NULL if the window is empty.
@@ -205,7 +203,7 @@ public:
     }
 
 private:
-    
+
     WinAggData currentWindow;   // Holds the values currently in the window.
     int64_t nullRows;           // Couunt of null entries
 

@@ -23,6 +23,7 @@
 package org.eigenbase.sql.parser;
 
 import java.util.*;
+import java.io.Serializable;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
@@ -36,7 +37,7 @@ import org.eigenbase.sql.*;
  * @version $Id$
  * @since Jun 1, 2004
  */
-public class SqlParserPos
+public class SqlParserPos implements Serializable
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -46,12 +47,14 @@ public class SqlParserPos
      */
     public static final SqlParserPos ZERO = new SqlParserPos(0, 0);
 
+    private static final long serialVersionUID = 1L;
+
     //~ Instance fields --------------------------------------------------------
 
-    private int lineNumber;
-    private int columnNumber;
-    private int endLineNumber;
-    private int endColumnNumber;
+    private final int lineNumber;
+    private final int columnNumber;
+    private final int endLineNumber;
+    private final int endColumnNumber;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -203,6 +206,18 @@ public class SqlParserPos
         return sum(nodes.toArray(new SqlNode[nodes.size()]));
     }
 
+    /**
+     * Computes the parser position which is the sum of the positions of an
+     * array of parse tree nodes and of a parser position represented by
+     * (line, column, endLine, endColumn).
+     *
+     * @param nodes Array of parse tree nodes
+     * @param line Start line
+     * @param column Start column
+     * @param endLine End line
+     * @param endColumn End column
+     * @return Sum of parser positions
+     */
     private static SqlParserPos sum(
         SqlNode [] nodes,
         int line,
@@ -252,6 +267,18 @@ public class SqlParserPos
         return sum(poses, Integer.MAX_VALUE, Integer.MAX_VALUE, -1, -1);
     }
 
+    /**
+     * Computes the parser position which is the sum of an array of parser
+     * positions and of a parser position represented by 
+     * (line, column, endLine, endColumn).
+     *
+     * @param poses Array of parser positions
+     * @param line Start line
+     * @param column Start column
+     * @param endLine End line
+     * @param endColumn End column
+     * @return Sum of parser positions
+     */
     private static SqlParserPos sum(
         SqlParserPos [] poses,
         int line,

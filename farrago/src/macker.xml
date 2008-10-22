@@ -34,6 +34,7 @@
       <include class="org.eigenbase.util14.*" />
       <include class="org.eigenbase.util.property.*" />
       <include class="org.eigenbase.util.EigenbaseException" />
+      <include class="org.eigenbase.jdbc4.*" />
     </pattern>
 
     <pattern name="farrago">

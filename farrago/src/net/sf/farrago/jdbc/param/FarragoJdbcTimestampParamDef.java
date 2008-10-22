@@ -42,6 +42,12 @@ class FarragoJdbcTimestampParamDef
 {
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a FarragoJdbcEngineTimestampParamDef.
+     *
+     * @param paramName Name
+     * @param paramMetaData Meta data
+     */
     FarragoJdbcTimestampParamDef(
         String paramName,
         FarragoParamFieldMetaData paramMetaData)
@@ -91,10 +97,13 @@ class FarragoJdbcTimestampParamDef
         // it is a convenient format to serialize values over RMI.
         // We disallow ZonelessTime for the same reasons we disallow
         // java.sql.Time above.
-        if ((x instanceof ZonelessTimestamp) || (x instanceof ZonelessDate)) {
+        if (x instanceof ZonelessTimestamp) {
+            // Do not shift time - value has already been shifted.
+            return x;
+        } else if (x instanceof ZonelessDate) {
             long time = ((ZonelessDatetime) x).getTime();
             ZonelessTimestamp zt = new ZonelessTimestamp();
-            zt.setZonedTime(time, DateTimeUtil.getTimeZone(cal));
+            zt.setZonelessTime(time);
             return zt;
         }
 

@@ -53,10 +53,11 @@ public class CoerceInputsRule
      * only
      */
     public CoerceInputsRule(
-        Class consumerRelClass,
+        Class<? extends RelNode> consumerRelClass,
         boolean coerceNames)
     {
-        super(new RelOptRuleOperand(consumerRelClass, null));
+        super(
+            new RelOptRuleOperand(consumerRelClass, ANY));
         this.consumerRelClass = consumerRelClass;
         this.coerceNames = coerceNames;
         description = "CoerceInputsRule:" + consumerRelClass.getName();

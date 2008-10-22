@@ -912,11 +912,19 @@ Messages: {1}</text>
 </exception>
 
 <exception id="460230" name="MedJdbc_InvalidTableSchemaMapping">
-<text>Cannot specify both a TABLE_MAPPING and a SCHEMA_MAPPING</text>
+<text>Cannot specify more than one of SCHEMA_MAPPING, TABLE_MAPPING, or TABLE_PREFIX_MAPPING</text>
 </exception>
 
 <exception id="460240" name="MedJdbc_InvalidTableMapping">
 <text>''{0}.{1}'' and ''{2}.{3}'' cannot both map to ''{4}.{5}''.</text>
+</exception>
+
+<exception id="460245" name="MedJdbc_InvalidTablePrefixMapping">
+<text>''{0}.{1}'' and ''{2}.{3}'' cannot both map to ''{4}.{5}''.</text>
+</exception>
+
+<exception id="460250" name="MedJdbc_InvalidDataSource">
+<text>Cannot find JNDI resource ''{0}''</text>
 </exception>
 
 <!-- NOTE:  Mock resources don't really need localization; this one is
@@ -940,6 +948,10 @@ Messages: {1}</text>
 
 <message name="MedJdbc_PASSWORD_Description">
 <text>Password for authentication in source DBMS</text>
+</message>
+
+<message name="MedJdbc_JNDI_NAME_Description">
+<text>Name of the JNDI resource containing the DataSource for the source DBMS</text>
 </message>
 
 <message name="MedJdbc_EXTENDED_OPTIONS_Description">
@@ -1224,6 +1236,10 @@ Messages: {1}</text>
 <text>Invalid value ''{0}'' for byte property {1}</text>
 </exception>
 
+<exception id="490006" name="PluginInvalidStringProp">
+<text>Invalid value ''{0}'' for string property {1}</text>
+</exception>
+
 <exception id="490010" name="PluginJarLoadFailed">
 <text>Failed to load plugin jar ''{0}''</text>
 </exception>
@@ -1246,6 +1262,10 @@ Messages: {1}</text>
 
 <exception id="490060" name="PluginPropRequired">
 <text>Value required for property {0}</text>
+</exception>
+
+<exception id="490070" name="PluginPropsConflict">
+<text>Property {0} conflicts with property {1}</text>
 </exception>
 
 <!-- ====================================================================== -->

@@ -111,15 +111,17 @@
     </xsl:copy>
   </xsl:template>
 
-  <!-- Apply lazy association tag to some associations: -->
+  <!-- Apply high cardinality association tag to some associations: -->
+  <!--   ElementOwnership          -->
   <!--   ParameterType             -->
   <!--   StructuralFeatureType     -->
-  <xsl:template match="Model:Association[@name='ParameterType']
+  <xsl:template match="Model:Association[@name='ElementOwnership']
+      | Model:Association[@name='ParameterType']
       | Model:Association[@name='StructuralFeatureType']">
     <xsl:copy>
       <xsl:apply-templates select="@* | node()" />
       <Model:Namespace.contents>
-        <Model:Tag tagId='org.eigenbase.enki.lazyAssociation'>
+        <Model:Tag tagId='org.eigenbase.enki.highCardinalityAssociation'>
           <xsl:attribute name="elements">
             <xsl:value-of select="@xmi.id"/>
           </xsl:attribute>

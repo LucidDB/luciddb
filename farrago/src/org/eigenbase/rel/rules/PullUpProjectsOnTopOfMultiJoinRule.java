@@ -58,8 +58,6 @@ import org.eigenbase.relopt.*;
 public class PullUpProjectsOnTopOfMultiJoinRule
     extends PullUpProjectsAboveJoinRule
 {
-    // ~ Static fields/initializers --------------------------------------------
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final PullUpProjectsOnTopOfMultiJoinRule
@@ -67,22 +65,12 @@ public class PullUpProjectsOnTopOfMultiJoinRule
             new PullUpProjectsOnTopOfMultiJoinRule(
                 new RelOptRuleOperand(
                     JoinRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(
-                            ProjectRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    MultiJoinRel.class,
-                                    null)
-                            }),
-                        new RelOptRuleOperand(
-                            ProjectRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    MultiJoinRel.class,
-                                    null)
-                            })
-                    }),
+                    new RelOptRuleOperand(
+                        ProjectRel.class,
+                        new RelOptRuleOperand(MultiJoinRel.class, ANY)),
+                    new RelOptRuleOperand(
+                        ProjectRel.class,
+                        new RelOptRuleOperand(MultiJoinRel.class, ANY))),
                 "with two ProjectRel children");
 
     public static final PullUpProjectsOnTopOfMultiJoinRule
@@ -90,15 +78,9 @@ public class PullUpProjectsOnTopOfMultiJoinRule
             new PullUpProjectsOnTopOfMultiJoinRule(
                 new RelOptRuleOperand(
                     JoinRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(
-                            ProjectRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    MultiJoinRel.class,
-                                    null)
-                            })
-                    }),
+                    new RelOptRuleOperand(
+                        ProjectRel.class,
+                        new RelOptRuleOperand(MultiJoinRel.class, ANY))),
                 "with ProjectRel on left");
 
     public static final PullUpProjectsOnTopOfMultiJoinRule
@@ -106,16 +88,10 @@ public class PullUpProjectsOnTopOfMultiJoinRule
             new PullUpProjectsOnTopOfMultiJoinRule(
                 new RelOptRuleOperand(
                     JoinRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(RelNode.class, null),
-                        new RelOptRuleOperand(
-                            ProjectRel.class,
-                            new RelOptRuleOperand[] {
-                                new RelOptRuleOperand(
-                                    MultiJoinRel.class,
-                                    null)
-                            })
-                    }),
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(
+                        ProjectRel.class,
+                        new RelOptRuleOperand(MultiJoinRel.class, ANY))),
                 "with ProjectRel on right");
 
     //~ Constructors -----------------------------------------------------------

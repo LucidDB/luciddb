@@ -21,8 +21,9 @@
 */
 package net.sf.farrago.runtime;
 
-import net.sf.farrago.session.*;
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.util.*;
 
@@ -131,6 +132,19 @@ public abstract class FarragoUdrRuntime
         FarragoUdrInvocationFrame frame =
             FarragoRuntimeContext.getUdrInvocationFrame();
         return frame.udrContext.getSession();
+    }
+
+    /**
+     * Gets the FarragoRepos for this context.  Only system UDR's are allowed
+     * to call this.
+     *
+     * @return a FarragoRepos
+     */
+    public static FarragoRepos getRepos()
+    {
+        FarragoUdrInvocationFrame frame =
+            FarragoRuntimeContext.getUdrInvocationFrame();
+        return frame.udrContext.getRepos();
     }
 
     /**

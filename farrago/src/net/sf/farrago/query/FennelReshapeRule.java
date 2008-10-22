@@ -62,9 +62,10 @@ public class FennelReshapeRule
      */
     public FennelReshapeRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 CalcRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -57,38 +57,30 @@ public class LcsIndexAccessRule
         //
         // RelOptRuleOperand(
         //    FilterRel.class,
-        //    new RelOptRuleOperand [] {
-        //        new RelOptRuleOperand(LcsRowScanRel.class, null),
-        //    })
+        //    new RelOptRuleOperand(LcsRowScanRel.class, ANY))
         // or
         //
         // RelOptRuleOperand(
         //     FilterRel.class,
-        //     new RelOptRuleOperand [] {
-        //         new RelOptRuleOperand(LcsRowScanRel.class,
-        //         new RelOptRuleOperand [] {
-        //             new RelOptRuleOperand(LcsIndexIntersectRel.class, null)
-        //     })})
+        //     new RelOptRuleOperand(
+        //         LcsRowScanRel.class,
+        //             new RelOptRuleOperand(LcsIndexIntersectRel.class, ANY)))
         // or
         //
         // RelOptRuleOperand(
         //     FilterRel.class,
-        //     new RelOptRuleOperand [] {
-        //         new RelOptRuleOperand(LcsRowScanRel.class,
-        //         new RelOptRuleOperand [] {
-        //             new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-        //     })})
+        //     new RelOptRuleOperand(
+        //         LcsRowScanRel.class,
+        //         new RelOptRuleOperand(LcsIndexSearchRel.class, ANY)))
         // or
         //
         // RelOptRuleOperand(
         //     FilterRel.class,
-        //     new RelOptRuleOperand [] {
-        //         new RelOptRuleOperand(LcsRowScanRel.class,
-        //         new RelOptRuleOperand [] {
-        //             new RelOptRuleOperand(LcsIndexMergeRel.class,
-        //             new RelOptRuleOperand [] {
-        //                 new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-        //     })})})
+        //     new RelOptRuleOperand(
+        //         LcsRowScanRel.class,
+        //         new RelOptRuleOperand(
+        //             LcsIndexMergeRel.class,
+        //             new RelOptRuleOperand(LcsIndexSearchRel.class, ANY))))
 
         // TODO: SWZ 11-Sep-2007: This rule is not fired for 
         // LcsSamplingRowScanRel.  It could be used without modification for 

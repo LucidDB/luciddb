@@ -58,9 +58,10 @@ public class FennelNestedLoopJoinRule
 
     public FennelNestedLoopJoinRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
             JoinRel.class,
-            null));
+            ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -282,7 +283,9 @@ public class FennelNestedLoopJoinRule
                     rootPageIdParamId);
         }
 
-        Set<Integer> leftJoinKeys = joinKeyParamMap.keySet();
+        // Use a TreeSet to ensure that the order of the keys is deterministic
+        TreeSet<Integer> leftJoinKeys = new TreeSet<Integer>();
+        leftJoinKeys.addAll(joinKeyParamMap.keySet());
         FennelRelParamId [] joinKeyParamIds =
             new FennelRelParamId[leftJoinKeys.size()];
         int joinKey = 0;

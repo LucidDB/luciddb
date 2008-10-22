@@ -21,9 +21,8 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/FennelResource.h"
-#include "fennel/common/SysCallExcn.h"
+#include "fennel/common/FennelExcn.h"
 #include "fennel/device/RandomAccessFileDevice.h"
-#include "fennel/lucidera/flatfile/FlatFileBinding.h"
 #include "fennel/lucidera/flatfile/FlatFileBuffer.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -35,16 +34,19 @@ FlatFileBuffer::FlatFileBuffer(const std::string &path)
     bufferSize = 0;
     contentSize = 0;
     pCurrent = NULL;
+    pFile = NULL;
 }
 
 FlatFileBuffer::~FlatFileBuffer()
 {
-    close();
 }
 
 void FlatFileBuffer::closeImpl()
 {
-    pRandomAccessDevice.reset();
+    if (pFile) {
+        fclose(pFile);
+        pFile = NULL;
+    }
     contentSize = 0;
     pCurrent = NULL;
 }
@@ -57,21 +59,23 @@ void FlatFileBuffer::setStorage(char *pBuffer, uint size)
     pCurrent = NULL;
 }
 
-// TODO: review exception mechanism
 void FlatFileBuffer::open()
 {
-    DeviceMode openMode;
-    openMode.readOnly = openMode.sequential = 1;
-    try {
-        pRandomAccessDevice.reset(
-            new RandomAccessFileDevice(path,openMode));
-    } catch (SysCallExcn e) {
-        FENNEL_TRACE(TRACE_SEVERE, e.getMessage());
+    // in case we are reopening
+    close();
+
+    // NOTE jvs 17-Oct-2008:  we use fopen here instead of ifstream
+    // in case we want to support popen("gunzip") in the future.
+    
+    pFile = fopen(path.c_str(), "r");
+    if (!pFile) {
         throw FennelExcn(
             FennelResource::instance().readDataFailed(path));
     }
+
+    needsClose = true;
+
     filePosition = 0;
-    fileEnd = pRandomAccessDevice->getSizeInBytes();
     contentSize = 0;
     pCurrent = NULL;
 }
@@ -82,30 +86,25 @@ uint FlatFileBuffer::read()
     if (pCurrent != NULL) {
         assert(pBuffer <= pCurrent && pCurrent <= getEndPtr());
         residual = getEndPtr() - pCurrent;
-        memmove(pBuffer, pCurrent, residual * sizeof(char));
+        memmove(pBuffer, pCurrent, residual);
         contentSize = residual;
     }
     pCurrent = pBuffer;
 
     uint free = bufferSize - residual;
     char *target = pBuffer + residual;
-    uint targetSize = (uint)
-        std::min( 
-            FileSize(free * sizeof(char)), 
-            fileEnd - filePosition );
-    
-    RandomAccessRequest readRequest;
-    readRequest.pDevice = pRandomAccessDevice.get();
-    readRequest.cbOffset = filePosition;
-    readRequest.cbTransfer = targetSize;
-    readRequest.type = RandomAccessRequest::READ;
-    FlatFileBinding binding(path, target, targetSize);
-    readRequest.bindingList.push_back(binding);
-    pRandomAccessDevice->transfer(readRequest);
-    filePosition += targetSize;
+    uint targetSize = free;
 
-    contentSize = residual + targetSize/sizeof(char);
-    return targetSize/sizeof(char);
+    size_t actualSize = fread(target, 1, targetSize, pFile);
+    if (ferror(pFile)) {
+        // FIXME jvs 19-Oct-2008:  the error message here is confusingly
+        // switched with the error message for opening the file.
+        throw FennelExcn(
+            FennelResource::instance().dataTransferFailed(path, targetSize));
+    }
+    filePosition += actualSize;
+    contentSize = residual + actualSize;
+    return actualSize;
 }
 
 char *FlatFileBuffer::getReadPtr()
@@ -133,13 +132,12 @@ bool FlatFileBuffer::isFull()
 
 bool FlatFileBuffer::isComplete()
 {
-    assert(filePosition <= fileEnd);
-    return filePosition == fileEnd;
+    assert(pFile);
+    return feof(pFile);
 }
 
 bool FlatFileBuffer::isDone()
 {
-    assert(filePosition <= fileEnd);
     return isComplete() && getReadPtr() >= getEndPtr();
 }
 

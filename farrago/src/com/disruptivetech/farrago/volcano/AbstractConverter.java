@@ -117,9 +117,10 @@ public class AbstractConverter
     {
         public ExpandConversionRule()
         {
-            super(new RelOptRuleOperand(
+            super(
+                new RelOptRuleOperand(
                     AbstractConverter.class,
-                    null));
+                    ANY));
         }
 
         public void onMatch(RelOptRuleCall call)

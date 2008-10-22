@@ -95,7 +95,10 @@ public class ZonelessTimestamp
     {
         Timestamp ts =
             getTempTimestamp(getJdbcTimestamp(DateTimeUtil.defaultZone));
-        return ts.toString();
+        // Remove trailing '.0' so that format is consistent with SQL spec for
+        // CAST(TIMESTAMP(0) TO VARCHAR). E.g. "1969-12-31 16:00:00.0"
+        // becomes "1969-12-31 16:00:00"
+        return ts.toString().substring(0, 19);
     }
 
     /**

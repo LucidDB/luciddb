@@ -115,13 +115,11 @@ Error: Overflow during calculation or cast. (state=,code=0)
 '  FennelSortRel'
 '    FtrsIndexScanRel'
 > 
-> explain plan excluding attributes for
-> select * from loopback_sys_boot.jdbc_metadata.catalogs_view;
-'column0'
-'FennelToIteratorConverter'
-'  FennelReshapeRel'
-'    IteratorToFennelConverter'
-'      MedMdrClassExtentRel'
+> --  REVIEW: SWZ: 2008-10-07: Re-enable this test. Currently disabled because
+> --  query plan varies based on repository config (Hibernate vs. Netbeans).
+> --  Once Hibernate because the standard, we can re-enable.
+> -- explain plan excluding attributes for
+> -- select * from loopback_sys_boot.jdbc_metadata.catalogs_view;
 > 
 > explain plan excluding attributes for
 > select emps.name as ename, depts.name as dname from 

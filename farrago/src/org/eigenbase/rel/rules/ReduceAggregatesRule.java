@@ -47,45 +47,39 @@ public class ReduceAggregatesRule
      * The singleton.
      */
     public static final ReduceAggregatesRule instance =
-        new ReduceAggregatesRule();
+        new ReduceAggregatesRule(new RelOptRuleOperand(AggregateRel.class, ANY));
 
     //~ Constructors -----------------------------------------------------------
 
-    private ReduceAggregatesRule()
+    protected ReduceAggregatesRule(RelOptRuleOperand operand)
     {
-        super(new RelOptRuleOperand(AggregateRel.class, null));
+        super(operand);
     }
 
-    //~ Methods ----------------------------------------------------------------
+     //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall ruleCall)
     {
-        AggregateRel oldAggRel = (AggregateRel) ruleCall.rels[0];
+        AggregateRelBase oldAggRel = (AggregateRelBase) ruleCall.rels[0];
 
-        int i = -1;
         for (AggregateCall aggCall : oldAggRel.getAggCallList()) {
-            ++i;
-            if (aggCall.getAggregation().getName().equals("AVG")) {
-                // NOTE jvs 24-Apr-2006: To make life simple, we peel these off
-                // one at a time.  This may appear extravagant; the assumption
-                // is that there will be other rules to take care of combining
-                // the extra projections that result in case of multiple AVG
-                // calls, and more importantly, recognizing the COUNT common
-                // subexpressions in the replacement agg.  Both of these are
-                // better done generically (since user SQL may already include
-                // such redundancy) rather than complicating the rule here.
-                reduceAverage(ruleCall, oldAggRel, aggCall, i);
+            if (aggCall.getAggregation() instanceof SqlAvgAggFunction) {
+                reduceAverages(ruleCall, oldAggRel);
                 return;
             }
         }
     }
 
-    private void reduceAverage(
+    /*
+     * This will reduce all avg's in aggregates list to sum/count. It needs to
+     * handle newly generated common subexpressions since this was done
+     * at the sql2rel stage.
+     */
+    private void reduceAverages(
         RelOptRuleCall ruleCall,
-        AggregateRel oldAggRel,
-        AggregateCall avgCall,
-        int iOldCall)
+        AggregateRelBase oldAggRel)
     {
+
         RelDataTypeFactory typeFactory =
             oldAggRel.getCluster().getTypeFactory();
         RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
@@ -93,32 +87,29 @@ public class ReduceAggregatesRule
         List<AggregateCall> oldCalls = oldAggRel.getAggCallList();
         int nGroups = oldAggRel.getGroupCount();
 
-        // + 1 for COUNT; we'll replace AVG with SUM to make
-        // projection arithmetic easier
         List<AggregateCall> newCalls =
             new ArrayList<AggregateCall>();
-
-        assert (avgCall.getArgList().size() == 1);
-        int iAvgInput = avgCall.getArgList().get(0);
+        Map<AggregateCall, RexNode> aggCallMapping =
+            new HashMap<AggregateCall, RexNode>();
 
         List<RexNode> projList = new ArrayList<RexNode>();
-
         // pass through group key
         for (int i = 0; i < nGroups; ++i) {
             projList.add(
                 rexBuilder.makeInputRef(
-                    getFieldType(oldAggRel, i),
+                    getField(oldAggRel, i),
                     i));
         }
 
         // create new agg function calls and rest of project list together
         SqlAggFunction countAgg = SqlStdOperatorTable.countOperator;
         RelDataType countType = countAgg.getReturnType(typeFactory);
-        for (int i = 0; i < oldCalls.size() + 1; ++i) {
-            if (i == iOldCall) {
-                // replace original AVG with SUM
+        for (AggregateCall oldCall : oldCalls) {
+            if (oldCall.getAggregation()  instanceof SqlAvgAggFunction) {
+                // replace original AVG with SUM/COUNT
+                int iAvgInput = oldCall.getArgList().get(0);
                 RelDataType avgInputType =
-                    getFieldType(
+                    getField(
                         oldAggRel.getChild(),
                         iAvgInput);
                 RelDataType sumType =
@@ -126,70 +117,94 @@ public class ReduceAggregatesRule
                         avgInputType,
                         true);
                 SqlSumAggFunction sumAgg = new SqlSumAggFunction(sumType);
-                newCalls.add(
+                AggregateCall sumCall =
                     new AggregateCall(
                         sumAgg,
-                        avgCall.isDistinct(),
-                        avgCall.getArgList(),
+                        oldCall.isDistinct(),
+                        oldCall.getArgList(),
                         sumType,
-                        null));
+                        null);
+                AggregateCall countCall =
+                new AggregateCall(
+                    countAgg,
+                    oldCall.isDistinct(),
+                    oldCall.getArgList(),
+                    countType,
+                    null);
 
                 // NOTE:  these references are with respect to the output
                 // of newAggRel
                 RexNode numeratorRef =
-                    rexBuilder.makeInputRef(
-                        sumType,
-                        nGroups + i);
+                    rexBuilder.addAggCall(
+                        sumCall,
+                        nGroups,
+                        newCalls,
+                        aggCallMapping);
                 RexNode denominatorRef =
-                    rexBuilder.makeInputRef(
-                        countType,
-                        nGroups + oldCalls.size());
-                projList.add(
+                    rexBuilder.addAggCall(
+                        countCall,
+                        nGroups,
+                        newCalls,
+                        aggCallMapping);
+               projList.add(
                     rexBuilder.makeCast(
-                        avgCall.getType(),
+                        oldCall.getType(),
                         rexBuilder.makeCall(
                             SqlStdOperatorTable.divideOperator,
                             numeratorRef,
                             denominatorRef)));
-            } else if (i == oldCalls.size()) {
-                // at end:  append new COUNT
-                newCalls.add(
-                    new AggregateCall(
-                        countAgg,
-                        avgCall.isDistinct(),
-                        avgCall.getArgList(),
-                        countType,
-                        null));
             } else {
                 // anything else:  preserve original call
-                final AggregateCall oldCall = oldCalls.get(i);
-                newCalls.add(oldCall);
                 projList.add(
-                    rexBuilder.makeInputRef(
-                        oldCall.getType(),
-                        i + nGroups));
+                    rexBuilder.addAggCall(
+                        oldCall,
+                        nGroups,
+                        newCalls,
+                        aggCallMapping));
             }
+       }
+
+        AggregateRelBase newAggRel =
+            newAggregateRel(
+                oldAggRel,
+               newCalls);
+
+        List<String> fieldNames = new ArrayList<String>();
+        for (RelDataTypeField field : oldAggRel.getRowType().getFieldList()) {
+            fieldNames.add(field.getName());
         }
-
-        AggregateRel newAggRel =
-            new AggregateRel(
-                oldAggRel.getCluster(),
-                oldAggRel.getChild(),
-                nGroups,
-                newCalls);
-
         RelNode projectRel =
             CalcRel.createProject(
                 newAggRel,
                 projList,
-                null);
+                fieldNames);
 
         ruleCall.transformTo(projectRel);
     }
 
-    private RelDataType getFieldType(RelNode relNode, int i)
+    /**
+     * Do a shallow clone of oldAggRel and update aggCalls. Could be
+     * refactored into AggregateRelBase and subclasses - but it's only needed
+     * for some subclasses.
+     *
+     * @param oldAggRel AggregateRel to clone.
+     * @param newCalls New list of AggregateCalls
+     * @return shallow clone with new list of AggregateCalls.
+     */
+    protected AggregateRelBase newAggregateRel(
+      AggregateRelBase oldAggRel,
+     List<AggregateCall> newCalls)
     {
-        RelDataTypeField inputField = relNode.getRowType().getFields()[i];
+        return new AggregateRel(
+                oldAggRel.getCluster(),
+                oldAggRel.getChild(),
+                oldAggRel.getGroupCount(),
+                newCalls);
+    }
+
+    private RelDataType getField(RelNode relNode, int i)
+    {
+        final RelDataTypeField inputField =  relNode.getRowType().getFields()[i];
         return inputField.getType();
     }
 }

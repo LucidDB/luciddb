@@ -134,7 +134,7 @@ public class DdlRelationalHandler
                     repos.getLocalizedObjectName(table));
             }
         }
-        
+
         // check that columns are distinct
         List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
         boolean[] includesColumn = new boolean[table.getFeature().size()];
@@ -147,7 +147,7 @@ public class DdlRelationalHandler
                 includesColumn[ordinal] = true;
             }
         }
-        
+
         // TODO:  verify columns distinct, total width acceptable, and all
         // columns indexable types
         if (index.getNamespace() != null) {
@@ -222,7 +222,7 @@ public class DdlRelationalHandler
         // Validate unique constraints
         FemLocalIndex generatedPrimaryKeyIndex = null;
         FemPrimaryKeyConstraint primaryKey = null;
-        
+
         // Sort constraints into the order in which they were created
         // (to keep unit tests deterministic across repository
         // implementations).
@@ -581,7 +581,7 @@ public class DdlRelationalHandler
         validator.getInvokingSession().getPersonality().resetRowCounts(table);
     }
 
-    private void indexExistingRows(
+    protected void indexExistingRows(
         FemLocalTable table,
         FemLocalIndex index)
     {
@@ -617,17 +617,6 @@ public class DdlRelationalHandler
             false);
     }
     
-    // implement FarragoSessionDdlHandler
-    public void executeDrop(FemLabel label)
-        throws Exception
-    {
-        // Remove stats associated with the label being dropped.  Note that
-        // this needs to be done before the label is deleted from the
-        // catalog.
-        FarragoCatalogUtil.removeObsoleteStatistics(label, repos);
-    }
-    
-
     protected boolean isReplacingType(CwmModelElement obj)
     {
         return ((DdlValidator) medHandler.getValidator()).isReplacingType(obj);
@@ -672,8 +661,8 @@ public class DdlRelationalHandler
             getStmtContext().execute();
         }
     }
-    
-    private static class UniqueConstraintComparator 
+
+    private static class UniqueConstraintComparator
         implements Comparator<FemAbstractUniqueConstraint>
     {
         public int compare(
@@ -682,7 +671,7 @@ public class DdlRelationalHandler
         {
             return o1.refMofId().compareTo(o2.refMofId());
         }
-        
+
     }
 }
 

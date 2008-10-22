@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.7.4
+LucidDB Binary Release 0.7.5
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -45,6 +45,9 @@ http://issues.eigenbase.org
 
 ----------------------------------------------------------------------
 CHANGE HISTORY
+
+0.7.5 is a development snapshot; changes since 0.7.4 have not
+yet been finalized.
 
 Changes since 0.7.3 include
 

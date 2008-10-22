@@ -221,11 +221,25 @@ JAVACODE SqlParseException convertException(Throwable ex)
             int column = Integer.parseInt(matcher.group(2));
             pos = new SqlParserPos(line, column, line, column);
         }
+    } else if (ex instanceof org.eigenbase.util.EigenbaseContextException) {
+        // EigenbaseContextException is the standard wrapper for exceptions
+        // produced by the validator, but in the parser, the standard is
+        // SqlParseException; so, strip it away. In case you were wondering,
+        // the EigenbaseContextException appears because the parser
+        // occasionally calls into validator-style code such as
+        // SqlSpecialOperator.reduceExpr.
+        org.eigenbase.util.EigenbaseContextException ece =
+            (org.eigenbase.util.EigenbaseContextException) ex;
+        pos = new SqlParserPos(
+            ece.getPosLine(),
+            ece.getPosColumn(),
+            ece.getEndPosLine(),
+            ece.getEndPosColumn());
+        ex = ece.getCause();
     }
 
-    SqlParseException spex = new SqlParseException(
+    return new SqlParseException(
         ex.getMessage(), pos, expectedTokenSequences, tokenImage, ex);
-    return spex;
 }
 
 /**
@@ -370,7 +384,7 @@ SqlNode LeafQuery(ExprContext exprContext) :
     {
         return e;
     }
-    | e = ExplicitTable()
+    | e = ExplicitTable(getPos())
     {
         return e;
     }
@@ -1211,7 +1225,7 @@ SqlNode FromClause() :
                     e2,
                     SqlLiteral.createSymbol(
                         SqlJoinOperator.ConditionType.Using, usingPos),
-                    new SqlNodeList(list, getPos()),
+                    new SqlNodeList(list, usingPos),
                     joinTypePos);
             }
             |
@@ -1312,8 +1326,8 @@ SqlNode TableRef() :
                     pos.plus(getPos()), args.toArray());
         }
     |
-        <TABLE> <LPAREN>
-        tableRef = TableFunctionCall()
+        <TABLE> { pos = getPos(); } <LPAREN>
+        tableRef = TableFunctionCall(pos)
         <RPAREN>
         {
         }
@@ -1405,12 +1419,11 @@ SqlNode TableRef() :
     }
 }
 
-SqlNode TableFunctionCall() :
+SqlNode TableFunctionCall(SqlParserPos pos) :
 {
     SqlNode call;
     SqlFunctionCategory funcType =
         SqlFunctionCategory.UserDefinedFunction;
-    SqlParserPos pos = getPos();
 }
 {
     [
@@ -1450,15 +1463,13 @@ SqlNode TableFunctionCall() :
 /**
  * Parses an explicit TABLE t reference.
  */
-SqlNode ExplicitTable() :
+SqlNode ExplicitTable(SqlParserPos pos) :
 {
     SqlNode tableRef;
-    SqlParserPos pos;
 }
 {
     <TABLE> tableRef = CompoundIdentifier()
     {
-        pos = getPos();
         return SqlStdOperatorTable.explicitTableOperator.createCall(
             pos, tableRef);
     }
@@ -3561,6 +3572,21 @@ SqlNode StandardFloorCeilOptions(SqlParserPos pos, boolean floorFlag) :
 }
 
 /**
+ * Parses the name of a JDBC function that is a token but is not reserved.
+ */
+String NonReservedJdbcFunctionName() :
+{
+}
+{
+    (
+        <SUBSTRING>
+    )
+    {
+        return getToken(0).image.toUpperCase();
+    }
+}
+
+/**
  * Parses the name of a function (either a compound identifier or
  * a reserved word which can be used as a function name).
  */
@@ -3661,6 +3687,7 @@ SqlIdentifier ContextVariable() :
 SqlNode JdbcFunctionCall() :
 {
     String name;
+    SqlIdentifier id;
     SqlNodeList args;
     SqlParserPos pos;
     SqlParserPos starPos;
@@ -3672,8 +3699,14 @@ SqlNode JdbcFunctionCall() :
             pos = getPos();
         }
         (
-            // SPECIAL CASE WHEN WE HAVE a {fn insert} call
+            // INSERT is a reserved word, but we need to handle {fn insert}
             <INSERT> { name = getToken(0).image.toUpperCase(); }
+            |
+            // For cases like {fn power(1,2)} and {fn lower('a')}
+            id = ReservedFunctionName() { name = id.getSimple(); }
+            |
+            // For cases like {fn substring('foo', 1,2)}
+            name = NonReservedJdbcFunctionName()
             |
             name = Identifier()
         )

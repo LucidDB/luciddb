@@ -34,7 +34,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import org.eigenbase.util14.*;
 
 
 /**
@@ -64,7 +63,7 @@ public class ReduceDecimalsRule
      */
     public ReduceDecimalsRule()
     {
-        super(new RelOptRuleOperand(CalcRel.class, null));
+        super(new RelOptRuleOperand(CalcRel.class, ANY));
         description = "ReduceDecimalsRule";
     }
 
@@ -109,7 +108,7 @@ public class ReduceDecimalsRule
                 calcRel.getChild(),
                 newProgram.getOutputRowType(),
                 newProgram,
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         call.transformTo(newCalcRel);
     }
 

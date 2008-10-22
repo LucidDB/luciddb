@@ -77,7 +77,18 @@ public:
     FileDevice(std::string filename,DeviceMode mode,FileSize initialSize);
     virtual ~FileDevice();
 
-    void transfer(RandomAccessRequest const &);
+    /**
+     * Executes a synchronous transfer request for a single
+     * random access binding.  This is an all-or-nothing request,
+     * so unless the result size is equal to the requested
+     * transfer size, the request is considered a failure.
+     * However, no exception is thrown when failure occurs;
+     * instead, the binding notification method is called.
+     *
+     * @param request transfer specification; must have exactly
+     * one binding
+     */
+    void transfer(RandomAccessRequest const &request);
     
     void flush();
     

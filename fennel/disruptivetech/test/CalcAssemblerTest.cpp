@@ -552,16 +552,16 @@ public:
         case STANDARD_TYPE_BINARY:
             // Fixed length storage
             assert(buflen <= datum.cbData);
-            memset(ptr, 0, datum.cbData); // Fill with 0
-            memcpy(ptr, buf, buflen);
+            memset((void*) ptr, 0, datum.cbData); // Fill with 0
+            memcpy((void*) ptr, buf, buflen);
             break;
 
         case STANDARD_TYPE_VARCHAR:
         case STANDARD_TYPE_VARBINARY:
             // Variable length storage
             assert(buflen <= desc.cbStorage);
-            memset(ptr, 'I', desc.cbStorage); // Fill with junk
-            memcpy(ptr, buf, buflen);
+            memset((void*)ptr, 'I', desc.cbStorage); // Fill with junk
+            memcpy((void*)ptr, buf, buflen);
             datum.cbData = buflen;
             break;
 
@@ -2042,7 +2042,7 @@ void CalcAssemblerTest::testLiteralBinding()
     teststr9 += ", 60000000; T; MOVE O0, C0; MOVE O1, C1;";
     CalcAssemblerTestCase testCase9(__LINE__, "STRING (CHAR) = \"test\"", teststr9.c_str());
     if (testCase9.assemble()) {
-        testCase9.setExpectedOutput<char>(0, "test", 4);
+        testCase9.setExpectedOutput<const char>(0, "test", 4);
         testCase9.setExpectedOutput<uint64_t>(1, 60000000);
         testCase9.test();
     }
@@ -2054,7 +2054,7 @@ void CalcAssemblerTest::testLiteralBinding()
     teststr10 += "; T; MOVE O0, C0;";
     CalcAssemblerTestCase testCase10(__LINE__, "STRING (VARCHAR) = \"short\"", teststr10.c_str());
     if (testCase10.assemble()) {
-        testCase10.setExpectedOutput<char>(0, "short", 5);
+        testCase10.setExpectedOutput<const char>(0, "short", 5);
         testCase10.test();
     }
 
@@ -2144,8 +2144,8 @@ void CalcAssemblerTest::testPointer()
     CalcAssemblerTestCase testCase1(__LINE__, "CHAR EQ", "I c,10, c,10;\nO bo, bo;\nT;\n"
                                     "EQ O0, I0, I1; EQ O1, I0, I0;");
     if (testCase1.assemble()) {
-        testCase1.setInput<char>(0, "test", 4);
-        testCase1.setInput<char>(1, "junk", 4);
+        testCase1.setInput<const char>(0, "test", 4);
+        testCase1.setInput<const char>(1, "junk", 4);
         testCase1.setExpectedOutput<bool>(0, false);
         testCase1.setExpectedOutput<bool>(1, true);
         testCase1.test();
@@ -2155,11 +2155,11 @@ void CalcAssemblerTest::testPointer()
                                     "O bo, bo, vc,255, u4;\nC u4; V 10;T;\n"
                                     "EQ O0, I0, I1; EQ O1, I0, I0; ADD O2, I0, C0; GETS O3, I0;");
     if (testCase2.assemble()) {
-        testCase2.setInput<char>(0, "test varchar equal and add ....", 31);
-        testCase2.setInput<char>(1, "junk", 4);
+        testCase2.setInput<const char>(0, "test varchar equal and add ....", 31);
+        testCase2.setInput<const char>(1, "junk", 4);
         testCase2.setExpectedOutput<bool>(0, false);
         testCase2.setExpectedOutput<bool>(1, true);
-        testCase2.setExpectedOutput<char>(2, "ar equal and add ....", 21);
+        testCase2.setExpectedOutput<const char>(2, "ar equal and add ....", 21);
         testCase2.setExpectedOutput<uint32_t>(3, 31);
         testCase2.test();
     }

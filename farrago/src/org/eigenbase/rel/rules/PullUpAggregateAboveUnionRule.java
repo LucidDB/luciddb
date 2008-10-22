@@ -48,13 +48,10 @@ public class PullUpAggregateAboveUnionRule
         super(
             new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(
-                        UnionRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(RelNode.class, null),
-                            new RelOptRuleOperand(RelNode.class, null)
-                        })}));
+                new RelOptRuleOperand(
+                    UnionRel.class,
+                    new RelOptRuleOperand(RelNode.class, ANY),
+                    new RelOptRuleOperand(RelNode.class, ANY))));
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -50,9 +50,7 @@ class AddProjectToQueryRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JdbcQuery.class, null)
-                }));
+                new RelOptRuleOperand(JdbcQuery.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

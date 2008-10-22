@@ -69,7 +69,7 @@ public final class ProjectRel
                 exps,
                 fieldNames),
             flags,
-            RelCollation.emptyList);
+            Collections.<RelCollation>emptyList());
     }
 
     /**
@@ -112,7 +112,7 @@ public final class ProjectRel
                 RexUtil.clone(exps),
                 rowType,
                 getFlags(),
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         clone.inheritTraitsFrom(this);
         return clone;
     }

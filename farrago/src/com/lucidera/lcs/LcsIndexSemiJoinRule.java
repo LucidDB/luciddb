@@ -67,38 +67,30 @@ public class LcsIndexSemiJoinRule
         //
         // RelOptRuleOperand(
         //    SemiJoinRel.class,
-        //    new RelOptRuleOperand [] {
-        //        new RelOptRuleOperand(LcsRowScanRel.class, null),
-        //    })
+        //    new RelOptRuleOperand(LcsRowScanRel.class, ANY))
         // or
         //
         // RelOptRuleOperand(
         //     SemiJoinRel.class,
-        //     new RelOptRuleOperand [] {
-        //         new RelOptRuleOperand(LcsRowScanRel.class,
-        //         new RelOptRuleOperand [] {
-        //             new RelOptRuleOperand(LcsIndexIntersectRel.class, null)
-        //     })})
+        //     new RelOptRuleOperand(
+        //         LcsRowScanRel.class,
+        //         new RelOptRuleOperand(LcsIndexIntersectRel.class, ANY)))
         // or
         //
         // RelOptRuleOperand(
         //     SemiJoinRel.class,
-        //     new RelOptRuleOperand [] {
-        //         new RelOptRuleOperand(LcsRowScanRel.class,
-        //         new RelOptRuleOperand [] {
-        //             new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-        //     })})
+        //     new RelOptRuleOperand(
+        //         LcsRowScanRel.class,
+        //         new RelOptRuleOperand(LcsIndexSearchRel.class, ANY)))
         // or
         //
         // RelOptRuleOperand(
         //     SemiJoinRel.class,
-        //     new RelOptRuleOperand [] {
-        //         new RelOptRuleOperand(LcsRowScanRel.class,
-        //         new RelOptRuleOperand [] {
-        //             new RelOptRuleOperand(LcsIndexMergeRel.class,
-        //             new RelOptRuleOperand [] {
-        //                 new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-        //     })})})
+        //     new RelOptRuleOperand(
+        //         LcsRowScanRel.class,
+        //         new RelOptRuleOperand(
+        //             LcsIndexMergeRel.class,
+        //                 new RelOptRuleOperand(LcsIndexSearchRel.class, ANY))))
 
         super(rule);
         description = "LcsIndexSemiJoinRule: " + id;

@@ -1,0 +1,17 @@
+These tests are currently written to execute against a local MySQL
+instance.  It must be pre-configured with a database named
+MEDJDBC_TEST (which can be created via mysql.init.sql).
+
+It would be desirable to run these tests as part of nightly builds.
+That would require:
+
+1. a server dedicated to hosting the test database
+2. modification of prop.mysql to default to that server
+3. introduction of luciddb/test-nightly-mysql.xml that points to this
+   directory's test.xml
+4. addition of test-nightly-mysql.xml to test-all.xml
+5. add a target for test-mysql and call it from initBuild.sh
+6. whatever work needs to be done to incorporate results into nightly build
+   web pages (if any)
+
+SWZ 2008-09-17

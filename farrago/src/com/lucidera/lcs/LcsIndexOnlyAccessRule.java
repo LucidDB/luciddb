@@ -50,23 +50,16 @@ public class LcsIndexOnlyAccessRule
         new LcsIndexOnlyAccessRule(
             new RelOptRuleOperand(
                 LcsRowScanRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-                }),
+                new RelOptRuleOperand(LcsIndexSearchRel.class, ANY)),
             "with index search child");
 
     public static final LcsIndexOnlyAccessRule instanceMerge =
         new LcsIndexOnlyAccessRule(
             new RelOptRuleOperand(
                 LcsRowScanRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(
-                        LcsIndexMergeRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(LcsIndexSearchRel.class,
-                                null)
-                        })
-                }),
+                new RelOptRuleOperand(
+                    LcsIndexMergeRel.class,
+                    new RelOptRuleOperand(LcsIndexSearchRel.class, ANY))),
             "with merge child");
 
     //~ Constructors -----------------------------------------------------------

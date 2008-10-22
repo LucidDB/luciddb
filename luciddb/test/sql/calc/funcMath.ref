@@ -123,37 +123,37 @@ Error: Argument to function 'MOD' must have a scale of 0 (state=,code=0)
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select pow(10,2), pow(0,0), pow(nnull, 0), pow(0, nnull),
-. . . . . . . . >        pow(1000,5) from boris1
+0: jdbc:luciddb:> select power(10,2), power(0,0), power(nnull, 0), power(0, nnull),
+. . . . . . . . >        power(1000,5) from boris1
 . . . . . . . . > ;
 +---------+---------+---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  | EXPR$4  |
 +---------+---------+---------+---------+---------+
 | 100.0   | 1.0     |         |         | 1.0E15  |
 +---------+---------+---------+---------+---------+
-0: jdbc:luciddb:> select pow(2,0.5), pow(3,0.5), pow(-2,1), pow(-2,2) from boris1
+0: jdbc:luciddb:> select power(2,0.5), power(3,0.5), power(-2,1), power(-2,2) from boris1
 . . . . . . . . > ;
 +---------------------+---------------------+---------+---------+
 |       EXPR$0        |       EXPR$1        | EXPR$2  | EXPR$3  |
 +---------------------+---------------------+---------+---------+
 | 1.4142135623730951  | 1.7320508075688772  | -2.0    | 4.0     |
 +---------------------+---------------------+---------+---------+
-0: jdbc:luciddb:> select pow(-2.0,-1.0), pow(-2,-2) from boris1
+0: jdbc:luciddb:> select power(-2.0,-1.0), power(-2,-2) from boris1
 . . . . . . . . > ;
 +---------+---------+
 | EXPR$0  | EXPR$1  |
 +---------+---------+
 | -0.5    | 0.25    |
 +---------+---------+
-0: jdbc:luciddb:> select pow(-1,-1/3), pow(-1,-1/5) from boris1
+0: jdbc:luciddb:> select power(-1,-1/3), power(-1,-1/5) from boris1
 . . . . . . . . > ;
-Error: Invalid argument(s) for 'POW' function (state=,code=0)
-0: jdbc:luciddb:> select pow(-1,-0.5) from boris1
+Error: Invalid argument(s) for 'POWER' function (state=,code=0)
+0: jdbc:luciddb:> select power(-1,-0.5) from boris1
 . . . . . . . . > ;
-Error: Invalid argument(s) for 'POW' function (state=,code=0)
-0: jdbc:luciddb:> select pow(-1,-0.25) from boris1
+Error: Invalid argument(s) for 'POWER' function (state=,code=0)
+0: jdbc:luciddb:> select power(-1,-0.25) from boris1
 . . . . . . . . > ;
-Error: Invalid argument(s) for 'POW' function (state=,code=0)
+Error: Invalid argument(s) for 'POWER' function (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- select round(cos(.2), 1), round(.2383, 2), round(.2313,0), round(nnull, 3) from boris1

@@ -543,31 +543,33 @@
 > 
 > -- LER-8000 -- Make sure ReshapeRel handles comparing null values against
 > -- non-nullable columns
+> -- SWZ: 2008-10-07: Modified test to use FTRS table -- repository query plans 
+> -- vary with build configuration.
+> alter session implementation set default;
+> create table n1 (i int primary key, "name" varchar(32) not null, "ordinal" int);
+> insert into n1 values (1, 'X', 0), (2, 'Y', 1), (3, 'Z', 0), (4, 'X', 0);
+> 
 > !set outputformat csv
 > explain plan for
-> select "name" from sys_fem."SQL2003"."KeyComponent" where "name" is null;
+> select "name" from n1 where "name" is null;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[null]], outputRowType=[RecordType(VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL name) NOT NULL])'
-'    IteratorToFennelConverter'
-'      MedMdrClassExtentRel(table=[[SYS_FEM, SQL2003, KeyComponent]])'
+'  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[null]], outputRowType=[RecordType(VARCHAR(32) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL name) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, N1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$N1], preserveOrder=[false])'
 > !set outputformat table
-> select "name" from sys_fem."SQL2003"."KeyComponent" where "name" is null;
+> select "name" from n1 where "name" is null;
 +-------+
 | name  |
 +-------+
 +-------+
 > -- make sure data is returned when the query is supposed to return data
-> select distinct "name" from sys_fem."SQL2003"."KeyComponent" where "ordinal" = 0
+> select distinct "name" from n1 where "ordinal" = 0
 >     order by "name";
-+---------+
-|  name   |
-+---------+
-| A       |
-| DEPTNO  |
-| EMPID   |
-| NAME    |
-| PK      |
-+---------+
++-------+
+| name  |
++-------+
+| X     |
+| Z     |
++-------+
 > 
 > !quit

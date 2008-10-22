@@ -250,7 +250,7 @@ public class OJPlannerFactory
     {
         public DistinctToExistsRule()
         {
-            super(new RelOptRuleOperand(JavaDistinctRel.class, null));
+            super(new RelOptRuleOperand(JavaDistinctRel.class, ANY));
         }
 
         public void onMatch(RelOptRuleCall call)
@@ -270,8 +270,11 @@ public class OJPlannerFactory
     {
         public DistinctToJavaRule()
         {
-            super(AggregateRel.class, CallingConvention.NONE,
-                CallingConvention.JAVA, "DistinctToJavaRule");
+            super(
+                AggregateRel.class,
+                CallingConvention.NONE,
+                CallingConvention.JAVA,
+                "DistinctToJavaRule");
         }
 
         public RelNode convert(RelNode rel)

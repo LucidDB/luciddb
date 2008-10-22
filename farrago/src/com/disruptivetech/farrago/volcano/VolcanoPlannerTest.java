@@ -635,7 +635,7 @@ public class VolcanoPlannerTest
     {
         PhysLeafRule()
         {
-            super(new RelOptRuleOperand(NoneLeafRel.class, null));
+            super(new RelOptRuleOperand(NoneLeafRel.class, ANY));
         }
 
         // implement RelOptRule
@@ -660,9 +660,10 @@ public class VolcanoPlannerTest
     {
         GoodSingleRule()
         {
-            super(new RelOptRuleOperand(
+            super(
+                new RelOptRuleOperand(
                     NoneSingleRel.class,
-                    null));
+                    ANY));
         }
 
         // implement RelOptRule
@@ -702,9 +703,7 @@ public class VolcanoPlannerTest
             super(
                 new RelOptRuleOperand(
                     NoneSingleRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(PhysLeafRel.class, null)
-                    }));
+                    new RelOptRuleOperand(PhysLeafRel.class, ANY)));
         }
 
         // implement RelOptRule
@@ -735,9 +734,10 @@ public class VolcanoPlannerTest
     {
         PhysProjectRule()
         {
-            super(new RelOptRuleOperand(
+            super(
+                new RelOptRuleOperand(
                     ProjectRel.class,
-                    null));
+                    ANY));
         }
 
         // implement RelOptRule
@@ -764,9 +764,7 @@ public class VolcanoPlannerTest
             super(
                 new RelOptRuleOperand(
                     PhysSingleRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(PhysLeafRel.class, null)
-                    }));
+                    new RelOptRuleOperand(PhysLeafRel.class, ANY)));
         }
 
         // implement RelOptRule
@@ -794,9 +792,7 @@ public class VolcanoPlannerTest
             super(
                 new RelOptRuleOperand(
                     NoneSingleRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(PhysLeafRel.class, null)
-                    }));
+                    new RelOptRuleOperand(PhysLeafRel.class, ANY)));
         }
 
         // implement RelOptRule

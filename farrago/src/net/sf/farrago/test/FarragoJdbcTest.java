@@ -350,13 +350,13 @@ public class FarragoJdbcTest
     public void testJavaQuerySynchronousCancel()
         throws Exception
     {
-        testQueryCancel(true, "JAVA");
+        queryCancel(true, "JAVA");
     }
 
     public void testJavaQueryAsynchronousCancel()
         throws Exception
     {
-        testQueryCancel(false, "JAVA");
+        queryCancel(false, "JAVA");
     }
 
     public void testJavaQueryAsynchronousCancelRepeated()
@@ -369,42 +369,42 @@ public class FarragoJdbcTest
         // test nearly immediate cancellation
         for (int i = 0; i < 10; i++) {
             int millis = (int) (rand.nextDouble() * 5);
-            testQueryCancel(millis, "JAVA", false);
+            queryCancel(millis, "JAVA", false);
         }
 
         // test more "reasonable" cancellation intervals
         rand.setSeed(seed);
         for (int i = 0; i < 10; i++) {
             int millis = (int) (rand.nextDouble() * 5000);
-            testQueryCancel(millis, "JAVA", false);
+            queryCancel(millis, "JAVA", false);
         }
     }
 
     public void testFennelQuerySynchronousCancel()
         throws Exception
     {
-        testQueryCancel(true, "FENNEL");
+        queryCancel(true, "FENNEL");
     }
 
     // FIXME jvs 11-Apr-2006:  re-enable once FNL-30 is fixed
     public void _testFennelQueryAsynchronousCancel()
         throws Exception
     {
-        testQueryCancel(false, "FENNEL");
+        queryCancel(false, "FENNEL");
     }
 
     public void testUdxSynchronousCancel()
         throws Exception
     {
-        testUdxCancel(true);
+        udxCancel(true);
     }
 
     public void testUdxAsynchronousCancel()
         throws Exception
     {
-        testUdxCancel(false);
+        udxCancel(false);
     }
-    
+
     public void testSubqueryCancel()
         throws Exception
     {
@@ -412,17 +412,17 @@ public class FarragoJdbcTest
         // It exercises a similar query pattern as
         // _testFennelQueryAsynchronousCancel, except within a subquery
         // and using a Java executor for the foreign table.
-        testQueryCancel(5000, "JAVA", true);
+        queryCancel(5000, "JAVA", true);
     }
 
-    private void testQueryCancel(boolean synchronous, String executorType)
+    protected void queryCancel(boolean synchronous, String executorType)
         throws Exception
     {
         // Wait 2 seconds before cancel for asynchronous case
-        testQueryCancel(synchronous ? 0 : 2000, executorType, false);
+        queryCancel(synchronous ? 0 : 2000, executorType, false);
     }
 
-    private void testQueryCancel(
+    protected void queryCancel(
         int waitMillis,
         String executorType,
         boolean subquery)
@@ -471,8 +471,8 @@ public class FarragoJdbcTest
                 sql = "select * from cancel_test.m";
             }
             executeAndCancel(sql, waitMillis);
-        }       
-        
+        }
+
         // reset back to the default
         if (subquery) {
             sql =
@@ -482,14 +482,14 @@ public class FarragoJdbcTest
         }
     }
 
-    private void testUdxCancel(boolean synchronous)
+    protected void udxCancel(boolean synchronous)
         throws Exception
     {
         // Wait 2 seconds before cancel for asynchronous case
-        testUdxCancel(synchronous ? 0 : 2000);
+        udxCancel(synchronous ? 0 : 2000);
     }
 
-    private void testUdxCancel(int waitMillis)
+    protected void udxCancel(int waitMillis)
         throws Exception
     {
         // cleanup
@@ -562,7 +562,7 @@ public class FarragoJdbcTest
         }
         Assert.fail("Expected failure due to cancel request");
     }
-    
+
     private void prepareAndCancel(String sql, int waitMillis)
         throws SQLException
     {
@@ -591,7 +591,7 @@ public class FarragoJdbcTest
             };
         tracer.fine("scheduling cancel task with delay=" + waitMillis);
         timer.schedule(task, waitMillis);
-    
+
         try {
             resultSet = stmt.executeQuery(sql);
         } catch (SQLException ex) {
@@ -604,7 +604,7 @@ public class FarragoJdbcTest
         }
         Assert.fail("Expected failure due to cancel request");
     }
-    
+
     public void testCheckParametersSet()
         throws Exception
     {
@@ -2559,6 +2559,72 @@ public class FarragoJdbcTest
     }
 
     /**
+     * Tests orphan statement and resultset cleanup.
+     * REVIEW: test ALL Statement methods?
+     */
+    public void testOrphans() throws Exception
+    {
+        final String sql1 = "SELECT * FROM sales.emps";
+        final String sql2 = "SELECT * FROM sales.depts";
+
+        // create a new connection and statements, don't use the globals
+        Connection conn = tester.newConnection();
+
+        // abandon prepared statements before executing the query
+        PreparedStatement pstmt1 = conn.prepareStatement(sql1);
+        PreparedStatement pstmt2 = conn.prepareStatement(sql2);
+        tracer.fine("orphaning two new prepared statements");
+        conn.close();
+        // orphaned statements should have been closed
+        // and should now throw exceptions if used.
+        assertFalse("executeQuery pstmt1", tryExecuteQuery(pstmt1));
+        assertFalse("executeQuery pstmt2", tryExecuteQuery(pstmt2));
+
+        // abandon prepared statements after executing the query
+        conn = tester.newConnection();
+        conn.setAutoCommit(false);  // allow two open cursors at once
+        pstmt1 = conn.prepareStatement(sql1);
+        ResultSet rs1 = pstmt1.executeQuery();
+        assertNotNull("rs1 null", rs1);
+        pstmt2 = conn.prepareStatement(sql2);
+        ResultSet rs2 = pstmt2.executeQuery();
+        assertNotNull("rs2 null", rs2);
+        tracer.fine("orphaning two used prepared statements");
+        conn.close();
+        // orphaned statements should have been closed along with resultsets
+        // and should now throw exceptions if used.
+        // REVIEW (hersker): FarragoTupleIterResultSet has "detached sessions"
+        // and I'm not sure if throwing an exception would be correct.
+        // assertFalse("rs1.next", tryResultSet(rs1));
+        // assertFalse("rs2.next", tryResultSet(rs2));
+        assertFalse("executeQuery pstmt1", tryExecuteQuery(pstmt1));
+        assertFalse("executeQuery pstmt2", tryExecuteQuery(pstmt2));
+
+        // abandon plain statements before executing the query
+        conn = tester.newConnection();
+        Statement stmt1 = conn.createStatement();
+        Statement stmt2 = conn.createStatement();
+        tracer.fine("orphaning two new plain statements");
+        conn.close();
+        assertFalse("executeQuery stmt1", tryExecuteQuery(stmt1, sql1));
+        assertFalse("executeQuery stmt2", tryExecuteQuery(stmt2, sql2));
+
+        // abandon plain statements after executing the query
+        conn = tester.newConnection();
+        conn.setAutoCommit(false);  // allow two open cursors at once
+        stmt1 = conn.createStatement();
+        rs1 = stmt1.executeQuery(sql1);
+        assertNotNull("rs1 null", rs1);
+        stmt2 = conn.createStatement();
+        rs2 = stmt2.executeQuery(sql2);
+        assertNotNull("rs2 null", rs2);
+        tracer.fine("orphaning two used plain statements");
+        conn.close();
+        assertFalse("executeQuery stmt1", tryExecuteQuery(stmt1, sql1));
+        assertFalse("executeQuery stmt2", tryExecuteQuery(stmt2, sql2));
+    }
+
+    /**
      * Tests char and varchar Data Type in JDBC.
      *
      * @throws Exception .
@@ -3451,6 +3517,121 @@ public class FarragoJdbcTest
         }
     }
 
+    /** attempts executeQuery on a plain Statement. */
+    private boolean tryExecuteQuery(Statement stmt, String sql)
+    {
+        try {
+            ResultSet rset = stmt.executeQuery(sql);
+            return rset != null;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+    /** attempts executeQuery on a PreparedStatement. */
+    private boolean tryExecuteQuery(PreparedStatement stmt)
+    {
+        try {
+            ResultSet rset = stmt.executeQuery();
+            return rset != null;
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    /** attempts to use a ResultSet. */
+    private boolean tryResultSet(ResultSet rset)
+    {
+        try {
+            boolean bool = rset.next();     // should not return
+            fail("ResultSet did not throw, bool=" + bool);
+            return bool;                    // keep compiler happy
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Tests inserting timestamp values via a dynamic parameter with and
+     * without a calendar object.
+     *
+     * @see PreparedStatement#setTimestamp(int, java.sql.Timestamp)
+     * @see PreparedStatement#setTimestamp(int, java.sql.Timestamp, java.util.Calendar)
+     */
+    public void testSetTimestamp() throws SQLException
+    {
+        Calendar calendar;
+        Timestamp ts;
+        final String insert =
+            "insert into datatypes_schema.dataTypes_table" +
+                " (id, \"Column 15: timestamp(0)\") values (1, ?)";
+        preparedStmt = connection.prepareStatement(insert);
+        stmt = connection.createStatement();
+
+        // Case 1. No calendar.
+        // With no calendar, timestamp is interpreted in local time.
+        // Timestamp(0) is the 1970-01-01 00:00:00 UTC,
+        // which is 1969-12-31 16:00:00 PDT.
+        // In the server it is a zoneless timestamp: timestamp is converted
+        // to a string without timezone conversion, regardless of the server's
+        // time zone. Value remains "1969-12-31 16:00:00.0".
+        ts = new Timestamp(0);
+        assertTrue(ts.getTime() == 0);
+        final String defaultTzName = TimeZone.getDefault().getDisplayName();
+        if (defaultTzName.equals("GMT-08:00")) {
+            preparedStmt.setTimestamp(1, ts);
+            assertTimestampBecomes("1969-12-31 16:00:00");
+        }
+
+        // Case 2. Calendar in Tokyo time.
+        // Timestamp is interpreted in Tokyo time.
+        // Timestamp(0) is 1970-01-01 00:00:00 UTC,
+        // which is 1970-01-01 09:00:00 Tokyo time.
+        final TimeZone tzTokyo = TimeZone.getTimeZone("Asia/Tokyo");
+        assertNotNull(tzTokyo);
+        calendar = Calendar.getInstance(tzTokyo);
+        calendar.setTimeInMillis(0);
+        ts = new Timestamp(calendar.getTimeInMillis());
+        assertTrue(ts.getTime() == 0);
+        preparedStmt.setTimestamp(1, ts, calendar);
+        assertTimestampBecomes("1970-01-01 09:00:00");
+
+        // Case 3. Calendar in Pacific time.
+        // Timestamp is interpreted in Pacific time.
+        // Timestamp(0) is 1970-01-01 00:00:00 UTC,
+        // which is 1969-12-31 16:00:00 Pacific time.
+        final TimeZone tzPacific = TimeZone.getTimeZone("America/Los_Angeles");
+        assertNotNull(tzPacific);
+        calendar = Calendar.getInstance(tzPacific);
+        calendar.setTimeInMillis(0);
+        ts = new Timestamp(calendar.getTimeInMillis());
+        assertTrue(ts.getTime() == 0);
+        preparedStmt.setTimestamp(1, ts, calendar);
+        assertTimestampBecomes("1969-12-31 16:00:00");
+
+        // Case 4. null calendar means local time, which is the same as case 1.
+        ts = new Timestamp(0);
+        if (defaultTzName.equals("GMT-08:00")) {
+            preparedStmt.setTimestamp(1, ts, null);
+            assertTimestampBecomes("1969-12-31 16:00:00");
+        }
+    }
+
+    private void assertTimestampBecomes(String expected) throws SQLException
+    {
+        final String delete =
+            "delete from datatypes_schema.dataTypes_table";
+        final String select =
+            "select cast(\"Column 15: timestamp(0)\" as varchar(30)) " +
+                "from datatypes_schema.dataTypes_table";
+
+        stmt.executeUpdate(delete);
+        final int rowCount = preparedStmt.executeUpdate();
+        assertEquals(1, rowCount);
+        resultSet = stmt.executeQuery(select);
+        assertTrue(resultSet.next());
+        assertEquals(expected, resultSet.getString(1));
+    }
+
     //~ Inner Interfaces -------------------------------------------------------
 
     public static interface JdbcTester
@@ -3462,6 +3643,8 @@ public class FarragoJdbcTest
             throws Exception;
 
         public Connection getConnection();
+
+        public Connection newConnection() throws Exception;
 
         public Statement getStatement();
     }
@@ -3497,10 +3680,16 @@ public class FarragoJdbcTest
         {
             return FarragoJdbcTest.this.getName();
         }
-        
+
         public Connection getConnection()
         {
-            return testCase.connection;
+            return FarragoTestCase.connection;
+        }
+
+        public Connection newConnection() throws Exception
+        {
+            // return new connection for which caller is responsible
+            return FarragoTestCase.newConnection();
         }
 
         public Statement getStatement()
@@ -4055,10 +4244,12 @@ public class FarragoJdbcTest
         private static final TestSqlType [] typesChar = {
             Char, Varchar
         };
-        private static final TestSqlType [] typesBinary =
-        { Binary, Varbinary, };
-        private static final TestSqlType [] typesDateTime =
-        { Time, Date, Timestamp };
+        private static final TestSqlType [] typesBinary = {
+            Binary, Varbinary
+        };
+        private static final TestSqlType [] typesDateTime = {
+            Time, Date, Timestamp
+        };
         public static final int VALID = 0;
         public static final int INVALID = 1;
         public static final int OUTOFRANGE = 2;

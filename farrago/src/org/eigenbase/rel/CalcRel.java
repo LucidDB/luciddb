@@ -265,7 +265,7 @@ public final class CalcRel
                 child,
                 program.getOutputRowType(),
                 program,
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         } else {
             return new FilterRel(
                 child.getCluster(),
@@ -396,7 +396,7 @@ public final class CalcRel
             rel,
             program.getOutputRowType(),
             program,
-            RelCollation.emptyList);
+            Collections.<RelCollation>emptyList());
     }
 
     /**
@@ -471,7 +471,7 @@ public final class CalcRel
             rel,
             program.getOutputRowType(),
             program,
-            RelCollation.emptyList);
+            Collections.<RelCollation>emptyList());
     }
 }
 

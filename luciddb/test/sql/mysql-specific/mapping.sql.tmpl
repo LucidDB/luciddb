@@ -1,0 +1,74 @@
+create foreign data wrapper MYSQL_WRAPPER
+library '@DATA_LIBRARY@'
+language java;
+
+create server MYSQL_MAPPING_1
+foreign data wrapper MYSQL_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    schema_name '@SCHEMA@',
+    table_types '@TABLE_TYPES@',
+    lenient 'true',
+    table_prefix_mapping '%.MAPPING_%:TEST.%'
+);
+
+create server MYSQL_MAPPING_2
+foreign data wrapper MYSQL_WRAPPER
+options(
+    url '@URL@',
+    user_name '@USERNAME@',
+    password '@PASSWORD@',
+    driver_class '@DRIVER_CLASS@',
+    schema_name '@SCHEMA@',
+    table_types '@TABLE_TYPES@',
+    lenient 'true',
+    table_prefix_mapping '%.MAPPING_T%:TEST.TABLE%'
+);
+
+-- mapped to MAPPING_T1/T2
+select * from MYSQL_MAPPING_1.TEST.T1;
+select * from MYSQL_MAPPING_1.TEST.T2;
+
+-- fails because name matches target prefix 
+select * from MYSQL_MAPPING_1.TEST.MAPPING_T1;
+select * from MYSQL_MAPPING_1.TEST.MAPPING_T2;
+select * from MYSQL_MAPPING_1.TEST.@DATATYPE_TABLE@;
+
+-- mapped to MAPPING_T1/T2
+select * from MYSQL_MAPPING_2.TEST.TABLE1;
+select * from MYSQL_MAPPING_2.TEST.TABLE2;
+
+-- ok because name does not match target prefix
+select * from MYSQL_MAPPING_2.TEST.MAPPING_T1;
+select * from MYSQL_MAPPING_2.TEST.MAPPING_T2;
+select * from MYSQL_MAPPING_2.TEST.@DATATYPE_TABLE@ order by 5;
+
+
+create schema test;
+import foreign schema TEST from server MYSQL_MAPPING_1 into test;
+
+select table_name, table_type from sys_boot.jdbc_metadata.tables_view
+where table_schem = 'TEST'
+order by table_name;
+
+select count(*) from test.@DATATYPE_TABLE@;
+select count(*) from test.t1;
+select count(*) from test.t2;
+
+create schema test2;
+import foreign schema TEST from server MYSQL_MAPPING_2 into test2;
+
+select table_name, table_type from sys_boot.jdbc_metadata.tables_view
+where table_schem = 'TEST2'
+order by table_name;
+
+select count(*) from test2.@DATATYPE_TABLE@;
+select count(*) from test2.table1;
+select count(*) from test2.table2;
+
+drop schema test cascade;
+drop schema test2 cascade;
+drop foreign data wrapper MYSQL_WRAPPER cascade;

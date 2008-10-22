@@ -811,6 +811,27 @@ loop:
         return permutation;
     }
 
+    /**
+     * Returns the set of correlation variables used (read) by this program.
+     *
+     * @return set of correlation variable names
+     */
+    public HashSet<String> getCorrelVariableNames()
+    {
+        final HashSet<String> paramIdSet = new HashSet<String>();
+        apply(
+            new RexVisitorImpl<Void>(true) {
+                public Void visitCorrelVariable(RexCorrelVariable correlVariable)
+                {
+                    paramIdSet.add(correlVariable.getName());
+                    return null;
+                }
+            },
+            exprs,
+            null);
+        return paramIdSet;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

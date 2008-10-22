@@ -46,9 +46,10 @@ public class LhxMinusRule
      */
     public LhxMinusRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 MinusRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

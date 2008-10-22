@@ -52,7 +52,7 @@ public class PushAggThroughUnionAllRule extends RelOptRule
             new RelOptRuleOperand(
                 AggregateRel.class,
                 new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(UnionRel.class, null)
+                    new RelOptRuleOperand(UnionRel.class, RelOptRule.ANY)
                 }));
     }
     

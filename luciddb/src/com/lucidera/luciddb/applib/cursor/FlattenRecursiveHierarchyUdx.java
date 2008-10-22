@@ -141,7 +141,9 @@ public abstract class FlattenRecursiveHierarchyUdx
             Set<String> verticesInLoop = cyc.findCycles();
             StringBuilder sb = new StringBuilder();
             int i = 0;
-            Iterator iter = verticesInLoop.iterator();
+            TreeSet<String> orderedVerticesInLoop = new TreeSet<String>();
+            orderedVerticesInLoop.addAll(verticesInLoop);
+            Iterator iter = orderedVerticesInLoop.iterator();
 
             while (iter.hasNext() && i<20) {
                 sb.append((String) iter.next() + " ");
@@ -149,8 +151,7 @@ public abstract class FlattenRecursiveHierarchyUdx
             }
 
             throw ApplibResourceObject.get().GraphHasCycle.ex(
-                String.valueOf(verticesInLoop.size()), sb.toString());
-
+                String.valueOf(orderedVerticesInLoop.size()), sb.toString());
         }
 
       

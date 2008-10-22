@@ -58,10 +58,8 @@ public class PushProjectPastJoinRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JoinRel.class, null)
-                }));
-        this.preserveExprs = Collections.EMPTY_SET;
+                new RelOptRuleOperand(JoinRel.class, ANY)));
+        this.preserveExprs = Collections.emptySet();
     }
 
     public PushProjectPastJoinRule(Set<SqlOperator> preserveExprs)
@@ -69,9 +67,7 @@ public class PushProjectPastJoinRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(JoinRel.class, null)
-                }));
+                new RelOptRuleOperand(JoinRel.class, ANY)));
         this.preserveExprs = preserveExprs;
     }
 
@@ -148,7 +144,7 @@ public class PushProjectPastJoinRule
                 rightProjRel,
                 newJoinFilter,
                 joinRel.getJoinType(),
-                Collections.EMPTY_SET,
+                Collections.<String>emptySet(),
                 joinRel.isSemiJoinDone());
 
         // put the original project on top of the join, converting it to

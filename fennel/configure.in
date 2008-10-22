@@ -10,12 +10,12 @@ AC_CANONICAL_TARGET
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_SRCDIR([common/CommonPreamble.h])
 
-AM_INIT_AUTOMAKE(fennel, 0.7.4)
+AM_INIT_AUTOMAKE(fennel, 0.7.5)
 
 dnl Define CXXFLAGS before AC_PROG_CXX to suppress the default autoconf
 dnl compiler options
 CXXFLAGS="-pipe -ftemplate-depth-64 \
--Wall -Wno-unused-parameter -Wno-sign-compare -Werror \
+-Wall -Wno-unused-parameter -Wno-unused -Wno-sign-compare -Werror \
 -D_REENTRANT -D_STLP_USE_DYNAMIC_LIB=1 -D_STLP_NO_ANACHRONISMS=1 -DBOOST_NO_HASH=1"
 
 dnl Checks for programs.
@@ -213,7 +213,7 @@ AM_CONDITIONAL(STATIC_TEST_LIBRARY,\
 test "$target_os" = "cygwin" -o "$target_os" = "mingw32")
 
 AM_CONDITIONAL(HAVE_LIBAIO,test "$found_libaio" = "true")
-AM_CONDITIONAL(HAVE_LIBUUID,test "$found_old_libuuid" = "true" || "$found_new_libuuid" = "true")
+AM_CONDITIONAL(HAVE_LIBUUID,test "$found_old_libuuid" = "true" -o "$found_new_libuuid" = "true")
 AM_CONDITIONAL(HAVE_LIBUUID_NEW,test "$found_new_libuuid" = "true")
 
 dnl TODO:  combine common mingw/cygwin stuff under host rather than target.
@@ -275,7 +275,7 @@ then
 fi
 
 dnl Compiler version-specific tweaks
-if test "$fennel_gcc_version" = "4.1.1" -o "$fennel_gcc_version" = "4.1.2"
+if test "$fennel_gcc_version" = "4.1.1" -o "$fennel_gcc_version" = "4.1.2" -o "$fennel_gcc_version" = "4.2.3"
 then
     dnl gcc 4.1.1 build encounters bogus errors
     CXXFLAGS="$CXXFLAGS -Wno-uninitialized -Wno-unused"

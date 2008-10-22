@@ -48,17 +48,14 @@ public class FarragoOJRexSimilarLikeImplementor
 {
     //~ Instance fields --------------------------------------------------------
 
-    boolean isSimilar;
-    boolean isNot;
+    private final boolean similar;
 
     //~ Constructors -----------------------------------------------------------
 
     public FarragoOJRexSimilarLikeImplementor(
-        boolean bIsSimilar,
-        boolean bIsNot)
+        boolean similar)
     {
-        isSimilar = bIsSimilar;
-        isNot = bIsNot;
+        this.similar = similar;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -132,7 +129,7 @@ public class FarragoOJRexSimilarLikeImplementor
                 escapeStr = str.getValue();
             }
             String javaPattern = null;
-            if (isSimilar) {
+            if (similar) {
                 javaPattern =
                     RuntimeTypeUtil.SqlToRegexSimilar(
                         sqlPattern,
@@ -205,7 +202,7 @@ public class FarragoOJRexSimilarLikeImplementor
                 likeArguments.add(Literal.constantNull());
             }
             String funcName = null;
-            if (isSimilar) {
+            if (similar) {
                 funcName = "SqlToRegexSimilar";
             } else {
                 funcName = "SqlToRegexLike";
@@ -281,29 +278,6 @@ public class FarragoOJRexSimilarLikeImplementor
             call.getType(),
             varResult,
             false);
-
-        if (isNot) {
-            // should not be here.
-            // The optimizer should have already got rid of IS NOT.
-            // but we just implement it anyway.
-            Expression value = varResult;
-            if (retType.isNullable()) {
-                value =
-                    new FieldAccess(
-                        varResult,
-                        NullablePrimitive.VALUE_FIELD_NAME);
-            } else {
-                value = varResult;
-            }
-            stmtList.add(
-                new ExpressionStatement(
-                    new AssignmentExpression(
-                        value,
-                        AssignmentExpression.EQUALS,
-                        new UnaryExpression(
-                            value,
-                            UnaryExpression.NOT))));
-        }
 
         // All the builtin function returns null if
         // one of the arguements is null.

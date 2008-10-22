@@ -49,9 +49,10 @@ public class RemoveTrivialCalcRule
 
     private RemoveTrivialCalcRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 CalcRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

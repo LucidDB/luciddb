@@ -49,7 +49,11 @@ FENNEL_BEGIN_NAMESPACE
  *
  */
 
-enum SqlDateTimeType { SQLDATE, SQLTIME, SQLTIMESTAMP };
+enum SqlDateTimeType {
+    SQLDATE,
+    SQLTIME,
+    SQLTIMESTAMP
+};
 
 boost::posix_time::ptime const epoc(boost::gregorian::date(1970,1,1));
 
@@ -78,7 +82,7 @@ SqlDateToStr(char *dest,
             // ASCII
 
             // from_time_t isn't in the version of boost we're using. sigh.
-	    // FIXME: jhyde: No longer true. Let's use it.
+            // FIXME: jhyde: No longer true. Let's use it.
             //          boost::posix_time::ptime t = boost::posix_time::from_time_t(d);
 
             // we could use the millisecond() duration constructor,
@@ -125,8 +129,7 @@ SqlDateToStr(char *dest,
             if (fixed) {
                 memset(dest + len, padchar, destStorageBytes - len);
                 return destStorageBytes;
-            }
-            else {
+            } else {
                 return len;
             }
         } else if (CodeUnitBytes == 2) {
@@ -152,7 +155,7 @@ SqlStrToDate(char *src, int len)
         if (CodeUnitBytes == 1) {
             // ASCII
 
-            switch(dateTimeType) {
+            switch (dateTimeType) {
             case SQLDATE:
                 return IsoStringToDate(src,len);
             case SQLTIME:
@@ -171,11 +174,27 @@ SqlStrToDate(char *src, int len)
     }
 }
 
-int64_t CurrentTime();
-int64_t CurrentTimestamp();
+/// Returns time of day in UTC.
+///
+/// (This function used to be called CurrentTime, but as FNL-77 points out,
+/// that is misleading, because CurrentTime's result is in the local timezone.)
+int64_t UniversalTime();
+
+/// Returns timestamp in UTC. That is, milliseconds since 1970-1-1 00:00:00 UTC.
+///
+/// (This function used to be called CurrentTimestamp, but as FNL-77 points out,
+/// that is misleading, because CurrentTimestamp's result is in the local
+/// timezone.)
+int64_t UniversalTimestamp();
+
+/// Returns the time of day in the given time zone.
 int64_t LocalTime(boost::local_time::time_zone_ptr tzPtr);
+
+/// Returns the timestamp in the given time zone.
 int64_t LocalTimestamp(boost::local_time::time_zone_ptr tzPtr);
 
 FENNEL_END_NAMESPACE
 
 #endif
+
+// End SqlDate.h

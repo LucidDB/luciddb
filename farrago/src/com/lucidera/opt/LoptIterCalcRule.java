@@ -48,142 +48,104 @@ public abstract class LoptIterCalcRule
         new TableAccessRule(
             new RelOptRuleOperand(
                 IterCalcRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    ConverterRel.class,
                     new RelOptRuleOperand(
-                        ConverterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                TableAccessRelBase.class,
-                                null)
-                        })
-                }));
+                        TableAccessRelBase.class,
+                        ANY))));
     
     public static LoptIterCalcRule lcsRowScanInstance =
         new LcsRowScanRule(
             new RelOptRuleOperand(
                 IterCalcRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    ConverterRel.class,
                     new RelOptRuleOperand(
-                        ConverterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                LcsRowScanRel.class,
-                                null)
-                        })
-                }));
+                        LcsRowScanRel.class,
+                        ANY))));
 
     public static LoptIterCalcRule jdbcQueryInstance =
         new JdbcQueryRule(
             new RelOptRuleOperand(
                 IterCalcRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    ConverterRel.class,
                     new RelOptRuleOperand(
-                        ConverterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                JdbcQuery.class,
-                                null)
-                        })
-                }));
+                        JdbcQuery.class,
+                        ANY))));
 
     public static LoptIterCalcRule javaUdxInstance =
         new JavaUdxRule(
             new RelOptRuleOperand(
                 IterCalcRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(
-                        FarragoJavaUdxRel.class,
-                        null)
-                }));
+                new RelOptRuleOperand(
+                    FarragoJavaUdxRel.class,
+                    ANY)));
 
     public static LoptIterCalcRule lcsAppendInstance =
         new TableAppendRule(
             new RelOptRuleOperand(
                 LcsTableAppendRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    ConverterRel.class,
                     new RelOptRuleOperand(
-                        ConverterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                IterCalcRel.class,
-                                null)
-                        })
-                }));
+                        IterCalcRel.class,
+                        ANY))));
 
     public static LoptIterCalcRule lcsMergeInstance =
         new TableMergeRule(
             new RelOptRuleOperand(
                 LcsTableMergeRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    ConverterRel.class,
                     new RelOptRuleOperand(
-                        ConverterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                IterCalcRel.class,
-                                null)
-                        })
-                }));
+                        IterCalcRel.class,
+                        ANY))));
 
     public static LoptIterCalcRule lcsDeleteInstance =
         new TableDeleteRule(
             new RelOptRuleOperand(
                 LcsTableDeleteRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    ConverterRel.class,
                     new RelOptRuleOperand(
-                        ConverterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                IterCalcRel.class,
-                                null)
-                        })
-                }));
+                        IterCalcRel.class,
+                        ANY))));
 
     public static LoptIterCalcRule hashJoinInstance =
         new HashJoinRule(
             new RelOptRuleOperand(
                 IterCalcRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    ConverterRel.class,
                     new RelOptRuleOperand(
-                        ConverterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                LhxJoinRel.class,
-                                null)
-                        })
-                }));
+                        LhxJoinRel.class,
+                        ANY))));
     
     public static LoptIterCalcRule nestedLoopJoinInstance =
         new NestedLoopJoinRule(
             new RelOptRuleOperand(
                 IterCalcRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    ConverterRel.class,
                     new RelOptRuleOperand(
-                        ConverterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                FennelNestedLoopJoinRel.class,
-                                null)
-                        })
-                }));
+                        FennelNestedLoopJoinRel.class,
+                        ANY))));
     
     public static LoptIterCalcRule cartesianJoinInstance =
         new CartesianJoinRule(
             new RelOptRuleOperand(
                 IterCalcRel.class,
-                new RelOptRuleOperand[] {
+                new RelOptRuleOperand(
+                    ConverterRel.class,
                     new RelOptRuleOperand(
-                        ConverterRel.class,
-                        new RelOptRuleOperand[] {
-                            new RelOptRuleOperand(
-                                FennelCartesianProductRel.class,
-                                null)
-                        })
-                }));
+                        FennelCartesianProductRel.class,
+                        ANY))));
 
     public static LoptIterCalcRule defaultInstance =
         new DefaultRule(new RelOptRuleOperand(
                 IterCalcRel.class,
-                null));
+                ANY));
 
     // index acess rule, hash rules
 
@@ -276,8 +238,10 @@ public abstract class LoptIterCalcRule
         StringBuffer sb = new StringBuffer(action);
         sb.append(".").append(qualifiedName[2]);
         if (rel != null) {
-            sb.append("." + rel.getId());
-            sb.append("_" + Util.getFileTimestamp());
+            sb.append(".")
+                .append(rel.getId())
+                .append("_")
+                .append(Util.getFileTimestamp());
         }
         return sb.toString();
     }

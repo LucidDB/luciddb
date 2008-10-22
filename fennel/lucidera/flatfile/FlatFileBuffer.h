@@ -25,7 +25,6 @@
 
 #include "fennel/common/ClosableObject.h"
 #include "fennel/common/TraceSource.h"
-#include "fennel/device/RandomAccessDevice.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -73,11 +72,11 @@ typedef boost::shared_ptr<FlatFileBuffer> SharedFlatFileBuffer;
 class FlatFileBuffer : public ClosableObject, public TraceSource
 {
     std::string path;
-    SharedRandomAccessDevice pRandomAccessDevice;
-    FileSize filePosition, fileEnd;
+    FILE *pFile;
+    FileSize filePosition;
     
-	char *pBuffer;
-	uint bufferSize, contentSize;
+    char *pBuffer;
+    uint bufferSize, contentSize;
     char *pCurrent;
 
     // implement ClosableObject
@@ -95,7 +94,7 @@ public:
     /**
      * Opens a file and obtains resources needed for reading the file
      */
-	void open();
+    void open();
 
     /**
      * Sets internal buffers
@@ -112,7 +111,7 @@ public:
      *
      * @return number of characters read
      */
-	uint read();
+    uint read();
 
     /**
      * Returns a pointer to the current row

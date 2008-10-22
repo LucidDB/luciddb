@@ -22,6 +22,8 @@
 */
 package org.eigenbase.rel;
 
+import java.util.Collections;
+
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -52,9 +54,7 @@ public class MergeProjectOntoCalcRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(CalcRel.class, null),
-                }));
+                new RelOptRuleOperand(CalcRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -84,7 +84,7 @@ public class MergeProjectOntoCalcRule
                     calc,
                     project.getRowType(),
                     program,
-                    RelCollation.emptyList);
+                    Collections.<RelCollation>emptyList());
             call.transformTo(projectAsCalc);
             return;
         }
@@ -117,7 +117,7 @@ public class MergeProjectOntoCalcRule
                 calc.getChild(),
                 project.getRowType(),
                 mergedProgram,
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         call.transformTo(newCalc);
     }
 }

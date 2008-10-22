@@ -46,9 +46,10 @@ public class ProcedureNamespace
     ProcedureNamespace(
         SqlValidatorImpl validator,
         SqlValidatorScope scope,
-        SqlCall call)
+        SqlCall call,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         this.scope = scope;
         this.call = call;
     }

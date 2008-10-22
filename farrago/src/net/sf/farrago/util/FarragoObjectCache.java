@@ -61,7 +61,7 @@ public class FarragoObjectCache
      * on either map or entry but not both at once.  See code comments in
      * tryPin for more info on this.
      */
-    private MultiMap<Object, FarragoCacheEntry> mapKeyToEntry;
+    protected MultiMap<Object, FarragoCacheEntry> mapKeyToEntry;
     private long bytesMax;
 
     /**
@@ -152,7 +152,7 @@ public class FarragoObjectCache
             }
         }
     }
-    
+
     private Entry tryPin(
         Object key,
         CachedObjectFactory factory,
@@ -165,7 +165,7 @@ public class FarragoObjectCache
         // since construction work below may be time-consuming.
         FarragoCacheEntry entry =
             findOrCreateEntry(currentThread, key, factory, exclusive);
-        
+
         boolean unpinEntry = false;
         try {
             synchronized (entry) {
@@ -476,6 +476,45 @@ public class FarragoObjectCache
 
         // in case too much was pinned
         adjustMemoryUsage(0);
+    }
+
+    /**
+     * Just like unpin except that it takes only the key to the cache entry
+     * and doesn't call adjustMemoryUsage.  It is used just like unpin but
+     * it is a bit more forgiving and calls closeAllocation on the cache
+     * entry if it is truely unpinned.  It is currently used only by a specific
+     * extention to Farrago and not Farrago itself.
+     *
+     * @param key the key to the pinned Entry
+     */
+    public void tryUnpin(String key)
+    {
+        synchronized (mapKeyToEntry) {
+
+            List<FarragoCacheEntry> entryList = mapKeyToEntry.getMulti(key);
+            assert(entryList != null);
+            tracer.fine("unpinning cache entries " + entryList);
+
+            Iterator<FarragoCacheEntry> it = entryList.iterator();
+
+            while (it.hasNext()) {
+
+                FarragoCacheEntry entry = it.next();
+                tracer.finest("unpinning cache entry " + entry +
+                              " with pin count " + entry.pinCount);
+
+                if (1 >= entry.pinCount) {
+
+                    if (entry.getValue() instanceof FarragoAllocation)
+                        ((FarragoAllocation)entry.getValue()).
+                            closeAllocation();
+
+                } else {
+
+                    entry.pinCount--;
+                }
+            }
+        }
     }
 
     /**

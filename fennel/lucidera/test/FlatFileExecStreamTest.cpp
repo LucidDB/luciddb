@@ -83,21 +83,21 @@ class FlatFileExecStreamTest : public ExecStreamUnitTestBase
 {
     void checkRead(
         FlatFileBuffer &buffer,
-        char *string);
+        const char *string);
 
     void checkTrim(
         FlatFileParser &parser,
-        char *string,
-        char *result);
+        const char *string,
+        const char *result);
 
     void checkStrip(
         FlatFileParser &parser,
-        char *string,
-        char *result);
+        const char *string,
+        const char *result);
 
     void checkColumnScan(
         FlatFileParser &parser,
-        char *string,
+        const char *string,
         FlatFileColumnParseResult::DelimiterType type,
         uint size,
         uint offset);
@@ -125,19 +125,20 @@ void FlatFileExecStreamTest::testBuffer()
     FixedBuffer fixedBuffer[8];
     std::string path = "flatfile/buffer";
     
-    FlatFileBuffer fileBuffer(path);
-    fileBuffer.open();
-    fileBuffer.setStorage((char *) fixedBuffer, (uint)8);
+    SharedFlatFileBuffer pFileBuffer;
+    pFileBuffer.reset(new FlatFileBuffer(path), ClosableObjectDestructor());
+    pFileBuffer->open();
+    pFileBuffer->setStorage((char *) fixedBuffer, (uint)8);
 
-    checkRead(fileBuffer, "12345671");
-    BOOST_CHECK_EQUAL(fileBuffer.getReadPtr(), (char *)fixedBuffer);
+    checkRead(*pFileBuffer, "12345671");
+    BOOST_CHECK_EQUAL(pFileBuffer->getReadPtr(), (char *)fixedBuffer);
 
-    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+7);
-    checkRead(fileBuffer, "12345676");
+    pFileBuffer->setReadPtr(pFileBuffer->getReadPtr()+7);
+    checkRead(*pFileBuffer, "12345676");
 
-    fileBuffer.setReadPtr(fileBuffer.getReadPtr()+6);
-    checkRead(fileBuffer, "7654\n");
-    BOOST_CHECK(fileBuffer.isComplete());
+    pFileBuffer->setReadPtr(pFileBuffer->getReadPtr()+6);
+    checkRead(*pFileBuffer, "7654\n");
+    BOOST_CHECK(pFileBuffer->isComplete());
 }
 
 void FlatFileExecStreamTest::testParser()
@@ -192,7 +193,7 @@ void FlatFileExecStreamTest::testParser()
 
 void FlatFileExecStreamTest::checkRead(
     FlatFileBuffer &buffer,
-    char *string)
+    const char *string)
 {
     uint size = strlen(string);
     buffer.read();
@@ -202,8 +203,8 @@ void FlatFileExecStreamTest::checkRead(
 
 void FlatFileExecStreamTest::checkTrim(
     FlatFileParser &parser,
-    char *string,
-    char *result)
+    const char *string,
+    const char *result)
 {
     char buffer[128];
     assert (strlen(string) < sizeof(buffer));
@@ -216,8 +217,8 @@ void FlatFileExecStreamTest::checkTrim(
 
 void FlatFileExecStreamTest::checkStrip(
     FlatFileParser &parser,
-    char *string,
-    char *result)
+    const char *string,
+    const char *result)
 {
     char buffer[128];
     assert (strlen(string) < sizeof(buffer));
@@ -230,7 +231,7 @@ void FlatFileExecStreamTest::checkStrip(
 
 void FlatFileExecStreamTest::checkColumnScan(
     FlatFileParser &parser,
-    char *string, 
+    const char *string, 
     FlatFileColumnParseResult::DelimiterType type,
     uint size,
     uint offset)

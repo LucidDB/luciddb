@@ -47,15 +47,16 @@ public class FarragoUpdateCatalogUDR
     }
 
     //~ Methods ----------------------------------------------------------------
-    
+
     /**
      * Updates Farrago config objects in cases where they have been set to dummy values.
      */
     public static void updateConfiguration()
     {
         tracer.info("Updating Farrago system parameters");
-        FarragoSession session = FarragoUdrRuntime.getSession();
-        FarragoRepos repos = session.getRepos();
+        //FarragoSession session = FarragoUdrRuntime.getSession();
+        //FarragoRepos repos = session.getRepos();
+        FarragoRepos repos = FarragoUdrRuntime.getRepos();
 
         FarragoUpdateCatalogUDR init = null;
         FarragoReposTxnContext txn = repos.newTxnContext(true);
@@ -82,7 +83,7 @@ public class FarragoUpdateCatalogUDR
         }
         tracer.info("Update of Farrago system parameters complete");
     }
-    
+
     /**
      * Updates catalogs with system objects, adding them if they don't exist
      * yet.
@@ -90,8 +91,7 @@ public class FarragoUpdateCatalogUDR
     public static void updateSystemObjects()
     {
         tracer.info("Updating system-owned catalog objects");
-        FarragoSession session = FarragoUdrRuntime.getSession();
-        FarragoRepos repos = session.getRepos();
+        FarragoRepos repos = FarragoUdrRuntime.getRepos();
 
         FarragoUpdateCatalogUDR init = null;
         FarragoReposTxnContext txn = repos.newTxnContext(true);

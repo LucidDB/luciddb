@@ -22,6 +22,8 @@
 */
 package org.eigenbase.rel;
 
+import java.util.Collections;
+
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -50,9 +52,10 @@ public class ProjectToCalcRule
 
     private ProjectToCalcRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 ProjectRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -77,7 +80,7 @@ public class ProjectToCalcRule
                 child,
                 rowType,
                 program,
-                RelCollation.emptyList);
+                Collections.<RelCollation>emptyList());
         call.transformTo(calc);
     }
 }

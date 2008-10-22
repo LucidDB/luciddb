@@ -46,9 +46,10 @@ class FtrsTableModificationRule
      */
     public FtrsTableModificationRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 TableModificationRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

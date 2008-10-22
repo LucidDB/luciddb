@@ -53,7 +53,7 @@ public:
     explicit
     NativeNativeInstruction(RegisterRef<TMPLT>* result,
                             RegisterRef<TMPLT>* op1,
-                            RegisterRef<TMPLT>* op2, 
+                            RegisterRef<TMPLT>* op2,
                             StandardTypeDescriptorOrdinal nativeType)
         : NativeInstruction<TMPLT>(op1, op2, nativeType),
           mResult(result)
@@ -65,17 +65,19 @@ protected:
     RegisterRef<TMPLT>* mResult;
     static void fnSetRegisterToNull(const char *, void *pOpaque) {
         RegisterRef<TMPLT> *pReg = (RegisterRef<TMPLT> *)pOpaque;
-        pReg->toNull();
+        if (pReg->isNullable()) {
+            pReg->toNull();
         }
+    }
 };
 
 template <typename TMPLT>
 class NativeAdd : public NativeNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     NativeAdd(RegisterRef<TMPLT>* result,
-              RegisterRef<TMPLT>* op1, 
+              RegisterRef<TMPLT>* op1,
               RegisterRef<TMPLT>* op2,
               StandardTypeDescriptorOrdinal nativeType)
         : NativeNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -83,9 +85,9 @@ public:
     virtual
     ~NativeAdd() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
@@ -101,12 +103,12 @@ public:
     }
 
     static const char * longName() { return "NativeAdd"; }
-    static const char * shortName() { return "ADD"; } 
+    static const char * shortName() { return "ADD"; }
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       NativeNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -130,10 +132,10 @@ public:
 template <typename TMPLT>
 class NativeSub : public NativeNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     NativeSub(RegisterRef<TMPLT>* result,
-              RegisterRef<TMPLT>* op1, 
+              RegisterRef<TMPLT>* op1,
               RegisterRef<TMPLT>* op2,
               StandardTypeDescriptorOrdinal nativeType)
         : NativeNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -141,9 +143,9 @@ public:
     virtual
     ~NativeSub() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
@@ -163,8 +165,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       NativeNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -188,7 +190,7 @@ public:
 template <typename TMPLT>
 class NativeMul : public NativeNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     NativeMul(RegisterRef<TMPLT>* result,
               RegisterRef<TMPLT>* op1,
@@ -199,9 +201,9 @@ public:
     virtual
     ~NativeMul() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
@@ -221,8 +223,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       NativeNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -246,10 +248,10 @@ public:
 template <typename TMPLT>
 class NativeDiv : public NativeNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     NativeDiv(RegisterRef<TMPLT>* result,
-              RegisterRef<TMPLT>* op1, 
+              RegisterRef<TMPLT>* op1,
               RegisterRef<TMPLT>* op2,
               StandardTypeDescriptorOrdinal nativeType)
         : NativeNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -258,9 +260,9 @@ public:
     virtual
     ~NativeDiv() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
             NativeNativeInstruction<TMPLT>::mResult->toNull();
@@ -273,7 +275,7 @@ public:
                 NativeNativeInstruction<TMPLT>::mResult->toNull();
                 // SQL99 Part 2 Section 22.1 SQLState dataexception class 22,
                 // division by zero subclass 012
-                throw CalcMessage("22012", pc - 1); 
+                throw CalcMessage("22012", pc - 1);
             }
 #endif
             TExceptionCBData tE(
@@ -286,13 +288,13 @@ public:
         }
     }
 
-    static char const * const longName() { return "NativeDiv"; } 
-    static char const * const shortName() { return "DIV"; } 
+    static char const * const longName() { return "NativeDiv"; }
+    static char const * const shortName() { return "DIV"; }
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       NativeNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -318,7 +320,7 @@ public:
 template <typename TMPLT>
 class NativeNeg : public NativeNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     NativeNeg(RegisterRef<TMPLT>* result,
               RegisterRef<TMPLT>* op1,
@@ -328,7 +330,7 @@ public:
     virtual
     ~NativeNeg() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (NativeInstruction<TMPLT>::mOp1->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
@@ -347,8 +349,8 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       NativeNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -401,7 +403,7 @@ public:
 template <typename TMPLT>
 class NativeRound : public NativeNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     NativeRound(RegisterRef<TMPLT>* result,
                 RegisterRef<TMPLT>* op1,
@@ -411,7 +413,7 @@ public:
     virtual
     ~NativeRound() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (NativeInstruction<TMPLT>::mOp1->isNull()) {
             NativeNativeInstruction<TMPLT>::mResult->toNull();
@@ -428,8 +430,8 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       NativeNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -452,7 +454,7 @@ public:
 template <typename TMPLT>
 class NativeMove : public NativeNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     NativeMove(RegisterRef<TMPLT>* result,
                RegisterRef<TMPLT>* op1,
@@ -462,7 +464,7 @@ public:
     virtual
     ~NativeMove() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (NativeInstruction<TMPLT>::mOp1->isNull()) {
             NativeNativeInstruction<TMPLT>::mResult->toNull();
@@ -476,8 +478,8 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       NativeNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -500,7 +502,7 @@ public:
 template <typename TMPLT>
 class NativeRef : public NativeNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     NativeRef(RegisterRef<TMPLT>* result,
               RegisterRef<TMPLT>* op1,
@@ -510,7 +512,7 @@ public:
     virtual
     ~NativeRef() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         NativeNativeInstruction<TMPLT>::mResult->
             refer(NativeInstruction<TMPLT>::mOp1);
@@ -520,8 +522,8 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       NativeNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -544,7 +546,7 @@ public:
 template <typename TMPLT>
 class NativeToNull : public NativeNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     NativeToNull(RegisterRef<TMPLT>* result,
                  StandardTypeDescriptorOrdinal nativeType)
@@ -553,7 +555,7 @@ public:
     virtual
     ~NativeToNull() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         NativeNativeInstruction<TMPLT>::mResult->toNull();
     }
@@ -562,8 +564,8 @@ public:
     static int numArgs() { return 1; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       NativeNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 

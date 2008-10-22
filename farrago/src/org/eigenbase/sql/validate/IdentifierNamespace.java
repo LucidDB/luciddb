@@ -57,9 +57,19 @@ public class IdentifierNamespace
 
     //~ Constructors -----------------------------------------------------------
 
-    IdentifierNamespace(SqlValidatorImpl validator, SqlIdentifier id)
+    /**
+     * Creates an IdentifierNamespace.
+     *
+     * @param validator Validator
+     * @param id Identifier node
+     * @param enclosingNode Enclosing node
+     */
+    IdentifierNamespace(
+        SqlValidatorImpl validator,
+        SqlIdentifier id,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         this.id = id;
     }
 

@@ -48,10 +48,14 @@ public class SetopNamespace
      *
      * @param validator Validator
      * @param call Call to set operator
+     * @param enclosingNode Enclosing node
      */
-    protected SetopNamespace(SqlValidatorImpl validator, SqlCall call)
+    protected SetopNamespace(
+        SqlValidatorImpl validator,
+        SqlCall call,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         this.call = call;
     }
 

@@ -56,10 +56,8 @@ public class PushProjectPastFilterRule
         super(
             new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FilterRel.class, null)
-                }));
-        this.preserveExprs = Collections.EMPTY_SET;
+                new RelOptRuleOperand(FilterRel.class, ANY)));
+        this.preserveExprs = Collections.emptySet();
     }
 
     public PushProjectPastFilterRule(

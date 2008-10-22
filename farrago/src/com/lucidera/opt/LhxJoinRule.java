@@ -44,7 +44,7 @@ public class LhxJoinRule
 
     public LhxJoinRule()
     {
-        super(new RelOptRuleOperand(JoinRel.class, null));
+        super(new RelOptRuleOperand(JoinRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -59,7 +59,6 @@ public class LhxJoinRule
     public void onMatch(RelOptRuleCall call)
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
-        RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
 
         RelNode leftRel = joinRel.getLeft();
         RelNode rightRel = joinRel.getRight();

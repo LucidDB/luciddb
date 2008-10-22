@@ -502,7 +502,7 @@ public class VolcanoPlannerTraitTest
     {
         PhysLeafRule()
         {
-            super(new RelOptRuleOperand(NoneLeafRel.class, null));
+            super(new RelOptRuleOperand(NoneLeafRel.class, ANY));
         }
 
         // implement RelOptRule
@@ -527,7 +527,7 @@ public class VolcanoPlannerTraitTest
     {
         IterSingleRule()
         {
-            super(new RelOptRuleOperand(NoneSingleRel.class, null));
+            super(new RelOptRuleOperand(NoneSingleRel.class, ANY));
         }
 
         // implement RelOptRule
@@ -563,7 +563,7 @@ public class VolcanoPlannerTraitTest
     {
         IterSingleRule2()
         {
-            super(new RelOptRuleOperand(NoneSingleRel.class, null));
+            super(new RelOptRuleOperand(NoneSingleRel.class, ANY));
         }
 
         // implement RelOptRule

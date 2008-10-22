@@ -45,9 +45,7 @@ public class RemoveDistinctRule
         super(
             new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(RelNode.class, null)
-                }));
+                new RelOptRuleOperand(RelNode.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

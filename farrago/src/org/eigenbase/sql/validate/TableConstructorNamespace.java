@@ -42,12 +42,21 @@ public class TableConstructorNamespace
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates a TableConstructorNamespace.
+     *
+     * @param validator Validator
+     * @param values VALUES parse tree node
+     * @param scope Scope
+     * @param enclosingNode Enclosing node
+     */
     TableConstructorNamespace(
         SqlValidatorImpl validator,
         SqlCall values,
-        SqlValidatorScope scope)
+        SqlValidatorScope scope,
+        SqlNode enclosingNode)
     {
-        super(validator);
+        super(validator, enclosingNode);
         this.values = values;
         this.scope = scope;
     }
@@ -64,6 +73,11 @@ public class TableConstructorNamespace
         return values;
     }
 
+    /**
+     * Returns the scope.
+     *
+     * @return scope
+     */
     public SqlValidatorScope getScope()
     {
         return scope;

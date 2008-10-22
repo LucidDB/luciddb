@@ -631,7 +631,7 @@ public class SqlParserTest
     public void testArthimeticOperators()
     {
         checkExp("1-2+3*4/5/6-7", "(((1 - 2) + (((3 * 4) / 5) / 6)) - 7)");
-        checkExp("pow(2,3)", "POW(2, 3)");
+        checkExp("power(2,3)", "POWER(2, 3)");
         checkExp("aBs(-2.3e-2)", "ABS(-2.3E-2)");
         checkExp("MOD(5             ,\t\f\r\n2)", "MOD(5, 2)");
         checkExp("ln(5.43  )", "LN(5.43)");
@@ -695,8 +695,8 @@ public class SqlParserTest
             "SELECT (SUBSTRING('Eggs and ham' FROM 1 FOR (3 + 2)) || ' benedict')"
             + NL + "FROM `EMP`");
         checkExp(
-            "log10(1)\r\n+pow(2, mod(\r\n3\n\t\t\f\n,ln(4))*log10(5)-6*log10(7/abs(8)+9))*pow(10,11)",
-            "(LOG10(1) + (POW(2, ((MOD(3, LN(4)) * LOG10(5)) - (6 * LOG10(((7 / ABS(8)) + 9))))) * POW(10, 11)))");
+            "log10(1)\r\n+power(2, mod(\r\n3\n\t\t\f\n,ln(4))*log10(5)-6*log10(7/abs(8)+9))*power(10,11)",
+            "(LOG10(1) + (POWER(2, ((MOD(3, LN(4)) * LOG10(5)) - (6 * LOG10(((7 / ABS(8)) + 9))))) * POWER(10, 11)))");
     }
 
     public void testFunctionWithDistinct()
@@ -712,7 +712,7 @@ public class SqlParserTest
 
     public void testFunctionInFunction()
     {
-        checkExp("ln(pow(2,2))", "LN(POW(2, 2))");
+        checkExp("ln(power(2,2))", "LN(POWER(2, 2))");
     }
 
     public void testGroup()
@@ -1137,7 +1137,7 @@ public class SqlParserTest
                     "FROM `EMP` AS `X` TABLESAMPLE SUBSTITUTE('MEDIUM')",
                     "INNER JOIN `DEPT` TABLESAMPLE SUBSTITUTE('LARGE') ON (`X`.`DEPTNO` = `DEPT`.`DEPTNO`)"
                 }));
-        
+
         check(
             "select * "
             + "from emp as x tablesample bernoulli(50)",
@@ -2053,7 +2053,7 @@ public class SqlParserTest
         checkExp(
             "case col1 when \n1.2 then 'one' when 2 then 'two' else 'three' end",
             "(CASE WHEN (`COL1` = 1.2) THEN 'one' WHEN (`COL1` = 2) THEN 'two' ELSE 'three' END)");
-        
+
         // subqueries as case expression operands
         checkExp(
             "case (select * from emp) when 1 then 2 end",
@@ -5291,7 +5291,7 @@ public class SqlParserTest
     public void testLongIdentifiers()
     {
         StringBuilder ident128Builder = new StringBuilder();
-        for(int i = 0; i < 128; i++) {
+        for (int i = 0; i < 128; i++) {
             ident128Builder.append((char)('a' + (i % 26)));
         }
         String ident128 = ident128Builder.toString();
@@ -5312,6 +5312,27 @@ public class SqlParserTest
         checkFails(
             "select ^" + ident129 + "^ from mytable",
             "Length of identifier '" + ident129Upper + "' must be less than or equal to 128 characters");
+    }
+
+    /**
+     * Tests that you can't quote the names of builtin functions.
+     *
+     * @see org.eigenbase.test.SqlValidatorTest#testQuotedFunction()
+     */
+    public void testQuotedFunction()
+    {
+        checkExpFails(
+            "\"CAST\"(1 ^as^ double)",
+            "(?s).*Encountered \"as\" at .*");
+        checkExpFails(
+            "\"POSITION\"('b' ^in^ 'alphabet')",
+            "(?s).*Encountered \"in \\\\'alphabet\\\\'\" at .*");
+        checkExpFails(
+            "\"OVERLAY\"('a' ^PLAcing^ 'b' from 1)",
+            "(?s).*Encountered \"PLAcing\" at.*");
+        checkExpFails(
+            "\"SUBSTRING\"('a' ^from^ 1)",
+            "(?s).*Encountered \"from\" at .*");
     }
 
     //~ Inner Interfaces -------------------------------------------------------

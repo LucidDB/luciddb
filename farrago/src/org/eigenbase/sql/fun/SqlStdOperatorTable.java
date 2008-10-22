@@ -688,6 +688,12 @@ public class SqlStdOperatorTable
             SqlTypeStrategies.otcNumericOrString,
             SqlFunctionCategory.Numeric);
 
+    /**
+     * <code>SUM0</code> aggregate function.
+     */
+    public static final SqlAggFunction sumEmptyIsZeroOperator =
+        new SqlSumEmptyIsZeroAggFunction(null);
+
     //-------------------------------------------------------------
     // WINDOW Rank Functions
     //-------------------------------------------------------------
@@ -998,9 +1004,9 @@ public class SqlStdOperatorTable
      * example POW(int, int) can return a non integer if the second operand is
      * negative.
      */
-    public static final SqlFunction powFunc =
+    public static final SqlFunction powerFunc =
         new SqlFunction(
-            "POW",
+            "POWER",
             SqlKind.Function,
             SqlTypeStrategies.rtiNullableDouble,
             null,

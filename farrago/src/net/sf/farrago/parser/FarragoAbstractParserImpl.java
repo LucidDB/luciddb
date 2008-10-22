@@ -26,9 +26,10 @@ import java.io.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.ddl.DdlDropStmt;
+import net.sf.farrago.ddl.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -198,6 +199,19 @@ public abstract class FarragoAbstractParserImpl
         boolean restrict)
     {
         return new DdlDropStmt(droppedElement, restrict);
+    }
+    
+    /**
+     * Creates new DDL Statement for DROP LABEL.
+     * @param droppedElement label element to drop
+     * @param restrict whether a DROP RESTRICT statement is being processed
+     * @return DDL Statement for DROP LABEL
+     */
+    public DdlDropStmt newDdlDropLabelStmt(
+        CwmModelElement droppedElement,
+        boolean restrict)
+    {
+        return new DdlDropLabelStmt((FemLabel)droppedElement, restrict);
     }
 }
 

@@ -80,12 +80,12 @@ static double dblTestData[][SAMPLE_SIZE] =
 
 #define STR_SAMPLE_SIZE 4
 
-static char *str1 = "abcd";
-static char *str2 = "qrst";
-static char *str3 = "abc ";
-static char *str4 = "noot";
+static const char *str1 = "abcd";
+static const char *str2 = "qrst";
+static const char *str3 = "abc ";
+static const char *str4 = "noot";
 
-static char* strAddTestData[][STR_SAMPLE_SIZE] =
+static const char* strAddTestData[][STR_SAMPLE_SIZE] =
 {
     {str1, str2, str3, str4},   // data values
     {str1, str1, str3, str3},   // running MIN
@@ -95,7 +95,7 @@ static char* strAddTestData[][STR_SAMPLE_SIZE] =
     {str1, str2, str3, str4},   // running LAST_VALUE
 };
 
-static char* strDropTestData[][STR_SAMPLE_SIZE] =
+static const char* strDropTestData[][STR_SAMPLE_SIZE] =
 {
     {str1, str2, str3, str4},   // data values
     {str3, str3, str4, NULL},   // running MIN
@@ -553,12 +553,12 @@ void checkDropStr(
 /// Helper function to compare a tuple with an expected string value.
 void checkEqualStr(
     TupleDatum const &tuple,
-    char *expected)
+    const char *expected)
 {
-    char *rtnStr = reinterpret_cast<char*>(const_cast<PBuffer>(tuple.pData));
+    const char *rtnStr = reinterpret_cast<const char*>(const_cast<PBuffer>(tuple.pData));
     if (NULL != expected && NULL != rtnStr) {
-        char *rtnStrEnd = rtnStr + tuple.cbData;
-        char *expectedEnd = expected + strlen(expected);
+        const char *rtnStrEnd = rtnStr + tuple.cbData;
+        const char *expectedEnd = expected + strlen(expected);
     
         BOOST_CHECK_EQUAL_COLLECTIONS(rtnStr, rtnStrEnd, expected, expectedEnd);
     } else {
@@ -568,7 +568,7 @@ void checkEqualStr(
 
 void checkStr(
     TupleDataWithBuffer* outTuple,
-    char* testData[][STR_SAMPLE_SIZE],
+    const char* testData[][STR_SAMPLE_SIZE],
     int index)
 {
     // check the MIN return value

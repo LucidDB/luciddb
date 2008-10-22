@@ -27,12 +27,11 @@ import junit.framework.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
  * Abstract implementation of {@link SqlTester}. A derived class only needs to
- * implement {@link #check} and {@link #checkType}.
+ * implement {@link #check}, {@link #checkColumnType} and {@link #checkFails}.
  *
  * @author wael
  * @version $Id$
@@ -68,7 +67,7 @@ public abstract class AbstractSqlTester
 
     //~ Methods ----------------------------------------------------------------
 
-    public void setFor(SqlOperator operator)
+    public void setFor(SqlOperator operator, VmName... unimplementedVmNames)
     {
         if ((operator != null) && (this.operator != null)) {
             throw new AssertionFailedError("isFor() called twice");
@@ -80,15 +79,33 @@ public abstract class AbstractSqlTester
         String expr,
         String [] inputValues,
         Object result,
-        int delta)
+        double delta)
     {
         String query = generateAggQuery(expr, inputValues);
         check(query, AnyTypeChecker, result, delta);
     }
 
+    public void checkWinAgg(
+        String expr,
+        String[] inputValues,
+        String windowSpec,
+        String type,
+        Object result,
+        double delta)
+    {
+        // Windowed aggregation is not implemented in eigenbase. We cannot
+        // evaluate the query to check results. The best we can do is to check
+        // the type.
+        String query = generateWinAggQuery(expr, windowSpec, inputValues);
+        checkColumnType(query, type);
+    }
+
     /**
      * Helper function to get the string representation of a RelDataType
      * (include precision/scale but no charset or collation)
+     *
+     * @param sqlType Type
+     * @return String representation of type
      */
     public static String getTypeString(RelDataType sqlType)
     {
@@ -104,11 +121,9 @@ public abstract class AbstractSqlTester
             // Get rid of the verbose charset/collation stuff.
             // TODO: There's probably a better way to do this.
             final String s = sqlType.getFullTypeString();
-            final String s2 =
-                s.replace(
-                    " CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\"",
-                    "");
-            return s2;
+            return s.replace(
+                " CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\"",
+                "");
         }
     }
 
@@ -125,8 +140,25 @@ public abstract class AbstractSqlTester
             buf.append(inputValue).append(" AS x FROM (VALUES (1))");
         }
         buf.append(")");
-        String query = buf.toString();
-        return query;
+        return buf.toString();
+    }
+
+    public static String generateWinAggQuery(
+        String expr, String windowSpec, String[] inputValues)
+    {
+        StringBuilder buf = new StringBuilder();
+        buf.append("SELECT ").append(expr).append(" OVER (").append(windowSpec)
+            .append(") FROM (");
+        for (int i = 0; i < inputValues.length; i++) {
+            if (i > 0) {
+                buf.append(" UNION ALL ");
+            }
+            buf.append("SELECT ");
+            String inputValue = inputValues[i];
+            buf.append(inputValue).append(" AS x FROM (VALUES (1))");
+        }
+        buf.append(")");
+        return buf.toString();
     }
 
     /**
@@ -134,10 +166,19 @@ public abstract class AbstractSqlTester
      *
      * <p>By default, "expr" becomes "VALUES (expr)". Derived classes may
      * override.
+     *
+     * @param expression Expression
+     * @return Query that returns expression
      */
     protected String buildQuery(String expression)
     {
         return "values (" + expression + ")";
+    }
+
+    public void checkType(
+        String expression, String type)
+    {
+        checkColumnType(buildQuery(expression), type);
     }
 
     public void checkScalarExact(
@@ -169,7 +210,7 @@ public abstract class AbstractSqlTester
         check(
             sql,
             typeChecker,
-            new Double(expectedResult),
+            expectedResult,
             delta);
     }
 
@@ -221,6 +262,8 @@ public abstract class AbstractSqlTester
     /**
      * Returns the operator this test is for. Throws if no operator has been
      * set.
+     *
+     * @return the operator this test is for, never null
      */
     protected SqlOperator getFor()
     {

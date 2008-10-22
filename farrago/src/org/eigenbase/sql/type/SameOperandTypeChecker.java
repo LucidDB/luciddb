@@ -26,8 +26,6 @@ import java.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -88,7 +86,7 @@ public class SameOperandTypeChecker
             types[i] = operatorBinding.getOperandType(i);
         }
         for (int i = 1; i < nOperandsActual; ++i) {
-            if (!checkTypePair(types[i], types[i - 1])) {
+            if (!SqlTypeUtil.isComparable(types[i], types[i - 1])) {
                 if (!throwOnFailure) {
                     return false;
                 }
@@ -101,54 +99,6 @@ public class SameOperandTypeChecker
             }
         }
         return true;
-    }
-
-    private boolean checkTypePair(RelDataType type1, RelDataType type2)
-    {
-        if (type1.isStruct() != type2.isStruct()) {
-            return false;
-        }
-
-        if (type1.isStruct()) {
-            int n = type1.getFieldCount();
-            if (n != type2.getFieldCount()) {
-                return false;
-            }
-            for (int i = 0; i < n; ++i) {
-                RelDataTypeField field1 =
-                    (RelDataTypeField) type1.getFieldList().get(i);
-                RelDataTypeField field2 =
-                    (RelDataTypeField) type2.getFieldList().get(i);
-                if (!checkTypePair(
-                        field1.getType(),
-                        field2.getType()))
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-        RelDataTypeFamily family1 = null;
-        RelDataTypeFamily family2 = null;
-
-        // REVIEW jvs 2-June-2005:  This is needed to keep
-        // the Saffron type system happy.
-        if (type1.getSqlTypeName() != null) {
-            family1 = type1.getSqlTypeName().getFamily();
-        }
-        if (type2.getSqlTypeName() != null) {
-            family2 = type2.getSqlTypeName().getFamily();
-        }
-        if (family1 == null) {
-            family1 = type1.getFamily();
-        }
-        if (family2 == null) {
-            family2 = type2.getFamily();
-        }
-        if (family1 == family2) {
-            return true;
-        }
-        return false;
     }
 
     /**

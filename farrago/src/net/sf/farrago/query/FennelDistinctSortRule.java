@@ -51,9 +51,10 @@ public class FennelDistinctSortRule
      */
     public FennelDistinctSortRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 AggregateRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

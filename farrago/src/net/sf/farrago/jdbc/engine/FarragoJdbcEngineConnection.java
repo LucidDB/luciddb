@@ -40,6 +40,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.Util;
 
+import org.eigenbase.jdbc4.*;
 
 /**
  * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
@@ -48,7 +49,7 @@ import org.eigenbase.util.Util;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineConnection
+public class FarragoJdbcEngineConnection extends Unwrappable
     implements FarragoConnection,
         FarragoSessionConnectionSource
 {
@@ -601,6 +602,88 @@ public class FarragoJdbcEngineConnection
 
         return new FleetingMedDataWrapperInfo(mofId, libraryName, options);
     }
+
+    //
+    // begin JDBC 4 methods
+    //
+
+    // implement Connection
+    public Struct createStruct(String typeName, Object [] attributes)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createStruct");
+    }
+
+    // implement Connection
+    public Array createArrayOf(String typeName, Object [] elements)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createArrayOf");
+    }
+
+    // implement Connection
+    public Properties getClientInfo()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public String getClientInfo(String name)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(String name, String value)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(Properties props)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public boolean isValid(int timeout)
+    {
+        throw new UnsupportedOperationException("isValid");
+    }
+
+    // implement Connection
+    public SQLXML createSQLXML()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createSQLXML");
+    }
+
+    // implement Connection
+    public NClob createNClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createNClob");
+    }
+
+    // implement Connection
+    public Clob createClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createClob");
+    }
+
+    // implement Connection
+    public Blob createBlob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createBlob");
+    }
+
+    //
+    // end JDBC 4 methods
+    //
 
     //~ Inner Classes ----------------------------------------------------------
 

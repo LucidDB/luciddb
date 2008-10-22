@@ -42,9 +42,10 @@ public class FennelSortRule
      */
     public FennelSortRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 SortRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

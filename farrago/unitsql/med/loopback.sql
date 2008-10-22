@@ -73,8 +73,11 @@ select * from x.bar;
 explain plan excluding attributes for 
 select * from loopback_localdb.sales.depts order by deptno;
 
-explain plan excluding attributes for
-select * from loopback_sys_boot.jdbc_metadata.catalogs_view;
+--  REVIEW: SWZ: 2008-10-07: Re-enable this test. Currently disabled because
+--  query plan varies based on repository config (Hibernate vs. Netbeans).
+--  Once Hibernate because the standard, we can re-enable.
+-- explain plan excluding attributes for
+-- select * from loopback_sys_boot.jdbc_metadata.catalogs_view;
 
 explain plan excluding attributes for
 select emps.name as ename, depts.name as dname from 

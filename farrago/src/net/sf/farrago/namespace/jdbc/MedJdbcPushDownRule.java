@@ -44,25 +44,26 @@ import org.eigenbase.sql.parser.*;
 class MedJdbcPushDownRule
     extends RelOptRule
 {
-    //~ Instance fields --------------------------------------------------------
-
-    boolean projOnFilter = false;
-    boolean filterOnProj = false;
-    boolean filterOnly = false;
-    boolean projectOnly = false;
-
-    // ~ Constructors ---------------------------------------------------------
-
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new MedJdbcPushDownRule object.
      */
-
-    public MedJdbcPushDownRule(RelOptRuleOperand rule, String id)
+    public MedJdbcPushDownRule(RelOptRuleOperand operand, String id)
     {
-        super(rule);
+        super(operand);
         description = "MedJdbcPushDownRule: " + id;
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
+    {
+        boolean projOnFilter = false;
+        boolean filterOnProj = false;
+        boolean filterOnly = false;
+        boolean projectOnly = false;
         if (description.contains("proj on filter")) {
             projOnFilter = true;
         } else if (description.contains("filter on proj")) {
@@ -72,15 +73,7 @@ class MedJdbcPushDownRule
         } else {
             projectOnly = true;
         }
-    }
 
-    //~ Methods ----------------------------------------------------------------
-
-    // ~ Methods --------------------------------------------------------------
-
-    // implement RelOptRule
-    public void onMatch(RelOptRuleCall call)
-    {
         int relLength = call.rels.length;
         final MedJdbcQueryRel queryRel =
             (MedJdbcQueryRel) call.rels[relLength - 1];
@@ -100,7 +93,8 @@ class MedJdbcPushDownRule
             topProj = (ProjectRel) call.rels[0];
             // handle any expressions in the projection
             PushProjector pushProject = new PushProjector(
-                topProj, null, filter.getChild(), Collections.EMPTY_SET);
+                topProj, null, filter.getChild(), 
+                Collections.<SqlOperator>emptySet());
             ProjectRel newProj = pushProject.convertProject(null);
             if (newProj != null) {
                 topProj = (ProjectRel) newProj.getChild();
@@ -117,7 +111,8 @@ class MedJdbcPushDownRule
             bottomProj = (ProjectRel) call.rels[relLength - 2];
             if (projectOnly) {
                 PushProjector pushProject = new PushProjector(
-                    bottomProj, null, queryRel, Collections.EMPTY_SET);
+                    bottomProj, null, queryRel, 
+                    Collections.<SqlOperator>emptySet());
                 ProjectRel newProj = pushProject.convertProject(null);
                 if (newProj != null) {
                     bottomProj = (ProjectRel) newProj.getChild();
@@ -171,7 +166,7 @@ class MedJdbcPushDownRule
         }
 
         List<SqlIdentifier> projList = null;
-        String[] fieldNames= null;
+        String[] fieldNames = null;
         RelDataType[] fieldTypes = null;
 
         // push down projection
@@ -236,62 +231,66 @@ class MedJdbcPushDownRule
                 SqlParserPos.ZERO);
 
         MedJdbcDataServer server = queryRel.columnSet.directory.server;
-        SqlDialect dialect = new SqlDialect(server.databaseMetaData);
-        String sql = selectWithFilter.toSqlString(dialect);
-        sql = queryRel.columnSet.directory.normalizeQueryString(sql);
-
-        // test if sql can be executed against source
-        ResultSet rs = null;
-        PreparedStatement ps = null;
-        Statement testStatement = null;
         try {
-            // Workaround for Oracle JDBC thin driver, where
-            // PreparedStatement.getMetaData does not actually get metadata
-            // before execution
-            if (dialect.isOracle()) {
-                String quotedSql = dialect.quoteStringLiteral(sql);
-                String sqlTest =
-                    " DECLARE"
-                    + "   test_cursor integer;"
-                    + " BEGIN"
-                    + "   test_cursor := dbms_sql.open_cursor;"
-                    + "   dbms_sql.parse(test_cursor, " + quotedSql + ", "
-                    + "   dbms_sql.native);"
-                    + "   dbms_sql.close_cursor(test_cursor);"
-                    + " EXCEPTION"
-                    + " WHEN OTHERS THEN"
-                    + "   dbms_sql.close_cursor(test_cursor);"
-                    + "   RAISE;"
-                    + " END;";
-                testStatement = server.getConnection().createStatement();
-                rs = testStatement.executeQuery(sqlTest);
-            } else {
-                ps = server.getConnection().prepareStatement(sql);
-                if (ps != null) {
-                    if (ps.getMetaData() == null) {
-                        return;
+            SqlDialect dialect = new SqlDialect(server.getDatabaseMetaData());
+            String sql = selectWithFilter.toSqlString(dialect);
+            sql = queryRel.columnSet.directory.normalizeQueryString(sql);
+
+            // test if sql can be executed against source
+            ResultSet rs = null;
+            PreparedStatement ps = null;
+            Statement testStatement = null;
+            try {
+                // Workaround for Oracle JDBC thin driver, where
+                // PreparedStatement.getMetaData does not actually get metadata
+                // before execution
+                if (dialect.isOracle()) {
+                    String quotedSql = dialect.quoteStringLiteral(sql);
+                    String sqlTest =
+                        " DECLARE"
+                        + "   test_cursor integer;"
+                        + " BEGIN"
+                        + "   test_cursor := dbms_sql.open_cursor;"
+                        + "   dbms_sql.parse(test_cursor, " + quotedSql + ", "
+                        + "   dbms_sql.native);"
+                        + "   dbms_sql.close_cursor(test_cursor);"
+                        + " EXCEPTION"
+                        + " WHEN OTHERS THEN"
+                        + "   dbms_sql.close_cursor(test_cursor);"
+                        + "   RAISE;"
+                        + " END;";
+                    testStatement = server.getConnection().createStatement();
+                    rs = testStatement.executeQuery(sqlTest);
+                } else {
+                    ps = server.getConnection().prepareStatement(sql);
+                    if (ps != null) {
+                        if (ps.getMetaData() == null) {
+                            return;
+                        }
                     }
+                }
+            } catch (SQLException ex) {
+                return;
+            } catch (RuntimeException ex) {
+                return;
+            } finally {
+                try {
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    if (testStatement != null) {
+                        testStatement.close();
+                    }
+                    if (ps != null) {
+                        ps.close();
+                    }
+                } catch (SQLException sqe) {
                 }
             }
         } catch (SQLException ex) {
             return;
-        } catch (RuntimeException ex) {
-            return;
-        } finally {
-            try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (testStatement != null) {
-                    testStatement.close();
-                }
-                if (ps != null) {
-                    ps.close();
-                }
-            } catch (SQLException sqe) {
-            }
         }
-
+        
         RelDataType rt = queryRel.getRowType();
         if (!filterOnly) {
             RexBuilder rexBuilder = queryRel.getCluster().getRexBuilder();
@@ -338,4 +337,5 @@ class MedJdbcPushDownRule
         return fieldName;
     }
 }
-//End MedJdbcPushDownRule.java
+
+// End MedJdbcPushDownRule.java

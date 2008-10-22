@@ -91,7 +91,7 @@ public abstract class RelOptAbstractTable
 
     public List<RelCollation> getCollationList()
     {
-        return RelCollation.emptyList;
+        return Collections.<RelCollation>emptyList();
     }
 }
 

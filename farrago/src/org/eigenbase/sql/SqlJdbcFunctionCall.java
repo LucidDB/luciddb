@@ -419,12 +419,11 @@ public class SqlJdbcFunctionCall
 
     //~ Instance fields --------------------------------------------------------
 
-    String jdbcName;
-    MakeCall lookupMakeCallObj;
+    private final String jdbcName;
+    private final MakeCall lookupMakeCallObj;
     private SqlCall lookupCall;
 
-    //    private SqlCall thisCall;
-    SqlNode [] thisOperands;
+    private SqlNode [] thisOperands;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -742,6 +741,7 @@ public class SqlJdbcFunctionCall
             // A table of all functions can be found at
             // http://java.sun.com/products/jdbc/driverdevs.html
             // which is also provided in the javadoc for this class.
+            // See also SqlOperatorTests.testJdbcFn, which contains the list.
             map.put(
                 "ABS",
                 new MakeCall(SqlStdOperatorTable.absFunc, 1));
@@ -759,7 +759,7 @@ public class SqlJdbcFunctionCall
                 new MakeCall(SqlStdOperatorTable.modFunc, 2));
             map.put(
                 "POWER",
-                new MakeCall(SqlStdOperatorTable.powFunc, 2));
+                new MakeCall(SqlStdOperatorTable.powerFunc, 2));
 
             map.put(
                 "CONCAT",
@@ -820,7 +820,7 @@ public class SqlJdbcFunctionCall
                 new MakeCall(SqlStdOperatorTable.substringFunc, 3));
             map.put(
                 "UCASE",
-                new MakeCall(SqlStdOperatorTable.upperFunc, 0));
+                new MakeCall(SqlStdOperatorTable.upperFunc, 1));
 
             map.put(
                 "CURDATE",

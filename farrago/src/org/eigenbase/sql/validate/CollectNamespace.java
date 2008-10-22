@@ -54,9 +54,19 @@ public class CollectNamespace
 
     //~ Constructors -----------------------------------------------------------
 
-    CollectNamespace(SqlCall child, SqlValidatorScope scope)
+    /**
+     * Creates a CollectNamespace.
+     *
+     * @param child Parse tree node
+     * @param scope Scope
+     * @param enclosingNode Enclosing parse tree node
+     */
+    CollectNamespace(
+        SqlCall child,
+        SqlValidatorScope scope,
+        SqlNode enclosingNode)
     {
-        super((SqlValidatorImpl) scope.getValidator());
+        super((SqlValidatorImpl) scope.getValidator(), enclosingNode);
         this.child = child;
         this.scope = scope;
     }

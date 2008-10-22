@@ -48,7 +48,7 @@ public class RemoveTrivialProjectRule
 
     private RemoveTrivialProjectRule()
     {
-        super(new RelOptRuleOperand(ProjectRel.class, null));
+        super(new RelOptRuleOperand(ProjectRel.class, ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

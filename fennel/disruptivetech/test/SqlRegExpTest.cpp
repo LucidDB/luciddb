@@ -82,7 +82,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
     bool result = false;
     int i;
 
-    char* test[][2] = { 
+    const char* test[][2] = { 
         // pattern, matchValue
 
         // SQL99 Part 2 Section 8.5 General Rule 3.d.i
@@ -178,7 +178,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiFalse()
 {
     bool result = false;
     int i;
-    char* test[][2] = { 
+    const char* test[][2] = { 
         // pattern,    matchValue
         { "",    "a" },
         { "_",    "" },
@@ -271,7 +271,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
     bool result = false;
     int i;
 
-    char* test[][3] = { 
+    const char* test[][3] = { 
         // pattern, matchValue, escape
         // define new escape
         { "_",      "a",  "#" },
@@ -369,7 +369,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
     bool result = false;
     int i;
 
-    char* test[][3] = { 
+    const char* test[][3] = { 
         // pattern, matchValue, escape
 
         { "_",    "ab",  "#" },
@@ -465,7 +465,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiException()
     bool result = false;
     int i;
 
-    char* test[][4] = { 
+    const char* test[][4] = { 
         // pattern, matchValue, escape, exception
         { "=",       "a",       "=",       "22025" },
         { "=a",       "a",       "=",      "22025" },
@@ -508,7 +508,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
     bool result = false;
     int i;
 
-    char* test[][3] = { 
+    const char* test[][3] = { 
         // pattern, matchValue, result
 
         // {2} 
@@ -1095,7 +1095,7 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
     bool result = false;
     int i;
 
-    char* test[][4] = { 
+    const char* test[][4] = { 
         // pattern, matchValue, escape
 
         // define a new escape
@@ -1245,7 +1245,7 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiException()
     bool result = false;
     int i;
 
-    char* test[][4] = { 
+    const char* test[][4] = { 
         // pattern, matchValue, escape, exception
         { "[[:ALPHA:]]", 
                   "a",   ":",     "2200B" },

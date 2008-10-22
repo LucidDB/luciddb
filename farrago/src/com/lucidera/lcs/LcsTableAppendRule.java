@@ -43,9 +43,10 @@ public class LcsTableAppendRule
      */
     public LcsTableAppendRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 TableModificationRel.class,
-                null));
+                ANY));
     }
 
     //~ Methods ----------------------------------------------------------------

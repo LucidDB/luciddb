@@ -144,7 +144,7 @@ public class MedJdbcForeignDataWrapper
                 server = newServer("faux-mofid", chainedProps);
                 if (server instanceof MedJdbcDataServer) {
                     MedJdbcDataServer mjds = (MedJdbcDataServer)server;
-                    String term = mjds.databaseMetaData.getSchemaTerm();
+                    String term = mjds.getDatabaseMetaData().getSchemaTerm();
                     if (mjds.useSchemaNameAsForeignQualifier
                     || term == null
                     || term.length() == 0) {
@@ -152,7 +152,9 @@ public class MedJdbcForeignDataWrapper
                         String[] list = null;
                         if (mjds.supportsMetaData) {
                             // collect names for list of choices
-                            list = getArtificialSchemas(mjds.databaseMetaData);
+                            list = 
+                                getArtificialSchemas(
+                                    mjds.getDatabaseMetaData());
                         }
                         infoMap.addPropInfo(
                             MedJdbcDataServer.PROP_SCHEMA_NAME,
@@ -206,7 +208,7 @@ public class MedJdbcForeignDataWrapper
     private Driver loadDriverClass(String driverClassName)
     {
         try {
-            Class clazz = Class.forName(driverClassName);
+            Class<?> clazz = Class.forName(driverClassName);
             return (Driver) clazz.newInstance();
         } catch (Exception ex) {
             throw FarragoResource.instance().JdbcDriverLoadFailed.ex(

@@ -35,6 +35,7 @@ import java.util.*;
 
 import net.sf.farrago.session.*;
 
+import org.eigenbase.jdbc4.*;
 
 /**
  * FarragoJdbcEnginePreparedStatement is an abstract base for Farrago
@@ -488,6 +489,140 @@ public abstract class FarragoJdbcEnginePreparedStatement
     {
         throw new SQLException(ERRMSG_ALREADY_PREPARED);
     }
+
+    //
+    // begin JDBC 4 methods
+    //
+
+    // implement PreparedStatement
+    public void setCharacterStream(int i, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setCharacterStream");
+    }
+
+    // implement PreparedStatement
+    public void setCharacterStream(int i, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setCharacterStream");
+    }
+
+    // implement PreparedStatement
+    public void setNCharacterStream(int i, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setNCharacterStream");
+    }
+
+    // implement PreparedStatement
+    public void setNCharacterStream(int i, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setNCharacterStream");
+    }
+
+    // implement PreparedStatement
+    public void setClob(int i, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setClob");
+    }
+
+    // implement PreparedStatement
+    public void setClob(int i, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setClob");
+    }
+
+    // implement PreparedStatement
+    public void setNClob(int i, Reader reader)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setNClob");
+    }
+    
+    // implement PreparedStatement
+    public void setNClob(int i, NClob nclob)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setNClob");
+    }
+    
+    // implement PreparedStatement
+    public void setNClob(int i, Reader reader, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setNClob");
+    }
+    
+    // implement PreparedStatement
+    public void setBlob(int i, InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setBlob");
+    }
+    
+    // implement PreparedStatement
+    public void setBlob(int i, InputStream inputStream, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setBlob");
+    }
+    
+    // implement PreparedStatement
+    public void setBinaryStream(int i, InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setBinaryStream");
+    }
+    
+    // implement PreparedStatement
+    public void setBinaryStream(int i, InputStream inputStream, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setBinaryStream");
+    }
+    
+    // implement PreparedStatement
+    public void setAsciiStream(int i, InputStream inputStream)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setAsciiStream");
+    }
+    
+    // implement PreparedStatement
+    public void setAsciiStream(int i, InputStream inputStream, long len)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setAsciiStream");
+    }
+    
+    // implement PreparedStatement
+    public void setSQLXML(int i, SQLXML sqlxml)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setSQLXML");
+    }
+    
+    // implement PreparedStatement
+    public void setNString(int i, String nstring)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setNString");
+    }
+    
+    // implement PreparedStatement
+    public void setRowId(int i, RowId rowid)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setRowId");
+    }
+    
+    //
+    // end JDBC 4 methods
+    //
 }
 
 // End FarragoJdbcEnginePreparedStatement.java

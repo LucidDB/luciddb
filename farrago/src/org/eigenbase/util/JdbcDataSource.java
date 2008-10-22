@@ -28,6 +28,7 @@ import java.sql.*;
 
 import javax.sql.*;
 
+import org.eigenbase.jdbc4.*;
 
 /**
  * Adapter to make a JDBC connection into a {@link javax.sql.DataSource}.
@@ -36,7 +37,7 @@ import javax.sql.*;
  * @version $Id$
  * @since Sep 7, 2003
  */
-public class JdbcDataSource
+public class JdbcDataSource extends Unwrappable
     implements DataSource
 {
     //~ Instance fields --------------------------------------------------------

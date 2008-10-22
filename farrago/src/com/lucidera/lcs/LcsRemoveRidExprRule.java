@@ -48,7 +48,7 @@ public class LcsRemoveRidExprRule
             new RelOptRuleOperand(
                 ProjectRel.class,
                 new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(EmptyRel.class, null)
+                    new RelOptRuleOperand(EmptyRel.class, RelOptRule.ANY)
                 }));
     }
 

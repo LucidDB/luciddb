@@ -232,8 +232,10 @@ public abstract class FarragoTestCase
         boolean endSession = false;
         try {
             cleanup.setUp();
-            getSession().getRepos().beginReposSession();
-            endSession = true;
+            if (connection instanceof FarragoJdbcEngineConnection) {
+                getSession().getRepos().beginReposSession();
+                endSession = true;
+            }
             cleanup.execute(); // let overrides see this call!
         } finally {
             if (endSession) {
@@ -950,6 +952,11 @@ public abstract class FarragoTestCase
             } else if (connection != null) {
                 ResultSet schemas = connection.getMetaData().getSchemas();
                 while(schemas.next()) {
+                    // ignore schemas not in the default catalog
+                    String catalog = schemas.getString(2);
+                    if (catalog.startsWith("SYS_")) {
+                        continue;
+                    }
                     String name = schemas.getString(1);
                     if (!isBlessedSchema(name))
                     {

@@ -43,9 +43,7 @@ public class MergeFilterRule
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FilterRel.class, null)
-                }));
+                new RelOptRuleOperand(FilterRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

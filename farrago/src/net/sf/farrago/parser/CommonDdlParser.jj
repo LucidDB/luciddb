@@ -210,41 +210,46 @@ DdlStmt DdlStmtEof() :
                 dropRestrict = true;
             }
             (
-                modelElement = SchemaDrop()
-                |
-                modelElement = TableDrop()
-                |
-                modelElement = IndexDrop()
-                |
-                modelElement = ViewDrop()
-                |
-                modelElement = RoutineDrop()
-                |
-                modelElement = UserDefinedTypeDrop()
-                |
-                modelElement = UserDefinedOrderingDrop()
-                |
-                modelElement = JarDrop()
-                |
-                modelElement = DataServerDrop()
-                |
-                LOOKAHEAD(2)
-                modelElement = DataWrapperDrop()
-                |
-                LOOKAHEAD(2)
-                modelElement = ForeignTableDrop()
-                |
-                modelElement = UserDrop()
-                |
-                modelElement = RoleDrop()
-                |
-                modelElement = ExtensionModelDrop()
+                (
+                    modelElement = SchemaDrop()
+                    |
+                    modelElement = TableDrop()
+                    |
+                    modelElement = IndexDrop()
+                    |
+                    modelElement = ViewDrop()
+                    |
+                    modelElement = RoutineDrop()
+                    |
+                    modelElement = UserDefinedTypeDrop()
+                    |
+                    modelElement = UserDefinedOrderingDrop()
+                    |
+                    modelElement = JarDrop()
+                    |
+                    modelElement = DataServerDrop()
+                    |
+                    LOOKAHEAD(2)
+                    modelElement = DataWrapperDrop()
+                    |
+                    LOOKAHEAD(2)
+                    modelElement = ForeignTableDrop()
+                    |
+                    modelElement = UserDrop()
+                    |
+                    modelElement = RoleDrop()
+                    |
+                    modelElement = ExtensionModelDrop()
+                )
+                {
+                    ddlStmt = newDdlDropStmt(modelElement,dropRestrict);
+                }
                 |
                 modelElement = LabelDrop()
+                {
+                    ddlStmt = newDdlDropLabelStmt(modelElement,dropRestrict);
+                }
             )
-            {
-                ddlStmt = newDdlDropStmt(modelElement,dropRestrict);
-            }
         )
         |
         (

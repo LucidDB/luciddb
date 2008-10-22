@@ -289,6 +289,14 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Cannot specify NATURAL keyword with ON or USING clause</text>
 </exception>
 
+<exception id="120312" name="ColumnInUsingNotUnique" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Column name ''{0}'' in USING clause is not unique on one side of join</text>
+</exception>
+
+<exception id="120314" name="NaturalOrUsingColumnNotCompatible" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Column ''{0}'' matched using NATURAL keyword or USING clause has incompatible types: cannot compare ''{1}'' to ''{2}''</text>
+</exception>
+
 <exception id="120320" name="WindowNotFound" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Window ''{0}'' not found</text>
 </exception>
@@ -297,8 +305,16 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Expression ''{0}'' is not being grouped</text>
 </exception>
 
-<exception id="120340" name="AggregateIllegalInWhere" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>Aggregate expression is illegal in WHERE clause</text>
+<exception id="120335" name="NotSelectDistinctExpr" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Expression ''{0}'' is not in the select clause</text>
+</exception>
+
+<exception id="120340" name="AggregateIllegalInClause" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Aggregate expression is illegal in {0} clause</text>
+</exception>
+
+<exception id="120345" name="WindowedAggregateIllegalInClause" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Windowed aggregate expression is illegal in {0} clause</text>
 </exception>
 
 <exception id="120342" name="AggregateIllegalInGroupBy" className="org.eigenbase.sql.validate.SqlValidatorException">
@@ -475,6 +491,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
 
 <exception id="120695" name="IntervalFractionalSecondPrecisionOutOfRange" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Interval fractional second precision ''{0}'' out of range for {1}</text>
+</exception>
+
+<exception id="120700" name="FromAliasDuplicate" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Duplicate relation name ''{0}'' in FROM clause</text>
 </exception>
 
 <!-- ====================================================================== -->

@@ -40,6 +40,7 @@ import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -1752,11 +1753,13 @@ public abstract class FarragoCatalogUtil
      * 
      * @param label the label
      * @param repos repository
+     * @param usePreviewRefDelete whether to use the repository's preview
+     * refDelete feature or simply delete the objects
      */
     public static void removeObsoleteStatistics(
         FemLabel label,
-        FarragoRepos repos)
-        throws Exception
+        FarragoRepos repos,
+        boolean usePreviewRefDelete)
     {   
         // Locate the stats associated with the label by determining the
         // timestamps of the two labels that bound the specified label.
@@ -1776,32 +1779,42 @@ public abstract class FarragoCatalogUtil
             onlyLabel = true;
         }
         
-        // Start with RowCountStatistics
-        removeObsoleteStatisticsFromTable(
-            repos.allOfType(FemAbstractColumnSet.class),
-            FemAbstractColumnSet.class.getMethod("getRowCountStats"),
-            null,
-            lowerBound,
-            upperBound,
-            onlyLabel);
-
-        // Move on to ColumnHistogram
-        removeObsoleteStatisticsFromTable(
-            repos.allOfType(FemAbstractColumn.class),
-            FemAbstractColumn.class.getMethod("getHistogram"),
-            FemColumnHistogram.class.getMethod("getAnalyzeTime"),
-            lowerBound,
-            upperBound,
-            onlyLabel);
-        
-        // Finally, IndexStatistics
-        removeObsoleteStatisticsFromTable(
-            repos.allOfType(FemLocalIndex.class),
-            FemLocalIndex.class.getMethod("getIndexStats"),
-            FemIndexStatistics.class.getMethod("getAnalyzeTime"),
-            lowerBound,
-            upperBound,
-            onlyLabel);
+        try {
+            // Start with RowCountStatistics
+            removeObsoleteStatisticsFromTable(
+                repos,
+                repos.allOfType(FemAbstractColumnSet.class),
+                FemAbstractColumnSet.class.getMethod("getRowCountStats"),
+                null,
+                lowerBound,
+                upperBound,
+                onlyLabel,
+                usePreviewRefDelete);
+    
+            // Move on to ColumnHistogram
+            removeObsoleteStatisticsFromTable(
+                repos,
+                repos.allOfType(FemAbstractColumn.class),
+                FemAbstractColumn.class.getMethod("getHistogram"),
+                FemColumnHistogram.class.getMethod("getAnalyzeTime"),
+                lowerBound,
+                upperBound,
+                onlyLabel,
+                usePreviewRefDelete);
+            
+            // Finally, IndexStatistics
+            removeObsoleteStatisticsFromTable(
+                repos,
+                repos.allOfType(FemLocalIndex.class),
+                FemLocalIndex.class.getMethod("getIndexStats"),
+                FemIndexStatistics.class.getMethod("getAnalyzeTime"),
+                lowerBound,
+                upperBound,
+                onlyLabel,
+                usePreviewRefDelete);
+        } catch(Exception e) {
+            throw Util.newInternal(e);
+        }
     }   
    
     /**
@@ -1812,6 +1825,7 @@ public abstract class FarragoCatalogUtil
      * 
      * @param <ParentType> the type of the object that references the stat
      * records
+     * @param repos repository
      * @param parentList list of parent objects
      * @param statsGetter method that retrieves the list of stat records from
      * each parent object
@@ -1823,20 +1837,30 @@ public abstract class FarragoCatalogUtil
      * @param onlyLabel true if this is the special case where the label
      * being dropped is the only remaining one; in this case, the lowerBound
      * should be null
+     * @param usePreviewRefDelete whether to use the repository's preview
+     * refDelete feature or just delete the objects
      */
     private static <ParentType extends CwmModelElement> void
     removeObsoleteStatisticsFromTable(
+        FarragoRepos repos,
         Collection<ParentType> parentList,
         Method statsGetter,
         Method timestampGetter,
         Timestamp lowerBound,
         Timestamp upperBound,
-        boolean onlyLabel)
+        boolean onlyLabel,
+        boolean usePreviewRefDelete)
         throws Exception
     {
+        EnkiMDRepository mdrRepos = repos.getEnkiMdrRepos();
+        
         for (ParentType parent : parentList) {
+            // We make a copy of the actual list to avoid modifying the 
+            // repository when this method is used as part of previewRefDelete
             List<RefObject> statsList =
-                (List<RefObject>) statsGetter.invoke(parent);
+                new ArrayList<RefObject>(
+                    (List<RefObject>) statsGetter.invoke(parent));
+
             
             // Determine the indices of the stats that are within the bounds
             int lowerIdx = -1;
@@ -1908,7 +1932,11 @@ public abstract class FarragoCatalogUtil
                     while (i < upperIdx && listIter.hasNext()) {
                         RefObject stats = listIter.next();
                         listIter.remove();
-                        stats.refDelete();
+                        if (usePreviewRefDelete) {
+                            mdrRepos.previewRefDelete(stats);
+                        } else {
+                            stats.refDelete();
+                        }
                         i++;
                     }
                 }

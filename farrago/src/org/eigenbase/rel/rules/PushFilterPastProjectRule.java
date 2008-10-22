@@ -44,9 +44,7 @@ public class PushFilterPastProjectRule
         super(
             new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(ProjectRel.class, null)
-                }));
+                new RelOptRuleOperand(ProjectRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

@@ -61,7 +61,7 @@ Calculator::init(int codeSize, int literalSize, int inputSize,
 
     int i;
     for (i = RegisterReference::EFirstSet;
-         i < RegisterReference::ELastSet; 
+         i < RegisterReference::ELastSet;
          i++) {
         // explicitly clear registers. allows detection of rebinding
         // local & literal
@@ -82,20 +82,13 @@ Calculator::~Calculator()
     for (i = RegisterReference::EFirstSet;
          i < RegisterReference::ELastSet;
          i++) {
-        if (mRegisterSetDescriptor[i]) {
-            delete mRegisterSetDescriptor[i];
-            mRegisterSetDescriptor[i] = NULL;
-        }
-        if (mRegisterSetBinding[i]) {
-            delete mRegisterSetBinding[i];
-            mRegisterSetBinding[i] = NULL;
-        }
+        unbind((RegisterReference::ERegisterSet)i);
     }
 
     if (mIsUsingAssembler) {
         // Assembler created all these register references, let's delete them
         for (i = RegisterReference::EFirstSet;
-             i < RegisterReference::ELastSet; 
+             i < RegisterReference::ELastSet;
              i++) {
             for (uint reg=0; reg < mRegisterRef[i].size(); reg++) {
                 if (mRegisterRef[i][reg])
@@ -130,10 +123,10 @@ Calculator::assemble(const char *program)
 {
     assert(mIsUsingAssembler);
 
-    FENNEL_TRACE(TRACE_FINER,
+    FENNEL_TRACE(TRACE_FINEST,
                  "Calculator instructions:" << endl <<
                  InstructionFactory::signatures());
-    FENNEL_TRACE(TRACE_FINER,
+    FENNEL_TRACE(TRACE_FINEST,
                  "Calculator extended instructions:" << endl <<
                  InstructionFactory::extendedSignatures());
     FENNEL_TRACE(TRACE_FINE,
@@ -146,25 +139,38 @@ Calculator::assemble(const char *program)
     mIsAssembling = false;
 }
 
-void
-Calculator::bind(RegisterReference::ERegisterSet regset,
-                 TupleData* data, 
-                 const TupleDescriptor& desc)
+void  Calculator::unbind(RegisterReference::ERegisterSet regset, bool unbindDescriptor)
 {
+    if (unbindDescriptor && mRegisterSetDescriptor[regset]) {
+        delete mRegisterSetDescriptor[regset];
+        mRegisterSetDescriptor[regset] = NULL;
+    }
+    if (mRegisterSetBinding[regset]) {
+        delete mRegisterSetBinding[regset];
+        mRegisterSetBinding[regset] = NULL;
+    }
+}
+
+void
+	Calculator::bind(RegisterReference::ERegisterSet regset,
+	                 TupleData* data,
+	                 const TupleDescriptor& desc)
+	{
     assert(mIsUsingAssembler ? mIsAssembling : true);
     assert(regset < RegisterReference::ELastSet);
     assert(data); // Not strictly needed
-    
+
     // At the moment, do not allow literal and local register sets
     // to ever be rebound as they (may) have cached pointers.
     // If rebinding these register sets is a required feature, you
     // must reset each RegisterReference that points to these
     // tuples
-    assert((regset == RegisterReference::ELiteral) ? 
+    assert((regset == RegisterReference::ELiteral) ?
            !mRegisterSetBinding[RegisterReference::ELiteral] : true);
-    assert((regset == RegisterReference::ELocal) ? 
+    assert((regset == RegisterReference::ELocal) ?
            !mRegisterSetBinding[RegisterReference::ELocal] : true);
-            
+
+    unbind(regset);
     mRegisterSetBinding[regset] = new RegisterSetBinding(data);
     mRegisterSetDescriptor[regset] = new TupleDescriptor(desc);
 
@@ -175,11 +181,11 @@ Calculator::bind(RegisterReference::ERegisterSet regset,
                  mRegisterRef[regset].end(),
                  mem_fun(&RegisterReference::cachePointer));
     }
-    
+
     // pre-allocate mReset vector to the largest possible value
     // trade memory for speed - vector should never have to reallocate
     // TODO: This calls reserve twice, which is wasteful, even at startup.
-    size_t totalResetableRegisters = 
+    size_t totalResetableRegisters =
         mRegisterRef[RegisterReference::ELiteral].size() +
         mRegisterRef[RegisterReference::ELocal].size();
     mRegisterReset.reserve(totalResetableRegisters);
@@ -189,13 +195,15 @@ void Calculator::bind(
     TupleData* input, TupleData* output,
     bool takeOwnwership, const TupleData* outputWrite)
 {
+    unbind(RegisterReference::EInput, false);
     mRegisterSetBinding[RegisterReference::EInput] =
         new RegisterSetBinding(input, takeOwnwership);
+    unbind(RegisterReference::EOutput, false);
     if (outputWrite)
         mRegisterSetBinding[RegisterReference::EOutput] =
             new RegisterSetBinding(output, outputWrite, takeOwnwership);
     else
-        mRegisterSetBinding[RegisterReference::EOutput] = 
+        mRegisterSetBinding[RegisterReference::EOutput] =
             new RegisterSetBinding(output, takeOwnwership);
 }
 
@@ -217,7 +225,7 @@ Calculator::getStatusRegisterDescriptor() const
     return *(mRegisterSetDescriptor[RegisterReference::EStatus]);
 }
 
-TupleData const * const 
+TupleData const * const
 Calculator::getStatusRegister() const
 {
     return &(mRegisterSetBinding[RegisterReference::EStatus]->asTupleData());
@@ -226,7 +234,7 @@ Calculator::getStatusRegister() const
 void Calculator::zeroStatusRegister()
 {
     if (mRegisterSetDescriptor[RegisterReference::EStatus] != NULL) {
-        RegisterSetBinding *statusBinding = 
+        RegisterSetBinding *statusBinding =
             mRegisterSetBinding[RegisterReference::EStatus];
 
         int ncols = statusBinding->asTupleData().size();
@@ -262,21 +270,21 @@ Calculator::exec()
 #ifdef DEBUG
     ostringstream oss;
     TuplePrinter p;
-    if (isTracingLevel(TRACE_FINER)) {
+    if (isTracingLevel(TRACE_FINEST)) {
         oss << "Pre-Exec" << endl << "Output Register: " << endl;
         p.print(oss, getOutputRegisterDescriptor(),
                 mRegisterSetBinding[RegisterReference::EOutput]->asTupleData());
         oss << endl << "Input Register: " << endl;
-        p.print(oss, getInputRegisterDescriptor(), 
+        p.print(oss, getInputRegisterDescriptor(),
                 mRegisterSetBinding[RegisterReference::EInput]->asTupleData());
         oss << endl << "Status Register: " << endl;
-        p.print(oss, getStatusRegisterDescriptor(), 
+        p.print(oss, getStatusRegisterDescriptor(),
                 mRegisterSetBinding[RegisterReference::EStatus]->asTupleData());
         oss << endl;
-        trace(TRACE_FINER, oss.str());
+        trace(TRACE_FINEST, oss.str());
     }
 #endif
-                 
+
 
     TProgramCounter pc = 0, endOfProgram;
     endOfProgram = mCode.size();
@@ -286,18 +294,18 @@ Calculator::exec()
 #ifdef DEBUG
             int oldpc = pc;
             string out;
-            if (isTracingLevel(TRACE_FINER)) {
+            if (isTracingLevel(TRACE_FINEST)) {
                 mCode[oldpc]->describe(out, true);
-                FENNEL_TRACE(TRACE_FINER, "BF [" << oldpc << "] " <<  out.c_str());
+                FENNEL_TRACE(TRACE_FINEST, "BF [" << oldpc << "] " <<  out.c_str());
             }
-#endif 
-            
+#endif
+
             mCode[pc]->exec(pc);
 
 #ifdef DEBUG
-            if (isTracingLevel(TRACE_FINER)) {
+            if (isTracingLevel(TRACE_FINEST)) {
                 mCode[oldpc]->describe(out, true);
-                FENNEL_TRACE(TRACE_FINER, "AF [" << oldpc << "] " <<  out.c_str());
+                FENNEL_TRACE(TRACE_FINEST, "AF [" << oldpc << "] " <<  out.c_str());
             }
 #endif
         }
@@ -311,19 +319,19 @@ Calculator::exec()
         }
     }
 #ifdef DEBUG
-    if (isTracingLevel(TRACE_FINER)) {
+    if (isTracingLevel(TRACE_FINEST)) {
         oss.clear();
         oss << "Post-Exec" << endl << "Output Register: " << endl;
         p.print(oss, getOutputRegisterDescriptor(),
                 mRegisterSetBinding[RegisterReference::EOutput]->asTupleData());
         oss << endl << "Input Register: " << endl;
-        p.print(oss, getInputRegisterDescriptor(), 
+        p.print(oss, getInputRegisterDescriptor(),
                 mRegisterSetBinding[RegisterReference::EInput]->asTupleData());
         oss << endl << "Status Register: " << endl;
-        p.print(oss, getStatusRegisterDescriptor(), 
+        p.print(oss, getStatusRegisterDescriptor(),
                 mRegisterSetBinding[RegisterReference::EStatus]->asTupleData());
         oss << endl << "Warnings: |" << warnings() << "|"<< endl;
-        trace(TRACE_FINER, oss.str());
+        trace(TRACE_FINEST, oss.str());
     }
 #endif
 }

@@ -51,9 +51,15 @@ static void aio_handler(int,siginfo_t *pSiginfo,void *)
     assert(pSiginfo->si_code == SI_ASYNCIO);
     RandomAccessRequestBinding *pBinding =
         static_cast<RandomAccessRequestBinding *>(pSiginfo->si_value.sival_ptr);
-    int rc = aio_error(pBinding);
+
+    // static_cast assigned to lpBinding is a workaround
+    // for a gcc bug that shows up on Ubuntu 8.04 when
+    // passing pBinding to aio_* methods
+    aiocb *lpBinding = static_cast<aiocb *>(pBinding);
+
+    int rc = aio_error(lpBinding);
     if (rc != EINPROGRESS) {
-        rc = aio_return(pBinding);
+        rc = aio_return(lpBinding);
         pBinding->notifyTransferCompletion(rc >= 0);
     }
     // TODO:  chain?
@@ -111,10 +117,16 @@ bool AioSignalScheduler::schedule(RandomAccessRequest &request)
         pBinding->aio_sigevent.sigev_notify = SIGEV_SIGNAL;
         pBinding->aio_sigevent.sigev_signo = SIGRTMIN;
         pBinding->aio_sigevent.sigev_value.sival_ptr = pBinding;
+
+    	// static_cast assigned to lpBinding is a workaround
+    	// for a gcc bug that shows up on Ubuntu 8.04 when
+   	// passing pBinding to aio_* methods
+    	aiocb *lpBinding = static_cast<aiocb *>(pBinding);
+
         if (request.type == RandomAccessRequest::READ) {
-            rc = aio_read(pBinding);
+            rc = aio_read(lpBinding);
         } else {
-            rc = aio_write(pBinding);
+            rc = aio_write(lpBinding);
         }
         assert(!rc);
     }

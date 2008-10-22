@@ -45,9 +45,7 @@ public class FennelRemoveRedundantSortRule
         super(
             new RelOptRuleOperand(
                 FennelSortRel.class,
-                new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(FennelRel.class, null)
-                }));
+                new RelOptRuleOperand(FennelRel.class, ANY)));
     }
 
     //~ Methods ----------------------------------------------------------------

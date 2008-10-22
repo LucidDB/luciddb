@@ -25,7 +25,7 @@ select name from sales.emps order by 1;
 (select name from sales.emps) union all (select name from sales.emps) order by 1;
 
 -- function in function
-values pow(pow(2.0+1.0,pow(2.0,2.0)-1.0)+3.0,2.0);
+values power(power(2.0+1.0,power(2.0,2.0)-1.0)+3.0,2.0);
 
 values -(1+2);
 

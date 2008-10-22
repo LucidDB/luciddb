@@ -10,9 +10,9 @@ create table bug2533tab ( n1 integer)
 ;
 insert into bug2533tab values(2)
 ;
-select POW(POW(n1,2), 2) from bug2533tab
+select POWER(POWER(n1,2), 2) from bug2533tab
 ;
-select POW(POW(n1,2), 0.5) from bug2533tab
+select POWER(POWER(n1,2), 0.5) from bug2533tab
 ;
-select POW(n1,0.5) from bug2533tab
+select POWER(n1,0.5) from bug2533tab
 ;

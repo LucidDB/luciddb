@@ -68,6 +68,20 @@ public interface CalcRexAggImplementor
         RexToCalcTranslator translator);
 
     /**
+     * Generates instructions to initialize and add a new value to an aggregation.
+     *
+     * This could call implementInitialize followed by implementAdd
+     *
+     * @param call The call to the aggregate function to be implemented
+     * @param accumulatorRegister The accumulator register
+     * @param translator Calculator code generator
+     */
+    void implementInitAdd(
+        RexCall call,
+        CalcReg accumulatorRegister,
+        RexToCalcTranslator translator);
+
+    /**
      * Generates instructions to implement this call, and returns the register
      * which holds the result.
      *

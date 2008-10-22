@@ -150,10 +150,12 @@ public interface SqlTester
      *
      * @param expression Scalar expression
      * @param result Expected result
-     * @param resultType
+     * @param resultType Expected result type
      */
-    void checkString(String expression,
-        String result, String resultType);
+    void checkString(
+        String expression,
+        String result,
+        String resultType);
 
     /**
      * Tests that a SQL expression returns the SQL NULL value. For example,
@@ -185,6 +187,18 @@ public interface SqlTester
         String type);
 
     /**
+     * Checks that a query returns one column of an expected type. For
+     * example, <code>checkType("VALUES (1 + 2)", "INTEGER NOT
+     * NULL")</code>.
+     *
+     * @param sql Query expression
+     * @param type Type string
+     */
+    void checkColumnType(
+        String sql,
+        String type);
+
+    /**
      * Tests that a SQL query returns a single column with the given type. For
      * example,
      *
@@ -211,8 +225,13 @@ public interface SqlTester
     /**
      * Declares that this test is for a given operator. So we can check that all
      * operators are tested.
+     *
+     * @param operator Operator
+     * @param unimplementedVmNames Names of virtual machines for which this
      */
-    void setFor(SqlOperator operator);
+    void setFor(
+        SqlOperator operator,
+        VmName... unimplementedVmNames);
 
     /**
      * Checks that an aggregate expression returns the expected result.
@@ -223,11 +242,35 @@ public interface SqlTester
      * @param expr Aggregate expression, e.g. <code>SUM(DISTINCT x)</code>
      * @param inputValues Array of input values, e.g. <code>["1", null,
      * "2"]</code>.
-     * @param result
-     * @param delta
+     * @param result Expected result
+     * @param delta Allowable variance from expected result
      */
-    void checkAgg(String expr,
-        String [] inputValues, Object result, int delta);
+    void checkAgg(
+        String expr,
+        String [] inputValues,
+        Object result,
+        double delta);
+
+    /**
+     * Checks that a windowed aggregate expression returns the expected result.
+     *
+     * <p>For example, <code>checkWinAgg("FIRST_VALUE(x)", new String[] {"2",
+     * "3", null, "3" }, "INTEGER NOT NULL", 2, 0d);</code>
+     *
+     * @param expr Aggregate expression, e.g. <code>SUM(DISTINCT x)</code>
+     * @param inputValues Array of input values, e.g. <code>["1", null,
+     * "2"]</code>.
+     * @param type Expected result type
+     * @param result Expected result
+     * @param delta Allowable variance from expected result
+     */
+    void checkWinAgg(
+        String expr,
+        String[] inputValues,
+        String windowSpec,
+        String type,
+        Object result,
+        double delta);
 
     /**
      * Tests that a scalar SQL expression fails at run time.
@@ -248,6 +291,16 @@ public interface SqlTester
     interface TypeChecker
     {
         void checkType(RelDataType type);
+    }
+
+    /**
+     * Name of a virtual machine that can potentially implement an operator.
+     */
+    public enum VmName
+    {
+        FENNEL,
+        JAVA,
+        EXPAND
     }
 }
 

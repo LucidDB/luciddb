@@ -58,7 +58,7 @@ public abstract class CalcRelBase
         this.rowType = rowType;
         this.program = program;
         this.collationList =
-            collationList.isEmpty() ? RelCollation.emptyList : collationList;
+            collationList.isEmpty() ? Collections.<RelCollation>emptyList() : collationList;
         assert isValid(true);
     }
 

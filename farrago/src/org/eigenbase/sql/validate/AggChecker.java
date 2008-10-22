@@ -44,20 +44,30 @@ class AggChecker
     private final Stack<SqlValidatorScope> scopes =
         new Stack<SqlValidatorScope>();
     private final List<SqlNode> groupExprs;
+    private boolean distinct;
     private SqlValidatorImpl validator;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an AggChecker.
+     *
+     * @param validator Validator
+     * @param scope Scope
+     * @param groupExprs Expressions in GROUP BY (or SELECT DISTINCT) clause,
+     * that are therefore available
+     * @param distinct Whether aggregation checking is because of a SELECT
+     * DISTINCT clause
      */
     AggChecker(
         SqlValidatorImpl validator,
         AggregatingScope scope,
-        List<SqlNode> groupExprs)
+        List<SqlNode> groupExprs,
+        boolean distinct)
     {
         this.validator = validator;
         this.groupExprs = groupExprs;
+        this.distinct = distinct;
         this.scopes.push(scope);
     }
 
@@ -105,12 +115,25 @@ class AggChecker
         final String exprString = originalExpr.toString();
         throw validator.newValidationError(
             originalExpr,
-            EigenbaseResource.instance().NotGroupExpr.ex(exprString));
+            distinct
+                ? EigenbaseResource.instance().NotSelectDistinctExpr.ex(
+                exprString)
+                : EigenbaseResource.instance().NotGroupExpr.ex(exprString));
     }
 
     public Void visit(SqlCall call)
     {
         if (call.getOperator().isAggregator()) {
+            if (distinct) {
+                // Cannot use agg fun in ORDER BY clause if have SELECT
+                // DISTINCT.
+                SqlNode originalExpr = validator.getOriginal(call);
+                final String exprString = originalExpr.toString();
+                throw validator.newValidationError(
+                    call,
+                    EigenbaseResource.instance().NotSelectDistinctExpr.ex(
+                        exprString));
+            }
             // For example, 'sum(sal)' in 'SELECT sum(sal) FROM emp GROUP
             // BY deptno'
             return null;

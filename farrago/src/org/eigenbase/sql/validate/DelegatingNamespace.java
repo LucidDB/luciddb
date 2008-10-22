@@ -84,6 +84,11 @@ public abstract class DelegatingNamespace implements SqlValidatorNamespace
         return namespace.getNode();
     }
 
+    public SqlNode getEnclosingNode()
+    {
+        return namespace.getEnclosingNode();
+    }
+
     public SqlValidatorNamespace lookupChild(
         String name)
     {

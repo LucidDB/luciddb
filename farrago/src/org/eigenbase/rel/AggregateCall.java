@@ -170,6 +170,12 @@ public class AggregateCall
             && argList.equals(other.argList);
     }
 
+    // override Object
+    public int hashCode()
+    {
+        return aggregation.hashCode()+argList.hashCode();
+    }
+
     /**
      * Creates a binding of this call in the context of an {@link
      * AggregateRel}, which can then be used to infer the return type.

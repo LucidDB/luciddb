@@ -17,9 +17,15 @@ select parameter_name from sys_boot.mgmt.dba_routine_parameters_internal1
 where schema_name='MGMT' and routine_specific_name='SLEEP'
 order by 1;
 
+-- SYS_CWM/FEM use different wrappers depending on repository configuration
 select foreign_wrapper_name, foreign_server_name
 from sys_boot.mgmt.dba_foreign_servers_internal2
+where foreign_server_name not in ('SYS_CWM', 'SYS_FEM')
 order by 1,2;
+
+select foreign_server_name
+from sys_boot.mgmt.dba_foreign_servers_internal2
+order by 1;
 
 create schema mtest;
 create table mtest.t(col int primary key);

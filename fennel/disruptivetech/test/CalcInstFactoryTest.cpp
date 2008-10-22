@@ -118,7 +118,7 @@ CalcInstFactoryTest::testBool()
 {
     ostringstream pg("");
 
-    char* Bool[][2] = {
+    const char* Bool[][2] = {
         { "OR", "3" },
         { "AND", "3" },
         { "NOT", "2" },
@@ -176,7 +176,7 @@ CalcInstFactoryTest::testBoolNative()
 {
     ostringstream pg("");
 
-    char* boolnative[][2] = {
+    const char* boolnative[][2] = {
        { "EQ", "3" },
        { "NE" , "3" },
        { "GT", "3" },
@@ -228,7 +228,7 @@ CalcInstFactoryTest::testIntegralNative()
 {
     ostringstream pg("");
 
-    char* integralnative[][2] = {
+    const char* integralnative[][2] = {
         { "MOD", "3" },
         { "AND", "3" },
         { "OR", "3" },
@@ -277,7 +277,7 @@ CalcInstFactoryTest::testIntegralPointer()
 {
     ostringstream pg("");
 
-    char* integralpointer[][2] = {
+    const char* integralpointer[][2] = {
        { "GETS", "2", },
        { "GETMS" , "2", },
        { "", "" }
@@ -324,7 +324,7 @@ CalcInstFactoryTest::testPointerIntegral()
 {
     ostringstream pg("");
 
-    char* pointerintegral[][2] = {
+    const char* pointerintegral[][2] = {
        { "PUTS", "2", },
        { "", "" }
     };
@@ -364,7 +364,7 @@ CalcInstFactoryTest::testBoolPointer()
 {
     ostringstream pg("");
 
-    char* boolpointer[][2] = {
+    const char* boolpointer[][2] = {
        { "EQ", "3", },
        { "NE" , "3", },
        { "GT", "3", },
@@ -417,7 +417,7 @@ CalcInstFactoryTest::testJump()
 {
     ostringstream pg("");
 
-    char* Jump[][2] = {
+    const char* Jump[][2] = {
         { "JMP", "0" },
         { "JMPT", "1" },
         { "JMPF", "1" },
@@ -460,7 +460,7 @@ CalcInstFactoryTest::testNativeNative()
 {
     ostringstream pg("");
 
-    char* nativenative[][2] = {
+    const char* nativenative[][2] = {
        { "ADD", "3" },
        { "SUB" , "3" },
        { "MUL", "3" },
@@ -512,7 +512,7 @@ CalcInstFactoryTest::testPointerPointer()
 {
     ostringstream pg("");
 
-    char* pointerpointer[][3] = {
+    const char* pointerpointer[][3] = {
        { "ADD", "2", "1" },
        { "SUB" , "2", "1" },
        { "MOVE", "2", "0" },

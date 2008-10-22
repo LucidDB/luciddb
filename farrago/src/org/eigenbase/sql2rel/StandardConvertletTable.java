@@ -100,6 +100,22 @@ public class StandardConvertletTable
                 }
             });
 
+        // Expand "x NOT SIMILAR y" into "NOT (x SIMILAR y)"
+        registerOp(
+            SqlStdOperatorTable.notSimilarOperator,
+            new SqlRexConvertlet() {
+                public RexNode convertCall(SqlRexContext cx, SqlCall call)
+                {
+                    final SqlCall expanded =
+                        SqlStdOperatorTable.notOperator.createCall(
+                            SqlParserPos.ZERO,
+                            SqlStdOperatorTable.similarOperator.createCall(
+                                SqlParserPos.ZERO,
+                                call.getOperands()));
+                    return cx.convertExpression(expanded);
+                }
+            });
+
         // Unary "+" has no effect, so expand "+ x" into "x".
         registerOp(
             SqlStdOperatorTable.prefixPlusOperator,

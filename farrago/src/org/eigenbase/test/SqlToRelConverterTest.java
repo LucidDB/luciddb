@@ -96,13 +96,32 @@ public class SqlToRelConverterTest
     {
         check("SELECT * FROM emp JOIN dept USING (deptno)", "${plan}");
     }
+
     public void testJoinUsingCompound()
     {
         check("SELECT * FROM emp LEFT JOIN (" +
             "SELECT *, deptno * 5 as empno FROM dept) " +
             "USING (deptno,empno)", "${plan}");
     }
-    
+
+    public void testJoinNatural()
+    {
+        check("SELECT * FROM emp NATURAL JOIN dept",
+            "${plan}");
+    }
+
+    public void testJoinNaturalNoCommonColumn()
+    {
+        check("SELECT * FROM emp NATURAL JOIN (SELECT deptno AS foo, name FROM dept) AS d",
+            "${plan}");
+    }
+
+    public void testJoinNaturalMultipleCommonColumn()
+    {
+        check("SELECT * FROM emp NATURAL JOIN (SELECT deptno, name AS ename FROM dept) AS d",
+            "${plan}");
+    }
+
     public void testJoinWithUnion()
     {
         check(
@@ -592,7 +611,7 @@ public class SqlToRelConverterTest
             + "  sum(deptno) over w1,\n"
             + "  sum(deptno) over w2\n"
             + "from emp\n"
-            + "where sum(deptno - sal) over w1 > 999\n"
+            + "where deptno - sal > 999\n"
             + "window w1 as (partition by job order by hiredate rows 2 preceding),\n"
             + "  w2 as (partition by job order by hiredate rows 3 preceding disallow partial),\n"
             + "  w3 as (partition by job order by hiredate range interval '1' second preceding)",
