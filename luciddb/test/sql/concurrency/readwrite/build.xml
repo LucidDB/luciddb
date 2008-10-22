@@ -34,6 +34,12 @@
   <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
   <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
+  <!-- somewhat redundant but needed because the backup/restore test targets
+       don't always inherit these the properties in this file
+  -->
+  <property name="luciddb.dir" location="${open.dir}/luciddb" />
+  <property name="build.init.properties" location="${rwconcurrency.dir}/build.init.properties" />
+  <import file="${luciddb.dir}/properties.xml" />
 
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${rwconcurrency.dir}/gen" />
