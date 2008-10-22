@@ -688,6 +688,12 @@ public class SqlStdOperatorTable
             SqlTypeStrategies.otcNumericOrString,
             SqlFunctionCategory.Numeric);
 
+    /**
+     * <code>SUM0</code> aggregate function.
+     */
+    public static final SqlAggFunction sumEmptyIsZeroOperator =
+        new SqlSumEmptyIsZeroAggFunction(null);
+
     //-------------------------------------------------------------
     // WINDOW Rank Functions
     //-------------------------------------------------------------

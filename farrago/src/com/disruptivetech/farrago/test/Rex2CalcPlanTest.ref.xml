@@ -1467,7 +1467,7 @@ C s8, s4;
 V 0, 0;
 T;
 MOVE O0, C0 /* 0: COUNT() */;
-MOVE O1, C1 /* 1: SUM($t0) */;
+MOVE O1, C1 /* 1: $SUM0($t0) */;
 MOVE O2, C0 /* 2: COUNT($t0) */;
 RETURN /* 3: */;]]>
         </Resource>
@@ -1479,7 +1479,7 @@ C s8;
 V 1;
 T;
 ADD O0, O0, C0 /* 0: COUNT() */;
-ADD O1, O1, I0 /* 1: SUM($t0) */;
+ADD O1, O1, I0 /* 1: $SUM0($t0) */;
 ADD O2, O2, C0 /* 2: COUNT($t0) */;
 RETURN /* 3: */;]]>
         </Resource>
@@ -1491,7 +1491,7 @@ C s8;
 V 1;
 T;
 SUB O0, O0, C0 /* 0: COUNT() */;
-SUB O1, O1, I0 /* 1: SUM($t0) */;
+SUB O1, O1, I0 /* 1: $SUM0($t0) */;
 SUB O2, O2, C0 /* 2: COUNT($t0) */;
 RETURN /* 3: */;]]>
         </Resource>
