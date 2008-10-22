@@ -4545,12 +4545,15 @@ public class SqlToRelConverter
             final RelDataType type = call.getType();
             RexNode [] exprs = call.getOperands();
 
+            boolean isUnboundedPreceding =
+                SqlWindowOperator.isUnboundedPreceding(window.getLowerBound());
             // The fennel support for windowed Agg MIN/MAX only
             // supports BIGINT and DOUBLE numeric types. If the
             // expression result is numeric but not correct then pre
             // and post CAST the data.  Example with INTEGER
             // CAST(MIN(CAST(exp to BIGINT)) to INTEGER)
-            SqlFunction histogramOp = getHistogramOp(aggOp);
+            SqlFunction histogramOp =
+                isUnboundedPreceding ? null : getHistogramOp(aggOp);
 
             // If a window contains only the current row, treat it as physical.
             // (It could be logical too, but physical is simpler to implement.)
@@ -4596,7 +4599,8 @@ public class SqlToRelConverter
                         window.getLowerBound(),
                         window.getUpperBound(),
                         physical,
-                        window.isAllowPartial());
+                        window.isAllowPartial(),
+                        false);
 
                 RexNode histogramCall =
                     rexBuilder.makeCall(
@@ -4617,16 +4621,23 @@ public class SqlToRelConverter
 
                 return histogramCall;
             } else {
+                boolean needSum0 =
+                    aggOp == SqlStdOperatorTable.sumOperator;
+                SqlAggFunction aggOpToUse =
+                    needSum0 ?
+                        SqlStdOperatorTable.sumEmptyIsZeroOperator
+                        : aggOp;
                 return rexBuilder.makeOver(
                     type,
-                    aggOp,
+                    aggOpToUse,
                     exprs,
                     partitionKeys,
                     orderKeys,
                     window.getLowerBound(),
                     window.getUpperBound(),
                     physical,
-                    window.isAllowPartial());
+                    window.isAllowPartial(),
+                    needSum0);
             }
         }
 
