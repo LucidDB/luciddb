@@ -306,7 +306,8 @@ ${farrago.test.jvmargs}
   </target>
 
   <!-- compile only packages needed by Saffron -->
-  <target name="compile.saffron.deps" depends="generateResources,sqlParser">
+  <target name="compile.saffron.deps" 
+    depends="mungeJdbc, generateResources,sqlParser">
     <farrago.javaCompileClient
       srcdir="${farrago.src.dir}"
       destdir="${farrago.classes.dir}"
@@ -552,7 +553,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="compileCatalog"
-    depends="cleanCatalog,mungeJdbc,generateSqlTestWrapper,createRepository"/>
+    depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
 
   <!-- creates the plugin/jaas.config file from template -->
   <target name="createJaasConfig">

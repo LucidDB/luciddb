@@ -33,6 +33,9 @@
   <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
   <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
+  <property name="build.init.properties" location="${backupRestore.dir}/build.init.properties" />
+  <property name="luciddb.dir" location="${open.dir}/luciddb" />
+  <import file="${luciddb.dir}/properties.xml" />
 
   <!-- directory of csv files -->
   <property name="data.dir" value="${open.dir}/luciddb/test/data"/>
