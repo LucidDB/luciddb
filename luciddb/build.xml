@@ -494,6 +494,7 @@ ${farrago.test.jvmargs}
 
   <target name="clean" depends="clean-dist">
     <antcall target="cleanTestLogs"/>
+    <antcall target="cleanJars"/>
     <delete quiet="true">
       <fileset dir="${classes.dir}" includes="**/*.class"/>
     </delete>
