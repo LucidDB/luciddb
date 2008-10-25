@@ -3669,6 +3669,23 @@ public class SqlValidatorImpl
         targetWindow.setWindowCall(null);
     }
 
+    public void validateAggregateParams(SqlCall aggFunction, SqlValidatorScope scope)
+    {
+        // For agg(expr), expr cannot itself contain aggregate function
+        // invocations.  For example, SUM(2*MAX(x)) is illegal; when
+        // we see it, we'll report the error for the SUM (not the MAX).
+        // For more than one level of nesting, the error which results
+        // depends on the traversal order for validation.
+         for (SqlNode param : aggFunction.getOperands()) {
+             final SqlNode agg = aggOrOverFinder.findAgg(param);
+             if (aggOrOverFinder.findAgg(param) != null) {
+                 throw newValidationError(
+                     aggFunction,
+                     EigenbaseResource.instance().NestedAggIllegal.ex());
+             }
+        }
+    }
+
     public void validateCall(
         SqlCall call,
         SqlValidatorScope scope)

@@ -5589,7 +5589,7 @@ public class SqlValidatorTest
     public void testNestedAggFails()
     {
         String ERR_NESTED_AGG = "Aggregate expressions cannot be nested";
-        
+
         // simple case
         checkFails(
             "select ^sum(max(empno))^ from emp",
@@ -5615,6 +5615,16 @@ public class SqlValidatorTest
         // causes us to flag the intermediate level
         checkFails(
             "select sum(^max(min(empno))^) from emp",
+            ERR_NESTED_AGG);
+
+        // in OVER clause
+        checkFails(
+            "select ^sum(max(empno)) OVER^ (order by deptno ROWS 2 PRECEDING) from emp",
+            ERR_NESTED_AGG);
+
+        // OVER in clause
+        checkFails(
+            "select ^sum(max(empno) OVER (order by deptno ROWS 2 PRECEDING))^ from emp",
             ERR_NESTED_AGG);
     }
 
