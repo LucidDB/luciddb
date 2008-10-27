@@ -12,7 +12,7 @@ insert into t2 values (1,100), (2,200), (4,400);
 -- insert column list ommitted
 merge into t1 using t2 on n1 = m1
 when matched then update set n2=m2
-when not matched then insert values (m1, pow(m2,2));
+when not matched then insert values (m1, power(m2,2));
 select * from t1 order by 2;
 delete from t1;
 insert into t1 values (1,10), (2,20), (3,30);
