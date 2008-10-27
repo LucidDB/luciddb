@@ -25,15 +25,15 @@
 . . . . . . . . > (object '@DATATYPE_TABLE@');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from orcl_server_no_pushdown.schoi.@DATATYPE_TABLE@ order by 1,2,3,4,5,6;
-+------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
-|        DATECOL         |      TIMESTAMPCOL      | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
-+------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
-|                        |                        | 99999.0          |                   | varchar     |          |          |
-|                        |                        | 99999.0          |                   | varchar     | 123      |          |
-|                        |                        | 99999.0          |                   | varchar     | 456      |          |
-| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  | 100.011          | 100.000           | varchar     |          |          |
-| 2006-10-31 23:59:59.0  |                        | 0.0              | 0.000             |             |          |          |
-+------------------------+------------------------+------------------+-------------------+-------------+----------+----------+
++----------------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|       DATECOL        |     TIMESTAMPCOL     | NUMERICCOLZEROP  | NUMERICCOL2WITHP  | VARCHARCOL  | CLOBCOL  | BLOBCOL  |
++----------------------+----------------------+------------------+-------------------+-------------+----------+----------+
+|                      |                      | 99999.0          |                   | varchar     |          |          |
+|                      |                      | 99999.0          |                   | varchar     | 123      |          |
+|                      |                      | 99999.0          |                   | varchar     | 456      |          |
+| 2006-10-31 00:00:00  | 2006-10-31 12:00:21  | 100.011          | 100.000           | varchar     |          |          |
+| 2006-10-31 23:59:59  |                      | 0.0              | 0.000             |             |          |          |
++----------------------+----------------------+------------------+-------------------+-------------+----------+----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> call applib.create_var('context1', null, 'context');
 0: jdbc:luciddb:> call applib.create_var('context1', 'last_extract_timestamp', 'appvariable');
@@ -46,12 +46,12 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2,3;
-+------------------------+------------------------+-------------+
-|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
-+------------------------+------------------------+-------------+
-|                        | 2006-10-31 23:59:59.0  |             |
-| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
-+------------------------+------------------------+-------------+
++----------------------+----------------------+-------------+
+|     TIMESTAMPCOL     |       DATECOL        | VARCHARCOL  |
++----------------------+----------------------+-------------+
+|                      | 2006-10-31 23:59:59  |             |
+| 2006-10-31 12:00:21  | 2006-10-31 00:00:00  | varchar     |
++----------------------+----------------------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select * from test.datatype where datecol >=
@@ -60,17 +60,17 @@
 . . . . . . . . >      - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . >   order by 1,2,3
 . . . . . . . . > );
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                                                                                   column0                                                                                                                                                    |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                                                                                                                                                    |
-|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                  |
-|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GE], filterOrdinals=[[1]], filterTuple=[[2006-10-31 00:00:00.0]], outputRowType=[RecordType(TIMESTAMP(0) TIMESTAMPCOL, TIMESTAMP(0) DATECOL, VARCHAR(4000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" VARCHARCOL) NOT NULL])  |
-|       IteratorToFennelConverter                                                                                                                                                                                                                                                                              |
-|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                  |
-|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                         |
-| FROM "SCHOI"."DATATYPES"])                                                                                                                                                                                                                                                                                   |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                                  column0                                                                                                                                                   |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                                                                  |
+|   FennelSortRel(key=[[0, 1, 2]], discardDuplicates=[false])                                                                                                                                                                                                                                                |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GE], filterOrdinals=[[1]], filterTuple=[[2006-10-31 00:00:00]], outputRowType=[RecordType(TIMESTAMP(0) TIMESTAMPCOL, TIMESTAMP(0) DATECOL, VARCHAR(4000) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" VARCHARCOL) NOT NULL])  |
+|       IteratorToFennelConverter                                                                                                                                                                                                                                                                            |
+|         ResultSetToFarragoIteratorConverter                                                                                                                                                                                                                                                                |
+|           MedJdbcQueryRel(foreignSql=[SELECT "TIMESTAMPCOL", "DATECOL", "VARCHARCOL"                                                                                                                                                                                                                       |
+| FROM "SCHOI"."DATATYPES"])                                                                                                                                                                                                                                                                                 |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- ENABLED PUSHDOWN
@@ -133,12 +133,12 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2;
-+------------------------+------------------------+
-|        DATECOL         |      TIMESTAMPCOL      |
-+------------------------+------------------------+
-| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  |
-| 2006-10-31 23:59:59.0  |                        |
-+------------------------+------------------------+
++----------------------+----------------------+
+|       DATECOL        |     TIMESTAMPCOL     |
++----------------------+----------------------+
+| 2006-10-31 00:00:00  | 2006-10-31 12:00:21  |
+| 2006-10-31 23:59:59  |                      |
++----------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where datecol >=
@@ -167,11 +167,11 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2;
-+------------------------+---------------+
-|        DATECOL         | TIMESTAMPCOL  |
-+------------------------+---------------+
-| 2006-10-31 23:59:59.0  |               |
-+------------------------+---------------+
++----------------------+---------------+
+|       DATECOL        | TIMESTAMPCOL  |
++----------------------+---------------+
+| 2006-10-31 23:59:59  |               |
++----------------------+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where datecol >
@@ -200,11 +200,11 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2;
-+------------------------+------------------------+
-|        DATECOL         |      TIMESTAMPCOL      |
-+------------------------+------------------------+
-| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  |
-+------------------------+------------------------+
++----------------------+----------------------+
+|       DATECOL        |     TIMESTAMPCOL     |
++----------------------+----------------------+
+| 2006-10-31 00:00:00  | 2006-10-31 12:00:21  |
++----------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where datecol <=
@@ -265,11 +265,11 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2;
-+------------------------+------------------------+
-|        DATECOL         |      TIMESTAMPCOL      |
-+------------------------+------------------------+
-| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  |
-+------------------------+------------------------+
++----------------------+----------------------+
+|       DATECOL        |     TIMESTAMPCOL     |
++----------------------+----------------------+
+| 2006-10-31 00:00:00  | 2006-10-31 12:00:21  |
++----------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where datecol =
@@ -298,11 +298,11 @@
 . . . . . . . . >    (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)),
 . . . . . . . . >    - (cast(applib.get_var('context1', 'extraction_window') as INTEGER)))
 . . . . . . . . > order by 1,2;
-+------------------------+---------------+
-|        DATECOL         | TIMESTAMPCOL  |
-+------------------------+---------------+
-| 2006-10-31 23:59:59.0  |               |
-+------------------------+---------------+
++----------------------+---------------+
+|       DATECOL        | TIMESTAMPCOL  |
++----------------------+---------------+
+| 2006-10-31 23:59:59  |               |
++----------------------+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where datecol <>
@@ -351,14 +351,14 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- LIKE
 0: jdbc:luciddb:> select datecol, timestampcol from test.datatype where varcharcol LIKE '%char' order by 1,2;
-+------------------------+------------------------+
-|        DATECOL         |      TIMESTAMPCOL      |
-+------------------------+------------------------+
-|                        |                        |
-|                        |                        |
-|                        |                        |
-| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  |
-+------------------------+------------------------+
++----------------------+----------------------+
+|       DATECOL        |     TIMESTAMPCOL     |
++----------------------+----------------------+
+|                      |                      |
+|                      |                      |
+|                      |                      |
+| 2006-10-31 00:00:00  | 2006-10-31 12:00:21  |
++----------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . > select datecol, timestampcol from test.datatype where varcharcol LIKE '%char' order by 1,2
@@ -421,12 +421,12 @@
 . . . . . . . . >   AND
 . . . . . . . . >   (cast(applib.get_var('context1', 'last_extract_timestamp') as TIMESTAMP)) 
 . . . . . . . . > order by 1,2;
-+------------------------+------------------------+
-|        DATECOL         |      TIMESTAMPCOL      |
-+------------------------+------------------------+
-| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  |
-| 2006-10-31 23:59:59.0  |                        |
-+------------------------+------------------------+
++----------------------+----------------------+
+|       DATECOL        |     TIMESTAMPCOL     |
++----------------------+----------------------+
+| 2006-10-31 00:00:00  | 2006-10-31 12:00:21  |
+| 2006-10-31 23:59:59  |                      |
++----------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where datecol BETWEEN
@@ -477,14 +477,14 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- IN
 0: jdbc:luciddb:> select datecol, timestampcol from test.datatype where varcharcol IN ('varchar2', 'varchar') order by 1,2;
-+------------------------+------------------------+
-|        DATECOL         |      TIMESTAMPCOL      |
-+------------------------+------------------------+
-|                        |                        |
-|                        |                        |
-|                        |                        |
-| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  |
-+------------------------+------------------------+
++----------------------+----------------------+
+|       DATECOL        |     TIMESTAMPCOL     |
++----------------------+----------------------+
+|                      |                      |
+|                      |                      |
+|                      |                      |
+| 2006-10-31 00:00:00  | 2006-10-31 12:00:21  |
++----------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where varcharcol IN ('varchar2', 'varchar') order by 1,2
@@ -505,14 +505,14 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- IS NOT NULL
 0: jdbc:luciddb:> select datecol, timestampcol from test.datatype where varcharcol IS NOT NULL order by 1,2;
-+------------------------+------------------------+
-|        DATECOL         |      TIMESTAMPCOL      |
-+------------------------+------------------------+
-|                        |                        |
-|                        |                        |
-|                        |                        |
-| 2006-10-31 00:00:00.0  | 2006-10-31 12:00:21.0  |
-+------------------------+------------------------+
++----------------------+----------------------+
+|       DATECOL        |     TIMESTAMPCOL     |
++----------------------+----------------------+
+|                      |                      |
+|                      |                      |
+|                      |                      |
+| 2006-10-31 00:00:00  | 2006-10-31 12:00:21  |
++----------------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where varcharcol IS NOT NULL order by 1,2
@@ -533,11 +533,11 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- IS NULL
 0: jdbc:luciddb:> select datecol, timestampcol from test.datatype where varcharcol IS NULL order by 1,2;
-+------------------------+---------------+
-|        DATECOL         | TIMESTAMPCOL  |
-+------------------------+---------------+
-| 2006-10-31 23:59:59.0  |               |
-+------------------------+---------------+
++----------------------+---------------+
+|       DATECOL        | TIMESTAMPCOL  |
++----------------------+---------------+
+| 2006-10-31 23:59:59  |               |
++----------------------+---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol, timestampcol from test.datatype where varcharcol IS NULL order by 1,2
@@ -565,11 +565,11 @@
 . . . . . . . . >   AND
 . . . . . . . . > timestampcol < TIMESTAMP'2006-10-31 12:12:12')
 . . . . . . . . > order by 1,2;
-+------------------------+------------------------+-------------+
-|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
-+------------------------+------------------------+-------------+
-| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
-+------------------------+------------------------+-------------+
++----------------------+----------------------+-------------+
+|     TIMESTAMPCOL     |       DATECOL        | VARCHARCOL  |
++----------------------+----------------------+-------------+
+| 2006-10-31 12:00:21  | 2006-10-31 00:00:00  | varchar     |
++----------------------+----------------------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select timestampcol, datecol, varcharcol from test.datatype
@@ -602,15 +602,15 @@
 . . . . . . . . >   OR
 . . . . . . . . > timestampcol < TIMESTAMP'2006-10-31 12:12:12')
 . . . . . . . . > order by 1,2;
-+------------------------+------------------------+-------------+
-|      TIMESTAMPCOL      |        DATECOL         | VARCHARCOL  |
-+------------------------+------------------------+-------------+
-|                        |                        | varchar     |
-|                        |                        | varchar     |
-|                        |                        | varchar     |
-|                        | 2006-10-31 23:59:59.0  |             |
-| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  | varchar     |
-+------------------------+------------------------+-------------+
++----------------------+----------------------+-------------+
+|     TIMESTAMPCOL     |       DATECOL        | VARCHARCOL  |
++----------------------+----------------------+-------------+
+|                      |                      | varchar     |
+|                      |                      | varchar     |
+|                      |                      | varchar     |
+|                      | 2006-10-31 23:59:59  |             |
+| 2006-10-31 12:00:21  | 2006-10-31 00:00:00  | varchar     |
++----------------------+----------------------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select timestampcol, datecol, varcharcol from test.datatype 
@@ -638,11 +638,11 @@
 0: jdbc:luciddb:> -- not mapped
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select datecol from test.datatype where datecol >= APPLIB.ADD_DAYS(timestampcol, -100);
-+------------------------+
-|        DATECOL         |
-+------------------------+
-| 2006-10-31 00:00:00.0  |
-+------------------------+
++----------------------+
+|       DATECOL        |
++----------------------+
+| 2006-10-31 00:00:00  |
++----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol from test.datatype where datecol >= APPLIB.ADD_DAYS(timestampcol, -100)
@@ -658,12 +658,12 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select datecol from test.datatype where datecol >= cast('2006-10-10 00:00:00' as TIMESTAMP);
-+------------------------+
-|        DATECOL         |
-+------------------------+
-| 2006-10-31 00:00:00.0  |
-| 2006-10-31 23:59:59.0  |
-+------------------------+
++----------------------+
+|       DATECOL        |
++----------------------+
+| 2006-10-31 00:00:00  |
+| 2006-10-31 23:59:59  |
++----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for (
 . . . . . . . . >   select datecol from test.datatype where datecol >= cast('2006-10-10 00:00:00' as TIMESTAMP)
@@ -690,12 +690,12 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- date pushdown
 0: jdbc:luciddb:> select datecol from test.datatype where datecol >= TIMESTAMP '2005-01-01 00:00:00' order by 1;
-+------------------------+
-|        DATECOL         |
-+------------------------+
-| 2006-10-31 00:00:00.0  |
-| 2006-10-31 23:59:59.0  |
-+------------------------+
++----------------------+
+|       DATECOL        |
++----------------------+
+| 2006-10-31 00:00:00  |
+| 2006-10-31 23:59:59  |
++----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for select datecol from test.datatype where datecol >= TIMESTAMP '2005-01-01 00:00:00' order by 1;
 +--------------------------------------------------------+
@@ -714,12 +714,12 @@
 0: jdbc:luciddb:> -- projections
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select cast(varcharcol as varchar(2)) as "var col", cast(datecol as timestamp(0)) as "date timestamp" from test.datatype where datecol >= TIMESTAMP '2005-01-01 00:00:00' order by 1, 2;
-+----------+------------------------+
-| var col  |     date timestamp     |
-+----------+------------------------+
-|          | 2006-10-31 23:59:59.0  |
-| va       | 2006-10-31 00:00:00.0  |
-+----------+------------------------+
++----------+----------------------+
+| var col  |    date timestamp    |
++----------+----------------------+
+|          | 2006-10-31 23:59:59  |
+| va       | 2006-10-31 00:00:00  |
++----------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for select cast(varcharcol as varchar(2)) as "var col", cast(datecol as timestamp(0)) as "date timestamp" from test.datatype where datecol >= TIMESTAMP '2005-01-01 00:00:00' order by 1, 2;
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -736,12 +736,12 @@
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from test.datatype where datecol >= TIMESTAMP '2005-01-01 00:00:00' order by 1,2,3;
-+------------------------+------------------------+-------------+-------------+
-|      TIMESTAMPCOL      |        DATECOL         | DELETEDCOL  | VARCHARCOL  |
-+------------------------+------------------------+-------------+-------------+
-|                        | 2006-10-31 23:59:59.0  |             |             |
-| 2006-10-31 12:00:21.0  | 2006-10-31 00:00:00.0  |             | varchar     |
-+------------------------+------------------------+-------------+-------------+
++----------------------+----------------------+-------------+-------------+
+|     TIMESTAMPCOL     |       DATECOL        | DELETEDCOL  | VARCHARCOL  |
++----------------------+----------------------+-------------+-------------+
+|                      | 2006-10-31 23:59:59  |             |             |
+| 2006-10-31 12:00:21  | 2006-10-31 00:00:00  |             | varchar     |
++----------------------+----------------------+-------------+-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan for select * from test.datatype where datecol >= TIMESTAMP '2005-01-01 00:00:00' order by 1,2,3;
 +----------------------------------------------------------------------------------------------------------------------------------------------+
