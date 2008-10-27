@@ -97,7 +97,7 @@ public:
         tempDeviceId = DeviceId(42);
 
         FENNEL_UNIT_TEST_CASE(BackupRestoreTest, testHeaderBackupRestore);
-        FENNEL_EXTRA_UNIT_TEST_CASE(BackupRestoreTest, testBackupCleanup);
+        FENNEL_UNIT_TEST_CASE(BackupRestoreTest, testBackupCleanup);
         FENNEL_UNIT_TEST_CASE(BackupRestoreTest, testBackupRestoreUncompressed);
         FENNEL_UNIT_TEST_CASE(BackupRestoreTest, testBackupRestoreCompressed);
     }
