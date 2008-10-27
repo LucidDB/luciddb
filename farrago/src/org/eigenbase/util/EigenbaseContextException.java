@@ -32,6 +32,15 @@ package org.eigenbase.util;
 public class EigenbaseContextException
     extends EigenbaseException
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool. Prevents
+     * incompatible class conflict when serialized from JDK 1.5-built server to
+     * JDK 1.4-built client.
+     */
+    private static final long serialVersionUID = -54978888153560134L;
+
     //~ Instance fields --------------------------------------------------------
 
     private int posLine;
