@@ -288,29 +288,6 @@ public abstract class ReflectUtil
     }
 
     /**
-     * For backwards compatibility. Remove ASAP.
-     *
-     * @deprecated
-     *
-     * @param visitor object whose visit method is to be invoked
-     * @param visitee object to be passed as a parameter to the visit method
-     * @param hierarchyRoot if non-null, visitor method will only be invoked if
-     * it takes a parameter whose type is a subtype of hierarchyRoot
-     * @param visitMethodName name of visit method, e.g. "visit"
-     *
-     * @return true if a matching visit method was found and invoked
-     */
-    public static boolean invokeVisitor(
-        Object visitor,
-        Object visitee,
-        Class hierarchyRoot,
-        String visitMethodName)
-    {
-        return invokeVisitorInternal(
-            visitor, visitee, hierarchyRoot, visitMethodName);
-    }
-
-    /**
      * Looks up a visit method.
      *
      * @param visitorClass class of object whose visit method is to be invoked
