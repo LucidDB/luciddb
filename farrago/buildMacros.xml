@@ -194,6 +194,9 @@ ${farrago.test.jvmargs}
   <!-- directory in which catalog-related XMI files are stored -->
   <property name="farrago.xmi.dir" location="${farrago.catalog.dir}/xmi"/>
 
+  <!-- directory in which catalog-related SQL files are stored -->
+  <property name="farrago.catalog.sql.dir" location="${farrago.catalog.dir}/sql"/>
+
   <!-- directory in which trace files are configured and generated -->
   <property name="farrago.trace.dir" location="${farrago.dir}/trace"/>
 
@@ -262,6 +265,10 @@ ${farrago.test.jvmargs}
   <!-- Farrago metamodel -->
   <property name="FarragoExtMetamodel.uml"
     location="${farrago.xmi.dir}/FarragoExtMetamodel.uml"/>
+
+  <!-- File containing schema DDL for Farrago metamodel  -->
+  <property name="FarragoMetamodel.sql"
+    location="${farrago.catalog.sql.dir}/FarragoMetamodel.sql"/>
 
   <!-- File defining Farrago tracing -->
   <property name="FarragoTrace.properties"
@@ -812,8 +819,17 @@ ${farrago.test.jvmargs}
   -->
 
   <target name="farrago.mdr_taskdef">
-    <taskdef name="mdr" classname="org.eigenbase.enki.ant.EnkiTask"
-      classpathref="farrago.3p.classpath"/>
+    <taskdef name="mdr" 
+      classname="org.eigenbase.enki.ant.EnkiTask"
+      classpathref="farrago.3p.classpath"
+      loaderRef="mdr_loader"/>
+
+    <!-- Enki provider-specific sub tasks. -->
+    <typedef 
+      name="exportSchema"
+      classname="org.eigenbase.enki.hibernate.ant.ExportSchemaSubTask"
+      classpathref="farrago.3p.classpath"
+      loaderRef="mdr_loader"/>
   </target>
 
   <!-- Macro for creating a TAGS file suitable for use in Emacs -->
