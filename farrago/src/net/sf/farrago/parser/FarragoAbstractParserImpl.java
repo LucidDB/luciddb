@@ -28,7 +28,9 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.ddl.DdlCreateStmt;
 import net.sf.farrago.ddl.DdlDropStmt;
+import net.sf.farrago.ddl.DdlReplaceOptions;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -199,6 +201,20 @@ public abstract class FarragoAbstractParserImpl
     {
         return new DdlDropStmt(droppedElement, restrict);
     }
+
+    /**
+     * Creates new DDL Statement for CREATE.
+     * @param createdElement catalog element to create
+     * @param replaceOptions attributes of CREATE OR REPLACE
+     * @return DDL Statement for CREATE
+     */
+    public DdlCreateStmt newDdlCreateStmt(
+        CwmModelElement createdElement,
+        DdlReplaceOptions replaceOptions)
+    {
+        return new DdlCreateStmt(createdElement, replaceOptions);
+    }
+
 }
 
 // End FarragoAbstractParserImpl.java

@@ -195,7 +195,7 @@ DdlStmt DdlStmtEof() :
                 modelElement = ExtensionModelDefinition()
             )
             {
-                ddlStmt = new DdlCreateStmt(modelElement, replaceOptions);
+                ddlStmt = newDdlCreateStmt(modelElement, replaceOptions);
             }
         )
         |
