@@ -176,20 +176,6 @@ public class RelOptRuleOperand
         Util.discard(dummy);
     }
 
-    /**
-     * Creates an operand that matches zero children only.
-     *
-     * @param clazz Class of relational expression to match (must not be null)
-     *
-     * @deprecated this is transitional and will need to go away
-     * during next integration from //open/dev
-     */
-    public RelOptRuleOperand(
-        Class clazz)
-    {
-        this(clazz, null, false, new RelOptRuleOperand[0]);
-    }
-
     //~ Methods ----------------------------------------------------------------
 
     /**
