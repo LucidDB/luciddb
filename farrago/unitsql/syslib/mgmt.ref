@@ -274,6 +274,40 @@
 | JVM          | JvmNanoTime                              |
 +--------------+------------------------------------------+
 > 
+> call sys_boot.mgmt.create_directory('testgen/mgmt_files');
+> 
+> create server test_server
+> foreign data wrapper sys_file_wrapper
+> options (
+>     directory 'testgen/mgmt_files/',
+>     file_extension 'csv',
+>     with_header 'yes', 
+>     lenient 'no');
+> 
+> call sys_boot.mgmt.flush_code_cache();
+> 
+> -- should pass
+> call sys_boot.mgmt.test_data_server('TEST_SERVER');
+> 
+> call sys_boot.mgmt.flush_code_cache();
+> 
+> -- should pass
+> call sys_boot.mgmt.test_all_servers_for_wrapper('SYS_FILE_WRAPPER');
+> 
+> call sys_boot.mgmt.delete_file_or_directory('testgen/mgmt_files');
+> 
+> call sys_boot.mgmt.flush_code_cache();
+> 
+> -- should fail now that directory is gone
+> call sys_boot.mgmt.test_data_server('TEST_SERVER');
+Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
+> 
+> call sys_boot.mgmt.flush_code_cache();
+> 
+> -- should fail now that directory is gone
+> call sys_boot.mgmt.test_all_servers_for_wrapper('SYS_FILE_WRAPPER');
+Error: Directory testgen/mgmt_files/ does not exist (state=,code=0)
+> 
 > -- set code cache size to some arbitrary number
 > alter system set "codeCacheMaxBytes" = 42000;
 > 

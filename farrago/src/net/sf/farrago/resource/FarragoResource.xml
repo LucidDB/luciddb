@@ -1635,6 +1635,14 @@ Messages: {1}</text>
 <text>The backup archive directory ''{0}'' is not readable</text>
 </exception>
 
+<exception id="520030" name="FileDeletionFailed">
+<text>Failed to delete ''{0}''</text>
+</exception>
+
+<exception id="520040" name="ServerTestConnFailed">
+<text>Failed testing connection to data server ''{0}''</text>
+</exception>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>

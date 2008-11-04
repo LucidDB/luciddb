@@ -852,6 +852,43 @@
 >     g."action" = 'CREATION'
 > ;
 > 
+> 
+> create or replace procedure create_directory(
+>   directory_path varchar(1024))
+>   language java
+>   parameter style java
+>   no sql
+>   external name 
+>   'class net.sf.farrago.syslib.FarragoManagementUDR.createDirectory';
+> 
+> create or replace procedure delete_file_or_directory(
+>   file_path varchar(1024))
+>   language java
+>   parameter style java
+>   no sql
+>   external name 
+>   'class net.sf.farrago.syslib.FarragoManagementUDR.deleteFileOrDirectory';
+> 
+> -- Tests that a connection can be established to a particular
+> -- SQL/MED local or foreign data server.
+> create or replace procedure test_data_server(
+>   server_name varchar(128))
+>   language java
+>   parameter style java
+>   no sql
+>   external name 
+>   'class net.sf.farrago.syslib.FarragoMedUDR.testServer';
+> 
+> -- Tests that a connection can be established for all SQL/MED servers
+> -- instantiated from a particular data wrapper.
+> create or replace procedure test_all_servers_for_wrapper(
+>   wrapper_name varchar(128))
+>   language java
+>   parameter style java
+>   no sql
+>   external name 
+>   'class net.sf.farrago.syslib.FarragoMedUDR.testAllServersForWrapper';
+> 
 > -- Returns the set of options relevant to a given wrapper.  A partial
 > -- set of options may be passed in via the proposed_server_options
 > -- cursor parameter, which must have two columns (OPTION_NAME and
