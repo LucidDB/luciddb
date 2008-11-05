@@ -102,8 +102,7 @@ public class DdlValidator
      * Map (from RefAssociation.Class to FarragoSessionDdlDropRule) of
      * associations for which special handling is required during DROP.
      */
-    private MultiMap<Class<? extends Object>, FarragoSessionDdlDropRule>
-        dropRules;
+    private MultiMap<Class<?>, FarragoSessionDdlDropRule> dropRules;
 
     /**
      * Map from catalog object to SqlParserPos for beginning of definition.
@@ -203,8 +202,7 @@ public class DdlValidator
 
         // NOTE:  dropRules are populated implicitly as action handlers
         // are set up below.
-        dropRules =
-            new MultiMap<Class<? extends Object>, FarragoSessionDdlDropRule>();
+        dropRules = new MultiMap<Class<?>, FarragoSessionDdlDropRule>();
 
         // Build up list of action handlers.
         actionHandlers = new ArrayList<DdlHandler>();
@@ -1232,8 +1230,7 @@ public class DdlValidator
                             mofId);
                     return FarragoResource.instance().ValidatorDropRestrict.ex(
                         getRepos().getLocalizedObjectName(
-                            droppedElement,
-                            droppedElement.refClass()));
+                            droppedElement));
                 }
             });
     }
@@ -1703,8 +1700,7 @@ public class DdlValidator
                         throw FarragoResource.instance()
                         .ValidatorDropObjectInUse.ex(
                             getRepos().getLocalizedObjectName(
-                                droppedElement,
-                                droppedElement.refClass()));
+                                droppedElement));
                     }
                 });
         }
@@ -1724,7 +1720,8 @@ public class DdlValidator
 
     /**
      * RefObjectPositionComparator compares RefObjects based on their position
-     * within the owning DdlValidator's {@link #parserContextMap}.  Handles
+     * within the owning DdlValidator's
+     * {@link net.sf.farrago.ddl.DdlValidator#parserContextMap}.  Handles
      * the case where position information is not available (all comparisons
      * return equality) and even the unlikely case where only partial position
      * information is available (RefObjects with positions compare before those
