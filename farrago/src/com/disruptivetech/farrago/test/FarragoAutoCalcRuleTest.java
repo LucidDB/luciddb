@@ -27,7 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.util.*;
-import java.util.regex.*;
 
 import junit.extensions.*;
 
@@ -45,7 +44,6 @@ import net.sf.farrago.util.*;
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rex.*;
-import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
@@ -149,7 +147,9 @@ public class FarragoAutoCalcRuleTest
         // pertinent to the test being performed.
         setRefFileDiffMasks();
 
-        runSqlLineTest("testcases/autoCalcRule.sql");
+        runSqlLineTest(
+            FarragoProperties.instance().expandProperties(
+                "${FARRAGO_HOME}/testcases/autoCalcRule.sql"));
     }
 
     public void testSimple()

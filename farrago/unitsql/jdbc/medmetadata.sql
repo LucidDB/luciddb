@@ -12,7 +12,7 @@ create server csv_server
 foreign data wrapper test_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
-    url 'jdbc:relique:csv:unitsql/med',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
     schema_name 'TESTDATA');
 
 -- Check the foreign data wrapper and server

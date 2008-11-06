@@ -11,7 +11,7 @@ set schema 'flatfile_schema';
 create server flatfile_server
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'csv',
     with_header 'yes', 
     lenient 'no');
@@ -77,7 +77,7 @@ create foreign table flatfile_badLineDelim(
     name varchar(50) not null,
     extra_field char(1) not null)
 server flatfile_server_badLineDelim
-options (filename 'unitsql/med/flatfiles/noheader.csv');
+options (filename '${FARRAGO_HOME}/unitsql/med/flatfiles/noheader.csv');
 
 select * from flatfile_badLineDelim;
 
@@ -97,7 +97,7 @@ create foreign table flatfile_badFieldDelim(
     name varchar(50) not null,
     extra_field char(1) not null)
 server flatfile_server_badFieldDelim
-options (filename 'unitsql/med/flatfiles/noheader');
+options (filename '${FARRAGO_HOME}/unitsql/med/flatfiles/noheader');
 
 select * from flatfile_badFieldDelim;
 
@@ -121,7 +121,7 @@ create foreign table flatfile_incompleteColumn(
     name varchar(50) not null,
     extra_field char(1) not null)
 server flatfile_server_incompleteColumn
-options (filename 'unitsql/med/flatfiles/noheader');
+options (filename '${FARRAGO_HOME}/unitsql/med/flatfiles/noheader');
 
 -- Note: Farrago's error handler quietly swallows row errors
 select * from flatfile_incompleteColumn;
@@ -158,7 +158,7 @@ select * from flatfile_tooFewColumns;
 create server flatfile_server_rowTooLong
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'txt',
     with_header 'yes', 
     lenient 'no');
@@ -174,7 +174,7 @@ select * from flatfile_server_rowTooLong.BCP."longcol";
 create server flatfile_server_esc
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'esc',
     control_file_extension 'ctl',
     with_header 'yes', 
@@ -193,7 +193,7 @@ select * from flatfile_server_esc.BCP."example" order by 3;
 create server flatfile_server_fixed
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'dat',
     with_header 'no',
     field_delimiter '',
@@ -205,7 +205,7 @@ options (
 create server flatfile_server_fixed
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'dat',
     with_header 'no',
     field_delimiter '',
@@ -247,7 +247,7 @@ select * from flatfile_server.SAMPLE."missing";
 create server flatfile_server_empty
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'txt');
 
 select * from flatfile_server_empty.SAMPLE."empty";
@@ -281,7 +281,7 @@ select * from flatfile_server_empty.BCP."nulldata";
 create server flatfile_server_badbcp
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     control_file_extension 'bcp2',
     file_extension 'txt',
     with_header 'no');
@@ -327,7 +327,7 @@ into flatfile_schema;
 create server flatfile_server_fail
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'fail',
     control_file_extension 'failbcp');
 
@@ -353,7 +353,7 @@ set schema 'flatfiledir_schema';
 create server flatfiledir_server
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'csv',
     with_header 'yes');
 
@@ -438,7 +438,7 @@ order by option_ordinal, option_choice_ordinal;
 create server ff_server
 foreign data wrapper local_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'csv',
     with_header 'yes');
 
@@ -463,7 +463,7 @@ set schema 'flatfile_schema';
 create server ff_lenient
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'csv');
 
 create foreign table buggy(
@@ -541,7 +541,7 @@ select * from flatfile_server.""."example";
 create or replace server mapped_server
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/med/flatfiles/',
+    directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
     file_extension 'csv',
     with_header 'yes',
     mapped 'yes');
