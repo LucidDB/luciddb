@@ -226,6 +226,7 @@ ${farrago.test.jvmargs}
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${plugin.classes.dir}" />
     <pathelement path="${ant.classpath}"/>
     <pathelement path="${test.emma.classpath}" />
     <pathelement location="${diffj.dir}/share/diffj/diffj.jar" />
