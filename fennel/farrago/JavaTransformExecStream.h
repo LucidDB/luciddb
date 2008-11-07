@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2008 The Eigenbase Project
+// Copyright (C) 2006-2008 Disruptive Tech
+// Copyright (C) 2006-2008 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -78,13 +78,15 @@ class JavaTransformExecStream : virtual public ExecStream
      */
     SegPageLock bufferLock;
 
+
   protected:
     std::vector<SharedExecStreamBufAccessor> inAccessors;
     SharedExecStreamBufAccessor pOutAccessor;
 
-    /**
-     * The Java peer, an instance of a net.sf.farrago.runtime.FarragoTransform.
-     */
+    /**  Request production on empty inputs. Called by execute() */
+    void checkEmptyInputs();
+
+    /** The Java peer, an instance of a net.sf.farrago.runtime.FarragoTransform. */
     jobject farragoTransform;
 
   public:

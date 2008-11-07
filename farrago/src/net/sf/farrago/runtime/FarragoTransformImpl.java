@@ -61,6 +61,13 @@ public abstract class FarragoTransformImpl
         this.next = null;
     }
 
+    public void setInputFetchToBlock(boolean mode)
+    {
+        if (tupleIter instanceof FarragoJavaUdxIterator) {
+            ((FarragoJavaUdxIterator) tupleIter).setFetchNextToBlock(mode);
+        }
+    }
+
     /**
      * Execute this transform. Execution continues until the underlying {@link
      * #tupleIter} returns END_OF_DATA or UNDERFLOW or until the underlying

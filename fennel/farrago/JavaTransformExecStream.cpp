@@ -166,17 +166,9 @@ ExecStreamResult JavaTransformExecStream::execute(
         }
     }
 
-    for (uint i = 0; i < inAccessors.size(); ++i) {
-        SharedExecStreamBufAccessor inAccessor = inAccessors[i];
-
-        // Request production on empty inputs.
-        if (inAccessor->getState() == EXECBUF_EMPTY) {
-            inAccessor->requestProduction();
-        }
-    }
+    checkEmptyInputs();
 
     jlong jquantum = static_cast<jlong>(quantum.nTuplesMax);
-
     JniEnvAutoRef pEnv;
     assert(farragoTransform);
     int cb = pEnv->CallIntMethod(
@@ -195,6 +187,8 @@ ExecStreamResult JavaTransformExecStream::execute(
         return EXECRC_BUF_OVERFLOW;
     } else if (cb < 0) {
         FENNEL_TRACE(TRACE_FINER, "underflow");
+        checkEmptyInputs();
+        // TODO mb 10/28/08: return EXECRC_YIELD when executing in data-push mode.
         return EXECRC_BUF_UNDERFLOW;
     } else {
         FENNEL_TRACE(TRACE_FINER, "marking EOS");
@@ -202,6 +196,16 @@ ExecStreamResult JavaTransformExecStream::execute(
             pOutAccessor->markEOS();
         }
         return EXECRC_EOS;
+    }
+}
+
+void JavaTransformExecStream::checkEmptyInputs()
+{
+    for (uint i = 0; i < inAccessors.size(); ++i) {
+        SharedExecStreamBufAccessor inAccessor = inAccessors[i];
+        if (inAccessor->getState() == EXECBUF_EMPTY) {
+            inAccessor->requestProduction();
+        }
     }
 }
 

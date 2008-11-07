@@ -324,6 +324,11 @@ public:
     static jmethodID methFarragoTransformExecute;
 
     /**
+     * Java method FarragoTransform.setInputFetchToBlock.
+     */
+    static jmethodID methFarragoTransformSetInputFetchToBlock;
+
+    /**
      * Java method FarragoTransform.restart.
      */
     static jmethodID methFarragoTransformRestart;

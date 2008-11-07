@@ -369,7 +369,8 @@ public class FarragoJavaUdxRel
                 implementor,
                 this);
 
-        Expression iteratorExp =
+        // both an Iterator and a TupleIter
+        Expression iterExp =
             new AllocationExpression(
                 OJUtil.typeNameForClass(FarragoJavaUdxIterator.class),
                 new ExpressionList(
@@ -378,12 +379,7 @@ public class FarragoJavaUdxRel
                     typeLookupCall),
                 memberList);
 
-        Expression tupleIterExp =
-            new AllocationExpression(
-                OJUtil.typeNameForClass(RestartableIteratorTupleIter.class),
-                new ExpressionList(
-                    iteratorExp));
-        return tupleIterExp;
+        return iterExp;
     }
 
     /**

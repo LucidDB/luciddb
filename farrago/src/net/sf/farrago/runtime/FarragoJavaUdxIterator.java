@@ -69,6 +69,8 @@ public abstract class FarragoJavaUdxIterator
 
     private boolean stopThread;
 
+    private boolean fetchNextBlocks = true;
+
     private CountDownLatch latch;
 
     private final ParameterMetaData parameterMetaData;
@@ -129,8 +131,32 @@ public abstract class FarragoJavaUdxIterator
         return super.hasNext(timeout);
     }
 
+    public void setFetchNextToBlock(boolean val)
+    {
+        fetchNextBlocks = val;
+    }
+
     // implement TupleIter
+    // REVIEW 1-Nov-2008 mberkowitz. Most callers expect this fetchNext() to block,
+    // so by default it does; but this behavior can be toggled.
+    // Isn't TupleIter supposed to be a non-blocking interface?
     public Object fetchNext()
+    {
+        return (fetchNextBlocks ? blockingFetch() : fetch());
+    }
+
+    // a fetch that blocks, like an Iterator
+    private Object blockingFetch()
+    {
+        if (hasNext()) {
+            return next();
+        } else {
+            return NoDataReason.END_OF_DATA;
+        }
+    }
+
+    // a fetch that never blocks
+    private Object fetch()
     {
         try {
             // throws TimeoutException if next item not available right now.

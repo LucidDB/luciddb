@@ -70,6 +70,15 @@ public interface FarragoTransform
     int execute(ByteBuffer outputBuffer, long quantum);
 
     /**
+     * Sets the transform to fetch input rows in blocking or non-blocking mode.
+     * This is optional since the default mode is to block.
+     * @param mode true means block for the next input row, false means never block.
+     * TODO mberkowitz 1-Nov-2008 Remove this, and have IteratorToFennelConverter figure
+     * out which mode to use in generated java code.
+     */
+    void setInputFetchToBlock(boolean mode);
+
+    /**
      * Restarts this transform's underlying TupleIter(s).
      */
     void restart();
