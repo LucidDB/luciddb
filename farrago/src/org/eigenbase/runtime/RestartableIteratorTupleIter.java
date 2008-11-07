@@ -38,8 +38,8 @@ import java.util.*;
 /**
  * <code>RestartableIteratorTupleIter</code> adapts an underlying
  * {@link RestartableIterator} as a {@link TupleIter}.
- * It is an imperfect adaptor; {@link RestartableIterator#fetchNext()} blocks when a
- * real TupleIter would return {@link TupleIter.NoDataReason,UNDERFLOW}.
+ * It is an imperfect adaptor; {@link #fetchNext} blocks when a
+ * real TupleIter would return {@link TupleIter.NoDataReason#UNDERFLOW}.
  *
  * @author John V. Sichi
  * @version $Id$
