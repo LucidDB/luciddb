@@ -91,6 +91,10 @@ public class TimeoutQueueTupleIter
      *
      * @param timeoutMillis number of milliseconds to wait for the next row;
      * less than or equal to 0 means do not wait
+     *
+     * @return next row
+     *
+     * @throws org.eigenbase.runtime.QueueIterator.TimeoutException on timeout
      */
     public Object fetchNext(long timeoutMillis)
         throws QueueIterator.TimeoutException
@@ -153,11 +157,15 @@ public class TimeoutQueueTupleIter
             try {
                 // Empty the queue -- the thread will wait for us to consume
                 // all items in the queue, hanging the join call.
-                while (queueIterator.hasNext()) {
+                while (queueIterator.hasNext(/*0*/)) {
                     queueIterator.next();
                 }
                 thread.join(timeoutMillis);
             } catch (InterruptedException e) {
+                // ignore
+//            } catch (QueueIterator.TimeoutException e) {
+                // not actually possible - because hasNext(timeout=0) means to
+                // poll
             }
             thread = null;
         }

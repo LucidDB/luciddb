@@ -61,7 +61,8 @@ public abstract class FarragoJavaUdxIterator
 
     private final PreparedStatement resultInserter;
 
-    private final FarragoSessionRuntimeContext runtimeContext;
+    // protected because needed by generated subclasses
+    protected final FarragoSessionRuntimeContext runtimeContext;
 
     private int iRow;
 

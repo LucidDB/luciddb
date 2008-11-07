@@ -52,7 +52,7 @@ public:
     {
         pEnv = pEnvInit;
     }
-    
+
     ~JniExceptionChecker();
 
     JNIEnv *operator->() const
@@ -72,7 +72,7 @@ public:
 class JniEnvRef
 {
     JNIEnv *pEnv;
-    
+
 public:
     /**
      * Explicit constructor:  use supplied JNIEnv pointer.
@@ -112,7 +112,7 @@ public:
 class JniEnvAutoRef : public JniEnvRef
 {
     bool needDetach;
-    
+
 public:
     /**
      * Uses GetEnv to access current thread's JNIEnv pointer.
@@ -144,7 +144,7 @@ class JniLocalRefReaper
 {
     JNIEnv *pEnv;
     jobject obj;
-    
+
 public:
     JniLocalRefReaper(JniEnvRef &pEnvInit, jobject objInit)
     {
@@ -191,7 +191,7 @@ public:
 /**
  * Static utility methods for dealing with JNI.
  */
-class JniUtil 
+class JniUtil
 {
     friend class JniEnvAutoRef;
 
@@ -215,7 +215,7 @@ class JniUtil
      */
     static jmethodID methGetModifiers;
 
-    /** 
+    /**
      * class java.lang.Modifier
      */
     static jclass classModifier;
@@ -229,12 +229,12 @@ class JniUtil
      * java.util.Collection.iterator()
      */
     static jmethodID methIterator;
-    
+
     /**
      * java.util.Iterator.hasNext()
      */
     static jmethodID methHasNext;
-    
+
     /**
      * java.util.Iterator.next()
      */
@@ -255,7 +255,7 @@ class JniUtil
      * @return current thread's JNIEnv
      */
     static JNIEnv *getAttachedJavaEnv(bool &needDetach);
-    
+
     /**
      * Counter for all handles opened by Farrago.
      */
@@ -269,7 +269,7 @@ class JniUtil
     static bool traceHandleCountEnabled;
 
     /**
-     * Flag indicating that the JNI handle trace stream should be closed 
+     * Flag indicating that the JNI handle trace stream should be closed
      * when the handle count reaches 0.
      */
     static bool closeHandleCountTraceOnZero;
@@ -313,17 +313,17 @@ public:
     static jmethodID methRandomUUID;
     static jclass classUUID;
 
-    /** 
+    /**
      * Java method FarragoTransform.init.
      */
     static jmethodID methFarragoTransformInit;
 
-    /** 
+    /**
      * Java method FarragoTransform.execute.
      */
     static jmethodID methFarragoTransformExecute;
 
-    /** 
+    /**
      * Java method FarragoTransform.restart.
      */
     static jmethodID methFarragoTransformRestart;
@@ -342,6 +342,16 @@ public:
      * Java method FarragoRuntimeContext.statementClassForName.
      */
     static jmethodID methFarragoRuntimeContextStatementClassForName;
+
+    /**
+     * Java class org.eigenbase.util.Util.
+     */
+    static jclass classUtil;
+
+    /**
+     * Java method org.eigenbase.util.Util.getStackTrace(Throwable).
+     */
+    static jmethodID methUtilGetStackTrace;
 
     /** java.lang.Long */
     static jclass classLong;
@@ -403,7 +413,7 @@ public:
      * @param envVarName name of environment variable used to trigger debugging
      */
     static void initDebug(char const *envVarName);
-    
+
     /**
      * Initializes our JNI support.
      *
@@ -506,7 +516,7 @@ public:
      * of getAttachedJavaEnv in the case where needDetach received true).
      */
     static void detachJavaEnv();
-    
+
     /**
      * Increment the handle count.  The handle type is used for JNI
      * handle tracing.  It indicates the type of handle that was

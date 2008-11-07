@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -67,16 +67,7 @@ void JavaSinkExecStream::open(bool restart)
 {
     FENNEL_TRACE(TRACE_FINE, "open");
     SingleInputExecStream::open(restart);
-
-    // Find our FennelPipeTupleIter peer
-    JniEnvAutoRef pEnv;
-    jlong hJavaFennelPipeTupleIter = pEnv->CallLongMethod(
-        pStreamGraphHandle->javaRuntimeContext,
-        JniUtil::methGetJavaStreamHandle,
-        javaFennelPipeTupleIterId);
-    javaFennelPipeTupleIter = 
-        CmdInterpreter::getObjectFromLong(hJavaFennelPipeTupleIter);
-    assert(javaFennelPipeTupleIter);
+    javaFennelPipeTupleIter = NULL;
 }
 
 ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
@@ -110,17 +101,30 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
     if (nbytes > 0) {
         inAccessor.consumeData(pInBufEnd);
         return (lastResult = EXECRC_BUF_UNDERFLOW);
-    } else
+    } else {
         return (lastResult = EXECRC_EOS);
+    }
 }
 
 /// sends data to java peer
 void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
 {
+    JniEnvAutoRef pEnv;
+
+    if (javaFennelPipeTupleIter == NULL) {
+        // Find our FennelPipeTupleIter peer
+        jlong hJavaFennelPipeTupleIter = pEnv->CallLongMethod(
+            pStreamGraphHandle->javaRuntimeContext,
+            JniUtil::methGetJavaStreamHandle,
+            javaFennelPipeTupleIterId);
+        javaFennelPipeTupleIter =
+            CmdInterpreter::getObjectFromLong(hJavaFennelPipeTupleIter);
+        assert(javaFennelPipeTupleIter);
+    }
+
     // Get an output ByteBuffer. Since this is a local ref, it will be automatically
     // deleted when the next method call returns.
     // REVIEW: Could give the ByteBuffer a longer lifecycle.
-    JniEnvAutoRef pEnv;
     jobject javaByteBuf = pEnv->CallObjectMethod(
         javaFennelPipeTupleIter, methFennelPipeTupleIter_getByteBuffer, size);
     assert(javaByteBuf);
@@ -130,20 +134,24 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
 
     // Send to the iterator, calling the method
     //   void FennelIterPipe.write(ByteBuffer, int byteCount)
-    FENNEL_TRACE(TRACE_FINE, "call FennelPipeTupleIter.write " << size << " bytes");
-    pEnv->CallVoidMethod(javaFennelPipeTupleIter, methFennelPipeTupleIter_write,
-                         javaByteBuf, size);
+    FENNEL_TRACE(
+        TRACE_FINE,
+        "call FennelPipeTupleIter.write " << size << " bytes");
+    pEnv->CallVoidMethod(
+        javaFennelPipeTupleIter, methFennelPipeTupleIter_write,
+        javaByteBuf, size);
     FENNEL_TRACE(TRACE_FINE, "FennelPipeTupleIter.write returned");
 }
 
-void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size)
+void JavaSinkExecStream::stuffByteBuffer(
+    jobject byteBuffer, PConstBuffer src, uint size)
 {
     // TODO: lookup methods in constructor.
     // TODO: ByteBuffer with a longer life, permanently pinned.
     JniEnvAutoRef pEnv;
 
     // pin the byte array
-    jbyteArray bufBacking = 
+    jbyteArray bufBacking =
         static_cast<jbyteArray>(
             pEnv->CallObjectMethod(byteBuffer, methByteBuffer_array));
     jboolean copied;
@@ -161,7 +169,7 @@ void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, u
             pInAccessor->getTupleDesc(), pInAccessor->getTupleFormat());
         ba.clear();
         PBuffer buf = (PBuffer) dst;
-        ba.provideBufferForConsumption(buf, buf+size);
+        ba.provideBufferForConsumption(buf, buf + size);
         FENNEL_TRACE(TRACE_FINER, "output rows:");
         getGraph().getScheduler()->
             traceStreamBufferContents(*this, ba, TRACE_FINER);

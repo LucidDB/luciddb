@@ -83,7 +83,7 @@ public class IteratorToFennelConverter
      * to generate Java code
      */
     List<FarragoRelImplementor.RelPathEntry> javaRelPath;
-    
+
     /**
      * The RelNode path that leads to this node when invoking this node
      * to setup the Fennel child streams
@@ -94,7 +94,7 @@ public class IteratorToFennelConverter
         farragoTransformClassNameMap;
 
     private Map<List<FarragoRelImplementor.RelPathEntry>, List<ChildStream>>
-    	childStreamDefsMap;
+        childStreamDefsMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -351,15 +351,18 @@ public class IteratorToFennelConverter
                 memberList);
 
         //     public void init(
-        //         FarragoRuntimeContext connection,
+        //         final FarragoRuntimeContext connection_p,
         //         FarragoTransformInputBinding[] bindings)
         //     {
+        //         final FarragoRuntimeContext connection = connection_p;
         ParameterList initParams = new ParameterList();
+        final String CONNECTION_PARAM_NAME =
+            OJPreparingStmt.connectionVariable + "_p";
         initParams.add(
             new Parameter(
                 new ModifierList(ModifierList.FINAL),
                 OJUtil.typeNameForClass(FarragoRuntimeContext.class),
-                OJPreparingStmt.connectionVariable));
+                CONNECTION_PARAM_NAME));
         initParams.add(
             new Parameter(
                 new ModifierList(ModifierList.EMPTY),
@@ -373,6 +376,15 @@ public class IteratorToFennelConverter
                 INPUT_BINDINGS_VAR_NAME));
 
         StatementList initBody = new StatementList();
+
+        // Variable to hold parameter because janino cannot see it (bug in
+        // janino-2.5.15).
+        initBody.add(
+            new VariableDeclaration(
+                new ModifierList(ModifierList.FINAL),
+                OJUtil.typeNameForClass(FarragoRuntimeContext.class),
+                OJPreparingStmt.connectionVariable,
+                new Variable(CONNECTION_PARAM_NAME)));
 
         //         super.init(
         //             new FennelTupleWriter() { ... },
@@ -410,7 +422,7 @@ public class IteratorToFennelConverter
         List<FarragoRelImplementor.RelPathEntry> relPath)
     {
         // init child stream defs for this invocation
-    	javaRelPath =
+        javaRelPath =
             new LinkedList<FarragoRelImplementor.RelPathEntry>(relPath);
         childStreamDefsMap.put(
             javaRelPath,
@@ -436,7 +448,7 @@ public class IteratorToFennelConverter
         // Cheeky! We happen to know it's a FarragoRelImplementor (for now).
         FarragoRelImplementor farragoRelImplementor =
             (FarragoRelImplementor) implementor;
-        
+
         initJavaInvocation(farragoRelImplementor.getRelPathEntry());
 
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);

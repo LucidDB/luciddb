@@ -113,19 +113,17 @@ public abstract class FarragoTestUDR
             throw new IllegalArgumentException(
                 "Cannot convert '" + i + "' to a Java char");
         }
-        
         return new String(new char[] { (char)i }, 0, 1);
     }
-    
+
     public static String itoaWithNulForErr(int i)
     {
         if (i < 0 || i > 0xFFFF) {
             return null;
         }
-        
         return new String(new char[] { (char)i }, 0, 1);
     }
-    
+
     public static void setSystemProperty(String name, String value)
     {
         System.setProperty(name, value);
@@ -343,7 +341,8 @@ public abstract class FarragoTestUDR
     {
         int nInput = inputSet.getMetaData().getColumnCount();
         int nOutput = resultInserter.getParameterMetaData().getParameterCount();
-        assert (nOutput == (nInput + 1));
+        assert (nOutput == (nInput + 1))
+            : descibeInputOutput(inputSet, resultInserter);
 
         // NOTE jvs 6-Aug-2006: This is just an example.  It's a terrible
         // digest; don't use it for anything real!
@@ -360,6 +359,25 @@ public abstract class FarragoTestUDR
             resultInserter.setInt(nInput + 1, digest);
             resultInserter.executeUpdate();
         }
+    }
+
+    private static String descibeInputOutput(
+        ResultSet inputSet, PreparedStatement resultInserter)
+        throws SQLException
+    {
+        StringBuffer buf = new StringBuffer();
+        final ResultSetMetaData resultSetMetaData = inputSet.getMetaData();
+        for (int i = 0; i < resultSetMetaData.getColumnCount(); i++) {
+            buf.append(" in#").append(i + 1).append("=")
+                .append(resultSetMetaData.getColumnName(i + 1));
+        }
+        final ParameterMetaData parameterMetaData =
+            resultInserter.getParameterMetaData();
+        for (int i = 0; i < parameterMetaData.getParameterCount(); i++) {
+            buf.append(" out#").append(i + 1).append("=")
+                .append(parameterMetaData.getParameterClassName(i + 1));
+        }
+        return buf.toString();
     }
 
     public static void longerRamp(int n, PreparedStatement resultInserter)
@@ -397,18 +415,17 @@ public abstract class FarragoTestUDR
         resultInserter.setTime(3, new Time(millis), cal);
         resultInserter.executeUpdate();
     }
-    
+
     public static void setSessionVariable(String name, String value)
     throws SQLException
     {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
-            
             sess.getSessionVariables().set(name, value);
         } catch (Throwable e) {
             throw new SQLException(e.getMessage());
         }
-    }    
+    }
 }
 
 // End FarragoTestUDR.java

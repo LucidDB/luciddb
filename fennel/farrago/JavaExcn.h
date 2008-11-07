@@ -42,7 +42,7 @@ FENNEL_BEGIN_NAMESPACE
 class JavaExcn : public FennelExcn
 {
     jthrowable javaException;
-    
+
 public:
     /**
      * Constructs a new JavaExcn.
@@ -51,11 +51,16 @@ public:
      */
     explicit JavaExcn(
         jthrowable javaExceptionInit);
-    
+
     /**
      * @return the wrapped Java exception
      */
     jthrowable getJavaException() const;
+
+    /**
+     * @return the stack trace
+     */
+    const std::string& getStackTrace() const;
 };
 
 FENNEL_END_NAMESPACE

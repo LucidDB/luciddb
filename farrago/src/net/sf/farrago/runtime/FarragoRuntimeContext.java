@@ -146,14 +146,10 @@ public class FarragoRuntimeContext
 
         cursorMonitor = new Object();
 
-        FarragoPluginClassLoader classLoader = null;
-
+        FarragoPluginClassLoader classLoader;
         if (session != null) {
-
             classLoader = session.getPluginClassLoader();
-
         } else {
-
             statementClassLoader = classLoader = params.pluginClassLoader;
         }
 
@@ -206,7 +202,9 @@ public class FarragoRuntimeContext
         streamOwner.closeAllocation();
         if (!isDml) {
             // For queries, this is called when the cursor is closed.
-            if (session != null) session.endTransactionIfAuto(true);
+            if (session != null) {
+                session.endTransactionIfAuto(true);
+            }
         }
         statementClassLoader = null;
 
@@ -443,7 +441,7 @@ public class FarragoRuntimeContext
         FarragoCompoundAllocation streamOwner)
     {
         streamIdToHandleMap.put(
-            new Integer(streamId),
+            streamId,
             FennelDbHandleImpl.allocateNewObjectHandle(streamOwner, stream));
     }
 
@@ -476,8 +474,8 @@ public class FarragoRuntimeContext
     public Object dummyArray(
         Object [] dummyArray)
     {
-        for (int i = 0; i < dummyArray.length; i++) {
-            assert (dummyArray[i] == null);
+        for (Object aDummyArray : dummyArray) {
+            assert (aDummyArray == null);
         }
         return null;
     }
@@ -565,12 +563,13 @@ public class FarragoRuntimeContext
         txn.beginReadTxn();
         try {
             FennelStreamHandle streamHandle = getStreamHandle(streamName, true);
-
-            return new FennelTupleIter(
+            final FennelTupleIter iter = new FennelTupleIter(
                 tupleReader,
                 streamGraph,
                 streamHandle,
                 repos.getCurrentConfig().getFennelConfig().getCachePageSize());
+            registerJavaStream(streamId, iter);
+            return iter;
         } finally {
             txn.commit();
         }
@@ -633,8 +632,7 @@ public class FarragoRuntimeContext
                 inputStreamHandle,
                 inputBinding.getOrdinal(),
                 repos.getCurrentConfig().getFennelConfig().getCachePageSize());
-        }
-        finally {
+        } finally {
             txn.commit();
         }
     }
@@ -692,7 +690,7 @@ public class FarragoRuntimeContext
     // implement FennelJavaStreamMap
     public long getJavaStreamHandle(int streamId)
     {
-        FennelJavaHandle handle = streamIdToHandleMap.get(streamId);
+        final FennelJavaHandle handle = streamIdToHandleMap.get(streamId);
         assert handle != null : "No handle for stream #" + streamId;
         return handle.getLongHandle();
     }
@@ -956,7 +954,9 @@ public class FarragoRuntimeContext
     // implement FarragoSessionRuntimeContext
     public RelDataType getRowTypeForResultSet(String resultSetName)
     {
-        return resultSetTypeMap.get(resultSetName);
+        final RelDataType rowType = resultSetTypeMap.get(resultSetName);
+        assert rowType != null : "no type for result set " + resultSetName;
+        return rowType;
     }
 
     public FarragoSequenceAccessor getSequenceAccessor(String mofId)

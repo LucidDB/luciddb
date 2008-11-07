@@ -81,6 +81,8 @@ jmethodID JniUtil::methDoubleValue = 0;
 jmethodID JniUtil::methFloatValue = 0;
 jmethodID JniUtil::methBooleanValue = 0;
 jmethodID JniUtil::methBase64Decode;
+jmethodID JniUtil::methUtilGetStackTrace;
+jclass JniUtil::classUtil;
 
 AtomicCounter JniUtil::handleCount;
 
@@ -143,7 +145,7 @@ void JniUtil::initDebug(char const *envVarName)
                 // Fall back on sleeping.
                 sleep(60000);
             }
-        }        
+        }
 #endif
     }
 }
@@ -222,7 +224,7 @@ jint JniUtil::init(JavaVM *pVmInit)
     jclass tempInputBinding =
         pEnv->FindClass(
             "net/sf/farrago/runtime/FarragoTransform$InputBinding");
-    classFarragoTransformInputBinding = 
+    classFarragoTransformInputBinding =
         (jclass)pEnv->NewGlobalRef(tempInputBinding);
 
     jclass classFarragoRuntimeContext = pEnv->FindClass(
@@ -255,39 +257,39 @@ jint JniUtil::init(JavaVM *pVmInit)
 
     jclass tempClassLong = pEnv->FindClass("java/lang/Long");
     classLong = (jclass)pEnv->NewGlobalRef(tempClassLong);
-    methLongValueOf = 
+    methLongValueOf =
         pEnv->GetStaticMethodID(classLong, "valueOf", "(J)Ljava/lang/Long;");
     methLongValue = pEnv->GetMethodID(classLong, "longValue", "()J");
 
     jclass tempClassInteger = pEnv->FindClass("java/lang/Integer");
     classInteger = (jclass)pEnv->NewGlobalRef(tempClassInteger);
-    methIntegerValueOf = 
+    methIntegerValueOf =
         pEnv->GetStaticMethodID(
             classInteger, "valueOf", "(I)Ljava/lang/Integer;");
     methIntValue = pEnv->GetMethodID(classInteger, "intValue", "()I");
 
     jclass tempClassShort = pEnv->FindClass("java/lang/Short");
     classShort = (jclass)pEnv->NewGlobalRef(tempClassShort);
-    methShortValueOf = 
+    methShortValueOf =
         pEnv->GetStaticMethodID(classShort, "valueOf", "(S)Ljava/lang/Short;");
     methShortValue = pEnv->GetMethodID(classShort, "shortValue", "()S");
 
     jclass tempClassDouble = pEnv->FindClass("java/lang/Double");
     classDouble = (jclass)pEnv->NewGlobalRef(tempClassDouble);
-    methDoubleValueOf = 
+    methDoubleValueOf =
         pEnv->GetStaticMethodID(
             classDouble, "valueOf", "(D)Ljava/lang/Double;");
     methDoubleValue = pEnv->GetMethodID(classDouble, "doubleValue", "()D");
 
     jclass tempClassFloat = pEnv->FindClass("java/lang/Float");
     classFloat = (jclass)pEnv->NewGlobalRef(tempClassFloat);
-    methFloatValueOf = 
+    methFloatValueOf =
         pEnv->GetStaticMethodID(classFloat, "valueOf", "(F)Ljava/lang/Float;");
     methFloatValue = pEnv->GetMethodID(classFloat, "floatValue", "()F");
 
     jclass tempClassBoolean = pEnv->FindClass("java/lang/Boolean");
     classBoolean = (jclass)pEnv->NewGlobalRef(tempClassBoolean);
-    methBooleanValueOf = 
+    methBooleanValueOf =
         pEnv->GetStaticMethodID(
             classBoolean, "valueOf", "(Z)Ljava/lang/Boolean;");
     methBooleanValue = pEnv->GetMethodID(classBoolean, "booleanValue", "()Z");
@@ -297,7 +299,7 @@ jint JniUtil::init(JavaVM *pVmInit)
     methRandomUUID = pEnv->GetStaticMethodID(
         classUUID,"randomUUID","()Ljava/util/UUID;");
     methFarragoTransformInit = pEnv->GetMethodID(
-        classFarragoTransform, "init", 
+        classFarragoTransform, "init",
         "(Lnet/sf/farrago/runtime/FarragoRuntimeContext;Ljava/lang/String;[Lnet/sf/farrago/runtime/FarragoTransform$InputBinding;)V");
     methFarragoTransformExecute = pEnv->GetMethodID(
         classFarragoTransform, "execute", "(Ljava/nio/ByteBuffer;J)I");
@@ -305,13 +307,19 @@ jint JniUtil::init(JavaVM *pVmInit)
         classFarragoTransform, "restart", "()V");
     methFarragoTransformInputBindingCons =
         pEnv->GetMethodID(
-            classFarragoTransformInputBinding, "<init>", 
+            classFarragoTransformInputBinding, "<init>",
             "(Ljava/lang/String;I)V");
     methFarragoRuntimeContextStatementClassForName =
         pEnv->GetMethodID(
             classFarragoRuntimeContext,
             "statementClassForName",
             "(Ljava/lang/String;)Ljava/lang/Class;");
+
+    jclass tempClassUtil = pEnv->FindClass("org/eigenbase/util/Util");
+    classUtil = (jclass) pEnv->NewGlobalRef(tempClassUtil);
+    methUtilGetStackTrace = pEnv->GetStaticMethodID(
+        classUtil, "getStackTrace",
+        "(Ljava/lang/Throwable;)Ljava/lang/String;");
 
     return jniVersion;
 }
@@ -350,19 +358,19 @@ std::string JniUtil::getClassName(jclass jClass)
 std::string JniUtil::getFirstPublicInterfaceName(jclass jClass)
 {
     JniEnvAutoRef pEnv;
-    
-    jobjectArray interfaces = 
+
+    jobjectArray interfaces =
         reinterpret_cast<jobjectArray>(
             pEnv->CallObjectMethod(jClass, methGetInterfaces));
     assert(interfaces);
 
-    for(jsize i = 0, len = pEnv->GetArrayLength(interfaces); i < len; i++) {
-        jclass interface = 
+    for (jsize i = 0, len = pEnv->GetArrayLength(interfaces); i < len; i++) {
+        jclass interface =
             reinterpret_cast<jclass>(
                 pEnv->GetObjectArrayElement(interfaces, i));
         assert(interface);
 
-        jint modifiers = 
+        jint modifiers =
             pEnv->CallIntMethod(interface, methGetModifiers);
 
         jboolean isPublic =
@@ -418,14 +426,14 @@ jobject JniUtil::getNextFromIter(JniEnvRef pEnv,jobject jIter)
 void JniUtil::incrementHandleCount(const char *pType, const void *pHandle)
 {
     ++handleCount;
-    
+
     traceHandleCount("INC", pType, pHandle);
 }
 
 void JniUtil::decrementHandleCount(const char *pType, const void *pHandle)
 {
     --handleCount;
-    
+
     assert(handleCount >= 0);
 
     traceHandleCount("DEC", pType, pHandle);
@@ -438,13 +446,13 @@ void JniUtil::traceHandleCount(
         handleCountTraceStream
             << pAction << " " << pType << ": " << pHandle << std::endl;
 
-        if (handleCount == 0 && closeHandleCountTraceOnZero && 
+        if (handleCount == 0 && closeHandleCountTraceOnZero &&
             strcmp(pAction, "DEC") == 0) {
             traceHandleCountEnabled = false;
             closeHandleCountTraceOnZero = false;
-            
+
             handleCountTraceStream.flush();
-            handleCountTraceStream.close();   
+            handleCountTraceStream.close();
         }
     }
 }
@@ -523,7 +531,7 @@ void JniEnvRef::handleExcn(std::exception &ex)
     if (pFennelExcn) {
         what = pFennelExcn->getMessage();
     } else {
-        std::bad_alloc *pBadAllocExcn = 
+        std::bad_alloc *pBadAllocExcn =
             dynamic_cast<std::bad_alloc *>(&ex);
         if (pBadAllocExcn) {
             // Convert bad_alloc's terrible error mesage into something fit for

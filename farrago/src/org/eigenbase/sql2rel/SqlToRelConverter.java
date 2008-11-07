@@ -873,12 +873,14 @@ public class SqlToRelConverter
             convertCursor(bb, (SqlCall) node);
             return;
         case SqlKind.MultisetQueryConstructorORDINAL:
-        case SqlKind.MultisetValueConstructorORDINAL: {
+        case SqlKind.MultisetValueConstructorORDINAL:
+        {
             converted = convertMultisets(new SqlNode[] { node },
                 bb);
             break;
         }
-        case SqlKind.InORDINAL: {
+        case SqlKind.InORDINAL:
+        {
             SqlCall call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
 
@@ -973,7 +975,8 @@ public class SqlToRelConverter
             }
             break;
         }
-        case SqlKind.ExistsORDINAL: {
+        case SqlKind.ExistsORDINAL:
+        {
             // "select from emp where exists (select a from T)"
             //
             // is converted to the following if the subquery is correlated:
@@ -1797,6 +1800,14 @@ public class SqlToRelConverter
             getColumnMappings(call.getOperator());
         callRel.setColumnMappings(columnMappings);
         bb.setRoot(callRel, true);
+        afterTableFunction(bb, call, callRel);
+    }
+
+    protected void afterTableFunction(
+        SqlToRelConverter.Blackboard bb,
+        SqlCall call,
+        TableFunctionRel callRel)
+    {
     }
 
     private Set<RelColumnMapping> getColumnMappings(SqlOperator op)
@@ -3778,7 +3789,8 @@ public class SqlToRelConverter
             case SqlKind.CursorConstructorORDINAL:
             case SqlKind.SelectORDINAL:
             case SqlKind.ExistsORDINAL:
-            case SqlKind.ScalarQueryORDINAL: {
+            case SqlKind.ScalarQueryORDINAL:
+            {
                 rex = mapSubqueryToExpr.get(expr);
 
                 assert rex != null : "rex != null";
@@ -3822,7 +3834,8 @@ public class SqlToRelConverter
                 }
                 return fieldAccess;
             }
-            case SqlKind.InORDINAL: {
+            case SqlKind.InORDINAL:
+            {
                 rex = mapSubqueryToExpr.get(expr);
 
                 assert rex != null : "rex != null";
@@ -3884,7 +3897,8 @@ public class SqlToRelConverter
                 }
                 return rexNode;
             }
-            case SqlKind.OverORDINAL: {
+            case SqlKind.OverORDINAL:
+            {
                 return convertOver(this, expr);
             }
             default:
@@ -4141,8 +4155,7 @@ public class SqlToRelConverter
             boolean isExists,
             boolean isExplain)
         {
-            assert(false);
-            return null;
+            throw new IllegalArgumentException();
         }
     }
 
