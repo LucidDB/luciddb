@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2002-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 2003-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,9 +30,10 @@ import org.eigenbase.util.*;
 
 
 /**
- * Test case for {@link TimeoutQueueIterator}.
+ * Test case for {@link QueueIterator} and its subclasses {@link ThreadIterator} and
+ * {@link TimeoutQueueIterator}.
  */
-public class TimeoutIteratorTest
+public class QueueIteratorTest
     extends TestCase
 {
     //~ Static fields/initializers ---------------------------------------------
@@ -45,6 +46,11 @@ public class TimeoutIteratorTest
      */
     private static final int tickMillis = 1000;
 
+    /**
+     * Contents of queue in both tests.
+     */
+    private static final String [] queueValues = { "a", "b", null, "d" };
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -54,7 +60,7 @@ public class TimeoutIteratorTest
 
     //~ Constructors -----------------------------------------------------------
 
-    public TimeoutIteratorTest(String s)
+    public QueueIteratorTest(String s)
         throws Exception
     {
         super(s);
@@ -62,58 +68,82 @@ public class TimeoutIteratorTest
 
     //~ Methods ----------------------------------------------------------------
 
-    public void testDummy()
-    {
-    }
-
     // NOTE jvs 21-Oct-2006:  I'm disabling this test because
     // it fails sporadically, and we're planning to eliminate
     // usage of this class anyway (http://issues.eigenbase.org/browse/FRG-168).
-    public void _testTimeoutIterator()
+    public void testTimeoutIterator()
     {
         startTime = System.currentTimeMillis();
-        String [] values = { "a", "b", null, "d" };
-        TickIterator tickIter = new TickIterator(values, false, startTime);
-        TimeoutQueueIterator timeoutIter = new TimeoutQueueIterator(tickIter);
-        timeoutIter.start();
+        // writer
+        TickIterator tickIter = new TickIterator(queueValues, false, startTime);
+        // reader
+        TestingTimeoutQueueIterator ttqi =
+            new TestingTimeoutQueueIterator(tickIter);
 
+        ttqi.start();
+        read(ttqi.getQueueIterator());
+    }
+
+    public void testThreadIterator()
+    {
+        startTime = System.currentTimeMillis();
+        // reader and writer
+        ThreadIterator threadIter =
+            new ThreadIterator() {
+                // paced data source
+                TickIterator tickIter =
+                    new TickIterator(queueValues, false, startTime);
+                protected void doWork() {
+                    while (tickIter.hasNext()) {
+                        put(tickIter.next());
+                    }
+                }
+
+            };
+
+        threadIter.start();
+        read(threadIter);
+    }
+
+    private void read(QueueIterator iter)
+    {
         // tick 1: hasNext() returns true at tick 1
         // tick 2: next() returns "a"
         // tick 2: object is available
         assertHasNext(
-            timeoutIter,
+            iter,
             true,
             toMillis(2.1));
 
         // call next with zero timeout -- it already has the answer
-        assertNext(timeoutIter, "a", 0);
+        assertNext(iter, "a", 0);
 
         // tick 3: hasNext returns true at tick 3
         assertHasNextTimesOut(
-            timeoutIter,
+            iter,
             toMillis(2.7));
         assertHasNextTimesOut(
-            timeoutIter,
+            iter,
             toMillis(2.9));
 
         // tick 4: next returns "b"
         // tick 4: object is available
         assertNextTimesOut(
-            timeoutIter,
+            iter,
             toMillis(3.3));
 
         // call next with zero timeout will timeout immediately (not the
         // same as JDBC ResultSet.setQueryTimeout(0), which means don't
         // timeout ever)
-        assertNextTimesOut(timeoutIter, 0);
+        assertNextTimesOut(iter, 0);
         assertNextTimesOut(
-            timeoutIter,
+            iter,
             toMillis(3.6));
         assertNextTimesOut(
-            timeoutIter,
+            iter,
             toMillis(3.8));
         assertNext(
-            timeoutIter,
+            iter,
             "b",
             toMillis(4.2));
 
@@ -124,46 +154,46 @@ public class TimeoutIteratorTest
         // tick 8: next returns "d"
         // tick 8: object is available
         assertHasNext(
-            timeoutIter,
+            iter,
             true,
             toMillis(8.1));
 
         // call hasNext twice in succession
         assertHasNext(
-            timeoutIter,
+            iter,
             true,
             toMillis(8.2));
 
         // call hasNext with zero timeout -- it already has the answer
-        assertHasNext(timeoutIter, true, 0);
+        assertHasNext(iter, true, 0);
 
         // call hasNext with non-zero timeout -- it already has the answer
-        assertHasNext(timeoutIter, true, 10);
+        assertHasNext(iter, true, 10);
         assertNext(
-            timeoutIter,
+            iter,
             null,
             toMillis(8.2));
 
         // call next() without calling hasNext() is legal
         assertNext(
-            timeoutIter,
+            iter,
             "d",
             toMillis(8.3));
         assertHasNextTimesOut(
-            timeoutIter,
+            iter,
             toMillis(8.4));
         assertHasNextTimesOut(
-            timeoutIter,
+            iter,
             toMillis(8.5));
 
         // tick 9: hasNext returns false
         // tick 9: no object is available
         assertHasNext(
-            timeoutIter,
+            iter,
             false,
             toMillis(10.5));
         try {
-            timeoutIter.next(100);
+            iter.next(100);
             fail("did not throw NoSuchElementException");
         } catch (QueueIterator.TimeoutException e) {
             fail("next() timed out");
@@ -173,12 +203,12 @@ public class TimeoutIteratorTest
     }
 
     private void assertHasNext(
-        TimeoutQueueIterator timeoutIter,
+        QueueIterator iter,
         boolean expected,
         long timeoutMillis)
     {
         try {
-            boolean b = timeoutIter.hasNext(timeoutMillis);
+            boolean b = iter.hasNext(timeoutMillis);
             assertEquals(expected, b);
         } catch (QueueIterator.TimeoutException e) {
             fail("hasNext() timed out at " + new Date());
@@ -186,7 +216,7 @@ public class TimeoutIteratorTest
     }
 
     private void assertHasNextTimesOut(
-        TimeoutQueueIterator timeoutIter,
+        QueueIterator iter,
         long timeoutMillis)
     {
         try {
@@ -195,7 +225,7 @@ public class TimeoutIteratorTest
                     "entering hasNext at " + new Date()
                     + " with " + timeoutMillis);
             }
-            boolean b = timeoutIter.hasNext(timeoutMillis);
+            boolean b = iter.hasNext(timeoutMillis);
             fail(
                 "hasNext() returned " + b + " and did not time out at "
                 + new Date());
@@ -205,12 +235,12 @@ public class TimeoutIteratorTest
     }
 
     private void assertNext(
-        TimeoutQueueIterator timeoutIter,
+        QueueIterator iter,
         Object expected,
         long timeoutMillis)
     {
         try {
-            Object actual = timeoutIter.next(timeoutMillis);
+            Object actual = iter.next(timeoutMillis);
             assertEquals(expected, actual);
         } catch (QueueIterator.TimeoutException e) {
             fail("next() timed out at " + new Date());
@@ -218,11 +248,11 @@ public class TimeoutIteratorTest
     }
 
     private void assertNextTimesOut(
-        TimeoutQueueIterator timeoutIter,
+        QueueIterator iter,
         long timeoutMillis)
     {
         try {
-            Object o = timeoutIter.next(timeoutMillis);
+            Object o = iter.next(timeoutMillis);
             Util.discard(o);
             fail("next() did not time out at " + new Date());
         } catch (QueueIterator.TimeoutException e) {
@@ -237,6 +267,25 @@ public class TimeoutIteratorTest
     }
 
     //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * A TimeoutQueueIterator that exposes its inner QueueIterator for direct
+     * reading. Just a kludge to fit this test.
+     */
+    private static class TestingTimeoutQueueIterator
+        extends TimeoutQueueIterator
+    {
+        TestingTimeoutQueueIterator(Iterator producer)
+        {
+            super(producer);
+        }
+
+        public QueueIterator getQueueIterator()
+        {
+            return queueIterator;
+        }
+    }
+
 
     /**
      * Iterator which returns an element from an array on a regular basis.
@@ -288,7 +337,7 @@ public class TimeoutIteratorTest
         private void waitUntil(int tick)
         {
             long timeToWait =
-                (startTime + (tick * TimeoutIteratorTest.tickMillis))
+                (startTime + (tick * QueueIteratorTest.tickMillis))
                 - System.currentTimeMillis();
             if (timeToWait > 0) {
                 try {
@@ -332,4 +381,4 @@ public class TimeoutIteratorTest
     }
 }
 
-// End TimeoutIteratorTest.java
+// End QueueIteratorTest.java

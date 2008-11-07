@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2008 The Eigenbase Project
+// Copyright (C) 2006-2008 Disruptive Tech
+// Copyright (C) 2006-2008 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,17 +39,18 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
 
-
 /**
  * FarragoJavaUdxIterator provides runtime support for a call to a Java UDX.
+ *
+ * It supports both the blocking interface {@link Iterator} and the non-blocking
+ * {@link TupleIter}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class FarragoJavaUdxIterator
     extends ThreadIterator
-    implements RestartableIterator,
-        ClosableAllocation
+    implements RestartableIterator, TupleIter
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -119,6 +120,28 @@ public abstract class FarragoJavaUdxIterator
         return super.hasNext();
     }
 
+    // override QueueIterator
+    public boolean hasNext(long timeout) throws TimeoutException
+    {
+        if (latch == null) {
+            startWithLatch();
+        }
+        return super.hasNext(timeout);
+    }
+
+    // implement TupleIter
+    public Object fetchNext()
+    {
+        try {
+            // throws TimeoutException if next item not available right now.
+            return next(0);
+        } catch (TimeoutException e) {
+            return NoDataReason.UNDERFLOW;
+        } catch (NoSuchElementException e) {
+            return NoDataReason.END_OF_DATA;
+        }
+    }
+
     // implement ThreadIterator
     protected void doWork()
     {
@@ -165,7 +188,7 @@ public abstract class FarragoJavaUdxIterator
         startWithLatch();
     }
 
-    // implement ClosableAllocation
+    // implement TupleIter
     public void closeAllocation()
     {
         stopWithLatch();

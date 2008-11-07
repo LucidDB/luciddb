@@ -62,7 +62,7 @@ public class TimeoutQueueIterator
 {
     //~ Instance fields --------------------------------------------------------
 
-    private final QueueIterator queueIterator;
+    protected final QueueIterator queueIterator; // only protected to suit QueueIteratorTest
     private final Iterator producer;
     private Thread thread;
 
