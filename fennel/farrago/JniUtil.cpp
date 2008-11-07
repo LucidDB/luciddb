@@ -62,6 +62,7 @@ jmethodID JniUtil::methFarragoTransformRestart = 0;
 jclass JniUtil::classFarragoTransformInputBinding = 0;
 jmethodID JniUtil::methFarragoTransformInputBindingCons = 0;
 jmethodID JniUtil::methFarragoRuntimeContextStatementClassForName = 0;
+jmethodID JniUtil::methFarragoRuntimeContextFindFarragoTransform = 0;
 jclass JniUtil::classLong;
 jclass JniUtil::classInteger;
 jclass JniUtil::classShort;
@@ -314,6 +315,11 @@ jint JniUtil::init(JavaVM *pVmInit)
             classFarragoRuntimeContext,
             "statementClassForName",
             "(Ljava/lang/String;)Ljava/lang/Class;");
+    methFarragoRuntimeContextFindFarragoTransform =
+        pEnv->GetMethodID(
+            classFarragoRuntimeContext,
+            "findFarragoTransform",
+            "(Ljava/lang/String;)Lnet/sf/farrago/runtime/FarragoTransform;");
 
     jclass tempClassUtil = pEnv->FindClass("org/eigenbase/util/Util");
     classUtil = (jclass) pEnv->NewGlobalRef(tempClassUtil);

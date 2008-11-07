@@ -63,6 +63,14 @@ JNIEXPORT jlong JNICALL Java_net_sf_farrago_fennel_FennelStorage_executeJavaCmd
 
 /*
  * Class:     net_sf_farrago_fennel_FennelStorage
+ * Method:    tupleStreamGraphGetInputStreams
+ * Signature: (JLjava/lang/String;Ljava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphGetInputStreams
+  (JNIEnv *, jclass, jlong, jstring, jobject);
+
+/*
+ * Class:     net_sf_farrago_fennel_FennelStorage
  * Method:    tupleStreamGraphOpen
  * Signature: (JJLnet/sf/farrago/fennel/FennelJavaStreamMap;Lnet/sf/farrago/fennel/FennelJavaErrorTarget;)V
  */
@@ -105,3 +113,4 @@ JNIEXPORT void JNICALL Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraph
 }
 #endif
 #endif
+// End NativeMethods.h

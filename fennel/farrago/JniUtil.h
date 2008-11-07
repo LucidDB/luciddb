@@ -344,6 +344,11 @@ public:
     static jmethodID methFarragoRuntimeContextStatementClassForName;
 
     /**
+     * Java method FarragoRuntimeContext.findFarragoTransform.
+     */
+    static jmethodID methFarragoRuntimeContextFindFarragoTransform;
+
+    /**
      * Java class org.eigenbase.util.Util.
      */
     static jclass classUtil;

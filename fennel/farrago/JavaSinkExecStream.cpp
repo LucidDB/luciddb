@@ -67,7 +67,16 @@ void JavaSinkExecStream::open(bool restart)
 {
     FENNEL_TRACE(TRACE_FINE, "open");
     SingleInputExecStream::open(restart);
-    javaFennelPipeTupleIter = NULL;
+
+    // Find our FennelPipeTupleIter peer
+    JniEnvAutoRef pEnv;
+    jlong hJavaFennelPipeTupleIter = pEnv->CallLongMethod(
+        pStreamGraphHandle->javaRuntimeContext,
+        JniUtil::methGetJavaStreamHandle,
+        javaFennelPipeTupleIterId);
+    javaFennelPipeTupleIter =
+        CmdInterpreter::getObjectFromLong(hJavaFennelPipeTupleIter);
+    assert(javaFennelPipeTupleIter);
 }
 
 ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
@@ -111,17 +120,6 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
 {
     JniEnvAutoRef pEnv;
 
-    if (javaFennelPipeTupleIter == NULL) {
-        // Find our FennelPipeTupleIter peer
-        jlong hJavaFennelPipeTupleIter = pEnv->CallLongMethod(
-            pStreamGraphHandle->javaRuntimeContext,
-            JniUtil::methGetJavaStreamHandle,
-            javaFennelPipeTupleIterId);
-        javaFennelPipeTupleIter =
-            CmdInterpreter::getObjectFromLong(hJavaFennelPipeTupleIter);
-        assert(javaFennelPipeTupleIter);
-    }
-
     // Get an output ByteBuffer. Since this is a local ref, it will be automatically
     // deleted when the next method call returns.
     // REVIEW: Could give the ByteBuffer a longer lifecycle.
@@ -134,17 +132,13 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
 
     // Send to the iterator, calling the method
     //   void FennelIterPipe.write(ByteBuffer, int byteCount)
-    FENNEL_TRACE(
-        TRACE_FINE,
-        "call FennelPipeTupleIter.write " << size << " bytes");
-    pEnv->CallVoidMethod(
-        javaFennelPipeTupleIter, methFennelPipeTupleIter_write,
-        javaByteBuf, size);
+    FENNEL_TRACE(TRACE_FINE, "call FennelPipeTupleIter.write " << size << " bytes");
+    pEnv->CallVoidMethod(javaFennelPipeTupleIter, methFennelPipeTupleIter_write,
+                         javaByteBuf, size);
     FENNEL_TRACE(TRACE_FINE, "FennelPipeTupleIter.write returned");
 }
 
-void JavaSinkExecStream::stuffByteBuffer(
-    jobject byteBuffer, PConstBuffer src, uint size)
+void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size)
 {
     // TODO: lookup methods in constructor.
     // TODO: ByteBuffer with a longer life, permanently pinned.

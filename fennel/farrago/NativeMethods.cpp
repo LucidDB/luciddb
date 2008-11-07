@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2003-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 1999-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,6 +40,8 @@
 #include "fennel/exec/ExecStreamGovernor.h"
 
 #include <sstream>
+#include <iostream>
+#include <string>
 
 #ifdef __MINGW32__
 #include <windows.h>
@@ -56,8 +58,8 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 #ifdef __MINGW32__
 extern "C" JNIEXPORT BOOL APIENTRY DllMain(
-    HANDLE hModule, 
-    DWORD  ul_reason_for_call, 
+    HANDLE hModule,
+    DWORD  ul_reason_for_call,
     LPVOID lpReserved)
 {
     return TRUE;
@@ -84,7 +86,7 @@ JNI_OnLoad(JavaVM *vm,void *reserved)
 #ifndef __MINGW32__
     dlopen("libfarrago.so", RTLD_NOW | RTLD_GLOBAL);
 #endif
-    
+
     return version;
 }
 
@@ -136,7 +138,7 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
 
 extern "C" JNIEXPORT jint JNICALL
 Java_net_sf_farrago_fennel_FennelStorage_tupleStreamTransformFetch(
-    JNIEnv *pEnvInit, jclass, jlong hStream, jint inputOrdinal, 
+    JNIEnv *pEnvInit, jclass, jlong hStream, jint inputOrdinal,
     jbyteArray byteArray)
 {
     JniEnvRef pEnv(pEnvInit);
@@ -170,6 +172,35 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamTransformFetch(
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
         return 0;
+    }
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphGetInputStreams(
+    JNIEnv *pEnvInit, jclass,
+    jlong hStreamGraph, jstring baseName, jobject inputStreamNameList)
+{
+    JniEnvRef pEnv(pEnvInit);
+    try {
+        // TODO lift these to JniUtil:
+        jclass classList = pEnv->FindClass("java/util/List");
+        jmethodID methListAdd = pEnv->GetMethodID(classList, "add", "(Ljava/lang/Object;)Z");
+        CmdInterpreter::StreamGraphHandle &streamGraphHandle =
+            CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
+        SharedExecStreamGraph pgraph = streamGraphHandle.pExecStreamGraph;
+        assert(pgraph);
+
+        SharedExecStream base = pgraph->findStream(JniUtil::toStdString(pEnv, baseName));
+        assert(base);
+        uint ct = pgraph->getInputCount(base->getStreamId());
+        for (uint i = 0; i < ct; i++) {
+            SharedExecStream input = pgraph->getStreamInput(base->getStreamId(), i);
+            assert(input);
+            jstring inputName = pEnv->NewStringUTF(input->getName().c_str());
+            pEnv->CallObjectMethod(inputStreamNameList, methListAdd, inputName);
+        }
+    } catch (std::exception &ex) {
+        pEnv.handleExcn(ex);
     }
 }
 
@@ -276,7 +307,7 @@ Java_net_sf_farrago_fennel_FennelStorage_getAccessorXmiForTupleDescriptor(
     JNIEnv *pEnvInit, jclass, jobject jTupleDesc)
 {
     JniEnvRef pEnv(pEnvInit);
-    
+
     // NOTE: Since JniProxies are currently read-only, generate XMI
     // representation instead.  If more of this kind of thing starts to
     // accumulate, making the JniProxies read-write would be a good idea.
@@ -285,7 +316,7 @@ Java_net_sf_farrago_fennel_FennelStorage_getAccessorXmiForTupleDescriptor(
     proxyTupleDesc.init(pEnv,jTupleDesc);
 
     // TODO:  excn handling?
-    
+
     // TODO:  should take database handle and use its factory instead
     StandardTypeDescriptorFactory typeFactory;
     TupleDescriptor tupleDescriptor;
@@ -356,7 +387,7 @@ Java_net_sf_farrago_fennel_FennelStorage_newObjectHandle(
     JNIEnv *pEnvInit, jclass, jobject obj)
 {
     // TODO:  excn handling?
-    
+
     JniEnvRef pEnv(pEnvInit);
     jobject jGlobalRef;
     if (obj) {
@@ -377,7 +408,7 @@ Java_net_sf_farrago_fennel_FennelStorage_deleteObjectHandle(
     JNIEnv *pEnvInit, jclass, jlong handle)
 {
     // TODO:  excn handling?
-    
+
     JniEnvRef pEnv(pEnvInit);
     jobject *pGlobalRef = reinterpret_cast<jobject *>(handle);
     jobject jGlobalRef = *pGlobalRef;
@@ -395,7 +426,7 @@ Java_net_sf_farrago_fennel_FennelStorage_setObjectHandle(
     JNIEnv *pEnvInit, jclass, jlong handle, jobject obj)
 {
     // TODO:  excn handling?
-    
+
     JniEnvRef pEnv(pEnvInit);
     jobject *pGlobalRef = reinterpret_cast<jobject *>(handle);
     jobject jGlobalRef = *pGlobalRef;

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2003-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 2003-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -146,7 +146,7 @@ public class FarragoPreparingStmt
     private FarragoRelImplementor relImplementor;
 
     //~ Constructors -----------------------------------------------------------
-    
+
     /**
      * Creates a new FarragoPreparingStmt object.
      *
@@ -201,7 +201,7 @@ public class FarragoPreparingStmt
         // but not to override the behavior of other providers.
         relMetadataProvider.addProvider(
             new FarragoRelMetadataProvider(getRepos()));
-        
+
         this.rootStmtContext = rootStmtContext;
         this.parentStmt = null;
     }
@@ -228,12 +228,12 @@ public class FarragoPreparingStmt
     {
         return rootStmtContext;
     }
-    
+
     public FarragoSessionStmtValidator getStmtValidator()
     {
         return stmtValidator;
     }
-    
+
     /**
      * @return the FarragoPreparingStmt that's the parent of this one
      */
@@ -241,12 +241,12 @@ public class FarragoPreparingStmt
     {
         return parentStmt;
     }
-    
+
     /**
      * Sets the parent FarragoPreparingStmt corresponding to this statement.
      * This is used when this is a reentrant statement.  The parent corresponds
      * to the statement that requires the reentrant statement.
-     * 
+     *
      * @param parentStmt the parent of this statement
      */
     public void setParentStmt(FarragoPreparingStmt parentStmt)
@@ -475,6 +475,12 @@ public class FarragoPreparingStmt
         packageName = "net.sf.farrago.dynamic." + packageNameUnqualified;
     }
 
+    // expose to this package, for FarragoTransformDef
+    protected Class compileClass(String packageName, String className, String source)
+    {
+        return super.compileClass(packageName, className, source);
+    }
+
     // Override OJPreparingStmt
     protected BoundMethod compileAndBind(
         ClassDeclaration decl,
@@ -500,33 +506,10 @@ public class FarragoPreparingStmt
         BoundMethod boundMethod =
             super.compileAndBind(decl, parseTree, arguments);
 
-        compileTransforms();
+        streamGraphTracer.finer("compile FarragoTransforms");
+        relImplementor.compileTransforms(getTempPackageName());
 
         return boundMethod;
-    }
-
-    /**
-     * Compiles the FarragoTransform implementations associated with this
-     * statement.
-     */
-    private void compileTransforms()
-    {
-        // Compile any FarragoTransform implementations
-        String packageName = getTempPackageName();
-        for (ClassDeclaration transformDecl : relImplementor.getTransforms()) {
-            CompilationUnit compUnit =
-                new CompilationUnit(
-                    packageName,
-                    new String[0],
-                    new ClassDeclarationList(transformDecl));
-
-            Class clazz =
-                super.compileClass(
-                    packageName,
-                    transformDecl.getName(),
-                    compUnit.toString());
-            Util.discard(clazz);
-        }
     }
 
     protected boolean treeContainsJava(RelNode rootRel)
@@ -607,6 +590,7 @@ public class FarragoPreparingStmt
                         (originalRowType == null) ? rowType : originalRowType,
                         dynamicParamRowType,
                         preparedExecution.getMethod(),
+                        relImplementor.getTransforms(),
                         xmiFennelPlan,
                         preparedResult.isDml(),
                         preparedResult.getTableModOp(),
@@ -1131,7 +1115,7 @@ public class FarragoPreparingStmt
     {
         return sql;
     }
-    
+
     // implement RelOptConnection
     public RelOptSchema getRelOptSchema()
     {
@@ -1467,7 +1451,7 @@ public class FarragoPreparingStmt
             }
         }
         allDependencies.add(supplier);
-        
+
         // Add the dependency to all of the parent FarragoPreparingStmt's
         // as well.
         FarragoPreparingStmt parent = parentStmt;

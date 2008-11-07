@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2003-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 2003-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -479,7 +479,7 @@ public class IteratorToFennelConverter
                 newTupleWriterExp,
                 childExp);
 
-        farragoRelImplementor.addTransform(transformDecl);
+        farragoRelImplementor.addTransform(this, transformDecl);
 
         ParseTree parseTree = Literal.constantNull();
 
