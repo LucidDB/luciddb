@@ -50,6 +50,69 @@ public abstract class FarragoMedUDR
     //~ Methods ----------------------------------------------------------------
 
     /**
+     * Tests that a connection can be established to a particular
+     * SQL/MED local or foreign data server.  If no exception
+     * is thrown, the test was successful.
+     *
+     * @param serverName name of data server to test
+     */
+    public static void testServer(
+        String serverName)
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn = 
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        try {
+            FemDataServer femServer =
+                stmtValidator.findDataServer(
+                    new SqlIdentifier(serverName, SqlParserPos.ZERO));
+            stmtValidator.getDataWrapperCache().loadServerFromCatalog(
+                femServer);
+        } finally {
+            txn.commit();
+            stmtValidator.closeAllocation();
+        }
+    }
+    
+    /**
+     * Tests that a connection can be established for all SQL/MED servers
+     * instantiated from a particular data wrapper.  If no exception is thrown,
+     * the test was successful.
+     *
+     * @param wrapperName name of data wrapper to test
+     */
+    public static void testAllServersForWrapper(
+        String wrapperName)
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoReposTxnContext txn = 
+            new FarragoReposTxnContext(session.getRepos(), true);
+        txn.beginReadTxn();
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
+        try {
+            FemDataWrapper femWrapper =
+                stmtValidator.findDataWrapper(
+                    new SqlIdentifier(wrapperName, SqlParserPos.ZERO),
+                    true);
+            for (FemDataServer femServer : femWrapper.getServer()) {
+                try {
+                    stmtValidator.getDataWrapperCache().loadServerFromCatalog(
+                        femServer);
+                } catch (Throwable ex) {
+                    throw FarragoResource.instance().ServerTestConnFailed.ex(
+                        femServer.getName(),
+                        ex);
+                }
+            }
+        } finally {
+            txn.commit();
+            stmtValidator.closeAllocation();
+        }
+    }
+    
+    /**
      * Queries SQL/MED connection information for a foreign data server.
      *
      * @param wrapperName name of foreign data wrapper to use

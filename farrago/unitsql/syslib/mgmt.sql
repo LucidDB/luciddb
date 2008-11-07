@@ -95,6 +95,38 @@ select source_name, counter_name
 from table(sys_boot.mgmt.performance_counters())
 order by source_name, counter_name;
 
+call sys_boot.mgmt.create_directory('testgen/mgmt_files');
+
+create server test_server
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'testgen/mgmt_files/',
+    file_extension 'csv',
+    with_header 'yes', 
+    lenient 'no');
+
+call sys_boot.mgmt.flush_code_cache();
+
+-- should pass
+call sys_boot.mgmt.test_data_server('TEST_SERVER');
+
+call sys_boot.mgmt.flush_code_cache();
+
+-- should pass
+call sys_boot.mgmt.test_all_servers_for_wrapper('SYS_FILE_WRAPPER');
+
+call sys_boot.mgmt.delete_file_or_directory('testgen/mgmt_files');
+
+call sys_boot.mgmt.flush_code_cache();
+
+-- should fail now that directory is gone
+call sys_boot.mgmt.test_data_server('TEST_SERVER');
+
+call sys_boot.mgmt.flush_code_cache();
+
+-- should fail now that directory is gone
+call sys_boot.mgmt.test_all_servers_for_wrapper('SYS_FILE_WRAPPER');
+
 -- set code cache size to some arbitrary number
 alter system set "codeCacheMaxBytes" = 42000;
 

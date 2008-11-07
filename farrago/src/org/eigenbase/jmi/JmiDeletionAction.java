@@ -22,8 +22,8 @@
 package org.eigenbase.jmi;
 
 /**
- * JmiDeletionAction enumerates the possible actions to take when a {@link
- * JmiDeletionRule} applies.
+ * JmiDeletionAction enumerates the possible actions to take when a
+ * JmiDeletionRule applies.
  *
  * @author John V. Sichi
  * @version $Id$

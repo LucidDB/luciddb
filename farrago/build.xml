@@ -581,6 +581,14 @@ ${farrago.test.jvmargs}
       classpathref="farrago.3p.classpath">
       <include name="**/*.java"/>
     </farrago.javaCompile>
+
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+      <then>
+        <farrago.mdrFork target="forked_configureMetamodelSchema"/>
+      </then>
+    </ac:if>
+
     <farrago.mdrFork target="forked_importMetamodel"/>
     <farrago.mdrFork target="forked_createCatalogRepository"/>
     <antcall target="compile.saffron.deps"/>
@@ -603,6 +611,39 @@ ${farrago.test.jvmargs}
     <delete quiet="true">
       <fileset dir="." includes="mdr.bt?"/>
     </delete>
+  </target>
+
+  <target name="forked_configureMetamodelSchema" depends="farrago.mdr_taskdef">
+    <farrago.setReposProvider/>
+
+    <mkdir dir="${farrago.catalog.sql.dir}"/>
+
+    <mdr
+        propertiesFile="${farrago.ReposStorage.propfile}"
+        logConfigFile="${FarragoMdrBuildTrace.properties}">
+      <propertyset>
+        <propertyref name="FARRAGO_CATALOG_DIR"/>
+      </propertyset>
+      <exportSchema
+        file="${FarragoMetamodel.sql}"
+        extent="FarragoMetamodel"/>
+    </mdr>
+
+    <property 
+        file="${farrago.ReposStorage.propfile}"
+        prefix="gensch"/>
+
+    <echo>
+      Configuring repository schema at:
+      ${gensch.net.sf.farrago.dev.connection.url}${farrago.catalog.schema}
+    </echo>
+    <sql
+        driver="${gensch.net.sf.farrago.dev.connection.driver_class}"
+        url="${gensch.net.sf.farrago.dev.connection.url}${farrago.catalog.schema}"
+        userid="${gensch.net.sf.farrago.dev.connection.username}"
+        password="${gensch.net.sf.farrago.dev.connection.password}"
+        classpathref="farrago.3p.classpath"
+        src="${FarragoMetamodel.sql}"/>
   </target>
 
   <target name="importMetamodel">
@@ -775,6 +816,7 @@ ${farrago.test.jvmargs}
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactory.java"/>
     <delete
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
+    <delete file="${FarragoMetamodel.sql}"/>
     <delete dir="${farrago.catalog.src.dir}"/>
     <delete file="${FarragoSqlTestWrapper.java}"/>
     <delete dir="${farrago.catalog.dir}/fennel"/>

@@ -689,6 +689,29 @@ public abstract class FarragoManagementUDR
             sess.setOptRuleDescExclusionFilter(Pattern.compile(regex));
         }
     }
+
+    /**
+     * Creates a directory, including any parent directories.
+     *
+     * @param path directory path to be created
+     */
+    public static void createDirectory(String path)
+        throws Exception
+    {
+        new File(path).mkdirs();
+    }
+
+    /**
+     * Deletes a file or directory.  Attempts to delete a non-empty
+     * directory will fail.
+     */
+    public static void deleteFileOrDirectory(String path)
+        throws Exception
+    {
+        if (!(new File(path).delete())) {
+            throw FarragoResource.instance().FileDeletionFailed.ex(path);
+        }
+    }
     
     /**
      * Backs up the database, but without checking that there's enough space
