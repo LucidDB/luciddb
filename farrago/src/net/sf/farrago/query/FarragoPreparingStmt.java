@@ -387,6 +387,11 @@ public class FarragoPreparingStmt
         return iterCalcTypeMap;
     }
 
+    protected List<FarragoTransformDef> getTransformDefs()
+    {
+         return relImplementor.getTransforms();
+    }
+
     // implement FarragoSessionPreparingStmt
     public void postValidate(SqlNode sqlNode)
     {
@@ -590,7 +595,7 @@ public class FarragoPreparingStmt
                         (originalRowType == null) ? rowType : originalRowType,
                         dynamicParamRowType,
                         preparedExecution.getMethod(),
-                        relImplementor.getTransforms(),
+                        getTransformDefs(),
                         xmiFennelPlan,
                         preparedResult.isDml(),
                         preparedResult.getTableModOp(),

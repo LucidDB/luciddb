@@ -42,7 +42,7 @@ import net.sf.farrago.trace.FarragoTrace;
  *
  * @author Marc Berkowitz
  */
-class FarragoTransformDef
+public class FarragoTransformDef
 {
     // trace with fennel plan
     private static final Logger tracer =
@@ -117,7 +117,7 @@ class FarragoTransformDef
         }
     }
 
-    void init(FarragoSessionRuntimeContext fsrc) throws Error
+    public void init(FarragoSessionRuntimeContext fsrc) throws Error
     {
         if (tracer.isLoggable(Level.FINEST)) {
             tracer.finest("init " + this);
@@ -137,7 +137,6 @@ class FarragoTransformDef
             assert streamName != null;
             assert inputBindings != null;
             t.init(conn, streamName, inputBindings);
-
         } catch (Exception e) {
             throw Util.newInternal(e);
         }
