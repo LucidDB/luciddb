@@ -1247,7 +1247,13 @@ public abstract class SqlTypeStrategies
                         break;
                     }
                 }
+                // REVIEW jvs 11-Nov-2008:  We can't assert this
+                // because SqlAdvisorValidator produces
+                // unknown types for incomplete expressions.
+                // Maybe we need to distinguish the two kinds of unknown.
+                /*
                 assert !knownType.equals(unknownType);
+                */
                 for (int i = 0; i < operandTypes.length; ++i) {
                     operandTypes[i] = knownType;
                 }

@@ -2620,8 +2620,7 @@ public class SqlValidatorImpl
             break;
         case On:
             Util.permAssert(condition != null, "condition != null");
-            validateNoAggs(condition, "ON");
-            condition.validate(this, joinScope);
+            validateWhereOrOn(joinScope, condition, "ON");
             break;
         case Using:
             SqlNodeList list = (SqlNodeList) condition;
@@ -3012,17 +3011,25 @@ public class SqlValidatorImpl
             return;
         }
         final SqlValidatorScope whereScope = getWhereScope(select);
-        validateNoAggs(where, "WHERE");
+        validateWhereOrOn(whereScope, where, "WHERE");
+    }
+
+    protected void validateWhereOrOn(
+        SqlValidatorScope scope,
+        SqlNode condition,
+        String keyword)
+    {
+        validateNoAggs(condition, keyword);
         inferUnknownTypes(
             booleanType,
-            whereScope,
-            where);
-        where.validate(this, whereScope);
-        final RelDataType type = deriveType(whereScope, where);
+            scope,
+            condition);
+        condition.validate(this, scope);
+        final RelDataType type = deriveType(scope, condition);
         if (!SqlTypeUtil.inBooleanFamily(type)) {
             throw newValidationError(
-                where,
-                EigenbaseResource.instance().WhereMustBeBoolean.ex());
+                condition,
+                EigenbaseResource.instance().CondMustBeBoolean.ex(keyword));
         }
     }
 

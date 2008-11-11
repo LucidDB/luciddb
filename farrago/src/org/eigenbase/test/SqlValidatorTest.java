@@ -5080,6 +5080,13 @@ public class SqlValidatorTest
             "WHERE clause must be a condition");
     }
 
+    public void testOn()
+    {
+        checkFails(
+            "select * from emp e1 left outer join emp e2 on ^e1.sal^",
+            "ON clause must be a condition");
+    }
+
     public void testHaving()
     {
         checkFails(

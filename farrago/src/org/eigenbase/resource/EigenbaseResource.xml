@@ -329,8 +329,8 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Aggregate expression is illegal in ORDER BY clause of non-aggregating SELECT</text>
 </exception>
 
-<exception id="120350" name="WhereMustBeBoolean" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>WHERE clause must be a condition</text>
+<exception id="120350" name="CondMustBeBoolean" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>{0} clause must be a condition</text>
 </exception>
 
 <exception id="120360" name="HavingMustBeBoolean" className="org.eigenbase.sql.validate.SqlValidatorException">
