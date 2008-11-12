@@ -1028,7 +1028,11 @@ TxnId Database::initiateBackup(
     pBackupRestoreDevice = 
         SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
              backupFilePathname,
+#ifdef __MINGW32__
+             "wb",
+#else
              "w",
+#endif
              compressionProgram,
              nScratchPages,
              2,
@@ -1168,7 +1172,11 @@ void Database::restoreFromBackup(
     pBackupRestoreDevice =
         SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
              backupFilePathname,
+#ifdef __MINGW32__
+             "rb",
+#else
              "r",
+#endif
              compressionProgram,
              nScratchPages,
              0,
