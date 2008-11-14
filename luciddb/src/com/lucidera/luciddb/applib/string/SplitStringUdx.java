@@ -408,7 +408,15 @@ public abstract class SplitStringUdx
         int start = 0;
         String tmp;
         int i = 0;
-        
+
+        // one row of null input returns a row of null
+        // applicable for split_rows versions only, split_string_to_rows
+        // won't get here
+        if (theString == null) {
+            v.add(null);
+            return v;
+        }
+
         while (i <= theString.length()) {
             if (i == theString.length() || theString.charAt(i) == separator) {
                 if (i==0 || i == theString.length() || theString.charAt(i-1) != escape) {
