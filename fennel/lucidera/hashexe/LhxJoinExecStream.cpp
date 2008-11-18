@@ -168,8 +168,8 @@ void LhxJoinExecStream::open(bool restart)
      *
      * The execute state machine operates at the plan level.
      */
-    probePart = SharedLhxPartition(new LhxPartition());
-    buildPart = SharedLhxPartition(new LhxPartition());
+    probePart = SharedLhxPartition(new LhxPartition(this));
+    buildPart = SharedLhxPartition(new LhxPartition(this));
 
     (probePart->segStream).reset();
     probePart->inputIndex = DefaultProbeInputIndex;
@@ -404,6 +404,9 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
         case GetNextPlan:
             {
                 hashTable.releaseResources();
+                
+                checkAbort();
+                
                 curPlan = curPlan->getNextLeaf();
 
                 if (curPlan) {

@@ -215,6 +215,34 @@ public abstract class FarragoTestUDR
         ramp(n.intValue(), resultInserter);
     }
 
+    // NOTE jvs 17-Nov-2008:  This one is kind of dangerous,
+    // because it can cancel another statement executed after
+    // the one which actually invoked the UDX.  You can avoid this
+    // by using a dedicated session to invoke the UDX.
+    public static void noiseWithCancel(
+        long n,
+        long seed,
+        long cancelDelayMillis,
+        PreparedStatement resultInserter)
+        throws Exception
+    {
+        Random r = new Random();
+        for (long i = 0; i < n; ++i) {
+            resultInserter.setLong(1, r.nextLong());
+            resultInserter.executeUpdate();
+        }
+        final FarragoSession session = FarragoUdrRuntime.getSession();
+        Timer timer = new Timer(true);
+        TimerTask task = new TimerTask() 
+            {
+                public void run()
+                {
+                    session.cancel();
+                }
+            };
+        timer.schedule(task, cancelDelayMillis);
+    }
+
     public static void stringify(
         ResultSet inputSet,
         String delimiter,

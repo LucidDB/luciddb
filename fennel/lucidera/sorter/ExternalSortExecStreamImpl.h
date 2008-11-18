@@ -215,6 +215,8 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
     virtual void closeImpl();
     
 public:
+    explicit ExternalSortExecStreamImpl();
+    
     // implement ExecStream
     virtual void prepare(ExternalSortExecStreamParams const &params);
     virtual void open(bool restart);

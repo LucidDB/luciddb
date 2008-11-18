@@ -165,6 +165,13 @@ void ParallelExecStreamScheduler::abort(ExecStreamGraph &graph)
     condition.notify_one();
 }
 
+void ParallelExecStreamScheduler::checkAbort() const
+{
+    if (pPendingExcn) {
+        throw AbortExcn();
+    }
+}
+
 void ParallelExecStreamScheduler::stop()
 {
     FENNEL_TRACE(TRACE_FINE,"stop");

@@ -260,6 +260,9 @@ public class FarragoPreparingStmt
     {
         assert (this.planner == null);
         this.planner = planner;
+        if (rootStmtContext != null) {
+            planner.setCancelFlag(rootStmtContext.getCancelFlag());
+        }
         getSession().getPersonality().definePlannerListeners(planner);
     }
 

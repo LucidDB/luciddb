@@ -181,6 +181,7 @@ public:
     virtual void setRunnable(ExecStream &stream, bool runnable);
     virtual void makeRunnable(ExecStream &stream);
     virtual void abort(ExecStreamGraph &graph);
+    virtual void checkAbort() const;
     virtual void stop();
     virtual ExecStreamBufAccessor &readStream(ExecStream &stream);
     virtual void createBufferProvisionAdapter(

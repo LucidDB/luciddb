@@ -38,10 +38,13 @@ import java.util.regex.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.db.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.jdbc.FarragoStatement;
 import net.sf.farrago.trace.*;
 
+import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
@@ -386,8 +389,7 @@ public class FarragoJdbcTest
         queryCancel(true, "FENNEL");
     }
 
-    // FIXME jvs 11-Apr-2006:  re-enable once FNL-30 is fixed
-    public void _testFennelQueryAsynchronousCancel()
+    public void testFennelQueryAsynchronousCancel()
         throws Exception
     {
         queryCancel(false, "FENNEL");
@@ -408,12 +410,83 @@ public class FarragoJdbcTest
     public void testSubqueryCancel()
         throws Exception
     {
-        // REVIEW zfong 3/28/08 - I'm not sure if this will hit FNL-30.
-        // It exercises a similar query pattern as
-        // _testFennelQueryAsynchronousCancel, except within a subquery
-        // and using a Java executor for the foreign table.
         queryCancel(5000, "JAVA", true);
     }
+
+    public void testPlannerCancel()
+        throws Exception
+    {
+        // NOTE jvs 17-Nov-2008:  This relies on voodoo in
+        // FarragoTestPersonalityFactory.  Using schema BAD_VOLCANO
+        // will trigger a Volcano setup which goes into an
+        // infinite loop, guaranteeing that cancel is required to
+        // be working in order to break out of it.  Without that,
+        // the test would hang.
+        String sql = "create schema BAD_VOLCANO";
+        stmt.execute(sql);
+        sql = "set schema 'BAD_VOLCANO'";
+        stmt.execute(sql);
+        sql = "create view vemps(eno, name, deptno, doubleage) "
+            + "as select empno, upper(name), deptno, age * 2 from sales.emps";
+        stmt.execute(sql);
+        sql = "create view vdepts(name, deptno) "
+            + "as select upper(name), deptno from sales.depts";
+        stmt.execute(sql);
+        sql = "create jar test_personality_plugin library "
+            + "'class net.sf.farrago.test.FarragoTestPersonalityFactory' "
+            + "options(0)";
+        stmt.execute(sql);
+        sql = "alter session implementation set jar test_personality_plugin";
+        stmt.execute(sql);
+
+        sql = "explain plan for "
+            + "select ve.name, ve.doubleage, vd.name "
+            + "from vemps ve, vdepts vd "
+            + "where ve.deptno = vd.deptno";
+        prepareAndCancel(sql, 5000);
+
+        sql = "alter session implementation set default";
+        stmt.execute(sql);
+
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        farragoConnection.getSession().getSessionVariables().schemaName = null;
+    }
+
+    // See FRG-349 for purpose of this test.
+    public void testEarlyCancel()
+        throws Exception
+    {
+        String sql = "select name, 'special unique snowflake' from sales.depts";
+        
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        FarragoDatabase db =
+            ((FarragoDbSession) farragoConnection.getSession()).getDatabase();
+        FarragoSessionTxnMgr oldTxnMgr = db.getTxnMgr();
+        FarragoSessionTxnMgr delayTxnMgr = new FarragoDbNullTxnMgr() 
+            {
+                // implement FarragoSessionTxnMgr
+                public void accessTables(
+                    FarragoSessionTxnId txnId,
+                    TableAccessMap accessMap)
+                {
+                    try {
+                        Thread.currentThread().sleep(10000);
+                    } catch (InterruptedException ex) {
+                        throw Util.newInternal(ex);
+                    }
+                    super.accessTables(txnId, accessMap);
+                }
+            };
+        try {
+            db.setTxnMgr(delayTxnMgr);
+            prepareAndCancel(sql, 5000);
+        } finally {
+            db.setTxnMgr(oldTxnMgr);
+        }
+    }
+    
 
     protected void queryCancel(boolean synchronous, String executorType)
         throws Exception
@@ -551,6 +624,7 @@ public class FarragoJdbcTest
         }
         try {
             while (resultSet.next()) {
+                // don't need to actually process rows
             }
         } catch (SQLException ex) {
             // expected
@@ -594,6 +668,9 @@ public class FarragoJdbcTest
 
         try {
             resultSet = stmt.executeQuery(sql);
+            while (resultSet.next()) {
+                // don't need to actually process rows
+            }
         } catch (SQLException ex) {
             // expected
             Assert.assertTrue(
@@ -3479,9 +3556,6 @@ public class FarragoJdbcTest
     /**
      * Tests that a DDL statement fails because we have not specified a target
      * schema.
-     *
-     * <p>Currently disabled because the DT testing infrastructure cannot handle
-     * failures.
      */
     public void testCreateViewNegative()
         throws SQLException

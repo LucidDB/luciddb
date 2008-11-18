@@ -30,6 +30,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
@@ -116,6 +117,8 @@ public abstract class FarragoDbStmtContextBase
      */
     protected boolean saveFirstCsn;
 
+    protected final CancelFlag cancelFlag;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -167,6 +170,7 @@ public abstract class FarragoDbStmtContextBase
             this.stmtCurrentTime = rootStmtContext.getStmtCurrentTime();
             rootStmtContext.addChildStmtContext(this);
         }
+        cancelFlag = new CancelFlag();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -203,6 +207,7 @@ public abstract class FarragoDbStmtContextBase
     // implement FarragoSessionStmtContext
     public void unprepare()
     {
+        cancelFlag.clearCancel();
         synchronized (session) {
             sql = null;
             dynamicParamValues = null;
@@ -365,7 +370,7 @@ public abstract class FarragoDbStmtContextBase
     }
 
     /**
-     * Checks that all dynamic parameters have been set
+     * Checks that all dynamic parameters have been set.
      */
     protected void checkDynamicParamsSet()
     {
@@ -391,11 +396,11 @@ public abstract class FarragoDbStmtContextBase
     protected void accessTables(FarragoSessionExecutableStmt executableStmt)
     {
         TableAccessMap accessMap = executableStmt.getTableAccessMap();
-        lockTable(accessMap);
+        lockTables(accessMap);
     }
 
     /**
-     * Acquires locks (or whatever transaction manager wants) on a single table
+     * Acquires locks (or whatever transaction manager wants) on a single table.
      *
      * @param table fully qualified table name, represented as a list
      * @param mode access mode for the table
@@ -403,16 +408,16 @@ public abstract class FarragoDbStmtContextBase
     protected void accessTable(List<String> table, TableAccessMap.Mode mode)
     {
         TableAccessMap accessMap = new TableAccessMap(table, mode);
-        lockTable(accessMap);
+        lockTables(accessMap);
     }
 
     /**
-     * Calls the transaction manager to access a set of tables
+     * Calls the transaction manager to access a set of tables.
      *
      * @param accessMap map containing the tables being accessed and their
      * access modes
      */
-    private void lockTable(TableAccessMap accessMap)
+    private void lockTables(TableAccessMap accessMap)
     {
         FarragoSessionTxnMgr txnMgr = session.getDatabase().getTxnMgr();
         FarragoSessionTxnId txnId = session.getTxnId(true);
@@ -441,7 +446,7 @@ public abstract class FarragoDbStmtContextBase
     }
 
     /**
-     * Marks a single object, represented by its mofId, as in-use
+     * Marks a single object, represented by its mofId, as in-use.
      *
      * @param mofId mofId of the object being marked as in-use
      */
@@ -486,12 +491,19 @@ public abstract class FarragoDbStmtContextBase
      */
     protected void clearExecutingStmtInfo()
     {
+        cancelFlag.clearCancel();
         if (info == null) {
             return;
         }
         long key = info.getId();
         getSessionInfo().removeExecutingStmtInfo(key);
         info = null;
+    }
+
+    // implement FarragoSessionStmtContext
+    public CancelFlag getCancelFlag()
+    {
+        return cancelFlag;
     }
 
     /**

@@ -25,6 +25,8 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.regex.*;
 
+import org.eigenbase.util.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -59,6 +61,8 @@ public abstract class AbstractRelOptPlanner
 
     private Pattern ruleDescExclusionFilter;
 
+    private CancelFlag cancelFlag;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -67,10 +71,31 @@ public abstract class AbstractRelOptPlanner
     protected AbstractRelOptPlanner()
     {
         mapDescToRule = new HashMap<String, RelOptRule>();
+
+        // In case no one calls setCancelFlag, set up a
+        // dummy here.
+        cancelFlag = new CancelFlag();
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    // implement RelOptPlanner
+    public void setCancelFlag(CancelFlag cancelFlag)
+    {
+        this.cancelFlag = cancelFlag;
+    }
+
+    /**
+     * Checks to see whether cancellation has been requested, and
+     * if so, throws an exception.
+     */
+    public void checkCancel()
+    {
+        if (cancelFlag.isCancelRequested()) {
+            throw EigenbaseResource.instance().PreparationAborted.ex();
+        }
+    }
+    
     /**
      * Registers a rule's description.
      *
@@ -243,6 +268,8 @@ public abstract class AbstractRelOptPlanner
     protected void fireRule(
         RelOptRuleCall ruleCall)
     {
+        checkCancel();
+        
         assert ruleCall.getRule().matches(ruleCall);
         if (isRuleExcluded(ruleCall.getRule())) {
             if (tracer.isLoggable(Level.FINE)) {

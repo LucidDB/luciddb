@@ -153,6 +153,7 @@ public class VolcanoRuleCall
     protected void onMatch()
     {
         assert getRule().matches(this);
+        volcanoPlanner.checkCancel();
         try {
             if (volcanoPlanner.isRuleExcluded(getRule())) {
                 if (tracer.isLoggable(Level.FINE)) {

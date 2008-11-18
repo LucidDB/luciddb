@@ -36,6 +36,13 @@ FENNEL_BEGIN_NAMESPACE
 struct ExternalSortInfo
 {
     /**
+     * Main stream, for abort checking.  Note that we intentionally
+     * don't give subcomponents access to ExternalSortExecStreamImpl
+     * details.
+     */
+    ExecStream &stream;
+    
+    /**
      * Accessor for segment used to store runs externally.
      */
     SegmentAccessor externalSegmentAccessor;
@@ -80,7 +87,7 @@ struct ExternalSortInfo
      */
     uint cbPage;
 
-    explicit ExternalSortInfo();
+    explicit ExternalSortInfo(ExecStream &);
 
     /**
      * Compares two keys, taking ASC/DESC into account.

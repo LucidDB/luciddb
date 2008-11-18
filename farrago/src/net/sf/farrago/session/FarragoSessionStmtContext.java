@@ -28,6 +28,7 @@ import java.util.*;
 
 import net.sf.farrago.util.*;
 
+import org.eigenbase.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -175,6 +176,16 @@ public interface FarragoSessionStmtContext
      * Cancels execution.
      */
     public void cancel();
+
+    /**
+     * Gets the cancellation flag for this context.  This is part of
+     * the implementation of cancel-checking; callers who actually
+     * want to request cancellation should use the {@link #cancel()}
+     * method instead.
+     *
+     * @return the cancellation flag for this context
+     */
+    public CancelFlag getCancelFlag();
 
     /**
      * Cancels execution and destroys the statement.

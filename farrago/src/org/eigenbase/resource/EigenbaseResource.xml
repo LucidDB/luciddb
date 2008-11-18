@@ -548,8 +548,12 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Cannot explicitly insert value into IDENTITY column ''{0}'' which is ALWAYS GENERATED</text>
 </exception>
 
-<exception id="421080" name="ArgumentMustHaveScaleZero">
+<exception id="130130" name="ArgumentMustHaveScaleZero">
 <text>Argument to function ''{0}'' must have a scale of 0</text>
+</exception>
+
+<exception id="130140" name="PreparationAborted">
+<text>Statement preparation aborted</text>
 </exception>
 
 

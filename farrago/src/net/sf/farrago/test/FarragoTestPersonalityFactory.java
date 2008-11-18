@@ -29,6 +29,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.sql.*;
 
@@ -69,6 +70,29 @@ public class FarragoTestPersonalityFactory
             ChainedRelMetadataProvider chain)
         {
             chain.addProvider(new FarragoTestRelMetadataProvider());
+        }
+        
+        // implement FarragoSessionPersonality
+        public FarragoSessionPlanner newPlanner(
+            FarragoSessionPreparingStmt stmt,
+            boolean init)
+        {
+            // NOTE jvs 17-Nov-2008:  This is a hack to trigger
+            // a badly-behaving planner for testing planner abort.
+            if ("BAD_VOLCANO".equals(
+                    stmt.getSession().getSessionVariables().schemaName))
+            {
+                FarragoDefaultPlanner planner =
+                    new FarragoDefaultPlanner(stmt);
+                if (init) {
+                    planner.init();
+                    planner.addRule(
+                        PullUpProjectsAboveJoinRule.instanceTwoProjectChildren);
+                }
+                return planner;
+            } else {
+                return super.newPlanner(stmt, init);
+            }
         }
     }
 

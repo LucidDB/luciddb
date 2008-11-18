@@ -34,7 +34,8 @@ ExternalSortExecStream *ExternalSortExecStream::newExternalSortExecStream()
     return new ExternalSortExecStreamImpl();
 }
 
-ExternalSortInfo::ExternalSortInfo()
+ExternalSortInfo::ExternalSortInfo(ExecStream &streamInit)
+    : stream(streamInit)
 {
     nSortMemPages = 0;
     nSortMemPagesPerRun = 0;
@@ -57,6 +58,11 @@ int ExternalSortInfo::compareKeys(TupleData const &key1, TupleData const &key2)
     } else {
         return c;
     }
+}
+
+ExternalSortExecStreamImpl::ExternalSortExecStreamImpl()
+    : sortInfo(*this)
+{
 }
 
 void ExternalSortExecStreamImpl::prepare(

@@ -25,6 +25,7 @@ package org.eigenbase.relopt;
 import java.util.logging.*;
 import java.util.regex.*;
 
+import org.eigenbase.util.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -96,6 +97,15 @@ public interface RelOptPlanner
      * filtering
      */
     public void setRuleDescExclusionFilter(Pattern exclusionFilter);
+
+    /**
+     * Installs the cancellation-checking flag for this planner.
+     * The planner should periodically check this flag and terminate the
+     * planning process if it sees a cancellation request.
+     *
+     * @param cancelFlag flag which the planner should periodically check
+     */
+    public void setCancelFlag(CancelFlag cancelFlag);
 
     /**
      * Changes a relational expression to an equivalent one with a different set
