@@ -61,6 +61,11 @@ insert into upemps
     (1,'Fred',20),
     (2,'Bill', 10),
     (3,'Joe',10);
+-- attempt to update same column twice; should fail
+update upemps
+  set empno=10, empno=20;
+-- same for insert
+insert into upemps(empno,empno) values (10,20);
 -- update two columns from same query
 -- oracle supports this but we do not; expect validation error
 update upemps

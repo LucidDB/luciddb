@@ -59,13 +59,12 @@ create or replace view x.foo as select 'foofah' from (values(0));
 call sys_boot.mgmt.flush_code_cache();
 select * from x.bar;
 
--- finally, simulate a change to a non-CAST-compatible type
--- (TODO:  need a better error message; see comments in
---  FarragoOJRexCastImplementor.java)
-create or replace view x.foo as select true from (values(0));
-
-call sys_boot.mgmt.flush_code_cache();
-select * from x.bar;
+-- next test simulates a change to a non-CAST-compatible type;
+-- it's currently disabled because it produces an internal error message
+-- which varies (TODO:  figure out how to improve the error message
+-- create or replace view x.foo as select true from (values(0));
+-- call sys_boot.mgmt.flush_code_cache();
+-- select * from x.bar;
 
 -- verify loopback via EXPLAIN PLAN
 !set outputformat csv

@@ -106,27 +106,12 @@ public class FarragoOJRexCastImplementor
             return rhsExp;
         }
 
-        // Normally the validator will report the error.
-        // but when do insert into t values (...)
-        // somehow, it slipped in.
-        // TODO: should it be done by the validator even
-        // for insert into table?
-        if ((lhsType != null) && (rhsType != null)) {
-            // in the case of set catalog 'sys_cwm'
-            // select "name" from Relational"."Schema";
-            // somehow java String datatype slipped in.
-            // we need to filter it out.
-            if ((lhsType.getSqlTypeName() != null)
-                && (rhsType.getSqlTypeName() != null))
-            {
-                if (!SqlTypeUtil.canCastFrom(lhsType, rhsType, true)) {
-                    // REVIEW jvs 27-Dec-2005:  Need a better error
-                    // message here:  this is during code generation, but
-                    // the message is intended for execution.
-                    throw FarragoResource.instance().Overflow.ex();
-                }
-            }
-        }
+        // NOTE jvs 19-Nov-2008:  In some cases (e.g. FRG-273) a cast
+        // may be illegal at the SQL level, but allowable as part of
+        // implementation, so don't try to enforce
+        // SqlTypeUtil.canCastFrom here.  Anything which was supposed
+        // to have been prevented should already have been caught
+        // by the validator.
 
         CastHelper helper =
             new CastHelper(

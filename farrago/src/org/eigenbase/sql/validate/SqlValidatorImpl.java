@@ -3225,9 +3225,16 @@ public class SqlValidatorImpl
                 fieldNames[i] = SqlUtil.deriveAliasFromOrdinal(i);
             }
         }
+        Set<String> assignedColumnNames = new HashSet<String>();
         for (SqlNode node : targetColumnList) {
             SqlIdentifier id = (SqlIdentifier) node;
             int iColumn = baseRowType.getFieldOrdinal(id.getSimple());
+            if (!assignedColumnNames.add(id.getSimple())) {
+                throw newValidationError(
+                    id,
+                    EigenbaseResource.instance().DuplicateTargetColumn.ex(
+                        id.getSimple()));
+            }
             if (iColumn == -1) {
                 throw newValidationError(
                     id,
@@ -3322,7 +3329,16 @@ public class SqlValidatorImpl
             RelDataType sourceType = sourceFields[i].getType();
             RelDataType targetType = targetFields[i].getType();
             if (!SqlTypeUtil.canAssignFrom(targetType, sourceType)) {
-                SqlNode node = getNthExpr(query, i, sourceCount);
+                // FRG-255:  account for UPDATE rewrite; there's
+                // probably a better way to do this.
+                int iAdjusted = i;
+                if (query instanceof SqlUpdate) {
+                    int nUpdateColumns =
+                        ((SqlUpdate) query).getTargetColumnList().size();
+                    assert(sourceFields.length >= nUpdateColumns);
+                    iAdjusted -= (sourceFields.length - nUpdateColumns);
+                }
+                SqlNode node = getNthExpr(query, iAdjusted, sourceCount);
                 throw newValidationError(
                     node,
                     EigenbaseResource.instance().TypeNotAssignable.ex(

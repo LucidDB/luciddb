@@ -77,6 +77,13 @@ select * from rtable where r < 1.0;
 
 select * from rtable where r <= 1.0;
 
+-- FRG-255:  type checking for UPDATE
+create table t2(a int primary key, b numeric);
+update t2 set b = '123';
+
+-- FRG-273:  type checking for cast datetime to BIGINT
+values cast(current_date as bigint);
+
 -- End datatypes.sql
 
 

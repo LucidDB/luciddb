@@ -167,6 +167,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Unknown target column ''{0}''</text>
 </exception>
 
+<exception id="120065" name="DuplicateTargetColumn" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Target column ''{0}'' is assigned more than once</text>
+</exception>
+
 <exception id="120070" name="UnmatchInsertColumn" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Number of INSERT target columns ({0,number}) does not equal number of source items ({1,number})</text>
 </exception>
