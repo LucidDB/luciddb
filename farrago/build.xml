@@ -391,7 +391,7 @@ ${farrago.test.jvmargs}
   <target name="clean" depends="cleanTestLogs">
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${farrago.classes.dir}"
-        includes="**/*.class,**/*.properties"/>
+        includes="**/*.class,**/*.properties,**/*.xml"/>
       <fileset dir="${plugin.classes.dir}" includes="**/*.class"/>
       <fileset dir="${farrago.plugin.dir}" includes="**/*.jar"/>
       <fileset dir="${farrago.classes.dir}"
