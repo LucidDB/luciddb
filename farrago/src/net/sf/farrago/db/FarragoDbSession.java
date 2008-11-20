@@ -547,8 +547,10 @@ public class FarragoDbSession
     }
 
     // implement FarragoSession
-    public synchronized boolean isClosed()
+    public boolean isClosed()
     {
+        // NOTE jvs 18-Nov-2008:  don't mark this method as
+        // synchronized; see FRG-294 for why.
         return (database == null);
     }
 
@@ -559,16 +561,22 @@ public class FarragoDbSession
     }
 
     // implement FarragoSession
-    public synchronized boolean isTxnInProgress()
+    public boolean isTxnInProgress()
     {
+        // NOTE jvs 18-Nov-2008:  don't mark this method as
+        // synchronized; see FRG-294 for why.
+        
         // TODO jvs 9-Mar-2006:  Unify txn state.
         if (txnIdRef.txnId != null) {
             return true;
         }
-        if (fennelTxnContext == null) {
+
+        FennelTxnContext contextToCheck = fennelTxnContext;
+        
+        if (contextToCheck == null) {
             return false;
         }
-        return fennelTxnContext.isTxnInProgress();
+        return contextToCheck.isTxnInProgress();
     }
 
     // implement FarragoSession
