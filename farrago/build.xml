@@ -625,7 +625,8 @@ ${farrago.test.jvmargs}
         <propertyref name="FARRAGO_CATALOG_DIR"/>
       </propertyset>
       <exportSchema
-        file="${FarragoMetamodel.sql}"
+        mode="model"
+        dir="${farrago.catalog.src.dir}"
         extent="FarragoMetamodel"/>
     </mdr>
 
@@ -642,8 +643,16 @@ ${farrago.test.jvmargs}
         url="${gensch.net.sf.farrago.dev.connection.url}${farrago.catalog.schema}"
         userid="${gensch.net.sf.farrago.dev.connection.username}"
         password="${gensch.net.sf.farrago.dev.connection.password}"
-        classpathref="farrago.3p.classpath"
-        src="${FarragoMetamodel.sql}"/>
+        classpathref="farrago.3p.classpath">
+      <!-- Ant will alphaebtize if these are in the same fileset. 
+           Keep provider.sql first, since it logically belongs first. -->
+      <fileset dir="${farrago.catalog.src.dir}">
+        <include name="**/provider.sql"/>
+      </fileset>
+      <fileset dir="${farrago.catalog.src.dir}">
+        <include name="**/create.sql"/>
+      </fileset>
+    </sql>
   </target>
 
   <target name="importMetamodel">
@@ -816,7 +825,6 @@ ${farrago.test.jvmargs}
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactory.java"/>
     <delete
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
-    <delete file="${FarragoMetamodel.sql}"/>
     <delete dir="${farrago.catalog.src.dir}"/>
     <delete file="${FarragoSqlTestWrapper.java}"/>
     <delete dir="${farrago.catalog.dir}/fennel"/>
