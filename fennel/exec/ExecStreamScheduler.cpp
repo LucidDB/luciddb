@@ -216,6 +216,10 @@ void ExecStreamScheduler::traceStreamBufferContents(
     }
 }
 
+void ExecStreamScheduler::checkAbort() const
+{
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ExecStreamScheduler.cpp

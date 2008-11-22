@@ -85,6 +85,7 @@ public:
     virtual void start();
     virtual void setRunnable(ExecStream &stream, bool);
     virtual void abort(ExecStreamGraph &graph);
+    virtual void checkAbort() const;
     virtual void stop();
     virtual ExecStreamBufAccessor &readStream(ExecStream &stream);
 };

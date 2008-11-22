@@ -1181,6 +1181,9 @@ ${farrago.test.jvmargs}
     <copy todir="${dist.dir}/${lucidera.release.spec}/examples">
       <fileset dir="${luciddb.dir}/examples"/>
     </copy>
+    <copy todir="${dist.dir}/${lucidera.release.spec}/ext">
+      <fileset dir="${luciddb.dir}/ext"/>
+    </copy>
     <copy 
       file="${luciddb.dir}/license/README" 
       todir="${dist.dir}/${lucidera.release.spec}"

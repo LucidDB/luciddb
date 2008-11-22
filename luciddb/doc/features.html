@@ -20,7 +20,7 @@ Here are some of the main features which set LucidDB apart:
 </tr>
 
 <tr>
-<td rowspan=3><i>Storage</i></td> 
+<td rowspan=5><i>Storage</i></td> 
 <td>Column-store tables</td> 
 <td>Very high data compression rates for columns with many repeated values; 
 reduced I/O for queries which access only a subset of columns;
@@ -44,6 +44,29 @@ readers to access a table while data is being bulk loaded or updated;
 versioning at page-level is much more efficient than transactional
 multi-versioning schemes such as row-level versioning or log-based
 page reconstruction
+</td>
+</tr>
+
+<tr>
+<td><a target="_top"
+href="http://pub.eigenbase.org/wiki/LucidDbWarehouseLabels">Warehouse
+labels</a></td>
+<td>
+Allows report execution to sync to a particular global database state
+such as <em>last successful ETL</em> so that queries never see intermediate
+inconsistent states; enables trickle-feed ETL, and may be used to
+eliminate the downtime imposition of an ETL window.
+</td>
+</tr>
+
+<tr>
+<td><a target="_top"
+href="http://pub.eigenbase.org/wiki/LucidDbBackupRestore">Hot+incremental
+backup</a></td>
+<td>
+Allows the system to be backed up consistently while queries and ETL
+are running, eliminating downtime; incremental and compression options
+minimize archival storage and bandwidth.
 </td>
 </tr>
 

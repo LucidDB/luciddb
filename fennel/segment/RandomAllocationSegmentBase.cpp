@@ -52,6 +52,7 @@ RandomAllocationSegmentBase::RandomAllocationSegmentBase(
 
     nPagesOccupiedHighWater = 0;
     nPagesAllocated = 0;
+    netDeallocations = 0;
 }
 
 RandomAllocationSegmentBase::~RandomAllocationSegmentBase()

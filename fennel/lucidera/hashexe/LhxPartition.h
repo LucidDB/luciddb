@@ -32,6 +32,7 @@
 #include "fennel/lucidera/hashexe/LhxHashBase.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/exec/ExecStream.h"
 #include "fennel/exec/AggComputer.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_array.hpp>
@@ -63,9 +64,13 @@ struct LhxPartition
      */
     uint   inputIndex;
 
-#ifdef NOT_DONE
-	BOOL m_bOneKey;						// whether there is only 1 distinct key
-#endif
+    /**
+     * Parent ExecStream, for abort checking purposes, or NULL
+     * if none (only for unit tests, so not default).
+     */
+    ExecStream *pExecStream;
+
+    explicit LhxPartition(ExecStream *pExecStreamInit);
 };
 
 class LhxPartitionWriter
@@ -153,6 +158,7 @@ public:
     void close();
     inline ExecStreamBufState getState() const;
     inline TupleDescriptor const &getTupleDesc() const;
+    inline SharedLhxPartition getSourcePartition() const;
 };
 
 // REVIEW jvs 26-Aug-2006:  Fennel convention for enum names is
@@ -437,6 +443,11 @@ public:
     string toString();
 };
 
+inline LhxPartition::LhxPartition(ExecStream *pExecStreamInit)
+{
+    pExecStream = pExecStreamInit;
+}
+
 inline ExecStreamBufState LhxPartitionReader::getState() const
 {
     if (srcIsInputStream) {
@@ -444,6 +455,11 @@ inline ExecStreamBufState LhxPartitionReader::getState() const
    } else {
         return bufState;
    }
+}
+
+inline SharedLhxPartition LhxPartitionReader::getSourcePartition() const
+{
+    return srcPartition;
 }
 
 inline TupleDescriptor const &LhxPartitionReader::getTupleDesc() const

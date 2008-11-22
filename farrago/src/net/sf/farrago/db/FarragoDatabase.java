@@ -327,6 +327,18 @@ public class FarragoDatabase
         return txnMgr;
     }
 
+    /**
+     * Sets the transaction manager for this database.  This
+     * is intended only for use by white-box tests; it should
+     * not be called otherwise.
+     *
+     * @param txnMgr new transaction manager
+     */
+    public void setTxnMgr(FarragoSessionTxnMgr txnMgr)
+    {
+        this.txnMgr = txnMgr;
+    }
+
     private File getBootUrlFile()
     {
         return new File(

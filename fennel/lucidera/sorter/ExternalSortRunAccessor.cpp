@@ -26,6 +26,7 @@
 #include "fennel/segment/SegInputStream.h"
 #include "fennel/segment/SegOutputStream.h"
 #include "fennel/segment/SegStreamAllocation.h"
+#include "fennel/exec/ExecStream.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -110,6 +111,8 @@ ExternalSortFetchArray &ExternalSortRunAccessor::bindFetchArray()
 
 ExternalSortRC ExternalSortRunAccessor::fetch(uint nTuplesRequested)
 {
+    sortInfo.stream.checkAbort();
+    
     if (nTuplesRequested > EXTSORT_FETCH_ARRAY_SIZE) {
         nTuplesRequested = EXTSORT_FETCH_ARRAY_SIZE;
     }

@@ -246,6 +246,16 @@ public:
     virtual bool mayBlock() const;
 
     /**
+     * Checks whether there is an abort request for this stream's
+     * scheduler.  Normally, streams don't need to check this,
+     * since the scheduler services abort requests in between
+     * quanta.  However, streams which enter long-running loops
+     * need to check for themselves.  If an abort is scheduled,
+     * this method will throw an AbortExcn automatically.
+     */
+    virtual void checkAbort() const;
+
+    /**
      * Queries the BufferProvision which this stream is capable of when
      * producing tuples.
      *

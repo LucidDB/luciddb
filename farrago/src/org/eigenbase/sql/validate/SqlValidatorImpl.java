@@ -2620,8 +2620,7 @@ public class SqlValidatorImpl
             break;
         case On:
             Util.permAssert(condition != null, "condition != null");
-            validateNoAggs(condition, "ON");
-            condition.validate(this, joinScope);
+            validateWhereOrOn(joinScope, condition, "ON");
             break;
         case Using:
             SqlNodeList list = (SqlNodeList) condition;
@@ -3012,17 +3011,25 @@ public class SqlValidatorImpl
             return;
         }
         final SqlValidatorScope whereScope = getWhereScope(select);
-        validateNoAggs(where, "WHERE");
+        validateWhereOrOn(whereScope, where, "WHERE");
+    }
+
+    protected void validateWhereOrOn(
+        SqlValidatorScope scope,
+        SqlNode condition,
+        String keyword)
+    {
+        validateNoAggs(condition, keyword);
         inferUnknownTypes(
             booleanType,
-            whereScope,
-            where);
-        where.validate(this, whereScope);
-        final RelDataType type = deriveType(whereScope, where);
+            scope,
+            condition);
+        condition.validate(this, scope);
+        final RelDataType type = deriveType(scope, condition);
         if (!SqlTypeUtil.inBooleanFamily(type)) {
             throw newValidationError(
-                where,
-                EigenbaseResource.instance().WhereMustBeBoolean.ex());
+                condition,
+                EigenbaseResource.instance().CondMustBeBoolean.ex(keyword));
         }
     }
 
@@ -3218,9 +3225,16 @@ public class SqlValidatorImpl
                 fieldNames[i] = SqlUtil.deriveAliasFromOrdinal(i);
             }
         }
+        Set<String> assignedColumnNames = new HashSet<String>();
         for (SqlNode node : targetColumnList) {
             SqlIdentifier id = (SqlIdentifier) node;
             int iColumn = baseRowType.getFieldOrdinal(id.getSimple());
+            if (!assignedColumnNames.add(id.getSimple())) {
+                throw newValidationError(
+                    id,
+                    EigenbaseResource.instance().DuplicateTargetColumn.ex(
+                        id.getSimple()));
+            }
             if (iColumn == -1) {
                 throw newValidationError(
                     id,
@@ -3315,7 +3329,16 @@ public class SqlValidatorImpl
             RelDataType sourceType = sourceFields[i].getType();
             RelDataType targetType = targetFields[i].getType();
             if (!SqlTypeUtil.canAssignFrom(targetType, sourceType)) {
-                SqlNode node = getNthExpr(query, i, sourceCount);
+                // FRG-255:  account for UPDATE rewrite; there's
+                // probably a better way to do this.
+                int iAdjusted = i;
+                if (query instanceof SqlUpdate) {
+                    int nUpdateColumns =
+                        ((SqlUpdate) query).getTargetColumnList().size();
+                    assert(sourceFields.length >= nUpdateColumns);
+                    iAdjusted -= (sourceFields.length - nUpdateColumns);
+                }
+                SqlNode node = getNthExpr(query, iAdjusted, sourceCount);
                 throw newValidationError(
                     node,
                     EigenbaseResource.instance().TypeNotAssignable.ex(
@@ -3667,6 +3690,23 @@ public class SqlValidatorImpl
         targetWindow.setWindowCall(call);
         targetWindow.validate(this, scope);
         targetWindow.setWindowCall(null);
+    }
+
+    public void validateAggregateParams(SqlCall aggFunction, SqlValidatorScope scope)
+    {
+        // For agg(expr), expr cannot itself contain aggregate function
+        // invocations.  For example, SUM(2*MAX(x)) is illegal; when
+        // we see it, we'll report the error for the SUM (not the MAX).
+        // For more than one level of nesting, the error which results
+        // depends on the traversal order for validation.
+         for (SqlNode param : aggFunction.getOperands()) {
+             final SqlNode agg = aggOrOverFinder.findAgg(param);
+             if (aggOrOverFinder.findAgg(param) != null) {
+                 throw newValidationError(
+                     aggFunction,
+                     EigenbaseResource.instance().NestedAggIllegal.ex());
+             }
+        }
     }
 
     public void validateCall(

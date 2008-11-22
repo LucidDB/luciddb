@@ -1046,24 +1046,33 @@ public abstract class SqlOperatorTests
     protected static Calendar getCalendarNotTooNear(int timeUnit)
     {
         while (true) {
-            final Calendar cal = Calendar.getInstance();
+            Calendar cal = Calendar.getInstance();
+            final Calendar fcal;
             try {
                 switch (timeUnit) {
                 case Calendar.DAY_OF_MONTH:
-                    // Within two minutes of the end of the day, wait.
+                    // Within two minutes of the end of the day.
+                    // Wait 2 minutes to force calendar into next
+                    // day, then get a new instance to return
                     if ((cal.get(Calendar.HOUR_OF_DAY) == 23)
                         && (cal.get(Calendar.MINUTE) >= 58)) {
-                        Thread.sleep(60 * 1000);
+                        Thread.sleep(2 * 60 * 1000);
+                        cal = Calendar.getInstance();
                         continue;
                     }
+                    fcal = cal;
                     return cal;
                 case Calendar.HOUR_OF_DAY:
-                    // Within two minutes of the top of the hour, wait.
+                    // Within two minutes of the top of the hour.
+                    // Wait 2 minutes to force calendar into next
+                    // hour, then get a new instance to return
                     if ((cal.get(Calendar.MINUTE) >= 58)) {
-                        Thread.sleep(60 * 1000);
+                        Thread.sleep(2 * 60 * 1000); 
+                        cal = Calendar.getInstance();
                         continue;
                     }
-                    return cal;
+                    fcal = cal;
+                    return fcal;
                 default:
                     throw Util.newInternal("unexpected time unit " + timeUnit);
                 }

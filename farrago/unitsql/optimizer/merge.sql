@@ -615,17 +615,12 @@ merge into emps e
         insert (empno, name, age, gender, salary, city)
         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000);
 
--- mismatch in types in values clause
+-- mismatch in types in update clause
 explain plan without implementation for
 merge into emps e
     using tempemps t on t.t_empno = e.empno
     when matched then
-        update set deptno = t.t_deptno, city = upper(t.t_city),
-            salary = salary * .25
-    when not matched then
-        insert (empno, name, age, gender, salary, city)
-        values(t.t_empno, upper(t.t_name), t.t_name, t.t_gender, t.t_age * 1000,
-            t.t_city);
+        update set deptno = 'abc';
 
 -- LucidDb doesn't support UPDATE
 update emps set name = 'Foobar';

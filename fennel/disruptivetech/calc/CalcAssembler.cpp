@@ -100,7 +100,7 @@ int CalcAssembler::assemble()
     catch (FennelExcn& ex) {
         throw CalcAssemblerException(ex.getMessage(), getLexer().getLocation());
     }
-    catch (exception& ex) {
+    catch (std::exception& ex) {
         throw CalcAssemblerException(ex.what(), getLexer().getLocation());
     }
         

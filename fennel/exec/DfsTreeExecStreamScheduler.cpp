@@ -85,6 +85,14 @@ void DfsTreeExecStreamScheduler::abort(ExecStreamGraph &)
     aborted = true;
 }
 
+void DfsTreeExecStreamScheduler::checkAbort() const
+{
+    if (aborted) {
+        FENNEL_TRACE(TRACE_FINE,"abort detected");
+        throw AbortExcn();
+    }
+}
+
 void DfsTreeExecStreamScheduler::stop()
 {
     FENNEL_TRACE(TRACE_FINE,"stop");
@@ -137,10 +145,7 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
         SharedExecStream pStream = graphImpl.getStreamFromVertex(current);
         ExecStreamResult rc = executeStream(*pStream, quantum);
 
-        if (aborted) {
-            FENNEL_TRACE(TRACE_FINE,"abort detected");
-            throw AbortExcn();
-        }
+        checkAbort();
 
         ExecStreamGraphImpl::Edge edge;
 

@@ -179,6 +179,12 @@ public:
     virtual void abort(ExecStreamGraph &graph) = 0;
 
     /**
+     * Checks whether there is an abort request for this
+     * scheduler, and if so, throws an AbortExcn.
+     */
+    virtual void checkAbort() const;
+
+    /**
      * Shuts down this scheduler, preventing any further streams from
      * being scheduled.
      */

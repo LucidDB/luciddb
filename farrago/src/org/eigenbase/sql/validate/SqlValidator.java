@@ -232,6 +232,14 @@ public interface SqlValidator
     void validateCall(SqlCall call, SqlValidatorScope scope);
 
     /**
+      * Validates parameters for aggregate function.
+      *
+      * @param aggFunction function containing COLUMN_LIST parameter
+      * @param scope Syntactic scope
+      */
+     void validateAggregateParams(SqlCall aggFunction, SqlValidatorScope scope);
+
+    /**
      * Validates a COLUMN_LIST parameter
      *
      * @param function function containing COLUMN_LIST parameter

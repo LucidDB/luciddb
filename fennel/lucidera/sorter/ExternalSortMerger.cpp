@@ -24,6 +24,7 @@
 #include "fennel/lucidera/sorter/ExternalSortMerger.h"
 #include "fennel/lucidera/sorter/ExternalSortInfo.h"
 #include "fennel/lucidera/sorter/ExternalSortRunAccessor.h"
+#include "fennel/exec/ExecStream.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -196,6 +197,8 @@ ExternalSortRC ExternalSortMerger::checkFetch()
 
 ExternalSortRC ExternalSortMerger::fetch(uint nTuplesRequested)
 {
+    sortInfo.stream.checkAbort();
+    
     if (nTuplesRequested > EXTSORT_FETCH_ARRAY_SIZE) {
         nTuplesRequested = EXTSORT_FETCH_ARRAY_SIZE;
     }

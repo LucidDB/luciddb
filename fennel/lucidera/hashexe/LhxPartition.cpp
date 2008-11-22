@@ -240,18 +240,16 @@ bool LhxPartitionReader::demandData()
            return false;
         } else {
             tupleStorageLength = tupleAccessor.getBufferByteCount(pSrcBuf);
-            if (bytesReadable < tupleStorageLength) {
-                /*
-                 * REVIEW: when will this happen
-                 */
-                // REVIEW jvs 26-Aug-2006:  It should never happen,
-                // so assert instead.
-                bufState = EXECBUF_EOS;
-                return false;
-            } else {
-               tupleAccessor.setCurrentTupleBuf(pSrcBuf);
-               return true;
+            assert(bytesReadable >= tupleStorageLength);
+            if (bytesReadable == tupleStorageLength) {
+                // We're processing the last tuple in a buffer,
+                // so now is a good time to check for abort.
+                if (srcPartition->pExecStream) {
+                    srcPartition->pExecStream->checkAbort();
+                }
             }
+            tupleAccessor.setCurrentTupleBuf(pSrcBuf);
+            return true;
         }
     }
 }
@@ -314,7 +312,8 @@ void LhxPartitionInfo::open(
     shared_array<uint> curSubPartStat;
 
     for (i = 0; i < numInputs * LhxPlan::LhxChildPartCount; i ++) {
-        destPartitionList.push_back(SharedLhxPartition(new LhxPartition()));
+        destPartitionList.push_back(
+            SharedLhxPartition(new LhxPartition(probePartition->pExecStream)));
         destPartitionList[i]->inputIndex = (i / LhxPlan::LhxChildPartCount);
         subPartStatList.push_back(
             shared_array<uint>(new uint[LhxPlan::LhxSubPartCount]));
@@ -384,7 +383,9 @@ void LhxPartitionInfo::open(
     shared_array<uint> curSubPartStat;
     
     for (i = 0; i < numInputs * LhxPlan::LhxChildPartCount; i ++) {
-        destPartitionList.push_back(SharedLhxPartition(new LhxPartition()));
+        destPartitionList.push_back(
+            SharedLhxPartition(
+                new LhxPartition(reader->getSourcePartition()->pExecStream)));
         destPartitionList[i]->inputIndex = (i / LhxPlan::LhxChildPartCount);
         subPartStatList.push_back(
             shared_array<uint>(new uint[LhxPlan::LhxSubPartCount]));
@@ -911,7 +912,8 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
     
         for (i = 0; i < LhxChildPartCount; i ++) {
             uint index = j * LhxChildPartCount + i;
-            destPartitionList[index].reset(new LhxPartition());
+            destPartitionList[index].reset(
+                new LhxPartition(partitions[j]->pExecStream));
             destPartitionList[index]->inputIndex = j;
             writerList[i].open(destPartitionList[index], hashInfo);
         }

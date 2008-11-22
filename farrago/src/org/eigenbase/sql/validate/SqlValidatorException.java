@@ -50,6 +50,7 @@ public class SqlValidatorException
     private static Logger tracer =
         Logger.getLogger("org.eigenbase.util.EigenbaseException");
 
+    static final long serialVersionUID = -831683113957131387L;
     //~ Constructors -----------------------------------------------------------
 
     /**

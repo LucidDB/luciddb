@@ -1377,18 +1377,13 @@ Error: From line 9, column 33 to line 9, column 36: Column 'NAME' not found in a
 >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000);
 Error: From line 8, column 9 to line 8, column 14: Number of INSERT target columns (6) does not equal number of source items (5) (state=,code=0)
 > 
-> -- mismatch in types in values clause
+> -- mismatch in types in update clause
 > explain plan without implementation for
 > merge into emps e
 >     using tempemps t on t.t_empno = e.empno
 >     when matched then
->         update set deptno = t.t_deptno, city = upper(t.t_city),
->             salary = salary * .25
->     when not matched then
->         insert (empno, name, age, gender, salary, city)
->         values(t.t_empno, upper(t.t_name), t.t_name, t.t_gender, t.t_age * 1000,
->             t.t_city);
-Error: From line 8, column 30 to line 8, column 32: Cannot assign to target field 'AGE' of type INTEGER from source field 'T_NAME' of type VARCHAR(25) (state=,code=0)
+>         update set deptno = 'abc';
+Error: From line 5, column 20 to line 5, column 25: Cannot assign to target field 'DEPTNO' of type INTEGER from source field 'EXPR$0' of type CHAR(3) (state=,code=0)
 > 
 > -- LucidDb doesn't support UPDATE
 > update emps set name = 'Foobar';

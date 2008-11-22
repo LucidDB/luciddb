@@ -333,7 +333,8 @@ void LhxHashTableTest::testInsert(
     }
 
     if (writeToPartition) {
-        SharedLhxPartition partition = SharedLhxPartition(new LhxPartition());
+        SharedLhxPartition partition =
+            SharedLhxPartition(new LhxPartition(NULL));
         partition->inputIndex = 1;
 
         //write to a paritition
@@ -375,7 +376,8 @@ void LhxHashTableTest::testInsert(
 
         // for both input sides.
         for (int j = 0; j < 2; j ++) {
-            partitions.push_back(SharedLhxPartition(new LhxPartition()));
+            partitions.push_back(
+                SharedLhxPartition(new LhxPartition(NULL)));
             partitions[j]->inputIndex = 1;
             tuplesWritten[j] =
                 writeHashTable((LhxHashInfo const &)hashInfo,

@@ -128,7 +128,7 @@ void LhxAggExecStream::open(bool restart)
      */
     vector<SharedLhxPartition> partitionList;
 
-    buildPart = SharedLhxPartition(new LhxPartition());
+    buildPart = SharedLhxPartition(new LhxPartition(this));
     // REVIEW jvs 25-Aug-2006:  Why does buildPart->segStream need to be reset
     // immediately after construction?
     buildPart->segStream.reset();
@@ -355,6 +355,9 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
         case GetNextPlan:
             {
                 hashTable.releaseResources();
+                
+                checkAbort();
+
                 curPlan = curPlan->getNextLeaf();
 
                 if (curPlan) {

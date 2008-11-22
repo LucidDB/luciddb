@@ -300,22 +300,6 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.CHAR);
         rule.add(SqlTypeName.VARCHAR);
         coerceRules.put(SqlTypeName.TIMESTAMP, rule);
-
-        // REVIEW jvs 13-Dec-2004:  getting the milliseconds?
-        // That sounds like a physical operation, and has nothing to do
-        // with enforcing the logical rules.
-
-        // for getting the milliseconds.
-        // Bigint is assignable from...
-        rule = new HashSet<SqlTypeName>();
-        rule = (HashSet<SqlTypeName>) coerceRules.get(SqlTypeName.BIGINT);
-
-        // xluo 24-Sept-2005 datetime added, there is a specific
-        // test case for that. I assume it should.
-        rule.add(SqlTypeName.DATE);
-        rule.add(SqlTypeName.TIME);
-        rule.add(SqlTypeName.TIMESTAMP);
-        coerceRules.put(SqlTypeName.BIGINT, rule);
     }
 
     //~ Methods ----------------------------------------------------------------

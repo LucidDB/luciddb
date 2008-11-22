@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/cache/CacheAccessor.h"
 #include "fennel/txn/LogicalTxn.h"
 
@@ -61,6 +62,18 @@ void ExecStream::closeImpl()
         pScratchQuotaAccessor->setMaxLockedPages(0);
     }
     */
+}
+
+void ExecStream::checkAbort() const
+{
+    if (!pGraph) {
+        return;
+    }
+    ExecStreamScheduler *pScheduler = pGraph->getScheduler();
+    if (!pScheduler) {
+        return;
+    }
+    pScheduler->checkAbort();
 }
 
 void ExecStream::prepare(ExecStreamParams const &params)

@@ -60,7 +60,7 @@ mathLn(RegisterRef<double>* result,
         // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
         throw "22023";
     }else {
-        result->value(log(x->value())); //using the c math library log
+        result->value(log(double(x->value()))); //using the c math library log
     }
 }
 
@@ -94,7 +94,7 @@ mathLog10(RegisterRef<double>* result,
         // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
         throw "22023";
     } else {
-        result->value(log10(x->value()));
+        result->value(log10(double(x->value())));
     }
 }
 

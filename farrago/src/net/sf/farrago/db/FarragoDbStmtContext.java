@@ -284,6 +284,11 @@ public class FarragoDbStmtContext
             // tables accessed by this statement.
             accessTables(executableStmt);
 
+            // If cancel request already came in, propagate it to
+            // new context, which will then see it as part of execution.
+            if (cancelFlag.isCancelRequested()) {
+                newContext.cancel();
+            }
             resultSet = executableStmt.execute(newContext);
             runningContext = newContext;
             newContext = null;
@@ -391,12 +396,17 @@ public class FarragoDbStmtContext
     {
         tracer.info("cancel");
         
-        // First, see if there are any children context that need to be
+        // First, see if there are any child contexts that need to be
         // canceled
         for (FarragoSessionStmtContext childStmtContext : childrenStmtContexts)
         {
             childStmtContext.cancel();
         }
+
+        // Record the cancellation request even if we haven't started
+        // a runtime context yet.  We'll check this once the
+        // runtime context gets created (FRG-349).
+        cancelFlag.requestCancel();
         
         FarragoSessionRuntimeContext contextToCancel = runningContext;
         if (contextToCancel == null) {
