@@ -615,7 +615,6 @@ void LbmSearchTest::loadTableAndIndex(
         lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
 
         lcsAppendParams.inputProj.push_back(i);
-        lcsAppendParams.overwrite = false;
 
         // create an empty page to start the btree
 
@@ -741,6 +740,7 @@ void LbmSearchTest::loadTableAndIndex(
     // 8. setup splicer
 
     LbmSplicerExecStreamParams splicerParams;
+    splicerParams.createNewIndex = false;
     splicerParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 15);
     splicerParams.pCacheAccessor = pCache;
@@ -824,6 +824,8 @@ void LbmSearchTest::initClusterScanDef(
     clusterScanDef.rootPageId = bTreeClusters[bTreeIndex]->rootPageId;
     clusterScanDef.pageOwnerId = bTreeClusters[bTreeIndex]->pageOwnerId;
     clusterScanDef.segmentId = bTreeClusters[bTreeIndex]->segmentId;
+    clusterScanDef.pRootMap = 0;
+    clusterScanDef.rootPageIdParamId = DynamicParamId(0);
     rowScanParams.lcsClusterScanDefs.push_back(clusterScanDef);
 }
 

@@ -19,6 +19,7 @@ PagingTestBase.cpp \
 TestBase.cpp \
 SegmentTestBase.cpp \
 SegStorageTestBase.cpp \
+SnapshotSegmentTestBase.cpp \
 ThreadedTestBase.cpp
 
 # NOTE:  tests are ordered roughly from fastest to slowest

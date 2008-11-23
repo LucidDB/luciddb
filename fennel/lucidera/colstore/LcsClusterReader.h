@@ -127,6 +127,11 @@ class LcsClusterReader :
     PLcsBatchDir pBatches;
 
     /**
+     * If true, do not use pre-fetch
+     */
+    bool noPrefetch;
+
+    /**
      * Iterator over the circular buffer containing rid runs
      */
     CircularBufferIter<LcsRidRun> ridRunIter;
@@ -164,13 +169,21 @@ class LcsClusterReader :
 
     /**
      * Reads a cluster block and sets up necessary structures to navigate
+     * within the page.
+     *
+     * @param clusterPageId pageId of the cluster page to read
+     */
+    void moveToBlock(PageId clusterPageId);
+
+    /**
+     * Reads a cluster block and sets up necessary structures to navigate
      * within the page corresponding to a rid.
      *
      * @param rid the rid that determines the page that needs to be read
      *
      * @return true if a cluster block was successfully located
      */
-    bool moveToBlock(LcsRid rid);
+    bool moveToBlockWithRid(LcsRid rid);
 
     /**
      * Finds the range in the current block which contains "Rid".  Does not
@@ -234,13 +247,22 @@ public:
      *
      * @param treeDescriptor of btree corresponding to cluster
      *
-     * @param pRidRuns pointer to circular buffer of rid runs; defaults to NULL
+     * @param pRidRuns pointer to circular buffer of rid runs; defaults to NULL,
+     * in which case, pre-fetches are disabled
      */
     explicit LcsClusterReader(
         BTreeDescriptor const &treeDescriptor,
         CircularBuffer<LcsRidRun> *pRidRuns = NULL);
 
     virtual ~LcsClusterReader();
+
+    /**
+     * Sets the root pageId of the underlying btree corresponding to the
+     * cluster.
+     *
+     * @param rootPageId the root pageId that's set
+     */
+    void setRootPageId(PageId rootPageId);
 
     /**
      * Initializes cluster reader with column readers
@@ -392,6 +414,11 @@ public:
      * @param parentNextRid next rid of the parent scan
      */
     void catchUp(uint parentBufPos, LcsRid parentNextRid);
+
+    /**
+     * @return the number of rows in the cluster
+     */
+    RecordNum getNumRows();
 };
 
 inline bool LcsClusterReader::isPositioned() const

@@ -35,7 +35,7 @@ void LcsClusterAppendExecStream::prepare(
     ConduitExecStream::prepare(params);
 
     tableColsTupleDesc = pInAccessor->getTupleDesc();
-    numColumns = params.inputProj.size();
+    initTupleLoadParams(params.inputProj);
 
     // setup one tuple descriptor per cluster column
     colTupleDesc.reset(new TupleDescriptor[numColumns]);
@@ -47,10 +47,6 @@ void LcsClusterAppendExecStream::prepare(
     // for this cluster, based on the input projection
 
     pInAccessor->bindProjection(params.inputProj);
-    clusterColsTupleDesc.projectFrom(tableColsTupleDesc, params.inputProj);
-    clusterColsTupleData.compute(clusterColsTupleDesc);
-
-    overwrite = params.overwrite;
 
     // setup bufferLock to access temporary large page blocks
 
@@ -77,6 +73,14 @@ void LcsClusterAppendExecStream::prepare(
     
 }
     
+void LcsClusterAppendExecStream::initTupleLoadParams(
+    const TupleProjection &inputProj)
+{
+    numColumns = inputProj.size();
+    clusterColsTupleDesc.projectFrom(tableColsTupleDesc, inputProj);
+    clusterColsTupleData.compute(clusterColsTupleDesc);
+}
+
 void LcsClusterAppendExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
@@ -186,86 +190,52 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
         return EXECRC_EOS;
     }
 
-    // no more input; produce final row count
-
-    if (pInAccessor->getState() == EXECBUF_EOS) {
-
-        // since we done adding rows to index write last batch
-        // and block
-        if (rowCnt) {
-            // if rowCnt < 8 or a multiple of 8, force writeBatch to
-            // treat this as the last batch
-            if (rowCnt < 8 || (rowCnt % 8) == 0) {
-                writeBatch(true);
-            } else {
-                writeBatch(false);
-            }
-        }
-
-        // Write out the last block and then free up resources
-        // rather than waiting until stream close. This will keep
-        // resource usage window smaller and avoid interference with 
-        // downstream processing such as writing to unclustered indexes.
-        writeBlock();
-        lcsBlockBuilder->close();
-        close();
-        
-        // outputTuple was already initialized to point to numRowCompressed/
-        // startRow in prepare()
-        // Write a single outputTuple(numRowCompressed, [startRow])
-        // and indicate OVERFLOW.
-
-        outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
-        pOutAccessor->provideBufferForConsumption(
-            outputTupleBuffer.get(), 
-            outputTupleBuffer.get() +
-                outputTupleAccessor->getCurrentByteCount());
-
-        isDone = true;
-        return EXECRC_BUF_OVERFLOW;
-    }
-
     for (i = 0; i < quantum.nTuplesMax; i++) {
-        if (!pInAccessor->demandData()) {
-            return EXECRC_BUF_UNDERFLOW;
-        }
 
-        // If this is the first time compress is called, then
-        // start new block (for new table), or load last block
-        // (of existing table).  We do this here rather than in
-        // init() because for INSERT into T as SELECT * from T
-        // we need to make sure that we extract all the data from
-        // T before modifying the blocks there; use the boolean to
-        // ensure that initialization of cluster page is only done
-        // once
+        // if we have finished processing the previous row, retrieve
+        // the next cluster tuple and then convert the columns in the
+        // cluster into individual tuples, one per cluster column
+        ExecStreamResult rc = getTupleForLoad();
 
-        if (!compressCalled) {
-            compressCalled = true;
-        
-            // if the index exists, get last block written
-        
-            PLcsClusterNode pExistingIndexBlock;
+        // no more input; produce final row count
+        if (rc == EXECRC_EOS) {
 
-            bool found = getLastBlock(pExistingIndexBlock);
-            if (found) { 
-                // indicate we are updating a leaf
-                pIndexBlock = pExistingIndexBlock;
-            
-                // extract rows and values from last batch so we can 
-                // add to it.
-                loadExistingBlock();
-            } else {
-                // Start writing a new block
-                startNewBlock();
-                startRow = LcsRid(0);
+            // since we're done adding rows to the index, write the last batch
+            // and block
+            if (rowCnt) {
+                // if rowCnt < 8 or a multiple of 8, force writeBatch to
+                // treat this as the last batch
+                if (rowCnt < 8 || (rowCnt % 8) == 0) {
+                    writeBatch(true);
+                } else {
+                    writeBatch(false);
+                }
             }
-        }
 
-        // if we have finished processing the previous row, unmarshal
-        // the next cluster tuple and convert them into individual
-        // tuples, one per cluster column
-        if (!pInAccessor->isTupleConsumptionPending())
-            pInAccessor->unmarshalProjectedTuple(clusterColsTupleData);
+            // Write out the last block and then free up resources
+            // rather than waiting until stream close. This will keep
+            // resource usage window smaller and avoid interference with 
+            // downstream processing such as writing to unclustered indexes.
+            writeBlock();
+            lcsBlockBuilder->close();
+            close();
+            
+            // outputTuple was already initialized to point to numRowCompressed/
+            // startRow in prepare()
+            // Write a single outputTuple(numRowCompressed, [startRow])
+            // and indicate OVERFLOW.
+
+            outputTupleAccessor->marshal(outputTuple, outputTupleBuffer.get());
+            pOutAccessor->provideBufferForConsumption(
+                outputTupleBuffer.get(), 
+                outputTupleBuffer.get() +
+                    outputTupleAccessor->getCurrentByteCount());
+
+            isDone = true;
+            return EXECRC_BUF_OVERFLOW;
+        } else if (rc != EXECRC_YIELD) {
+            return rc;
+        }
 
         // Go through each column value for current row and insert it.
         // If we run out of space then rollback all the columns that
@@ -327,11 +297,71 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
 
         // only consume the tuple after we know the row can fit
         // on the current page
-        pInAccessor->consumeTuple();
-        numRowCompressed++;
+        postProcessTuple();
     }
 
     return EXECRC_QUANTUM_EXPIRED;
+}
+
+ExecStreamResult LcsClusterAppendExecStream::getTupleForLoad()
+{
+    if (pInAccessor->getState() == EXECBUF_EOS) {
+        return EXECRC_EOS;
+    }
+
+    if (!pInAccessor->demandData()) {
+        return EXECRC_BUF_UNDERFLOW;
+    }
+
+    // Initialize the load, only after we know we have input available
+    initLoad();
+
+    if (!pInAccessor->isTupleConsumptionPending()) {
+        pInAccessor->unmarshalProjectedTuple(clusterColsTupleData);
+    }
+
+    return EXECRC_YIELD;
+}
+
+void LcsClusterAppendExecStream::initLoad()
+{
+    // If this is the first time this method is called, then
+    // start a new block (for the new table), or load the last block
+    // (of the existing table).  We do this here rather than in
+    // init() because for INSERT into T as SELECT * from T,
+    // we need to make sure that we extract all the data from
+    // T before modifying the blocks there; hence that's why this
+    // method should not be called until there is input available.
+    // Use the boolean to ensure that initialization of cluster page
+    // is only done once.
+
+    if (!compressCalled) {
+        compressCalled = true;
+    
+        // if the index exists, get last block written
+    
+        PLcsClusterNode pExistingIndexBlock;
+
+        bool found = getLastBlock(pExistingIndexBlock);
+        if (found) { 
+            // indicate we are updating a leaf
+            pIndexBlock = pExistingIndexBlock;
+        
+            // extract rows and values from last batch so we can 
+            // add to it.
+            loadExistingBlock();
+        } else {
+            // Start writing a new block
+            startNewBlock();
+            startRow = LcsRid(0);
+        }
+    }
+}
+
+void LcsClusterAppendExecStream::postProcessTuple()
+{
+    pInAccessor->consumeTuple();
+    numRowCompressed++;
 }
 
 void LcsClusterAppendExecStream::close() 

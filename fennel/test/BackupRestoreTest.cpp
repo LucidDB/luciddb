@@ -23,13 +23,12 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/FileSystem.h"
-#include "fennel/test/SegmentTestBase.h"
+#include "fennel/test/SnapshotSegmentTestBase.h"
 #include "fennel/cache/PagePredicate.h"
 #include "fennel/txn/LogicalTxn.h"
 #include "fennel/txn/LogicalTxnLog.h"
 #include "fennel/segment/VersionedRandomAllocationSegment.h"
 #include "fennel/segment/SnapshotRandomAllocationSegment.h"
-#include "fennel/segment/LinearViewSegment.h"
 #include "fennel/segment/SegPageBackupRestoreDevice.h"
 #include "fennel/db/Database.h"
 
@@ -41,7 +40,7 @@ using namespace fennel;
  * Unit test for backup and restore of database header pages and a 
  * VersionedRandomAllocationSegment.
  */
-class BackupRestoreTest : virtual public SegmentTestBase
+class BackupRestoreTest : virtual public SnapshotSegmentTestBase
 {
     struct TestNode : public StoredNode
     {
@@ -55,21 +54,10 @@ class BackupRestoreTest : virtual public SegmentTestBase
     SharedDatabase pDatabase;
     PageId persistentPageId;
 
-    uint nDiskPagesTotal;
-    PageId firstPageId;
-    DeviceId tempDeviceId;
-    SharedRandomAccessDevice pTempDevice;
-    SharedSegment pTempSegment;
-    TxnId currCsn;
-    std::vector<TxnId> updatedCsns;
-    bool commit;
-    
     void createSnapshotData();
     void executeSnapshotTxn(int i);
     void verifySnapshotData(uint x);
 
-    void setForceCacheUnmap(SharedSegment pSegment);
-    void commitChanges(TxnId commitCsn);
     void testBackupRestore(bool isCompressed);
     void backup(
         std::string backupFileName,
@@ -84,18 +72,9 @@ class BackupRestoreTest : virtual public SegmentTestBase
     std::string getCompressionProgram(bool isCompressed);
     void verifyData();
 
-    virtual void openSegmentStorage(DeviceMode openMode);
-    virtual void closeStorage();
-    virtual void testAllocateAll();
-    virtual void verifyPage(CachePage &page, uint x);
-    virtual void fillPage(CachePage &page, uint x);
-
 public:
     explicit BackupRestoreTest()
     {
-        nDiskPagesTotal = nDiskPages;
-        tempDeviceId = DeviceId(42);
-
         FENNEL_UNIT_TEST_CASE(BackupRestoreTest, testHeaderBackupRestore);
         FENNEL_UNIT_TEST_CASE(BackupRestoreTest, testBackupCleanup);
         FENNEL_UNIT_TEST_CASE(BackupRestoreTest, testBackupRestoreUncompressed);
@@ -121,8 +100,6 @@ public:
      * Tests backup and restore of data pages, with compression.
      */
     void testBackupRestoreCompressed();
-
-    virtual void testCaseSetUp();
 };
   
 void BackupRestoreTest::testBackupRestoreUncompressed()
@@ -133,13 +110,6 @@ void BackupRestoreTest::testBackupRestoreUncompressed()
 void BackupRestoreTest::testBackupRestoreCompressed()
 {
     testBackupRestore(true);
-}
-
-void BackupRestoreTest::testCaseSetUp()
-{
-    currCsn = TxnId(0);
-    commit = true;
-    updatedCsns.clear();
 }
 
 void BackupRestoreTest::createSnapshotData()
@@ -445,130 +415,6 @@ void BackupRestoreTest::verifySnapshotData(uint x)
     TestPageLock pageLock(segmentAccessor);
     pageLock.lockShared(persistentPageId);
     BOOST_CHECK_EQUAL(pageLock.getNodeForRead().x,x);
-}
-
-void BackupRestoreTest::openSegmentStorage(DeviceMode openMode)
-{
-    nDiskPages = nDiskPagesTotal;
-    if (openMode.create) {
-        firstPageId = NULL_PAGE_ID;
-    }
-
-    pTempDevice =
-        openDevice("temp.dat", openMode, nDiskPages/50, tempDeviceId);
-    SharedSegment pTempDeviceSegment =
-        createLinearDeviceSegment(tempDeviceId, nDiskPages/50);
-    pTempSegment =
-        pSegmentFactory->newRandomAllocationSegment(
-            pTempDeviceSegment,
-            openMode.create);
-
-    SharedSegment pDeviceSegment =
-        createLinearDeviceSegment(dataDeviceId, nDiskPages);
-    pVersionedRandomSegment =
-        pSegmentFactory->newVersionedRandomAllocationSegment(
-            pDeviceSegment,
-            pTempSegment,
-            openMode.create);
-    pSnapshotRandomSegment =
-        pSegmentFactory->newSnapshotRandomAllocationSegment(
-            pVersionedRandomSegment,
-            pVersionedRandomSegment,
-            currCsn);
-    setForceCacheUnmap(pSnapshotRandomSegment);
-
-    pRandomSegment = pSnapshotRandomSegment;
-
-    nDiskPages /= 2;
-    SharedSegment pLinearViewSegment =
-        pSegmentFactory->newLinearViewSegment(
-            pSnapshotRandomSegment,
-            firstPageId);
-    pLinearSegment = pLinearViewSegment;
-}
-
-void BackupRestoreTest::setForceCacheUnmap(SharedSegment pSegment)
-{
-    // Force the snapshot segment to always execute its checkpoints during
-    // a cache flush and unmap, in order to unmap these page from the cache
-    if (pSegment) {
-        SnapshotRandomAllocationSegment *pSnapshotSegment =
-            SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
-                pSegment);
-        pSnapshotSegment->setForceCacheUnmap();
-    }
-}
-
-void BackupRestoreTest::closeStorage()
-{
-    commitChanges(currCsn);
-    closeLinearSegment();
-    pRandomSegment.reset();
-    closeSnapshotRandomSegment();
-    // Free leftover temp pages used during page versioning
-    if (pVersionedRandomSegment) {
-        VersionedRandomAllocationSegment *pVRSegment =
-            SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
-                pVersionedRandomSegment);
-        pVRSegment->freeTempPages();
-    }
-    closeVersionedRandomSegment();
-    if (pTempSegment) {
-        // Confirm that all temp pages have been freed.
-        BOOST_REQUIRE(pTempSegment->getAllocatedSizeInPages() == 0);
-        assert(pTempSegment.unique());
-        pTempSegment.reset();
-    }
-    if (pTempDevice) {
-        closeDevice(tempDeviceId, pTempDevice);
-    }
-    SegmentTestBase::closeStorage();
-}
-
-void BackupRestoreTest::testAllocateAll()
-{
-    SegmentTestBase::testAllocateAll();
-    assert(firstPageId == NULL_PAGE_ID);
-    LinearViewSegment *pLinearViewSegment =
-        SegmentFactory::dynamicCast<LinearViewSegment *>(pLinearSegment);
-    assert(pLinearViewSegment);
-    firstPageId = pLinearViewSegment->getFirstPageId();
-}
-
-void BackupRestoreTest::verifyPage(CachePage &page, uint x)
-{
-    // If the pageId is a multiple of one of the csn's smaller than the
-    // current csn, then the page should reflect the update made by
-    // that smaller csn
-    uint update = 0;
-    for (int i = updatedCsns.size() - 1; i >= 0; i--) {
-        if (updatedCsns[i] <= currCsn &&
-            x % opaqueToInt(updatedCsns[i]) == 0)
-        {
-            update = opaqueToInt(updatedCsns[i]);
-            break;
-        }
-    }
-    SegmentTestBase::verifyPage(page, x + update);
-}
-
-void BackupRestoreTest::fillPage(CachePage &page, uint x)
-{
-    SegmentTestBase::fillPage(page, x + opaqueToInt(currCsn));
-}
-
-void BackupRestoreTest::commitChanges(TxnId commitCsn)
-{
-    if (pSnapshotRandomSegment) {
-        SnapshotRandomAllocationSegment *pSnapshotSegment =
-            SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
-                pSnapshotRandomSegment);
-        if (commit) {
-            pSnapshotSegment->commitChanges(commitCsn);
-        } else {
-            pSnapshotSegment->rollbackChanges();
-        }
-    }
 }
 
 void BackupRestoreTest::testBackupRestore(bool isCompressed)

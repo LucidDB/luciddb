@@ -177,7 +177,7 @@ public class FarragoDbSession
 
     private Pattern optRuleDescExclusionFilter;
     
-    private FemLabel sessionLabel;
+    private SessionLabel sessionLabel;
 
     private boolean isLoopback;
 
@@ -784,35 +784,42 @@ public class FarragoDbSession
     
     private void setSessionLabel(FemLabel label)
     {
-       FarragoDdlLockManager ddlLockManager = getDatabase().getDdlLockManager();
+        FarragoDdlLockManager ddlLockManager =
+            getDatabase().getDdlLockManager();
      
-       // Unlock the current label
-       if (sessionLabel != null) {
-           ddlLockManager.removeObjectsInUse(this);
-           tracer.info("Session label reset to null");
-       }
+        // Unlock the current label
+        if (sessionLabel != null) {
+            ddlLockManager.removeObjectsInUse(this);
+            tracer.info("Session label reset to null");
+        }
        
-       // If the label is an alias, determine the base label that the
-       // alias maps to.  This will make it possible to reset the alias to
-       // a new base label even though the original base label is still
-       // in-use.
-       if (label != null) {
-           FemLabel parentLabel = label.getParentLabel();
-           while (parentLabel != null) {
-               label = parentLabel;
-               parentLabel = label.getParentLabel();
-           }
-       }
-       
-       sessionLabel = label;
-       if (sessionLabel != null) {
-           // Lock the new label
-           Set<String> mofId = new HashSet<String>();
-           CwmModelElement refObj = (CwmModelElement) sessionLabel;
-           mofId.add(refObj.refMofId());
-           ddlLockManager.addObjectsInUse(this, mofId);
-           tracer.info("Session label set to \"" + sessionLabel.getName() + "\"");
-       }
+        // If the label is an alias, determine the base label that the
+        // alias maps to.  This will make it possible to reset the alias to
+        // a new base label even though the original base label is still
+        // in-use.
+        if (label == null) {
+            sessionLabel = null;
+        } else {
+            FemLabel parentLabel = label.getParentLabel();
+            while (parentLabel != null) {
+                label = parentLabel;
+                parentLabel = label.getParentLabel();
+            }
+            sessionLabel =
+                new SessionLabel(
+                    label.getCommitSequenceNumber(),
+                    label.getCreationTimestamp());
+        }
+      
+        if (sessionLabel != null) {
+            // Lock the new label
+            Set<String> mofId = new HashSet<String>();
+            CwmModelElement refObj = (CwmModelElement) label;
+            mofId.add(refObj.refMofId());
+            ddlLockManager.addObjectsInUse(this, mofId);
+            tracer.info(
+                "Session label set to \"" + label.getName() + "\"");
+        }
     }
     
     // implement FarragoSession
@@ -1590,6 +1597,28 @@ public class FarragoDbSession
     private static class TxnIdRef
     {
         FarragoSessionTxnId txnId;
+    }
+
+    private static class SessionLabel
+    {
+        Long csn;
+        String timestamp;
+
+        SessionLabel(Long csn, String timestamp)
+        {
+            this.csn = csn;
+            this.timestamp = timestamp;
+        }
+
+        Long getCommitSequenceNumber()
+        {
+            return csn;
+        }
+
+        String getCreationTimestamp()
+        {
+            return timestamp;
+        }
     }
 }
 

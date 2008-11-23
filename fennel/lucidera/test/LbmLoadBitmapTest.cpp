@@ -37,6 +37,7 @@
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/exec/SplitterExecStream.h"
 #include "fennel/exec/BarrierExecStream.h"
+#include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/cache/Cache.h"
 #include "fennel/common/TraceSource.h"
 #include <stdarg.h>
@@ -99,7 +100,8 @@ protected:
     void initClusterScanDef(
         LbmGeneratorExecStreamParams &generatorParams,
         struct LcsClusterScanDef &clusterScanDef,
-        uint bTreeIndex);
+        uint bTreeIndex,
+        DynamicParamId paramId);
 
     /**
      * Initializes BTreeExecStreamParam corresponding to a bitmap index
@@ -114,7 +116,8 @@ protected:
 
     void testLoad(
         uint nRows, uint nClusters, std::vector<int> &repeatSeqValues, 
-        bool newRoot, bool dumpEntries, string testName);
+        bool newRoot, bool dumpEntries, string testName,
+        bool dynamicRootPageId);
 
 public:
     explicit LbmLoadBitmapTest()
@@ -123,18 +126,32 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmLoadBitmapTest, testLoad5000);
         FENNEL_UNIT_TEST_CASE(LbmLoadBitmapTest, testLoad10000);
         FENNEL_UNIT_TEST_CASE(LbmLoadBitmapTest, testAppend);
+        FENNEL_UNIT_TEST_CASE(LbmLoadBitmapTest, testLoadDynamicRoot50);
     }
 
     void testCaseSetUp();
     void testCaseTearDown();
 
+    void testLoadSmall(bool dynamicRootPageId);
+
     void testLoad50();
     void testLoad5000();
     void testLoad10000();
     void testAppend();
+    void testLoadDynamicRoot50();
 };
 
 void LbmLoadBitmapTest::testLoad50()
+{
+    testLoadSmall(false);
+}
+
+void LbmLoadBitmapTest::testLoadDynamicRoot50()
+{
+    testLoadSmall(true);
+}
+
+void LbmLoadBitmapTest::testLoadSmall(bool dynamicRootPageId)
 {
     // small load
     uint nRows = 50;
@@ -147,7 +164,9 @@ void LbmLoadBitmapTest::testLoad50()
     repeatSeqValues.push_back(5);
     repeatSeqValues.push_back(9);
     repeatSeqValues.push_back(19);
-    testLoad(nRows, nClusters, repeatSeqValues, true, true, "testLoad50");
+    testLoad(
+        nRows, nClusters, repeatSeqValues, true, true, "testLoad50", 
+        dynamicRootPageId);
 }
 
 void LbmLoadBitmapTest::testLoad5000()
@@ -159,7 +178,8 @@ void LbmLoadBitmapTest::testLoad5000()
     // test with a larger number of distinct values to force buffer flushing
     repeatSeqValues.push_back(nRows);
     repeatSeqValues.push_back(200);
-    testLoad(nRows, nClusters, repeatSeqValues, true, true, "testLoad5000");
+    testLoad(
+        nRows, nClusters, repeatSeqValues, true, true, "testLoad5000", false);
 }
 
 void LbmLoadBitmapTest::testLoad10000()
@@ -173,7 +193,8 @@ void LbmLoadBitmapTest::testLoad10000()
     repeatSeqValues.push_back(5);
     repeatSeqValues.push_back(9);
     repeatSeqValues.push_back(19);
-    testLoad(nRows, nClusters, repeatSeqValues, true, true, "testLoad10000");
+    testLoad(
+        nRows, nClusters, repeatSeqValues, true, true, "testLoad10000", false);
 }
 
 void LbmLoadBitmapTest::testAppend()
@@ -204,12 +225,14 @@ void LbmLoadBitmapTest::testAppend()
 
     // load into empty btree
     testLoad(
-        nRows, nClusters, repeatSeqValues1, true,  true, "testAppendNewRoot");
+        nRows, nClusters, repeatSeqValues1, true,  true, "testAppendNewRoot",
+        false);
 
     // append some new values
     resetExecStreamTest();
     testLoad(
-        nRows, nClusters, repeatSeqValues2, false, true, "testAppendOldRoot");
+        nRows, nClusters, repeatSeqValues2, false, true, "testAppendOldRoot",
+        false);
 }
 
 /**
@@ -225,7 +248,7 @@ void LbmLoadBitmapTest::testAppend()
  */
 void LbmLoadBitmapTest::testLoad(
     uint nRows, uint nClusters, std::vector<int> &repeatSeqValues, bool newRoot,
-    bool dumpEntries, string testName)
+    bool dumpEntries, string testName, bool dynamicRootPageId)
 {
     // 0. reset member fields.
     for (uint i = 0; i < bTreeClusters.size(); i++) {
@@ -294,7 +317,6 @@ void LbmLoadBitmapTest::testLoad(
         lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
 
         lcsAppendParams.inputProj.push_back(i);
-        lcsAppendParams.overwrite = false;
 
         // create an empty page to start the btree
 
@@ -364,10 +386,16 @@ void LbmLoadBitmapTest::testLoad(
         // first nCluster generators only scan a single column; the
         // last one scans all columns
         if (i < nClusters) {
-            initClusterScanDef(generatorParams, clusterScanDef, i);
+            DynamicParamId paramId =
+                (dynamicRootPageId) ?
+                    DynamicParamId(nClusters + i + 2) : DynamicParamId(0);
+            initClusterScanDef(generatorParams, clusterScanDef, i, paramId);
         } else {
             for (uint j = 0; j < nClusters; j++) {
-                initClusterScanDef(generatorParams, clusterScanDef, j);
+                DynamicParamId paramId =
+                    (dynamicRootPageId) ? DynamicParamId(nClusters + 2 + j) :
+                        DynamicParamId(0);
+                initClusterScanDef(generatorParams, clusterScanDef, j, paramId);
             }
         }
 
@@ -424,6 +452,17 @@ void LbmLoadBitmapTest::testLoad(
         }
         generatorParams.rootPageId = pBTreeDesc->rootPageId =
             savedBTreeBitmapRootIds[i];
+        if (dynamicRootPageId && i < nClusters) {
+            SharedDynamicParamManager pDynamicParamManager =
+                pGraph->getDynamicParamManager();
+            DynamicParamId paramId = DynamicParamId(nClusters + i + 2);
+            pDynamicParamManager->createParam(paramId, attrDesc_int64);
+            TupleDatum pageIdDatum;
+            PageId rootPageId = savedBTreeBitmapRootIds[i];
+            pageIdDatum.pData = (PConstBuffer) &rootPageId;
+            pageIdDatum.cbData = sizeof(PageId);
+            pDynamicParamManager->writeParam(paramId, pageIdDatum);
+        }
 
         ExecStreamEmbryo generatorStreamEmbryo;
         generatorStreamEmbryo.init(
@@ -459,6 +498,7 @@ void LbmLoadBitmapTest::testLoad(
         // 8. setup splicer
 
         LbmSplicerExecStreamParams splicerParams;
+        splicerParams.createNewIndex = false;
         splicerParams.scratchAccessor =
             pSegmentFactory->newScratchSegment(pCache, 15);
         splicerParams.pCacheAccessor = pCache;
@@ -538,7 +578,8 @@ void LbmLoadBitmapTest::initBTreeParam(
 void LbmLoadBitmapTest::initClusterScanDef(
     LbmGeneratorExecStreamParams &generatorParams,
     struct LcsClusterScanDef &clusterScanDef,
-    uint bTreeIndex)
+    uint bTreeIndex,
+    DynamicParamId paramId)
 {
     clusterScanDef.pSegment =
         bTreeClusters[bTreeIndex]->segmentAccessor.pSegment;
@@ -546,9 +587,13 @@ void LbmLoadBitmapTest::initClusterScanDef(
         bTreeClusters[bTreeIndex]->segmentAccessor.pCacheAccessor;
     clusterScanDef.tupleDesc = bTreeClusters[bTreeIndex]->tupleDescriptor;
     clusterScanDef.keyProj = bTreeClusters[bTreeIndex]->keyProjection;
-    clusterScanDef.rootPageId = bTreeClusters[bTreeIndex]->rootPageId;
+    clusterScanDef.rootPageIdParamId = paramId;
+    clusterScanDef.rootPageId =
+        (opaqueToInt(paramId) > 0) ?
+            NULL_PAGE_ID : bTreeClusters[bTreeIndex]->rootPageId;
     clusterScanDef.pageOwnerId = bTreeClusters[bTreeIndex]->pageOwnerId;
     clusterScanDef.segmentId = bTreeClusters[bTreeIndex]->segmentId;
+    clusterScanDef.pRootMap = 0;
     generatorParams.lcsClusterScanDefs.push_back(clusterScanDef);
 }
 

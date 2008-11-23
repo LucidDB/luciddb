@@ -1497,14 +1497,21 @@ outerForLoop:
         Double leftRowCount = RelMetadataQuery.getRowCount(left.getJoinTree());
         Double rightRowCount =
             RelMetadataQuery.getRowCount(right.getJoinTree());
+        
+        // The left side is smaller than the right if it has fewer rows,
+        // or if it has the same number of rows as the right (excluding
+        // roundoff), but fewer columns.
         if ((leftRowCount != null) && (rightRowCount != null)
-           && (leftRowCount < rightRowCount))
+            && ((leftRowCount < rightRowCount) || 
+                ((Math.abs(leftRowCount - rightRowCount) < RelOptUtil.EPSILON)
+                    && (rowWidthCost(left.getJoinTree()) <
+                        rowWidthCost(right.getJoinTree())))))
         {
             swap = true;
         }
         return swap;
     }
-
+    
     /**
      * Adjusts a filter to reflect swapping of join inputs
      *

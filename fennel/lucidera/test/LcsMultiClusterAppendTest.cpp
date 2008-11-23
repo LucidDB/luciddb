@@ -164,7 +164,6 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
         for (uint j = 0; j < nCols; j++) {
             lcsAppendParams.inputProj.push_back(i * nCols + j);
         }
-        lcsAppendParams.overwrite = false;
         lcsAppendParams.pRootMap = 0;
         lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
     

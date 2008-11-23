@@ -1068,7 +1068,6 @@ public class SqlValidatorImpl
             // inner join.  Need to clone the source table reference in order
             // for validation to work
             SqlNode sourceTableRef = call.getSourceTableRef();
-            call.setSourceTableRef(sourceTableRef);
             SqlInsert insertCall = call.getInsertCall();
             SqlJoinOperator.JoinType joinType =
                 (insertCall == null) ? SqlJoinOperator.JoinType.Inner

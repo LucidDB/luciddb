@@ -29,6 +29,7 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDataWithBuffer.h"
+#include "fennel/segment/SnapshotRandomAllocationSegment.h"
 #include "fennel/lucidera/bitmap/LbmEntry.h"
 #include "fennel/lucidera/bitmap/LbmRidReader.h"
 #include <boost/scoped_array.hpp>
@@ -42,6 +43,8 @@ struct LbmSplicerExecStreamParams : public DiffluenceExecStreamParams
     DynamicParamId insertRowCountParamId;
 
     DynamicParamId writeRowCountParamId;
+
+    bool createNewIndex;
 };
 
 /**
@@ -94,6 +97,11 @@ class LbmSplicerExecStream : public DiffluenceExecStream
      */
     DynamicParamId insertRowCountParamId;
     
+    /**
+     * If true, create a new index that the splicer will be writing
+     */
+    bool createNewIndex;
+
     /**
      * Parameter id of the dynamic parameter used to write the row count
      * affected by this stream that will be read downstream
@@ -289,6 +297,18 @@ class LbmSplicerExecStream : public DiffluenceExecStream
      * TupleData used to build error records
      */
     TupleData errorTuple;
+
+    /**
+     * Underlying snapshot segment corresponding to the index that will be
+     * written.  Only used when a new index is dynamically created.
+     */
+    SnapshotRandomAllocationSegment *pSnapshotSegment;
+
+    /**
+     * The original root pageId of the index that will be written.  Only used
+     * when a new index is dynamically created.
+     */
+    PageId origRootPageId;
 
     /**
      * Determines, and remembers whether the bitmap being updated is empty.

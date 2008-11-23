@@ -38,19 +38,9 @@ struct LcsClusterAppendExecStreamParams :
     public BTreeExecStreamParams, public ConduitExecStreamParams
 {
     /**
-     * True if cluster append is in overwrite mode
-     */
-    bool overwrite;
-
-    /**
      * Projection list projecting out columns for this cluster
      */
     TupleProjection inputProj;
-
-    explicit LcsClusterAppendExecStreamParams()
-    {
-        overwrite = false;
-    }
 };
 
 /**
@@ -60,6 +50,8 @@ struct LcsClusterAppendExecStreamParams :
 class LcsClusterAppendExecStream :
     public BTreeExecStream, public ConduitExecStream
 {
+protected:
+
     /**
      * Space available on page blocks for writing cluster data
      */
@@ -222,6 +214,12 @@ class LcsClusterAppendExecStream :
     void allocArrays();
     
     /**
+     * Initializes the load.  This method should only be called when the
+     * input stream has data available to read.
+     */
+    void initLoad();
+
+    /**
      * Populates row and hash arrays from existing index block
      */
     void loadExistingBlock();
@@ -289,9 +287,31 @@ class LcsClusterAppendExecStream :
 
     /**
      * Writes out the last pending batches and btree pages.  Deallocates
-     * temporary memory and buffer pages
+     * temporary memory and buffer pages.  Allows resources to be freed
+     * before the execution stream is actually closed.
      */
-    void close();
+    virtual void close();
+
+    /**
+     * Initializes member fields corresponding to the data to be loaded.
+     *
+     * @param inputProj projection of the input tuple that's relevant to
+     * this cluster append
+     */
+    virtual void initTupleLoadParams(const TupleProjection &inputProj);
+
+    /**
+     * Retrieves the tuple that will be loaded into the cluster.
+     *
+     * @return EXECRC_BUF_UNDERFLOW if the input buffer needs to be replenished;
+     * EXECRC_EOS if there are no more tuples to load; else, EXECRC_YIELD
+     */
+    virtual ExecStreamResult getTupleForLoad();
+
+    /**
+     * Performs post-processing after a tuple has been loaded.
+     */
+    virtual void postProcessTuple();
 
 public:
     virtual void prepare(LcsClusterAppendExecStreamParams const &params);

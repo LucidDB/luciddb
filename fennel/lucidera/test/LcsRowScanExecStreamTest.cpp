@@ -271,7 +271,6 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     // output only one value(rows inserted)
     lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
 
-    lcsAppendParams.overwrite = false;
     for (uint i = 0; i < nCols; i++) {
         lcsAppendParams.inputProj.push_back(i);
     }

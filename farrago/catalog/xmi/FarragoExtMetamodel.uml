@@ -129,7 +129,7 @@
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Fri Oct 17 16:02:40 PDT 2008'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Sun Nov 16 15:32:06 PST 2008'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -2704,13 +2704,6 @@
                     <UML:Generalization xmi.idref = 'I6435251fm107b542be1cmm5690'/>
                   </UML:GeneralizableElement.generalization>
                   <UML:Classifier.feature>
-                    <UML:Attribute xmi.id = 'I6435251fm107b542be1cmm5683' name = 'overwrite'
-                      visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
-                      changeability = 'changeable'>
-                      <UML:StructuralFeature.type>
-                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fde'/>
-                      </UML:StructuralFeature.type>
-                    </UML:Attribute>
                     <UML:Attribute xmi.id = 'Im7eeb97d2m10821361865mm27f7' name = 'clusterColProj'
                       visibility = 'private' isSpecification = 'false' ownerScope = 'instance'
                       changeability = 'changeable'>
@@ -29254,7 +29247,7 @@
       </path>
     </group>
     <group name="Fig0.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[401, 311, 159, 34]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[401, 311, 159, 21]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -29267,7 +29260,7 @@
         x="401"
         y="311"
         width="159"
-        height="34"
+        height="21"
         fill="1"
         fillcolor="white"
         stroke="0"
@@ -29288,16 +29281,6 @@
       <text name="Fig0.4.2"
         x="401"
         y="312"
-        fill="0"
-        fillcolor="white"
-        stroke="0"
-        strokecolor="black"
-        font="Dialog"
-        textsize="10"
-      >overwrite : Boolean</text>
-      <text name="Fig0.4.3"
-        x="401"
-        y="325"
         fill="0"
         fillcolor="white"
         stroke="0"

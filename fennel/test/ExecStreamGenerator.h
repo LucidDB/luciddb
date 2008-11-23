@@ -102,10 +102,12 @@ public:
  */
 class StairCaseExecStreamGenerator : public MockProducerExecStreamGenerator
 {
+    int s;
     int h;
     int w;
 public:
-    StairCaseExecStreamGenerator(int height, uint width) :
+    StairCaseExecStreamGenerator(int height, uint width, int start = 0) :
+        s(start),
         h(height),
         w(width)
     {
@@ -114,7 +116,7 @@ public:
 
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
-        return h * (iRow / w);
+        return s + h * (iRow / w);
     }
 };
 
@@ -476,8 +478,11 @@ class MixedDupColumnGenerator : public ColumnGenerator<int64_t>
     int initialValue;
 
 public:
-    explicit MixedDupColumnGenerator(int numDupsInit, int startValue = 0,
-        int wid = 1) {
+    explicit MixedDupColumnGenerator(
+        int numDupsInit,
+        int startValue = 0,
+        int wid = 1)
+    {
         assert(numDupsInit > 0);
         numDups = numDupsInit;
         curValue = 0;
@@ -501,6 +506,32 @@ public:
         }
 
         return res;
+    }
+};
+
+/**
+ * Same as StairCaseExecStreamGenerator except for columns
+ */
+class StairCaseColumnGenerator : public ColumnGenerator<int64_t>
+{
+    int s;
+    int h;
+    int w;
+    uint iRow;
+
+public:
+    StairCaseColumnGenerator(int height, uint width, int start = 0) :
+        s(start),
+        h(height),
+        w(width),
+        iRow(0)
+    {
+        // empty
+    }
+
+    int64_t next() 
+    {
+        return s + h * (iRow++ / w);
     }
 };
 

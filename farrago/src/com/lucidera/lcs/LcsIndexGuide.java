@@ -747,10 +747,8 @@ public class LcsIndexGuide
 
         //
         // Set up FemLcsClusterAppendStreamDef
-        //        - setOverwrite
         //        - setClusterColProj
         //
-        clusterAppend.setOverwrite(false);
 
         Integer [] clusterColProj;
         clusterColProj = new Integer[getNumFlattenedClusterCols(clusterIndex)];

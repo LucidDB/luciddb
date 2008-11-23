@@ -22,35 +22,19 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/test/SegmentTestBase.h"
-#include "fennel/segment/SnapshotRandomAllocationSegment.h"
+#include "fennel/test/SnapshotSegmentTestBase.h"
 #include "fennel/segment/VersionedRandomAllocationSegment.h"
-#include "fennel/segment/LinearViewSegment.h"
-#include "fennel/segment/SegPageLock.h"
 #include "fennel/cache/CacheStats.h"
 
 #include <boost/test/test_tools.hpp>
 
 using namespace fennel;
 
-class SnapshotSegmentTest : virtual public SegmentTestBase
+class SnapshotSegmentTest : virtual public SnapshotSegmentTestBase
 {
-    uint nDiskPagesTotal;
-    PageId firstPageId;
-    DeviceId tempDeviceId;
-    SharedRandomAccessDevice pTempDevice;
-    SharedSegment pTempSegment;
-    SharedSegment pSnapshotRandomSegment2;
-    std::vector<TxnId> updatedCsns;
-    TxnId currCsn;
-    bool commit;
-    
 public:
     explicit SnapshotSegmentTest()
     {
-        nDiskPagesTotal = nDiskPages;
-        tempDeviceId = DeviceId(42);
-
         FENNEL_UNIT_TEST_CASE(SegmentTestBase, testSingleThread);
         FENNEL_UNIT_TEST_CASE(PagingTestBase, testMultipleThreads);
         FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testSnapshotReads);
@@ -59,145 +43,6 @@ public:
         FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testDeallocateOld);
     }
   
-    virtual void testCaseSetUp()
-    {
-        currCsn = TxnId(0);
-        commit = true;
-        updatedCsns.clear();
-    }
-
-    virtual void openSegmentStorage(DeviceMode openMode)
-    {
-        nDiskPages = nDiskPagesTotal;
-        if (openMode.create) {
-            firstPageId = NULL_PAGE_ID;
-        }
-
-        // Use a random segment for the temp segment so we can verify that
-        // temp pages used are freed.
-        pTempDevice =
-            openDevice("temp.dat", openMode, nDiskPages/50, tempDeviceId);
-        SharedSegment pTempDeviceSegment =
-            createLinearDeviceSegment(tempDeviceId, nDiskPages/50);
-        pTempSegment =
-            pSegmentFactory->newRandomAllocationSegment(
-                pTempDeviceSegment,
-                openMode.create);
-
-        SharedSegment pDeviceSegment =
-            createLinearDeviceSegment(dataDeviceId, nDiskPages);
-        pVersionedRandomSegment =
-            pSegmentFactory->newVersionedRandomAllocationSegment(
-                pDeviceSegment,
-                pTempSegment,
-                openMode.create);
-        pSnapshotRandomSegment =
-            pSegmentFactory->newSnapshotRandomAllocationSegment(
-                pVersionedRandomSegment,
-                pVersionedRandomSegment,
-                currCsn);
-        setForceCacheUnmap(pSnapshotRandomSegment);
-
-        // Set pRandomSegment so we can use PagingTestBase::testMultipleThreads
-        // to exercise concurrent allocations/deallocations
-        pRandomSegment = pSnapshotRandomSegment;
-
-        nDiskPages /= 2;
-        SharedSegment pLinearViewSegment =
-            pSegmentFactory->newLinearViewSegment(
-                pSnapshotRandomSegment,
-                firstPageId);
-        pLinearSegment = pLinearViewSegment;
-    }
-
-    void setForceCacheUnmap(SharedSegment pSegment)
-    {
-        // Force the snapshot segment to always execute its checkpoints during
-        // a cache flush and unmap, in order to unmap these page from the cache
-        if (pSegment) {
-            SnapshotRandomAllocationSegment *pSnapshotSegment =
-                SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
-                    pSegment);
-            pSnapshotSegment->setForceCacheUnmap();
-        }
-    }
-
-    virtual void closeStorage()
-    {
-        commitChanges(currCsn);
-        closeLinearSegment();
-        pRandomSegment.reset();
-        closeSnapshotRandomSegment();
-        if (pSnapshotRandomSegment2) {
-            assert(pSnapshotRandomSegment2.unique());
-            pSnapshotRandomSegment2.reset();
-        }
-        // Free leftover temp pages used during page versioning
-        if (pVersionedRandomSegment) {
-            VersionedRandomAllocationSegment *pVRSegment =
-                SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
-                    pVersionedRandomSegment);
-            pVRSegment->freeTempPages();
-        }
-        closeVersionedRandomSegment();
-        if (pTempSegment) {
-            // Confirm that all temp pages have been freed.
-            BOOST_REQUIRE(pTempSegment->getAllocatedSizeInPages() == 0);
-            assert(pTempSegment.unique());
-            pTempSegment.reset();
-        }
-        if (pTempDevice) {
-            closeDevice(tempDeviceId, pTempDevice);
-        }
-        SegmentTestBase::closeStorage();
-    }
-
-    virtual void testAllocateAll()
-    {
-        SegmentTestBase::testAllocateAll();
-        assert(firstPageId == NULL_PAGE_ID);
-        LinearViewSegment *pLinearViewSegment =
-            SegmentFactory::dynamicCast<LinearViewSegment *>(pLinearSegment);
-        assert(pLinearViewSegment);
-        firstPageId = pLinearViewSegment->getFirstPageId();
-    }
-
-    virtual void verifyPage(CachePage &page, uint x)
-    {
-        // If the pageId is a multiple of one of the csn's smaller than the
-        // current csn, then the page should reflect the update made by
-        // that smaller csn
-        uint update = 0;
-        for (int i = updatedCsns.size() - 1; i >= 0; i--) {
-            if (updatedCsns[i] <= currCsn &&
-                x % opaqueToInt(updatedCsns[i]) == 0)
-            {
-                update = opaqueToInt(updatedCsns[i]);
-                break;
-            }
-        }
-        SegmentTestBase::verifyPage(page, x + update);
-    }
-
-    virtual void fillPage(CachePage &page, uint x)
-    {
-        SegmentTestBase::fillPage(page, x + opaqueToInt(currCsn));
-    }
-
-    void commitChanges(TxnId commitCsn)
-    {
-        if (pSnapshotRandomSegment) {
-            SnapshotRandomAllocationSegment *pSnapshotSegment =
-                SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
-                    pSnapshotRandomSegment);
-            if (commit) {
-                pSnapshotSegment->commitChanges(commitCsn);
-            } else {
-                pSnapshotSegment->rollbackChanges();
-            }
-        }
-    }
-
     void testSnapshotReads()
     {
         // Create and initialize a VersionedRandomAllocationSegment using

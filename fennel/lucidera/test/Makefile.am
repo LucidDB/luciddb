@@ -12,6 +12,7 @@ ExternalSortExecStreamTest \
 FlatFileExecStreamTest \
 LcsClusterAppendExecStreamTest \
 LcsMultiClusterAppendTest \
+LcsClusterReplaceExecStreamTest \
 LcsRowScanExecStreamTest \
 LbmEntryTest \
 LbmSplicerExecStreamTest \
@@ -33,6 +34,7 @@ ExternalSortExecStreamTest_SOURCES=ExternalSortExecStreamTest.cpp
 FlatFileExecStreamTest_SOURCES=FlatFileExecStreamTest.cpp
 LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
 LcsMultiClusterAppendTest_SOURCES=LcsMultiClusterAppendTest.cpp
+LcsClusterReplaceExecStreamTest_SOURCES=LcsClusterReplaceExecStreamTest.cpp
 LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
 LbmEntryTest_SOURCES=LbmEntryTest.cpp
 LbmSplicerExecStreamTest_SOURCES=LbmSplicerExecStreamTest.cpp 

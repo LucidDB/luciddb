@@ -802,6 +802,7 @@ void LbmSplicerExecStreamTest::spliceInput(
 
     // Create the splicer stream
     LbmSplicerExecStreamParams splicerParams;
+    splicerParams.createNewIndex = false;
     splicerParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 15);
     splicerParams.pCacheAccessor = pCache;

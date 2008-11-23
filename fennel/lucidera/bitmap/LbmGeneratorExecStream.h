@@ -114,6 +114,12 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
     bool createIndex;
 
     /**
+     * Ordered list of dynamic parameter ids for the clusters that provide
+     * source data for this stream
+     */
+    std::vector<DynamicParamId> parameterIds;
+
+    /**
      * Size of a scratch page
      */
     uint scratchPageSize;

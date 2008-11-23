@@ -253,6 +253,22 @@ public class RelMdUtil
     }
 
     /**
+     * Sets a bitmap corresponding to a list of keys.
+     *
+     * @param keys list of keys
+     *
+     * @return the bitmap
+     */
+    public static BitSet setBitKeys(List<Integer> keys)
+    {
+        BitSet bits = new BitSet();
+        for (Integer key : keys) {
+            bits.set(key);
+        }
+        return bits;
+    }
+
+    /**
      * Separates a bitmask representing a join into masks representing the left
      * and right inputs into the join
      *
