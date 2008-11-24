@@ -535,6 +535,8 @@ void BackupRestoreTest::backup(
         lowerBoundCsn,
         upperBoundCsn,
         abortFlag);
+
+    assert(pBackupDevice.unique());
     pBackupDevice.reset();
 
     scratchAccessor.reset();
@@ -578,6 +580,8 @@ void BackupRestoreTest::restore(
         lowerBoundCsn, 
         upperBoundCsn,
         abortFlag);
+
+    assert(pBackupDevice.unique());
     pBackupDevice.reset();
 
     scratchAccessor.reset();
