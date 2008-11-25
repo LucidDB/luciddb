@@ -28,6 +28,7 @@ ResourceTest \
 LocalConditionTest \
 TupleTest \
 StandardTypeTest \
+SparseBitmapTest \
 RandomAllocationSegmentTest \
 ExecStreamTest \
 ParallelExecStreamSchedulerTest \
@@ -66,6 +67,8 @@ ParallelExecStreamSchedulerTest_SOURCES=ParallelExecStreamSchedulerTest.cpp
 RandomAccessFileDeviceTest_SOURCES=RandomAccessFileDeviceTest.cpp
 
 CacheTest_SOURCES=CacheTest.cpp
+
+SparseBitmapTest_SOURCES=SparseBitmapTest.cpp
 
 LinearDeviceSegmentTest_SOURCES=LinearDeviceSegmentTest.cpp
 

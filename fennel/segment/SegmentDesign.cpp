@@ -57,6 +57,13 @@ virtualization rather than a direct logical-to-physical mapping.
 The segment library also relies on the cache library (TBD: link to cache
 design) for all device access, and for imposing rules such as write ordering.
 
+<p>
+
+For an example of how the segment library can be applied to create page-based
+persistent data structures, see <a
+href="http://pub.eigenbase.org/wiki/FennelPageBasedDataStructureHowto">this
+HOWTO doc</a>.
+
 <hr>
 
 <h3>Segment Interface</h3>
