@@ -54,7 +54,7 @@ TestBase::TestBase()
     pTestObj.reset(this);
     testName = configMap.getStringParam(paramTestSuiteName);
     traceLevel = static_cast<TraceLevel>(
-        configMap.getIntParam(paramTraceLevel,TRACE_INFO));
+        configMap.getIntParam(paramTraceLevel,TRACE_CONFIG));
     std::string traceStdoutParam = 
         configMap.getStringParam(paramTraceStdout,"");
     traceStdout = ((traceStdoutParam.length() == 0) ? false : true);
@@ -82,6 +82,13 @@ TestBase::TestBase()
             }
         }
     }
+
+    // NOTE jvs 25-Nov-2008:  This is to make sure we trace any
+    // configuration access in the derived class constructor.
+    // There's a matching call to disableTracing in
+    // the definition for FENNEL_UNIT_TEST_SUITE after
+    // the constructor returns.
+    configMap.initTraceSource(shared_from_this(), "testConfig");
 }
 
 TestBase::~TestBase()
@@ -153,6 +160,7 @@ TestSuite *TestBase::releaseTestSuite()
 {
     assert(pTestObj);
     assert(pTestObj.use_count() > 1);
+
     // release self-reference now that all test cases have been registered
     pTestObj.reset();
 
@@ -169,8 +177,9 @@ TestSuite *TestBase::releaseTestSuite()
         pTestSuite->add(p);
     } else {
         defaultTests.addAllToTestSuite(pTestSuite);
-        if (runAll)
+        if (runAll) {
             extraTests.addAllToTestSuite(pTestSuite);
+        }
     }
     return pTestSuite;
 }
@@ -213,11 +222,13 @@ void TestBase::beforeTestCase(std::string testCaseName)
     AutoBacktrace::setOutputStream();
     AutoBacktrace::setTraceTarget(shared_from_this());
     AutoBacktrace::install();
+    configMap.initTraceSource(shared_from_this(), "testConfig");
 }
 
 void TestBase::afterTestCase(std::string testCaseName)
 {
     AutoBacktrace::setTraceTarget();
+    configMap.disableTracing();
     notifyTrace(testName,TRACE_INFO,"LEAVE:  " + testCaseName);
 }
 

@@ -474,6 +474,7 @@ void SparseBitmapTest::testCaseTearDown()
 {
     // Regardless of how the test ends, be sure to close all resources
     closeStorage();
+    TestBase::testCaseTearDown();
 }
 
 void SparseBitmapTest::closeStorage()

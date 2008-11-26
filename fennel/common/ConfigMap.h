@@ -26,13 +26,15 @@
 
 #include <map>
 
+#include "fennel/common/TraceSource.h"
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
  * ConfigMap defines a simple container for configuration parameter/value
  * pairs.
  */
-class ConfigMap 
+class ConfigMap : public TraceSource
 {
     typedef std::map<std::string,std::string> StringMap;
     typedef StringMap::iterator StringMapIter;
