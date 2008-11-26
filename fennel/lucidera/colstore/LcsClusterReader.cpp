@@ -38,11 +38,21 @@ LcsClusterReader::LcsClusterReader(
     prefetchQueue(4000)
 {
     bTreeReader = SharedBTreeReader(new BTreeReader(treeDescriptor));
-    prefetchQueue.setPrefetchSource(*this);
+    if (pRidRuns == NULL) {
+        noPrefetch = true;
+    } else {
+        noPrefetch = false;
+        prefetchQueue.setPrefetchSource(*this);
+    }
 }
 
 LcsClusterReader::~LcsClusterReader()
 {
+}
+
+void LcsClusterReader::setRootPageId(PageId rootPageId)
+{
+    bTreeReader->setRootPageId(rootPageId);
 }
 
 LcsClusterNode const &LcsClusterReader::readClusterPage()
@@ -132,13 +142,27 @@ bool LcsClusterReader::position(LcsRid rid)
         if (found)
             return true;
     } else {
-        // Initiate the first set of pre-fetches.
-        prefetchQueue.mapRange(segmentAccessor, NULL_PAGE_ID);
+        if (noPrefetch) {
+            if (!bTreeReader->searchFirst()) {
+                bTreeReader->endSearch();
+            }
+        } else {
+            // Initiate the first set of pre-fetches.
+            prefetchQueue.mapRange(segmentAccessor, NULL_PAGE_ID);
+        }
     }
 
-    found = moveToBlock(rid);
-    if (!found) {
-        return false;
+    if (noPrefetch) {
+        found = searchForRid(rid);
+        if (!found) {
+            return false;
+        }
+        moveToBlock(readClusterPageId());
+    } else {
+        found = moveToBlockWithRid(rid);
+        if (!found) {
+            return false;
+        }
     }
     
     found = positionInBlock(rid);
@@ -165,7 +189,18 @@ bool LcsClusterReader::searchForRid(LcsRid rid)
     return true;
 }
 
-bool LcsClusterReader::moveToBlock(LcsRid rid)
+void LcsClusterReader::moveToBlock(PageId clusterPageId)
+{
+    // read the desired cluster page and initialize structures to reflect
+    // page read
+
+    clusterLock.lockShared(clusterPageId);
+    LcsClusterNode const &page = clusterLock.getNodeForRead();
+    pLHdr = &page;
+    setUpBlock();
+}
+        
+bool LcsClusterReader::moveToBlockWithRid(LcsRid rid)
 {
     PageId clusterPageId;
 
@@ -384,6 +419,27 @@ void LcsClusterReader::catchUp(uint parentBufPos, LcsRid parentNextRid)
     if (parentBufPos > ridRunIter.getCurrPos()) {
         ridRunIter.setCurrPos(parentBufPos);
     }
+}
+
+RecordNum LcsClusterReader::getNumRows()
+{
+    // Read the last cluster page
+    if (bTreeReader->searchLast() == false) {
+        bTreeReader->endSearch();
+        return RecordNum(0);
+    }
+    bTreeReader->getTupleAccessorForRead().unmarshal(bTreeTupleData);
+    LcsClusterNode const &node = readClusterPage();
+
+    // Then count the number of rows in each batch on that page
+    RecordNum nRows = RecordNum(opaqueToInt(node.firstRID));
+    PLcsBatchDir pBatch = (PLcsBatchDir) ((PBuffer) &node + node.oBatch);
+    for (uint i = 0; i < node.nBatch; i += nClusterCols) {
+        nRows += pBatch[i].nRow;
+    }
+
+    bTreeReader->endSearch();
+    return nRows;
 }
 
 FENNEL_END_CPPFILE("$Id$");

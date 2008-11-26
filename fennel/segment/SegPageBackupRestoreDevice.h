@@ -431,6 +431,12 @@ public:
      * Waits for any pending writes to complete.
      */
     void waitForPendingWrites();
+
+    /**
+     * @return the mutex that ensures that only one thread is modifying this
+     * object
+     */
+    StrictMutex &getMutex();
 };
 
 FENNEL_END_NAMESPACE

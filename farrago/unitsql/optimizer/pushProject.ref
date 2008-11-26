@@ -365,24 +365,24 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT EXPR$0) NOT NULL])'
+'    FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(BIGINT EXPR$0) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
 '        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER T2A) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '            LcsRowScanRel(table=[[LOCALDB, PP, T2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$T2A]])'
 '            LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
 > explain plan for select 2*vjb, lcs_rid(vja) from vjoin order by 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[2], expr#5=[100], expr#6=[-($t3, $t5)], expr#7=[*($t4, $t6)], EXPR$0=[$t7], EXPR$1=[$t1])'
+'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[2], expr#5=[100], expr#6=[-($t1, $t5)], expr#7=[*($t4, $t6)], EXPR$0=[$t7], EXPR$1=[$t3])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
 '        FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER T2A, INTEGER T2C) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '            LcsRowScanRel(table=[[LOCALDB, PP, T2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$T2A, SYS$CLUSTERED_INDEX$T2$T2C]])'
 '            LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
 > 
 > -- negative case -- can't push project past a distinct union
 > create view vudemps(eno, name, deptno, age) as

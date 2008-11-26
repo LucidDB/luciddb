@@ -72,11 +72,17 @@ void BackupRestorePage::setReadRequest(bool isReadInit)
 void BackupRestorePage::notifyTransferCompletion(bool bSuccess)
 {
     SharedSegPageBackupRestoreDevice sharedPtr = pParent.lock();
+    StrictMutexGuard mutexGuard(sharedPtr->getMutex());
+
     if (isRead) {
         sharedPtr->notifyReadTransferCompletion(*this, bSuccess);   
     } else {
         sharedPtr->notifyWriteTransferCompletion(*this, bSuccess);
     }
+
+    // release the reference to the shared pointer while we're still holding
+    // the parent mutex
+    sharedPtr.reset();
 }
 
 SharedSegPageBackupRestoreDevice
@@ -286,9 +292,6 @@ void SegPageBackupRestoreDevice::notifyReadTransferCompletion(
     BackupRestorePage &scratchPage,
     bool bSuccess)
 {
-    // Hold the mutex so only one read notification is dealt with at a time
-    StrictMutexGuard mutexGuard(mutex);
-
     if (!bSuccess) {
         if (!pPendingExcn) {
             pPendingExcn.reset(
@@ -372,7 +375,6 @@ void SegPageBackupRestoreDevice::notifyWriteTransferCompletion(
     BackupRestorePage &scratchPage,
     bool bSuccess)
 {
-    StrictMutexGuard mutexGuard(mutex);
     if (!bSuccess) {
         if (!pPendingExcn) {
             pPendingExcn.reset(
@@ -415,6 +417,11 @@ void SegPageBackupRestoreDevice::closeImpl()
         }
         backupFile = NULL;
     }
+}
+
+StrictMutex &SegPageBackupRestoreDevice::getMutex()
+{
+    return mutex;
 }
 
 FENNEL_END_CPPFILE("$Id$");

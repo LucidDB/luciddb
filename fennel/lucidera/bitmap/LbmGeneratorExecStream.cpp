@@ -35,6 +35,10 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
     assert(opaqueToInt(insertRowCountParamId) > 0);
 
     createIndex = params.createIndex;
+    parameterIds.resize(nClusters);
+    for (uint i = 0; i < nClusters; i++) {
+        parameterIds[i] = params.lcsClusterScanDefs[i].rootPageIdParamId;
+    }
 
     scratchLock.accessSegment(scratchAccessor);
     scratchPageSize = scratchAccessor.pSegment->getUsablePageSize();
@@ -85,6 +89,19 @@ void LbmGeneratorExecStream::open(bool restart)
     if (!restart) {
         pDynamicParamManager->createParam(
             insertRowCountParamId, inAccessors[0]->getTupleDesc()[0]);
+
+        // set the rootPageIds of the clusters, if there are dynamic parameters
+        // corresponding to them
+        if (parameterIds.size() > 0) {
+            for (uint i = 0; i < nClusters; i++) {
+                if (opaqueToInt(parameterIds[i]) > 0) {
+                    pClusters[i]->setRootPageId(
+                        *reinterpret_cast<PageId const *>(
+                            pDynamicParamManager->getParam(parameterIds[i]).
+                                getDatum().pData));
+                }
+            }
+        }
     }
 }
 

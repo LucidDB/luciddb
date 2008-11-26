@@ -201,7 +201,6 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     lcsAppendParams.pCacheAccessor = pCache;
     lcsAppendParams.pSegment = pRandomSegment;
     
-    lcsAppendParams.overwrite = false;
     lcsAppendParams.inputProj.push_back(0);
 
     // initialize the btree parameter portion of lcsAppendParams
@@ -306,7 +305,6 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     // output only one value(rows inserted)
     lcsAppendParams.outputTupleDesc.push_back(attrDesc_int64);
 
-    lcsAppendParams.overwrite = false;
     for (uint i = 0; i < nCols; i++) {
         lcsAppendParams.inputProj.push_back(i);
     }

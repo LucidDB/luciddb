@@ -46,12 +46,6 @@
   <property name="plugin.catalog.src.dir" 
     location="${plugin.catalog.dir}/java"/>
 
-  <property name="plugin.catalog.sql.dir" 
-    location="${plugin.catalog.dir}/sql"/>
-
-  <property name="plugin.catalog.sql" 
-    location="${plugin.catalog.sql.dir}/${plugin.jar.basename}.sql"/>
-
   <property name="plugin.catalog.schema" value="${project.catalog.schema}"/>
 
   <property name="plugin.src.dir" 
@@ -172,16 +166,14 @@
     <farrago.setReposProvider
       reposStorageProps="${plugin.repos.storage.propfile}"/>
 
-    <mkdir dir="${plugin.catalog.sql.dir}"/>
-
     <mdr
         propertiesFile="${plugin.repos.storage.propfile}"
         logConfigFile="${FarragoMdrBuildTrace.properties}"
         modelPathRef="plugin.classpath">
       <exportSchema
-        file="${plugin.catalog.sql}"
-        extent="FarragoMetamodel"
-        update="true"/>
+        mode="model-plugin"
+        dir="${plugin.catalog.src.dir}"
+        extent="FarragoMetamodel"/>
     </mdr>
 
     <property 
@@ -197,8 +189,11 @@
         url="${gensch.net.sf.farrago.dev.connection.url}${plugin.catalog.schema}"
         userid="${gensch.net.sf.farrago.dev.connection.username}"
         password="${gensch.net.sf.farrago.dev.connection.password}"
-        classpathref="plugin.classpath"
-        src="${plugin.catalog.sql}"/>
+        classpathref="plugin.classpath">
+      <fileset dir="${plugin.catalog.src.dir}">
+        <include name="**/create.sql"/>
+      </fileset>
+    </sql>
   </target>
 
   <target name="plugin.forked_importMetamodel" depends="farrago.mdr_taskdef">

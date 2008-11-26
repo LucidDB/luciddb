@@ -7,6 +7,7 @@ LcsClusterAppendExecStream.cpp \
 LcsClusterDump.cpp \
 LcsClusterNodeWriter.cpp \
 LcsClusterReader.cpp \
+LcsClusterReplaceExecStream.cpp \
 LcsClusterVerifier.cpp \
 LcsColumnReader.cpp \
 LcsHash.cpp \

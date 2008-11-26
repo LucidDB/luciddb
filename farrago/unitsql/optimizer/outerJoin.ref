@@ -945,15 +945,15 @@
 >     on a = c;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER NOT NULL C, INTEGER NOT NULL D) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[2]], joinType=[INNER])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
-'        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
-'        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
+'  FennelReshapeRel(projection=[[3, 4, 0, 1]], outputRowType=[RecordType(INTEGER A, INTEGER B, INTEGER NOT NULL C, INTEGER NOT NULL D) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])'
 '      FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL C, INTEGER NOT NULL D, INTEGER CAST($0):INTEGER) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, D]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$D$D]])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
+'        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
 > 
 > explain plan for
 > select a, b, c, d from
@@ -1317,12 +1317,13 @@
 >     on a = bb;
 'column0'
 'FennelToIteratorConverter'
-'  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
-'    LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
-'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[*($t0, $t2)], expr#4=[*($t1, $t2)], BB=[$t3], CC=[$t4])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
-'        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
+'  FennelReshapeRel(projection=[[2, 0, 1]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER BB, INTEGER CC) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[*($t0, $t2)], expr#4=[*($t1, $t2)], BB=[$t3], CC=[$t4])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
+'      LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 > -- can pull even though join condition references expression
 > explain plan for
 > select a, bb, cc from
@@ -1379,13 +1380,12 @@
 >     on aa = c;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1, 2, 0]], outputRowType=[RecordType(INTEGER AA, INTEGER BB, INTEGER NOT NULL C) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
-'      LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[*($t0, $t2)], expr#4=[*($t1, $t2)], AA=[$t3], BB=[$t4])'
-'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
-'          LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
+'  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[*($t0, $t2)], expr#4=[*($t1, $t2)], AA=[$t3], BB=[$t4])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'        LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'        LcsRowScanRel(table=[[LOCALDB, OJ, B]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$B$B]])'
+'    LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 > -- can pull even though join condition references expression
 > explain plan for
 > select aa, bb, c from
@@ -1735,12 +1735,12 @@
 >         where X.k = c;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER NOT NULL A) NOT NULL])'
-'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
-'      FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER NOT NULL A, INTEGER K) NOT NULL])'
-'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[LEFT])'
-'          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER NOT NULL A) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER K, INTEGER NOT NULL A) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[RIGHT])'
 '          LcsRowScanRel(table=[[LOCALDB, OJ, BUNIQ]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$BUNIQ$B, SYS$CLUSTERED_INDEX$BUNIQ$K]])'
+'          LcsRowScanRel(table=[[LOCALDB, OJ, A]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$A$A]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL C, INTEGER CAST($0):INTEGER) NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, OJ, C]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$C$C]])'
 > -- non-equijoin filter

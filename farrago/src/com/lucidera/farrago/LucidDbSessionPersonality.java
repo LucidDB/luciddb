@@ -275,6 +275,17 @@ public class LucidDbSessionPersonality
         // may introduce new joins which need to be optimized further on.
         builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
 
+        // These rule instances need to be applied before the join filter is
+        // extracted from the join and before the MERGE statement is converted
+        // to a physical MERGE statement.
+        builder.addRuleInstance(LcsConvertMergeToUpdateRule.instanceRowScan);
+        builder.addRuleInstance(
+            LcsConvertMergeToUpdateRule.instanceFilterScan);
+        builder.addRuleInstance(
+            LcsConvertMergeToUpdateRule.instanceProjectScan);
+        builder.addRuleInstance(
+            LcsConvertMergeToUpdateRule.instanceProjectFilterScan);
+        
         // Now, pull join conditions out of joins, leaving behind Cartesian
         // products.  Why?  Because PushFilterRule doesn't start from
         // join conditions, only filters.  It will push them right back

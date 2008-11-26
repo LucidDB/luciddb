@@ -514,10 +514,10 @@
 'column0'
 'FennelToIteratorConverter'
 '  LhxAggRel(groupCount=[1], EXPR$1=[COUNT()])'
-'    FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 > 
 > explain plan for
 > select deptno, gender, min(age), max(age) from emps

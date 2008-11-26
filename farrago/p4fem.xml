@@ -11,7 +11,8 @@
     <p4edit view="../fennel/farrago/FemGeneratedMethods.h"/>
     <p4edit view="../fennel/common/FemGeneratedEnums.h"/>
 
-    <!-- not strictly part of fem, but it's generated as well -->
+    <!-- not strictly part of fem, but it's generated as well
     <p4edit view="../fennel/farrago/JniPseudoUuid.h"/>
+    -->
   </target>
 </project>

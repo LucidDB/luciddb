@@ -35,9 +35,6 @@ void BTreeExecStream::prepare(BTreeExecStreamParams const &params)
     scratchAccessor = params.scratchAccessor;
     pRootMap = params.pRootMap;
     rootPageIdParamId = params.rootPageIdParamId;
-    if (rootPageIdParamId > DynamicParamId(0)) {
-        assert(treeDescriptor.rootPageId == NULL_PAGE_ID);
-    }
 }
 
 void BTreeExecStream::open(bool restart)

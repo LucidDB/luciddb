@@ -21,6 +21,8 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/common/FennelResource.h"
+#include "fennel/segment/SegmentFactory.h"
+#include "fennel/btree/BTreeBuilder.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
@@ -95,6 +97,16 @@ void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
             violationTuple.compute(violationAccessor->getTupleDesc());
         }
     }
+
+    // If the index is going to be dynamically created, the underlying
+    // segment associated with the index needs to be a snapshot segment.
+    createNewIndex = params.createNewIndex;
+    if (createNewIndex) {
+        pSnapshotSegment =
+            SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+                writeBTreeDesc.segmentAccessor.pSegment);
+        assert(pSnapshotSegment != NULL);
+    }
 }
 
 void LbmSplicerExecStream::open(bool restart)
@@ -109,8 +121,26 @@ void LbmSplicerExecStream::open(bool restart)
             bitmapBuffer.get(), mergeBuffer.get(), maxEntrySize,
             bitmapTupleDesc);
 
+        // If the index is going to be dynamically created, save the original
+        // root pageId of the index so we can use it later to version the
+        // index root page.
+        if (createNewIndex) {
+            origRootPageId = writeBTreeDesc.rootPageId;
+            writeBTreeDesc.rootPageId = NULL_PAGE_ID;
+            BTreeBuilder builder(
+                writeBTreeDesc,
+                writeBTreeDesc.segmentAccessor.pSegment);
+            builder.createEmptyRoot();
+            writeBTreeDesc.rootPageId = builder.getRootPageId();
+            emptyTable = true;
+            emptyTableUnknown = false;
+        } else {
+            emptyTable = false;
+            emptyTableUnknown = true;
+        }
+        
         bTreeWriter = SharedBTreeWriter(
-            new BTreeWriter(writeBTreeDesc, scratchAccessor, false));
+            new BTreeWriter(writeBTreeDesc, scratchAccessor, emptyTable));
         bTreeWriterMoved = true;
 
         if (opaqueToInt(writeRowCountParamId) > 0) {
@@ -132,7 +162,6 @@ void LbmSplicerExecStream::open(bool restart)
 
     currValidation = false;
     firstValidation = true;
-    emptyTableUnknown = true;
 }
 
 void LbmSplicerExecStream::getResourceRequirements(
@@ -172,6 +201,13 @@ bool LbmSplicerExecStream::isEmpty()
 ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
 {
     if (isDone) {
+        // Version the index roots if the index was dynamically created
+        if (createNewIndex) {
+            pSnapshotSegment->versionPage(
+                origRootPageId,
+                writeBTreeDesc.rootPageId);
+        }
+
         for (uint i = 0; i < outAccessors.size(); i++) {
             outAccessors[i]->markEOS();
         }

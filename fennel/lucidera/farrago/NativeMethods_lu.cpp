@@ -177,8 +177,6 @@ class ExecStreamSubFactory_lu
         // LcsClusterAppendExecStream requires a private ScratchSegment.
         pExecStreamFactory->createPrivateScratchSegment(params);
 
-        params.overwrite = streamDef.isOverwrite();
-        
         CmdInterpreter::readTupleProjection(
             params.inputProj,
             streamDef.getClusterColProj());
@@ -258,6 +256,7 @@ class ExecStreamSubFactory_lu
         params.writeRowCountParamId =
             pExecStreamFactory->readDynamicParamId(
                 streamDef.getWriteRowCountParamId());
+        params.createNewIndex = false;
         pEmbryo->init(new LbmSplicerExecStream(), params);
     }
 

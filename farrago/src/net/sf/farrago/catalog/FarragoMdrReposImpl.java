@@ -134,9 +134,10 @@ public class FarragoMdrReposImpl
         }
 
         super.setRootPackage(farragoPackage);
-        checkModelTimestamp();
 
         mdrRepository = (EnkiMDRepository)modelLoader.getMdrRepos();
+
+        checkModelTimestamp("FarragoCatalog");
 
         // Load configuration
         currentConfigMofId = getDefaultConfig().refMofId();
@@ -160,24 +161,32 @@ public class FarragoMdrReposImpl
 
     //~ Methods ----------------------------------------------------------------
 
-    private void checkModelTimestamp()
+    private void checkModelTimestamp(String extentName)
     {
         String prefix = "TIMESTAMP = ";
 
-        MofPackage pkg = (MofPackage) getFarragoPackage().refMetaObject();
-        String storedTimestamp = pkg.getAnnotation();
-        String compiledTimestamp = prefix + getCompiledModelTimestamp();
-        if ((storedTimestamp == null) || !storedTimestamp.startsWith(prefix)) {
-            // first time:  add timestamp
-            pkg.setAnnotation(compiledTimestamp);
-        } else {
-            // on reload:  verify timestamps
-            if (!storedTimestamp.equals(compiledTimestamp)) {
-                throw FarragoResource.instance()
-                .CatalogModelTimestampCheckFailed.ex(
-                    storedTimestamp,
-                    compiledTimestamp);
+        mdrRepository.beginTrans(true);
+        boolean rollback = true;
+        try {
+            String storedTimestamp = mdrRepository.getAnnotation(extentName);
+            String compiledTimestamp = prefix + getCompiledModelTimestamp();
+            if ((storedTimestamp == null) || 
+                !storedTimestamp.startsWith(prefix))
+            {
+                // first time:  add timestamp
+                mdrRepository.setAnnotation(extentName, compiledTimestamp);
+                rollback = false;
+            } else {
+                // on reload:  verify timestamps
+                if (!storedTimestamp.equals(compiledTimestamp)) {
+                    throw FarragoResource.instance()
+                    .CatalogModelTimestampCheckFailed.ex(
+                        storedTimestamp,
+                        compiledTimestamp);
+                }
             }
+        } finally {
+            mdrRepository.endTrans(rollback);
         }
     }
 

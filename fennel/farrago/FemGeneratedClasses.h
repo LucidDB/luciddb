@@ -1101,8 +1101,6 @@ class ProxyLcsClusterAppendStreamDef
 public:
 SharedProxyTupleProjection getClusterColProj();
 static jmethodID meth_getClusterColProj;
-bool isOverwrite();
-static jmethodID meth_isOverwrite;
 };
 
 class ProxyLcsClusterScanDef

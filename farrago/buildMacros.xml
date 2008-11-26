@@ -266,10 +266,6 @@ ${farrago.test.jvmargs}
   <property name="FarragoExtMetamodel.uml"
     location="${farrago.xmi.dir}/FarragoExtMetamodel.uml"/>
 
-  <!-- File containing schema DDL for Farrago metamodel  -->
-  <property name="FarragoMetamodel.sql"
-    location="${farrago.catalog.sql.dir}/FarragoMetamodel.sql"/>
-
   <!-- File defining Farrago tracing -->
   <property name="FarragoTrace.properties"
     location="${farrago.trace.dir}/FarragoTrace.properties"/>
