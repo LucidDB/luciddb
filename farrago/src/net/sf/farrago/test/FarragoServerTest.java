@@ -36,6 +36,7 @@ import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.server.*;
+import net.sf.farrago.db.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -135,6 +136,13 @@ public class FarragoServerTest
         }
         stopped = server.stopSoft();
         server = null;
+        assertTrue(stopped);
+        
+        // NOTE jvs 27-Nov-2008: next two calls are coverage for LDB-190, to
+        // make sure a shutdown call on an already-shutdown DB is treated as a
+        // NOP.
+        FarragoDbSingleton.shutdown();
+        stopped = FarragoDbSingleton.shutdownConditional(0);
         assertTrue(stopped);
     }
 

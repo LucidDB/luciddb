@@ -204,13 +204,16 @@ public abstract class FarragoDbSingleton
         boolean flushCodeCache = false;
         boolean success = false;
         synchronized(FarragoDbSingleton.class) {
+            if (instance == null) {
+                assert(nReferences == 0);
+                return true;
+            }
             if (inShutdownConditional || inShutdown) {
                 return false;
             }
             inShutdownConditional = true;
 
             try {
-                assert (instance != null);
                 tracer.fine("ground reference count = " + groundReferences);
                 tracer.fine("actual reference count = " + nReferences);
             
@@ -277,13 +280,16 @@ public abstract class FarragoDbSingleton
 
         boolean flushCodeCache = false;
         synchronized(FarragoDbSingleton.class) {
+            if (instance == null) {
+                assert(nReferences == 0);
+                return;
+            }
             if (inShutdown) {
                 return;
             }
             inShutdown = true;
     
             tracer.info("shutdown");
-            assert (instance != null);
         
             if (countLoopbackSessions() > 0) {
                 flushCodeCache = true;
