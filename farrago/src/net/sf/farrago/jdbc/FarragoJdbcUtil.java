@@ -253,6 +253,13 @@ public class FarragoJdbcUtil
         private final Set/*<Object>*/ active = new HashSet/*<Object>*/();
 
         /**
+         * Whether the client has the RMI class loader enabled. If true,
+         * serializabilty is sufficient. If false, the class also has to be
+         * available on the client.
+         */
+        private final boolean rmiClassLoader = true;
+
+        /**
          * Converts a {@code Throwable} into a similar exception that is
          * serializable. The original object, or at least its cause, is
          * used if possible; and the new throwable has the same stack trace.
@@ -303,6 +310,16 @@ public class FarragoJdbcUtil
          */
         boolean isSerializable(Object o)
         {
+            if (!rmiClassLoader) {
+                String className = o.getClass().getName();
+                if (className.startsWith("org.eigenbase.sql.")) {
+                    // In particular:
+                    //  org.eigenbase.sql.parser.SqlParseException
+                    //  org.eigenbase.sql.parser.SqlParserPos
+                    //  org.eigenbase.sql.SqlNode (and subclasses)
+                    return false;
+                }
+            }
             if (!active.add(o)) {
                 // The object is already being tested for serialization. Tell a
                 // white lie and say that it is serializable. If it is not
@@ -455,7 +472,8 @@ public class FarragoJdbcUtil
             Throwable serializableCause;
             if (cause != null
                 && cause != this
-                && !checker.isSerializable(cause)) {
+                && !checker.isSerializable(cause))
+            {
                 needNewException = true;
                 serializableCause = checker.makeSerializable(cause);
             } else {
