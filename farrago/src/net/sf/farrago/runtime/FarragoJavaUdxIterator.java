@@ -21,25 +21,21 @@
 */
 package net.sf.farrago.runtime;
 
-import java.lang.reflect.*;
-
-import java.math.*;
-
+import java.lang.reflect.Proxy;
+import java.math.BigDecimal;
 import java.sql.*;
-
 import java.util.*;
-import java.util.logging.*;
 import java.util.concurrent.*;
-
-import net.sf.farrago.jdbc.param.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.type.runtime.*;
-import net.sf.farrago.trace.FarragoTrace;
+import java.util.logging.Logger;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
+import net.sf.farrago.jdbc.param.*;
+import net.sf.farrago.session.FarragoSessionRuntimeContext;
+import net.sf.farrago.trace.FarragoTrace;
+import net.sf.farrago.type.FarragoParameterMetaData;
+import net.sf.farrago.type.runtime.*;
 
 /**
  * FarragoJavaUdxIterator provides runtime support for a call to a Java UDX.
@@ -328,15 +324,22 @@ public abstract class FarragoJavaUdxIterator
         {
             int iField = parameterIndex - 1;
 
-            // result types are always nullable, so we're guaranteed
-            // to get something which implements both NullableValue
-            // and AssignableValue
+            // Result types are always nullable, so we should get something which is
+            // both a NullableValue and an AssignableValue.
+            // However SqlDateTimeWithoutTZ is not a NullableValue, for some reason.
+            // Hack around this for the time being, as changing SqlDateTimeWithoutTZ
+            // seems to cause unmarshalling problems.
             Object fieldObj = getCurrentRow().getFieldValue(iField);
-            NullableValue nullableValue = (NullableValue) fieldObj;
-            if (obj == null) {
-                nullableValue.setNull(true);
-            } else {
-                nullableValue.setNull(false);
+
+            if (fieldObj instanceof NullableValue) {
+                NullableValue nullableValue = (NullableValue) fieldObj;
+                nullableValue.setNull(obj == null);
+            } else if (fieldObj instanceof SqlDateTimeWithoutTZ) {
+                SqlDateTimeWithoutTZ dt = (SqlDateTimeWithoutTZ) fieldObj;
+                dt.setNull(obj == null); // its own public method!
+            }
+
+            if (obj != null) {
                 AssignableValue assignableValue = (AssignableValue) fieldObj;
 
                 // Note: Calendar is an optional argument so it wouldn't

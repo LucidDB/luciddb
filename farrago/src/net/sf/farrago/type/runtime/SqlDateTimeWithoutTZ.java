@@ -52,9 +52,10 @@ import org.eigenbase.util14.*;
  * @since May 5, 2004
  */
 public abstract class SqlDateTimeWithoutTZ
-    implements AssignableValue,
-        SpecialDataValue
+    implements AssignableValue, SpecialDataValue
 {
+    // REVIEW mb 28-Nov-08 Why not implement NullableValue, since its methods are defined below?
+
     //~ Static fields/initializers ---------------------------------------------
 
     // ~ Static fields --------------------------------------------------------
@@ -740,7 +741,6 @@ public abstract class SqlDateTimeWithoutTZ
             // using FarragoRuntimeContext's notion of the current
             // timestamp; I think SQL:2003 requires the CURRENT_DATE
             // per-execution snapshot semantics to apply here too.
-            
             currentDate = new ZonelessDate();
             currentDate.setZonelessTime(date.value.getTime());
         }
