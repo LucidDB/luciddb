@@ -324,9 +324,9 @@ public:
     static jmethodID methFarragoTransformExecute;
 
     /**
-     * Java method FarragoTransform.setInputFetchToBlock.
+     * Java method FarragoTransform.setInputFetchTimeout
      */
-    static jmethodID methFarragoTransformSetInputFetchToBlock;
+    static jmethodID methFarragoTransformSetInputFetchTimeout;
 
     /**
      * Java method FarragoTransform.restart.

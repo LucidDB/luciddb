@@ -32,7 +32,7 @@ import org.eigenbase.util.*;
  *
  * <p>Note that calling {@link ClosableAllocation#closeAllocation()
  * closeAllocation()} closes this iterator, allowing it to release its
- * resources. No further calls to {@link #fetchNext()} or {@link #restart()} may
+ * resources. No further calls to {@link TupleIter#fetchNext} or {@link TupleIter#restart} may
  * be made once the iterator is closed.
  *
  * @author Stephan Zuercher
@@ -41,13 +41,18 @@ import org.eigenbase.util.*;
 public interface TupleIter
     extends ClosableAllocation
 {
-    //~ Static fields/initializers ---------------------------------------------
+    //~ Static classes/fields/initializers ---------------------------------------------
 
     public static final TupleIter EMPTY_ITERATOR =
         new TupleIter() {
             public Object fetchNext()
             {
                 return NoDataReason.END_OF_DATA;
+            }
+
+            public boolean setTimeout(long timeout, boolean asUnderflow)
+            {
+                return false;
             }
 
             public void restart()
@@ -59,11 +64,21 @@ public interface TupleIter
             }
         };
 
+    /**
+     * One way to indicate that {@link TupleIter#fetchNext} timed-out. The other way is to
+     * return {@link NoDataReason#UNDERFLOW}. See {@link TupleIter#setTimeout}. Since throwing
+     * this exception is optional for fetchNext, it is a RuntimeException.
+     *
+     */
+    public static class TimeoutException extends RuntimeException {
+    }
+
+
     //~ Enums ------------------------------------------------------------------
 
     /**
      * NoDataReason provides a reason why no data was returned by a call to
-     * {@link #fetchNext()}.
+     * {@link TupleIter#fetchNext}.
      */
     public enum NoDataReason
     {
@@ -83,12 +98,12 @@ public interface TupleIter
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Returns the next element in the iteration. This method returns the next
-     * value in the iteration, if there is one. If not, it returns a value from
-     * the {@link NoDataReason} enumeration indicating why no data was returned.
+     * Returns the next element in the iteration. If there is no next value, it
+     * returns a value from the {@link NoDataReason} enumeration indicating why no
+     * data was returned.
      *
      * <p>If this method returns {@link NoDataReason#END_OF_DATA}, no further
-     * data will be returned by this iterator unless {@link #restart()} is
+     * data will be returned by this iterator unless {@link TupleIter#restart()} is
      * called.
      *
      * <p>If this method returns {@link NoDataReason#UNDERFLOW}, no data is
@@ -105,8 +120,26 @@ public interface TupleIter
      */
     public Object fetchNext();
 
+
+    // REVIEW mberkowitz 27-Nov-2008 Is this too contrived? Intended to support
+    // FarragoTransform.execute() in data-push mode.
     /**
-     * Restarts this iterator, so that a subsequent call to {@link #fetchNext()}
+     * Sets a timeout for {@link TupleIter#fetchNext}; (optional operation).
+     * Not all implementing classes support a timeout.
+     * For those that do, this method provides a common interface,
+     * For those that do not, the adapter {@link TimeoutQueueTupleIter} puts a timeout queue on top.
+     *
+     * @param timeout in milliseconds. 0 means poll, infinity means block.
+     * @param asUnderflow true means indicate timeout by returning {@link
+     *  NoDataReason#UNDERFLOW}; false means throw {@link TupleIter.TimeoutException}
+     *  on a timeout.
+     * @return true if the timeout was set, false if the implementing class does not
+     *   support a timeout.
+     */
+    public boolean setTimeout(long timeout, boolean asUnderflow);
+
+    /**
+     * Restarts this iterator, so that a subsequent call to {@link TupleIter#fetchNext()}
      * returns the first element in the collection being iterated.
      */
     public void restart();

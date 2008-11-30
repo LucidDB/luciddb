@@ -55,7 +55,7 @@ import org.eigenbase.test.*;
  * @version $Id$
  */
 public class CompoundParallelTupleIter
-    implements TupleIter
+    extends AbstractTupleIter
 {
     //~ Instance fields --------------------------------------------------------
 

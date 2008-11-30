@@ -45,7 +45,7 @@ import java.util.*;
  * @version $Id$
  */
 public class RestartableIteratorTupleIter
-    implements TupleIter
+    extends AbstractTupleIter
 {
     //~ Instance fields --------------------------------------------------------
 

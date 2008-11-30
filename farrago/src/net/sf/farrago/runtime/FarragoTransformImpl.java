@@ -72,11 +72,9 @@ public abstract class FarragoTransformImpl
         return tupleIter;
     }
 
-    public void setInputFetchToBlock(boolean mode)
+    public void setInputFetchTimeout(long msec)
     {
-        if (tupleIter instanceof FarragoJavaUdxIterator) {
-            ((FarragoJavaUdxIterator) tupleIter).setFetchNextToBlock(mode);
-        }
+        tupleIter.setTimeout(msec, true);
     }
 
     /**

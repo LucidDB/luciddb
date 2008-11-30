@@ -32,7 +32,7 @@ import org.eigenbase.runtime.*;
  * @version $Id$
  */
 public class MedMockTupleIter
-    implements TupleIter
+    extends AbstractTupleIter
 {
     //~ Instance fields --------------------------------------------------------
 

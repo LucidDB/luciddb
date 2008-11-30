@@ -30,7 +30,7 @@ import java.sql.*;
  * ResultSet} to a {@link TupleIter}.
  */
 public class ResultSetTupleIter
-    implements TupleIter
+    extends AbstractTupleIter
 {
     //~ Instance fields --------------------------------------------------------
 

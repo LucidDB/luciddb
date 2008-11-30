@@ -28,12 +28,14 @@ import java.math.*;
 import java.sql.*;
 
 import java.util.*;
+import java.util.logging.*;
 import java.util.concurrent.*;
 
 import net.sf.farrago.jdbc.param.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
+import net.sf.farrago.trace.FarragoTrace;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
@@ -53,8 +55,9 @@ public abstract class FarragoJavaUdxIterator
     implements RestartableIterator, TupleIter
 {
     //~ Static fields/initializers ---------------------------------------------
-
     private static final int QUEUE_ARRAY_SIZE = 100;
+    protected static final Logger tracer =
+        FarragoTrace.getRuntimeContextTracer();
 
     //~ Instance fields --------------------------------------------------------
 
@@ -67,9 +70,11 @@ public abstract class FarragoJavaUdxIterator
 
     private int iRow;
 
-    private boolean stopThread;
+    private long defaultTimeout = Long.MAX_VALUE;
 
-    private boolean fetchNextBlocks = true;
+    private boolean timeoutAsUnderflow = true;
+
+    private boolean stopThread;
 
     private CountDownLatch latch;
 
@@ -123,7 +128,8 @@ public abstract class FarragoJavaUdxIterator
     }
 
     // override QueueIterator
-    public boolean hasNext(long timeout) throws TimeoutException
+    public boolean hasNext(long timeout)
+        throws QueueIterator.TimeoutException
     {
         if (latch == null) {
             startWithLatch();
@@ -131,40 +137,31 @@ public abstract class FarragoJavaUdxIterator
         return super.hasNext(timeout);
     }
 
-    public void setFetchNextToBlock(boolean val)
+    // implement TupleIter
+    public boolean setTimeout(long timeout, boolean asUnderflow)
     {
-        fetchNextBlocks = val;
+        this.defaultTimeout = timeout;
+        this.timeoutAsUnderflow = asUnderflow;
+        return true;
     }
 
     // implement TupleIter
-    // REVIEW 1-Nov-2008 mberkowitz. Most callers expect this fetchNext() to block,
-    // so by default it does; but this behavior can be toggled.
-    // Isn't TupleIter supposed to be a non-blocking interface?
     public Object fetchNext()
     {
-        return (fetchNextBlocks ? blockingFetch() : fetch());
-    }
-
-    // a fetch that blocks, like an Iterator
-    private Object blockingFetch()
-    {
-        if (hasNext()) {
-            return next();
-        } else {
-            return NoDataReason.END_OF_DATA;
-        }
-    }
-
-    // a fetch that never blocks
-    private Object fetch()
-    {
         try {
-            // throws TimeoutException if next item not available right now.
-            return next(0);
-        } catch (TimeoutException e) {
-            return NoDataReason.UNDERFLOW;
+            if (defaultTimeout < Long.MAX_VALUE) {
+                return next(defaultTimeout);
+            } else {
+                return next();
+            }
         } catch (NoSuchElementException e) {
             return NoDataReason.END_OF_DATA;
+        } catch (QueueIterator.TimeoutException e) {
+            if (timeoutAsUnderflow) {
+                return NoDataReason.UNDERFLOW;
+            } else {
+                throw new TupleIter.TimeoutException();
+            }
         }
     }
 
