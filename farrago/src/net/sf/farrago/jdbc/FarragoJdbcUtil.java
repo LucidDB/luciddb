@@ -257,7 +257,7 @@ public class FarragoJdbcUtil
          * serializabilty is sufficient. If false, the class also has to be
          * available on the client.
          */
-        private final boolean rmiClassLoader = true;
+        private final boolean rmiClassLoader = false;
 
         /**
          * Converts a {@code Throwable} into a similar exception that is
