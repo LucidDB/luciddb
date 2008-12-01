@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2005-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 2003-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -63,8 +63,9 @@ class FarragoExecutableJavaStmt
     // just the class name, and dynamically load it per-execution.  This
     // will keep cache memory usage down.
     private final Class rowClass;
-    private final ClassLoader statementClassLoader;
-    private final Method method;
+    private final ClassLoader stmtClassLoader;
+    private final Method stmtMethod;
+    private final List<FarragoTransformDef> transformDefs;
     private final Map<String, RelDataType> resultSetTypeMap;
     private final Map<String, RelDataType> iterCalcTypeMap;
     private final int totalByteCodeSize;
@@ -74,10 +75,11 @@ class FarragoExecutableJavaStmt
     FarragoExecutableJavaStmt(
         File packageDir,
         Class rowClass,
-        ClassLoader statementClassLoader,
+        ClassLoader stmtClassLoader,
         RelDataType preparedRowType,
         RelDataType dynamicParamRowType,
-        Method method,
+        Method stmtMethod,
+        List<FarragoTransformDef> transformDefs,
         String xmiFennelPlan,
         boolean isDml,
         TableModificationRel.Operation tableModOp,
@@ -100,8 +102,9 @@ class FarragoExecutableJavaStmt
 
         this.packageDir = packageDir;
         this.rowClass = rowClass;
-        this.statementClassLoader = statementClassLoader;
-        this.method = method;
+        this.stmtClassLoader = stmtClassLoader;
+        this.stmtMethod = stmtMethod;
+        this.transformDefs = transformDefs;
         this.resultSetTypeMap = resultSetTypeMap;
         this.iterCalcTypeMap = iterCalcTypeMap;
         this.totalByteCodeSize = totalByteCodeSize;
@@ -113,7 +116,7 @@ class FarragoExecutableJavaStmt
     public ResultSet execute(FarragoSessionRuntimeContext runtimeContext)
     {
         try {
-            runtimeContext.setStatementClassLoader(statementClassLoader);
+            runtimeContext.setStatementClassLoader(stmtClassLoader);
 
             if (xmiFennelPlan != null) {
                 runtimeContext.loadFennelPlan(xmiFennelPlan);
@@ -121,23 +124,28 @@ class FarragoExecutableJavaStmt
 
             // NOTE jvs 1-May-2004: This sequence is subtle.  We can't open all
             // Fennel tuple streams yet, since some may take Java streams as
-            // input, and the Java streams are created by method.invoke below
-            // (which calls the generated execute method to obtain an iterator).
+            // input, and the Java streams are created by stmtMethod.invoke below
+            // (which calls the generated execute stmtMethod to obtain an iterator).
             // This means that the generated execute must NOT try to prefetch
             // any data, since the Fennel streams aren't open yet. In
             // particular, Java iterator implementations must not do prefetch in
             // the constructor (always wait for hasNext/next).
-            FarragoTupleIterResultSet resultSet;
             TupleIter iter =
-                (TupleIter) method.invoke(
+                (TupleIter) stmtMethod.invoke(
                     null,
                     new Object[] { runtimeContext });
-            resultSet =
+
+            FarragoTupleIterResultSet resultSet =
                 new FarragoTupleIterResultSet(
                     iter,
                     rowClass,
                     rowType,
                     runtimeContext);
+
+            // instantiate and initialize all generated FarragoTransforms.
+            for (FarragoTransformDef tdef : transformDefs) {
+                tdef.init(runtimeContext);
+            }
 
             if (xmiFennelPlan != null) {
                 // Finally, it's safe to open all streams.
@@ -145,9 +153,8 @@ class FarragoExecutableJavaStmt
             }
 
             runtimeContext = null;
-            
             resultSet.setOpened();
-            
+
             return resultSet;
         } catch (IllegalAccessException e) {
             throw Util.newInternal(e);

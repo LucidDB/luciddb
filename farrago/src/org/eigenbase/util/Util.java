@@ -874,6 +874,21 @@ public class Util
     }
 
     /**
+     * Returns the stack trace of a throwable. Called from native code.
+     *
+     * @param t Throwable
+     * @return Stack trace
+     */
+    public static String getStackTrace(Throwable t)
+    {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
+        pw.flush();
+        return sw.toString();
+    }
+
+    /**
      * Checks a pre-condition.
      *
      * <p>For example,
@@ -1778,7 +1793,7 @@ public class Util
     {
         return new AbstractCollection<E>() {
             private int size = -1;
-            
+
             public Iterator<E> iterator()
             {
                 return new Filterator<E>(collection.iterator(), includeFilter);
@@ -1787,19 +1802,19 @@ public class Util
             public int size()
             {
                 if (size == -1) {
-                    // Compute size.  This is expensive, but the value 
-                    // collection.size() is not correct since we're 
+                    // Compute size.  This is expensive, but the value
+                    // collection.size() is not correct since we're
                     // filtering values.  (Some java.util algorithms
                     // call next() on the result of iterator() size() times.)
                     int s = 0;
                     Iterator<E> iter = iterator();
-                    while(iter.hasNext()) {
+                    while (iter.hasNext()) {
                         iter.next();
                         s++;
                     }
                     size = s;
                 }
-                
+
                 return size;
             }
         };

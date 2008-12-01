@@ -10,7 +10,6 @@ endif
 noinst_PROGRAMS= \
 testNoisyArithmetic \
 testCalc \
-testCalcExtString \
 testCalcExtended \
 tuple \
 CollectExecStreamTest \
@@ -40,8 +39,6 @@ testNoisyArithmetic_SOURCES=testNoisyArithmetic.cpp
 testCalc_SOURCES=testCalc.cpp 
 
 testCalcExtended_SOURCES=testCalcExtended.cpp 
-
-testCalcExtString_SOURCES=testCalcExtString.cpp 
 
 tuple_SOURCES=tuple.cpp
 

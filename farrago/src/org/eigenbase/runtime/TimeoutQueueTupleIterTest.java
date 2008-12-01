@@ -160,7 +160,7 @@ public class TimeoutQueueTupleIterTest
      * method waits until the appropriate time.
      */
     private static class TickIterator
-        implements TupleIter
+        extends AbstractTupleIter
     {
         private final boolean verbose;
         private final long startTime;
@@ -233,4 +233,4 @@ public class TimeoutQueueTupleIterTest
     }
 }
 
-// End TimeoutIteratorTest.java
+// End TimeoutQueueTupleIterTest.java

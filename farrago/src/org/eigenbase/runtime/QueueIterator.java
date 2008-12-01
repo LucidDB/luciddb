@@ -193,7 +193,7 @@ public class QueueIterator
         if (next == null) {
             try {
                 if (timeoutMillis <= 0) {
-                    next = queue.peek();
+                    next = queue.poll();
                 } else {
                     next = queue.poll(timeoutMillis, TimeUnit.MILLISECONDS);
                 }

@@ -120,6 +120,9 @@ public interface FarragoRepos
      * Formats the fully-qualified localized name for an existing object,
      * including its type.
      *
+     * <p>Calling {@code getLocalizedObjectName(e)} is identical to
+     * calling {@code getLocalizedObjectName(e, e.refClass())}.</p>
+     *
      * @param modelElement catalog object
      *
      * @return localized name

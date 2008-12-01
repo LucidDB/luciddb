@@ -33,10 +33,10 @@ import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.core.VisibilityKindEnum;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.util.*;
 
 
 /**
@@ -238,7 +238,9 @@ public class FarragoRepositoryTest
         SAXParser parser = spf.newSAXParser();
         
         // Verify that these files pass XML parsing.
-        final String DIR = "testcases/xml";
+        final String DIR =
+            FarragoProperties.instance().expandProperties(
+                "${FARRAGO_HOME}/testcases/xml");
         for(String filename: validFiles) {
             File file = new File(DIR, filename);
             

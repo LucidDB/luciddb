@@ -130,7 +130,7 @@ public abstract class EigenbaseTestCase
      */
     public static TupleIter makeTupleIter(final Object [] a)
     {
-        return new TupleIter() {
+        return new AbstractTupleIter() {
             private List data = Arrays.asList(a);
             private Iterator iter = data.iterator();
 

@@ -1,6 +1,6 @@
 -- $Id$
 -- Script which creates every kind of object, with all clauses.
--- Invoked from AspenDdlGeneratorTest.testCustomSchema,
+-- Invoked from FarragoDdlGeneratorTest.testCustomSchema,
 -- as well as as a standalone test.
 --
 -- Types not tested yet:
@@ -123,58 +123,5 @@ end;
 CREATE ORDERING FOR ddlgen.playing_card
 ORDER FULL BY RELATIVE
 WITH SPECIFIC FUNCTION ddlgen.compare_cards_spades_trump;
-
--- aspen-specific objects follow this point
-
-create driver node d1
- identified by '44444444-4444-4444-4444-444444444444'
- offline opening not updated peer link respawn holddown 5
- description 'bar';
-
-create driver node D2 offline opening
- not updated peer link respawn holddown 5
- description 'with a multi-'
- 'line description';
-
-create processing node n2;
-
-create processing node N1
- identified by 'deadbeef-cafe-abad-face-5ca1ed6e0de5'
- listener 'n1.domain.com' port 5410
- ipaddress '192.168.1.1' port 32000
- description 'a node';
-
-create link between n1 and n2 unknown description 'node 1 to node 2';
-
-create or replace foreign data wrapper pulse_w
-    library 'class com.sqlstream.plugin.pulse.PulseControlPlugin'
-    language java;
-
-create or replace server pulse_s
- foreign data wrapper pulse_w
- description 'a foreign server';
-
-create foreign stream pulse
-    (seqno int not null,
-     message varchar(32))
-    server pulse_s
-    options (
-        nrows '10',
-        rowtime_interval '100',
-        default_string_output 'before')
-   description 'a foreign stream';
-
-CREATE STREAM x(x INTEGER, y VARCHAR(10) NOT NULL)
-DESCRIPTION 'a stream';
-
-CREATE VIEW vx
-DESCRIPTION 'a stream view' AS
-SELECT STREAM * FROM x WHERE x > 5;
-
-CREATE STREAM y(x INTEGER, y VARCHAR(10) NOT NULL)
-RESIDING ON n2;
-
-create or replace pump pump1 stopped description 'pump1 is a trivial pump' as
-    insert into ddlgen.y select stream * from ddlgen.vx where x < 4;
 
 -- End ddlgen.sql

@@ -5,7 +5,7 @@ create server csv_server
 foreign data wrapper sys_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
-    url 'jdbc:relique:csv:unitsql/med',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
     schema_name 'TESTDATA');
 
 -- test direct table reference
@@ -53,7 +53,7 @@ create server csv_server_missing_schema
 foreign data wrapper sys_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
-    url 'jdbc:relique:csv:unitsql/med');
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med');
 
 -- should fail due to missing schema name
 create foreign table csv_schema.missing_schema
@@ -76,7 +76,7 @@ create server csv_server_with_extended_option
 foreign data wrapper sys_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
-    url 'jdbc:relique:csv:unitsql/med',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
     extended_options 'TRUE',
     schema_name 'TESTDATA',
     "suppressHeaders" 'true');
@@ -89,7 +89,7 @@ create server csv_server_without_extended_option
 foreign data wrapper sys_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
-    url 'jdbc:relique:csv:unitsql/med',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
     schema_name 'TESTDATA',
     "suppressHeaders" 'true');
 

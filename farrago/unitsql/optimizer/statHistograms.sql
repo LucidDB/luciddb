@@ -12,7 +12,7 @@ set schema 'stat';
 create server stat_server
 foreign data wrapper sys_file_wrapper
 options (
-    directory 'unitsql/optimizer/data',
+    directory '${FARRAGO_HOME}/unitsql/optimizer/data',
     file_extension 'csv',
     with_header 'yes', 
     log_directory 'testlog');

@@ -5,7 +5,7 @@
 > foreign data wrapper sys_jdbc
 > options(
 >     driver_class 'org.relique.jdbc.csv.CsvDriver',
->     url 'jdbc:relique:csv:unitsql/med',
+>     url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
 >     schema_name 'TESTDATA');
 > 
 > -- test direct table reference
@@ -80,7 +80,7 @@ Error: Value required for property URL (state=,code=0)
 > foreign data wrapper sys_jdbc
 > options(
 >     driver_class 'org.relique.jdbc.csv.CsvDriver',
->     url 'jdbc:relique:csv:unitsql/med');
+>     url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med');
 > 
 > -- should fail due to missing schema name
 > create foreign table csv_schema.missing_schema
@@ -106,7 +106,7 @@ Error: Values ('TESTDATA', 'grub') for property SCHEMA_NAME do not match (state=
 > foreign data wrapper sys_jdbc
 > options(
 >     driver_class 'org.relique.jdbc.csv.CsvDriver',
->     url 'jdbc:relique:csv:unitsql/med',
+>     url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
 >     extended_options 'TRUE',
 >     schema_name 'TESTDATA',
 >     "suppressHeaders" 'true');
@@ -124,7 +124,7 @@ Error: Values ('TESTDATA', 'grub') for property SCHEMA_NAME do not match (state=
 > foreign data wrapper sys_jdbc
 > options(
 >     driver_class 'org.relique.jdbc.csv.CsvDriver',
->     url 'jdbc:relique:csv:unitsql/med',
+>     url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
 >     schema_name 'TESTDATA',
 >     "suppressHeaders" 'true');
 > 

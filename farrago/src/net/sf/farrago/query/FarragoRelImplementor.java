@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2008 The Eigenbase Project
+// Copyright (C) 2003-2008 Disruptive Tech
+// Copyright (C) 2005-2008 LucidEra, Inc.
+// Portions Copyright (C) 2003-2008 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,15 +24,16 @@ package net.sf.farrago.query;
 
 import java.util.*;
 import java.util.List;
+import java.util.logging.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.type.runtime.*;
+import net.sf.farrago.trace.FarragoTrace;
 
 import openjava.mop.*;
-
 import openjava.ptree.*;
 
 import org.eigenbase.jmi.JmiObjUtil;
@@ -57,11 +58,16 @@ public class FarragoRelImplementor
     implements FennelRelImplementor,
         FarragoOJRexRelImplementor
 {
+    // trace with fennel plan
+    private static final Logger tracer =
+        FarragoTrace.getPreparedStreamGraphTracer();
+
     //~ Instance fields --------------------------------------------------------
 
     FarragoPreparingStmt preparingStmt;
     OJClass ojAssignableValue;
     OJClass ojBytePointer;
+
     private Set<FemExecutionStreamDef> streamDefSet;
     private String serverMofId;
     private long nextRelParamId;
@@ -75,13 +81,14 @@ public class FarragoRelImplementor
     // accessible from the leaf RelNode in that RelPathEntry list
     private Map<List<RelPathEntry>, RelScope> relPathScopeMap;
 
+    // all FarragoTransforms in the plan,
+    private List<FarragoTransformDef>  transformDefs;
+    // the matching stream defs
+    private List<FemJavaTransformStreamDef> transformStreamDefs;
+    // indexes transformDefs by name of generated FarragoTransform subclass
+    private Map<String, FarragoTransformDef> transformMap;
     private int nextTransformId;
 
-    /**
-     * List of ClassDeclarations representing generated Java code not directly
-     * linked to the plan's root rel node.
-     */
-    private List<ClassDeclaration> transformDeclarations;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -110,7 +117,9 @@ public class FarragoRelImplementor
         nextDynamicParamId =
             preparingStmt.getSqlToRelConverter().getDynamicParamCount() + 1;
         nextTransformId = 1;
-        transformDeclarations = new ArrayList<ClassDeclaration>();
+        transformDefs = new ArrayList<FarragoTransformDef>();
+        transformStreamDefs = new ArrayList<FemJavaTransformStreamDef>();
+        transformMap = new HashMap<String, FarragoTransformDef>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -226,9 +235,9 @@ public class FarragoRelImplementor
 
     public List<RelPathEntry> getRelPathEntry()
     {
-    	return currRelPathList;
+        return currRelPathList;
     }
-    
+
     /**
      * Adds a RelPathEntry corresponding to a new RelNode to the current
      * RelPathEntry list
@@ -280,7 +289,7 @@ public class FarragoRelImplementor
                 + rel + " to a plan");
         }
         removeRelPathEntry();
-        
+
         return streamDef;
     }
 
@@ -308,19 +317,82 @@ public class FarragoRelImplementor
         return streamDefSet;
     }
 
-    public List<ClassDeclaration> getTransforms()
+    public List<FarragoTransformDef> getTransforms()
     {
-        return Collections.unmodifiableList(transformDeclarations);
+        if (tracer.isLoggable(Level.FINEST)) {
+            tracer.finest("transform list: " + printTransforms());
+            tracer.finest("transform map: " + printTransformMap());
+        }
+        finishTransforms();
+        return Collections.unmodifiableList(transformDefs);
     }
 
-    public void addTransform(ClassDeclaration transform)
+    public void addTransform(RelNode rel,  ClassDeclaration decl)
     {
-        transformDeclarations.add(transform);
+        FarragoTransformDef tdef = new FarragoTransformDef(rel, decl);
+        transformDefs.add(tdef);
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer("added transform " + tdef);
+        }
     }
 
     public int allocateTransform()
     {
         return nextTransformId++;
+    }
+
+    public void compileTransforms(String pkgName)
+    {
+        for (FarragoTransformDef t : transformDefs) {
+            t.compile(preparingStmt, pkgName);
+            transformMap.put(t.getClassName(), t);
+        }
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer(
+                "compiled transforms: " +
+                printTransforms() +
+                "\n transform map now: " +
+                printTransformMap());
+        }
+    }
+
+    private void finishTransforms()
+    {
+        for (FemJavaTransformStreamDef sdef : transformStreamDefs) {
+            String streamName = sdef.getName();
+            String className = sdef.getJavaClassName();
+            FarragoTransformDef tdef = transformMap.get(className);
+            assert tdef != null;
+            assert transformDefs.contains(tdef); // TODO rm this
+            tdef.setStreamName(streamName);
+            if (tracer.isLoggable(Level.FINER)) {
+                tracer.finer("set stream name for " + tdef);
+            }
+        }
+        for (FarragoTransformDef t : transformDefs) {
+            t.disconnectFromImplementor();
+        }
+    }
+
+    private String printTransforms()
+    {
+        StringBuilder buf = new StringBuilder("( ");
+        for (FarragoTransformDef def : transformDefs) {
+            buf.append(def).append(" ");
+        }
+        return buf.append(")").toString();
+    }
+
+    private String printTransformMap()
+    {
+        StringBuilder buf = new StringBuilder("{");
+        for (Map.Entry<String, FarragoTransformDef> e : transformMap.entrySet()) {
+            buf.append("\n")
+                .append(e.getKey())
+                .append(" => ")
+                .append(e.getValue());
+        }
+        return buf.append("}").toString();
     }
 
     public FarragoPreparingStmt getPreparingStmt()
@@ -338,6 +410,9 @@ public class FarragoRelImplementor
             rowType = rel.getRowType();
         }
         registerStreamDef(streamDef, rel, rowType);
+        if (streamDef instanceof FemJavaTransformStreamDef) {
+            transformStreamDefs.add((FemJavaTransformStreamDef) streamDef);
+        }
     }
 
     // implement FennelRelImplementor

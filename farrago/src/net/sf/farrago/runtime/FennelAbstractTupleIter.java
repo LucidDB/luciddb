@@ -47,7 +47,7 @@ import org.eigenbase.runtime.*;
  * @version $Id$
  */
 public abstract class FennelAbstractTupleIter
-    implements TupleIter
+    extends AbstractTupleIter
 {
     //~ Static fields/initializers ---------------------------------------------
 

@@ -74,6 +74,16 @@ public class CompoundTupleIter
         }
     }
 
+    public boolean setTimeout(long timeout, boolean asUnderflow)
+    {
+        // try to set a timeout on all underlings, but return false if any refused.
+        boolean result = true;
+        for (int i = 0; i < iterators.length; i++) {
+            result &= iterators[i].setTimeout(timeout, asUnderflow);
+        }
+        return result;
+    }
+
     public Object fetchNext()
     {
         tracer.finer(toString());
@@ -306,7 +316,7 @@ public class CompoundTupleIter
         // different contents. Mimics the TupleIter from a farrago dynamic
         // statement.
         static class BoxTupleIter
-            implements TupleIter
+            extends AbstractTupleIter
         {
             TupleIter base;
             Box box;

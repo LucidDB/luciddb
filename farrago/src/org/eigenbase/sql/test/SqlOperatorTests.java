@@ -1061,13 +1061,13 @@ public abstract class SqlOperatorTests
                         continue;
                     }
                     fcal = cal;
-                    return cal;
+                    return fcal;
                 case Calendar.HOUR_OF_DAY:
                     // Within two minutes of the top of the hour.
                     // Wait 2 minutes to force calendar into next
                     // hour, then get a new instance to return
                     if ((cal.get(Calendar.MINUTE) >= 58)) {
-                        Thread.sleep(2 * 60 * 1000); 
+                        Thread.sleep(2 * 60 * 1000);
                         cal = Calendar.getInstance();
                         continue;
                     }

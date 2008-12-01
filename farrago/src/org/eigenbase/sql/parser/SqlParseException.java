@@ -166,6 +166,20 @@ public class SqlParseException
     {
         return expectedTokenSequences;
     }
+
+    /**
+     * Per {@link java.io.Serializable} API, provides a replacement object
+     * to be written during serialization.
+     *
+     * <p>SqlParseException is serializable but is not available on the client.
+     * This implementation converts this SqlParseException into a
+     * vanilla {@link RuntimeException} with the same message.
+     */
+    private Object writeReplace()
+    {
+        return new RuntimeException(
+            getClass().getName() + ": " + getMessage());
+    }
 }
 
 // End SqlParseException.java

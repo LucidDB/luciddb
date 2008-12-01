@@ -39,8 +39,8 @@ public abstract class FarragoTransformImpl
 {
     //~ Instance fields --------------------------------------------------------
 
-    private FennelTupleWriter tupleWriter;
     private TupleIter tupleIter;
+    private FennelTupleWriter tupleWriter;
     private Object next;
 
     //~ Methods ----------------------------------------------------------------
@@ -49,6 +49,11 @@ public abstract class FarragoTransformImpl
      * Initialze this FarragoTransformImpl. Generated FarragoTransform
      * implementations should pass their generated FennelTupleWriter and
      * TupleIter implementations here.
+     *
+     * A subclass (not an anonymous subclass) may pass <code>null</code> for
+     * <code>tupleWriter</code> or <code>tupleIter</code> iff it has a different way
+     * to read or write its data and iff it overrides {@link #execute} and {@link
+     * #restart} as appropriate.
      *
      * @param tupleWriter FennelTupleWriter that can marshal this transform's
      * output tuple format.
@@ -59,6 +64,17 @@ public abstract class FarragoTransformImpl
         this.tupleWriter = tupleWriter;
         this.tupleIter = tupleIter;
         this.next = null;
+    }
+
+    /** for named subclasses, not for generated transforms */
+    protected TupleIter getTupleIter()
+    {
+        return tupleIter;
+    }
+
+    public void setInputFetchTimeout(long msec)
+    {
+        tupleIter.setTimeout(msec, true);
     }
 
     /**

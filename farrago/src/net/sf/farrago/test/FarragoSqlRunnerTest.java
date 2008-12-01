@@ -48,7 +48,9 @@ public class FarragoSqlRunnerTest
     //~ Instance fields --------------------------------------------------------
 
     private String serverUrl = "jdbc:farrago:";
-    private String testScript = "unitsql/runner/easy.sql";
+    private String testScript =
+        FarragoProperties.instance().expandProperties(
+            "${FARRAGO_HOME}/unitsql/runner/easy.sql");
 
     //~ Constructors -----------------------------------------------------------
 
@@ -153,6 +155,7 @@ public class FarragoSqlRunnerTest
         throws IOException, SQLException
     {
         addDiffMask("\\$Id.*\\$");
+        addDiffMask("jdbc:.*:>");   // allows testing with other drivers/URLs
         String scriptBase =
             testScript.substring(
                 0,

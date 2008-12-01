@@ -30,11 +30,27 @@ JavaExcn::JavaExcn(jthrowable javaExceptionInit)
     : FennelExcn("FennelJavaExcn")
 {
     javaException = javaExceptionInit;
+
+    // Initialize the msg field to the stack trace. It is necessary to
+    // store the stack trace, so that 'what' can hand out a 'const
+    // char *'.
+    JniEnvAutoRef pEnv;
+    jstring s = reinterpret_cast<jstring>(
+        pEnv->CallStaticObjectMethod(
+            JniUtil::classUtil,
+            JniUtil::methUtilGetStackTrace,
+            javaException));
+    msg = JniUtil::toStdString(pEnv, s);
 }
 
 jthrowable JavaExcn::getJavaException() const
 {
     return javaException;
+}
+
+const std::string& JavaExcn::getStackTrace() const
+{
+    return msg;
 }
 
 void JavaExcn::throwSelf()

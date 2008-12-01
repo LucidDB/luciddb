@@ -137,6 +137,7 @@ public class FennelToIteratorConverter
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
+    @SuppressWarnings({"CloneDoesntCallSuperClone"})
     public FennelToIteratorConverter clone()
     {
         FennelToIteratorConverter clone =
@@ -519,13 +520,15 @@ public class FennelToIteratorConverter
      * into a {@link FemExecutionStreamDef}.
      *
      * <p>Derived classes may override this method.
+     *
+     * @param implementor Context for the implementation process
+     *
+     * @return stream definition
      */
     protected FemExecutionStreamDef childToStreamDef(
         FennelRelImplementor implementor)
     {
-        FemExecutionStreamDef rootStream =
-            implementor.visitFennelChild((FennelRel) getChild(), 0);
-        return rootStream;
+        return implementor.visitFennelChild((FennelRel) getChild(), 0);
     }
 
     /**
@@ -559,7 +562,7 @@ public class FennelToIteratorConverter
         return false;
     }
 
-    private void registerChildWithAncestor(
+    protected final void registerChildWithAncestor(
         JavaRelImplementor implementor,
         FemExecutionStreamDef streamDef,
         boolean implicit)

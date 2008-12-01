@@ -3761,6 +3761,11 @@ public class SqlValidatorImpl
         return newExpr;
     }
 
+    public boolean isSystemField(RelDataTypeField field)
+    {
+        return false;
+    }
+
     public void validateColumnListParams(
         SqlFunction function,
         RelDataType [] argTypes,
