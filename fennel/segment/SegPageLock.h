@@ -389,6 +389,12 @@ struct StoredNode
  * The Node template parameter determines the derived class of StoredNode.  It
  * must have a static member MAGIC_NUMBER defining its unique magic number.
  * (To generate these, I run uuidgen on Linux and take the last 16 nybbles.)
+ *
+ *<p>
+ *
+ * For more information, see <a
+ * href="http://pub.eigenbase.org/wiki/FennelPageBasedDataStructureHowto">the
+ * HOWTO</a>.
  */
 template <class Node>
 class SegNodeLock : public SegPageLock

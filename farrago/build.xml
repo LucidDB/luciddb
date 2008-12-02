@@ -1265,7 +1265,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
   </target>
 
   <!-- debug a JUnit test case; called from script junitDebug -->
-  <target name="jswat.junit" depends="all">
+  <target name="jswat.junit" depends="cleanTestLogs">
     <fail message="property junit.class not defined" unless="junit.class"/>
     <farrago.jswatDebug
       classpath="${farrago.sqlline.classpath}"

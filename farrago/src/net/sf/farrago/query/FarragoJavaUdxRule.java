@@ -21,13 +21,8 @@
 */
 package net.sf.farrago.query;
 
-import java.util.*;
-
-import net.sf.farrago.util.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -69,13 +64,23 @@ public class FarragoJavaUdxRule
     public void onMatch(RelOptRuleCall call)
     {
         TableFunctionRel callRel = (TableFunctionRel) call.rels[0];
+        final RelNode[] inputs = callRel.getInputs().clone();
+
+        for (int i = 0; i < inputs.length; i++) {
+            RelNode input = inputs[i];
+            inputs[i] =
+                mergeTraitsAndConvert(
+                    input.getTraits(),
+                    CallingConvention.ITERATOR,
+                    input);
+        }
         FarragoJavaUdxRel javaTableFunctionRel =
             new FarragoJavaUdxRel(
                 callRel.getCluster(),
                 callRel.getCall(),
                 callRel.getRowType(),
                 null,
-                RelOptUtil.clone(callRel.getInputs()));
+                inputs);
         javaTableFunctionRel.setColumnMappings(callRel.getColumnMappings());
         call.transformTo(javaTableFunctionRel);
     }

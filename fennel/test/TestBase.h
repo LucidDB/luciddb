@@ -243,6 +243,7 @@ TestSuite* init_unit_test_suite(int argc,char **argv) \
     std::string paramVal(#UserTestClass); \
     TestBase::configMap.setStringParam(paramKey,paramVal); \
     UserTestClass *pTestObj = new UserTestClass(); \
+    TestBase::configMap.disableTracing(); \
     return pTestObj->releaseTestSuite(); \
 }
 

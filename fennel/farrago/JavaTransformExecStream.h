@@ -1,20 +1,20 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2008 The Eigenbase Project
+// Copyright (C) 2006-2008 Disruptive Tech
+// Copyright (C) 2006-2008 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,26 +34,23 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-struct JavaTransformExecStreamParams : 
+struct JavaTransformExecStreamParams :
     virtual public ExecStreamParams
 {
     /**
      * Mimic SingleOutputExecStreamParams, but may be uninitialized.
      */
     TupleDescriptor outputTupleDesc;
-
-    /**
-     * Mimic SingleOutputExecStreamParams, but may be uninitialized.
-     */
     TupleFormat outputTupleFormat;
 
     /**
-     * Java class name.
+     * Class name of java peer, a FarragoTransform
+     * TODO: Register and look-up the java peer like other peers; cf JavaSinkExecStream.
      */
     std::string javaClassName;
 
     /**
-     * StreamGraphHandle pointer for accessing FarragoRuntimeContext.
+     * StreamGraphHandle, for accessing FarragoRuntimeContext.
      */
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
 
@@ -65,12 +62,10 @@ struct JavaTransformExecStreamParams :
  * JavaTransformExecStream represents a sequence of Java transforms
  * encapsulated within a Fennel ExecStream.
  */
-class JavaTransformExecStream :	virtual public ExecStream
+class JavaTransformExecStream : virtual public ExecStream
 {
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
-
-    std::string farragoTransformClassName;
-
+    std::string javaClassName;
     jobject outputByteBuffer;
 
     /**
@@ -83,17 +78,20 @@ class JavaTransformExecStream :	virtual public ExecStream
      */
     SegPageLock bufferLock;
 
+
   protected:
     std::vector<SharedExecStreamBufAccessor> inAccessors;
     SharedExecStreamBufAccessor pOutAccessor;
 
-    /**
-     * The Java peer, an instance of a net.sf.farrago.runtime.FarragoTransform.
-     */
+    /**  Request production on empty inputs. Called by execute() */
+    void checkEmptyInputs();
+
+    /** The Java peer, an instance of a net.sf.farrago.runtime.FarragoTransform. */
     jobject farragoTransform;
 
   public:
     JavaTransformExecStream();
+    virtual ~JavaTransformExecStream();
 
     // implement ExecStream
     virtual void prepare(JavaTransformExecStreamParams const &params);
@@ -113,6 +111,6 @@ class JavaTransformExecStream :	virtual public ExecStream
 
 FENNEL_END_NAMESPACE
 
-#endif 
+#endif
 
 // End JavaTransformExecStream.h

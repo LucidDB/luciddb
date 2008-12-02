@@ -79,8 +79,18 @@ std::string ConfigMap::getStringParam(
 {
     StringMapConstIter pPair = paramVals.find(paramName);
     if (pPair == paramVals.end()) {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using default value of '"
+            << defaultVal << "'");
         return defaultVal;
     } else {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using specified value of '"
+            << pPair->second << "'");
         return pPair->second;
     }
 }
@@ -91,8 +101,18 @@ int ConfigMap::getIntParam(
 {
     StringMapConstIter pPair = paramVals.find(paramName);
     if (pPair == paramVals.end()) {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using default value of '"
+            << defaultVal << "'");
         return defaultVal;
     } else {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using specified value of '"
+            << pPair->second << "'");
         return boost::lexical_cast<int>(pPair->second);
     }
 }
@@ -103,9 +123,19 @@ bool ConfigMap::getBoolParam(
 {
     StringMapConstIter pPair = paramVals.find(paramName);
     if (pPair == paramVals.end()) {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using default value of '"
+            << defaultVal << "'");
         return defaultVal;
     } else {
-        /* Support true/false? boost only likes 1/0 */
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using specified value of '"
+            << pPair->second << "'");
+        // boost only likes 1/0, so preprocess true/false
         if (strcasecmp(pPair->second.c_str(), "true") == 0) {
             return true;
         }
@@ -116,16 +146,27 @@ bool ConfigMap::getBoolParam(
     }
 }
 
-// REVIEW:  maybe use a template instead?
 long ConfigMap::getLongParam(
     std::string paramName,
     long defaultVal) const
 {
     StringMapConstIter pPair = paramVals.find(paramName);
     if (pPair == paramVals.end()) {
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using default value of '"
+            << defaultVal << "'");
         return defaultVal;
     } else {
-        // NOTE:  see above
+        FENNEL_TRACE(
+            TRACE_CONFIG,
+            "parameter " << paramName
+            << " using specified value of '"
+            << pPair->second << "'");
+        // REVIEW jvs 25-Nov-2008:  There used to be a note here,
+        // but it didn't actually explain why this doesn't use
+        // boost::lexical_cast; probably an old Boost bug.
         return atol(pPair->second.c_str());
     }
 }

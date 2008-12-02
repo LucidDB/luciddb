@@ -200,7 +200,20 @@ public abstract class FarragoAbstractParserImpl
     {
         return new DdlDropStmt(droppedElement, restrict);
     }
-    
+
+    /**
+     * Creates new DDL Statement for CREATE.
+     * @param createdElement catalog element to create
+     * @param replaceOptions attributes of CREATE OR REPLACE
+     * @return DDL Statement for CREATE
+     */
+    public DdlCreateStmt newDdlCreateStmt(
+        CwmModelElement createdElement,
+        DdlReplaceOptions replaceOptions)
+    {
+        return new DdlCreateStmt(createdElement, replaceOptions);
+    }
+
     /**
      * Creates new DDL Statement for DROP LABEL.
      * @param droppedElement label element to drop

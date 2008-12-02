@@ -58,7 +58,7 @@ class TupleTest : virtual public TestBase, public TraceSource
     void testStandardTypes(TupleFormat,bool nullable);
     void testZeroByteTuple();
     void testDebugAccess();
-    void testLoadStoreLcsDatum();
+    void testLoadStoreUnaligned();
     void loadStore8ByteInts(int64_t initialValue, uint8_t nextByte);
     void loadAndStore8ByteInt(int64_t intVal);
     void loadStore2ByteLenData(uint dataLen);
@@ -82,7 +82,7 @@ public:
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNotNull);
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNetworkNullable);
         FENNEL_UNIT_TEST_CASE(TupleTest,testZeroByteTuple);
-        FENNEL_UNIT_TEST_CASE(TupleTest,testLoadStoreLcsDatum);
+        FENNEL_UNIT_TEST_CASE(TupleTest,testLoadStoreUnaligned);
 
         // This one should fail when TupleAccessor.cpp's DEBUG_TUPLE_ACCESS
         // is set to 1.
@@ -475,7 +475,7 @@ void TupleTest::testZeroByteTuple()
         tupleAccessor.getMaxByteCount());
 }
 
-void TupleTest::testLoadStoreLcsDatum()
+void TupleTest::testLoadStoreUnaligned()
 {
     // test compression of 8-byte integers
     loadStore8ByteInts(0, 0xff);

@@ -42,7 +42,6 @@ import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
-
 /**
  * Implementation of {@link FarragoRepos} using a MDR repository.
  *
@@ -79,7 +78,7 @@ public abstract class FarragoReposImpl
 
     private JmiModelView modelView;
 
-    private Map<String, FarragoSequenceAccessor> sequenceMap;
+    private final Map<String, FarragoSequenceAccessor> sequenceMap;
 
     private final ReentrantReadWriteLock sxLock = new ReentrantReadWriteLock();
 
@@ -91,6 +90,8 @@ public abstract class FarragoReposImpl
 
     /**
      * Opens a Farrago repository.
+     *
+     * @param owner Allocation owner
      */
     public FarragoReposImpl(
         FarragoAllocationOwner owner)
@@ -158,71 +159,50 @@ public abstract class FarragoReposImpl
         return "Uml" + className;
     }
 
-    /**
-     * @return model graph for repository metamodel
-     */
+    // implement FarragoRepos
     public JmiModelGraph getModelGraph()
     {
         return modelGraph;
     }
 
-    /**
-     * @return model view for repository metamodel
-     */
+    // implement FarragoRepos
     public JmiModelView getModelView()
     {
         return modelView;
     }
 
-    /**
-     * @return CwmCatalog representing this FarragoRepos
-     */
+    // implement FarragoRepos
     public CwmCatalog getSelfAsCatalog()
     {
         // TODO:  variable
         return getCatalog(FarragoCatalogInit.LOCALDB_CATALOG_NAME);
     }
 
-    /**
-     * @return maximum identifier length in characters
-     */
+    // implement FarragoRepos
     public int getIdentifierPrecision()
     {
         return maxNameLength;
     }
 
-    /**
-     * @return the name of the default Charset for this repository
-     */
+    // implement FarragoRepos
     public String getDefaultCharsetName()
     {
         return SaffronProperties.instance().defaultCharset.get();
     }
 
-    /**
-     * @return the name of the default Collation for this repository
-     */
+    // implement FarragoRepos
     public String getDefaultCollationName()
     {
         return SaffronProperties.instance().defaultCollation.get();
     }
 
-    /**
-     * @return true iff Fennel support should be used
-     */
+    // implement FarragoRepos
     public boolean isFennelEnabled()
     {
         return isFennelEnabled;
     }
 
-    /**
-     * Formats the fully-qualified localized name for an existing object,
-     * including its type.
-     *
-     * @param modelElement catalog object
-     *
-     * @return localized name
-     */
+    // implement FarragoRepos
     public String getLocalizedObjectName(
         CwmModelElement modelElement)
     {
@@ -231,29 +211,14 @@ public abstract class FarragoReposImpl
             modelElement.refClass());
     }
 
-    /**
-     * Formats the localized name for an unqualified typeless object.
-     *
-     * @param name object name
-     *
-     * @return localized name
-     */
+    // implement FarragoRepos
     public String getLocalizedObjectName(
         String name)
     {
         return getLocalizedObjectName(null, name, null);
     }
 
-    /**
-     * Formats the fully-qualified localized name for an existing object.
-     *
-     * @param modelElement catalog object
-     * @param refClass if non-null, use this as the type of the object, e.g.
-     * "table SCHEMA.TABLE"; if null, don't include type (e.g. just
-     * "SCHEMA.TABLE")
-     *
-     * @return localized name
-     */
+    // implement FarragoRepos
     public String getLocalizedObjectName(
         CwmModelElement modelElement,
         RefClass refClass)
@@ -269,18 +234,7 @@ public abstract class FarragoReposImpl
             refClass);
     }
 
-    /**
-     * Formats the fully-qualified localized name for an object that may not
-     * exist yet.
-     *
-     * @param qualifierName name of containing object, or null for unqualified
-     * name
-     * @param objectName name of object
-     * @param refClass if non-null, the object type to use in the name; if null,
-     * no type is prepended
-     *
-     * @return localized name
-     */
+    // implement FarragoRepos
     public String getLocalizedObjectName(
         String qualifierName,
         String objectName,
@@ -304,13 +258,7 @@ public abstract class FarragoReposImpl
         return sb.toString();
     }
 
-    /**
-     * Looks up the localized name for a class of metadata.
-     *
-     * @param refClass class of metadata, e.g. CwmTableClass
-     *
-     * @return localized name, e.g. "table"
-     */
+    // implement FarragoRepos
     public String getLocalizedClassName(RefClass refClass)
     {
         String umlKey = getLocalizedClassKey(refClass);
@@ -325,13 +273,7 @@ public abstract class FarragoReposImpl
         }
     }
 
-    /**
-     * Looks up a catalog by name.
-     *
-     * @param catalogName name of catalog to find
-     *
-     * @return catalog definition, or null if not found
-     */
+    // implement FarragoRepos
     public CwmCatalog getCatalog(String catalogName)
     {
         Map<String, Pair<RefClass, String>> catalogCache = 
@@ -571,10 +513,6 @@ public abstract class FarragoReposImpl
         }
     }
 
-    /* (non-Javadoc)
-     * @see
-     * net.sf.farrago.catalog.FarragoRepos#expandProperties(java.lang.String)
-     */
     public String expandProperties(String value)
     {
         return FarragoProperties.instance().expandProperties(value);

@@ -97,7 +97,8 @@ public class TableFunctionReturnTypeInference
             // Translate to actual argument type.
             RelDataType cursorType = opBinding.getCursorOperand(paramOrdinal);
 
-            // And expand (function output is always nullable).
+            // And expand. Function output is always nullable... except system
+            // fields.
             int iInputColumn = -1;
             for (RelDataTypeField cursorField : cursorType.getFieldList()) {
                 ++iInputColumn;
@@ -111,10 +112,22 @@ public class TableFunctionReturnTypeInference
                 columnMapping.isDerived = true;
                 columnMappings.add(columnMapping);
 
+                // As a special case, system fields are implicitly NOT NULL.
+                // A badly behaved UDX can still provide NULL values, so the
+                // system must ensure that each generated system field has a
+                // reasonable value.
+                boolean nullable = true;
+                if (opBinding instanceof SqlCallBinding) {
+                    SqlCallBinding sqlCallBinding = (SqlCallBinding) opBinding;
+                    if (sqlCallBinding.getValidator().isSystemField(
+                        cursorField)) {
+                        nullable = false;
+                    }
+                }
                 RelDataType nullableType =
                     opBinding.getTypeFactory().createTypeWithNullability(
                         cursorField.getType(),
-                        true);
+                        nullable);
                 expandedOutputTypes.add(nullableType);
                 expandedFieldNames.add(cursorField.getName());
             }

@@ -43,39 +43,39 @@ function usage
     echo "     e.g. ./junitSingle unitsql/jdbc/metadata.sql junit.client"
     echo
     echo "Options:"
+    echo "  -n no-op "
+    echo "  -e echo command before executing it"
+    echo "  -g debug test with jswat"
+    echo "  -v pass -v flag to ant"
     echo "  --repeat  Run the test repeatedly until it fails"
-    echo "  --help    Print this help"
     echo "  --[no]build Whether to compile first. Default is to not compile."
+    echo "  --help    Print this help"
 }
 
 # Parse flags
 once=true
-build=
-help=
+build=false
+help=false
+nope=false
+echoCmd=false
+swat=false
+ANT=ant
+
 while [ $# -gt 0 ]; do
     case "$1" in
-    -repeat|--repeat)
-        once=false
-        shift
-        ;;
-    --build)
-        build=true
-        shift
-        ;;
-    --nobuild)
-        build=
-        shift
-        ;;
-    --help)
-        help=true
-        shift
-        ;;
-    *)
-        break
+    -n) nope=true; shift ;;
+    -e) echoCmd=true; shift ;;
+    -g) swat=true; shift ;;
+    -v) ANT="ant -v"; shift ;;
+    -repeat|--repeat) once=false; shift ;;
+    --build) build=true; shift ;;
+    --nobuild) build=false; shift ;;
+    --help) help=true; shift ;;
+    *) break
     esac
 done
 
-if [ "$help" ]; then
+if $help; then
     usage
     exit 0
 fi
@@ -83,26 +83,37 @@ fi
 if [ ! "$1" ]; then
     echo "Error: specify a .sql or .java filename or a test class name";
     usage
-    exit 1;
+    exit 1
 fi
 test=$1
-
-if [ ! "$2" ]; then
-    if [ "$build" ]; then
-        target="all junit"
-    else
-        target=junit
-    fi
-else
-    target="$2"
-fi
+utarget=$2
 
 if [ ! "$EIGEN_TEST_DEFAULT_PACKAGE" ]; then
     EIGEN_TEST_DEFAULT_PACKAGE=net.sf.farrago.test
 fi
 
+function chooseTarget
+{
+  if [ "$utarget" ]; then
+    target="$utarget"
+  else
+    if $swat; then
+      target=jswat.junit
+    else
+      target=junit
+    fi
+    if $build; then
+      target="all $target"
+    else
+      :
+    fi
+  fi
+}
+
 function chooseCommand
 {
+chooseTarget
+
     if [ -e "$test" -a ${test:0-5} == ".java" ]; then
         # Interpret the argument as the name of a java source file.
         # Convert it to the name of a java class.
@@ -120,13 +131,14 @@ function chooseCommand
     }
   }
 }' "$test")
-        command="ant -Djunit.class=$junit_class -Dfileset.unitsql='' $target"
+        command="$ANT -Djunit.class=$junit_class -Dfileset.unitsql='' $target"
     elif [ -e "$test" ]; then
-        # Interpret the argument as the name of an .sql script to run
+        # Interpret the argument as the name of a script to run
 
         # Assume unitsql tests
         junit_class=net.sf.farrago.test.FarragoSqlTest
         fileset=fileset.unitsql
+        nullfilesets="-Dfileset.regressionsql='' -Dfileset.concurrentsql='' -Dfileset.unitlurql=''"
 
         # if we're running regressionsql tests, use the right class and ant target
         if [ ${test/*regressionsql*/x} == "x" ]; then
@@ -139,6 +151,7 @@ function chooseCommand
             target=regressionWithoutBuild
             junit_class=net.sf.farrago.test.regression.FarragoSqlRegressionTest
             fileset=fileset.regressionsql
+            nullfilesets="-Dfileset.unitsql='' -Dfileset.concurrentsql='' -Dfileset.unitlurql=''"
         elif [ ${test:0-6} == ".mtsql" ]; then
             if [ "$target" == "jswat.junit" ]; then
                 # REVIEW: it needs a jswat.junit.regressionsql target that sets
@@ -149,22 +162,32 @@ function chooseCommand
             target=regressionWithoutBuild
             junit_class=net.sf.farrago.test.concurrent.FarragoTestConcurrentTest
             fileset=fileset.concurrentsql
+            nullfilesets="-Dfileset.unitsql='' -Dfileset.regressionsql='' -Dfileset.unitlurql=''"
         elif [ ${test:0-6} == ".lurql" ]; then
             junit_class=com.lucidera.lurql.test.LurqlQueryTest
             fileset=fileset.unitlurql
+            nullfilesets="-Dfileset.unitsql='' -Dfileset.regressionsql='' -Dfileset.concurrentsql=''"
         fi
 
-        command="ant -Djunit.class=$junit_class -D$fileset=$test $target"
+        command="$ANT -Djunit.class=$junit_class $nullfilesets -D$fileset=$test $target"
     else
         # Interpret the argument as the name of a test case
         if [ -z `echo $test | grep '\.'` ]; then
             test=$EIGEN_TEST_DEFAULT_PACKAGE.$test
         fi
-        command="ant -Djunit.class=$test -Dfileset.unitsql='' -Dfileset.unitlurql='' $target"
+        nullfilesets="-Dfileset.unitsql='' -Dfileset.regressionsql='' -Dfileset.concurrentsql='' -Dfileset.unitlurql=''"
+        command="$ANT -Djunit.class=$test $nullfilesets $target"
     fi
 }
 
 chooseCommand
+if $echoCmd; then
+  echo $command
+fi
+if $nope; then
+  exit 0;
+fi
+
 if $once; then
     $command;
 else
@@ -172,13 +195,13 @@ else
     echo ::: Execution $count started at `date`
 
     while $command; do
-        let count++;
-        if [ "$target" = "all junit" ]; then
-            # save time by only building the first cycle
-            target=junit
-            chooseCommand
+        # no sense building more than once
+        if $build; then
+          build=false
+          chooseCommand            
         fi
-        echo
+
+        let count++;
         echo ::: Execution $count started at `date`
     done
 
