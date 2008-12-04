@@ -118,6 +118,11 @@ FileDevice::FileDevice(
     }
 
     if (mode.direct) {
+        // REVIEW jvs 4-Dec-2008: Comment below used to be true, but probably
+        // only on 2.4 kernels.  2.6 kernels seem to be happy with
+        // O_DIRECT+pwrite.
+        // (http://lkml.indiana.edu/hypermail/linux/kernel/0511.2/1758.html).
+        // So we can probably clean this up now.
         access |= O_SYNC;
         // NOTE:  We don't actually set O_DIRECT here, because on Linux
         // that results in EINVAL errors from pwrite.  Instead,
