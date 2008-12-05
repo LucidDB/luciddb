@@ -27,7 +27,6 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
@@ -351,21 +350,11 @@ public class FarragoDbStmtContext
             }
         }
         
-        // If a metamodel dump has been requested, shutdown the database
-        // before dumping the metamodel.
-        if (session.metamodelDumpRequested()) {
+        if (session.shutdownRequested()) {
             session.closeAllocation();
             FarragoDatabase db =((FarragoDbSession) session).getDatabase();
             db.shutdown();
-            try {
-                FarragoReposUtil.dumpRepository(
-                    new FarragoModelLoader(),
-                    true);
-            } catch (Exception ex) {
-                throw FarragoResource.instance().CatalogDumpFailed.ex(ex);
-            } finally {
-                session.setMetamodelDump(false);
-            }
+            session.setShutdownRequest(false);
         }
     }
 

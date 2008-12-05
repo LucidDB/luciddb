@@ -53,6 +53,10 @@ import org.netbeans.api.xmi.*;
  */
 public abstract class FarragoReposUtil
 {
+    public static final String FARRAGO_CATALOG_EXTENT = "FarragoCatalog";
+    public static final String FARRAGO_METAMODEL_EXTENT = "FarragoMetamodel";
+    public static final String FARRAGO_PACKAGE_NAME = "Farrago";
+    
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -79,7 +83,7 @@ public abstract class FarragoReposUtil
             xmiWriter.write(
                 outStream,
                 "SUBMODEL",
-                mdrRepos.getExtent("FarragoMetamodel"),
+                mdrRepos.getExtent(FARRAGO_METAMODEL_EXTENT),
                 "1.2");
             if (!refProvider.subPackageFound) {
                 throw new NoSuchElementException(subPackageName);
@@ -94,14 +98,16 @@ public abstract class FarragoReposUtil
         URL inputUrl)
         throws Exception
     {
-        if (((EnkiMDRepository)mdrRepos).isExtentBuiltIn("FarragoMetamodel")) {
+        if (((EnkiMDRepository)mdrRepos).isExtentBuiltIn(
+                FARRAGO_METAMODEL_EXTENT))
+        {
             return;
         }
         
         XMIReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
         ImportRefResolver refResolver =
             new ImportRefResolver(
-                (Namespace) mdrRepos.getExtent("FarragoCatalog")
+                (Namespace) mdrRepos.getExtent(FARRAGO_CATALOG_EXTENT)
                                     .refMetaObject());
         xmiReader.getConfiguration().setReferenceResolver(refResolver);
         boolean rollback = false;
@@ -115,7 +121,7 @@ public abstract class FarragoReposUtil
             xmiReader.read(
                 filter,
                 inputUrl.toString(),
-                mdrRepos.getExtent("FarragoMetamodel"));
+                mdrRepos.getExtent(FARRAGO_METAMODEL_EXTENT));
             
             if (filter.getNumInvalidCharsFiltered() > 0) {
                 FarragoTrace.getReposTracer().warning(
@@ -159,17 +165,24 @@ public abstract class FarragoReposUtil
         boolean success = false;
         try {
             FarragoPackage farragoPackage =
-                modelLoader.loadModel("FarragoCatalog", false);
-            exportExtent(
-                modelLoader.getMdrRepos(),
-                metamodelDump,
-                "FarragoMetamodel");
-            if (!metamodelDumpOnly) {
+                modelLoader.loadModel(FARRAGO_CATALOG_EXTENT, false);
+            
+            modelLoader.getMdrRepos().beginTrans(false);
+            try {
                 exportExtent(
                     modelLoader.getMdrRepos(),
-                    catalogDump,
-                    "FarragoCatalog");
+                    metamodelDump,
+                    FARRAGO_METAMODEL_EXTENT);
+                if (!metamodelDumpOnly) {
+                    exportExtent(
+                        modelLoader.getMdrRepos(),
+                        catalogDump,
+                        FARRAGO_CATALOG_EXTENT);
+                }
+            } finally {
+                modelLoader.getMdrRepos().endTrans();
             }
+            
             deleteStorage(modelLoader, farragoPackage);
             success = true;
         } finally {
@@ -229,7 +242,7 @@ public abstract class FarragoReposUtil
             importExtent(
                 modelLoader.getMdrRepos(),
                 metamodelDump,
-                "FarragoMetamodel",
+                FARRAGO_METAMODEL_EXTENT,
                 null,
                 null,
                 false);
@@ -238,9 +251,9 @@ public abstract class FarragoReposUtil
             importExtent(
                 modelLoader.getMdrRepos(),
                 catalogDump,
-                "FarragoCatalog",
-                "FarragoMetamodel",
-                "Farrago",
+                FARRAGO_CATALOG_EXTENT,
+                FARRAGO_METAMODEL_EXTENT,
+                FARRAGO_PACKAGE_NAME,
                 isCompressed);
 
             metamodelDump.delete();
@@ -284,14 +297,10 @@ public abstract class FarragoReposUtil
         FarragoPackage farragoPackage)
         throws Exception
     {
-        try {
-            EnkiMDRepository repos = 
-                (EnkiMDRepository)modelLoader.getMdrRepos();
-            
-            repos.dropExtentStorage(farragoPackage);
-        } finally {
-            modelLoader.close();
-        }
+        EnkiMDRepository repos = 
+            (EnkiMDRepository)modelLoader.getMdrRepos();
+        
+        repos.dropExtentStorage(farragoPackage);
     }
 
     private static void importExtent(
@@ -364,7 +373,7 @@ public abstract class FarragoReposUtil
         String subPackageName = args[2];
         FarragoModelLoader modelLoader = new FarragoModelLoader();
         try {
-            modelLoader.loadModel("FarragoCatalog", false);
+            modelLoader.loadModel(FARRAGO_CATALOG_EXTENT, false);
             exportSubModel(
                 modelLoader.getMdrRepos(),
                 file,
@@ -381,7 +390,7 @@ public abstract class FarragoReposUtil
         File file = new File(args[1]);
         FarragoModelLoader modelLoader = new FarragoModelLoader();
         try {
-            modelLoader.loadModel("FarragoCatalog", false);
+            modelLoader.loadModel(FARRAGO_CATALOG_EXTENT, false);
             importSubModel(
                 modelLoader.getMdrRepos(),
                 file.toURL());

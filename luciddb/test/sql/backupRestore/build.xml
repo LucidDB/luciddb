@@ -30,6 +30,7 @@
 
   <!-- override Farrago -->
   <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.catalog.schema" value="luciddb" />
   <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
   <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
   <import file="${open.dir}/farrago/buildMacros.xml" />

@@ -38,6 +38,8 @@ import net.sf.farrago.resource.*;
 
 public abstract class FarragoBackupRestoreUtil
 {
+    private static final String CATALOG_BACKUP_FILENAME = "FarragoCatalogDump";
+
     /**
      * Validates the archive directory, expanding property names within the
      * name, as needed.
@@ -108,8 +110,8 @@ public abstract class FarragoBackupRestoreUtil
         checkBackupFile(
             archiveDirectory,
             isCompressed ?
-                "FarragoCatalogDump.xmi.gz" :
-                "FarragoCatalogDump.xmi",
+                CATALOG_BACKUP_FILENAME + ".gz" :
+                CATALOG_BACKUP_FILENAME,
             isBackup);
         checkBackupFile(
             archiveDirectory,
@@ -159,6 +161,23 @@ public abstract class FarragoBackupRestoreUtil
             throw FarragoResource.instance().InvalidCompressionMode.ex(
                 compressionMode);
         }
+    }
+    
+    /**
+     * Returns the catalog backup file name relative to the given archive
+     * directory.
+     * 
+     * @param archiveDir archive directory
+     * @param isCompressed whether compression is enabled
+     */
+    public static File getCatalogBackupFile(
+        String archiveDir, boolean isCompressed)
+    {
+        String dumpName = CATALOG_BACKUP_FILENAME;
+        if (isCompressed) {
+            dumpName += ".gz";
+        }
+        return new File(archiveDir, dumpName);
     }
 }
 
