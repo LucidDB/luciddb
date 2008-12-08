@@ -25,6 +25,10 @@ package net.sf.farrago.syslib;
 import java.io.*;
 
 import java.util.*;
+import java.util.logging.*;
+import java.util.zip.*;
+
+import org.eigenbase.trace.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
@@ -32,6 +36,7 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
 
 import net.sf.farrago.resource.*;
 
@@ -47,6 +52,8 @@ import net.sf.farrago.resource.*;
 
 public class FarragoSystemBackup
 {
+    private static final Logger tracer = FarragoTrace.getSyslibTracer();
+
     //~ Instance fields --------------------------------------------------------
     
     private String archiveDirectory;
@@ -64,6 +71,8 @@ public class FarragoSystemBackup
     Long lowerBoundCsn = null;
     Long upperBoundCsn = null;
     Long dbSize = null;
+
+    private EigenbaseTimingTracer timingTracer;
 
     //~ Constructors -----------------------------------------------------------
  
@@ -89,6 +98,8 @@ public class FarragoSystemBackup
     public void backupDatabase()
         throws Exception
     {    
+        timingTracer = new EigenbaseTimingTracer(tracer, "backup: begin");
+        
         // Validate the input parameters
         archiveDirectory = 
             FarragoBackupRestoreUtil.validateArchiveDirectory(
@@ -124,11 +135,13 @@ public class FarragoSystemBackup
                 archiveDirectory,
                 isCompressed,
                 true);
-                            
+
+            timingTracer.traceTime("backup: checkBackupFiles");
+            
             // Execute the first part of the backup
             abandonBackup = true;
             initiateBackup(execHandle);
-            
+
             // Backup data pages
             boolean backupSucceeded = false;
             abandonBackup = false;
@@ -144,6 +157,8 @@ public class FarragoSystemBackup
                 db.cleanupBackupData(backupSucceeded, true);
             }
         
+            timingTracer.traceTime("backup: femCmdCompleteBackup");
+            
             writeBackupPropertyFile(
                 archiveDirectory,
                 backupType,
@@ -165,6 +180,8 @@ public class FarragoSystemBackup
             }
             db.setBackupFlag(false);
         }
+        
+        timingTracer.traceTime("backup: finished");
     }
     
     /**
@@ -231,20 +248,32 @@ public class FarragoSystemBackup
                 upperBoundCsn,
                 startTime);
     
+            timingTracer.traceTime("backup: addPendingSystemBackup");
+            
             // Export the catalog
-            String dumpName = "FarragoCatalogDump.xmi";
-            if (isCompressed) {
-                dumpName += ".gz";
+            File export = 
+                FarragoBackupRestoreUtil.getCatalogBackupFile(
+                    archiveDirectory, isCompressed);
+            OutputStream exportStream = new FileOutputStream(export);
+            try {
+                if (isCompressed) {
+                    exportStream = new GZIPOutputStream(exportStream);
+                }
+                
+                repos.getEnkiMdrRepos().backupExtent(
+                    FarragoReposUtil.FARRAGO_CATALOG_EXTENT, 
+                    exportStream);
+            } finally {
+                exportStream.close();
             }
-            File export = new File(archiveDirectory, dumpName);
-            FarragoManagementUDR.exportCatalog(
-                export.getAbsolutePath(),
-                isCompressed);
+            
             reposTxnContext.commit();
         } finally {                
             reposTxnContext.rollback();
             // Unlock the catalog
             reposTxnContext.unlockAfterTxn();
+            
+            timingTracer.traceTime("backup: backupExtent");
         }
     }
 

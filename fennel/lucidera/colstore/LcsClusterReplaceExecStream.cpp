@@ -33,6 +33,10 @@ void LcsClusterReplaceExecStream::prepare(
 {
     LcsClusterAppendExecStream::prepare(params);
     newClusterRootParamId = params.rootPageIdParamId;
+
+    // Save the original root pageId at prepare time because the treeDescriptor
+    // will be reset at open time with the new cluster's rootPageId
+    origRootPageId = treeDescriptor.rootPageId;
 }
 
 void LcsClusterReplaceExecStream::initTupleLoadParams(
@@ -59,12 +63,6 @@ void LcsClusterReplaceExecStream::initTupleLoadParams(
     }
     pOrigClusterReader->initColumnReaders(numColumns, proj);
 
-    // Make sure the underlying segment supports snapshots
-    pSnapshotSegment =
-        SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
-            treeDescriptor.segmentAccessor.pSegment);
-    assert(pSnapshotSegment != NULL);
-
     // Setup the objects for accessing just the cluster columns by excluding
     // the rid column
     std::copy(inputProj.begin() + 1, inputProj.end(), proj.begin());
@@ -79,6 +77,13 @@ void LcsClusterReplaceExecStream::initTupleLoadParams(
     }
 
     origClusterTupleData.computeAndAllocate(clusterColsTupleDesc);
+
+    // setup one tuple descriptor per cluster column
+    colTupleDesc.reset(new TupleDescriptor[numColumns]);
+    for (int i = 0; i < numColumns; i++) {
+        // +1 to skip over the rid column
+        colTupleDesc[i].push_back(tableColsTupleDesc[inputProj[i + 1]]);
+    }
 }
 
 void LcsClusterReplaceExecStream::getResourceRequirements(
@@ -100,7 +105,6 @@ void LcsClusterReplaceExecStream::getResourceRequirements(
 void LcsClusterReplaceExecStream::open(bool restart)
 {
     // Create a new rid to pageId btree map for this cluster
-    origRootPageId = treeDescriptor.rootPageId;
     treeDescriptor.rootPageId = NULL_PAGE_ID;
     BTreeBuilder builder(
         treeDescriptor,
@@ -115,12 +119,22 @@ void LcsClusterReplaceExecStream::open(bool restart)
     // Determine how many rows are in the original cluster
     origNumRows = pOrigClusterReader->getNumRows();
     
-    // Save the root pageId in a dynamic parameter so it can be read
-    // downstream, if a parameter is specified
-    if (!restart && opaqueToInt(newClusterRootParamId) > 0) {
-        pDynamicParamManager->createParam(
-            newClusterRootParamId,
-            pInAccessor->getTupleDesc()[0]);
+    if (!restart) {
+       
+        // Save the root pageId in a dynamic parameter so it can be read
+        // downstream, if a parameter is specified
+        if (opaqueToInt(newClusterRootParamId) > 0) {
+            pDynamicParamManager->createParam(
+                newClusterRootParamId,
+                pInAccessor->getTupleDesc()[0]);
+        }
+
+        // Retrieve the snapshot segment.  This needs to be done at open time
+        // because the segment changes across transaction boundaries.
+        pSnapshotSegment =
+            SegmentFactory::getSnapshotSegment(
+                treeDescriptor.segmentAccessor.pSegment);
+        assert(pSnapshotSegment != NULL);
     }
 
     if (opaqueToInt(newClusterRootParamId) > 0) {

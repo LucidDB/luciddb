@@ -206,6 +206,11 @@ void DynamicDelegatingSegment::setDelegatingSegment(
     delegateSegment = delegatingSegment;
 }
 
+SharedSegment DynamicDelegatingSegment::getDelegateSegment()
+{
+    return delegateSegment.lock();
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End DynamicDelegatingSegment.cpp

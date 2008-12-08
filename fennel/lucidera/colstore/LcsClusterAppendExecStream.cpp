@@ -37,12 +37,6 @@ void LcsClusterAppendExecStream::prepare(
     tableColsTupleDesc = pInAccessor->getTupleDesc();
     initTupleLoadParams(params.inputProj);
 
-    // setup one tuple descriptor per cluster column
-    colTupleDesc.reset(new TupleDescriptor[numColumns]);
-    for (int i = 0; i < numColumns; i++) {
-        colTupleDesc[i].push_back(tableColsTupleDesc[params.inputProj[i]]);
-    }
-
     // setup descriptors, accessors and data to access only the columns
     // for this cluster, based on the input projection
 
@@ -79,6 +73,12 @@ void LcsClusterAppendExecStream::initTupleLoadParams(
     numColumns = inputProj.size();
     clusterColsTupleDesc.projectFrom(tableColsTupleDesc, inputProj);
     clusterColsTupleData.compute(clusterColsTupleDesc);
+
+    // setup one tuple descriptor per cluster column
+    colTupleDesc.reset(new TupleDescriptor[numColumns]);
+    for (int i = 0; i < numColumns; i++) {
+        colTupleDesc[i].push_back(tableColsTupleDesc[inputProj[i]]);
+    }
 }
 
 void LcsClusterAppendExecStream::getResourceRequirements(

@@ -26,6 +26,10 @@ import java.io.*;
 import java.nio.channels.*;
 
 import java.util.*;
+import java.util.logging.*;
+import java.util.zip.*;
+
+import org.eigenbase.trace.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
@@ -33,6 +37,7 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
 
 import net.sf.farrago.resource.*;
 
@@ -45,6 +50,8 @@ import net.sf.farrago.resource.*;
  */
 public class FarragoSystemRestore
 {
+    private static final Logger tracer = FarragoTrace.getSyslibTracer();
+    
     //~ Instance fields --------------------------------------------------------
     
     private String archiveDirectory;
@@ -55,6 +62,8 @@ public class FarragoSystemRestore
     Long upperBoundCsn = null;
     Boolean isCompressed = null;
 
+    private EigenbaseTimingTracer timingTracer;
+    
     //~ Constructors -----------------------------------------------------------
 
     public FarragoSystemRestore(String archiveDirectory)
@@ -70,6 +79,8 @@ public class FarragoSystemRestore
     public void restoreDatabase()
         throws Exception
     {
+        timingTracer = new EigenbaseTimingTracer(tracer, "restore: begin");
+        
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
         FarragoReposTxnContext reposTxnContext = 
@@ -100,6 +111,8 @@ public class FarragoSystemRestore
                 isCompressed,
                 false);
         
+            timingTracer.traceTime("restore: checkBackupFiles");
+            
             // Get information on the backups that have completed
             List<FarragoCatalogUtil.BackupData> backupData;
             try {
@@ -120,6 +133,8 @@ public class FarragoSystemRestore
             FennelDbHandle fennelDbHandle = db.getFennelDbHandle();
             FarragoRepos systemRepos = db.getSystemRepos();
         
+            timingTracer.traceTime("restore: getCurrentBackupData");
+            
             // Restore the data pages first so we can also verify if the backup
             // file is the correct one.
             FemCmdRestoreFromBackup cmd =
@@ -146,14 +161,38 @@ public class FarragoSystemRestore
             cmd.setLowerBoundCsn(lowerBoundCsn);
             cmd.setUpperBoundCsn(upperBoundCsn);
             fennelDbHandle.executeCmd(cmd, execHandle);
-        
-            // Copy the catalog dump from the backup to the catalog directory
-            // and then set the flag needed to request a database shutdown
-            // and metamodel dump.  On the next database restart, the
-            // repository will be reloaded from these dumps.
-            copyCatalogDump();
-            ((FarragoDbSession) session).setMetamodelDump(true);
+
+            timingTracer.traceTime("restore: femCmdRestoreFromBackup");
             
+            File importFile = 
+                FarragoBackupRestoreUtil.getCatalogBackupFile(
+                    archiveDirectory, isCompressed);
+
+            // Restore the catalog backup and request shutdown.
+            InputStream importStream = new FileInputStream(importFile);
+            
+            reposTxnContext.beginWriteTxn();
+            try {
+                if (isCompressed) {
+                    importStream = new GZIPInputStream(importStream);
+                }
+
+                repos.getEnkiMdrRepos().restoreExtent(
+                    FarragoReposUtil.FARRAGO_CATALOG_EXTENT,
+                    FarragoReposUtil.FARRAGO_METAMODEL_EXTENT,
+                    FarragoReposUtil.FARRAGO_PACKAGE_NAME,
+                    importStream);
+                
+                reposTxnContext.commit();
+            } finally {
+                reposTxnContext.rollback();
+                
+                importStream.close();
+                
+                timingTracer.traceTime("restore: restoreExtent");
+            }
+            
+            ((FarragoDbSession) session).setShutdownRequest(true);
         } finally {
             FarragoUdrRuntime.setExecutionHandle(null);
             if (execHandle != null) {
@@ -161,6 +200,8 @@ public class FarragoSystemRestore
             }
             reposTxnContext.endExclusiveAccess();
         }
+        
+        timingTracer.traceTime("restore: finished");
     }
     
     private void readPropertyFile()
@@ -206,38 +247,6 @@ public class FarragoSystemRestore
     {
         if (val == null) {
             throw FarragoResource.instance().MissingPropertySetting.ex(name);
-        }
-    }
-    
-    private void copyCatalogDump()
-        throws Exception
-    {
-        FarragoModelLoader modelLoader = 
-            FarragoManagementUDR.getModelLoader();
-        String dumpName = "FarragoCatalogDump.xmi";
-        if (isCompressed.booleanValue()) {
-            dumpName += ".gz";
-        }
-        
-        FileChannel dest = null;
-        FileChannel src = null;
-        try {
-            File copiedDump =
-                new File(
-                    modelLoader.getFarragoProperties().getCatalogDir(),
-                    dumpName);
-            dest = new FileOutputStream(copiedDump).getChannel();
-            src =
-                new FileInputStream(
-                    new File(archiveDirectory, dumpName)).getChannel();
-            src.transferTo(0, src.size(), dest);
-        } finally {
-            if (dest != null) {
-                dest.close();
-            }
-            if (src != null) {
-                src.close();
-            }
         }
     }
 }

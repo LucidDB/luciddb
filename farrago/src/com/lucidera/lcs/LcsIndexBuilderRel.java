@@ -108,7 +108,8 @@ class LcsIndexBuilderRel
                 deletionIndex,
                 implementor,
                 true,
-                paramId);
+                paramId,
+                false);
 
         // TODO: review recovery behavior
         implementor.addDataFlowFromProducerToConsumer(

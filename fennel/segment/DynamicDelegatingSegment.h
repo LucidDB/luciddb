@@ -54,6 +54,8 @@ public:
 
     void setDelegatingSegment(WeakSegment delegatingSegment);
     
+    SharedSegment getDelegateSegment();
+
     // implement the Segment interface
     virtual BlockNum getAllocatedSizeInPages();
     virtual BlockNum getNumPagesOccupiedHighWater();

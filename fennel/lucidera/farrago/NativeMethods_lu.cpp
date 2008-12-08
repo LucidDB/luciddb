@@ -25,6 +25,7 @@
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 #include "fennel/lucidera/flatfile/FlatFileExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
+#include "fennel/lucidera/colstore/LcsClusterReplaceExecStream.h"
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
@@ -171,6 +172,28 @@ class ExecStreamSubFactory_lu
     virtual void visit(ProxyLcsClusterAppendStreamDef &streamDef)
     {
         LcsClusterAppendExecStreamParams params;
+        readClusterAppendParams(streamDef, params);
+
+        pEmbryo->init(
+            new LcsClusterAppendExecStream(),
+            params);
+    }
+
+    // implement FemVisitor
+    virtual void visit(ProxyLcsClusterReplaceStreamDef &streamDef)
+    {
+        LcsClusterReplaceExecStreamParams params;
+        readClusterAppendParams(streamDef, params);
+
+        pEmbryo->init(
+            new LcsClusterReplaceExecStream(),
+            params);
+    }
+
+    void readClusterAppendParams(
+        ProxyLcsClusterAppendStreamDef &streamDef,
+        LcsClusterAppendExecStreamParams &params)
+    {
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         pExecStreamFactory->readBTreeStreamParams(params, streamDef);
         
@@ -180,12 +203,8 @@ class ExecStreamSubFactory_lu
         CmdInterpreter::readTupleProjection(
             params.inputProj,
             streamDef.getClusterColProj());
-
-        pEmbryo->init(
-            new LcsClusterAppendExecStream(),
-            params);
     }
-    
+
     //implement FemVisitor
     virtual void visit(ProxyLcsRowScanStreamDef &streamDef)
     {
@@ -256,7 +275,7 @@ class ExecStreamSubFactory_lu
         params.writeRowCountParamId =
             pExecStreamFactory->readDynamicParamId(
                 streamDef.getWriteRowCountParamId());
-        params.createNewIndex = false;
+        params.createNewIndex = streamDef.isCreateNewIndex();
         pEmbryo->init(new LbmSplicerExecStream(), params);
     }
 
