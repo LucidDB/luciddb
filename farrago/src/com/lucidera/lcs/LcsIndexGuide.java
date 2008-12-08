@@ -81,6 +81,8 @@ public class LcsIndexGuide
     private int numFlattenedCols;
 
     private int numUnFlattenedCols;
+    
+    private Map<FemLocalIndex, Integer> clusterToRootPageIdParamIdMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -113,6 +115,8 @@ public class LcsIndexGuide
         numFlattenedCols = flattenedRowType.getFieldList().size();
 
         this.clusteredIndexes = clusteredIndexes;
+        
+        clusterToRootPageIdParamIdMap = new HashMap<FemLocalIndex, Integer>();
 
         createClusterMap(clusteredIndexes);
     }
@@ -150,59 +154,74 @@ public class LcsIndexGuide
         this(
             typeFactory,
             table,
-            getUnclusteredCoverageSet(
+            getIndexCoverageSet(
                 typeFactory.getRepos(),
-                table,
-                unclusteredIndex));
+                unclusteredIndex,
+                FarragoCatalogUtil.getClusteredIndexes(
+                    typeFactory.getRepos(),
+                    table),
+                true,
+                true));
     }
 
     //~ Methods ----------------------------------------------------------------
 
-    public static List<FemLocalIndex> getUnclusteredCoverageSet(
+    /**
+     * Determines the list of indexes from a candidate index list those
+     * indexes that contain at least one column matching the columns of
+     * a specified index.
+     * 
+     * @param repos repository
+     * @param index the specified index
+     * @param candidateIndexes candidate indexes
+     * @param singleMatch if true, find only the first candidate index that
+     * covers each column in the specified index; otherwise, find all
+     * candidate indexes that cover each column
+     * @param requireNonEmpty if true, the return list must be non-empty
+     * 
+     * @return the list of indexes from the candidate list covering the
+     * specified index
+     */
+    public static List<FemLocalIndex> getIndexCoverageSet(
         FarragoRepos repos,
-        CwmColumnSet table,
-        FemLocalIndex unclusteredIndex)
+        FemLocalIndex index,
+        List<FemLocalIndex> candidateIndexes,
+        boolean singleMatch,
+        boolean requireNonEmpty)
     {
         //
-        // Get the columns of the index
+        // Get the columns of the specified index
         //
         Set<CwmColumn> requiredColumns = new HashSet<CwmColumn>();
-        for (
-            CwmIndexedFeature indexedFeature
-            : unclusteredIndex.getIndexedFeature())
-        {
+        for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
             requiredColumns.add((CwmColumn) indexedFeature.getFeature());
         }
 
         //
-        // Get the clustered indexes of the table
-        //
-        List<FemLocalIndex> clusteredIndexes =
-            FarragoCatalogUtil.getClusteredIndexes(repos, table);
-
-        //
-        // Find clustered indexes which cover the columns of the index
+        // Find the candidate indexes which cover the columns of the index
         //
         List<FemLocalIndex> coverageIndexes = new ArrayList<FemLocalIndex>();
-        for (FemLocalIndex clusteredIndex : clusteredIndexes) {
+        for (FemLocalIndex candidateIndex : candidateIndexes) {
             boolean include = false;
             for (
                 CwmIndexedFeature indexedFeature
-                : clusteredIndex.getIndexedFeature())
+                : candidateIndex.getIndexedFeature())
             {
                 CwmColumn column = (CwmColumn) indexedFeature.getFeature();
                 if (requiredColumns.contains(column)) {
                     include = true;
-                    requiredColumns.remove(column);
+                    if (singleMatch) {
+                        requiredColumns.remove(column);
+                    }
                 }
             }
             if (include) {
-                coverageIndexes.add(clusteredIndex);
+                coverageIndexes.add(candidateIndex);
             }
         }
 
-        if (!requiredColumns.isEmpty()) {
-            throw Util.newInternal("unclustered index could not be covered");
+        if (requireNonEmpty && !requiredColumns.isEmpty()) {
+            throw Util.newInternal("index could not be covered");
         }
 
         return coverageIndexes;
@@ -735,15 +754,42 @@ public class LcsIndexGuide
         return barrier;
     }
 
+    /**
+     * Creates a cluster append stream for a specific clustered index.
+     * 
+     * @param rel the RelNode that the cluster belongs to
+     * @param clusterIndex the clustered index
+     * @param hasIndexes if true, indexes will also be inserted into as part
+     * of execution of this cluster append
+     * @param rootPageIdParamId the dynamic parameter id of the root page of
+     * the cluster; only set > 0 if this is a cluster replace
+     * @param clusterPos only used if this is a cluster replace, in which
+     * case, it corresponds to the position of this cluster from the
+     * list of clusters that will be replaced
+     * 
+     * @return the constructed cluster append stream
+     */
     protected FemLcsClusterAppendStreamDef newClusterAppend(
         FennelRel rel,
         FemLocalIndex clusterIndex,
-        boolean hasIndexes)
+        boolean hasIndexes,
+        int rootPageIdParamId,
+        int clusterPos)
     {
-        FemLcsClusterAppendStreamDef clusterAppend =
-            repos.newFemLcsClusterAppendStreamDef();
+        FemLcsClusterAppendStreamDef clusterAppend;
+        if (rootPageIdParamId > 0) {
+            clusterAppend = repos.newFemLcsClusterReplaceStreamDef();
+        } else {
+            clusterAppend = repos.newFemLcsClusterAppendStreamDef();
+        }
 
-        defineIndexStream(clusterAppend, rel, clusterIndex, true, true);
+        defineIndexStream(
+            clusterAppend,
+            rel,
+            clusterIndex,
+            true,
+            true,
+            rootPageIdParamId);
 
         //
         // Set up FemLcsClusterAppendStreamDef
@@ -751,21 +797,34 @@ public class LcsIndexGuide
         //
 
         Integer [] clusterColProj;
-        clusterColProj = new Integer[getNumFlattenedClusterCols(clusterIndex)];
+        if (rootPageIdParamId > 0) {
+            // The rid column always appears first in the input tuple and
+            // is projected as the first column, followed by the only column
+            // in the cluster.
+            clusterColProj = new Integer[2];
+            clusterColProj[0] = 0;
+            clusterColProj[1] = clusterPos;
+            // Keep track of the dynamic parameter for later use
+            clusterToRootPageIdParamIdMap.put(clusterIndex, rootPageIdParamId);
+        } else {
+            clusterColProj =
+                new Integer[getNumFlattenedClusterCols(clusterIndex)];
 
-        //
-        // Figure out the projection covering columns contained in each index.
-        //
-        int i = 0;
-        for (
-            CwmIndexedFeature indexedFeature : clusterIndex.getIndexedFeature())
-        {
-            FemAbstractColumn column =
-                (FemAbstractColumn) indexedFeature.getFeature();
-            int n = getNumFlattenedSubCols(column.getOrdinal());
-            for (int j = 0; j < n; ++j) {
-                clusterColProj[i] = flattenOrdinal(column.getOrdinal()) + j;
-                i++;
+            //
+            // Figure out the projection covering columns contained in each index.
+            //
+            int i = 0;
+            for (
+                CwmIndexedFeature indexedFeature :
+                    clusterIndex.getIndexedFeature())
+            {
+                FemAbstractColumn column =
+                    (FemAbstractColumn) indexedFeature.getFeature();
+                int n = getNumFlattenedSubCols(column.getOrdinal());
+                for (int j = 0; j < n; ++j) {
+                    clusterColProj[i] = flattenOrdinal(column.getOrdinal()) + j;
+                    i++;
+                }
             }
         }
 
@@ -813,7 +872,8 @@ public class LcsIndexGuide
         FemLocalIndex deletionIndex,
         FennelRelImplementor implementor,
         boolean createIndex,
-        FennelRelParamId insertDynParamId)
+        FennelRelParamId insertDynParamId,
+        boolean createNewIndex)
     {
         // create the streams
         FemExecutionStreamDef generator =
@@ -832,7 +892,8 @@ public class LcsIndexGuide
                 index,
                 deletionIndex,
                 implementor.translateParamId(insertDynParamId).intValue(),
-                0);
+                0,
+                createNewIndex);
 
         // link them up
         implementor.addDataFlowFromProducerToConsumer(generator, sorter);
@@ -853,7 +914,7 @@ public class LcsIndexGuide
         //
         // Setup cluster scans. The generator scans are based on the new
         // clusters being written.
-        //
+        //        
         defineScanStream(generator, rel, true);
 
         //
@@ -884,7 +945,7 @@ public class LcsIndexGuide
         //
         // Setup Btree accessor parameters
         //
-        defineIndexAccessor(generator, rel, index, false, true, false);
+        defineIndexAccessor(generator, rel, index, false, true, false, 0);
 
         //
         // Set up FemExecutionStreamDef
@@ -953,7 +1014,8 @@ public class LcsIndexGuide
         FemLocalIndex index,
         FemLocalIndex deletionIndex,
         int insertRowCountParamId,
-        int writeRowCountParamId)
+        int writeRowCountParamId,
+        boolean createNewIndex)
     {
         FemLbmSplicerStreamDef splicer = repos.newFemLbmSplicerStreamDef();
 
@@ -966,7 +1028,8 @@ public class LcsIndexGuide
             index,
             false,
             true,
-            false);
+            false,
+            0);
         splicer.getIndexAccessor().add(indexAccessor);
 
         // Setup the deletion index if the splicer will be reading from it.
@@ -980,7 +1043,8 @@ public class LcsIndexGuide
                 deletionIndex,
                 false,
                 false,
-                false);
+                false,
+                0);
             splicer.getIndexAccessor().add(indexAccessor);
         }
 
@@ -991,6 +1055,7 @@ public class LcsIndexGuide
         //
         splicer.setInsertRowCountParamId(insertRowCountParamId);
         splicer.setWriteRowCountParamId(writeRowCountParamId);
+        splicer.setCreateNewIndex(createNewIndex);
 
         // NOTE zfong 11/30/06 - Splicer may also write out rid values.
         // As it turns out, the type of a rid is currently the same as a
@@ -1067,7 +1132,7 @@ public class LcsIndexGuide
         FemLocalIndex index,
         Integer [] outputProj)
     {
-        defineIndexStream(scanStream, rel, index, false, false);
+        defineIndexStream(scanStream, rel, index, false, false, 0);
 
         // set FemIndexScanDef
         if (outputProj == null) {
@@ -1088,7 +1153,8 @@ public class LcsIndexGuide
         FennelRel rel,
         FemLocalIndex index,
         boolean clustered,
-        boolean write)
+        boolean write,
+        int rootPageIdParamId)
     {
         //
         // Set up FemExecutionStreamDef
@@ -1100,7 +1166,14 @@ public class LcsIndexGuide
                 typeFactory,
                 rel.getRowType()));
 
-        defineIndexAccessor(indexStream, rel, index, clustered, write, !write);
+        defineIndexAccessor(
+            indexStream,
+            rel,
+            index,
+            clustered,
+            write,
+            !write,
+            rootPageIdParamId);
     }
 
     private void defineIndexAccessor(
@@ -1109,7 +1182,8 @@ public class LcsIndexGuide
         FemLocalIndex index,
         boolean clustered,
         boolean write,
-        boolean readOnlyCommittedData)
+        boolean readOnlyCommittedData,
+        int rootPageIdParamId)
     {
         final FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
 
@@ -1122,7 +1196,7 @@ public class LcsIndexGuide
         //
         indexAccessor.setRootPageId(
             stmt.getIndexMap().getIndexRoot(index, write));
-        indexAccessor.setRootPageIdParamId(0);
+        indexAccessor.setRootPageIdParamId(rootPageIdParamId);
 
         indexAccessor.setSegmentId(
             LcsDataServer.getIndexSegmentId(index));
@@ -1157,6 +1231,8 @@ public class LcsIndexGuide
      * Fills in a stream definition for this scan.
      *
      * @param scanStream stream definition to fill in
+     * @param rel the RelNode containing the cluster
+     * @param write whether the cluster will be written
      */
     private void defineScanStream(
         FemLcsRowScanStreamDef scanStream,
@@ -1166,7 +1242,15 @@ public class LcsIndexGuide
         // setup each cluster scan def
         for (FemLocalIndex index : clusteredIndexes) {
             FemLcsClusterScanDef clusterScan = repos.newFemLcsClusterScanDef();
-            defineClusterScan(index, rel, clusterScan, write);
+            Integer rootPageIdParamId =
+                clusterToRootPageIdParamIdMap.get(index);
+            defineClusterScan(
+                index, 
+                rel,
+                clusterScan,
+                write,
+                (rootPageIdParamId == null) ?
+                    0 : rootPageIdParamId.intValue());
             scanStream.getClusterScan().add(clusterScan);
         }
     }
@@ -1175,13 +1259,18 @@ public class LcsIndexGuide
      * Fills in a cluster scan def for this scan
      *
      * @param index clustered index corresponding to this can
+     * @param rel the RelNode containing the cluster
      * @param clusterScan clustered scan to fill in
+     * @param write true if the cluster will be written as well as read
+     * @param rootPageIdParamId if > 0, the dynamic parameter that will supply
+     * the value of the root pageId of the cluster
      */
     private void defineClusterScan(
         FemLocalIndex index,
         FennelRel rel,
         FemLcsClusterScanDef clusterScan,
-        boolean write)
+        boolean write,
+        int rootPageIdParamId)
     {
         final FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
 
@@ -1204,7 +1293,7 @@ public class LcsIndexGuide
             clusterScan.setRootPageId(-1);
             clusterScan.setReadOnlyCommittedData(false);
         }
-        clusterScan.setRootPageIdParamId(0);
+        clusterScan.setRootPageIdParamId(rootPageIdParamId);
 
         clusterScan.setSegmentId(LcsDataServer.getIndexSegmentId(index));
         clusterScan.setIndexId(JmiObjUtil.getObjectId(index));

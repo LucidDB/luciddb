@@ -657,7 +657,6 @@ void TupleTest::loadStoreNullData(uint typeOrdinal, uint dataLen)
     tupleDatum.pData = loadBuf;
     accessor.loadValue(tupleDatum, storageBuf);
 
-    BOOST_REQUIRE(tupleDatum.cbData == 0);
     BOOST_REQUIRE(tupleDatum.pData == NULL);
 }
 

@@ -23,12 +23,20 @@ package com.lucidera.lcs;
 import com.lucidera.query.*;
 
 import java.util.*;
+import java.util.logging.*;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.keysindexes.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.trace.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
 
@@ -43,6 +51,22 @@ import org.eigenbase.sql.fun.*;
 public class LcsTableMergeRule
     extends RelOptRule
 {
+    private static final Logger tracer = FarragoTrace.getOptimizerRuleTracer();
+    
+    /**
+     * The upper bound on the percentage of columns that must be updated for the
+     * replace column optimization to be used
+     */
+    private static final double COLUMN_UPDATE_THRESHOLD = .6;
+    
+    /**
+     * The lower bound on the percentage of rows that must be updated for
+     * the replace column optimization to be used.  Note that this percentage
+     * will be multiplied by the percentage of columns updated by the statement,
+     * so the threshold is lower when fewer columns are updated.
+     */
+    private static final double ROW_UPDATE_THRESHOLD = .4;
+    
     //~ Constructors -----------------------------------------------------------
 
     public LcsTableMergeRule()
@@ -50,7 +74,9 @@ public class LcsTableMergeRule
         super(
             new RelOptRuleOperand(
                 TableModificationRel.class,
-                new RelOptRuleOperand(ProjectRel.class, ANY)));
+                new RelOptRuleOperand(
+                    ProjectRel.class,
+                    new RelOptRuleOperand(RelNode.class, ANY))));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -90,6 +116,13 @@ public class LcsTableMergeRule
             && (origProjExprs.length == (nTargetFields + updateList.size()));
         boolean insertOnly = (origProjExprs.length == nTargetFields);
         assert (!(updateOnly && insertOnly));
+        
+        List<FemLocalIndex> updateClusters =
+            shouldReplaceColumns(
+                (LcsTable) tableModification.getTable(),
+                call.rels[2],
+                updateList,
+                updateOnly);
 
         // create a rid expression on the target table
         RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
@@ -121,6 +154,7 @@ public class LcsTableMergeRule
                     targetFields,
                     updateList,
                     updateOnly,
+                    (updateClusters != null),
                     ridExpr,
                     rexBuilder);
         }
@@ -142,11 +176,182 @@ public class LcsTableMergeRule
                 fennelInput,
                 tableModification.getOperation(),
                 tableModification.getUpdateColumnList(),
-                updateOnly);
+                updateOnly,
+                updateClusters);
 
         call.transformTo(mergeRel);
     }
 
+    /**
+     * Determines whether the merge should be executed by replacing the
+     * columns being updated, as opposed to updating individual rows.  This
+     * is only feasible if:
+     * 
+     * <ol>
+     * <li>The underlying personality supports snapshots.</li>
+     * <li>The merge statement only contains an update substatement.</li>
+     * <li>The columns being updated all correspond to single column
+     * clusters.</li>
+     * <li>The keys in the ON condition are unique.</li>
+     * <li>The number of columns being updated is less than some threshold.</li>
+     * <li>The percentage of rows being updated is greater than a threshold
+     * that also depends on the percentage of columns updated.</li>
+     * </ol>
+     * 
+     * @param target the target table
+     * @param source the source for the merge
+     * @param updateCols list of columns being updated
+     * @param updateOnly true if the statement only contains an update
+     * substatement
+     * 
+     * @return list of clusters corresponding to the columns being updated
+     * if the criteria are met; otherwise, null
+     */
+    List<FemLocalIndex> shouldReplaceColumns(
+        LcsTable target,
+        RelNode source,
+        List<String> updateCols,
+        boolean updateOnly)
+    {
+        if (!target.getPreparingStmt().getSession().getPersonality().
+            supportsFeature(
+                EigenbaseResource.instance().PersonalitySupportsSnapshots))
+        {
+            return null;
+        }
+
+        if (!updateOnly) {
+            return null;
+        }
+        
+        double percentColsUpdated =
+            ((double) updateCols.size()) / target.getRowType().getFieldCount();
+        if (percentColsUpdated > COLUMN_UPDATE_THRESHOLD) {
+            return null;
+        }
+        
+        // If the source is a ProjectRel or FilterRel, then the MERGE has
+        // been optimized by LcsConvertMergeToUpdateRule and already meets
+        // the criteria of having unique join keys.  If it's a join, then
+        // we need to validate that the keys are unique.  The source shouldn't
+        // be anything else, but in case it is, we reject those as well.
+        if (source instanceof JoinRel) {
+            List<Integer> leftKeys = new ArrayList<Integer>();
+            List<Integer> rightKeys = new ArrayList<Integer>();
+            JoinRel joinRel = (JoinRel) source;
+            RelOptUtil.splitJoinCondition(
+                joinRel.getInput(0),
+                joinRel.getInput(1),
+                joinRel.getCondition(),
+                leftKeys,
+                rightKeys);
+            if (leftKeys.size() == 0) {
+                return null;
+            }
+            if (!RelMdUtil.areColumnsDefinitelyUnique(
+                joinRel.getInput(0),
+                RelMdUtil.setBitKeys(leftKeys)))
+            {
+                return null;
+            }
+            if (!RelMdUtil.areColumnsDefinitelyUnique(
+                joinRel.getInput(1),
+                RelMdUtil.setBitKeys(rightKeys)))
+            {
+                return null;
+            }
+        } else if (!(source instanceof ProjectRel) &&
+            !(source instanceof FilterRel))
+        {
+            return null;
+        }
+
+        FarragoRepos repos = target.getPreparingStmt().getRepos();
+        Double nSourceRows = RelMetadataQuery.getRowCount(source);
+        Double nTargetRows =
+            FarragoRelMetadataProvider.getRowCountStat(
+                target,
+                repos);
+        if (nSourceRows == null || nTargetRows == null) {
+            return null;
+        }
+        double percentRowsUpdated = nSourceRows / nTargetRows;
+        
+        // Make sure the percentage of rows is at least 1 so we avoid the
+        // optimization when a small percentage of rows are updated.
+        if (percentRowsUpdated < .01) {
+            return null;
+        }
+        // By multiplying the row threshold by the percentage of columns updated,
+        // this means that when fewer columns are updated, not as many rows need
+        // to be updated to trigger the optimization.
+        if (percentRowsUpdated < ROW_UPDATE_THRESHOLD * percentColsUpdated) {
+            return null;
+        }
+        
+        List<FemLocalIndex> updateClusters =
+            checkSingleColClusters(updateCols, target, repos);
+        
+        if (updateClusters != null) {
+            tracer.fine(
+                "Replace columns optimization used for MERGE on target table " +
+                target.getName());
+        }
+        return updateClusters;
+    }
+    
+    /**
+     * Determines if each of the columns from a list of columns being updated
+     * all belong to clusters containing only a single column.
+     * 
+     * @param updateCols the list of columns being updated
+     * @param table the target table
+     * @param repos repository
+     * 
+     * @return the clusters corresponding to the columns being updated in
+     * an order matching the update columns, provided the columns are all
+     * part of single-column clusters; otherwise, null is returned
+     */
+    private List<FemLocalIndex> checkSingleColClusters(
+        List<String> updateCols,
+        LcsTable table,
+        FarragoRepos repos)
+    {
+        List<FemLocalIndex> updateClusters = new ArrayList<FemLocalIndex>();
+        
+        // Build a map, mapping each column ordinal to its corresponding
+        // cluster.
+        List<FemLocalIndex> clusteredIndexes =
+            FarragoCatalogUtil.getClusteredIndexes(
+                repos,
+                table.getCwmColumnSet());
+        Map<Integer, FemLocalIndex> colOrdToClusterMap =
+            new HashMap<Integer,FemLocalIndex>();
+        for (FemLocalIndex cluster : clusteredIndexes) {
+            for (CwmIndexedFeature indexedFeature :
+                    cluster.getIndexedFeature())
+            {
+                FemAbstractColumn column =
+                    (FemAbstractColumn) indexedFeature.getFeature();
+                colOrdToClusterMap.put(column.getOrdinal(), cluster);
+            }
+        }
+        
+        // Determine if each column being updated is part of a cluster
+        // containing only a single column
+        for (String colName : updateCols) {
+            int colOrdinal = table.getRowType().getFieldOrdinal(colName);
+            FemLocalIndex cluster = colOrdToClusterMap.get(colOrdinal);
+            if (cluster.getIndexedFeature().size() == 1) {
+                updateClusters.add(cluster);
+            } else {
+                return null;
+            }
+        }
+        
+        return updateClusters;
+    }
+    
     /**
      * Creates a RelNode that serves as the source for an insert-only MERGE. A
      * FilterRel is inserted underneath the current ProjectRel. The filter
@@ -193,13 +398,18 @@ public class LcsTableMergeRule
      * Creates the source RelNode for a MERGE that contains an UPDATE component.
      * The current ProjectRel is replaced by a FilterRel underneath a new
      * ProjectRel. The filter removes rows where the columns are not actually
-     * updated. The new projection projects the target rid (and 2 nulls)
-     * followed by a set of expressions representing new insert rows.
+     * updated.
+     * 
+     * <p>The new projection projects the target rid followed by a set of
+     * expressions representing new insert rows, or in the case where columns are
+     * being replaced, the replaced column values.
      *
      * @param origProj the original projection being replaced
      * @param targetFields fields from the target table
      * @param updateList list of names corresponding to the update columns
      * @param updateOnly if true, MERGE statement contains no INSERT
+     * @param replaceColumns true if the MERGE will be executed by replacing
+     * entire columns
      * @param ridExpr expression representing the target rid column
      * @param rexBuilder rex builder
      *
@@ -210,20 +420,23 @@ public class LcsTableMergeRule
         RelDataTypeField [] targetFields,
         List<String> updateList,
         boolean updateOnly,
+        boolean replaceColumns,
         RexNode ridExpr,
         RexBuilder rexBuilder)
     {
         RexNode [] origProjExprs = origProj.getProjectExps();
         int nTargetFields = targetFields.length;
         int nInsertFields = (updateOnly) ? 0 : nTargetFields;
-
+   
+        RelNode child;
         // create a filter selecting only rows where any of the update
-        // columns are different from their original column values; if there's
-        // an insert component in the MERGE, then we also need to allow
-        // rows where the target rid is null; note also that since the
-        // expression comparing the original and new values doesn't handle
-        // nulls, we need to also explicitly add checks for nulls
-        RelNode child =
+        // columns are different from their original column values; if
+        // there's an insert component in the MERGE, then we also need
+        // to allow rows where the target rid is null; note also that
+        // since the expression comparing the original and new values
+        // doesn't handle nulls, we need to also explicitly add checks
+        // for nulls
+        child = 
             createChangeFilterRel(
                 origProj,
                 targetFields,
@@ -234,14 +447,22 @@ public class LcsTableMergeRule
                 nInsertFields);
 
         // Project out the rid column as well as the expressions that make up
-        // a new insert target row.  The content of insert target row depends
-        // on whether the rid is null or non-null.  In the case of the former,
-        // it corresponds to the target of the INSERT substatement while in
-        // the latter, it corresponds to the UPDATE.  These will be implemented
-        // using a CASE expression.  If only an UPDATE substatement is present,
-        // no CASE expression is required.
-        RexNode [] projExprs = new RexNode[nTargetFields + 1];
-        String [] fieldNames = new String[nTargetFields + 1];
+        // a new target row or target columns.
+        // 
+        // In the case where entire rows are being inserted, the content of
+        // insert target row depends on whether the rid is null or non-null.
+        // In the case of the former, it corresponds to the target of the
+        // INSERT substatement while in the latter, it corresponds to the
+        // UPDATE.  These will be implemented using a CASE expression.  If
+        // only an UPDATE substatement is present, no CASE expression is
+        // required.
+        //
+        // In the case where entire columns are being replaced, the target
+        // columns simply contain the update expressions.
+        int nProjExprs =
+            ((replaceColumns) ? updateList.size() : nTargetFields) + 1;
+        RexNode [] projExprs = new RexNode[nProjExprs];
+        String [] fieldNames = new String[nProjExprs];
         projExprs[0] = ridExpr;
         fieldNames[0] = "rid";
 
@@ -254,19 +475,26 @@ public class LcsTableMergeRule
                     ridExpr);
         }
 
-        for (int i = 0; i < nTargetFields; i++) {
+        for (int i = 0; i < nProjExprs - 1; i++) {
             RexNode updateExpr = null;
 
-            // determine whether a target expression was specified for the
-            // field in the UPDATE call
-            int matchedSetExpr = updateList.indexOf(targetFields[i].getName());
-
-            if (matchedSetExpr != -1) {
-                updateExpr =
-                    origProjExprs[nInsertFields + nTargetFields
-                        + matchedSetExpr];
+            if (replaceColumns) {
+                updateExpr = origProjExprs[nTargetFields + i];
+                fieldNames[i + 1] = updateList.get(i);
             } else {
-                updateExpr = origProjExprs[nInsertFields + i];
+                // determine whether a target expression was specified for the
+                // field in the UPDATE call
+                int matchedSetExpr =
+                    updateList.indexOf(targetFields[i].getName());
+
+                if (matchedSetExpr != -1) {
+                    updateExpr =
+                        origProjExprs[nInsertFields + nTargetFields
+                                      + matchedSetExpr];
+                } else {
+                    updateExpr = origProjExprs[nInsertFields + i];
+                }
+                fieldNames[i + 1] = targetFields[i].getName();
             }
 
             if (updateOnly) {
@@ -278,8 +506,7 @@ public class LcsTableMergeRule
                         whenExpr,
                         origProjExprs[i],
                         updateExpr);
-            }
-            fieldNames[i + 1] = targetFields[i].getName();
+            }           
         }
 
         return CalcRel.createProject(child, projExprs, fieldNames);

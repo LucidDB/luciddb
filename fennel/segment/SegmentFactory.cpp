@@ -327,6 +327,25 @@ void TempSegDestructor::operator()(Segment *pSegment)
     pSegmentFactory->deallocateTempDeviceId(deviceId);
 }
 
+SnapshotRandomAllocationSegment *SegmentFactory::getSnapshotSegment(
+    SharedSegment pSegment)
+{
+    SnapshotRandomAllocationSegment *pSnapshotSegment =
+        SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+            pSegment);
+    if (pSnapshotSegment == NULL) {
+        DynamicDelegatingSegment *pDynamicSegment = 
+            SegmentFactory::dynamicCast<DynamicDelegatingSegment *>(
+                pSegment);
+        if (pDynamicSegment != NULL) {
+            pSnapshotSegment =
+                SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
+                    pDynamicSegment->getDelegateSegment());
+        }
+    }
+    return pSnapshotSegment;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End SegmentFactory.cpp

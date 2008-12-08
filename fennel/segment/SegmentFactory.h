@@ -29,6 +29,7 @@
 #include "fennel/common/ConfigMap.h"
 #include "fennel/synch/SynchObj.h"
 #include "fennel/segment/TracingSegment.h"
+#include "fennel/segment/SnapshotRandomAllocationSegment.h"
 #include "fennel/device/DeviceMode.h"
 
 #include <boost/dynamic_bitset.hpp>
@@ -347,6 +348,18 @@ public:
         }
         return pDerived;
     }
+
+    /**
+     * Casts a shared segment to a SnapshotRandomAllocationSegment, if the
+     * segment is in fact a SnapshotRandomAllocationSegment.  It may be 
+     * necessary to extract the SnapshotRandomAllocationSegment from a
+     * DynamicDelegatingSegment.
+     *
+     * @return the underlying SnapshotRandomAllocationSegment or NULL if
+     * the segment is not a SnapshotRandomAllocationSegment
+     */
+    static SnapshotRandomAllocationSegment *getSnapshotSegment(
+        SharedSegment pSegment);
 };
 
 class TempSegDestructor : public ClosableObjectDestructor

@@ -129,7 +129,7 @@
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Sun Nov 16 15:32:06 PST 2008'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Nov 18 15:54:58 PST 2008'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -3192,6 +3192,21 @@
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd8'/>
                       </UML:StructuralFeature.type>
                     </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F33'
+                      name = 'createNewIndex' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'instance' changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F37'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F36'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fde'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
                   </UML:Classifier.feature>
                 </UML:Class>
                 <UML:Class xmi.id = 'Im322672acm108c80ba958mm538a' name = 'LbmGeneratorStreamDef'
@@ -5028,6 +5043,22 @@
                   </UML:Generalization.child>
                   <UML:Generalization.parent>
                     <UML:Class xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7f46'/>
+                  </UML:Generalization.parent>
+                </UML:Generalization>
+                <UML:Class xmi.id = '127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F30'
+                  name = 'LcsClusterReplaceStreamDef' visibility = 'public' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false' isActive = 'false'>
+                  <UML:GeneralizableElement.generalization>
+                    <UML:Generalization xmi.idref = '127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F32'/>
+                  </UML:GeneralizableElement.generalization>
+                </UML:Class>
+                <UML:Generalization xmi.id = '127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F32'
+                  isSpecification = 'false'>
+                  <UML:Generalization.child>
+                    <UML:Class xmi.idref = '127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F30'/>
+                  </UML:Generalization.child>
+                  <UML:Generalization.parent>
+                    <UML:Class xmi.idref = 'I6435251fm107b542be1cmm56a3'/>
                   </UML:Generalization.parent>
                 </UML:Generalization>
               </UML:Namespace.ownedElement>
@@ -26498,7 +26529,7 @@
       </path>
     </group>
     <group name="Fig3.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[249, 519, 170, 34]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[249, 519, 170, 47]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -26511,7 +26542,7 @@
         x="249"
         y="519"
         width="170"
-        height="34"
+        height="47"
         fill="1"
         fillcolor="white"
         stroke="0"
@@ -26549,6 +26580,16 @@
         font="Dialog"
         textsize="10"
       >writeRowCountParamId : Integer</text>
+      <text name="Fig3.4.4"
+        x="249"
+        y="546"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >createNewIndex : Boolean</text>
     </group>
     <rectangle name="Fig3.5"
       x="248"
@@ -29211,7 +29252,7 @@
       textsize="10"
     >LcsClusterAppendStreamDef</text>
     <group name="Fig0.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[401, 336, 159, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[401, 329, 159, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -29223,7 +29264,7 @@
       
       <rectangle name="Fig0.3.0"
         x="401"
-        y="336"
+        y="329"
         width="159"
         height="20"
         fill="1"
@@ -29241,9 +29282,9 @@
         visibility="0"
       >
         <moveto x="401"
-                y="336" />
+                y="329" />
         <lineto x="560"
-                y="336" />
+                y="329" />
       </path>
     </group>
     <group name="Fig0.4"
@@ -30283,6 +30324,164 @@
               y="288" />
       <lineto x="480"
               y="227" />
+    </path>
+  </group>
+  <group name="Fig12"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[464, 568, 146, 43]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       href="127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F30"
+       fill="1"
+       fillcolor="white"
+       stroke="1"
+       strokecolor="black"
+  >
+    <private>
+    </private>
+    
+    <rectangle name="Fig12.0"
+      x="464"
+      y="568"
+      width="146"
+      height="43"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="0 255 255"
+    />
+    <group name="Fig12.1"
+         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[464, 568, 146, 2]"
+         href="127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F30"
+         fill="1"
+         fillcolor="white"
+         stroke="1"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig12.1.0"
+        x="464"
+        y="568"
+        width="146"
+        height="2"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      />
+    </group>
+    <text name="Fig12.2"
+      x="464"
+      y="570"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="red"
+      font="Dialog"
+      textsize="10"
+    >LcsClusterReplaceStreamDef</text>
+    <group name="Fig12.3"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[465, 612, 146, 20]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+         visibility="0"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig12.3.0"
+        x="465"
+        y="612"
+        width="146"
+        height="20"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        visibility="0"
+      />
+      <path name="Fig12.3.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+        visibility="0"
+      >
+        <moveto x="465"
+                y="612" />
+        <lineto x="611"
+                y="612" />
+      </path>
+    </group>
+    <group name="Fig12.4"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[465, 591, 145, 20]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig12.4.0"
+        x="465"
+        y="591"
+        width="145"
+        height="20"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+      />
+      <path name="Fig12.4.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      >
+        <moveto x="465"
+                y="591" />
+        <lineto x="610"
+                y="591" />
+      </path>
+    </group>
+    <rectangle name="Fig12.5"
+      x="464"
+      y="568"
+      width="146"
+      height="43"
+      fill="0"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    />
+  </group>
+  <group name="Fig13"
+       description="org.argouml.uml.diagram.ui.FigGeneralization"
+       href="127-0-0-1--293a0ef6:11db2002f84:-8000:0000000000000F32"
+       stroke="1"
+       strokecolor="black"
+  >
+    <private>
+      sourcePortFig="Fig12"
+      destPortFig="Fig0"
+      sourceFigNode="Fig12"
+      destFigNode="Fig0"
+    </private>
+    <path name="Fig13.0"
+      description="org.tigris.gef.presentation.FigPoly"
+      fill="0"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    >
+      <moveto x="504"
+              y="568" />
+      <lineto x="504"
+              y="345" />
     </path>
   </group>
 </pgml>

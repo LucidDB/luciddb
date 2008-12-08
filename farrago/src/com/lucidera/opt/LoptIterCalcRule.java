@@ -452,7 +452,8 @@ public abstract class LoptIterCalcRule
                     replaceTagAsFennel(converter, calc, tag),
                     tableRel.getOperation(),
                     tableRel.getUpdateColumnList(),
-                    tableRel.getUpdateOnly()));
+                    tableRel.getUpdateOnly(),
+                    tableRel.getUpdateClusters()));
         }
     }
 

@@ -216,6 +216,9 @@ typedef JniProxyIter<ProxyLbmUnionStreamDef> SharedProxyLbmUnionStreamDef;
 class ProxyLcsClusterAppendStreamDef;
 typedef JniProxyIter<ProxyLcsClusterAppendStreamDef> SharedProxyLcsClusterAppendStreamDef;
 
+class ProxyLcsClusterReplaceStreamDef;
+typedef JniProxyIter<ProxyLcsClusterReplaceStreamDef> SharedProxyLcsClusterReplaceStreamDef;
+
 class ProxyLcsClusterScanDef;
 typedef JniProxyIter<ProxyLcsClusterScanDef> SharedProxyLcsClusterScanDef;
 
@@ -1075,6 +1078,8 @@ class ProxyLbmSplicerStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
+bool isCreateNewIndex();
+static jmethodID meth_isCreateNewIndex;
 SharedProxySplicerIndexAccessorDef getIndexAccessor();
 static jmethodID meth_getIndexAccessor;
 int32_t getInsertRowCountParamId();
@@ -1101,6 +1106,12 @@ class ProxyLcsClusterAppendStreamDef
 public:
 SharedProxyTupleProjection getClusterColProj();
 static jmethodID meth_getClusterColProj;
+};
+
+class ProxyLcsClusterReplaceStreamDef
+: virtual public JniProxy, virtual public ProxyLcsClusterAppendStreamDef
+{
+public:
 };
 
 class ProxyLcsClusterScanDef
@@ -1560,6 +1571,8 @@ virtual void visit(ProxyLbmSplicerStreamDef &)
 virtual void visit(ProxyLbmUnionStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLcsClusterAppendStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLcsClusterReplaceStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLcsClusterScanDef &)
 { unhandledVisit(); }

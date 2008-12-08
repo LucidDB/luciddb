@@ -85,6 +85,13 @@
       classpathref="test.classpath"/>
   </target>
 
+  <target name="test-sanity" depends="clean-test,gen-all-sql">
+    <blackhawk.fork
+      basedir="${dml_merge.dir}"
+      testscript="sanity.xml"
+      classpathref="test.classpath"/>
+  </target>
+
   <target name="copy-csv">
     <available file="${csvsource.dir}" type="dir"
       property="raksha.available"/>

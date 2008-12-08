@@ -98,14 +98,12 @@ void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
         }
     }
 
-    // If the index is going to be dynamically created, the underlying
-    // segment associated with the index needs to be a snapshot segment.
     createNewIndex = params.createNewIndex;
+    // If the index is going to be dynamically created, save the original
+    // root pageId of the index so we can use it later to version the
+    // index root page.
     if (createNewIndex) {
-        pSnapshotSegment =
-            SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
-                writeBTreeDesc.segmentAccessor.pSegment);
-        assert(pSnapshotSegment != NULL);
+        origRootPageId = writeBTreeDesc.rootPageId;
     }
 }
 
@@ -121,11 +119,7 @@ void LbmSplicerExecStream::open(bool restart)
             bitmapBuffer.get(), mergeBuffer.get(), maxEntrySize,
             bitmapTupleDesc);
 
-        // If the index is going to be dynamically created, save the original
-        // root pageId of the index so we can use it later to version the
-        // index root page.
         if (createNewIndex) {
-            origRootPageId = writeBTreeDesc.rootPageId;
             writeBTreeDesc.rootPageId = NULL_PAGE_ID;
             BTreeBuilder builder(
                 writeBTreeDesc,
@@ -153,6 +147,17 @@ void LbmSplicerExecStream::open(bool restart)
             SharedBTreeReader deletionBTreeReader = SharedBTreeReader(
                 new BTreeReader(deletionBTreeDesc));
             deletionReader.init(deletionBTreeReader, deletionTuple);
+        }
+
+        // If the index is going to be dynamically created, the underlying
+        // segment associated with the index needs to be a snapshot segment.
+        // Retrieve the snapshot segment.  This needs to be done at open time
+        // because the segment changes across transaction boundaries.
+        if (createNewIndex) {
+            pSnapshotSegment =
+                SegmentFactory::getSnapshotSegment(
+                    writeBTreeDesc.segmentAccessor.pSegment);
+            assert(pSnapshotSegment != NULL);
         }
     }
     isDone = false;
@@ -628,7 +633,7 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
     }
     // all other rids are rejected as duplicate keys
     while (inputRidReader.hasNext()) {
-        if (! violationTuple.size()) {
+        if (!violationTuple.size()) {
             // if there is a possibility of violations, the splicer should
             // have been initialized with a second output
             permAssert(false);

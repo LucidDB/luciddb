@@ -205,7 +205,6 @@ void UnalignedAttributeAccessor::loadValue(
         if (!firstByte) {
             // null value
             datum.pData = NULL;
-            datum.cbData = 0;
         } else if (firstByte & TWO_BYTE_LENGTH_BIT) {
             // not null, so must have a length that requires 2 bytes to
             // store
