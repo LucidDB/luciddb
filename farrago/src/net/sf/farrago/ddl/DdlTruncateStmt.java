@@ -103,8 +103,12 @@ public class DdlTruncateStmt
     // implement DdlMultipleTransactionStmt
     public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
-        FarragoSession session)
+        FarragoSession session,
+        boolean success)
     {
+        // REVIEW jvs 8-Dec-2008:  can anything cause
+        // success=false?
+        
         session.getPersonality().resetRowCounts((FemAbstractColumnSet) table);
     }
 }

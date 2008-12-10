@@ -122,13 +122,15 @@ public class FarragoDefaultSessionPersonality
         REDUCE_NON_CORRELATED_SUBQUERIES_FARRAGO_DEFAULT = "false";
 
     /**
-     * Whether non-correlated subqueries should be converted to constants 
+     * Degree of parallelism to use for parallel executor; a value of
+     * 1 (the default) causes the default non-parallel executor
+     * to be used.
      */
     public static final String DEGREE_OF_PARALLELISM =
         "degreeOfParallelism";
     public static final String
         DEGREE_OF_PARALLELISM_DEFAULT = "1";
-    
+
     /**
      * The label for the current session
      */
@@ -203,6 +205,12 @@ public class FarragoDefaultSessionPersonality
         }
     }
 
+    // implement FarragoSessionPersonality
+    public boolean isAlterTableAddColumnIncremental()
+    {
+        return false;
+    }
+    
     // implement FarragoSessionPersonality
     public SqlOperatorTable getSqlOperatorTable(
         FarragoSessionPreparingStmt preparingStmt)

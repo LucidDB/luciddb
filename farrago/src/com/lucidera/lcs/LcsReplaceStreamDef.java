@@ -111,7 +111,8 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
                     clusteredIndex,
                     hasIndexes,
                     implementor.translateParamId(rootPageIdParamId).intValue(),
-                    clusterPos++));
+                    clusterPos++,
+                    false));
         }
     }
 }

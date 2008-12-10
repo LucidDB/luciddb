@@ -577,17 +577,6 @@ FemLocalTable UnscopedTableDefinition() :
     OptionalSampleList(table, false)
     OptionalDescription(table)
     {
-        List features = table.getFeature();
-        int sequences = 0;
-        for (Object o : features) {
-            if (((FemStoredColumn) o).getSequence() != null) {
-                sequences++;
-            }
-        }
-        if (sequences > 1) {
-            throw FarragoResource.instance()
-            .ValidatorMultipleTableSequences.ex(table.getName());
-        }
         return table;
     }
 }
@@ -1557,6 +1546,11 @@ DdlStmt AlterTableStmt() :
 {
     table = TableIdentifier()
     (
+        <ADD> [ <COLUMN> ] ddlStmt = AddColumnStmt(table)
+        {
+            return ddlStmt;
+        }
+        |
         <ALTER> <COLUMN> ddlStmt = AlterColumnStmt(table)
         {
             return ddlStmt;
@@ -1567,6 +1561,41 @@ DdlStmt AlterTableStmt() :
             return new DdlRebuildTableStmt(table);
         }
     )
+}
+
+DdlStmt AddColumnStmt(CwmTable table) :
+{
+    DdlStmt ddlStmt;
+    CwmColumn column;
+}
+{
+    // NOTE jvs 4-Dec-2008:  It's important that we construct
+    // ddlStmt BEFORE parsing the actual column definition.
+    // The reason is that the constructor for
+    // DdlAlterTableStructureStmt needs to make a copy
+    // of the unmodified table structure.
+    {
+        FarragoSession session =
+            farragoParser.getDdlValidator().getInvokingSession();
+        ddlStmt = new DdlAlterTableStructureStmt(
+            getRepos(), table);
+    }
+    column = ColumnDefinition(table)
+    {
+        boolean constraints = false;
+        UniqueFeature uf =
+            getRepos().getKeysIndexesPackage().getUniqueFeature();
+        if (!uf.getUniqueKey(column).isEmpty()) {
+            constraints = true;
+        }
+        if (constraints) {
+            // TODO jvs 4-Dec-2008:  This is supposed to work; we just
+            // haven't added the necessary support yet.
+            throw Util.needToImplement(
+                "Adding keys via ALTER TABLE is not yet supported");
+        }
+        return ddlStmt;
+    }
 }
 
 DdlStmt AlterColumnStmt(CwmTable table) :

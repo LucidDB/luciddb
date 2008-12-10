@@ -30,9 +30,10 @@ import net.sf.farrago.session.*;
 
 
 /**
- * DdlAlterStmt represents a DDL ALTER statement. Represents any kind of ALTER
- * statement except ALTER SYSTEM ..., which is handled by {@link
- * DdlSetSystemParamStmt}.
+ * DdlAlterStmt represents some but not all DDL ALTER statements.
+ * For others, see {@link DdlAlterTableStructureStmt},
+ * {@link DdlRebuildTableStmt}, and 
+ * {@link DdlSetSystemParamStmt}.
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -67,6 +68,9 @@ public abstract class DdlAlterStmt
 
     // REVIEW: SWZ: 2008-02-26: Eliminate this constructor if no red-zone 
     // subclasses require it.
+    /**
+     * @deprecated
+     */
     public DdlAlterStmt(CwmModelElement alterElement, boolean runsAsDml)
     {
         super(alterElement, runsAsDml);

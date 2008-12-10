@@ -749,7 +749,13 @@ public abstract class SqlTypeUtil
         // TODO jvs 2-Jan-2005:  handle all the other cases like
         // rows, collections, UDT's
         if (fromType.getSqlTypeName() == SqlTypeName.NULL) {
-            return toType.isNullable();
+            // REVIEW jvs 4-Dec-2008: We allow assignment from NULL to any
+            // type, including NOT NULL types, since in the case where no
+            // rows are actually processed, the assignment is legal
+            // (FRG-365).  However, it would be better if the validator's
+            // NULL type inference guaranteed that we had already
+            // assigned a real (nullable) type to every NULL literal.
+            return true;
         }
         return toType.getFamily() == fromType.getFamily();
     }

@@ -39,9 +39,12 @@ import javax.security.auth.login.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.defimpl.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.plugin.*;
@@ -182,14 +185,22 @@ public class FarragoDatabase
                     "java.library.path = "
                     + System.getProperty("java.library.path"));
 
+                // NOTE jvs 8-Dec-2008:  a pure-Java DBMS based on Farrago
+                // would need some non-Fennel mechanism for detecting that
+                // catalog recovery is needed.
+                
                 if (systemRepos.isFennelEnabled()) {
                     FarragoReposTxnContext txn = systemRepos.newTxnContext();
                     try {
                         txn.beginWriteTxn();
-                        loadFennel(
+                        boolean recoveryRequired = loadFennel(
                             startOfWorldAllocation,
                             sessionFactory.newFennelCmdExecutor(),
                             init);
+                        // This updateCatalog step always needs to run to deal
+                        // with the case of starting up after a restore (in
+                        // which case recoveryRequired=false).
+                        updateCatalog(recoveryRequired);
                         txn.commit();
                     } finally {
                         txn.rollback();
@@ -472,7 +483,7 @@ public class FarragoDatabase
         assert (n == 0) : "FennelStorage.getHandleCount() == " + n;
     }
 
-    private void loadFennel(
+    private boolean loadFennel(
         FarragoCompoundAllocation startOfWorldAllocation,
         FennelCmdExecutor cmdExecutor,
         boolean init)
@@ -539,12 +550,69 @@ public class FarragoDatabase
                 cmdExecutor,
                 cmd);
 
-        // NOTE jvs 14-Oct-2008:  in the future we can genericize
-        // this into a hook mechanism for cleaning up any other parts of the
-        // catalog which need it (including extension models).
-        cleanupBackupData(!cmd.isResultRecoveryRequired(), false);
-
         tracer.config("Fennel successfully loaded");
+
+        return cmd.isResultRecoveryRequired();
+    }
+
+    /**
+     * Updates the catalog on startup, taking care of any cleanup
+     * or recovery.
+     *
+     * @param recoveryRequired true if starting up after a crash
+     */
+    private void updateCatalog(boolean recoveryRequired)
+        throws Exception
+    {
+        // TODO jvs 14-Oct-2008:  give extension models a chance
+        // to clean up their portions of the catalog.
+
+        cleanupBackupData(!recoveryRequired, false);
+
+        // No repos transaction needed since we're already inside one.
+        List<FemRecoveryReference> refs =
+            new ArrayList<FemRecoveryReference>(
+                systemRepos.getMedPackage().getFemRecoveryReference().
+                refAllOfType());
+
+        // NOTE jvs 9-Dec-2008:  even when recoveryRequired=false,
+        // refs may be non-empty, since we may be restoring from
+        // a hot backup which was started while an operation such
+        // as ALTER TABLE ADD COLUMN was already in progress.
+
+        for (FemRecoveryReference ref : refs) {
+            // TODO jvs 8-Dec-2008:  proper dispatch mechanism
+            // once we have more of these; for now there's only one
+            assert(ref.getRecoveryType()
+                == RecoveryTypeEnum.ALTER_TABLE_ADD_COLUMN);
+            CwmDependency dep =
+                ref.getClientDependency().iterator().next();
+            CwmModelElement element = dep.getSupplier().iterator().next();
+            assert(element instanceof CwmTable);
+            DdlAlterTableStructureStmt.recover(
+                systemRepos,
+                (CwmTable) element);
+            ref.refDelete();
+        }
+    }
+
+    /**
+     * Simulates the catalog recovery which would occur on startup
+     * after a crash.  This allows tests to set up a crash representation
+     * in the catalog and then invoke recovery without actually having
+     * to bring down the JVM.
+     */
+    public void simulateCatalogRecovery()
+        throws Exception
+    {
+        FarragoReposTxnContext txn = systemRepos.newTxnContext();
+        try {
+            txn.beginWriteTxn();
+            updateCatalog(true);
+            txn.commit();
+        } finally {
+            txn.rollback();
+        }
     }
     
     /**

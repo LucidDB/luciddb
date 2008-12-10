@@ -125,6 +125,26 @@ public class FarragoProperties
     public final StringProperty testFilesetUnitlurql =
         new StringProperty(this, "com.lucidera.fileset.unitlurql", null);
 
+    /**
+     * The integer property "net.sf.farrago.ddl.DdlReloadTableStmt.sleep"
+     * specifies (if set) the number of milliseconds that ALTER TABLE
+     * should sleep after taking locks and before executing.  This
+     * is a trap intended solely for test instrumentation.
+     */
+    public final IntegerProperty testTableReloadSleep =
+        new IntegerProperty(
+            this, "net.sf.farrago.ddl.DdlReloadTableStmt.sleep");
+
+    /**
+     * The boolean property "net.sf.farrago.ddl.DdlReloadTableStmt.crash"
+     * causes ALTER TABLE to fail in a mode which simultates
+     * a database crash.
+     */
+    public final BooleanProperty testTableReloadCrash =
+        new BooleanProperty(
+            this, "net.sf.farrago.ddl.DdlReloadTableStmt.crash",
+            false);
+
     //~ Constructors -----------------------------------------------------------
 
     private FarragoProperties()

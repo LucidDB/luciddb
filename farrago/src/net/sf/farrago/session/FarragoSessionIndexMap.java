@@ -90,6 +90,20 @@ public interface FarragoSessionIndexMap
         CwmTable table);
 
     /**
+     * For ALTER TABLE, retrieves the old table structure
+     * corresponding to the table being modified.
+     * Be warned that the old table structure is not a complete
+     * copy; it consists of only the column definitions and their
+     * datatypes (without default values).  Additional
+     * logical constructs such as constraints are not present
+     * on the returned object, nor are physical constructs
+     * such as indexes.
+     *
+     * @return copy of old table, or null if not executing ALTER TABLE
+     */
+    public CwmTable getOldTableStructure();
+
+    /**
      * Creates an index and records its root in this map.
      *
      * @param wrapperCache cache for looking up data wrappers

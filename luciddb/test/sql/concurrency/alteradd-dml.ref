@@ -1,0 +1,84 @@
+-- setup
+> create schema alteradd;
+0 rows affected.
+> create table alteradd.t1(i int);
+0 rows affected.
+> insert into alteradd.t1 values (10), (20), (30), (40), (50), (60);
+6 rows affected.
+> create procedure alteradd.set_farrago_property(
+> in name varchar(128),val varchar(128))
+> language java
+> no sql
+> external name
+> 'class net.sf.farrago.test.FarragoTestUDR.setFarragoProperty';
+0 rows affected.
+> call alteradd.set_farrago_property(
+> 'net.sf.farrago.ddl.DdlReloadTableStmt.sleep', '5000');
+0 rows affected.
+-- end of setup
+
+-- thread queryBefore
+> select i, sys_boot.mgmt.sleep(1000) from alteradd.t1 order by i;
++------------+------------+
+| I          | EXPR$1     |
++------------+------------+
+| 10         | 0          |
+| 20         | 0          |
+| 30         | 0          |
+| 40         | 0          |
+| 50         | 0          |
+| 60         | 0          |
++------------+------------+
+
+-- end of thread queryBefore
+
+-- thread alter
+> alter table alteradd.t1 add j int generated always as identity;
+0 rows affected.
+-- end of thread alter
+
+-- thread queryDuringGood
+> select i from alteradd.t1 order by i;
++------------+
+| I          |
++------------+
+| 10         |
+| 20         |
+| 30         |
+| 40         |
+| 50         |
+| 60         |
++------------+
+
+-- end of thread queryDuringGood
+
+-- thread queryDuringBad
+> select * from alteradd.t1 order by i;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot query new column (via index "ALTERADD"."SYS$CLUSTERED_INDEX$T1$J") currently being added by ALTER TABLE
+-- end of thread queryDuringBad
+
+-- thread insertDuringBad
+> insert into alteradd.t1(i) values (999);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.ALTERADD.T1
+-- end of thread insertDuringBad
+
+-- thread alterDuringBad
+> alter table alteradd.t1 add z int;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.ALTERADD.T1
+-- end of thread alterDuringBad
+
+-- thread queryAfter
+> select i,j from alteradd.t1 order by i;
++------------+------------+
+| I          | J          |
++------------+------------+
+| 10         | 0          |
+| 20         | 1          |
+| 30         | 2          |
+| 40         | 3          |
+| 50         | 4          |
+| 60         | 5          |
++------------+------------+
+
+-- end of thread queryAfter
+

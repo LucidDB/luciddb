@@ -3270,6 +3270,12 @@ public class SqlValidatorImpl
             SqlValidatorScope scope = scopes.get(source);
             validateQuery(source, scope);
         }
+
+        // REVIEW jvs 4-Dec-2008: In FRG-365, this namespace row type is
+        // discarding the type inferred by inferUnknownTypes (which was invoked
+        // from validateSelect above).  It would be better if that information
+        // were used here so that we never saw any untyped nulls during
+        // checkTypeAssignment.
         RelDataType sourceRowType = getNamespace(source).getRowType();
         RelDataType logicalTargetRowType =
             getLogicalTargetRowType(targetRowType, insert);

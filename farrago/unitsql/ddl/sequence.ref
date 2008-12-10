@@ -42,7 +42,7 @@ Error: org.eigenbase.sql.parser.SqlParseException: Sequence start 1000 is requir
 >     i int generated always as identity
 >         (minvalue 100 maxvalue 500) primary key,
 >     j int generated always as identity);
-Error: org.eigenbase.sql.parser.SqlParseException: Multiple identity columns are specified in definition of T (state=,code=0)
+Error: Cannot specify more than one identity column in definition of table "SEQUENCE_DDL_TEST"."T" (state=,code=0)
 > 
 > -- out of range
 > create table t(

@@ -326,6 +326,11 @@ public class FarragoJdbcUtil
                     //  org.eigenbase.sql.SqlNode (and subclasses)
                     return false;
                 }
+                if (className.startsWith("net.sf.farrago.parser.impl.")) {
+                    // e.g.
+                    //   net.sf.farrago.parser.impl.Token
+                    return false;
+                }
             }
             if (!active.add(o)) {
                 // The object is already being tested for serialization. Tell a

@@ -637,7 +637,7 @@ column type family is {1} but default value type family is {2}</text>
 </exception>
 
 <exception id="421030" name="ValidatorMultipleTableSequences">
-<text>Multiple identity columns are specified in definition of {0}</text>
+<text>Cannot specify more than one identity column in definition of {0}</text>
 </exception>
 
 <exception id="421040" name="ValidatorInvalidSequenceStart">
@@ -650,6 +650,14 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="421060" name="ValidatorAlterFailed">
 <text>Unable to execute ALTER statement</text>
+</exception>
+
+<exception id="421065" name="ValidatorAlterForeignTable">
+<text>ALTER TABLE cannot be used on a foreign table</text>
+</exception>
+
+<exception id="421068" name="ValidatorAlterTableDataServer">
+<text>ALTER TABLE is not supported by local {0}</text>
 </exception>
 
 <exception id="421070" name="ValidatorAlterIdentityFailed">
@@ -817,6 +825,10 @@ Messages: {1}</text>
 
 <exception id="450180" name="JavaRowTooLong">
 <text>Row size exceeds maximum ({0,number,#} bytes); row data:  {1}</text>
+</exception>
+
+<exception id="450190" name="QueryAccessNewColumn">
+<text>Cannot query new column (via {0}) currently being added by ALTER TABLE</text>
 </exception>
 
 <!-- ====================================================================== -->

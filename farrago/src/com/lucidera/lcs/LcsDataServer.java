@@ -384,6 +384,12 @@ class LcsDataServer
     {
         return index.isClustered();
     }
+    
+    // implement FarragoMedLocalDataServer
+    public boolean supportsAlterTableAddColumn()
+    {
+        return true;
+    }
 }
 
 // End LcsDataServer.java

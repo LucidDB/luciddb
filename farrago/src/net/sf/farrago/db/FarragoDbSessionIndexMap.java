@@ -157,6 +157,12 @@ class FarragoDbSessionIndexMap
         }
     }
 
+    // implement FarragoSessionIndexMap
+    public CwmTable getOldTableStructure()
+    {
+        return null;
+    }
+    
     // implement FarragoAllocation
     public void closeAllocation()
     {

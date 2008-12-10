@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.List;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -283,6 +284,16 @@ class FtrsIndexScanRel
 
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
 
+        CwmTable oldTable = stmt.getIndexMap().getOldTableStructure();
+        if (oldTable != null) {
+            // REVIEW jvs 4-Dec-2008:  this wouldn't work for
+            // an unclustered index scan, so if somehow we ever
+            // ended up choosing one of those for ALTER TABLE
+            // ADD COLUMN, I think we'd be in trouble.
+            indexGuide = new FtrsIndexGuide(
+                stmt.getFarragoTypeFactory(),
+                oldTable);
+        }
         scanStream.setTupleDesc(
             indexGuide.getCoverageTupleDescriptor(index));
 

@@ -163,6 +163,12 @@ public class LucidDbSessionPersonality
     }
 
     // implement FarragoSessionPersonality
+    public boolean isAlterTableAddColumnIncremental()
+    {
+        return true;
+    }
+    
+    // implement FarragoSessionPersonality
     public SqlOperatorTable getSqlOperatorTable(
         FarragoSessionPreparingStmt preparingStmt)
     {
@@ -242,11 +248,17 @@ public class LucidDbSessionPersonality
 
         Collection<RelOptRule> medPluginRules = new LinkedHashSet<RelOptRule>();
 
+        boolean alterTable = false;
+        if (stmt.getIndexMap().getOldTableStructure() != null) {
+            alterTable = true;
+        }
+
         HepProgram program =
             createHepProgram(
                 fennelEnabled,
                 calcVM,
-                medPluginRules);
+                medPluginRules,
+                alterTable);
         FarragoSessionPlanner planner =
             new LucidDbPlanner(
                 program,
@@ -273,7 +285,8 @@ public class LucidDbSessionPersonality
     private HepProgram createHepProgram(
         boolean fennelEnabled,
         CalcVirtualMachine calcVM,
-        Collection<RelOptRule> medPluginRules)
+        Collection<RelOptRule> medPluginRules,
+        boolean alterTable)
     {
         HepProgramBuilder builder = new HepProgramBuilder();
 
@@ -311,12 +324,18 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new LcsTableDeleteRule());
         builder.addRuleInstance(new LcsTableMergeRule());
         
+        // Likewise for ALTER TABLE ADD COLUMN.
+        if (alterTable) {
+            builder.addRuleClass(CoerceInputsRule.class);
+            builder.addRuleInstance(LcsTableAlterRule.instance);
+        }
+
         // Now, pull join conditions out of joins, leaving behind Cartesian
         // products.  Why?  Because PushFilterRule doesn't start from
         // join conditions, only filters.  It will push them right back
         // into and possibly through the join.
         builder.addRuleInstance(ExtractJoinFilterRule.instance);
-        
+
         // Convert ProjectRels underneath an insert into RenameRels before
         // applying any merge projection rules.  Otherwise, we end up losing
         // column information used in error reporting during inserts.

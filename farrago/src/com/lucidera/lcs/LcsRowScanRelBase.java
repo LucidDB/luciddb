@@ -309,14 +309,24 @@ public abstract class LcsRowScanRelBase
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        // This assert will fail if the LucidDbSessionPersonality was not
-        // used and therefore LcsAddDeletionScanRule wasn't fired.
-        Util.permAssert(
-            inputs.length > 0 &&
+        FarragoPreparingStmt stmt =
+            FennelRelUtil.getPreparingStmt(this);
+        if (stmt.getIndexMap().getOldTableStructure() != null) {
+            // This assert will fail if we are doing ALTER TABLE ADD COLUMN
+            // but somehow we ended up subtracting off deleted rows.
+            Util.permAssert(
+                (inputs.length == 1) && (inputs[0] instanceof FennelValuesRel),
+                "ALTER TABLE ADD COLUMN should preserve deleted rows");
+        } else {
+            // This assert will fail if the LucidDbSessionPersonality was not
+            // used and therefore LcsAddDeletionScanRule wasn't fired.
+            Util.permAssert(
+                inputs.length > 0 &&
                 (inputs[0] instanceof LcsIndexSearchRel ||
                     inputs[0] instanceof LcsIndexMinusRel),
-            "Column store row scans are only available in the LucidDb" +
-            " personality");
+                "Column store row scans are only available in the LucidDb" +
+                " personality");
+        }
         return createScanStream(implementor);
     }
     

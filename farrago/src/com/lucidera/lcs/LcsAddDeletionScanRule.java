@@ -22,6 +22,11 @@ package com.lucidera.lcs;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
+
+import net.sf.farrago.query.*;
+
+import java.util.*;
 
 /**
  * A rule for modifying the input into a row scan to include a scan of the
@@ -76,8 +81,17 @@ public class LcsAddDeletionScanRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
+        boolean alterTable = false;
+        FarragoPreparingStmt stmt =
+            FennelRelUtil.getPreparingStmt(call.rels[0]);
+        if (stmt.getIndexMap().getOldTableStructure() != null) {
+            // We're doing ALTER TABLE ADD COLUMN, so we want
+            // to include deleted rows in the new column.
+            alterTable = true;
+        }
+        
         // Determine if this rule has already been fired
-        if (alreadyCalled(call)) {
+        if (alreadyCalled(call, alterTable)) {
             return;
         }
         
@@ -97,7 +111,18 @@ public class LcsAddDeletionScanRule
                     null,
                     null,
                     true);
-            newInputs[0] = delIndexScan;
+            if (alterTable) {
+                // Feed the row scan an empty set input instead of
+                // the deletion index, so it will scan all rows,
+                // both deleted and non-deleted.
+                newInputs[0] = new FennelValuesRel(
+                    origRowScan.getCluster(),
+                    delIndexScan.getRowType(),
+                    new ArrayList<List<RexLiteral>>(),
+                    true);
+            } else {
+                newInputs[0] = delIndexScan;
+            }
         } else {
             newInputs = new RelNode[origInputs.length];
             if (origInputs.length > 1) {
@@ -154,10 +179,12 @@ public class LcsAddDeletionScanRule
      * index.
      * 
      * @param call rule call
+     *
+     * @param alterTable whether we are preparing ALTER TABLE ADD COLUMN
      * 
      * @return true if this should be fired
      */
-    private boolean alreadyCalled(RelOptRuleCall call)
+    private boolean alreadyCalled(RelOptRuleCall call, boolean alterTable)
     {
         if (call.rels.length == 1) {
             RelNode rowScan = call.rels[0];
@@ -180,6 +207,10 @@ public class LcsAddDeletionScanRule
             relNode = call.rels[3];
         } else {
             relNode = call.rels[1];
+        }
+        if (alterTable) {
+            assert(relNode instanceof FennelValuesRel);
+            return true;
         }
         if (relNode instanceof LcsIndexSearchRel) {
             LcsIndexSearchRel indexSearch = (LcsIndexSearchRel) relNode;

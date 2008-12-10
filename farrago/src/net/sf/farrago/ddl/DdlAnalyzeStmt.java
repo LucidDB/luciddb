@@ -313,8 +313,15 @@ public class DdlAnalyzeStmt
     // implement DdlMultipleTransactionStmt
     public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
-        FarragoSession session)
+        FarragoSession session,
+        boolean success)
     {
+        // If there was a problem, just discard whatever we information
+        // we collected, but don't try to update anything.
+        if (!success) {
+            return;
+        }
+        
         // Update stats computed during executeUnlocked
         updateStats(
             repos,
