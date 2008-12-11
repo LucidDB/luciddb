@@ -619,15 +619,6 @@ ${farrago.test.jvmargs}
       </xslt>
       <java classname="org.netbeans.lib.jmi.uml2mof.Main"
         fork="true" failonerror="true">
-        <!-- UML2MOF Defaults to Netbeans MDR's btree implementation.  That
-             implementation has a bug which intermittently causes ordered 
-             multi-value associations to be re-ordered during XMI import.
-             The re-ordering can cause attributes to be re-ordered which 
-             causes FRG-322. The memory implementation provides deterministic
-             output. -->
-        <sysproperty
-          key="org.netbeans.mdr.storagemodel.StorageFactoryClassName"
-          value="org.netbeans.mdr.persistence.memoryimpl.StorageFactoryImpl"/>
         <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
         <classpath>
           <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
