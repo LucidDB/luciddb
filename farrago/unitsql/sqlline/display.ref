@@ -65,4 +65,31 @@ sqlline> !connect jdbc:farrago:;clientProcessId=bogus sa tiger
 | 10      | Sales      |
 +---------+------------+
 > 
+> -- get rowcounts without times
+> !set silent off
+> !set showtime off
+> create schema rowcounts;
+No rows affected
+> create table rowcounts.t(i int not null primary key);
+No rows affected
+> insert into rowcounts.t values (1);
+1 row affected
+> select * from rowcounts.t;
++----+
+| I  |
++----+
+| 1  |
++----+
+1 row selected
+> 
+> -- revert to default
+> !set showtime on
+> !set silent on
+> select * from rowcounts.t;
++----+
+| I  |
++----+
+| 1  |
++----+
+> 
 > !quit
