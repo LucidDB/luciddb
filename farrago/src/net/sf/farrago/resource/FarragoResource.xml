@@ -656,6 +656,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>ALTER TABLE cannot be used on a foreign table</text>
 </exception>
 
+<exception id="421066" name="ValidatorAlterTempTable">
+<text>ALTER TABLE cannot be used on a temporary table</text>
+</exception>
+
 <exception id="421068" name="ValidatorAlterTableDataServer">
 <text>ALTER TABLE is not supported by local {0}</text>
 </exception>

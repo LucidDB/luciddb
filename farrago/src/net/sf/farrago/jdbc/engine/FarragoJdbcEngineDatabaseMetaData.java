@@ -350,7 +350,7 @@ public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
     public boolean supportsAlterTableWithAddColumn()
         throws SQLException
     {
-        return false;
+        return true;
     }
 
     // implement DatabaseMetaData

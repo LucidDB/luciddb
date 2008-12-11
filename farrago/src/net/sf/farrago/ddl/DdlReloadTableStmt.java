@@ -258,6 +258,11 @@ public abstract class DdlReloadTableStmt
                     wrapperCache,
                     baseIndexMap,
                     writeIndexMap.get(index));
+
+                // REVIEW jvs 10-Dec-2008: Should this be generating a new
+                // end-of-stmt timestamp, instead of reusing the one generated
+                // at the beginning?  Also, should the table's timestamp
+                // likewise be set here rather than at the beginning?
                 
                 // Update the index's timestamp (for a normal DdlStmt executing
                 // in preValidate this happens behind the scenes).

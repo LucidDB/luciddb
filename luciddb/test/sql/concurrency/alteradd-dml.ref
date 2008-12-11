@@ -13,7 +13,7 @@
 > 'class net.sf.farrago.test.FarragoTestUDR.setFarragoProperty';
 0 rows affected.
 > call alteradd.set_farrago_property(
-> 'net.sf.farrago.ddl.DdlReloadTableStmt.sleep', '5000');
+> 'net.sf.farrago.ddl.DdlReloadTableStmt.sleep', '10000');
 0 rows affected.
 -- end of setup
 
@@ -52,9 +52,24 @@
 
 -- end of thread queryDuringGood
 
--- thread queryDuringBad
+-- thread queryDuringStar
 > select * from alteradd.t1 order by i;
-net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot query new column (via index "ALTERADD"."SYS$CLUSTERED_INDEX$T1$J") currently being added by ALTER TABLE
++------------+
+| I          |
++------------+
+| 10         |
+| 20         |
+| 30         |
+| 40         |
+| 50         |
+| 60         |
++------------+
+
+-- end of thread queryDuringStar
+
+-- thread queryDuringBad
+> select j from alteradd.t1 order by j;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: At line 1, column 8: Column 'J' not found in any table
 -- end of thread queryDuringBad
 
 -- thread insertDuringBad
@@ -66,6 +81,16 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock 
 > alter table alteradd.t1 add z int;
 net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.ALTERADD.T1
 -- end of thread alterDuringBad
+
+-- thread createViewDuringBad
+> create view alteradd.v as select j from alteradd.t1;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: At line 1, column 34: Column 'J' not found in any table
+-- end of thread createViewDuringBad
+
+-- thread createLabelDuring
+> create label sneaky;
+0 rows affected.
+-- end of thread createLabelDuring
 
 -- thread queryAfter
 > select i,j from alteradd.t1 order by i;
@@ -80,5 +105,21 @@ net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock 
 | 60         | 5          |
 +------------+------------+
 
+> alter session set "label" = 'SNEAKY';
+0 rows affected.
+> select i from alteradd.t1 order by i;
++------------+
+| I          |
++------------+
+| 10         |
+| 20         |
+| 30         |
+| 40         |
+| 50         |
+| 60         |
++------------+
+
+> select i,j from alteradd.t1 order by i;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: At line 1, column 10: Column 'J' not found in any table
 -- end of thread queryAfter
 

@@ -92,6 +92,10 @@ Error: Target CAST($t5):INTEGER NOT NULL cannot be assigned null value (state=,c
 > alter table x.v add h int;
 Error: DDL validation error near line 1, column 15: Reference to unknown table "V" (state=,code=0)
 > 
+> -- negative test:  can't alter a temp table
+> alter table sales.temps add h int;
+Error: ALTER TABLE cannot be used on a temporary table (state=,code=0)
+> 
 > -- negative test:  can't tack on constraints other than NOT NULL
 > alter table x.t add i int not null unique;
 Error: org.eigenbase.sql.parser.SqlParseException: class java.lang.String: Adding keys via ALTER TABLE is not yet supported (state=,code=0)

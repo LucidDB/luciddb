@@ -2,7 +2,7 @@
 
 @setup
 -- Test queries against a table to which a column is being added;
--- we use a trap property to make the ALTER sleep for 5 seconds during
+-- we use a trap property to make the ALTER sleep for 10 seconds during
 -- its execution.  The trap resets itself automatically after being
 -- encountered.
    create schema alteradd;
@@ -15,7 +15,7 @@
      external name 
      'class net.sf.farrago.test.FarragoTestUDR.setFarragoProperty';
    call alteradd.set_farrago_property(
-     'net.sf.farrago.ddl.DdlReloadTableStmt.sleep', '5000');
+     'net.sf.farrago.ddl.DdlReloadTableStmt.sleep', '10000');
 @end
 
 @thread queryBefore
@@ -36,11 +36,18 @@
    select i from alteradd.t1 order by i;
 @end
 
+@thread queryDuringStar
+-- this thread should start while the ALTER is in progress, and should
+-- succeed without seeing the new column
+   @sleep 7500
+   select * from alteradd.t1 order by i;
+@end
+
 @thread queryDuringBad
 -- this thread should start while the ALTER is in progress, and should
--- fail since it tries to query the new column
+-- fail since it tries to explicitly reference the new column
    @sleep 7500
-   @err select * from alteradd.t1 order by i;
+   @err select j from alteradd.t1 order by j;
 @end
 
 @thread insertDuringBad
@@ -57,9 +64,30 @@
    @err alter table alteradd.t1 add z int;
 @end
 
+@thread createViewDuringBad
+-- this thread should start while the ALTER is in progress, and should
+-- fail since CREATE VIEW is not allowed to reference a column being
+-- added
+   @sleep 7500
+   @err create view alteradd.v as select j from alteradd.t1;
+@end
+
+@thread createLabelDuring
+-- this thread should start while the ALTER is in progress, and should
+-- succeed
+   @sleep 7500
+   create label sneaky;
+@end
+
 @thread queryAfter
 -- this thread will start after the ALTER completes, so it should
 -- be able to successfully read the net effect of all other operations
-   @sleep 15000
+   @sleep 20000
    select i,j from alteradd.t1 order by i;
+   alter session set "label" = 'SNEAKY';
+-- should succeed
+   select i from alteradd.t1 order by i;
+-- should fail, since the ALTER TABLE wasn't committed yet at the
+-- time of label creation
+   @err select i,j from alteradd.t1 order by i;
 @end

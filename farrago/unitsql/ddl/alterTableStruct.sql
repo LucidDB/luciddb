@@ -58,6 +58,9 @@ alter table x.t add f int not null;
 -- negative test:  can't alter a view
 alter table x.v add h int;
 
+-- negative test:  can't alter a temp table
+alter table sales.temps add h int;
+
 -- negative test:  can't tack on constraints other than NOT NULL
 alter table x.t add i int not null unique;
 

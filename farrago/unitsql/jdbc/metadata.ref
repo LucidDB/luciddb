@@ -365,7 +365,7 @@ storesMixedCaseIdentifiers                        false
 storesMixedCaseQuotedIdentifiers                  false
 storesUpperCaseIdentifiers                        true
 storesUpperCaseQuotedIdentifiers                  false
-supportsAlterTableWithAddColumn                   false
+supportsAlterTableWithAddColumn                   true
 supportsAlterTableWithDropColumn                  false
 supportsANSI92EntryLevelSQL                       false
 supportsANSI92FullSQL                             false

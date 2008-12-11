@@ -153,10 +153,19 @@ public class DdlAlterTableStructureStmt
         if (getTable() instanceof FemForeignTable) {
             throw FarragoResource.instance().ValidatorAlterForeignTable.ex();
         }
+        FemLocalTable localTable = (FemLocalTable) getTable();
+        if (localTable.isTemporary()) {
+            // TODO jvs 10-Dec-2008:  According to SQL:2003, only local
+            // temporary tables should be prohibited, but thinking
+            // about what it would take to make ALTER TABLE ADD COLUMN
+            // work for global temporary tables is making my head hurt,
+            // so for now I'm disabling it for all temporary tables.
+            throw FarragoResource.instance().ValidatorAlterTempTable.ex();
+        }
         FarragoDataWrapperCache wrapperCache =
             ddlValidator.getDataWrapperCache();
         FemDataServer femDataServer =
-            ((FemLocalTable) getTable()).getServer();
+            localTable.getServer();
         FarragoMedLocalDataServer medDataServer =
             (FarragoMedLocalDataServer) wrapperCache.loadServerFromCatalog(
                 femDataServer);
@@ -289,6 +298,27 @@ public class DdlAlterTableStructureStmt
     {
         super.recoverFromFailure(ddlValidator, session);
         recover(session.getRepos(), getTable());
+    }
+    
+    // override DdlReloadTableStmt
+    public void completeAfterExecuteUnlocked(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSession session,
+        boolean success)
+    {
+        super.completeAfterExecuteUnlocked(ddlValidator, session, success);
+        if (!success) {
+            return;
+        }
+
+        // Reset the creation timestamp on the new column to the
+        // end-of-statement time so that labels created while the ALTER
+        // was in progress will not have the column visible.
+        FemStoredColumn column = (FemStoredColumn)
+            getTable().getFeature().get(getTable().getFeature().size() - 1);
+        String timestamp = FarragoCatalogUtil.createTimestamp();
+        column.setModificationTimestamp(timestamp);
+        column.setCreationTimestamp(timestamp);
     }
     
     // implement DdlReloadTableStmt

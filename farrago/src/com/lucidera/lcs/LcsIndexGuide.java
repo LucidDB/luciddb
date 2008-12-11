@@ -1273,6 +1273,9 @@ public class LcsIndexGuide
 
     private void failIfIndexInvalid(FemLocalIndex index)
     {
+        // REVIEW jvs 10-Dec-2008:  The validator should prevent
+        // us from ever actually hitting this, so perhaps it
+        // should change to an assertion instead.
         if (index.isInvalid()) {
             throw FarragoResource.instance().QueryAccessNewColumn.ex(
                 repos.getLocalizedObjectName(index));
