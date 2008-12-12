@@ -237,6 +237,37 @@ public class LucidDbSqlValidator
         return ((errorMax != null) && (errorMax == 0));
     }
 
+    // override SqlValidatorImpl
+    protected SqlNode getSelfJoinExprForUpdate(
+        SqlIdentifier table,
+        String alias)
+    {
+        // For LucidDB, when rewriting UPDATE to MERGE, we
+        // generate a self-join of the form
+        //     LCS_RID(src.x) = LCS_RID(tgt.y)
+        
+        // Arbitrarily pick the first column in the table
+        String colName;
+        if (alias.equals(UPDATE_SRC_ALIAS)) {
+            colName = UPDATE_ANON_PREFIX + "1";
+        } else {
+            RelOptTable relOptTable = getPreparingStmt().loadColumnSet(table);
+            if (relOptTable == null) {
+                // let validator complain about non-existent table
+                return null;
+            }
+            colName =
+                relOptTable.getRowType().getFieldList().get(0).getName();
+        }
+        SqlNode colRef = null;
+        SqlIdentifier colId = new SqlIdentifier(
+            new String [] { alias, colName }, SqlParserPos.ZERO);
+        SqlNode lcsRidCall = LucidDbOperatorTable.lcsRidFunc.createCall(
+            SqlParserPos.ZERO,
+            colId);
+        return lcsRidCall;
+    }
+    
     //~ Inner Classes ----------------------------------------------------------
 
     /**

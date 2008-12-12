@@ -187,12 +187,7 @@ public class LucidDbSessionPersonality
             return false;
         }
 
-        // LucidDB doesn't support UPDATE
-        if (feature == featureResource.SQLFeature_E101_03) {
-            return false;
-        }
-
-        // but LucidDB does support MERGE (unlike vanilla Farrago)
+        // LucidDB supports MERGE (unlike vanilla Farrago)
         if (feature == featureResource.SQLFeature_F312) {
             return true;
         }

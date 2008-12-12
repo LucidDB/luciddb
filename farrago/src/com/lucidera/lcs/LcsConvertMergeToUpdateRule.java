@@ -31,6 +31,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
 
+import com.lucidera.farrago.*;
 
 /**
  * LcsConvertMergeToUpdateRule is a rule for converting a {@link
@@ -273,13 +274,105 @@ public class LcsConvertMergeToUpdateRule
         {
             return null;
         }
-        
+
+        RelNode source = joinRel.getInput(0);
+
+        // First, see if this originated with a rewrite from UPDATE
+        // to MERGE, in which case LCS_RID is used for the join condition.
+        RexNode extraFilters = checkPreConditionsFromUpdateRewrite(
+            joinRel,
+            source,
+            targetTable);
+        if (extraFilters != null) {
+            return extraFilters;
+        }
+
+        // Otherwise, see if the user-level SQL matches the
+        // allowable pattern.
+        extraFilters = checkPreConditionsFromNonRewrite(
+            joinRel,
+            source,
+            targetTable);
+        return extraFilters;
+    }
+
+    private RexNode checkPreConditionsFromUpdateRewrite(
+        JoinRel joinRel,
+        RelNode source,
+        LcsRowScanRel targetTable)
+    {
+        // Look for LCS_RID(lhs.x) = LCS_RID(rhs.y) since that is what we
+        // generate when rewriting an UPDATE into a MERGE.  The rewrite will
+        // use the same column for x and y, but we don't have to care about
+        // whether the columns actually match here since LCS_RID only uses the
+        // column to determine the table.
+        List<RexNode> leftJoinKeyExprs = new ArrayList<RexNode>();
+        List<RexNode> rightJoinKeyExprs = new ArrayList<RexNode>();
+        RexNode extraFilters =
+            RelOptUtil.splitJoinCondition(
+                source,
+                targetTable,
+                joinRel.getCondition(),
+                leftJoinKeyExprs,
+                rightJoinKeyExprs,
+                null,
+                null);
+        for (int i = 0; i < leftJoinKeyExprs.size(); ++i) {
+            boolean leftIsRid = detectLcsRid(leftJoinKeyExprs.get(i));
+            boolean rightIsRid = detectLcsRid(rightJoinKeyExprs.get(i));
+            if (leftIsRid && rightIsRid) {
+                // We found what we're looking for.  Now, we
+                // need to toss any unused equijoin conditions
+                // back into the filter.
+                List<RexNode> rexList = new ArrayList<RexNode>();
+                if (extraFilters != null) {
+                    rexList.add(extraFilters);
+                }
+                RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
+                for (int j = 0; j < leftJoinKeyExprs.size(); ++j) {
+                    if (j == i) {
+                        // skip the LCS_RID condition we already
+                        // recognized
+                        continue;
+                    }
+                    rexList.add(
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.equalsOperator,
+                            leftJoinKeyExprs.get(j),
+                            rightJoinKeyExprs.get(j)));
+                }
+                extraFilters = RexUtil.andRexNodeList(
+                    rexBuilder, rexList);
+                if (extraFilters == null) {
+                    // Make up a TRUE literal to distinguish
+                    // "no extra filters" from "precondition not met".
+                    extraFilters = rexBuilder.makeLiteral(true);
+                }
+                return extraFilters;
+            }
+        }
+        return null;
+    }
+
+    private boolean detectLcsRid(RexNode node)
+    {
+        if (!(node instanceof RexCall)) {
+            return false;
+        }
+        RexCall call = (RexCall) node;
+        return (call.getOperator() == LucidDbOperatorTable.lcsRidFunc);
+    }
+    
+    private RexNode checkPreConditionsFromNonRewrite(
+        JoinRel joinRel,
+        RelNode source,
+        LcsRowScanRel targetTable)
+    {
         // Locate the equality join conditions in the ON clause.  Determine
         // if the keys from the source map back to the same keys from the
         // target.
         List<Integer> leftKeys = new ArrayList<Integer>();
         List<Integer> rightKeys = new ArrayList<Integer>();
-        RelNode source = joinRel.getInput(0);
         RexNode extraFilters =
             RelOptUtil.splitJoinCondition(
                 source,
