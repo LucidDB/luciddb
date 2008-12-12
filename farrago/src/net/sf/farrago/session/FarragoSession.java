@@ -379,12 +379,30 @@ public interface FarragoSession
     public void setLoopback();
 
     /**
-     * Tests whether this session is loopback session.
+     * Tests whether this session is a loopback session.
      *
      * @return true if this is a loopback session, false otherwise
      * @see #setLoopback()
      */
     public boolean isLoopback();
+
+    /**
+     * Tests whether this is a reentrant session executing DML on behalf of
+     * ALTER TABLE REBUILD.
+     *
+     * @return true if this session is doing ALTER TABLE REBUILD,
+     * false otherwise
+     */
+    public boolean isReentrantAlterTableRebuild();
+
+    /**
+     * Tests whether this is a reentrant session executing DML on behalf of
+     * ALTER TABLE ADD COLUMN.
+     *
+     * @return true if this session is doing ALTER TABLE ADD COLUMN,
+     * false otherwise
+     */
+    public boolean isReentrantAlterTableAddColumn();
 }
 
 // End FarragoSession.java

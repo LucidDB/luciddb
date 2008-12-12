@@ -53,14 +53,16 @@ public abstract class DdlReloadTableStmt
     //~ Instance fields --------------------------------------------------------
 
     private CwmTable table;
-
+    private String tableMofId;
+    private FarragoRepos repos;
     private FarragoSessionIndexMap baseIndexMap;
     private FarragoDataWrapperCache wrapperCache;
-    private Map<FemLocalIndex, Long> writeIndexMap;
+    // map from index MOFID to index root PageID
+    private Map<String, Long> writeIndexMap;
     private FarragoSessionIndexMap rebuildMap;
     private String reloadSql;
     private boolean rebuildingIndexes;
-    protected FemRecoveryReference recoveryRef;
+    private String recoveryRefMofId;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -73,6 +75,7 @@ public abstract class DdlReloadTableStmt
     {
         super(table, true);
         this.table = table;
+        tableMofId = table.refMofId();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -88,13 +91,13 @@ public abstract class DdlReloadTableStmt
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
-        FarragoRepos repos = session.getRepos();
+        repos = session.getRepos();
         wrapperCache = ddlValidator.getDataWrapperCache();
         SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
         
         rebuildingIndexes = shouldRebuildIndexes(ddlValidator);
-        writeIndexMap = new HashMap<FemLocalIndex, Long>();
+        writeIndexMap = new HashMap<String, Long>();
         baseIndexMap = ddlValidator.getIndexMap();
         
         // Create new index roots, which depends on index creation validation
@@ -110,25 +113,10 @@ public abstract class DdlReloadTableStmt
                 }
                 long newRoot =
                     baseIndexMap.createIndexStorage(wrapperCache, index, false);
-                writeIndexMap.put(index, newRoot);
+                writeIndexMap.put(index.refMofId(), newRoot);
             }
         }
         rebuildMap = new ReloadTableIndexMap(baseIndexMap, writeIndexMap);
-
-        // REVIEW jvs 4-Dec-2008:  for ALTER TABLE ADD COLUMN, it
-        // would be nice to avoid touching the rowcounts altogether,
-        // since they won't actually change.
-
-        // Reset current row counts, if applicable to the personality.
-        //
-        // REVIEW zfong 3/27/07 - Note that the update to the rowcounts below,
-        // as well as the one that will be done as part of the insert-select
-        // that follows, are executed in separate MDR xacts.  This will
-        // result in inconsistent rowcounts if a failure occurs in the
-        // middle of the alter table rebuild.  The alternative is to hold
-        // the MDR lock for the duration of the entire alter table rebuild.
-        // Or another would be to find a way to defer updating the rowcounts.
-        session.getPersonality().resetRowCounts((FemAbstractColumnSet) table);
 
         // REVIEW jvs 5-Dec-2009:  For FTRS ALTER TABLE REBUILD, the
         // next step is necessary, since the roots actually change
@@ -147,6 +135,10 @@ public abstract class DdlReloadTableStmt
             false);
         
         reloadSql = getReloadDml(writer);
+
+        // Nullify the table reference so that later
+        // transactions will know to reload it.
+        table = null;
     }
     
     // implement DdlMultipleTransactionStmt
@@ -163,13 +155,20 @@ public abstract class DdlReloadTableStmt
         session.getSessionVariables().set(
             FarragoDefaultSessionPersonality.CACHE_STATEMENTS,
             Boolean.toString(false));
-        session.getSessionVariables().set(
-            FarragoDefaultSessionPersonality.ENFORCE_IDENTITY_GENERATED_ALWAYS,
-            Boolean.toString(false));
         FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
         boolean success = false;
         stmtContext.prepare(reloadSql, true);
+        // NOTE jvs 11-Dec-2008:  As a side-effect, this may also
+        // update row counts in the catalog as appropriate to
+        // the session personality.  There's a small window in between
+        // here and completeAfterExecuteUnlocked where things can
+        // still end up out of sync, but no more so than any other
+        // DDL statement.
         stmtContext.execute();
+        
+        // Nullify table since getTable() was most likely called from the
+        // reentrant SQL.
+        table = null;
     }
 
     private void sleepIfTrapSet()
@@ -209,9 +208,7 @@ public abstract class DdlReloadTableStmt
         // FIXME jvs 8-Dec-2008:  we should be freeing
         // the new roots so that they don't stay around as
         // garbage; this applies to both FTRS and LCS,
-        // and to both REBUILD and ADD COLUMN.  Also,
-        // for LCS, we need to restore the rowcounts, as noted
-        // above by Zelaine.
+        // and to both REBUILD and ADD COLUMN.
     }
     
     // implement DdlMultipleTransactionStmt
@@ -222,11 +219,13 @@ public abstract class DdlReloadTableStmt
     {
         crashIfTrapSet();
 
-        if (recoveryRef != null) {
+        if (recoveryRefMofId != null) {
             // Regardless of success or failure, delete the recoveryRef
             // if it exists, since it is only for crash recovery.
+            FemRecoveryReference recoveryRef = (FemRecoveryReference)
+                session.getRepos().getMdrRepos().getByMofId(recoveryRefMofId);
             recoveryRef.refDelete();
-            recoveryRef = null;
+            recoveryRefMofId = null;
         }
         
         if (!success) {
@@ -237,7 +236,7 @@ public abstract class DdlReloadTableStmt
         FarragoRepos repos = session.getRepos();
         for (
             FemLocalIndex index
-                : FarragoCatalogUtil.getTableIndexes(repos, table))
+                : FarragoCatalogUtil.getTableIndexes(repos, getTable()))
         {
             if (index.isInvalid()) {
                 // Indicate that we've successfully built the index.
@@ -257,7 +256,7 @@ public abstract class DdlReloadTableStmt
                     index,
                     wrapperCache,
                     baseIndexMap,
-                    writeIndexMap.get(index));
+                    writeIndexMap.get(index.refMofId()));
 
                 // REVIEW jvs 10-Dec-2008: Should this be generating a new
                 // end-of-stmt timestamp, instead of reusing the one generated
@@ -303,7 +302,9 @@ public abstract class DdlReloadTableStmt
     }
 
     /**
-     * Generates the SQL to be used to reload the table.
+     * Generates the SQL to be used to reload the table.  Note that
+     * this is called from prepForExecuteUnlocked, so it is allowed
+     * to call getTable().
      *
      * @param writer writer to uses for generating SQL
      *
@@ -312,10 +313,23 @@ public abstract class DdlReloadTableStmt
     protected abstract String getReloadDml(SqlPrettyWriter writer);
 
     /**
+     * Sets up a recovery reference to be used in the event of a crash.
+     *
+     * @param recoveryRef recovery reference for this operation
+     */
+    protected void setRecoveryRef(FemRecoveryReference recoveryRef)
+    {
+        recoveryRefMofId = recoveryRef.refMofId();
+    }
+
+    /**
      * @return the table affected by this statement
      */
-    public CwmTable getTable()
+    protected CwmTable getTable()
     {
+        if (table == null) {
+            table = (CwmTable) repos.getMdrRepos().getByMofId(tableMofId);
+        }
         return table;
     }
 
@@ -342,7 +356,7 @@ public abstract class DdlReloadTableStmt
         implements FarragoSessionIndexMap
     {
         private FarragoSessionIndexMap internalMap;
-        private Map<FemLocalIndex, Long> writeIndexMap;
+        private Map<String, Long> writeIndexMap;
 
         /**
          * Constructs a ReloadTableIndexMap as a wrapper around a standard
@@ -353,7 +367,7 @@ public abstract class DdlReloadTableStmt
          */
         public ReloadTableIndexMap(
             FarragoSessionIndexMap internalMap,
-            Map<FemLocalIndex, Long> writeIndexMap)
+            Map<String, Long> writeIndexMap)
         {
             this.internalMap = internalMap;
             this.writeIndexMap = writeIndexMap;
@@ -375,7 +389,7 @@ public abstract class DdlReloadTableStmt
         public long getIndexRoot(FemLocalIndex index, boolean write)
         {
             if (write) {
-                Long root = writeIndexMap.get(index);
+                Long root = writeIndexMap.get(index.refMofId());
                 if (root != null) {
                     return root;
                 }
@@ -397,6 +411,12 @@ public abstract class DdlReloadTableStmt
             internalMap.instantiateTemporaryTable(wrapperCache, table);
         }
         
+        // implement FarragoSessionIndexMap
+        public CwmTable getReloadTable()
+        {
+            return getTable();
+        }
+    
         // implement FarragoSessionIndexMap
         public CwmTable getOldTableStructure()
         {
@@ -432,6 +452,15 @@ public abstract class DdlReloadTableStmt
             boolean truncate)
         {
             internalMap.dropIndexStorage(wrapperCache, index, truncate);
+        }
+
+        // implement FarragoSessionIndexMap
+        public void dropIndexStorage(
+            FarragoDataWrapperCache wrapperCache,
+            String indexMofId,
+            boolean truncate)
+        {
+            internalMap.dropIndexStorage(wrapperCache, indexMofId, truncate);
         }
 
         // implement FarragoSessionIndexMap

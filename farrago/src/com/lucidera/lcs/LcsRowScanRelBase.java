@@ -311,7 +311,7 @@ public abstract class LcsRowScanRelBase
     {
         FarragoPreparingStmt stmt =
             FennelRelUtil.getPreparingStmt(this);
-        if (stmt.getIndexMap().getOldTableStructure() != null) {
+        if (stmt.getSession().isReentrantAlterTableAddColumn()) {
             // This assert will fail if we are doing ALTER TABLE ADD COLUMN
             // but somehow we ended up subtracting off deleted rows.
             Util.permAssert(

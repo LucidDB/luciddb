@@ -135,10 +135,12 @@ public class DdlAlterTableStructureStmt
         FarragoSession session)
     {
         super.prepForExecuteUnlocked(ddlValidator, session);
-        recoveryRef = FarragoCatalogUtil.createRecoveryReference(
-            session.getRepos(),
-            RecoveryTypeEnum.ALTER_TABLE_ADD_COLUMN,
-            getTable());
+        FemRecoveryReference recoveryRef =
+            FarragoCatalogUtil.createRecoveryReference(
+                session.getRepos(),
+                RecoveryTypeEnum.ALTER_TABLE_ADD_COLUMN,
+                getTable());
+        setRecoveryRef(recoveryRef);
     }
     
     // implement DdlReloadTableStmt

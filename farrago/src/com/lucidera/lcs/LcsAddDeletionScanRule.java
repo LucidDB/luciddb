@@ -81,14 +81,12 @@ public class LcsAddDeletionScanRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        boolean alterTable = false;
         FarragoPreparingStmt stmt =
             FennelRelUtil.getPreparingStmt(call.rels[0]);
-        if (stmt.getIndexMap().getOldTableStructure() != null) {
-            // We're doing ALTER TABLE ADD COLUMN, so we want
-            // to include deleted rows in the new column.
-            alterTable = true;
-        }
+        // For ALTER TABLE ADD COLUMN, we want to include deleted rows in the
+        // new column.
+        boolean alterTable =
+            stmt.getSession().isReentrantAlterTableAddColumn();
         
         // Determine if this rule has already been fired
         if (alreadyCalled(call, alterTable)) {

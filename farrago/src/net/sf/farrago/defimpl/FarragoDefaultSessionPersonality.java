@@ -104,16 +104,6 @@ public class FarragoDefaultSessionPersonality
     public static final String VALIDATE_DDL_ON_PREPARE_DEFAULT = "false";
 
     /**
-     * Whether the GENERATED ALWAYS option for identity columns should be
-     * enforced. TODO jvs 8-May-2007: This is only intended for use by the
-     * system during ALTER TABLE REBUILD; need to hide it from the user level.
-     */
-    public static final String ENFORCE_IDENTITY_GENERATED_ALWAYS =
-        "enforceIdentityGeneratedAlways";
-    public static final String ENFORCE_IDENTITY_GENERATED_ALWAYS_DEFAULT =
-        "true";
-
-    /**
      * Whether non-correlated subqueries should be converted to constants 
      */
     public static final String REDUCE_NON_CORRELATED_SUBQUERIES =
@@ -157,9 +147,6 @@ public class FarragoDefaultSessionPersonality
             false);
         paramValidator.registerBoolParam(
             VALIDATE_DDL_ON_PREPARE,
-            false);
-        paramValidator.registerBoolParam(
-            ENFORCE_IDENTITY_GENERATED_ALWAYS,
             false);
         paramValidator.registerBoolParam(
             REDUCE_NON_CORRELATED_SUBQUERIES,
@@ -466,9 +453,6 @@ public class FarragoDefaultSessionPersonality
         variables.setDefault(
             VALIDATE_DDL_ON_PREPARE,
             VALIDATE_DDL_ON_PREPARE_DEFAULT);
-        variables.setDefault(
-            ENFORCE_IDENTITY_GENERATED_ALWAYS,
-            ENFORCE_IDENTITY_GENERATED_ALWAYS_DEFAULT);
         variables.setDefault(
             REDUCE_NON_CORRELATED_SUBQUERIES,
             REDUCE_NON_CORRELATED_SUBQUERIES_FARRAGO_DEFAULT);

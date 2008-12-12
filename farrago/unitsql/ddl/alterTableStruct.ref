@@ -199,22 +199,23 @@ Error: ALTER TABLE is not supported by local data server "SYS_BOOT"."MOCK_LOCAL_
 > -- test crash recovery via fault injection
 > -- (we add a column of multiset type to make sure the special cleanup
 > --  required for this kicks in)
-> create procedure x.set_farrago_property(
+> create schema y;
+> create procedure y.set_farrago_property(
 > in name varchar(128),val varchar(128))
 > language java
 > no sql
 > external name 'class net.sf.farrago.test.FarragoTestUDR.setFarragoProperty';
-> create procedure x.simulate_catalog_recovery()
+> create procedure y.simulate_catalog_recovery()
 > language java
 > no sql
 > external name 'class net.sf.farrago.test.FarragoTestUDR.simulateCatalogRecovery';
-> call x.set_farrago_property(
+> call y.set_farrago_property(
 >   'net.sf.farrago.ddl.DdlReloadTableStmt.crash', 'true');
 > alter table x.t3 add z integer multiset;
 Error: java.lang.RuntimeException: simulating ALTER TABLE crash (state=,code=0)
 > -- x.t3 is in a bad state now:  a query or insert would crash for real;
 > -- but we can fix it
-> call x.simulate_catalog_recovery();
+> call y.simulate_catalog_recovery();
 > insert into x.t3(i) values (8);
 > select * from x.t3 order by i;
 +----+
@@ -384,6 +385,15 @@ Error: Sequence generator limit exceeded for LOCALDB.X.T3 (state=,code=0)
 | 5   |
 | 20  |
 +-----+
+> -- LDB-191:  check rowcounts too
+> select current_row_count, deleted_row_count
+> from sys_boot.mgmt.dba_stored_tables_internal1
+> where schema_name='X' and table_name='T3';
++--------------------+--------------------+
+| CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++--------------------+--------------------+
+| 6                  | 0                  |
++--------------------+--------------------+
 > 
 > -- test deleted rows; this also demonstrates "holes" in new sequences,
 > -- which are expected behavior (if you don't like them, rebuild the table
@@ -404,5 +414,34 @@ Error: Sequence generator limit exceeded for LOCALDB.X.T3 (state=,code=0)
 | 7   | 6    |
 | 20  | 5    |
 +-----+------+
+> 
+> -- check rowcounts; deleted rows are not removed by ADD COLUMN
+> select current_row_count, deleted_row_count
+> from sys_boot.mgmt.dba_stored_tables_internal1
+> where schema_name='X' and table_name='T3';
++--------------------+--------------------+
+| CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++--------------------+--------------------+
+| 7                  | 1                  |
++--------------------+--------------------+
+> 
+> -- more on LDB-191:  verify ALTER TABLE REBUILD too by forcing a failure
+> call y.set_farrago_property(
+>   'net.sf.farrago.ddl.DdlReloadTableStmt.crash', 'true');
+> alter table x.t3 rebuild;
+Error: java.lang.RuntimeException: simulating ALTER TABLE crash (state=,code=0)
+> -- recover
+> call y.simulate_catalog_recovery();
+> -- check rowcounts again; note that the completed effect of the rebuild
+> -- is visible due to the fact that the placement of the crash trap
+> -- is after the reentrant INSERT commits
+> select current_row_count, deleted_row_count
+> from sys_boot.mgmt.dba_stored_tables_internal1
+> where schema_name='X' and table_name='T3';
++--------------------+--------------------+
+| CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
++--------------------+--------------------+
+| 7                  | 0                  |
++--------------------+--------------------+
 > 
 > !quit

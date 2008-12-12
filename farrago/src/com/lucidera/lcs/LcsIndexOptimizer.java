@@ -1485,10 +1485,9 @@ public class LcsIndexOptimizer
         if (indexList.isEmpty()) {
             return null;
         }
-        FarragoSessionIndexMap sessionIndexMap =
-            FennelRelUtil.getPreparingStmt(rowScan).getSession()
-            .getSessionIndexMap();
-        if (sessionIndexMap.getOldTableStructure() != null) {
+        FarragoSession session =
+            FennelRelUtil.getPreparingStmt(rowScan).getSession();
+        if (session.isReentrantAlterTableAddColumn()) {
             // We're doing ALTER TABLE ADD COLUMN; disqualify the new index
             // being created, since it doesn't have any rows in it yet, whereas
             // we want to read one column for all of the existing rows.

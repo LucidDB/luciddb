@@ -1434,6 +1434,19 @@ public class FarragoDbSession
         return isLoopback;
     }
 
+    // implement FarragoSession
+    public boolean isReentrantAlterTableRebuild()
+    {
+        return (getSessionIndexMap().getReloadTable() != null)
+            && !isReentrantAlterTableAddColumn();
+    }
+
+    // implement FarragoSession
+    public boolean isReentrantAlterTableAddColumn()
+    {
+        return (getSessionIndexMap().getOldTableStructure() != null);
+    }
+    
     //~ Inner Classes ----------------------------------------------------------
 
     private class DdlExecutionVisitor

@@ -248,10 +248,8 @@ public class LucidDbSessionPersonality
 
         Collection<RelOptRule> medPluginRules = new LinkedHashSet<RelOptRule>();
 
-        boolean alterTable = false;
-        if (stmt.getIndexMap().getOldTableStructure() != null) {
-            alterTable = true;
-        }
+        boolean alterTable = 
+            stmt.getSession().isReentrantAlterTableAddColumn();
 
         HepProgram program =
             createHepProgram(
@@ -860,6 +858,14 @@ public class LucidDbSessionPersonality
         TableModificationRel.Operation tableModOp,
         FarragoSessionRuntimeContext runningContext)
     {
+        if (session.isReentrantAlterTableAddColumn()) {
+            // LDB-191:  For ALTER TABLE ADD COLUMN, don't
+            // touch the rowcounts, because they don't change.
+            // We can just return 0, because the invoking session
+            // just ignores the DML return value.
+            return 0;
+        }
+        
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         FarragoRepos repos = session.getRepos();
         long affectedRowCount = 0;
@@ -878,6 +884,14 @@ public class LucidDbSessionPersonality
                 stmtValidator.findSchemaObject(
                     qualifiedName,
                     FemAbstractColumnSet.class);
+
+            if (session.isReentrantAlterTableRebuild()) {
+                // LDB-191:  For ALTER TABLE REBUILD, reset
+                // the rowcounts now before incrementing them
+                // with the result of the reentrant INSERT.
+                resetRowCounts(columnSet);
+            }
+            
             Long[] rowCountStats = new Long[2];
             Timestamp labelTimestamp =
                 session.getSessionLabelCreationTimestamp();

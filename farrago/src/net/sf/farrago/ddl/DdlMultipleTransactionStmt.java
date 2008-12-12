@@ -30,6 +30,14 @@ import net.sf.farrago.session.*;
  * repository transaction lock for excessive periods of time (and thereby
  * blocking other statements).
  *
+ *<p>
+ *
+ * NOTE jvs 11-Dec-2008: the implementations of executeUnlocked and
+ * completeAfterExecuteUnlocked should not reuse references to repository
+ * objects obtained during the initial repository transaction, as they
+ * may be stale.  Instead, MOFID's should be used to reload references
+ * as needed.
+ *
  * @author Stephan Zuercher
  * @version $Id$
  */
