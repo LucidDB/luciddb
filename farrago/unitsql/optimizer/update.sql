@@ -3,6 +3,11 @@
 -----------------------------
 -- Tests for UPDATE statement
 -----------------------------
+
+-- display rowcounts so diff can verify them
+!set silent off
+!set showtime off
+
 set schema 'upsales';
 create schema upsales;
 create table upemps(
@@ -54,6 +59,12 @@ select * from upemps order by empno;
 update upemps
   set deptno = (values (10));
 select * from upemps order by empno;
+-- no-op update; FTRS is not smart enough to detect that nothing
+-- really changed, so it reports 3 rows affected; this is actually
+-- the expected behavior according to SQL:2003
+update upemps
+  set deptno = (values (10));
+select * from upemps order by empno;
 -- restore original data
 truncate table upemps;
 insert into upemps
@@ -91,6 +102,9 @@ select * from upemps order by empno;
 -- full table update
 update upemps
   set empno = empno + 5;
+-- make sure lastUpsertRowsInserted comes out zero
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastUpsertRowsInserted';
 select * from upemps order by empno;
 
 -- update two columns and use a where clause
@@ -127,6 +141,12 @@ select * from upemps order by empno;
 update upemps
   set deptno = (values (10));
 select * from upemps order by empno;
+-- no-op update; LucidDB is smart enough to detect that nothing
+-- really changed, so it reports no rows affected; this
+-- is non-conforming behavior according to SQL:2003
+update upemps
+  set deptno = (values (10));
+
 -- attempt to update same column twice; should fail
 update upemps
   set empno=10, empno=20;
@@ -160,6 +180,26 @@ update upemps u
 where u.deptno = 10;
 select * from upemps order by empno;
 
+-- NOTE jvs 12-Dec-2008:  we can't test execution failures which would lead
+-- to rollback here because of the schizo Farrago/LucidDB setup used
+-- for these tests; for that, see luciddb/test/sql/txn/rollback.sql
+
+-- but we can test recoverable failures
+alter session set "errorMax" = 100;
+alter session set "logDir" = 'testlog';
+
+-- this will lead to division by zero for rows with deptno=10
+update upemps u set deptno = 7 / (deptno - 10);
+select * from sys_boot.mgmt.session_parameters_view
+    where param_name = 'lastRowsRejected';
+select * from upemps order by empno;
+
+-- can't update primary key in error tolerant mode (this test is OK
+-- since it's caught by the validator)
+update upemps set empno = empno+1;
+
+alter session set "errorMax" = 0;
+
 ---------------------------------------------------------------
 -- Explain output to make sure join elimination is taking place
 ---------------------------------------------------------------
@@ -179,5 +219,6 @@ explain plan for
 update upemps
   set deptno = (values (10));
 
+!set silent on
 -- End update.sql
 
