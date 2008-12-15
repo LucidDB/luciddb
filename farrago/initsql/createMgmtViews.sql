@@ -1017,6 +1017,6 @@ external name
 'class net.sf.farrago.syslib.FarragoManagementUDR.lobText';
 
 -- variation of LucidDB session personality but with index only scans enabled
-create jar sys_boot.sys_boot.luciddb_index_only_plugin 
+create or replace jar sys_boot.sys_boot.luciddb_index_only_plugin 
 library 'class com.lucidera.farrago.LucidDbIndexOnlySessionFactory' 
 options(0);
