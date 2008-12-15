@@ -37,6 +37,8 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.*;
 import org.eigenbase.util.*;
 
+import javax.jmi.reflect.*;
+
 /**
  * DdlReloadTableStmt is an abstract base for statements which
  * need to self-insert data from an existing table.  Currently
@@ -54,6 +56,7 @@ public abstract class DdlReloadTableStmt
 
     private CwmTable table;
     private String tableMofId;
+    private RefClass tableClass;
     private FarragoRepos repos;
     private FarragoSessionIndexMap baseIndexMap;
     private FarragoDataWrapperCache wrapperCache;
@@ -76,6 +79,7 @@ public abstract class DdlReloadTableStmt
         super(table, true);
         this.table = table;
         tableMofId = table.refMofId();
+        tableClass = table.refClass();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -223,7 +227,10 @@ public abstract class DdlReloadTableStmt
             // Regardless of success or failure, delete the recoveryRef
             // if it exists, since it is only for crash recovery.
             FemRecoveryReference recoveryRef = (FemRecoveryReference)
-                session.getRepos().getMdrRepos().getByMofId(recoveryRefMofId);
+                session.getRepos().getEnkiMdrRepos().getByMofId(
+                    recoveryRefMofId,
+                    session.getRepos().getMedPackage()
+                    .getFemRecoveryReference());
             recoveryRef.refDelete();
             recoveryRefMofId = null;
         }
@@ -328,7 +335,9 @@ public abstract class DdlReloadTableStmt
     protected CwmTable getTable()
     {
         if (table == null) {
-            table = (CwmTable) repos.getMdrRepos().getByMofId(tableMofId);
+            table = (CwmTable) repos.getEnkiMdrRepos().getByMofId(
+                tableMofId,
+                tableClass);
         }
         return table;
     }

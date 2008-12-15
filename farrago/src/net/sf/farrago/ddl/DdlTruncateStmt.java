@@ -32,6 +32,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.session.*;
 
+import javax.jmi.reflect.*;
 
 /**
  * DdlTruncateStmt represents a DDL TRUNCATE statement of any kind.
@@ -46,6 +47,7 @@ public class DdlTruncateStmt
     //~ Instance fields --------------------------------------------------------
 
     private String tableMofId;
+    private RefClass tableClass;
     private List<String> indexMofIds;
 
     //~ Constructors -----------------------------------------------------------
@@ -59,6 +61,7 @@ public class DdlTruncateStmt
     {
         super(truncatedElement, true);
         tableMofId = truncatedElement.refMofId();
+        tableClass = truncatedElement.refClass();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -115,7 +118,9 @@ public class DdlTruncateStmt
             return;
         }
         FemAbstractColumnSet table = (FemAbstractColumnSet)
-            session.getRepos().getMdrRepos().getByMofId(tableMofId);
+            session.getRepos().getEnkiMdrRepos().getByMofId(
+                tableMofId,
+                tableClass);
         session.getPersonality().resetRowCounts(table);
     }
 }
