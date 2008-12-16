@@ -62,7 +62,7 @@
   set schema 'rwconcur';
 
   @sync
-  @sleep 100
+  @sleep 1000
     @err delete from lineitem where l_shipmode = 'RAIL';
   @sync
   @sync
