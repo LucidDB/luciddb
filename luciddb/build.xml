@@ -71,7 +71,7 @@ ${farrago.test.jvmargs}
   <property name="fennel.dir" location="${open.dir}/fennel"/>
 
   <property file="${farrago.dir}/initBuild.properties" />
-  <property file="${farrago.dir}/customBuild.properties" />
+  <property file="${luciddb.dir}/customBuild.properties" />
 
   <!-- directory in which classes are built -->
   <property name="classes.dir" location="${luciddb.dir}/classes" />
@@ -657,6 +657,12 @@ ${farrago.test.jvmargs}
     <mkdir dir="${testlog.dir}"/>
     <copy todir="${classes.dir}" file="${release.properties.source}"
       overwrite="true"/>
+    <!--
+         Set jdbc.url.port.default in customBuild.properties to
+         override JDBC listener port.
+    -->
+    <farrago.configureReleaseProperties
+        file="${classes.dir}/FarragoRelease.properties"/>
   </target>
 
   <target name="makePluginDirs">

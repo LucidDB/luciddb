@@ -1158,7 +1158,7 @@ ${farrago.test.jvmargs}
           <propertyfile file="@{file}">
             <entry
                 key="jdbc.url.port.default"
-                default="${jdbc.url.port.default}"/>
+                value="${jdbc.url.port.default}"/>
           </propertyfile>
         </then>
       </if>
