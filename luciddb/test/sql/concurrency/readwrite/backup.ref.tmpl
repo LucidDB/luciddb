@@ -45,6 +45,13 @@
 0 rows affected.
 > alter system deallocate old;
 0 rows affected.
+> select sys_boot.mgmt.sleep(1000) from "lineitem" where f1 = 1 and f4 = 1;
++------------+
+| EXPR$0     |
++------------+
+| 0          |
++------------+
+
 > select (cast(counter_value as bigint) <
 > cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
 > from sys_root.dba_performance_counters

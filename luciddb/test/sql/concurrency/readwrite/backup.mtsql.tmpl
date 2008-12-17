@@ -37,8 +37,10 @@ set schema 'rwconcur';
 select count(*) from lineitem;
 truncate table lineitemu1;
 
--- the purge should now be reenabled
+-- the purge should now be reenabled; sleep briefly to allow time for the
+-- stat counters to be updated
 alter system deallocate old;
+select sys_boot.mgmt.sleep(1000) from "lineitem" where f1 = 1 and f4 = 1;
 select (cast(counter_value as bigint) <
         cast(applib.get_var('RWCONCUR', 'pageCount') as bigint))
     from sys_root.dba_performance_counters
