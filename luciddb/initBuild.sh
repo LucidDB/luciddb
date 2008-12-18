@@ -161,9 +161,9 @@ fi
 nightlylog_dir=${luciddb_dir}/nightlylog
 nightly_test_list="\
 test-nondb \
+test-nondb-concurrency-backupRestore \
 test-nondb-concurrency \
 test-nondb-backupRestore \
-test-nondb-concurrency-backupRestore \
 test-flatfile \
 test-oracle \
 test-sqlserver \
