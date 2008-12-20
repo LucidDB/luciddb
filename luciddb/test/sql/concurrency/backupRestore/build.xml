@@ -180,7 +180,6 @@
     <delete dir="${concurBackupRestore.dir}/bh-concurRestore"/>
     <delete dir="${concurBackupRestore.dir}/bh-concurValidate"/>
     <delete dir="${concurBackupRestore.dir}/bh-cancelBackup"/>
-    <delete dir="${gensql.dir}"/>
     <delete dir="${concurBackupRestore.dir}/fullArchive"/>
     <delete dir="${concurBackupRestore.dir}/fullArchive2"/>
   </target>
