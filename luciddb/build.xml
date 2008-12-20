@@ -306,8 +306,8 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-nondb-concurrency-backupRestore" depends="gen-properties">
-    <ant dir="${luciddb.dir}/test/sql/concurrency/readwrite"
-       target="testBackupRestore" inheritAll="false">
+    <ant dir="${luciddb.dir}/test/sql/concurrency/backupRestore"
+       target="test" inheritAll="false">
       <property name="foreign.db" value="nondb"/>
       <property name="bh.log.gtlf.env.ForeignDb" value="ldb-nondb"/>
       <property name="testlog.dir" value="${testlog.dir}"/>
