@@ -232,6 +232,12 @@ public:
      */
     virtual ExecStreamBufAccessor &readStream(
         ExecStream &stream) = 0;
+
+    /**
+     * @return the degree of parallelism implemented by this scheduler,
+     * or 1 for a non-parallel scheduler
+     */
+    virtual uint getDegreeOfParallelism();
 };
 
 inline ExecStreamResult ExecStreamScheduler::executeStream(

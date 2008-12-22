@@ -47,6 +47,7 @@ protected:
         std::hash_set<int64_t> const &outputParams);
     void testBTreeInsertExecStream(bool useDynamicBTree, uint nRows);
     void testNestedLoopJoinExecStream(uint nRowsLeft, uint nRowsRight);
+    virtual uint getDegreeOfParallelism();
     
 public:
     /**

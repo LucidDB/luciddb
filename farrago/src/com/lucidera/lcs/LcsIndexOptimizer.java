@@ -1481,12 +1481,27 @@ public class LcsIndexOptimizer
     public static FemLocalIndex getIndexWithMinDiskPages(
         LcsRowScanRelBase rowScan)
     {
+        // REVIEW jvs 21-Dec-2008:  Having a side effect like
+        // this (sorting the clusteredIndexes list in place) is
+        // a questionable practice.
+        
         List<FemLocalIndex> indexList = rowScan.clusteredIndexes;
         if (indexList.isEmpty()) {
             return null;
         }
+        Collections.sort(
+            indexList,
+            new IndexPageCountComparator(
+                FennelRelUtil.getPreparingStmt(rowScan).getSession().
+                getSessionLabelCreationTimestamp()));
         FarragoSession session =
             FennelRelUtil.getPreparingStmt(rowScan).getSession();
+
+        // REVIEW jvs 21-Dec-2008:  It would probably be a good idea
+        // to do this filtering under any circumstances; currently
+        // ALTER TABLE ADD COLUMN is the only known case where we
+        // might see an invalid clustered index.
+        
         if (session.isReentrantAlterTableAddColumn()) {
             // We're doing ALTER TABLE ADD COLUMN; disqualify the new index
             // being created, since it doesn't have any rows in it yet, whereas
@@ -1500,11 +1515,6 @@ public class LcsIndexOptimizer
             }
             indexList = newList;
         }
-        Collections.sort(
-            indexList,
-            new IndexPageCountComparator(
-                FennelRelUtil.getPreparingStmt(rowScan).getSession().
-                getSessionLabelCreationTimestamp()));
         return indexList.get(0);
     }
 

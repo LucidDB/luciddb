@@ -412,7 +412,7 @@ public class LcsAppendStreamDef
         FemMergeStreamDef mergeStream = null;
         if (numUniqueIndexes > 1) {
             mergeStream = repos.newFemMergeStreamDef();
-            mergeStream.setSequential(true);
+            mergeStream.setSequential(false);
             mergeStream.setPrePullInputs(false);
             deleteInput = mergeStream;
         }

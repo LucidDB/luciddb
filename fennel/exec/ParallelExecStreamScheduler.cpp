@@ -482,6 +482,11 @@ ParallelExecResult::ParallelExecResult(
     rc = rcInit;
 }
 
+uint ParallelExecStreamScheduler::getDegreeOfParallelism()
+{
+    return degreeOfParallelism;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ParallelExecStreamScheduler.cpp

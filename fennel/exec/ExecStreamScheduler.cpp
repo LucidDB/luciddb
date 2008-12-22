@@ -220,6 +220,11 @@ void ExecStreamScheduler::checkAbort() const
 {
 }
 
+uint ExecStreamScheduler::getDegreeOfParallelism()
+{
+    return 1;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End ExecStreamScheduler.cpp

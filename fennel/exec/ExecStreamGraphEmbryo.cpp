@@ -143,9 +143,14 @@ void ExecStreamGraphEmbryo::addDataflow(
     if (isImplicit) {
         pInput = pSourceStream;
     } else {
+        uint iOutput = pGraph->getOutputCount(pSourceStream->getStreamId());
+        ExecStreamBufProvision requiredConversion =
+            pSourceStream->getOutputBufConversion();
+        if (requiredConversion != BUFPROV_NONE) {
+            addAdapterFor(source, iOutput, requiredConversion);
+        }
         ExecStreamBufProvision requiredDataflow =
             pTargetStream->getInputBufProvision();
-        uint iOutput = pGraph->getOutputCount(pSourceStream->getStreamId());
         addAdapterFor(source, iOutput, requiredDataflow);
         pInput = pGraph->findLastStream(source, iOutput);
     }

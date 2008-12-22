@@ -186,6 +186,7 @@ public:
     virtual ExecStreamBufAccessor &readStream(ExecStream &stream);
     virtual void createBufferProvisionAdapter(
         ExecStreamEmbryo &embryo);
+    virtual uint getDegreeOfParallelism();
 };
 
 FENNEL_END_NAMESPACE

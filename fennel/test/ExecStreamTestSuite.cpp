@@ -50,6 +50,11 @@
 
 using namespace fennel;
 
+uint ExecStreamTestSuite::getDegreeOfParallelism()
+{
+    return 1;
+}
+
 void ExecStreamTestSuite::testScratchBufferExecStream()
 {
     StandardTypeDescriptorFactory stdTypeFactory;
@@ -173,6 +178,9 @@ void ExecStreamTestSuite::testMergeExecStream()
 
     MergeExecStreamParams paramsMerge;
     paramsMerge.outputTupleDesc.push_back(attrDesc);
+    if (getDegreeOfParallelism() != 1) {
+        paramsMerge.isParallel = true;
+    }
 
     ExecStreamEmbryo mergeStreamEmbryo;
     mergeStreamEmbryo.init(new MergeExecStream(),paramsMerge);
