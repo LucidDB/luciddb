@@ -700,6 +700,25 @@ public class FarragoOptRulesTest
             "select * from sales.emps " +
             "where cast((empno + (10/2)) as int) = 13");
     }
+
+    public void testReduceCastsNullable()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        // Simulate the way INSERT will insert casts to the target types
+        programBuilder.addRuleInstance(
+            new CoerceInputsRule(TableModificationRel.class, false));
+        // Convert projects to calcs, merge two calcs, and then
+        // reduce redundant casts in merged calc.
+        programBuilder.addRuleInstance(ProjectToCalcRule.instance);
+        programBuilder.addRuleInstance(MergeCalcRule.instance);
+        programBuilder.addRuleInstance(
+            FarragoReduceExpressionsRule.CALC_INSTANCE);
+        check(
+            programBuilder.createProgram(),
+            "insert into sales.depts(name) " +
+            "select cast(gender as varchar(128)) from sales.emps");
+    }
 }
 
 // End FarragoOptRulesTest.java

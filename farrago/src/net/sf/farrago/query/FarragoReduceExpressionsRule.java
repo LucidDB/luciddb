@@ -284,7 +284,6 @@ public abstract class FarragoReduceExpressionsRule
         List<RexNode> removableCasts = new ArrayList<RexNode>();
         findReducibleExps(
             preparingStmt,
-            rel.getCluster().getTypeFactory(),
             expList,
             constExps,
             addCasts,
@@ -368,7 +367,6 @@ public abstract class FarragoReduceExpressionsRule
      * to expressions with redundant casts removed.
      * 
      * @param preparingStmt the statement containing the expressions
-     * @param typeFactory type factory
      * @param exps list of candidate expressions to be examined for reduction
      * @param constExps returns the list of expressions that can be constant
      * reduced
@@ -380,7 +378,6 @@ public abstract class FarragoReduceExpressionsRule
      */
     private static void findReducibleExps(
         FarragoSessionPreparingStmt preparingStmt,
-        RelDataTypeFactory typeFactory,
         List<RexNode> exps,       
         List<RexNode> constExps,
         List<Boolean> addCasts,
@@ -389,7 +386,6 @@ public abstract class FarragoReduceExpressionsRule
         ReducibleExprLocator gardener =
             new ReducibleExprLocator(
                 preparingStmt,
-                typeFactory,
                 constExps,
                 addCasts,
                 removableCasts);
@@ -513,7 +509,6 @@ public abstract class FarragoReduceExpressionsRule
 
         ReducibleExprLocator(
             FarragoSessionPreparingStmt preparingStmt,
-            RelDataTypeFactory typeFactory,
             List<RexNode> constExprs,
             List<Boolean> addCasts,
             List<RexNode> removableCasts)
@@ -660,12 +655,7 @@ public abstract class FarragoReduceExpressionsRule
                 // if this cast expression can't be reduced to a literal,
                 // then see if we can remove the cast
                 if (call.getOperator() == SqlStdOperatorTable.castFunc) {
-                    RexNode[] operands = call.getOperands();
-                    if (operands.length == 1 && operands[0].getType().equals(
-                        call.getType()))
-                    {
-                        removableCasts.add(call);
-                    }
+                    reduceCasts(call);
                 }
             }
 
@@ -679,6 +669,49 @@ public abstract class FarragoReduceExpressionsRule
             stack.add(callConstancy);
         }
 
+        private void reduceCasts(RexCall outerCast)
+        {
+            RexNode[] operands = outerCast.getOperands();
+            if (operands.length != 1) {
+                return;
+            }
+            RelDataType outerCastType = outerCast.getType();
+            RelDataType operandType = operands[0].getType();
+            if (operandType.equals(outerCastType)) {
+                removableCasts.add(outerCast);
+                return;
+            }
+            // See if the reduction
+            // CAST((CAST x AS type) AS type NOT NULL)
+            // -> CAST(x AS type NOT NULL)
+            // applies.  TODO jvs 15-Dec-2008:  consider
+            // similar cases for precision changes.
+            if (!(operands[0] instanceof RexCall)) {
+                return;
+            }
+            RexCall innerCast = (RexCall) operands[0];
+            if (innerCast.getOperator() != SqlStdOperatorTable.castFunc) {
+                return;
+            }
+            if (innerCast.getOperands().length != 1) {
+                return;
+            }
+            RelDataTypeFactory typeFactory =
+                preparingStmt.getFarragoTypeFactory();
+            RelDataType outerTypeNullable =
+                typeFactory.createTypeWithNullability(
+                    outerCastType, true);
+            RelDataType innerTypeNullable =
+                typeFactory.createTypeWithNullability(
+                    operandType, true);
+            if (outerTypeNullable != innerTypeNullable) {
+                return;
+            }
+            if (operandType.isNullable()) {
+                removableCasts.add(innerCast);
+            }
+        }
+        
         public Void visitDynamicParam(RexDynamicParam dynamicParam)
         {
             return pushVariable();

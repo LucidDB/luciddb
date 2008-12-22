@@ -719,4 +719,24 @@ ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testReduceCastsNullable">
+        <Resource name="sql">
+            <![CDATA[insert into sales.depts(name) select cast(gender as varchar(128)) from sales.emps]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+TableModificationRel(table=[[LOCALDB, SALES, DEPTS]], operation=[INSERT], updateColumnList=[[]], flattened=[false])
+  ProjectRel(DEPTNO=[CAST(null):INTEGER NOT NULL], NAME=[$0])
+    ProjectRel(EXPR$0=[CAST($3):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"])
+      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+TableModificationRel(table=[[LOCALDB, SALES, DEPTS]], operation=[INSERT], updateColumnList=[[]], flattened=[false])
+  CalcRel(expr#0..9=[{inputs}], expr#10=[CAST(null):INTEGER NOT NULL], expr#11=[CAST($3):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], DEPTNO=[$t10], NAME=[$t11])
+    TableAccessRel(table=[[LOCALDB, SALES, EMPS]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>
