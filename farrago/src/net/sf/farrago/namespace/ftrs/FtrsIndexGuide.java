@@ -100,22 +100,6 @@ class FtrsIndexGuide
     }
 
     /**
-     * Determines whether an index is in a valid state for satisfying queries.
-     * This returns false for a new index under construction. Optimization rules
-     * which consider unclustered indexes must test this state. For FTRS,
-     * clustered indexes are always valid since they can only be created
-     * together with the table.
-     *
-     * @param index index to test
-     *
-     * @return true if usable
-     */
-    public boolean isValid(FemLocalIndex index)
-    {
-        return index.getVisibility() == VisibilityKindEnum.VK_PUBLIC;
-    }
-
-    /**
      * Gets a list of columns covered by an unclustered index.
      *
      * <p>Example: for index EMPS_UX, the result is [ NAME, DEPTNO, EMPNO ]

@@ -167,6 +167,12 @@ public class SqlParseException
         return expectedTokenSequences;
     }
 
+    // override Exception
+    public Throwable getCause()
+    {
+        return parserException;
+    }
+
     /**
      * Per {@link java.io.Serializable} API, provides a replacement object
      * to be written during serialization.

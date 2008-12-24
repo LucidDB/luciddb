@@ -30,6 +30,14 @@ import net.sf.farrago.session.*;
  * repository transaction lock for excessive periods of time (and thereby
  * blocking other statements).
  *
+ *<p>
+ *
+ * NOTE jvs 11-Dec-2008: the implementations of executeUnlocked and
+ * completeAfterExecuteUnlocked should not reuse references to repository
+ * objects obtained during the initial repository transaction, as they
+ * may be stale.  Instead, MOFID's should be used to reload references
+ * as needed.
+ *
  * @author Stephan Zuercher
  * @version $Id$
  */
@@ -44,7 +52,7 @@ public interface DdlMultipleTransactionStmt extends FarragoSessionDdlStmt
      * @param ddlValidator DDL validator for this statement
      * @see net.sf.farrago.catalog.FarragoReposTxnContext
      */
-    void prepForExecuteUnlocked(
+    public void prepForExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session);
 
@@ -56,20 +64,20 @@ public interface DdlMultipleTransactionStmt extends FarragoSessionDdlStmt
      * @param session reentrant Farrago session which may be used to execute
      *                DML statements
      */
-    void executeUnlocked(
+    public void executeUnlocked(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session);
 
     /**
      * Checks whether the 
      * {@link #completeAfterExecuteUnlocked(
-     *      FarragoSessionDdlValidator, FarragoSession)}
+     *      FarragoSessionDdlValidator, FarragoSession, boolean)}
      * method requires a repository write transaction.
      * 
      * @return true if a write txn must be started before executing the
      *         completion step, false if a read txn is sufficient
      */
-    boolean completeRequiresWriteTxn();
+    public boolean completeRequiresWriteTxn();
     
     /**
      * Provides access to the repository after execution of the DDL.  
@@ -95,10 +103,13 @@ public interface DdlMultipleTransactionStmt extends FarragoSessionDdlStmt
      * @param ddlValidator DDL validator for this statement
      * @param session reentrant Farrago session which may be used to execute
      *                DML statements
+     * @param success whether the execution succeeded; detection
+     * of failure can be used to recover
      */
-    void completeAfterExecuteUnlocked(
+    public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
-        FarragoSession session);
+        FarragoSession session,
+        boolean success);
 }
 
 // End DdlMultipleTransactionStmt.java

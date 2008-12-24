@@ -37,3 +37,16 @@ select * from sales.depts order by name;
 -- revert to fetching all rows
 !set rowlimit 0
 select * from sales.depts order by name;
+
+-- get rowcounts without times
+!set silent off
+!set showtime off
+create schema rowcounts;
+create table rowcounts.t(i int not null primary key);
+insert into rowcounts.t values (1);
+select * from rowcounts.t;
+
+-- revert to default
+!set showtime on
+!set silent on
+select * from rowcounts.t;

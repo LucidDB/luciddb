@@ -23,13 +23,21 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/MergeExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStreamScheduler.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+MergeExecStreamParams::MergeExecStreamParams()
+{
+    isParallel = false;
+}
 
 void MergeExecStream::prepare(
     MergeExecStreamParams const &params)
 {
     ConfluenceExecStream::prepare(params);
+    isParallel = params.isParallel;
     assert(!inAccessors.empty());
     for (uint i = 0; i < inAccessors.size(); ++i) {
         assert(
@@ -37,6 +45,7 @@ void MergeExecStream::prepare(
         assert(
             inAccessors[i]->getTupleFormat() == pOutAccessor->getTupleFormat());
     }
+    inputEOS.resize(inAccessors.size());
 }
 
 void MergeExecStream::open(
@@ -45,6 +54,13 @@ void MergeExecStream::open(
     ConfluenceExecStream::open(restart);
     iInput = 0;
     pLastConsumptionEnd = NULL;
+    nInputsEOS = 0;
+    std::fill(inputEOS.begin(), inputEOS.end(), false);
+    // Ignore the isParallel parameter unless we are actually running
+    // in a parallel scheduler.
+    if (pGraph->getScheduler()->getDegreeOfParallelism() == 1) {
+        isParallel = false;
+    }
 }
 
 ExecStreamResult MergeExecStream::execute(
@@ -69,7 +85,8 @@ ExecStreamResult MergeExecStream::execute(
         return EXECRC_EOS;
     }
 
-    while (iInput < inAccessors.size()) {
+    int iInputStart = iInput;
+    for (;;) {
         switch(inAccessors[iInput]->getState()) {
         case EXECBUF_OVERFLOW:
         case EXECBUF_NONEMPTY:
@@ -80,20 +97,51 @@ ExecStreamResult MergeExecStream::execute(
                 pLastConsumptionEnd);
             return EXECRC_BUF_OVERFLOW;
         case EXECBUF_UNDERFLOW:
-            return EXECRC_BUF_UNDERFLOW;
+            if (!isParallel) {
+                return EXECRC_BUF_UNDERFLOW;
+            }
+            ++iInput;
+            break;
         case EXECBUF_EMPTY:
             inAccessors[iInput]->requestProduction();
-            return EXECRC_BUF_UNDERFLOW;
+            if (!isParallel) {
+                return EXECRC_BUF_UNDERFLOW;
+            }
+            ++iInput;
+            break;
         case EXECBUF_EOS:
+            if (!inputEOS[iInput]) {
+                inputEOS[iInput] = true;
+                nInputsEOS++;
+            }
             // Current input is exhausted; move on to the next one.
             ++iInput;
             break;
         default:
             permAssert(false);
         }
+        if (isParallel) {
+            if (iInput == inAccessors.size()) {
+                iInput = 0;
+            }
+            if (iInput == iInputStart) {
+                // We've made one full loop without making any progress;
+                // time to give up for this quantum.
+                break;
+            }
+        } else {
+            if (iInput == inAccessors.size()) {
+                break;
+            }
+        }
     }
-    pOutAccessor->markEOS();
-    return EXECRC_EOS;
+    if (nInputsEOS == inAccessors.size()) {
+        pOutAccessor->markEOS();
+        return EXECRC_EOS;
+    } else {
+        assert(isParallel);
+        return EXECRC_BUF_UNDERFLOW;
+    }
 }
 
 ExecStreamBufProvision MergeExecStream::getOutputBufProvision() const

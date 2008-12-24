@@ -35,6 +35,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.jmi.JmiObjUtil;
@@ -714,7 +715,7 @@ public class LcsIndexGuide
         return createUnclusteredRowType(uniqueIndex, keyProj);
     }
 
-    protected FemSplitterStreamDef newSplitter(RelDataType outputRowType)
+    FemSplitterStreamDef newSplitter(RelDataType outputRowType)
     {
         FemSplitterStreamDef splitter = repos.newFemSplitterStreamDef();
 
@@ -726,7 +727,7 @@ public class LcsIndexGuide
         return splitter;
     }
 
-    protected FemBarrierStreamDef newBarrier(
+    FemBarrierStreamDef newBarrier(
         RelDataType outputRowType,
         BarrierReturnMode returnMode,
         int deleteRowCountParamId)
@@ -766,15 +767,17 @@ public class LcsIndexGuide
      * @param clusterPos only used if this is a cluster replace, in which
      * case, it corresponds to the position of this cluster from the
      * list of clusters that will be replaced
+     * @param alterTable whether we are doing ALTER TABLE ADD COLUMN
      * 
      * @return the constructed cluster append stream
      */
-    protected FemLcsClusterAppendStreamDef newClusterAppend(
+    FemLcsClusterAppendStreamDef newClusterAppend(
         FennelRel rel,
         FemLocalIndex clusterIndex,
         boolean hasIndexes,
         int rootPageIdParamId,
-        int clusterPos)
+        int clusterPos,
+        boolean alterTable)
     {
         FemLcsClusterAppendStreamDef clusterAppend;
         if (rootPageIdParamId > 0) {
@@ -811,18 +814,27 @@ public class LcsIndexGuide
                 new Integer[getNumFlattenedClusterCols(clusterIndex)];
 
             //
-            // Figure out the projection covering columns contained in each index.
+            // Figure out the projection covering columns contained in each
+            // index.
             //
             int i = 0;
-            for (
-                CwmIndexedFeature indexedFeature :
-                    clusterIndex.getIndexedFeature())
+            for (CwmIndexedFeature indexedFeature
+                     : clusterIndex.getIndexedFeature())
             {
                 FemAbstractColumn column =
                     (FemAbstractColumn) indexedFeature.getFeature();
                 int n = getNumFlattenedSubCols(column.getOrdinal());
                 for (int j = 0; j < n; ++j) {
-                    clusterColProj[i] = flattenOrdinal(column.getOrdinal()) + j;
+                    if (alterTable) {
+                        // If we're doing ALTER TABLE ADD COLUMN, the
+                        // new column is the only thing in the input;
+                        // if it's a UDT, its fields should match the
+                        // order of the input row.
+                        clusterColProj[i] = i;
+                    } else {
+                        clusterColProj[i] =
+                            flattenOrdinal(column.getOrdinal()) + j;
+                    }
                     i++;
                 }
             }
@@ -837,7 +849,7 @@ public class LcsIndexGuide
         return clusterAppend;
     }
 
-    protected FemLcsRowScanStreamDef newRowScan(
+    FemLcsRowScanStreamDef newRowScan(
         LcsRowScanRelBase rel,
         Integer [] projectedColumns,
         Integer [] residualColumns)
@@ -866,7 +878,7 @@ public class LcsIndexGuide
     /**
      * Creates a set of streams for updating a bitmap index
      */
-    protected LcsCompositeStreamDef newBitmapAppend(
+    LcsCompositeStreamDef newBitmapAppend(
         FennelRel rel,
         FemLocalIndex index,
         FemLocalIndex deletionIndex,
@@ -980,7 +992,7 @@ public class LcsIndexGuide
      *
      * @return the created sort streamDef
      */
-    protected FemSortingStreamDef newSorter(
+    FemSortingStreamDef newSorter(
         FemLocalIndex index,
         Double estimatedNumRows,
         boolean ridOnly,
@@ -1009,7 +1021,7 @@ public class LcsIndexGuide
         return sortingStream;
     }
 
-    protected FemLbmSplicerStreamDef newSplicer(
+    FemLbmSplicerStreamDef newSplicer(
         FennelRel rel,
         FemLocalIndex index,
         FemLocalIndex deletionIndex,
@@ -1075,7 +1087,7 @@ public class LcsIndexGuide
         return splicer;
     }
 
-    protected FemIndexScanDef newIndexScan(
+    FemIndexScanDef newIndexScan(
         FennelRel rel,
         FemLocalIndex index,
         Integer [] projectedColumns)
@@ -1086,7 +1098,7 @@ public class LcsIndexGuide
         return scanStream;
     }
 
-    protected FemLbmSearchStreamDef newIndexSearch(
+    FemLbmSearchStreamDef newIndexSearch(
         FennelRel rel,
         FemLocalIndex index,
         boolean isUniqueKey,
@@ -1203,6 +1215,10 @@ public class LcsIndexGuide
 
         long indexId = JmiObjUtil.getObjectId(index);
 
+        if (!write) {
+            failIfIndexInvalid(index);
+        }
+        
         indexAccessor.setIndexId(indexId);
 
         FemTupleDescriptor indexTupleDesc;
@@ -1255,6 +1271,17 @@ public class LcsIndexGuide
         }
     }
 
+    private void failIfIndexInvalid(FemLocalIndex index)
+    {
+        // REVIEW jvs 10-Dec-2008:  The validator should prevent
+        // us from ever actually hitting this, so perhaps it
+        // should change to an assertion instead.
+        if (index.isInvalid()) {
+            throw FarragoResource.instance().QueryAccessNewColumn.ex(
+                repos.getLocalizedObjectName(index));
+        }
+    }
+
     /**
      * Fills in a cluster scan def for this scan
      *
@@ -1280,6 +1307,10 @@ public class LcsIndexGuide
 
         // setup index accessor def fields
 
+        if (!write) {
+            failIfIndexInvalid(index);
+        }
+        
         if (!FarragoCatalogUtil.isIndexTemporary(index)) {
             clusterScan.setRootPageId(
                 stmt.getIndexMap().getIndexRoot(index, write));
@@ -1310,7 +1341,7 @@ public class LcsIndexGuide
      *
      * <p>The inputs are two columns: [rowCount startRid]
      */
-    protected RexNode [] getUnclusteredInputs(RexBuilder builder)
+    RexNode [] getUnclusteredInputs(RexBuilder builder)
     {
         // First obtain the row count and starting row id
         //
@@ -1330,7 +1361,7 @@ public class LcsIndexGuide
             };
     }
 
-    protected RelDataType getUnclusteredInputType()
+    RelDataType getUnclusteredInputType()
     {
         // TODO: These types must match the fennel types for
         // RecordNum and LcsRowId
@@ -1343,7 +1374,7 @@ public class LcsIndexGuide
             new String[] { "ROWCOUNT", "SRID" });
     }
 
-    protected FemTupleDescriptor getUnclusteredInputDesc()
+    FemTupleDescriptor getUnclusteredInputDesc()
     {
         return FennelRelUtil.createTupleDescriptorFromRowType(
             repos,
@@ -1397,12 +1428,7 @@ public class LcsIndexGuide
             FennelRelUtil.newIotaProjection(1));
     }
 
-    public boolean isValid(FemLocalIndex index)
-    {
-        return index.getVisibility() == VisibilityKindEnum.VK_PUBLIC;
-    }
-
-    protected FemSortingStreamDef newBitmapSorter()
+    FemSortingStreamDef newBitmapSorter()
     {
         FemSortingStreamDef sortingStream = repos.newFemSortingStreamDef();
         sortingStream.setDistinctness(DistinctnessEnum.DUP_ALLOW);
@@ -1427,7 +1453,7 @@ public class LcsIndexGuide
         bitOpStream.setOutputDesc(createUnclusteredBitmapTupleDesc());
     }
 
-    protected FemLbmIntersectStreamDef newBitmapIntersect(
+    FemLbmIntersectStreamDef newBitmapIntersect(
         FennelDynamicParamId startRidParamId,
         FennelDynamicParamId rowLimitParamId)
     {
@@ -1442,7 +1468,7 @@ public class LcsIndexGuide
         return intersectStream;
     }
 
-    protected FemLbmMinusStreamDef newBitmapMinus(
+    FemLbmMinusStreamDef newBitmapMinus(
         FennelDynamicParamId startRidParamId,
         FennelDynamicParamId rowLimitParamId,
         RelNode child)
@@ -1464,7 +1490,7 @@ public class LcsIndexGuide
         return minusStream;
     }
 
-    protected LcsIndexMinusRel createMinusOfDeletionIndex(
+    LcsIndexMinusRel createMinusOfDeletionIndex(
         FennelRel rel,
         LcsTable lcsTable,
         RelNode input)
@@ -1505,7 +1531,7 @@ public class LcsIndexGuide
      *
      * @return the created index search
      */
-    protected LcsIndexSearchRel createDeletionIndexScan(
+    LcsIndexSearchRel createDeletionIndexScan(
         FennelRel rel,
         LcsTable lcsTable,
         FennelRelParamId startRidParamId,

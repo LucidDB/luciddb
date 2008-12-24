@@ -72,7 +72,7 @@ alter system set "deviceSchedulerType" = 'foo';
 select * from sys_boot.mgmt.session_parameters_view
   where param_name in 
     ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric',
-     'validateDdlOnPrepare', 'enforceIdentityGeneratedAlways', 
+     'validateDdlOnPrepare',
      'cacheStatements', 'reduceNonCorrelatedSubqueries')
   order by 1;
 

@@ -1,4 +1,4 @@
-Fennel Source Release 0.8.0
+Fennel Source Release 0.8.1
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -9,7 +9,7 @@ http://fennel.sourceforge.net
 BUILD
 
 See file INSTALL for details.  If instead of building you would like
-to obtain pre-packaged binaries, download the full Eigenbase binary
+to obtain pre-packaged binaries, download the full Eigenbase binary 
 release for your platform.
 
 http://www.eigenbase.org/download.html

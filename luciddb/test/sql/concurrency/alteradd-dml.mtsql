@@ -1,0 +1,93 @@
+@nolockstep
+
+@setup
+-- Test queries against a table to which a column is being added;
+-- we use a trap property to make the ALTER sleep for 10 seconds during
+-- its execution.  The trap resets itself automatically after being
+-- encountered.
+   create schema alteradd;
+   create table alteradd.t1(i int);
+   insert into alteradd.t1 values (10), (20), (30), (40), (50), (60);
+   create procedure alteradd.set_farrago_property(
+     in name varchar(128),val varchar(128))
+     language java
+     no sql
+     external name 
+     'class net.sf.farrago.test.FarragoTestUDR.setFarragoProperty';
+   call alteradd.set_farrago_property(
+     'net.sf.farrago.ddl.DdlReloadTableStmt.sleep', '10000');
+@end
+
+@thread queryBefore
+-- this thread will start before the ALTER, but it has a per-row sleep,
+-- so its duration should extend into the ALTER
+   select i, sys_boot.mgmt.sleep(1000) from alteradd.t1 order by i;
+@end
+
+@thread alter
+   @sleep 5000
+   alter table alteradd.t1 add j int generated always as identity;
+@end
+
+@thread queryDuringGood
+-- this thread should start while the ALTER is in progress, and should
+-- succeed since it only queries the old column
+   @sleep 7500
+   select i from alteradd.t1 order by i;
+@end
+
+@thread queryDuringStar
+-- this thread should start while the ALTER is in progress, and should
+-- succeed without seeing the new column
+   @sleep 7500
+   select * from alteradd.t1 order by i;
+@end
+
+@thread queryDuringBad
+-- this thread should start while the ALTER is in progress, and should
+-- fail since it tries to explicitly reference the new column
+   @sleep 7500
+   @err select j from alteradd.t1 order by j;
+@end
+
+@thread insertDuringBad
+-- this thread should start while the ALTER is in progress, and should
+-- fail since INSERT conflicts with ALTER
+   @sleep 7500
+   @err insert into alteradd.t1(i) values (999);
+@end
+
+@thread alterDuringBad
+-- this thread should start while the ALTER is in progress, and should
+-- fail since ALTER operations conflict with each other
+   @sleep 7500
+   @err alter table alteradd.t1 add z int;
+@end
+
+@thread createViewDuringBad
+-- this thread should start while the ALTER is in progress, and should
+-- fail since CREATE VIEW is not allowed to reference a column being
+-- added
+   @sleep 7500
+   @err create view alteradd.v as select j from alteradd.t1;
+@end
+
+@thread createLabelDuring
+-- this thread should start while the ALTER is in progress, and should
+-- succeed
+   @sleep 7500
+   create label sneaky;
+@end
+
+@thread queryAfter
+-- this thread will start after the ALTER completes, so it should
+-- be able to successfully read the net effect of all other operations
+   @sleep 20000
+   select i,j from alteradd.t1 order by i;
+   alter session set "label" = 'SNEAKY';
+-- should succeed
+   select i from alteradd.t1 order by i;
+-- should fail, since the ALTER TABLE wasn't committed yet at the
+-- time of label creation
+   @err select i,j from alteradd.t1 order by i;
+@end

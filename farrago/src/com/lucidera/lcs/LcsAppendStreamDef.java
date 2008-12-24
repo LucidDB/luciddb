@@ -52,6 +52,7 @@ public class LcsAppendStreamDef
     protected FemLocalIndex deletionIndex;
     protected boolean replaceColumns;
     protected boolean hasIndexes;
+    private boolean alterTable;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -90,6 +91,39 @@ public class LcsAppendStreamDef
             FarragoCatalogUtil.getClusteredIndexes(repos, table);
         unclusteredIndexes =
             FarragoCatalogUtil.getUnclusteredIndexes(repos, table);
+        
+        if (appendRel.getInput(0).getRowType().getFieldCount()
+            < indexGuide.getFlattenedRowType().getFieldCount())
+        {
+            // We're doing ALTER TABLE ADD COLUMN
+            alterTable = true;
+
+            // TODO jvs 6-Dec-2008: need to deal with these once we allow ALTER
+            // TABLE ADD COLUMN c UNIQUE
+            unclusteredIndexes = Collections.emptyList();
+
+            // Filter clusteredIndexes down to just the one
+            // containing the new column.
+            Integer [] projection = new Integer[1];
+            projection[0] =
+                indexGuide.getFlattenedRowType().getFieldCount() - 1;
+
+            Iterator<FemLocalIndex> iter = clusteredIndexes.iterator();
+            while (iter.hasNext()) {
+                FemLocalIndex clusteredIndex = iter.next();
+                if (!indexGuide.testIndexCoverage(clusteredIndex, projection)) {
+                    iter.remove();
+                }
+            }
+            assert(clusteredIndexes.size() == 1);
+
+            // Create a new index guide which pretends that the
+            // table only consists of the new clustered index.
+            indexGuide = new LcsIndexGuide(
+                lcsTable.getPreparingStmt().getFarragoTypeFactory(),
+                table,
+                clusteredIndexes);
+        }
     }
     
     /**
@@ -110,11 +144,6 @@ public class LcsAppendStreamDef
         // stream contains a startRid; so make sure to reflect that in the
         // output descriptors
         hasIndexes = (unclusteredIndexes.size() > 0);
-
-        //
-        // Setup the SplitterStreamDef
-        //
-        FemSplitterStreamDef splitter = createSplitter();
 
         //
         // Setup all the LcsClusterAppendStreamDef's
@@ -150,9 +179,21 @@ public class LcsAppendStreamDef
         //                                  ...
         //                               -> clusterAppend ->
         //
-        implementor.addDataFlowFromProducerToConsumer(
-            inputStream,
-            splitter);
+        
+        //
+        // Setup the SplitterStreamDef, unless there's only one
+        // clusterAppend, in which case no splitter is needed.
+        //
+        FemExecutionStreamDef splitter;
+        if (clusterAppendDefs.size() != 1) {
+            splitter = createSplitter();
+
+            implementor.addDataFlowFromProducerToConsumer(
+                inputStream,
+                splitter);
+        } else {
+            splitter = inputStream;
+        }
 
         for (FemLcsClusterAppendStreamDef clusterAppend : clusterAppendDefs) {
             implementor.addDataFlowFromProducerToConsumer(
@@ -182,7 +223,8 @@ public class LcsAppendStreamDef
                     clusteredIndex,
                     hasIndexes,
                     0,
-                    0));
+                    0,
+                    alterTable));
         }
     }
     
@@ -370,7 +412,7 @@ public class LcsAppendStreamDef
         FemMergeStreamDef mergeStream = null;
         if (numUniqueIndexes > 1) {
             mergeStream = repos.newFemMergeStreamDef();
-            mergeStream.setSequential(true);
+            mergeStream.setSequential(false);
             mergeStream.setPrePullInputs(false);
             deleteInput = mergeStream;
         }

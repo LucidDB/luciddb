@@ -183,7 +183,7 @@ class FtrsScanToSearchRule
 
         FtrsIndexGuide indexGuide = origScan.ftrsTable.getIndexGuide();
 
-        if (!indexGuide.isValid(index)) {
+        if (index.isInvalid()) {
             return;
         }
 

@@ -317,7 +317,7 @@ public class FarragoSessionVariables
     }
 
     /**
-     * Gets the value of a variable, casted to an Integer
+     * Gets the value of a variable, casted to a Boolean
      *
      * @param name the name of a session variable
      *

@@ -96,6 +96,14 @@ public abstract class MedAbstractLocalDataServer
     {
         validateTableDefinition(table, generatedPrimaryKeyIndex);
     }
+    
+    // implement FarragoMedLocalDataServer
+    public boolean supportsAlterTableAddColumn()
+    {
+        // Assume not; subclasses have to override this
+        // to enable support.
+        return false;
+    }
 }
 
 // End MedAbstractLocalDataServer.java

@@ -102,4 +102,10 @@
   <result EXPR$0=""/>
 </resultset>
 > 
+> create schema x;
+> create table x.t(i int not null primary key);
+> 
+> -- this should work since the table is empty (FRG-365)
+> insert into x.t select null from x.t;
+> 
 > !quit

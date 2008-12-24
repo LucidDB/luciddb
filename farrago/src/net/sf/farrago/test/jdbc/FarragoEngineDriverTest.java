@@ -377,6 +377,31 @@ public class FarragoEngineDriverTest
                 ".*Personality does not support snapshot reads");
         }
     }
+
+    /**
+     * For background on this test, please see
+     *
+     * http://n2.nabble.com/SqlParseException.getCause%28%29-td1616492.html
+     */
+    public void testExcnStack()
+        throws Exception
+    {
+        // Do something we know will cause Util.needToImplement
+        // to be invoked, since that produces a generic RuntimeException
+        // rather than a Farrago-specific excn.  If you are seeing
+        // this test fail because you are implementing
+        // ALTER TABLE ADD c INT UNIQUE, please find another excn cause
+        // to keep this test coverage.
+        String sql = "alter table sales.depts add dcode int unique";
+        
+        // For the engine driver, we should get full exception stacks,
+        // because they don't have to go over the wire.
+        try {
+            stmt.execute(sql);
+        } catch (FarragoJdbcUtil.FarragoSqlException ex) {
+            assertNotNull(ex.getOriginalThrowable().getCause());
+        }
+    }
     
     /**
      * creates test connection properties.

@@ -33,6 +33,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 
 import org.eigenbase.rel.*;
@@ -115,7 +116,7 @@ public class LcsIndexOptimizer
                 rowScanRel.lcsTable.getPreparingStmt().getRepos(),
                 rowScanRel.lcsTable.getCwmColumnSet()))
         {
-            if (isValid(index)) {
+            if (!index.isInvalid()) {
                 usableIndexes.add(index);
             }
         }
@@ -200,18 +201,6 @@ public class LcsIndexOptimizer
         return FarragoCatalogUtil.getUnclusteredIndexes(
             rowScan.lcsTable.getPreparingStmt().getRepos(),
             rowScan.lcsTable.getCwmColumnSet());
-    }
-
-    /**
-     * Checks if an index is valid
-     *
-     * @param index
-     *
-     * @return if an index is valid
-     */
-    private boolean isValid(FemLocalIndex index)
-    {
-        return index.getVisibility() == VisibilityKindEnum.VK_PUBLIC;
     }
 
     /**
@@ -1492,17 +1481,41 @@ public class LcsIndexOptimizer
     public static FemLocalIndex getIndexWithMinDiskPages(
         LcsRowScanRelBase rowScan)
     {
+        // REVIEW jvs 21-Dec-2008:  Having a side effect like
+        // this (sorting the clusteredIndexes list in place) is
+        // a questionable practice.
+        
         List<FemLocalIndex> indexList = rowScan.clusteredIndexes;
         if (indexList.isEmpty()) {
             return null;
-        } else {
-            Collections.sort(
-                indexList,
-                new IndexPageCountComparator(
-                    FennelRelUtil.getPreparingStmt(rowScan).getSession().
-                        getSessionLabelCreationTimestamp()));
-            return indexList.get(0);
         }
+        Collections.sort(
+            indexList,
+            new IndexPageCountComparator(
+                FennelRelUtil.getPreparingStmt(rowScan).getSession().
+                getSessionLabelCreationTimestamp()));
+        FarragoSession session =
+            FennelRelUtil.getPreparingStmt(rowScan).getSession();
+
+        // REVIEW jvs 21-Dec-2008:  It would probably be a good idea
+        // to do this filtering under any circumstances; currently
+        // ALTER TABLE ADD COLUMN is the only known case where we
+        // might see an invalid clustered index.
+        
+        if (session.isReentrantAlterTableAddColumn()) {
+            // We're doing ALTER TABLE ADD COLUMN; disqualify the new index
+            // being created, since it doesn't have any rows in it yet, whereas
+            // we want to read one column for all of the existing rows.
+            List newList = new ArrayList<FemLocalIndex>();
+            for (FemLocalIndex index : indexList) {
+                if (index.isInvalid()) {
+                    continue;
+                }
+                newList.add(index);
+            }
+            indexList = newList;
+        }
+        return indexList.get(0);
     }
 
     /**

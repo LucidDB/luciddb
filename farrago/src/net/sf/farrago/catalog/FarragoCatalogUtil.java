@@ -1569,6 +1569,38 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
+     * Creates a new recovery reference for a recoverable action on an
+     * object.
+     *
+     * @param repos repository in which object is defined
+     *
+     * @param recoveryType description of recoverable action
+     *
+     * @param modelElement object on which recovery would be needed
+     */
+    public static FemRecoveryReference createRecoveryReference(
+        FarragoRepos repos,
+        RecoveryType recoveryType,
+        CwmModelElement modelElement)
+    {
+        FemRecoveryReference ref = repos.newFemRecoveryReference();
+        ref.setRecoveryType(recoveryType);
+        CwmDependency dep = repos.newCwmDependency();
+        dep.setName(recoveryType.toString() + " " + modelElement.getName());
+        dep.setNamespace(ref);
+        dep.setKind("Recovery");
+        dep.getClient().add(ref);
+        dep.getSupplier().add(modelElement);
+        // These are typically created outside of DdlValidator,
+        // so fill in standard ModelElement attributes.
+        ref.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+        dep.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+        JmiObjUtil.setMandatoryPrimitiveDefaults(ref);
+        JmiObjUtil.setMandatoryPrimitiveDefaults(dep);
+        return ref;
+    }
+
+    /**
      * Resets the row counts for a table
      * 
      * @deprecated

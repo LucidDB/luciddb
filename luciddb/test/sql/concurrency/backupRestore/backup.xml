@@ -1,0 +1,39 @@
+<project name="bh" default="concurBackupRestore">
+  <target name="concurBackupRestore">
+    <test-suite name="concurBackupRestore">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="concurBackupRestore"/>
+          </test-suite-call>
+        </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/concurrency/backupRestore" target="gen-all-sql"/>
+        <ant dir="${open.dir}/luciddb/test/sql/concurrency/backupRestore" target="create-db"/>
+      </init-hook>
+
+      <test name="setup">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/backupRestore/gen/setup.sql"/>
+      </test>
+
+      <test name="backup" requiresSuccess="setup">
+        <junit-sql
+          file="${open.dir}/luciddb/test/sql/concurrency/backupRestore/gen/backup.mtsql"/>
+      </test>
+
+      <test name="restore" requiresSuccess="setup">
+        <junit-sql
+          file="${open.dir}/luciddb/test/sql/concurrency/backupRestore/gen/restore.mtsql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="concurBackupRestore"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

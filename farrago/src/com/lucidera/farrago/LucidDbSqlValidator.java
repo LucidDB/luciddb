@@ -237,6 +237,58 @@ public class LucidDbSqlValidator
         return ((errorMax != null) && (errorMax == 0));
     }
 
+    // override SqlValidatorImpl
+    protected SqlNode getSelfJoinExprForUpdate(
+        SqlIdentifier table,
+        String alias)
+    {
+        // For LucidDB, when rewriting UPDATE to MERGE, we
+        // generate a self-join of the form
+        //     LCS_RID(src.x) = LCS_RID(tgt.y).
+
+        // For example, given
+        //
+        // create table x.t(i int, j int);
+        // update x.t set i = i + 1, j = 7 where j > 10;
+        //
+        // The rewrite produces
+        //
+        // MERGE INTO "LOCALDB"."X"."T" AS "SYS$TGT"
+        // USING (SELECT "I" AS "SYS$ANON1", "J" AS "SYS$ANON2"
+        //        FROM "X"."T") AS "SYS$SRC"
+        // ON LCS_RID("SYS$SRC"."SYS$ANON1") = LCS_RID("SYS$TGT"."I")
+        // AND "J" > 10
+        // WHEN MATCHED THEN UPDATE SET "I" = "I" + 1, "J" = 7
+        
+        // LCS_RID doesn't care which column we choose (only which table
+        // reference it comes from), so we can arbitrarily pick the first
+        // column in the table.
+        String colName;
+        if (alias.equals(UPDATE_SRC_ALIAS)) {
+            // The source columns have been anonymized, so
+            // we reference the first one by position as
+            // "SYS$ANON1"
+            colName = UPDATE_ANON_PREFIX + "1";
+        } else {
+            // The target columns retained their names, so look
+            // up the table and get the name of the first column.
+            RelOptTable relOptTable = getPreparingStmt().loadColumnSet(table);
+            if (relOptTable == null) {
+                // let validator complain about non-existent table
+                return null;
+            }
+            colName =
+                relOptTable.getRowType().getFieldList().get(0).getName();
+        }
+        SqlNode colRef = null;
+        SqlIdentifier colId = new SqlIdentifier(
+            new String [] { alias, colName }, SqlParserPos.ZERO);
+        SqlNode lcsRidCall = LucidDbOperatorTable.lcsRidFunc.createCall(
+            SqlParserPos.ZERO,
+            colId);
+        return lcsRidCall;
+    }
+    
     //~ Inner Classes ----------------------------------------------------------
 
     /**

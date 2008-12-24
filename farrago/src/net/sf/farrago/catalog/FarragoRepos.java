@@ -279,7 +279,7 @@ public interface FarragoRepos
 
     /**
      * Returns an instance of FarragoReposTxnContext for use in executing
-     * transactions against this repository with out no automatic repository 
+     * transactions against this repository without automatic repository 
      * session management.  
      * Equivalent to {@link #newTxnContext(boolean) newTxnContext(false)}.
      * 

@@ -155,6 +155,14 @@ public interface FarragoMedLocalDataServer
         Long newRoot,
         FennelTxnContext txnContext)
         throws SQLException;
+
+    /**
+     * Checks whether ALTER TABLE ADD COLUMN is implemented for
+     * tables stored by this local data server.
+     *
+     * @return whether ALTER TABLE ADD COLUMN can be executed
+     */
+    public boolean supportsAlterTableAddColumn();
 }
 
 // End FarragoMedLocalDataServer.java

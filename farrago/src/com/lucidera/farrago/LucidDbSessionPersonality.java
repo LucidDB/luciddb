@@ -163,6 +163,12 @@ public class LucidDbSessionPersonality
     }
 
     // implement FarragoSessionPersonality
+    public boolean isAlterTableAddColumnIncremental()
+    {
+        return true;
+    }
+    
+    // implement FarragoSessionPersonality
     public SqlOperatorTable getSqlOperatorTable(
         FarragoSessionPreparingStmt preparingStmt)
     {
@@ -181,12 +187,7 @@ public class LucidDbSessionPersonality
             return false;
         }
 
-        // LucidDB doesn't support UPDATE
-        if (feature == featureResource.SQLFeature_E101_03) {
-            return false;
-        }
-
-        // but LucidDB does support MERGE (unlike vanilla Farrago)
+        // LucidDB supports MERGE (unlike vanilla Farrago)
         if (feature == featureResource.SQLFeature_F312) {
             return true;
         }
@@ -242,11 +243,15 @@ public class LucidDbSessionPersonality
 
         Collection<RelOptRule> medPluginRules = new LinkedHashSet<RelOptRule>();
 
+        boolean alterTable = 
+            stmt.getSession().isReentrantAlterTableAddColumn();
+
         HepProgram program =
             createHepProgram(
                 fennelEnabled,
                 calcVM,
-                medPluginRules);
+                medPluginRules,
+                alterTable);
         FarragoSessionPlanner planner =
             new LucidDbPlanner(
                 program,
@@ -273,7 +278,8 @@ public class LucidDbSessionPersonality
     private HepProgram createHepProgram(
         boolean fennelEnabled,
         CalcVirtualMachine calcVM,
-        Collection<RelOptRule> medPluginRules)
+        Collection<RelOptRule> medPluginRules,
+        boolean alterTable)
     {
         HepProgramBuilder builder = new HepProgramBuilder();
 
@@ -311,12 +317,18 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new LcsTableDeleteRule());
         builder.addRuleInstance(new LcsTableMergeRule());
         
+        // Likewise for ALTER TABLE ADD COLUMN.
+        if (alterTable) {
+            builder.addRuleClass(CoerceInputsRule.class);
+            builder.addRuleInstance(LcsTableAlterRule.instance);
+        }
+
         // Now, pull join conditions out of joins, leaving behind Cartesian
         // products.  Why?  Because PushFilterRule doesn't start from
         // join conditions, only filters.  It will push them right back
         // into and possibly through the join.
         builder.addRuleInstance(ExtractJoinFilterRule.instance);
-        
+
         // Convert ProjectRels underneath an insert into RenameRels before
         // applying any merge projection rules.  Otherwise, we end up losing
         // column information used in error reporting during inserts.
@@ -841,6 +853,14 @@ public class LucidDbSessionPersonality
         TableModificationRel.Operation tableModOp,
         FarragoSessionRuntimeContext runningContext)
     {
+        if (session.isReentrantAlterTableAddColumn()) {
+            // LDB-191:  For ALTER TABLE ADD COLUMN, don't
+            // touch the rowcounts, because they don't change.
+            // We can just return 0, because the invoking session
+            // just ignores the DML return value.
+            return 0;
+        }
+        
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         FarragoRepos repos = session.getRepos();
         long affectedRowCount = 0;
@@ -859,6 +879,14 @@ public class LucidDbSessionPersonality
                 stmtValidator.findSchemaObject(
                     qualifiedName,
                     FemAbstractColumnSet.class);
+
+            if (session.isReentrantAlterTableRebuild()) {
+                // LDB-191:  For ALTER TABLE REBUILD, reset
+                // the rowcounts now before incrementing them
+                // with the result of the reentrant INSERT.
+                resetRowCounts(columnSet);
+            }
+            
             Long[] rowCountStats = new Long[2];
             Timestamp labelTimestamp =
                 session.getSessionLabelCreationTimestamp();

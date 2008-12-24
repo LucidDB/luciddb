@@ -496,6 +496,8 @@ public class LcsTableMergeRel
             nullReshape,
             nullRidBuffer);
 
+        // NOTE jvs 21-Dec-2008:  Ordering is important for the inputs
+        // here, so we can NOT use parallel merge.
         FemMergeStreamDef mergeStream = repos.newFemMergeStreamDef();
         mergeStream.setSequential(true);
         mergeStream.setPrePullInputs(false);

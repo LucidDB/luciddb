@@ -124,6 +124,11 @@
           file="${open.dir}/luciddb/test/sql/concurrency/insert-dbasessions.mtsql"/>
       </test>
 
+      <test name="alteradd-dml">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/alteradd-dml.mtsql"/>
+      </test>
+
       <test name="concurrentMerges">
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/concurrentMerges.mtsql"/>

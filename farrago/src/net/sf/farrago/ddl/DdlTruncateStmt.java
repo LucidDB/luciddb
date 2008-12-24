@@ -32,6 +32,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.session.*;
 
+import javax.jmi.reflect.*;
 
 /**
  * DdlTruncateStmt represents a DDL TRUNCATE statement of any kind.
@@ -45,9 +46,9 @@ public class DdlTruncateStmt
 {
     //~ Instance fields --------------------------------------------------------
 
-    private CwmTable table;
-
-    private Collection<FemLocalIndex> tableIndexes;
+    private String tableMofId;
+    private RefClass tableClass;
+    private List<String> indexMofIds;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -59,7 +60,8 @@ public class DdlTruncateStmt
     public DdlTruncateStmt(CwmModelElement truncatedElement)
     {
         super(truncatedElement, true);
-        this.table = (CwmTable) truncatedElement;
+        tableMofId = truncatedElement.refMofId();
+        tableClass = truncatedElement.refClass();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -75,8 +77,13 @@ public class DdlTruncateStmt
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
-        tableIndexes = FarragoCatalogUtil.getTableIndexes(
-            session.getRepos(), table);
+        indexMofIds = new ArrayList<String>();
+        CwmTable table = (CwmTable) getModelElement();
+        Collection<FemLocalIndex> tableIndexes =
+            FarragoCatalogUtil.getTableIndexes(session.getRepos(), table);
+        for (FemLocalIndex index : tableIndexes) {
+            indexMofIds.add(index.refMofId());
+        }
     }
 
     // implement DdlMultipleTransactionStmt
@@ -87,10 +94,8 @@ public class DdlTruncateStmt
         FarragoSessionIndexMap baseIndexMap = ddlValidator.getIndexMap();
         FarragoDataWrapperCache wrapperCache = 
             ddlValidator.getDataWrapperCache();
-        for (FemLocalIndex index : tableIndexes) {
-            // REVIEW: SWZ: 2008-02-26: This method might inadvertently access
-            // the repository outside a txn by navigating links on index.
-            baseIndexMap.dropIndexStorage(wrapperCache, index, true);
+        for (String indexMofId : indexMofIds) {
+            baseIndexMap.dropIndexStorage(wrapperCache, indexMofId, true);
         }
     }
 
@@ -103,9 +108,20 @@ public class DdlTruncateStmt
     // implement DdlMultipleTransactionStmt
     public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
-        FarragoSession session)
+        FarragoSession session,
+        boolean success)
     {
-        session.getPersonality().resetRowCounts((FemAbstractColumnSet) table);
+        if (!success) {
+            // NOTE jvs 11-Dec-2008:  I'm not sure whether anything
+            // can cause a TRUNCATE to fail, but if it does fail, we
+            // shouldn't reset the rowcounts.
+            return;
+        }
+        FemAbstractColumnSet table = (FemAbstractColumnSet)
+            session.getRepos().getEnkiMdrRepos().getByMofId(
+                tableMofId,
+                tableClass);
+        session.getPersonality().resetRowCounts(table);
     }
 }
 

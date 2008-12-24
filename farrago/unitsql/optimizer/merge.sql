@@ -622,9 +622,6 @@ merge into emps e
     when matched then
         update set deptno = 'abc';
 
--- LucidDb doesn't support UPDATE
-update emps set name = 'Foobar';
-
 -- Farrago doesn't support MERGE
 alter session implementation set default;
 merge into emps e

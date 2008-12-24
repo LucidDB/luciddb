@@ -85,21 +85,20 @@ Error: Type mismatch in value ''foo'' for system parameter "deviceSchedulerType"
 > select * from sys_boot.mgmt.session_parameters_view
 >   where param_name in 
 >     ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric',
->      'validateDdlOnPrepare', 'enforceIdentityGeneratedAlways', 
+>      'validateDdlOnPrepare',
 >      'cacheStatements', 'reduceNonCorrelatedSubqueries')
 >   order by 1;
-+---------------------------------+--------------+
-|           PARAM_NAME            | PARAM_VALUE  |
-+---------------------------------+--------------+
-| cacheStatements                 | true         |
-| catalogName                     | LOCALDB      |
-| enforceIdentityGeneratedAlways  | true         |
-| reduceNonCorrelatedSubqueries   | false        |
-| schemaName                      |              |
-| sessionUserName                 | sa           |
-| squeezeJdbcNumeric              | true         |
-| validateDdlOnPrepare            | false        |
-+---------------------------------+--------------+
++--------------------------------+--------------+
+|           PARAM_NAME           | PARAM_VALUE  |
++--------------------------------+--------------+
+| cacheStatements                | true         |
+| catalogName                    | LOCALDB      |
+| reduceNonCorrelatedSubqueries  | false        |
+| schemaName                     |              |
+| sessionUserName                | sa           |
+| squeezeJdbcNumeric             | true         |
+| validateDdlOnPrepare           | false        |
++--------------------------------+--------------+
 > 
 > -- should fail (farrago does not have this parameter)
 > alter session set "logDir" = 'testlog';

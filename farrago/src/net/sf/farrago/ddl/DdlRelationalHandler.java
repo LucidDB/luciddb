@@ -216,6 +216,17 @@ public class DdlRelationalHandler
 
         validateAttributeSet(table);
 
+        int nSequences = 0;
+        for (CwmFeature feature : table.getFeature()) {
+            if (((FemStoredColumn) feature).getSequence() != null) {
+                nSequences++;
+            }
+        }
+        if (nSequences > 1) {
+            throw res.ValidatorMultipleTableSequences.ex(
+                repos.getLocalizedObjectName(table));
+        }
+
         // NOTE:  don't need to validate index name uniqueness since indexes
         // live in same schema as table, so enforcement will take place at
         // schema level
@@ -550,7 +561,6 @@ public class DdlRelationalHandler
             index);
 
         FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
-
         if (!validator.isCreatedObject(table)) {
             indexExistingRows(table, index);
         }
@@ -585,6 +595,21 @@ public class DdlRelationalHandler
         FemLocalTable table,
         FemLocalIndex index)
     {
+        // indicate that while we're building it, the optimizer
+        // should not allow the index to be accessed for any other
+        // reason
+        index.setInvalid(true);
+        
+        if (index.isClustered()) {
+            // Normally, it's not meaningful to create a clustered index
+            // on existing rows.  However, this can arise during
+            // ALTER TABLE ADD COLUMN for column store (and could
+            // come up for a row store which allows reclustering).
+            // Such operations are responsible for calling
+            // index.setInvalid(false) when done.
+            return;
+        }
+        
         FemDataServer dataServer = table.getServer();
         FarragoMedLocalDataServer medDataServer =
             (FarragoMedLocalDataServer) validator.getDataWrapperCache()
@@ -602,6 +627,7 @@ public class DdlRelationalHandler
         } finally {
             validator.releaseReentrantSession(session);
         }
+        index.setInvalid(false);
     }
 
     // implement FarragoSessionDdlHandler

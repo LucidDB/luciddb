@@ -243,8 +243,9 @@ void ExecStreamFactory::visit(ProxyMergeStreamDef &streamDef)
 {
     MergeExecStreamParams params;
     readTupleStreamParams(params, streamDef);
-    // MergeExecStream doesn't support anything but sequential yet
-    assert(streamDef.isSequential());
+    if (!streamDef.isSequential()) {
+        params.isParallel = true;
+    }
     // prePullInputs parameter isn't actually supported yet
     assert(!streamDef.isPrePullInputs());
     embryo.init(new MergeExecStream(), params);

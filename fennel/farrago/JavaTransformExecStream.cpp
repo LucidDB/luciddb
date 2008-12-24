@@ -37,7 +37,10 @@ JavaTransformExecStreamParams::JavaTransformExecStreamParams()
 JavaTransformExecStream::JavaTransformExecStream()
 {
     pStreamGraphHandle = NULL;
-    outputByteBuffer = NULL;
+    outputByteBuffer1 = NULL;
+    outputByteBuffer2 = NULL;
+    pBuffer1 = NULL;
+    pBuffer2 = NULL;
     farragoTransform = NULL;
 }
 
@@ -82,22 +85,6 @@ void JavaTransformExecStream::prepare(
 
     javaClassName = params.javaClassName;
     pStreamGraphHandle = params.pStreamGraphHandle;
-
-    // TODO: SWZ: 3/17/06: Avoid allocating scratch space when there's
-    // no output accessor.  Also need to change getResourceRequirements.
-    scratchAccessor = params.scratchAccessor;
-    bufferLock.accessSegment(scratchAccessor);
-}
-
-void JavaTransformExecStream::getResourceRequirements(
-    ExecStreamResourceQuantity &minQuantity,
-    ExecStreamResourceQuantity &optQuantity)
-{
-    ExecStream::getResourceRequirements(minQuantity,optQuantity);
-
-    // one page for scratch buffer
-    minQuantity.nCachePages += 1;
-    optQuantity = minQuantity;
 }
 
 void JavaTransformExecStream::open(bool restart)
@@ -134,16 +121,6 @@ void JavaTransformExecStream::open(bool restart)
             pEnv->NewStringUTF(javaClassName.c_str()));
     assert(o);
     farragoTransform = pEnv->NewGlobalRef(o);
-
-    // Allocate output buffer.
-    bufferLock.allocatePage();
-    outputByteBuffer = pEnv->NewDirectByteBuffer(
-        bufferLock.getPage().getWritableData(),
-        bufferLock.getPage().getCache().getPageSize());
-    outputByteBuffer = pEnv->NewGlobalRef(outputByteBuffer);
-    FENNEL_TRACE(
-        TRACE_FINER, "allocated 1 java ByteBuffer " << outputByteBuffer);
-    assert(outputByteBuffer);
 }
 
 
@@ -171,24 +148,54 @@ ExecStreamResult JavaTransformExecStream::execute(
     jlong jquantum = static_cast<jlong>(quantum.nTuplesMax);
     JniEnvAutoRef pEnv;
     assert(farragoTransform);
+    PBuffer pBuffer;
+    if (pOutAccessor) {
+        pBuffer = pOutAccessor->getProductionStart();
+        if (!outputByteBuffer1) {
+            outputByteBuffer1 = pEnv->NewDirectByteBuffer(
+                pBuffer,
+                pOutAccessor->getProductionAvailable());
+            outputByteBuffer1 = pEnv->NewGlobalRef(outputByteBuffer1);
+            pBuffer1 = pBuffer;
+        } else if (!outputByteBuffer2) {
+            if (pBuffer1 != pBuffer) {
+                outputByteBuffer2 = pEnv->NewDirectByteBuffer(
+                    pBuffer,
+                    pOutAccessor->getProductionAvailable());
+                outputByteBuffer2 = pEnv->NewGlobalRef(outputByteBuffer2);
+                pBuffer2 = pBuffer;
+            }
+        }
+    } else {
+        pBuffer = NULL;
+    }
+
+    // If this assertion fails, it means we're dealing with something
+    // other than a ScratchBufferExecStream or DoubleBufferExecStream
+    // immediately downstream.
+    assert((pBuffer == pBuffer1) || (pBuffer == pBuffer2));
+
+    // REVIEW jvs 18-Dec-2008:  Is it OK to pass NULL for the buffer
+    // in the case where no outputs are defined?  There are no
+    // unit tests demonstrating this pattern in Fennel, but
+    // there should be.
+    
     int cb = pEnv->CallIntMethod(
         farragoTransform,
         JniUtil::methFarragoTransformExecute,
-        outputByteBuffer,
+        (pBuffer == pBuffer1) ? outputByteBuffer1 : outputByteBuffer2,
         jquantum);
 
     if (cb > 0) {
         assert(pOutAccessor);
-        pOutAccessor->provideBufferForConsumption(
-            bufferLock.getPage().getWritableData(),
-            bufferLock.getPage().getWritableData() + cb);
-
+        pOutAccessor->produceData(pBuffer + cb);
         FENNEL_TRACE(TRACE_FINER, "wrote " << cb << " bytes");
         return EXECRC_BUF_OVERFLOW;
     } else if (cb < 0) {
         FENNEL_TRACE(TRACE_FINER, "underflow");
         checkEmptyInputs();
-        // TODO mb 10/28/08: return EXECRC_YIELD when executing in data-push mode.
+        // TODO mb 10/28/08: return EXECRC_YIELD when executing in data-push
+        // mode.
         return EXECRC_BUF_UNDERFLOW;
     } else {
         FENNEL_TRACE(TRACE_FINER, "marking EOS");
@@ -216,11 +223,16 @@ void JavaTransformExecStream::closeImpl()
         pEnv->DeleteGlobalRef(farragoTransform);
         farragoTransform = NULL;
     }
-    if (outputByteBuffer) {
-        pEnv->DeleteGlobalRef(outputByteBuffer);
-        outputByteBuffer = NULL;
+    if (outputByteBuffer1) {
+        pEnv->DeleteGlobalRef(outputByteBuffer1);
+        outputByteBuffer1 = NULL;
     }
-    bufferLock.unlock();
+    if (outputByteBuffer2) {
+        pEnv->DeleteGlobalRef(outputByteBuffer2);
+        outputByteBuffer2 = NULL;
+    }
+    pBuffer1 = NULL;
+    pBuffer2 = NULL;
     ExecStream::closeImpl();
 }
 
@@ -231,6 +243,16 @@ ExecStreamBufProvision JavaTransformExecStream::getInputBufProvision() const
 
 ExecStreamBufProvision JavaTransformExecStream::getOutputBufProvision() const
 {
+    return BUFPROV_CONSUMER;
+}
+
+ExecStreamBufProvision JavaTransformExecStream::getOutputBufConversion() const
+{
+    // Although JavaTransformExecStream itself does not provide buffers,
+    // it relies on having either ScratchBufferExecStream or
+    // DoubleBufferExecStream available immediately downstream; it cannot
+    // handle any other kind of buffers such as those from
+    // SegBufferExecStream.
     return BUFPROV_PRODUCER;
 }
 

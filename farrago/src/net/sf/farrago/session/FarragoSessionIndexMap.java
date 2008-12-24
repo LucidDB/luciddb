@@ -90,6 +90,30 @@ public interface FarragoSessionIndexMap
         CwmTable table);
 
     /**
+     * For ALTER TABLE ADD COLUMN or REBUILD, retrieves
+     * the target table.
+     *
+     * @return target table, or null if not executing
+     * ALTER TABLE ADD COLUMN or REBUILD
+     */
+    public CwmTable getReloadTable();
+
+    /**
+     * For ALTER TABLE ADD COLUMN, retrieves the old table structure
+     * corresponding to the table being modified.
+     * Be warned that the old table structure is not a complete
+     * copy; it consists of only the column definitions and their
+     * datatypes (without default values).  Additional
+     * logical constructs such as constraints are not present
+     * on the returned object, nor are physical constructs
+     * such as indexes.
+     *
+     * @return copy of old table, or null if not executing
+     * ALTER TABLE ADD COLUMN
+     */
+    public CwmTable getOldTableStructure();
+
+    /**
      * Creates an index and records its root in this map.
      *
      * @param wrapperCache cache for looking up data wrappers
@@ -124,6 +148,24 @@ public interface FarragoSessionIndexMap
     public void dropIndexStorage(
         FarragoDataWrapperCache wrapperCache,
         FemLocalIndex index,
+        boolean truncate);
+
+    /**
+     * Drops an index by MOFID and removes its root from this map.
+     * This method is used in contexts (e.g. TRUNCATE) where
+     * it is undesirable to hold a catalog lock across the entire
+     * operation.  (Really, this should be the case for
+     * all callers, so eventually we should deprecate the
+     * version which takes a direct index reference.)
+     *
+     * @param wrapperCache cache for looking up data wrappers
+     * @param indexMofId MOFID of the index to drop
+     * @param truncate if true, only truncate storage; if false, drop storage
+     * entirely
+     */
+    public void dropIndexStorage(
+        FarragoDataWrapperCache wrapperCache,
+        String indexMofId,
         boolean truncate);
 
     /**

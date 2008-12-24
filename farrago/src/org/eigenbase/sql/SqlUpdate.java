@@ -72,7 +72,7 @@ public class SqlUpdate
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * @return the identifier for the target table of the insertion
+     * @return the identifier for the target table of the update
      */
     public SqlIdentifier getTargetTable()
     {
@@ -80,7 +80,7 @@ public class SqlUpdate
     }
 
     /**
-     * @return the alias for the target table of the deletion
+     * @return the alias for the target table of the update
      */
     public SqlIdentifier getAlias()
     {

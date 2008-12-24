@@ -1385,10 +1385,6 @@ Error: From line 8, column 9 to line 8, column 14: Number of INSERT target colum
 >         update set deptno = 'abc';
 Error: From line 5, column 20 to line 5, column 25: Cannot assign to target field 'DEPTNO' of type INTEGER from source field 'EXPR$0' of type CHAR(3) (state=,code=0)
 > 
-> -- LucidDb doesn't support UPDATE
-> update emps set name = 'Foobar';
-Error: UPDATE not supported (state=,code=0)
-> 
 > -- Farrago doesn't support MERGE
 > alter session implementation set default;
 > merge into emps e

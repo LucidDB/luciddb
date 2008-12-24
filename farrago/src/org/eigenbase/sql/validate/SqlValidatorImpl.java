@@ -77,6 +77,23 @@ public class SqlValidatorImpl
         Valid
     }
 
+    /**
+     * Alias generated for the source table when rewriting UPDATE to MERGE.
+     */
+    public static final String UPDATE_SRC_ALIAS = "SYS$SRC";
+    
+    /**
+     * Alias generated for the target table when rewriting UPDATE to MERGE
+     * if no alias was specified by the user.
+     */
+    public static final String UPDATE_TGT_ALIAS = "SYS$TGT";
+    
+    /**
+     * Alias prefix generated for source columns when rewriting UPDATE to MERGE.
+     */
+    public static final String UPDATE_ANON_PREFIX = "SYS$ANON";
+    
+
     //~ Instance fields --------------------------------------------------------
 
     private final SqlOperatorTable opTab;
@@ -173,6 +190,10 @@ public class SqlValidatorImpl
     protected boolean expandColumnReferences;
 
     private boolean rewriteCalls;
+
+    // TODO jvs 11-Dec-2008:  make this local to performUnconditionalRewrites
+    // if it's OK to expand the signature of that method.
+    private boolean validatingSqlMerge;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -906,6 +927,9 @@ public class SqlValidatorImpl
 
         // first transform operands and invoke generic call rewrite
         if (node instanceof SqlCall) {
+            if (node instanceof SqlMerge) {
+                validatingSqlMerge = true;
+            }
             SqlCall call = (SqlCall) node;
             boolean isSelect = call.isA(SqlKind.Select);
             boolean isAs = call.isA(SqlKind.As);
@@ -1037,95 +1061,219 @@ public class SqlValidatorImpl
             SqlUpdate call = (SqlUpdate) node;
             SqlSelect select = createSourceSelectForUpdate(call);
             call.setOperand(SqlUpdate.SOURCE_SELECT_OPERAND, select);
+            // See if we're supposed to rewrite UPDATE to MERGE
+            // (unless this is the UPDATE clause of a MERGE,
+            // in which case leave it alone).
+            if (!validatingSqlMerge) {
+                SqlNode selfJoinSrcExpr = getSelfJoinExprForUpdate(
+                    call.getTargetTable(), UPDATE_SRC_ALIAS);
+                if (selfJoinSrcExpr != null) {
+                    node = rewriteUpdateToMerge(call, selfJoinSrcExpr);
+                }
+            }
         } else if (node.isA(SqlKind.Merge)) {
             SqlMerge call = (SqlMerge) node;
-            SqlNodeList selectList;
-            SqlUpdate updateStmt = call.getUpdateCall();
-            if (updateStmt != null) {
-                // if we have an update statement, just clone the select list
-                // from the update statement's source since it's the same as
-                // what we want for the select list of the merge source -- '*'
-                // followed by the update set expressions
-                selectList =
-                    (SqlNodeList) updateStmt.getSourceSelect().getSelectList()
-                    .clone();
-            } else {
-                // otherwise, just use select *
-                selectList = new SqlNodeList(SqlParserPos.ZERO);
-                selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
-            }
-            SqlNode targetTable = call.getTargetTable();
-            if (call.getAlias() != null) {
-                targetTable =
-                    SqlValidatorUtil.addAlias(
-                        targetTable,
-                        call.getAlias().getSimple());
-            }
+            rewriteMerge(call);
+        }
+        return node;
+    }
 
-            // Provided there is an insert substatement, the source select for
-            // the merge is a left outer join between the source in the USING
-            // clause and the target table; otherwise, the join is just an
-            // inner join.  Need to clone the source table reference in order
-            // for validation to work
-            SqlNode sourceTableRef = call.getSourceTableRef();
-            SqlInsert insertCall = call.getInsertCall();
-            SqlJoinOperator.JoinType joinType =
-                (insertCall == null) ? SqlJoinOperator.JoinType.Inner
-                : SqlJoinOperator.JoinType.Left;
-            SqlNode leftJoinTerm = (SqlNode) sourceTableRef.clone();
-            SqlNode outerJoin =
-                SqlStdOperatorTable.joinOperator.createCall(
-                    leftJoinTerm,
-                    SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
-                    SqlLiteral.createSymbol(joinType, SqlParserPos.ZERO),
+    private void rewriteMerge(SqlMerge call)
+    {
+        SqlNodeList selectList;
+        SqlUpdate updateStmt = call.getUpdateCall();
+        if (updateStmt != null) {
+            // if we have an update statement, just clone the select list
+            // from the update statement's source since it's the same as
+            // what we want for the select list of the merge source -- '*'
+            // followed by the update set expressions
+            selectList =
+                (SqlNodeList) updateStmt.getSourceSelect().getSelectList()
+                .clone();
+        } else {
+            // otherwise, just use select *
+            selectList = new SqlNodeList(SqlParserPos.ZERO);
+            selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
+        }
+        SqlNode targetTable = call.getTargetTable();
+        if (call.getAlias() != null) {
+            targetTable =
+                SqlValidatorUtil.addAlias(
                     targetTable,
-                    SqlLiteral.createSymbol(
-                        SqlJoinOperator.ConditionType.On,
-                        SqlParserPos.ZERO),
-                    call.getCondition(),
+                    call.getAlias().getSimple());
+        }
+
+        // Provided there is an insert substatement, the source select for
+        // the merge is a left outer join between the source in the USING
+        // clause and the target table; otherwise, the join is just an
+        // inner join.  Need to clone the source table reference in order
+        // for validation to work
+        SqlNode sourceTableRef = call.getSourceTableRef();
+        SqlInsert insertCall = call.getInsertCall();
+        SqlJoinOperator.JoinType joinType =
+            (insertCall == null) ? SqlJoinOperator.JoinType.Inner
+            : SqlJoinOperator.JoinType.Left;
+        SqlNode leftJoinTerm = (SqlNode) sourceTableRef.clone();
+        SqlNode outerJoin =
+            SqlStdOperatorTable.joinOperator.createCall(
+                leftJoinTerm,
+                SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
+                SqlLiteral.createSymbol(joinType, SqlParserPos.ZERO),
+                targetTable,
+                SqlLiteral.createSymbol(
+                    SqlJoinOperator.ConditionType.On,
+                    SqlParserPos.ZERO),
+                call.getCondition(),
+                SqlParserPos.ZERO);
+        SqlSelect select =
+            SqlStdOperatorTable.selectOperator.createCall(
+                null,
+                selectList,
+                outerJoin,
+                null,
+                null,
+                null,
+                null,
+                null,
+                SqlParserPos.ZERO);
+        call.setOperand(SqlMerge.SOURCE_SELECT_OPERAND, select);
+
+        // Source for the insert call is a select of the source table
+        // reference with the select list being the value expressions;
+        // note that the values clause has already been converted to a
+        // select on the values row constructor; so we need to extract
+        // that via the from clause on the select
+        if (insertCall != null) {
+            SqlSelect valuesSelect = (SqlSelect) insertCall.getSource();
+            SqlCall valuesCall = (SqlCall) valuesSelect.getFrom();
+            SqlCall rowCall = (SqlCall) valuesCall.getOperands()[0];
+            selectList =
+                new SqlNodeList(
+                    Arrays.asList(rowCall.getOperands()),
                     SqlParserPos.ZERO);
-            SqlSelect select =
+            SqlNode insertSource = (SqlNode) sourceTableRef.clone();
+            select =
                 SqlStdOperatorTable.selectOperator.createCall(
                     null,
                     selectList,
-                    outerJoin,
+                    insertSource,
                     null,
                     null,
                     null,
                     null,
                     null,
                     SqlParserPos.ZERO);
-            call.setOperand(SqlMerge.SOURCE_SELECT_OPERAND, select);
-
-            // Source for the insert call is a select of the source table
-            // reference with the select list being the value expressions;
-            // note that the values clause has already been converted to a
-            // select on the values row constructor; so we need to extract
-            // that via the from clause on the select
-            if (insertCall != null) {
-                SqlSelect valuesSelect = (SqlSelect) insertCall.getSource();
-                SqlCall valuesCall = (SqlCall) valuesSelect.getFrom();
-                SqlCall rowCall = (SqlCall) valuesCall.getOperands()[0];
-                selectList =
-                    new SqlNodeList(
-                        Arrays.asList(rowCall.getOperands()),
-                        SqlParserPos.ZERO);
-                SqlNode insertSource = (SqlNode) sourceTableRef.clone();
-                select =
-                    SqlStdOperatorTable.selectOperator.createCall(
-                        null,
-                        selectList,
-                        insertSource,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        SqlParserPos.ZERO);
-                insertCall.setOperand(SqlInsert.SOURCE_OPERAND, select);
-            }
+            insertCall.setOperand(SqlInsert.SOURCE_OPERAND, select);
         }
-        return node;
+    }
+
+    private SqlNode rewriteUpdateToMerge(
+        SqlUpdate updateCall, SqlNode selfJoinSrcExpr)
+    {
+        // Make sure target has an alias.
+        if (updateCall.getAlias() == null) {
+            updateCall.setOperand(
+                SqlUpdate.ALIAS_OPERAND,
+                new SqlIdentifier(UPDATE_TGT_ALIAS, SqlParserPos.ZERO));
+        }
+        SqlNode selfJoinTgtExpr = getSelfJoinExprForUpdate(
+            updateCall.getTargetTable(), updateCall.getAlias().getSimple());
+        assert(selfJoinTgtExpr != null);
+
+        // Create join condition between source and target exprs,
+        // creating a conjunction with the user-level WHERE
+        // clause if one was supplied
+        SqlNode condition = updateCall.getCondition();
+        SqlNode selfJoinCond =
+            SqlStdOperatorTable.equalsOperator.createCall(
+                SqlParserPos.ZERO,
+                selfJoinSrcExpr,
+                selfJoinTgtExpr);
+        if (condition == null) {
+            condition = selfJoinCond;
+        } else {
+            condition = 
+                SqlStdOperatorTable.andOperator.createCall(
+                    SqlParserPos.ZERO,
+                    selfJoinCond,
+                    condition);
+        }
+        SqlIdentifier target = (SqlIdentifier)
+            updateCall.getTargetTable().clone(SqlParserPos.ZERO);
+
+        // For the source, we need to anonymize the fields, so
+        // that for a statement like UPDATE T SET I = I + 1,
+        // there's no ambiguity for the "I" in "I + 1";
+        // this is OK because the source and target have
+        // identical values due to the self-join.
+        // Note that we anonymize the source rather than the
+        // target because downstream, the optimizer rules
+        // don't want to see any projection on top of the target.
+        IdentifierNamespace ns = new IdentifierNamespace(
+            this,
+            target,
+            null);
+        RelDataType rowType = ns.getRowType();
+        SqlNode source =
+            updateCall.getTargetTable().clone(SqlParserPos.ZERO);
+        final SqlNodeList selectList =
+            new SqlNodeList(SqlParserPos.ZERO);
+        int i = 1;
+        for (RelDataTypeField field : rowType.getFieldList()) {
+            SqlIdentifier col = new SqlIdentifier(
+                field.getName(),
+                SqlParserPos.ZERO);
+            selectList.add(
+                SqlValidatorUtil.addAlias(col, UPDATE_ANON_PREFIX + i));
+            ++i;
+        }
+        source =
+            SqlStdOperatorTable.selectOperator.createCall(
+                null,
+                selectList,
+                source,
+                null,
+                null,
+                null,
+                null,
+                null,
+                SqlParserPos.ZERO);
+        source = SqlValidatorUtil.addAlias(source, UPDATE_SRC_ALIAS);
+        SqlMerge mergeCall = new SqlMerge(
+            SqlStdOperatorTable.mergeOperator,
+            target,
+            condition,
+            source,
+            updateCall,
+            null,
+            updateCall.getAlias(),
+            updateCall.getParserPosition());
+        rewriteMerge(mergeCall);
+        return mergeCall;
+    }
+
+    /**
+     * Allows a subclass to provide information about how to
+     * convert an UPDATE into a MERGE via self-join.  If this method
+     * returns null, then no such conversion takes place.
+     * Otherwise, this method should return a suitable unique identifier
+     * expression for the given table.
+     *
+     * @param table identifier for table being updated
+     *
+     * @param alias alias to use for qualifying columns in expression,
+     * or null for unqualified references; if this is equal to
+     * {@value #UPDATE_SRC_ALIAS}, then column references have
+     * been anonymized to "SYS$ANONx", where x is the 1-based
+     * column number.
+     *
+     * @return expression for unique identifier, or null to
+     * prevent conversion
+     */
+    protected SqlNode getSelfJoinExprForUpdate(
+        SqlIdentifier table, String alias)
+    {
+        return null;
     }
 
     /**
@@ -3270,6 +3418,12 @@ public class SqlValidatorImpl
             SqlValidatorScope scope = scopes.get(source);
             validateQuery(source, scope);
         }
+
+        // REVIEW jvs 4-Dec-2008: In FRG-365, this namespace row type is
+        // discarding the type inferred by inferUnknownTypes (which was invoked
+        // from validateSelect above).  It would be better if that information
+        // were used here so that we never saw any untyped nulls during
+        // checkTypeAssignment.
         RelDataType sourceRowType = getNamespace(source).getRowType();
         RelDataType logicalTargetRowType =
             getLogicalTargetRowType(targetRowType, insert);

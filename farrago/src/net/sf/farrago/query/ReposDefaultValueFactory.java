@@ -80,12 +80,13 @@ public class ReposDefaultValueFactory
         RelOptTable table,
         int iColumn)
     {
-        String generatedAlwaysProp =
-            FarragoDefaultSessionPersonality.ENFORCE_IDENTITY_GENERATED_ALWAYS;
-        boolean enforceGeneratedAlways =
-            farragoPreparingStmt.getSession().getSessionVariables().getBoolean(
-                generatedAlwaysProp);
-        if (!enforceGeneratedAlways) {
+        FarragoSession session = farragoPreparingStmt.getSession();
+        if (session.isReentrantAlterTableRebuild()
+            || session.isReentrantAlterTableAddColumn())
+        {
+            // Override GENERATED ALWAYS for these special reentrant
+            // INSERT statements, since we need to be able to reload
+            // the existing sequence values.
             return false;
         }
 

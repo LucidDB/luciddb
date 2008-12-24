@@ -218,6 +218,12 @@ class FtrsDataServer
         chain.addProvider(ftrsProvider);
     }
 
+    // implement FarragoMedLocalDataServer
+    public boolean supportsAlterTableAddColumn()
+    {
+        return true;
+    }
+    
     // REVIEW jvs 24-Aug-2008:  do stuff for FtrsIndexSearchRel too?
 
     public static class FtrsRelMetadataProvider

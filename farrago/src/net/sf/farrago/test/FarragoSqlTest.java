@@ -111,17 +111,6 @@ public class FarragoSqlTest
         runSqlLineTest(getName());
     }
 
-    protected void setRefFileDiffMasks()
-    {
-        super.setRefFileDiffMasks();
-        // flatfile script now embeds full path in error messages, so mask
-        if (getName().endsWith("med/flatfile.sql")) {
-            final String hd =
-                FarragoProperties.instance().homeDir.stringValue()+ "/";
-            addDiffMask("(" + hd + ")?unitsql/med/flatfiles");
-        }
-    }
-
     //~ Inner Interfaces -------------------------------------------------------
 
     public interface FarragoSqlTestFactory

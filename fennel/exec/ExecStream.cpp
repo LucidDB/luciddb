@@ -169,6 +169,11 @@ ExecStreamBufProvision ExecStream::getOutputBufProvision() const
     return BUFPROV_NONE;
 }
 
+ExecStreamBufProvision ExecStream::getOutputBufConversion() const
+{
+    return BUFPROV_NONE;
+}
+
 ExecStreamBufProvision ExecStream::getInputBufProvision() const
 {
     return BUFPROV_NONE;

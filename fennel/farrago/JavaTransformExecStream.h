@@ -44,8 +44,8 @@ struct JavaTransformExecStreamParams :
     TupleFormat outputTupleFormat;
 
     /**
-     * Class name of java peer, a FarragoTransform
-     * TODO: Register and look-up the java peer like other peers; cf JavaSinkExecStream.
+     * Class name of java peer, a FarragoTransform TODO: Register and look-up
+     * the java peer like other peers; cf JavaSinkExecStream.
      */
     std::string javaClassName;
 
@@ -66,30 +66,28 @@ class JavaTransformExecStream : virtual public ExecStream
 {
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
     std::string javaClassName;
-    jobject outputByteBuffer;
-
-    /**
-     * Accessor for scratch segment.
-     */
-    SegmentAccessor scratchAccessor;
-
-    /**
-     * Lock on buffer used to fetch data from Java.
-     */
-    SegPageLock bufferLock;
+    jobject outputByteBuffer1;
+    jobject outputByteBuffer2;
+    PBuffer pBuffer1;
+    PBuffer pBuffer2;
 
 
-  protected:
+protected:
     std::vector<SharedExecStreamBufAccessor> inAccessors;
     SharedExecStreamBufAccessor pOutAccessor;
 
-    /**  Request production on empty inputs. Called by execute() */
+    /**
+     * Request production on empty inputs. Called by execute()
+     */
     void checkEmptyInputs();
 
-    /** The Java peer, an instance of a net.sf.farrago.runtime.FarragoTransform. */
+    /**
+     * The Java peer, an instance of a
+     * net.sf.farrago.runtime.FarragoTransform.
+     */
     jobject farragoTransform;
 
-  public:
+public:
     JavaTransformExecStream();
     virtual ~JavaTransformExecStream();
 
@@ -99,14 +97,12 @@ class JavaTransformExecStream : virtual public ExecStream
         std::vector<SharedExecStreamBufAccessor> const &inAccessors);
     virtual void setOutputBufAccessors(
         std::vector<SharedExecStreamBufAccessor> const &outAccessors);
-    virtual void getResourceRequirements(
-        ExecStreamResourceQuantity &minQuantity,
-        ExecStreamResourceQuantity &optQuantity);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void closeImpl();
     virtual ExecStreamBufProvision getInputBufProvision() const;
     virtual ExecStreamBufProvision getOutputBufProvision() const;
+    virtual ExecStreamBufProvision getOutputBufConversion() const;
 };
 
 FENNEL_END_NAMESPACE

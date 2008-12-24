@@ -164,7 +164,7 @@ class FtrsTableProjectionRule
         FemLocalIndex index,
         Integer [] projection)
     {
-        if (!indexGuide.isValid(index)) {
+        if (index.isInvalid()) {
             return false;
         }
         if (index.isClustered()) {

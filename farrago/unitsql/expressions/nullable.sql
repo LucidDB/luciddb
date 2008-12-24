@@ -38,3 +38,9 @@ values cast(cast(null as double) as varchar(30));
 
 -- make sure empty string doesn't get converted back to null (FRG-275)
 values ('');
+
+create schema x;
+create table x.t(i int not null primary key);
+
+-- this should work since the table is empty (FRG-365)
+insert into x.t select null from x.t;

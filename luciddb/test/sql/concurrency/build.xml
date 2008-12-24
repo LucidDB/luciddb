@@ -170,6 +170,7 @@
     <delete dir="${csv.dir}"/>
     <delete file="run.properties"/>
     <ant dir="${concurrency.dir}/readwrite" target="clean"/>
+    <ant dir="${concurrency.dir}/backupRestore" target="clean"/>
   </target>
 
   <target name="clean-each">

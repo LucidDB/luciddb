@@ -125,11 +125,15 @@
             name="FarragoExtMetamodel_Types.pgml"
             diagramclass="org.argouml.uml.diagram.static_structure.ui.UMLClassDiagram"
             diagramname="Types" />
+    <member type="pgml"
+            name="FarragoExtMetamodel_Recovery.pgml"
+            diagramclass="org.argouml.uml.diagram.static_structure.ui.UMLClassDiagram"
+            diagramname="Recovery" />
     <member type="todo"
             name="FarragoExtMetamodel.todo" />
     <historyfile name="" />
   </argo>
-<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Nov 18 15:54:58 PST 2008'>
+<XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Dec 09 00:06:38 PST 2008'>
   <XMI.header>    <XMI.documentation>
       <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
       <XMI.exporterVersion>0.24(5) revised on $Date: 2006-11-06 19:55:22 +0100 (Mon, 06 Nov 2006) $ </XMI.exporterVersion>
@@ -5919,6 +5923,15 @@
                     <UML:Class xmi.idref = 'Ilsmmsmmsmm278e83mfaa30dba10mm7ff9'/>
                   </UML:Generalization.parent>
                 </UML:Generalization>
+                <UML:Generalization xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F54'
+                  isSpecification = 'false'>
+                  <UML:Generalization.child>
+                    <UML:Class xmi.idref = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F3D'/>
+                  </UML:Generalization.child>
+                  <UML:Generalization.parent>
+                    <UML:Class xmi.idref = 'I54f742m10189d8df1fmm7ffe'/>
+                  </UML:Generalization.parent>
+                </UML:Generalization>
               </UML:Namespace.ownedElement>
             </UML:Package>
             <UML:Package xmi.id = 'Ilsmmsmmsmm278e83mfaa30dba10mm7ff4' name = 'Security'
@@ -6618,6 +6631,21 @@
                         <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fd6'/>
                       </UML:StructuralFeature.type>
                     </UML:Attribute>
+                    <UML:Attribute xmi.id = '127-0-0-1--532acd:11e1ac64b52:-8000:0000000000000F43'
+                      name = 'isInvalid' visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                      changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--532acd:11e1ac64b52:-8000:0000000000000F49'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--532acd:11e1ac64b52:-8000:0000000000000F48'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fde'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
                   </UML:Classifier.feature>
                 </UML:Class>
                 <UML:Class xmi.id = 'I1990d96m10165397c29mm7ff9' name = 'LocalIndexColumn'
@@ -7268,6 +7296,56 @@
                     </UML:Attribute>
                   </UML:Classifier.feature>
                 </UML:Class>
+                <UML:Class xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F36'
+                  name = 'RecoveryType' visibility = 'public' isSpecification = 'false' isRoot = 'false'
+                  isLeaf = 'false' isAbstract = 'false' isActive = 'false'>
+                  <UML:ModelElement.stereotype>
+                    <UML:Stereotype xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fe3'/>
+                  </UML:ModelElement.stereotype>
+                  <UML:Classifier.feature>
+                    <UML:Attribute xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F38'
+                      name = 'ALTER_TABLE_ADD_COLUMN' visibility = 'public' isSpecification = 'false'
+                      ownerScope = 'classifier' changeability = 'frozen' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F45'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F44'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:Class xmi.idref = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F36'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                  </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Class xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F3D'
+                  name = 'RecoveryReference' visibility = 'public' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false' isActive = 'false'>
+                  <UML:GeneralizableElement.generalization>
+                    <UML:Generalization xmi.idref = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F54'/>
+                  </UML:GeneralizableElement.generalization>
+                  <UML:Classifier.feature>
+                    <UML:Attribute xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F3F'
+                      name = 'recoveryType' visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
+                      changeability = 'changeable' targetScope = 'instance'>
+                      <UML:StructuralFeature.multiplicity>
+                        <UML:Multiplicity xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F49'>
+                          <UML:Multiplicity.range>
+                            <UML:MultiplicityRange xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F48'
+                              lower = '1' upper = '1'/>
+                          </UML:Multiplicity.range>
+                        </UML:Multiplicity>
+                      </UML:StructuralFeature.multiplicity>
+                      <UML:StructuralFeature.type>
+                        <UML:Class xmi.idref = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F36'/>
+                      </UML:StructuralFeature.type>
+                    </UML:Attribute>
+                  </UML:Classifier.feature>
+                </UML:Class>
+                <UML:Comment xmi.id = '127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F55'
+                  isSpecification = 'false' body = 'A RecoveryReference connects to model elements &#10;via Dependency.  The model elements are suppliers&#10;and the RecoveryReference is the client (and also&#10;the owner of the dependency, which is why it inherits&#10;from Namespace).'/>
               </UML:Namespace.ownedElement>
             </UML:Package>
             <UML:Package xmi.id = 'I178920amffe18e457amm7ef7' name = 'SQL2003' visibility = 'public'
@@ -26493,7 +26571,7 @@
       textsize="10"
     >LbmSplicerStreamDef</text>
     <group name="Fig3.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[249, 550, 170, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[249, 557, 170, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -26505,7 +26583,7 @@
       
       <rectangle name="Fig3.3.0"
         x="249"
-        y="550"
+        y="557"
         width="170"
         height="20"
         fill="1"
@@ -26523,9 +26601,9 @@
         visibility="0"
       >
         <moveto x="249"
-                y="550" />
+                y="557" />
         <lineto x="419"
-                y="550" />
+                y="557" />
       </path>
     </group>
     <group name="Fig3.4"
@@ -30345,7 +30423,7 @@
       fill="1"
       fillcolor="white"
       stroke="0"
-      strokecolor="0 255 255"
+      strokecolor="black"
     />
     <group name="Fig12.1"
          description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[464, 568, 146, 2]"
@@ -30380,7 +30458,7 @@
       textsize="10"
     >LcsClusterReplaceStreamDef</text>
     <group name="Fig12.3"
-         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[465, 612, 146, 20]"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[465, 602, 145, 20]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -30392,8 +30470,8 @@
       
       <rectangle name="Fig12.3.0"
         x="465"
-        y="612"
-        width="146"
+        y="602"
+        width="145"
         height="20"
         fill="1"
         fillcolor="white"
@@ -30410,9 +30488,9 @@
         visibility="0"
       >
         <moveto x="465"
-                y="612" />
-        <lineto x="611"
-                y="612" />
+                y="602" />
+        <lineto x="610"
+                y="602" />
       </path>
     </group>
     <group name="Fig12.4"
@@ -40049,7 +40127,7 @@
       </path>
     </group>
     <group name="Fig21.4"
-         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[825, 127, 133, 60]"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[825, 127, 133, 73]"
          fill="1"
          fillcolor="white"
          stroke="0"
@@ -40062,7 +40140,7 @@
         x="825"
         y="127"
         width="133"
-        height="60"
+        height="73"
         fill="1"
         fillcolor="white"
         stroke="0"
@@ -40099,7 +40177,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >storageId : String</text>
+      >storageId [0..1] : String</text>
       <text name="Fig21.4.4"
         x="825"
         y="154"
@@ -40109,7 +40187,7 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >analyzeTime : String</text>
+      >analyzeTime [0..1] : String</text>
       <text name="Fig21.4.5"
         x="825"
         y="167"
@@ -40119,7 +40197,17 @@
         strokecolor="black"
         font="Dialog"
         textsize="10"
-      >pageCount : Long</text>
+      >pageCount [0..1] : Long</text>
+      <text name="Fig21.4.6"
+        x="825"
+        y="180"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >isInvalid : Boolean</text>
     </group>
     <rectangle name="Fig21.5"
       x="824"
@@ -54104,6 +54192,558 @@
       stroke="1"
       strokecolor="black"
     />
+  </group>
+</pgml>
+<pgml description="org.argouml.uml.diagram.static_structure.ui.UMLClassDiagram|Ilsmmsmmsmm61cd2mfaeb0c5450mm7ff5"
+      name="Recovery"
+>
+  <group name="Fig0"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[168, 96, 293, 57]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       href="127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F36"
+       fill="1"
+       fillcolor="white"
+       stroke="1"
+       strokecolor="black"
+  >
+    <private>
+    </private>
+    
+    <rectangle name="Fig0.0"
+      x="168"
+      y="96"
+      width="293"
+      height="57"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="black"
+    />
+    <group name="Fig0.1"
+         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[168, 96, 293, 15]"
+         href="127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F36"
+         fill="1"
+         fillcolor="white"
+         stroke="1"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig0.1.0"
+        x="168"
+        y="96"
+        width="293"
+        height="15"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      />
+      <text name="Fig0.1.1"
+        x="169"
+        y="97"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >&lt;&lt;enumeration&gt;&gt;</text>
+    </group>
+    <text name="Fig0.2"
+      x="168"
+      y="111"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="red"
+      font="Dialog"
+      textsize="10"
+    >RecoveryType</text>
+    <group name="Fig0.3"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[169, 144, 292, 20]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+         visibility="0"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig0.3.0"
+        x="169"
+        y="144"
+        width="292"
+        height="20"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        visibility="0"
+      />
+      <path name="Fig0.3.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+        visibility="0"
+      >
+        <moveto x="169"
+                y="144" />
+        <lineto x="461"
+                y="144" />
+      </path>
+    </group>
+    <group name="Fig0.4"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[169, 132, 292, 21]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig0.4.0"
+        x="169"
+        y="132"
+        width="292"
+        height="21"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+      />
+      <path name="Fig0.4.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      >
+        <moveto x="169"
+                y="132" />
+        <lineto x="461"
+                y="132" />
+      </path>
+      <text name="Fig0.4.2"
+        x="169"
+        y="133"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >ALTER_TABLE_ADD_COLUMN : RecoveryType</text>
+    </group>
+    <rectangle name="Fig0.5"
+      x="168"
+      y="96"
+      width="293"
+      height="57"
+      fill="0"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    />
+  </group>
+  <group name="Fig1"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[616, 256, 148, 44]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       href="127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F3D"
+       fill="1"
+       fillcolor="white"
+       stroke="1"
+       strokecolor="black"
+  >
+    <private>
+    </private>
+    
+    <rectangle name="Fig1.0"
+      x="616"
+      y="256"
+      width="148"
+      height="44"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="black"
+    />
+    <group name="Fig1.1"
+         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[616, 256, 148, 2]"
+         href="127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F3D"
+         fill="1"
+         fillcolor="white"
+         stroke="1"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig1.1.0"
+        x="616"
+        y="256"
+        width="148"
+        height="2"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      />
+    </group>
+    <text name="Fig1.2"
+      x="616"
+      y="258"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="red"
+      font="Dialog"
+      textsize="10"
+    >RecoveryReference</text>
+    <group name="Fig1.3"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[617, 291, 147, 20]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+         visibility="0"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig1.3.0"
+        x="617"
+        y="291"
+        width="147"
+        height="20"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        visibility="0"
+      />
+      <path name="Fig1.3.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+        visibility="0"
+      >
+        <moveto x="617"
+                y="291" />
+        <lineto x="764"
+                y="291" />
+      </path>
+    </group>
+    <group name="Fig1.4"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[617, 279, 147, 21]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig1.4.0"
+        x="617"
+        y="279"
+        width="147"
+        height="21"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+      />
+      <path name="Fig1.4.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      >
+        <moveto x="617"
+                y="279" />
+        <lineto x="764"
+                y="279" />
+      </path>
+      <text name="Fig1.4.2"
+        x="617"
+        y="280"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        font="Dialog"
+        textsize="10"
+      >recoveryType : RecoveryType</text>
+    </group>
+    <rectangle name="Fig1.5"
+      x="616"
+      y="256"
+      width="148"
+      height="44"
+      fill="0"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    />
+  </group>
+  <group name="Fig2"
+       description="org.argouml.uml.diagram.static_structure.ui.FigClass[656, 120, 64, 43]pathVisible=false;operationsVisible=false;attributesVisible=true"
+       href="I54f742m10189d8df1fmm7ffe"
+       fill="1"
+       fillcolor="white"
+       stroke="1"
+       strokecolor="black"
+  >
+    <private>
+    </private>
+    
+    <rectangle name="Fig2.0"
+      x="656"
+      y="120"
+      width="64"
+      height="43"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="black"
+    />
+    <group name="Fig2.1"
+         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[656, 120, 64, 2]"
+         href="I54f742m10189d8df1fmm7ffe"
+         fill="1"
+         fillcolor="white"
+         stroke="1"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig2.1.0"
+        x="656"
+        y="120"
+        width="64"
+        height="2"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      />
+    </group>
+    <text name="Fig2.2"
+      x="656"
+      y="122"
+      fill="1"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="red"
+      font="Dialog"
+      textsize="10"
+    >Namespace</text>
+    <group name="Fig2.3"
+         description="org.argouml.uml.diagram.ui.FigOperationsCompartment[657, 154, 63, 20]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+         visibility="0"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig2.3.0"
+        x="657"
+        y="154"
+        width="63"
+        height="20"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+        visibility="0"
+      />
+      <path name="Fig2.3.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+        visibility="0"
+      >
+        <moveto x="657"
+                y="154" />
+        <lineto x="720"
+                y="154" />
+      </path>
+    </group>
+    <group name="Fig2.4"
+         description="org.argouml.uml.diagram.ui.FigAttributesCompartment[657, 143, 63, 20]"
+         fill="1"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig2.4.0"
+        x="657"
+        y="143"
+        width="63"
+        height="20"
+        fill="1"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+      />
+      <path name="Fig2.4.1"
+        description="org.argouml.uml.diagram.ui.FigFeaturesCompartment$FigSeperator"
+        fill="1"
+        fillcolor="white"
+        stroke="1"
+        strokecolor="black"
+      >
+        <moveto x="657"
+                y="143" />
+        <lineto x="720"
+                y="143" />
+      </path>
+    </group>
+    <rectangle name="Fig2.5"
+      x="656"
+      y="120"
+      width="64"
+      height="43"
+      fill="0"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    />
+  </group>
+  <group name="Fig3"
+       description="org.argouml.uml.diagram.ui.FigGeneralization"
+       href="127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F54"
+       stroke="1"
+       strokecolor="black"
+  >
+    <private>
+      sourcePortFig="Fig1.0"
+      destPortFig="Fig2.0"
+      sourceFigNode="Fig1"
+      destFigNode="Fig2"
+    </private>
+    <path name="Fig3.0"
+      description="org.tigris.gef.presentation.FigPoly"
+      fill="0"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    >
+      <moveto x="687"
+              y="256" />
+      <lineto x="687"
+              y="163" />
+    </path>
+  </group>
+  <group name="Fig4"
+       description="org.argouml.uml.diagram.static_structure.ui.FigComment[208, 232, 280, 88]pathVisible=false;"
+       href="127-0-0-1--5cb20eb6:11e19c88791:-8000:0000000000000F55"
+       fill="1"
+       fillcolor="white"
+       stroke="1"
+       strokecolor="black"
+  >
+    <private>
+    </private>
+    
+    <rectangle name="Fig4.0"
+      x="208"
+      y="232"
+      width="280"
+      height="88"
+      fill="0"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="black"
+    />
+    <path name="Fig4.1"
+      description="org.tigris.gef.presentation.FigPoly"
+      fill="1"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    >
+      <moveto x="208"
+              y="232" />
+      <lineto x="477"
+              y="232" />
+      <lineto x="487"
+              y="242" />
+      <lineto x="487"
+              y="319" />
+      <lineto x="208"
+              y="319" />
+      <lineto x="208"
+              y="232" />
+    </path>
+    <path name="Fig4.2"
+      description="org.tigris.gef.presentation.FigPoly"
+      fill="1"
+      fillcolor="white"
+      stroke="1"
+      strokecolor="black"
+    >
+      <moveto x="477"
+              y="232" />
+      <lineto x="487"
+              y="242" />
+      <lineto x="477"
+              y="242" />
+      <lineto x="477"
+              y="232" />
+    </path>
+    <group name="Fig4.3"
+         description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[210, 234, 266, 2]"
+         fill="0"
+         fillcolor="white"
+         stroke="0"
+         strokecolor="black"
+         visibility="0"
+    >
+      <private>
+      </private>
+      
+      <rectangle name="Fig4.3.0"
+        x="210"
+        y="234"
+        width="266"
+        height="2"
+        fill="0"
+        fillcolor="white"
+        stroke="0"
+        strokecolor="black"
+      />
+    </group>
+    <text name="Fig4.4"
+      x="210"
+      y="234"
+      fill="0"
+      fillcolor="white"
+      stroke="0"
+      strokecolor="black"
+      font="Dialog"
+      textsize="10"
+    >A RecoveryReference connects to model elements 
+via Dependency.  The model elements are suppliers
+and the RecoveryReference is the client (and also
+the owner of the dependency, which is why it inherits
+from Namespace).</text>
   </group>
 </pgml>
 <todo>

@@ -85,7 +85,7 @@ public class LucidDbCancelBackupTest
         farragoPropInstance.catalogDir.set(catalogDir);
 
         testDir = 
-            homeDirString + "/../luciddb/test/sql/concurrency/readwrite";
+            homeDirString + "/../luciddb/test/sql/concurrency/backupRestore";
         
         // Create a new connection with the right session factory and db
         final String driverURI = "jdbc:luciddb:";

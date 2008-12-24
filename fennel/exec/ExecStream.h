@@ -264,6 +264,14 @@ public:
     virtual ExecStreamBufProvision getOutputBufProvision() const;
 
     /**
+     * Queries the BufferProvision to which this stream needs its
+     * output to be converted, if any.
+     *
+     * @return required conversion; default is BUFPROV_NONE
+     */
+    virtual ExecStreamBufProvision getOutputBufConversion() const;
+
+    /**
      * Queries the BufferProvision which this stream requires of its inputs when
      * consuming their tuples.
      *

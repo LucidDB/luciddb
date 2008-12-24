@@ -110,7 +110,7 @@ class FennelMergeRel
         FarragoRepos repos = FennelRelUtil.getRepos(this);
 
         FemMergeStreamDef mergeStream = repos.newFemMergeStreamDef();
-        mergeStream.setSequential(true);
+        mergeStream.setSequential(false);
         mergeStream.setPrePullInputs(false);
 
         for (int i = 0; i < inputs.length; i++) {

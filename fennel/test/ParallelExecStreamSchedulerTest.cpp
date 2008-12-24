@@ -33,17 +33,21 @@ class ParallelExecStreamSchedulerTest : public ExecStreamTestSuite
 {
     ThreadTracker threadTracker;
     
+    uint degreeOfParallelism;
+    
     // override ExecStreamTestBase
     virtual ExecStreamScheduler *newScheduler()
     {
-        uint degreeOfParallelism =
-            configMap.getIntParam(paramDegreeOfParallelism, 4);
-        
         return new ParallelExecStreamScheduler(
             shared_from_this(),
             "ParallelExecStreamScheduler",
             threadTracker,
             degreeOfParallelism);
+    }
+
+    uint getDegreeOfParallelism()
+    {
+        return degreeOfParallelism;
     }
 
 public:
@@ -53,50 +57,53 @@ public:
     explicit ParallelExecStreamSchedulerTest()
         : ExecStreamTestSuite(false)
     {
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testScratchBufferExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testDoubleBufferExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamInner);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCountAggExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSumAggExecStream);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream1);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream2);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream3);
-            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream4);
-            FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testReshapeExecStreamCastFilter);
-            FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testReshapeExecStreamNoCastFilter);
-            FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,testReshapeExecStreamDynamicParams);
-            FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,
-                testSingleValueAggExecStream);
-            FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,
-                testMergeImplicitPullInputs);
-            FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,
-                testBTreeInsertExecStreamStaticBTree);
-            FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,
-                testBTreeInsertExecStreamDynamicBTree);
+        degreeOfParallelism =
+            configMap.getIntParam(paramDegreeOfParallelism, 4);
+        
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testScratchBufferExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testDoubleBufferExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamInner);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCountAggExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSumAggExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream1);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream2);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream3);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream4);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,testReshapeExecStreamCastFilter);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,testReshapeExecStreamNoCastFilter);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,testReshapeExecStreamDynamicParams);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testSingleValueAggExecStream);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testMergeImplicitPullInputs);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testBTreeInsertExecStreamStaticBTree);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testBTreeInsertExecStreamDynamicBTree);
 
-            // TODO jvs 4-Aug-2008:  enable these once
-            // NLJ is parallel-safe
-            FENNEL_EXTRA_UNIT_TEST_CASE(
-                ExecStreamTestSuite,
-                testNestedLoopJoinExecStream1);
-            FENNEL_EXTRA_UNIT_TEST_CASE(
-                ExecStreamTestSuite,
-                testNestedLoopJoinExecStream2);
+        // TODO jvs 4-Aug-2008:  enable these once
+        // NLJ is parallel-safe
+        FENNEL_EXTRA_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testNestedLoopJoinExecStream1);
+        FENNEL_EXTRA_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testNestedLoopJoinExecStream2);
             
-            FENNEL_UNIT_TEST_CASE(
-                ExecStreamTestSuite,
-                testSplitterPlusBarrier);
+        FENNEL_UNIT_TEST_CASE(
+            ExecStreamTestSuite,
+            testSplitterPlusBarrier);
     }
 };
 

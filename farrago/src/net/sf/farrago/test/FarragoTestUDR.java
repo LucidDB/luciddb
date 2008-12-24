@@ -31,6 +31,8 @@ import java.util.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.syslib.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -128,6 +130,11 @@ public abstract class FarragoTestUDR
     public static void setSystemProperty(String name, String value)
     {
         System.setProperty(name, value);
+    }
+
+    public static void setFarragoProperty(String name, String value)
+    {
+        FarragoProperties.instance().setProperty(name, value);
     }
 
     public static int accessSql()
@@ -519,6 +526,14 @@ public abstract class FarragoTestUDR
         } catch (Throwable e) {
             throw new SQLException(e.getMessage());
         }
+    }
+
+    public static void simulateCatalogRecovery()
+        throws Exception
+    {
+        FarragoSession callerSession = FarragoUdrRuntime.getSession();
+        FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
+        db.simulateCatalogRecovery();
     }
     
     /**

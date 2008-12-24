@@ -333,10 +333,19 @@ public abstract class OJPreparingStmt
             timingTracer.traceTime("end optimization");
         }
 
+        // For transformation from DML -> DML, use result of rewrite
+        // (e.g. UPDATE -> MERGE).  For anything else (e.g. CALL -> SELECT),
+        // use original kind.
+        SqlKind kind;
+        if (sqlQuery.getKind().isA(SqlKind.Dml)) {
+            kind = sqlQuery.getKind();
+        } else {
+            kind = sqlNodeOriginal.getKind();
+        }
         return implement(
             resultType,
             rootRel,
-            sqlNodeOriginal.getKind(),
+            kind,
             decl,
             arguments);
     }

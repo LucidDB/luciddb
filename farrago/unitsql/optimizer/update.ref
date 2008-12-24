@@ -3,18 +3,27 @@
 > -----------------------------
 > -- Tests for UPDATE statement
 > -----------------------------
+> 
+> -- display rowcounts so diff can verify them
+> !set silent off
+> !set showtime off
+> 
 > set schema 'upsales';
+No rows affected
 > create schema upsales;
+No rows affected
 > create table upemps(
 >   empno int primary key,
 >   name varchar(10),
 >   deptno int);
+No rows affected
 > insert into upemps
 >   values
 >     (1, 'Fred', 20),
 >     (2, 'Bill', 10),
 >     (3, 'Joe', 10);
-> select * from upemps;
+3 rows affected
+> select * from upemps order by empno;
 +--------+-------+---------+
 | EMPNO  | NAME  | DEPTNO  |
 +--------+-------+---------+
@@ -22,12 +31,13 @@
 | 2      | Bill  | 10      |
 | 3      | Joe   | 10      |
 +--------+-------+---------+
+3 rows selected
 > -- update with no where; modifying primary key
 > -- currently gives 'Duplicate key detected' - this is a bug
 > update upemps
 >   set empno = empno + 1;
 Error: Duplicate key detected:  [ 2 ] (state=,code=0)
-> select * from upemps;
+> select * from upemps order by empno;
 +--------+-------+---------+
 | EMPNO  | NAME  | DEPTNO  |
 +--------+-------+---------+
@@ -35,10 +45,12 @@ Error: Duplicate key detected:  [ 2 ] (state=,code=0)
 | 2      | Bill  | 10      |
 | 3      | Joe   | 10      |
 +--------+-------+---------+
+3 rows selected
 > -- as above, but large gap to avoid bug
 > update upemps
 >   set empno = empno + 5;
-> select * from upemps;
+3 rows affected
+> select * from upemps order by empno;
 +--------+-------+---------+
 | EMPNO  | NAME  | DEPTNO  |
 +--------+-------+---------+
@@ -46,12 +58,14 @@ Error: Duplicate key detected:  [ 2 ] (state=,code=0)
 | 7      | Bill  | 10      |
 | 8      | Joe   | 10      |
 +--------+-------+---------+
+3 rows selected
 > -- update two columns and use a where clause
 > update upemps
 >   set empno = empno + 5,
 >     name = upper(name)
 > where deptno = 10;
-> select * from upemps;
+2 rows affected
+> select * from upemps order by empno;
 +--------+-------+---------+
 | EMPNO  | NAME  | DEPTNO  |
 +--------+-------+---------+
@@ -59,13 +73,15 @@ Error: Duplicate key detected:  [ 2 ] (state=,code=0)
 | 12     | BILL  | 10      |
 | 13     | JOE   | 10      |
 +--------+-------+---------+
+3 rows selected
 > -- populate using a correlated subquery
 > update upemps as u
 >   set empno = empno + (
 >     select count(*)
 >     from upemps
 >     where deptno = u.deptno);
-> select * from upemps;
+3 rows affected
+> select * from upemps order by empno;
 +--------+-------+---------+
 | EMPNO  | NAME  | DEPTNO  |
 +--------+-------+---------+
@@ -73,12 +89,14 @@ Error: Duplicate key detected:  [ 2 ] (state=,code=0)
 | 14     | BILL  | 10      |
 | 15     | JOE   | 10      |
 +--------+-------+---------+
+3 rows selected
 > -- drive from subquery in where clause
 > update upemps
 >   set name = lower(name),
 >     deptno = -deptno
 > where deptno in (select min(deptno) from upemps);
-> select * from upemps;
+2 rows affected
+> select * from upemps order by empno;
 +--------+-------+---------+
 | EMPNO  | NAME  | DEPTNO  |
 +--------+-------+---------+
@@ -86,13 +104,15 @@ Error: Duplicate key detected:  [ 2 ] (state=,code=0)
 | 14     | bill  | -10     |
 | 15     | joe   | -10     |
 +--------+-------+---------+
+3 rows selected
 > -- update column from scalar subquery
 > -- note that if query returns 0 rows, null is assigned to column
 > -- note that we use correlating variable 'u' but without 'as' this time
 > update upemps u
 >   set name = (
 >     select name from upemps where empno = u.empno + 1);
-> select * from upemps;
+3 rows affected
+> select * from upemps order by empno;
 +--------+-------+---------+
 | EMPNO  | NAME  | DEPTNO  |
 +--------+-------+---------+
@@ -100,10 +120,12 @@ Error: Duplicate key detected:  [ 2 ] (state=,code=0)
 | 14     | joe   | -10     |
 | 15     |       | -10     |
 +--------+-------+---------+
+3 rows selected
 > -- update using values as subquery
 > update upemps
 >   set deptno = (values (10));
-> select * from upemps;
+3 rows affected
+> select * from upemps order by empno;
 +--------+-------+---------+
 | EMPNO  | NAME  | DEPTNO  |
 +--------+-------+---------+
@@ -111,13 +133,31 @@ Error: Duplicate key detected:  [ 2 ] (state=,code=0)
 | 14     | joe   | 10      |
 | 15     |       | 10      |
 +--------+-------+---------+
+3 rows selected
+> -- no-op update; FTRS is not smart enough to detect that nothing
+> -- really changed, so it reports 3 rows affected; this is actually
+> -- the expected behavior according to SQL:2003
+> update upemps
+>   set deptno = (values (10));
+3 rows affected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 7      |       | 10      |
+| 14     | joe   | 10      |
+| 15     |       | 10      |
++--------+-------+---------+
+3 rows selected
 > -- restore original data
 > truncate table upemps;
+No rows affected
 > insert into upemps
 >   values
 >     (1,'Fred',20),
 >     (2,'Bill', 10),
 >     (3,'Joe',10);
+3 rows affected
 > -- attempt to update same column twice; should fail
 > update upemps
 >   set empno=10, empno=20;
@@ -133,6 +173,274 @@ Error: org.eigenbase.sql.parser.SqlParseException: Encountered "(" at line 2, co
 Was expecting one of:
     <IDENTIFIER> ...
     <QUOTED_IDENTIFIER> ... (state=,code=0)
+> 
+> drop table upemps;
+No rows affected
+> 
+> -- Test LucidDB rewrite from UPDATE to MERGE
+> 
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+No rows affected
+> 
+> create table upemps(
+>   empno int primary key,
+>   name varchar(10),
+>   deptno int);
+No rows affected
+> insert into upemps
+>   values
+>     (1, 'Fred', 20),
+>     (2, 'Bill', 10),
+>     (3, 'Joe', 10);
+3 rows affected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 1      | Fred  | 20      |
+| 2      | Bill  | 10      |
+| 3      | Joe   | 10      |
++--------+-------+---------+
+3 rows selected
+> 
+> -- full table update
+> update upemps
+>   set empno = empno + 5;
+3 rows affected
+> -- make sure lastUpsertRowsInserted comes out zero
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastUpsertRowsInserted';
++-------------------------+--------------+
+|       PARAM_NAME        | PARAM_VALUE  |
++-------------------------+--------------+
+| lastUpsertRowsInserted  | 0            |
++-------------------------+--------------+
+1 row selected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 6      | Fred  | 20      |
+| 7      | Bill  | 10      |
+| 8      | Joe   | 10      |
++--------+-------+---------+
+3 rows selected
+> 
+> -- update two columns and use a where clause
+> update upemps
+>   set empno = empno + 5,
+>     name = upper(name)
+> where deptno = 10;
+2 rows affected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 6      | Fred  | 20      |
+| 12     | BILL  | 10      |
+| 13     | JOE   | 10      |
++--------+-------+---------+
+3 rows selected
+> 
+> -- FIXME jvs 12-Dec-2008:  LucidDB can't currently handle
+> -- subqueries combined with UPDATE
+> 
+> -- -- populate using a correlated subquery
+> -- update upemps as u
+> --   set empno = empno + (
+> --     select count(*)
+> --     from upemps
+> --     where deptno = u.deptno);
+> -- select * from upemps order by empno;
+> -- -- drive from subquery in where clause
+> -- update upemps
+> --   set name = lower(name),
+> --     deptno = -deptno
+> -- where deptno in (select min(deptno) from upemps);
+> -- select * from upemps order by empno;
+> 
+> -- -- update column from scalar subquery
+> -- update upemps u
+> --   set name = (
+> --     select name from upemps where empno = u.empno + 1);
+> -- select * from upemps order by empno;
+> 
+> -- update using values as subquery
+> update upemps
+>   set deptno = (values (10));
+1 row affected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 6      | Fred  | 10      |
+| 12     | BILL  | 10      |
+| 13     | JOE   | 10      |
++--------+-------+---------+
+3 rows selected
+> -- no-op update; LucidDB is smart enough to detect that nothing
+> -- really changed, so it reports no rows affected; this
+> -- is non-conforming behavior according to SQL:2003
+> update upemps
+>   set deptno = (values (10));
+No rows affected
+> 
+> -- attempt to update same column twice; should fail
+> update upemps
+>   set empno=10, empno=20;
+Error: From line 2, column 17 to line 2, column 21: Target column 'EMPNO' is assigned more than once (state=,code=0)
+> 
+> truncate table upemps;
+No rows affected
+> insert into upemps
+>   values
+>     (1,'Fred',20),
+>     (2,'Bill', 10),
+>     (3,'Joe',10);
+3 rows affected
+> 
+> -- modify primary key overlapping:  LucidDB handles this correctly
+> update upemps
+>   set empno = empno + 1;
+3 rows affected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 2      | Fred  | 20      |
+| 3      | Bill  | 10      |
+| 4      | Joe   | 10      |
++--------+-------+---------+
+3 rows selected
+> 
+> -- full table update with alias
+> update upemps u
+>   set empno = u.empno + 5;
+3 rows affected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 7      | Fred  | 20      |
+| 8      | Bill  | 10      |
+| 9      | Joe   | 10      |
++--------+-------+---------+
+3 rows selected
+> 
+> -- full table update with unused alias and "as" noiseword
+> update upemps as u
+>   set empno = empno + 5;
+3 rows affected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 12     | Fred  | 20      |
+| 13     | Bill  | 10      |
+| 14     | Joe   | 10      |
++--------+-------+---------+
+3 rows selected
+> 
+> -- update two columns and use a where clause with alias
+> update upemps u
+>   set empno = u.empno + 5,
+>     name = upper(u.name)
+> where u.deptno = 10;
+2 rows affected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 12     | Fred  | 20      |
+| 18     | BILL  | 10      |
+| 19     | JOE   | 10      |
++--------+-------+---------+
+3 rows selected
+> 
+> -- NOTE jvs 12-Dec-2008:  we can't test execution failures which would lead
+> -- to rollback here because of the schizo Farrago/LucidDB setup used
+> -- for these tests; for that, see luciddb/test/sql/txn/rollback.sql
+> 
+> -- but we can test recoverable failures
+> alter session set "errorMax" = 100;
+No rows affected
+> alter session set "logDir" = 'testlog';
+No rows affected
+> 
+> -- this will lead to division by zero for rows with deptno=10
+> update upemps u set deptno = 7 / (deptno - 10);
+Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0; see testlog/Summary.log for details (state=,code=0)
+1 row affected
+> select * from sys_boot.mgmt.session_parameters_view
+>     where param_name = 'lastRowsRejected';
++-------------------+--------------+
+|    PARAM_NAME     | PARAM_VALUE  |
++-------------------+--------------+
+| lastRowsRejected  | 2            |
++-------------------+--------------+
+1 row selected
+> select * from upemps order by empno;
++--------+-------+---------+
+| EMPNO  | NAME  | DEPTNO  |
++--------+-------+---------+
+| 12     | Fred  | 1       |
+| 18     | BILL  | 10      |
+| 19     | JOE   | 10      |
++--------+-------+---------+
+3 rows selected
+> 
+> -- can't update primary key in error tolerant mode (this test is OK
+> -- since it's caught by the validator)
+> update upemps set empno = empno+1;
+Error: Cannot update unique key column (EMPNO) (state=,code=0)
+> 
+> alter session set "errorMax" = 0;
+No rows affected
+> 
+> ---------------------------------------------------------------
+> -- Explain output to make sure join elimination is taking place
+> ---------------------------------------------------------------
+> !set outputformat csv
+> 
+> explain plan for
+> update upemps
+>   set empno = empno + 5;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, UPSALES, UPEMPS]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[ROW($t0)], expr#5=[5], expr#6=[+($t0, $t5)], expr#7=[ROW($t6)], expr#8=[$IS_DIFFERENT_FROM($t4, $t7)], expr#9=[CAST($t3):BIGINT NOT NULL], rid=[$t9], EMPNO=[$t6], NAME=[$t1], DEPTNO=[$t2], $condition=[$t8])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, UPSALES, UPEMPS]], projection=[[0, 1, 2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$UPEMPS$DEPTNO, SYS$CLUSTERED_INDEX$UPEMPS$EMPNO, SYS$CLUSTERED_INDEX$UPEMPS$NAME]])'
+6 rows selected
+> 
+> explain plan for
+> update upemps
+>   set empno = empno + 5,
+>     name = upper(name)
+> where deptno = 10;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, UPSALES, UPEMPS]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[10], expr#5=[CAST($t4):INTEGER], expr#6=[=($t5, $t2)], expr#7=[ROW($t0, $t1)], expr#8=[5], expr#9=[+($t0, $t8)], expr#10=[UPPER($t1)], expr#11=[ROW($t9, $t10)], expr#12=[$IS_DIFFERENT_FROM($t7, $t11)], expr#13=[AND($t6, $t12)], expr#14=[CAST($t3):BIGINT NOT NULL], rid=[$t14], EMPNO=[$t9], NAME=[$t10], DEPTNO=[$t2], $condition=[$t13])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, UPSALES, UPEMPS]], projection=[[0, 1, 2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$UPEMPS$DEPTNO, SYS$CLUSTERED_INDEX$UPEMPS$EMPNO, SYS$CLUSTERED_INDEX$UPEMPS$NAME]])'
+6 rows selected
+> 
+> explain plan for
+> update upemps
+>   set deptno = (values (10));
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, UPSALES, UPEMPS]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..3=[{inputs}], expr#4=[ROW($t2)], expr#5=[?0], expr#6=[ROW($t5)], expr#7=[$IS_DIFFERENT_FROM($t4, $t6)], expr#8=[CAST($t3):BIGINT NOT NULL], rid=[$t8], EMPNO=[$t0], NAME=[$t1], DEPTNO=[$t5], $condition=[$t7])'
+'        FennelToIteratorConverter'
+'          LcsRowScanRel(table=[[LOCALDB, UPSALES, UPEMPS]], projection=[[0, 1, 2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$UPEMPS$DEPTNO, SYS$CLUSTERED_INDEX$UPEMPS$EMPNO, SYS$CLUSTERED_INDEX$UPEMPS$NAME]])'
+6 rows selected
+> 
+> !set silent on
 > -- End update.sql
 > 
 > 
