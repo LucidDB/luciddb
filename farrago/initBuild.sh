@@ -33,7 +33,12 @@ usage() {
     echo ""
     echo "           [--with[out]-tests] (default without)"
     echo "           [--with-nightly-tests] (default without)"
-    echo "           [--with-repos-type=(default|mysql/hibernate|psql/netbeans)]"
+    echo "           [--with-repos-type=REPOS_TYPE]"
+    echo "             where REPOS_TYPE may be:"
+    echo "                 default            (Enki/Netbeans + HSQLDB)"
+    echo "                 mysql/hibernate    (Enki/Hibernate + MySQL)"
+    echo "                 hsqldb/hibernate   (Enki/Hibernate + HSQLDB)"
+    echo "                 psql/netbeans      (Enki/Netbeans + psql)"
 }
 
 fennel_flag_missing=true
@@ -70,6 +75,8 @@ while [ -n "$1" ]; do
             repos_type="switchToDefaultReposStorage";;
         --with-repos-type=mysql/hibernate)
             repos_type="switchToMysqlHibernateReposStorage";;
+        --with-repos-type=hsqldb/hibernate)
+            repos_type="switchToHsqldbHibernateReposStorage";;
         --with-repos-type=psql/netbeans) 
             repos_type="switchToPsqlReposStorage";;
             

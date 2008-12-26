@@ -21,6 +21,8 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/bitmap/LbmEntry.h"
+#include "fennel/tuple/TuplePrinter.h"
+#include "fennel/common/FennelResource.h"
 #include <iomanip>
 #include <sstream>
 #include <boost/scoped_array.hpp>
@@ -72,14 +74,15 @@ void LbmEntry::init(
      * Set up the entryTuple
      */
     entryTuple.compute(tupleDesc);
-    currentEntrySize = keySize = 0;
-    /**
-     * Compute keysize based on max space that can be occupied by
-     * the keys
-     */
-    for (uint i = 0; i < tupleDesc.size() - 2; i++) {
-        keySize += tupleDesc[i].cbStorage;
+    currentEntrySize = 0;
+
+    keyDesc.resize(tupleDesc.size() - 2);
+    for (uint i = 0; i < keyDesc.size(); i++) {
+        keyDesc[i] = tupleDesc[i];
     }
+
+    bitmapSegSize = tupleDesc[tupleDesc.size() - 1].cbStorage;
+    maxSegSize = getMaxBitmapSize(bitmapSegSize);
 }
 
 
@@ -124,14 +127,9 @@ void LbmEntry::setEntryTuple(TupleData const &indexTuple)
         if (entryTuple[i].isNull()) {
             entryTuple[i].cbData = 0;
         }
-        /**
-         * Once we hit the rid field, bump up the currentEntrySize past
-         * the max space used by the keys
-         */
+        currentEntrySize += entryTuple[i].cbData;
         if (i == RIDField) {
-            currentEntrySize = keySize;
-        } else {
-            currentEntrySize += entryTuple[i].cbData;
+            keySize = currentEntrySize;
         }
     }
 
@@ -144,7 +142,7 @@ void LbmEntry::setEntryTuple(TupleData const &indexTuple)
      * have been used. The total length in this case will exceed
      * scratchBufferUsableSize but not scratchBufferSize.
      */
-    assert(currentEntrySize <= scratchBufferSize);
+    validateEntrySize();
 
     /*
      * Set up the Segment and Segment descriptor pointers. There are a few
@@ -236,6 +234,10 @@ bool LbmEntry::setRIDAdjacentSegByte(LcsRid rid)
         return false;
     }
 
+    if (pSegStart - pSegEnd == bitmapSegSize) {
+        closeCurrentSegment();
+        return false;
+    }
     pSegEnd--;
     currSegByte = pSegEnd;
     currSegByteStartRID = roundToByteBoundary(rid);
@@ -265,6 +267,9 @@ bool LbmEntry::openNewSegment(LcsRid rid)
         return false;
     }
     
+    if (pSegStart - pSegEnd == bitmapSegSize) {
+        return false;
+    }
     pSegEnd--;
     currSegByte = pSegEnd;
     *currSegByte = 0;
@@ -926,7 +931,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
         inputStartRID >= roundToByteBoundary(endRID))
     {
         if (adjustEntry(inputTuple)) {
-            permAssert(currentEntrySize <= scratchBufferSize);
+            validateEntrySize();
             return true;
         }
     }
@@ -939,7 +944,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
     if (inputStartRID <= endRID) {
         permAssert(isSingleton(inputTuple));
         bool rc = spliceSingleton(inputTuple);
-        permAssert(currentEntrySize <= scratchBufferSize);
+        validateEntrySize();
         return rc;
     }
 
@@ -960,12 +965,13 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      */
     if (isSingleton(inputTuple)) { 
         bool rc = setRID(inputStartRID);
-        permAssert(currentEntrySize <= scratchBufferSize);
+        validateEntrySize();
         return rc;
     }
 
     /*
-     * Now merge the two pieces of bitmaps together.
+     * Now merge the two pieces of bitmaps together, provided the resulting
+     * bitmap doesn't exceed the segment field size.
      */
     uint inputSegDescLength = 
         inputTuple[inputTuple.size() - 2].pData ? 
@@ -973,6 +979,9 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
     uint inputSegLength = 
         inputTuple[inputTuple.size() - 1].pData ? 
         inputTuple[inputTuple.size() - 1].cbData : 0;
+    if (pSegStart - pSegEnd + inputSegLength > bitmapSegSize) {
+        return false;
+    }
 
     if (!isSingleBitmap(inputTuple)) {
         /*
@@ -1000,7 +1009,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
            inputTuple[inputTuple.size() - 1].pData,
            inputSegLength);
     currentEntrySize += inputSegLength;
-    permAssert(currentEntrySize <= scratchBufferSize);
+    validateEntrySize();
     return true;
 }
 
@@ -1320,6 +1329,9 @@ bool LbmEntry::addNewAdjacentSegment(
 void LbmEntry::addNewRid(
     PBuffer nextSegDesc, PBuffer newSeg, LcsRid newRid, uint remainingSegLen)
 {
+    // This method should only be called when splicing entries that consist
+    // of only the rid key
+    assert(keyDesc.size() == 1);
     // shift the byte segments to the left by 1
     PBuffer seg = pSegEnd;
     for (int i = 0; i < remainingSegLen; i++) {
@@ -1512,11 +1524,14 @@ TupleData const &LbmEntry::produceEntryTuple()
     } else {
         /*
          * There are segment descriptors. Check if these descriptors can be
-         * removed(when all the segments are contiguous).
+         * removed (when all the segments are contiguous and there's no
+         * possibility that the max segment size is exceeded).
          */
         uint rowCount = getRowCount();
 
-        if (rowCount == entryTuple[segmentField].cbData*8) {
+        if (rowCount == entryTuple[segmentField].cbData * 8 &&
+            rowCount <= maxSegSize * 8)
+        {
             /*
              * All the RIDs are in the bitmap segments. There is no "gap" 
              * between segments. Do not need to store the segment descriptors
@@ -1923,7 +1938,10 @@ void LbmEntry::getSizeBounds(
         - segDescFieldMaxLength 
         - segFieldMaxLength 
         + 5;
-
+    // Cap the size of the entry by the pageSize
+    if (minEntrySize > pageSize) {
+        minEntrySize = pageSize;
+    }
     
     // the sum total of the two bitmap columns needs to be less than the
     // max size of a single column. The maximum size taken by the bitmap index
@@ -1942,6 +1960,7 @@ void LbmEntry::getSizeBounds(
     } else {
         maxEntrySize = min(maxEntrySizeForPage, maxEntrySize);
     }
+    assert(minEntrySize <= maxEntrySize);
 }
 
 void LbmEntry::generateRIDs(
@@ -2119,6 +2138,27 @@ int LbmEntry::segmentContainsRid(
     } else {
         return 1;
     }
+}
+
+void LbmEntry::validateEntrySize()
+{
+    if (currentEntrySize <= scratchBufferSize) {
+        return;
+    }
+    // Extract the portion of the entry that corresponds to the key
+    TupleData keyData;
+    keyData.resize(keyDesc.size());
+    for (uint i = 0; i < keyData.size(); i++) {
+        keyData[i] = entryTuple[i];
+    }
+    
+    std::ostringstream oss;
+    TuplePrinter tuplePrinter;
+    tuplePrinter.print(oss, keyDesc, keyData);
+    throw FennelResource::instance().bitmapEntryTooLong(
+        currentEntrySize,
+        scratchBufferSize,
+        oss.str());
 }
 
 FENNEL_END_CPPFILE("$Id$");

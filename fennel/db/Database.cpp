@@ -1012,7 +1012,7 @@ TxnId Database::initiateBackup(
     // value because of read-only txns.  But we don't care about read-only
     // txns.  We just want the txnId that's in sync with what's reflected in
     // the header.
-    TxnId upperBoundCsn = header.txnLogCheckpointMemento.nextTxnId - 1;
+    TxnId upperBoundCsn = getLastCommittedTxnId();
 
     disableDeallocateOld = true;
     dataDeviceSize = pDataDevice->getSizeInBytes();

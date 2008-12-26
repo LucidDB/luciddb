@@ -281,6 +281,29 @@ no sql
 external name
 'class net.sf.farrago.test.FarragoTestUDR.combineStringifyColumnsJumbledArgs';
 
+-- UDX's that returns columns from parameters that select from cursors
+create function returnInput(
+    inputCursor cursor,
+    columnSubset select from inputCursor)
+returns table(columnSubset.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnInput';
+
+create function returnTwoInputs(
+    inputCursor1 cursor,
+    inputCursor2 cursor,
+    columnSubset1 select from inputCursor1,
+    columnSubset2 select from inputCursor2)
+returns table(columnSubset1.*, columnSubset2.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+
 create view ramp_view as select * from table(ramp(3));
 
 create view stringified_view as 
@@ -598,6 +621,45 @@ select * from combineStringifiedColumns_view;
 select * 
 from table(digest(cursor(select * from sales.depts)))
 order by row_digest;
+
+-- udx invocation where the result is determined by parameters that select
+-- from cursor parameters
+select * from table(
+    returnInput(
+        cursor(select * from sales.emps),
+        row(name, empno, age)))
+order by empno;
+select * from table(
+    returnInput(
+        cursor(select name as n, gender as g, city as c, age as a
+            from sales.emps),
+        row(c, n, a)))
+order by n;
+select * from table(
+    returnInput(
+        cursor(select * from sales.emps),
+        row(name)))
+union
+select * from table(
+    returnInput(
+        cursor(select * from sales.depts),
+        row(name)))
+order by name;
+select * from table(
+    returnTwoInputs(
+        cursor(select * from sales.emps where empno <= 110 order by empno),
+        cursor(select deptno as dno, name as dname from sales.depts
+            order by deptno),
+        row(empno, name),
+        row(dname)));
+-- this will fail because of duplicate column names
+select * from table(
+    returnTwoInputs(
+        cursor(select * from sales.emps where empno <= 110 order by empno),
+        cursor(select * from sales.depts
+            order by deptno),
+        row(empno, name),
+        row(name)));
 
 -- commented out until jrockit R27 bug fixed
 -- udx with specified calendar

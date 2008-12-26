@@ -68,11 +68,15 @@ Error: Type mismatch in value ''abc'' for system parameter "cachePagesInit" (sta
 Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesInit/5'. (state=,code=0)
 > 
 > -- should work
+> alter system set "cacheReservePercentage" = 99;
+> alter system set "cacheReservePercentage" = 1;
 > alter system set "cacheReservePercentage" = 10;
 > alter system set "cacheReservePercentage" = 5;
 > 
 > -- should fail
 > alter system set "cacheReservePercentage" = 100;
+Error: Invalid parameter setting.  Setting must be between 1 and 99. (state=,code=0)
+> alter system set "cacheReservePercentage" = 0;
 Error: Invalid parameter setting.  Setting must be between 1 and 99. (state=,code=0)
 > 
 > -- should fail

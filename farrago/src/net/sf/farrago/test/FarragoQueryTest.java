@@ -456,6 +456,72 @@ public class FarragoQueryTest
         stmt.executeUpdate(sql);
     }
 
+    public void testUdxReturnsColListParamRelMetadata()
+        throws Exception
+    {
+        String sql = "create schema udx";
+        stmt.executeUpdate(sql);
+
+        sql =
+            "create function udx.returnInput(inputCursor cursor, "
+            + "columnSubset select from inputCursor) "
+            + "returns table(columnSubset.*) "
+            + "language java "
+            + "parameter style system defined java "
+            + "no sql "
+            + "external name "
+            + "'class net.sf.farrago.test.FarragoTestUDR.returnInput'";
+        stmt.executeUpdate(sql);
+
+        sql =
+            "select * from "
+            + "table(udx.returnInput(cursor(select * from sales.emps), "
+            + "row(name, empno, age)))";
+
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        FarragoSession session = farragoConnection.getSession();
+        FarragoSessionAnalyzedSql analyzedSql =
+            session.analyzeSql(
+                sql,
+                new FarragoTypeFactoryImpl(session.getRepos()),
+                null,
+                false);
+
+        Set<RelColumnOrigin> rcoSet = analyzedSql.columnOrigins.get(0);
+        assertEquals(
+            1,
+            rcoSet.size());
+        RelMetadataTest.checkColumnOrigin(
+            rcoSet.iterator().next(),
+            "EMPS",
+            "NAME",
+            true);
+
+        rcoSet = analyzedSql.columnOrigins.get(1);
+        assertEquals(
+            1,
+            rcoSet.size());
+        RelMetadataTest.checkColumnOrigin(
+            rcoSet.iterator().next(),
+            "EMPS",
+            "EMPNO",
+            true);
+
+        rcoSet = analyzedSql.columnOrigins.get(2);
+        assertEquals(
+            1,
+            rcoSet.size());
+        RelMetadataTest.checkColumnOrigin(
+            rcoSet.iterator().next(),
+            "EMPS",
+            "AGE",
+            true);
+
+        sql = "drop schema udx cascade";
+        stmt.executeUpdate(sql);
+    }
+
     /**
      * Tests that the transaction manager correctly notifies listeners of table
      * accesses.

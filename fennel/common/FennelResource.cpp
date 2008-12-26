@@ -64,6 +64,7 @@ FennelResource::FennelResource(Locale locale)
       _readDataPageFailed(this, "readDataPageFailed"),
       _writeDataPageFailed(this, "writeDataPageFailed"),
       _outOfSpaceDuringRestore(this, "outOfSpaceDuringRestore"),
+      _bitmapEntryTooLong(this, "bitmapEntryTooLong"),
       _readDataFailed(this, "readDataFailed"),
       _dataTransferFailed(this, "dataTransferFailed"),
       _writeLogFailed(this, "writeLogFailed"),
@@ -160,6 +161,10 @@ string FennelResource::writeDataPageFailed() const
 string FennelResource::outOfSpaceDuringRestore() const
 {
     return _outOfSpaceDuringRestore.format();
+}
+string FennelResource::bitmapEntryTooLong(int p0, int p1, const std::string &p2) const
+{
+    return _bitmapEntryTooLong.format(p0, p1, p2);
 }
 string FennelResource::readDataFailed(const std::string &p0) const
 {

@@ -348,7 +348,7 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
 
     } else if (paramName.compare("cacheReservePercentage") == 0) {
         int percent = boost::lexical_cast<int>(pParam->getValue());
-        if (percent <= 0 || percent >= 99) {
+        if (percent <= 0 || percent > 99) {
             throw InvalidParamExcn("1", "99");
         }
         ExecStreamResourceKnobs knob;

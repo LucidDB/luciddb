@@ -69,12 +69,17 @@ class LbmEntry : public LbmSegment
     TupleData entryTuple;
 
     /**
+     * Descriptor of the key portion + RID of the bitmap entry
+     */
+    TupleDescriptor keyDesc;
+
+    /**
      * startRID( if singleton, startRID == RID column in entryTuple)
      */
     LcsRid currSegByteStartRID;
 
     /**
-     * size(key) + size(LcsRid) + size(segDesc) + size(seg).
+     * size(current key) + size(LcsRid) + size(segDesc) + size(seg).
      * For a LbmEntry in construction, it will be the current storage size.
      * For a LbmEntry from an existing tuple, it will be the storage size of
      * the tuple. 
@@ -82,9 +87,20 @@ class LbmEntry : public LbmSegment
     uint currentEntrySize;
 
     /**
-     * size(key) + size(SRID)
+     * size(current key) + size(SRID)
      */
     uint keySize;
+
+    /**
+     * Size of the bitmap segment field
+     */
+    uint bitmapSegSize;
+
+    /**
+     * Maximum possible size of a single bitmap segment, as computed by
+     * getMaxBitmapSize
+     */
+    uint maxSegSize;
 
     /**
      * Increment forward from pSegDescStart.
@@ -212,7 +228,8 @@ class LbmEntry : public LbmSegment
      *
      * @param [in] rid the new rid that this entry will try to include
      *
-     * @param [in] reserveSpace the number of bytes to reserve in the scratch buffer
+     * @param [in] reserveSpace the number of bytes to reserve in the scratch
+     * buffer
      *
      * @return true if there is enough room to grow the current entry to rid;
      * false otherwise.
@@ -428,6 +445,12 @@ class LbmEntry : public LbmSegment
      * @return the amount of space required for the merge
      */
     uint getMergeSpaceRequired(TupleData const &inputTuple);
+
+    /**
+     * Verifies that the current size of the constructed entry does not
+     * exceed the scratch buffer size.  Throws an exception if it does.
+     */
+    void validateEntrySize();
 
     /**
      ** STATIC MEMBERS AND METHODS

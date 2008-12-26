@@ -528,3 +528,41 @@ language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns3';
+
+-- should succeed
+create function returnTwoInputs(
+    inputCursor1 cursor,
+    inputCursor2 cursor,
+    columnSubset1 select from inputCursor1,
+    columnSubset2 select from inputCursor2)
+returns table(columnSubset1.*, columnSubset2.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+
+-- the following 2 should fail because of references to non-existent cursor
+-- parameters
+create function returnTwoInputs(
+    inputCursor1 cursor,
+    inputCursor2 cursor,
+    columnSubset1 select from inputCursor1,
+    columnSubset2 select from inputCursor2)
+returns table(columnSubset.*, inputCursor2.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+create function returnTwoInputs(
+    inputCursor1 cursor,
+    inputCursor2 cursor,
+    columnSubset1 select from inputCursor1,
+    columnSubset2 select from inputCursor2)
+returns table(inputCursor1.*, columnSubset.*)
+language java
+parameter style system defined java
+no sql
+external name
+'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';

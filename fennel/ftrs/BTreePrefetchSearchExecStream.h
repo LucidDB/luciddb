@@ -49,9 +49,14 @@ struct BTreePrefetchSearchKey
     SearchEndpoint upperBoundDirective;
 
     /**
-     * Buffer used to store key values
+     * Buffer used to store lower key value
      */
-    PBuffer keyBuffer;
+    PBuffer lowerKeyBuffer;
+
+    /**
+     * Buffer used to store upper key value
+     */
+    PBuffer upperKeyBuffer;
 
     /**
      * True if the pre-fetched leaf page needs to be searched before it's
@@ -181,6 +186,12 @@ protected:
      * Number of search key entries per scratch page
      */
     uint nEntriesPerScratchPage;
+
+    /**
+     * True if the maximum key size is such that potentially only a single
+     * key can be stored on a page
+     */
+    bool bigMaxKey;
 
     /**
      * Vector of pointers to scratch pages allocated

@@ -556,16 +556,25 @@ public interface SqlValidator
     void declareCursor(SqlSelect select, SqlValidatorScope scope);
 
     /**
-     * Pushes a new instance of a cursor map on to the cursor map stack. Each
-     * cursor map corresponds to a specific function call.
+     * Pushes a new instance of a function call on to a function call stack.
      */
-    void pushCursorMap();
+    void pushFunctionCall();
 
     /**
-     * Removes the topmost entry from the cursor map stack.
+     * Removes the topmost entry from the function call stack.
      */
-    void popCursorMap();
+    void popFunctionCall();
 
+    /**
+     * Retrieves the name of the parent cursor referenced by a column list
+     * parameter.
+     * 
+     * @param columnListParamName name of the column list parameter
+     * 
+     * @return name of the parent cursor
+     */
+    String getParentCursor(String columnListParamName);
+    
     /**
      * Enables or disables expansion of identifiers other than column
      * references.

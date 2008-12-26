@@ -240,95 +240,95 @@ public class SqlFunction
         final SqlValidatorScope operandScope = scope.getOperandScope(call);
 
         // Indicate to the validator that we're validating a new function call
-        validator.pushCursorMap();
+        validator.pushFunctionCall();
 
-        boolean containsRowArg = false;
-        for (int i = 0; i < operands.length; ++i) {
-            RelDataType nodeType;
+        try {
+            boolean containsRowArg = false;
+            for (int i = 0; i < operands.length; ++i) {
+                RelDataType nodeType;
 
-            // for row arguments that should be converted to ColumnList types,
-            // set the nodeType to a ColumnList type but defer validating the
-            // arguments of the row constructor until we know for sure that the
-            // row argument maps to a ColumnList type
-            if ((operands[i].getKind() == SqlKind.Row)
-                && convertRowArgToColumnList)
-            {
-                containsRowArg = true;
-                RelDataTypeFactory typeFactory = validator.getTypeFactory();
-                nodeType = typeFactory.createSqlType(SqlTypeName.COLUMN_LIST);
-            } else {
-                nodeType = validator.deriveType(operandScope, operands[i]);
+                // for row arguments that should be converted to ColumnList types,
+                // set the nodeType to a ColumnList type but defer validating the
+                // arguments of the row constructor until we know for sure that the
+                // row argument maps to a ColumnList type
+                if ((operands[i].getKind() == SqlKind.Row)
+                    && convertRowArgToColumnList)
+                {
+                    containsRowArg = true;
+                    RelDataTypeFactory typeFactory = validator.getTypeFactory();
+                    nodeType = typeFactory.createSqlType(SqlTypeName.COLUMN_LIST);
+                } else {
+                    nodeType = validator.deriveType(operandScope, operands[i]);
+                }
+                validator.setValidatedNodeType(operands[i], nodeType);
+                argTypes[i] = nodeType;
             }
-            validator.setValidatedNodeType(operands[i], nodeType);
-            argTypes[i] = nodeType;
-        }
 
-        SqlFunction function =
-            SqlUtil.lookupRoutine(
-                validator.getOperatorTable(),
-                getNameAsId(),
-                argTypes,
-                getFunctionType());
-
-        // if we have a match on function name and parameter count, but couldn't
-        // find a function with  a COLUMN_LIST type, retry, but this time, don't
-        // convert the row argument to a COLUMN_LIST type; if we did find a
-        // match, go back and revalidate the row operands (corresponding to
-        // column references), now that we can set the scope to that of the
-        // source cursor referenced by that ColumnList type
-        if (containsRowArg) {
-            if ((function == null)
-                && SqlUtil.matchRoutinesByParameterCount(
+            SqlFunction function =
+                SqlUtil.lookupRoutine(
                     validator.getOperatorTable(),
                     getNameAsId(),
                     argTypes,
-                    getFunctionType()))
-            {
-                // remove the already validated node types corresponding to
-                // row arguments before revalidating
-                for (int i = 0; i < operands.length; ++i) {
-                    if (operands[i].getKind() == SqlKind.Row) {
-                        validator.removeValidatedNodeType(operands[i]);
+                    getFunctionType());
+
+            // if we have a match on function name and parameter count, but couldn't
+            // find a function with  a COLUMN_LIST type, retry, but this time, don't
+            // convert the row argument to a COLUMN_LIST type; if we did find a
+            // match, go back and revalidate the row operands (corresponding to
+            // column references), now that we can set the scope to that of the
+            // source cursor referenced by that ColumnList type
+            if (containsRowArg) {
+                if ((function == null)
+                    && SqlUtil.matchRoutinesByParameterCount(
+                        validator.getOperatorTable(),
+                        getNameAsId(),
+                        argTypes,
+                        getFunctionType()))
+                {
+                    // remove the already validated node types corresponding to
+                    // row arguments before revalidating
+                    for (int i = 0; i < operands.length; ++i) {
+                        if (operands[i].getKind() == SqlKind.Row) {
+                            validator.removeValidatedNodeType(operands[i]);
+                        }
                     }
+                    return deriveType(validator, scope, call, false);
+                } else if (function != null) {
+                    validator.validateColumnListParams(
+                        function,
+                        argTypes,
+                        operands);
                 }
-                validator.popCursorMap();
-                return deriveType(validator, scope, call, false);
-            } else if (function != null) {
-                validator.validateColumnListParams(
-                    function,
-                    argTypes,
-                    operands);
             }
-        }
 
-        // we've finished validating cursor parameters, so we can pop the cursor
-        // map corresponding to the current call off the cursor map stack
-        validator.popCursorMap();
+            if (getFunctionType() == SqlFunctionCategory.UserDefinedConstructor) {
+                return validator.deriveConstructorType(
+                    scope,
+                    call,
+                    this,
+                    function,
+                    argTypes);
+            }
+            if (function == null) {
+                validator.handleUnresolvedFunction(
+                    call,
+                    this,
+                    argTypes);
+            }
 
-        if (getFunctionType() == SqlFunctionCategory.UserDefinedConstructor) {
-            return validator.deriveConstructorType(
-                scope,
-                call,
-                this,
-                function,
-                argTypes);
+            // REVIEW jvs 25-Mar-2005:  This is, in a sense, expanding
+            // identifiers, but we ignore shouldExpandIdentifiers()
+            // because otherwise later validation code will
+            // choke on the unresolved function.
+            call.setOperator(function);
+            return 
+                function.validateOperands(
+                    validator,
+                    operandScope,
+                    call);
+        } finally {
+            validator.popFunctionCall();
         }
-        if (function == null) {
-            validator.handleUnresolvedFunction(
-                call,
-                this,
-                argTypes);
-        }
-
-        // REVIEW jvs 25-Mar-2005:  This is, in a sense, expanding
-        // identifiers, but we ignore shouldExpandIdentifiers()
-        // because otherwise later validation code will
-        // choke on the unresolved function.
-        call.setOperator(function);
-        return function.validateOperands(
-            validator,
-            operandScope,
-            call);
     }
 }
 

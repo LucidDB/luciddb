@@ -57,11 +57,14 @@ alter system set "expectedConcurrentStatements" = 4;
 alter system set "expectedConcurrentStatements" = 201;
 
 -- should work
+alter system set "cacheReservePercentage" = 99;
+alter system set "cacheReservePercentage" = 1;
 alter system set "cacheReservePercentage" = 10;
 alter system set "cacheReservePercentage" = 5;
 
 -- should fail
 alter system set "cacheReservePercentage" = 100;
+alter system set "cacheReservePercentage" = 0;
 
 -- should fail
 alter system set "deviceSchedulerType" = 'foo';

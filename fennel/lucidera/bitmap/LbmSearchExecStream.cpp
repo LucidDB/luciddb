@@ -65,9 +65,6 @@ void LbmSearchExecStream::prepare(LbmSearchExecStreamParams const &params)
         savedLowerBoundAccessor.compute(ridKeyDesc);
         ridSearchKeyData.compute(ridKeyDesc);
         pfLowerBoundData.compute(ridKeyDesc);
-        // rid is last key
-        ridSearchKeyData[ridSearchKeyData.size() - 1].pData =
-            (PConstBuffer) &startRid;
 
         // need to look for greatest lower bound if searching on rid
         leastUpper = false;
@@ -108,6 +105,11 @@ void LbmSearchExecStream::setAdditionalKeys()
                 ridSearchKeyData[i] = inputKeyData[i];
             }
         }
+        // rid is the last key; note that this needs to be reset each time
+        // because the rid key value originates from a dynamic parameter
+        // rather than the key buffer passed into setLowerBoundKey()
+        ridSearchKeyData[ridSearchKeyData.size() - 1].pData =
+            (PConstBuffer) &startRid;
         pDynamicParamManager->readParam(startRidParamId, startRidDatum);
         pSearchKey = &ridSearchKeyData;
 

@@ -64,7 +64,7 @@ Error: Invalid jar name "jar jar binks" (state=,code=0)
 > no sql
 > external name 
 > 'nojar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.testConnection';
-Error: DDL validation error: Reference to unknown jar "NOJAR" (state=,code=0)
+Error: DDL validation error near line 6, column 1: Reference to unknown jar "NOJAR" (state=,code=0)
 > 
 > -- should fail:  no such method
 > create function bad4(url varchar(2000))
@@ -93,7 +93,7 @@ Error: Dropping jar "JARTEST"."MEDJAR" requires CASCADE because other objects st
 > no sql
 > external name 
 > 'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.getDriverForUrl';
-Error: DDL validation error: Reference to unknown jar "MEDJAR" (state=,code=0)
+Error: DDL validation error near line 6, column 1: Reference to unknown jar "MEDJAR" (state=,code=0)
 > 
 > 
 > 
@@ -130,7 +130,7 @@ Error: Dropping jar "JARTEST"."MEDJAR" requires CASCADE because other objects st
 > no sql
 > external name 
 > 'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.getDriverForUrl';
-Error: DDL validation error: Reference to unknown jar "MEDJAR" (state=,code=0)
+Error: DDL validation error near line 6, column 1: Reference to unknown jar "MEDJAR" (state=,code=0)
 > 
 > -- test that (re)create after drop succeeds
 > 

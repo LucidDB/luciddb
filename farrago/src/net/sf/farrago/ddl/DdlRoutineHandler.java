@@ -35,6 +35,7 @@ import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.query.*;
@@ -121,6 +122,37 @@ public class DdlRoutineHandler
         // the source cursor parameters
         validateColumnListParams(routine);
 
+        // if the return contains cursors, make sure they exist
+        List<CwmFeature> routineFeatures = routine.getFeature();
+        for (CwmFeature feature : routineFeatures) {
+            SqlNode typeNode = validator.getSqlDefinition(feature);
+            if (typeNode instanceof SqlIdentifier) {
+                SqlIdentifier id = (SqlIdentifier) typeNode;
+                if (id.getSimple().equals("CURSOR")) {
+                    boolean match = false;
+                    for (
+                        FemRoutineParameter param
+                        : Util.cast(
+                            routine.getParameter(),
+                            FemRoutineParameter.class))
+                    {
+                        if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN)
+                        {
+                            continue;
+                        }
+                        if (param.getName().equals(feature.getName())) {
+                            match = true;
+                            break;
+                        }
+                    }
+                    if (!match) {
+                        throw res.NonExistentCursorParam.ex(
+                            repos.getLocalizedObjectName(feature.getName()));
+                    }
+                }
+            }
+        }
+        
         if (FarragoCatalogUtil.isTableFunction(routine)) {
             routine.setUdx(true);
             validateAttributeSet(routine);

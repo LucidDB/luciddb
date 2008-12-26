@@ -524,6 +524,8 @@ explain plan for select a, count(*) from minus group by a;
 !set outputformat table
 select a, count(*) from minus group by a;
 
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
 -- LER-5800
 create table t1(a int);
 create index it1 on t1(a);
@@ -546,6 +548,53 @@ insert into u values (2),(3),(4),(5),(6),(7),(8),(9),(10);
 delete from u where a = 10;
 insert into u select * from u;
 select * from u order by a;
+
+-- LER-9058
+-- A varchar column size of 16380 multipled by 2 equals 32K; a size of 16382
+-- multipled by 2 will exceed 32K
+create table vc(
+    a varchar(16380), b varchar(16382), c varchar(32768), d varchar(65535));
+create index ivc1 on vc(a);
+create index ivc2 on vc(b);
+create index ivc3 on vc(c);
+create index ivc4 on vc(d);
+insert into vc values
+    ('a1', 'b1', 'c1', 'd1'),
+    ('a2', 'b2', 'c2', 'd2'),
+    ('a3', 'b3', 'c3', 'd3'),
+    ('a4', 'b4', 'c4', 'd4');
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'VC', 10000);
+-- make sure the index is used
+!set outputformat csv
+explain plan for select * from vc where a = 'a1';
+explain plan for select * from vc where b = 'b2';
+explain plan for select * from vc where c = 'c3';
+explain plan for select * from vc where d = 'd4';
+!set outputformat table
+select * from vc where a = 'a1';
+select * from vc where b = 'b2';
+select * from vc where c = 'c3';
+select * from vc where d = 'd4';
+
+create table vc2(a varchar(40));
+insert into vc2 values
+    (null),(null),(null),(null),(null),(null),(null),(null),(null),(null);
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+insert into vc2 select * from vc2;
+create index i_vc2 on vc2(a);
+delete from vc2 where lcs_rid(a) = 0;
+!set outputformat csv
+explain plan for select count(*) from vc2 where a is null;
+!set outputformat table
+select count(*) from vc2 where a is null;
 
 -- cleanup
 drop server test_data cascade;

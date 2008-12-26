@@ -532,6 +532,19 @@ ${farrago.test.jvmargs}
     </copy>
   </target>
 
+  <!-- create ReposStorage.properties from the default HSQLDB+Hibernate
+       template -->
+  <target name="switchToHsqldbHibernateReposStorage">
+    <copy file="${farrago.catalog.dir}/templates/HsqldbHibernateRepos.properties"
+      tofile="${farrago.ReposStorage.propfile}" overwrite="true">
+      <filterchain>
+        <tokenfilter>
+          <replacestring from="{SCHEMA}" to="${farrago.catalog.schema}"/>
+        </tokenfilter>
+      </filterchain>
+    </copy>
+  </target>
+
   <!-- creates ReposStorage.properties from the default Postgres template -->
   <target name="switchToDefaultReposStorage">
     <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties"
@@ -636,11 +649,11 @@ ${farrago.test.jvmargs}
 
     <echo>
       Configuring repository schema at:
-      ${gensch.net.sf.farrago.dev.connection.url}${farrago.catalog.schema}
+      ${gensch.net.sf.farrago.dev.connection.schema.url}
     </echo>
     <sql
         driver="${gensch.net.sf.farrago.dev.connection.driver_class}"
-        url="${gensch.net.sf.farrago.dev.connection.url}${farrago.catalog.schema}"
+        url="${gensch.net.sf.farrago.dev.connection.schema.url}"
         userid="${gensch.net.sf.farrago.dev.connection.username}"
         password="${gensch.net.sf.farrago.dev.connection.password}"
         classpathref="farrago.3p.classpath">
