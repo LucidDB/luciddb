@@ -599,10 +599,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, MULTICLUSTER]])'
-'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7]], outputRowType=[RecordType(INTEGER C0, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C1, INTEGER C2, INTEGER C3, INTEGER C4, INTEGER C5, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" C6, INTEGER C7) NOT NULL])'
-'      FennelRenameRel(fieldNames=[[C0, C1, C2, C3, C4, C5, C6, C7]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[10], expr#6=[100], expr#7=[1000], proj#0..1=[{exprs}], EXPR$2=[$t4], EXPR$3=[$t5], EXPR$4=[$t6], EXPR$5=[$t7], CITY=[$t3], DEPTNO=[$t2])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
+'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[10], expr#6=[100], expr#7=[1000], expr#8=[CAST($t0):INTEGER], expr#9=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#10=[CAST($t4):INTEGER], expr#11=[CAST($t5):INTEGER], expr#12=[CAST($t6):INTEGER], expr#13=[CAST($t7):INTEGER], expr#14=[CAST($t2):INTEGER], C0=[$t8], C1=[$t9], C2=[$t10], C3=[$t11], C4=[$t12], C5=[$t13], C6=[$t3], C7=[$t14])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2, 4]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS], preserveOrder=[false])'
 > 
 > explain plan for
 > select * from multicluster order by c0, c1;
@@ -965,10 +963,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, RECTANGLES]])'
-'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, BOOLEAN R, DOUBLE R, DOUBLE R, INTEGER NOT NULL ID) NOT NULL])'
-'      FennelRenameRel(fieldNames=[[NAME, R, R, R, ID]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=['Default'], expr#2=[false], expr#3=[2.0], expr#4=[Reinterpret($t3)], expr#5=[CAST($t4):DOUBLE NOT NULL], expr#6=[1E1], expr#7=[/INT($t5, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[4.0], expr#10=[Reinterpret($t9)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[/INT($t11, $t6)], expr#13=[CAST($t12):DOUBLE], expr#14=[1], EXPR$0=[$t1], EXPR$1=[$t2], EXPR$1=[$t8], EXPR$1=[$t13], EXPR$2=[$t14])'
-'          FennelValuesRel(tuples=[[{ 0 }]])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=['Default'], expr#2=[false], expr#3=[2.0], expr#4=[Reinterpret($t3)], expr#5=[CAST($t4):DOUBLE NOT NULL], expr#6=[1E1], expr#7=[/INT($t5, $t6)], expr#8=[CAST($t7):DOUBLE], expr#9=[4.0], expr#10=[Reinterpret($t9)], expr#11=[CAST($t10):DOUBLE NOT NULL], expr#12=[/INT($t11, $t6)], expr#13=[CAST($t12):DOUBLE], expr#14=[1], expr#15=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#16=[CAST($t2):BOOLEAN], NAME=[$t15], R=[$t16], R=[$t8], R=[$t13], ID=[$t14])'
+'      FennelValuesRel(tuples=[[{ 0 }]])'
 > 
 > explain plan for
 > select * from rectangles t;

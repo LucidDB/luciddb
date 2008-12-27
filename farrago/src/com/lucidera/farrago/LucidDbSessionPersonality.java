@@ -329,10 +329,15 @@ public class LucidDbSessionPersonality
         // into and possibly through the join.
         builder.addRuleInstance(ExtractJoinFilterRule.instance);
 
+        // REVIEW jvs 27-Dec-2008: Next rule is disabled because it interferes
+        // with cast elimination, and may not always have the expected benefit.
+        // If it gets re-enabled, it needs a corresponding companion to deal
+        // with MERGE.
+        
         // Convert ProjectRels underneath an insert into RenameRels before
         // applying any merge projection rules.  Otherwise, we end up losing
         // column information used in error reporting during inserts.
-        if (fennelEnabled) {
+        if (false) {
             builder.addRuleInstance(new FennelInsertRenameRule());
         }
 
