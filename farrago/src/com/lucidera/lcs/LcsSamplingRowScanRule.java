@@ -58,7 +58,7 @@ public class LcsSamplingRowScanRule
         
         Util.permAssert(origScanRel.isFullScan, "Cannot sample index scans");
         Util.permAssert(
-            !origScanRel.hasResidualFilter, 
+            !origScanRel.hasResidualFilters(), 
             "Cannot sample scans with residual filters");
         
         RelOptCluster cluster = origScanRel.getCluster();

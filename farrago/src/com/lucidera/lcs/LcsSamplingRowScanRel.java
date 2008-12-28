@@ -86,8 +86,7 @@ public class LcsSamplingRowScanRel
             connection, 
             projectedColumns,
             true,  // full row scan
-            false, // no residual filters
-            new Integer[0], 
+            new Integer[0], // no residual filters
             1.0);
         
         this.samplingParams = samplingParameters;

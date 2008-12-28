@@ -264,7 +264,6 @@ public class LcsIndexSemiJoinRule
                 origRowScan.getConnection(),
                 origRowScan.projectedColumns,
                 false,
-                origRowScan.hasResidualFilter,
                 origRowScan.residualColumns,
                 rowScanInputSelectivity * origRowScan.getInputSelectivity());
 
@@ -363,10 +362,7 @@ public class LcsIndexSemiJoinRule
                 indexSelectivity);
 
         // Number of existing residual filters
-        int origResidualColumnCount = 0;
-        if (origRowScanRel.hasResidualFilter) {
-            origResidualColumnCount = origRowScanRel.residualColumns.length;
-        }
+        int origResidualColumnCount = origRowScanRel.residualColumns.length;
 
         int origIndexRelCount =
             origRowScanRel.getInputs().length - origResidualColumnCount;
@@ -379,7 +375,7 @@ public class LcsIndexSemiJoinRule
         // finally create the new row scan
         rowScanInputRels[0] = newIndexAccessRel;
 
-        if (origRowScanRel.hasResidualFilter) {
+        if (origResidualColumnCount > 0) {
             System.arraycopy(
                 origRowScanRel.getInputs(),
                 origIndexRelCount,
