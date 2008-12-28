@@ -170,9 +170,7 @@ uint LhxHashGenerator::hash(
 
     for (int i = 0; i < keyLength; i ++)
     {
-        // REVIEW jvs 25-Aug-2006:  Shouldn't this be a const &?  There's
-        // no need to copy the TupleDatum object.
-        TupleDatum col = inputTuple[keyProjection[i]];
+        TupleDatum const &col = inputTuple[keyProjection[i]];
         hashOneColumn(hashValue, col, isKeyColVarChar[i]);
     }
 
