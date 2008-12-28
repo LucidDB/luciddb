@@ -1248,9 +1248,6 @@ BlockNum VersionedRandomAllocationSegment::backupAllocationNodes(
             checkAbort(abortFlag);
             SegmentAllocationNode::ExtentEntry const &extentEntry =
                 segAllocNode.getExtentEntry(i);
-            if (extentEntry.nUnallocatedPages == nPagesPerExtent - 1) {
-                continue;
-            }
 
             VersionedExtentAllocLock extentAllocLock(selfAccessor);
             extentAllocLock.lockShared(getExtentAllocPageId(extentNum));
@@ -1258,6 +1255,13 @@ BlockNum VersionedRandomAllocationSegment::backupAllocationNodes(
                 extentAllocLock.getPage().getReadableData());
 
             if (countDataPages) {
+
+                // Don't bother looping through the entries if we know none
+                // are allocated
+                if (extentEntry.nUnallocatedPages == nPagesPerExtent - 1) {
+                    continue;
+                }
+
                 VersionedExtentAllocationNode const &extentNode =
                     extentAllocLock.getNodeForRead();
 
@@ -1450,9 +1454,6 @@ void VersionedRandomAllocationSegment::restoreFromBackup(
             checkAbort(abortFlag);
             SegmentAllocationNode::ExtentEntry const &extentEntry =
                 segAllocNode.getExtentEntry(i);
-            if (extentEntry.nUnallocatedPages == nPagesPerExtent - 1) {
-                continue;
-            }
             // Make sure there's enough space in the segment for this extent
             if (!DelegatingSegment::ensureAllocatedSize(
                 makePageNum(extentNum, nPagesPerExtent)))

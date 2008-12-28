@@ -182,11 +182,11 @@
 
     <echo>
       Configuring repository schema at:
-      ${gensch.net.sf.farrago.dev.connection.url}${plugin.catalog.schema}
+      ${gensch.net.sf.farrago.dev.connection.schema.url}
     </echo>
     <sql
         driver="${gensch.net.sf.farrago.dev.connection.driver_class}"
-        url="${gensch.net.sf.farrago.dev.connection.url}${plugin.catalog.schema}"
+        url="${gensch.net.sf.farrago.dev.connection.schema.url}"
         userid="${gensch.net.sf.farrago.dev.connection.username}"
         password="${gensch.net.sf.farrago.dev.connection.password}"
         classpathref="plugin.classpath">

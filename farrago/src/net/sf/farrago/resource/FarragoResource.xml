@@ -698,6 +698,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot create a circular label chain.</text>
 </exception>
 
+<exception id="421150" name="NonExistentCursorParam">
+<text>Cursor parameter {0} does not exist.</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -975,7 +979,7 @@ Messages: {1}</text>
 </message>
 
 <message name="MedJdbc_SCHEMA_NAME_Description">
-<text>Artificial foreign schema name for servers which don't support schemas</text>
+<text>Artificial foreign schema name for servers which don''t support schemas</text>
 </message>
 
 <!-- ====================================================================== -->

@@ -155,13 +155,12 @@ public class SqlValidatorImpl
     private final Set<SqlNode> cursorSet = new HashSet<SqlNode>();
 
     /**
-     * Stack of cursor maps that map a cursor (based on its position relative to
-     * other cursor parameters within a function call) to the SELECT associated
-     * with the cursor. A stack is needed to handle nested function calls. The
-     * function call currently being validated is at the top of the stack.
+     * Stack of objects that maintain information about function calls.  A stack
+     * is needed to handle nested function calls. The function call currently
+     * being validated is at the top of the stack.
      */
-    protected final Stack<Map<Integer, SqlSelect>> cursorMapStack =
-        new Stack<Map<Integer, SqlSelect>>();
+    protected final Stack<FunctionParamInfo> functionCallStack =
+        new Stack<FunctionParamInfo>();
 
     private int nextGeneratedId;
     protected final RelDataTypeFactory typeFactory;
@@ -290,7 +289,8 @@ public class SqlValidatorImpl
 
         // add the cursor to a map that maps the cursor to its select based on
         // the position of the cursor relative to other cursors in that call
-        Map<Integer, SqlSelect> cursorMap = cursorMapStack.peek();
+        FunctionParamInfo funcParamInfo = functionCallStack.peek();
+        Map<Integer, SqlSelect> cursorMap = funcParamInfo.cursorPosToSelectMap;
         int numCursors = cursorMap.size();
         cursorMap.put(numCursors, select);
 
@@ -305,15 +305,26 @@ public class SqlValidatorImpl
         registerNamespace(cursorScope, alias, selectNs, false);
     }
 
-    public void pushCursorMap()
+    // implement SqlValidator
+    public void pushFunctionCall()
     {
-        Map<Integer, SqlSelect> cursorMap = new HashMap<Integer, SqlSelect>();
-        cursorMapStack.push(cursorMap);
+        FunctionParamInfo funcInfo = new FunctionParamInfo();
+        functionCallStack.push(funcInfo);
     }
 
-    public void popCursorMap()
+    // implement SqlValidator
+    public void popFunctionCall()
     {
-        cursorMapStack.pop();
+        functionCallStack.pop();
+    }
+    
+    // implement SqlValidator
+    public String getParentCursor(String columnListParamName)
+    {
+        FunctionParamInfo funcParamInfo = functionCallStack.peek();
+        Map<String, String> parentCursorMap =
+            funcParamInfo.columnListParamToParentCursorMap;
+        return parentCursorMap.get(columnListParamName);
     }
 
     /**
@@ -4346,6 +4357,30 @@ public class SqlValidatorImpl
         }
     }
 
+    /**
+     * Utility object used to maintain information about the parameters in a
+     * function call.
+     */
+    protected static class FunctionParamInfo {
+        /**
+         *  Maps a cursor (based on its position relative to other cursor
+         *  parameters within a function call) to the SELECT associated with the
+         *  cursor.
+         */
+        public final Map<Integer, SqlSelect> cursorPosToSelectMap;
+        
+        /**
+         * Maps a column list parameter to the parent cursor parameter it references.
+         * The parameters are id'd by their names.
+         */
+        public final Map<String, String> columnListParamToParentCursorMap;
+        
+        public FunctionParamInfo()
+        {
+            cursorPosToSelectMap = new HashMap<Integer, SqlSelect>();
+            columnListParamToParentCursorMap = new HashMap<String, String>();
+        }
+    }
 }
 
 // End SqlValidatorImpl.java

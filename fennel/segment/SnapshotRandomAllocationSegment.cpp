@@ -72,6 +72,7 @@ PageId SnapshotRandomAllocationSegment::getSnapshotId(PageId pageId)
     pVersionedRandomSegment->getLatestPageEntryCopy(pageId, pageEntry);
     // Handle the special case where there's no chain
     if (pageEntry.versionChainPageId == pageId) {
+        assert(snapshotCsn >= pageEntry.allocationCsn);
         snapshotPageMap[pageId] = pageId;
         return pageId;
     }

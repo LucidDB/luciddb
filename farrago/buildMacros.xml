@@ -872,13 +872,16 @@ ${farrago.test.jvmargs}
         <then>
           <loadproperties srcFile="@{reposStorageProps}">
             <filterchain>
-              <linecontains>
-                <contains value="org.eigenbase.enki.implementationType"/>
-              </linecontains>
+              <linecontainsregexp>
+                <regexp pattern="(org.eigenbase.enki.implementationType|hibernate.dialect=)"/>
+              </linecontainsregexp>
               <tokenfilter>
                 <replacestring 
                   from="org.eigenbase.enki.implementationType"
                   to="farrago.enki.provider"/>
+                <replacestring 
+                  from="hibernate.dialect="
+                  to="farrago.enki.dialect="/>
               </tokenfilter>
             </filterchain>
           </loadproperties>
@@ -900,6 +903,15 @@ ${farrago.test.jvmargs}
     <attribute name="dropStorage" default="false"/>
 
     <sequential>
+      <delete>
+        <fileset dir="@{catalogDir}" includes="*.dat"/>
+        <fileset dir="@{catalogDir}" includes="*Dump.xmi"/>
+        <fileset dir="@{catalogDir}" includes="FarragoBootUrls.lst"/>
+
+        <!-- Deletes HSQLDB files or MYSQL .dump files. -->
+        <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
+      </delete>
+
       <property 
           file="@{catalogDir}/ReposStorage.properties"
           prefix="cleanCatalog"/>
@@ -919,26 +931,31 @@ ${farrago.test.jvmargs}
             ${cleanCatalog.net.sf.farrago.dev.dropStorage}
             ${cleanCatalog.net.sf.farrago.dev.createStorage}
           </echo>
+          <!-- Allow drop to fail (may be first time we run this). -->
+          <!-- propertyresource allows semi-colon delimited statements. -->
           <sql
               driver="${cleanCatalog.net.sf.farrago.dev.connection.driver_class}"
               url="${cleanCatalog.net.sf.farrago.dev.connection.url}" 
               userid="${cleanCatalog.net.sf.farrago.dev.connection.username}"
               password="${cleanCatalog.net.sf.farrago.dev.connection.password}"
-              classpathref="farrago.3p.classpath">
-            ${cleanCatalog.net.sf.farrago.dev.dropStorage}
-            ${cleanCatalog.net.sf.farrago.dev.createStorage}
+              classpathref="farrago.3p.classpath"
+              onerror="continue"
+              autocommit="true">
+            <propertyresource 
+                name="cleanCatalog.net.sf.farrago.dev.dropStorage"/>
+          </sql>
+          <sql
+              driver="${cleanCatalog.net.sf.farrago.dev.connection.driver_class}"
+              url="${cleanCatalog.net.sf.farrago.dev.connection.url}" 
+              userid="${cleanCatalog.net.sf.farrago.dev.connection.username}"
+              password="${cleanCatalog.net.sf.farrago.dev.connection.password}"
+              classpathref="farrago.3p.classpath"
+              autocommit="true">
+            <propertyresource
+                name="cleanCatalog.net.sf.farrago.dev.createStorage"/>
           </sql>
         </then>
       </if>
-
-      <delete>
-        <fileset dir="@{catalogDir}" includes="*.dat"/>
-        <fileset dir="@{catalogDir}" includes="*Dump.xmi"/>
-        <fileset dir="@{catalogDir}" includes="FarragoBootUrls.lst"/>
-
-        <!-- Deletes HSQLDB files or MYSQL .dump files. -->
-        <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
-      </delete>
     </sequential>
   </macrodef>
 
@@ -958,7 +975,14 @@ ${farrago.test.jvmargs}
       <mkdir dir="@{backupDir}"/>
 
       <ac:if xmlns:ac="antlib:net.sf.antcontrib">
-        <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+        <and>
+          <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+          <not>
+            <equals 
+                arg1="${farrago.enki.dialect}"
+                arg2="org.hibernate.dialect.HSQLDialect"/>
+          </not>
+        </and>
         <then>
           <!-- Backup the hibernate database to FarragoCatalog.dump. -->
           <echo message="Backing up Enki/Hibernate repository from schema '${project.catalog.schema}'"/> 
@@ -1003,7 +1027,7 @@ ${farrago.test.jvmargs}
     <sequential>
       <farrago.setReposProvider reposStorageProps="@{catalogDir}/ReposStorage.properties"/>
 
-      <copy todir="@{catalogDir}">
+      <copy overwrite="true" todir="@{catalogDir}">
         <fileset dir="@{backupDir}">
           <exclude name="*.dump"/>
           <exclude name="*.dat"/>
@@ -1013,7 +1037,7 @@ ${farrago.test.jvmargs}
       <ac:if xmlns:ac="antlib:net.sf.antcontrib">
         <isfalse value="@{catalogOnly}"/>
         <then>
-          <copy todir="@{catalogDir}">
+          <copy overwrite="true" todir="@{catalogDir}">
             <fileset dir="@{backupDir}">
               <include name="*.dat"/>
             </fileset>
@@ -1022,7 +1046,14 @@ ${farrago.test.jvmargs}
       </ac:if>
       
       <ac:if xmlns:ac="antlib:net.sf.antcontrib">
-        <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+        <and>
+          <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+          <not>
+            <equals 
+                arg1="${farrago.enki.dialect}"
+                arg2="org.hibernate.dialect.HSQLDialect"/>
+          </not>
+        </and>
         <then>
           <!-- Restore the hibernate database from FarragoCatalog.dump. -->
           <echo message="Restoring Enki/Hibernate repository to schema '${project.catalog.schema}'"/> 

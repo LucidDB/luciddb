@@ -27,6 +27,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
+import java.util.*;
 
 /**
  * <code>SqlCallBinding</code> implements {@link SqlOperatorBinding} by
@@ -152,6 +153,24 @@ public class SqlCallBinding
         final SqlCall cursorCall = (SqlCall) operand;
         final SqlNode query = cursorCall.operands[0];
         return validator.deriveType(scope, query);
+    }
+    
+    // implement SqlOperatorBinding
+    public String getColumnListParamInfo(
+        int ordinal,
+        String paramName,
+        List<String> columnList)
+    {
+        final SqlNode operand = call.operands[ordinal];
+        if (!SqlUtil.isCallTo(operand, SqlStdOperatorTable.rowConstructor)) {
+            return null;
+        }
+        SqlNode[] operands = ((SqlCall) operand).getOperands();
+        for (int i = 0; i < operands.length; i++) {
+            SqlIdentifier id = (SqlIdentifier) operands[i];
+            columnList.add(id.getSimple());
+        }
+        return validator.getParentCursor(paramName);
     }
 
     public EigenbaseException newError(

@@ -74,6 +74,18 @@ void BTreePrefetchSearchExecStream::getResourceRequirements(
     // search key information, up to a max of 8K pre-fetch entries.
     minQuantity.nCachePages += 1;
     keyValuesSize = savedLowerBoundAccessor.getMaxByteCount() * 2;
+
+    // The actual size of the keys should never exceed a page size, but we're
+    // trying to store at least 2 keys on each page.  If the max size is such
+    // that we can only store a single key on a page, then set aside an entire
+    // page to store each key.
+    if (keyValuesSize > scratchPageSize) {
+        bigMaxKey = true;
+        keyValuesSize = scratchPageSize;
+    } else {
+        bigMaxKey = false;
+    }
+
     nEntriesPerScratchPage = scratchPageSize / keyValuesSize;
     uint optNumPages = (uint) ceil(8192.0 / nEntriesPerScratchPage);
     assert(optNumPages >= 1);
@@ -100,7 +112,10 @@ void BTreePrefetchSearchExecStream::open(bool restart)
     rootOnly = (pNonLeafReader->isRootOnly());
 
     if (!restart) {
-        uint nPrefetchEntries = nPrefetchScratchPages * nEntriesPerScratchPage;
+        uint nPrefetchEntries =
+            (bigMaxKey) ?
+                nPrefetchScratchPages / 2 :
+                nPrefetchScratchPages * nEntriesPerScratchPage;
         leafPageQueue.resize(nPrefetchEntries);
         allocateScratchPages();
         leafPageQueue.setPrefetchSource(*this);
@@ -128,11 +143,17 @@ void BTreePrefetchSearchExecStream::allocateScratchPages()
 void BTreePrefetchSearchExecStream::initPrefetchEntry(
     BTreePrefetchSearchKey &searchKey)
 {
-    searchKey.keyBuffer =
-        scratchPages[currPage] + currPageEntry * keyValuesSize;
-    if (++currPageEntry == nEntriesPerScratchPage) {
-        currPage++;
-        currPageEntry = 0;
+    if (bigMaxKey) {
+        searchKey.lowerKeyBuffer = scratchPages[currPage++];
+        searchKey.upperKeyBuffer = scratchPages[currPage++];
+    } else {
+        searchKey.lowerKeyBuffer =
+            scratchPages[currPage] + currPageEntry * keyValuesSize;
+        searchKey.upperKeyBuffer = searchKey.lowerKeyBuffer + keyValuesSize / 2;
+        if (++currPageEntry == nEntriesPerScratchPage) {
+            currPage++;
+            currPageEntry = 0;
+        }
     }
 }
 
@@ -250,9 +271,8 @@ void BTreePrefetchSearchExecStream::setUpSearchKey(
 {
     lowerBoundDirective = searchKey.lowerBoundDirective;
     upperBoundDirective = searchKey.upperBoundDirective;
-    setLowerBoundKey(searchKey.keyBuffer);
-    savedUpperBoundAccessor.setCurrentTupleBuf(
-        searchKey.keyBuffer + keyValuesSize / 2);
+    setLowerBoundKey(searchKey.lowerKeyBuffer);
+    savedUpperBoundAccessor.setCurrentTupleBuf(searchKey.upperKeyBuffer);
     savedUpperBoundAccessor.unmarshal(upperBoundData);
 }
 
@@ -374,10 +394,16 @@ void BTreePrefetchSearchExecStream::setSearchKeyData(
         pfLowerBoundDirective;
     searchKey.upperBoundDirective =
         pfUpperBoundDirective;
-    savedLowerBoundAccessor.marshal(pfLowerBoundData, searchKey.keyBuffer);
-    savedUpperBoundAccessor.marshal(
-        pfUpperBoundData,
-        searchKey.keyBuffer + keyValuesSize / 2);
+    if (bigMaxKey) {
+        assert(
+            savedLowerBoundAccessor.getByteCount(pfLowerBoundData)
+                <= keyValuesSize);
+        assert(
+            savedUpperBoundAccessor.getByteCount(pfUpperBoundData)
+                <= keyValuesSize);
+    }
+    savedLowerBoundAccessor.marshal(pfLowerBoundData, searchKey.lowerKeyBuffer);
+    savedUpperBoundAccessor.marshal(pfUpperBoundData, searchKey.upperKeyBuffer);
 }
 
 bool BTreePrefetchSearchExecStream::testNonLeafInterval()

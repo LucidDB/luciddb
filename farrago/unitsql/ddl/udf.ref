@@ -597,4 +597,44 @@ Error: DDL validation error near line 1, column 8: COLUMN_LIST parameters for ro
 > external name 'class net.sf.farrago.test.FarragoTestUDR.badStringifyColumns3';
 Error: DDL validation error near line 1, column 8: Unknown external Java method "net.sf.farrago.test.FarragoTestUDR.badStringifyColumns3(java.sql.ResultSet, java.util.List, java.lang.String, java.sql.PreparedStatement)" referenced by routine "UDFTEST"."BAD_STRINGIFYCOLUMNS" (state=,code=0)
 > 
+> -- should succeed
+> create function returnTwoInputs(
+>     inputCursor1 cursor,
+>     inputCursor2 cursor,
+>     columnSubset1 select from inputCursor1,
+>     columnSubset2 select from inputCursor2)
+> returns table(columnSubset1.*, columnSubset2.*)
+> language java
+> parameter style system defined java
+> no sql
+> external name
+> 'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+> 
+> -- the following 2 should fail because of references to non-existent cursor
+> -- parameters
+> create function returnTwoInputs(
+>     inputCursor1 cursor,
+>     inputCursor2 cursor,
+>     columnSubset1 select from inputCursor1,
+>     columnSubset2 select from inputCursor2)
+> returns table(columnSubset.*, inputCursor2.*)
+> language java
+> parameter style system defined java
+> no sql
+> external name
+> 'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+Error: Cursor parameter "COLUMNSUBSET" does not exist. (state=,code=0)
+> create function returnTwoInputs(
+>     inputCursor1 cursor,
+>     inputCursor2 cursor,
+>     columnSubset1 select from inputCursor1,
+>     columnSubset2 select from inputCursor2)
+> returns table(inputCursor1.*, columnSubset.*)
+> language java
+> parameter style system defined java
+> no sql
+> external name
+> 'class net.sf.farrago.test.FarragoTestUDR.returnTwoInputs';
+Error: Cursor parameter "COLUMNSUBSET" does not exist. (state=,code=0)
+> 
 > !quit

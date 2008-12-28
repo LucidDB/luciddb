@@ -23,8 +23,10 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.EigenbaseException;
-import org.eigenbase.sql.validate.SqlValidatorException;
+import org.eigenbase.util.*;
+import org.eigenbase.sql.validate.*;
+
+import java.util.*;
 
 /**
  * <code>SqlOperatorBinding</code> represents the binding of an {@link
@@ -155,6 +157,25 @@ public abstract class SqlOperatorBinding
      * @return Rowtype of the query underlying the cursor
      */
     public RelDataType getCursorOperand(int ordinal)
+    {
+        throw new UnsupportedOperationException();
+    }
+    
+    /**
+     * Retrieves information about a column list parameter.
+     * 
+     * @param ordinal ordinal position of the column list parameter
+     * @param paramName name of the column list parameter
+     * @param columnList returns a list of the column names that are referenced in
+     * the column list parameter
+     * 
+     * @return the name of the parent cursor referenced by the column list
+     * parameter if it is a column list parameter; otherwise, null is returned
+     */
+    public String getColumnListParamInfo(
+        int ordinal,
+        String paramName,
+        List<String> columnList)
     {
         throw new UnsupportedOperationException();
     }

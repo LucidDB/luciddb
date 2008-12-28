@@ -501,6 +501,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Duplicate relation name ''{0}'' in FROM clause</text>
 </exception>
 
+<exception id="120710" name="DuplicateColumnName" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Duplicate column name ''{0}'' in output</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->
@@ -648,7 +652,7 @@ TBD: naming convention for extension features
 
 <exception name="PersonalityManagesRowCount">
     <property name="FeatureDefinition">Eigenbase-defined</property>
-    <text>Personality does not maintain table's row count in the catalog</text>
+    <text>Personality does not maintain table''s row count in the catalog</text>
 </exception>
 
 <exception name="PersonalitySupportsSnapshots">

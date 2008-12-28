@@ -200,7 +200,10 @@ public class FarragoSqlValidator
             (FarragoUserDefinedRoutine) function;
         FemRoutine femRoutine = routine.getFemRoutine();
         List<CwmParameter> params = femRoutine.getParameter();
-        Map<Integer, SqlSelect> cursorMap = cursorMapStack.peek();
+        FunctionParamInfo funcParamInfo = functionCallStack.peek();
+        Map<Integer, SqlSelect> cursorMap = funcParamInfo.cursorPosToSelectMap;
+        Map<String, String> parentCursorMap =
+            funcParamInfo.columnListParamToParentCursorMap;
 
         // locate arguments that are COLUMN_LIST types; locate the select
         // scope corresponding to the source cursor and revalidate the
@@ -230,6 +233,9 @@ public class FarragoSqlValidator
                             removeValidatedNodeType(operands[i]);
                             deriveType(cursorScope, operands[i]);
                             setValidatedNodeType(operands[i], origNodeType);
+                            parentCursorMap.put(
+                                clParam.getName(), 
+                                sourceCursor);
                             break;
                         }
                     }

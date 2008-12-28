@@ -206,6 +206,11 @@ PageId RandomAllocationSegmentBase::allocateFromLockedExtentTemplate(
     for (uint i = 0; i < nPagesPerExtent; i++) {
         PageEntryT &pageEntry = node.getPageEntry(i);
         if (pageEntry.ownerId == UNALLOCATED_PAGE_OWNER_ID) {
+            if (i == 0) {
+                // entry 0 is the extent allocation node itself so it
+                // should never be marked as unallocated
+                permAssert(false);
+            }
             pageEntry.ownerId = ownerId;
             PageId pageId = getLinearPageId(makePageNum(extentNum,i));
             return pageId;
