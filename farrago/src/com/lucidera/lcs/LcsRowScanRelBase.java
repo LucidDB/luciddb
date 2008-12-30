@@ -37,6 +37,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
 
@@ -74,7 +75,6 @@ public abstract class LcsRowScanRelBase
      * Types of scans to perform.
      */
     boolean isFullScan;
-    boolean hasResidualFilter;
 
     /**
      * Array of 0-based flattened filter column ordinals.
@@ -100,8 +100,7 @@ public abstract class LcsRowScanRelBase
      * @param projectedColumns array of 0-based table-relative column ordinals,
      * or null to project all columns
      * @param isFullScan true if doing a full scan of the table
-     * @param hasResidualFilter true if the scan has residual filters
-     * @param resCols residual filter columns
+     * @param resCols residual filter columns (0-length array if none)
      */
     public LcsRowScanRelBase(
         RelOptCluster cluster,
@@ -111,7 +110,6 @@ public abstract class LcsRowScanRelBase
         RelOptConnection connection,
         Integer [] projectedColumns,
         boolean isFullScan,
-        boolean hasResidualFilter,
         Integer [] resCols,
         double inputSelectivity)
     {      
@@ -121,7 +119,6 @@ public abstract class LcsRowScanRelBase
         this.projectedColumns = projectedColumns;
         this.connection = connection;
         this.isFullScan = isFullScan;
-        this.hasResidualFilter = hasResidualFilter;
         this.residualColumns = resCols;
 
         assert (lcsTable.getPreparingStmt()
@@ -267,7 +264,10 @@ public abstract class LcsRowScanRelBase
         // but is useful in verbose mode. Can't resolve this comment until FRG-8
         // is completed.
 
-        int nExtraTerms = (residualColumns.length > 0) ? 1 : 0;
+        int nExtraTerms = hasResidualFilters() ? 1 : 0;
+        if (pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES) {
+            ++nExtraTerms;
+        }
         int nSubclassTerms = (subclassTerms != null) ? subclassTerms.length : 0;
         Object [] objects = new Object[3 + nExtraTerms + nSubclassTerms];
         String [] nameList = new String[inputs.length + 3 + nExtraTerms + nSubclassTerms];
@@ -280,14 +280,23 @@ public abstract class LcsRowScanRelBase
         objects[0] = Arrays.asList(lcsTable.getQualifiedName());
         objects[1] = projection;
         objects[2] = indexNames;
-        if (residualColumns.length > 0) {
-            nameList[inputs.length + 3] = "residual columns";
-            objects[3] = Arrays.asList(residualColumns);
+        int iExtraTerm = 3;
+        if (hasResidualFilters()) {
+            nameList[inputs.length + iExtraTerm] = "residual columns";
+            objects[iExtraTerm] = Arrays.asList(residualColumns);
+            ++iExtraTerm;
+        }
+        if (pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES) {
+            nameList[inputs.length + iExtraTerm] = "isFullScan";
+            objects[iExtraTerm] = isFullScan;
+            ++iExtraTerm;
         }
         if (subclassTerms != null) {
             for(int i = 0; i < subclassTerms.length; i++) {
-                nameList[inputs.length + 3 + nExtraTerms + i] = subclassTerms[i];
-                objects[3 + nExtraTerms + i] = subclassValues[i];
+                nameList[inputs.length + 3 + nExtraTerms + i]
+                    = subclassTerms[i];
+                objects[3 + nExtraTerms + i]
+                    = subclassValues[i];
             }
         }
         pw.explain(
@@ -489,6 +498,11 @@ public abstract class LcsRowScanRelBase
     public double getInputSelectivity()
     {
         return inputSelectivity;
+    }
+
+    public boolean hasResidualFilters()
+    {
+        return (residualColumns.length > 0);
     }
 }
 

@@ -160,7 +160,6 @@ public class LcsTableProjectionRule
                     origScan.getConnection(),
                     projectedColumns,
                     origScan.isFullScan,
-                    origScan.hasResidualFilter,
                     origScan.residualColumns,
                     origScan.inputSelectivity);
         } else {

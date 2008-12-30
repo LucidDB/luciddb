@@ -148,7 +148,6 @@ public class LcsAddDeletionScanRule
                     origRowScan.getConnection(),
                     origRowScan.projectedColumns,
                     origRowScan.isFullScan,
-                    origRowScan.hasResidualFilter,
                     origRowScan.residualColumns,
                     origRowScan.inputSelectivity);
         } else {

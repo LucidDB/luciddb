@@ -84,7 +84,6 @@ public class LcsTable
             connection,
             null,
             true,
-            false,
             new Integer[0],
             inputSelectivity);
     }

@@ -240,10 +240,7 @@ public class LcsIndexAccessRule
             }
         }
 
-        int origResidualColumnCount = 0;
-        if (origRowScan.hasResidualFilter) {
-            origResidualColumnCount = origRowScan.residualColumns.length;
-        }
+        int origResidualColumnCount = origRowScan.residualColumns.length;
 
         int origIndexRelCount =
             origRowScan.getInputs().length - origResidualColumnCount;
@@ -327,7 +324,6 @@ public class LcsIndexAccessRule
                 origRowScan.getConnection(),
                 origRowScan.projectedColumns,
                 indexRelCount == 0,
-                newResCols.length > 0,
                 newResCols,
                 rowScanInputSelectivity);
 

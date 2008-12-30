@@ -865,7 +865,7 @@ public class LcsIndexGuide
         scanStream.setOutputProj(
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
         scanStream.setFullScan(rel.isFullScan);
-        scanStream.setHasExtraFilter(rel.hasResidualFilter);
+        scanStream.setHasExtraFilter(rel.hasResidualFilters());
         scanStream.setSamplingMode(TableSamplingModeEnum.SAMPLING_OFF);
         Integer [] clusterResidualColumns =
             computeProjectedColumns(residualColumns);

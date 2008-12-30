@@ -51,7 +51,6 @@ public class LcsRowScanRel
      * @param projectedColumns array of 0-based table-relative column ordinals,
      * or null to project all columns
      * @param isFullScan true if doing a full scan of the table
-     * @param hasResidualFilter true if the scan has residual filters
      * @param resCols residual filter columns
      */
     public LcsRowScanRel(
@@ -62,13 +61,12 @@ public class LcsRowScanRel
         RelOptConnection connection,
         Integer [] projectedColumns,
         boolean isFullScan,
-        boolean hasResidualFilter,
         Integer [] resCols,
         double inputSelectivity)
     {
         super(
             cluster, children, lcsTable, clusteredIndexes, connection, 
-            projectedColumns, isFullScan, hasResidualFilter, resCols, 
+            projectedColumns, isFullScan, resCols, 
             inputSelectivity);
     }
 
@@ -86,7 +84,6 @@ public class LcsRowScanRel
                 connection,
                 projectedColumns,
                 isFullScan,
-                hasResidualFilter,
                 residualColumns,
                 inputSelectivity);
         clone.inheritTraitsFrom(this);
