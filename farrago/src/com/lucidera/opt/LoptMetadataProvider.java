@@ -20,7 +20,9 @@
 */
 package com.lucidera.opt;
 
+import com.lucidera.farrago.*;
 import com.lucidera.lcs.*;
+import com.lucidera.query.*;
 
 import java.util.*;
 
@@ -307,6 +309,27 @@ public class LoptMetadataProvider
 
     public Double getCostWithFilters(JoinRel rel, RexNode filter)
     {
+        // The cost of a self-join is slightly larger than the minimum cost
+        // of the inputs since any filtering applied on either input needs to
+        // be applied on the remaining input.  But for simplicity, just use
+        // the minimum.
+        if (rel.isRemovableSelfJoin()) {
+            Double leftResult =
+                computeDefaultCostWithFilters(
+                    rel.getLeft(),
+                    null,
+                    true);
+            Double rightResult =
+                computeDefaultCostWithFilters(
+                    rel.getRight(),
+                    null,
+                    true);
+            if (leftResult == null || rightResult == null) {
+                return null;
+            }
+            return Math.min(leftResult, rightResult);
+        }
+        
         Double result = computeDefaultCostWithFilters(rel, filter, false);
         if (result == null) {
             return null;
@@ -835,23 +858,59 @@ public class LoptMetadataProvider
         return columnMd.getUniqueKeys(rel, repos);
     }
 
+    public Boolean areColumnsUnique(ProjectRel rel, BitSet columns)
+    {
+        // If any of the columns in the projection correspond to the
+        // rid column, then the column set is unique
+        for (int column = columns.nextSetBit(0); column >= 0;
+            column = columns.nextSetBit(column + 1))
+        {
+            RelColumnOrigin colOrigin = getSimpleColumnOrigin(rel, column);
+            if (colOrigin != null &&
+                LucidDbSpecialOperators.isLcsRidColumnId(
+                    colOrigin.getOriginColumnOrdinal()))
+            {
+                return true;
+            }
+        }
+        // Let another provider decide whether the columns are unique
+        return null;
+    }
+    
     public Boolean areColumnsUnique(LcsRowScanRel rel, BitSet columns)
     {
         return columnMd.areColumnsUnique(rel, columns, repos);
     }
 
     public Set<RelColumnOrigin> getSimpleColumnOrigins(
-        JoinRelBase rel,
-        int iOutputColumn)
-    {
-        return columnOrigins.getColumnOrigins(rel, iOutputColumn);
-    }
-
-    public Set<RelColumnOrigin> getSimpleColumnOrigins(
         ProjectRelBase rel,
         int iOutputColumn)
-    {
-        return columnOrigins.getColumnOrigins(rel, iOutputColumn);
+    {        
+        Set<RelColumnOrigin> colOrigins =
+            columnOrigins.getColumnOrigins(rel, iOutputColumn);
+        
+        // If the projection is the special case rid column, then treat
+        // that as a non-derived column
+        RexNode projExpr = rel.getProjectExps()[iOutputColumn];
+        if (projExpr instanceof RexCall) {
+            RexCall call = (RexCall) projExpr;
+            if (call.getOperator() == LucidDbOperatorTable.lcsRidFunc) {
+                assert(colOrigins.size() == 1);
+                RelColumnOrigin [] coList =
+                    (RelColumnOrigin []) colOrigins.toArray(
+                        new RelColumnOrigin[1]);
+                RelOptTable table = coList[0].getOriginTable();
+                Set<RelColumnOrigin> ridOrigin = new HashSet<RelColumnOrigin>();
+                ridOrigin.add(
+                    new RelColumnOrigin(
+                        table,
+                        LucidDbOperatorTable.ldbInstance().getSpecialOpColumnId(
+                            call.getOperator()),
+                        false));
+                return ridOrigin;
+            }
+        }
+        return colOrigins;
     }
 
     public Set<RelColumnOrigin> getSimpleColumnOrigins(
@@ -874,6 +933,35 @@ public class LoptMetadataProvider
             return null;
         }
         return columnOrigins.getColumnOrigins(rel, iOutputColumn);
+    }
+    
+    /**
+     * Determines the origin of a column, provided the column maps to a
+     * single column that isn't derived.
+     * 
+     * @param rel the RelNode of the column
+     * @param colOffset the offset of the column whose origin we are trying
+     * to determine
+     * 
+     * @return the origin of a column provided it's a simple column;
+     * otherwise, returns null 
+     */
+    public static RelColumnOrigin getSimpleColumnOrigin(
+        RelNode rel,
+        int colOffset)
+    {
+        Set<RelColumnOrigin> colOrigin =
+            LoptMetadataQuery.getSimpleColumnOrigins(rel, colOffset);
+        if ((colOrigin == null) || (colOrigin.size() != 1)) {
+            return null;
+        }
+        RelColumnOrigin [] coList =
+            (RelColumnOrigin []) colOrigin.toArray(
+                new RelColumnOrigin[1]);
+        if (coList[0].isDerived()) {
+            return null;
+        }
+        return coList[0];
     }
 
     //~ Inner Classes ----------------------------------------------------------

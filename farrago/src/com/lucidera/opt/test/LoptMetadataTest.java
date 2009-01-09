@@ -1530,6 +1530,13 @@ public class LoptMetadataTest
             "select dname from "
             + "(select dname from depts union select name from emps)");
     }
+    
+    public void testSimpleColumnOriginsJoin()
+        throws Exception
+    {
+        checkNoSimpleColumnOrigin(
+            "select e.name from emps e, depts d where e.deptno = d.deptno");
+    }
 }
 
 // End LoptMetadataTest.java

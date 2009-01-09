@@ -39,14 +39,14 @@ struct LbmBitOpExecStreamParams : public ConfluenceExecStreamParams
     /**
      * Parameter id representing the dynamic parameter used to limit the
      * number of rows producers for this stream should produce on a single
-     * execute
+     * execute.  If set to 0, there is no limit.
      */
     DynamicParamId rowLimitParamId;
 
     /**
      * Parameter id representing the dynamic parameter used to set the
      * starting rid value for bitmap entries to be produced by this stream's
-     * producers
+     * producers.  If set to 0, then no skipping of rid values is done.
      */
     DynamicParamId startRidParamId;
 };
@@ -215,6 +215,12 @@ protected:
      * @return false if buffer overflow occurred writing out a segment
      */
     bool addSegments();
+
+    /**
+     * Writes the startRid value to the startRid dynamic parameter, if one
+     * exists.
+     */
+    void writeStartRidParamValue();
 
     /**
      * Produces a tuple to the output stream, based on a bitmap.

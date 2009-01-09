@@ -299,17 +299,6 @@ public class LucidDbSessionPersonality
         // Eliminate AGG(DISTINCT x) now, because this transformation
         // may introduce new joins which need to be optimized further on.
         builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
-
-        // These rule instances need to be applied before the join filter is
-        // extracted from the join and before the MERGE statement is converted
-        // to a physical MERGE statement.
-        builder.addRuleInstance(LcsConvertMergeToUpdateRule.instanceRowScan);
-        builder.addRuleInstance(
-            LcsConvertMergeToUpdateRule.instanceFilterScan);
-        builder.addRuleInstance(
-            LcsConvertMergeToUpdateRule.instanceProjectScan);
-        builder.addRuleInstance(
-            LcsConvertMergeToUpdateRule.instanceProjectFilterScan);
         
         // Need to fire delete and merge rules before any projection rules
         // since they modify the projection.  Also need to fire these
@@ -487,6 +476,34 @@ public class LucidDbSessionPersonality
         // rules.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
 
+        // These rules need to be applied after semijoins have been converted,
+        // but before table projections and bitmap index searches have been
+        // applied.
+        builder.addGroupBegin();
+        builder.addRuleInstance(
+            LoptModifyRemovableSelfJoinRule.instanceFilterOnLeft);
+        builder.addRuleInstance(
+            LoptModifyRemovableSelfJoinRule.instanceFilterOnRight);
+        builder.addRuleInstance(
+            LoptModifyRemovableSelfJoinRule.instanceProjectOnLeft);
+        builder.addRuleInstance(
+            LoptModifyRemovableSelfJoinRule.instanceProjectOnRight);
+        builder.addRuleInstance(
+            LoptModifyRemovableSelfJoinRule.instanceRowScanOnLeft);
+        builder.addRuleInstance(
+            LoptModifyRemovableSelfJoinRule.instanceRowScanOnRight);
+        builder.addGroupEnd();
+        
+        // Remove self-joins that are removable.  Note that removable
+        // self-joins are flagged in LoptOptimizeJoinRule.  Therefore, any
+        // rules that create new JoinRel's after that rule is fired and
+        // before this one is fired MUST preserve the self-join flag.
+        builder.addRuleInstance(new LoptRemoveSelfJoinRule());
+        
+        // Push down any filters that were added as a result of removing
+        // self-joins
+        applyPushDownFilterRules(builder);
+        
         // Convert filters to bitmap index searches and boolean operators.
         // Do this after LcsIndexSemiJoinRule
         builder.addRuleClass(LcsIndexAccessRule.class);

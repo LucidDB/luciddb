@@ -174,7 +174,8 @@ public class PushSemiJoinPastJoinRule
                 joinRel.getCondition(),
                 joinRel.getJoinType(),
                 Collections.<String>emptySet(),
-                joinRel.isSemiJoinDone());
+                joinRel.isSemiJoinDone(),
+                joinRel.isRemovableSelfJoin());
 
         call.transformTo(newJoinRel);
     }

@@ -21,6 +21,7 @@
 package com.lucidera.opt;
 
 import com.lucidera.lcs.*;
+import com.lucidera.query.*;
 
 import java.util.*;
 
@@ -422,44 +423,37 @@ public class LoptSemiJoinOptimizer
         ListIterator<Integer> keyIter = leftKeys.listIterator();
         while (keyIter.hasNext()) {
             boolean removeKey = false;
-            Set<RelColumnOrigin> colOrigin =
-                LoptMetadataQuery.getSimpleColumnOrigins(
+            RelColumnOrigin colOrigin =
+                LoptMetadataProvider.getSimpleColumnOrigin(
                     factRel,
                     keyIter.next());
-            if ((colOrigin == null) || (colOrigin.size() != 1)) {
-                // references > 1 column
+            // can't use the rid column as a semijoin key
+            if (colOrigin == null ||
+                LucidDbSpecialOperators.isLcsRidColumnId(
+                    colOrigin.getOriginColumnOrdinal()))
+            {
                 removeKey = true;
             } else {
-                RelColumnOrigin [] coList =
-                    (RelColumnOrigin []) colOrigin.toArray(
-                        new RelColumnOrigin[1]);
-                if (coList[0].isDerived()) {
-                    // not a simple column reference
-                    removeKey = true;
-                } else {
-                    RelOptTable table = coList[0].getOriginTable();
-                    if (theTable == null) {
-                        if (!(table instanceof LcsTable)) {
-                            // not a column store table
-                            removeKey = true;
-                        } else {
-                            theTable = table;
-                        }
-                    } else if (table != theTable) {
-                        // doesn't match the table of the first key found;
-                        // note that we arbitrarily use the table of the
-                        // first valid key as the underlying fact table
-                        // even though there could be multiple choices
+                RelOptTable table = colOrigin.getOriginTable();
+                if (theTable == null) {
+                    if (!(table instanceof LcsTable)) {
+                        // not a column store table
                         removeKey = true;
+                    } else {
+                        theTable = table;
                     }
-                    if (!removeKey) {
-                        actualLeftKeys.add(coList[0].getOriginColumnOrdinal());
-                        keyIdx++;
-                    }
+                } else if (table != theTable) {
+                    // doesn't match the table of the first key found;
+                    // note that we arbitrarily use the table of the
+                    // first valid key as the underlying fact table
+                    // even though there could be multiple choices
+                    removeKey = true;
                 }
             }
-
-            if (removeKey) {
+            if (!removeKey) {
+                actualLeftKeys.add(colOrigin.getOriginColumnOrdinal());
+                keyIdx++;
+            } else {
                 keyIter.remove();
                 rightKeys.remove(keyIdx);
             }

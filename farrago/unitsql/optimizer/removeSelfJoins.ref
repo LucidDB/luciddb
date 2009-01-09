@@ -1,0 +1,651 @@
+> -- $Id$
+> -- Exercise queries where self-joins can be removed
+> 
+> create schema rsj;
+> set schema 'rsj';
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+> 
+> create table sales(
+>     sid int unique not null, product_id int, salesperson int, customer int,
+>     quantity int);
+> create index i_sales_pid on sales(product_id);
+> create index i_sales_sp on sales(salesperson);
+> create index i_sales_cust on sales(customer);
+> 
+> create table product(
+>     id int unique not null, name char(20), color char(10), size char(1));
+> create table salesperson(id int unique not null, name char(20), age int);
+> create table customer(
+>     id int unique not null, company char(20), city char(20) not null);
+> create table state(city char(20) unique not null, state char(20));
+> 
+> create index i_product_color on product(color);
+> create index i_product_size on product(size);
+> create index i_customer_city on customer(city);
+> 
+> insert into product values(1, 'radio', 'black', 'S');
+> insert into product values(2, 'phone', 'white', 'M');
+> insert into salesperson values(1, 'XYZ', 30);
+> insert into salesperson values(2, 'UVW', 40);
+> insert into customer values(1, 'ABC', 'San Mateo');
+> insert into customer values(2, 'DEF', 'New York City');
+> insert into state values('San Mateo', 'CA');
+> insert into state values('New York City', 'New York');
+> insert into sales values(1, 1, 1, 1, 10);
+> insert into sales values(2, 1, 1, 2, 20);
+> insert into sales values(3, 1, 2, 1, 30);
+> insert into sales values(4, 1, 2, 2, 40);
+> insert into sales values(5, 2, 1, 1, 50);
+> insert into sales values(6, 2, 1, 2, 60);
+> insert into sales values(7, 2, 2, 1, 70);
+> insert into sales values(8, 2, 2, 2, 80);
+> 
+> -- fake stats to force usage of semijoins; note that the predicates chosen in
+> -- the actual queries aren't necessarily selective in reality but the stats
+> -- make the optimizer think they are
+> 
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RSJ', 'SALES', 100000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RSJ', 'PRODUCT', 20);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RSJ', 'SALESPERSON', 10);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RSJ', 'CUSTOMER', 100);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'RSJ', 'STATE', 5);
+> 
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'RSJ', 'SALES', 'PRODUCT_ID', 20, 100, 20, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'RSJ', 'SALES', 'SALESPERSON', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'RSJ', 'SALES', 'CUSTOMER', 100, 100, 100, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'RSJ', 'PRODUCT', 'ID', 20, 100, 20, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'RSJ', 'SALESPERSON', 'ID', 10, 100, 10, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'RSJ', 'CUSTOMER', 'ID', 100, 100, 100, 0, '0123456789');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'RSJ', 'CUSTOMER', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> call sys_boot.mgmt.stat_set_column_histogram(
+>     'LOCALDB', 'RSJ', 'STATE', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+> 
+> !set outputformat csv
+> 
+> --------------------------------------------------------------------------------
+> -- Exercise various scenarios including combinations of the following:
+> -- a) projections on the self-join tables
+> -- b) filtering on the self-join tables
+> -- c) semijoin filtering on the self-join tables
+> -- d) semijoin filtering on the self-join tables where the joins to the
+> --    semijoin dimension table can also be removed
+> -- e) different orderings of tables in the FROM clause
+> --------------------------------------------------------------------------------
+> 
+> explain plan for
+> select s1.quantity, s2.* from sales s1, sales s2 where s1.sid = s2.sid and
+>     s2.quantity > 50;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[QUANTITY, SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
+> explain plan for
+> select s1.*, s2.quantity from sales s1, sales s2 where s1.sid = s2.sid and
+>     s1.quantity > 50;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
+> explain plan for
+> select s1.*, s2.* from sales s1, sales s2 where s1.sid = s2.sid and
+>     s1.quantity > 50 and s2.quantity > 60;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY, SID0, PRODUCT_ID0, SALESPERSON0, CUSTOMER0, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'      FennelValuesRel(tuples=[[{ '(', 60, '+', null }]])'
+> explain plan for
+> select s1.*, s2.* from sales s1, sales s2, product p
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M';
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY, SID0, PRODUCT_ID0, SALESPERSON0, CUSTOMER0, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'      LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'        LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'          FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'            FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'              LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'                  LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                    FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+> explain plan for
+> select s1.quantity, s2.quantity, sp.* from sales s1, sales s2, salesperson sp
+>     where s1.sid = s2.sid and s2.salesperson = sp.id and sp.age >= 40;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 3, 4, 5]], outputRowType=[RecordType(INTEGER QUANTITY, INTEGER QUANTITY0, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[3]], joinType=[INNER])'
+'      LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 2, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON]])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                  FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SALESPERSON$NAME]], residual columns=[[2]])'
+'          FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+> 
+> explain plan for
+> select s1.*, s2.* from sales s1, sales s2, product p, salesperson sp
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY, SID0, PRODUCT_ID0, SALESPERSON0, CUSTOMER0, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'      LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                  FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+> explain plan for
+> select s1.quantity, s2.* from sales s1, product p, sales s2, salesperson sp
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[QUANTITY, SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'      LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                  FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+> explain plan for
+> select s1.quantity, s2.* from sales s1, product p, salesperson sp, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s1.quantity > 50;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[QUANTITY, SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'      LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                  FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+'      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
+> 
+> explain plan for 
+> select s1.*, s2.quantity from product p, sales s1, sales s2, salesperson sp
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[SID, PRODUCT_ID, SALESPERSON, CUSTOMER, QUANTITY, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'      LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                  FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+> explain plan for 
+> select s1.quantity, s2.quantity
+>     from product p, sales s1, salesperson sp, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[QUANTITY, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
+'      LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                  FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+> explain plan for 
+> select s1.quantity, s2.quantity
+>     from product p, salesperson sp, sales s1, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s1.quantity > 50;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[QUANTITY, QUANTITY0]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[4, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$QUANTITY]], residual columns=[[4]])'
+'      LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                  FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'          LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                    LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                      FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+'      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
+> 
+> explain plan for 
+> select s1.*, s2.quantity, p.*, sp.*
+> from sales s1, product p, sales s2, salesperson sp
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s2.quantity > 50;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 6, 7, 8]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY, INTEGER QUANTITY0, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER NOT NULL ID0, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME0, INTEGER AGE) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[4]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 6, 7, 8, 9]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY, INTEGER QUANTITY0, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[5]], rightKeys=[[3]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0, 1, 2, 3, 4, 2, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'            LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
+'              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'                LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                      LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                          LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                            FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+'              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'                LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                      LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                        FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'            FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
+'          FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SALESPERSON$NAME]], residual columns=[[2]])'
+'              FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+'          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'            LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+> explain plan for 
+> select s1.quantity, s2.quantity, p.*, sp.*
+> from sales s1, product p, salesperson sp, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s2.quantity > 50;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1, 2, 6, 7, 8, 9, 3, 4, 5]], outputRowType=[RecordType(INTEGER QUANTITY, INTEGER QUANTITY0, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER NOT NULL ID0, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME0, INTEGER AGE) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[4]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1, 3, 4, 5, 6]], outputRowType=[RecordType(INTEGER PRODUCT_ID, INTEGER QUANTITY, INTEGER QUANTITY0, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[2]], rightKeys=[[3]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[1, 4, 2, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON]], residual columns=[[4]])'
+'            LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
+'              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'                LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                      LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                          LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                            FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+'              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'                LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                      LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                        FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'            FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
+'          FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SALESPERSON$NAME]], residual columns=[[2]])'
+'              FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+'          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'            LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+> explain plan for 
+> select s1.quantity, s2.quantity, p.*, sp.*
+> from product p, sales s1, salesperson sp, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s2.quantity > 50 and
+>         s1.quantity > 60;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1, 2, 6, 7, 8, 9, 3, 4, 5]], outputRowType=[RecordType(INTEGER QUANTITY, INTEGER QUANTITY0, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER NOT NULL ID0, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME0, INTEGER AGE) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[4]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1, 3, 4, 5, 6]], outputRowType=[RecordType(INTEGER PRODUCT_ID, INTEGER QUANTITY, INTEGER QUANTITY0, INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[2]], rightKeys=[[3]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[1, 4, 2, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON]], residual columns=[[4]])'
+'            LcsIndexIntersectRel(startRidParamId=[0], rowLimitParamId=[0])'
+'              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'                LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                      LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'                          LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                            FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+'              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'                LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_SP], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'                  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                      LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID]], residual columns=[[2]])'
+'                        FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'            FennelValuesRel(tuples=[[{ '(', 60, '+', null }]])'
+'          FennelReshapeRel(projection=[[0, 1, 2, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER AGE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            LcsRowScanRel(table=[[LOCALDB, RSJ, SALESPERSON]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALESPERSON$AGE, SYS$CLUSTERED_INDEX$SALESPERSON$ID, SYS$CLUSTERED_INDEX$SALESPERSON$NAME]], residual columns=[[2]])'
+'              FennelValuesRel(tuples=[[{ '[', 40, '+', null }]])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, CHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" COLOR, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" SIZE, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$COLOR, SYS$CLUSTERED_INDEX$PRODUCT$ID, SYS$CLUSTERED_INDEX$PRODUCT$NAME, SYS$CLUSTERED_INDEX$PRODUCT$SIZE]])'
+'          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[3])'
+'            LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+> 
+> !set outputformat table
+> 
+> select s1.quantity, s2.* from sales s1, sales s2 where s1.sid = s2.sid and
+>     s2.quantity > 50
+>     order by s2.sid;
++-----------+------+-------------+--------------+-----------+------------+
+| QUANTITY  | SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY0  |
++-----------+------+-------------+--------------+-----------+------------+
+| 60        | 6    | 2           | 1            | 2         | 60         |
+| 70        | 7    | 2           | 2            | 1         | 70         |
+| 80        | 8    | 2           | 2            | 2         | 80         |
++-----------+------+-------------+--------------+-----------+------------+
+> select s1.*, s2.quantity from sales s1, sales s2 where s1.sid = s2.sid and
+>     s1.quantity > 50
+>     order by s1.sid;
++------+-------------+--------------+-----------+-----------+-----------+
+| SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  | QUANTITY  |
++------+-------------+--------------+-----------+-----------+-----------+
+| 6    | 2           | 1            | 2         | 60        | 60        |
+| 7    | 2           | 2            | 1         | 70        | 70        |
+| 8    | 2           | 2            | 2         | 80        | 80        |
++------+-------------+--------------+-----------+-----------+-----------+
+> select s1.*, s2.* from sales s1, sales s2 where s1.sid = s2.sid and
+>     s1.quantity > 50 and s2.quantity > 60
+>     order by s1.sid;
++------+-------------+--------------+-----------+-----------+-------+--------------+---------------+------------+------------+
+| SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  | SID0  | PRODUCT_ID0  | SALESPERSON0  | CUSTOMER0  | QUANTITY0  |
++------+-------------+--------------+-----------+-----------+-------+--------------+---------------+------------+------------+
+| 7    | 2           | 2            | 1         | 70        | 7     | 2            | 2             | 1          | 70         |
+| 8    | 2           | 2            | 2         | 80        | 8     | 2            | 2             | 2          | 80         |
++------+-------------+--------------+-----------+-----------+-------+--------------+---------------+------------+------------+
+> select s1.*, s2.* from sales s1, sales s2, product p
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M'
+>     order by s1.sid;
++------+-------------+--------------+-----------+-----------+-------+--------------+---------------+------------+------------+
+| SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  | SID0  | PRODUCT_ID0  | SALESPERSON0  | CUSTOMER0  | QUANTITY0  |
++------+-------------+--------------+-----------+-----------+-------+--------------+---------------+------------+------------+
+| 1    | 1           | 1            | 1         | 10        | 1     | 1            | 1             | 1          | 10         |
+| 2    | 1           | 1            | 2         | 20        | 2     | 1            | 1             | 2          | 20         |
+| 3    | 1           | 2            | 1         | 30        | 3     | 1            | 2             | 1          | 30         |
+| 4    | 1           | 2            | 2         | 40        | 4     | 1            | 2             | 2          | 40         |
+| 5    | 2           | 1            | 1         | 50        | 5     | 2            | 1             | 1          | 50         |
+| 6    | 2           | 1            | 2         | 60        | 6     | 2            | 1             | 2          | 60         |
+| 7    | 2           | 2            | 1         | 70        | 7     | 2            | 2             | 1          | 70         |
+| 8    | 2           | 2            | 2         | 80        | 8     | 2            | 2             | 2          | 80         |
++------+-------------+--------------+-----------+-----------+-------+--------------+---------------+------------+------------+
+> select s1.quantity, s2.quantity, sp.* from sales s1, sales s2, salesperson sp
+>     where s1.sid = s2.sid and s2.salesperson = sp.id and sp.age >= 40
+>     order by s1.quantity;
++-----------+-----------+-----+-----------------------+------+
+| QUANTITY  | QUANTITY  | ID  |         NAME          | AGE  |
++-----------+-----------+-----+-----------------------+------+
+| 30        | 30        | 2   | UVW                   | 40   |
+| 40        | 40        | 2   | UVW                   | 40   |
+| 70        | 70        | 2   | UVW                   | 40   |
+| 80        | 80        | 2   | UVW                   | 40   |
++-----------+-----------+-----+-----------------------+------+
+> select s1.*, s2.* from sales s1, sales s2, product p, salesperson sp
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40
+>     order by s1.sid;
++------+-------------+--------------+-----------+-----------+-------+--------------+---------------+------------+------------+
+| SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  | SID0  | PRODUCT_ID0  | SALESPERSON0  | CUSTOMER0  | QUANTITY0  |
++------+-------------+--------------+-----------+-----------+-------+--------------+---------------+------------+------------+
+| 3    | 1           | 2            | 1         | 30        | 3     | 1            | 2             | 1          | 30         |
+| 4    | 1           | 2            | 2         | 40        | 4     | 1            | 2             | 2          | 40         |
+| 7    | 2           | 2            | 1         | 70        | 7     | 2            | 2             | 1          | 70         |
+| 8    | 2           | 2            | 2         | 80        | 8     | 2            | 2             | 2          | 80         |
++------+-------------+--------------+-----------+-----------+-------+--------------+---------------+------------+------------+
+> select s1.quantity, s2.* from sales s1, product p, sales s2, salesperson sp
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40
+>     order by s1.sid;
++-----------+------+-------------+--------------+-----------+------------+
+| QUANTITY  | SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY0  |
++-----------+------+-------------+--------------+-----------+------------+
+| 30        | 3    | 1           | 2            | 1         | 30         |
+| 40        | 4    | 1           | 2            | 2         | 40         |
+| 70        | 7    | 2           | 2            | 1         | 70         |
+| 80        | 8    | 2           | 2            | 2         | 80         |
++-----------+------+-------------+--------------+-----------+------------+
+> select s1.quantity, s2.* from sales s1, product p, salesperson sp, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s1.quantity > 50
+>     order by s2.sid;
++-----------+------+-------------+--------------+-----------+------------+
+| QUANTITY  | SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY0  |
++-----------+------+-------------+--------------+-----------+------------+
+| 70        | 7    | 2           | 2            | 1         | 70         |
+| 80        | 8    | 2           | 2            | 2         | 80         |
++-----------+------+-------------+--------------+-----------+------------+
+> select s1.*, s2.quantity from product p, sales s1, sales s2, salesperson sp
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40
+>     order by s1.sid;
++------+-------------+--------------+-----------+-----------+-----------+
+| SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  | QUANTITY  |
++------+-------------+--------------+-----------+-----------+-----------+
+| 3    | 1           | 2            | 1         | 30        | 30        |
+| 4    | 1           | 2            | 2         | 40        | 40        |
+| 7    | 2           | 2            | 1         | 70        | 70        |
+| 8    | 2           | 2            | 2         | 80        | 80        |
++------+-------------+--------------+-----------+-----------+-----------+
+> select s1.quantity, s2.quantity
+>     from product p, sales s1, salesperson sp, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40
+>     order by s1.quantity;
++-----------+-----------+
+| QUANTITY  | QUANTITY  |
++-----------+-----------+
+| 30        | 30        |
+| 40        | 40        |
+| 70        | 70        |
+| 80        | 80        |
++-----------+-----------+
+> select s1.quantity, s2.quantity
+>     from product p, salesperson sp, sales s1, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s1.quantity > 50
+>     order by s1.quantity;
++-----------+-----------+
+| QUANTITY  | QUANTITY  |
++-----------+-----------+
+| 70        | 70        |
+| 80        | 80        |
++-----------+-----------+
+> select s1.*, s2.quantity, p.*, sp.*
+> from sales s1, product p, sales s2, salesperson sp
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s2.quantity > 50
+>     order by s1.sid;
++------+-------------+--------------+-----------+-----------+-----------+-----+-----------------------+-------------+-------+------+-----------------------+------+
+| SID  | PRODUCT_ID  | SALESPERSON  | CUSTOMER  | QUANTITY  | QUANTITY  | ID  |         NAME          |    COLOR    | SIZE  | ID0  |         NAME0         | AGE  |
++------+-------------+--------------+-----------+-----------+-----------+-----+-----------------------+-------------+-------+------+-----------------------+------+
+| 7    | 2           | 2            | 1         | 70        | 70        | 2   | phone                 | white       | M     | 2    | UVW                   | 40   |
+| 8    | 2           | 2            | 2         | 80        | 80        | 2   | phone                 | white       | M     | 2    | UVW                   | 40   |
++------+-------------+--------------+-----------+-----------+-----------+-----+-----------------------+-------------+-------+------+-----------------------+------+
+> select s1.quantity, s2.quantity, p.*, sp.*
+> from sales s1, product p, salesperson sp, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s2.quantity > 50
+>     order by s1.quantity;
++-----------+-----------+-----+-----------------------+-------------+-------+------+-----------------------+------+
+| QUANTITY  | QUANTITY  | ID  |         NAME          |    COLOR    | SIZE  | ID0  |         NAME0         | AGE  |
++-----------+-----------+-----+-----------------------+-------------+-------+------+-----------------------+------+
+| 70        | 70        | 2   | phone                 | white       | M     | 2    | UVW                   | 40   |
+| 80        | 80        | 2   | phone                 | white       | M     | 2    | UVW                   | 40   |
++-----------+-----------+-----+-----------------------+-------------+-------+------+-----------------------+------+
+> select s1.quantity, s2.quantity, p.*, sp.*
+> from product p, sales s1, salesperson sp, sales s2
+>     where s1.sid = s2.sid and s1.product_id = p.id and p.size >= 'M' and
+>         s2.salesperson = sp.id and sp.age >= 40 and s2.quantity > 50 and
+>         s1.quantity > 60
+>     order by s1.quantity;
++-----------+-----------+-----+-----------------------+-------------+-------+------+-----------------------+------+
+| QUANTITY  | QUANTITY  | ID  |         NAME          |    COLOR    | SIZE  | ID0  |         NAME0         | AGE  |
++-----------+-----------+-----+-----------------------+-------------+-------+------+-----------------------+------+
+| 70        | 70        | 2   | phone                 | white       | M     | 2    | UVW                   | 40   |
+| 80        | 80        | 2   | phone                 | white       | M     | 2    | UVW                   | 40   |
++-----------+-----------+-----+-----------------------+-------------+-------+------+-----------------------+------+
+> 
+> ---------------------------------------------
+> -- Cases where the self-join can't be removed
+> ---------------------------------------------
+> 
+> !set outputformat csv
+> 
+> -- outer joins
+> 
+> explain plan for select * from sales s1 left outer join sales s2
+>     on s1.sid = s2.sid and s2.quantity > 50;
+'column0'
+'FennelToIteratorConverter'
+'  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
+> explain plan for select * from sales s1 right outer join sales s2
+>     on s1.sid = s2.sid and s1.quantity > 50;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[5, 6, 7, 8, 9, 0, 1, 2, 3, 4]], outputRowType=[RecordType(INTEGER SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY, INTEGER NOT NULL SID0, INTEGER PRODUCT_ID0, INTEGER SALESPERSON0, INTEGER CUSTOMER0, INTEGER QUANTITY0) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFT])'
+'      LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'      LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'        FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
+> explain plan for select * from 
+>     (select * from sales where quantity > 50) s1
+>     full outer join 
+>     (select * from sales where quantity > 60) s2
+>     on s1.sid = s2.sid;
+'column0'
+'FennelToIteratorConverter'
+'  LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[FULL])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'      FennelValuesRel(tuples=[[{ '(', 50, '+', null }]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]], residual columns=[[4]])'
+'      FennelValuesRel(tuples=[[{ '(', 60, '+', null }]])'
+> 
+> -- one of the self-join inputs is removed by a semijoin
+> 
+> explain plan for select s.* from sales s, product p1, product p2
+>     where s.product_id = p1.id and p1.size >= 'M' and p1.id = p2.id;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[5]], rightKeys=[[0]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..4=[{inputs}], expr#5=[CAST($t1):INTEGER NOT NULL], proj#0..5=[{exprs}])'
+'        LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'          LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'            LcsIndexSearchRel(table=[[LOCALDB, RSJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'              FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'                FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                  LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
+'                      LcsIndexSearchRel(table=[[LOCALDB, RSJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                        FennelValuesRel(tuples=[[{ '[', 'M', '+', null }]])'
+'      LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+> 
+> -- join inputs are not simple tables
+> 
+> explain plan for select * from
+>     (select sid from sales group by sid) s1, sales s2 where s1.sid = s2.sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[5, 0, 1, 2, 3, 4]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER NOT NULL SID0, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'      LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'      LhxAggRel(groupCount=[1])'
+'        LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$SID]])'
+> explain plan for select * from
+>     sales s1,
+>     (select s.* from sales s full outer join product p on s.product_id = p.id)
+>         s2
+>     where s1.sid = s2.sid;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[5, 6, 7, 8, 9, 0, 1, 2, 3, 4]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY, INTEGER SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY) NOT NULL])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[5]], joinType=[INNER])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 4]], outputRowType=[RecordType(INTEGER SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY) NOT NULL])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[FULL])'
+'          LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'          FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'            LcsRowScanRel(table=[[LOCALDB, RSJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'      FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 0]], outputRowType=[RecordType(INTEGER NOT NULL SID, INTEGER PRODUCT_ID, INTEGER SALESPERSON, INTEGER CUSTOMER, INTEGER QUANTITY, INTEGER CAST($0):INTEGER) NOT NULL])'
+'        LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+> 
+> -- join keys are not unique
+> 
+> explain plan for select * from sales s1, sales s2
+>     where s1.product_id = s2.product_id;
+'column0'
+'FennelToIteratorConverter'
+'  LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+'    LcsRowScanRel(table=[[LOCALDB, RSJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SALES$SID]])'
+> 
+> !quit

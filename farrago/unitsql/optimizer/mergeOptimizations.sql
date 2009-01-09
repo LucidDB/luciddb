@@ -28,6 +28,13 @@ insert into tempemps
     select empno, name, deptno + 1, gender, coalesce(city, 'San Mateo'), age
         from emps;
 select * from tempemps order by t_empno;
+insert into salarytable values(100, 100000);
+insert into salarytable values(110, 110000);
+insert into salarytable values(120, 120000);
+insert into salarytable values(130, 130000);
+insert into salarytable values(140, 140000);
+insert into salarytable values(150, 150000);
+select * from salarytable order by empno;
 
 --------------------------------------
 -- Test merges that are really updates
@@ -92,6 +99,14 @@ merge into emps e1 using (select * from emps where city = 'UNKNOWN') e2
     when matched then update set name = upper(e1.name);
 select * from emps order by empno;
 
+-- source has a join
+merge into emps e1
+    using (select e.empno, s.salary from emps e, salarytable s
+            where e.empno = s.empno) e2
+    on e1.empno = e2.empno
+    when matched then update set salary = e2.salary;
+select * from emps order by empno;
+
 -----------------
 -- Explain output
 -----------------
@@ -154,6 +169,14 @@ merge into emps e1 using (select * from emps where city = 'UNKNOWN') e2
     on e2.empno = e1.empno and e1.gender = 'F'
     when matched then update set name = upper(e1.name);
 
+-- source has a join
+explain plan for
+merge into emps e1
+    using (select e.empno, s.salary from emps e, salarytable s
+            where e.empno = s.empno) e2
+    on e1.empno = e2.empno
+    when matched then update set salary = e2.salary;
+
 ----------------------------------------------
 -- Self-joins cannot be removed in these cases
 ----------------------------------------------
@@ -208,14 +231,6 @@ explain plan for
 merge into emps e1 using (select empno from emps group by empno) e2
     on e1.empno = e2.empno 
     when matched then update set age = e1.age / 10;
-
--- source has a join
-explain plan for
-merge into emps e1
-    using (select e.empno, s.salary from emps e, salarytable s
-            where e.empno = s.salary) e2
-    on e1.empno = e2.empno
-    when matched then update set salary = e2.salary;
 
 -- different tables
 create schema mo2;
