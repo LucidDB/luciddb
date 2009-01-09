@@ -1140,6 +1140,7 @@ ${farrago.test.jvmargs}
     <antcall target="exportCatalog"/>
     <antcall target="testDmv"/>
     <antcall target="testMiniplanner"/>
+    <antcall target="testMqlPlugin"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="testCleanup"/>
@@ -1247,6 +1248,13 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
     <!-- this will import pre-upgrade catalog contents -->
     <farrago.runSqlTest
       file="${farrago.dir}/examples/rng/unitsql/verifyReplaceCatalog.sql"/>
+  </target>
+
+  <!-- For MQL, don't run the connected.sql test since it 
+       requires an Internet connection -->
+  <target name="testMqlPlugin">
+    <farrago.runSqlTest
+      file="${farrago.dir}/ext/mql/unitsql/disconnected.sql"/>
   </target>
 
   <!-- TODO:  verify actual .dot output -->
@@ -1498,6 +1506,9 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <packageset dir="${farrago.dir}/examples/miniplan/src">
         <include name="**"/>
       </packageset>
+      <packageset dir="${farrago.dir}/ext/mql/src">
+        <include name="**"/>
+      </packageset>
       <packageset dir="${farrago.dir}/examples/rng/src">
         <include name="**"/>
       </packageset>
@@ -1546,6 +1557,9 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/miniplan/src">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.dir}/ext/mql/src">
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/rng/src">
@@ -1699,6 +1713,8 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       inheritAll="false"/>
     <ant antfile="examples/miniplan/build.xml"
       inheritAll="false"/>
+    <ant antfile="ext/mql/build.xml"
+      inheritAll="false"/>
   </target>
 
   <target name="cleanExamples">
@@ -1707,6 +1723,8 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
     <ant antfile="examples/rng/build.xml" target="clean"
       inheritAll="false"/>
     <ant antfile="examples/miniplan/build.xml" target="clean"
+      inheritAll="false"/>
+    <ant antfile="ext/mql/build.xml" target="clean"
       inheritAll="false"/>
   </target>
 

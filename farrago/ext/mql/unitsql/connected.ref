@@ -1,0 +1,279 @@
+> -- $Id$
+> -- Test MQL foreign data wrapper, including the parts
+> -- that actually access the web service
+> -- (so this should not run as part of checkin acceptance tests).
+> -- This test may fail if the Freebase contents have been
+> -- updated since the last time the .ref file was updated.
+> 
+> create schema metaweb;
+> 
+> create or replace foreign data wrapper mql_wrapper
+> library '${FARRAGO_HOME}/ext/mql/plugin/farrago-mql.jar'
+> language java;
+> 
+> create or replace server mql_server
+> foreign data wrapper mql_wrapper;
+> 
+> create or replace jar metaweb.mql_jar
+> library 'file:${FARRAGO_HOME}/ext/mql/plugin/farrago-mql.jar'
+> options(0);
+> 
+> create or replace function metaweb.mql_query(
+>   url varchar(4096),
+>   mql varchar(65535), 
+>   row_type varchar(65535))
+> returns table(
+>   objects varchar(128))
+> language java
+> parameter style system defined java
+> dynamic_function
+> no sql
+> external name 'metaweb.mql_jar:net.sf.farrago.namespace.mql.MedMqlUdx.execute';
+> 
+> create or replace foreign table metaweb.artists(
+>     "name" varchar(128), "id" varchar(128))
+> server mql_server
+> options (metaweb_type '/music/artist');
+> 
+> select * from metaweb.artists order by "name";
++-----------------------------------+-----------------------------------------+
+|               name                |                   id                    |
++-----------------------------------+-----------------------------------------+
+| ABBA                              | /en/abba                                |
+| Aaliyah                           | /en/aaliyah                             |
+| Alban Berg                        | /en/alban_berg                          |
+| Alex Lifeson                      | /en/alex_lifeson                        |
+| Amr Diab                          | /en/amr_diab                            |
+| Amy Grant                         | /en/amy_grant                           |
+| Analog Brothers                   | /en/analog_brothers                     |
+| Ani DiFranco                      | /en/ani_difranco                        |
+| Antonio Diabelli                  | /en/anton_diabelli                      |
+| Antonio Salieri                   | /en/antonio_salieri                     |
+| Antonio Vivaldi                   | /en/antonio_vivaldi                     |
+| Aphex Twin                        | /en/aphex_twin                          |
+| Arlo Guthrie                      | /en/arlo_guthrie                        |
+| Articolo 31                       | /en/articolo_31                         |
+| Aztlan Underground                | /en/aztlan_underground                  |
+| BT                                | /en/brian_transeau                      |
+| B\u00e9la Bart\u00f3k             | /en/bela_bartok                         |
+| Bar\u0131\u015f Man\u00e7o        | /authority/imdb/name/nm0541534          |
+| Beastie Boys                      | /en/beastie_boys                        |
+| Belle &amp; Sebastian             | /en/belle_sebastian                     |
+| Big Country                       | /en/big_country                         |
+| Bill Clinton                      | /en/bill_clinton                        |
+| Bill Haley                        | /en/bill_haley                          |
+| Billy Bob Thornton                | /en/billy_bob_thornton                  |
+| Black Sabbath                     | /en/black_sabbath                       |
+| Blind Blake                       | /en/blind_blake                         |
+| Blind Lemon Jefferson             | /en/blind_lemon_jefferson               |
+| Blind Willie McTell               | /en/blind_willie_mctell                 |
+| Blonde Redhead                    | /en/blonde_redhead                      |
+| Boney M.                          | /en/boney_m                             |
+| Bonzo Dog Doo-Dah Band            | /en/bonzo_dog_doo-dah_band              |
+| Boogie Down Productions           | /en/boogie_down_productions             |
+| Brian Eno                         | /en/brian_eno                           |
+| Brigitte Bardot                   | /en/brigitte_bardot                     |
+| Britney Spears                    | /en/britney_spears                      |
+| Bronski Beat                      | /en/bronski_beat                        |
+| Brownie McGhee                    | /en/brownie_mcghee                      |
+| Bruce Cockburn                    | /en/bruce_cockburn                      |
+| Buck Owens                        | /en/buck_owens                          |
+| Carmen Electra                    | /en/carmen_electra                      |
+| Charles Mingus                    | /en/charles_mingus                      |
+| Chet Atkins                       | /en/chet_atkins                         |
+| Chuck D                           | /en/chuck_d                             |
+| Claude Debussy                    | /en/claude_debussy                      |
+| Claudio Monteverdi                | /en/claudio_monteverdi                  |
+| Cold Chisel                       | /en/cold_chisel                         |
+| Coldcut                           | /en/coldcut                             |
+| Commodores                        | /en/commodores                          |
+| Crowded House                     | /en/crowded_house                       |
+| Cypress Hill                      | /en/cypress_hill                        |
+| Danny Elfman                      | /en/danny_elfman                        |
+| Dave Brubeck                      | /en/dave_brubeck                        |
+| Dave Grohl                        | /en/dave_grohl                          |
+| Davy Jones                        | /en/davy_jones_1945                     |
+| Dead Kennedys                     | /en/dead_kennedys                       |
+| Deicide                           | /guid/9202a8c04000641f8000000000013724  |
+| Depeche Mode                      | /en/depeche_mode                        |
+| Desi Arnaz                        | /en/desi_arnaz                          |
+| Devo                              | /en/devo                                |
+| Dimmu Borgir                      | /en/dimmu_borgir                        |
+| Django Reinhardt                  | /en/django_reinhardt                    |
+| Dmitri Shostakovich               | /en/dmitri_shostakovich                 |
+| Dolly Parton                      | /en/dolly_parton                        |
+| Domenico Alberti                  | /en/domenico_alberti                    |
+| Don McLean                        | /en/don_mclean                          |
+| Donny the Punk                    | /en/donny_the_punk                      |
+| Doris Day                         | /en/doris_day                           |
+| Dwight Yoakam                     | /en/dwight_yoakam                       |
+| Edward Elgar                      | /en/edward_elgar                        |
+| Electric Light Orchestra          | /en/electric_light_orchestra            |
+| Elvis Costello                    | /en/elvis_costello                      |
+| Elvis Presley                     | /en/elvis_presley                       |
+| Emma Abbott                       | /en/emma_abbott                         |
+| Ennio Morricone                   | /en/ennio_morricone                     |
+| Eric Clapton                      | /en/eric_clapton                        |
+| Fleetwood Mac                     | /en/fleetwood_mac                       |
+| Frank Sinatra                     | /en/frank_sinatra                       |
+| Frank Zappa                       | /en/frank_zappa                         |
+| Frankie Goes to Hollywood         | /en/frankie_goes_to_hollywood           |
+| Garth Brooks                      | /en/garth_brooks                        |
+| Gene Kelly                        | /en/gene_kelly                          |
+| George Benson                     | /en/george_benson                       |
+| George Frideric Handel            | /en/george_frideric_handel              |
+| George Harrison                   | /en/george_harrison                     |
+| Gheorghe Zamfir                   | /en/gheorghe_zamfir                     |
+| Giacomo Puccini                   | /en/giacomo_puccini                     |
+| Gioacchino Rossini                | /en/gioacchino_rossini                  |
+| Giovanni Pierluigi da Palestrina  | /en/giovanni_pierluigi_da_palestrina    |
+| Gloria Gaynor                     | /en/gloria_gaynor                       |
+| Goodness                          | /en/goodness                            |
+| Goran Bregovi\u0107               | /en/goran_bregovic                      |
+| Grateful Dead                     | /en/grateful_dead                       |
+| Gregorio Allegri                  | /en/gregorio_allegri                    |
+| Guitarist                         | /en/guitarist                           |
+| Kings of Leon                     | /en/kings_of_leon                       |
+| Led Zeppelin                      | /en/led_zeppelin                        |
+| The Alan Parsons Project          | /en/the_alan_parsons_project            |
+| The Beach Boys                    | /en/the_beach_boys                      |
+| The Elephant Six Collective       | /en/the_elephant_six_collective         |
++-----------------------------------+-----------------------------------------+
+|               name                |                   id                    |
++-----------------------------------+-----------------------------------------+
+| Yo La Tengo                       | /en/yo_la_tengo                         |
++-----------------------------------+-----------------------------------------+
+> 
+> select "id" from metaweb.artists order by "id";
++-----------------------------------------+
+|                   id                    |
++-----------------------------------------+
+| /authority/imdb/name/nm0541534          |
+| /en/aaliyah                             |
+| /en/abba                                |
+| /en/alban_berg                          |
+| /en/alex_lifeson                        |
+| /en/amr_diab                            |
+| /en/amy_grant                           |
+| /en/analog_brothers                     |
+| /en/ani_difranco                        |
+| /en/anton_diabelli                      |
+| /en/antonio_salieri                     |
+| /en/antonio_vivaldi                     |
+| /en/aphex_twin                          |
+| /en/arlo_guthrie                        |
+| /en/articolo_31                         |
+| /en/aztlan_underground                  |
+| /en/beastie_boys                        |
+| /en/bela_bartok                         |
+| /en/belle_sebastian                     |
+| /en/big_country                         |
+| /en/bill_clinton                        |
+| /en/bill_haley                          |
+| /en/billy_bob_thornton                  |
+| /en/black_sabbath                       |
+| /en/blind_blake                         |
+| /en/blind_lemon_jefferson               |
+| /en/blind_willie_mctell                 |
+| /en/blonde_redhead                      |
+| /en/boney_m                             |
+| /en/bonzo_dog_doo-dah_band              |
+| /en/boogie_down_productions             |
+| /en/brian_eno                           |
+| /en/brian_transeau                      |
+| /en/brigitte_bardot                     |
+| /en/britney_spears                      |
+| /en/bronski_beat                        |
+| /en/brownie_mcghee                      |
+| /en/bruce_cockburn                      |
+| /en/buck_owens                          |
+| /en/carmen_electra                      |
+| /en/charles_mingus                      |
+| /en/chet_atkins                         |
+| /en/chuck_d                             |
+| /en/claude_debussy                      |
+| /en/claudio_monteverdi                  |
+| /en/cold_chisel                         |
+| /en/coldcut                             |
+| /en/commodores                          |
+| /en/crowded_house                       |
+| /en/cypress_hill                        |
+| /en/danny_elfman                        |
+| /en/dave_brubeck                        |
+| /en/dave_grohl                          |
+| /en/davy_jones_1945                     |
+| /en/dead_kennedys                       |
+| /en/depeche_mode                        |
+| /en/desi_arnaz                          |
+| /en/devo                                |
+| /en/dimmu_borgir                        |
+| /en/django_reinhardt                    |
+| /en/dmitri_shostakovich                 |
+| /en/dolly_parton                        |
+| /en/domenico_alberti                    |
+| /en/don_mclean                          |
+| /en/donny_the_punk                      |
+| /en/doris_day                           |
+| /en/dwight_yoakam                       |
+| /en/edward_elgar                        |
+| /en/electric_light_orchestra            |
+| /en/elvis_costello                      |
+| /en/elvis_presley                       |
+| /en/emma_abbott                         |
+| /en/ennio_morricone                     |
+| /en/eric_clapton                        |
+| /en/fleetwood_mac                       |
+| /en/frank_sinatra                       |
+| /en/frank_zappa                         |
+| /en/frankie_goes_to_hollywood           |
+| /en/garth_brooks                        |
+| /en/gene_kelly                          |
+| /en/george_benson                       |
+| /en/george_frideric_handel              |
+| /en/george_harrison                     |
+| /en/gheorghe_zamfir                     |
+| /en/giacomo_puccini                     |
+| /en/gioacchino_rossini                  |
+| /en/giovanni_pierluigi_da_palestrina    |
+| /en/gloria_gaynor                       |
+| /en/goodness                            |
+| /en/goran_bregovic                      |
+| /en/grateful_dead                       |
+| /en/gregorio_allegri                    |
+| /en/guitarist                           |
+| /en/kings_of_leon                       |
+| /en/led_zeppelin                        |
+| /en/the_alan_parsons_project            |
+| /en/the_beach_boys                      |
+| /en/the_elephant_six_collective         |
+| /en/yo_la_tengo                         |
++-----------------------------------------+
+|                   id                    |
++-----------------------------------------+
+| /guid/9202a8c04000641f8000000000013724  |
++-----------------------------------------+
+> 
+> select "name" from metaweb.artists 
+> where "id"='/en/gene_kelly';
++-------------+
+|    name     |
++-------------+
+| Gene Kelly  |
++-------------+
+> 
+> select * from metaweb.artists 
+> where "id"='/en/gene_kelly';
++-------------+-----------------+
+|    name     |       id        |
++-------------+-----------------+
+| Gene Kelly  | /en/gene_kelly  |
++-------------+-----------------+
+> 
+> select count(*) from metaweb.artists;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+> 
+> !quit
