@@ -504,6 +504,21 @@ public abstract class LcsRowScanRelBase
     {
         return (residualColumns.length > 0);
     }
+
+    public List<FemLocalIndex> getClusteredIndexes()
+    {
+        return clusteredIndexes;
+    }
+    
+    public Integer [] getProjectedColumns()
+    {
+        return projectedColumns;
+    }
+    
+    public boolean isFullScan()
+    {
+        return isFullScan;
+    }
 }
 
 // End LcsRowScanRelBase.java

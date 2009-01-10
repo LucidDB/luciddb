@@ -172,7 +172,7 @@ ExecStreamResult LbmMinusExecStream::readMinuendInputAndRestart(
     // dynamic parameter so the children can skip forward to that
     // rid
     startRid = baseRid;
-    pDynamicParamManager->writeParam(startRidParamId, startRidDatum);
+    writeStartRidParamValue();
     iInput = 1;
 
     // If there are no keys (the usual case), we never need to restart inputs

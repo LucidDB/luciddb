@@ -153,7 +153,9 @@ public abstract class FarragoReduceExpressionsRule
                             join.getRight(),
                             expList.get(0),
                             join.getJoinType(),
-                            join.getVariablesStopped()));
+                            join.getVariablesStopped(),
+                            join.isSemiJoinDone(),
+                            join.isRemovableSelfJoin()));
                     // New plan is absolutely better than old plan.
                     call.getPlanner().setImportance(join, 0.0);
                 }

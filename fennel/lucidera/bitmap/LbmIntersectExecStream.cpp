@@ -73,8 +73,7 @@ ExecStreamResult LbmIntersectExecStream::execute(
             assert(currRid >= startRid);
             if (currRid > startRid) {
                 startRid = currRid;
-                pDynamicParamManager->writeParam(
-                    startRidParamId, startRidDatum);
+                writeStartRidParamValue();
                 nMatches = 1;
                 minLen = currLen;
             } else {
@@ -131,7 +130,7 @@ bool LbmIntersectExecStream::intersectSegments(uint len)
     // the next set of segments to read will start past the end of
     // the overlapping segments just read
     startRid = addRid + len * LbmSegment::LbmOneByteSize;
-    pDynamicParamManager->writeParam(startRidParamId, startRidDatum);
+    writeStartRidParamValue();
 
     // add the AND'd segment to the segment under construction;
     // if the segment is full and the output buffer fills up writing

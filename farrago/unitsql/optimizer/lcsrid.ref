@@ -418,10 +418,8 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[2]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[3, 1, 2, 0, 4]], outputRowType=[RecordType(INTEGER C8, INTEGER C5, BIGINT EXPR$2, INTEGER C2, BIGINT EXPR$4) NOT NULL])'
-'      LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[2, 5, LCS_RID]], clustered indexes=[[I_C1_C2, I_C3_C4_C5]])'
-'        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[8, LCS_RID, LCS_RID]], clustered indexes=[[I_C6_C7_C8_C9]])'
+'    FennelRenameRel(fieldNames=[[C8, C5, EXPR$2, C2, EXPR$4]])'
+'      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[8, 5, LCS_RID, 2, LCS_RID]], clustered indexes=[[I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
 > explain plan for select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;
 'column0'
 'FennelToIteratorConverter'

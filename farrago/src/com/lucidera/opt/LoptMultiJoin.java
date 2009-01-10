@@ -160,6 +160,15 @@ public class LoptMultiJoin
      * removed from the query plan
      */
     Set<Integer> removableOuterJoinFactors;
+    
+    /**
+     * Map consisting of all pairs of self-joins where the self-join can
+     * be removed because the join between the identical factors is an
+     * equality join on the same set of unique keys.  For each pair, one
+     * factor is the key into the map and the corresponding factor is the
+     * value.
+     */
+    Map<Integer, Integer> removableSelfJoinPairs;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -206,6 +215,7 @@ public class LoptMultiJoin
         joinRemovalSemiJoins = new SemiJoinRel[nJoinFactors];
 
         removableOuterJoinFactors = new HashSet<Integer>();
+        removableSelfJoinPairs = new HashMap<Integer, Integer>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -731,6 +741,28 @@ public class LoptMultiJoin
     public boolean isRemovableOuterJoinFactor(int factIdx)
     {
         return removableOuterJoinFactors.contains(factIdx);
+    }
+    
+    /**
+     * Adds to a map that keeps track of removable self-join pairs.
+     * 
+     * @param leftFactor left factor in the self-join
+     * @param rightFactor right factor in the self-join
+     */
+    public void addRemovableSelfJoinPair(int leftFactor, int rightFactor)
+    {
+        removableSelfJoinPairs.put(leftFactor, rightFactor);
+    }
+    
+    /*
+     * @param factIdx the left factor in a self-join pair
+     * 
+     * @return the right factor in a self-join pair if the factor passed in is
+     * indeed part of a removable self-join; otherwise, returns null
+     */
+    public Integer getRightSelfJoinFactor(int factIdx)
+    {
+        return removableSelfJoinPairs.get(factIdx);
     }
 }
 

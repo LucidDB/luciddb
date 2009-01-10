@@ -32,8 +32,6 @@ void LbmBitOpExecStream::prepare(LbmBitOpExecStreamParams const &params)
     // set dynanmic parameter ids
     rowLimitParamId = params.rowLimitParamId;
     startRidParamId = params.startRidParamId;
-    assert(opaqueToInt(rowLimitParamId) > 0);
-    assert(opaqueToInt(startRidParamId) > 0);
 
     // setup tupledatums for writing dynamic parameter values
     rowLimitDatum.pData = (PConstBuffer) &rowLimit;
@@ -61,10 +59,14 @@ void LbmBitOpExecStream::open(bool restart)
     if (!restart) {
         // create dynamic parameters with the same type as the first bitmap
         // field, a RID, if this is the first time open is called
-        pDynamicParamManager->createParam(
-            rowLimitParamId, pOutAccessor->getTupleDesc()[nKeys]);
-        pDynamicParamManager->createParam(
-            startRidParamId, pOutAccessor->getTupleDesc()[nKeys]);
+        if (opaqueToInt(rowLimitParamId) > 0) {
+            pDynamicParamManager->createParam(
+                rowLimitParamId, pOutAccessor->getTupleDesc()[nKeys]);
+        }
+        if (opaqueToInt(startRidParamId) > 0) {
+            pDynamicParamManager->createParam(
+                startRidParamId, pOutAccessor->getTupleDesc()[nKeys]);
+        }
     }
 
     // need to allocate buffers if this is the very first open, or if a
@@ -96,8 +98,10 @@ void LbmBitOpExecStream::open(bool restart)
     startRid = LcsRid(0);
     rowLimit = 1;
     producePending = false;
-    pDynamicParamManager->writeParam(rowLimitParamId, rowLimitDatum);
-    pDynamicParamManager->writeParam(startRidParamId, startRidDatum);
+    writeStartRidParamValue();
+    if (opaqueToInt(rowLimitParamId) > 0) {
+        pDynamicParamManager->writeParam(rowLimitParamId, rowLimitDatum);
+    }
     for (uint i = 0; i < nInputs; i++) {
         segmentReaders[i].init(inAccessors[i], bitmapSegTuples[i]);
     }
@@ -197,6 +201,13 @@ void LbmBitOpExecStream::closeImpl()
     ConfluenceExecStream::closeImpl();
     outputBuf.reset();
     byteSegBuf.reset();
+}
+
+void LbmBitOpExecStream::writeStartRidParamValue()
+{
+    if (opaqueToInt(startRidParamId) > 0) {
+        pDynamicParamManager->writeParam(startRidParamId, startRidDatum);
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

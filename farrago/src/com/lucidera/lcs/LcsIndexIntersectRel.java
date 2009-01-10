@@ -35,7 +35,7 @@ import org.eigenbase.relopt.*;
  * @author John Pham
  * @version $Id$
  */
-class LcsIndexIntersectRel
+public class LcsIndexIntersectRel
     extends LcsIndexBitOpRel
 {
     //~ Constructors -----------------------------------------------------------

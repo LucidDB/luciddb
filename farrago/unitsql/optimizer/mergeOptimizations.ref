@@ -46,6 +46,23 @@
 | 140      | Barney  | 10        | M         | San Mateo                            | 41     |
 | 150      | Betty   | 20        | F         | San Francisco                        | 40     |
 +----------+---------+-----------+-----------+--------------------------------------+--------+
+> insert into salarytable values(100, 100000);
+> insert into salarytable values(110, 110000);
+> insert into salarytable values(120, 120000);
+> insert into salarytable values(130, 130000);
+> insert into salarytable values(140, 140000);
+> insert into salarytable values(150, 150000);
+> select * from salarytable order by empno;
++--------+---------+
+| EMPNO  | SALARY  |
++--------+---------+
+| 100    | 100000  |
+| 110    | 110000  |
+| 120    | 120000  |
+| 130    | 130000  |
+| 140    | 140000  |
+| 150    | 150000  |
++--------+---------+
 > 
 > --------------------------------------
 > -- Test merges that are really updates
@@ -190,6 +207,22 @@
 | 130    | John   | 140     | M       | Vancouver                       |      |           |
 +--------+--------+---------+---------+---------------------------------+------+-----------+
 > 
+> -- source has a join
+> merge into emps e1
+>     using (select e.empno, s.salary from emps e, salarytable s
+>             where e.empno = s.empno) e2
+>     on e1.empno = e2.empno
+>     when matched then update set salary = e2.salary;
+> select * from emps order by empno;
++--------+--------+---------+---------+---------------------------------+------+------------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |              CITY               | AGE  |   SALARY   |
++--------+--------+---------+---------+---------------------------------+------+------------+
+| 100    | fred   | 110     |         | UNKNOWN                         | 25   | 100000.00  |
+| 110    | eric   | 20      | M       | San Francisco                   | 80   | 110000.00  |
+| 120    | WILMA  | 120     | F       | UNKNOWN                         | 50   | 120000.00  |
+| 130    | John   | 140     | M       | Vancouver                       |      | 130000.00  |
++--------+--------+---------+---------+---------------------------------+------+------------+
+> 
 > -----------------
 > -- Explain output
 > -----------------
@@ -258,7 +291,7 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, MO, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..7=[{inputs}], expr#8=[IS NOT NULL($t5)], expr#9=['San%'], expr#10=[LIKE($t4, $t9)], expr#11=[AND($t8, $t10)], expr#12=[ROW($t2)], expr#13=[100], expr#14=[-($t2, $t13)], expr#15=[ROW($t14)], expr#16=[$IS_DIFFERENT_FROM($t12, $t15)], expr#17=[AND($t11, $t16)], expr#18=[CAST($t7):BIGINT NOT NULL], rid=[$t18], EMPNO=[$t0], NAME=[$t1], DEPTNO=[$t14], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t6], $condition=[$t17])'
+'      IterCalcRel(expr#0..7=[{inputs}], expr#8=[ROW($t2)], expr#9=[100], expr#10=[-($t2, $t9)], expr#11=[ROW($t10)], expr#12=[$IS_DIFFERENT_FROM($t8, $t11)], expr#13=['San%'], expr#14=[LIKE($t4, $t13)], expr#15=[AND($t12, $t14)], expr#16=[IS NOT NULL($t5)], expr#17=[AND($t15, $t16)], expr#18=[CAST($t7):BIGINT NOT NULL], rid=[$t18], EMPNO=[$t0], NAME=[$t1], DEPTNO=[$t10], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t6], $condition=[$t17])'
 '        FennelToIteratorConverter'
 '          LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]])'
 > 
@@ -327,6 +360,24 @@
 '          LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]], residual columns=[[3, 4]])'
 '            FennelValuesRel(tuples=[[{ '[', 'F', ']', 'F' }]])'
 '            FennelValuesRel(tuples=[[{ '[', 'UNKNOWN                       ', ']', 'UNKNOWN                       ' }]])'
+> 
+> -- source has a join
+> explain plan for
+> merge into emps e1
+>     using (select e.empno, s.salary from emps e, salarytable s
+>             where e.empno = s.empno) e2
+>     on e1.empno = e2.empno
+>     when matched then update set salary = e2.salary;
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, MO, EMPS]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..11=[{inputs}], expr#12=[CAST($t9):BIGINT NOT NULL], expr#13=[100], expr#14=[*($t1, $t13)], expr#15=[true], expr#16=[Reinterpret($t14, $t15)], expr#17=[ROW($t8)], expr#18=[ROW($t16)], expr#19=[$IS_DIFFERENT_FROM($t17, $t18)], rid=[$t12], EMPNO=[$t2], NAME=[$t3], DEPTNO=[$t4], GENDER=[$t5], CITY=[$t6], AGE=[$t7], SALARY=[$t16], $condition=[$t19])'
+'        FennelToIteratorConverter'
+'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[9]], joinType=[INNER])'
+'            LcsRowScanRel(table=[[LOCALDB, MO, SALARYTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALARYTABLE$EMPNO, SYS$CLUSTERED_INDEX$SALARYTABLE$SALARY]])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 8]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER NOT NULL EMPNO, INTEGER CAST($8):INTEGER) NOT NULL])'
+'              LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]])'
 > 
 > ----------------------------------------------
 > -- Self-joins cannot be removed in these cases
@@ -466,27 +517,6 @@
 '          IterCalcRel(expr#0..7=[{inputs}], expr#8=[ROW($t5)], expr#9=[10], expr#10=[CAST($t5):DOUBLE], expr#11=[CAST($t9):DOUBLE NOT NULL], expr#12=[/($t10, $t11)], expr#13=[1E6], expr#14=[*($t12, $t13)], expr#15=[CAST($t14):BIGINT], expr#16=[Reinterpret($t15)], expr#17=[Reinterpret($t16)], expr#18=[0], expr#19=[>($t17, $t18)], expr#20=[500000], expr#21=[+($t17, $t20)], expr#22=[-($t17, $t20)], expr#23=[CASE($t19, $t21, $t22)], expr#24=[1000000], expr#25=[/INT($t23, $t24)], expr#26=[CAST($t25):INTEGER], expr#27=[ROW($t26)], expr#28=[$IS_DIFFERENT_FROM($t8, $t27)], proj#0..7=[{exprs}], $condition=[$t28])'
 '            FennelToIteratorConverter'
 '              LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]])'
-> 
-> -- source has a join
-> explain plan for
-> merge into emps e1
->     using (select e.empno, s.salary from emps e, salarytable s
->             where e.empno = s.salary) e2
->     on e1.empno = e2.empno
->     when matched then update set salary = e2.salary;
-'column0'
-'FennelToIteratorConverter'
-'  LcsTableMergeRel(table=[[LOCALDB, MO, EMPS]])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..9=[{inputs}], expr#10=[ROW($t6)], expr#11=[100], expr#12=[*($t9, $t11)], expr#13=[true], expr#14=[Reinterpret($t12, $t13)], expr#15=[ROW($t14)], expr#16=[$IS_DIFFERENT_FROM($t10, $t15)], expr#17=[CAST($t7):BIGINT NOT NULL], rid=[$t17], EMPNO=[$t0], NAME=[$t1], DEPTNO=[$t2], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t14], $condition=[$t16])'
-'        FennelToIteratorConverter'
-'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'            LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]])'
-'            FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER SALARY) NOT NULL])'
-'              LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
-'                FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER CAST($0):INTEGER) NOT NULL])'
-'                  LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$EMPNO]])'
-'                LcsRowScanRel(table=[[LOCALDB, MO, SALARYTABLE]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALARYTABLE$SALARY]])'
 > 
 > -- different tables
 > create schema mo2;
