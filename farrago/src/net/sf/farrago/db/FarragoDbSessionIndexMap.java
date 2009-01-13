@@ -172,17 +172,23 @@ class FarragoDbSessionIndexMap
     // implement FarragoAllocation
     public void closeAllocation()
     {
-        // materialize deletion list to avoid ConcurrentModificationException
-        List<String> list =
-            new ArrayList<String>(tempIndexRootMap.keySet());
-        for (String indexMofId : list) {
-            dropIndexStorage(privateDataWrapperCache, indexMofId, false);
-        }
+        repos.beginReposSession();
+        try {
+            // materialize deletion list to avoid
+            // ConcurrentModificationException
+            List<String> list =
+                new ArrayList<String>(tempIndexRootMap.keySet());
+            for (String indexMofId : list) {
+                dropIndexStorage(privateDataWrapperCache, indexMofId, false);
+            }
         
-        // TODO:  make Fennel drop temporary indexes on recovery also
-        // NOTE:  do this last, so that we don't release data wrappers
-        // until we're done using them for drops above
-        super.closeAllocation();
+            // TODO:  make Fennel drop temporary indexes on recovery also
+            // NOTE:  do this last, so that we don't release data wrappers
+            // until we're done using them for drops above
+            super.closeAllocation();
+        } finally {
+            repos.endReposSession();
+        }
     }
 
     /**
