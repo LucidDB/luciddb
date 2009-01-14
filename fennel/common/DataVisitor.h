@@ -45,7 +45,8 @@ public:
     virtual void postVisitRow() = 0;
     virtual void visitAttribute(std::string) = 0;
     virtual void visitString(std::string) = 0;
-    virtual void visitChars(char const *, TupleStorageByteLength iChars) = 0;
+    virtual void visitChars(char const *, TupleStorageByteLength nChars) = 0;
+    virtual void visitUnicodeChars(Ucs2ConstBuffer, uint nChars) = 0;
     virtual void visitUnsignedInt(uint64_t) = 0;
     virtual void visitSignedInt(int64_t) = 0;
     virtual void visitDouble(double) = 0;

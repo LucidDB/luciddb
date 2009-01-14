@@ -123,7 +123,7 @@ public:
     RegisterReference()
         : mSetIndex(EUnknown),
           mIndex(0),
-          mType(STANDARD_TYPE_END),
+          mType(STANDARD_TYPE_END_NO_UNICODE),
           mPData(0),
           mCbData(0),
           mCbStorage(0),

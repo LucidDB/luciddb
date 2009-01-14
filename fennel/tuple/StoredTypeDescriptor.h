@@ -78,7 +78,7 @@ public:
     /**
      * Gets the alignment size in bytes required for values of this type, given
      * a particular max byte count.  This must be 1, 2, 4, or 8, and may not be
-     * greater than 1 for variable-width datatypes.  For fixed-width datatypes,
+     * greater than 2 for variable-width datatypes.  For fixed-width datatypes,
      * the width must be a multiple of the alignment size.
      *
      * @param cbWidth width for which to compute the alignment

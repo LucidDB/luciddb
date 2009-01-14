@@ -36,6 +36,12 @@ typedef uint8_t FixedBuffer;      // e.g. FixedBuffer buf[10];
 typedef uint8_t *PBuffer;
 typedef uint8_t const *PConstBuffer;
 
+// a single UCS-2 character
+typedef uint16_t Ucs2Char;
+// a buffer of UCS-2 characters (with no byte order mark)
+typedef Ucs2Char *Ucs2Buffer;
+typedef Ucs2Char const *Ucs2ConstBuffer;
+
 // use FileSize for all file sizes and offsets
 typedef uint64_t FileSize;
 

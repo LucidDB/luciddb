@@ -35,9 +35,10 @@ FENNEL_BEGIN_NAMESPACE
  * start from EXTENSION_TYPE_MIN.
  * NOTE: Any changes must be copied into 
  * 1) enum StandardTypeDescriptorOrdinal
- * 2) net.sf.farrago.query.FennelRelUtil.convertSqlTypeNumberToFennelTypeOrdinal
- * 3) StandardTypeDescriptor class
- * 4) StoredTypeDescriptor standardTypes
+ * 2) net.sf.farrago.query.FennelUtil.convertSqlTypeNameToFennelType
+ * 4) net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor
+ * 4) StandardTypeDescriptor class
+ * 5) StoredTypeDescriptor standardTypes
  */
 enum StandardTypeDescriptorOrdinal
 {
@@ -57,6 +58,9 @@ enum StandardTypeDescriptorOrdinal
     STANDARD_TYPE_VARCHAR = 13,
     STANDARD_TYPE_BINARY = 14,
     STANDARD_TYPE_VARBINARY = 15,
+    STANDARD_TYPE_END_NO_UNICODE = 16,
+    STANDARD_TYPE_UNICODE_CHAR = 16,
+    STANDARD_TYPE_UNICODE_VARCHAR = 17,
     STANDARD_TYPE_END,
     
     /**
@@ -108,6 +112,10 @@ public:
             return "b";
         case STANDARD_TYPE_VARBINARY:
             return "vb";
+        case STANDARD_TYPE_UNICODE_CHAR:
+            return "U";
+        case STANDARD_TYPE_UNICODE_VARCHAR:
+            return "vU";
         default:
             throw std::invalid_argument("fennel/tuple/StandardTypeDescriptor::toString");
         }
@@ -152,12 +160,16 @@ public:
             return STANDARD_TYPE_DOUBLE;
         case 'c':
             return STANDARD_TYPE_CHAR;
+        case 'U':
+            return STANDARD_TYPE_UNICODE_CHAR;
         case 'v':
             switch(*(str+1)) {
             case 'c':
                 return STANDARD_TYPE_VARCHAR;
             case 'b':
                 return STANDARD_TYPE_VARBINARY;
+            case 'U':
+                return STANDARD_TYPE_UNICODE_VARCHAR;
             default:
                 break;
             }
@@ -236,7 +248,7 @@ public:
     isArray(StandardTypeDescriptorOrdinal st)
     {
         if (st >= STANDARD_TYPE_CHAR &&
-            st <= STANDARD_TYPE_VARBINARY) {
+            st <= STANDARD_TYPE_UNICODE_VARCHAR) {
             return true;
         }
         return false;
@@ -246,7 +258,8 @@ public:
     isVariableLenArray(StandardTypeDescriptorOrdinal st)
     {
         if (st == STANDARD_TYPE_VARCHAR ||
-            st == STANDARD_TYPE_VARBINARY) {
+            st == STANDARD_TYPE_VARBINARY ||
+            st == STANDARD_TYPE_UNICODE_VARCHAR) {
             return true;
         }
         return false;
@@ -256,7 +269,8 @@ public:
     isFixedLenArray(StandardTypeDescriptorOrdinal st)
     {
         if (st == STANDARD_TYPE_CHAR ||
-            st == STANDARD_TYPE_BINARY) {
+            st == STANDARD_TYPE_BINARY ||
+            st == STANDARD_TYPE_UNICODE_CHAR) {
             return true;
         }
         return false;
@@ -266,7 +280,9 @@ public:
     isTextArray(StandardTypeDescriptorOrdinal st)
     {
         if (st == STANDARD_TYPE_CHAR ||
-            st == STANDARD_TYPE_VARCHAR) {
+            st == STANDARD_TYPE_VARCHAR ||
+            st == STANDARD_TYPE_UNICODE_CHAR ||
+            st == STANDARD_TYPE_UNICODE_VARCHAR) {
             return true;
         }
         return false;

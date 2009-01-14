@@ -56,6 +56,13 @@ class TupleAccessor : public boost::noncopyable
      * Array of 0-based indices of variable-width attributes.
      */
     std::vector<uint> pVarWidthAttrIndices;
+
+    /**
+     * Permutation in which attributes should be marshalled; empty when
+     * !bAlignedVar, in which case attributes should be marshalled in logical
+     * order.
+     */
+    std::vector<uint> marshalOrder;
     
     /**
      * @see getMaxByteCount()
@@ -94,6 +101,13 @@ class TupleAccessor : public boost::noncopyable
      * attribute, or MAXU if there are no variable-width attributes.
      */
     uint iFirstVarOffset;
+
+    /**
+     * Whether any variable-width attributes with alignment requirements
+     * (currently restricted to 2-byte alignment for UNICODE strings) are
+     * present.
+     */
+    bool bAlignedVar;
     
     /**
      * @see getCurrentTupleBuf()

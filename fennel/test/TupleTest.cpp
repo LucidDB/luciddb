@@ -41,7 +41,7 @@ using namespace fennel;
 class TupleTest : virtual public TestBase, public TraceSource
 {
     static const uint MAX_WIDTH = 512;
-    
+
     TupleDescriptor tupleDesc;
     TupleAccessor tupleAccessor;
     
@@ -50,6 +50,8 @@ class TupleTest : virtual public TestBase, public TraceSource
     void writeSampleData(TupleDatum &datum,uint typeOrdinal);
     uint testMarshal(TupleData const &tupleDataFixed);
     void checkData(TupleData const &tupleData1,TupleData const &tupleData2);
+    void checkAlignment(
+        TupleAttributeDescriptor const &desc, PConstBuffer pBuf);
         
     void testStandardTypesNullable();
     void testStandardTypesNotNull();
@@ -237,12 +239,34 @@ void TupleTest::checkData(
                 static_cast<void const *>(datum2.pData));
             continue;
         }
+        checkAlignment(tupleDesc[i], datum1.pData);
+        checkAlignment(tupleDesc[i], datum2.pData);
         BOOST_CHECK_EQUAL(datum1.cbData,datum2.cbData);
         BOOST_CHECK_EQUAL_COLLECTIONS(
             datum1.pData,
             datum1.pData + datum1.cbData,
             datum2.pData,
             datum2.pData + datum2.cbData);
+    }
+}
+
+void TupleTest::checkAlignment(
+    TupleAttributeDescriptor const &desc, PConstBuffer pBuf)
+{
+    uint iAlign = desc.pTypeDescriptor->getAlignmentByteCount(
+        desc.cbStorage);
+    switch(iAlign) {
+    case 1:
+        return;
+    case 2:
+        BOOST_CHECK_EQUAL(0, int(pBuf) & 1);
+        break;
+    case 4:
+        BOOST_CHECK_EQUAL(0, int(pBuf) & 3);
+        break;
+    case 8:
+        BOOST_CHECK_EQUAL(0, int(pBuf) & 7);
+        break;
     }
 }
 
@@ -299,8 +323,19 @@ void TupleTest::writeMinData(TupleDatum &datum,uint typeOrdinal)
     case STANDARD_TYPE_CHAR:
         memset(pData,'A',datum.cbData);
         break;
+    case STANDARD_TYPE_UNICODE_CHAR:
+        {
+            Ucs2Buffer pStr =
+                reinterpret_cast<Ucs2Buffer>(pData);
+            uint nChars = (datum.cbData >> 1);
+            for (uint i = 0; i < nChars; ++i) {
+                pStr[i] = 'A';
+            }
+        }
+        break;
     case STANDARD_TYPE_VARCHAR:
     case STANDARD_TYPE_VARBINARY:
+    case STANDARD_TYPE_UNICODE_VARCHAR:
         datum.cbData = 0;
         break;
     default:
@@ -355,6 +390,7 @@ void TupleTest::writeMaxData(TupleDatum &datum,uint typeOrdinal)
         *(reinterpret_cast<double *>(pData)) =
             std::numeric_limits<double>::max();
         break;
+    case STANDARD_TYPE_UNICODE_CHAR:
     case STANDARD_TYPE_BINARY:
         memset(pData,0xFF,datum.cbData);
         break;
@@ -365,6 +401,7 @@ void TupleTest::writeMaxData(TupleDatum &datum,uint typeOrdinal)
         datum.cbData = MAX_WIDTH;
         memset(pData,'z',datum.cbData);
         break;
+    case STANDARD_TYPE_UNICODE_VARCHAR:
     case STANDARD_TYPE_VARBINARY:
         datum.cbData = MAX_WIDTH;
         memset(pData,0xFF,datum.cbData);
@@ -411,6 +448,7 @@ void TupleTest::writeSampleData(TupleDatum &datum,uint typeOrdinal)
     case STANDARD_TYPE_UINT_64:
         *(reinterpret_cast<uint64_t *>(pData)) = 0x1234567890abcdefLL;
         break;
+    case STANDARD_TYPE_UNICODE_CHAR:
     case STANDARD_TYPE_BINARY:
         for (int i = 0; i < datum.cbData; i++) {
             pData[i] = i % 256;
@@ -427,8 +465,15 @@ void TupleTest::writeSampleData(TupleDatum &datum,uint typeOrdinal)
             pData[i] = i % ('z' - ' ') + ' ';
         }
         break;
+    case STANDARD_TYPE_UNICODE_VARCHAR:
     case STANDARD_TYPE_VARBINARY:
         datum.cbData = randomNumberGenerator(MAX_WIDTH);
+        if (typeOrdinal == STANDARD_TYPE_UNICODE_VARCHAR) {
+            if (datum.cbData & 1) {
+                // need an even number of bytes for doublebyte characters
+                datum.cbData--;
+            }
+        }
         for (int i = 0; i < datum.cbData; i++) {
             pData[i] = i % 256;
         }

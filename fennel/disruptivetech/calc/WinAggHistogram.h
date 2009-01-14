@@ -94,7 +94,7 @@ public:
     }
 
     //! dropRow - Removes a value from the tree and updates
-    //! the running sum..
+    //! the running sum.
     //!
     //! Input - Value to be removed from the tree
     //

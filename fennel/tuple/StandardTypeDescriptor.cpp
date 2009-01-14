@@ -178,6 +178,73 @@ class CharType : public StoredTypeDescriptor
     }
 };
 
+class UnicodeCharType : public StoredTypeDescriptor
+{
+    virtual Ordinal getOrdinal() const
+    {
+        return STANDARD_TYPE_UNICODE_CHAR;
+    }
+    
+    virtual uint getBitCount() const
+    {
+        return 0;
+    }
+    
+    virtual uint getFixedByteCount() const
+    {
+        return 0;
+    }
+    
+    virtual uint getMinByteCount(uint cbMaxWidth) const
+    {
+        return cbMaxWidth;
+    }
+
+    virtual uint getAlignmentByteCount(uint cbWidth) const
+    {
+        return 2;
+    }
+
+    virtual void visitValue(
+        DataVisitor &dataVisitor,
+        void const *pData,
+        TupleStorageByteLength cbData) const
+    {
+        assert((cbData & 1) == 0);
+        Ucs2ConstBuffer pStr = static_cast<Ucs2ConstBuffer>(pData);
+        dataVisitor.visitUnicodeChars(pStr,(cbData >> 1));
+    }
+
+    virtual int compareValues(
+        void const *pData1,
+        TupleStorageByteLength cbData1,
+        void const *pData2,
+        TupleStorageByteLength cbData2) const
+    {
+        assert(cbData1 == cbData2);
+        assert((cbData1 & 1) == 0);
+        Ucs2ConstBuffer pStr1 = static_cast<Ucs2ConstBuffer>(pData1);
+        Ucs2ConstBuffer pStr2 = static_cast<Ucs2ConstBuffer>(pData2);
+        uint nChars = (cbData1 >> 1);
+        int c = compareStrings(pStr1, pStr2, nChars);
+        return c;
+    }
+    
+public:
+    static inline int compareStrings(
+        Ucs2ConstBuffer pStr1, Ucs2ConstBuffer pStr2, uint nChars)
+    {
+        for (uint i = 0; i < nChars; ++i) {
+            int c = *pStr2;
+            c -= *pStr1;
+            if (c) {
+                return c;
+            }
+        }
+        return 0;
+    }
+};
+
 class VarCharType : public StoredTypeDescriptor
 {
     virtual Ordinal getOrdinal() const
@@ -238,6 +305,81 @@ class VarCharType : public StoredTypeDescriptor
         } else {
             trailStart = pBuf2 + cbMin;
             trailEnd = pBuf2 + cbData2;
+            rc = -1;
+        }
+        for (; trailStart < trailEnd; trailStart++) {
+            if (*trailStart != ' ') {
+                return rc;
+            }
+        }
+        return 0;
+    }
+};
+
+class UnicodeVarCharType : public StoredTypeDescriptor
+{
+    virtual Ordinal getOrdinal() const
+    {
+        return STANDARD_TYPE_UNICODE_VARCHAR;
+    }
+    
+    virtual uint getBitCount() const
+    {
+        return 0;
+    }
+    
+    virtual uint getFixedByteCount() const
+    {
+        return 0;
+    }
+    
+    virtual uint getMinByteCount(uint cbMaxWidth) const
+    {
+        return 0;
+    }
+
+    virtual uint getAlignmentByteCount(uint cbWidth) const
+    {
+        return 2;
+    }
+
+    virtual void visitValue(
+        DataVisitor &dataVisitor,
+        void const *pData,
+        TupleStorageByteLength cbData) const
+    {
+        assert((cbData & 1) == 0);
+        Ucs2ConstBuffer pStr = static_cast<Ucs2ConstBuffer>(pData);
+        dataVisitor.visitUnicodeChars(pStr,(cbData >> 1));
+    }
+
+    virtual int compareValues(
+        void const *pData1,
+        TupleStorageByteLength cbData1,
+        void const *pData2,
+        TupleStorageByteLength cbData2) const
+    {
+        assert((cbData1 & 1) == 0);
+        assert((cbData2 & 1) == 0);
+        Ucs2ConstBuffer pStr1 = static_cast<Ucs2ConstBuffer>(pData1);
+        Ucs2ConstBuffer pStr2 = static_cast<Ucs2ConstBuffer>(pData2);
+        TupleStorageByteLength cbMin = std::min(cbData1,cbData2);
+        uint nCharsMin = (cbMin >> 1);
+        int rc = UnicodeCharType::compareStrings(pStr1, pStr2, nCharsMin);
+        if (rc) {
+            return rc;
+        }
+        if (cbData1 == cbData2) {
+            return 0;
+        }
+        Ucs2ConstBuffer trailStart,trailEnd;
+        if (cbData1 > cbData2) {
+            trailStart = pStr1 + nCharsMin;
+            trailEnd = pStr1 + (cbData1 >> 1);
+            rc = 1;
+        } else {
+            trailStart = pStr2 + nCharsMin;
+            trailEnd = pStr2 + (cbData2 >> 1);
             rc = -1;
         }
         for (; trailStart < trailEnd; trailStart++) {
@@ -367,6 +509,8 @@ static CharType stdCHAR;
 static VarCharType stdVARCHAR;
 static BinaryType stdBINARY;
 static VarBinaryType stdVARBINARY;
+static UnicodeCharType stdUNICODE_CHAR;
+static UnicodeVarCharType stdUNICODE_VARCHAR;
 
 /**
  * NOTE: Any changes must be copied into 
@@ -392,6 +536,8 @@ static StoredTypeDescriptor const *standardTypes[] = {
     &stdVARCHAR,
     &stdBINARY,
     &stdVARBINARY,
+    &stdUNICODE_CHAR,
+    &stdUNICODE_VARCHAR,
 };
 
 StandardTypeDescriptorFactory::StandardTypeDescriptorFactory()
