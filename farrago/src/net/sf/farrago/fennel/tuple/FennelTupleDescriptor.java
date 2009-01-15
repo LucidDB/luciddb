@@ -105,45 +105,6 @@ public class FennelTupleDescriptor
         }
         return false;
     }
-
-    /**
-     * Compares two tuples.
-     *
-     * @return zero if they match, -1 if the first is less than the second
-     * otherwise 1
-     */
-    public int compareTuples(FennelTupleData tuple1, FennelTupleData tuple2)
-    {
-        int n = tuple1.getDatumCount();
-        if (n > tuple2.getDatumCount()) {
-            n = tuple2.getDatumCount();
-        }
-        if (n >= getAttrCount()) {
-            n = getAttrCount();
-        }
-        int i;
-        for (i = 0; i < n; ++i) {
-            FennelTupleDatum datum1 = tuple1.getDatum(i);
-            FennelTupleDatum datum2 = tuple2.getDatum(i);
-            if (!datum1.isPresent()) {
-                if (!datum2.isPresent()) {
-                    continue;
-                }
-                return -1;
-            } else if (!datum2.isPresent()) {
-                return 1;
-            }
-            int c = getAttr(i).typeDescriptor.compareValues(datum1, datum2);
-            if (c != 0) {
-                if (c < 0) {
-                    return -1;
-                }
-                return 1;
-            }
-        }
-        return 0;
-    }
 }
-;
 
 // End FennelTupleDescriptor.java

@@ -22,6 +22,7 @@
 */
 package net.sf.farrago.test;
 
+import java.io.*;
 import java.nio.*;
 
 import java.util.*;
@@ -43,6 +44,10 @@ import org.eigenbase.util.*;
 public class FennelTupleTest
     extends TestCase
 {
+    // REVIEW jvs 14-Jan-2009:  LE/BE should be chosen automatically
+    // based on native architecture
+    private static final String UNICODE_CHARSET = "UTF-16LE";
+    
     //~ Methods ----------------------------------------------------------------
 
     private FennelTupleDescriptor buildDescriptor(
@@ -175,6 +180,15 @@ public class FennelTupleTest
             case FennelStandardTypeDescriptor.VARBINARY_ORDINAL:
                 d.getDatum(i).setBytes(((String) objs[i]).getBytes());
                 break;
+            case FennelStandardTypeDescriptor.UNICODE_CHAR_ORDINAL:
+            case FennelStandardTypeDescriptor.UNICODE_VARCHAR_ORDINAL:
+                try {
+                    d.getDatum(i).setString(((String) objs[i]),
+                        UNICODE_CHARSET);
+                } catch (UnsupportedEncodingException ex) {
+                    throw Util.newInternal(ex);
+                }
+                break;
             default:
                 assertTrue(false);
             }
@@ -281,6 +295,19 @@ public class FennelTupleTest
                         d.getDatum(i).getBytes(),
                         0,
                         d.getDatum(i).getLength());
+                break;
+            case FennelStandardTypeDescriptor.UNICODE_CHAR_ORDINAL:
+            case FennelStandardTypeDescriptor.UNICODE_VARCHAR_ORDINAL:
+                try {
+                    o[i] =
+                        new String(
+                            d.getDatum(i).getBytes(),
+                            0,
+                            d.getDatum(i).getLength(),
+                            UNICODE_CHARSET);
+                } catch (UnsupportedEncodingException ex) {
+                    throw Util.newInternal(ex);
+                }
                 break;
             default:
                 assertTrue(false);
@@ -503,16 +530,25 @@ public class FennelTupleTest
             FennelStandardTypeDescriptor.CHAR,
             FennelStandardTypeDescriptor.VARCHAR,
             FennelStandardTypeDescriptor.VARCHAR,
-            FennelStandardTypeDescriptor.CHAR
+            FennelStandardTypeDescriptor.CHAR,
+            FennelStandardTypeDescriptor.UNICODE_CHAR,
+            FennelStandardTypeDescriptor.UNICODE_VARCHAR,
+            FennelStandardTypeDescriptor.UNICODE_CHAR,
+            FennelStandardTypeDescriptor.UNICODE_VARCHAR
         };
         FennelTupleDescriptor desc =
             buildDescriptor(
                 o1,
-                new boolean[] { false, false, true, true },
-                new int[] { 10, 20, 12, 8 });
+                new boolean[] {
+                    false, false, true, true, false, false, true, true},
+                new int[] { 10, 20, 12, 8, 20, 40, 24, 16 });
 
         Object [] stringVals =
         {
+            new String("10bytes   "),
+            new String("hi"),
+            null,
+            new String("6bytes  "),
             new String("10bytes   "),
             new String("hi"),
             null,

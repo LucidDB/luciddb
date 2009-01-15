@@ -151,6 +151,20 @@ public final class FennelTupleAccessor
      */
     private final boolean setNativeOrder;
 
+    /**
+     * Permutation in which attributes should be marshalled; null when
+     * !hasAlignedVar, in which case attributes should be marshalled
+     * in logical order.
+     */
+    private List marshalOrder;
+
+    /**
+     * Whether any variable-width attributes with alignment requirements
+     * (currently restricted to 2-byte alignment for UNICODE strings) are
+     * present.
+     */
+    private boolean hasAlignedVar;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -285,6 +299,8 @@ public final class FennelTupleAccessor
         attrAccessors.clear();
         varWidthAccessors.clear();
         currTupleBuf = null;
+        marshalOrder = null;
+        hasAlignedVar = false;
     }
 
     /**
@@ -314,6 +330,8 @@ public final class FennelTupleAccessor
         ArrayList aligned2 = new ArrayList();
         ArrayList unalignedFixed = new ArrayList();
         ArrayList bitAccessors = new ArrayList();
+        ArrayList unalignedVar = new ArrayList();
+        ArrayList alignedVar2 = new ArrayList();
 
         // special-case reference to the accessor for the first variable-width
         // attribute
@@ -367,11 +385,13 @@ public final class FennelTupleAccessor
             newAccessor = attr.typeDescriptor.newAttributeAccessor();
             if (!isFixedWidth) {
                 varDataMax += attr.storageSize;
-                assert (alignment == 1);
-                if (firstVariableAccessor == null) {
-                    firstVariableAccessor = newAccessor;
+                if (alignment == 2) {
+                    hasAlignedVar = true;
+                    alignedVar2.add(new Integer(iAttr));
+                } else {
+                    assert (alignment == 1);
+                    unalignedVar.add(new Integer(iAttr));
                 }
-                varWidthAccessors.add(new Integer(iAttr));
             } else if (nBits > 0) {
                 newAccessor.valueBitNdx = nBitFields;
                 nBitFields++;
@@ -413,6 +433,16 @@ public final class FennelTupleAccessor
             attrAccessors.add(newAccessor);
         }
 
+        // deal with variable-width attributes
+        varWidthAccessors.addAll(alignedVar2);
+        varWidthAccessors.addAll(unalignedVar);
+        if (!varWidthAccessors.isEmpty()) {
+            FennelAttributeAccessor attrAccessor =
+                (FennelAttributeAccessor) attrAccessors.get(
+                    ((Integer) varWidthAccessors.get(0)).intValue());
+            firstVariableAccessor = attrAccessor;
+        }
+
         // now, make a pass over each storage class, calculating actual
         // offsets; note that initFixedAccessors advances maxStorage
         // as a side-effect
@@ -442,6 +472,13 @@ public final class FennelTupleAccessor
             bitFieldOffset = Integer.MAX_VALUE;
         }
         if (firstVariableAccessor != null) {
+            if (hasAlignedVar) {
+                // First variable-width value needs to be 2-byte aligned,
+                // so add one byte of padding if necessary.
+                if ((maxStorage & 1) != 0) {
+                    ++maxStorage;
+                }
+            }
             firstVariableAccessor.fixedOffset = maxStorage;
             firstVarOffset = maxStorage;
         } else {
@@ -463,6 +500,24 @@ public final class FennelTupleAccessor
         // AFTER computing maxStorage based on the unaligned minStorage
         minStorage = alignRoundUp(minStorage);
         maxStorage = alignRoundUp(maxStorage);
+
+        // if aligned variable-width fields are present, permute the
+        // marshalling order so that they come before unaligned
+        // variable-width fields
+        if (hasAlignedVar) {
+            marshalOrder = new ArrayList();
+            // add all of the fixed-width attributes
+            for (int i = 0; i < attrAccessors.size(); ++i) {
+                FennelAttributeAccessor accessor =
+                    (FennelAttributeAccessor) attrAccessors.get(i);
+                if (accessor.endIndirectOffset == Integer.MAX_VALUE) {
+                    marshalOrder.add(new Integer(i));
+                }
+            }
+            // then all of the variable-width attributes, in the correct order
+            marshalOrder.addAll(varWidthAccessors);
+            assert(marshalOrder.size() == attrAccessors.size());
+        }
     }
 
     /**
@@ -692,16 +747,12 @@ public final class FennelTupleAccessor
         return (FennelAttributeAccessor) attrAccessors.get(iAttribute);
     }
 
-    // REVIEW jvs 19-Feb-2006:  The comment below says tupleBuf
-    // becomes the current buffer, and that's the case in the original
-    // Fennel code, but I don't think it's actually happening here.
-
     /**
      * Marshalls a tuple's values into a buffer.
      *
      * @param tuple the tuple to be marshalled
-     * @param tupleBuf the buffer into which to marshal, which also becomes the
-     * current tuple buffer
+     * @param tupleBuf the buffer into which to marshal
+     * (note that this accessor's own current tuple buffer remains unchanged)
      */
     public void marshal(FennelTupleData tuple, ByteBuffer tupleBuf)
     {
@@ -736,8 +787,14 @@ public final class FennelTupleAccessor
         }
 
         for (i = 0; i < tuple.getDatumCount(); i++) {
-            FennelTupleDatum value = tuple.getDatum(i);
-            FennelAttributeAccessor accessor = getAccessor(i);
+            int iAttr;
+            if (marshalOrder != null) {
+                iAttr = ((Integer) marshalOrder.get(i)).intValue();
+            } else {
+                iAttr = i;
+            }
+            FennelTupleDatum value = tuple.getDatum(iAttr);
+            FennelAttributeAccessor accessor = getAccessor(iAttr);
 
             // set is-value-present for nullables
             if (accessor.nullBitNdx != Integer.MAX_VALUE) {
@@ -762,7 +819,7 @@ public final class FennelTupleAccessor
                 }
             } else {
                 // if you hit this assert, most likely the result produced
-                // an null but type derivation in SqlValidator derived an
+                // a null but type derivation in SqlValidator derived a
                 // non nullable result type
                 assert (accessor.nullBitNdx != Integer.MAX_VALUE);
             }
@@ -787,6 +844,5 @@ public final class FennelTupleAccessor
         }
     }
 }
-;
 
 // End FennelTupleAccessor.java

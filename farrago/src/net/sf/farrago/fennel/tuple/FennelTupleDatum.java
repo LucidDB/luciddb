@@ -482,6 +482,5 @@ public class FennelTupleDatum
         rawBytesSet = true;
     }
 }
-;
 
 // End FennelTupleDatum.java

@@ -109,6 +109,5 @@ public class FennelTupleData
         return false;
     }
 }
-;
 
 // End FennelTupleData.java
