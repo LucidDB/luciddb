@@ -223,6 +223,8 @@ public abstract class DdlReloadTableStmt
     {
         crashIfTrapSet();
 
+        table = null;
+
         if (recoveryRefMofId != null) {
             // Regardless of success or failure, delete the recoveryRef
             // if it exists, since it is only for crash recovery.
