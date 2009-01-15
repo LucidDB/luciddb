@@ -259,13 +259,13 @@ void TupleTest::checkAlignment(
     case 1:
         return;
     case 2:
-        BOOST_CHECK_EQUAL(0, int64_t(pBuf) & 1);
+        BOOST_CHECK_EQUAL(0, uintptr_t(pBuf) & 1);
         break;
     case 4:
-        BOOST_CHECK_EQUAL(0, int64_t(pBuf) & 3);
+        BOOST_CHECK_EQUAL(0, uintptr_t(pBuf) & 3);
         break;
     case 8:
-        BOOST_CHECK_EQUAL(0, int64_t(pBuf) & 7);
+        BOOST_CHECK_EQUAL(0, uintptr_t(pBuf) & 7);
         break;
     }
 }
