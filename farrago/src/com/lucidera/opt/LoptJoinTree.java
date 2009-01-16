@@ -42,6 +42,7 @@ public class LoptJoinTree
 
     private BinaryTree factorTree;
     private RelNode joinTree;
+    private boolean removableSelfJoin;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -55,6 +56,7 @@ public class LoptJoinTree
     {
         this.joinTree = joinTree;
         factorTree = new BinaryTree(factorId);
+        this.removableSelfJoin = false;
     }
 
     /**
@@ -67,6 +69,7 @@ public class LoptJoinTree
     {
         this.joinTree = joinTree;
         this.factorTree = factorTree;
+        this.removableSelfJoin = false;
     }
 
     /**
@@ -82,8 +85,28 @@ public class LoptJoinTree
         BinaryTree leftFactorTree,
         BinaryTree rightFactorTree)
     {
+        this(joinTree, leftFactorTree, rightFactorTree, false);
+    }
+
+    /**
+     * Associates the factor ids with a jointree given the factors corresponding
+     * to the left and right subtrees of the join.  Also indicates whether
+     * the join is a removable self-join.
+     *
+     * @param joinTree RelNodes corresponding to the join tree
+     * @param leftFactorTree tree of the factor ids for left subtree
+     * @param rightFactorTree tree of the factor ids for the right subtree
+     * @param removableSelfJoin true if the join is a removable self-join
+     */
+    public LoptJoinTree(
+        RelNode joinTree,
+        BinaryTree leftFactorTree,
+        BinaryTree rightFactorTree,
+        boolean removableSelfJoin)
+    {
         factorTree = new BinaryTree(leftFactorTree, rightFactorTree);
         this.joinTree = joinTree;
+        this.removableSelfJoin = removableSelfJoin;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -115,6 +138,11 @@ public class LoptJoinTree
     public void getTreeOrder(List<Integer> treeOrder)
     {
         factorTree.getTreeOrder(treeOrder);
+    }
+    
+    public boolean isRemovableSelfJoin()
+    {
+        return removableSelfJoin;
     }
 
     //~ Inner Classes ----------------------------------------------------------

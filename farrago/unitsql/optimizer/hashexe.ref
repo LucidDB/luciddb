@@ -127,6 +127,13 @@
 > insert into lhxdepts3 select deptno, deptno from sales.emps;
 > insert into lhxdepts4 select deptno, deptno from sales.emps;
 > 
+> -- set fake stats to avoid non-deterministic results
+> 
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXEMPS', 1000);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXDEPTS', 600);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXDEPTS2', 700);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXDEPTS3', 800);
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LHX', 'LHXDEPTS4', 900);
 > 
 > !set outputformat csv
 > select * from lhxemps order by 1;

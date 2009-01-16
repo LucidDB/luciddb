@@ -53,11 +53,6 @@ public final class JoinRel
     // to control rule firing, but due to the non-local nature of
     // semijoin optimizations, it's pretty much required.
     private final boolean semiJoinDone;
-    
-    /**
-     * True if the join is a removable self-join
-     */
-    private final boolean removableSelfJoin;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -88,10 +83,9 @@ public final class JoinRel
             condition,
             joinType,
             variablesStopped,
-            false,
             false);
     }
-
+    
     /**
      * Creates a JoinRel, flagged with whether it has been translated to a
      * semi-join.
@@ -117,44 +111,6 @@ public final class JoinRel
         Set<String> variablesStopped,
         boolean semiJoinDone)
     {
-        this(
-            cluster,
-            left,
-            right,
-            condition,
-            joinType,
-            variablesStopped,
-            semiJoinDone,
-            false);
-    }
-    
-    /**
-     * Creates a JoinRel, flagged with whether it has been translated to a
-     * semi-join, and whether it is a removable self-join.
-     *
-     * @param cluster Cluster
-     * @param left Left input
-     * @param right Right input
-     * @param condition Join condition
-     * @param joinType Join type
-     * @param variablesStopped Set of names of variables which are set by the
-     * LHS and used by the RHS and are not available to nodes above this JoinRel
-     * in the tree
-     * @param semiJoinDone Whether this join has been translated to a semi-join
-     * @param removableSelfJoin true if the join is a removable self-join
-     *
-     * @see #isSemiJoinDone()
-     */
-    public JoinRel(
-        RelOptCluster cluster,
-        RelNode left,
-        RelNode right,
-        RexNode condition,
-        JoinRelType joinType,
-        Set<String> variablesStopped,
-        boolean semiJoinDone,
-        boolean removableSelfJoin)
-    {
         super(
             cluster,
             new RelTraitSet(CallingConvention.NONE),
@@ -164,7 +120,6 @@ public final class JoinRel
             joinType,
             variablesStopped);
         this.semiJoinDone = semiJoinDone;
-        this.removableSelfJoin = removableSelfJoin;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -179,8 +134,7 @@ public final class JoinRel
                 condition.clone(),
                 joinType,
                 new HashSet<String>(variablesStopped),
-                isSemiJoinDone(),
-                isRemovableSelfJoin());
+                isSemiJoinDone());
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -189,30 +143,18 @@ public final class JoinRel
     {
         // NOTE jvs 14-Mar-2006: Do it this way so that semijoin state
         // don't clutter things up in optimizers that don't use semijoins
-        // or removable self-joins
-        if (!semiJoinDone && !removableSelfJoin) {
+        if (!semiJoinDone) {
             super.explain(pw);
             return;
         }
-        String[] names;
-        Object[] objects;
-        if (removableSelfJoin) {
-            names = new String[6];
-            objects = new Object[3];
-            names[5] = "removableSelfJoin";
-            objects[2] = removableSelfJoin;
-        } else {
-            names = new String[5];
-            objects = new Object[2];
-        }
-        names[0] = "left";
-        names[1] = "right";
-        names[2] = "condition";
-        names[3] = "joinType";
-        names[4] = "semiJoinDone";
-        objects[0] = joinType.name().toLowerCase();
-        objects[1] = semiJoinDone;
-        pw.explain(this, names, objects);
+        pw.explain(
+            this,
+            new String[] {
+                "left", "right", "condition", "joinType", "semiJoinDone"
+            },
+            new Object[] {
+                joinType.name().toLowerCase(), semiJoinDone
+            });
     }
 
     /**
@@ -223,14 +165,6 @@ public final class JoinRel
     public boolean isSemiJoinDone()
     {
         return semiJoinDone;
-    }
-    
-    /**
-     * @return true if the join is flagged as a self-join
-     */
-    public boolean isRemovableSelfJoin()
-    {
-        return removableSelfJoin;
     }
 }
 

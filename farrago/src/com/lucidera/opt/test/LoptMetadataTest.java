@@ -592,14 +592,9 @@ public class LoptMetadataTest
             + " on e1.empid=e2.empid");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
 
-        // Cumulative cost is two table accesses plus join.
-        double expected = 0;
+        // Cumulative cost is cost of single table access
+        double expected = SALES_EMPS_ROWCOUNT;
 
-        // table access
-        expected += 2 * SALES_EMPS_ROWCOUNT;
-
-        // worst-case join (two sides are balanced, so factor is 10)
-        expected += 10 * SALES_EMPS_ROWCOUNT;
         checkCost(
             expected,
             cost);
@@ -1447,6 +1442,34 @@ public class LoptMetadataTest
             assertTrue(boolResult.equals(true));
         }
     }
+    
+    public void testUniqueRidColumn()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            "select deptno, lcs_rid(age) from emps");
+        BitSet key = new BitSet();
+        key.set(0);
+        key.set(1);
+        Boolean result = RelMetadataQuery.areColumnsUnique(rootRel, key);
+        assertTrue(result.equals(true));
+    }
+    
+    public void testNotUniqueIfRidAboveJoin()
+        throws Exception
+    {
+        // When the rid is above the join, it's not unique
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            "select lcs_rid(age) from emps, depts");
+        BitSet key = new BitSet();
+        key.set(0);
+        Boolean result = RelMetadataQuery.areColumnsUnique(rootRel, key);
+        assertTrue(result == null);
+    }
 
     private Set<RelColumnOrigin> checkSimpleColumnOrigin(String sql)
         throws Exception
@@ -1536,6 +1559,30 @@ public class LoptMetadataTest
     {
         checkNoSimpleColumnOrigin(
             "select e.name from emps e, depts d where e.deptno = d.deptno");
+    }
+    
+    public void testSimpleColumnOriginProjectedRowScan()
+        throws Exception
+    {
+        // Make sure that if the row scan is projected, the column
+        // origin takes the projection into account
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new LcsTableProjectionRule());
+        transformQuery(
+            programBuilder.createProgram(),
+            "select age from emps");
+        Set<RelColumnOrigin> result =
+            LoptMetadataQuery.getSimpleColumnOrigins(rootRel, 0);
+        assertTrue(result != null);
+        assertEquals(
+            1,
+            result.size());
+        RelColumnOrigin rco = result.iterator().next();
+        checkSimpleColumnOrigin(
+            rco,
+            "EMPS",
+            "AGE",
+            false);
     }
 }
 

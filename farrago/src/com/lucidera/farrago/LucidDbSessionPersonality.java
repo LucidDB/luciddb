@@ -494,10 +494,7 @@ public class LucidDbSessionPersonality
             LoptModifyRemovableSelfJoinRule.instanceRowScanOnRight);
         builder.addGroupEnd();
         
-        // Remove self-joins that are removable.  Note that removable
-        // self-joins are flagged in LoptOptimizeJoinRule.  Therefore, any
-        // rules that create new JoinRel's after that rule is fired and
-        // before this one is fired MUST preserve the self-join flag.
+        // Remove self-joins that are removable.
         builder.addRuleInstance(new LoptRemoveSelfJoinRule());
         
         // Push down any filters that were added as a result of removing

@@ -196,8 +196,7 @@ public class PushFilterPastJoinRule
                 joinFilter,
                 joinRel.getJoinType(),
                 Collections.<String>emptySet(),
-                joinRel.isSemiJoinDone(),
-                joinRel.isRemovableSelfJoin());
+                joinRel.isSemiJoinDone());
 
         // create a FilterRel on top of the join if needed
         RelNode newRel =

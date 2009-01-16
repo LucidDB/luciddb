@@ -279,8 +279,9 @@ outerForLoop:
             for (int j = i + 1; j < factors.size(); j++) {
                 int leftFactor = factors.get(i);
                 int rightFactor = factors.get(j);
-                if (simpleFactors.get(leftFactor) ==
-                    simpleFactors.get(rightFactor))
+                if (Arrays.equals(
+                    simpleFactors.get(leftFactor).getQualifiedName(),
+                    simpleFactors.get(rightFactor).getQualifiedName()))
                 {
                     selfJoinPairs.put(leftFactor, rightFactor);
                     repeatedTables.add(simpleFactors.get(leftFactor));                    
@@ -349,25 +350,9 @@ outerForLoop:
                 continue;
             }
             RelNode rel = multiJoin.getJoinFactor(factIdx);
-            boolean simple = true;
-            RelOptTable simpleTable = null;
-            for (int i = 0; i < rel.getRowType().getFieldCount(); i++) {
-                RelColumnOrigin colOrigin =
-                    LoptMetadataProvider.getSimpleColumnOrigin(rel, i);
-                if (colOrigin == null) {
-                    simple = false;
-                    break;
-                }
-                RelOptTable table = colOrigin.getOriginTable();
-                if (simpleTable == null) {
-                    simpleTable = table;
-                } else if (simpleTable != table) {
-                    simple = false;
-                    break;
-                }
-            }
-            if (simple) {
-                returnList.put(factIdx, simpleTable);
+            RelOptTable table = LoptMetadataProvider.getSimpleTableOrigin(rel);
+            if (table != null) {
+                returnList.put(factIdx, table);
             }
         }
         
@@ -420,40 +405,7 @@ outerForLoop:
                     rightRel.getRowType().getFields(),
                     adjustments));
         
-        List<Integer> leftKeys = new ArrayList<Integer>();
-        List<Integer> rightKeys = new ArrayList<Integer>();      
-        RelOptUtil.splitJoinCondition(
-            leftRel,
-            rightRel,
-            joinFilters,
-            leftKeys,
-            rightKeys);
-        
-        // Make sure each key on the left maps to the same column as the
-        // corresponding key on the right.  Note that we've already
-        // confirmed that the keys are simple columns.
-        for (int i = 0; i < leftKeys.size(); i++) {
-            if (LoptMetadataProvider.getSimpleColumnOrigin(
-                    leftRel,
-                    leftKeys.get(i)).getOriginColumnOrdinal() !=
-                LoptMetadataProvider.getSimpleColumnOrigin(
-                    rightRel,
-                    rightKeys.get(i)).getOriginColumnOrdinal())
-            {
-                return false;
-            }
-        }
-            
-        // Now that we've verified that the keys are the same, see if they
-        // are unique.
-        if (!RelMdUtil.areColumnsDefinitelyUnique(
-            leftRel,
-            RelMdUtil.setBitKeys(leftKeys)))
-        {
-            return false;
-        }
-        
-        return true;
+        return areJoinKeysUnique(leftRel, rightRel, joinFilters);
     }
 
     /**
@@ -1070,7 +1022,7 @@ outerForLoop:
         
         // can't push factors pass self-joins because in order to later remove
         // them, we need to keep the factors together
-        if (joinRel.isRemovableSelfJoin()) {
+        if (joinTree.isRemovableSelfJoin()) {
             return null;
         }
 
@@ -1721,8 +1673,7 @@ outerForLoop:
                 condition,
                 joinType,
                 Collections.<String>emptySet(),
-                true,
-                selfJoin);
+                true);
 
         // if this is a left or right outer join, and additional filters can
         // be applied to the resulting join, then they need to be applied
@@ -1741,7 +1692,8 @@ outerForLoop:
         return new LoptJoinTree(
             joinTree,
             left.getFactorTree(),
-            right.getFactorTree());
+            right.getFactorTree(),
+            selfJoin);
     }
     
     /**
@@ -1915,6 +1867,101 @@ outerForLoop:
         }
 
         return needAdjustment;
+    }
+    
+    /**
+     * Determines whether a join is a removable self-join.  It is if it's an
+     * inner join between identical, simple factors and the equality portion
+     * of the join condition consists of the same set of unique keys.
+     * 
+     * @param joinRel the join
+     * 
+     * @return true if the join is removable
+     */
+    public static boolean isRemovableSelfJoin(JoinRel joinRel)
+    {   
+        RelNode left = joinRel.getLeft();
+        RelNode right = joinRel.getRight();
+        
+        if (joinRel.getJoinType() != JoinRelType.INNER) {
+            return false;
+        }
+        
+        // Make sure the join is between the same simple factor
+        RelOptTable leftTable = LoptMetadataProvider.getSimpleTableOrigin(left);
+        if (leftTable == null) {
+            return false;
+        }
+        RelOptTable rightTable =
+            LoptMetadataProvider.getSimpleTableOrigin(right);
+        if (rightTable == null) {
+            return false;
+        }
+        if (!Arrays.equals(
+            leftTable.getQualifiedName(),
+            rightTable.getQualifiedName()))
+        {
+            return false;
+        }
+        
+        // Determine if the join keys are identical and unique
+        return areJoinKeysUnique(left, right, joinRel.getCondition());        
+    }
+    
+    /**
+     * Determines if the equality portion of a join condition is between
+     * identical keys that are unique.
+     * 
+     * @param leftRel left side of the join
+     * @param rightRel right side of the join
+     * @param joinFilters the join condition
+     * 
+     * @return true if the equality join keys are the same and
+     * unique
+     */
+    private static boolean areJoinKeysUnique(
+        RelNode leftRel,
+        RelNode rightRel,
+        RexNode joinFilters)
+    {
+        List<Integer> leftKeys = new ArrayList<Integer>();
+        List<Integer> rightKeys = new ArrayList<Integer>();      
+        RelOptUtil.splitJoinCondition(
+            leftRel,
+            rightRel,
+            joinFilters,
+            leftKeys,
+            rightKeys);
+        
+        // Make sure each key on the left maps to the same simple column as the
+        // corresponding key on the right
+        for (int i = 0; i < leftKeys.size(); i++) {
+            RelColumnOrigin leftOrigin =
+                LoptMetadataProvider.getSimpleColumnOrigin(
+                    leftRel,
+                    leftKeys.get(i));
+            if (leftOrigin == null) {
+                return false;
+            }
+            RelColumnOrigin rightOrigin =
+                LoptMetadataProvider.getSimpleColumnOrigin(
+                    rightRel,
+                    rightKeys.get(i));
+            if (rightOrigin == null) {
+                return false;
+            }
+            if (leftOrigin.getOriginColumnOrdinal() != 
+                rightOrigin.getOriginColumnOrdinal())
+            {
+                return false;
+            }
+        }
+            
+        // Now that we've verified that the keys are the same, see if they
+        // are unique.
+        return RelMdUtil.areColumnsDefinitelyUnique(
+            leftRel,
+            RelMdUtil.setBitKeys(leftKeys));
     }
 }
 
