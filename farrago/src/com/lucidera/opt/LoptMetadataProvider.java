@@ -313,7 +313,7 @@ public class LoptMetadataProvider
         // of the inputs since any filtering applied on either input needs to
         // be applied on the remaining input.  But for simplicity, just use
         // the minimum.
-        if (rel.isRemovableSelfJoin()) {
+        if (LoptOptimizeJoinRule.isRemovableSelfJoin(rel)) {
             Double leftResult =
                 computeDefaultCostWithFilters(
                     rel.getLeft(),
@@ -895,19 +895,22 @@ public class LoptMetadataProvider
         if (projExpr instanceof RexCall) {
             RexCall call = (RexCall) projExpr;
             if (call.getOperator() == LucidDbOperatorTable.lcsRidFunc) {
-                assert(colOrigins.size() == 1);
-                RelColumnOrigin [] coList =
-                    (RelColumnOrigin []) colOrigins.toArray(
-                        new RelColumnOrigin[1]);
-                RelOptTable table = coList[0].getOriginTable();
-                Set<RelColumnOrigin> ridOrigin = new HashSet<RelColumnOrigin>();
-                ridOrigin.add(
-                    new RelColumnOrigin(
-                        table,
-                        LucidDbOperatorTable.ldbInstance().getSpecialOpColumnId(
-                            call.getOperator()),
-                        false));
-                return ridOrigin;
+                if (colOrigins.size() == 1) {
+                    RelColumnOrigin [] coList =
+                        (RelColumnOrigin []) colOrigins.toArray(
+                            new RelColumnOrigin[1]);
+                    RelOptTable table = coList[0].getOriginTable();
+                    Set<RelColumnOrigin> ridOrigin =
+                        new HashSet<RelColumnOrigin>();
+                    ridOrigin.add(
+                        new RelColumnOrigin(
+                            table,
+                            LucidDbOperatorTable.ldbInstance().
+                                getSpecialOpColumnId(
+                                    call.getOperator()),
+                                    false));
+                    return ridOrigin;
+                }
             }
         }
         return colOrigins;
@@ -922,6 +925,24 @@ public class LoptMetadataProvider
             iOutputColumn);
     }
 
+    public Set<RelColumnOrigin> getSimpleColumnOrigins(
+        LcsRowScanRel rel,
+        int iOutputColumn)
+    {
+        Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
+        // The row scan could be projected
+        Integer[] projectedColumns = rel.getProjectedColumns();
+        if (projectedColumns == null) {
+            set.add(new RelColumnOrigin(rel.getTable(), iOutputColumn, false));
+        } else {
+            set.add(
+                new RelColumnOrigin(rel.getTable(), 
+                projectedColumns[iOutputColumn], 
+                false));
+        }
+        return set;
+    }
+    
     // Catch-all rule when none of the others apply.
     public Set<RelColumnOrigin> getSimpleColumnOrigins(
         RelNode rel,
@@ -962,6 +983,31 @@ public class LoptMetadataProvider
             return null;
         }
         return coList[0];
+    }
+    
+    /**
+     * Determines the origin of a RelNode, provided it maps to a single table,
+     * optionally with filtering and projection.
+     * 
+     * @param rel the RelNode
+     * 
+     * @return true if the RelNode is a simple table; otherwise, returns
+     * null
+     */
+    public static RelOptTable getSimpleTableOrigin(RelNode rel)
+    {
+        // Determine the simple origin of the first column in the
+        // RelNode.  If it's simple, then that means that the underlying
+        // table is also simple, even if the column itself is derived.
+        Set<RelColumnOrigin> colOrigins =
+            LoptMetadataQuery.getSimpleColumnOrigins(rel, 0);
+        if ((colOrigins == null) || (colOrigins.size() == 0)) {
+            return null;
+        }
+        RelColumnOrigin [] coList =
+            (RelColumnOrigin []) colOrigins.toArray(
+                new RelColumnOrigin[colOrigins.size()]);
+        return coList[0].getOriginTable();
     }
 
     //~ Inner Classes ----------------------------------------------------------

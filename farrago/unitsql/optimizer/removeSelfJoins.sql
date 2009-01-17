@@ -237,3 +237,7 @@ explain plan for select * from
 
 explain plan for select * from sales s1, sales s2
     where s1.product_id = s2.product_id;
+
+-- join keys are derived
+explain plan for select * from sales s1, sales s2
+    where abs(s1.sid) = abs(s2.sid);

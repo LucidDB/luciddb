@@ -124,7 +124,7 @@ public class LoptModifyRemovableSelfJoinRule
     public void onMatch(RelOptRuleCall call)
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
-        if (!joinRel.isRemovableSelfJoin()) {
+        if (!LoptOptimizeJoinRule.isRemovableSelfJoin(joinRel)) {
             return;
         }
         
@@ -183,8 +183,7 @@ public class LoptModifyRemovableSelfJoinRule
                 joinRel.getCondition(),
                 joinRel.getJoinType(),
                 joinRel.getVariablesStopped(),
-                joinRel.isSemiJoinDone(),
-                true);
+                joinRel.isSemiJoinDone());
         call.transformTo(newSelfJoin);        
     }
     

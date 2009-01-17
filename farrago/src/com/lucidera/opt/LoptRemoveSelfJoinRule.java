@@ -71,7 +71,7 @@ public class LoptRemoveSelfJoinRule
     public void onMatch(RelOptRuleCall call)
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
-        if (!joinRel.isRemovableSelfJoin()) {
+        if (!LoptOptimizeJoinRule.isRemovableSelfJoin(joinRel)) {
             return;
         }
         

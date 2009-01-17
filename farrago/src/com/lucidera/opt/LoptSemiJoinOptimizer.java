@@ -442,12 +442,10 @@ public class LoptSemiJoinOptimizer
                     } else {
                         theTable = table;
                     }
-                } else if (table != theTable) {
-                    // doesn't match the table of the first key found;
-                    // note that we arbitrarily use the table of the
-                    // first valid key as the underlying fact table
-                    // even though there could be multiple choices
-                    removeKey = true;
+                } else {
+                    // the tables must match because the column has
+                    // a simple origin
+                    assert(table == theTable);
                 }
             }
             if (!removeKey) {
