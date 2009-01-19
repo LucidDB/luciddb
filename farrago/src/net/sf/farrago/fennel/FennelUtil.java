@@ -27,6 +27,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
+import java.nio.charset.*;
 
 /**
  * Static utility methods related to Fennel storage. Historically, these methods
@@ -55,8 +56,7 @@ public abstract class FennelUtil
             RelDataType type = field.getType();
             FennelTupleAttributeDescriptor attrDesc =
                 new FennelTupleAttributeDescriptor(
-                    FennelUtil.convertSqlTypeNameToFennelType(
-                        type.getSqlTypeName()),
+                    convertSqlTypeToFennelType(type),
                     type.isNullable(),
                     SqlTypeUtil.getMaxByteSize(type));
             tupleDesc.add(attrDesc);
@@ -99,7 +99,7 @@ public abstract class FennelUtil
      * <td>{@link SqlTypeName#DECIMAL}(precision, scale)</td>
      * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
      * <td>
-     * <p>We plan to use a shifted representation. For example, the <code>
+     * <p>We use a scaled integer representation. For example, the <code>
      * DECIMAL(6, 2)</code> value 1234.5 would be represented as an {@link
      * FennelStandardTypeDescriptor#INT_32 INT_32} value 123450 (which is 1234.5
      * 10 ^ 2)</td>
@@ -155,7 +155,9 @@ public abstract class FennelUtil
      * </tr>
      * <tr>
      * <td>{@link SqlTypeName#VARCHAR}(precision)</td>
-     * <td>{@link FennelStandardTypeDescriptor#VARCHAR VARCHAR}</td>
+     * <td>{@link FennelStandardTypeDescriptor#VARCHAR VARCHAR}
+     * or {@link FennelStandardTypeDescriptor#VARCHAR UNICODE_VARCHAR}
+     * depending on character set</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
@@ -172,7 +174,7 @@ public abstract class FennelUtil
      * field. Of course, this requires that every value takes at least one byte.
      *
      * <p>The length of a multiset value is limited by the capacity of the
-     * <code>VARBINARY</code> datatype. This limitation will be liften when
+     * <code>VARBINARY</code> datatype. This limitation will be lifted when
      * <code>LONG VARBINARY</code> is implemented.</td>
      * </tr>
      * <tr>
@@ -188,7 +190,9 @@ public abstract class FennelUtil
      * </tr>
      * <tr>
      * <td>{@link SqlTypeName#CHAR}(precision)</td>
-     * <td>{@link FennelStandardTypeDescriptor#CHAR CHAR}</td>
+     * <td>{@link FennelStandardTypeDescriptor#CHAR CHAR}
+     * or {@link FennelStandardTypeDescriptor#CHAR CHAR}
+     * depending on character set</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
@@ -213,10 +217,10 @@ public abstract class FennelUtil
      * </tr>
      * </table>
      */
-    public static FennelStandardTypeDescriptor convertSqlTypeNameToFennelType(
-        SqlTypeName sqlType)
+    public static FennelStandardTypeDescriptor convertSqlTypeToFennelType(
+        RelDataType sqlType)
     {
-        switch (sqlType) {
+        switch (sqlType.getSqlTypeName()) {
         case BOOLEAN:
             return FennelStandardTypeDescriptor.BOOL;
         case TINYINT:
@@ -233,12 +237,20 @@ public abstract class FennelUtil
         case INTERVAL_YEAR_MONTH:
             return FennelStandardTypeDescriptor.INT_64;
         case VARCHAR:
-            return FennelStandardTypeDescriptor.VARCHAR;
+            if (needUnicode(sqlType)) {
+                return FennelStandardTypeDescriptor.UNICODE_VARCHAR;
+            } else {
+                return FennelStandardTypeDescriptor.VARCHAR;
+            }
         case VARBINARY:
         case MULTISET:
             return FennelStandardTypeDescriptor.VARBINARY;
         case CHAR:
-            return FennelStandardTypeDescriptor.CHAR;
+            if (needUnicode(sqlType)) {
+                return FennelStandardTypeDescriptor.UNICODE_CHAR;
+            } else {
+                return FennelStandardTypeDescriptor.CHAR;
+            }
         case BINARY:
             return FennelStandardTypeDescriptor.BINARY;
         case REAL:
@@ -249,8 +261,20 @@ public abstract class FennelUtil
         case DOUBLE:
             return FennelStandardTypeDescriptor.DOUBLE;
         default:
-            throw Util.unexpected(sqlType);
+            throw Util.unexpected(sqlType.getSqlTypeName());
         }
+    }
+
+    private static boolean needUnicode(RelDataType sqlType)
+    {
+        Charset charset = sqlType.getCharset();
+        if (charset == null) {
+            return false;
+        }
+        if (charset.name().startsWith("UTF")) {
+            return true;
+        }
+        return false;
     }
 }
 

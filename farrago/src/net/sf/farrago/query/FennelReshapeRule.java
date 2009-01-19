@@ -24,6 +24,8 @@ package net.sf.farrago.query;
 
 import java.util.*;
 
+import java.nio.charset.*;
+
 import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.rel.*;
@@ -221,6 +223,18 @@ public class FennelReshapeRule
         if (!(castType.isNullable())) {
             return false;
         }
+
+        Charset origCharset = origType.getCharset();
+        Charset castCharset = castType.getCharset();
+        if ((origCharset != null) || (castCharset != null)) {
+            if ((origCharset == null) || (castCharset == null)) {
+                return false;
+            }
+            if (!origCharset.equals(castCharset)) {
+                return false;
+            }
+        }
+        
         return ((origType == castType)
             || ((origTypeName == SqlTypeName.CHAR)
                 && (castTypeName == SqlTypeName.VARCHAR))

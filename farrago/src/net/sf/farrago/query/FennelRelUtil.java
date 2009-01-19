@@ -263,7 +263,7 @@ public abstract class FennelRelUtil
         FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
         tupleDesc.getAttrDescriptor().add(attrDesc);
         final FennelStandardTypeDescriptor fennelType =
-            convertSqlTypeNameToFennelType(type.getSqlTypeName());
+            FennelUtil.convertSqlTypeToFennelType(type);
         attrDesc.setTypeOrdinal(fennelType.getOrdinal());
         int byteLength = SqlTypeUtil.getMaxByteSize(type);
         attrDesc.setByteLength(byteLength);
@@ -281,18 +281,6 @@ public abstract class FennelRelUtil
         RelDataType rowType)
     {
         return FennelUtil.convertRowTypeToFennelTupleDesc(rowType);
-    }
-
-    /**
-     * Converts a SQL type to a Fennel type.
-     *
-     * <p>See {@link FennelUtil#convertSqlTypeNameToFennelType(SqlTypeName)} for
-     * a detailed conversion table.
-     */
-    public static FennelStandardTypeDescriptor convertSqlTypeNameToFennelType(
-        SqlTypeName sqlType)
-    {
-        return FennelUtil.convertSqlTypeNameToFennelType(sqlType);
     }
 
     /**

@@ -32,6 +32,7 @@ import junit.framework.*;
 import net.sf.farrago.fennel.tuple.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -44,9 +45,8 @@ import org.eigenbase.util.*;
 public class FennelTupleTest
     extends TestCase
 {
-    // REVIEW jvs 14-Jan-2009:  LE/BE should be chosen automatically
-    // based on native architecture
-    private static final String UNICODE_CHARSET = "UTF-16LE";
+    private static final String UNICODE_CHARSET =
+        ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
     
     //~ Methods ----------------------------------------------------------------
 

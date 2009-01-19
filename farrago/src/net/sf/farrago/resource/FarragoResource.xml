@@ -1667,6 +1667,11 @@ Messages: {1}</text>
 <text>Failed testing connection to data server ''{0}''</text>
 </exception>
 
+<exception id="520050" name="ChangeToUnicodeFailed">
+<text>Cannot change default character set to Unicode because local tables
+have already been defined</text>
+</exception>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>

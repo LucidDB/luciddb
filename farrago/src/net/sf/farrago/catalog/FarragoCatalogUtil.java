@@ -67,8 +67,10 @@ public abstract class FarragoCatalogUtil
         FarragoRepos repos,
         CwmCatalog catalog)
     {
-        catalog.setDefaultCharacterSetName(repos.getDefaultCharsetName());
-        catalog.setDefaultCollationName(repos.getDefaultCollationName());
+        catalog.setDefaultCharacterSetName(
+            SaffronProperties.instance().defaultCharset.get());
+        catalog.setDefaultCollationName(
+            SaffronProperties.instance().defaultCollation.get());
     }
 
     /**

@@ -283,7 +283,7 @@ public class RelOptRuleOperand
      * signifying operands that will be matched by relational expressions with
      * any number of children.
      */
-    enum Dummy {
+    public enum Dummy {
         /**
          * Signifies that operand can have any number of children.
          */

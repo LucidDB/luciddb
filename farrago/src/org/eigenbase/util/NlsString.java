@@ -68,8 +68,14 @@ public class NlsString
     {
         Util.pre(value != null, "theString != null");
         if (null != charsetName) {
-            this.charsetName = charsetName.toUpperCase();
-            this.charset = Charset.forName(this.charsetName);
+            charsetName = charsetName.toUpperCase();
+            this.charsetName = charsetName;
+            String javaCharsetName =
+                SqlUtil.translateCharacterSetName(charsetName);
+            if (javaCharsetName == null) {
+                throw new UnsupportedCharsetException(charsetName);
+            }
+            this.charset = Charset.forName(javaCharsetName);
         } else {
             this.charsetName = null;
             this.charset = null;

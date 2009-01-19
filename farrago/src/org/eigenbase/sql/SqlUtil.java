@@ -38,6 +38,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -818,7 +819,7 @@ public abstract class SqlUtil
     {
         Charset charset = str.getCharset();
         if (null == charset) {
-            charset = Util.getDefaultCharset();
+            charset = typeFactory.getDefaultCharset();
         }
         SqlCollation collation = str.getCollation();
         if (null == collation) {
@@ -834,6 +835,30 @@ public abstract class SqlUtil
                 charset,
                 collation);
         return type;
+    }
+
+    /**
+     * Translates a character set name from a SQL-level
+     * name into a Java-level name.
+     *
+     * @param name SQL-level name
+     *
+     * @return Java-level name, or null if SQL-level name is unknown
+     */
+    public static String translateCharacterSetName(String name)
+    {
+        if (name.equals("LATIN1")) {
+            return "ISO-8859-1";
+        } else if (name.equals("UTF16")) {
+            return ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
+        } else if (name.equals(ConversionUtil.NATIVE_UTF16_CHARSET_NAME)) {
+            // no translation needed
+            return name;
+        } else if (name.equals("ISO-8859-1")) {
+            // no translation needed
+            return name;
+        }
+        return null;
     }
 
     //~ Inner Classes ----------------------------------------------------------

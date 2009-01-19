@@ -187,13 +187,13 @@ public abstract class FarragoReposImpl
     // implement FarragoRepos
     public String getDefaultCharsetName()
     {
-        return SaffronProperties.instance().defaultCharset.get();
+        return getSelfAsCatalog().getDefaultCharacterSetName();
     }
 
     // implement FarragoRepos
     public String getDefaultCollationName()
     {
-        return SaffronProperties.instance().defaultCollation.get();
+        return getSelfAsCatalog().getDefaultCollationName();
     }
 
     // implement FarragoRepos

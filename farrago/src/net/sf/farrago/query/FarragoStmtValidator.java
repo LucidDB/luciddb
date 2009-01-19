@@ -926,16 +926,15 @@ public class FarragoStmtValidator
             if (JmiObjUtil.isBlank(charsetName)) {
                 charsetName = repos.getDefaultCharsetName();
             } else {
-                if (!Charset.isSupported(charsetName)) {
+                String javaCharsetName =
+                    SqlUtil.translateCharacterSetName(charsetName);
+                if (javaCharsetName == null) {
                     throw res.ValidatorCharsetUnsupported.ex(
-                        dataType.getCharSetName());
+                        charsetName);
                 }
+                charsetName = javaCharsetName;
             }
             Charset charSet = Charset.forName(charsetName);
-            if (charSet.newEncoder().maxBytesPerChar() > 1) {
-                // TODO:  implement multi-byte character sets
-                throw Util.needToImplement(charSet);
-            }
         } else {
             if (!JmiObjUtil.isBlank(dataType.getCharSetName())) {
                 throw res.ValidatorCharsetUnexpected.ex(

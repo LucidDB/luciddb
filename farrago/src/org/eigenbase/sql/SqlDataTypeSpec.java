@@ -306,8 +306,9 @@ public class SqlDataTypeSpec
 
         SqlTypeName sqlTypeName = SqlTypeName.get(name);
 
-        // TODO jvs 13-Dec-2004:  these assertions should be real
-        // validation errors instead; need to share code with DDL
+        // NOTE jvs 15-Jan-2009:  earlier validation is supposed to
+        // have caught these, which is why it's OK for them
+        // to be assertions rather than user-level exceptions.
         RelDataType type;
         if ((precision >= 0) && (scale >= 0)) {
             assert (sqlTypeName.allowsPrecScale(true, true));
@@ -332,9 +333,11 @@ public class SqlDataTypeSpec
 
             Charset charset;
             if (null == charSetName) {
-                charset = Util.getDefaultCharset();
+                charset = typeFactory.getDefaultCharset();
             } else {
-                charset = Charset.forName(charSetName);
+                String javaCharSetName =
+                    SqlUtil.translateCharacterSetName(charSetName);
+                charset = Charset.forName(javaCharSetName);
             }
             type =
                 typeFactory.createTypeWithCharsetAndCollation(

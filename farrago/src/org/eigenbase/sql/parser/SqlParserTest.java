@@ -1973,7 +1973,7 @@ public class SqlParserTest
             "_ISO-8859-1'is it a plane? no it''s superman!'");
         checkExp("n'lowercase n'", "_ISO-8859-1'lowercase n'");
         checkExp("'boring string'", "'boring string'");
-        checkExp("_iSo_8859-1'bye'", "_ISO_8859-1'bye'");
+        checkExp("_iSo-8859-1'bye'", "_ISO-8859-1'bye'");
         checkExp(
             "'three' \n ' blind'\n' mice'",
             TestUtil.fold("'three'\n' blind'\n' mice'"));
@@ -1984,8 +1984,8 @@ public class SqlParserTest
             "N'bye' \t\r\f\f\n' bye'",
             TestUtil.fold("_ISO-8859-1'bye'\n' bye'"));
         checkExp(
-            "_iso_8859-1'bye' \n\n--\n-- this is a comment\n' bye'",
-            TestUtil.fold("_ISO_8859-1'bye'\n' bye'"));
+            "_iso-8859-1'bye' \n\n--\n-- this is a comment\n' bye'",
+            TestUtil.fold("_ISO-8859-1'bye'\n' bye'"));
 
         // newline in string literal
         checkExp("'foo\rbar'", "'foo\rbar'");

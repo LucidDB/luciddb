@@ -195,7 +195,7 @@ public class Rex2CalcPlanTest
     public void testStringLiterals()
     {
         String sql =
-            "SELECT n'aBc',_iso_8859-1'', 'abc' FROM emp WHERE empno > 10";
+            "SELECT n'aBc',_iso-8859-1'', 'abc' FROM emp WHERE empno > 10";
         tester.check(sql, false, false);
     }
 

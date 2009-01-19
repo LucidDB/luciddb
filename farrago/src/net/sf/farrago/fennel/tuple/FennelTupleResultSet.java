@@ -248,20 +248,21 @@ abstract public class FennelTupleResultSet
         case Types.CHAR:
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
-
-            // TODO jvs 8-Dec-2006:  use metadata to pick the correct
-            // charset
+            String charsetName =
+                d.isUnicode()
+                ? ConversionUtil.NATIVE_UTF16_CHARSET_NAME
+                : "ISO-8859-1";
             try {
                 return new String(
                     d.getBytes(),
                     0,
                     d.getLength(),
-                    "ISO-8859-1");
+                    charsetName);
             } catch (UnsupportedEncodingException ex) {
-                // According to Charset javadoc, ISO-8859-1 should always
-                // be available.
+                // According to Charset javadoc, ISO-8859-1 and
+                // UTF-16* should always be available.
                 throw new AssertionError(
-                    "ISO-8859-1 missing?");
+                    "Standard charset " + charsetName + " missing?");
             }
         case Types.BINARY:
         case Types.VARBINARY:
