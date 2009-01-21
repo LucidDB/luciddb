@@ -203,6 +203,11 @@ public class FarragoRepositoryTest
         // Handle Enki Hibernate vs. Netbeans difference in class names
         return str.replaceAll("\\$Impl", "");
     }
+
+    public void testDefaultCharacterSet()
+    {
+        assertEquals("ISO-8859-1", repos.getDefaultCharsetName());
+    }
     
     public void testInvalidCharFilter() throws Exception
     {
