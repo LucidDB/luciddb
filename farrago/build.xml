@@ -1086,11 +1086,13 @@ ${farrago.test.jvmargs}
 
   <!-- run all JUnit test cases (or a single test case chosen with -->
   <!-- property junit.class, normally from script junitSingle) -->
+  <!-- MaxPermSize setting is required to prevent PermGen space OOM's -->
   <target name="junit" depends="cleanTestLogs">
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="-Xmx512m"/>
         <jvmarg line="-Xss1536k"/>
+        <jvmarg line="-XX:MaxPermSize=256m"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <syspropertyset>
