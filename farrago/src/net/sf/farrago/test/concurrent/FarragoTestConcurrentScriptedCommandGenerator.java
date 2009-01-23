@@ -81,6 +81,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     private static final String REPEAT = "@repeat";
     private static final String SYNC = "@sync";
     private static final String TIMEOUT = "@timeout";
+    private static final String ROWLIMIT="@rowlimit";
     private static final String PREPARE = "@prepare";
     private static final String FETCH = "@fetch";
     private static final String CLOSE = "@close";
@@ -122,12 +123,13 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 new StateDatum(REPEAT, REPEAT_STATE),
                 new StateDatum(SYNC, THREAD_STATE),
                 new StateDatum(TIMEOUT, THREAD_STATE),
+                new StateDatum(ROWLIMIT, THREAD_STATE),
                 new StateDatum(PREPARE, THREAD_STATE),
                 new StateDatum(FETCH, THREAD_STATE),
                 new StateDatum(CLOSE, THREAD_STATE),
                 new StateDatum(SLEEP, THREAD_STATE),
                 new StateDatum(SQL, THREAD_STATE),
-                new StateDatum(ERR, THREAD_STATE),
+                new StateDatum(ERR, THREAD_STATE),         
                 new StateDatum(END, POST_THREAD_STATE)
             }),
 
@@ -136,11 +138,12 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             new StateDatum[] {
                 new StateDatum(SYNC, REPEAT_STATE),
                 new StateDatum(TIMEOUT, REPEAT_STATE),
+                new StateDatum(ROWLIMIT, REPEAT_STATE),
                 new StateDatum(PREPARE, REPEAT_STATE),
                 new StateDatum(FETCH, REPEAT_STATE),
                 new StateDatum(CLOSE, REPEAT_STATE),
                 new StateDatum(SLEEP, REPEAT_STATE),
-                new StateDatum(SQL, REPEAT_STATE),
+                new StateDatum(SQL, REPEAT_STATE),         
                 new StateDatum(ERR, THREAD_STATE),
                 new StateDatum(END, THREAD_STATE)
             }),
@@ -159,6 +162,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     private static final int SLEEP_LEN = SLEEP.length();
     private static final int THREAD_LEN = THREAD.length();
     private static final int TIMEOUT_LEN = TIMEOUT.length();
+    private static final int ROWLIMIT_LEN = ROWLIMIT.length();
     private static final int ERR_LEN = ERR.length();
 
     private static final char [] spaces;
@@ -483,6 +487,32 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                                     : (AbstractCommand) new SqlCommand(
                                         sql,
                                         millis)));
+                        }
+                        order++;
+                    } else if (ROWLIMIT.equals(command)) {
+                        String args =
+                            trimmedLine.substring(ROWLIMIT_LEN).trim();
+                        String limitStr = firstWord(args);
+                        int limit = Integer.parseInt(limitStr);
+                        assert(limit >= 0) : "Rowlimit must be >= 0";
+                        
+                        String sql =
+                            readSql(
+                                skipFirstWord(args).trim(),
+                                in);
+                        boolean isSelect = isSelect(sql);
+                        if (!isSelect) {
+                            throw new IllegalStateException(
+                                "Only select can be used with rowlimit");
+                        }
+                        for (int i = threadId; i < nextThreadId; i++) {
+                            addCommand(
+                                i,
+                                order,
+                                (AbstractCommand) new SelectCommand(
+                                    sql,
+                                    0,
+                                    limit));
                         }
                         order++;
                     } else if (PREPARE.equals(command)) {
@@ -1005,35 +1035,61 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             return false;
         }
     }
+    
+    private static abstract class CommandWithTimeoutAndRowLimit
+        extends CommandWithTimeout
+    {
+        private int rowLimit;
+        
+        private CommandWithTimeoutAndRowLimit(long timeout)
+        {
+            this(timeout, 0);
+        }
+        
+        private CommandWithTimeoutAndRowLimit(long timeout, int rowLimit)
+        {
+            super(timeout);
+            this.rowLimit = rowLimit;
+        }
+        
+        protected void setRowLimit(Statement stmt)
+            throws SQLException
+        {
+            assert(rowLimit >= 0);
+            if (rowLimit > 0) {
+                stmt.setMaxRows(rowLimit);
+            }
+        }       
+    }
 
     /**
      * SelectCommand creates and executes a SQL select statement, with optional
-     * timeout.
+     * timeout and row limit.
      */
     private class SelectCommand
-        extends CommandWithTimeout
+        extends CommandWithTimeoutAndRowLimit
     {
         private String sql;
-        private long timeout;
 
         private SelectCommand(String sql)
         {
-            super(0);
-
-            this.sql = sql;
+            this(sql, 0, 0);
         }
 
         private SelectCommand(String sql, boolean errorExpected)
         {
-            super(0);
-            this.sql = sql;
+            this(sql, 0, 0);
             this.markToFail();
         }
 
         private SelectCommand(String sql, long timeout)
         {
-            super(timeout);
-
+            this(sql, timeout, 0);
+        }
+        
+        private SelectCommand(String sql, long timeout, int rowLimit)
+        {
+            super(timeout, rowLimit);
             this.sql = sql;
         }
 
@@ -1054,6 +1110,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 executor.getConnection().prepareStatement(properSql);
 
             boolean timeoutSet = setTimeout(stmt);
+            setRowLimit(stmt);
 
             try {
                 storeResults(
@@ -1074,7 +1131,6 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         extends CommandWithTimeout
     {
         private String sql;
-        private long timeout;
 
         private SqlCommand(String sql)
         {

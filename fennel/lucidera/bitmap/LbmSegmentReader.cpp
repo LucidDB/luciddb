@@ -29,7 +29,20 @@ void LbmSegmentReader::init(
     SharedExecStreamBufAccessor &pInAccessorInit,
     TupleData &bitmapSegTuple)
 {
-    LbmSegmentReaderBase::init(pInAccessorInit, bitmapSegTuple);
+    init(pInAccessorInit, bitmapSegTuple, false, NULL);
+}
+
+void LbmSegmentReader::init(
+    SharedExecStreamBufAccessor &pInAccessorInit,
+    TupleData &bitmapSegTuple,
+    bool setBitmapInit,
+    boost::dynamic_bitset<> *pBitmapInit)
+{
+    LbmSegmentReaderBase::init(
+        pInAccessorInit, 
+        bitmapSegTuple, 
+        setBitmapInit, 
+        pBitmapInit);
     initCommon();
 }
 
@@ -37,7 +50,20 @@ void LbmSegmentReader::init(
     SharedLbmTupleReader &pTupleReaderInit,
     TupleData &bitmapSegTuple)
 {
-    LbmSegmentReaderBase::init(pTupleReaderInit, bitmapSegTuple);
+    init(pTupleReaderInit, bitmapSegTuple, false, NULL);
+}
+
+void LbmSegmentReader::init(
+    SharedLbmTupleReader &pTupleReaderInit,
+    TupleData &bitmapSegTuple,
+    bool setBitmapInit,
+    boost::dynamic_bitset<> *pBitmapInit)
+{
+    LbmSegmentReaderBase::init(
+        pTupleReaderInit,
+        bitmapSegTuple, 
+        setBitmapInit,
+        pBitmapInit);
     initCommon();
 }
 

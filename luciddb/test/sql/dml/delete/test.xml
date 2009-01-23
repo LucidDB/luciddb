@@ -8,6 +8,7 @@
             <test-suite-modifier value="dml-delete"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/dml/delete" target="copy-csv"/>
       </init-hook>
 
       <test name="setup">
@@ -44,6 +45,10 @@
 
       <test name="withSubQuery" requiresSuccess="setup">
         <junit-sql file="${open.dir}/luciddb/test/sql/dml/delete/withSubQuery.sql"/>
+      </test>
+
+      <test name="idxOnlyScan"> 
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/delete/idxOnlyScan.sql"/>
       </test>
 
       <cleanup-hook>

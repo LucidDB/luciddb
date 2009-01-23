@@ -42,6 +42,7 @@ import org.eigenbase.sql.SqlWriter.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.pretty.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 import org.eigenbase.trace.*;
 
@@ -69,6 +70,9 @@ public class DdlAnalyzeStmt
     //~ Static fields/initializers ---------------------------------------------
 
     private final static int DEFAULT_HISTOGRAM_BAR_COUNT = 100;
+
+    private final static int MAX_HISTOGRAM_BAR_COUNT = 
+        DEFAULT_HISTOGRAM_BAR_COUNT + (DEFAULT_HISTOGRAM_BAR_COUNT / 10);
 
     private final static long MIN_SAMPLE_SIZE = 5000L;
 
@@ -299,8 +303,11 @@ public class DdlAnalyzeStmt
 
             timingTracer.traceTime("analyze: end index page counts");
         }
+        catch(EigenbaseException ex) {
+            throw ex;
+        }
         catch(Throwable ex) {
-            throw FarragoResource.instance().ValidatorAlterFailed.ex(ex);
+            throw FarragoResource.instance().ValidatorAnalyzeFailed.ex(ex);
         }
     }
 
@@ -943,6 +950,12 @@ public class DdlAnalyzeStmt
         if (barRowCount > 0) {
             bars.add(new ColumnHistogramBar(barStartValue, barValueCount));
         }
+
+        if (bars.size() > MAX_HISTOGRAM_BAR_COUNT) {
+            throw FarragoResource.instance().ValidatorAnalyzeInvalidRowCount.ex(
+                tableName.toString());
+        }
+
         return bars;
     }
 

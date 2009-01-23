@@ -524,6 +524,48 @@ explain plan for select a, count(*) from minus group by a;
 !set outputformat table
 select a, count(*) from minus group by a;
 
+truncate table minus;
+insert into minus values(0,1,0);
+insert into minus values(0,1,1);
+insert into minus values(0,1,2);
+insert into minus values(0,1,3);
+insert into minus values(0,1,4);
+insert into minus values(0,1,5);
+insert into minus values(0,1,6);
+insert into minus values(0,1,7);
+insert into minus values(0,2,8);
+insert into minus values(0,2,9);
+insert into minus values(0,2,10);
+insert into minus values(0,2,11);
+insert into minus values(0,2,12);
+insert into minus values(0,2,13);
+insert into minus values(0,2,14);
+insert into minus values(0,2,15);
+insert into minus values(0,3,16);
+insert into minus values(0,3,17);
+insert into minus values(0,3,18);
+insert into minus values(0,3,19);
+insert into minus values(0,3,20);
+insert into minus values(0,3,21);
+insert into minus values(0,3,22);
+insert into minus values(0,3,23);
+insert into minus values(0,1,24);
+insert into minus values(0,4,25);
+insert into minus values(0,4,26);
+insert into minus values(0,4,27);
+insert into minus values(0,4,28);
+insert into minus values(0,4,29);
+insert into minus values(0,4,30);
+insert into minus values(0,4,31);
+insert into minus values(1,4,32);
+delete from minus where c = 24 or c = 16;
+-- fake stats so index is chosen
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'LBM', 'MINUS', 100);
+!set outputformat csv
+explain plan for select a, count(*) from minus group by a;
+!set outputformat table
+select a, count(*) from minus group by a;
+
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 -- LER-5800

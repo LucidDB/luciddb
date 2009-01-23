@@ -44,21 +44,29 @@ void LbmMinusExecStream::prepare(LbmMinusExecStreamParams const &params)
         }
         prevTuple.computeAndAllocate(prevTupleDesc);
     }
+    subtrahendBitmap.resize(0);
 }
 
 void LbmMinusExecStream::open(bool restart)
 {
     LbmBitOpExecStream::open(restart);
-    childrenDone = false;
+    subtrahendsDone = false;
     needToRead = true;
-    minChildRid = LcsRid(0);
+    minSubtrahendRid = LcsRid(0);
+    maxSubtrahendRid = LcsRid(0);
+    baseRid = LcsRid(0);
     advancePending = false;
-    // since the children need to read till EOS, don't set a rowLimit
+    // since the subtrahends need to read till EOS, don't set a rowLimit
     rowLimit = 0;
     inputType = UNKNOWN_INPUT;
     copyPrefixPending = false;
     prevTupleValid = false;
     minuendReader.init(inAccessors[0], bitmapSegTuples[0]);
+
+    if (nFields > 0) {
+        subtrahendBitmap.resize(SUBTRAHEND_BITMAP_SIZE);
+    }
+    restartSubtrahends();
 }
 
 ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
@@ -67,8 +75,7 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
 
     // On the first execution, check whether any subtrahend has data
     if (inputType == UNKNOWN_INPUT) {
-        iInput = 1;
-        rc = advanceChildren(LcsRid(0));
+        rc = advanceSubtrahends(LcsRid(0));
         if (rc != EXECRC_YIELD) {
             return rc;
         }
@@ -76,9 +83,11 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         rc = findMinInput(dummy);
         if (rc == EXECRC_EOS) {
             inputType = EMPTY_INPUT;
+            if (nFields == 0) {
+                subtrahendsDone = true;
+            }
         } else {
             inputType = NONEMPTY_INPUT;
-            restartSubtrahends();
         }
     }
 
@@ -89,34 +98,46 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         }
     }
 
+    bool skipMinus = false;
     if (copyPrefixPending) {
         copyPrefix();
         copyPrefixPending = false;
         needToRead = false;
+        // Since we bypassed the restart check when this current minuend
+        // was read, we need to do the check here
+        skipMinus = checkNeedForRestart();
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
 
-        // read a segment from the anchor if we've finished processing the
+        // read a segment from the minuend if we've finished processing the
         // previous segment
         if (needToRead) {
-            rc = readMinuendInputAndRestart(baseRid, baseByteSeg, baseLen);
+            rc = readMinuendInputAndFlush(baseRid, baseByteSeg, baseLen);
             if (rc != EXECRC_YIELD) {
                 return rc;
             }
+
+            // See if we need to restart the subtrahends
+            skipMinus = checkNeedForRestart();
         }
 
-        // minus the children input, if they haven't all reached EOS
-        if ((inputType != EMPTY_INPUT) && !childrenDone) {
+        // Minus the subtrahends if they haven't all reached EOS in the
+        // case where there are no keys.  In the case where there are keys,
+        // the bitmap determines whether we can skip the minus.
+        if ((nFields == 0 && !subtrahendsDone) || !skipMinus) {
            
             if (advancePending) {
-                rc = advanceChild(advanceChildInputNo, advanceChildRid);
+                rc =
+                    advanceSingleSubtrahend(
+                        advanceSubtrahendInputNo,
+                        advanceSubtrahendRid);
                 if (rc != EXECRC_YIELD && rc != EXECRC_EOS) {
                     return rc;
                 }
                 advancePending = false;
             } else {
-                rc = advanceChildren(baseRid);
+                rc = advanceSubtrahends(baseRid);
                 if (rc != EXECRC_YIELD) {
                     return rc;
                 }
@@ -129,7 +150,7 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         }
 
         // bump up the startrid past the segment just read and
-        // write out the anchor segment
+        // write out the minuend segment
         needToRead = true;
         startRid = baseRid + baseLen * LbmSegment::LbmOneByteSize;
         addRid = baseRid;
@@ -139,13 +160,13 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
             return EXECRC_BUF_OVERFLOW;
         }
 
-        // loop back to read the next anchor segment
+        // loop back to read the next minuend segment
     }
 
     return EXECRC_QUANTUM_EXPIRED;
 }
 
-ExecStreamResult LbmMinusExecStream::readMinuendInputAndRestart(
+ExecStreamResult LbmMinusExecStream::readMinuendInputAndFlush(
     LcsRid &currRid, PBuffer &currByteSeg, uint &currLen)
 {
     ExecStreamResult rc;
@@ -169,7 +190,7 @@ ExecStreamResult LbmMinusExecStream::readMinuendInputAndRestart(
     memcpy(pByteSegBuf, baseByteSeg - baseLen + 1, baseLen);
     needToRead = false;
     // reset the startrid to the rid just read in and write the
-    // dynamic parameter so the children can skip forward to that
+    // dynamic parameter so the subtrahends can skip forward to that
     // rid
     startRid = baseRid;
     writeStartRidParamValue();
@@ -187,9 +208,11 @@ ExecStreamResult LbmMinusExecStream::readMinuendInputAndRestart(
     // (Ex: RIDs in index [K1, K2] are ordered for each pair [k1, k2].
     // However, a minus based on [K1] will be completely out of order.)
     //
-    // Due to the lack of ordering, we restart subtrahends whenever the
-    // minuend is out of order so all of the subtrahend data can be minused
-    // from the next minuend input.
+    // Due to the lack of ordering, we may need to restart subtrahends
+    // whenever the minuend is out of order so all of the subtrahend data
+    // can be minused from the next minuend input.  That is handled outside
+    // of this method because restarts don't always need to be done 
+    // immediately after a new key is read.
     //
     // We also flush the segment writer's current tuple. If it cannot be
     // written, then we can't copy the next prefix yet, because the old
@@ -199,7 +222,7 @@ ExecStreamResult LbmMinusExecStream::readMinuendInputAndRestart(
             minuendReader.resetChangeListener();
             int keyComp = comparePrefixes();
             if (keyComp != 0 || unordered) {
-                restartSubtrahends();
+                needSubtrahendRestart = true;
                 if (!flush()) {
                     copyPrefixPending = true;
                     return EXECRC_BUF_OVERFLOW;
@@ -252,13 +275,18 @@ int LbmMinusExecStream::comparePrefixes()
 
 void LbmMinusExecStream::restartSubtrahends()
 {
-    childrenDone = false;
-    minChildRid = LcsRid(0);
+    minSubtrahendRid = LcsRid(0);
     advancePending = false;
     for (uint i = 1; i < nInputs; i++) {
         pGraph->getStreamInput(getStreamId(), i)->open(true);
-        segmentReaders[i].init(inAccessors[i], bitmapSegTuples[i]);
+        segmentReaders[i].init(
+            inAccessors[i],
+            bitmapSegTuples[i],
+            (!subtrahendsDone && nFields > 0),
+            &subtrahendBitmap);
     }
+    iInput = 1;
+    needSubtrahendRestart = false;
 }
 
 void LbmMinusExecStream::copyPrefix()
@@ -274,20 +302,23 @@ void LbmMinusExecStream::copyPrefix()
     }
 }
 
-ExecStreamResult LbmMinusExecStream::advanceChild(int inputNo, LcsRid rid)
+ExecStreamResult LbmMinusExecStream::advanceSingleSubtrahend(
+    int inputNo,
+    LcsRid rid)
 {
     ExecStreamResult rc = segmentReaders[inputNo].advanceToRid(rid);
     return rc;
 }
 
-ExecStreamResult LbmMinusExecStream::advanceChildren(LcsRid baseRid)
+ExecStreamResult LbmMinusExecStream::advanceSubtrahends(LcsRid baseRid)
 {
-    // no need to advance children if they're all positioned past the anchor
-    if (minChildRid > baseRid) {
+    // no need to advance subtrahends if they're all positioned past the
+    // minuend
+    if (minSubtrahendRid > baseRid) {
         return EXECRC_YIELD;
     }
 
-    // advance the children input, resuming at the one where we last left off
+    // advance the subtrahends, resuming at the one where we last left off
     for (; iInput < nInputs; iInput++) {
         ExecStreamResult rc = segmentReaders[iInput].advanceToRid(baseRid);
         if (rc == EXECRC_EOS) {
@@ -301,12 +332,79 @@ ExecStreamResult LbmMinusExecStream::advanceChildren(LcsRid baseRid)
     return EXECRC_YIELD;
 }
 
+bool LbmMinusExecStream::checkNeedForRestart()
+{
+    // Return value indicates whether the minus can be skipped, not whether
+    // a restart was done.
+
+    if (nFields == 0) {
+        return false;
+    } else if (inputType == EMPTY_INPUT) {
+        // If the input is empty, we can always bypass the minus
+        return true;
+    } else if (needSubtrahendRestart) {
+        bool skipMinus = canSkipMinus();
+        // If there are potentially overlapping rids and the subtrahend is
+        // positioned past the current minuend, we need to restart
+        if (!skipMinus && minSubtrahendRid > startRid) {
+            restartSubtrahends();
+        }
+        return skipMinus;
+    } else {
+        return canSkipMinus();
+    }
+}
+
+bool LbmMinusExecStream::canSkipMinus()
+{
+    LcsRid rid = baseRid;
+    LcsRid endRid = baseRid + baseLen * LbmSegment::LbmOneByteSize - 1;
+
+    // Determine whether the rids in the current minuend segment are
+    // "covered" by the bitmap in its current state
+    if (subtrahendsDone) {
+        // If the first rid we're interested in extends past the max rid read
+        // from all subtrahends, then there are no rids to subtract off.
+        if (rid > maxSubtrahendRid) {
+            return true;
+        }
+    } else {
+        // If the last rid we're interested in extends past the max rid read
+        // from any subtrahend, then we can't use the bitmap to determine if
+        // we can skip the minus.
+        for (uint i = 1; i < nInputs; i++) {
+            if (endRid > segmentReaders[i].getMaxRidSet()) {
+                return false;
+            }
+        }
+    }
+
+    PBuffer seg = baseByteSeg;
+    for (uint i = 0; i < baseLen; i++) {
+        uint8_t byte = *((uint8_t *) seg);
+        for (uint j = 0; j < LbmSegment::LbmOneByteSize; j++) {
+            if (byte & 1) {
+                // once we find a match, no need to look any further
+                if (subtrahendBitmap.test(
+                    opaqueToInt(rid % SUBTRAHEND_BITMAP_SIZE)))
+                {
+                    return false;
+                }
+            }
+            byte = byte >> 1;
+            rid++;
+        }
+        seg--;
+    }
+    return true;
+}
+
 ExecStreamResult LbmMinusExecStream::minusSegments(
     LcsRid baseRid, PBuffer baseByteSeg, uint baseLen)
 {
     while (true) {
 
-        // find the child with the minimum startrid and read its current
+        // find the subtrahend with the minimum startrid and read its current
         // segment
         int minInput;
         ExecStreamResult rc = findMinInput(minInput);
@@ -320,20 +418,19 @@ ExecStreamResult LbmMinusExecStream::minusSegments(
         segmentReaders[minInput].readCurrentByteSegment(
             currRid, currByteSeg, currLen);
 
-        // if the non-anchor inputs are not within the range of the
-        // anchor's current rid range, ignore the current segment and
-        // get a new one
+        // if the subtrahends are not within the range of the minuend's
+        // current rid range, ignore the current segment and get a new one
         uint offset =
             opaqueToInt(currRid - baseRid) / LbmSegment::LbmOneByteSize;
         if (offset >= baseLen) {
             break;
         }
 
-        // only read from the children input the amount that will
-        // match the anchor's segment
+        // only read from the subtrahends the amount that will match the
+        // minuend's segment
         currLen = std::min(currLen, baseLen - offset);
 
-        // minus from the anchor -- note that segments are stored 
+        // minus from the minuend -- note that segments are stored 
         // backwards
         PBuffer out = pByteSegBuf + baseLen - 1 - offset; 
         uint len = currLen;
@@ -341,15 +438,16 @@ ExecStreamResult LbmMinusExecStream::minusSegments(
             *out-- &= ~(*currByteSeg--);
         }
 
-        // advance the child by the amount read in; note that we don't return
-        // if this child has reached EOS, as there may still be other children
-        // that aren't in the EOS state
+        // advance the subtrahend by the amount read in; note that we don't
+        // return if this subtrahend has reached EOS, as there may still be
+        // other subtrahends that aren't in the EOS state
         rc = segmentReaders[minInput].advanceToRid(
-            currRid + currLen * LbmSegment::LbmOneByteSize);
+                currRid + currLen * LbmSegment::LbmOneByteSize);
         if (rc != EXECRC_YIELD && rc != EXECRC_EOS) {
             advancePending = true;
-            advanceChildRid = currRid + currLen * LbmSegment::LbmOneByteSize;
-            advanceChildInputNo = minInput;
+            advanceSubtrahendRid =
+                currRid + currLen * LbmSegment::LbmOneByteSize;
+            advanceSubtrahendInputNo = minInput;
             return rc;
         }
     }
@@ -372,14 +470,25 @@ ExecStreamResult LbmMinusExecStream::findMinInput(int &minInput)
         segmentReaders[i].readCurrentByteSegment(
             currRid, currByteSeg, currLen);
 
-        if (minInput == -1 || currRid < minChildRid) {
+        if (minInput == -1 || currRid < minSubtrahendRid) {
             minInput = i;
-            minChildRid = currRid;
+            minSubtrahendRid = currRid;
         }
     }
 
     if (minInput == -1) {
-        childrenDone = true;
+        // Note that once we've made one pass over the subtrahends, by setting
+        // subtrahendsDone, we'll avoid resetting the bits on subsequent passes.
+        // Position minSubtrahendRid past the max subtrahend rid since the
+        // subtrahends are no longer positioned at that minimum rid.
+        subtrahendsDone = true;
+        for (uint i = 1; i < nInputs; i++) {
+            LcsRid rid = segmentReaders[i].getMaxRidSet();
+            if (rid > maxSubtrahendRid) {
+                maxSubtrahendRid = rid;
+            }
+        }
+        minSubtrahendRid = maxSubtrahendRid + 1;
         return EXECRC_EOS;
     } else {
         return EXECRC_YIELD;
@@ -405,6 +514,7 @@ bool LbmMinusExecStream::produceTuple(TupleData bitmapTuple)
 
 void LbmMinusExecStream::closeImpl()
 {
+    subtrahendBitmap.resize(0);
     LbmBitOpExecStream::closeImpl();
 }
 

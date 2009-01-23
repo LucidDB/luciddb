@@ -202,3 +202,19 @@ select * from sys_root.user_session_parameters where false;
 -- select counter_name, counter_value
 -- from sys_root.dba_performance_counters
 -- where counter_name = 'TempPagesAllocated';
+
+-- LER-9476 -- make sure replacing the data server doesn't reset row counts
+create schema s;
+set schema 's';
+create table rc(a int);
+insert into rc values(1),(2),(3);
+delete from rc where a = 2;
+select table_name, current_row_count, deleted_row_count
+    from sys_root.dba_stored_tables where table_name = 'RC';
+set schema 'sys_boot.sys_boot';
+set path 'sys_boot.sys_boot';
+create or replace server sys_column_store_data_server
+local data wrapper sys_column_store;
+-- these row counts should remain non-zero
+select table_name, current_row_count, deleted_row_count
+    from localdb.sys_root.dba_stored_tables where table_name = 'RC';

@@ -1050,9 +1050,9 @@ public abstract class FarragoCatalogUtil
             return;
         }
         
-         // Older catalog versions only store the row counts directly in
-         // the columnSet record so there won't be separate row count
-         // stat records yet. 
+        // Older catalog versions and newly created tables only store
+        // the row counts directly in the columnSet record so there won't
+        // be separate row count stat records yet. 
         List<FemRowCountStatistics> rowCountStatsList =
             table.getRowCountStats();
         if (rowCountStatsList.isEmpty()) {

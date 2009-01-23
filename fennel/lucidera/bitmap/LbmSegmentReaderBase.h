@@ -26,6 +26,8 @@
 #include "fennel/exec/ExecStreamDefs.h"
 #include "fennel/lucidera/bitmap/LbmSegment.h"
 
+#include <boost/dynamic_bitset.hpp>
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -82,6 +84,25 @@ protected:
 
     /**
      * Initializes reader to start reading bit segments from a specified
+     * input stream, optionally keeping track of the bits read.
+     *
+     * @param pInAccessorInit input stream accessor
+     *
+     * @param bitmapSegTupleInit tuple data for reading segments
+     *
+     * @param setBitmapInit if true, keep track of bits read
+     *
+     * @param pBitmapInit pointer to the bitmap to be set if the setBitmapInit
+     * parameter is true
+     */
+    void init(
+        SharedExecStreamBufAccessor &pInAccessorInit,
+        TupleData &bitmapSegTupleInit,
+        bool setBitmapInit,
+        boost::dynamic_bitset<> *pBitmapInit);
+
+    /**
+     * Initializes reader to start reading bit segments from a specified
      * input stream
      *
      * @param pInAccessorInit input stream accessor
@@ -105,6 +126,25 @@ protected:
         TupleData &bitmapSegTupleInit);
 
     /**
+     * Initializes reader to start reading bit segments from a specified
+     * tuple reader, optionally keeping track of the bits read.
+     *
+     * @param pTupleReaderInit input tuple reader
+     *
+     * @param bitmapSegTupleInit tuple data for reading segments
+     *
+     * @param setBitmapInit if true, keep track of bits read
+     *
+     * @param pBitmapInit pointer to the bitmap to be set if the setBitmapInit
+     * parameter is true
+     */
+    void init(
+        SharedLbmTupleReader &pTupleReaderInit,
+        TupleData &bitmapSegTupleInit,
+        bool setBitmapInit,
+        boost::dynamic_bitset<> *pBitmapInit);
+
+    /**
      * Reads a bitmap segment tuple from the input stream and extracts the
      * starting rid, the descriptor, and bitmap fields
      *
@@ -117,6 +157,36 @@ protected:
      * the next segment in a bitmap segment
      */
     void advanceSegment();
+
+private:
+    /**
+     * If true, keep track of bits read
+     */
+    bool setBitmap;
+
+    /**
+     * Pointer to a bitmap that keeps track of the bits read.  Whether bits
+     * are set in the bitmap is determined by the setBitmap flag.
+     */
+    boost::dynamic_bitset<> *pBitmap;
+
+    /**
+     * If the reader is set to keep track of bits read, then this field is
+     * the maximum rid read since it was initialized.  Otherwise, it is
+     * always 0.
+     */
+    LcsRid maxRidSet;
+
+    /**
+     * Sets bits in a bitmap for all bits read from the segment, provided
+     * the reader has been set to keep track of bits.
+     *
+     * @param startRid starting rid of the segment
+     * @param segStart first byte of the segment; note that the segment is
+     * stored backwards
+     * @param segLen length of the segment
+     */
+    void setBitsRead(LcsRid startRid, PBuffer segStart, uint segLen);
 
 public:
     /**
@@ -133,6 +203,15 @@ public:
      * @see getTupleChange().
      */
     void resetChangeListener();
+
+    /**
+     * Retrieves the maximum rid that has been read by this reader since it
+     * was initialized, provided the reader has been set to keep track of
+     * rids read.
+     *
+     * @return max rid read; 0 if the reader is not keeping track of rids read
+     */
+    LcsRid getMaxRidSet();
 };
 
 FENNEL_END_NAMESPACE

@@ -64,6 +64,8 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmMinusExecStreamTest, testEvens);
         FENNEL_UNIT_TEST_CASE(LbmMinusExecStreamTest, testNines);
         FENNEL_UNIT_TEST_CASE(LbmMinusExecStreamTest, testClose);
+        FENNEL_UNIT_TEST_CASE(
+            LbmMinusExecStreamTest, testLowCardinalityRestart);
     }
 
     void test2Inputs();
@@ -76,6 +78,7 @@ public:
     void testEvens();
     void testNines();
     void testClose();
+    void testLowCardinalityRestart();
 };
 
 /**
@@ -486,6 +489,16 @@ void LbmMinusExecStreamTest::testClose()
     repeatSeqValues.push_back(2);
     repeatSeqValues.push_back(3);
     uint subtrahendInterval = 4;
+
+    testRestartingMinus(nRows, repeatSeqValues, subtrahendInterval);
+}
+
+void LbmMinusExecStreamTest::testLowCardinalityRestart()
+{
+    uint nRows = 10000;
+    std::vector<int> repeatSeqValues;
+    repeatSeqValues.push_back(2);
+    uint subtrahendInterval = 21;
 
     testRestartingMinus(nRows, repeatSeqValues, subtrahendInterval);
 }
