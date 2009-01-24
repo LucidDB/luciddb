@@ -624,6 +624,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot analyze {0} because analysis is not supported for objects of that type</text>
 </exception>
 
+<exception id="420992" name="ValidatorAnalyzeInvalidRowCount">
+<text>Cannot analyze {0} because its row count metadata is incorrect</text>
+</exception>
+
 <exception id="421000" name="ValidatorDuplicateSequenceOption">
 <text>Sequence option {0} cannot be assigned multiple times in definition of {1}</text>
 </exception>

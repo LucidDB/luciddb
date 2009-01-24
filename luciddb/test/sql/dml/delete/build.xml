@@ -39,6 +39,10 @@
   <!-- directory where blackhawk output should go -->
   <property name="bh.log.basedir" value="${dml_delete.dir}/testlog" />
 
+  <!-- directories for csv data files -->
+  <property name="csv.dir" value="${dml_delete.dir}/csv" />
+  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
@@ -61,6 +65,16 @@
         <property file="run.properties"/>
       </else>
     </if>
+
+     <!-- generate sql -->
+    <copy todir="${dml_delete.dir}" overwrite="true">
+      <fileset dir="${dml_delete.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="DIR" value="${csv.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
+
   </target>
 
   <target name="test" depends="clean-test,gen-all-sql">
@@ -70,8 +84,26 @@
       classpathref="test.classpath"/>
   </target>
 
+  <target name="copy-csv">
+    <available file="${csvsource.dir}" type="dir"
+      property="raksha.available"/>
+    <if>
+      <isset property="raksha.available"/>
+      <then>
+        <!-- sync raksha <-> csv.dir -->
+        <sync todir="${csv.dir}"
+          overwrite="false"
+          failonerror="false"
+          verbose="true">
+          <fileset dir="${csvsource.dir}"/>
+        </sync>
+      </then>
+    </if>
+  </target>
+
   <target name="clean">
     <antcall target="clean-test"/>
+    <delete dir="${csv.dir}"/>
     <delete file="run.properties"/>
   </target>
 

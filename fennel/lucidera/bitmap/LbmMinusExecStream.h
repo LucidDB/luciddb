@@ -58,51 +58,57 @@ struct LbmMinusExecStreamParams : public LbmBitOpExecStreamParams
 class LbmMinusExecStream : public LbmBitOpExecStream
 {
     /**
-     * True if all children (i.e., non-anchor) inputs have reached EOS
+     * True if all subtrahends have reached EOS at some point
      */
-    bool childrenDone;
+    bool subtrahendsDone;
 
     /**
-     * True if a new segment needs to be read from the anchor
+     * True if a new segment needs to be read from the minuend
      */
     bool needToRead;
 
     /**
-     * Current startrid for anchor input
+     * Current startrid for the minuend
      */
     LcsRid baseRid;
 
     /**
-     * Current byte segment for anchor input
+     * Current byte segment for the minuend
      */
     PBuffer baseByteSeg;
 
     /**
-     * Length of anchor input's current byte segment
+     * Length of minuend's current byte segment
      */
     uint baseLen;
 
     /**
-     * Minimum rid from amongst the children input
+     * Minimum rid from amongst the subtrahends
      */
-    LcsRid minChildRid;
+    LcsRid minSubtrahendRid;
 
     /**
-     * True if a child input needs to be advanced even though all children
-     * are already positioned past the anchor's startrid
+     * The maximum rid that have been read by a subtrahend.  This only
+     * applies if the input has keys.
+     */
+    LcsRid maxSubtrahendRid;
+
+    /**
+     * True if a subtrahend needs to be advanced even though all subtrahends
+     * are already positioned past the minuend's startrid
      */
     bool advancePending;
 
     /**
-     * The rid that the child input needs to be advanced to when
-     * advancePending is true
+     * The rid that the subtrahend needs to be advanced to when advancePending
+     * is true
      */
-    LcsRid advanceChildRid;
+    LcsRid advanceSubtrahendRid;
 
     /**
-     * The input containing the child that needs to be advanced
+     * The input containing the subtrahend that needs to be advanced
      */
-    int advanceChildInputNo;
+    int advanceSubtrahendInputNo;
 
     enum MinusInputType {
         UNKNOWN_INPUT = 0,
@@ -112,7 +118,7 @@ class LbmMinusExecStream : public LbmBitOpExecStream
 
     /**
      * Field used to detect the special case of empty inputs. When the
-     * subtrahend inputs are empty, there is no need to subtract them.
+     * subtrahends are empty, there is no need to subtract them.
      */
     MinusInputType inputType;
 
@@ -143,16 +149,36 @@ class LbmMinusExecStream : public LbmBitOpExecStream
     TupleData prefixedBitmapTuple;
 
     /**
-     * Read a byte segment from the minuend input stream. The subtrahends 
-     * may be restarted under the following conditions:
-     *
-     * <ul>
-     *   <li>The main stream contains prefix columns
-     *   <li>The prefix columns changed between the last segment and the
-     *     current segment
-     * </ul>
+     * Number of bits in the bitmap that keeps track of rid values read from
+     * the subtrahends.  Note that because the size of the bitmap is smaller
+     * than the number of possible rid values, there can be false hits when
+     * testing the bitmap.  The larger this value, the more memory required,
+     * but the lower the likelihood of false hits.
      */
-    ExecStreamResult readMinuendInputAndRestart(
+    static const uint SUBTRAHEND_BITMAP_SIZE = 32768;
+
+    /**
+     * Bitmap containing rid values read from the subtrahends.  Only used in
+     * the case when the input contains keys.
+     */
+    boost::dynamic_bitset<> subtrahendBitmap;
+
+    /**
+     * True if the subtrahends need to be restarted
+     */
+    bool needSubtrahendRestart;
+
+    /**
+     * Read a byte segment from the minuend input stream.  In the case where
+     * the input has keys, tuples are flushed whenever a new key is read.
+     *
+     * @param currRid the starting rid value of the segment read
+     * @param currByteSeg the first byte of the segment read
+     * @param currLen the length of the segment read
+     *
+     * @return EXECRC_YIELD if a segment was successfully read
+     */
+    ExecStreamResult readMinuendInputAndFlush(
         LcsRid &currRid, PBuffer &currByteSeg, uint &currLen);
 
     /**
@@ -166,49 +192,83 @@ class LbmMinusExecStream : public LbmBitOpExecStream
     void copyPrefix();
 
     /**
-     * Advance a single child input to the specified rid
+     * Advance a single subtrahend to the specified rid.
      *
-     * @param inputNo input number of the child
+     * @param inputNo input number of the subtrahend
      * @param rid rid to be advanced to
      *
      * @return EXECRC_YIELD if advance was successful
      */
-    ExecStreamResult advanceChild(int inputNo, LcsRid rid);
+    ExecStreamResult advanceSingleSubtrahend(int inputNo, LcsRid rid);
 
     /**
-     * Advances all children input to the desired start rid
+     * Advances all subtrahends to the desired start rid.
      *
      * @param baseRid desired startrid
      *
-     * @returns EXECRC_YIELD if able to successfully advance children
+     * @returns EXECRC_YIELD if able to successfully advance all subtrahends
      */
-    ExecStreamResult advanceChildren(LcsRid baseRid);
+    ExecStreamResult advanceSubtrahends(LcsRid baseRid);
 
     /**
-     * Performs the minus operation on the children of the anchor
+     * Performs the minus operation between the minuend and the subtrahends.
      *
-     * @param baseRid start rid of the anchor
-     * @param baseByteSeg pointer to the first byte of the anchor segment; note
+     * @param baseRid start rid of the minuend
+     * @param baseByteSeg pointer to the first byte of the minuend segment; note
      * that the segment is stored backwards so it needs to be read from right
      * to left
-     * @param baseLen length of the anchor segment
+     * @param baseLen length of the minuend segment
      *
-     * @return EXECRC_YIELD if able to read data from children
+     * @return EXECRC_YIELD if able to read data from subtrahends
      */
     ExecStreamResult minusSegments(
         LcsRid baseRid, PBuffer baseByteSeg, uint baseLen);
 
     /**
-     * Determines which input child contains the minimum rid value in its 
-     * current input stream
+     * Determines which subtrahend contains the minimum rid value in its 
+     * current input stream.
      *
-     * @param minInput returns input number corresponding to the child with
-     * the minimum rid input
+     * @param minInput returns input number corresponding to the subtrahend
+     * with the minimum rid input
      *
-     * @return EXECRC_YIELD if able to successfully find a child; else
-     * EXECRC_EOS if all children have reached EOS
+     * @return EXECRC_YIELD if able to successfully find a subtrahend; else
+     * EXECRC_EOS if all subtrahends have reached EOS
      */
     ExecStreamResult findMinInput(int &minInput);
+
+    /**
+     * Restarts the subtrahends, as needed, when the input has keys.
+     *
+     * <p>The pre-condition for a restart is either a change in key value
+     * in the input or unordered rid values in the minuend.  Once this
+     * pre-condition is met, then two additional criteria are also required --
+     * the current minuend must contain rids that overlap with the
+     * subtrahends, and the subtrahend is positioned past the current minuend.
+     *
+     * <p>For a minuend that meets the pre-condition just described, even if
+     * it doesn't meet the additional criteria, then the very first segment
+     * that follows that does meet the criteria will need a restart.
+     * After that restart is done, then no further restart checks are needed
+     * until the restart pre-condition is met again.
+     *
+     * <p>As part of determining whether or not the restart is necessary,
+     * we check for overlapping rids.  If there is no overlap, then the minus
+     * operation can be skipped.  This skip minus check is always done,
+     * provided the input is non-empty.
+     *
+     * @return true if the minus operation can be bypassed when the input has
+     * keys
+     */
+    bool checkNeedForRestart();
+
+    /**
+     * Determines if it's possible to avoid the minus operation for the
+     * current segment read from the minuend by using a bitmap that keeps
+     * track of subtrahend rids that have been read.
+     *
+     * @return true if the minus can be skipped
+     */
+    bool canSkipMinus();
 
 protected:
     // override LbmBitOpStream

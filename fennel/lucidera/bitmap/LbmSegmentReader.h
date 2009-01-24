@@ -72,6 +72,25 @@ public:
 
     /**
      * Initializes reader to start reading bit segments from a specified
+     * input stream, optionally keeping track of the bits read.
+     *
+     * @param pInAccessorInit input stream accessor
+     *
+     * @param bitmapSegTupleInit tuple data for reading segments
+     *
+     * @param setBitmapInit if true, keep track of bits read
+     *
+     * @param pBitmapInit pointer to the bitmap to be set if the setBitmapInit
+     * parameter is true
+     */
+    void init(
+        SharedExecStreamBufAccessor &pInAccessorInit,
+        TupleData &bitmapSegTupleInit,
+        bool setBitmapInit,
+        boost::dynamic_bitset<> *pBitmapInit);
+
+    /**
+     * Initializes reader to start reading bit segments from a specified
      * tuple reader
      *
      * @param pTupleReaderInit input tuple reader
@@ -81,6 +100,25 @@ public:
     void init(
         SharedLbmTupleReader &pTupleReaderInit,
         TupleData &bitmapSegTupleInit);
+
+    /**
+     * Initializes reader to start reading bit segments from a specified
+     * tuple reader, optionally keeping track of the bits read.
+     *
+     * @param pTupleReaderInit input tuple reader
+     *
+     * @param bitmapSegTupleInit tuple data for reading segments
+     *
+     * @param setBitmapInit if true, keep track of bits read
+     *
+     * @param pBitmapInit pointer to the bitmap to be set if the setBitmapInit
+     * parameter is true
+     */
+    void init(
+        SharedLbmTupleReader &pTupleReaderInit,
+        TupleData &bitmapSegTupleInit,
+        bool setBitmapInit,
+        boost::dynamic_bitset<> *pBitmapInit);
 
     /**
      * Advances within a segment to at least the specified rid, reading

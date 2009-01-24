@@ -582,14 +582,6 @@ public class DdlRelationalHandler
                 cmd.getResultHandle().getLongHandle());
         }
     }
-    
-    // implement FarragoSessionDdlHandler
-    public void executeCreation(FemLocalTable table)
-    {
-        // Initialize the row counts to 0 only for new local
-        // tables, since we don't know the counts for foreign tables.
-        validator.getInvokingSession().getPersonality().resetRowCounts(table);
-    }
 
     protected void indexExistingRows(
         FemLocalTable table,
