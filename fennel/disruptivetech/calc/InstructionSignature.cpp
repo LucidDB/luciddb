@@ -133,11 +133,13 @@ InstructionSignature::typeVector(bool(*typeFunction)(StandardTypeDescriptorOrdin
     vector<StandardTypeDescriptorOrdinal>v;
     int iter;
     StandardTypeDescriptorOrdinal iter2;
-    assert(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
+    assert(STANDARD_TYPE_MIN < STANDARD_TYPE_END_NO_UNICODE);
     assert(STANDARD_TYPE_MIN == STANDARD_TYPE_INT_8);
-    assert(STANDARD_TYPE_END == STANDARD_TYPE_VARBINARY + 1);
+    assert(STANDARD_TYPE_END_NO_UNICODE == STANDARD_TYPE_VARBINARY + 1);
 
-    for (iter = STANDARD_TYPE_MIN; iter < STANDARD_TYPE_END; iter++) {
+    for (iter = STANDARD_TYPE_MIN; iter < STANDARD_TYPE_END_NO_UNICODE;
+         iter++)
+    {
         iter2 = StandardTypeDescriptorOrdinal(iter);
         if (typeFunction(iter2)) {
             v.push_back(iter2);
@@ -157,6 +159,6 @@ InstructionSignature::registersToTypes()
 
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/disruptivetech/calc/InstructionSignature.cpp#4 $");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/disruptivetech/calc/InstructionSignature.cpp#5 $");
 
 // End InstructionSignature.cpp

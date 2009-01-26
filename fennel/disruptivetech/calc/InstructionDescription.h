@@ -59,7 +59,7 @@ public:
     // C'tor for a group of types
     explicit
     RegDesc(Groups groupArg) :
-        type(STANDARD_TYPE_END),
+        type(STANDARD_TYPE_END_NO_UNICODE),
         group(groupArg)
     {
     }

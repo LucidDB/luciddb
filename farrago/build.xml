@@ -1086,11 +1086,13 @@ ${farrago.test.jvmargs}
 
   <!-- run all JUnit test cases (or a single test case chosen with -->
   <!-- property junit.class, normally from script junitSingle) -->
+  <!-- MaxPermSize setting is required to prevent PermGen space OOM's -->
   <target name="junit" depends="cleanTestLogs">
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="-Xmx512m"/>
         <jvmarg line="-Xss1536k"/>
+        <jvmarg line="-XX:MaxPermSize=256m"/>
         <jvmarg line="${assertions.jvmarg}"/>
         <jvmarg line="&FarragoSqlLineProps;"/>
         <syspropertyset>
@@ -1140,6 +1142,7 @@ ${farrago.test.jvmargs}
     <antcall target="exportCatalog"/>
     <antcall target="testDmv"/>
     <antcall target="testMiniplanner"/>
+    <antcall target="testMqlPlugin"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="testCleanup"/>
@@ -1247,6 +1250,13 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
     <!-- this will import pre-upgrade catalog contents -->
     <farrago.runSqlTest
       file="${farrago.dir}/examples/rng/unitsql/verifyReplaceCatalog.sql"/>
+  </target>
+
+  <!-- For MQL, don't run the connected.sql test since it 
+       requires an Internet connection -->
+  <target name="testMqlPlugin">
+    <farrago.runSqlTest
+      file="${farrago.dir}/ext/mql/unitsql/disconnected.sql"/>
   </target>
 
   <!-- TODO:  verify actual .dot output -->
@@ -1498,6 +1508,9 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <packageset dir="${farrago.dir}/examples/miniplan/src">
         <include name="**"/>
       </packageset>
+      <packageset dir="${farrago.dir}/ext/mql/src">
+        <include name="**"/>
+      </packageset>
       <packageset dir="${farrago.dir}/examples/rng/src">
         <include name="**"/>
       </packageset>
@@ -1546,6 +1559,9 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/miniplan/src">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.dir}/ext/mql/src">
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/rng/src">
@@ -1699,6 +1715,8 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       inheritAll="false"/>
     <ant antfile="examples/miniplan/build.xml"
       inheritAll="false"/>
+    <ant antfile="ext/mql/build.xml"
+      inheritAll="false"/>
   </target>
 
   <target name="cleanExamples">
@@ -1707,6 +1725,8 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
     <ant antfile="examples/rng/build.xml" target="clean"
       inheritAll="false"/>
     <ant antfile="examples/miniplan/build.xml" target="clean"
+      inheritAll="false"/>
+    <ant antfile="ext/mql/build.xml" target="clean"
       inheritAll="false"/>
   </target>
 

@@ -187,27 +187,52 @@ bool ReshapeExecStream::checkCastTypes(
                     || (!inputTupleDesc[i].isNullable
                         && outputTupleDesc[i].isNullable));
             }
-            if (inputTupleDesc[i].pTypeDescriptor->getOrdinal() !=
-                outputTupleDesc[i].pTypeDescriptor->getOrdinal())
-            {
+            StoredTypeDescriptor::Ordinal inputType =
+                inputTupleDesc[i].pTypeDescriptor->getOrdinal();
+            StoredTypeDescriptor::Ordinal outputType =
+                outputTupleDesc[i].pTypeDescriptor->getOrdinal();
+
+            // can't convert between unicode and non-unicode;
+            // normalize types to non-unicode to make other checks
+            // easier, but verify that either both or neither are unicode
+            bool inputUnicode = false;
+            if (inputType == STANDARD_TYPE_UNICODE_CHAR) {
+                inputType = STANDARD_TYPE_CHAR;
+                inputUnicode = true;
+            }
+            if (inputType == STANDARD_TYPE_UNICODE_VARCHAR) {
+                inputType = STANDARD_TYPE_VARCHAR;
+                inputUnicode = true;
+            }
+
+            bool outputUnicode = false;
+            if (outputType == STANDARD_TYPE_UNICODE_CHAR) {
+                outputType = STANDARD_TYPE_CHAR;
+                outputUnicode = true;
+            }
+            if (outputType == STANDARD_TYPE_UNICODE_VARCHAR) {
+                outputType = STANDARD_TYPE_VARCHAR;
+                outputUnicode = true;
+            }
+
+            if (inputUnicode || outputUnicode) {
+                assert(inputUnicode && outputUnicode);
+            }
+
+            if (inputType != outputType) {
                 // if types are different, must be casting from char to 
                 // varchar
                 assert(
-                    inputTupleDesc[i].pTypeDescriptor->getOrdinal() ==
-                        STANDARD_TYPE_CHAR &&
-                    outputTupleDesc[i].pTypeDescriptor->getOrdinal() ==
-                        STANDARD_TYPE_VARCHAR);
+                    (inputType == STANDARD_TYPE_CHAR)
+                    && (outputType == STANDARD_TYPE_VARCHAR));
             }
             if (inputTupleDesc[i].cbStorage != outputTupleDesc[i].cbStorage) {
                 // if lengths are different, must be casting from char or
                 // varchar to varchar
                 assert(
-                    (inputTupleDesc[i].pTypeDescriptor->getOrdinal() ==
-                        STANDARD_TYPE_VARCHAR ||
-                        inputTupleDesc[i].pTypeDescriptor->getOrdinal() ==
-                            STANDARD_TYPE_CHAR) &&
-                    outputTupleDesc[i].pTypeDescriptor->getOrdinal() ==
-                        STANDARD_TYPE_VARCHAR);
+                    ((inputType == STANDARD_TYPE_VARCHAR)
+                        || (inputType == STANDARD_TYPE_CHAR))
+                    && (outputType == STANDARD_TYPE_VARCHAR));
             }
         }
     }

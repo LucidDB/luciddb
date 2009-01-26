@@ -37,10 +37,13 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 import net.sf.farrago.resource.*;
 import javax.jmi.reflect.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.sql2003.*;
 
 /**
  * FarragoManagementUDR is a set of user-defined routines providing access to
@@ -781,6 +784,52 @@ public abstract class FarragoManagementUDR
         FarragoSystemRestore restore =
             new FarragoSystemRestore(archiveDirectory);
         restore.restoreDatabase();
+    }
+
+    /**
+     * Sets Unicode as the default character set.
+     */
+    public static void setUnicodeAsDefault()
+        throws Exception
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoRepos repos = session.getRepos();
+        FarragoReposTxnContext reposTxnContext = 
+            new FarragoReposTxnContext(repos, true);
+        reposTxnContext.beginWriteTxn();
+        try {
+            Collection c =
+                repos.getMedPackage().getFemLocalTable().refAllOfType();
+            if (!c.isEmpty()) {
+                throw FarragoResource.instance().ChangeToUnicodeFailed.ex();
+            }
+            String characterSetName =
+                ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
+            String collationName =
+                ConversionUtil.NATIVE_UTF16_CHARSET_NAME + "$en_US";
+            c = repos.getRelationalPackage().getCwmCatalog().refAllOfType();
+            for (Object obj : c) {
+                CwmCatalog catalog = (CwmCatalog) obj;
+                catalog.setDefaultCharacterSetName(characterSetName);
+                catalog.setDefaultCollationName(collationName);
+            }
+            c = repos.getRelationalPackage().getCwmColumn().refAllOfType();
+            for (Object obj : c) {
+                CwmColumn column = (CwmColumn) obj;
+                column.setCharacterSetName(characterSetName);
+                column.setCollationName(collationName);
+            }
+            c = repos.getSql2003Package().getFemRoutineParameter()
+                .refAllOfType();
+            for (Object obj : c) {
+                FemRoutineParameter param = (FemRoutineParameter) obj;
+                param.setCharacterSetName(characterSetName);
+                param.setCollationName(collationName);
+            }
+            reposTxnContext.commit();
+        } finally {
+            reposTxnContext.rollback();
+        }
     }
 }
 

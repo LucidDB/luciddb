@@ -1578,7 +1578,7 @@ public class FarragoDbSession
                 "must be in repos txn");
             
             boolean readOnly = !stmt.completeRequiresWriteTxn();
-            boolean success = false;
+            boolean needRecovery = false;
             
             FarragoSession session = ddlValidator.newReentrantSession();
             try {
@@ -1587,17 +1587,19 @@ public class FarragoDbSession
                 reposTxnContext.commit();
                 reposTxnContext.unlockAfterTxn();
 
+                needRecovery = true;
                 stmt.executeUnlocked(ddlValidator, session);
-
+                needRecovery = false;
+                
                 reposTxnContext.beginLockedTxn(readOnly);
-
-                success = true;
                 stmt.completeAfterExecuteUnlocked(
-                    ddlValidator, session, success);
+                    ddlValidator, session, true);
             } finally {
-                if (!success) {
+                if (needRecovery) {
+                    reposTxnContext.beginLockedTxn(readOnly);
                     stmt.completeAfterExecuteUnlocked(
-                        ddlValidator, session, success);
+                        ddlValidator, session, false);
+                    reposTxnContext.commit();
                 }
                 ddlValidator.releaseReentrantSession(session);
             }

@@ -174,7 +174,6 @@ public abstract class FarragoReposImpl
     // implement FarragoRepos
     public CwmCatalog getSelfAsCatalog()
     {
-        // TODO:  variable
         return getCatalog(FarragoCatalogInit.LOCALDB_CATALOG_NAME);
     }
 
@@ -187,13 +186,35 @@ public abstract class FarragoReposImpl
     // implement FarragoRepos
     public String getDefaultCharsetName()
     {
-        return SaffronProperties.instance().defaultCharset.get();
+        // REVIEW jvs 21-Jan-2009:  Do we really want an implicit
+        // session here?
+        beginReposSession();
+        try {
+            CwmCatalog catalog = getSelfAsCatalog();
+            if (catalog == null) {
+                return SaffronProperties.instance().defaultCharset.get();
+            } else {
+                return catalog.getDefaultCharacterSetName();
+            }
+        } finally {
+            endReposSession();
+        }
     }
 
     // implement FarragoRepos
     public String getDefaultCollationName()
     {
-        return SaffronProperties.instance().defaultCollation.get();
+        beginReposSession();
+        try {
+            CwmCatalog catalog = getSelfAsCatalog();
+            if (catalog == null) {
+                return SaffronProperties.instance().defaultCollation.get();
+            } else {
+                return catalog.getDefaultCollationName();
+            }
+        } finally {
+            endReposSession();
+        }
     }
 
     // implement FarragoRepos

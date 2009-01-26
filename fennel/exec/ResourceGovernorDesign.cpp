@@ -258,14 +258,14 @@ then the resource governor assigns each stream its minimum and
 divides up the difference
 between the reference amount and the total minimum using the following formula:
 
-<pre><code>
+\verbatim
 number of pages to allocate to stream X =
     minimum for X +
     (reference amount - total minimum) *
         (sqrt((optimum for X) - (minimum for X)) /
         sum of the sqrt of the differences between the optimum and minimum
             settings for each stream
-</code></pre>
+\endverbatim
 
 <li>If the total optimum cache pages is less than or equal to the reference
 amount and all streams have specified an

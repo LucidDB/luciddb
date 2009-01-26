@@ -87,10 +87,12 @@ public interface DdlMultipleTransactionStmt extends FarragoSessionDdlStmt
      * This method is invoked in a 
      * {@link FarragoReposTxnContext#beginLockedTxn(boolean) locked} repository
      * transaction.  The method {@link #completeRequiresWriteTxn()} controls
-     * whether the transaction read-only or not.  Ths method may access
-     * and/or modify repository objects loaded in a previous transaction so
-     * long as it is guaranteed (for instance by "table-in-use" semantics)
-     * that they have not been modified by another statement.
+     * whether the transaction read-only or not.  This method may not access
+     * and/or modify repository objects loaded in a previous transaction 
+     * unless they are reloaded by MOF ID. Be aware that objects may have been
+     * modified by another session unless some external mechanism (for 
+     * instance, the "table-in-use" collection) guarantees that they have not 
+     * been modified by another statement.
      *
      * <p>Note that any repository modifications made during the execution of
      * this method <b>will not</b> be post-processed by {@link DdlValidator}.

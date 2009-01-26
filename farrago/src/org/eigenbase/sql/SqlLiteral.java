@@ -571,7 +571,7 @@ public class SqlLiteral
             NlsString string = (NlsString) value;
             Charset charset = string.getCharset();
             if (null == charset) {
-                charset = Util.getDefaultCharset();
+                charset = typeFactory.getDefaultCharset();
             }
             SqlCollation collation = string.getCollation();
             if (null == collation) {

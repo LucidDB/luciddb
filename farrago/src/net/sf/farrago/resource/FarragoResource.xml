@@ -1292,6 +1292,10 @@ Messages: {1}</text>
 <text>Property {0} conflicts with property {1}</text>
 </exception>
 
+<exception id="490080" name="PluginManifestMissing">
+<text>Plugin jar ''{0}'' manifest lacks attribute ''{1}''</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- com.disruptivetech.farrago.calc resources 500,000 - 510,000 -->
 <!-- REVIEW jvs 28-Aug-2004:  these are all assertions, so why i18n? -->
@@ -1665,6 +1669,11 @@ Messages: {1}</text>
 
 <exception id="520040" name="ServerTestConnFailed">
 <text>Failed testing connection to data server ''{0}''</text>
+</exception>
+
+<exception id="520050" name="ChangeToUnicodeFailed">
+<text>Cannot change default character set to Unicode because local tables
+have already been defined</text>
 </exception>
 
 <!-- End of last error section ============================================ -->

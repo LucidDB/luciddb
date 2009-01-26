@@ -107,14 +107,14 @@ public class SqlValidatorTest
     {
         checkExpType("'abc'", "CHAR(3) NOT NULL");
         checkExpType("n'abc'", "CHAR(3) NOT NULL");
-        checkExpType("_iso_8859-2'abc'", "CHAR(3) NOT NULL");
+        checkExpType("_UTF16'abc'", "CHAR(3) NOT NULL");
         checkExpType("'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
         checkExpType(
             "'ab'" + NL + "'cd'" + NL + "'ef'" + NL + "'gh'" + NL
             + "'ij'" + NL + "'kl'",
             "CHAR(12) NOT NULL");
         checkExpType("n'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
-        checkExpType("_iso_8859-2'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
+        checkExpType("_UTF16'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
 
         checkExpFails(
             "^x'abc'^",
@@ -366,7 +366,7 @@ public class SqlValidatorTest
 
     public void testStringLiteral()
     {
-        check("select n''=_iso_8859-1'abc' from (values(true))");
+        check("select n''=_iso-8859-1'abc' from (values(true))");
         check("select N'f'<>'''' from (values(true))");
     }
 
@@ -569,14 +569,14 @@ public class SqlValidatorTest
         checkExpType(
             "'a'||'b'||cast('cde' as VARCHAR(3))|| 'f'",
             "VARCHAR(6) NOT NULL");
-        checkExp("_iso-8859-6'a'||_iso-8859-6'b'||_iso-8859-6'c'");
+        checkExp("_UTF16'a'||_UTF16'b'||_UTF16'c'");
     }
 
     public void testConcatWithCharset()
     {
         checkCharset(
-            "_iso-8859-6'a'||_iso-8859-6'b'||_iso-8859-6'c'",
-            Charset.forName("ISO-8859-6"));
+            "_UTF16'a'||_UTF16'b'||_UTF16'c'",
+            Charset.forName("UTF-16LE"));
     }
 
     public void testConcatFails()
@@ -598,25 +598,25 @@ public class SqlValidatorTest
     public void testCharsetMismatch()
     {
         checkWholeExpFails(
-            "''=_shift_jis''",
-            "Cannot apply .* to the two different charsets ISO-8859-1 and Shift_JIS");
+            "''=_UTF16''",
+            "Cannot apply .* to the two different charsets ISO-8859-1 and UTF-16LE");
         checkWholeExpFails(
-            "''<>_shift_jis''",
+            "''<>_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
         checkWholeExpFails(
-            "''>_shift_jis''",
+            "''>_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
         checkWholeExpFails(
-            "''<_shift_jis''",
+            "''<_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
         checkWholeExpFails(
-            "''<=_shift_jis''",
+            "''<=_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
         checkWholeExpFails(
-            "''>=_shift_jis''",
+            "''>=_UTF16''",
             "(?s).*Cannot apply .* to the two different charsets.*");
-        checkWholeExpFails("''||_shift_jis''", ANY);
-        checkWholeExpFails("'a'||'b'||_iso-8859-6'c'", ANY);
+        checkWholeExpFails("''||_UTF16''", ANY);
+        checkWholeExpFails("'a'||'b'||_UTF16'c'", ANY);
     }
 
     // FIXME jvs 2-Feb-2005: all collation-related tests are disabled due to
@@ -639,7 +639,7 @@ public class SqlValidatorTest
     public void _testCharsetAndCollateMismatch()
     {
         //todo
-        checkExpFails("_shift_jis's' collate latin1$en$1", "?");
+        checkExpFails("_UTF16's' collate latin1$en$1", "?");
     }
 
     public void _testDyadicCollateCompare()
@@ -681,7 +681,7 @@ public class SqlValidatorTest
     public void testCharLength()
     {
         checkExp("char_length('string')");
-        checkExp("char_length(_shift_jis'string')");
+        checkExp("char_length(_UTF16'string')");
         checkExp("character_length('string')");
         checkExpType("char_length('string')", "INTEGER NOT NULL");
         checkExpType("character_length('string')", "INTEGER NOT NULL");
@@ -689,7 +689,7 @@ public class SqlValidatorTest
 
     public void testUpperLower()
     {
-        checkExp("upper(_shift_jis'sadf')");
+        checkExp("upper(_UTF16'sadf')");
         checkExp("lower(n'sadf')");
         checkExpType("lower('sadf')", "CHAR(4) NOT NULL");
         checkWholeExpFails(
@@ -737,7 +737,7 @@ public class SqlValidatorTest
             "trim('a' FROM 123)",
             "(?s).*Cannot apply 'TRIM' to arguments of type.*");
         checkWholeExpFails(
-            "trim('a' FROM _shift_jis'b')",
+            "trim('a' FROM _UTF16'b')",
             "(?s).*not comparable to each other.*");
     }
 
@@ -795,8 +795,8 @@ public class SqlValidatorTest
             "substring('10' FROM 1  FOR 2)",
             Charset.forName("latin1"));
         checkCharset(
-            "substring(_shift_jis'10' FROM 1  FOR 2)",
-            Charset.forName("SHIFT_JIS"));
+            "substring(_UTF16'10' FROM 1  FOR 2)",
+            Charset.forName("UTF-16LE"));
     }
 
     public void testSubstringFails()
@@ -805,13 +805,13 @@ public class SqlValidatorTest
             "substring('a' from 1 for 'b')",
             "(?s).*Cannot apply 'SUBSTRING' to arguments of type.*");
         checkWholeExpFails(
-            "substring(_shift_jis'10' FROM '0' FOR '\\')",
+            "substring(_UTF16'10' FROM '0' FOR '\\')",
             "(?s).* not comparable to each other.*");
         checkWholeExpFails(
-            "substring('10' FROM _shift_jis'0' FOR '\\')",
+            "substring('10' FROM _UTF16'0' FOR '\\')",
             "(?s).* not comparable to each other.*");
         checkWholeExpFails(
-            "substring('10' FROM '0' FOR _shift_jis'\\')",
+            "substring('10' FROM '0' FOR _UTF16'\\')",
             "(?s).* not comparable to each other.*");
     }
 
@@ -826,14 +826,14 @@ public class SqlValidatorTest
     public void _testLikeAndSimilarFails()
     {
         checkExpFails(
-            "'a' like _shift_jis'b'  escape 'c'",
+            "'a' like _UTF16'b'  escape 'c'",
             "(?s).*Operands _ISO-8859-1.a. COLLATE ISO-8859-1.en_US.primary, _SHIFT_JIS.b..*");
         checkExpFails(
-            "'a' similar to _shift_jis'b'  escape 'c'",
+            "'a' similar to _UTF16'b'  escape 'c'",
             "(?s).*Operands _ISO-8859-1.a. COLLATE ISO-8859-1.en_US.primary, _SHIFT_JIS.b..*");
 
         checkExpFails(
-            "'a' similar to 'b' collate shift_jis$jp  escape 'c'",
+            "'a' similar to 'b' collate UTF16$jp  escape 'c'",
             "(?s).*Operands _ISO-8859-1.a. COLLATE ISO-8859-1.en_US.primary, _ISO-8859-1.b. COLLATE SHIFT_JIS.jp.primary.*");
     }
 
@@ -5576,7 +5576,7 @@ public class SqlValidatorTest
 
         checkFails(
             "select case ^empno^ when 10 then _iso-8859-1'foo bar' else null end from emp "
-            + "group by case empno when 10 then _iso-8859-2'foo bar' else null end",
+            + "group by case empno when 10 then _UTF16'foo bar' else null end",
             "Expression 'EMPNO' is not being grouped");
 
         if (Bug.Frg78Fixed) {

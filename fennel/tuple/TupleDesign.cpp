@@ -146,14 +146,22 @@ maintained
 <li>STANDARD_TYPE_BOOL: single-bit boolean; these are packed 8 at a time
 into bytes (along with null indicators)
 
+<li>STANDARD_TYPE_UNICODE_CHAR: fixed-width double-byte (UCS-2) character string
+
+<li>STANDARD_TYPE_UNICODE_VARCHAR: variable-width double-byte (UCS-2) character
+string with SQL comparison semantics
+
 </ul>
 
 Applications may extend this list with their own types via a customized
-subclass of StandardTypeDescriptorFactory.
+subclass of StandardTypeDescriptorFactory.  Primitive types may also
+be reinterpreted at higher levels; e.g. date/time types are often
+represented as a STANDARD_TYPE_UINT_64 interpreted as a quantity such as
+milliseconds since a given epoch.
 
 <p>
 
-TODO: lobs, UNICODE, date/time/timestamp
+TODO: lobs
 
 <a name="TupleDescriptor"></a>
 <h3>Tuple Descriptors</h3>
@@ -168,8 +176,8 @@ TupleAttributeDescriptor specifies:
 
 <li>the StoredTypeDescriptor describing values to be stored
 
-<li>a maximum storage length; this is implied by the StoredTypeDescriptor for
-fixed-width types
+<li>a maximum storage length in bytes; this is implied by the
+StoredTypeDescriptor for fixed-width types
 
 <li>whether NULL values are possible
 
@@ -180,24 +188,24 @@ extra utility methods tacked on); this makes it very easy to manipulate
 TupleDescriptors directly via STL.  For example, tuple descriptors can be
 concatenated with code like
 
-<pre><code>
+\verbatim
     TupleDescriptor td1 = getFirstTupleDesc();
     TupleDescriptor td2 = getSecondTupleDesc();
     td1.insert(td1.end(),td2.begin(),td2.end());
     return td1;
-</code></pre>
+\endverbatim
 
 Consider an SQL statement like
 
-<pre><code>
+\verbatim
 create table MACHINES(
     IP_ADDRESS int not null,
     NAME varchar(32));
-</code></pre>
+\endverbatim
 
 A TupleDescriptor to define the rows of this table could be constructed as:
 
-<pre><code>
+\verbatim
     StandardTypeDescriptorFactory typeFactory;
     TupleDescriptor machineTupleDesc;
     TupleAttributeDescriptor ipAddressAttr(
@@ -210,7 +218,7 @@ A TupleDescriptor to define the rows of this table could be constructed as:
         32);
     machineTupleDesc.push_back(ipAddressAttr);
     machineTupleDesc.push_back(nameAttr);
-</code></pre>
+\endverbatim
 
 Note that the TupleDescriptor contains only a minimal amount of information
 needed for data storage; it does not store metadata such as attribute names.
@@ -231,14 +239,14 @@ NULL data pointer is interpreted as a NULL value.  To continue the previous
 example, a row to be inserted into the MACHINES table could be constructed like
 so:
 
-<pre><code>
+\verbatim
     TupleData machineTupleData(machineTupleDesc);
     uint32_t localhostIP = 0x7F000001;
     char const *pMachineName = "jackalope";
     machineTupleData[0].pData = &amp;localhostIP;
     machineTupleData[1].pData = pMachineName;
     machineTupleData[1].cbData = strlen(pMachineName);
-</code></pre>
+\endverbatim
 
 Notes:
 
@@ -297,7 +305,7 @@ TupleDatum entries one by one.
 
 In the context of the running example:
 
-<pre><code>
+\verbatim
 void storeMachineTuple(FILE *file)
 {
     TupleAccessor tupleAccessor;
@@ -329,7 +337,7 @@ uint32_t readStoredMachineIpAddress(FILE *file)
     tupleAccessor.unmarshal(machineTupleData);
     return *((uint32_t *) (machineTupleData[0].pData));
 }
-</code></pre>
+\endverbatim
 
 The diagram below shows the effect of the marshal and unmarshal operations.
 The gray boxes are internal length-indicator fields described later on: 
@@ -349,14 +357,16 @@ requirements:
 
 <li>values requiring alignment are always stored at the correct
 (platform-specific) alignment boundaries with respect to the start of the
-tuple; alignment is only required for fixed-width values
+tuple
 
 <li>the total tuple width must be a multiple of the maximum alignment
 size for the platform
 
 <li>a null can be stored for any attribute, regardless of datatype
 
-<li>both fixed-width and variable-width values can be stored
+<li>both fixed-width and variable-width values can be stored;
+for variable-width aligned values (e.g. UNICODE strings), the only
+alignment supported is 2-byte
 
 <li>any bit pattern can be stored (no reserved values for representing
 nulls or terminators)
@@ -393,7 +403,10 @@ The physical field ordering is illustrated in the following diagram:
 \image html TupleFormat.gif
 <hr>
 
-TODO:  show bit values together with null bits
+In the variable-width portion, all 2-byte aligned fields are stored before any
+unaligned fields; also, if the bitfields end on an odd byte boundary,
+one extra byte of padding is inserted so that the first variable width
+field comes out aligned.
 
 <h3>Alternate Storage Formats</h3>
 
@@ -412,10 +425,11 @@ sets TupleDatum.pData to reference it.
 
 A third storage format is also supported:
 TUPLE_FORMAT_ALL_FIXED.  This format treats all values as fixed-width
-(a variable-width attribute is taken at its maximum width).  It is mostly useful for setting up
-a TupleData instance with a preallocated staging area.  For example:
+(a variable-width attribute is taken at its maximum width).  It is mostly
+useful for setting up a TupleData instance with a preallocated staging area.
+For example:
 
-<pre><code>
+\verbatim
 void storeLocalhostMachineTuple(FILE *file)
 {
     TupleAccessor fixedAccessor;
@@ -446,8 +460,7 @@ void fillLocalhostMachineTuple()
         machineTupleData.pData = NULL;
     }
 }
-   
-</code></pre>
+\endverbatim
 
 <p>
 
@@ -469,7 +482,7 @@ while class TupleProjectionAccessor defines how to extract it.
 Suppose we want to extract the NAME attribute from a series of stored tuples.
 The following class does the trick:
 
-<pre><code>
+\verbatim
 class NameExtractor
 {
     TupleAccessor tupleAccessor;
@@ -496,7 +509,7 @@ public:
         return (char const *) (projData[0].pData);
     }
 };
-</code></pre>
+\endverbatim
 
 Notes:
 

@@ -229,6 +229,12 @@
 > called on null input
 > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
 > 
+> -- switches default character set to Unicode
+> create or replace procedure change_default_character_set_to_unicode()
+> language java
+> no sql
+> external name 'class net.sf.farrago.syslib.FarragoManagementUDR.setUnicodeAsDefault';
+> 
 > -- Returns session parameters
 > create or replace function session_parameters ()
 > returns table(

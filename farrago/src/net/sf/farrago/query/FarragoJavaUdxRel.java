@@ -219,14 +219,26 @@ public class FarragoJavaUdxRel
     // override TableFunctionRelBase
     public void explain(RelOptPlanWriter pw)
     {
+        // NOTE jvs 8-Jan-2009:  omit the serverMofId in the
+        // default EXPLAIN PLAN display so that diff-based testing can
+        // work (the MOFID isn't deterministic).
+
+        boolean omitServerMofId = false;
+
         if (serverMofId == null) {
+            omitServerMofId = true;
+        }
+
+        switch(pw.getDetailLevel()) {
+        case NO_ATTRIBUTES:
+        case EXPPLAN_ATTRIBUTES:
+            omitServerMofId = true;
+        }
+
+        if (omitServerMofId) {
             super.explain(pw);
             return;
         }
-
-        // NOTE jvs 7-Mar-2006:  including the serverMofId means
-        // we can't use EXPLAIN PLAN in diff-based testing because
-        // the MOFID isn't deterministic.
 
         pw.explain(
             this,

@@ -497,6 +497,11 @@ public abstract class RelDataTypeFactoryImpl
         return null;
     }
 
+    public Charset getDefaultCharset()
+    {
+        return Util.getDefaultCharset();
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     // TODO jvs 13-Dec-2004:  move to OJTypeFactoryImpl?

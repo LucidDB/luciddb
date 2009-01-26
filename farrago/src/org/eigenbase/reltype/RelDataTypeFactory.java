@@ -183,6 +183,11 @@ public interface RelDataTypeFactory
         SqlCollation collation);
 
     /**
+     * @return the default {@link Charset} for string types
+     */
+    public Charset getDefaultCharset();
+
+    /**
      * Returns the most general of a set of types (that is, one type to which
      * they can all be cast), or null if conversion is not possible. The result
      * may be a new type which is less restrictive than any of the input types,

@@ -63,6 +63,9 @@
   <property name="plugin.parser.impl.dir" 
     location="${plugin.src.dir}/${plugin.parser.impl.package}"/>
 
+  <property name="plugin.manifest.attr.name" 
+    value="PluginFactoryClassName"/>
+
   <path id="plugin.classpath">
     <pathelement path="${plugin.3p.classpath}"/>
     <pathelement path="${farrago.run.classpath}"/>
@@ -270,7 +273,7 @@
     <mkdir dir="${plugin.classes.dir}/META-INF"/>
     <manifest file="${plugin.classes.dir}/META-INF/MANIFEST.MF">
       <attribute
-        name="PluginFactoryClassName"
+        name="${plugin.manifest.attr.name}"
         value="${plugin.factory.class}"/>
     </manifest>
     <jar destfile="${plugin.jar.file}" compress="true" 

@@ -90,6 +90,5 @@ public class FennelTupleAttributeDescriptor
         }
     }
 }
-;
 
 // End FennelTupleAttributeDescriptor.java

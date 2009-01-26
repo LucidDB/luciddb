@@ -1748,10 +1748,10 @@ void CalcAssemblerTest::testBoolInstructions(StandardTypeDescriptorOrdinal type)
 
 void CalcAssemblerTest::testStandardTypes()
 {
-    string max[STANDARD_TYPE_END];
-    string min[STANDARD_TYPE_END];
-    string overflow[STANDARD_TYPE_END];
-    string underflow[STANDARD_TYPE_END];
+    string max[STANDARD_TYPE_END_NO_UNICODE];
+    string min[STANDARD_TYPE_END_NO_UNICODE];
+    string overflow[STANDARD_TYPE_END_NO_UNICODE];
+    string underflow[STANDARD_TYPE_END_NO_UNICODE];
 
     min[STANDARD_TYPE_BOOL] = "0";
     max[STANDARD_TYPE_BOOL] = "1";
@@ -1810,7 +1810,7 @@ void CalcAssemblerTest::testStandardTypes()
     underflow[STANDARD_TYPE_DOUBLE] = "2.22507e-324";
     overflow[STANDARD_TYPE_DOUBLE] = "1.79769e+309";
 
-    for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; i++) 
+    for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END_NO_UNICODE; i++) 
     {
         // First test setting output = input (using move)
         // Also test tonull

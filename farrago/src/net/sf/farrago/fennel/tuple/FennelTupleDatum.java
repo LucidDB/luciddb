@@ -52,14 +52,20 @@ public class FennelTupleDatum
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * length of this data in externallized form.
+     * length of this data in externalized form.
      */
     private int dataLen;
 
     /**
-     * maximum size of this data in externallized form.
+     * maximum size of this data in externalized form.
      */
     private int capacity;
+
+    /**
+     * if character data, whether the attribute descriptor is Unicode;
+     * otherwise false
+     */
+    private boolean isUnicode;
 
     /**
      * the numeric object kept by this tuple; this holds all the numeric
@@ -94,11 +100,7 @@ public class FennelTupleDatum
      */
     public FennelTupleDatum()
     {
-        dataLen = 0;
-        capacity = 0;
-        rawBytesSet = false;
-        numeric = 0;
-        numericSet = false;
+        this(0);
     }
 
     /**
@@ -107,11 +109,7 @@ public class FennelTupleDatum
      */
     public FennelTupleDatum(int capacity)
     {
-        dataLen = 0;
         setCapacity(capacity);
-        rawBytesSet = false;
-        numeric = 0;
-        numericSet = false;
     }
 
     /**
@@ -481,7 +479,23 @@ public class FennelTupleDatum
         setLength(rawBytes.length);
         rawBytesSet = true;
     }
+
+    /**
+     * Sets the isUnicode flag; this is non-public because it is private
+     * to TupleData initialization.
+     */
+    void setUnicode(boolean isUnicode)
+    {
+        this.isUnicode = isUnicode;
+    }
+
+    /**
+     * Whether character data is stored as Unicode.
+     */
+    public boolean isUnicode()
+    {
+        return isUnicode;
+    }
 }
-;
 
 // End FennelTupleDatum.java

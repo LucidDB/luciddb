@@ -132,6 +132,10 @@ public class FarragoPluginClassLoader
                 Manifest manifest = jar.getManifest();
                 String className =
                     manifest.getMainAttributes().getValue(jarAttributeName);
+                if (className == null) {
+                    throw FarragoResource.instance().PluginManifestMissing.ex(
+                        libraryName, jarAttributeName);
+                }
                 return loadClassFromJarUrl(
                     "file:" + libraryName,
                     className);

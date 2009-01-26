@@ -188,6 +188,9 @@ public class FarragoTypeFactoryImpl
                         new SqlCollation(
                             SqlCollation.Coercibility.Implicit);
 
+                    charsetName =
+                        SqlUtil.translateCharacterSetName(charsetName);
+                    assert(charsetName != null);
                     Charset charSet = Charset.forName(charsetName);
                     type =
                         createTypeWithCharsetAndCollation(
@@ -1118,10 +1121,8 @@ public class FarragoTypeFactoryImpl
         return type;
     }
 
-    /**
-     * Returns the default {@link Charset} for string types.
-     */
-    protected Charset getDefaultCharset()
+    // implement RelDataTypeFactory
+    public Charset getDefaultCharset()
     {
         String charsetName = repos.getDefaultCharsetName();
         Charset charset = Charset.forName(charsetName);

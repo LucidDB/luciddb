@@ -89,7 +89,7 @@ void StandardTypeTest::testStandardTypeToString()
         concat += str;
     }
     BOOST_MESSAGE("concat: |" << concat << "|");
-    BOOST_CHECK(!(concat.compare("s1u1s2u2s4u4s8u8bordcvcbvb")));
+    BOOST_CHECK(!(concat.compare("s1u1s2u2s4u4s8u8bordcvcbvbUvU")));
 
     for (i = STANDARD_TYPE_VARBINARY; i >= STANDARD_TYPE_INT_8; i--) {
         v = StandardTypeDescriptorOrdinal(i);
@@ -114,7 +114,9 @@ void StandardTypeTest::testStandardTypeIsNative()
         if (v == STANDARD_TYPE_CHAR ||
             v == STANDARD_TYPE_VARCHAR ||
             v == STANDARD_TYPE_BINARY ||
-            v == STANDARD_TYPE_VARBINARY) {
+            v == STANDARD_TYPE_VARBINARY ||
+            v == STANDARD_TYPE_UNICODE_CHAR ||
+            v == STANDARD_TYPE_UNICODE_VARCHAR) {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isNative(v), false);
         } else {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isNative(v), true);
@@ -138,7 +140,9 @@ void StandardTypeTest::testStandardTypeIsNativeNotBool()
             v == STANDARD_TYPE_CHAR ||
             v == STANDARD_TYPE_VARCHAR ||
             v == STANDARD_TYPE_BINARY ||
-            v == STANDARD_TYPE_VARBINARY) {
+            v == STANDARD_TYPE_VARBINARY ||
+            v == STANDARD_TYPE_UNICODE_CHAR ||
+            v == STANDARD_TYPE_UNICODE_VARCHAR) {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isNativeNotBool(v),
                               false);
         } else {
@@ -165,7 +169,9 @@ void StandardTypeTest::testStandardTypeIsIntegralNative()
             v == STANDARD_TYPE_CHAR ||
             v == STANDARD_TYPE_VARCHAR ||
             v == STANDARD_TYPE_BINARY ||
-            v == STANDARD_TYPE_VARBINARY) {
+            v == STANDARD_TYPE_VARBINARY ||
+            v == STANDARD_TYPE_UNICODE_CHAR ||
+            v == STANDARD_TYPE_UNICODE_VARCHAR) {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isIntegralNative(v), false);
         } else {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isIntegralNative(v), true);
@@ -191,7 +197,9 @@ void StandardTypeTest::testStandardTypeIsExact()
             v == STANDARD_TYPE_CHAR ||
             v == STANDARD_TYPE_VARCHAR ||
             v == STANDARD_TYPE_BINARY ||
-            v == STANDARD_TYPE_VARBINARY) {
+            v == STANDARD_TYPE_VARBINARY ||
+            v == STANDARD_TYPE_UNICODE_CHAR ||
+            v == STANDARD_TYPE_UNICODE_VARCHAR) {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isExact(v), false);
         } else {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isExact(v), true);
@@ -236,7 +244,9 @@ void StandardTypeTest::testStandardTypeIsArray()
         if (v == STANDARD_TYPE_CHAR ||
             v == STANDARD_TYPE_VARCHAR ||
             v == STANDARD_TYPE_BINARY ||
-            v == STANDARD_TYPE_VARBINARY) {
+            v == STANDARD_TYPE_VARBINARY ||
+            v == STANDARD_TYPE_UNICODE_CHAR ||
+            v == STANDARD_TYPE_UNICODE_VARCHAR) {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isArray(v), true);
         } else {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isArray(v), false);
@@ -255,7 +265,8 @@ void StandardTypeTest::testStandardTypeIsVariableLenArray()
         BOOST_MESSAGE("isVariableLenArray " << i);
         v = StandardTypeDescriptorOrdinal(i);
         if (v == STANDARD_TYPE_VARCHAR ||
-            v == STANDARD_TYPE_VARBINARY) {
+            v == STANDARD_TYPE_VARBINARY ||
+            v == STANDARD_TYPE_UNICODE_VARCHAR) {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isVariableLenArray(v), true);
         } else {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isVariableLenArray(v), false);
@@ -274,7 +285,8 @@ void StandardTypeTest::testStandardTypeIsFixedLenArray()
         BOOST_MESSAGE("isFixedLenArray " << i);
         v = StandardTypeDescriptorOrdinal(i);
         if (v == STANDARD_TYPE_CHAR ||
-            v == STANDARD_TYPE_BINARY) {
+            v == STANDARD_TYPE_BINARY ||
+            v == STANDARD_TYPE_UNICODE_CHAR) {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isFixedLenArray(v), true);
         } else {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isFixedLenArray(v), false);
@@ -293,7 +305,9 @@ void StandardTypeTest::testStandardTypeIsTextArray()
         BOOST_MESSAGE("isTextArray " << i);
         v = StandardTypeDescriptorOrdinal(i);
         if (v == STANDARD_TYPE_CHAR ||
-            v == STANDARD_TYPE_VARCHAR) {
+            v == STANDARD_TYPE_VARCHAR ||
+            v == STANDARD_TYPE_UNICODE_CHAR ||
+            v == STANDARD_TYPE_UNICODE_VARCHAR) {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isTextArray(v), true);
         } else {
             BOOST_CHECK_EQUAL(StandardTypeDescriptor::isTextArray(v), false);

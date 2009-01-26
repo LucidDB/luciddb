@@ -22,6 +22,8 @@
 */
 package org.eigenbase.util14;
 
+import java.nio.*;
+
 import java.sql.*;
 
 import java.text.*;
@@ -38,6 +40,10 @@ import org.eigenbase.resource.*;
  */
 public class ConversionUtil
 {
+    public static final String NATIVE_UTF16_CHARSET_NAME =
+        (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN)
+        ? "UTF-16BE" : "UTF-16LE";
+
     //~ Methods ----------------------------------------------------------------
 
     /**

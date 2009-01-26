@@ -52,7 +52,8 @@ class TuplePrinter
     virtual void postVisitRow();
     virtual void visitAttribute(std::string);
     virtual void visitString(std::string);
-    virtual void visitChars(char const *, TupleStorageByteLength iChars);
+    virtual void visitChars(char const *, TupleStorageByteLength nChars);
+    virtual void visitUnicodeChars(Ucs2ConstBuffer, uint nChars);
     virtual void visitUnsignedInt(uint64_t);
     virtual void visitSignedInt(int64_t);
     virtual void visitDouble(double);

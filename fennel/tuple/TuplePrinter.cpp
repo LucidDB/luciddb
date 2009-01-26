@@ -74,6 +74,12 @@ void TuplePrinter::visitChars(char const *c, TupleStorageByteLength n)
     visitString(s);
 }
 
+void TuplePrinter::visitUnicodeChars(Ucs2ConstBuffer c, uint n)
+{
+    // TODO jvs 13-Jan-2009:  something prettier
+    visitBytes(c, n*2);
+}
+
 void TuplePrinter::visitUnsignedInt(uint64_t i)
 {
     preVisitValue();

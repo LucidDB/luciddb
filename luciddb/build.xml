@@ -72,6 +72,9 @@ ${farrago.test.jvmargs}
 
   <property file="${farrago.dir}/initBuild.properties" />
   <property file="${luciddb.dir}/customBuild.properties" />
+  <!-- inherit Farrago custom build properties, but only if not already set 
+       by LucidDB -->
+  <property file="${farrago.dir}/customBuild.properties" />
 
   <!-- directory in which classes are built -->
   <property name="classes.dir" location="${luciddb.dir}/classes" />

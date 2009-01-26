@@ -209,7 +209,7 @@ public:
     //!   which is null in \c output.
     //! @param takeOwnership When true, the Calculator owns these TupleData, and will
     //!   delete them in its destructor.
-    void bind(TupleData* input, TupleData* output, bool takeOwnwership = false,
+    void bind(TupleData* input, TupleData* output, bool takeOwnership = false,
               const TupleData* outputWrite = 0);
 
 

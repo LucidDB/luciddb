@@ -85,15 +85,26 @@ class SegPageLock : public boost::noncopyable
         return origLockMode;
     }
 
+    inline void initialize()
+    {
+        // this is a dummy to keep happy optimizing compilers which are too
+        // smart for their own good
+        lockMode = LOCKMODE_X;
+        isWriteVersioned = false;
+    }
+    
+
 public:
     explicit SegPageLock()
     {
+        initialize();
         resetPage();
     }
 
     explicit SegPageLock(
         SegmentAccessor const &segmentAccessor)
     {
+        initialize();
         resetPage();
         accessSegment(segmentAccessor);
     }

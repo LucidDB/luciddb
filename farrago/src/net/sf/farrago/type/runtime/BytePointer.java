@@ -328,12 +328,11 @@ public class BytePointer
     }
 
     /*
-     * implement CharSequence the Default implementation. Only works for
-     * ISO-8859-1 If Unicode, or any other variable length encoding, it needs to
-     * override these functions.
-     *
+     * The next few methods implement CharSequence.  The default implementation
+     * only works for ISO-8859-1.  For non-singlebyte encodings, a subclass
+     * needs to override these functions.
      */
-
+    
     public int length()
     {
         return available();

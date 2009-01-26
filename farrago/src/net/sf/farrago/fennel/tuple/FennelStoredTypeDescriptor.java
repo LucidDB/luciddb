@@ -96,14 +96,6 @@ public interface FennelStoredTypeDescriptor
     public FennelAttributeAccessor newAttributeAccessor();
 
     /**
-     * Compares two tupledatums of this type.
-     *
-     * @return zero if they match, a negative value if the first is less than
-     * the second otherwise a positive value
-     */
-    public int compareValues(FennelTupleDatum datum1, FennelTupleDatum datum2);
-
-    /**
      * Indicates whether numeric data type is signed.
      *
      * @return false for non-numeric data types, false for unsigned numeric data
