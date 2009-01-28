@@ -996,8 +996,9 @@ public abstract class SqlTypeStrategies
                     {
                         throw opBinding.newError(
                             EigenbaseResource.instance().TypeNotComparable.ex(
-                                opBinding.getOperandType(0).toString(),
-                                opBinding.getOperandType(1).toString()));
+                                opBinding.getOperandType(0).getFullTypeString(),
+                                opBinding.getOperandType(1).getFullTypeString())
+                            );
                     }
 
                     pickedCollation =

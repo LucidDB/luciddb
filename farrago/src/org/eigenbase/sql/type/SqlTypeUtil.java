@@ -1301,6 +1301,22 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * Checks whether a type represents Unicode character data.
+     *
+     * @param type type to test
+     *
+     * @return whether type represents Unicode character data
+     */
+    public static boolean isUnicode(RelDataType type)
+    {
+        Charset charset = type.getCharset();
+        if (charset == null) {
+            return false;
+        }
+        return charset.name().startsWith("UTF");
+    }
+
+    /**
      * Convenience class for building a struct type with several fields.
      *
      * <p>TypeBuilder is more convenient because it supports chained calls to

@@ -26,43 +26,257 @@ Error: DDL validation error near line 2, column 29: Character set UTF-8 unsuppor
 > create table uni.t5(
 > i int not null primary key, v varchar(10) character set "LATIN1");
 > 
-> insert into uni.t5 values (1, 'hi');
+> insert into uni.t5 values (1, 'Hi');
 > 
 > select cast(v as varchar(1) character set "LATIN1") from uni.t5;
 +---------+
 | EXPR$0  |
 +---------+
-| h       |
+| H       |
 +---------+
 > 
 > -- should succeed:  2-byte Unicode
 > create table uni.t6(
 > i int not null primary key, v varchar(10) character set "UTF16");
 > 
-> insert into uni.t6 values (1, _UTF16'hi');
+> insert into uni.t6 values (1, _UTF16'Hi');
 > 
 > select * from uni.t6;
 +----+-----+
 | I  |  V  |
 +----+-----+
-| 1  | hi  |
+| 1  | Hi  |
 +----+-----+
 > 
 > select cast(v as varchar(1) character set "UTF16") from uni.t6;
 +---------+
 | EXPR$0  |
 +---------+
-| h       |
+| H       |
 +---------+
 > 
 > -- should fail:  unknown character set
 > select cast(v as varchar(1) character set "SANSKRIT") from uni.t6;
 Error: From line 1, column 18 to line 1, column 24: Character set SANSKRIT unsupported (state=,code=0)
 > 
-> -- FIXME:  single-byte to double-byte currently crashes in Fennel
-> -- select cast(v as varchar(1) character set "UTF16") from uni.t5;
+> select cast(v as varchar(1) character set "UTF16") from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| H       |
++---------+
 > 
-> -- FIXME:  double-byte to single-byte currently crashes in Fennel
-> -- select cast(v as varchar(1) character set "LATIN1") from uni.t6;
+> select cast(v as varchar(1) character set "LATIN1") from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| H       |
++---------+
+> 
+> select cast(v as char(40) character set "LATIN1") from uni.t5;
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Hi                                        |
++-------------------------------------------+
+> 
+> select cast(v as char(40) character set "UTF16") from uni.t6;
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Hi                                        |
++-------------------------------------------+
+> 
+> select cast(v as char(40) character set "UTF16") from uni.t5;
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Hi                                        |
++-------------------------------------------+
+> 
+> select cast(v as char(40) character set "LATIN1") from uni.t6;
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Hi                                        |
++-------------------------------------------+
+> 
+> select char_length(v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> select char_length(v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> select v||v from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| HiHi    |
++---------+
+> 
+> select v||v from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| HiHi    |
++---------+
+> 
+> select substring(v from 1 for 1) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| H       |
++---------+
+> 
+> select substring(v from 1 for 1) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| H       |
++---------+
+> 
+> select substring(v from 2 for 1) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| i       |
++---------+
+> 
+> select substring(v from 2 for 1) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| i       |
++---------+
+> 
+> select substring(v from 2) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| i       |
++---------+
+> 
+> select substring(v from 2) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| i       |
++---------+
+> 
+> select overlay(v placing 'a' from 2 for 1) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| Ha      |
++---------+
+> 
+> -- should fail:  character set mismatch
+> select overlay(v placing _UTF16'a' from 2 for 1) from uni.t5;
+Error: From line 1, column 8 to line 1, column 48: VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" is not comparable to CHAR(1) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL (state=,code=0)
+> 
+> select overlay(v placing _UTF16'a' from 2 for 1) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| Ha      |
++---------+
+> 
+> select overlay(v placing 'ya' from 3 for 0) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| Hiya    |
++---------+
+> 
+> select overlay(v placing _UTF16'ya' from 3 for 0) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| Hiya    |
++---------+
+> 
+> select position('i' in v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> -- FIXME:  should fail:  character set mismatch
+> -- select position(_UTF16'i' in v) from uni.t5;
+> 
+> select position(_UTF16'i' in v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> select trim(both from '  a  ') from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| a       |
++---------+
+> 
+> -- FIXME:  implicit trim char should match character set automatically
+> -- select trim(both from _UTF16'  a  ') from uni.t6;
+> 
+> select trim(both _UTF16' ' from _UTF16'  a  ') from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| a       |
++---------+
+> 
+> select upper(v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| HI      |
++---------+
+> 
+> select upper(v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| HI      |
++---------+
+> 
+> select lower(v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| hi      |
++---------+
+> 
+> select lower(v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| hi      |
++---------+
+> 
+> select initcap(v||v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| Hihi    |
++---------+
+> 
+> select initcap(v||v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| Hihi    |
++---------+
 > 
 > !quit

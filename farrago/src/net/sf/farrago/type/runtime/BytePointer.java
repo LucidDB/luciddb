@@ -80,13 +80,13 @@ public class BytePointer
     /**
      * An allocate-on-demand array used when a new value must be created.
      */
-    private byte [] ownBytes;
+    protected byte [] ownBytes;
 
     /**
      * two temp variables to store the substring pointers
      */
-    private int S1;
-    private int L1;
+    protected int S1;
+    protected int L1;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -152,12 +152,24 @@ public class BytePointer
         this.count = end;
     }
 
+    /**
+     * @return the charset used for this pointer's encoding, or
+     * BINARY if no character data is encoded
+     */
+    protected String getCharsetName()
+    {
+        return "BINARY";
+    }
+    
     // implement AssignableValue
     public void assignFrom(Object obj)
     {
+        // TODO jvs 28-Jan-2009:  optimized charset comparison?
         if (obj == null) {
             setNull(true);
-        } else if (obj instanceof BytePointer) {
+        } else if ((obj instanceof BytePointer)
+            && (getCharsetName().equals(((BytePointer) obj).getCharsetName())))
+        {
             BytePointer other = (BytePointer) obj;
             buf = other.buf;
             pos = other.pos;
@@ -181,7 +193,8 @@ public class BytePointer
     /**
      * Pads or truncates this value according to the given precision.
      *
-     * @param precision desired precision
+     * @param precision desired precision, in characters for
+     * character data, or bytes for binary data
      * @param needPad true if short values should be padded
      * @param padByte byte to pad with
      */
@@ -199,7 +212,7 @@ public class BytePointer
             count = pos + precision;
         } else if (needPad && (len < precision)) {
             // pad
-            allocateOwnBytes(precision);
+            allocateOwnBytesForPrecision(precision);
             System.arraycopy(buf, pos, ownBytes, 0, len);
             buf = ownBytes;
             for (; len < precision; ++len) {
@@ -258,6 +271,14 @@ public class BytePointer
             length,
             bp1.getByteCount(),
             true);
+        finishOverlay(bp1, bp2, starting);
+    }
+
+    protected void finishOverlay(
+        BytePointer bp1,
+        BytePointer bp2,
+        int starting)
+    {
         int totalLength = bp2.getByteCount() + bp1.getByteCount() - L1;
         allocateOwnBytes(totalLength);
         if ((L1 == 0) && (starting > bp1.getByteCount())) {
@@ -305,6 +326,9 @@ public class BytePointer
     {
         // can not be null.
         allocateOwnBytes(bp1.getByteCount() + bp2.getByteCount());
+
+        // This works equally well for both single-byte and double-byte
+        // representations.
         System.arraycopy(
             bp1.buf,
             bp1.pos,
@@ -345,10 +369,10 @@ public class BytePointer
 
     public CharSequence subSequence(int start, int end)
     {
-        BytePointer bp = new BytePointer();
-        if ((start < 0) || (end < 0) || (end >= getByteCount())) {
+        if ((start < 0) || (end < start) || (end >= getByteCount())) {
             throw new IndexOutOfBoundsException();
         }
+        BytePointer bp = new BytePointer();
         bp.setPointer(buf, pos + start, pos + end);
         return bp;
     }
@@ -462,12 +486,17 @@ public class BytePointer
 
     public int position(BytePointer bp1)
     {
+        return positionImpl(bp1, 1);
+    }
+    
+    protected int positionImpl(BytePointer bp1, int bytesPerChar)
+    {
         if (bp1.getByteCount() == 0) {
             return 1;
         }
         int cnt1 = bp1.getByteCount();
         int cnt = 1 + getByteCount() - cnt1;
-        for (int i = 0; i < cnt; i++) {
+        for (int i = 0; i < cnt; i += bytesPerChar) {
             boolean stillMatch = true;
             for (int j = 0; j < cnt1; j++) {
                 if (buf[pos + i + j] != bp1.buf[bp1.pos + j]) {
@@ -482,7 +511,7 @@ public class BytePointer
         return 0;
     }
 
-    private void copyFrom(BytePointer bp1)
+    protected void copyFrom(BytePointer bp1)
     {
         allocateOwnBytes(bp1.getByteCount());
         System.arraycopy(
@@ -502,7 +531,7 @@ public class BytePointer
 
     // we store the result in the member variables to avoid memory allocation.
 
-    private void calcSubstringPointers(
+    protected void calcSubstringPointers(
         int S,
         int L,
         int LC,
@@ -541,11 +570,16 @@ public class BytePointer
         }
     }
 
-    private void allocateOwnBytes(int n)
+    protected void allocateOwnBytes(int n)
     {
         if ((ownBytes == null) || (ownBytes.length < n)) {
             ownBytes = new byte[n];
         }
+    }
+
+    protected void allocateOwnBytesForPrecision(int n)
+    {
+        allocateOwnBytes(n);
     }
 
     /**
@@ -801,7 +835,7 @@ public class BytePointer
         if ((scale == 0) && (l == 0)) {
             len = 1;
         }
-        allocateOwnBytes(len);
+        allocateOwnBytesForPrecision(len);
         if ((scale == 0) && (l == 0)) {
             ownBytes[0] = (byte) '0';
         } else {

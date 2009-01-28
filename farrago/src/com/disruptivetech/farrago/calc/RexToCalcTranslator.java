@@ -1439,6 +1439,18 @@ public class RexToCalcTranslator
 
         public Void visitCall(RexCall call)
         {
+            // Currently, the Fennel calc does not support Unicode data,
+            // so for now bail out if either the operands or the result type
+            // are Unicode.
+            if (SqlTypeUtil.isUnicode(call.getType())) {
+                throw new TranslationException();
+            }
+            for (RexNode operand : call.getOperands()) {
+                if (SqlTypeUtil.isUnicode(operand.getType())) {
+                    throw new TranslationException();
+                }
+            }
+            
             final SqlOperator op = call.getOperator();
             CalcRexImplementor implementor =
                 translator.implementorTable.get(op);
