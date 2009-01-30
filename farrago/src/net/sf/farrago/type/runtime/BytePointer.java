@@ -362,6 +362,11 @@ public class BytePointer
         return available();
     }
 
+    protected void setCharAt(int index, char c)
+    {
+        buf[pos + index] = (byte) c;
+    }
+    
     public char charAt(int index)
     {
         return (char) buf[pos + index];
@@ -582,6 +587,11 @@ public class BytePointer
         allocateOwnBytes(n);
     }
 
+    protected int getByteCountForPrecision(int n)
+    {
+        return n;
+    }
+
     /**
      * Writes the contents of this pointer to a ByteBuffer.
      *
@@ -691,22 +701,23 @@ public class BytePointer
         //
 
         if (d == 0) {
+            pos = 0;
             if (precision >= 3) {
-                allocateOwnBytes(3);
-                ownBytes[0] = (byte) '0';
-                ownBytes[1] = (byte) 'E';
-                ownBytes[2] = (byte) '0';
-                count = 3;
+                allocateOwnBytesForPrecision(3);
+                buf = ownBytes;
+                count = getByteCountForPrecision(3);
+                setCharAt(0, '0');
+                setCharAt(1, 'E');
+                setCharAt(2, '0');
             } else if (precision >= 1) {
-                allocateOwnBytes(1);
-                ownBytes[0] = (byte) '0';
-                count = 1;
+                allocateOwnBytesForPrecision(1);
+                buf = ownBytes;
+                count = getByteCountForPrecision(1);
+                setCharAt(0, '0');
             } else {
                 // char(0) is it possible?
                 throw FarragoResource.instance().Overflow.ex();
             }
-            buf = ownBytes;
-            pos = 0;
             return;
         }
 
@@ -714,7 +725,7 @@ public class BytePointer
         if (precision < s.length()) {
             throw FarragoResource.instance().Overflow.ex();
         }
-        ownBytes = s.getBytes();
+        ownBytes = getBytesForString(s);
         buf = ownBytes;
         pos = 0;
         count = buf.length;
@@ -729,7 +740,7 @@ public class BytePointer
             throw FarragoResource.instance().Overflow.ex();
         }
 
-        buf = str.getBytes();
+        buf = getBytesForString(str);
         pos = 0;
         count = buf.length;
     }
@@ -836,11 +847,14 @@ public class BytePointer
             len = 1;
         }
         allocateOwnBytesForPrecision(len);
+        buf = ownBytes;
+        pos = 0;
+        count = getByteCountForPrecision(len);
         if ((scale == 0) && (l == 0)) {
-            ownBytes[0] = (byte) '0';
+            setCharAt(0, '0');
         } else {
             if (negative) {
-                ownBytes[0] = (byte) '-';
+                setCharAt(0, '-');
             }
             int i = 0;
             for (templ = l; i < digits; i++, templ = templ / 10) {
@@ -848,17 +862,13 @@ public class BytePointer
                 if (negative) {
                     currentDigit = -currentDigit;
                 }
-                ownBytes[len - 1 - i] = (byte) ('0' + (char) currentDigit);
+                setCharAt(len - 1 - i, (char) ('0' + (char) currentDigit));
                 if ((scale > 0) && (i == (scale - 1))) {
                     i++;
-                    ownBytes[len - 1 - i] = (byte) '.';
+                    setCharAt(len - 1 - i, '.');
                 }
             }
         }
-
-        buf = ownBytes;
-        pos = 0;
-        count = len;
     }
 }
 

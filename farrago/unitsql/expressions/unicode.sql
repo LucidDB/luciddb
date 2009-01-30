@@ -108,3 +108,102 @@ select lower(v) from uni.t6;
 select initcap(v||v) from uni.t5;
 
 select initcap(v||v) from uni.t6;
+
+-- for comparison ops, first test with Fennel ReshapeExecStream
+
+select * from uni.t5 where v = 'Hi';
+
+-- should fail:  character set mismatch
+select * from uni.t6 where v = 'Hi';
+
+select * from uni.t6 where v = _UTF16'Hi';
+
+select * from uni.t6 where v = _UTF16'Hi  ';
+
+select * from uni.t6 where v = _UTF16'hi';
+
+select * from uni.t6 where v > _UTF16'H';
+
+select * from uni.t6 where v >= _UTF16'H';
+
+select * from uni.t6 where v >= _UTF16'Hi';
+
+select * from uni.t6 where v >= _UTF16'Ice';
+
+select * from uni.t6 where v < _UTF16'H';
+
+select * from uni.t6 where v <= _UTF16'Ice';
+
+select * from uni.t6 where v <> _UTF16'Hi';
+
+select * from uni.t6 where v <> _UTF16'bye';
+
+-- retest comparison ops with Java calc (concat operator prevents
+-- usage of ReshapeExecStream)
+
+select * from uni.t5 where v||'' = 'Hi';
+
+select * from uni.t6 where v||_UTF16'' = _UTF16'Hi';
+
+select * from uni.t6 where v||_UTF16'' = _UTF16'Hi  ';
+
+select * from uni.t6 where v||_UTF16'' = _UTF16'hi';
+
+select * from uni.t6 where v||_UTF16'' > _UTF16'H';
+
+select * from uni.t6 where v||_UTF16'' >= _UTF16'H';
+
+select * from uni.t6 where v||_UTF16'' >= _UTF16'Hi';
+
+select * from uni.t6 where v||_UTF16'' >= _UTF16'Ice';
+
+select * from uni.t6 where v||_UTF16'' < _UTF16'H';
+
+select * from uni.t6 where v||_UTF16'' <= _UTF16'Ice';
+
+select * from uni.t6 where v||_UTF16'' <> _UTF16'Hi';
+
+select * from uni.t6 where v||_UTF16'' <> _UTF16'bye';
+
+
+-- test pattern matching
+
+select * from uni.t5 where v like 'H%';
+
+select * from uni.t5 where v like 'I%';
+
+select * from uni.t5 where v like '_i';
+
+select * from uni.t5 where v like '_a';
+
+select * from uni.t6 where v like _UTF16'H%';
+
+select * from uni.t6 where v like _UTF16'I%';
+
+select * from uni.t6 where v like _UTF16'_i';
+
+select * from uni.t6 where v like _UTF16'_a';
+
+-- should fail:  character set mismatch
+
+select * from uni.t6 where v like 'H%';
+
+
+-- test conversion
+
+values cast(_UTF16'123' as int);
+
+values cast(0.0 as varchar(128) character set "UTF16");
+
+values cast(1.2e80 as varchar(128) character set "UTF16");
+
+values cast(0 as varchar(128) character set "UTF16");
+
+values cast(123.45 as varchar(128) character set "UTF16");
+
+values cast(true as varchar(128) character set "UTF16");
+
+values cast(date '1994-09-08' as varchar(128) character set "UTF16");
+
+select cast(v as int) from uni.t6;
+

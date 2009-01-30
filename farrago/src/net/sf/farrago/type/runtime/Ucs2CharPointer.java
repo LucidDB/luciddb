@@ -48,6 +48,11 @@ public class Ucs2CharPointer
         allocateOwnBytes(n << 1);
     }
 
+    protected int getByteCountForPrecision(int n)
+    {
+        return n << 1;
+    }
+
     // override BytePointer
     public void enforceBytePrecision(
         int precision,
@@ -140,7 +145,7 @@ public class Ucs2CharPointer
         return (char) ((b1 << 8) + b0);
     }
 
-    private void setCharAt(int index, char c)
+    protected void setCharAt(int index, char c)
     {
         // FIXME jvs 21-Jan-2009:  code below assumes little-endian
         int x = pos + (index << 1);
@@ -273,6 +278,13 @@ public class Ucs2CharPointer
                 bWordBegin = false;
             }
         }
+    }
+    
+    // override BytePointer
+    public long attemptFastAsciiByteToLong()
+    {
+        // can't deal with Unicode yet, so punt
+        return Long.MAX_VALUE;
     }
 }
 

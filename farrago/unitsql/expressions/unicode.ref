@@ -279,4 +279,289 @@ Error: From line 1, column 8 to line 1, column 48: VARCHAR(10) CHARACTER SET "IS
 | Hihi    |
 +---------+
 > 
+> -- for comparison ops, first test with Fennel ReshapeExecStream
+> 
+> select * from uni.t5 where v = 'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> -- should fail:  character set mismatch
+> select * from uni.t6 where v = 'Hi';
+Error: From line 1, column 28 to line 1, column 35: Cannot apply = to the two different charsets UTF-16LE and ISO-8859-1 (state=,code=0)
+> 
+> select * from uni.t6 where v = _UTF16'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v = _UTF16'Hi  ';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v = _UTF16'hi';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v > _UTF16'H';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v >= _UTF16'H';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v >= _UTF16'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v >= _UTF16'Ice';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v < _UTF16'H';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v <= _UTF16'Ice';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v <> _UTF16'Hi';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v <> _UTF16'bye';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> -- retest comparison ops with Java calc (concat operator prevents
+> -- usage of ReshapeExecStream)
+> 
+> select * from uni.t5 where v||'' = 'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||_UTF16'' = _UTF16'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||_UTF16'' = _UTF16'Hi  ';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||_UTF16'' = _UTF16'hi';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v||_UTF16'' > _UTF16'H';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||_UTF16'' >= _UTF16'H';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||_UTF16'' >= _UTF16'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||_UTF16'' >= _UTF16'Ice';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v||_UTF16'' < _UTF16'H';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v||_UTF16'' <= _UTF16'Ice';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||_UTF16'' <> _UTF16'Hi';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v||_UTF16'' <> _UTF16'bye';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> 
+> -- test pattern matching
+> 
+> select * from uni.t5 where v like 'H%';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t5 where v like 'I%';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t5 where v like '_i';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t5 where v like '_a';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v like _UTF16'H%';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v like _UTF16'I%';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v like _UTF16'_i';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v like _UTF16'_a';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> -- should fail:  character set mismatch
+> 
+> select * from uni.t6 where v like 'H%';
+Error: From line 0, column 0 to line 1, column 38: Operands V, 'H%' not comparable to each other (state=,code=0)
+> 
+> 
+> -- test conversion
+> 
+> values cast(_UTF16'123' as int);
++---------+
+| EXPR$0  |
++---------+
+| 123     |
++---------+
+> 
+> values cast(0.0 as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| .0      |
++---------+
+> 
+> values cast(1.2e80 as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| 1.2E80  |
++---------+
+> 
+> values cast(0 as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+> 
+> values cast(123.45 as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| 123.45  |
++---------+
+> 
+> values cast(true as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| TRUE    |
++---------+
+> 
+> values cast(date '1994-09-08' as varchar(128) character set "UTF16");
++-------------+
+|   EXPR$0    |
++-------------+
+| 1994-09-08  |
++-------------+
+> 
+> select cast(v as int) from uni.t6;
+Error: Cannot assign 'Hi' to a NUMERIC value: NumberFormatException (state=,code=0)
+> 
+> 
 > !quit
