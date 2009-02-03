@@ -616,6 +616,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot drop {0} because it is currently in use by a statement</text>
 </exception>
 
+<exception id="420981" name="ValidatorDropObjectInUseBySession">
+<text>Cannot drop {0} because it is currently in use by a session</text>
+</exception>
+
 <exception id="420990" name="ValidatorAnalyzeFailed">
 <text>Unable to execute ANALZYE statement</text>
 </exception>

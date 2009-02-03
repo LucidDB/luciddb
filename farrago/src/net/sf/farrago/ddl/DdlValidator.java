@@ -1797,10 +1797,17 @@ public class DdlValidator
                         CwmModelElement droppedElement =
                             (CwmModelElement) getRepos().getMdrRepos()
                                                         .getByMofId(mofId);
-                        throw FarragoResource.instance()
-                        .ValidatorDropObjectInUse.ex(
-                            getRepos().getLocalizedObjectName(
-                                droppedElement));
+                        if (droppedElement instanceof FemLabel) {
+                            throw FarragoResource.instance()
+                            .ValidatorDropObjectInUseBySession.ex(
+                                getRepos().getLocalizedObjectName(
+                                    droppedElement));
+                        } else {
+                            throw FarragoResource.instance()
+                            .ValidatorDropObjectInUse.ex(
+                                getRepos().getLocalizedObjectName(
+                                    droppedElement));
+                        }
                     }
                 });
         }

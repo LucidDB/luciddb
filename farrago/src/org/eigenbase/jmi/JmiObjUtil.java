@@ -86,7 +86,6 @@ public abstract class JmiObjUtil
         SortedMap<String, Object> map)
     {
         RefClass refClass = dst.refClass();
-        MofClass mofClass = (MofClass) refClass.refMetaObject();
         for (Attribute attr : getFeatures(refClass, Attribute.class, false)) {
             if (!(attr.getScope().equals(ScopeKindEnum.INSTANCE_LEVEL))) {
                 continue;
@@ -148,8 +147,8 @@ public abstract class JmiObjUtil
 
     private static boolean compositeEquals(RefObject obj1, RefObject obj2)
     {
-        SortedMap map1 = getAttributeValues(obj1);
-        SortedMap map2 = getAttributeValues(obj2);
+        SortedMap<String, Object> map1 = getAttributeValues(obj1);
+        SortedMap<String, Object> map2 = getAttributeValues(obj2);
 
         return map1.equals(map2);
     }
@@ -228,7 +227,7 @@ public abstract class JmiObjUtil
      *
      * @return string representation of XMI
      */
-    public static String exportToXmiString(Collection collection)
+    public static String exportToXmiString(Collection<?> collection)
     {
         XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
@@ -274,7 +273,6 @@ public abstract class JmiObjUtil
     public static RefObject newClone(RefObject refObject)
     {
         RefClass refClass = refObject.refClass();
-        MofClass mofClass = (MofClass) refClass.refMetaObject();
         RefObject cloned = refClass.refCreateInstance(Collections.EMPTY_LIST);
         copyAttributes(cloned, refObject);
         return cloned;
@@ -287,12 +285,14 @@ public abstract class JmiObjUtil
      *
      * @return corresponding Java interface
      */
-    public static Class getJavaInterfaceForRefClass(RefClass refClass)
+    public static Class<? extends RefClass> getJavaInterfaceForRefClass(
+        RefClass refClass)
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
             refClass.getClass(),
-            "$Impl");
+            RefClass.class,
+            "$");
     }
 
     /**
@@ -302,12 +302,14 @@ public abstract class JmiObjUtil
      *
      * @return corresponding Java interface
      */
-    public static Class getJavaInterfaceForRefAssoc(RefAssociation refAssoc)
+    public static Class<? extends RefAssociation> getJavaInterfaceForRefAssoc(
+        RefAssociation refAssoc)
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
             refAssoc.getClass(),
-            "$Impl");
+            RefAssociation.class,
+            "$");
     }
 
     /**
@@ -318,12 +320,14 @@ public abstract class JmiObjUtil
      *
      * @return corresponding Java interface
      */
-    public static Class getJavaInterfaceForRefObject(RefClass refClass)
+    public static Class<? extends RefObject> getJavaInterfaceForRefObject(
+        RefClass refClass)
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
             refClass.getClass(),
-            "Class$Impl");
+            RefObject.class,
+            "Class$");
     }
 
     /**
@@ -333,29 +337,36 @@ public abstract class JmiObjUtil
      *
      * @return corresponding Java interface
      */
-    public static Class getJavaInterfaceForRefPackage(RefPackage refPackage)
+    public static Class<? extends RefPackage> getJavaInterfaceForRefPackage(
+        RefPackage refPackage)
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
             refPackage.getClass(),
-            "$Impl");
+            RefPackage.class,
+            "$");
     }
 
-    private static Class getJavaInterfaceForProxy(
-        Class proxyClass,
-        String classSuffix)
+    private static <T> Class<? extends T> getJavaInterfaceForProxy(
+        Class<?> proxyClass,
+        Class<T> resultClass,
+        String delimiter)
         throws ClassNotFoundException
     {
-        // REVIEW: This hack is dependent on the way MDR names
-        // implementation classes.
+        // REVIEW: This hack is dependent on the way MDR/Enki names
+        // implementation classes.  Note that different Enki repository
+        // implementations may use different suffixes, hence we allow
+        // any string following the delimiter.
         String className = proxyClass.getName();
-        assert (className.endsWith(classSuffix));
-        className =
-            className.substring(0, className.length() - classSuffix.length());
-        return Class.forName(
-            className,
-            true,
-            proxyClass.getClassLoader());
+        
+        int delimPos = className.lastIndexOf(delimiter);
+        assert(delimPos > 0); // Must be found and not at start of string
+
+        className = className.substring(0, delimPos);
+
+        return
+            Class.forName(className, true, proxyClass.getClassLoader())
+            	.asSubclass(resultClass);
     }
 
     /**
