@@ -43,6 +43,19 @@ Please report issues at Eigenbase JIRA:
 
 http://issues.eigenbase.org
 
+------------------------------------------------------------
+LEGAL
+
+Copyright (C) 2005-2009 LucidEra Inc
+Copyright (C) 1999-2009 The Eigenbase Project and others
+
+LucidDB and the LucidDB logo are trademarks of LucidEra, Inc.
+
+This distribution of LucidDB is licensed under the GNU General
+Public License; see file COPYING for details.  License terms for
+third-party libraries contained in this distribution are provided as
+text files in the lib directory.
+
 ----------------------------------------------------------------------
 CHANGE HISTORY
 
