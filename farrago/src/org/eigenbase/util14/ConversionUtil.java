@@ -44,6 +44,23 @@ public class ConversionUtil
         (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN)
         ? "UTF-16BE" : "UTF-16LE";
 
+    /**
+     * A constant string which can be used wherever a Java string containing
+     * Unicode characters is needed in a test.  It spells 'anthropos' in Greek.
+     */
+    public static final String TEST_UNICODE_STRING =
+        "\u03B1\u03BD\u03B8\u03C1\u03C9\u03C0\u03BF\u03C2";
+
+    /**
+     * A constant string which can be used wherever a SQL literal containing
+     * Unicode escape characters is needed in a test.  It spells 'anthropos' in
+     * Greek.  The escape character is the SQL default (backslash); note
+     * that the backslash-doubling here is for Java only, so by the time
+     * the SQL parser gets it, there is only one backslash.
+     */
+    public static final String TEST_UNICODE_SQL_ESCAPED_LITERAL =
+        "\\03B1\\03BD\\03B8\\03C1\\03C9\\03C0\\03BF\\03C2";
+
     //~ Methods ----------------------------------------------------------------
 
     /**

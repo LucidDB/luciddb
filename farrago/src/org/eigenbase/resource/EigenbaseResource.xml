@@ -112,6 +112,26 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Unknown character set ''{0}''</text>
 </exception>
 
+<exception id="100160" name="CharsetEncoding">
+    <text>Failed to encode ''{0}'' in character set ''{1}''</text>
+</exception>
+
+<exception id="100170" name="UnicodeEscapeCharLength">
+    <text>UESCAPE ''{0}'' must be exactly one character</text>
+</exception>
+
+<exception id="100180" name="UnicodeEscapeCharIllegal">
+    <text>UESCAPE ''{0}'' may not be hex digit, whitespace, plus sign, or double quote</text>
+</exception>
+
+<exception id="100190" name="UnicodeEscapeUnexpected">
+    <text>UESCAPE cannot be specified without Unicode literal introducer</text>
+</exception>
+
+<exception id="100200" name="UnicodeEscapeMalformed">
+    <text>Unicode escape sequence starting at character {0,number,#} is not exactly four hex digits</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->
 <!-- ====================================================================== -->

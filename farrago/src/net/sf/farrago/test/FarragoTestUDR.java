@@ -155,6 +155,23 @@ public abstract class FarragoTestUDR
         }
     }
 
+    public static String convertUnicodeToEscapedForm(String s)
+    {
+        StringBuffer sb = new StringBuffer();
+        int n = s.length();
+        for (int i = 0; i < n; ++i) {
+            char c = s.charAt(i);
+            int v = (int) c;
+            if (v < 128) {
+                sb.append(c);
+            } else {
+                sb.append('\\');
+                sb.append(String.format("%1$04X", v));
+            }
+        }
+        return sb.toString();
+    }
+
     public static String decryptPublicKey(byte [] keyBytes)
     {
         if (keyBytes == null) {

@@ -85,7 +85,9 @@ public final class SqlParserUtil
     }
 
     /**
-     * Converts the contents of an sql quoted string literal into a java string.
+     * Converts the contents of an sql quoted string literal into the
+     * corresponding Java string representation (removing leading and
+     * trailing quotes and unescaping internal doubled quotes).
      */
     public static String parseString(String s)
     {
@@ -778,6 +780,29 @@ outer:
             assert list.size() < count;
         }
         return (SqlNode) list.get(start);
+    }
+
+    /**
+     * Checks a UESCAPE string for validity, and returns the escape
+     * character if no exception is thrown.
+     *
+     * @param s UESCAPE string to check
+     *
+     * @return validated escape character
+     */
+    public static char checkUnicodeEscapeChar(String s)
+    {
+        if (s.length() != 1) {
+            throw EigenbaseResource.instance().UnicodeEscapeCharLength.ex(s);
+        }
+        char c = s.charAt(0);
+        if (Character.isDigit(c) || Character.isWhitespace(c)
+            || (c == '+') || (c == '"') || ((c >= 'a' && c <= 'f'))
+            || ((c >= 'A' && c <= 'F')))
+        {
+            throw EigenbaseResource.instance().UnicodeEscapeCharIllegal.ex(s);
+        }
+        return c;
     }
 
     //~ Inner Classes ----------------------------------------------------------
