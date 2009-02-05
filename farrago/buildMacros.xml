@@ -835,6 +835,11 @@ ${farrago.test.jvmargs}
       classname="org.eigenbase.enki.hibernate.ant.ExportSchemaSubTask"
       classpathref="farrago.3p.classpath"
       loaderRef="mdr_loader"/>
+    <typedef 
+      name="applyTablePrefix"
+      classname="org.eigenbase.enki.hibernate.ant.ApplyTablePrefixSubTask"
+      classpathref="farrago.3p.classpath"
+      loaderRef="mdr_loader"/>
   </target>
 
   <!-- Macro for creating a TAGS file suitable for use in Emacs -->

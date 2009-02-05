@@ -46,6 +46,9 @@
   <property name="plugin.catalog.src.dir" 
     location="${plugin.catalog.dir}/java"/>
 
+  <property name="plugin.catalog.sql.dir" 
+    location="${plugin.catalog.dir}/sql"/>
+
   <property name="plugin.catalog.schema" value="${project.catalog.schema}"/>
 
   <property name="plugin.src.dir" 
@@ -173,6 +176,8 @@
     <farrago.setReposProvider
       reposStorageProps="${plugin.repos.storage.propfile}"/>
 
+    <mkdir dir="${plugin.catalog.sql.dir}"/>
+
     <mdr
         propertiesFile="${plugin.repos.storage.propfile}"
         logConfigFile="${FarragoMdrBuildTrace.properties}"
@@ -181,12 +186,21 @@
         mode="model-plugin"
         dir="${plugin.catalog.src.dir}"
         extent="FarragoMetamodel"/>
+      <applyTablePrefix output="${plugin.catalog.sql.dir}">
+        <fileset dir="${plugin.catalog.src.dir}">
+          <include name="**/*.sql"/>
+        </fileset>
+      </applyTablePrefix>
     </mdr>
 
     <property 
         file="${plugin.repos.storage.propfile}"
         prefix="gensch"/>
 
+    <!-- N.B. this expects that the given database already has the FEM
+         metamodel in place and that we just need to create the plugin's
+         tables. Otherwise, need to invoke farrago/catalog/sql/provider.sql 
+         and create.sql as well. -->
     <echo>
       Configuring repository schema at:
       ${gensch.net.sf.farrago.dev.connection.schema.url}
@@ -197,7 +211,7 @@
         userid="${gensch.net.sf.farrago.dev.connection.username}"
         password="${gensch.net.sf.farrago.dev.connection.password}"
         classpathref="plugin.classpath">
-      <fileset dir="${plugin.catalog.src.dir}">
+      <fileset dir="${plugin.catalog.sql.dir}">
         <include name="**/create.sql"/>
       </fileset>
     </sql>
