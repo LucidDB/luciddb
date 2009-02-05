@@ -803,7 +803,7 @@ public class SqlLiteral
         assert(SqlTypeUtil.inCharFamily(getTypeName()));
         NlsString ns = (NlsString) value;
         String s = ns.getValue();
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int n = s.length();
         for (int i = 0; i < n; ++i) {
             char c = s.charAt(i);

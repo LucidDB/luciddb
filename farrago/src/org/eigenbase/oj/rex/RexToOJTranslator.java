@@ -257,8 +257,26 @@ public class RexToOJTranslator
             setTranslation(Literal.constantNull());
             break;
         case CHAR:
-            setTranslation(
-                Literal.makeLiteral(((NlsString) value).getValue()));
+            Literal lit =
+                Literal.makeLiteral(((NlsString) value).getValue());
+            // Replace non-ASCII characters with Java Unicode escape
+            // sequences to avoid encoding glitches in the generated
+            // Java code.
+            String s = lit.toString();
+            int n = s.length();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < n; ++i) {
+                char c = s.charAt(i);
+                int v = (int) c;
+                if (v < 128) {
+                    sb.append(c);
+                } else {
+                    sb.append("\\u");
+                    sb.append(String.format("%1$04X", v));
+                }
+            }
+            lit = new Literal(Literal.STRING, sb.toString());
+            setTranslation(lit);
             break;
         case BOOLEAN:
             setTranslation(Literal.makeLiteral((Boolean) value));
