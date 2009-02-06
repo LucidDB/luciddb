@@ -617,8 +617,7 @@ ${farrago.test.jvmargs}
         file="${FarragoMetamodel.xmi}"
         extent="FarragoMetamodel"
         dir="${farrago.catalog.src.dir}"
-        generatorClass="${farrago.enki.generator}"
-        generatorOptions="tablePrefix='FEM_'"/>
+        generatorClass="${farrago.enki.generator}"/>
     </mdr>
 
     <delete quiet="true">
@@ -641,6 +640,11 @@ ${farrago.test.jvmargs}
         mode="model"
         dir="${farrago.catalog.src.dir}"
         extent="FarragoMetamodel"/>
+      <applyTablePrefix output="${farrago.catalog.sql.dir}">
+        <fileset dir="${farrago.catalog.src.dir}">
+          <include name="**/*.sql"/>
+        </fileset>
+      </applyTablePrefix>
     </mdr>
 
     <property 
@@ -659,10 +663,10 @@ ${farrago.test.jvmargs}
         classpathref="farrago.3p.classpath">
       <!-- Ant will alphaebtize if these are in the same fileset. 
            Keep provider.sql first, since it logically belongs first. -->
-      <fileset dir="${farrago.catalog.src.dir}">
+      <fileset dir="${farrago.catalog.sql.dir}">
         <include name="**/provider.sql"/>
       </fileset>
-      <fileset dir="${farrago.catalog.src.dir}">
+      <fileset dir="${farrago.catalog.sql.dir}">
         <include name="**/create.sql"/>
       </fileset>
     </sql>

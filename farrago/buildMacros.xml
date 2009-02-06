@@ -383,6 +383,7 @@ ${farrago.test.jvmargs}
     <pathelement location="${vjdbc.dir}/lib/commons-pool-1.3.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-dbcp-1.2.1.jar"/>
     <pathelement location="${vjdbc.dir}/lib/commons-digester-1.7.jar"/>
+    <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
@@ -390,7 +391,6 @@ ${farrago.test.jvmargs}
   <!-- classpath for execution -->
   <path id="farrago.run.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
-    <pathelement location="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
     <pathelement path="${test.emma.classpath}" />
@@ -835,6 +835,11 @@ ${farrago.test.jvmargs}
       classname="org.eigenbase.enki.hibernate.ant.ExportSchemaSubTask"
       classpathref="farrago.3p.classpath"
       loaderRef="mdr_loader"/>
+    <typedef 
+      name="applyTablePrefix"
+      classname="org.eigenbase.enki.hibernate.ant.ApplyTablePrefixSubTask"
+      classpathref="farrago.3p.classpath"
+      loaderRef="mdr_loader"/>
   </target>
 
   <!-- Macro for creating a TAGS file suitable for use in Emacs -->
@@ -887,10 +892,21 @@ ${farrago.test.jvmargs}
           </loadproperties>
       
           <condition 
-            property="farrago.enki.generator"
-            value="org.eigenbase.enki.hibernate.codegen.HibernateGenerator"
-            else="org.eigenbase.enki.netbeans.codegen.NetbeansGenerator">
+              property="farrago.enki.generator"
+              value="org.eigenbase.enki.hibernate.codegen.HibernateGenerator">
             <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+          </condition>
+          <condition 
+              property="farrago.enki.generator"
+              value="org.eigenbase.enki.trans.codegen.TransientGenerator">
+            <equals arg1="${farrago.enki.provider}" arg2="ENKI_TRANSIENT"/>
+          </condition>
+          <condition 
+              property="farrago.enki.generator"
+              value="org.eigenbase.enki.netbeans.codegen.NetbeansGenerator">
+            <not>
+              <isset property="farrago.enki.generator"/>
+            </not>
           </condition>
         </then>
       </ac:if>
