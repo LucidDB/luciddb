@@ -196,14 +196,14 @@ void LhxHashTableTest::testInsert(
     TupleDescriptor inputDesc;
     TupleProjection keyProj;
     TupleProjection dataProj;
-    std::vector<bool> isKeyVarChar;
+    std::vector<LhxHashTrim> isKeyVarChar;
 
     for (i = 0; i < numCols; i ++) {
         inputDesc.push_back(attrDesc_int32);
 
         if ( i < numKeyCols) {
             keyProj.push_back(i);
-            isKeyVarChar.push_back(false);
+            isKeyVarChar.push_back(HASH_TRIM_NONE);
         } else if (i < numKeyCols + numAggs) {
             hashInfo.aggsProj.push_back(i);
         } else {

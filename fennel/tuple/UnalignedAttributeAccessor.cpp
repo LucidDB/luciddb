@@ -50,7 +50,8 @@ void UnalignedAttributeAccessor::compute(
         !attrDescriptor.isNullable
         && !isCompressedInt64
         && (typeOrdinal != STANDARD_TYPE_VARCHAR)
-        && (typeOrdinal != STANDARD_TYPE_VARBINARY);
+        && (typeOrdinal != STANDARD_TYPE_VARBINARY)
+        && (typeOrdinal != STANDARD_TYPE_UNICODE_VARCHAR);
 }
 
 bool UnalignedAttributeAccessor::isInitialized() const

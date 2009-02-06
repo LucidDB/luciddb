@@ -25,6 +25,8 @@ package net.sf.farrago.ddl;
 import java.util.*;
 import java.util.logging.*;
 
+import java.nio.charset.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
@@ -502,6 +504,14 @@ public abstract class DdlHandler implements ReflectiveVisitor
             column.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         } else {
             column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
+        }
+        Charset charset = type.getCharset();
+        if (charset != null) {
+            column.setCharacterSetName(charset.name());
+        }
+        SqlCollation collation = type.getCollation();
+        if (collation != null) {
+            column.setCollationName(collation.getCollationName());
         }
     }
 

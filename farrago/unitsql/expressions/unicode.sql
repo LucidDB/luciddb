@@ -1,6 +1,8 @@
 -- $Id$
 -- Test Unicode data
 
+-- FIXME jvs 5-Feb-2009:  collations are all messed up as usual
+
 create schema uni;
 
 -- should fail:  unknown character set
@@ -263,3 +265,37 @@ where i=2 and v = U&'\03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2';
 
 select count(*) from uni.t6 
 where i=2 and v = U&'avast ye';
+
+-- verify that view columns inherit the underlying character set
+create view uni.v6(vi,vv) as select * from uni.t6;
+select uni.convert_to_escaped(vv) from uni.v6 order by vi;
+select "characterSetName"
+from sys_cwm."Relational"."Column" 
+where "name" = 'VV';
+
+create view uni.v1 as
+select * from (values (trim(leading U&' ' from U&'oops  '))) as v(x);
+create view uni.v2 as
+select * from (values (trim(leading U&' ' from U&'oops    '))) as v(x);
+
+-- verify that hash join does the right thing with trailing spaces
+-- (ignores them for equality comparison purposes)
+select count(*) from uni.v1, uni.v2 where v1.x=v2.x;
+
+select * from uni.v1
+union all
+select * from uni.v2
+order by x;
+
+-- verify that hash agg does the right thing with trailing spaces
+-- (ignores them for equality comparison purposes)
+select * from uni.v1
+union
+select * from uni.v2;
+
+-- verify that UNION type aggregation does not accidentally revert to ISO-8859-1
+!set outputformat csv
+explain plan for
+select * from uni.v1
+union all
+select * from uni.v2;

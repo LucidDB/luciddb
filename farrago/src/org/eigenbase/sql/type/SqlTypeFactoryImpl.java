@@ -241,7 +241,12 @@ public class SqlTypeFactoryImpl
                 return null;
             }
             if (SqlTypeUtil.inCharOrBinaryFamilies(type)) {
-                // TODO:  character set, collation
+                Charset charset1 = type.getCharset();
+                Charset charset2 = resultType.getCharset();
+                SqlCollation collation1 = type.getCollation();
+                SqlCollation collation2 = resultType.getCollation();
+                
+                // TODO:  refine collation combination rules
                 int precision =
                     Math.max(
                         resultType.getPrecision(),
@@ -278,6 +283,32 @@ public class SqlTypeFactoryImpl
                         createSqlType(
                             newTypeName,
                             precision);
+                }
+                Charset charset = null;
+                SqlCollation collation = null;
+                if ((charset1 != null) || (charset2 != null)) {
+                    if (charset1 == null) {
+                        charset = charset2;
+                        collation = collation2;
+                    } else if (charset2 == null) {
+                        charset = charset1;
+                        collation = collation1;
+                    } else if (charset1.equals(charset2)) {
+                        charset = charset1;
+                        collation = collation1;
+                    } else if (charset1.contains(charset2)) {
+                        charset = charset1;
+                        collation = collation1;
+                    } else {
+                        charset = charset2;
+                        collation = collation2;
+                    }
+                }
+                if (charset != null) {
+                    resultType = createTypeWithCharsetAndCollation(
+                        resultType,
+                        charset,
+                        collation);
                 }
             } else if (SqlTypeUtil.isExactNumeric(type)) {
                 if (SqlTypeUtil.isExactNumeric(resultType)) {

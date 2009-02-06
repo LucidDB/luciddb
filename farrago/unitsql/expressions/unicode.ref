@@ -1,6 +1,8 @@
 > -- $Id$
 > -- Test Unicode data
 > 
+> -- FIXME jvs 5-Feb-2009:  collations are all messed up as usual
+> 
 > create schema uni;
 > 
 > -- should fail:  unknown character set
@@ -695,5 +697,79 @@ Error: Cannot assign 'Hi' to a NUMERIC value: NumberFormatException (state=,code
 +---------+
 | 0       |
 +---------+
+> 
+> -- verify that view columns inherit the underlying character set
+> create view uni.v6(vi,vv) as select * from uni.t6;
+> select uni.convert_to_escaped(vv) from uni.v6 order by vi;
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Hi                                        |
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-------------------------------------------+
+> select "characterSetName"
+> from sys_cwm."Relational"."Column" 
+> where "name" = 'VV';
++-------------------+
+| characterSetName  |
++-------------------+
+| UTF-16LE          |
++-------------------+
+> 
+> create view uni.v1 as
+> select * from (values (trim(leading U&' ' from U&'oops  '))) as v(x);
+> create view uni.v2 as
+> select * from (values (trim(leading U&' ' from U&'oops    '))) as v(x);
+> 
+> -- verify that hash join does the right thing with trailing spaces
+> -- (ignores them for equality comparison purposes)
+> select count(*) from uni.v1, uni.v2 where v1.x=v2.x;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+> 
+> select * from uni.v1
+> union all
+> select * from uni.v2
+> order by x;
++-----------+
+|     X     |
++-----------+
+| oops      |
+| oops      |
++-----------+
+> 
+> -- verify that hash agg does the right thing with trailing spaces
+> -- (ignores them for equality comparison purposes)
+> select * from uni.v1
+> union
+> select * from uni.v2;
++---------+
+|    X    |
++---------+
+| oops    |
++---------+
+> 
+> -- verify that UNION type aggregation does not accidentally revert to ISO-8859-1
+> !set outputformat csv
+> explain plan for
+> select * from uni.v1
+> union all
+> select * from uni.v2;
+'column0'
+'IterConcatenateRel(all=[true])'
+'  IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(8) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], X=[$t1])'
+'    FennelToIteratorConverter'
+'      FennelRenameRel(fieldNames=[[X]])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[_UTF-16LE'oops  '], EXPR$0=[$t1])'
+'            IterOneRowRel'
+'  FennelToIteratorConverter'
+'    FennelRenameRel(fieldNames=[[X]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=[_UTF-16LE'oops    '], EXPR$0=[$t1])'
+'          IterOneRowRel'
 > 
 > !quit

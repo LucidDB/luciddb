@@ -628,7 +628,7 @@ class LhxHashTable
     TupleProjection keyColsProj;
     TupleProjection aggsProj;
     TupleProjection dataProj;
-    vector<bool> isKeyColVarChar;
+    vector<LhxHashTrim> isKeyColVarChar;
 
     /**
      * Accessors for the content of this hash table.
