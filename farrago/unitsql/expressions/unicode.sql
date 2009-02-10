@@ -27,6 +27,9 @@ i int not null primary key, v varchar(10) character set "LATIN1");
 
 insert into uni.t5 values (1, 'Hi');
 
+-- should fail:  cannot assign across character sets
+insert into uni.t5 values (100, U&'Hi');
+
 select cast(v as varchar(1) character set "LATIN1") from uni.t5;
 
 -- should succeed:  2-byte Unicode
@@ -35,6 +38,9 @@ i int not null primary key, v varchar(10) character set "UTF16");
 
 insert into uni.t6 values (1, U&'Hi');
 
+-- should fail:  cannot assign across character sets
+insert into uni.t6 values (100, 'Hi');
+
 select * from uni.t6;
 
 select cast(v as varchar(1) character set "UTF16") from uni.t6;
@@ -42,6 +48,7 @@ select cast(v as varchar(1) character set "UTF16") from uni.t6;
 -- should fail:  unknown character set
 select cast(v as varchar(1) character set "SANSKRIT") from uni.t6;
 
+-- should fail:  cast across character repertoires
 select cast(v as varchar(1) character set "UTF16") from uni.t5;
 
 select cast(v as varchar(1) character set "LATIN1") from uni.t6;
@@ -50,8 +57,10 @@ select cast(v as char(40) character set "LATIN1") from uni.t5;
 
 select cast(v as char(40) character set "UTF16") from uni.t6;
 
+-- should fail:  cast across character repertoires
 select cast(v as char(40) character set "UTF16") from uni.t5;
 
+-- should fail:  cast across character repertoires
 select cast(v as char(40) character set "LATIN1") from uni.t6;
 
 select char_length(v) from uni.t5;
@@ -61,6 +70,9 @@ select char_length(v) from uni.t6;
 select v||v from uni.t5;
 
 select v||v from uni.t6;
+
+-- should fail:  attempt to combine different character repertoires
+select t5.v||t6.v from uni.t5,uni.t6;
 
 select substring(v from 1 for 1) from uni.t5;
 
@@ -292,6 +304,35 @@ order by x;
 select * from uni.v1
 union
 select * from uni.v2;
+
+-- test CSVJDBC reader with Unicode flatfiles
+create or replace procedure uni.generate_test_csv(charset_name varchar(128))
+  language java
+  parameter style java
+  reads sql data
+  external name 
+  'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeTestCsv';
+
+call uni.generate_test_csv('UTF-8');
+
+create server utf8_csv_server
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/testgen/unicodeCsv',
+    schema_name 'TESTDATA',
+    extended_options 'TRUE',
+    charset 'UTF-8');
+
+create foreign table uni.utf8_data(
+    c1 varchar(50) character set "UTF16" not null,
+    c2 varchar(50) character set "UTF16" not null)
+server utf8_csv_server
+options (table_name 'UTF-8');
+
+select uni.convert_to_escaped(c1) as c1,
+uni.convert_to_escaped(c2) as c2
+from uni.utf8_data order by c1;
 
 -- verify that UNION type aggregation does not accidentally revert to ISO-8859-1
 !set outputformat csv

@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.test;
 
+import java.io.*;
+
 import java.math.*;
 
 import java.sql.*;
@@ -170,6 +172,37 @@ public abstract class FarragoTestUDR
             }
         }
         return sb.toString();
+    }
+
+    public static void generateUnicodeTestCsv(String charsetName)
+        throws Exception
+    {
+        File dir = new File(
+            FarragoProperties.instance().homeDir.get());
+        dir = new File(dir, "testgen");
+        dir = new File(dir, "unicodeCsv");
+        dir.mkdirs();
+        File utf8 = new File(dir, charsetName + ".csv");
+        FileOutputStream fos = new FileOutputStream(utf8);
+        try {
+            OutputStreamWriter osw = new OutputStreamWriter(fos, charsetName);
+            PrintWriter pw = new PrintWriter(osw);
+            pw.println("C1,C2");
+            pw.print('"');
+            pw.print(ConversionUtil.TEST_UNICODE_STRING);
+            pw.print('"');
+            pw.print(",");
+            pw.println(
+                new StringBuilder(
+                    ConversionUtil.TEST_UNICODE_STRING).reverse());
+            pw.print('"');
+            pw.print("hello");
+            pw.print('"');
+            pw.println(",goodbye");
+            pw.close();
+        } finally {
+            fos.close();
+        }
     }
 
     public static String decryptPublicKey(byte [] keyBytes)

@@ -3503,13 +3503,24 @@ public class SqlValidatorImpl
                     iAdjusted -= (sourceFields.length - nUpdateColumns);
                 }
                 SqlNode node = getNthExpr(query, iAdjusted, sourceCount);
+                String targetTypeString;
+                String sourceTypeString;
+                if (SqlTypeUtil.areCharacterSetsMismatched(
+                        sourceType, targetType))
+                {
+                    sourceTypeString = sourceType.getFullTypeString();
+                    targetTypeString = targetType.getFullTypeString();
+                } else {
+                    sourceTypeString = sourceType.toString();
+                    targetTypeString = targetType.toString();
+                }
                 throw newValidationError(
                     node,
                     EigenbaseResource.instance().TypeNotAssignable.ex(
                         targetFields[i].getName(),
-                        targetType.toString(),
+                        targetTypeString,
                         sourceFields[i].getName(),
-                        sourceType.toString()));
+                        sourceTypeString));
             }
         }
     }

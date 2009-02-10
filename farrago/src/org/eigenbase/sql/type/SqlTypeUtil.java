@@ -757,7 +757,35 @@ public abstract class SqlTypeUtil
             // assigned a real (nullable) type to every NULL literal.
             return true;
         }
+
+        if (areCharacterSetsMismatched(toType, fromType)) {
+            return false;
+        }
+        
         return toType.getFamily() == fromType.getFamily();
+    }
+
+    /**
+     * Determines whether two types both have different character sets.  If one
+     * or the other type has no character set (e.g. in cast from INT to
+     * VARCHAR), that is not a mismatch.
+     *
+     * @param t1 first type
+     * @param t2 second type
+     * @return true iff mismatched
+     */
+    public static boolean areCharacterSetsMismatched(
+        RelDataType t1,
+        RelDataType t2)
+    {
+        Charset cs1 = t1.getCharset();
+        Charset cs2 = t2.getCharset();
+        if ((cs1 != null) && (cs2 != null)) {
+            if (!cs1.equals(cs2)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -850,6 +878,13 @@ public abstract class SqlTypeUtil
         if ((tn1 == null) || (tn2 == null)) {
             return false;
         }
+
+        // REVIEW jvs 9-Feb-2009: we don't impose SQL rules for character sets
+        // here; instead, we do that in SqlCastFunction.  The reason is that
+        // this method is called from at least one place (MedJdbcNameDirectory)
+        // where internally a cast across character repertoires is OK.  Should
+        // probably clean that up.
+        
         SqlTypeAssignmentRules rules = SqlTypeAssignmentRules.instance();
         return rules.canCastFrom(tn1, tn2, coerce);
     }
