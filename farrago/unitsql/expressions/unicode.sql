@@ -314,6 +314,7 @@ create or replace procedure uni.generate_test_csv(charset_name varchar(128))
   'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeTestCsv';
 
 call uni.generate_test_csv('UTF-8');
+call uni.generate_test_csv('UTF-16');
 
 create server utf8_csv_server
 foreign data wrapper sys_jdbc
@@ -322,7 +323,16 @@ options(
     url 'jdbc:relique:csv:${FARRAGO_HOME}/testgen/unicodeCsv',
     schema_name 'TESTDATA',
     extended_options 'TRUE',
-    charset 'UTF-8');
+    "charset" 'UTF-8');
+
+create server utf16_csv_server
+foreign data wrapper sys_jdbc
+options(
+    driver_class 'org.relique.jdbc.csv.CsvDriver',
+    url 'jdbc:relique:csv:${FARRAGO_HOME}/testgen/unicodeCsv',
+    schema_name 'TESTDATA',
+    extended_options 'TRUE',
+    "charset" 'UTF-16');
 
 create foreign table uni.utf8_data(
     c1 varchar(50) character set "UTF16" not null,
@@ -330,9 +340,19 @@ create foreign table uni.utf8_data(
 server utf8_csv_server
 options (table_name 'UTF-8');
 
+create foreign table uni.utf16_data(
+    c1 varchar(50) character set "UTF16" not null,
+    c2 varchar(50) character set "UTF16" not null)
+server utf16_csv_server
+options (table_name 'UTF-16');
+
 select uni.convert_to_escaped(c1) as c1,
 uni.convert_to_escaped(c2) as c2
 from uni.utf8_data order by c1;
+
+select uni.convert_to_escaped(c1) as c1,
+uni.convert_to_escaped(c2) as c2
+from uni.utf16_data order by c1;
 
 -- verify that UNION type aggregation does not accidentally revert to ISO-8859-1
 !set outputformat csv
