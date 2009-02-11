@@ -27,6 +27,7 @@ import java.io.*;
 import java.math.*;
 
 import java.util.*;
+import java.lang.management.MemoryType;
 
 import junit.framework.*;
 
@@ -510,6 +511,29 @@ public class UtilTest
 
         assertEquals("UTC0",
             Util.toPosix(TimeZone.getTimeZone("UTC"), true));
+    }
+
+    /**
+     * Tests the methods {@link Util#enumConstants(Class)}
+     * and {@link Util#enumVal(Class, String)}.
+     */
+    public void testEnumConstants()
+    {
+        final Map<String, MemoryType> memoryTypeMap =
+            Util.enumConstants(MemoryType.class);
+        assertEquals(2, memoryTypeMap.size());
+        assertEquals(MemoryType.HEAP, memoryTypeMap.get("HEAP"));
+        assertEquals(MemoryType.NON_HEAP, memoryTypeMap.get("NON_HEAP"));
+        try {
+            memoryTypeMap.put("FOO", null);
+            fail("expected exception");
+        } catch (UnsupportedOperationException e) {
+            // expected: map is immutable
+        }
+
+        assertEquals("HEAP", Util.enumVal(MemoryType.class, "HEAP").name());
+        assertNull(Util.enumVal(MemoryType.class, "heap"));
+        assertNull(Util.enumVal(MemoryType.class, "nonexistent"));
     }
 
     /**
