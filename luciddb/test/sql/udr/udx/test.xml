@@ -86,6 +86,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/penultimateValues.sql"/>
       </test>
 
+      <test name="contiguousValueIntervals">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/contiguousValueIntervals.sql"/>
+      </test>
+
       <test-suite-call testfile="enforceRowConstraints/test.xml"/>
 
       <cleanup-hook>

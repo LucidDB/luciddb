@@ -295,6 +295,25 @@ public:
         testSequentialRead();
         pLinearViewSegment.reset();
 
+        // Setup a snapshot segment that reads pages as of TxnId(5), but
+        // ignores uncommitted updates.
+        pSnapshotRandomSegment2.reset();
+        closeLinearSegment();
+        pSnapshotRandomSegment2 =
+            pSegmentFactory->newSnapshotRandomAllocationSegment(
+                pVersionedRandomSegment,
+                pVersionedRandomSegment,
+                TxnId(5),
+                true);
+        setForceCacheUnmap(pSnapshotRandomSegment2);
+        pLinearViewSegment =
+            pSegmentFactory->newLinearViewSegment(
+                pSnapshotRandomSegment2,
+                firstPageId);
+        pLinearSegment = pLinearViewSegment;
+        testSequentialRead();
+        pLinearViewSegment.reset();
+
         // Commit TxnId(5)
         closeStorage();
 

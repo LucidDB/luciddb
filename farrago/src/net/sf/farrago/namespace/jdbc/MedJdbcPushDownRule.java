@@ -133,7 +133,10 @@ class MedJdbcPushDownRule
             // select * from sales.emps where slacker
             // (slacker = true or where slacker is true work fine, though)
             // In my example, the cast to RexCell fails. (Logged as FRG-339.)
-            
+            if (!(filter.getCondition() instanceof RexCall)) {
+                return;
+            }
+
             // push down filter
             RexCall filterCall = (RexCall) filter.getCondition();
 

@@ -38,7 +38,7 @@
 > grant select on statements_view to public;
 > 
 > create or replace function sessions()
-> returns table(id int, url varchar(128), current_user_name varchar(128), current_role_name varchar(128), session_user_name varchar(128), system_user_name varchar(128), system_user_fullname varchar(128), session_name varchar(128), program_name varchar(128), process_id int, catalog_name varchar(128), schema_name varchar(128), is_closed boolean, is_auto_commit boolean, is_txn_in_progress boolean, current_label varchar(128))
+> returns table(id int, url varchar(128), current_user_name varchar(128), current_role_name varchar(128), session_user_name varchar(128), system_user_name varchar(128), system_user_fullname varchar(128), session_name varchar(128), program_name varchar(128), process_id int, catalog_name varchar(128), schema_name varchar(128), is_closed boolean, is_auto_commit boolean, is_txn_in_progress boolean, label_name varchar(128))
 > language java
 > parameter style system defined java
 > no sql

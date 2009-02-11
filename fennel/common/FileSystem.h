@@ -36,7 +36,15 @@ public:
     static void remove(char const *filename);
     static bool setFileAttributes(char const *filename,bool readOnly = 1);
     static bool doesFileExist(char const *filename);
-    static bool getDiskFreeSpace(char const *dir, FileSize *availableSpace);
+
+    /**
+     * Determines how much free space is available in a file system.
+     *
+     * @param path the pathname of any file within the file system
+     * @param availableSpace returns the number of free bytes available in the
+     * file system
+     */
+    static void getDiskFreeSpace(char const *path, FileSize &availableSpace);
 };
 
 FENNEL_END_NAMESPACE

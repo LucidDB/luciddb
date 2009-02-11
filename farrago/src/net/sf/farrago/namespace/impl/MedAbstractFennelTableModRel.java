@@ -34,6 +34,7 @@ import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.resource.*;
 
 
 /**
@@ -128,6 +129,39 @@ public abstract class MedAbstractFennelTableModRel
         }
 
         return needBuffer;
+    }
+    
+    /*
+     * Determines if an input needs to be buffered, taking into account
+     * whether snapshot support is available.
+     * 
+     * @param input the input
+     */
+    public boolean inputNeedBuffer(RelNode input)
+    {
+        // If real snapshot support is available, there's no need to buffer
+        // the input, even if it's the same as the target table.  The
+        // streams corresponding to the input just need to be set up so that
+        // they only read committed data.
+        if (FennelRelUtil.getPreparingStmt(input).getSession().
+            getPersonality().supportsFeature(
+                EigenbaseResource.instance().PersonalitySupportsSnapshots))
+        {
+            return false;
+        } 
+        
+        // Deletes and merges always need buffering because they read the
+        // table being operated on
+        Operation op = getOperation();
+        if (op == TableModificationRel.Operation.DELETE ||
+            op == TableModificationRel.Operation.MERGE)
+        {
+            return true;
+        }
+        
+        // All other cases depend on whether the source is the same as the
+        // target.
+        return inputNeedBuffer();
     }
 
     /**

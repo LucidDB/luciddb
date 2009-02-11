@@ -104,10 +104,13 @@ public class FennelStorage
      * Executes a command represented as a Java object.
      *
      * @param cmd Java representation of object
+     * @param execHandle optional execution handle associated with the command
+     * that's used to pass execution state from Farrago to Fennel; set to 0
+     * if there is no handle
      *
      * @return output object handle if any
      */
-    static native long executeJavaCmd(FemCmd cmd)
+    static native long executeJavaCmd(FemCmd cmd, long execHandle)
         throws SQLException;
 
     /**
@@ -190,6 +193,29 @@ public class FennelStorage
         long hStreamGraph,
         int action)
         throws SQLException;
+    
+    /**
+     * Allocates a new object in Fennel that Farrago will use to communicate
+     * execution state information from Farrago to Fennel.  Access to that
+     * object will be through a handle.
+     * 
+     * @return the handle that will be used to access the Fennel object
+     */
+    static native long newExecutionHandle();
+    
+    /**
+     * Deletes the Fennel object corresponding to an execution handle.
+     *
+     * @param execHandle the execution handle
+     */
+    static native void deleteExecutionHandle(long execHandle);
+    
+    /**
+     * Cancels execution of a statement associated with an execution handle.
+     * 
+     * @param execHandle the execution handle
+     */
+    public static native void cancelExecution(long execHandle);
 }
 
 // End FennelStorage.java

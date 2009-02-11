@@ -40,10 +40,14 @@ public class FennelCmdExecutorImpl
     //~ Methods ----------------------------------------------------------------
 
     // implement FennelCmdExecutor
-    public long executeJavaCmd(FemCmd cmd)
+    public long executeJavaCmd(FemCmd cmd, FennelExecutionHandle execHandle)
         throws SQLException
     {
-        return FennelStorage.executeJavaCmd(cmd);
+        if (execHandle == null) {
+            return FennelStorage.executeJavaCmd(cmd, 0);
+        } else {
+            return FennelStorage.executeJavaCmd(cmd, execHandle.getHandle());
+        }
     }
 }
 

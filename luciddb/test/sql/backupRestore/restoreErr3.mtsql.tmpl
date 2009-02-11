@@ -1,0 +1,8 @@
+-- Attempt to restore an incremental archive when there has been no restore
+-- of a full archive
+
+@nolockstep
+
+@thread restore
+@err call sys_root.restore_database('@TEST_DIR@/incrArchive1');
+@end

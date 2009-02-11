@@ -1,0 +1,26 @@
+-- Run as a .mtsql script to avoid auto-execution of SQL statements prior to
+-- the start of the actual test
+
+-- Validate the results of the full restore.
+
+@nolockstep
+
+@thread validate
+
+-- there should be 2 records, but both with the same csn value
+select cast(backup_type as varchar(10)), cast(status as varchar(10))
+    from sys_root.dba_system_backups order by backup_type;
+select count(distinct csn) from sys_root.dba_system_backups;
+
+select count(*) from ff_server.bcp.EMP;
+select count(*) from ff_server.bcp.DEPT;
+select count(*) from ff_server.bcp.LOCATION;
+
+set schema 'br';
+
+select * from EMP order by empno;
+
+-- this should fail
+@err select * from DEPT;
+
+@end

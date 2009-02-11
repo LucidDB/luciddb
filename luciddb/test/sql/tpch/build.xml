@@ -37,6 +37,7 @@
 
   <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
   <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
+  <taskdef name="switch" classname="net.sf.antcontrib.logic.Switch" classpath="${ant.classpath}"/>
 
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${tpch.dir}/gen" />
@@ -58,7 +59,23 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <target name="gen-sql">
+  <target name="set-sf">
+    <switch value="${datasize}">
+      <case value="100M"> <property name="sf" value="0.1"/> </case>
+      <case value="1G"> <property name="sf" value="1"/> </case>
+      <case value="10G"> <property name="sf" value="10"/> </case>
+      <case value="30G"> <property name="sf" value="30"/> </case>
+      <case value="100G"> <property name="sf" value="100"/> </case>
+      <case value="300G"> <property name="sf" value="300"/> </case>
+      <case value="1000G"> <property name="sf" value="1000"/> </case>
+      <case value="3000G"> <property name="sf" value="3000"/> </case>
+      <case value="10000G"> <property name="sf" value="10000"/> </case>
+      <case value="30000G"> <property name="sf" value="30000"/> </case>
+      <case value="100000G"> <property name="sf" value="100000"/> </case>
+    </switch>
+  </target>
+
+  <target name="gen-sql" depends="set-sf">
     <!-- copy over sql.tmpl, and template reference and shell script files -->
     <copy todir="${gensql.dir}/${datasize.param}" overwrite="true">
       <fileset dir="${tpch.dir}">
@@ -74,6 +91,7 @@
       <filterset>
         <filter token="FFDIR" value="${ff.dir}/${datasize.param}"/>
         <filter token="DIR" value="${gensql.dir}/${datasize.param}"/>
+        <filter token="SF" value="${sf}"/>
       </filterset>
     </copy>
 
@@ -108,7 +126,7 @@
     </if>
 
     <!-- generate sql -->
-    <foreach list="100M" param="datasize.param" target="gen-sql"/>
+    <foreach list="${datasize}" param="datasize.param" target="gen-sql"/>
   </target>
 
   <target name="test" depends="clean-test,gen-all-sql">

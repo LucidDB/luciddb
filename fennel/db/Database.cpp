@@ -22,13 +22,16 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/AbortExcn.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
 #include "fennel/db/DataFormatExcn.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/FileSystem.h"
+#include "fennel/common/FennelResource.h"
 #include "fennel/device/RandomAccessFileDevice.h"
 #include "fennel/cache/Cache.h"
+#include "fennel/cache/PagePredicate.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/segment/LinearDeviceSegment.h"
 #include "fennel/segment/Segment.h"
@@ -102,6 +105,7 @@ Database::Database(
       pUuidGenerator(pUuidGeneratorInit)
 {
     openMode = openModeInit;
+    disableDeallocateOld = false;
 }
 
 void Database::init()
@@ -227,7 +231,7 @@ void Database::openSegments()
         TRACE_INFO,
         "database opened; page version = "
         << header.versionNumber);
-    
+
     if (!openMode.create) {
         checkpointImpl();
     }
@@ -443,11 +447,12 @@ void Database::createDataDevice(LinearDeviceSegmentParams &deviceParams)
         initialSize = (deviceParams.nPagesMin + 2) * pCache->getPageSize();
     }
 
-    SharedRandomAccessDevice pDataDevice(
-        new RandomAccessFileDevice(
-            dataDeviceName,
-            openMode,
-            initialSize));
+    pDataDevice =
+        SharedRandomAccessDevice(
+            new RandomAccessFileDevice(
+                dataDeviceName,
+                openMode,
+                initialSize));
     pCache->registerDevice(dataDeviceId,pDataDevice);
 }
 
@@ -598,7 +603,6 @@ void Database::allocateHeader()
         
     PageId pageId;
     pTxnLog->setNextTxnId(FIRST_TXN_ID);
-    lastCommittedTxnId = FIRST_TXN_ID;
     pageId = headerPageLock.allocatePage();
     assert(pageId == headerPageId1);
     headerPageLock.getNodeForWrite() = header;
@@ -651,24 +655,12 @@ void Database::loadHeader(bool recovery)
     if (pTxnLog) {
         TxnId nextTxnId = header.txnLogCheckpointMemento.nextTxnId;
         pTxnLog->setNextTxnId(nextTxnId);
-        // The last committed txn should always be one smaller than the
-        // next txnId, unless we haven't initiated a txn yet
-        if (nextTxnId == FIRST_TXN_ID) {
-            lastCommittedTxnId = nextTxnId;
-        } else {
-            lastCommittedTxnId = nextTxnId - 1;
-        }
     }
 }
 
 TxnId Database::getLastCommittedTxnId()
 {
-    return lastCommittedTxnId;
-}
-
-void Database::setLastCommittedTxnId(TxnId txnId)
-{
-    lastCommittedTxnId = txnId;
+    return header.txnLogCheckpointMemento.nextTxnId - 1;
 }
 
 void Database::checkpointImpl(CheckpointType checkpointType)
@@ -974,16 +966,277 @@ void Database::deallocateOldPages(TxnId oldestLabelCsn)
         // Hold the checkpoint mutex while deallocating old pages, if there
         // are pages to deallocate.
         if (!oldPageSet.empty()) {
-            pCheckpointThread->getActionMutex().waitFor(LOCKMODE_S);
+            SXMutexSharedGuard actionMutexGuard(
+                pCheckpointThread->getActionMutex());
+            if (disableDeallocateOld) {
+                return;
+            }
             pVersionedRandomSegment->deallocateOldPages(
                 oldPageSet,
                 oldestTxnId);
 
-            pCheckpointThread->getActionMutex().release(LOCKMODE_S);
+            actionMutexGuard.unlock();
             requestCheckpoint(CHECKPOINT_FLUSH_ALL, false);
             oldPageSet.clear();
         }
     } while (morePages);
+}
+
+TxnId Database::initiateBackup(
+    const std::string &backupFilePathname,
+    bool checkSpaceRequirements,
+    FileSize spacePadding,
+    TxnId lowerBoundCsn,
+    const std::string &compressionProgram,
+    FileSize &dataDeviceSize,
+    const volatile bool &aborted)
+{
+    FENNEL_TRACE(TRACE_FINE, "Started Fennel metadata backup");
+
+    // Snapshots must be enabled
+    if (!areSnapshotsEnabled()) {
+        throw FennelExcn(
+            FennelResource::instance().unsupportedOperation("System backup"));
+    }
+
+    // Hold the checkpoint mutex while backing up the header and allocation
+    // node pages
+    SXMutexSharedGuard actionMutexGuard(pCheckpointThread->getActionMutex());
+
+    // Another backup should not have already been initiated
+    assert(!disableDeallocateOld);
+    assert(pBackupRestoreDevice == NULL);
+
+    // The upper bound csn for this backup is the txnId of the last committed,
+    // write txn.  Note that the next txnId to be assigned may be a larger
+    // value because of read-only txns.  But we don't care about read-only
+    // txns.  We just want the txnId that's in sync with what's reflected in
+    // the header.
+    TxnId upperBoundCsn = header.txnLogCheckpointMemento.nextTxnId - 1;
+
+    disableDeallocateOld = true;
+    dataDeviceSize = pDataDevice->getSizeInBytes();
+
+    // Use the prefetch setting to determine how many scratch pages to
+    // allocate.  Note that these scratch pages are not being accounted
+    // for in the resource governor and come from the reserve pool that
+    // the resource governor currently sets aside.
+    uint nScratchPages, rate;
+    pCache->getPrefetchParams(nScratchPages, rate);
+
+    scratchAccessor = pSegmentFactory->newScratchSegment(pCache);
+    pBackupRestoreDevice = 
+        SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
+             backupFilePathname,
+             "w",
+             compressionProgram,
+             nScratchPages,
+             2,
+             scratchAccessor,
+             pCache->getDeviceAccessScheduler(*pDataDevice),
+             pDataDevice);
+    VersionedRandomAllocationSegment *pVRSegment =
+        SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+            pDataSegment);
+
+    try {
+        pBackupRestoreDevice->backupPage(
+            pHeaderSegment->translatePageId(headerPageId1));
+        pBackupRestoreDevice->backupPage(
+            pHeaderSegment->translatePageId(headerPageId2));
+        // First wait for writes of the header pages to complete before backing
+        // up the allocation node pages.
+        pBackupRestoreDevice->waitForPendingWrites();
+        BlockNum nDataPages =
+            pVRSegment->backupAllocationNodes(
+                pBackupRestoreDevice,
+                checkSpaceRequirements,
+                lowerBoundCsn,
+                upperBoundCsn,
+                aborted);
+
+        // Verify space if specified, now that we know how many data pages
+        // will be backed up
+        if (checkSpaceRequirements) {
+            FileSize spaceAvailable;
+            FileSystem::getDiskFreeSpace(
+                backupFilePathname.c_str(), 
+                spaceAvailable);
+            FileSize spaceRequired =
+                nDataPages * pDataSegment->getFullPageSize();
+            // TODO zfong 9/16/08 - Revisit the compression factor after more
+            // testing.  Set conservatively to 5, for now.
+            if (compressionProgram.length() != 0) {
+                spaceRequired /= 5;
+            }
+            spaceRequired += spacePadding;
+            if (spaceAvailable < spaceRequired) {
+                throw FennelExcn(FennelResource::instance().outOfBackupSpace());
+            }
+        }
+    } catch (...) {
+        cleanupBackupRestore(true);
+        // abort exception takes precedence
+        if (aborted) {
+            FENNEL_TRACE(TRACE_FINE, "abort detected");
+            throw AbortExcn();
+        } else {
+            throw;
+        }
+    }
+
+    FENNEL_TRACE(TRACE_FINE, "Finished Fennel metadata backup");
+    return upperBoundCsn;
+}
+
+void Database::completeBackup(
+    TxnId lowerBoundCsn,
+    TxnId upperBoundCsn,
+    const volatile bool &aborted)
+{
+    FENNEL_TRACE(TRACE_FINE, "Started Fennel data page backup");
+    assert(disableDeallocateOld);
+    assert(pBackupRestoreDevice != NULL);
+
+    VersionedRandomAllocationSegment *pVRSegment =
+        SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+            pDataSegment);
+    try {
+        pVRSegment->backupDataPages(
+            pBackupRestoreDevice,
+            lowerBoundCsn,
+            upperBoundCsn,
+            aborted);
+        cleanupBackupRestore(true);
+    } catch (...) {
+        cleanupBackupRestore(true);
+        // abort exception takes precedence
+        if (aborted) {
+            FENNEL_TRACE(TRACE_FINE, "abort detected");
+            throw AbortExcn();
+        } else {
+            throw;
+        }
+    }
+
+    FENNEL_TRACE(TRACE_FINE, "Finished Fennel data page backup");
+}
+
+void Database::abortBackup()
+{
+    FENNEL_TRACE(TRACE_FINE, "Aborting Fennel backup");
+    cleanupBackupRestore(true);
+}
+
+void Database::restoreFromBackup(
+    const std::string &backupFilePathname,
+    FileSize newSize,
+    const std::string &compressionProgram,
+    TxnId lowerBoundCsn,
+    TxnId upperBoundCsn,
+    const volatile bool &aborted)
+{
+    FENNEL_TRACE(TRACE_FINE, "Started Fennel restore");
+
+    // Snapshots must be enabled
+    if (!areSnapshotsEnabled()) {
+        throw FennelExcn(
+            FennelResource::instance().unsupportedOperation("System restore"));
+    }
+
+    // Verify that the last committed csn in the database header matches the
+    // lower bound csn.
+    if (lowerBoundCsn != NULL_TXN_ID) {
+        TxnId headerTxnId = getLastCommittedTxnId();
+        if (headerTxnId != lowerBoundCsn) {
+            std::ostringstream oss;
+            oss << headerTxnId;
+            throw FennelExcn(
+                FennelResource::instance().mismatchedRestore(oss.str()));
+        }
+    }
+
+    pDataDevice->setSizeInBytes(newSize);
+
+    VersionedRandomAllocationSegment *pVRSegment =
+        SegmentFactory::dynamicCast<VersionedRandomAllocationSegment *>(
+            pDataSegment);
+
+    uint nScratchPages, rate;
+    pCache->getPrefetchParams(nScratchPages, rate);
+
+    scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache);
+    pBackupRestoreDevice =
+        SegPageBackupRestoreDevice::newSegPageBackupRestoreDevice(
+             backupFilePathname,
+             "r",
+             compressionProgram,
+             nScratchPages,
+             0,
+             scratchAccessor,
+             pCache->getDeviceAccessScheduler(*pDataDevice),
+             pDataDevice);
+
+    // Flush and unmap pages from the cache that will be restored, i.e., any
+    // VersionedRandomAllocationSegment or database header pages, including
+    // the header page just read above.  We need to unmap these pages to
+    // ensure that the restore doesn't read old pages.
+    MappedPageListenerPredicate dataPredicate(*pVRSegment);
+    pCache->checkpointPages(dataPredicate, CHECKPOINT_FLUSH_AND_UNMAP);
+    MappedPageListenerPredicate headerPredicate(*pHeaderSegment);
+    pCache->checkpointPages(headerPredicate, CHECKPOINT_FLUSH_AND_UNMAP);
+
+    try {
+        // Restore the rest of the pages, including the database header pages
+        pBackupRestoreDevice->restorePage(
+            pHeaderSegment->translatePageId(headerPageId1));
+        pBackupRestoreDevice->restorePage(
+            pHeaderSegment->translatePageId(headerPageId2));
+        pVRSegment->restoreFromBackup(
+            pBackupRestoreDevice,
+            lowerBoundCsn,
+            upperBoundCsn,
+            aborted);
+        cleanupBackupRestore(false);
+    } catch (...) {
+        cleanupBackupRestore(false);
+        // abort exception takes precedence
+        if (aborted) {
+            FENNEL_TRACE(TRACE_FINE, "abort detected");
+            throw AbortExcn();
+        } else {
+            throw;
+        }
+    }
+
+    // Reload the header pages so future checkpoints will flush the
+    // restored data.  Issue a recover call on the versioned segment
+    // to reset the version number and online uuid to the values that are
+    // now in the header.
+    loadHeader(false);
+    pVersionedSegment->recover(
+        pDataSegment,
+        NULL_PAGE_ID,
+        header.versionNumber,
+        header.onlineUuid);
+
+    FENNEL_TRACE(TRACE_FINE, "Finished Fennel restore");
+}
+
+void Database::cleanupBackupRestore(bool isBackup)
+{
+    if (pBackupRestoreDevice) {
+        pBackupRestoreDevice.reset();
+    }
+    if (scratchAccessor.pSegment) {
+        scratchAccessor.reset();
+    }
+    if (isBackup) {
+        SXMutexSharedGuard actionMutexGuard(
+            pCheckpointThread->getActionMutex());
+        disableDeallocateOld = false;
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

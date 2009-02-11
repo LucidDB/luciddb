@@ -562,4 +562,8 @@ options (
 select * from mapped_server.bcp."mapped_extra_cols";
 select * from mapped_server.bcp."mapped_fewer_cols";
 
+-- LER-8712 -- bcp contains fewer columns than the csv file with the
+-- missing columns specified as null in the csv header row
+select * from mapped_server.bcp."missing_columns";
+
 drop schema test_schema cascade;

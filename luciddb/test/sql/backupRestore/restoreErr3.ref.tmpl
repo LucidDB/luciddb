@@ -1,0 +1,8 @@
+-- setup
+-- end of setup
+
+-- thread restore
+> call sys_root.restore_database('@TEST_DIR@/incrArchive1');
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: A full backup has not been executed yet
+-- end of thread restore
+

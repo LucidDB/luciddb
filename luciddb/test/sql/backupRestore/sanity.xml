@@ -1,0 +1,34 @@
+<project name="bh" default="backupRestore-sanity">
+  <target name="backupRestore-sanity">
+    <test-suite name="backupRestore-sanity">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="backupRestore-sanity"/>
+          </test-suite-call>
+        </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/backupRestore" target="copy-csv"/>
+        <ant dir="${open.dir}/luciddb/test/sql/backupRestore" target="gen-all-sql"/>
+        <ant dir="${open.dir}/luciddb/test/sql/backupRestore" target="create-archive-dirs"/>
+      </init-hook>
+
+      <test name="backups">
+        <junit-sql file="${open.dir}/luciddb/test/sql/backupRestore/backups.sql"/>
+      </test>
+
+      <test name="backupErrs" requiresSuccess="backups">
+        <junit-sql file="${open.dir}/luciddb/test/sql/backupRestore/backupErrs.sql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="backupRestore-sanity"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

@@ -464,6 +464,7 @@ public class FarragoDatabase
         FarragoCompoundAllocation startOfWorldAllocation,
         FennelCmdExecutor cmdExecutor,
         boolean init)
+        throws Exception
     {
         tracer.fine("Loading Fennel");
         assertNoFennelHandles();
@@ -526,7 +527,40 @@ public class FarragoDatabase
                 cmdExecutor,
                 cmd);
 
+        // NOTE jvs 14-Oct-2008:  in the future we can genericize
+        // this into a hook mechanism for cleaning up any other parts of the
+        // catalog which need it (including extension models).
+        cleanupBackupData(!cmd.isResultRecoveryRequired(), false);
+
         tracer.config("Fennel successfully loaded");
+    }
+    
+    /**
+     * Cleans up the system backup catalog by either removing pending backup
+     * data if the last backup failed, or by updating the pending data to
+     * completed, if the last backup succeeded.
+     * 
+     * @param backupSucceeded whether the last backup was successful
+     * @param setEndTimestamp if true, record the current timestamp as
+     * the ending timestamp when updating pending data to completed
+     */
+    public void cleanupBackupData(
+        boolean backupSucceeded,
+        boolean setEndTimestamp)
+        throws Exception
+    {
+        FarragoReposTxnContext reposTxnContext = 
+            new FarragoReposTxnContext(systemRepos, true);
+        try {
+            reposTxnContext.beginWriteTxn();
+            FarragoCatalogUtil.updatePendingBackupData(
+                systemRepos,
+                backupSucceeded,
+                setEndTimestamp);
+            reposTxnContext.commit();
+        } finally {
+            reposTxnContext.rollback();
+        }       
     }
 
     private void filterMapNullValues(Map<String,Object> configMap)

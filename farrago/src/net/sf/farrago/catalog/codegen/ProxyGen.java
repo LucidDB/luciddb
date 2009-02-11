@@ -197,7 +197,7 @@ public class ProxyGen
         cppTypeMap.put(Boolean.TYPE, new CppTypeInfo("bool"));
         cppTypeMap.put(
             Boolean.class,
-            new CppTypeInfo("boolean", "constructJavaBoolean", "boolValue"));
+            new CppTypeInfo("bool", "constructJavaBoolean", "boolValue"));
         javaTypeMap.put(Boolean.TYPE, "Z");
 
         cppTypeMap.put(

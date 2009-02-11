@@ -146,12 +146,17 @@ void FlatFileExecStreamImpl::open(bool restart)
             std::vector<uint> columnMap;
             columnMap.resize(nFields);
             for (uint i = 0; i < nFields; i++) {
-                std::string name(
-                    lastResult.getColumn(i),
-                    lastResult.getColumnSize(i));
-                columnMap[i] = findField(name);
-                if (columnMap[i] != -1) {
-                    found++;
+                char *n = lastResult.getColumn(i);
+                if (n == NULL) {
+                    columnMap[i] = -1;
+                } else {
+                    std::string name(
+                        n,
+                        lastResult.getColumnSize(i));
+                    columnMap[i] = findField(name);
+                    if (columnMap[i] != -1) {
+                        found++;
+                    }
                 }
             }
             if (found == 0) {

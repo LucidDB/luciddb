@@ -87,6 +87,12 @@ public class RelOptCostImpl
     {
         return getRows() == other.getRows();
     }
+    
+    // implement RelOptCost
+    public boolean isEqWithEpsilon(RelOptCost other)
+    {
+        return Math.abs(getRows() - other.getRows()) < RelOptUtil.EPSILON;
+    }
 
     // implement RelOptCost
     public RelOptCost minus(RelOptCost other)

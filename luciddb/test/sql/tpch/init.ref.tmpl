@@ -49,50 +49,6 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> import foreign schema "BCP" from server ff_tpch_server into tpch;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select count(*) from tpch."lineitem";
-+---------+
-| EXPR$0  |
-+---------+
-| 600572  |
-+---------+
-0: jdbc:luciddb:> select count(*) from tpch."nation";
-+---------+
-| EXPR$0  |
-+---------+
-| 25      |
-+---------+
-0: jdbc:luciddb:> select count(*) from tpch."region";
-+---------+
-| EXPR$0  |
-+---------+
-| 5       |
-+---------+
-0: jdbc:luciddb:> select count(*) from tpch."part";
-+---------+
-| EXPR$0  |
-+---------+
-| 20000   |
-+---------+
-0: jdbc:luciddb:> select count(*) from tpch."supplier";
-+---------+
-| EXPR$0  |
-+---------+
-| 1000    |
-+---------+
-0: jdbc:luciddb:> select count(*) from tpch."customer";
-+---------+
-| EXPR$0  |
-+---------+
-| 15000   |
-+---------+
-0: jdbc:luciddb:> select count(*) from tpch."orders";
-+---------+
-| EXPR$0  |
-+---------+
-| 150000  |
-+---------+
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set schema 'tpch';
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -87,6 +87,7 @@ public class FarragoRuntimeContext
     private final FarragoWarningQueue warningQueue;
     protected final Object cursorMonitor;
     private boolean cursorActive;
+    private FennelExecutionHandle execHandle;
 
     /**
      * Maps stream id to the corresponding java object.
@@ -913,6 +914,15 @@ public class FarragoRuntimeContext
         if (streamGraphToAbort != null) {
             streamGraphToAbort.abort();
         }
+        
+        // Synchronize so the execution handle doesn't get reset while
+        // we're checking for its existence
+        synchronized (this) {
+            if (execHandle != null) {
+                tracer.fine("Aborting statement execution");
+                execHandle.cancelExecution();
+            }
+        }
     }
 
     // implement FarragoSessionRuntimeContext
@@ -922,7 +932,15 @@ public class FarragoRuntimeContext
             throw FarragoResource.instance().ExecutionAborted.ex();
         }
     }
-
+    
+    // implement FarragoSessionRuntimeContext
+    public void setExecutionHandle(FennelExecutionHandle execHandle)
+    {
+        synchronized (this) {
+            this.execHandle = execHandle;
+        }
+    }
+    
     // implement FarragoSessionRuntimeContext
     public void setCursorState(boolean active)
     {

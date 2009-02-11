@@ -1,0 +1,31 @@
+-- Verify that system restore must execute in standalone mode
+
+@nolockstep
+
+@setup
+@end
+
+---------------------------------------------------------------
+
+@thread reader
+
+set schema 'rwconcur';
+
+@sync
+@sync
+
+@end
+
+
+---------------------------------------------------------------
+
+@thread badRestore
+
+@sync
+
+-- this should fail because there's a running session
+
+@err call sys_root.restore_database('@TEST_DIR@/fullArchive');
+
+@sync
+@end

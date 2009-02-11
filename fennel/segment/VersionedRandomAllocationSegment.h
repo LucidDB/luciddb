@@ -26,6 +26,7 @@
 
 #include "fennel/synch/SXMutex.h"
 #include "fennel/segment/RandomAllocationSegmentBase.h"
+#include "fennel/segment/SegPageBackupRestoreDevice.h"
 
 #include <hash_set>
 #include <hash_map>
@@ -562,6 +563,35 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
         PageId successorId,
         bool thisSegment);
 
+    /*
+     * Locates data pages relevant to a backup or restore based on the
+     * csn boundaries passed in, and then either backs up or restores the
+     * pages identified.
+     *
+     * @param pBackupDevice device that carries out I/O for the backup or
+     * restore
+     * @param lowerBoundCsn the lower bound allocation csn
+     * @param upperBoundCsn the upper bound allocation csn
+     * @param isBackup if true, relevant pages are backed up; otherwise,
+     * they are restored
+     * @param [in] abortFlag reference to a flag indicating whether the backup
+     * or restore should be aborted
+     */
+    void locateDataPages(
+        SharedSegPageBackupRestoreDevice pBackupDevice,
+        TxnId lowerBoundCsn,
+        TxnId upperBoundCsn,
+        bool isBackup,
+        bool volatile const &abortFlag);
+
+    /**
+     * Determines whether the abort flag is set.  If it is, throws an
+     * exception.
+     *
+     * @param [in] abortFlag reference to the abort flag
+     */
+    void checkAbort(bool volatile const &abortFlag);
+
     /**
      * Constructs a pageOwnerId corresponding to a deallocation-deferred page.
      *
@@ -763,6 +793,72 @@ public:
      * freed once they no longer contain any pending updates.
      */
     void freeTempPages();
+
+    /**
+     * Writes all the segment and extent allocation pages from this segment
+     * sequentially to a backup file.  If requested, also counts the number
+     * of data pages that will need to be backed up later, based on pages
+     * whose allocationCsn's are within a lower and upper bound.  If the
+     * lower bound is set to NULL_TXN_ID, then that indicates that there is
+     * no lower bound; otherwise, the lower bound is exclusive.  There must
+     * always be an upper bound and it is inclusive.
+     *
+     * @param pBackupDevice device that does all I/O for the backup
+     * @param countDataPages if true, count the number of data pages that
+     * will be backed up
+     * @param lowerBoundCsn the lower bound allocation csn
+     * @param upperBoundCsn the upper bound allocation csn
+     * @param [in] abortFlag reference to a flag indicating whether the backup
+     * should be aborted
+     *
+     * @return number of data pages that will be backed up if countDataPages
+     * is true; otherwise, returns 0
+     */
+    BlockNum backupAllocationNodes(
+        SharedSegPageBackupRestoreDevice pBackupDevice,
+        bool countDataPages,
+        TxnId lowerBoundCsn,
+        TxnId upperBoundCsn,
+        bool volatile const &abortFlag);
+
+    /**
+     * Walks through all page entries in this segment and locates the ones
+     * that have allocationCsn's in between a lower and upper bound.  If the
+     * lower bound is set to NULL_TXN_ID, then that indicates that there is
+     * no lower bound; otherwise, the lower bound is exclusive.  There must
+     * always be an upper bound and it is inclusive.
+     *
+     * @param pBackupDevice device that carries out I/O for the backup
+     * @param lowerBoundCsn the lower bound allocation csn
+     * @param upperBoundCsn the upper bound allocation csn
+     * @param [in] abortFlag reference to a flag indicating whether the backup
+     * should be aborted
+     */
+    void backupDataPages(
+        SharedSegPageBackupRestoreDevice pBackupDevice,
+        TxnId lowerBoundCsn,
+        TxnId upperBoundCsn,
+        bool volatile const &abortFlag);
+
+    /**
+     * Restores the segment and extent allocation node pages and data pages
+     * for this segment from a backup file.  The data pages in the backup
+     * file correspond to pages with allocationCsn's in between a lower and
+     * upper bound.  If the lower bound is set to NULL_TXN_ID, then that
+     * indicates that there is no lower bound; otherwise, the lower bound is
+     * exclusive.  There must always be an upper bound and it is inclusive.
+     *
+     * @param pBackupDevice device that carries out I/O during the restore
+     * @param lowerBoundCsn the lower bound allocation csn
+     * @param upperBoundCsn the upper bound allocation csn
+     * @param [in] abortFlag reference to a flag indicating whether the restore
+     * should be aborted
+     */
+    void restoreFromBackup(
+        SharedSegPageBackupRestoreDevice pBackupDevice,
+        TxnId lowerBoundCsn,
+        TxnId upperBoundCsn,
+        bool volatile const &abortFlag);
 
     // implementation of Segment interface
     virtual bool isPageIdAllocated(PageId pageId);

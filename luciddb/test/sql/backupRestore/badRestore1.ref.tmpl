@@ -1,0 +1,8 @@
+-- setup
+-- end of setup
+
+-- thread restore
+> call sys_root.restore_database('@TEST_DIR@/incrArchive2');
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Commit sequence number in the restore does not match the expected value of '386'
+-- end of thread restore
+

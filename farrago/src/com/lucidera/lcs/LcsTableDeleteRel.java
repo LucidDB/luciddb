@@ -137,8 +137,9 @@ public class LcsTableDeleteRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
+        RelNode childInput = getChild();
         FemExecutionStreamDef input =
-            implementor.visitFennelChild((FennelRel) getChild(), 0);
+            implementor.visitFennelChild((FennelRel) childInput, 0);
 
         CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
@@ -147,8 +148,9 @@ public class LcsTableDeleteRel
             FarragoCatalogUtil.getDeletionIndex(repos, table);
 
         // Determine whether we need to sort the input into the delete.
-        // If the input is sorted on the rid column, we can bypass the sort,
-        // but still need to buffer the input since the input reads from
+        // If the input is sorted on the rid column, we can bypass the sort.
+        // If not and real snapshot support is not available, then we
+        // still need to buffer the input since the input reads from
         // the deletion index while the delete writes to it.  (For that reason,
         // the sort also needs to do an early close on its producers.)  We know
         // that the input is sorted on the rid if the input is sorted on the
@@ -167,15 +169,17 @@ public class LcsTableDeleteRel
             FemSortingStreamDef sortingStream =
                 indexGuide.newSorter(
                     deletionIndex,
-                    RelMetadataQuery.getRowCount(getChild()),
+                    RelMetadataQuery.getRowCount(childInput),
                     true,
                     true);
             implementor.addDataFlowFromProducerToConsumer(input, sortingStream);
             input = sortingStream;
         } else {
-            FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
-            implementor.addDataFlowFromProducerToConsumer(input, buffer);
-            input = buffer;
+            if (inputNeedBuffer(childInput)) {
+                FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
+                implementor.addDataFlowFromProducerToConsumer(input, buffer);
+                input = buffer;
+            }
         }
 
         FemLbmSplicerStreamDef splicer =

@@ -1,0 +1,27 @@
+<project name="bh" default="backupRestore">
+  <target name="backupRestore">
+    <test-suite name="backupRestore">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinitSingleTest.xml">
+            <test-suite-modifier value="backupRestore"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
+      <test name="restoreFull">
+        <junit-sql file="${open.dir}/luciddb/test/sql/backupRestore/restoreFull.mtsql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="backupRestore"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

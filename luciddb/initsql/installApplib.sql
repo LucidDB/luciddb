@@ -923,6 +923,23 @@ deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PenultimateValuesUdx.execute';
 
+create or replace function contiguous_value_intervals(
+  input_table cursor,
+  partitioning_columns select from input_table,
+  timestamp_column select from input_table)
+returns table(
+  input_table.*,
+  until_timestamp timestamp,
+  previous_clump varchar(65535),
+  previous_from_timestamp timestamp,
+  next_clump varchar(65535),
+  next_until_timestamp timestamp)
+language java
+parameter style system defined java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.ContiguousValueIntervalsUdx.execute';
+
 ----
 -- System procedures
 ----

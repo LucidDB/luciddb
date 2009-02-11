@@ -39,7 +39,7 @@ void usage();
  *
  * <p>Usage:
  * <br>
- * allocFile --append-pages=<number of pages> --pagesize=<pageSize> <filename>
+ * allocFile --append-pages=&lt;number of pages&gt; --pagesize=&lt;pageSize&gt; &lt;filename&gt;
  *
  * <p>
  * The file must be writable and exclusively lockable.

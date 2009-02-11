@@ -27,6 +27,9 @@ typedef JniProxyIter<ProxyCartesianProductStreamDef> SharedProxyCartesianProduct
 class ProxyCmd;
 typedef JniProxyIter<ProxyCmd> SharedProxyCmd;
 
+class ProxyCmdAbandonBackup;
+typedef JniProxyIter<ProxyCmdAbandonBackup> SharedProxyCmdAbandonBackup;
+
 class ProxyCmdAlterSystemDeallocate;
 typedef JniProxyIter<ProxyCmdAlterSystemDeallocate> SharedProxyCmdAlterSystemDeallocate;
 
@@ -44,6 +47,9 @@ typedef JniProxyIter<ProxyCmdCloseDatabase> SharedProxyCmdCloseDatabase;
 
 class ProxyCmdCommit;
 typedef JniProxyIter<ProxyCmdCommit> SharedProxyCmdCommit;
+
+class ProxyCmdCompleteBackup;
+typedef JniProxyIter<ProxyCmdCompleteBackup> SharedProxyCmdCompleteBackup;
 
 class ProxyCmdCreateExecutionStreamGraph;
 typedef JniProxyIter<ProxyCmdCreateExecutionStreamGraph> SharedProxyCmdCreateExecutionStreamGraph;
@@ -63,11 +69,17 @@ typedef JniProxyIter<ProxyCmdGetLastCommittedTxnId> SharedProxyCmdGetLastCommitt
 class ProxyCmdGetTxnCsn;
 typedef JniProxyIter<ProxyCmdGetTxnCsn> SharedProxyCmdGetTxnCsn;
 
+class ProxyCmdInitiateBackup;
+typedef JniProxyIter<ProxyCmdInitiateBackup> SharedProxyCmdInitiateBackup;
+
 class ProxyCmdOpenDatabase;
 typedef JniProxyIter<ProxyCmdOpenDatabase> SharedProxyCmdOpenDatabase;
 
 class ProxyCmdPrepareExecutionStreamGraph;
 typedef JniProxyIter<ProxyCmdPrepareExecutionStreamGraph> SharedProxyCmdPrepareExecutionStreamGraph;
+
+class ProxyCmdRestoreFromBackup;
+typedef JniProxyIter<ProxyCmdRestoreFromBackup> SharedProxyCmdRestoreFromBackup;
 
 class ProxyCmdRollback;
 typedef JniProxyIter<ProxyCmdRollback> SharedProxyCmdRollback;
@@ -425,6 +437,12 @@ bool isLeftOuter();
 static jmethodID meth_isLeftOuter;
 };
 
+class ProxyCmdAbandonBackup
+: virtual public JniProxy, virtual public ProxyDatabaseCmd
+{
+public:
+};
+
 class ProxyCmdAlterSystemDeallocate
 : virtual public JniProxy, virtual public ProxyDatabaseCmd
 {
@@ -485,6 +503,16 @@ class ProxyCmdCommit
 : virtual public JniProxy, virtual public ProxyEndTxnCmd
 {
 public:
+};
+
+class ProxyCmdCompleteBackup
+: virtual public JniProxy, virtual public ProxyDatabaseCmd
+{
+public:
+int64_t getLowerBoundCsn();
+static jmethodID meth_getLowerBoundCsn;
+int64_t getUpperBoundCsn();
+static jmethodID meth_getUpperBoundCsn;
 };
 
 class ProxyCmdCreateExecutionStreamGraph
@@ -571,6 +599,27 @@ class ProxyCmdGetTxnCsn
 public:
 };
 
+class ProxyCmdInitiateBackup
+: virtual public JniProxy, virtual public ProxyCsnHandleReturningCmd, virtual public ProxyDatabaseCmd
+{
+public:
+std::string getBackupPathname();
+static jmethodID meth_getBackupPathname;
+bool isCheckSpaceRequirements();
+static jmethodID meth_isCheckSpaceRequirements;
+std::string getCompressionProgram();
+static jmethodID meth_getCompressionProgram;
+int64_t getLowerBoundCsn();
+static jmethodID meth_getLowerBoundCsn;
+int64_t getResultDataDeviceSize();
+static jmethodID meth_getResultDataDeviceSize;
+void setResultDataDeviceSize(const int64_t &valueRef);
+void clearResultDataDeviceSize();
+static jmethodID meth_setResultDataDeviceSize;
+int64_t getSpacePadding();
+static jmethodID meth_getSpacePadding;
+};
+
 class ProxyCmdOpenDatabase
 : virtual public JniProxy, virtual public ProxyCmd
 {
@@ -581,6 +630,11 @@ SharedProxyDatabaseParam getParams();
 static jmethodID meth_getParams;
 SharedProxyDbHandle getResultHandle();
 static jmethodID meth_getResultHandle;
+bool isResultRecoveryRequired();
+static jmethodID meth_isResultRecoveryRequired;
+void setResultRecoveryRequired(const bool &valueRef);
+void clearResultRecoveryRequired();
+static jmethodID meth_setResultRecoveryRequired;
 };
 
 class ProxyCmdPrepareExecutionStreamGraph
@@ -591,6 +645,22 @@ int32_t getDegreeOfParallelism();
 static jmethodID meth_getDegreeOfParallelism;
 SharedProxyExecutionStreamDef getStreamDefs();
 static jmethodID meth_getStreamDefs;
+};
+
+class ProxyCmdRestoreFromBackup
+: virtual public JniProxy, virtual public ProxyDatabaseCmd
+{
+public:
+std::string getBackupPathname();
+static jmethodID meth_getBackupPathname;
+std::string getCompressionProgram();
+static jmethodID meth_getCompressionProgram;
+int64_t getFileSize();
+static jmethodID meth_getFileSize;
+int64_t getLowerBoundCsn();
+static jmethodID meth_getLowerBoundCsn;
+int64_t getUpperBoundCsn();
+static jmethodID meth_getUpperBoundCsn;
 };
 
 class ProxyCmdRollback
@@ -815,6 +885,8 @@ class ProxyIndexAccessorDef
 public:
 int64_t getIndexId();
 static jmethodID meth_getIndexId;
+bool isReadOnlyCommittedData();
+static jmethodID meth_isReadOnlyCommittedData;
 int32_t getRootPageIdParamId();
 static jmethodID meth_getRootPageIdParamId;
 int64_t getRootPageId();
@@ -1365,6 +1437,8 @@ virtual void visit(ProxyCartesianProductStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmd &)
 { unhandledVisit(); }
+virtual void visit(ProxyCmdAbandonBackup &)
+{ unhandledVisit(); }
 virtual void visit(ProxyCmdAlterSystemDeallocate &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdBeginTxn &)
@@ -1376,6 +1450,8 @@ virtual void visit(ProxyCmdCheckpoint &)
 virtual void visit(ProxyCmdCloseDatabase &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdCommit &)
+{ unhandledVisit(); }
+virtual void visit(ProxyCmdCompleteBackup &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdCreateExecutionStreamGraph &)
 { unhandledVisit(); }
@@ -1389,9 +1465,13 @@ virtual void visit(ProxyCmdGetLastCommittedTxnId &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdGetTxnCsn &)
 { unhandledVisit(); }
+virtual void visit(ProxyCmdInitiateBackup &)
+{ unhandledVisit(); }
 virtual void visit(ProxyCmdOpenDatabase &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdPrepareExecutionStreamGraph &)
+{ unhandledVisit(); }
+virtual void visit(ProxyCmdRestoreFromBackup &)
 { unhandledVisit(); }
 virtual void visit(ProxyCmdRollback &)
 { unhandledVisit(); }

@@ -22,6 +22,8 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/AbortExcn.h"
+#include "fennel/common/FennelResource.h"
 #include "fennel/segment/RandomAllocationSegmentBaseImpl.h"
 #include "fennel/segment/VersionedRandomAllocationSegmentImpl.h"
 
@@ -1213,6 +1215,279 @@ void VersionedRandomAllocationSegment::freeTempPages()
 SXMutex &VersionedRandomAllocationSegment::getDeallocationMutex()
 {
     return deallocationMutex;
+}
+
+BlockNum VersionedRandomAllocationSegment::backupAllocationNodes(
+    SharedSegPageBackupRestoreDevice pBackupDevice,
+    bool countDataPages,
+    TxnId lowerBoundCsn,
+    TxnId upperBoundCsn,
+    bool volatile const &abortFlag)
+{
+    assert(upperBoundCsn != NULL_TXN_ID);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
+    SegAllocLock segAllocLock(selfAccessor);
+    uint iSegAlloc = 0;
+    ExtentNum extentNum = 0;
+    BlockNum nDataPages = 0;
+
+    while (true) {
+
+        PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
+        segAllocLock.lockShared(segAllocPageId);
+        pBackupDevice->writeBackupPage(
+            segAllocLock.getPage().getReadableData());
+
+        SegmentAllocationNode const &segAllocNode =
+            segAllocLock.getNodeForRead();
+        ExtentNum relativeExtentNum = extentNum % nExtentsPerSegAlloc;
+
+        for (uint i = relativeExtentNum; i < segAllocNode.nExtents;
+            i++, extentNum++)
+        {
+            checkAbort(abortFlag);
+            SegmentAllocationNode::ExtentEntry const &extentEntry =
+                segAllocNode.getExtentEntry(i);
+            if (extentEntry.nUnallocatedPages == nPagesPerExtent - 1) {
+                continue;
+            }
+
+            VersionedExtentAllocLock extentAllocLock(selfAccessor);
+            extentAllocLock.lockShared(getExtentAllocPageId(extentNum));
+            pBackupDevice->writeBackupPage(
+                extentAllocLock.getPage().getReadableData());
+
+            if (countDataPages) {
+                VersionedExtentAllocationNode const &extentNode =
+                    extentAllocLock.getNodeForRead();
+
+                // Start at pageEntry 1 to skip past the extent header page
+                for (uint j = 1; j < nPagesPerExtent; j++) {
+
+                    checkAbort(abortFlag);
+                    VersionedPageEntry const &pageEntry = 
+                        extentNode.getPageEntry(j);
+                    if (pageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID &&
+                       (lowerBoundCsn == NULL_TXN_ID ||
+                           pageEntry.allocationCsn > lowerBoundCsn) &&
+                       (pageEntry.allocationCsn <= upperBoundCsn))
+                    {
+                        nDataPages++;
+                    }
+                }
+            }
+        }
+
+        ++iSegAlloc;
+        if (segAllocNode.nextSegAllocPageId == NULL_PAGE_ID) {
+            break;
+        }
+    }
+
+    return nDataPages;
+}
+
+void VersionedRandomAllocationSegment::backupDataPages(
+    SharedSegPageBackupRestoreDevice pBackupDevice,
+    TxnId lowerBoundCsn,
+    TxnId upperBoundCsn,
+    bool volatile const &abortFlag)
+{
+    locateDataPages(
+        pBackupDevice,
+        lowerBoundCsn,
+        upperBoundCsn,
+        true,
+        abortFlag);
+}
+
+void VersionedRandomAllocationSegment::locateDataPages(
+    SharedSegPageBackupRestoreDevice pBackupDevice,
+    TxnId lowerBoundCsn,
+    TxnId upperBoundCsn,
+    bool isBackup,
+    bool volatile const &abortFlag)
+{
+    assert(upperBoundCsn != NULL_TXN_ID);
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
+    SegAllocLock segAllocLock(selfAccessor);
+    uint iSegAlloc = 0;
+    ExtentNum extentNum = 0;
+    PBuffer segNodeBuffer = NULL;
+    PBuffer extentNodeBuffer = NULL;
+    if (isBackup) {
+        segNodeBuffer = pBackupDevice->getReservedBufferPage();
+        extentNodeBuffer = pBackupDevice->getReservedBufferPage();
+    }
+
+    while (true) {
+
+        PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
+        segAllocLock.lockShared(segAllocPageId);
+        // In the case of a backup, make a copy of the allocation nodes so
+        // we don't pin them while we're doing I/O on the data pages mapped
+        // by the extent entries in those nodes.  Keeping the nodes pinned
+        // prevents new pages from being allocated from those nodes.
+        if (isBackup) {
+            memcpy(
+                segNodeBuffer,
+                segAllocLock.getPage().getReadableData(),
+                getFullPageSize());
+            segAllocLock.unlock();
+        }
+        SegmentAllocationNode const &segAllocNode =
+            (isBackup) ?
+                *reinterpret_cast<SegmentAllocationNode const *>
+                    (segNodeBuffer) :
+                segAllocLock.getNodeForRead();
+        ExtentNum relativeExtentNum = extentNum % nExtentsPerSegAlloc;
+
+        for (uint i = relativeExtentNum; i < segAllocNode.nExtents;
+            i++, extentNum++)
+        {
+            checkAbort(abortFlag);
+
+            SegmentAllocationNode::ExtentEntry const &extentEntry =
+                segAllocNode.getExtentEntry(i);
+            if (extentEntry.nUnallocatedPages == nPagesPerExtent - 1) {
+                continue;
+            }
+
+            VersionedExtentAllocLock extentAllocLock(selfAccessor);
+            extentAllocLock.lockShared(getExtentAllocPageId(extentNum));
+            if (isBackup) {
+                memcpy(
+                    extentNodeBuffer,
+                    extentAllocLock.getPage().getReadableData(),
+                    getFullPageSize());
+                extentAllocLock.unlock();
+            }
+            VersionedExtentAllocationNode const &extentNode =
+                (isBackup) ?
+                    *reinterpret_cast<VersionedExtentAllocationNode const *>
+                        (extentNodeBuffer) :
+                    extentAllocLock.getNodeForRead();
+
+            // Start at pageEntry 1 to skip past the extent header page
+            for (uint j = 1; j < nPagesPerExtent; j++) {
+
+                checkAbort(abortFlag);
+                VersionedPageEntry const &pageEntry = 
+                    extentNode.getPageEntry(j);
+                // Ignore pages outside the csn boundaries
+                if (pageEntry.ownerId == UNALLOCATED_PAGE_OWNER_ID ||
+                   (lowerBoundCsn != NULL_TXN_ID &&
+                       pageEntry.allocationCsn <= lowerBoundCsn) ||
+                   (pageEntry.allocationCsn > upperBoundCsn))
+                {
+                    continue;
+                }
+
+                // Map the pageEntry to its pageId, and then either back up
+                // or restore it.
+                PageId pageId = getLinearPageId(makePageNum(extentNum, j));
+                BlockId blockId = translatePageId(pageId);
+                if (isBackup) {
+                    pBackupDevice->backupPage(blockId);
+                } else {
+                    pBackupDevice->restorePage(blockId);
+                }
+            }
+        }
+        ++iSegAlloc;
+        if (segAllocNode.nextSegAllocPageId == NULL_PAGE_ID) {
+            break;
+        }
+    }
+
+    // Wait for all pending writes to complete
+    pBackupDevice->waitForPendingWrites();
+}
+
+void VersionedRandomAllocationSegment::restoreFromBackup(
+    SharedSegPageBackupRestoreDevice pBackupDevice,
+    TxnId lowerBoundCsn,
+    TxnId upperBoundCsn,
+    bool volatile const &abortFlag)
+{
+    // First restore the allocation node pages.
+    //
+    // The assumption is that prior to calling this method, all pages in the
+    // cache have been unmapped, so we're ensured that when we're reading
+    // pages from cache, we won't read stale copies.
+
+    SegmentAccessor selfAccessor(getTracingSegment(), pCache);
+    SegAllocLock segAllocLock(selfAccessor);
+    uint iSegAlloc = 0;
+    ExtentNum extentNum = 0;
+
+    while (true) {
+
+        // Restore the allocation node page from the backup file, writing it
+        // to disk.  Then wait for the write to complete before reading it
+        // into cache, so we're ensured that we pick up the completed write.
+        // Also make sure there's enough space for the first extent in this
+        // SegAllocNode.
+        PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
+
+        if (!DelegatingSegment::ensureAllocatedSize(
+            makePageNum(extentNum, nPagesPerExtent)))
+        {
+            throw FennelExcn(
+                FennelResource::instance().outOfSpaceDuringRestore());
+        }
+        pBackupDevice->restorePage(translatePageId(segAllocPageId));
+        pBackupDevice->waitForPendingWrites();
+        segAllocLock.lockShared(segAllocPageId);
+
+        SegmentAllocationNode const &segAllocNode =
+            segAllocLock.getNodeForRead();
+        ExtentNum relativeExtentNum = extentNum % nExtentsPerSegAlloc;
+
+        for (uint i = relativeExtentNum; i < segAllocNode.nExtents;
+            i++, extentNum++)
+        {
+            checkAbort(abortFlag);
+            SegmentAllocationNode::ExtentEntry const &extentEntry =
+                segAllocNode.getExtentEntry(i);
+            if (extentEntry.nUnallocatedPages == nPagesPerExtent - 1) {
+                continue;
+            }
+            // Make sure there's enough space in the segment for this extent
+            if (!DelegatingSegment::ensureAllocatedSize(
+                makePageNum(extentNum, nPagesPerExtent)))
+            {
+                throw FennelExcn(
+                    FennelResource::instance().outOfSpaceDuringRestore());
+            }
+            pBackupDevice->restorePage(
+                translatePageId(getExtentAllocPageId(extentNum)));
+        }
+        ++iSegAlloc;
+        if (segAllocNode.nextSegAllocPageId == NULL_PAGE_ID) {
+            break;
+        }
+    }
+   
+    // Walk through the allocation node pages just restored, looking for
+    // the page entries within the lower and upper bounds, and restore them.
+    // But first make sure to wait for the writes of the remaining extent
+    // allocation node pages to complete.
+    pBackupDevice->waitForPendingWrites();
+    locateDataPages(
+        pBackupDevice, 
+        lowerBoundCsn, 
+        upperBoundCsn, 
+        false, 
+        abortFlag);
+}
+
+void VersionedRandomAllocationSegment::checkAbort(
+    bool volatile const &abortFlag)
+{
+    if (abortFlag) {
+        throw AbortExcn();
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -17,6 +17,7 @@ SegInputStream.cpp \
 SegOutputStream.cpp \
 Segment.cpp \
 SegmentFactory.cpp \
+SegPageBackupRestoreDevice.cpp \
 SegPageIter.cpp \
 SegStream.cpp \
 SegStreamAllocation.cpp \

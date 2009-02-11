@@ -169,7 +169,12 @@ public class RelMdUtil
         }
 
         Double factPop = RelMetadataQuery.getPopulationSize(factRel, factKeys);
-        Double dimPop = RelMetadataQuery.getPopulationSize(dimRel, dimKeys);
+        if (factPop == null) {
+            // use the dimension population if the fact population is 
+            // unavailable; since we're filtering the fact table, that's
+            // the population we ideally want to use
+            factPop = RelMetadataQuery.getPopulationSize(dimRel, dimKeys);
+        }
 
         // if cardinality and population are available, use them; otherwise
         // use percentage original rows
@@ -179,21 +184,12 @@ public class RelMdUtil
                 dimRel,
                 dimKeys,
                 null);
-        if ((dimCard != null) && (dimPop != null)) {
+        if ((dimCard != null) && (factPop != null)) {
             // to avoid division by zero
-            if (dimPop < 1.0) {
-                dimPop = 1.0;
+            if (factPop < 1.0) {
+                factPop = 1.0;
             }
-
-            // take into account the case where the fact and dimension tables
-            // have different population sizes
-            double numDistinctVals;
-            if ((factPop != null) && (factPop > dimPop)) {
-                numDistinctVals = factPop;
-            } else {
-                numDistinctVals = dimPop;
-            }
-            selectivity = dimCard / numDistinctVals;
+            selectivity = dimCard / factPop;
         } else {
             selectivity = RelMetadataQuery.getPercentageOriginalRows(dimRel);
         }

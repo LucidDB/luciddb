@@ -877,3 +877,25 @@ select count(*) from orders, tpchcustomer, nation, region, lineitem, part
         n_regionkey = r_regionkey and r_name = 'AMERICA' and
         O_ORDERDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31' and 
         l_partkey = p_partkey and p_type = 'ECONOMY ANODIZED STEEL';
+
+-- LER-8795 - The following join should not use a semijoin because the
+-- selectivity of the semijoin is high.
+
+create table t1(a int);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'T1', 5000000);
+call sys_boot.mgmt.stat_set_column_histogram(
+        'LOCALDB', 'SJ', 'T1', 'A', 53, 100, 53, 0, '0123456789');
+create index it1 on t1(a);
+
+create table t2(a int generated always as identity primary key, b varchar(30));
+insert into t2(b) values(null);
+insert into t2(b) select b from t2;
+insert into t2(b) select b from t2;
+insert into t2(b) select b from t2;
+insert into t2(b) select b from t2;
+insert into t2(b) select b from t2;
+insert into t2(b) select b from t2 where lcs_rid(a) <= 20;
+insert into t2(b) values('1');
+analyze table t2 compute statistics for all columns;
+
+explain plan for select count(*) from t1, t2 where t1.a = t2.a and t2.b is null;

@@ -32,7 +32,8 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 SnapshotRandomAllocationSegment::SnapshotRandomAllocationSegment(
     SharedSegment delegateSegment,
     SharedSegment versionedSegment,
-    TxnId snapshotCsnInit)
+    TxnId snapshotCsnInit,
+    bool readOnlyCommittedDataInit)
     : DelegatingSegment(delegateSegment)
 {
     pVersionedRandomSegment =
@@ -41,6 +42,7 @@ SnapshotRandomAllocationSegment::SnapshotRandomAllocationSegment(
     assert(pVersionedRandomSegment);
 
     snapshotCsn = snapshotCsnInit;
+    readOnlyCommittedData = readOnlyCommittedDataInit;
     needPageFlush = false;
     forceCacheUnmap = false;
 }
@@ -87,7 +89,8 @@ PageId SnapshotRandomAllocationSegment::getSnapshotId(PageId pageId)
         if (snapshotCsn >= pageEntry.allocationCsn) {
             // only consider uncommitted pageEntry's if they correspond to
             // the current txn
-            if ((pageEntry.ownerId == UNCOMMITTED_PAGE_OWNER_ID &&
+            if ((!readOnlyCommittedData &&
+                    pageEntry.ownerId == UNCOMMITTED_PAGE_OWNER_ID &&
                     snapshotCsn == pageEntry.allocationCsn) ||
                 pageEntry.ownerId != UNCOMMITTED_PAGE_OWNER_ID)
             {
@@ -110,6 +113,8 @@ PageId SnapshotRandomAllocationSegment::getPageSuccessor(PageId pageId)
 void SnapshotRandomAllocationSegment::setPageSuccessor(
     PageId pageId, PageId successorId)
 {
+    assert(!readOnlyCommittedData);
+
     // The successor should be set in the latest page version.  The
     // pageId passed in may correspond to the anchor.
     PageId snapshotId = getSnapshotId(pageId);
@@ -195,6 +200,7 @@ PageId SnapshotRandomAllocationSegment::getAnchorPageId(PageId snapshotId)
 
 PageId SnapshotRandomAllocationSegment::allocatePageId(PageOwnerId ownerId)
 {
+    assert(!readOnlyCommittedData);
     SXMutexExclusiveGuard mapGuard(modPageMapMutex);
 
     PageId pageId =
@@ -215,6 +221,7 @@ void SnapshotRandomAllocationSegment::deallocatePageRange(
     PageId startPageId,
     PageId endPageId)
 {
+    assert(!readOnlyCommittedData);
     permAssert(startPageId != NULL_PAGE_ID);
     permAssert(startPageId == endPageId);
 
@@ -249,6 +256,8 @@ PageId SnapshotRandomAllocationSegment::updatePage(
     PageId pageId,
     bool needsTranslation)
 {
+    assert(!readOnlyCommittedData);
+
     PageId anchorPageId;
     PageId snapshotId;
     PageOwnerId ownerId;
@@ -344,6 +353,7 @@ bool SnapshotRandomAllocationSegment::isPageNewlyAllocated(PageId pageId)
 
 void SnapshotRandomAllocationSegment::commitChanges(TxnId commitCsn)
 {
+    assert(!readOnlyCommittedData);
     SXMutexExclusiveGuard mapGuard(modPageMapMutex);
 
     pVersionedRandomSegment->updateAllocNodes(
@@ -357,6 +367,7 @@ void SnapshotRandomAllocationSegment::commitChanges(TxnId commitCsn)
 
 void SnapshotRandomAllocationSegment::rollbackChanges()
 {
+    assert(!readOnlyCommittedData);
     SXMutexExclusiveGuard mapGuard(modPageMapMutex);
 
     pVersionedRandomSegment->updateAllocNodes(
@@ -407,11 +418,14 @@ MappedPageListener
 *SnapshotRandomAllocationSegment::notifyAfterPageCheckpointFlush(
     CachePage &page)
 {
+    assert(!readOnlyCommittedData);
     return pVersionedRandomSegment;
 }
 
 bool SnapshotRandomAllocationSegment::canFlushPage(CachePage &page)
 {
+    assert(!readOnlyCommittedData);
+
     // We can always flush snapshot pages since dirty snapshot pages are
     // always new so we don't have to worry about flushing corresponding
     // log pages
@@ -422,6 +436,8 @@ void SnapshotRandomAllocationSegment::notifyPageDirty(
     CachePage &page,
     bool bDataValid)
 {
+    assert(!readOnlyCommittedData);
+
     // Since snapshot pages are always new, we only need to call notifyPageDirty
     // when the page is first allocated.  That is indicated by bDataValid being
     // false.  bDataValid will be passed in as true in the case where we're
@@ -437,6 +453,7 @@ void SnapshotRandomAllocationSegment::versionPage(
     PageId destAnchorPageId,
     PageId srcAnchorPageId)
 {
+    assert(!readOnlyCommittedData);
     assert(destAnchorPageId == getAnchorPageId(destAnchorPageId));
     assert(srcAnchorPageId == getAnchorPageId(srcAnchorPageId));
 

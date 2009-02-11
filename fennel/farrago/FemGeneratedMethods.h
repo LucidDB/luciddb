@@ -23,15 +23,31 @@ jmethodID ProxyCmdBeginTxn::meth_isReadOnly = 0;
 jmethodID ProxyCmdBeginTxnWithCsn::meth_getCsnHandle = 0;
 jmethodID ProxyCmdCheckpoint::meth_isAsync = 0;
 jmethodID ProxyCmdCheckpoint::meth_isFuzzy = 0;
+jmethodID ProxyCmdCompleteBackup::meth_getLowerBoundCsn = 0;
+jmethodID ProxyCmdCompleteBackup::meth_getUpperBoundCsn = 0;
 jmethodID ProxyCmdCreateExecutionStreamGraph::meth_getResultHandle = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_isInput = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_getResultHandle = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_getStreamName = 0;
+jmethodID ProxyCmdInitiateBackup::meth_getBackupPathname = 0;
+jmethodID ProxyCmdInitiateBackup::meth_isCheckSpaceRequirements = 0;
+jmethodID ProxyCmdInitiateBackup::meth_getCompressionProgram = 0;
+jmethodID ProxyCmdInitiateBackup::meth_getLowerBoundCsn = 0;
+jmethodID ProxyCmdInitiateBackup::meth_getResultDataDeviceSize = 0;
+jmethodID ProxyCmdInitiateBackup::meth_setResultDataDeviceSize = 0;
+jmethodID ProxyCmdInitiateBackup::meth_getSpacePadding = 0;
 jmethodID ProxyCmdOpenDatabase::meth_isCreateDatabase = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getParams = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getResultHandle = 0;
+jmethodID ProxyCmdOpenDatabase::meth_isResultRecoveryRequired = 0;
+jmethodID ProxyCmdOpenDatabase::meth_setResultRecoveryRequired = 0;
 jmethodID ProxyCmdPrepareExecutionStreamGraph::meth_getDegreeOfParallelism = 0;
 jmethodID ProxyCmdPrepareExecutionStreamGraph::meth_getStreamDefs = 0;
+jmethodID ProxyCmdRestoreFromBackup::meth_getBackupPathname = 0;
+jmethodID ProxyCmdRestoreFromBackup::meth_getCompressionProgram = 0;
+jmethodID ProxyCmdRestoreFromBackup::meth_getFileSize = 0;
+jmethodID ProxyCmdRestoreFromBackup::meth_getLowerBoundCsn = 0;
+jmethodID ProxyCmdRestoreFromBackup::meth_getUpperBoundCsn = 0;
 jmethodID ProxyCmdSavepoint::meth_getResultHandle = 0;
 jmethodID ProxyCmdSetParam::meth_getParam = 0;
 jmethodID ProxyCmdVerifyIndex::meth_isEstimate = 0;
@@ -88,6 +104,7 @@ jmethodID ProxyGenericStreamDef::meth_getType = 0;
 jmethodID ProxyHandle::meth_getLongHandle = 0;
 jmethodID ProxyIndexAccessCmd::meth_getRootPageId = 0;
 jmethodID ProxyIndexAccessorDef::meth_getIndexId = 0;
+jmethodID ProxyIndexAccessorDef::meth_isReadOnlyCommittedData = 0;
 jmethodID ProxyIndexAccessorDef::meth_getRootPageIdParamId = 0;
 jmethodID ProxyIndexAccessorDef::meth_getRootPageId = 0;
 jmethodID ProxyIndexAccessorDef::meth_getSegmentId = 0;
@@ -255,6 +272,9 @@ ProxyCartesianProductStreamDef::meth_isLeftOuter = pEnv->GetMethodID(jClass,"isL
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmd");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmd>));
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdAbandonBackup");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdAbandonBackup>));
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdAlterSystemDeallocate");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdAlterSystemDeallocate>));
 ProxyCmdAlterSystemDeallocate::meth_getOldestLabelCsn = pEnv->GetMethodID(jClass,"getOldestLabelCsn","()J");
@@ -278,6 +298,11 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdCommit");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdCommit>));
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdCompleteBackup");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdCompleteBackup>));
+ProxyCmdCompleteBackup::meth_getLowerBoundCsn = pEnv->GetMethodID(jClass,"getLowerBoundCsn","()J");
+ProxyCmdCompleteBackup::meth_getUpperBoundCsn = pEnv->GetMethodID(jClass,"getUpperBoundCsn","()J");
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdCreateExecutionStreamGraph");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdCreateExecutionStreamGraph>));
 ProxyCmdCreateExecutionStreamGraph::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHandle","()Lnet/sf/farrago/fem/fennel/FemStreamGraphHandle;");
@@ -300,16 +325,36 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdGetTxnCsn");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdGetTxnCsn>));
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdInitiateBackup");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdInitiateBackup>));
+ProxyCmdInitiateBackup::meth_getBackupPathname = pEnv->GetMethodID(jClass,"getBackupPathname","()Ljava/lang/String;");
+ProxyCmdInitiateBackup::meth_isCheckSpaceRequirements = pEnv->GetMethodID(jClass,"isCheckSpaceRequirements","()Z");
+ProxyCmdInitiateBackup::meth_getCompressionProgram = pEnv->GetMethodID(jClass,"getCompressionProgram","()Ljava/lang/String;");
+ProxyCmdInitiateBackup::meth_getLowerBoundCsn = pEnv->GetMethodID(jClass,"getLowerBoundCsn","()J");
+ProxyCmdInitiateBackup::meth_getResultDataDeviceSize = pEnv->GetMethodID(jClass,"getResultDataDeviceSize","()Ljava/lang/Long;");
+ProxyCmdInitiateBackup::meth_setResultDataDeviceSize = pEnv->GetMethodID(jClass,"setResultDataDeviceSize","(Ljava/lang/Long;)V");
+ProxyCmdInitiateBackup::meth_getSpacePadding = pEnv->GetMethodID(jClass,"getSpacePadding","()J");
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdOpenDatabase");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdOpenDatabase>));
 ProxyCmdOpenDatabase::meth_isCreateDatabase = pEnv->GetMethodID(jClass,"isCreateDatabase","()Z");
 ProxyCmdOpenDatabase::meth_getParams = pEnv->GetMethodID(jClass,"getParams","()Ljava/util/Collection;");
 ProxyCmdOpenDatabase::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHandle","()Lnet/sf/farrago/fem/fennel/FemDbHandle;");
+ProxyCmdOpenDatabase::meth_isResultRecoveryRequired = pEnv->GetMethodID(jClass,"isResultRecoveryRequired","()Ljava/lang/Boolean;");
+ProxyCmdOpenDatabase::meth_setResultRecoveryRequired = pEnv->GetMethodID(jClass,"setResultRecoveryRequired","(Ljava/lang/Boolean;)V");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdPrepareExecutionStreamGraph");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdPrepareExecutionStreamGraph>));
 ProxyCmdPrepareExecutionStreamGraph::meth_getDegreeOfParallelism = pEnv->GetMethodID(jClass,"getDegreeOfParallelism","()I");
 ProxyCmdPrepareExecutionStreamGraph::meth_getStreamDefs = pEnv->GetMethodID(jClass,"getStreamDefs","()Ljava/util/Collection;");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdRestoreFromBackup");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdRestoreFromBackup>));
+ProxyCmdRestoreFromBackup::meth_getBackupPathname = pEnv->GetMethodID(jClass,"getBackupPathname","()Ljava/lang/String;");
+ProxyCmdRestoreFromBackup::meth_getCompressionProgram = pEnv->GetMethodID(jClass,"getCompressionProgram","()Ljava/lang/String;");
+ProxyCmdRestoreFromBackup::meth_getFileSize = pEnv->GetMethodID(jClass,"getFileSize","()J");
+ProxyCmdRestoreFromBackup::meth_getLowerBoundCsn = pEnv->GetMethodID(jClass,"getLowerBoundCsn","()J");
+ProxyCmdRestoreFromBackup::meth_getUpperBoundCsn = pEnv->GetMethodID(jClass,"getUpperBoundCsn","()J");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdRollback");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdRollback>));
@@ -441,6 +486,7 @@ ProxyIndexAccessCmd::meth_getRootPageId = pEnv->GetMethodID(jClass,"getRootPageI
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemIndexAccessorDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyIndexAccessorDef>));
 ProxyIndexAccessorDef::meth_getIndexId = pEnv->GetMethodID(jClass,"getIndexId","()J");
+ProxyIndexAccessorDef::meth_isReadOnlyCommittedData = pEnv->GetMethodID(jClass,"isReadOnlyCommittedData","()Z");
 ProxyIndexAccessorDef::meth_getRootPageIdParamId = pEnv->GetMethodID(jClass,"getRootPageIdParamId","()I");
 ProxyIndexAccessorDef::meth_getRootPageId = pEnv->GetMethodID(jClass,"getRootPageId","()J");
 ProxyIndexAccessorDef::meth_getSegmentId = pEnv->GetMethodID(jClass,"getSegmentId","()J");
@@ -859,6 +905,16 @@ bool ProxyCmdCheckpoint::isFuzzy()
 return pEnv->CallBooleanMethod(jObject,meth_isFuzzy);
 }
 
+int64_t ProxyCmdCompleteBackup::getLowerBoundCsn()
+{
+return pEnv->CallLongMethod(jObject,meth_getLowerBoundCsn);
+}
+
+int64_t ProxyCmdCompleteBackup::getUpperBoundCsn()
+{
+return pEnv->CallLongMethod(jObject,meth_getUpperBoundCsn);
+}
+
 SharedProxyStreamGraphHandle ProxyCmdCreateExecutionStreamGraph::getResultHandle()
 {
 SharedProxyStreamGraphHandle p;
@@ -887,6 +943,45 @@ std::string ProxyCmdCreateStreamHandle::getStreamName()
 return constructString(pEnv->CallObjectMethod(jObject,meth_getStreamName));
 }
 
+std::string ProxyCmdInitiateBackup::getBackupPathname()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getBackupPathname));
+}
+
+bool ProxyCmdInitiateBackup::isCheckSpaceRequirements()
+{
+return pEnv->CallBooleanMethod(jObject,meth_isCheckSpaceRequirements);
+}
+
+std::string ProxyCmdInitiateBackup::getCompressionProgram()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getCompressionProgram));
+}
+
+int64_t ProxyCmdInitiateBackup::getLowerBoundCsn()
+{
+return pEnv->CallLongMethod(jObject,meth_getLowerBoundCsn);
+}
+
+int64_t ProxyCmdInitiateBackup::getResultDataDeviceSize()
+{
+return int64Value(pEnv->CallObjectMethod(jObject,meth_getResultDataDeviceSize));
+}
+
+void ProxyCmdInitiateBackup::setResultDataDeviceSize(const int64_t &valueRef)
+{
+pEnv->CallVoidMethod(jObject,meth_setResultDataDeviceSize,constructJavaLong(valueRef));
+}
+void ProxyCmdInitiateBackup::clearResultDataDeviceSize()
+{
+pEnv->CallVoidMethod(jObject,meth_setResultDataDeviceSize,NULL);
+}
+
+int64_t ProxyCmdInitiateBackup::getSpacePadding()
+{
+return pEnv->CallLongMethod(jObject,meth_getSpacePadding);
+}
+
 bool ProxyCmdOpenDatabase::isCreateDatabase()
 {
 return pEnv->CallBooleanMethod(jObject,meth_isCreateDatabase);
@@ -911,6 +1006,20 @@ if (!p->jObject) p.reset();
 return p;
 }
 
+bool ProxyCmdOpenDatabase::isResultRecoveryRequired()
+{
+return boolValue(pEnv->CallObjectMethod(jObject,meth_isResultRecoveryRequired));
+}
+
+void ProxyCmdOpenDatabase::setResultRecoveryRequired(const bool &valueRef)
+{
+pEnv->CallVoidMethod(jObject,meth_setResultRecoveryRequired,constructJavaBoolean(valueRef));
+}
+void ProxyCmdOpenDatabase::clearResultRecoveryRequired()
+{
+pEnv->CallVoidMethod(jObject,meth_setResultRecoveryRequired,NULL);
+}
+
 int32_t ProxyCmdPrepareExecutionStreamGraph::getDegreeOfParallelism()
 {
 return pEnv->CallIntMethod(jObject,meth_getDegreeOfParallelism);
@@ -924,6 +1033,31 @@ p->jObject = pEnv->CallObjectMethod(jObject,meth_getStreamDefs);
 p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 ++p;
 return p;
+}
+
+std::string ProxyCmdRestoreFromBackup::getBackupPathname()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getBackupPathname));
+}
+
+std::string ProxyCmdRestoreFromBackup::getCompressionProgram()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getCompressionProgram));
+}
+
+int64_t ProxyCmdRestoreFromBackup::getFileSize()
+{
+return pEnv->CallLongMethod(jObject,meth_getFileSize);
+}
+
+int64_t ProxyCmdRestoreFromBackup::getLowerBoundCsn()
+{
+return pEnv->CallLongMethod(jObject,meth_getLowerBoundCsn);
+}
+
+int64_t ProxyCmdRestoreFromBackup::getUpperBoundCsn()
+{
+return pEnv->CallLongMethod(jObject,meth_getUpperBoundCsn);
 }
 
 SharedProxySvptHandle ProxyCmdSavepoint::getResultHandle()
@@ -1289,6 +1423,11 @@ return pEnv->CallLongMethod(jObject,meth_getRootPageId);
 int64_t ProxyIndexAccessorDef::getIndexId()
 {
 return pEnv->CallLongMethod(jObject,meth_getIndexId);
+}
+
+bool ProxyIndexAccessorDef::isReadOnlyCommittedData()
+{
+return pEnv->CallBooleanMethod(jObject,meth_isReadOnlyCommittedData);
 }
 
 int32_t ProxyIndexAccessorDef::getRootPageIdParamId()
