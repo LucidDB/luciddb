@@ -20,8 +20,10 @@
 */
 package com.lucidera.lcs;
 
+import java.sql.*;
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
@@ -123,17 +125,21 @@ public class LcsSamplingRowScanRel
         ((FarragoPreparingStmt)connection).disableStatementCaching();
         
         Long rowCount;
+        Long[] rowCounts = new Long[2];
+        Timestamp labelTimestamp =
+            ((FarragoRelImplementor) implementor).getPreparingStmt().
+                getSession().getSessionLabelCreationTimestamp();
+        FarragoCatalogUtil.getRowCounts(
+            (FemAbstractColumnSet) columnSet, 
+            labelTimestamp, 
+            rowCounts);
         if (samplingParams.isBernoulli()) {
             scanStream.setSamplingMode(
                 TableSamplingModeEnum.SAMPLING_BERNOULLI);
-            rowCount = 
-                ((FemAbstractColumnSet)columnSet).getRowCount() +
-                ((FemAbstractColumnSet)columnSet).getDeletedRowCount();
-            
+            rowCount = rowCounts[0] + rowCounts[1];
         } else {
             scanStream.setSamplingMode(TableSamplingModeEnum.SAMPLING_SYSTEM);
-            rowCount = 
-                ((FemAbstractColumnSet)columnSet).getRowCount();
+            rowCount = rowCounts[0];
             assert(rowCount != null);
         }
         scanStream.setSamplingRowCount(rowCount);

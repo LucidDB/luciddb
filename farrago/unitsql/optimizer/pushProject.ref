@@ -154,43 +154,39 @@
 > explain plan for select id, lcs_rid(name) from vunion;
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[ID, EXPR$1]])'
-'    FennelMergeRel'
-'      FennelCalcRel(expr#0=[{inputs}], expr#1=['emps'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t2], LCS_RID=[$t0])'
-'        LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$AGE]])'
-'      FennelCalcRel(expr#0=[{inputs}], expr#1=['depts'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t2], LCS_RID=[$t0])'
-'        LcsRowScanRel(table=[[LOCALDB, PP, LCSDEPTS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
+'  FennelMergeRel'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=['emps'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], ID=[$t2], EXPR$1=[$t0])'
+'      LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$AGE]])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=['depts'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], ID=[$t2], EXPR$1=[$t0])'
+'      LcsRowScanRel(table=[[LOCALDB, PP, LCSDEPTS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 > explain plan for select id, lcs_rid(name) from vunion where number in (20, 120);
 'column0'
 'FennelToIteratorConverter'
-'  FennelRenameRel(fieldNames=[[ID, EXPR$1]])'
-'    FennelMergeRel'
-'      FennelCalcRel(expr#0=[{inputs}], expr#1=['emps'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t2], LCS_RID=[$t0])'
-'        LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO]], residual columns=[[0]])'
-'          FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }, { '[', 120, ']', 120 }]])'
-'      FennelCalcRel(expr#0=[{inputs}], expr#1=['depts'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t2], LCS_RID=[$t0])'
-'        LcsRowScanRel(table=[[LOCALDB, PP, LCSDEPTS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]], residual columns=[[0]])'
-'          FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }, { '[', 120, ']', 120 }]])'
+'  FennelMergeRel'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=['emps'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], ID=[$t2], EXPR$1=[$t0])'
+'      LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO]], residual columns=[[0]])'
+'        FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }, { '[', 120, ']', 120 }]])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=['depts'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], ID=[$t2], EXPR$1=[$t0])'
+'      LcsRowScanRel(table=[[LOCALDB, PP, LCSDEPTS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]], residual columns=[[0]])'
+'        FennelValuesRel(tuples=[[{ '[', 20, ']', 20 }, { '[', 120, ']', 120 }]])'
 > explain plan for select count(*) from vuemps;
 'column0'
 'FennelToIteratorConverter'
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'      FennelMergeRel'
-'        FennelRenameRel(fieldNames=[[ENO]])'
-'          LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO]])'
-'        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ENO) NOT NULL])'
-'          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
+'    FennelMergeRel'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$AGE]])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
 > explain plan for select count(*) from vunion;
 'column0'
 'FennelToIteratorConverter'
 '  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
-'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
-'      FennelMergeRel'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=['emps'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t2])'
-'          LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$AGE]])'
-'        FennelCalcRel(expr#0=[{inputs}], expr#1=['depts'], expr#2=[CAST($t1):VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], EXPR$0=[$t2])'
-'          LcsRowScanRel(table=[[LOCALDB, PP, LCSDEPTS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
+'    FennelMergeRel'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$AGE]])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, LCSDEPTS]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 >         
 > !set outputformat table
 > select ve.name, ve.doubleage, vd.name
@@ -275,6 +271,14 @@
 > create view vjoin(vja, vjb, vjc) as
 >     select t1.t1b - 10, t2.t2c - 100, t3.t3d - 1000
 >         from t1, t2, t3 where t1.t1a = t2.t2a and t2.t2a = t3.t3a;
+> 
+> -- verify a bug which used to be caused by the fact that we
+> -- did not wrap default null values in a cast, so pushing them down
+> -- through a union could end up with a bare null (whereas without
+> -- the union, the bug was covered up by the fact that we coerce
+> -- the inputs to an INSERT to the target types)
+> create table t4(i int, j int);
+> insert into t4(i) select i from t4 union all select i from t4;
 > 
 > select * from vjoin order by vja;
 +------+------+-------+
@@ -361,24 +365,24 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(BIGINT EXPR$0) NOT NULL])'
-'      LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
-'        FennelReshapeRel(projection=[[1, 2]], outputRowType=[RecordType(BIGINT LCS_RID, INTEGER T2A) NOT NULL])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT EXPR$0) NOT NULL])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
+'        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER T2A) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'            LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
 '            LcsRowScanRel(table=[[LOCALDB, PP, T2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$T2A]])'
-'        LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
 > explain plan for select 2*vjb, lcs_rid(vja) from vjoin order by 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1]], discardDuplicates=[false])'
-'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[2], expr#5=[100], expr#6=[-($t2, $t5)], expr#7=[*($t4, $t6)], EXPR$0=[$t7], EXPR$1=[$t0])'
-'      LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
-'        FennelReshapeRel(projection=[[1, 2, 3]], outputRowType=[RecordType(BIGINT LCS_RID, INTEGER T2A, INTEGER T2C) NOT NULL])'
+'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[2], expr#5=[100], expr#6=[-($t3, $t5)], expr#7=[*($t4, $t6)], EXPR$0=[$t7], EXPR$1=[$t1])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
+'        FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER T2A, INTEGER T2C) NOT NULL])'
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'            LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$T1$T1A]])'
 '            LcsRowScanRel(table=[[LOCALDB, PP, T2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$T2A, SYS$CLUSTERED_INDEX$T2$T2C]])'
-'        LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T3$T3A]])'
 > 
 > -- negative case -- can't push project past a distinct union
 > create view vudemps(eno, name, deptno, age) as

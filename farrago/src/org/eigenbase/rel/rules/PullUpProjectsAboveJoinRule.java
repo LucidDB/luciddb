@@ -26,7 +26,6 @@ import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.relopt.RelOptUtil.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
@@ -35,8 +34,7 @@ import org.eigenbase.rex.*;
  * PullUpProjectsAboveJoinRule implements the rule for pulling {@link
  * ProjectRel}s beneath a {@link JoinRel} above the {@link JoinRel}. Projections
  * are pulled up if the {@link ProjectRel} doesn't originate from a null
- * generating input in an outer join, and the join condition in the {@link
- * JoinRel} only references projection elements that are {@link RexInputRef}s.
+ * generating input in an outer join.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -89,15 +87,12 @@ public class PullUpProjectsAboveJoinRule
 
         ProjectRel leftProj;
         ProjectRel rightProj;
-        RexNode [] leftProjExprs = null;
-        RexNode [] rightProjExprs = null;
         RelNode leftJoinChild;
         RelNode rightJoinChild;
 
         // see if at least one input's projection doesn't generate nulls
         if (hasLeftChild(call) && !joinType.generatesNullsOnLeft()) {
             leftProj = (ProjectRel) call.rels[1];
-            leftProjExprs = leftProj.getProjectExps();
             leftJoinChild = getProjectChild(call, leftProj, true);
         } else {
             leftProj = null;
@@ -105,7 +100,6 @@ public class PullUpProjectsAboveJoinRule
         }
         if (hasRightChild(call) && !joinType.generatesNullsOnRight()) {
             rightProj = (ProjectRel) getRightChild(call);
-            rightProjExprs = rightProj.getProjectExps();
             rightJoinChild = getProjectChild(call, rightProj, false);
         } else {
             rightProj = null;
@@ -113,34 +107,6 @@ public class PullUpProjectsAboveJoinRule
         }
         if ((leftProj == null) && (rightProj == null)) {
             return;
-        }
-
-        // make sure the join condition only references RexInputRefs from
-        // the join inputs; otherwise, if we pull up the projection, we end up
-        // evaluating the expression once in the join condition and then again
-        // in the projection
-        int nProjExprs = joinRel.getRowType().getFieldCount();
-        BitSet refs = new BitSet(nProjExprs);
-        joinRel.getCondition().accept(new InputFinder(refs));
-        int nLeft = joinRel.getLeft().getRowType().getFieldCount();
-        for (
-            int bit = refs.nextSetBit(0);
-            bit >= 0;
-            bit = refs.nextSetBit(bit + 1))
-        {
-            if (bit < nLeft) {
-                if ((leftProj != null)
-                    && !(leftProjExprs[bit] instanceof RexInputRef))
-                {
-                    return;
-                }
-            } else {
-                if ((rightProj != null)
-                    && !(rightProjExprs[bit - nLeft] instanceof RexInputRef))
-                {
-                    return;
-                }
-            }
         }
 
         // Construct two RexPrograms and combine them.  The bottom program
@@ -165,6 +131,7 @@ public class PullUpProjectsAboveJoinRule
         // expressions, shift them to the right by the number of fields on
         // the LHS.  If the join input was not a projection, simply create
         // references to the inputs.
+        int nProjExprs = joinRel.getRowType().getFieldCount();
         RexNode [] projExprs = new RexNode[nProjExprs];
         String [] fieldNames = new String[nProjExprs];
         RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();

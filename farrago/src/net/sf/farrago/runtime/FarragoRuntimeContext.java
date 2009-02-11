@@ -119,6 +119,8 @@ public class FarragoRuntimeContext
     protected long stmtId;
 
     private NativeRuntimeContext nativeContext;
+    
+    private EnkiMDSession detachedSession;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -191,7 +193,7 @@ public class FarragoRuntimeContext
         throw new AssertionError();
     }
 
-    // override FarragoCompoundAllocation
+    // override CompoundClosableAllocation
     public synchronized void closeAllocation()
     {
         tracer.fine("closing allocation " + isClosed);
@@ -202,6 +204,59 @@ public class FarragoRuntimeContext
 
         isCanceled = true;
 
+        boolean streamGraphClosed = false;
+
+        // Override CompoundClosableAllocation behavior, because we
+        // need special synchronization to account for the fact
+        // that FarragoJavaUdxIterator instances may be adding themselves
+        // concurrently during this shutdown.  Question:  is it possible
+        // for one to leak due to a race?
+        for (;;) {
+            ClosableAllocation allocation;
+            synchronized (allocations) {
+                if (allocations.isEmpty()) {
+                    break;
+                }
+                allocation = allocations.remove(allocations.size() - 1);
+            }
+            if (allocation instanceof FarragoObjectCache.Entry) {
+                Object cachedObj =
+                    ((FarragoObjectCache.Entry) allocation).getValue();
+                if (cachedObj == streamGraph) {
+                    // REVIEW jvs 1-Sep-2008: This is really gross.  We're
+                    // between a rock (FRG-251) and a hard place (FRG-331).
+                    // This (FRG-338) is the temporary resolution, but we really
+                    // need to straighten out the UDX thread lifecycle once and
+                    // for all.
+                    assert(!streamGraphClosed);
+                    streamGraphClosed = true;
+                    closeStreamGraph();
+                }
+            }
+            allocation.closeAllocation();
+        }
+        if (!streamGraphClosed) {
+            // For txnCodeCache != null, or for a pure-Java statement, we
+            // haven't actually unpinned any stream graph cache entry, but we
+            // still have some cleanup to do.
+            closeStreamGraph();
+        }
+
+        if (detachedSession != null) {
+            EnkiMDRepository mdrepos = getRepos().getEnkiMdrRepos();
+            EnkiMDSession callerSession = mdrepos.detachSession();
+            
+            reattachMdrSession();
+            getRepos().endReposSession();
+            
+            if (callerSession != null) {
+                mdrepos.reattachSession(callerSession);
+            }
+        }        
+    }
+
+    private void closeStreamGraph()
+    {
         // make sure all streams get closed BEFORE they are deallocated
         streamOwner.closeAllocation();
         if (!isDml) {
@@ -212,14 +267,36 @@ public class FarragoRuntimeContext
         }
         statementClassLoader = null;
 
-        // FRG-253:  nullify this, so that once we release its pinned
-        // entry from the cache, we don't try to abort it after someone
-        // else starts to reuse it!
+        // FRG-253: nullify this, so that once we release its pinned entry from
+        // the cache, we don't try to abort it after someone else starts to
+        // reuse it!
         streamGraph = null;
-
-        super.closeAllocation();
     }
 
+    // override CompoundClosableAllocation
+    public void addAllocation(ClosableAllocation allocation)
+    {
+        synchronized (allocations) {
+            super.addAllocation(allocation);
+        }
+    }
+    
+    // override CompoundClosableAllocation
+    public boolean forgetAllocation(ClosableAllocation allocation)
+    {
+        synchronized (allocations) {
+            return super.forgetAllocation(allocation);
+        }
+    }
+    
+    // override CompoundClosableAllocation
+    public boolean hasAllocations()
+    {
+        synchronized (allocations) {
+            return !allocations.isEmpty();
+        }
+    }
+    
     // implement RelOptConnection
     public Object contentsAsArray(
         String qualifier,
@@ -244,24 +321,25 @@ public class FarragoRuntimeContext
         EnkiMDRepository mdrRepos = repos.getEnkiMdrRepos();
         mdrRepos.beginSession();
         mdrRepos.beginTrans(false);
+        FarragoMedDataServer server;
         try {
             FemDataServer femServer =
                 (FemDataServer) mdrRepos.getByMofId(serverMofId);
-
-            FarragoMedDataServer server =
-                dataWrapperCache.loadServerFromCatalog(femServer);
-            try {
-                Object obj = server.getRuntimeSupport(param);
-                if (obj instanceof FarragoAllocation) {
-                    addAllocation((FarragoAllocation) obj);
-                }
-                return obj;
-            } catch (Throwable ex) {
-                throw FarragoResource.instance().DataServerRuntimeFailed.ex(ex);
-            }
+            
+            server = dataWrapperCache.loadServerFromCatalog(femServer);
         } finally {
             mdrRepos.endTrans();
             mdrRepos.endSession();
+        }
+    
+        try {
+            Object obj = server.getRuntimeSupport(param);
+            if (obj instanceof FarragoAllocation) {
+                addAllocation((FarragoAllocation) obj);
+            }
+            return obj;
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().DataServerRuntimeFailed.ex(ex);
         }
     }
 
@@ -442,7 +520,7 @@ public class FarragoRuntimeContext
     protected void registerJavaStream(
         int streamId,
         Object stream,
-        FarragoCompoundAllocation streamOwner)
+        FarragoCompoundAllocation owner)
     {
         if (streamIdToHandleMap.containsKey(streamId)) {
             // or assert?
@@ -453,7 +531,7 @@ public class FarragoRuntimeContext
         }
         streamIdToHandleMap.put(
             streamId,
-            FennelDbHandleImpl.allocateNewObjectHandle(streamOwner, stream));
+            FennelDbHandleImpl.allocateNewObjectHandle(owner, stream));
     }
 
     /**
@@ -1163,6 +1241,34 @@ public class FarragoRuntimeContext
             msg,
             byteBuffer,
             index);
+    }
+    
+    /**
+     * @return true if a UDR is currently being executed
+     */
+    public static boolean inUdr()
+    {
+        List<FarragoUdrInvocationFrame> stack = threadInvocationStack.get();
+        if ((stack == null) || (stack.isEmpty())) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    public void detachMdrSession()
+    {
+        Util.permAssert(
+            detachedSession == null,
+            "FarragoRuntimeContext only supports a single detached session");
+
+        detachedSession = getRepos().getEnkiMdrRepos().detachSession();
+    }
+    
+    public void reattachMdrSession()
+    {
+        getRepos().getEnkiMdrRepos().reattachSession(detachedSession);
+        detachedSession = null;
     }
 
     //~ Inner Classes ----------------------------------------------------------

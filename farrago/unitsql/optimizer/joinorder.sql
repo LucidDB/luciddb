@@ -386,9 +386,8 @@ WHERE (AL5.REVN_YR_MO=AL4.REVN_YR_MO
 GROUP BY AL1.CU_ID, AL4.REVN_YR_MO, AL5.RSD_CU_CNT;
 
 
--- LER-3639 -- Projects should not be pulled up in this case because the
--- projection expression is used as a join key.  If this query is not properly
--- optimized, a cartesian join is incorrectly chosen.
+-- LER-3639 -- If this query is not properly optimized, a cartesian join is
+-- incorrectly chosen.
 create table t1(t1a char(10));
 create table t2(t2a char(10));
 create table t3(t3a char(10));
@@ -402,3 +401,55 @@ where t3a = a;
 -- same query as above except without the subquery in the from clause
 explain plan for
 select * from t1, t2, t3 where t1a = t2a and t1a||t2a = t3a;
+
+-- LER-7778 -- Likewise for this query.  It should not result in a cartesian
+-- join.
+create table tab1(c1 char(1), c2 char(2), c3 char(3));
+create table tab2(c1 char(1), c2 char(2), c3 char(3));
+create table tab3(c1 char(1), c2 char(2), c3 char(3));
+create view vtab1 as
+    select cast(c1 as char(5)) as c1, cast(c2 as char(5)), cast(c3 as char(5))
+    from tab1;
+explain plan for
+select vtab1.c1 from vtab1, tab2, tab3 where
+    vtab1.c1 = tab3.c2 and tab2.c2 = tab3.c3;
+
+-- LER-7807 -- Tables A and B should be joined together before joining with C.
+-- This allows the joins to be completely processed using hash joins without
+-- post-processing of the filter referencing all 3 tables.
+create table A(a int, b int, c int);
+create table B(a int, b int, c int);
+create table C(a int, b int, c int);
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','A',1000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','B',500);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','C',400);
+
+explain plan for
+select * from A, B, C
+where A.a = B.a and
+A.b + B.b = C.b and
+A.c = C.c;
+
+-- The following query *MUST* produce a join ordering where the row scan
+-- that selects all columns from BIG (i.e., B2) *DOES NOT* appear in the
+-- innermost join in the query plan.  That would be non-optimal because it
+-- entails passing around the most data across exec streams.  The joins in
+-- this query are all 1-1, so to avoid putting B2 in the innermost join,
+-- the widths of the rows in the intermediate joins need to be taken into
+-- account.
+create table big(a int, b int, c int, d int, e int, f int);
+create table small(a int, b int);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','BIG',100000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','JO','SMALL',10);
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'BIG', 'A', 100000, 100, 100000, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'BIG', 'B', 10, 100, 10, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'JO', 'SMALL', 'A', 10, 100, 10, 0, '0123456789');
+explain plan for
+    select b2.*, b1.a, s1.b, s2.b
+        from big b2 inner join big b1 on b1.a = b2.a
+        left outer join small s1 on b1.b = s1.a
+        left outer join small s2 on b1.b = s2.a;

@@ -125,8 +125,8 @@
 > explain plan including all attributes for
 > select count(*) from (values(0));
 'column0'
-'FennelToIteratorConverter: rowcount = 1000000.0, cumulative cost = 1000003.0'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()]): rowcount = 1000000.0, cumulative cost = 3.0'
+'FennelToIteratorConverter: rowcount = 1000000.0, cumulative cost = 2000002.0'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()]): rowcount = 1000000.0, cumulative cost = 1000002.0'
 '    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1]): rowcount = 1.0, cumulative cost = 2.0'
 '      FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0'
 > 

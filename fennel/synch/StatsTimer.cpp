@@ -82,17 +82,17 @@ uint StatsTimer::getTimerIntervalMillis()
     return intervalInMillis;
 }
 
-void StatsTimer::onTimerStart()
+void StatsTimer::onThreadStart()
 {
     if (pTarget) {
-        pTarget->onTimerStart();
+        pTarget->onThreadStart();
     }
 }
 
-void StatsTimer::onTimerStop()
+void StatsTimer::onThreadEnd()
 {
     if (pTarget) {
-        pTarget->onTimerStop();
+        pTarget->onThreadEnd();
     }
 }
 
@@ -108,12 +108,12 @@ void StatsTimer::onTimerInterval()
     pTarget->endSnapshot();
 }
 
-void StatsTarget::onTimerStart()
+void StatsTarget::onThreadStart()
 {
     // by default do nothing
 }
 
-void StatsTarget::onTimerStop()
+void StatsTarget::onThreadEnd()
 {
     // by default do nothing
 }

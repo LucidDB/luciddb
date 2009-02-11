@@ -21,6 +21,7 @@
 */
 package net.sf.farrago.catalog;
 
+import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.cwm.core.*;
@@ -44,12 +45,15 @@ public class FarragoTableStatistics
 
     private FarragoRepos repos;
     private FemAbstractColumnSet table;
+    private Timestamp labelTimestamp;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
      * Initialize an object for retrieving table statistics
      *
+     * @deprecated
+     * 
      * @param repos the repository containing stats
      * @param table the table for which to retrieve stats
      */
@@ -57,8 +61,26 @@ public class FarragoTableStatistics
         FarragoRepos repos,
         FemAbstractColumnSet table)
     {
+        this(repos, table, null);
+    }
+    
+    /**
+     * Initialize an object for retrieving table statistics, optionally
+     * based on a label setting.
+     *
+     * @param repos the repository containing stats
+     * @param table the table for which to retrieve stats
+     * @param labelTimestamp the creation timestamp of the label that determines
+     * which stats to retrieve; null if there is no label setting
+     */
+    public FarragoTableStatistics(
+        FarragoRepos repos,
+        FemAbstractColumnSet table,
+        Timestamp labelTimestamp)
+    {
         this.repos = repos;
         this.table = table;
+        this.labelTimestamp = labelTimestamp;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -66,11 +88,12 @@ public class FarragoTableStatistics
     // implement RelStatSource
     public Double getRowCount()
     {
-        Long rowCount = table.getRowCount();
-        if (rowCount == null) {
-            rowCount = table.getLastAnalyzeRowCount();
-        }
-        return (rowCount == null) ? null : Double.valueOf(rowCount);
+        Long[] rowCounts = new Long[2];
+        FarragoCatalogUtil.getRowCounts(
+            table,
+            labelTimestamp,
+            rowCounts);
+        return (rowCounts[0] == null) ? null : Double.valueOf(rowCounts[0]);
     }
 
     // implement RelStatSource
@@ -82,7 +105,7 @@ public class FarragoTableStatistics
         FemAbstractColumn column = (FemAbstractColumn) features.get(ordinal);
 
         FarragoColumnHistogram result =
-            new FarragoColumnHistogram(column, predicate);
+            new FarragoColumnHistogram(column, predicate, labelTimestamp);
         result.evaluate();
         return result;
     }

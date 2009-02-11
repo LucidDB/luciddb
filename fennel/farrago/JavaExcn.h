@@ -57,6 +57,9 @@ public:
      */
     jthrowable getJavaException() const;
 
+    // override FennelExcn
+    virtual void throwSelf();
+
     /**
      * @return the stack trace
      */

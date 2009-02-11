@@ -32,6 +32,7 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/tuple/TuplePrinter.h"
+#include "fennel/cache/QuotaCacheAccessor.h"
 
 #include <boost/test/test_tools.hpp>
 
@@ -286,6 +287,13 @@ void ExecStreamUnitTestBase::testCaseSetUp()
     pGraph = newStreamGraph();
     pGraphEmbryo = newStreamGraphEmbryo(pGraph);
     pGraph->setResourceGovernor(pResourceGovernor);
+
+    // we don't bother with quotas for unit tests, but we do need
+    // to be able to associate TxnId's in order for parallel
+    // execution to work (since a cache page may be pinned
+    // by one thread and then released by another)
+    pCacheAccessor.reset(
+        new TransactionalCacheAccessor(pCache));
 }
 
 void ExecStreamUnitTestBase::resetExecStreamTest()

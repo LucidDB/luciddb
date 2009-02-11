@@ -312,6 +312,19 @@ select "ONE SPACE" from flatfile_server.BCP."headerswithwhitespace";
 -- generating bcp file
 select * from flatfile_server.BCP."headerswithwhitespacenobcp";
 
+--
+-- 3.13 test estimating row count of a file
+--
+explain plan including all attributes without implementation for
+select * from flatfile_server.BCP."decimal";
+
+explain plan including all attributes without implementation for
+select * from flatfile_server.BCP."example";
+
+explain plan including all attributes without implementation for
+select * from flatfile_server_empty.BCP."empty";
+
+
 ---------------------------------------------------------------------------
 -- Part 4. Reading metadata from bcp files                               --
 ---------------------------------------------------------------------------

@@ -134,7 +134,7 @@ ${farrago.test.jvmargs}
   <fileset dir="${unitsql.dir}" id="fileset.unitsql">
     <include name="**/*.sql"/>
     <exclude name="runner/**/*.sql"/>
-    <exclude name="med/scott.sql" unless="oracle.available"/>
+    <exclude name="med/scott.sql" unless="oracle.test"/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
@@ -230,7 +230,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${test.emma.classpath}" />
     <pathelement location="${diffj.dir}/share/diffj/diffj.jar" />
     <fileset dir="">
-      <include name="${oracle.home}/${oracle.jar}" if="oracle.available"/>
+      <include name="${oracle.home}/${oracle.jar}" if="oracle.test"/>
     </fileset>
   </path>
   <property name="test.classpath" refid="test.classpath"/>
@@ -468,6 +468,29 @@ ${farrago.test.jvmargs}
     <antcall target="createJaasConfig"/>
   </target>
 
+  <!-- see http://pub.eigenbase.org/wiki/Jdbc4Transition -->
+  <target name="mungeJdbc">
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${ant.java.version}" arg2="1.5"/>
+      <then>
+        <copy todir="${farrago.jdbc4.gen.dir}">
+          <fileset dir="${farrago.dir}/jdbc4" includes="*.java"
+            excludes="Unwrappable*.java"/>
+        </copy>
+        <copy file="${farrago.dir}/jdbc4/Unwrappable14.java"
+          tofile="${farrago.jdbc4.gen.dir}/Unwrappable.java"/>
+        <copy file="${farrago.dir}/jdbc4/UnwrappableRJConnection14.java"
+          tofile="${farrago.jdbc4.gen.dir}/UnwrappableRJConnection.java"/>
+      </then>
+      <else>
+        <copy file="${farrago.dir}/jdbc4/Unwrappable16.java"
+          tofile="${farrago.jdbc4.gen.dir}/Unwrappable.java"/>
+        <copy file="${farrago.dir}/jdbc4/UnwrappableRJConnection16.java"
+          tofile="${farrago.jdbc4.gen.dir}/UnwrappableRJConnection.java"/>
+      </else>
+    </ac:if>
+  </target>
+
   <target name="createCatalogIfNotUptodate" depends="checkCatalogUptodate"
       unless="catalog.uptodate">
     <antcall target="createCatalog"/>
@@ -529,7 +552,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="compileCatalog"
-    depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
+    depends="cleanCatalog,mungeJdbc,generateSqlTestWrapper,createRepository"/>
 
   <!-- creates the plugin/jaas.config file from template -->
   <target name="createJaasConfig">
@@ -674,8 +697,31 @@ ${farrago.test.jvmargs}
 
   <!-- determine list of all SQL scripts to run during catalog init -->
   <target name="determineInitSql" >
+    <farrago.setReposProvider/>
+
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <equals arg1="${farrago.enki.provider}" arg2="ENKI_HIBERNATE"/>
+      <then>
+        <copy todir="${farrago.initsql.dir}" overwrite="true">
+          <fileset dir="${farrago.initsql.dir}/templates">
+            <include name="*.hibernate.tmpl"/>
+          </fileset>
+          <mapper type="glob" from="*.hibernate.tmpl" to="*"/>
+        </copy>
+      </then>
+      <else>
+        <copy todir="${farrago.initsql.dir}" overwrite="true">
+          <fileset dir="${farrago.initsql.dir}/templates">
+            <include name="*.default.tmpl"/>
+          </fileset>
+          <mapper type="glob" from="*.default.tmpl" to="*"/>
+        </copy>
+      </else>
+    </ac:if>
+          
+
     <filelist dir="${farrago.initsql.dir}" id="filelist.initsql"
-      files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createSalesSchema.sql,createMgmtViews.sql"/>
+      files="createStorageWrappers.sql,createReposStorageServers.sql,createSqljSchema.sql,createJdbcViews.sql,createSalesSchema.sql,createMgmtViews.sql"/>
     <pathconvert property="filelist.initsql" refid="filelist.initsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
   </target>
@@ -732,6 +778,9 @@ ${farrago.test.jvmargs}
     <delete file="${FarragoSqlTestWrapper.java}"/>
     <delete dir="${farrago.catalog.dir}/fennel"/>
     <delete file="${FarragoMdrBuildTrace.log}"/>
+    <delete quiet="true">
+      <fileset dir="${farrago.jdbc4.gen.dir}" includes="*.java"/>
+    </delete>
   </target>
 
   <!-- delete catalog data only -->
@@ -1015,6 +1064,7 @@ ${farrago.test.jvmargs}
 
   <target name="test-only-setup">
     <antcall target="checkTrace"/>
+    <antcall target="checkOracle"/>
     <antcall target="cleanExamples"/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
@@ -1025,6 +1075,7 @@ ${farrago.test.jvmargs}
     <antcall target="testRngPlugin"/>
     <antcall target="exportCatalog"/>
     <antcall target="testDmv"/>
+    <antcall target="testMiniplanner"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="testCleanup"/>
@@ -1043,6 +1094,22 @@ ${farrago.test.jvmargs}
 Trace net.sf.farrago.dynamic.level=FINE
 will cause ant test to fail or run very slowly;
 please disable it and try again.
+        </fail>
+      </then>
+    </ac:if>
+  </target>
+
+  <target name="checkOracle">
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <and>
+        <isset property="oracle.test"/>
+        <not>
+          <isset property="oracle.available"/>
+        </not>
+      </and>
+      <then>
+        <fail>
+Oracle tests were requested via oracle.test, but Oracle is not available.
         </fail>
       </then>
     </ac:if>
@@ -1122,6 +1189,11 @@ please disable it and try again.
   <target name="testDmv">
     <farrago.runSqlTest
       file="${farrago.dir}/examples/dmv/test.sql"/>
+  </target>
+
+  <target name="testMiniplanner">
+    <farrago.runSqlTest
+      file="${farrago.dir}/examples/miniplan/unitsql/miniplan.sql"/>
   </target>
 
   <target name="testCleanup">
@@ -1359,6 +1431,9 @@ please disable it and try again.
       <packageset dir="${farrago.dir}/examples/plannerviz/src">
         <include name="**"/>
       </packageset>
+      <packageset dir="${farrago.dir}/examples/miniplan/src">
+        <include name="**"/>
+      </packageset>
       <packageset dir="${farrago.dir}/examples/rng/src">
         <include name="**"/>
       </packageset>
@@ -1404,6 +1479,9 @@ please disable it and try again.
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/plannerviz/src">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.dir}/examples/miniplan/src">
         <include name="**"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/rng/src">
@@ -1555,12 +1633,16 @@ please disable it and try again.
     <ant antfile="examples/plannerviz/build.xml" inheritAll="false"/>
     <ant antfile="examples/rng/build.xml" target="createPlugin"
       inheritAll="false"/>
+    <ant antfile="examples/miniplan/build.xml"
+      inheritAll="false"/>
   </target>
 
   <target name="cleanExamples">
     <ant antfile="examples/plannerviz/build.xml" target="clean"
       inheritAll="false"/>
     <ant antfile="examples/rng/build.xml" target="clean"
+      inheritAll="false"/>
+    <ant antfile="examples/miniplan/build.xml" target="clean"
       inheritAll="false"/>
   </target>
 

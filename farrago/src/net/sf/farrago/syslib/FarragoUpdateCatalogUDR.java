@@ -91,8 +91,6 @@ public class FarragoUpdateCatalogUDR
     public static void updateSystemObjects()
     {
         tracer.info("Updating system-owned catalog objects");
-        //FarragoSession session = FarragoUdrRuntime.getSession();
-        //FarragoRepos repos = session.getRepos();
         FarragoRepos repos = FarragoUdrRuntime.getRepos();
 
         FarragoUpdateCatalogUDR init = null;

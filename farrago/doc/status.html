@@ -107,7 +107,8 @@ temporary table must be specified together with the CREATE TABLE
 statement; indexes may not be subsequently added or dropped (if you
 need that, drop and recreate the table definition).  Beyond that,
 temporary tables support the same features as permanent tables
-(constraints, defaults, etc.).
+(constraints, defaults, etc.).  However, see the "What's Broken" section
+below for some known issues.
 
 <li>CREATE VIEW:  all views are currently read-only.
 
@@ -297,10 +298,9 @@ getCrossReference
 
 <ul>
 
-<li>hash join/agg and nested loop joins coming soon (already available
-in LucidDB session personality)
+<li>hash join/agg and nested loop joins for inner and outer joins
 
-<li>cartesian product join (for inner joins only)
+<li>cartesian product join (for inner joins and degenerate outer joins)
 
 <li>index join (for LEFT, RIGHT, or INNER join;
 single-column equijoin only)
@@ -400,6 +400,10 @@ triggers are implemented.
 <li>The SET SCHEMA command cannot be used to set a schema in a
 virtual catalog based on a SQL/MED server (including the predefined
 SYS_CWM and SYS_FEM catalogs).
+
+<li>There are a number of problems with global temporary table support;
+see <a href="http://issues.eigenbase.org/browse/FRG-337">FRG-337</a>
+and <a href="http://issues.eigenbase.org/browse/FRG-298">FRG-298</a>.
 
 </ul>
 

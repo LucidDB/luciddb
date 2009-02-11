@@ -1,13 +1,17 @@
 > -- $Id$
-> -- Test queries on Oracle's scott/tiger schema via the MED JDBC adapter.
-> --
-> -- To make it work you will need Oracle installed and running, and the standard
-> -- scott/tiger schema installed. You also need to add your driver jar, say
-> -- /usr/lib/oracle/xe/app/oracle/product/10.2.0/server/jdbc/lib/ojdbc14.jar
-> -- in classpath.gen.
-> --
-> -- Naturally not every machine running the regression test suite will
-> -- have Oracle installed, so this test is disabled in build.xml by default.
+>-- Test queries on Oracle's scott/tiger schema via the MED JDBC adapter.
+>--
+>-- To make it work you will need Oracle installed and running, and the standard
+>-- scott/tiger schema installed. You also need to have the ORACLE_HOME
+>-- environment variable set, and $ORACLE_HOME/jdbc/lib/ojdbc14.jar
+>-- existing.  For running outside of ant, you also need
+>-- the path to ojdbc14.jar in classpath.gen.  Finally, you'll need to
+>-- add oracle.test=true in farrago/customBuild.properties.
+>--
+>-- Naturally not every machine running the regression test suite will
+>-- have Oracle installed, so this property is false in build.xml by default.
+>--
+>-- FIXME jvs 30-Sept-2008:  Somebody forgot about ORDER BY here...
 > 
 > CREATE SERVER my_oracle_server
 >   FOREIGN DATA WRAPPER SYS_JDBC

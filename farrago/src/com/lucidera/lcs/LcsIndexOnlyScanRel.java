@@ -120,6 +120,7 @@ public class LcsIndexOnlyScanRel
      * @param child the child of the scan
      * @param table the table of the index to be scanned
      * @param index the index to be scanned
+     * @param fullScan true if the entire index is being scanned
      * @param projectedColumns for full scans, the output projection. Should be
      * null for searches
      * @param isUniqueKey TODO
@@ -243,7 +244,8 @@ public class LcsIndexOnlyScanRel
                 inputJoinProj,
                 inputDirectiveProj,
                 null,
-                null);
+                null,
+                fullScan ? 1.0 : null);
         searchRel.inheritTraitsFrom(this);
 
         LcsIndexMinusRel minus =

@@ -75,21 +75,31 @@ Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesInit
 > alter system set "cacheReservePercentage" = 100;
 Error: Invalid parameter setting.  Setting must be between 1 and 99. (state=,code=0)
 > 
+> -- should fail
+> alter system set "deviceSchedulerType" = 'foo';
+Error: Type mismatch in value ''foo'' for system parameter "deviceSchedulerType" (state=,code=0)
+> 
 > -- Test session parameters
 > 
 > -- should work
 > select * from sys_boot.mgmt.session_parameters_view
 >   where param_name in 
->     ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric')
+>     ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric',
+>      'validateDdlOnPrepare', 'enforceIdentityGeneratedAlways', 
+>      'cacheStatements', 'reduceNonCorrelatedSubqueries')
 >   order by 1;
-+---------------------+--------------+
-|     PARAM_NAME      | PARAM_VALUE  |
-+---------------------+--------------+
-| catalogName         | LOCALDB      |
-| schemaName          |              |
-| sessionUserName     | sa           |
-| squeezeJdbcNumeric  | true         |
-+---------------------+--------------+
++---------------------------------+--------------+
+|           PARAM_NAME            | PARAM_VALUE  |
++---------------------------------+--------------+
+| cacheStatements                 | true         |
+| catalogName                     | LOCALDB      |
+| enforceIdentityGeneratedAlways  | true         |
+| reduceNonCorrelatedSubqueries   | false        |
+| schemaName                      |              |
+| sessionUserName                 | sa           |
+| squeezeJdbcNumeric              | true         |
+| validateDdlOnPrepare            | false        |
++---------------------------------+--------------+
 > 
 > -- should fail (farrago does not have this parameter)
 > alter session set "logDir" = 'testlog';

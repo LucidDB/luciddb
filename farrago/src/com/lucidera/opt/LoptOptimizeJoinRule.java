@@ -95,16 +95,24 @@ public class LoptOptimizeJoinRule
      */
     private void findRemovableOuterJoins(LoptMultiJoin multiJoin)
     {
-outerLoop:
-        for (
-            int factIdx = 0;
+        List<Integer> removalCandidates = new ArrayList<Integer>();
+        for (int factIdx = 0;
             factIdx < multiJoin.getNumJoinFactors();
             factIdx++)
         {
             if (multiJoin.isNullGenerating(factIdx)) {
+                removalCandidates.add(factIdx);
+            }
+        }
+        
+        while (!removalCandidates.isEmpty()) {
+            Set<Integer> retryCandidates = new HashSet<Integer>();
+            
+outerForLoop:
+            for (int factIdx : removalCandidates) {
                 // reject the factor if it is referenced in the projection list
                 BitSet projFields = multiJoin.getProjFields(factIdx);
-                if ((projFields == null) || (projFields.cardinality() > 0)) {
+                if ((projFields == null) || (projFields.cardinality() > 0)) {     
                     continue;
                 }
 
@@ -117,6 +125,8 @@ outerLoop:
                 RelOptUtil.decomposeConjunction(outerJoinCond, ojFilters);
                 int numFields = multiJoin.getNumFieldsInJoinFactor(factIdx);
                 BitSet joinKeys = new BitSet(numFields);
+                BitSet otherJoinKeys =
+                    new BitSet(multiJoin.getNumTotalFields());
                 int firstFieldNum = multiJoin.getJoinStart(factIdx);
                 int lastFieldNum = firstFieldNum + numFields;
                 for (RexNode filter : ojFilters) {
@@ -139,6 +149,7 @@ outerLoop:
                         ((RexInputRef) filterCall.getOperands()[1]).getIndex();
                     setJoinKey(
                         joinKeys,
+                        otherJoinKeys,
                         leftRef,
                         rightRef,
                         firstFieldNum,
@@ -147,7 +158,7 @@ outerLoop:
                 }
 
                 if (joinKeys.cardinality() == 0) {
-                    continue outerLoop;
+                    continue;
                 }
 
                 // make sure the only join fields referenced are the ones in
@@ -155,8 +166,10 @@ outerLoop:
                 int [] joinFieldRefCounts =
                     multiJoin.getJoinFieldRefCounts(factIdx);
                 for (int i = 0; i < joinFieldRefCounts.length; i++) {
-                    if ((joinFieldRefCounts[i] > 1) || !joinKeys.get(i)) {
-                        continue outerLoop;
+                    if ((joinFieldRefCounts[i] > 1) ||
+                        (!joinKeys.get(i) && joinFieldRefCounts[i] == 1))
+                    {
+                        continue outerForLoop;
                     }
                 }
 
@@ -166,16 +179,38 @@ outerLoop:
                         joinKeys))
                 {
                     multiJoin.addRemovableOuterJoinFactor(factIdx);
+                    // Since we are no longer joining this factor,
+                    // decrement the reference counters corresponding to
+                    // the join keys from the other factors that join with
+                    // this one.  Later, in the outermost loop, we'll have
+                    // the opportunity to retry removing those factors.
+                    for (int otherKey = otherJoinKeys.nextSetBit(0);
+                        otherKey >= 0;
+                        otherKey = otherJoinKeys.nextSetBit(otherKey + 1))
+                    {
+                        int otherFactor = multiJoin.findRef(otherKey);
+                        if (multiJoin.isNullGenerating(otherFactor)) {
+                            retryCandidates.add(otherFactor);
+                        }
+                        int [] otherJoinFieldRefCounts =
+                            multiJoin.getJoinFieldRefCounts(otherFactor);
+                        int offset = multiJoin.getJoinStart(otherFactor);
+                        --otherJoinFieldRefCounts[otherKey - offset];
+                    }
                 }
             }
+            removalCandidates.clear();
+            removalCandidates.addAll(retryCandidates);
         }
     }
 
     /**
      * Sets a join key if only one of the specified input references corresponds
-     * to a specified factor as determined by its field numbers
+     * to a specified factor as determined by its field numbers.  Also keeps
+     * track of the keys from the other factor.
      *
      * @param joinKeys join keys to be set if a key is found
+     * @param otherJoinKeys join keys for the other join factor
      * @param ref1 first input reference
      * @param ref2 second input reference
      * @param firstFieldNum first field number of the factor
@@ -186,6 +221,7 @@ outerLoop:
      */
     private void setJoinKey(
         BitSet joinKeys,
+        BitSet otherJoinKeys,
         int ref1,
         int ref2,
         int firstFieldNum,
@@ -195,12 +231,14 @@ outerLoop:
         if ((ref1 >= firstFieldNum) && (ref1 < lastFieldNum)) {
             if (!((ref2 >= firstFieldNum) && (ref2 < lastFieldNum))) {
                 joinKeys.set(ref1 - firstFieldNum);
+                otherJoinKeys.set(ref2);
             }
             return;
         }
         if (swap) {
             setJoinKey(
                 joinKeys,
+                otherJoinKeys,
                 ref2,
                 ref1,
                 firstFieldNum,
@@ -224,10 +262,6 @@ outerLoop:
     {
         List<RelNode> plans = new ArrayList<RelNode>();
 
-        Double [] cardJoinCols =
-            computeJoinCardinalities(
-                multiJoin,
-                semiJoinOpt);
         String [] fieldNames =
             RelOptUtil.getFieldNames(
                 multiJoin.getMultiJoinRel().getRowType());
@@ -242,8 +276,7 @@ outerLoop:
                 createOrdering(
                     multiJoin,
                     semiJoinOpt,
-                    i,
-                    cardJoinCols);
+                    i);
             if (joinTree == null) {
                 continue;
             }
@@ -325,61 +358,115 @@ outerLoop:
     }
 
     /**
-     * Computes the cardinality of the columns that participate in join filters
+     * Computes the cardinality of the join columns from a particular factor,
+     * when that factor is joined with another join tree.
      *
      * @param multiJoin join factors being optimized
      * @param semiJoinOpt optimal semijoins chosen for each factor
+     * @param joinTree the join tree that the factor is being joined with
+     * @param filters possible join filters to select from
+     * @param factor the factor being added
      *
-     * @return computed cardinalities
+     * @return computed cardinality
      */
-    private Double [] computeJoinCardinalities(
+    private Double computeJoinCardinality(
         LoptMultiJoin multiJoin,
-        LoptSemiJoinOptimizer semiJoinOpt)
+        LoptSemiJoinOptimizer semiJoinOpt,
+        LoptJoinTree joinTree,
+        List<RexNode> filters,
+        int factor)
     {
-        // OR together all fields referenced by all join filters
-        int nTotalFields = multiJoin.getNumTotalFields();
-        BitSet allJoinFields = new BitSet(nTotalFields);
-        for (RexNode joinFilter : multiJoin.getJoinFilters()) {
-            allJoinFields.or(multiJoin.getFieldsRefByJoinFilter(joinFilter));
-        }
-
-        // AND the fields referenced by all join filters with the fields
-        // corresponding to each factor in order to get the join fields
-        // referenced by that factor; then use that to determine the
-        // cardinality of the factor, relative to the join columns it
-        // references
-        int fieldStart = 0;
         int nJoinFactors = multiJoin.getNumJoinFactors();
-        Double [] cardJoinCols = new Double[nJoinFactors];
-        for (int i = 0; i < nJoinFactors; i++) {
-            BitSet factorFields = new BitSet(nTotalFields);
-            int numFields = multiJoin.getNumFieldsInJoinFactor(i);
-            RelOptUtil.setRexInputBitmap(
-                factorFields,
-                fieldStart,
-                numFields);
-            factorFields.and(allJoinFields);
+        BitSet childFactors = new BitSet(nJoinFactors);
+        multiJoin.getChildFactors(joinTree, childFactors);  
+        childFactors.set(factor);
 
-            // except for the first factor, need to adjust the bits to the left
-            if (i > 0) {
-                for (
-                    int bit = factorFields.nextSetBit(fieldStart);
-                    bit >= fieldStart;
-                    bit = factorFields.nextSetBit(bit + 1))
+        int factorStart = multiJoin.getJoinStart(factor);
+        int nFields = multiJoin.getNumFieldsInJoinFactor(factor);
+        BitSet joinKeys = new BitSet(nFields);
+        
+        // first loop through the inner join filters, picking out the ones
+        // that reference only the factors in either the join tree or the factor that will
+        // be added
+        setFactorJoinKeys(
+            multiJoin,
+            filters,
+            childFactors,
+            factorStart,
+            nFields,
+            joinKeys);
+        
+        // then loop through the outer join filters where the factor being
+        // added is the null generating factor in the outer join
+        RexNode outerJoinCond = multiJoin.getOuterJoinCond(factor);
+        List<RexNode> outerJoinFilters = new ArrayList<RexNode>();
+        RelOptUtil.decomposeConjunction(outerJoinCond, outerJoinFilters);
+        setFactorJoinKeys(
+            multiJoin,
+            outerJoinFilters,
+            childFactors,
+            factorStart,
+            nFields,
+            joinKeys);
+        
+        // if the join tree doesn't contain all the necessary factors in 
+        // any of the join filters, then joinKeys will be empty, so return
+        // null in that case
+        if (joinKeys.isEmpty()) {
+            return null;
+        } else {
+            return RelMetadataQuery.getDistinctRowCount(
+                semiJoinOpt.getChosenSemiJoin(factor),
+                joinKeys,
+                null);
+        }
+    }
+    
+    /**
+     * Locates from a list of filters those that correspond to a particular
+     * join tree.  Then, for each of those filters, extracts the fields
+     * corresponding to a particular factor, setting them in a bitmap.
+     * 
+     * @param multiJoin join factors being optimized
+     * @param filters list of join filters
+     * @param joinFactors bitmap containing the factors in a particular join
+     * tree
+     * @param factorStart the initial offset of the factor whose join keys
+     * will be extracted
+     * @param nFields the number of fields in the factor whose join keys will
+     * be extracted
+     * @param joinKeys the bitmap that will be set with the join keys
+     */
+    private void setFactorJoinKeys(
+        LoptMultiJoin multiJoin,
+        List<RexNode> filters,
+        BitSet joinFactors,
+        int factorStart,
+        int nFields,
+        BitSet joinKeys)
+    {
+        ListIterator<RexNode> filterIter = filters.listIterator();
+        while (filterIter.hasNext()) {
+            RexNode joinFilter = filterIter.next();
+            BitSet filterFactors =
+                multiJoin.getFactorsRefByJoinFilter(joinFilter);
+
+            // if all factors in the join filter are in the bitmap containing
+            // the factors in a join tree, then from that filter, add the
+            // fields corresponding to the specified factor to the join key
+            // bitmap; in doing so, adjust the join keys so they start at
+            // offset 0
+            if (RelOptUtil.contains(joinFactors, filterFactors)) {
+                BitSet joinFields =
+                    multiJoin.getFieldsRefByJoinFilter(joinFilter);
+                for (int field = joinFields.nextSetBit(factorStart);
+                    field >= 0 && field < factorStart + nFields;
+                    field = joinFields.nextSetBit(field + 1))
                 {
-                    factorFields.clear(bit);
-                    factorFields.set(bit - fieldStart);
+                    joinKeys.set(field - factorStart);
                 }
             }
-            cardJoinCols[i] =
-                RelMetadataQuery.getDistinctRowCount(
-                    semiJoinOpt.getChosenSemiJoin(i),
-                    factorFields,
-                    null);
-            fieldStart += numFields;
         }
-
-        return cardJoinCols;
     }
 
     /**
@@ -389,8 +476,6 @@ outerLoop:
      * @param multiJoin join factors being optimized
      * @param semiJoinOpt optimal semijoins for each factor
      * @param firstFactor first factor in the tree
-     * @param cardinalities cardinalities of each of the factors, relative to
-     * the join fields each references
      *
      * @return constructed join tree or null if it is not possible for
      * firstFactor to appear as the first factor in the join
@@ -398,8 +483,7 @@ outerLoop:
     private LoptJoinTree createOrdering(
         LoptMultiJoin multiJoin,
         LoptSemiJoinOptimizer semiJoinOpt,
-        int firstFactor,
-        Double [] cardinalities)
+        int firstFactor)
     {
         LoptJoinTree joinTree = null;
         int nJoinFactors = multiJoin.getNumJoinFactors();
@@ -460,18 +544,35 @@ outerLoop:
                         }
                     }
 
+                    // only compute the join cardinality if we know that
+                    // this factor joins with some part of the current join
+                    // tree and is potentially better than other factors
+                    // already considered
+                    Double cardinality = null;
+                    if (dimWeight > 0 &&
+                        (dimWeight > bestWeight || dimWeight == bestWeight))
+                    {
+                        cardinality = 
+                            computeJoinCardinality(
+                                multiJoin,
+                                semiJoinOpt,
+                                joinTree,
+                                filtersToAdd,
+                                factor);
+                    }
+                    
                     // if two factors have the same weight, pick the one
-                    // with the higher cardinality join key
+                    // with the higher cardinality join key, relative to
+                    // the join being considered
                     if ((dimWeight > bestWeight)
                         || ((dimWeight == bestWeight)
                             && ((bestCardinality == null)
-                                || ((cardinalities[factor] != null)
-                                    && (cardinalities[factor]
-                                        > bestCardinality)))))
+                                || ((cardinality != null)
+                                    && (cardinality > bestCardinality)))))
                     {
                         nextFactor = factor;
                         bestWeight = dimWeight;
-                        bestCardinality = cardinalities[factor];
+                        bestCardinality = cardinality;
                     }
                 }
             }
@@ -609,16 +710,49 @@ outerLoop:
         }
         RelOptCost costTop =
             RelMetadataQuery.getCumulativeCost(topTree.getJoinTree());
-        if ((costPushDown != null)
-            && (costTop != null)
-            && costPushDown.isLt(costTop))
-        {
-            bestTree = pushDownTree;
-        } else {
-            bestTree = topTree;
+        
+        bestTree = topTree;
+        if ((costPushDown != null) && (costTop != null))  {
+            if (costPushDown.equals(costTop)) {
+                // if both plans cost the same, favor the one that passes
+                // around the wider rows further up in the tree
+                if (rowWidthCost(pushDownTree.getJoinTree()) <
+                    rowWidthCost(topTree.getJoinTree()))
+                {
+                    bestTree = pushDownTree;
+                }
+            } else if (costPushDown.isLt(costTop)) {
+                bestTree = pushDownTree;
+            }
         }
-
+        
         return bestTree;
+    }
+        
+    /**
+     * Computes a cost for a join tree based on the row widths of the
+     * inputs into the join.  Joins where the inputs have the fewest number
+     * of columns lower in the tree are better than equivalent joins where
+     * the inputs with the larger number of columns are lower in the tree.
+     * 
+     * @param tree a tree of RelNodes
+     * 
+     * @return the cost associated with the width of the tree
+     */
+    private int rowWidthCost(RelNode tree)
+    {
+        // The width cost is the width of the tree itself plus the widths
+        // of its children.  Hence, skinnier rows are better when they're
+        // lower in the tree since the width of a RelNode contributes to
+        // the cost of each JoinRel that appears above that RelNode.
+        int width = tree.getRowType().getFieldCount();
+        if (isJoinTree(tree)) {
+            JoinRel joinRel = (JoinRel) tree;
+            width +=
+                rowWidthCost(joinRel.getLeft()) +
+                rowWidthCost(joinRel.getRight());
+        }
+        return width;
     }
 
     /**

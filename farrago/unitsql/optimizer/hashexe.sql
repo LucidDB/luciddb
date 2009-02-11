@@ -69,8 +69,11 @@ alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
--- allow hash joins again
+-- allow hash joins again, but disable expression reduction to preserve casts
+-- to ensure that casts in the join keys are handled
 call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(null);
+call sys_boot.mgmt.set_opt_rule_desc_exclusion_filter(
+    'FarragoReduceExpressionsRule.*');
 
 create table lhxemps(
     empno integer not null,
@@ -702,7 +705,24 @@ create view vtab(a,b,c) as
 !set outputformat table
 select * from vtab where a = 1 and b = 2 and c = 3 order by a, b, c; 
 
---------------
+-- LER-7927 -- To reproduce this bug, there needs to be a RIGHTSEMI join
+-- with a filter on top of it.  The RIGHTSEMI join should be generated for
+-- the IN predicate with tab2 as the left input into the join because it's the
+-- bigger table.
+create table tab2(a int primary key, b int);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','LHX','TAB',100);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB','LHX','TAB2',10000);
+!set outputformat csv
+explain plan for
+    select * from tab as t1,
+        (select tab.a from tab where a in (select tab2.a from tab2)
+            union
+        (select * from
+            (select distinct tab.a from tab
+                where a in (select tab2.a from tab2))
+            where a is not null)) as t2
+    where t1.a = t2.a;
+
 -- Clean up --
 --------------
 !set outputformat table

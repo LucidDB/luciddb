@@ -189,7 +189,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement path="${mdrlibs.dir}/jmi.jar"/>
     <pathelement path="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
-    <pathelement location="${openjava.dir}/openjava.jar"/>
+    <pathelement path="${openjava.dir}/openjava.jar"/>
   </path>
   <property name="applib.build.classpath" refid="applib.build.classpath"/>
 
@@ -207,6 +207,7 @@ ${farrago.test.jvmargs}
     <pathelement path="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement path="${mdrlibs.dir}/jmi.jar"/>
     <pathelement path="${jgrapht.dir}/jgrapht-jdk1.5.jar"/>
+    <pathelement path="${openjava.dir}/openjava.jar"/>
   </path>
   <property name="mbean.build.classpath" refid="mbean.build.classpath"/>
 
@@ -1112,6 +1113,8 @@ ${farrago.test.jvmargs}
       location="${dist.dir}/${lucidera.release.spec}/bin"/>
     <property name="release.install.dir"
       location="${dist.dir}/${lucidera.release.spec}/install"/>
+    <property name="release.catalog.dir"
+      location="${dist.dir}/${lucidera.release.spec}/catalog"/>
     <property name="release.properties.target"
       location="${release.lib.dir}/FarragoRelease.properties"/>
 
@@ -1171,6 +1174,10 @@ ${farrago.test.jvmargs}
       todir="${release.lib.dir}" overwrite="true"/>
     <chmod file="${release.properties.target}" perm="u+w" />
     <touch file="${release.properties.target}"/>
+
+    <copy todir="${release.catalog.dir}/fennel" overwrite="true">
+      <fileset dir="${luciddb.dir}/catalog/fennel" includes="*.properties"/>
+    </copy>
 
     <war destfile="${dist.dir}/${lucidera.release.spec}/lib/vjdbc_servlet.war"
       update="true">

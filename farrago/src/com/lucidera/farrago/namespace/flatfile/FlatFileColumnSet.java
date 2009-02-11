@@ -64,6 +64,7 @@ class FlatFileColumnSet
     String filePath;
     String logFilePath;
     FlatFileParams.SchemaType schemaType;
+    long numRows;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -72,11 +73,13 @@ class FlatFileColumnSet
         RelDataType rowType,
         FlatFileParams params,
         Properties tableProps,
+        long numRows,
         FlatFileParams.SchemaType schemaType)
     {
         super(localName, null, rowType, null, null);
 
         this.params = params;
+        this.numRows = numRows;
         filePath =
             makeFilePath(
                 localName,
@@ -102,6 +105,15 @@ class FlatFileColumnSet
     public String getLogFilePath()
     {
         return logFilePath;
+    }
+
+    // implement RelOptTable
+    public double getRowCount()
+    {
+    	if (numRows < 0) {
+            return super.getRowCount();
+    	}
+    	return numRows;
     }
 
     // implement RelOptTable

@@ -359,6 +359,11 @@ public interface RelNode
      *         return clone;
      *     }
      * </pre>
+     * 
+     * <b>N.B.:</b> This method must be overridden whenever an existing, 
+     * concrete RelNode is extended.  Otherwise, calling clone() will produce 
+     * a differently typed RelNode, resulting in invalid or incorrect query 
+     * plans.
      *
      * @return a clone of this RelNode
      */

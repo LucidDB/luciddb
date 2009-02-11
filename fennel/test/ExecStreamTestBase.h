@@ -49,6 +49,8 @@ protected:
 
     SharedExecStreamGovernor pResourceGovernor;
 
+    SharedCacheAccessor pCacheAccessor;
+
     /**
      * Creates a stream graph.
      */

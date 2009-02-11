@@ -34,6 +34,7 @@ import net.sf.farrago.ddl.gen.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
 
@@ -85,7 +86,18 @@ public class FarragoDdlGeneratorTest
     public void testExportSales()
     {
         String output = exportSchema("SALES", true);
-        getDiffRepos().assertEquals("output", "${output}", output);
+        
+        // REVIEW: SWZ: 2008-10-07: Output varies based on repository 
+        // configuration.  Handle the variance by repository type.  When
+        // all repositories switch to Enki/Hibernate we can remove the
+        // else case and conditional.
+        MdrProvider providerType = repos.getEnkiMdrRepos().getProviderType();
+        if (providerType == MdrProvider.ENKI_HIBERNATE) {
+            getDiffRepos().assertEquals(
+                "output-hibernate", "${output-hibernate}", output);
+        } else {
+            getDiffRepos().assertEquals("output", "${output}", output);
+        }
     }
 
     private String exportSchema(
@@ -182,76 +194,85 @@ public class FarragoDdlGeneratorTest
         final String VIEW_NAME = "BAR";
         StringBuilder output = new StringBuilder();
         
-        // Create a DDL Generator for this test
-        DdlGenerator ddlGenerator = newDdlGenerator();
+        FarragoReposTxnContext reposTxnContext = 
+            new FarragoReposTxnContext(repos, true);
+        reposTxnContext.beginWriteTxn();
         
-        // create a SCHEMA
-        FemLocalSchema schema = repos.newFemLocalSchema();
-        schema.setName(SCHEMA_NAME);
-        schema.setVisibility(VisibilityKindEnum.VK_PUBLIC);
-        schema.setNamespace(repos.getCatalog("LOCALDB"));
-        
-        // create a simple TABLE
-        FemLocalTable table = repos.newFemLocalTable();
-        table.setName(TABLE_NAME);
-        table.setNamespace(schema);
-        table.setDescription("Test");
-        table.setVisibility(VisibilityKindEnum.VK_PUBLIC);
-        FemStoredColumn column = repos.newFemStoredColumn();
-        column.setName(COLUMN_NAME);
-        table.getFeature().add(column);
-        
-        // create a VIEW off the TABLE
-        FemLocalView view = repos.newFemLocalView();
-        view.setName(VIEW_NAME);
-        view.setNamespace(schema);
-        view.setVisibility(VisibilityKindEnum.VK_PUBLIC);
-        CwmQueryExpression query = repos.newCwmQueryExpression();
-        query.setBody("SELECT * FROM " + TABLE_NAME);
-        view.setQueryExpression(query);
-        
-        // drop the SCHEMA (with CASCADE)
-        GeneratedDdlStmt stmt = new GeneratedDdlStmt();
-        ddlGenerator.setDropCascade(true);
-        ddlGenerator.generateDrop(schema, stmt);
-        appendStatementText(output, stmt);
-        // save the statement for cleanup use
         final File tempFile = File.createTempFile("cascade", ".sql");
-        final FileWriter fw = new FileWriter(tempFile);
-        fw.write(output.toString() + ";" + TestUtil.NL);
-        fw.close();
-        stmt.clear();
-        
-        // drop the SCHEMA (without CASCADE)
-        ddlGenerator.setDropCascade(false);
-        ddlGenerator.generateDrop(schema, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        
-        // drop the table (with CASCADE)
-        ddlGenerator.setDropCascade(true);
-        ddlGenerator.generateDrop(table, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        
-        // drop the table (without CASCADE)
-        ddlGenerator.setDropCascade(false);
-        ddlGenerator.generateDrop(table, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        
-        // drop the view (with CASCADE)
-        ddlGenerator.setDropCascade(true);
-        ddlGenerator.generateDrop(view, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        
-        // drop the view (without CASCADE)
-        ddlGenerator.setDropCascade(false);
-        ddlGenerator.generateDrop(view, stmt);
-        appendStatementText(output, stmt);
-        stmt.clear();
-        
+        try {
+            // Create a DDL Generator for this test
+            DdlGenerator ddlGenerator = newDdlGenerator();
+            
+            // create a SCHEMA
+            FemLocalSchema schema = repos.newFemLocalSchema();
+            schema.setName(SCHEMA_NAME);
+            schema.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+            schema.setNamespace(repos.getCatalog("LOCALDB"));
+            
+            // create a simple TABLE
+            FemLocalTable table = repos.newFemLocalTable();
+            table.setName(TABLE_NAME);
+            table.setNamespace(schema);
+            table.setDescription("Test");
+            table.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+            FemStoredColumn column = repos.newFemStoredColumn();
+            column.setName(COLUMN_NAME);
+            table.getFeature().add(column);
+            
+            // create a VIEW off the TABLE
+            FemLocalView view = repos.newFemLocalView();
+            view.setName(VIEW_NAME);
+            view.setNamespace(schema);
+            view.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+            CwmQueryExpression query = repos.newCwmQueryExpression();
+            query.setBody("SELECT * FROM " + TABLE_NAME);
+            view.setQueryExpression(query);
+            
+            // drop the SCHEMA (with CASCADE)
+            GeneratedDdlStmt stmt = new GeneratedDdlStmt();
+            ddlGenerator.setDropCascade(true);
+            ddlGenerator.generateDrop(schema, stmt);
+            appendStatementText(output, stmt);
+            // save the statement for cleanup use
+            final FileWriter fw = new FileWriter(tempFile);
+            fw.write(output.toString() + ";" + TestUtil.NL);
+            fw.close();
+            stmt.clear();
+            
+            // drop the SCHEMA (without CASCADE)
+            ddlGenerator.setDropCascade(false);
+            ddlGenerator.generateDrop(schema, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+            
+            // drop the table (with CASCADE)
+            ddlGenerator.setDropCascade(true);
+            ddlGenerator.generateDrop(table, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+            
+            // drop the table (without CASCADE)
+            ddlGenerator.setDropCascade(false);
+            ddlGenerator.generateDrop(table, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+            
+            // drop the view (with CASCADE)
+            ddlGenerator.setDropCascade(true);
+            ddlGenerator.generateDrop(view, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+            
+            // drop the view (without CASCADE)
+            ddlGenerator.setDropCascade(false);
+            ddlGenerator.generateDrop(view, stmt);
+            appendStatementText(output, stmt);
+            stmt.clear();
+        }
+        finally {
+            reposTxnContext.rollback();
+        }
+
         getDiffRepos().assertEquals("output", "${output}", output.toString());
         
         // clean up afterward

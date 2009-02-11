@@ -29,8 +29,10 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
@@ -38,6 +40,7 @@ import net.sf.farrago.session.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
@@ -499,6 +502,40 @@ public class DdlRelationalHandler
                 repos.getLocalizedObjectName(table));
         }
     }
+    
+    // implement FarragoSessionDdlHandler
+    public void validateDefinition(FemLabel label)
+    {
+        if (!validator.getInvokingSession().getPersonality().supportsFeature(
+            EigenbaseResource.instance().PersonalitySupportsLabels))
+        {
+            throw 
+                EigenbaseResource.instance().PersonalitySupportsLabels.ex();
+        }
+        
+        // Detect circular label chains
+        FemLabel parentLabel = label.getParentLabel();
+        while (parentLabel != null) {
+            if (parentLabel.getName().equals(label.getName())) {
+                throw res.ValidatorCircularLabelChain.ex();
+            }
+            parentLabel = parentLabel.getParentLabel();
+        }
+    }
+    
+    // implement FarragoSessionDdlHandler
+    public void validateDrop(FemLabel label)
+    {
+        // If the personality doesn't support labels, then it shouldn't
+        // be possible to have created a label in the first place; so this
+        // check shouldn't be needed.  But just in case ...
+        if (!validator.getInvokingSession().getPersonality().supportsFeature(
+            EigenbaseResource.instance().PersonalitySupportsLabels))
+        {
+            throw 
+                EigenbaseResource.instance().PersonalitySupportsLabels.ex();
+        }
+    }
 
     // implement FarragoSessionDdlHandler
     public void executeCreation(FemLocalIndex index)
@@ -517,6 +554,31 @@ public class DdlRelationalHandler
         if (!validator.isCreatedObject(table)) {
             indexExistingRows(table, index);
         }
+    }
+    
+    // implement FarragoSessionDdlHandler
+    public void executeCreation(FemLabel label)
+    {
+        // For label creates, we need to get the commit sequence
+        // number of the last committed txn from Fennel so we can
+        // associate that with the label, unless the label is an alias.
+        if (label.getParentLabel() == null) {
+            FemCmdGetLastCommittedTxnId cmd =
+                repos.newFemCmdGetLastCommittedTxnId();
+            FennelDbHandle fennelDbHandle = validator.getFennelDbHandle();
+            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(repos));
+            fennelDbHandle.executeCmd(cmd);
+            label.setCommitSequenceNumber(
+                cmd.getResultHandle().getLongHandle());
+        }
+    }
+    
+    // implement FarragoSessionDdlHandler
+    public void executeCreation(FemLocalTable table)
+    {
+        // Initialize the row counts to 0 only for new local
+        // tables, since we don't know the counts for foreign tables.
+        validator.getInvokingSession().getPersonality().resetRowCounts(table);
     }
 
     protected void indexExistingRows(
@@ -554,7 +616,7 @@ public class DdlRelationalHandler
             index,
             false);
     }
-
+    
     protected boolean isReplacingType(CwmModelElement obj)
     {
         return ((DdlValidator) medHandler.getValidator()).isReplacingType(obj);

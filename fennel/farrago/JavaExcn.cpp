@@ -48,6 +48,11 @@ jthrowable JavaExcn::getJavaException() const
     return javaException;
 }
 
+void JavaExcn::throwSelf()
+{
+    throw *this;
+}
+
 const std::string& JavaExcn::getStackTrace() const
 {
     return msg;

@@ -170,6 +170,7 @@ protected:
     virtual void visit(ProxyCmdCommit &);
     virtual void visit(ProxyCmdRollback &);
     virtual void visit(ProxyCmdGetTxnCsn &);
+    virtual void visit(ProxyCmdGetLastCommittedTxnId &);
     virtual void visit(ProxyCmdAlterSystemDeallocate &);
     virtual void visit(ProxyCmdVersionIndexRoot &);
 

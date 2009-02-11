@@ -24,14 +24,14 @@ package net.sf.farrago.catalog;
 
 import java.io.*;
 
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.logging.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.resource.*;
@@ -211,12 +211,8 @@ public class FarragoMdrReposImpl
     public FemFarragoConfig getCurrentConfig()
     {
         // TODO:  prevent updates
-        for (FemFarragoConfig config : allOfType(FemFarragoConfig.class)) {
-            if (config.refMofId().equals(currentConfigMofId)) {
-                return config; 
-            }
-        }
-        return null;        
+        return (FemFarragoConfig)getEnkiMdrRepos().getByMofId(
+            currentConfigMofId, getConfigPackage().getFemFarragoConfig());
     }
 
     // implement FarragoAllocation
@@ -241,6 +237,7 @@ public class FarragoMdrReposImpl
     public void beginReposSession()
     {
         tracer.fine("Begin repository session");
+        super.beginReposSession();
         mdrRepository.beginSession();
     }
     
@@ -270,6 +267,7 @@ public class FarragoMdrReposImpl
     public void endReposSession()
     {
         tracer.fine("End repository session");
+        super.endReposSession();
         mdrRepository.endSession();
     }
     
@@ -278,7 +276,7 @@ public class FarragoMdrReposImpl
     {
         return modelLoader;
     }
-
+    
     //~ Inner Classes ----------------------------------------------------------
 
     protected class FarragoMemFactory

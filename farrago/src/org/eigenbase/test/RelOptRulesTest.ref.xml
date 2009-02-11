@@ -155,4 +155,32 @@ ProjectRel(EXPR$0=[+($1, $4)])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testPushProjectPastSetOp">
+        <Resource name="sql">
+            <![CDATA[select sal from (select * from emp e1 union all select * from emp e2)]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+ProjectRel(SAL=[$5])
+  UnionRel(all=[true])
+    ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+    ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+      TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+UnionRel(all=[true])
+  ProjectRel(SAL=[$0])
+    ProjectRel(SAL=[$5])
+      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+  ProjectRel(SAL=[$0])
+    ProjectRel(SAL=[$5])
+      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+        TableAccessRel(table=[[CATALOG, SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

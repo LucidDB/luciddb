@@ -277,7 +277,6 @@ public class FarragoJavaUdxRel
                     varChild.toString(),
                     childExprs[i]));
             childExprs[i] = varChild;
-            if (false) // enable after we integrate latest from //open/dev
             executeMethodBody.add(
                 new ExpressionStatement(
                     new MethodCall(

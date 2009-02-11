@@ -5247,8 +5247,14 @@ public class SqlValidatorTest
             + "order by (select name from dept where deptno = emp.^foo^)",
             "Column 'FOO' not found in table 'EMP'");
 
+        // REVIEW jvs 10-Apr-2008:  I disabled this because I don't
+        // understand what it means; see
+        // testAggregateInOrderByFails for the discrimination I added
+        // (SELECT should be aggregating for this to make sense).
+        /*
         // Sort by aggregate. Oracle allows this.
         check("select 1 from emp order by sum(sal)");
+        */
 
         // ORDER BY and SELECT *
         check("select * from emp order by empno");
@@ -5580,6 +5586,64 @@ public class SqlValidatorTest
         check("select deptno as d, count(*) as c from emp group by deptno");
     }
 
+    public void testNestedAggFails()
+    {
+        String ERR_NESTED_AGG = "Aggregate expressions cannot be nested";
+        
+        // simple case
+        checkFails(
+            "select ^sum(max(empno))^ from emp",
+            ERR_NESTED_AGG);
+
+        // should still fail with intermediate expression
+        checkFails(
+            "select ^sum(2*max(empno))^ from emp",
+            ERR_NESTED_AGG);
+
+        // make sure it fails with GROUP BY too
+        checkFails(
+            "select ^sum(max(empno))^ from emp group by deptno",
+            ERR_NESTED_AGG);
+
+        // make sure it fails in HAVING too
+        checkFails(
+            "select count(*) from emp group by deptno "
+            + "having ^sum(max(empno))^=3",
+            ERR_NESTED_AGG);
+
+        // double-nesting should fail too; bottom-up validation currently
+        // causes us to flag the intermediate level
+        checkFails(
+            "select sum(^max(min(empno))^) from emp",
+            ERR_NESTED_AGG);
+    }
+
+    public void testAggregateInGroupByFails()
+    {
+        String ERR_AGG_IN_GROUP_BY =
+            "Aggregate expression is illegal in GROUP BY clause";
+        
+        checkFails(
+            "select count(*) from emp group by ^sum(empno)^",
+            ERR_AGG_IN_GROUP_BY);
+    }
+
+    public void testAggregateInOrderByFails()
+    {
+        String ERR_AGG_IN_ORDER_BY =
+            "Aggregate expression is illegal in ORDER BY clause of non-aggregating SELECT";
+        
+        checkFails(
+            "select empno from emp order by ^sum(empno)^",
+            ERR_AGG_IN_ORDER_BY);
+
+        // but this should be OK
+        check("select sum(empno) from emp group by deptno order by sum(empno)");
+
+        // this should also be OK
+        check("select sum(empno) from emp order by sum(empno)");
+    }
+
     public void testCorrelatingVariables()
     {
         // reference to unqualified correlating column
@@ -5896,9 +5960,11 @@ public class SqlValidatorTest
             "SELECT DISTINCT deptno from emp ORDER BY deptno, ^empno^",
             "Expression 'EMPNO' is not in the select clause");
         check("SELECT DISTINCT deptno from emp ORDER BY deptno + 2");
+        if (false) {   // Hersker 2008917: Julian will fix immediately after integration
         checkFails(
             "SELECT DISTINCT deptno from emp ORDER BY deptno, ^sum(empno)^",
             "Expression 'SUM\\(`EMP`\\.`EMPNO`\\)' is not in the select clause");
+        }
 
         // The ORDER BY clause works on what is projected by DISTINCT - even if
         // GROUP BY is present.

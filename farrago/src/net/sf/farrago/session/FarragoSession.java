@@ -353,6 +353,38 @@ public interface FarragoSession
      * Disables subquery reduction for the current session.
      */
     public void disableSubqueryReduction();
+    
+    /**
+     * Retrieves the commit sequence number associated with a session's label,
+     * if it's set.
+     * 
+     * @return the commit sequence number of a session's label; null if the
+     * session does not have a label setting
+     */
+    public Long getSessionLabelCsn();
+    
+    /**
+     * Retrieves the creation timestamp for the session's label setting, if
+     * a label setting is set.
+     * 
+     * @return the creation timestamp; null if the session does not have a
+     * label setting
+     */
+    public Timestamp getSessionLabelCreationTimestamp();
+
+    /**
+     * Flags this FarragoSession as being a loopback session. Loopback
+     * sessions do not block server shutdown.
+     */
+    public void setLoopback();
+
+    /**
+     * Tests whether this session is loopback session.
+     *
+     * @return true if this is a loopback session, false otherwise
+     * @see #setLoopback()
+     */
+    public boolean isLoopback();
 }
 
 // End FarragoSession.java

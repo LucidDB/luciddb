@@ -140,6 +140,23 @@ public:
     virtual SharedLogicalTxn getTxn() = 0;
 
     /**
+     * @return the transaction ID for this graph
+     */
+    virtual TxnId getTxnId() = 0;
+
+    /**
+     * Controls whether it is OK to call getTxnId without first
+     * calling setTxn.  Normally, this is a bad idea (since
+     * in that case getTxnId will return FIRST_TXN_ID as a dummy,
+     * which could lead to concurrency problems), but for
+     * non-transactional unit tests, this can be useful.
+     * Default is disabled.
+     *
+     * @param enabled whether dummy txn ID's are enabled
+     */
+    virtual void enableDummyTxnId(bool enabled) = 0;
+
+    /**
      * @return exec stream governor
      */
     virtual SharedExecStreamGovernor getResourceGovernor() = 0;

@@ -108,11 +108,6 @@ public final class RemoveDistinctAggregateRule
 
         // Aggregate the original relation, including any non-distinct aggs.
 
-        // TODO jvs 31-Oct-2006:  In the case where there are no
-        // non-distinct aggs, avoid generating the extra aggregate and
-        // join.  Or make sure there are other optimizer rules available
-        // to remove them later.
-
         List<AggregateCall> newAggCallList =
             new ArrayList<AggregateCall>();
         int i = -1;
@@ -129,12 +124,12 @@ public final class RemoveDistinctAggregateRule
             newAggCallList.add(aggCall);
         }
 
-        // NOTE jvs 31-Oct-2006:  Avoid generating a pathological
-        // 0-tuple for the case where there are no non-distinct aggs
-        // and no GROUP BY columns (FRG-229).
+        // In the case where there are no non-distinct aggs (regardless of
+        // whether there are group bys), there's no need to generate the
+        // extra aggregate and join.
         RelNode rel;
-        if ((groupCount == 0) && newAggCallList.isEmpty()) {
-            rel = new OneRowRel(aggregate.getCluster());
+        if (newAggCallList.isEmpty()) {
+            rel = null;
         } else {
             rel =
                 new AggregateRel(
@@ -206,7 +201,9 @@ public final class RemoveDistinctAggregateRule
      *
      * @param aggregate Original aggregate
      * @param left Child relational expression (either the original aggregate,
-     * or the output from the previous call to this method)
+     * the output from the previous call to this method, or null in the case
+     * where we're converting the first distinct aggregate in a query with
+     * no non-distinct aggregates)
      * @param argList Arguments to the distinct aggregate function
      * @param refs Array of expressions which will be the projected by the
      * result of this rule. Those relating to this arg list will be modified
@@ -221,7 +218,12 @@ public final class RemoveDistinctAggregateRule
     {
         final RexBuilder rexBuilder = aggregate.getCluster().getRexBuilder();
         final int groupCount = aggregate.getGroupCount();
-        final RelDataTypeField [] leftFields = left.getRowType().getFields();
+        final RelDataTypeField [] leftFields;
+        if (left == null) {
+            leftFields = null;
+        } else {
+            leftFields = left.getRowType().getFields();
+        }
 
         // AggregateRel(
         //   child,
@@ -240,15 +242,16 @@ public final class RemoveDistinctAggregateRule
         //     <f2 = f5>))
         //
         // E.g.
-        //   SELECT deptno, SUM(DISTINCT sal), COUNT(DISTINCT gender)
+        //   SELECT deptno, SUM(DISTINCT sal), COUNT(DISTINCT gender), MAX(age)
         //   FROM Emps
         //   GROUP BY deptno
         //
         // becomes
         //
-        //   SELECT e.deptno, adsal.sum_sal, adgender.count_gender
-        //   FROM (select deptno FROM Emps GROUP BY deptno) AS e
-        //   JOIN (
+        //   SELECT e.deptno, adsal.sum_sal, adgender.count_gender, e.max_age
+        //   FROM (select deptno, MAX(age) as max_age FROM Emps GROUP BY deptno)
+        //     AS e
+        //   JOIN ( 
         //     SELECT deptno, COUNT(gender) AS count_gender
         //     FROM (
         //       SELECT DISTINCT deptno, gender
@@ -263,6 +266,12 @@ public final class RemoveDistinctAggregateRule
         //     GROUP BY deptno) AS adsal
         //   ON e.deptno = adsal.deptno
         //   GROUP BY e.deptno
+        //
+        // Note that if a query contains no non-distinct aggregates, then the
+        // very first join/group by is omitted.  In the example
+        // above, if MAX(age) is removed, then the subselect of "e" is not
+        // needed, and instead the two other group by's are joined to one
+        // another.
 
         // Project the columns of the GROUP BY plus the arguments
         // to the agg function.
@@ -309,10 +318,17 @@ public final class RemoveDistinctAggregateRule
                     aggCall.getType(),
                     aggCall.getName());
             assert refs[i] == null;
-            refs[i] =
-                new RexInputRef(
-                    leftFields.length + groupCount + aggCallList.size(),
-                    newAggCall.getType());
+            if (left == null) {
+                refs[i] =
+                    new RexInputRef(
+                        groupCount + aggCallList.size(),
+                        newAggCall.getType());
+            } else {
+                refs[i] =
+                    new RexInputRef(
+                        leftFields.length + groupCount + aggCallList.size(),
+                        newAggCall.getType());
+            }
             aggCallList.add(newAggCall);
         }
 
@@ -323,6 +339,11 @@ public final class RemoveDistinctAggregateRule
                 groupCount,
                 aggCallList);
 
+        // If there's no left child yet, no need to create the join
+        if (left == null) {
+            return distinctAgg;
+        }
+        
         // Create the join condition. It is of the form
         //  'left.f0 = right.f0 and left.f1 = right.f1 and ...'
         // where {f0, f1, ...} are the GROUP BY fields.

@@ -29,6 +29,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.resource.FarragoResource;
 
 import org.eigenbase.util14.*;
+import org.eigenbase.jdbc4.*;
 
 
 /**
@@ -39,7 +40,7 @@ import org.eigenbase.util14.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineStatement
+public class FarragoJdbcEngineStatement extends Unwrappable
     implements FarragoStatement
 {
     //~ Static fields/initializers ---------------------------------------------
@@ -494,6 +495,34 @@ public class FarragoJdbcEngineStatement
                 FarragoResource.instance().JdbcConnSessionClosed.ex());
         }
     }
+
+    //
+    // begin JDBC 4 methods
+    //
+    
+    // implement Statement
+    public boolean isPoolable() throws SQLException
+    {
+        return false;
+    }
+
+    // implement Statement
+    public void setPoolable(boolean poolable)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("setPoolable");
+    }
+    
+    // implement Statement
+    public boolean isClosed()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("isClosed");
+    }
+
+    //
+    // end JDBC 4 methods
+    //
 }
 
 // End FarragoJdbcEngineStatement.java

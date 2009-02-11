@@ -24,23 +24,14 @@ package net.sf.farrago.namespace.jdbc;
 
 import java.sql.*;
 
-import java.util.*;
-
-import javax.sql.*;
-
 import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
+import org.apache.commons.dbcp.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -154,8 +145,15 @@ class MedJdbcColumnSet
         }
         Connection loopbackConnection = directory.server.getConnection();
         if (!(loopbackConnection instanceof FarragoJdbcEngineConnection)) {
-            return null;
+            Connection conn = loopbackConnection;
+            while(conn != null && conn instanceof DelegatingConnection) {
+                conn = ((DelegatingConnection)conn).getDelegate();
+            }
+            if (!(conn instanceof FarragoJdbcEngineConnection)) {
+                return null;
+            }
         }
+        
         String catalogName = directory.server.catalogName;
         if (catalogName == null) {
             // No catalog name specified, so try to query the connection for

@@ -281,6 +281,20 @@ public class FarragoDatabase
     }
 
     /**
+     * Flushes unpinned entries from the cache cache for this database.
+     */
+    public void flushCodeCache()
+    {
+        // REVIEW: SWZ 2008-09-15: Seems to me that this (and other changes 
+        // to code cache size) should be synchronized.
+
+        // Flush code cache in an attempt to close loopback sessions.
+        long maxBytes = codeCache.getBytesMax();
+        codeCache.setMaxBytes(0);
+        codeCache.setMaxBytes(maxBytes);
+    }
+
+    /**
      * @return the shared data wrapper cache for this database
      */
     public FarragoObjectCache getDataWrapperCache()
@@ -695,7 +709,17 @@ public class FarragoDatabase
         if (cancelOnly) {
             stmt.cancel();
         } else {
-            stmt.kill();
+            // LER-7874 - kill comes from another thread, make sure we've 
+            // detached that thread's session (if any) so we can attach the 
+            // to the running statement's session and end it.
+            EnkiMDRepository mdrRepos = systemRepos.getEnkiMdrRepos(); 
+            EnkiMDSession detachedReposSession = mdrRepos.detachSession();
+            try {
+                stmt.kill();
+            } finally {
+                mdrRepos.reattachSession(
+                    detachedReposSession);
+            }
         }
     }
 
@@ -898,6 +922,14 @@ public class FarragoDatabase
 
             return null;
         }
+        
+        String key = sql + ";label=";
+        FarragoDbSession session = (FarragoDbSession) stmt.getSession();
+        Long labelCsn = session.getSessionLabelCsn();
+        if (labelCsn != null) {
+            key += labelCsn;
+        }
+        final String stmtKey = key;
 
         FarragoObjectCache.Entry cacheEntry;
         FarragoObjectCache.CachedObjectFactory stmtFactory =
@@ -908,7 +940,7 @@ public class FarragoDatabase
                 {
                     timingTracer.traceTime("code cache miss");
 
-                    assert (key.equals(sql));
+                    assert (key.equals(stmtKey));
                     FarragoSessionExecutableStmt executableStmt =
                         stmt.prepare(validatedSqlNode, sqlNode);
                     long memUsage =
@@ -938,7 +970,7 @@ public class FarragoDatabase
                 EigenbaseResource.instance().SharedStatementPlans);
 
         // prepare the statement, caching the results in codeCache
-        cacheEntry = codeCache.pin(sql, stmtFactory, !sharable);
+        cacheEntry = codeCache.pin(stmtKey, stmtFactory, !sharable);
         FarragoSessionExecutableStmt executableStmt =
             (FarragoSessionExecutableStmt) cacheEntry.getValue();
         owner.addAllocation(cacheEntry);
@@ -1098,9 +1130,21 @@ public class FarragoDatabase
         if (!systemRepos.isFennelEnabled()) {
             return;
         }
+        
+        // Find the csn of the oldest label.  Since the catalog is locked
+        // for the duration of this statement, it isn't possible for 
+        // a CREATE LABEL statement to sneak in and invalidate the result of
+        // this call.
+        Long labelCsn = FarragoCatalogUtil.getOldestLabelCsn(userRepos);
+        
         FemCmdAlterSystemDeallocate cmd =
             systemRepos.newFemCmdAlterSystemDeallocate();
         cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
+        if (labelCsn == null) {
+            cmd.setOldestLabelCsn(-1);
+        } else {
+            cmd.setOldestLabelCsn(labelCsn);
+        }
         fennelDbHandle.executeCmd(cmd);
     }
 

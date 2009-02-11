@@ -30,11 +30,10 @@ QuotaCacheAccessor::QuotaCacheAccessor(
     SharedQuotaCacheAccessor pSuperQuotaAccessorInit,
     SharedCacheAccessor pDelegateInit,
     uint maxLockedPagesInit)
-    : DelegatingCacheAccessor(pDelegateInit),
+    : TransactionalCacheAccessor(pDelegateInit),
       pSuperQuotaAccessor(pSuperQuotaAccessorInit),
       maxLockedPages(maxLockedPagesInit)
 {
-    implicitTxnId = IMPLICIT_TXN_ID;
 }
     
 QuotaCacheAccessor::~QuotaCacheAccessor()
@@ -49,10 +48,7 @@ CachePage *QuotaCacheAccessor::lockPage(
     MappedPageListener *pMappedPageListener,
     TxnId txnId)
 {
-    if (txnId == IMPLICIT_TXN_ID) {
-        txnId = implicitTxnId;
-    }
-    CachePage *pPage = DelegatingCacheAccessor::lockPage(
+    CachePage *pPage = TransactionalCacheAccessor::lockPage(
         blockId,lockMode,readIfUnmapped,pMappedPageListener,txnId);
     if (pPage) {
         incrementUsage();
@@ -65,11 +61,8 @@ void QuotaCacheAccessor::unlockPage(
     LockMode lockMode,
     TxnId txnId)
 {
-    if (txnId == IMPLICIT_TXN_ID) {
-        txnId = implicitTxnId;
-    }
     decrementUsage();
-    DelegatingCacheAccessor::unlockPage(page,lockMode,txnId);
+    TransactionalCacheAccessor::unlockPage(page,lockMode,txnId);
 }
 
 void QuotaCacheAccessor::incrementUsage()
@@ -99,16 +92,6 @@ void QuotaCacheAccessor::setMaxLockedPages(uint nPages)
 {
     assert(nPages >= nPagesLocked);
     maxLockedPages = nPages;
-}
-
-void QuotaCacheAccessor::setTxnId(TxnId txnId)
-{
-    implicitTxnId = txnId;
-}
-
-TxnId QuotaCacheAccessor::getTxnId() const
-{
-    return implicitTxnId;
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -23,6 +23,7 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 
 /**
  * <code>EmptyRel</code> represents a relational expression with zero rows.
@@ -87,6 +88,22 @@ public class EmptyRel
     public double getRows()
     {
         return 0.0;
+    }
+
+    // implement RelNode
+    public void explain(RelOptPlanWriter pw)
+    {
+        if (pw.getDetailLevel() == SqlExplainLevel.DIGEST_ATTRIBUTES) {
+            // For rel digest, include the row type to discriminate
+            // this from other empties with different row types.
+            pw.explain(
+                this,
+                new String[] { "type", },
+                new Object[] { rowType });
+        } else {
+            // For normal EXPLAIN PLAN, omit the type.
+            super.explain(pw);
+        }
     }
 }
 

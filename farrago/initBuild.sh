@@ -41,7 +41,7 @@ fennel_disabled=missing
 fennel_skip_build=false
 skip_tests=true
 with_nightly_tests=false
-repos_type=missing
+repos_type="switchToDefaultReposStorage"
 
 # extended globbing for case statement
 shopt -sq extglob
@@ -136,12 +136,7 @@ fi
 # Build Farrago catalog and everything else, then run tests
 # (but don't run tests when Fennel is disabled, since most fail without it)
 cd ../farrago
-${run_ant} clean
-
-# if missing, assume repos is configured as desired (or that the default is ok)
-if [ $repos_type != "missing" ]; then
-    ${run_ant} $repos_type
-fi
+${run_ant} clean $repos_type
 
 if $fennel_disabled || $skip_tests ; then
     ${run_ant} createCatalog

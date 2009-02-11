@@ -43,26 +43,6 @@
 > primary key(l_orderkey, l_linenumber)
 > );
 0 rows affected.
-> create table lineitem4 (
-> l_orderkey    integer,
-> l_partkey     integer not null,
-> l_suppkey     integer not null,
-> l_linenumber  integer,
-> l_quantity    decimal(15,2) not null,
-> l_extendedprice  decimal(15,2) not null,
-> l_discount    decimal(15,2) not null,
-> l_tax         decimal(15,2) not null,
-> l_returnflag  varchar(1) not null,
-> l_linestatus  varchar(1) not null,
-> l_shipdate    date not null,
-> l_commitdate  date not null,
-> l_receiptdate date not null,
-> l_shipinstruct varchar(25) not null,
-> l_shipmode    varchar(10) not null,
-> l_comment      varchar(44) not null,
-> primary key(l_orderkey, l_linenumber)
-> );
-0 rows affected.
 > create table lineitem5 (
 > l_orderkey    integer,
 > l_partkey     integer not null,
@@ -116,26 +96,6 @@
 | 60175               |
 +---------------------+
 
-> insert into lineitem4 select * from "lineitem1";
-60175 rows affected.
-> delete from lineitem4 where l_shipmode in('MAIL','TRUCK');
-17379 rows affected.
-> select count(*) from lineitem4;
-+---------------------+
-| EXPR$0              |
-+---------------------+
-| 42796               |
-+---------------------+
-
-> alter table lineitem4 rebuild;
-0 rows affected.
-> select count(*) from lineitem4;
-+---------------------+
-| EXPR$0              |
-+---------------------+
-| 42796               |
-+---------------------+
-
 > insert into lineitem5 select * from "lineitem1";
 60175 rows affected.
 > delete from lineitem5 where l_shipmode in('MAIL','TRUCK');
@@ -166,8 +126,6 @@
 > drop table lineitem2;
 0 rows affected.
 > drop table lineitem3;
-0 rows affected.
-> drop table lineitem4;
 0 rows affected.
 > drop table lineitem5;
 0 rows affected.
@@ -266,25 +224,6 @@
 +---------------------+
 
 -- end of thread merge
-
--- thread mergeonself
-> set schema 'rwconcur';
-0 rows affected.
-> merge into lineitem4 tgt
-> using lineitem4 as src
-> on tgt.l_orderkey = src.l_orderkey and
-> tgt.l_linenumber = src.l_linenumber
-> when matched then
-> update set l_shipmode = 'JUNK';
-42796 rows affected.
-> select count(*) from lineitem4 where l_shipmode = 'JUNK';
-+---------------------+
-| EXPR$0              |
-+---------------------+
-| 42796               |
-+---------------------+
-
--- end of thread mergeonself
 
 -- thread insertrollback
 > set schema 'rwconcur';

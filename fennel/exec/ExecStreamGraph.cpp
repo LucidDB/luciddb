@@ -31,6 +31,7 @@
 #include "fennel/segment/Segment.h"
 #include "fennel/exec/ScratchBufferExecStream.h"
 #include "fennel/common/Backtrace.h"
+#include "fennel/txn/LogicalTxn.h"
 
 #include <boost/bind.hpp>
 #include <boost/graph/strong_components.hpp>
@@ -64,6 +65,7 @@ ExecStreamGraphImpl::ExecStreamGraphImpl()
     isPrepared = false;
     isOpen = false;
     doDataflowClose = false;
+    allowDummyTxnId = false;
 }
 
 void ExecStreamGraphImpl::setTxn(SharedLogicalTxn pTxnInit)
@@ -91,6 +93,20 @@ void ExecStreamGraphImpl::setResourceGovernor(
 SharedLogicalTxn ExecStreamGraphImpl::getTxn()
 {
     return pTxn;
+}
+
+TxnId ExecStreamGraphImpl::getTxnId()
+{
+    if (pTxn) {
+        return pTxn->getTxnId();
+    }
+    assert(allowDummyTxnId);
+    return FIRST_TXN_ID;
+}
+
+void ExecStreamGraphImpl::enableDummyTxnId(bool enabled)
+{
+    allowDummyTxnId = enabled;
 }
 
 SharedExecStreamGovernor ExecStreamGraphImpl::getResourceGovernor()
@@ -129,10 +145,12 @@ ExecStreamGraphImpl::addVertex(SharedExecStream pStream)
         // Note that pStream can be null for an exterior node in a farrago
         // graph.  Guard against duplicating a stream name.
         const std::string& name = pStream->getName();
-        if (name.length() == 0)
+        if (name.length() == 0) {
             permFail("cannot add nameless stream to graph " << this);
-        if (findStream(name))
+        }
+        if (findStream(name)) {
             permFail("cannot add stream " << name << " to graph " << this);
+        }
         pStream->id = v;
         pStream->pGraph = this;
         streamMap[name] = pStream->getStreamId();

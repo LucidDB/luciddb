@@ -373,7 +373,7 @@ public class LoptMultiJoin
     {
         return joinFieldRefCountsMap.get(factIdx);
     }
-
+    
     /**
      * @param dimIdx the dimension factor for which information will be returned
      *
@@ -520,7 +520,7 @@ public class LoptMultiJoin
      *
      * @return index corresponding to join factor
      */
-    private int findRef(int rexInputRef)
+    public int findRef(int rexInputRef)
     {
         for (int i = 0; i < nJoinFactors; i++) {
             if ((rexInputRef >= joinStart[i])

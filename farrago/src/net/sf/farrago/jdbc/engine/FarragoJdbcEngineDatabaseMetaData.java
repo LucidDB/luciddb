@@ -35,6 +35,8 @@ import net.sf.farrago.session.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 
+import org.eigenbase.jdbc4.*;
+
 
 /**
  * FarragoJdbcEngineDatabaseMetaData implements the {@link
@@ -43,7 +45,7 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineDatabaseMetaData
+public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
     implements DatabaseMetaData
 {
     //~ Instance fields --------------------------------------------------------
@@ -1148,7 +1150,14 @@ public class FarragoJdbcEngineDatabaseMetaData
         String table)
         throws SQLException
     {
-        throw new UnsupportedOperationException("getImportedKeys");
+        QueryBuilder queryBuilder =
+            createQueryBuilder(
+                "select * from sys_boot.jdbc_metadata.imported_keys_view");
+        // For now, ignore all parameters because we always return
+        // empty set.
+        queryBuilder.addOrderBy(
+            "pktable_cat, pktable_schem, pktable_name, key_seq");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -1158,7 +1167,14 @@ public class FarragoJdbcEngineDatabaseMetaData
         String table)
         throws SQLException
     {
-        throw new UnsupportedOperationException("getExportedKeys");
+        QueryBuilder queryBuilder =
+            createQueryBuilder(
+                "select * from sys_boot.jdbc_metadata.exported_keys_view");
+        // For now, ignore all parameters because we always return
+        // empty set.
+        queryBuilder.addOrderBy(
+            "fktable_cat, fktable_schem, fktable_name, key_seq");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -1171,7 +1187,14 @@ public class FarragoJdbcEngineDatabaseMetaData
         String foreignTable)
         throws SQLException
     {
-        throw new UnsupportedOperationException("getCrossReference");
+        QueryBuilder queryBuilder =
+            createQueryBuilder(
+                "select * from sys_boot.jdbc_metadata.cross_reference_view");
+        // For now, ignore all parameters because we always return
+        // empty set.
+        queryBuilder.addOrderBy(
+            "fktable_cat, fktable_schem, fktable_name, key_seq");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -1443,6 +1466,68 @@ public class FarragoJdbcEngineDatabaseMetaData
     {
         return false;
     }
+
+    //
+    // begin JDBC 4 methods
+    //
+
+    // implement DatabaseMetaData
+    public ResultSet getFunctions(
+        String catalog, String schemaPattern, String functionNamePattern)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getFunctions");
+    }
+
+    // implement DatabaseMetaData
+    public ResultSet getFunctionColumns(
+        String catalog, String schemaPattern, String functionNamePattern,
+        String columnNamePattern)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getFunctionColumns");
+    }
+    
+    // implement DatabaseMetaData
+    public ResultSet getClientInfoProperties()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfoProperties");
+    }
+
+    // implement DatabaseMetaData
+    public boolean autoCommitFailureClosesAllResultSets()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException(
+            "autoCommitFailureClosesAllResultSets");
+    }
+
+    // implement DatabaseMetaData
+    public boolean supportsStoredFunctionsUsingCallSyntax()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException(
+            "supportsStoredFunctionsUsingCallSyntax");
+    }
+    
+    // implement DatabaseMetaData
+    public ResultSet getSchemas(String catalog, String schemaPattern)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getSchemas");
+    }
+
+    // implement DatabaseMetaData
+    public RowIdLifetime getRowIdLifetime()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getRowIdLifetime");
+    }
+
+    //
+    // end JDBC 4 methods
+    //
 
     //~ Inner Classes ----------------------------------------------------------
 

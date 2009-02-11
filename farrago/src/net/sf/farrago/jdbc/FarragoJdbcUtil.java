@@ -44,6 +44,13 @@ import org.eigenbase.util14.*;
  */
 public class FarragoJdbcUtil
 {
+    // NOTE jvs 7-Oct-2008: the untested serialization support in this class is
+    // used by extension projects which make use of RmiJdbc.  VJDBC-based
+    // projects neither need nor use this support.  Applications which
+    // load the Farrago engine driver directly may use it (intentionally
+    // or unintentionally) by attempting to serialize exceptions
+    // thrown via Farrago JDBC.
+    
     /**
      * Contains the serialization checker for each thread.
      */

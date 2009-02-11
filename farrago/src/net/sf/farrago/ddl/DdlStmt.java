@@ -79,7 +79,7 @@ public abstract class DdlStmt
     {
         // by default, assume everything has already been done during parsing
     }
-
+    
     // implement FarragoSessionDdlStmt
     public void preExecute()
     {

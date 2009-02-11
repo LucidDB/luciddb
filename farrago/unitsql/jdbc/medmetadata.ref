@@ -15,7 +15,8 @@
 >     url 'jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med',
 >     schema_name 'TESTDATA');
 > 
-> -- Check the foreign data wrapper and server
+> -- Check the foreign data wrapper and server (exclude some storage option names
+> -- that vary by repository configuration in sys_fem/cwm)
 > select "name" from sys_fem.med."DataWrapper" order by 1;
 +-------------------+
 |       name        |
@@ -43,22 +44,15 @@
 | SYS_MOCK_FOREIGN_DATA_SERVER  |
 | SYS_MOF                       |
 +-------------------------------+
-> select "name","value" from sys_fem.med."StorageOption" order by 1,2;
-+--------------------+-----------------------------------------------+
-|        name        |                     value                     |
-+--------------------+-----------------------------------------------+
-| DRIVER_CLASS       | org.hsqldb.jdbcDriver                         |
-| DRIVER_CLASS       | org.relique.jdbc.csv.CsvDriver                |
-| ROOT_PACKAGE_NAME  | CWM                                           |
-| ROOT_PACKAGE_NAME  | FEM                                           |
-| ROOT_PACKAGE_NAME  | MOF                                           |
-| SCHEMA_NAME        | MODEL                                         |
-| SCHEMA_NAME        | TESTDATA                                      |
-| TABLE_TYPES        | TABLE,VIEW                                    |
-| URL                | jdbc:hsqldb:testcases/hsqldb/scott            |
-| URL                | jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med  |
-| USER_NAME          | SA                                            |
-+--------------------+-----------------------------------------------+
+> select "name","value" from sys_fem.med."StorageOption" where "name" in ('URL', 'DRIVER_CLASS') order by 1,2;
++---------------+-----------------------------------------------+
+|     name      |                     value                     |
++---------------+-----------------------------------------------+
+| DRIVER_CLASS  | org.hsqldb.jdbcDriver                         |
+| DRIVER_CLASS  | org.relique.jdbc.csv.CsvDriver                |
+| URL           | jdbc:hsqldb:testcases/hsqldb/scott            |
+| URL           | jdbc:relique:csv:${FARRAGO_HOME}/unitsql/med  |
++---------------+-----------------------------------------------+
 > 
 > -- Test a join to look up the storage options for a server
 > select o."name",o."value" 

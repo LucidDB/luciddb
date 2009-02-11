@@ -394,6 +394,22 @@ values substring24(cast(null as varchar(128)));
 
 values prim_int_to_hex_string(255);
 
+!set outputformat csv
+-- make sure the cast to a non-null type is preserved in the UDF argument
+explain plan for
+select * from sales.emps
+    where obj_int_to_hex_string(cast(empno as int)) = '64';
+-- whereas in this case, the cast can be removed because the argument is 
+-- nullable
+explain plan for
+select * from sales.emps
+    where obj_int_to_hex_string(cast(age as int)) = '64';
+!set outputformat table
+select * from sales.emps
+    where obj_int_to_hex_string(cast(empno as int)) = '64';
+select * from sales.emps
+    where obj_int_to_hex_string(cast(age as int)) = '50';
+
 -- this should fail with an SQL exception for NULL detected
 values prim_int_to_hex_string(cast(null as integer));
 
@@ -465,6 +481,12 @@ from sales.depts order by 1;
 values get_java_property('feeble');
 values gargle();
 values get_java_property('feeble');
+
+-- should fail:  numeric can't be implicitly cast to any integer type
+values generate_random_number(42.0);
+
+-- should pass
+values generate_random_number(cast(42.0 as int));
 
 !set outputformat csv
 
@@ -727,3 +749,43 @@ values lower('COBOL');
 
 -- should fail
 values confusing(true);
+
+
+-- FRG-331
+
+create schema FRG_331;
+
+set schema 'FRG_331';
+set path 'udftest,FRG_331';
+
+create function uniq(c cursor)
+returns table(c.*)
+language java
+parameter style system defined java
+no sql
+external name 
+'class net.sf.farrago.test.FarragoTestUDR.removeDupsFromPresortedCursor';
+
+-- use LucidDB optimizer to avoid buffering on the cartesian join RHS
+-- (since that would cover up the original bug)
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- before the bugfix, this returned 20 instead of 200
+select count(*) from
+(select * from table(uniq(cursor(select * from table(ramp(10)) order by 1)))),
+(select * from table(uniq(cursor(select * from table(ramp(20)) order by 1))));
+
+-- before the bugfix, this resulted in a ConcurrentModificationException
+select count(*) from
+(select * from table(uniq(cursor(select * from table(ramp(10)))))),
+(select * from table(uniq(cursor(select * from table(ramp(20))))));
+
+-- make sure there is no buffering
+!set outputformat csv
+explain plan excluding attributes for
+select count(*) from
+(select * from table(uniq(cursor(select * from table(ramp(10)) order by 1)))),
+(select * from table(uniq(cursor(select * from table(ramp(20)) order by 1))));
+
+alter session implementation set default;
+

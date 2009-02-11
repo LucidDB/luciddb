@@ -26,14 +26,12 @@ import java.sql.*;
 
 import java.util.logging.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
-import org.eigenbase.enki.mdr.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 
@@ -59,13 +57,12 @@ public class FarragoTupleIterResultSet
 
     private FarragoSessionRuntimeContext runtimeContext;
     private RelDataType rowType;
-    private EnkiMDSession detachedSession;
 
     //~ Constructors -----------------------------------------------------------
 
     public FarragoTupleIterResultSet(
         TupleIter tupleIter,
-        Class clazz,
+        Class<?> clazz,
         RelDataType rowType,
         FarragoSessionRuntimeContext runtimeContext)
     {
@@ -89,7 +86,7 @@ public class FarragoTupleIterResultSet
      */
     public FarragoTupleIterResultSet(
         TupleIter tupleIter,
-        Class clazz,
+        Class<?> clazz,
         RelDataType rowType,
         FarragoSessionRuntimeContext runtimeContext,
         ColumnGetter columnGetter)
@@ -114,7 +111,7 @@ public class FarragoTupleIterResultSet
         if (runtimeContext != null) {
             // Immediately detach session.  Another thread (think RMI) may be
             // the one to call next, we'll re-attach this session then.
-            detachMdrSession();
+            runtimeContext.detachMdrSession();
         }
     }
     
@@ -122,7 +119,7 @@ public class FarragoTupleIterResultSet
     public boolean next()
         throws SQLException
     {
-        boolean reattachedMdrSession = false;
+        boolean detachMdrSession = false;
         try {
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine(toString());
@@ -134,8 +131,8 @@ public class FarragoTupleIterResultSet
                 // the cursor.  This also checks for any pending cancel.
                 runtimeContext.setCursorState(true);
 
-                reattachMdrSession();
-                reattachedMdrSession = true;
+                runtimeContext.reattachMdrSession();
+                detachMdrSession = true;
             }
             boolean rc = super.next();
             if (!rc) {
@@ -146,10 +143,10 @@ public class FarragoTupleIterResultSet
                         // Connection.setAutoCommit, returning the last
                         // row of a cursor in autocommit mode ends
                         // the transaction.
-                        if(reattachedMdrSession) {
+                        if (detachMdrSession) {
                             // Close expects the session to be detached.
-                            detachMdrSession();
-                            reattachedMdrSession = false;
+                            runtimeContext.detachMdrSession();
+                            detachMdrSession = false;
                         }
                         runtimeContext.setCursorState(false);
                         close();
@@ -162,9 +159,9 @@ public class FarragoTupleIterResultSet
             throw FarragoJdbcUtil.newSqlException(ex, jdbcTracer);
         } finally {
             if (runtimeContext != null) {
-                if (reattachedMdrSession) {
-                    detachMdrSession();
-                    reattachedMdrSession = false;
+                if (detachMdrSession) {
+                    runtimeContext.detachMdrSession();
+                    detachMdrSession = false;
                 }
                 
                 // Inform context that we're done with cursor processing until
@@ -205,9 +202,6 @@ public class FarragoTupleIterResultSet
             // FarragoSessionRuntimeContext.closeAllocation().
             synchronized (allocationToClose.getSession()) {
                 allocationToClose.closeAllocation();
-
-                FarragoRepos repos = allocationToClose.getSession().getRepos();
-                repos.getEnkiMdrRepos().endDetachedSession(detachedSession);
             }
         }
         super.close();
@@ -229,18 +223,6 @@ public class FarragoTupleIterResultSet
             wasNull = false;
         }
         return obj;
-    }
-    
-    private void detachMdrSession()
-    {
-        detachedSession = 
-            runtimeContext.getRepos().getEnkiMdrRepos().detachSession();
-    }
-    
-    private void reattachMdrSession()
-    {
-        runtimeContext.getRepos().getEnkiMdrRepos().reattachSession(
-            detachedSession);
     }
 }
 

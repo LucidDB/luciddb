@@ -8,6 +8,7 @@ ConduitExecStream.cpp \
 ConfluenceExecStream.cpp \
 CopyExecStream.cpp \
 DfsTreeExecStreamScheduler.cpp \
+DoubleBufferExecStream.cpp \
 DynamicParam.cpp \
 ErrorSource.cpp \
 ErrorTarget.cpp \
@@ -21,6 +22,7 @@ MockConsumerExecStream.cpp \
 MockProducerExecStream.cpp \
 MockResourceExecStream.cpp \
 NestedLoopJoinExecStream.cpp \
+ParallelExecStreamScheduler.cpp \
 ScratchBufferExecStream.cpp \
 SegBufferExecStream.cpp \
 SimpleExecStreamGovernor.cpp \

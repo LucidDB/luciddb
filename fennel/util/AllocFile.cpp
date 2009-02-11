@@ -79,12 +79,10 @@ main(int argc, char *argv[])
     }
     if (nPages <= 0) {
         printf("Invalid number of pages argument: %d\n", nPages);
-        usage();
         exit(EINVAL);
     }
     if (pageSize <= 0) {
         printf("Invalid pagesize argument: %d\n", pageSize);
-        usage();
         exit(EINVAL);
     }
 
@@ -95,23 +93,23 @@ main(int argc, char *argv[])
 
     int handle = open(fileName, access, permission);
     if (handle < 0) {
-        printf("Failed to open '%s'\n", fileName); 
+        printf("Failed to open file '%s'\n", fileName); 
         exit(errno);
     }
     if (flock(handle, LOCK_EX|LOCK_NB) < 0) {
-        printf("Failed to acquire exclusive lock on '%s'\n", fileName);
+        printf("Failed to acquire exclusive lock on file '%s'\n", fileName);
         close(handle);
         exit(errno);
     }
     off_t offset = lseek(handle, 0, SEEK_END);
     if (offset == -1) {
-        printf("File seek on '%s' failed\n", fileName);
+        printf("File seek on file '%s' failed\n", fileName);
         close(handle);
         exit(errno);
     }
     int rc = posix_fallocate(handle, offset, ((off_t) nPages * pageSize));
     if (rc != 0) {
-        printf("File allocation failed for '%s'\n", fileName);
+        printf("File allocation failed for file '%s'\n", fileName);
         close(handle);
         exit(rc);
     }

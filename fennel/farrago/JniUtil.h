@@ -27,6 +27,7 @@
 #include "fennel/common/AtomicCounter.h"
 #include "fennel/common/PseudoUuid.h"
 #include "fennel/tuple/TupleDescriptor.h"
+#include "fennel/farrago/JavaThreadTracker.h"
 
 #include <jni.h>
 #include <locale>
@@ -261,7 +262,6 @@ class JniUtil
      */
     static AtomicCounter handleCount;
 
-
     /**
      * Flag indicating whether tracing of handles is enabled.  Should only
      * be set as JniUtil is being initialized.
@@ -278,6 +278,11 @@ class JniUtil
      * Stream for tracing handles opened by Farrago.
      */
     static std::ofstream handleCountTraceStream;
+
+    /**
+     * Tracker for JNI thread attach/detach.
+     */
+    static JavaThreadTracker threadTracker;
 
     /**
      * JNI handle tracing method.
@@ -565,6 +570,11 @@ public:
      * Constructs a FemTupleDescriptor xmi string
      */
     static std::string getXmi(const TupleDescriptor &tupleDesc);
+
+    /**
+     * @return the tracker for JNI thread attach/detach
+     */
+    static ThreadTracker &getThreadTracker();
 };
 
 class JniPseudoUuidGenerator : public PseudoUuidGenerator

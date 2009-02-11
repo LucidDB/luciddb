@@ -12,17 +12,15 @@
 Error: From line 1, column 13 to line 1, column 18: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> VALUES (tan(2,0));
 Error: From line 1, column 9 to line 1, column 16: No match found for function signature TAN(<NUMERIC>, <NUMERIC>) (state=,code=0)
-0: jdbc:luciddb:> -- VALUES (power(0));
-0: jdbc:luciddb:> VALUES (pow(0));
-Error: From line 1, column 9 to line 1, column 14: Invalid number of arguments to function 'POW'. Was expecting 2 arguments (state=,code=0)
+0: jdbc:luciddb:> VALUES (power(0));
+Error: From line 1, column 9 to line 1, column 16: Invalid number of arguments to function 'POWER'. Was expecting 2 arguments (state=,code=0)
 0: jdbc:luciddb:> VALUES (tan(date '1995-11-12'));
 Error: From line 1, column 9 to line 1, column 30: No match found for function signature TAN(<DATE>) (state=,code=0)
 0: jdbc:luciddb:> VALUES (100 / 0);
 Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> VALUES (100 / sin(0));
 Error: From line 1, column 15 to line 1, column 20: No match found for function signature SIN(<NUMERIC>) (state=,code=0)
-0: jdbc:luciddb:> -- VALUES (to_char(power(10,200) * power(10,200)));
-0: jdbc:luciddb:> VALUES (pow(10,200) * pow(10,200));
+0: jdbc:luciddb:> VALUES (power(10,200) * power(10,200));
 Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> VALUES (exp(1000));
 +-----------+

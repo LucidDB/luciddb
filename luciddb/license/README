@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.7.3
+LucidDB Binary Release 0.7.4
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -45,6 +45,69 @@ http://issues.eigenbase.org
 
 ----------------------------------------------------------------------
 CHANGE HISTORY
+
+Changes since 0.7.3 include
+
+- new feature for constant reduction of uncorrelated subqueries by
+  optimizer (controlled by "reduceNonCorrelateSubqueries" session
+  parameter, default true)
+- optimizer rewrite for relational expressions known to return zero rows
+- improve join elimination algorithm to handle more than one outer join
+- implement on-the-fly rowcount estimates for flatfiles based on file
+  size and sampling the first block of rows
+- improve cost estimate for joins where not all join conditions can be
+  evaluated by hash join
+- pull up projections even if expressions in the projection are
+  subsequently referenced in join filters (to avoid cartesian joins)
+- avoid extra join/aggregation for queries with multiple distinct
+  aggregates but no non-distinct aggregates
+- optimize aggregations in multi-input unions into a single
+  aggregation
+- add experimental support for Hibernate catalog storage (enki)
+- add new lucidDbAllocFile utility for storage preallocation
+- DDL performance improvements
+- add new applib.estimate_statistics_for_schema UDP
+- add new applib.penultimate_values UDX
+- add new applib.topn UDX
+- improve applib.collapse_rows UDX to run in streaming fashion
+- add optional sequence numbers to applib.split_string UDX family
+- add JBoss embedding example code
+- add sqlline support for !set rowlimit
+- add new performance counters for page allocation tracking
+- change default for session parameter "validateDdlOnPrepare" from
+  "true" to "false" (FRG-268)
+- fix mbeans to avoid auto-starting the engine via new
+  "requireExistingEngine" Farrago JDBC connection property
+- new mbean for storage management
+- fix some missing/redundant performance counter increments
+- fix for cache race condition during checkpoints
+- fix for optimizer bug with 0-column projections in cartesian joins
+- fix optimizer estimate for distinct row count of right-semijoins
+- fix for constant reduction in UDR arguments
+- removal of incorrect assertion in bitmap index code
+- fix bug with ReshapeExecStream evaluation of IS NULL constraints
+- fix upgrade path broken by addition of new prefetch/2Q parameters in
+  0.7.3
+- fix memory corruption which could occur from combination of nested
+  loop join with index prefetch
+- fix rare crashes during recovery caused by stats timer kicking in
+- fix TRIM BOTH when string is all blanks (FRG-319)
+- return empty results for foreign key JDBC metadata queries
+- fix parsing of DELETE WHERE FALSE
+- miscellaneous fixes for IN and uncorrelated subqueries (e.g. FRG-277)
+- fix tiny memory leak from FarragoDbSessionIndexMap
+- fix validator to prevent nested agg function invocations,
+  agg function invocations in GROUP BY, and agg function invocations
+  in ORDER BY (unless SELECT is already aggregating)
+- when parsing type name from Java UDR method signature, trim
+  off leading and trailing blanks
+- fix constant reduction so time-sensitive evaluations such as 
+  CURRENT_TIMESTAMP return the same value when invoked from multiple
+  expressions within the same statement
+- fix DDL validator to prevent drop of system-defined indexes
+  such as deletion index and constraint indexes
+- more testcases for DELETE
+- update query 13 in TPC-H, and add suggested preallocation sizes and script
 
 Changes since 0.7.2 include
 

@@ -73,12 +73,17 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/topNTest.sql"/>
       </test>
 
+      <test name="splitStringsTestWithSequence">
+        <junit-sql
+        file="${open.dir}/luciddb/test/sql/udr/udx/splitStringsTestWithSequence.sql"/>
+      </test>
+
       <test name="collapseRows">
-        <!-- UNRESOLVED ISSUE: FRG-209 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/collapseRows.sql"/>
+      </test>
+
+      <test name="penultimateValues">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/penultimateValues.sql"/>
       </test>
 
       <test-suite-call testfile="enforceRowConstraints/test.xml"/>

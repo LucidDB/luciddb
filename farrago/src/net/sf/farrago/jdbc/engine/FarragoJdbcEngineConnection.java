@@ -40,6 +40,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.Util;
 
+import org.eigenbase.jdbc4.*;
 
 /**
  * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
@@ -48,7 +49,7 @@ import org.eigenbase.util.Util;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineConnection
+public class FarragoJdbcEngineConnection extends Unwrappable
     implements FarragoConnection,
         FarragoSessionConnectionSource
 {
@@ -356,7 +357,9 @@ public class FarragoJdbcEngineConnection
         int resultSetConcurrency)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        // NOTE jvs 3-May-2008:  We don't currently throw
+        // UnsupportedOperationException
+        return prepareStatement(sql);
     }
 
     // implement Connection
@@ -367,7 +370,7 @@ public class FarragoJdbcEngineConnection
         int resultSetHoldability)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        return prepareStatement(sql, resultSetType, resultSetConcurrency);
     }
 
     // implement Connection
@@ -409,7 +412,7 @@ public class FarragoJdbcEngineConnection
     public int getHoldability()
         throws SQLException
     {
-        return 0;
+        return ResultSet.CLOSE_CURSORS_AT_COMMIT;
     }
 
     public void setReadOnly(boolean readOnly)
@@ -462,12 +465,14 @@ public class FarragoJdbcEngineConnection
         int resultSetConcurrency)
         throws SQLException
     {
-        if (resultSetType != ResultSet.TYPE_FORWARD_ONLY) {
-            throw new UnsupportedOperationException();
-        }
-        if (resultSetConcurrency != ResultSet.CONCUR_READ_ONLY) {
-            throw new UnsupportedOperationException();
-        }
+        // NOTE jvs 3-May-2008:  Rather than throwing
+        // UnsupportedOperationException here and elsewhere when
+        // clients ask for things we don't support, such as
+        // scroll cursors, just ignore the modifiers.  They'll
+        // find out about it if they actually try to use the
+        // feature.  The reason for this is that often client applications
+        // ask for things they never use, so being too strict
+        // prevents them from working.
         return createStatement();
     }
 
@@ -477,7 +482,7 @@ public class FarragoJdbcEngineConnection
         int resultSetHoldability)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        return createStatement();
     }
 
     public String nativeSQL(String sql)
@@ -597,6 +602,88 @@ public class FarragoJdbcEngineConnection
 
         return new FleetingMedDataWrapperInfo(mofId, libraryName, options);
     }
+
+    //
+    // begin JDBC 4 methods
+    //
+
+    // implement Connection
+    public Struct createStruct(String typeName, Object [] attributes)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createStruct");
+    }
+
+    // implement Connection
+    public Array createArrayOf(String typeName, Object [] elements)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createArrayOf");
+    }
+
+    // implement Connection
+    public Properties getClientInfo()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public String getClientInfo(String name)
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("getClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(String name, String value)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public void setClientInfo(Properties props)
+    {
+        throw new UnsupportedOperationException("setClientInfo");
+    }
+
+    // implement Connection
+    public boolean isValid(int timeout)
+    {
+        throw new UnsupportedOperationException("isValid");
+    }
+
+    // implement Connection
+    public SQLXML createSQLXML()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createSQLXML");
+    }
+
+    // implement Connection
+    public NClob createNClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createNClob");
+    }
+
+    // implement Connection
+    public Clob createClob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createClob");
+    }
+
+    // implement Connection
+    public Blob createBlob()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException("createBlob");
+    }
+
+    //
+    // end JDBC 4 methods
+    //
 
     //~ Inner Classes ----------------------------------------------------------
 

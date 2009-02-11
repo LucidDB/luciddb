@@ -91,10 +91,25 @@ insert into deltab select * from matrix9x9;
 select * from deltab order by a1;
 select * from deltab where b1 >= 0 order by a1;
 
+-- no-op deletes
+delete from deltab where 1 = 0;
+delete from deltab where false;
+select count(*) from deltab;
+delete from deltab where (select count(*) from deltab) = 0;
+select count(*) from deltab;
+delete from deltab where 1 = 0 and a1 in (select b1 from deltab);
+select count(*) from deltab;
+
 !set outputformat csv
 explain plan for
     delete from deltab where c1 in 
         (select max(c1) from deltab union select min(c1) from deltab);
+explain plan for
+    delete from deltab where 1 = 0;
+explain plan for
+    delete from deltab where (select count(*) from deltab) = 0;
+explain plan for
+    delete from deltab where 1 = 0 and a1 in (select b1 from deltab);
 
 drop server test_data cascade;
 

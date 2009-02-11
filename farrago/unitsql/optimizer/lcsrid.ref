@@ -275,6 +275,19 @@ Error: From line 1, column 8 to line 1, column 17: No match found for function s
 | 4       | 40  |
 +---------+-----+
 > 
+> -- no-op selects
+> select lcs_rid(c0), lcs_rid(c1)+1 from tencols where 1 = 0;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
++---------+---------+
+> select lcs_rid(t1.c0)*lcs_rid(t2.c1) from tencols t1, tencols t2
+>     where 1 = 0 and t1.c2 = t2.c2;
++---------+
+| EXPR$0  |
++---------+
++---------+
+> 
 > --------------
 > -- Error cases
 > --------------
@@ -435,5 +448,21 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, LCS_RID]], clustered indexes=[[I_C0]])'
 '        FennelValuesRel(tuples=[[{ 1 }]])'
+> explain plan for
+>     select lcs_rid(c0), lcs_rid(c1)+1 from tencols where 1 = 0;
+'column0'
+'IterCalcRel(expr#0..9=[{inputs}], expr#10=[null], expr#11=[CAST($t10):BIGINT], expr#12=[1], expr#13=[+($t11, $t12)], EXPR$0=[$t11], EXPR$1=[$t13])'
+'  FennelToIteratorConverter'
+'    FennelValuesRel(tuples=[[]])'
+> explain plan for
+>     select lcs_rid(t1.c0)*lcs_rid(t2.c1) from tencols t1, tencols t2
+>         where 1 = 0 and t1.c2 = t2.c2;
+'column0'
+'IterCalcRel(expr#0..3=[{inputs}], expr#4=[*($t3, $t1)], EXPR$0=[$t4])'
+'  FennelToIteratorConverter'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[2, LCS_RID]], clustered indexes=[[I_C1_C2]])'
+'      FennelCalcRel(expr#0..9=[{inputs}], expr#10=[null], expr#11=[CAST($t10):BIGINT], C2=[$t2], LCS_RID=[$t11])'
+'        FennelValuesRel(tuples=[[]])'
 > 
 > !quit

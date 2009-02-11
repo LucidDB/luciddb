@@ -432,6 +432,37 @@ Error: Invalid row 5 in control file unitsql/med/flatfiles/invalidbcpcolumns.bcp
 | 3          | 2                | 1                            |
 +------------+------------------+------------------------------+
 > 
+> --
+> -- 3.13 test estimating row count of a file
+> --
+> explain plan including all attributes without implementation for
+> select * from flatfile_server.BCP."decimal";
++------------------------------------------------------------------------------------------------------------+
+|                                                  column0                                                   |
++------------------------------------------------------------------------------------------------------------+
+| ProjectRel(F1=[$0], F2=[$1], F3=[$2], F4=[$3], F5=[$4], F6=[$5]): rowcount = 35.0, cumulative cost = 70.0  |
+|   TableAccessRel(table=[[FLATFILE_SERVER, BCP, decimal]]): rowcount = 35.0, cumulative cost = 35.0         |
++------------------------------------------------------------------------------------------------------------+
+> 
+> explain plan including all attributes without implementation for
+> select * from flatfile_server.BCP."example";
++-----------------------------------------------------------------------------------------------------+
+|                                               column0                                               |
++-----------------------------------------------------------------------------------------------------+
+| ProjectRel(ID=[$0], NAME=[$1], EXTRA_FIELD=[$2]): rowcount = 10.0, cumulative cost = 20.0           |
+|   TableAccessRel(table=[[FLATFILE_SERVER, BCP, example]]): rowcount = 10.0, cumulative cost = 10.0  |
++-----------------------------------------------------------------------------------------------------+
+> 
+> explain plan including all attributes without implementation for
+> select * from flatfile_server_empty.BCP."empty";
++-----------------------------------------------------------------------------------------------------------+
+|                                                  column0                                                  |
++-----------------------------------------------------------------------------------------------------------+
+| ProjectRel(ID=[$0], NAME=[$1], EXTRA_FIELD=[$2]): rowcount = 100.0, cumulative cost = 200.0               |
+|   TableAccessRel(table=[[FLATFILE_SERVER_EMPTY, BCP, empty]]): rowcount = 100.0, cumulative cost = 100.0  |
++-----------------------------------------------------------------------------------------------------------+
+> 
+> 
 > ---------------------------------------------------------------------------
 > -- Part 4. Reading metadata from bcp files                               --
 > ---------------------------------------------------------------------------
@@ -762,6 +793,7 @@ Error: error while fetching from cursor (state=,code=0)
 | Rusmore, Spangle, and Crowder  | Peninsula Trails                               | 14.95  |
 | Steve Jones                    | (leading spaces) Darwin's Ghost                | 15.00  |
 +--------------------------------+------------------------------------------------+--------+
+Warning: Statement execution encountered recoverable exceptions; errors: 2; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > 
 > -- we can select the errors from the log directory
 > create server log_server
@@ -803,8 +835,8 @@ Warning: Statement execution encountered recoverable exceptions; errors: 2; warn
 Error: Exceeded limit of 1 errors. Last error was:
 Could not calculate result column 2 for the following row:
 [Gary Larsen, null, 5.00]
-Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value
-Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
+Messages: Target CAST($1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value
+Target CAST($1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
 Error: error while fetching from cursor (state=,code=0)
 > !set shownestederrs false
 > 
@@ -838,6 +870,7 @@ Error: Mapping source columns in data files to target columns specified by contr
 | 21  | 0                     | 0.00                   | 0                 | 9999999999999.99   | max dec(15.2)  |
 | 23  | 0                     | 0.00                   | 0                 | -9999999999999.99  | min dec(15.2)  |
 +-----+-----------------------+------------------------+-------------------+--------------------+----------------+
+Warning: Statement execution encountered recoverable exceptions; errors: 12; warnings: 0; see testlog/Summary.log for details (state=,code=0)
 > 
 > -- test "DEFAULT" schema name
 > select count(*) from flatfile_server."DEFAULT"."example";

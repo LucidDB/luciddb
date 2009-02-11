@@ -32,6 +32,8 @@ import java.util.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
+import org.eigenbase.jdbc4.*;
+
 
 /**
  * AbstractIterResultSet provides functionality common to all ResultSet
@@ -226,7 +228,7 @@ public abstract class AbstractIterResultSet
     // ------------------------------------------------------------------------
     // NOTE jvs 30-May-2003:  I made this public because iSQL wanted it that
     // way for reflection.
-    public class MetaData
+    public class MetaData extends Unwrappable
         implements ResultSetMetaData
     {
         public boolean isAutoIncrement(int column)

@@ -212,6 +212,14 @@ public abstract class FarragoUdrRuntime
             FarragoRuntimeContext.getUdrInvocationFrame();
         frame.context.handleRowErrorCompletion(ex, tag);
     }
+    
+    /*
+     * @return true if a UDR is currently executing
+     */
+    public static boolean inUdr()
+    {
+        return FarragoRuntimeContext.inUdr();
+    }
 }
 
 // End FarragoUdrRuntime.java

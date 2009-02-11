@@ -38,12 +38,12 @@ public:
     /**
      * Receives notification that stats polling is starting via a TimerThread.
      */
-    virtual void onTimerStart();
+    virtual void onThreadStart();
     
     /**
      * Receives notification that stats polling via a TimerThread is ending.
      */
-    virtual void onTimerStop();
+    virtual void onThreadEnd();
     
     /**
      * Begins recording a snapshot.  Called before all writeCounter invocations

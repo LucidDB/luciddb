@@ -317,6 +317,18 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Windowed aggregate expression is illegal in {0} clause</text>
 </exception>
 
+<exception id="120342" name="AggregateIllegalInGroupBy" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Aggregate expression is illegal in GROUP BY clause</text>
+</exception>
+
+<exception id="120345" name="NestedAggIllegal" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Aggregate expressions cannot be nested</text>
+</exception>
+
+<exception id="120348" name="AggregateIllegalInOrderBy" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Aggregate expression is illegal in ORDER BY clause of non-aggregating SELECT</text>
+</exception>
+
 <exception id="120350" name="WhereMustBeBoolean" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>WHERE clause must be a condition</text>
 </exception>
@@ -634,6 +646,11 @@ TBD: naming convention for extension features
 <exception name="PersonalitySupportsSnapshots">
     <property name="FeatureDefinition">Eigenbase-defined</property>
     <text>Personality does not support snapshot reads</text>
+</exception>
+
+<exception name="PersonalitySupportsLabels">
+    <property name="FeatureDefinition">Eigenbase-defined</property>
+    <text>Personality does not support labels</text>
 </exception>
 
 <!-- ====================================================================== -->

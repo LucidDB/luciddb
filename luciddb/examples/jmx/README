@@ -1,0 +1,6 @@
+This example code is for installing LucidDB as a service mbean within
+JBoss.  See
+
+http://docs.eigenbase.org/LucidDbAsManagedBean
+
+for further instructions.

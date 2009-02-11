@@ -795,7 +795,7 @@ public abstract class SqlOperatorTests
 
         checkCastToApproxOkay("1", "DOUBLE", 1, 0);
         checkCastToApproxOkay("1.0", "DOUBLE", 1, 0);
-        checkCastToApproxOkay("-2.3", "FLOAT", -2.3, 0);
+        checkCastToApproxOkay("-2.3", "FLOAT", -2.3, 0.000001);
         checkCastToApproxOkay("'1'", "DOUBLE", 1, 0);
         checkCastToApproxOkay("'  -1e-37  '", "DOUBLE", -1e-37, 0);
         checkCastToApproxOkay("1e0", "DOUBLE", 1, 0);

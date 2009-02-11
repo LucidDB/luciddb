@@ -46,7 +46,19 @@
           methodnames="testSystemParameters"/>
       </test>
 
-      <cleanup-hook/>
+      <test name="testStorageManagement" requiresSuccess="testPingServer">
+        <junit testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+          methodnames="testStorageManagement"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <custom-task>
+            <junit-utility testclass="com.lucidera.luciddb.test.mbean.LucidDbMBeansTest"
+              methodnames="shutdownLucidDb"/>
+          </custom-task>
+        </test-suite>
+      </cleanup-hook>
 
     </test-suite>
   </target>

@@ -40,6 +40,11 @@ const char *FennelExcn::what() const throw()
     return msg.c_str();
 }
 
+void FennelExcn::throwSelf()
+{
+    throw *this;
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End FennelExcn.cpp

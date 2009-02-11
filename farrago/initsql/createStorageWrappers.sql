@@ -41,15 +41,8 @@ create or replace server sys_mof
 foreign data wrapper sys_mdr
 options(root_package_name 'MOF', schema_name 'MODEL');
 
--- create access to system's own CWM repository
-create or replace server sys_cwm
-foreign data wrapper sys_mdr
-options(root_package_name 'CWM');
-
--- create access to system's own Farrago-specific portion of repository
-create or replace server sys_fem
-foreign data wrapper sys_mdr
-options(root_package_name 'FEM');
+-- creation of SYS_FEM and SYS_CWM delayed.
+-- See ./templates/createReposStorageServers.sql.*
 
 
 -- create wrapper for access to local FTRS data

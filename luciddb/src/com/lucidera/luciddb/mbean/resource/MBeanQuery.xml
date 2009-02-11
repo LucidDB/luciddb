@@ -122,6 +122,13 @@ alter system set "{0}"  = ''{1}''
 </text>
 </message>
 
+<message name="PerfCounterQuery">
+<text>
+select counter_value from sys_root.dba_performance_counters 
+where counter_name=?
+</text>
+</message>
+
 </resourceBundle>
 
 <!-- End MBeanQuery.xml -->

@@ -38,7 +38,7 @@ create or replace view statements_view as
 grant select on statements_view to public;
 
 create or replace function sessions()
-returns table(id int, url varchar(128), current_user_name varchar(128), current_role_name varchar(128), session_user_name varchar(128), system_user_name varchar(128), system_user_fullname varchar(128), session_name varchar(128), program_name varchar(128), process_id int, catalog_name varchar(128), schema_name varchar(128), is_closed boolean, is_auto_commit boolean, is_txn_in_progress boolean)
+returns table(id int, url varchar(128), current_user_name varchar(128), current_role_name varchar(128), session_user_name varchar(128), system_user_name varchar(128), system_user_fullname varchar(128), session_name varchar(128), program_name varchar(128), process_id int, catalog_name varchar(128), schema_name varchar(128), is_closed boolean, is_auto_commit boolean, is_txn_in_progress boolean, current_label varchar(128))
 language java
 parameter style system defined java
 no sql
@@ -381,6 +381,10 @@ create or replace view histograms_view_internal as
         sys_fem.med."ColumnHistogram" h
     on
         c."mofId" = h."Column"
+    where
+        h."analyzeTime" =
+            (select max("analyzeTime") from sys_fem.med."ColumnHistogram"
+                where "Column" = h."Column")
 ;
 
 create or replace view histograms_view as
@@ -821,6 +825,31 @@ create or replace view browse_connect_foreign_wrappers as
   where 
     dw."foreign" = true
     and so."name" = 'BROWSE_CONNECT_DESCRIPTION'
+;
+
+create or replace view dba_labels_internal as
+  select
+    cast(lbl."name" as varchar(128)) as label_name,
+    cast(pLbl."name" as varchar(128)) as parent_label_name,
+    lbl."commitSequenceNumber" as csn,
+    cast(lbl."creationTimestamp" as timestamp) as creation_timestamp,
+    cast(lbl."modificationTimestamp" as timestamp) last_modified_timestamp,
+    cast(lbl."description" as varchar(65535)) as remarks,
+    lbl."mofId",
+    lbl."lineageId",
+    g."Grantee"
+  from
+    sys_fem.med."Label" lbl
+  left outer join
+    sys_fem.med."Label" pLbl
+  on
+    lbl."ParentLabel" = pLbl."mofId"
+  inner join
+    sys_fem."Security"."Grant" g
+  on
+    lbl."mofId" = g."Element"
+  where
+    g."action" = 'CREATION'
 ;
 
 -- Returns the set of options relevant to a given wrapper.  A partial

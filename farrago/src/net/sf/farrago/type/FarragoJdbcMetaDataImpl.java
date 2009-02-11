@@ -27,6 +27,8 @@ import java.sql.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
+import org.eigenbase.jdbc4.*;
+
 
 /**
  * Helper base class for implementing Jdbc metadata interfaces.
@@ -34,7 +36,7 @@ import org.eigenbase.sql.type.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcMetaDataImpl
+public class FarragoJdbcMetaDataImpl extends Unwrappable
 {
     //~ Instance fields --------------------------------------------------------
 

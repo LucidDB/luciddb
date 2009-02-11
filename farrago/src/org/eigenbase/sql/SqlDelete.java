@@ -84,9 +84,9 @@ public class SqlDelete
      * @return the condition expression for the data to be deleted, or null for
      * all rows in the table
      */
-    public SqlCall getCondition()
+    public SqlNode getCondition()
     {
-        return (SqlCall) operands[CONDITION_OPERAND];
+        return operands[CONDITION_OPERAND];
     }
 
     /**

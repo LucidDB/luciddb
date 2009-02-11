@@ -10,21 +10,21 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> insert into bug2533tab values(2)
 . . . . . . . . > ;
-0: jdbc:luciddb:> select POW(POW(n1,2), 2) from bug2533tab
+0: jdbc:luciddb:> select POWER(POWER(n1,2), 2) from bug2533tab
 . . . . . . . . > ;
 +---------+
 | EXPR$0  |
 +---------+
 | 16.0    |
 +---------+
-0: jdbc:luciddb:> select POW(POW(n1,2), 0.5) from bug2533tab
+0: jdbc:luciddb:> select POWER(POWER(n1,2), 0.5) from bug2533tab
 . . . . . . . . > ;
 +---------+
 | EXPR$0  |
 +---------+
 | 2.0     |
 +---------+
-0: jdbc:luciddb:> select POW(n1,0.5) from bug2533tab
+0: jdbc:luciddb:> select POWER(n1,0.5) from bug2533tab
 . . . . . . . . > ;
 +---------------------+
 |       EXPR$0        |

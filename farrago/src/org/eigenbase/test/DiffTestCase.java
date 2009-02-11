@@ -240,7 +240,13 @@ public abstract class DiffTestCase
                 }
             }
 
+            // NOTE: Use of diff.mask is deprecated, use diff_mask.
             String diffMask = System.getProperty("diff.mask",null);
+            if (diffMask != null) {
+                addDiffMask(diffMask);
+            }
+
+            diffMask = System.getProperty("diff_mask",null);
             if (diffMask != null) {
                 addDiffMask(diffMask);
             }

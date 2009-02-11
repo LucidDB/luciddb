@@ -38,14 +38,14 @@ Error: java.lang.IllegalArgumentException: Illegal pattern character 'Y' (state=
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- read the file as date and times
 0: jdbc:luciddb:> select * from flatfile_server.bcp."dates";
-+-------------+-------------+------------------------+
-| START_DATE  | START_TIME  |     ACTIVITY_TIME      |
-+-------------+-------------+------------------------+
-| 1980-01-01  | 00:00:00    | 1980-01-01 00:00:00.0  |
-| 1980-12-31  | 23:59:59    | 1980-12-31 11:59:59.0  |
-| 2004-02-29  | 12:00:00    | 2004-02-29 12:00:00.0  |
-| 2007-01-01  |             | 2006-04-22 14:30:00.0  |
-+-------------+-------------+------------------------+
++-------------+-------------+----------------------+
+| START_DATE  | START_TIME  |    ACTIVITY_TIME     |
++-------------+-------------+----------------------+
+| 1980-01-01  | 00:00:00    | 1980-01-01 00:00:00  |
+| 1980-12-31  | 23:59:59    | 1980-12-31 11:59:59  |
+| 2004-02-29  | 12:00:00    | 2004-02-29 12:00:00  |
+| 2007-01-01  |             | 2006-04-22 14:30:00  |
++-------------+-------------+----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- convert back into strings
 0: jdbc:luciddb:> select 
@@ -75,11 +75,11 @@ Error: java.lang.IllegalArgumentException: Illegal pattern character 'Y' (state=
 0: jdbc:luciddb:> values applib.char_to_timestamp(
 . . . . . . . . >     'yyyy-MM-dd HH:mm:ss',
 . . . . . . . . >     '2001-01-01 12:00:00');
-+------------------------+
-|         EXPR$0         |
-+------------------------+
-| 2001-01-01 12:00:00.0  |
-+------------------------+
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2001-01-01 12:00:00  |
++----------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values applib.timestamp_to_char( 
 . . . . . . . . >     'MM/dd/yyyy',

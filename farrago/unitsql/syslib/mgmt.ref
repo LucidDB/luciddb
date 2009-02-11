@@ -40,7 +40,7 @@
 +---------+
 | EXPR$0  |
 +---------+
-| 30      |
+| 31      |
 +---------+
 > 
 > select parameter_name from sys_boot.mgmt.dba_routine_parameters_internal1
@@ -53,18 +53,31 @@
 | RETURN          |
 +-----------------+
 > 
+> -- SYS_CWM/FEM use different wrappers depending on repository configuration
 > select foreign_wrapper_name, foreign_server_name
 > from sys_boot.mgmt.dba_foreign_servers_internal2
+> where foreign_server_name not in ('SYS_CWM', 'SYS_FEM')
 > order by 1,2;
 +-----------------------+-------------------------------+
 | FOREIGN_WRAPPER_NAME  |      FOREIGN_SERVER_NAME      |
 +-----------------------+-------------------------------+
 | SYS_JDBC              | HSQLDB_DEMO                   |
-| SYS_MDR               | SYS_CWM                       |
-| SYS_MDR               | SYS_FEM                       |
 | SYS_MDR               | SYS_MOF                       |
 | SYS_MOCK_FOREIGN      | SYS_MOCK_FOREIGN_DATA_SERVER  |
 +-----------------------+-------------------------------+
+> 
+> select foreign_server_name
+> from sys_boot.mgmt.dba_foreign_servers_internal2
+> order by 1;
++-------------------------------+
+|      FOREIGN_SERVER_NAME      |
++-------------------------------+
+| HSQLDB_DEMO                   |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
++-------------------------------+
 > 
 > create schema mtest;
 > create table mtest.t(col int primary key);

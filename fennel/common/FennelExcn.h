@@ -47,6 +47,8 @@ public:
     // implement std::exception
     virtual const char *what() const throw();
 
+    virtual void throwSelf();
+
     std::string const &getMessage()
     {
         return msg;

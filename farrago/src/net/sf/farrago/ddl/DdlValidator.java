@@ -32,6 +32,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
@@ -42,6 +43,7 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -122,15 +124,16 @@ public class DdlValidator
 
     /**
      * Map containing scheduled validation actions. The key is the MofId of the
-     * object scheduled for validation; the value is a ValidatedOp.
+     * object scheduled for validation; the value is a simple object containing
+     * a ValidatedOp and the object's RefClass.
      */
-    private Map<String, ValidatedOp> schedulingMap;
+    private Map<String, SchedulingDetail> schedulingMap;
 
     /**
      * Map of objects in transition between schedulingMap and validatedMap.
      * Content format is same as for schedulingMap.
      */
-    private Map<String, ValidatedOp> transitMap;
+    private Map<String, SchedulingDetail> transitMap;
 
     /**
      * Map of object validations which have already taken place. The key is the
@@ -175,6 +178,9 @@ public class DdlValidator
         dispatcher =
         ReflectUtil.createDispatcher(DdlHandler.class, CwmModelElement.class);
 
+    private FemAuthId systemUserAuthId;
+    private FemAuthId currentUserAuthId;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -191,7 +197,8 @@ public class DdlValidator
 
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
-        schedulingMap = new LinkedHashMap<String, ValidatedOp>();
+        schedulingMap = 
+            new LinkedHashMap<String, SchedulingDetail>();
         validatedMap = new LinkedHashMap<RefObject, ValidatedOp>();
         deleteQueue = new LinkedHashSet<RefObject>();
 
@@ -303,10 +310,21 @@ public class DdlValidator
         RefObject refObject,
         ValidatedOp status)
     {
-        return (schedulingMap.get(refObject.refMofId()) == status)
+        return (getObjectStatusFromMap(schedulingMap, refObject) == status)
             || (validatedMap.get(refObject) == status)
             || ((transitMap != null)
-                && (transitMap.get(refObject.refMofId()) == status));
+                && (getObjectStatusFromMap(transitMap, refObject) == status));
+    }
+    
+    private ValidatedOp getObjectStatusFromMap(
+        Map<String, SchedulingDetail> map, RefObject refObject)
+    {
+        SchedulingDetail detail = map.get(refObject.refMofId());
+        if (detail == null) {
+            return null;
+        }
+        
+        return detail.validatedOp;
     }
 
     // implement FarragoSessionDdlValidator
@@ -525,8 +543,21 @@ public class DdlValidator
                         deps.addAll(getDependencies(e));
                     }
                 }
+            } else if (replacementTarget instanceof FemLabel) {
+                deps.addAll(((FemLabel) replacementTarget).getAlias());
+                try {
+                    // remove stats associated with the replaced label
+                    FarragoCatalogUtil.removeObsoleteStatistics(
+                        (FemLabel) replacementTarget,
+                        getRepos());
+                } catch (Exception ex) {
+                    throw Util.newInternal(
+                        ex,
+                        "error removing replaced label's statistics: " +
+                        ex.getMessage());
+                }
             }
-
+            
             scheduleRevalidation(deps);
 
             SqlIdentifier newName = getNewName();
@@ -536,7 +567,7 @@ public class DdlValidator
 
             stopListening();
 
-            // special cases - FemBaseColumnSet, FemDataServer
+            // special cases - FemBaseColumnSet, FemDataServer, FemLabel
             for (CwmModelElement e : deps) {
                 if (e instanceof FemBaseColumnSet) {
                     // must reset server to newElement
@@ -544,6 +575,8 @@ public class DdlValidator
                         (FemDataServer) newElement);
                 } else if (e instanceof FemDataServer) {
                     ((FemDataServer) e).setWrapper((FemDataWrapper) newElement);
+                } else if (e instanceof FemLabel) {
+                    ((FemLabel) e).setParentLabel((FemLabel) newElement);
                 }
             }
 
@@ -598,15 +631,14 @@ public class DdlValidator
             RefObject obj = mapEntry.getKey();
             ValidatedOp action = mapEntry.getValue();
 
-            if (obj instanceof CwmStructuralFeature) {
-                // Set some mandatory but irrelevant attributes.
-                CwmStructuralFeature feature = (CwmStructuralFeature) obj;
-
-                feature.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
-            }
-
-            if (action == ValidatedOp.DELETION) {
-                clearDependencySuppliers(obj);
+            if (action != ValidatedOp.DELETION) {
+                if (obj instanceof CwmStructuralFeature) {
+                    // Set some mandatory but irrelevant attributes.
+                    CwmStructuralFeature feature = (CwmStructuralFeature) obj;
+    
+                    feature.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
+                }
+            } else {
                 RefFeatured container = obj.refImmediateComposite();
                 if (container != null) {
                     ValidatedOp containerAction = validatedMap.get(container);
@@ -663,12 +695,7 @@ public class DdlValidator
         // now we can finally consummate any requested deletions, since we're
         // all done referencing the objects
         Collections.reverse(deletionList);
-        for (RefObject refObj : deletionList) {
-            if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("really deleting " + refObj);
-            }
-            refObj.refDelete();
-        }
+        getRepos().getEnkiMdrRepos().delete(deletionList);
 
         // verify repository integrity post-delete
         for (
@@ -698,12 +725,28 @@ public class DdlValidator
     {
         boolean isNew = isNewObject(element);
         if (isNew) {
+            // Retrieve and cache the system and current user FemAuthId 
+            // objects rather than looking them up every time.
+            if (systemUserAuthId == null) {
+                systemUserAuthId = 
+                    FarragoCatalogUtil.getAuthIdByName(
+                        getRepos(), FarragoCatalogInit.SYSTEM_USER_NAME);
+            }
+            
+            String currentUserName = 
+                getInvokingSession().getSessionVariables().currentUserName;
+            if (currentUserAuthId == null) {
+                currentUserAuthId =
+                    FarragoCatalogUtil.getAuthIdByName(
+                        getRepos(), currentUserName);
+            }
+            
             // Define a pseudo-grant representing the element's relationship to
             // its creator.
             FarragoCatalogUtil.newCreationGrant(
                 getRepos(),
-                FarragoCatalogInit.SYSTEM_USER_NAME,
-                getInvokingSession().getSessionVariables().currentUserName,
+                systemUserAuthId,
+                currentUserAuthId,
                 element);
         }
 
@@ -742,7 +785,6 @@ public class DdlValidator
         // exception will be thrown when validate() is called.
         if (event.getType() == InstanceEvent.EVENT_INSTANCE_DELETE) {
             RefObject obj = (RefObject) (event.getSource());
-            clearDependencySuppliers(obj);
             scheduleDeletion(obj);
         } else if (event instanceof AttributeEvent) {
             checkStringLength((AttributeEvent)event);
@@ -753,27 +795,68 @@ public class DdlValidator
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine("end name = " + associationEvent.getEndName());
             }
-            scheduleModification(associationEvent.getFixedElement());
-            if (associationEvent.getOldElement() != null) {
-                scheduleModification(associationEvent.getNewElement());
+            boolean touchEnds = true;
+            DependencySupplier depSupplier =
+                getRepos().getCorePackage().getDependencySupplier();
+            RefAssociation refAssoc =
+                (RefAssociation) associationEvent.getSource();
+            if (refAssoc.equals(depSupplier)) {
+                // REVIEW jvs 3-Jun-2008:  make a special case for
+                // the supplier end of dependencies.  For example,
+                // when we create a view which depends on a table,
+                // there's no need to revalidate the table at
+                // that time.
+                touchEnds = false;
             }
-            if (associationEvent.getNewElement() != null) {
-                scheduleModification(associationEvent.getNewElement());
+            if (touchEnds) {
+                scheduleModification(associationEvent.getFixedElement());
+                if (associationEvent.getOldElement() != null) {
+                    scheduleModification(associationEvent.getNewElement());
+                }
+                if (associationEvent.getNewElement() != null) {
+                    scheduleModification(associationEvent.getNewElement());
+                }
             }
             if (event.getType() == AssociationEvent.EVENT_ASSOCIATION_REMOVE) {
-                RefAssociation refAssoc =
-                    (RefAssociation) associationEvent.getSource();
+                // MDR's event loses some information, namely which end the
+                // association is being removed from.  event.getEndName() is
+                // chosen arbitrarily.  To work around this, we use our
+                // knowledge of which side has already been scheduled for
+                // deleted to infer what we need.  (TODO jvs 9-Aug-2008: once
+                // we've completely migrated off of MDR, enhance enki to
+                // deliver the full information as part of the event.)
+
+                // By default, or if we can't do any better, rely on MDR.
+                String endName = associationEvent.getEndName();
+                RefObject droppedEnd = associationEvent.getFixedElement();
+                RefObject otherEnd = associationEvent.getOldElement();
+
+                if (!isDeletedObject(droppedEnd) && isDeletedObject(otherEnd)) {
+                    // Swap ends.
+                    RefObject tmp = droppedEnd;
+                    droppedEnd = otherEnd;
+                    otherEnd = tmp;
+                    JmiAssocEdge assocEdge =
+                        getRepos().getModelGraph().getEdgeForRefAssoc(refAssoc);
+                    if (endName.equals(assocEdge.getSourceEnd().getName())) {
+                        endName = assocEdge.getTargetEnd().getName();
+                    } else {
+                        assert(endName.equals(
+                                   assocEdge.getTargetEnd().getName()));
+                        endName = assocEdge.getSourceEnd().getName();
+                    }
+                }
+                
                 List<FarragoSessionDdlDropRule> rules =
                     dropRules.getMulti(refAssoc.getClass());
                 for (FarragoSessionDdlDropRule rule : rules) {
                     if ((rule != null)
-                        && rule.getEndName().equals(
-                            associationEvent.getEndName()))
+                        && rule.getEndName().equals(endName))
                     {
                         fireDropRule(
                             rule,
-                            associationEvent.getFixedElement(),
-                            associationEvent.getOldElement());
+                            droppedEnd,
+                            otherEnd);
                     }
                 }
             }
@@ -853,24 +936,28 @@ public class DdlValidator
             // Swap in a new map so new scheduling calls aren't handled until
             // the next round.
             transitMap = schedulingMap;
-            schedulingMap = new LinkedHashMap<String, ValidatedOp>();
+            schedulingMap = 
+                new LinkedHashMap<String, SchedulingDetail>();
 
             boolean progress = false;
             for (
-                Map.Entry<String, ValidatedOp> mapEntry
+                Map.Entry<String, SchedulingDetail> mapEntry
                 : transitMap.entrySet())
             {
+                SchedulingDetail scheduleDetail = mapEntry.getValue();
+                
+                RefClass cls = scheduleDetail.refClass;
                 RefObject obj =
-                    (RefObject) getRepos().getMdrRepos().getByMofId(
-                        mapEntry.getKey());
+                    ((EnkiMDRepository)getRepos().getMdrRepos()).getByMofId(
+                        mapEntry.getKey(), cls);
                 if (obj == null) {
                     progress = progress ||
-                        ValidatedOp.DELETION == mapEntry.getValue();
+                        ValidatedOp.DELETION == scheduleDetail.validatedOp;
                     // technically it is progress, and
                     // the object might already have been deleted
                     continue;
                 }
-                ValidatedOp action = mapEntry.getValue();
+                ValidatedOp action = scheduleDetail.validatedOp;
 
                 // mark this object as already validated so it doesn't slip
                 // back in by updating itself
@@ -897,9 +984,7 @@ public class DdlValidator
                     // Something hit an unvalidated dependency; we'll have
                     // to retry this object later.
                     validatedMap.remove(obj);
-                    schedulingMap.put(
-                        obj.refMofId(),
-                        action);
+                    schedulingMap.put(obj.refMofId(), scheduleDetail);
                 } catch (EigenbaseException ex) {
                     tracer.info(
                         "Revalidate exception on "
@@ -969,19 +1054,6 @@ public class DdlValidator
     {
         if (ex != null) {
             throw ex;
-        }
-    }
-
-    private void clearDependencySuppliers(RefObject refObj)
-    {
-        // REVIEW: We have to break dependencies explicitly
-        // before object deletion, or all kinds of nasty internal
-        // MDR errors result.  Should find out if that's expected
-        // behavior.
-        if (refObj instanceof CwmDependency) {
-            CwmDependency dependency = (CwmDependency) refObj;
-            dependency.getSupplier().clear();
-            dependency.getClient().clear();
         }
     }
 
@@ -1270,7 +1342,8 @@ public class DdlValidator
         // delete overrides anything else
         schedulingMap.put(
             obj.refMofId(),
-            ValidatedOp.DELETION);
+            new SchedulingDetail(
+                ValidatedOp.DELETION, obj.refClass()));
         mapParserPosition(obj);
     }
 
@@ -1290,18 +1363,20 @@ public class DdlValidator
             // integrity verification on it during executeStorage()
             schedulingMap.put(
                 obj.refMofId(),
-                ValidatedOp.MODIFICATION);
+                new SchedulingDetail(
+                    ValidatedOp.MODIFICATION, obj.refClass()));
             return;
         }
         CwmModelElement element = (CwmModelElement) obj;
         if (isNewObject(element)) {
             schedulingMap.put(
                 obj.refMofId(),
-                ValidatedOp.CREATION);
+                new SchedulingDetail(ValidatedOp.CREATION, obj.refClass()));
         } else {
             schedulingMap.put(
                 obj.refMofId(),
-                ValidatedOp.MODIFICATION);
+                new SchedulingDetail(
+                    ValidatedOp.MODIFICATION, obj.refClass()));
         }
         mapParserPosition(obj);
     }
@@ -1509,7 +1584,7 @@ public class DdlValidator
                     "");
                 schedulingMap.put(
                     e.refMofId(),
-                    ValidatedOp.CREATION);
+                    new SchedulingDetail(ValidatedOp.CREATION, e.refClass()));
             }
         }
     }
@@ -1761,6 +1836,18 @@ public class DdlValidator
 
                 return pos1.getEndColumnNum() - pos2.getEndColumnNum();
             }
+        }
+    }
+    
+    private static class SchedulingDetail
+    {
+        private final ValidatedOp validatedOp;
+        private final RefClass refClass;
+        
+        private SchedulingDetail(ValidatedOp validatedOp, RefClass refClass)
+        {
+            this.validatedOp = validatedOp;
+            this.refClass = refClass;
         }
     }
 }

@@ -1396,7 +1396,7 @@ public class LcsIndexGuide
     }
 
     /**
-     * Creates an index search on the deletion index corresponding to this lcs
+     * Creates an index search on the deletion index corresponding to an lcs
      * table. A deletion index is searched by RID.
      *
      * @param rel the rel from which this scan is being generated
@@ -1440,7 +1440,8 @@ public class LcsIndexGuide
                 null,
                 inputDirectiveProj,
                 startRidParamId,
-                rowLimitParamId);
+                rowLimitParamId,
+                null);
 
         return indexSearch;
     }
