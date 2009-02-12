@@ -23,6 +23,7 @@ package com.lucidera.opt;
 import java.util.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -164,11 +165,10 @@ public class LoptMultiJoin
     /**
      * Map consisting of all pairs of self-joins where the self-join can
      * be removed because the join between the identical factors is an
-     * equality join on the same set of unique keys.  For each pair, one
-     * factor is the key into the map and the corresponding factor is the
-     * value.
+     * equality join on the same set of unique keys.  The map is keyed by
+     * either factor in the self join.
      */
-    Map<Integer, Integer> removableSelfJoinPairs;
+    Map<Integer, RemovableSelfJoin> removableSelfJoinPairs;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -215,7 +215,7 @@ public class LoptMultiJoin
         joinRemovalSemiJoins = new SemiJoinRel[nJoinFactors];
 
         removableOuterJoinFactors = new HashSet<Integer>();
-        removableSelfJoinPairs = new HashMap<Integer, Integer>();
+        removableSelfJoinPairs = new HashMap<Integer, RemovableSelfJoin>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -265,7 +265,7 @@ public class LoptMultiJoin
     }
 
     /**
-     * @return all join filters in this multijoin
+     * @return all non-outer join filters in this multijoin
      */
     public List<RexNode> getJoinFilters()
     {
@@ -507,7 +507,7 @@ public class LoptMultiJoin
      *
      * @param factorRefBitmap bitmap representing factors referenced that will
      * be set by this method
-     * @param fieldRefBitmap bitmap reprepsenting fields referenced
+     * @param fieldRefBitmap bitmap representing fields referenced
      */
     private void setFactorBitmap(
         BitSet factorRefBitmap,
@@ -746,23 +746,185 @@ public class LoptMultiJoin
     /**
      * Adds to a map that keeps track of removable self-join pairs.
      * 
-     * @param leftFactor left factor in the self-join
-     * @param rightFactor right factor in the self-join
+     * @param factor1 one of the factors in the self-join
+     * @param factor2 the second factor in the self-join
      */
-    public void addRemovableSelfJoinPair(int leftFactor, int rightFactor)
+    public void addRemovableSelfJoinPair(int factor1, int factor2)
     {
-        removableSelfJoinPairs.put(leftFactor, rightFactor);
+        int leftFactor;
+        int rightFactor;
+        
+        // Put the factor with more fields on the left so it will be
+        // preserved after the self-join is removed.
+        if (getNumFieldsInJoinFactor(factor1) >
+            getNumFieldsInJoinFactor(factor2))
+        {
+            leftFactor = factor1;
+            rightFactor = factor2;
+        } else {
+            leftFactor = factor2;
+            rightFactor = factor1;
+        }
+        
+        // Compute a column mapping such that if a column from the right
+        // factor is also referenced in the left factor, we will map the
+        // right reference to the left to avoid redundant references.
+        Map<Integer, Integer> columnMapping = new HashMap<Integer, Integer>();
+        
+        // First, locate the originating column for all simple column
+        // references in the left factor.
+        RelNode left = getJoinFactor(leftFactor);
+        Map<Integer, Integer> leftFactorColMapping =
+            new HashMap<Integer, Integer>();
+        for (int i = 0; i < left.getRowType().getFieldCount(); i++) {
+            RelColumnOrigin colOrigin =
+                LoptMetadataProvider.getSimpleColumnOrigin(left, i);
+            if (colOrigin != null) {
+                leftFactorColMapping.put(
+                    colOrigin.getOriginColumnOrdinal(), 
+                    i);
+            }
+        }
+        
+        // Then, see if the right factor references any of the same columns
+        // by locating their originating columns.  If there are matches,
+        // then we want to store the corresponding offset into the left
+        // factor.
+        RelNode right = getJoinFactor(rightFactor);
+        for (int i = 0; i < right.getRowType().getFieldCount(); i++) {
+            RelColumnOrigin colOrigin =
+                LoptMetadataProvider.getSimpleColumnOrigin(right, i);
+            if (colOrigin == null) {
+                continue;
+            }
+            Integer leftOffset =
+                leftFactorColMapping.get(colOrigin.getOriginColumnOrdinal());
+            if (leftOffset == null) {
+                continue;
+            }
+            columnMapping.put(i, leftOffset);
+        }
+        
+        RemovableSelfJoin selfJoin =
+            new RemovableSelfJoin(leftFactor, rightFactor, columnMapping);
+        
+        removableSelfJoinPairs.put(leftFactor, selfJoin);
+        removableSelfJoinPairs.put(rightFactor, selfJoin);
     }
     
     /*
-     * @param factIdx the left factor in a self-join pair
+     * @param factIdx one of the factors in a self-join pair
      * 
-     * @return the right factor in a self-join pair if the factor passed in is
-     * indeed part of a removable self-join; otherwise, returns null
+     * @return the other factor in a self-join pair if the factor passed in is
+     * a factor in a removable self-join; otherwise, returns null
      */
-    public Integer getRightSelfJoinFactor(int factIdx)
+    public Integer getOtherSelfJoinFactor(int factIdx)
     {
-        return removableSelfJoinPairs.get(factIdx);
+        RemovableSelfJoin selfJoin = removableSelfJoinPairs.get(factIdx);
+        if (selfJoin == null) {
+            return null;
+        } else if (selfJoin.getRightFactor() == factIdx) {
+            return selfJoin.getLeftFactor();
+        } else {
+            return selfJoin.getRightFactor();
+        }
+    }
+    
+    /**
+     * @param factIdx factor in a self-join
+     * 
+     * @return true if the factor is the left factor in a self-join
+     */
+    public boolean isLeftFactorInRemovableSelfJoin(int factIdx)
+    {
+        RemovableSelfJoin selfJoin = removableSelfJoinPairs.get(factIdx);
+        if (selfJoin == null) {
+            return false;
+        }
+        return (selfJoin.getLeftFactor() == factIdx);
+    }
+       
+    /**
+     * @param factIdx factor in a self-join
+     * 
+     * @return true if the factor is the right factor in a self-join
+     */
+    public boolean isRightFactorInRemovableSelfJoin(int factIdx)
+    {
+        RemovableSelfJoin selfJoin = removableSelfJoinPairs.get(factIdx);
+        if (selfJoin == null) {
+            return false;
+        }
+        return (selfJoin.getRightFactor() == factIdx);
+    }   
+    
+    /**
+     * Determines whether there is a mapping from a column in the right factor
+     * of a self-join to a column from the left factor.  Assumes that the
+     * right factor is a part of a self-join.
+     * 
+     * @param rightFactor the index of the right factor
+     * @param rightOffset the column offset of the right factor
+     * 
+     * @return the offset of the corresponding column in the left factor, if
+     * such a column mapping exists; otherwise, null is returned
+     */
+    public Integer getRightColumnMapping(int rightFactor, int rightOffset)
+    {
+        RemovableSelfJoin selfJoin = removableSelfJoinPairs.get(rightFactor);
+        assert(selfJoin.getRightFactor() == rightFactor);
+        return selfJoin.getColumnMapping().get(rightOffset);
+    }
+
+    /**
+     * Utility class used to keep track of the factors in a removable
+     * self-join.  The right factor in the self-join is the one that will
+     * be removed.
+     */
+    private class RemovableSelfJoin
+    {
+        /**
+         * The left factor in a removable self-join
+         */
+        private int leftFactor;
+        
+        /**
+         * The right factor in a removable self-join, namely the factor
+         * that will be removed
+         */
+        private int rightFactor;
+        
+        /**
+         * A mapping that maps references to columns from the right factor
+         * to columns in the left factor, if the column is referenced in both
+         * factors
+         */
+        private Map<Integer, Integer> columnMapping;
+        
+        RemovableSelfJoin(
+            int leftFactor,
+            int rightFactor,
+            Map<Integer, Integer> columnMapping)
+        {
+            this.leftFactor = leftFactor;
+            this.rightFactor = rightFactor;
+            this.columnMapping = columnMapping;
+        }
+        
+        public int getLeftFactor()
+        {
+            return leftFactor;
+        }
+        
+        public int getRightFactor()
+        {
+            return rightFactor;
+        }
+        
+        public Map<Integer, Integer> getColumnMapping()
+        {
+            return columnMapping;
+        }
     }
 }
 

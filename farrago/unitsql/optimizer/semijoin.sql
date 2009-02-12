@@ -899,3 +899,13 @@ insert into t2(b) values('1');
 analyze table t2 compute statistics for all columns;
 
 explain plan for select count(*) from t1, t2 where t1.a = t2.a and t2.b is null;
+
+-- LER-9882 -- the join to PRODUCT should be removed even though it left outer
+-- joins with U because the left outer join with U can also be removed
+
+!set outputformat csv
+create table u(a char(10) primary key);
+explain plan for
+    select count(*) from sales s, product p left outer join u
+        on u.a = p.name
+        where s.product_id = p.id and p.size = 'S';
