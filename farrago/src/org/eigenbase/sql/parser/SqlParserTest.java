@@ -1656,6 +1656,7 @@ public class SqlParserTest
             + "    \"\\(\" \\.\\.\\." + NL
             + "    <IDENTIFIER> \\.\\.\\." + NL
             + "    <QUOTED_IDENTIFIER> \\.\\.\\." + NL
+            + "    <UNICODE_QUOTED_IDENTIFIER> \\.\\.\\." + NL
             + "    ");
     }
 
@@ -1676,6 +1677,7 @@ public class SqlParserTest
             + "Was expecting one of:" + NL
             + "    <IDENTIFIER> \\.\\.\\." + NL
             + "    <QUOTED_IDENTIFIER> \\.\\.\\." + NL
+            + "    <UNICODE_QUOTED_IDENTIFIER> \\.\\.\\." + NL
             + "    ");
     }
 

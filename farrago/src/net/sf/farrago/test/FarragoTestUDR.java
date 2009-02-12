@@ -157,6 +157,19 @@ public abstract class FarragoTestUDR
         }
     }
 
+    public static String generateUnicodeString()
+    {
+        return ConversionUtil.TEST_UNICODE_STRING;
+    }
+
+    public static void generateUnicodeStringUdx(
+        PreparedStatement resultInserter)
+        throws Exception
+    {
+        resultInserter.setString(1, generateUnicodeString());
+        resultInserter.executeUpdate();
+    }
+
     public static String convertUnicodeToEscapedForm(String s)
     {
         StringBuffer sb = new StringBuffer();

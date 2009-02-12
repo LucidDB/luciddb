@@ -172,7 +172,8 @@ Error: From line 1, column 26 to line 1, column 30: Target column 'EMPNO' is ass
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "(" at line 2, column 7.
 Was expecting one of:
     <IDENTIFIER> ...
-    <QUOTED_IDENTIFIER> ... (state=,code=0)
+    <QUOTED_IDENTIFIER> ...
+    <UNICODE_QUOTED_IDENTIFIER> ... (state=,code=0)
 > 
 > drop table upemps;
 No rows affected

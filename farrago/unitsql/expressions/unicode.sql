@@ -43,6 +43,12 @@ insert into uni.t6 values (100, 'Hi');
 
 select * from uni.t6;
 
+-- test rebuild and analyze on Unicode data
+alter table uni.t6 rebuild;
+analyze table uni.t6 compute statistics for all columns;
+
+select * from uni.t6;
+
 select cast(v as varchar(1) character set "UTF16") from uni.t6;
 
 -- should fail:  unknown character set
@@ -305,6 +311,43 @@ select * from uni.v1
 union
 select * from uni.v2;
 
+-- test a UDF which returns Unicode data
+
+create or replace function uni.generate_unicode_string()
+returns varchar(1024) character set "UTF16"
+language java
+no sql
+external name 
+'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeString';
+
+values uni.convert_to_escaped(uni.generate_unicode_string());
+
+-- test a UDX which returns Unicode data
+
+create function uni.generate_unicode_string_udx()
+returns table(v varchar(1024) character set "UTF16")
+language java
+parameter style system defined java
+no sql
+external name 
+'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeStringUdx';
+
+select uni.convert_to_escaped(v)
+from table(uni.generate_unicode_string_udx());
+
+-- test a UDX which passes through Unicode data
+create function uni.stringify(c cursor, delimiter varchar(128))
+returns table(v varchar(65535) character set "UTF16")
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+
+select uni.convert_to_escaped(v)
+from table(uni.stringify(
+    cursor(values uni.generate_unicode_string()),
+    '|'));
+
 -- test CSVJDBC reader with Unicode flatfiles
 create or replace procedure uni.generate_test_csv(charset_name varchar(128))
   language java
@@ -353,6 +396,15 @@ from uni.utf8_data order by c1;
 select uni.convert_to_escaped(c1) as c1,
 uni.convert_to_escaped(c2) as c2
 from uni.utf16_data order by c1;
+
+-- test Unicode in identifiers
+
+create table uni.U&"\03B1\03BD\03B8\03C1\03C9"(
+U&"\03C0\03BF\03C2" int not null primary key);
+
+insert into uni.U&"\03B1\03BD\03B8\03C1\03C9" values (1);
+
+insert into uni.U&"!03B1!03BD!03B8!03C1!03C9" UESCAPE '!' values (2);
 
 -- verify that UNION type aggregation does not accidentally revert to ISO-8859-1
 !set outputformat csv

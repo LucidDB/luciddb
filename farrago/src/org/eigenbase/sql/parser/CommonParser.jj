@@ -2836,6 +2836,7 @@ SqlDynamicParam DynamicParam() :
 String Identifier() :
 {
     String id;
+    char unicodeEscapeChar = '\\';
 }
 {
     (
@@ -2846,6 +2847,25 @@ String Identifier() :
         | <QUOTED_IDENTIFIER>
         {
             id = SqlParserUtil.strip(getToken(0).image, "\"");
+        }
+        | <UNICODE_QUOTED_IDENTIFIER>
+        {
+            id = getToken(0).image;
+            id = id.substring(id.indexOf('"'));
+            id = SqlParserUtil.strip(id, "\"");
+        }
+        [ <UESCAPE> <QUOTED_STRING>
+            {
+                String s = SqlParserUtil.parseString(token.image);
+                unicodeEscapeChar = SqlParserUtil.checkUnicodeEscapeChar(s);
+            }
+        ]
+        {
+        }
+        {
+            SqlLiteral lit = SqlLiteral.createCharString(id, "UTF16", getPos());
+            lit = lit.unescapeUnicode(unicodeEscapeChar);
+            return lit.toValue();
         }
         | id = NonReservedKeyWord()
     )
@@ -4850,6 +4870,8 @@ TOKEN :
         )*
     "\""
     >
+    |
+    < UNICODE_QUOTED_IDENTIFIER: "U" "&" <QUOTED_IDENTIFIER> >
     |
     < #LETTER:
     [

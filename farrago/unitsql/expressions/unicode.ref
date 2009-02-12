@@ -58,6 +58,17 @@ Error: At line 0, column 0: Cannot assign to target field 'V' of type VARCHAR(10
 | 1  | Hi  |
 +----+-----+
 > 
+> -- test rebuild and analyze on Unicode data
+> alter table uni.t6 rebuild;
+> analyze table uni.t6 compute statistics for all columns;
+> 
+> select * from uni.t6;
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
 > select cast(v as varchar(1) character set "UTF16") from uni.t6;
 +---------+
 | EXPR$0  |
@@ -751,6 +762,58 @@ Error: Cannot assign 'Hi' to a NUMERIC value: NumberFormatException (state=,code
 | oops    |
 +---------+
 > 
+> -- test a UDF which returns Unicode data
+> 
+> create or replace function uni.generate_unicode_string()
+> returns varchar(1024) character set "UTF16"
+> language java
+> no sql
+> external name 
+> 'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeString';
+> 
+> values uni.convert_to_escaped(uni.generate_unicode_string());
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-------------------------------------------+
+> 
+> -- test a UDX which returns Unicode data
+> 
+> create function uni.generate_unicode_string_udx()
+> returns table(v varchar(1024) character set "UTF16")
+> language java
+> parameter style system defined java
+> no sql
+> external name 
+> 'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeStringUdx';
+> 
+> select uni.convert_to_escaped(v)
+> from table(uni.generate_unicode_string_udx());
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-------------------------------------------+
+> 
+> -- test a UDX which passes through Unicode data
+> create function uni.stringify(c cursor, delimiter varchar(128))
+> returns table(v varchar(65535) character set "UTF16")
+> language java
+> parameter style system defined java
+> no sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+> 
+> select uni.convert_to_escaped(v)
+> from table(uni.stringify(
+>     cursor(values uni.generate_unicode_string()),
+>     '|'));
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-------------------------------------------+
+> 
 > -- test CSVJDBC reader with Unicode flatfiles
 > create or replace procedure uni.generate_test_csv(charset_name varchar(128))
 >   language java
@@ -811,6 +874,15 @@ Error: Cannot assign 'Hi' to a NUMERIC value: NumberFormatException (state=,code
 | \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  | \03C2\03BF\03C0\03C9\03C1\03B8\03BD\03B1  |
 | hello                                     | goodbye                                   |
 +-------------------------------------------+-------------------------------------------+
+> 
+> -- test Unicode in identifiers
+> 
+> create table uni.U&"\03B1\03BD\03B8\03C1\03C9"(
+> U&"\03C0\03BF\03C2" int not null primary key);
+> 
+> insert into uni.U&"\03B1\03BD\03B8\03C1\03C9" values (1);
+> 
+> insert into uni.U&"!03B1!03BD!03B8!03C1!03C9" UESCAPE '!' values (2);
 > 
 > -- verify that UNION type aggregation does not accidentally revert to ISO-8859-1
 > !set outputformat csv
