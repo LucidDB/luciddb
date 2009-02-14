@@ -271,6 +271,9 @@ select position(U&'\03C1' in v) from uni.t6 where i=2;
 -- test UESCAPE
 select position(U&'!03C1' UESCAPE '!' in v) from uni.t6 where i=2;
 
+-- doubled-up escape character gets replaced with a singleton
+values U&'abc!!def' UESCAPE '!';
+
 select uni.convert_to_escaped(trim(both U&' ' from U&' \03B1\03BD '))
 from uni.t6 where i=2;
 
@@ -320,7 +323,19 @@ no sql
 external name 
 'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeString';
 
+-- test a UDF which returns Unicode data with supplemental characters
+-- (Farrago does not actually support these, so they remain uncombined)
+
+create or replace function uni.generate_unicode_supplemental_string()
+returns varchar(1024) character set "UTF16"
+language java
+no sql
+external name 
+'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeSupplementalString';
+
 values uni.convert_to_escaped(uni.generate_unicode_string());
+
+values uni.convert_to_escaped(uni.generate_unicode_supplemental_string());
 
 -- test a UDX which returns Unicode data
 

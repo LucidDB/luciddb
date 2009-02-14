@@ -808,6 +808,13 @@ public class SqlLiteral
         for (int i = 0; i < n; ++i) {
             char c = s.charAt(i);
             if (c == unicodeEscapeChar) {
+                if (n > i+1) {
+                    if (s.charAt(i+1) == unicodeEscapeChar) {
+                        sb.append(unicodeEscapeChar);
+                        ++i;
+                        continue;
+                    }
+                }
                 if (i + 5 > n) {
                     throw SqlUtil.newContextException(
                         getParserPosition(),

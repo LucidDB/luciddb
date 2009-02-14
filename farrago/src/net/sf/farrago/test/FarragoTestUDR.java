@@ -162,6 +162,12 @@ public abstract class FarragoTestUDR
         return ConversionUtil.TEST_UNICODE_STRING;
     }
 
+    public static String generateUnicodeSupplementalString()
+    {
+        // This corresponds to the 4-byte Unicode value U+20000
+        return "\uD840\uDC00";
+    }
+
     public static void generateUnicodeStringUdx(
         PreparedStatement resultInserter)
         throws Exception
