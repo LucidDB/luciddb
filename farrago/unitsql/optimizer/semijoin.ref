@@ -2233,4 +2233,26 @@
 '          LcsRowScanRel(table=[[LOCALDB, SJ, T2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$T2$A, SYS$CLUSTERED_INDEX$T2$B]], residual columns=[[1]])'
 '            FennelValuesRel(tuples=[[{ '[', null, ']', null }]])'
 > 
+> -- LER-9882 -- the join to PRODUCT should be removed even though it left outer
+> -- joins with U because the left outer join with U can also be removed
+> 
+> !set outputformat csv
+> create table u(a char(10) primary key);
+> explain plan for
+>     select count(*) from sales s, product p left outer join u
+>         on u.a = p.name
+>         where s.product_id = p.id and p.size = 'S';
+'column0'
+'FennelToIteratorConverter'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT()])'
+'    FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1])'
+'      LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$CUSTOMER]])'
+'        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
+'          LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], index=[I_SALES_PID], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
+'            FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'              FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER ID) NOT NULL])'
+'                LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'
+'                  LcsIndexSearchRel(table=[[LOCALDB, SJ, PRODUCT]], index=[I_PRODUCT_SIZE], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'                    FennelValuesRel(tuples=[[{ '[', 'S', ']', 'S' }]])'
+> 
 > !quit

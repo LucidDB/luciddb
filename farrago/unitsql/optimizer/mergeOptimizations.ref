@@ -372,12 +372,12 @@
 'FennelToIteratorConverter'
 '  LcsTableMergeRel(table=[[LOCALDB, MO, EMPS]])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..11=[{inputs}], expr#12=[CAST($t9):BIGINT NOT NULL], expr#13=[100], expr#14=[*($t1, $t13)], expr#15=[true], expr#16=[Reinterpret($t14, $t15)], expr#17=[ROW($t8)], expr#18=[ROW($t16)], expr#19=[$IS_DIFFERENT_FROM($t17, $t18)], rid=[$t12], EMPNO=[$t2], NAME=[$t3], DEPTNO=[$t4], GENDER=[$t5], CITY=[$t6], AGE=[$t7], SALARY=[$t16], $condition=[$t19])'
+'      IterCalcRel(expr#0..10=[{inputs}], expr#11=[CAST($t9):BIGINT NOT NULL], expr#12=[100], expr#13=[*($t1, $t12)], expr#14=[true], expr#15=[Reinterpret($t13, $t14)], expr#16=[ROW($t8)], expr#17=[ROW($t15)], expr#18=[$IS_DIFFERENT_FROM($t16, $t17)], rid=[$t11], EMPNO=[$t2], NAME=[$t3], DEPTNO=[$t4], GENDER=[$t5], CITY=[$t6], AGE=[$t7], SALARY=[$t15], $condition=[$t18])'
 '        FennelToIteratorConverter'
-'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[9]], joinType=[INNER])'
+'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[8]], joinType=[INNER])'
 '            LcsRowScanRel(table=[[LOCALDB, MO, SALARYTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALARYTABLE$EMPNO, SYS$CLUSTERED_INDEX$SALARYTABLE$SALARY]])'
-'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 8]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER NOT NULL EMPNO, INTEGER CAST($8):INTEGER) NOT NULL])'
-'              LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID, 0]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]])'
+'            FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER DEPTNO, CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" GENDER, CHAR(30) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY, INTEGER AGE, DECIMAL(10, 2) SALARY, BIGINT LCS_RID, INTEGER CAST($0):INTEGER) NOT NULL])'
+'              LcsRowScanRel(table=[[LOCALDB, MO, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$EMPS$AGE, SYS$CLUSTERED_INDEX$EMPS$CITY, SYS$CLUSTERED_INDEX$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$EMPS$EMPNO, SYS$CLUSTERED_INDEX$EMPS$GENDER, SYS$CLUSTERED_INDEX$EMPS$NAME, SYS$CLUSTERED_INDEX$EMPS$SALARY]])'
 > 
 > ----------------------------------------------
 > -- Self-joins cannot be removed in these cases

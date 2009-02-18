@@ -254,4 +254,9 @@
 '      FennelCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):INTEGER NOT NULL], DEPTNO=[$t2], NAME=[$t0])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 > 
+> -- test UNION of boolean column with varchar column
+> -- causes validation error, not runtime error
+> select slacker from emps union select name from depts;
+Error: From line 1, column 8 to line 1, column 14: Type mismatch in column 1 of UNION (state=,code=0)
+> 
 > !quit
