@@ -436,7 +436,7 @@ outerForLoop:
                 continue;
             }
 
-            ProjectRel newProject =
+            RelNode newProject =
                 createTopProject(multiJoin, joinTree, fieldNames);
             plans.add(newProject);
         }
@@ -454,6 +454,7 @@ outerForLoop:
     /**
      * Creates the topmost projection that will sit on top of the selected join
      * ordering. The projection needs to match the original join ordering.
+     * Also, places any post-join filters on top of the project.
      *
      * @param multiJoin join factors being optimized
      * @param joinTree selected join ordering
@@ -461,7 +462,7 @@ outerForLoop:
      *
      * @return created projection
      */
-    private ProjectRel createTopProject(
+    private RelNode createTopProject(
         LoptMultiJoin multiJoin,
         LoptJoinTree joinTree,
         String [] fieldNames)
@@ -526,8 +527,16 @@ outerForLoop:
                 joinTree.getJoinTree(),
                 newProjExprs,
                 fieldNames);
-
-        return newProject;
+        
+        // Place the post-join filter (if it exists) on top of the final
+        // projection.
+        RexNode postJoinFilter =
+            multiJoin.getMultiJoinRel().getPostJoinFilter();
+        if (postJoinFilter != null) {
+            return CalcRel.createFilter(newProject, postJoinFilter);
+        } else {
+            return newProject;
+        }
     }
 
     /**

@@ -50,6 +50,7 @@ public final class MultiJoinRel
     private JoinRelType [] joinTypes;
     private BitSet [] projFields;
     private Map<Integer, int[]> joinFieldRefCountsMap;
+    private RexNode postJoinFilter;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -72,6 +73,7 @@ public final class MultiJoinRel
      * fields from the input are projected
      * @param joinFieldRefCountsMap counters of the number of times each field
      * is referenced in join conditions, indexed by the input #
+     * @param postJoinFilter filter to be applied after the joins are executed
      */
     public MultiJoinRel(
         RelOptCluster cluster,
@@ -82,7 +84,8 @@ public final class MultiJoinRel
         RexNode [] outerJoinConditions,
         JoinRelType [] joinTypes,
         BitSet [] projFields,
-        Map<Integer, int[]> joinFieldRefCountsMap)
+        Map<Integer, int[]> joinFieldRefCountsMap,
+        RexNode postJoinFilter)
     {
         super(
             cluster,
@@ -95,7 +98,35 @@ public final class MultiJoinRel
         this.joinTypes = joinTypes;
         this.projFields = projFields;
         this.joinFieldRefCountsMap = joinFieldRefCountsMap;
+        this.postJoinFilter = postJoinFilter;
     }
+    
+    /*
+     * @deprecated
+     */
+    public MultiJoinRel(
+        RelOptCluster cluster,
+        RelNode [] inputs,
+        RexNode joinFilter,
+        RelDataType rowType,
+        boolean isFullOuterJoin,
+        RexNode [] outerJoinConditions,
+        JoinRelType [] joinTypes,
+        BitSet [] projFields,
+        Map<Integer, int[]> joinFieldRefCountsMap)
+    {
+        this(
+            cluster,
+            inputs,
+            joinFilter,
+            rowType,
+            isFullOuterJoin,
+            outerJoinConditions,
+            joinTypes,
+            projFields,
+            joinFieldRefCountsMap,
+            null);
+    }    
 
     //~ Methods ----------------------------------------------------------------
 
@@ -111,7 +142,8 @@ public final class MultiJoinRel
                 RexUtil.clone(outerJoinConditions),
                 joinTypes.clone(),
                 projFields.clone(),
-                cloneJoinFieldRefCountsMap());
+                cloneJoinFieldRefCountsMap(),
+                postJoinFilter);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -131,7 +163,8 @@ public final class MultiJoinRel
     public void explain(RelOptPlanWriter pw)
     {
         int nInputs = inputs.length;
-        String [] terms = new String[nInputs + 5];
+        int nExtraTerms = (postJoinFilter != null) ? 6 : 5;
+        String [] terms = new String[nInputs + nExtraTerms];
         for (int i = 0; i < nInputs; i++) {
             terms[i] = "input#" + i;
         }
@@ -140,6 +173,9 @@ public final class MultiJoinRel
         terms[nInputs + 2] = "joinTypes";
         terms[nInputs + 3] = "outerJoinConditions";
         terms[nInputs + 4] = "projFields";
+        if (postJoinFilter != null) {
+            terms[nInputs + 5] = "postJoinFilter";
+        }
         List<String> joinTypeNames = new ArrayList<String>();
         List<String> outerJoinConds = new ArrayList<String>();
         List<String> projFieldObjects = new ArrayList<String>();
@@ -160,15 +196,16 @@ public final class MultiJoinRel
         // Note that we don't need to include the join field reference counts
         // in the digest because that field does not change for a given set
         // of inputs
-        pw.explain(
-            this,
-            terms,
-            new Object[] {
-                isFullOuterJoin,
-                joinTypeNames,
-                outerJoinConds,
-                projFieldObjects
-            });
+        Object[] objects = new Object[nExtraTerms - 1];
+        objects[0] = isFullOuterJoin;
+        objects[1] = joinTypeNames;
+        objects[2] = outerJoinConds;
+        objects[3] = projFieldObjects;
+        if (postJoinFilter != null) {
+            objects[4] = postJoinFilter;
+        }   
+        
+        pw.explain(this, terms, objects);
     }
 
     public RelDataType deriveRowType()
@@ -250,6 +287,14 @@ public final class MultiJoinRel
     public Map<Integer, int[]> getCopyJoinFieldRefCountsMap()
     {
         return cloneJoinFieldRefCountsMap();
+    }
+    
+    /**
+     * @return post-join filter associated with this MultiJoinRel
+     */
+    public RexNode getPostJoinFilter()
+    {
+        return postJoinFilter;
     }
 }
 

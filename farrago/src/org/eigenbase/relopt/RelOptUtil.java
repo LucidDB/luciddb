@@ -2071,7 +2071,7 @@ public abstract class RelOptUtil
         RelOptUtil.setRexInputBitmap(leftBitmap, 0, nFieldsLeft);
         RelOptUtil.setRexInputBitmap(rightBitmap, nFieldsLeft, nTotalFields);
 
-        ListIterator filterIter = filters.listIterator();
+        ListIterator<RexNode> filterIter = filters.listIterator();
         RelDataTypeField [] rightFields =
             joinRel.getInputs()[1].getRowType().getFields();
         while (filterIter.hasNext()) {
@@ -2418,11 +2418,14 @@ public abstract class RelOptUtil
         MultiJoinRel multiJoin,
         ProjectRel project)
     {
-        // locate all input references in the projection expressions
+        // Locate all input references in the projection expressions as well
+        // the post-join filter.  Since the filter effectively sits in
+        // between the ProjectRel and the MultiJoinRel, the projection needs
+        // to include those filter references.
         BitSet inputRefs = new BitSet(multiJoin.getRowType().getFieldCount());
         new RelOptUtil.InputFinder(inputRefs).apply(
             project.getProjectExps(),
-            null);
+            multiJoin.getPostJoinFilter());
 
         // create new copies of the bitmaps
         RelNode [] multiJoinInputs = multiJoin.getInputs();
@@ -2463,7 +2466,8 @@ public abstract class RelOptUtil
             multiJoin.getOuterJoinConditions(),
             multiJoin.getJoinTypes(),
             newProjFields,
-            multiJoin.getJoinFieldRefCountsMap());
+            multiJoin.getJoinFieldRefCountsMap(),
+            multiJoin.getPostJoinFilter());
     }
 
     //~ Inner Classes ----------------------------------------------------------

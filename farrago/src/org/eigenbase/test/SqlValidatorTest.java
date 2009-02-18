@@ -4856,6 +4856,10 @@ public class SqlValidatorTest
         checkFails(
             "select 1, ^2^ from emp union select deptno, name from dept",
             "Type mismatch in column 2 of UNION");
+        
+        checkFails(
+            "select ^slacker^ from emp union select name from dept",
+            "Type mismatch in column 1 of UNION");
     }
 
     public void testUnionTypeMismatchWithStarFails()
@@ -5397,6 +5401,70 @@ public class SqlValidatorTest
             + "group by empno, deptno "
             + "order by empno * sum(sal + 2)",
             tester.getConformance().isSortByAliasObscures() ? "xxxx" : null);
+        
+        // Distinct on expressions with attempts to order on a column in
+        // the underlying table
+        checkFails(
+            "select distinct cast(empno as bigint) "
+            + "from emp order by ^empno^",
+            "Expression 'EMPNO' is not in the select clause");        
+        checkFails(
+            "select distinct cast(empno as bigint) "
+            + "from emp order by ^emp.empno^",
+            "Expression 'EMP.EMPNO' is not in the select clause");
+        checkFails(
+            "select distinct cast(empno as bigint) as empno "
+            + "from emp order by ^emp.empno^",
+            "Expression 'EMP.EMPNO' is not in the select clause");        
+        checkFails(
+            "select distinct cast(empno as bigint) as empno "
+            + "from emp as e order by ^e.empno^",
+            "Expression 'E.EMPNO' is not in the select clause");
+        
+        // These tests are primarily intended to test cases where sorting by
+        // an alias is allowed.  But for instances that don't support sorting
+        // by alias, the tests also verify that a proper exception is thrown.
+        checkFails(
+            "select distinct cast(empno as bigint) as empno "
+            + "from emp order by ^empno^",
+            tester.getConformance().isSortByAlias() ?
+                null :
+                "Expression 'EMPNO' is not in the select clause");        
+        checkFails(
+            "select distinct cast(empno as bigint) as eno "
+            + "from emp order by ^eno^",
+            tester.getConformance().isSortByAlias() ?
+                null :
+                "Column 'ENO' not found in any table");
+        checkFails(
+            "select distinct cast(empno as bigint) as empno "
+            + "from emp e order by ^empno^",
+            tester.getConformance().isSortByAlias() ?
+                null :
+                "Expression 'EMPNO' is not in the select clause");
+        
+        // Distinct on expressions, sorting using ordinals.
+        if (tester.getConformance().isSortByOrdinal()) {
+            check(
+                "select distinct cast(empno as bigint) from emp order by 1");       
+            check(
+                "select distinct cast(empno as bigint) as empno "
+                + "from emp order by 1");        
+            check(
+                "select distinct cast(empno as bigint) as empno "
+                + "from emp as e order by 1");
+        }
+        
+        // Distinct on expressions with ordering on expressions as well
+        check(
+            "select distinct cast(empno as varchar(10)) from emp "
+            + "order by cast(empno as varchar(10))");
+        checkFails(
+            "select distinct cast(empno as varchar(10)) as eno from emp "
+            + " order by upper(^eno^)",
+            tester.getConformance().isSortByAlias() ?
+                null :
+                "Column 'ENO' not found in any table");
     }
 
     public void testGroup()

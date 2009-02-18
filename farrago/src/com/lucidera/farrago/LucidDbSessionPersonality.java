@@ -379,10 +379,11 @@ public class LucidDbSessionPersonality
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
         // all of its children have been converted to MultiJoinRels.  At the
-        // same time, pull up projects that are on top of MultiJoinRels so the
-        // projects are above their parent joins.  Since we're pulling up
-        // projects, we need to also merge any projects we generate as a
-        // result of the pullup.
+        // same time, push any filters on top of the converted MultiJoinRel's
+        // into the MultiJoinRel and pull up projects that are on top of
+        // them so the projects are above their parent joins.  Since we're
+        // pulling up projects, we need to also merge any projects we generate
+        // as a result of the pullup.
         //
         // These three rules are applied within a subprogram so they can be
         // applied one after the other in lockstep fashion.
@@ -390,6 +391,7 @@ public class LucidDbSessionPersonality
         subprogramBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
         subprogramBuilder.addMatchLimit(1);
         subprogramBuilder.addRuleInstance(new ConvertMultiJoinRule());
+        subprogramBuilder.addRuleInstance(new PushFilterIntoMultiJoinRule());
         subprogramBuilder.addRuleInstance(
             PullUpProjectsOnTopOfMultiJoinRule.instanceTwoProjectChildren);
         subprogramBuilder.addRuleInstance(
