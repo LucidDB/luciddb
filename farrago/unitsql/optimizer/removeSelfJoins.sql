@@ -77,6 +77,7 @@ call sys_boot.mgmt.stat_set_column_histogram(
 -- d) semijoin filtering on the self-join tables where the joins to the
 --    semijoin dimension table can also be removed
 -- e) different orderings of tables in the FROM clause
+-- f) queries including outer joins
 --------------------------------------------------------------------------------
 
 explain plan for
@@ -140,6 +141,31 @@ from product p, sales s1, salesperson sp, sales s2
         s2.salesperson = sp.id and sp.age >= 40 and s2.quantity > 50 and
         s1.quantity > 60;
 
+-- make sure the filter on the null-generating table does not "interfere"
+-- with removing the self-join
+explain plan for
+select s1.quantity, s2.name from sales s1,
+    (select * from sales s left outer join product p
+        on s.product_id = p.id 
+        where p.size = 'M') as s2
+    where s1.sid = s2.sid;
+explain plan for
+select s2.quantity, s1.name from
+    (select * from sales s left outer join product p
+        on s.product_id = p.id 
+        where p.size = 'M') as s1,
+    sales s2
+    where s1.sid = s2.sid;
+explain plan for
+select s1.sid, s1.color, s2.company from
+    (select * from sales s left outer join product p
+        on s.product_id = p.id 
+        where p.size = 'M') as s1,
+    (select * from sales s left outer join customer c
+        on s.customer = c.id
+        where c.city = 'San Mateo') as s2
+    where s1.sid = s2.sid;
+
 !set outputformat table
 
 select s1.quantity, s2.* from sales s1, sales s2 where s1.sid = s2.sid and
@@ -199,6 +225,28 @@ from product p, sales s1, salesperson sp, sales s2
         s2.salesperson = sp.id and sp.age >= 40 and s2.quantity > 50 and
         s1.quantity > 60
     order by s1.quantity;
+select s1.quantity, s2.name from sales s1,
+    (select * from sales s left outer join product p
+        on s.product_id = p.id 
+        where p.size = 'M') as s2
+    where s1.sid = s2.sid
+    order by quantity;
+select s2.quantity, s1.name from
+    (select * from sales s left outer join product p
+        on s.product_id = p.id 
+        where p.size = 'M') as s1,
+    sales s2
+    where s1.sid = s2.sid
+    order by quantity;
+select s1.sid, s1.color, s2.company from
+    (select * from sales s left outer join product p
+        on s.product_id = p.id 
+        where p.size = 'M') as s1,
+    (select * from sales s left outer join customer c
+        on s.customer = c.id
+        where c.city = 'San Mateo') as s2
+    where s1.sid = s2.sid
+    order by sid;
 
 ---------------------------------------------
 -- Cases where the self-join can't be removed

@@ -24,6 +24,7 @@ package org.eigenbase.sql.validate;
 import java.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 
 
 /**
@@ -91,7 +92,23 @@ public class AggregatingSelectScope
             // Cannot compute this in the constructor: select list has not been
             // expanded yet.
             assert select.isDistinct();
-            return ((SelectScope) parent).getExpandedSelectList();
+            
+            // Remove the AS operator so the expressions are consistent with
+            // OrderExpressionExpander.
+            List<SqlNode> groupExprs = new ArrayList<SqlNode>();
+            for (SqlNode selectItem :
+                ((SelectScope) parent).getExpandedSelectList())
+            {
+                if (SqlUtil.isCallTo(
+                    selectItem,
+                    SqlStdOperatorTable.asOperator))
+                {
+                    groupExprs.add(((SqlCall) selectItem).getOperands()[0]);
+                } else {
+                    groupExprs.add(selectItem);
+                }
+            }
+            return groupExprs;
         } else if (select.getGroup() != null) {
             return groupExprList;
         } else {

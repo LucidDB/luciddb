@@ -134,6 +134,9 @@ public class ConvertMultiJoinRule
             origJoinRel.getCondition(),
             joinFieldRefCountsList,
             newJoinFieldRefCountsMap);
+        
+        RexNode newPostJoinFilter =
+            combinePostJoinFilters(origJoinRel, left, right);
 
         RelNode multiJoin =
             new MultiJoinRel(
@@ -145,7 +148,8 @@ public class ConvertMultiJoinRule
                 newOuterJoinConds,
                 joinTypes,
                 projFieldsList.toArray(new BitSet[projFieldsList.size()]),
-                newJoinFieldRefCountsMap);
+                newJoinFieldRefCountsMap,
+                newPostJoinFilter);
 
         call.transformTo(multiJoin);
     }
@@ -402,22 +406,9 @@ public class ConvertMultiJoinRule
         RexNode rightFilter = null;
         if (canCombine(right, joinType.generatesNullsOnRight())) {
             MultiJoinRel multiJoin = (MultiJoinRel) right;
-            rightFilter = multiJoin.getJoinFilter();
-            if (rightFilter != null) {
-                int nFieldsOnLeft = left.getRowType().getFields().length;
-                int nFieldsOnRight = multiJoin.getRowType().getFields().length;
-                int [] adjustments = new int[nFieldsOnRight];
-                for (int i = 0; i < nFieldsOnRight; i++) {
-                    adjustments[i] = nFieldsOnLeft;
-                }
-                rightFilter =
-                    rightFilter.accept(
-                        new RelOptUtil.RexInputConverter(
-                            rexBuilder,
-                            multiJoin.getRowType().getFields(),
-                            joinRel.getRowType().getFields(),
-                            adjustments));
-            }
+            rightFilter =
+                shiftRightFilter(
+                    joinRel, left, multiJoin, multiJoin.getJoinFilter());
         }
 
         // AND the join condition if this isn't a left or right outer join;
@@ -455,6 +446,44 @@ public class ConvertMultiJoinRule
         return ((input instanceof MultiJoinRel)
             && !((MultiJoinRel) input).isFullOuterJoin()
             && !nullGenerating);
+    }
+    
+    /**
+     * Shifts a filter originating from the right child of the JoinRel to
+     * the right, to reflect the filter now being applied on the resulting
+     * MultiJoinRel.
+     * 
+     * @param joinRel the original JoinRel
+     * @param left the left child of the JoinRel
+     * @param right the right child of the JoinRel
+     * @param rightFilter the filter originating from the right child
+     * 
+     * @return the adjusted right filter
+     */
+    private RexNode shiftRightFilter(
+        JoinRel joinRel,
+        RelNode left,
+        MultiJoinRel right,
+        RexNode rightFilter)
+    {
+        if (rightFilter == null) {
+            return null;
+        }
+        
+        int nFieldsOnLeft = left.getRowType().getFields().length;
+        int nFieldsOnRight = right.getRowType().getFields().length;
+        int [] adjustments = new int[nFieldsOnRight];
+        for (int i = 0; i < nFieldsOnRight; i++) {
+            adjustments[i] = nFieldsOnLeft;
+        }
+        rightFilter =
+            rightFilter.accept(
+                new RelOptUtil.RexInputConverter(
+                    joinRel.getCluster().getRexBuilder(),
+                    right.getRowType().getFields(),
+                    joinRel.getRowType().getFields(),
+                    adjustments));
+        return rightFilter;
     }
 
     /**
@@ -507,6 +536,47 @@ public class ConvertMultiJoinRule
             }
             int [] refCounts = newJoinFieldRefCountsMap.get(currInput);
             refCounts[i - startField] += joinCondRefCounts[i];
+        }
+    }
+    
+    /**
+     * Combines the post-join filters from the left and right inputs (if they
+     * are MultiJoinRels) into a single AND'd filter.
+     *
+     * @param joinRel the original JoinRel
+     * @param left left child of the JoinRel
+     * @param right right child of the JoinRel
+     *
+     * @return combined post-join filters AND'd together
+     */
+    private RexNode combinePostJoinFilters(
+        JoinRel joinRel,
+        RelNode left,
+        RelNode right)
+    {
+        RexNode rightPostJoinFilter = null;
+        if (right instanceof MultiJoinRel) {
+            rightPostJoinFilter =
+                shiftRightFilter(
+                    joinRel,
+                    left,
+                    (MultiJoinRel) right,
+                    ((MultiJoinRel) right).getPostJoinFilter());
+        }
+        
+        RexNode leftPostJoinFilter = null;
+        if (left instanceof MultiJoinRel) {
+            leftPostJoinFilter = ((MultiJoinRel) left).getPostJoinFilter();
+        }
+        
+        if (leftPostJoinFilter == null && rightPostJoinFilter == null) {
+            return null;
+        } else {
+            return
+                RelOptUtil.andJoinFilters(
+                    joinRel.getCluster().getRexBuilder(),
+                    leftPostJoinFilter,
+                    rightPostJoinFilter);
         }
     }
 
