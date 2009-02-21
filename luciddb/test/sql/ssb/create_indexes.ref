@@ -1,0 +1,53 @@
+0: jdbc:luciddb:> set schema 'ssb';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ---------------------------
+0: jdbc:luciddb:> -- indices for foreign keys
+0: jdbc:luciddb:> ---------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- LINEORDER: LO_CUSTKEY, LO_PARTKEY, LO_SUPPKEY, LO_ORDERDATE, LO_COMMITDATE
+0: jdbc:luciddb:> CREATE INDEX LO_CUSTKEY_IDX ON LINEORDER(LO_CUSTKEY);
+0: jdbc:luciddb:> CREATE INDEX LO_PARTKEY_IDX ON LINEORDER(LO_PARTKEY);
+0: jdbc:luciddb:> CREATE INDEX LO_SUPPKEY_IDX ON LINEORDER(LO_SUPPKEY);
+0: jdbc:luciddb:> CREATE INDEX LO_ORDERDATE_IDX ON LINEORDER(LO_ORDERDATE);
+0: jdbc:luciddb:> CREATE INDEX LO_COMMITDATE_IDX ON LINEORDER(LO_COMMITDATE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ----------------------------
+0: jdbc:luciddb:> -- indices for WHERE clauses
+0: jdbc:luciddb:> ----------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- CUSTOMER: C_REGION, C_NATION, C_CITY
+0: jdbc:luciddb:> CREATE INDEX C_REGION_IDX ON CUSTOMER(C_REGION);
+0: jdbc:luciddb:> CREATE INDEX C_NAITON_IDX ON CUSTOMER(C_NATION);
+0: jdbc:luciddb:> CREATE INDEX C_CITY_IDX ON CUSTOMER(C_CITY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DATES: D_YEAR, D_YEARMONTHNUM, D_WEEKNUMINYEAR, D_YEARMONTH
+0: jdbc:luciddb:> CREATE INDEX D_YEAR_IDX ON DATES(D_YEAR);
+0: jdbc:luciddb:> CREATE INDEX D_YEARMONTHNUM_IDX ON DATES(D_YEARMONTHNUM);
+0: jdbc:luciddb:> CREATE INDEX D_WEEKNUMINYEAR_IDX ON DATES(D_WEEKNUMINYEAR);
+0: jdbc:luciddb:> CREATE INDEX D_YEARMONTH_IDX ON DATES(D_YEARMONTH);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- PART: P_CATEGORY, P_BRAND, P_MFGR
+0: jdbc:luciddb:> CREATE INDEX P_CATEGORY_IDX ON PART(P_BRAND);
+0: jdbc:luciddb:> CREATE INDEX P_BRAND_IDX ON PART(P_BRAND);
+0: jdbc:luciddb:> CREATE INDEX P_MFGR_IDX ON PART(P_BRAND);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- SUPPLIER: S_REGION, S_NATION, S_CITY
+0: jdbc:luciddb:> CREATE INDEX S_REGION_IDX ON SUPPLIER(S_REGION);
+0: jdbc:luciddb:> CREATE INDEX S_NAITON_IDX ON SUPPLIER(S_NATION);
+0: jdbc:luciddb:> CREATE INDEX S_CITY_IDX ON SUPPLIER(S_CITY);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- LINEORDER: LO_QUANTITY, LO_DISCOUNT, 
+0: jdbc:luciddb:> CREATE INDEX LO_QUANTITY_IDX ON LINEORDER(LO_QUANTITY);
+0: jdbc:luciddb:> CREATE INDEX LO_DISCOUNT_IDX ON LINEORDER(LO_DISCOUNT);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -----------------
+0: jdbc:luciddb:> -- analyze tables
+0: jdbc:luciddb:> -----------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ANALYZE TABLE CUSTOMER ESTIMATE STATISTICS FOR ALL COLUMNS;
+0: jdbc:luciddb:> ANALYZE TABLE DATES ESTIMATE STATISTICS FOR ALL COLUMNS;
+0: jdbc:luciddb:> ANALYZE TABLE PART ESTIMATE STATISTICS FOR ALL COLUMNS;
+0: jdbc:luciddb:> ANALYZE TABLE SUPPLIER ESTIMATE STATISTICS FOR ALL COLUMNS;
+0: jdbc:luciddb:> ANALYZE TABLE LINEORDER ESTIMATE STATISTICS FOR ALL COLUMNS;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

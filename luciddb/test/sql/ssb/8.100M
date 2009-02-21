@@ -1,0 +1,81 @@
+0: jdbc:luciddb:> --Q3.2
+0: jdbc:luciddb:> set schema 'ssb';
+0: jdbc:luciddb:> select 
+. . . . . . . . >     c_city, s_city, d_year, sum(lo_revenue) as revenue
+. . . . . . . . > from 
+. . . . . . . . >     customer, lineorder, supplier, dates
+. . . . . . . . > where 
+. . . . . . . . >     lo_custkey = c_custkey
+. . . . . . . . >     and lo_suppkey = s_suppkey
+. . . . . . . . >     and lo_orderdate = d_datekey
+. . . . . . . . >     and c_nation = 'UNITED STATES'
+. . . . . . . . >     and s_nation = 'UNITED STATES'
+. . . . . . . . >     and d_year >= 1992 and d_year <= 1997
+. . . . . . . . > group by 
+. . . . . . . . >     c_city, s_city, d_year
+. . . . . . . . > order by 
+. . . . . . . . >     d_year asc, revenue desc;
++-------------+-------------+---------+-----------+
+|   C_CITY    |   S_CITY    | D_YEAR  |  REVENUE  |
++-------------+-------------+---------+-----------+
+| UNITED ST8  | UNITED ST6  | 1992    | 24634841  |
+| UNITED ST0  | UNITED ST0  | 1992    | 14601730  |
+| UNITED ST7  | UNITED ST3  | 1992    | 11237410  |
+| UNITED ST1  | UNITED ST1  | 1992    | 10569009  |
+| UNITED ST3  | UNITED ST9  | 1992    | 10211709  |
+| UNITED ST8  | UNITED ST1  | 1992    | 9080961   |
+| UNITED ST1  | UNITED ST9  | 1992    | 8462884   |
+| UNITED ST4  | UNITED ST5  | 1992    | 8238387   |
+| UNITED ST8  | UNITED ST5  | 1992    | 8214367   |
+| UNITED ST4  | UNITED ST9  | 1992    | 7409390   |
+| UNITED ST8  | UNITED ST8  | 1992    | 7131269   |
+| UNITED ST0  | UNITED ST8  | 1992    | 6838276   |
+| UNITED ST1  | UNITED ST3  | 1992    | 6474276   |
+| UNITED ST3  | UNITED ST3  | 1992    | 6377834   |
+| UNITED ST2  | UNITED ST0  | 1992    | 6335128   |
+| UNITED ST2  | UNITED ST3  | 1992    | 6300021   |
+| UNITED ST5  | UNITED ST6  | 1992    | 6056831   |
+| UNITED ST4  | UNITED ST8  | 1992    | 5623454   |
+| UNITED ST3  | UNITED ST1  | 1992    | 5384313   |
+| UNITED ST0  | UNITED ST1  | 1992    | 5282630   |
+| UNITED ST9  | UNITED ST3  | 1992    | 5279638   |
+| UNITED ST5  | UNITED ST0  | 1992    | 4971349   |
+| UNITED ST9  | UNITED ST2  | 1992    | 4461866   |
+| UNITED ST1  | UNITED ST8  | 1992    | 4440294   |
+| UNITED ST3  | UNITED ST7  | 1992    | 4188502   |
+| UNITED ST8  | UNITED ST2  | 1992    | 4175775   |
+| UNITED ST4  | UNITED ST6  | 1992    | 4096956   |
+| UNITED ST3  | UNITED ST6  | 1992    | 3987858   |
+| UNITED ST7  | UNITED ST9  | 1992    | 3629948   |
+| UNITED ST6  | UNITED ST7  | 1992    | 3499835   |
+| UNITED ST5  | UNITED ST4  | 1992    | 3430321   |
+| UNITED ST2  | UNITED ST7  | 1992    | 3304616   |
+| UNITED ST2  | UNITED ST9  | 1992    | 3103435   |
+| UNITED ST4  | UNITED ST2  | 1992    | 3018139   |
+| UNITED ST6  | UNITED ST4  | 1992    | 2968950   |
+| UNITED ST0  | UNITED ST3  | 1992    | 2697786   |
+| UNITED ST9  | UNITED ST8  | 1992    | 2183045   |
+| UNITED ST1  | UNITED ST0  | 1992    | 2031328   |
+| UNITED ST9  | UNITED ST9  | 1992    | 1857262   |
+| UNITED ST0  | UNITED ST6  | 1992    | 1574856   |
+| UNITED ST5  | UNITED ST7  | 1992    | 1193207   |
+| UNITED ST9  | UNITED ST1  | 1992    | 923674    |
+| UNITED ST1  | UNITED ST5  | 1992    | 654480    |
+| UNITED ST4  | UNITED ST3  | 1992    | 651148    |
+| UNITED ST3  | UNITED ST0  | 1992    | 521187    |
+| UNITED ST1  | UNITED ST6  | 1992    | 143221    |
+| UNITED ST8  | UNITED ST4  | 1992    | 108719    |
+| UNITED ST6  | UNITED ST5  | 1992    | 0         |
+| UNITED ST6  | UNITED ST1  | 1992    | 0         |
+| UNITED ST5  | UNITED ST5  | 1992    | 0         |
+| UNITED ST2  | UNITED ST1  | 1992    | 0         |
+| UNITED ST9  | UNITED ST5  | 1992    | 0         |
+| UNITED ST5  | UNITED ST8  | 1992    | 0         |
+| UNITED ST6  | UNITED ST0  | 1992    | 0         |
+| UNITED ST6  | UNITED ST6  | 1992    | 0         |
+| UNITED ST9  | UNITED ST6  | 1992    | 0         |
+| UNITED ST9  | UNITED ST7  | 1992    | 0         |
+| UNITED ST1  | UNITED ST7  | 1992    | 0         |
++-------------+-------------+---------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

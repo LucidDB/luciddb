@@ -1,0 +1,7 @@
+0: jdbc:luciddb:> insert into ssb.customer select * from ssb."customer";
+0: jdbc:luciddb:> insert into ssb.dates select * from ssb."date";
+0: jdbc:luciddb:> insert into ssb.part select * from ssb."part";
+0: jdbc:luciddb:> insert into ssb.supplier select * from ssb."supplier";
+0: jdbc:luciddb:> insert into ssb.lineorder select * from ssb."lineorder";
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
