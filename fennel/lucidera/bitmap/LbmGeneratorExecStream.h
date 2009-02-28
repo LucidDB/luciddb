@@ -145,11 +145,6 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
     ClusterPageLock scratchLock;
 
     /**
-     * Number of bitmap buffers per scratch page
-     */
-    uint nBufsPerPage;
-
-    /**
      * Input tuple data
      */
     TupleData inputTuple;
@@ -263,6 +258,13 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
     bool doneReading;
 
     /**
+     * If true, even though the current batch is compressed and the index
+     * has a single key, generate singleton bitmaps for the batch due to lack
+     * of buffer space
+     */
+    bool revertToSingletons;
+
+    /**
      * Generates bitmaps for a single column index
      *
      * @param quantum quantum for stream
@@ -320,8 +322,12 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
      * buffers to bitmap entries.
      *
      * @param nEntries desired size of the table
+     *
+     * @return true if the table was successfully initialized, indicating
+     * that there was enough space to accomodate the number of keys in the
+     * current batch
      */
-    void initBitmapTable(uint nEntries);
+    bool initBitmapTable(uint nEntries);
 
     /**
      * Sets rid in a bitmap tupledata.  Also initializes bitmap fields to
@@ -354,11 +360,13 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
     /**
      * Flushes out an existing buffer currently in use by another LbmEntry.
      * 
+     * @param addRid the current rid being added that requires a buffer flush
+     *
      * @return pointer to buffer if flush of entry was successful; otherwise
      * NULL if an overflow occurred when writing the entry to the output
      * stream
      */
-    PBuffer flushBuffer();
+    PBuffer flushBuffer(LcsRid addRid);
 
     /**
      * Flushes out entire table of bitmap entries

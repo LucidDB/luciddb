@@ -638,6 +638,16 @@ public:
     bool containsRid(LcsRid rid);
 
     /**
+     * Determines if a specified rid is within the range of the current
+     * bitmap entry being constructed.
+     * 
+     * @param rid the rid
+     * 
+     * @return true if within current rid range
+     */
+    bool inRange(LcsRid rid);
+
+    /**
      ** STATIC METHODS
      **/
 
@@ -645,7 +655,8 @@ public:
      * Print the inputTuple as a bitmap index entry.
      *
      * @param [in] inputTuple the index entry tuple to print.
-     * @param [in] printRID true if want to print out the RIDs rather than bitmaps.
+     * @param [in] printRID true if want to print out the RIDs rather than
+     * bitmaps
      */
     static string toString(TupleData const &inputTuple, bool printRID=false);
 
