@@ -2140,6 +2140,12 @@ int LbmEntry::segmentContainsRid(
     }
 }
 
+bool LbmEntry::inRange(LcsRid rid)
+{
+    LcsRid endRID = startRID + getRowCount() - 1;
+    return (rid >= startRID && rid <= endRID);
+}
+
 void LbmEntry::validateEntrySize()
 {
     if (currentEntrySize <= scratchBufferSize) {

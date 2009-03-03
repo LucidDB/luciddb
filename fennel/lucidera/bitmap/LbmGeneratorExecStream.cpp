@@ -85,6 +85,7 @@ void LbmGeneratorExecStream::open(bool restart)
     rowCount = 0;
     batchRead = false;
     doneReading = false;
+    revertToSingletons = false;
     ridRuns.clear();
     if (!restart) {
         pDynamicParamManager->createParam(
@@ -207,7 +208,8 @@ ExecStreamResult LbmGeneratorExecStream::execute(
 
         // initialize bitmap table to a single entry, assuming we're
         // starting with singleton bitmaps
-        initBitmapTable(1);
+        bool rc = initBitmapTable(1);
+        assert(rc);
     }
 
     // take care of any pending flushes first
@@ -260,7 +262,9 @@ ExecStreamResult LbmGeneratorExecStream::generateSingleKeyBitmaps(
     // read from the current batch until either the end of the batch
     // is reached, or there is an overflow in a write to the output stream
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
-        if (pClusters[0]->clusterCols[0].batchIsCompressed()) {
+        if (!revertToSingletons &&
+            pClusters[0]->clusterCols[0].batchIsCompressed())
+        {
             if (!generateBitmaps()) {
                 return EXECRC_BUF_OVERFLOW;
             }
@@ -272,6 +276,7 @@ ExecStreamResult LbmGeneratorExecStream::generateSingleKeyBitmaps(
 
         // move to the next batch
         batchRead = false;
+        revertToSingletons = false;
         SharedLcsClusterReader &pScan = pClusters[0];
         if (!pScan->nextRange()) {
             return EXECRC_EOS;
@@ -372,7 +377,13 @@ bool LbmGeneratorExecStream::generateBitmaps()
     if (!batchRead) {
         uint nRead;
 
-        initBitmapTable(nDistinctVals);
+        // if there's insufficient buffer space, revert to generating
+        // singletons for this batch
+        if (!initBitmapTable(nDistinctVals)) {
+            revertToSingletons = true;
+            return generateSingletons();
+        }
+
         keyCodes.resize(nRows);
         colReader.readCompressedBatch(nRows, &keyCodes[0], &nRead);
         assert(nRows == nRead);
@@ -468,29 +479,37 @@ bool LbmGeneratorExecStream::advanceReader(SharedLcsClusterReader &pScan)
     return true;
 }
 
-void LbmGeneratorExecStream::initBitmapTable(uint nEntries)
+bool LbmGeneratorExecStream::initBitmapTable(uint nEntries)
 {
-    if (nEntries > nBitmapEntries) {
+    // compute the size of the bitmap buffers, based on the number
+    // of scratch pages available and the number of distinct values
+    // in the batch
+    uint nBufsPerPage = (uint) ceil((double) nEntries / maxNumScratchPages);
+    uint currSize = scratchPageSize / nBufsPerPage;
 
-        // resize bitmap table to accomodate new batch,
-        // which has more distinct values
+    if (currSize < minBitmapSize) {
+        currSize = minBitmapSize;
+        nBufsPerPage = scratchPageSize / currSize;
+    } else if (currSize > maxBitmapSize) {
+        currSize = maxBitmapSize;
+        nBufsPerPage = scratchPageSize / currSize;
+    }
+
+    // If there are less than 8 buffers, then there cannot be more keys than
+    // buffers.  That's because we need to avoid flushing those buffers that
+    // potentially overlap in the last byte with the upcoming rids being
+    // processed.
+    uint nBuffers = nBufsPerPage * maxNumScratchPages;
+    if (nBuffers < 8 && nEntries > nBuffers) {
+        return false;
+    }
+
+    if (nEntries > nBitmapEntries) {
+        // resize bitmap table to accomodate new batch, which has more
+        // distinct values
         bitmapTable.resize(nEntries);
         for (uint i = nBitmapEntries; i < nEntries; i++) {
             bitmapTable[i].pBitmap = SharedLbmEntry(new LbmEntry());
-        }
-
-        // compute the size of the bitmap buffers, based on the number
-        // of scratch pages available and the number of distinct values
-        // in the batch
-        nBufsPerPage = (uint) ceil((double) nEntries / maxNumScratchPages);
-        entrySize = scratchPageSize / nBufsPerPage;
-
-        if (entrySize < minBitmapSize) {
-            entrySize = minBitmapSize;
-            nBufsPerPage = scratchPageSize / entrySize;
-        } else if (entrySize > maxBitmapSize) {
-            entrySize = maxBitmapSize;
-            nBufsPerPage = scratchPageSize / entrySize;
         }
     }
 
@@ -519,7 +538,7 @@ void LbmGeneratorExecStream::initBitmapTable(uint nEntries)
                     break;
                 }
                 bitmapTable[idx].bufferPtr = scratchPages[i] + offset;
-                offset += entrySize;
+                offset += currSize;
             }
             if (idx == nEntries) {
                 break;
@@ -536,6 +555,9 @@ void LbmGeneratorExecStream::initBitmapTable(uint nEntries)
     }
     flushIdx = 0;
     nBitmapEntries = nEntries;
+    entrySize = currSize;
+
+    return true;
 }
 
 void LbmGeneratorExecStream::initRidAndBitmap(
@@ -570,7 +592,7 @@ bool LbmGeneratorExecStream::addRidToBitmap(
         if (!bitmapTable[keycode].bufferPtr) {
             // no assigned buffer yet; get a buffer by flushing
             // out an existing entry
-            PBuffer bufPtr = flushBuffer();
+            PBuffer bufPtr = flushBuffer(rid);
             if (!bufPtr) {
                 return false;
             }
@@ -586,7 +608,7 @@ bool LbmGeneratorExecStream::addRidToBitmap(
     return true;
 }
 
-PBuffer LbmGeneratorExecStream::flushBuffer()
+PBuffer LbmGeneratorExecStream::flushBuffer(LcsRid addRid)
 {
     // need to flush a buffer out and return that buffer for use; for now,
     // cycle through the entries in round robin order in determining which
@@ -595,10 +617,25 @@ PBuffer LbmGeneratorExecStream::flushBuffer()
     // NOTE zfong 6-Jan-2006: We may want to change this to a more 
     // sophisticated scheme where we flush on a LRU basis
     PBuffer retPtr;
+    uint nAttempts = 0;
     do {
+        ++nAttempts;
+        if (nAttempts > nBitmapEntries) {
+            // we should always have enough buffers so we can flush at least
+            // one existing entry
+            permAssert(false);
+        }
         if (bitmapTable[flushIdx].bufferPtr) {
             retPtr = bitmapTable[flushIdx].bufferPtr;
             if (bitmapTable[flushIdx].inuse) {
+                // skip over entries whose rid range overlaps with the rid
+                // that will be added next, since we potentially may need
+                // to add that rid (or one that follows and is within the
+                // same rid range) into that entry
+                if (bitmapTable[flushIdx].pBitmap->inRange(addRid)) {
+                    flushIdx = ++flushIdx % nBitmapEntries;
+                    continue;
+                }
                 if (!flushEntry(flushIdx)) {
                     return NULL;
                 }
