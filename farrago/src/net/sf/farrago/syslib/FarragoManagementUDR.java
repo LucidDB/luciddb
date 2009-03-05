@@ -38,6 +38,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
+import org.eigenbase.jmi.*;
 
 import net.sf.farrago.resource.*;
 import javax.jmi.reflect.*;
@@ -815,20 +816,38 @@ public abstract class FarragoManagementUDR
             }
             c = repos.getRelationalPackage().getCwmColumn().refAllOfType();
             for (Object obj : c) {
-                CwmColumn column = (CwmColumn) obj;
-                column.setCharacterSetName(characterSetName);
-                column.setCollationName(collationName);
+                FemAbstractTypedElement column =
+                    (FemAbstractTypedElement) obj;
+                setElementToUnicode(
+                    FarragoCatalogUtil.toFemSqltypedElement(column),
+                    characterSetName,
+                    collationName);
             }
             c = repos.getSql2003Package().getFemRoutineParameter()
                 .refAllOfType();
             for (Object obj : c) {
                 FemRoutineParameter param = (FemRoutineParameter) obj;
-                param.setCharacterSetName(characterSetName);
-                param.setCollationName(collationName);
+                setElementToUnicode(
+                    FarragoCatalogUtil.toFemSqltypedElement(param),
+                    characterSetName,
+                    collationName);
             }
             reposTxnContext.commit();
         } finally {
             reposTxnContext.rollback();
+        }
+    }
+
+    private static void setElementToUnicode(
+        FemSqltypedElement element,
+        String characterSetName,
+        String collationName)
+    {
+        // TODO jvs 4-Mar-2009:  deal with the nested attributes for
+        // UDT's and collection types
+        if (!JmiObjUtil.isBlank(element.getCharacterSetName())) {
+            element.setCharacterSetName(characterSetName);
+            element.setCollationName(collationName);
         }
     }
 }
