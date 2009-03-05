@@ -270,15 +270,15 @@
 | LOCALDB    | SALES        | EMPS        | EMPNO        | 2        | SYS$PRIMARY_KEY$EMPS  |
 +------------+--------------+-------------+--------------+----------+-----------------------+
 > !indexes EMPS
-+------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |                   INDEX_NAME                    | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | SALES        | EMPS        | false       |                  |                                                 | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1     | 1                 | DEPTNO       | A             | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1     | 2                 | EMPNO        | A             | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 3     | 1                 | EMPID        | A             | 0            | 0      |                   |
-| LOCALDB    | SALES        | EMPS        | true        | LOCALDB          | EMPS_UX                                         | 3     | 1                 | NAME         | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |                   INDEX_NAME                    | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_OR_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| LOCALDB    | SALES        | EMPS        | false       |                  |                                                 | 0     | 0                 |              |              | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1     | 1                 | DEPTNO       | A            | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$EMPS       | 1     | 2                 | EMPNO        | A            | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$SYS$UNIQUE_KEY$EMPS$EMPID  | 3     | 1                 | EMPID        | A            | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | true        | LOCALDB          | EMPS_UX                                         | 3     | 1                 | NAME         | A            | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
 > !procedures
 +----------------+------------------+---------------------+------------+------------+------------+----------+-----------------+
 | PROCEDURE_CAT  | PROCEDURE_SCHEM  |   PROCEDURE_NAME    | RESERVED1  | RESERVED2  | RESERVED3  | REMARKS  | PROCEDURE_TYPE  |
