@@ -603,7 +603,7 @@ public abstract class FarragoReposUtil
         private char[] inputBuffer;
         
         public InvalidXmlCharFilterInputStream(InputStream in) 
-        throws IOException
+            throws IOException
         {
             if (!in.markSupported()) {
                 in = new BufferedInputStream(in);
@@ -708,7 +708,7 @@ public abstract class FarragoReposUtil
          */
         private static Charset guessCharset(
             InputStream in, ByteOutputStream bufferStream)
-        throws IOException
+            throws IOException
         {
             in.mark(2 * MAX_DECL_SIZE);
             
@@ -759,7 +759,7 @@ public abstract class FarragoReposUtil
          *                                   malformed
          */
         private static Charset getCharsetFromXmlDecl(Reader reader)
-        throws IOException
+            throws IOException
         {
             final int max = 1024;
 

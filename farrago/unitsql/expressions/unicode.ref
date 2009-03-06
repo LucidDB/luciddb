@@ -909,6 +909,34 @@ Error: Cannot assign 'Hi' to a NUMERIC value: NumberFormatException (state=,code
 > 
 > insert into uni.U&"!03B1!03BD!03B8!03C1!03C9" UESCAPE '!' values (2);
 > 
+> -- test flatfiles with single-byte data exposed as Unicode
+> create server flatfile_server
+> foreign data wrapper sys_file_wrapper
+> options (
+>     directory 'unitsql/med/flatfiles/',
+>     file_extension 'csv',
+>     with_header 'yes', 
+>     lenient 'no');
+> 
+> create foreign table uni.flatfile_explicit_table(
+>     id int not null,
+>     name varchar(50) character set "UTF16" not null,
+>     extra_field char(1) character set "UTF16" not null)
+> server flatfile_server
+> options (filename 'example');
+> 
+> select * from uni.flatfile_explicit_table order by extra_field;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
+| 123  | "S,"                                     | F            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
+> 
 > -- verify that UNION type aggregation does not accidentally revert to ISO-8859-1
 > !set outputformat csv
 > explain plan for
@@ -928,5 +956,12 @@ Error: Cannot assign 'Hi' to a NUMERIC value: NumberFormatException (state=,code
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[_UTF-16LE'oops    '], EXPR$0=[$t1])'
 '          IterOneRowRel'
+> 
+> explain plan for
+> select * from uni.flatfile_explicit_table;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER NOT NULL], expr#4=[CAST($t1):VARCHAR(50) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#5=[CAST($t2):CHAR(1) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], ID=[$t3], NAME=[$t4], EXTRA_FIELD=[$t5])'
+'  FennelToIteratorConverter'
+'    FlatFileFennelRel(table=[[LOCALDB, UNI, FLATFILE_EXPLICIT_TABLE]])'
 > 
 > !quit

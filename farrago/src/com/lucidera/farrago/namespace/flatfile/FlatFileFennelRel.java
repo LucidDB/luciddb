@@ -172,6 +172,9 @@ public class FlatFileFennelRel
                 SqlTypeName.VARCHAR,
                 MAX_ROW_ERROR_TEXT_WIDTH);
         errorText = typeFactory.createTypeWithNullability(errorText, true);
+        errorText = FlatFileBCPFile.forceSingleByte(
+            typeFactory,
+            errorText);
         RelDataType errorType =
             typeFactory.createStructType(
                 new RelDataType[] { errorText },

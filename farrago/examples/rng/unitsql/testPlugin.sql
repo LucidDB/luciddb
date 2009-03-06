@@ -155,7 +155,11 @@ drop schema sales cascade;
 -- should succeed now since we dropped all the tables
 call sys_boot.mgmt.change_default_character_set_to_unicode();
 
--- these should have switched from ISO-8859-1 to UNICODE
+create view typecheck.v2 as select 'blah' as asc_or_desc from (values(0));
+
+-- existing column should have switched from ISO-8859-1 to UNICODE,
+-- and new column should also be UNICODE; note that collation
+-- is currently incorrect for new column
 select * from typecheck.v;
 
 -- last thing we do is to prepare for a restore of pre-upgrade catalog contents

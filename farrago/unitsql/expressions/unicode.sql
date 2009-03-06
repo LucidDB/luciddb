@@ -421,9 +421,30 @@ insert into uni.U&"\03B1\03BD\03B8\03C1\03C9" values (1);
 
 insert into uni.U&"!03B1!03BD!03B8!03C1!03C9" UESCAPE '!' values (2);
 
+-- test flatfiles with single-byte data exposed as Unicode
+create server flatfile_server
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles/',
+    file_extension 'csv',
+    with_header 'yes', 
+    lenient 'no');
+
+create foreign table uni.flatfile_explicit_table(
+    id int not null,
+    name varchar(50) character set "UTF16" not null,
+    extra_field char(1) character set "UTF16" not null)
+server flatfile_server
+options (filename 'example');
+
+select * from uni.flatfile_explicit_table order by extra_field;
+
 -- verify that UNION type aggregation does not accidentally revert to ISO-8859-1
 !set outputformat csv
 explain plan for
 select * from uni.v1
 union all
 select * from uni.v2;
+
+explain plan for
+select * from uni.flatfile_explicit_table;

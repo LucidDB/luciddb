@@ -21,6 +21,7 @@
 package com.lucidera.farrago.namespace.flatfile;
 
 import java.io.*;
+import java.nio.charset.*;
 
 import java.util.*;
 import java.util.regex.*;
@@ -30,6 +31,7 @@ import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
 
@@ -505,6 +507,29 @@ class FlatFileBCPFile
             }
         }
         return true;
+    }
+
+    public static RelDataType forceSingleByte(
+        RelDataTypeFactory typeFactory,
+        RelDataType type)
+    {
+        if (type.getSqlTypeName().getFamily() != SqlTypeFamily.CHARACTER) {
+            return type;
+        }
+        Charset singleByteCharset = Util.getDefaultCharset();
+        if (typeFactory.getDefaultCharset().equals(singleByteCharset)) {
+            return type;
+        }
+        // For character data, flat file reader can currently only
+        // deal with ISO-8859-1
+        type =
+            typeFactory.createTypeWithCharsetAndCollation(
+                type,
+                singleByteCharset,
+                new SqlCollation(
+                    SaffronProperties.instance().defaultCollation.get(),
+                    SqlCollation.Coercibility.Implicit));
+        return type;
     }
 
     private EigenbaseException newParseError(int line)
