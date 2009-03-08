@@ -126,6 +126,17 @@ public abstract class FarragoJavaUdxIterator
         return super.hasNext();
     }
 
+    /**
+     * Called by generated code to add an input cursor's iterator so
+     * that it can be restarted as needed.
+     *
+     * @param inputIter input cursor's iterator
+     */
+    protected void addRestartableInput(TupleIter inputIter)
+    {
+        restartableInputs.add(inputIter);
+    }
+
     // override QueueIterator
     public boolean hasNext(long timeout)
         throws QueueIterator.TimeoutException
@@ -162,17 +173,6 @@ public abstract class FarragoJavaUdxIterator
                 throw new TupleIter.TimeoutException();
             }
         }
-    }
-
-    /**
-     * Called by generated code to add an input cursor's iterator so
-     * that it can be restarted as needed.
-     *
-     * @param inputIter input cursor's iterator
-     */
-    protected void addRestartableInput(TupleIter inputIter)
-    {
-        restartableInputs.add(inputIter);
     }
 
     // implement ThreadIterator

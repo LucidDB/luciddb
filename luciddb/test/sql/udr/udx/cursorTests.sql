@@ -159,15 +159,3 @@ select * from table(
 ));
 
 select * from ct.mytable order by 1;
-
---
--- UDX with empty input
---
-select * from table(
-    pivot_columns_to_rows(cursor(select * from t1 where aa = 0)));
-
---
--- UDX with too many input rows
---
-select * from table(
-    pivot_columns_to_rows(cursor(select * from t1)));

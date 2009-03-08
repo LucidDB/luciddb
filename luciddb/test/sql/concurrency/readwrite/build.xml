@@ -38,9 +38,6 @@
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${rwconcurrency.dir}/gen" />
 
-  <!-- directory where blackhawk output should go -->
-  <property name="bh.log.basedir" value="${rwconcurrency.dir}/testlog" />
-
   <!-- directory of flat files -->
   <property name="ffsource.dir" value="${open.dir}/thirdparty/tpch/dataMultiProcess"/>
   <property name="ff.dir" value="${rwconcurrency.dir}/ff"/>
@@ -136,6 +133,7 @@
       <filterset>
         <filter token="FFDIR" value="${ff.dir}/${datasize.param}"/>
         <filter token="DIR" value="${gensql.dir}/${datasize.param}"/>
+        <filter token="TEST_DIR" value="${rwconcurrency.dir}"/>
       </filterset>
     </copy>
 
@@ -149,6 +147,8 @@
     </copy>
 
   </target>
+
+  <property name="testlog.dir" value="${rwconcurrency.dir}"/>
 
   <target name="gen-all-sql">
     <!-- generate run.properties -->
@@ -168,11 +168,61 @@
   </target>
 
   <target name="test" depends="clean-test,gen-all-sql">
+    <property name="bh.log.basedir" value="${rwconcurrency.dir}/testlog" />
     <property name="bh.filter.runDuration" value="short,medium,null"/> 
     <property file="run.properties"/>
     <blackhawk.fork
       basedir="${rwconcurrency.dir}"
       testscript="${testfile}"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="create-archive-dirs">
+    <mkdir dir="${rwconcurrency.dir}/fullArchive"/>
+    <mkdir dir="${rwconcurrency.dir}/fullArchive2"/>
+  </target>
+
+  <target name="testBackupRestore" depends="clean-test,gen-all-sql,create-archive-dirs">
+    <antcall target="backup"/>
+    <antcall target="restoreBackup"/>
+    <antcall target="validateRestore"/>
+    <antcall target="cancelBackup"/>
+  </target>
+  
+  <target name="backup">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-concurBackup" />
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${rwconcurrency.dir}"
+      testscript="backup.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreBackup">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-concurRestore" />
+    <property file="run.properties"/>
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <blackhawk.fork
+      basedir="${rwconcurrency.dir}"
+      testscript="restoreBackup.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateRestore">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-concurValidate" />
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${rwconcurrency.dir}"
+      testscript="validateRestore.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="cancelBackup">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-cancelBackup" />
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${rwconcurrency.dir}"
+      testscript="cancelBackup.xml"
       classpathref="test.classpath"/>
   </target>
 
@@ -185,8 +235,14 @@
   </target>
 
   <target name="clean-test">
-    <delete dir="${bh.log.basedir}"/>
+    <delete dir="${rwconcurrency.dir}/testlog"/>
+    <delete dir="${rwconcurrency.dir}/bh-concurBackup"/>
+    <delete dir="${rwconcurrency.dir}/bh-concurRestore"/>
+    <delete dir="${rwconcurrency.dir}/bh-concurValidate"/>
+    <delete dir="${rwconcurrency.dir}/bh-cancelBackup"/>
     <delete dir="${gensql.dir}"/>
+    <delete dir="${rwconcurrency.dir}/fullArchive"/>
+    <delete dir="${rwconcurrency.dir}/fullArchive2"/>
   </target>
 
 </project>

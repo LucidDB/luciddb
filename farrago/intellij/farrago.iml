@@ -24,14 +24,15 @@
     <orderEntry type="library" name="servlet" level="project" />
     <orderEntry type="library" name="resgen" level="project" />
     <orderEntry type="library" name="oj" level="project" />
-    <orderEntry type="library" name="jgrapht" level="project" />
     <orderEntry type="library" name="sqlline" level="project" />
     <orderEntry type="library" name="xml" level="project" />
     <orderEntry type="library" name="commons-transaction" level="project" />
     <orderEntry type="library" name="vjdbc" level="project" />
     <orderEntry type="library" name="diffj" level="project" />
     <orderEntry type="library" name="enki" level="project" />
-    <orderEntryProperties />
+    <orderEntry type="library" name="jgrapht" level="project" />
+    <orderEntry type="library" name="commons-dbcp" level="project" />
+    <orderEntry type="library" name="commons-pool" level="project" />
   </component>
 </module>
 

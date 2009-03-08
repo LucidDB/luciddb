@@ -71,7 +71,7 @@ ${farrago.test.jvmargs}
   <property name="fennel.dir" location="${open.dir}/fennel"/>
 
   <property file="${farrago.dir}/initBuild.properties" />
-  <property file="${luciddb.dir}/customBuild.properties" />
+  <property file="${farrago.dir}/customBuild.properties" />
 
   <!-- directory in which classes are built -->
   <property name="classes.dir" location="${luciddb.dir}/classes" />
@@ -306,8 +306,8 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-nondb-concurrency-backupRestore" depends="gen-properties">
-    <ant dir="${luciddb.dir}/test/sql/concurrency/backupRestore"
-       target="test" inheritAll="false">
+    <ant dir="${luciddb.dir}/test/sql/concurrency/readwrite"
+       target="testBackupRestore" inheritAll="false">
       <property name="foreign.db" value="nondb"/>
       <property name="bh.log.gtlf.env.ForeignDb" value="ldb-nondb"/>
       <property name="testlog.dir" value="${testlog.dir}"/>
@@ -494,7 +494,6 @@ ${farrago.test.jvmargs}
 
   <target name="clean" depends="clean-dist">
     <antcall target="cleanTestLogs"/>
-    <antcall target="cleanJars"/>
     <delete quiet="true">
       <fileset dir="${classes.dir}" includes="**/*.class"/>
     </delete>
@@ -657,12 +656,6 @@ ${farrago.test.jvmargs}
     <mkdir dir="${testlog.dir}"/>
     <copy todir="${classes.dir}" file="${release.properties.source}"
       overwrite="true"/>
-    <!--
-         Set jdbc.url.port.default in customBuild.properties to
-         override JDBC listener port.
-    -->
-    <farrago.configureReleaseProperties
-        file="${classes.dir}/FarragoRelease.properties"/>
   </target>
 
   <target name="makePluginDirs">
@@ -1186,9 +1179,6 @@ ${farrago.test.jvmargs}
     </copy>
     <copy todir="${dist.dir}/${lucidera.release.spec}/examples">
       <fileset dir="${luciddb.dir}/examples"/>
-    </copy>
-    <copy todir="${dist.dir}/${lucidera.release.spec}/ext">
-      <fileset dir="${luciddb.dir}/ext"/>
     </copy>
     <copy 
       file="${luciddb.dir}/license/README" 

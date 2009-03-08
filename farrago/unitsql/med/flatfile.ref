@@ -11,7 +11,7 @@
 > create server flatfile_server
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'csv',
 >     with_header 'yes', 
 >     lenient 'no');
@@ -98,7 +98,7 @@ Error: Could not read data file unitsql/med/flatfiles/missing.csv (state=,code=0
 >     name varchar(50) not null,
 >     extra_field char(1) not null)
 > server flatfile_server_badLineDelim
-> options (filename 'unitsql/med/flatfiles/noheader.csv');
+> options (filename '${FARRAGO_HOME}/unitsql/med/flatfiles/noheader.csv');
 > 
 > select * from flatfile_badLineDelim;
 Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: Data file unitsql/med/flatfiles/noheader.csv has no row delimiter (state=,code=0)
@@ -119,7 +119,7 @@ Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: 
 >     name varchar(50) not null,
 >     extra_field char(1) not null)
 > server flatfile_server_badFieldDelim
-> options (filename 'unitsql/med/flatfiles/noheader');
+> options (filename '${FARRAGO_HOME}/unitsql/med/flatfiles/noheader');
 > 
 > select * from flatfile_badFieldDelim;
 Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: Row has no column delimiter (state=,code=0)
@@ -144,7 +144,7 @@ Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: 
 >     name varchar(50) not null,
 >     extra_field char(1) not null)
 > server flatfile_server_incompleteColumn
-> options (filename 'unitsql/med/flatfiles/noheader');
+> options (filename '${FARRAGO_HOME}/unitsql/med/flatfiles/noheader');
 > 
 > -- Note: Farrago's error handler quietly swallows row errors
 > select * from flatfile_incompleteColumn;
@@ -187,7 +187,7 @@ Error: Could not read header from data file unitsql/med/flatfiles/example.csv: R
 > create server flatfile_server_rowTooLong
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'txt',
 >     with_header 'yes', 
 >     lenient 'no');
@@ -216,7 +216,7 @@ Error: Could not read header from data file unitsql/med/flatfiles/example.csv: R
 > create server flatfile_server_esc
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'esc',
 >     control_file_extension 'ctl',
 >     with_header 'yes', 
@@ -245,7 +245,7 @@ Error: Could not read header from data file unitsql/med/flatfiles/example.csv: R
 > create server flatfile_server_fixed
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'dat',
 >     with_header 'no',
 >     field_delimiter '',
@@ -258,7 +258,7 @@ Error: Fixed position parsing, enabled by setting an empty field delimiter, requ
 > create server flatfile_server_fixed
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'dat',
 >     with_header 'no',
 >     field_delimiter '',
@@ -326,7 +326,7 @@ Error: From line 1, column 15 to line 1, column 46: Table 'FLATFILE_SERVER.SAMPL
 > create server flatfile_server_empty
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'txt');
 > 
 > select * from flatfile_server_empty.SAMPLE."empty";
@@ -372,7 +372,7 @@ Error: Cannot derive column types for file unitsql/med/flatfiles/nullheader.txt 
 > create server flatfile_server_badbcp
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     control_file_extension 'bcp2',
 >     file_extension 'txt',
 >     with_header 'no');
@@ -479,7 +479,7 @@ Error: Unknown foreign schema "TESTDATA" (state=,code=0)
 > create server flatfile_server_fail
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'fail',
 >     control_file_extension 'failbcp');
 > 
@@ -517,7 +517,7 @@ Error: From line 1, column 15 to line 1, column 39: Table 'FLATFILE_SCHEMA.examp
 > create server flatfiledir_server
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'csv',
 >     with_header 'yes');
 > 
@@ -731,7 +731,7 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 > create server ff_server
 > foreign data wrapper local_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'csv',
 >     with_header 'yes');
 > 
@@ -761,7 +761,7 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 > create server ff_lenient
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'csv');
 > 
 > create foreign table buggy(
@@ -897,7 +897,7 @@ Error: From line 1, column 15 to line 1, column 42: Table 'FLATFILE_SERVER..exam
 > create or replace server mapped_server
 > foreign data wrapper sys_file_wrapper
 > options (
->     directory 'unitsql/med/flatfiles/',
+>     directory '${FARRAGO_HOME}/unitsql/med/flatfiles/',
 >     file_extension 'csv',
 >     with_header 'yes',
 >     mapped 'yes');

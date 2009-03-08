@@ -36,7 +36,7 @@ import net.sf.farrago.syslib.*;
  * clumping column are clumped into one output row which has the value of
  * current partition, current clump, timestamps at which the clump starts
  * and ends. The output row also contains information about the value and
- * timestamp of previous and next clump within the partition.
+ * timestamp of previous and next clump within the partition. 
  *
  * @author Elizabeth Lin
  * @author Khanh Vu
@@ -66,9 +66,9 @@ public abstract class ContiguousValueIntervalsUdx
         }
 
         // verify that timestampCol contains one column of type TIMESTAMP
-        int sqlTSColIdx = inputSet.findColumn(timestampCol.get(0));
-        if ((timestampCol.size() != 1)
-            || (inputSet.getMetaData().getColumnType(sqlTSColIdx)
+        int tsColIdx = inputSet.findColumn(timestampCol.get(0));
+        if ((timestampCol.size() != 1) 
+            || (inputSet.getMetaData().getColumnType(tsColIdx)
                 != java.sql.Types.TIMESTAMP))
         {
             throw ApplibResourceObject.get().CVIInvalidTsCol.ex();
@@ -86,27 +86,26 @@ public abstract class ContiguousValueIntervalsUdx
         }
 
         // verify that clumping column is of type CHAR or VARCHAR
-        int [] sqlPartitionColIdx = new int[numPartCols];
+        int [] partitionColIdx = new int[numPartCols];
         for (int i = 0; i < numPartCols; i++) {
-            sqlPartitionColIdx[i] = inputSet.findColumn(partitionCols.get(i));
+            partitionColIdx[i] = inputSet.findColumn(partitionCols.get(i));
         }
-        int sqlClumpColIdx = -1;
-        for (int i = 1; i < nInput + 1; i++) {
-            if ((i != sqlTSColIdx) &&
-                (Arrays.binarySearch(sqlPartitionColIdx, i) < 0))
+        int clumpColIdx = -1;
+        for (int i = 1; i < nInput+1; i++) {
+            if ((i != tsColIdx) && 
+                (Arrays.binarySearch(partitionColIdx, i) < 0)) 
             {
-                // sqlClumpColIdx is 1 based column idx in sql
-                sqlClumpColIdx = i;
+                clumpColIdx = i;
                 break;
             }
         }
-        if (sqlClumpColIdx == -1) {
+        if (clumpColIdx == -1) {
             //should never get here
             throw ApplibResourceObject.get().CVIInvalidInputTable.ex();
         }
-        if (!((inputSet.getMetaData().getColumnType(sqlClumpColIdx) ==
+        if (!((inputSet.getMetaData().getColumnType(clumpColIdx) ==
                     java.sql.Types.VARCHAR)
-                || (inputSet.getMetaData().getColumnType(sqlClumpColIdx) ==
+                || (inputSet.getMetaData().getColumnType(clumpColIdx) ==
                     java.sql.Types.CHAR)))
         {
             throw ApplibResourceObject.get().InvalidColumnDatatype.ex(
@@ -118,34 +117,34 @@ public abstract class ContiguousValueIntervalsUdx
         Timestamp currTS = null;
         Object [] outputRow = new Object[nOutput];
 
-        final int untilTSColIdx = nInput;
-        final int prevClumpColIdx = nInput + 1;
-        final int prevFromTSColIdx = nInput + 2;
-        final int nextClumpColIdx = nInput + 3;
-        final int nextUntilTSColIdx = nInput + 4;
-        final int clumpColIdx = sqlClumpColIdx - 1;
-        final int tsColIdx = sqlTSColIdx - 1;
+        // index in outputRow of
+        // UNTIL_TIMESATMP = nInput
+        // PREV_CLUMP = nInput + 1
+        // PREV_FROM_TIMESTAMP = nInput + 2
+        // NEXT_CLUMP = nInput + 3
+        // NEXT_UNTIL_TIMESTAMP = nInput + 4
 
         while (inputSet.next()) {
             // timestamp column must not be null
-            if (inputSet.getTimestamp(sqlTSColIdx) == null) {
+            if (inputSet.getTimestamp(tsColIdx) == null) {
                 throw ApplibResourceObject.get().CVITsMustNotBeNull.ex();
             }
 
             if (first) {
-                copyInRowNResetOutputRow(
-                    outputRow,
-                    currPart,
-                    inputSet,
-                    nInput,
-                    sqlClumpColIdx,
-                    sqlPartitionColIdx);
-                currTS = inputSet.getTimestamp(sqlTSColIdx);
+                copyInRowtoOutRow(outputRow, inputSet, nInput);
+
+                outputRow[nInput] = null;
+                outputRow[nInput + 1] = inputSet.getObject(clumpColIdx);
+                outputRow[nInput + 2] = null;
+                outputRow[nInput + 3] = inputSet.getObject(clumpColIdx);
+                outputRow[nInput + 4] = null;
+                setCurrentPartition(currPart, inputSet, partitionColIdx);
+                currTS = inputSet.getTimestamp(tsColIdx);
                 first = false;
             } else {
-                int c = comparePartitionColumnsUsingGroupBySemantics(
-                    currPart, inputSet, sqlPartitionColIdx);
-                if (c > 0) {
+                if(comparePartitionColumnsUsingGroupBySemantics(
+                    currPart, inputSet, partitionColIdx) > 0)
+                {
                     // partitioning columns out of order
                     String colNames = new String();
                     String colValues = new String();
@@ -154,89 +153,95 @@ public abstract class ContiguousValueIntervalsUdx
                             partitionCols.get(i) + ", ");
                         colValues = colValues.concat(
                             inputSet.getObject(
-                                sqlPartitionColIdx[i]).toString() + ", ");
+                                partitionColIdx[i]).toString() + ", ");
                     }
                         colNames = colNames.replaceFirst(", $","");
                         colValues = colValues.replaceFirst(", $","");
                     throw ApplibResourceObject.get().InputRowsNotSorted.ex(
                         colNames,colValues);
-                } else if (c < 0) {
+                } else if (comparePartitionColumnsUsingGroupBySemantics(
+                    currPart, inputSet, partitionColIdx) < 0)
+                {
                     // new partition, need output row
-                    currTS = inputSet.getTimestamp(sqlTSColIdx);
+                    currTS = inputSet.getTimestamp(tsColIdx);
 
-                    if (isOutputRowClumpsSame(
-                        outputRow[prevClumpColIdx],
-                        outputRow[clumpColIdx],
-                        outputRow[nextClumpColIdx]))
+                    if ((FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
+                            outputRow[clumpColIdx - 1],
+                            outputRow[nInput + 1]) == 0) &&
+                        (FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
+                            outputRow[clumpColIdx - 1],
+                            outputRow[nInput + 3]) == 0))
                     {
-                        outputRow[prevClumpColIdx] = null;
-                        outputRow[nextClumpColIdx] = null;
+                        outputRow[nInput + 1] = null;
+                        outputRow[nInput + 3] = null;
                     } else {
                         emitUdxRow(resultInserter, outputRow);
 
-                        outputRow[prevClumpColIdx] = outputRow[clumpColIdx];
-                        outputRow[prevFromTSColIdx] = outputRow[tsColIdx];
-                        outputRow[clumpColIdx] = outputRow[nextClumpColIdx];
-                        outputRow[tsColIdx] = outputRow[untilTSColIdx];
-                        outputRow[untilTSColIdx] = null;
-                        outputRow[nextClumpColIdx] = null;
-                        outputRow[nextUntilTSColIdx] = null;
+                        outputRow[nInput + 1] = outputRow[clumpColIdx - 1];
+                        outputRow[nInput + 2] = outputRow[tsColIdx  - 1];
+                        outputRow[clumpColIdx - 1] = outputRow[nInput + 3];
+                        outputRow[tsColIdx - 1] = outputRow[nInput];
+                        outputRow[nInput] = null;
+                        outputRow[nInput + 3] = null;
+                        outputRow[nInput + 4] = null;
                     }
                     emitUdxRow(resultInserter, outputRow);
 
-                    copyInRowNResetOutputRow(
-                        outputRow,
-                        currPart,
-                        inputSet,
-                        nInput,
-                        sqlClumpColIdx,
-                        sqlPartitionColIdx);
+                    copyInRowtoOutRow(outputRow, inputSet, nInput);
+                    outputRow[nInput] = null;
+                    outputRow[nInput + 1] = inputSet.getObject(clumpColIdx);
+                    outputRow[nInput + 2] = null;
+                    outputRow[nInput + 3] = inputSet.getObject(clumpColIdx);
+                    outputRow[nInput + 4] = null;
+                    setCurrentPartition(currPart, inputSet, partitionColIdx);
                 } else {
                     // partition not changed
-                    if (inputSet.getTimestamp(sqlTSColIdx).before(currTS)) {
+                    if (inputSet.getTimestamp(tsColIdx).before(currTS)) {
                         // timestamp column out of order
                         throw ApplibResourceObject.get().InputRowsNotSorted.ex(
-                            inputSet.getMetaData().getColumnName(sqlTSColIdx),
-                            inputSet.getTimestamp(sqlTSColIdx).toString());
+                            inputSet.getMetaData().getColumnName(tsColIdx),
+                            inputSet.getTimestamp(tsColIdx).toString());
                     } else {
-                        currTS = inputSet.getTimestamp(sqlTSColIdx);
+                        currTS = inputSet.getTimestamp(tsColIdx);
                     }
 
                     if (FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
-                            inputSet.getObject(sqlClumpColIdx),
-                            outputRow[nextClumpColIdx]) != 0)
+                            inputSet.getObject(clumpColIdx),
+                            outputRow[nInput + 3]) != 0)
                     {
                         // new clump, need output row
-                        if (isOutputRowClumpsSame(
-                            outputRow[prevClumpColIdx],
-                            outputRow[clumpColIdx],
-                            outputRow[nextClumpColIdx]))
+                        if ((FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
+                            outputRow[clumpColIdx - 1],
+                            outputRow[nInput + 1]) == 0) &&
+                        (FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
+                            outputRow[clumpColIdx - 1],
+                            outputRow[nInput + 3]) == 0))
                         {
-                            outputRow[prevClumpColIdx] = null;
-                            outputRow[untilTSColIdx] =
-                                inputSet.getObject(sqlTSColIdx);
-                            outputRow[nextClumpColIdx] =
-                                inputSet.getObject(sqlClumpColIdx);
-                            outputRow[nextUntilTSColIdx] = null;
+                            outputRow[nInput + 1] = null;
+                            outputRow[nInput] =
+                                inputSet.getObject(tsColIdx);
+                            outputRow[nInput + 3] =
+                                inputSet.getObject(clumpColIdx);
+                            outputRow[nInput + 4] = null;
                         } else {
-                            outputRow[nextUntilTSColIdx] =
-                                inputSet.getObject(sqlTSColIdx);
+                            outputRow[nInput + 4] =
+                                inputSet.getObject(tsColIdx);
 
                             emitUdxRow(resultInserter, outputRow);
 
-                            outputRow[prevClumpColIdx] =
-                                outputRow[clumpColIdx];
-                            outputRow[prevFromTSColIdx] =
-                                outputRow[tsColIdx];
-                            outputRow[clumpColIdx] =
-                                outputRow[nextClumpColIdx];
-                            outputRow[tsColIdx] =
-                                outputRow[untilTSColIdx];
-                            outputRow[untilTSColIdx] =
-                                outputRow[nextUntilTSColIdx];
-                            outputRow[nextClumpColIdx] =
-                                inputSet.getObject(sqlClumpColIdx);
-                            outputRow[nextUntilTSColIdx] = null;
+                            outputRow[nInput + 1] =
+                                outputRow[clumpColIdx - 1];
+                            outputRow[nInput + 2] =
+                                outputRow[tsColIdx  - 1];
+                            outputRow[clumpColIdx - 1] =
+                                outputRow[nInput + 3];
+                            outputRow[tsColIdx  - 1] =
+                                outputRow[nInput];
+                            outputRow[nInput] =
+                                outputRow[nInput  + 4];
+                            outputRow[nInput  + 3] =
+                                inputSet.getObject(clumpColIdx);
+                            outputRow[nInput  + 4] = null;
                         }
                     }
                 }
@@ -244,50 +249,46 @@ public abstract class ContiguousValueIntervalsUdx
         }
 
         if (!first) {
-            if (isOutputRowClumpsSame(
-                outputRow[prevClumpColIdx],
-                outputRow[clumpColIdx],
-                outputRow[nextClumpColIdx]))
+            if ((FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
+                outputRow[clumpColIdx - 1],
+                outputRow[nInput + 1]) == 0) &&
+            (FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
+                outputRow[clumpColIdx - 1],
+                outputRow[nInput + 3]) == 0))
             {
-                outputRow[prevClumpColIdx] = null;
-                outputRow[nextClumpColIdx] = null;
+                outputRow[nInput + 1] = null;
+                outputRow[nInput + 3] = null;
             } else {
                 emitUdxRow(resultInserter, outputRow);
 
-                outputRow[prevClumpColIdx] = outputRow[clumpColIdx];
-                outputRow[prevFromTSColIdx] = outputRow[tsColIdx];
-                outputRow[clumpColIdx] = outputRow[nextClumpColIdx];
-                outputRow[tsColIdx] = outputRow[untilTSColIdx];
-                outputRow[untilTSColIdx] = null;
-                outputRow[nextClumpColIdx] = null;
-                outputRow[nextUntilTSColIdx] = null;
+                outputRow[nInput + 1] = outputRow[clumpColIdx - 1];
+                outputRow[nInput + 2] = outputRow[tsColIdx  - 1];
+                outputRow[clumpColIdx - 1] = outputRow[nInput + 3];
+                outputRow[tsColIdx - 1] = outputRow[nInput];
+                outputRow[nInput] = null;
+                outputRow[nInput + 3] = null;
+                outputRow[nInput + 4] = null;
             }
             emitUdxRow(resultInserter, outputRow);
         }
     }
 
-    private static void copyInRowNResetOutputRow(
-        Object [] outputRow,
-        Object [] currentPartition,
-        ResultSet inputSet,
-        int nInput,
-        int sqlClumpColIdx,
-        int [] sqlPartitionColIdx)
+    private static void copyInRowtoOutRow(
+        Object [] outputRow, ResultSet inputSet, int numCol)
         throws SQLException
     {
-        for (int i = 0; i < nInput; i++) {
-            outputRow[i] = inputSet.getObject(i + 1);
+        for (int i = 0; i < numCol; i++) {
+            outputRow[i] = inputSet.getObject(i+1);
         }
+    }
 
-        outputRow[nInput] = null;
-        outputRow[nInput + 1] = inputSet.getObject(sqlClumpColIdx);
-        outputRow[nInput + 2] = null;
-        outputRow[nInput + 3] = inputSet.getObject(sqlClumpColIdx);
-        outputRow[nInput + 4] = null;
-
-        final int n = sqlPartitionColIdx.length;
+    private static void setCurrentPartition(
+        Object [] currPart, ResultSet inputSet, int [] partColIdx)
+        throws SQLException
+    {
+        int n = partColIdx.length;
         for (int i = 0; i < n; i++) {
-            currentPartition[i] = inputSet.getObject(sqlPartitionColIdx[i]);
+            currPart[i] = inputSet.getObject(partColIdx[i]);
         }
     }
 
@@ -303,28 +304,18 @@ public abstract class ContiguousValueIntervalsUdx
     }
 
     private static int comparePartitionColumnsUsingGroupBySemantics(
-        Object [] currPart, ResultSet inputSet, int [] sqlPartColIdx)
+        Object [] currPart, ResultSet inputSet, int [] partColIdx)
         throws SQLException
     {
-        int n = sqlPartColIdx.length;
+        int n = partColIdx.length;
         for (int i = 0; i < n; i++) {
             int comp = FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
-                currPart[i], inputSet.getObject(sqlPartColIdx[i]));
+                currPart[i], inputSet.getObject(partColIdx[i]));
             if (comp != 0) {
                 return comp;
             }
         }
         return 0;
-    }
-
-    private static boolean isOutputRowClumpsSame(
-        Object prevClump, Object thisClump, Object nextClump)
-        throws SQLException
-    {
-        return (FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
-            prevClump, thisClump) == 0) &&
-            (FarragoSyslibUtil.compareKeysUsingGroupBySemantics(
-                thisClump, nextClump) == 0);
     }
 }
 

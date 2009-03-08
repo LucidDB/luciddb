@@ -1,4 +1,4 @@
-LucidDB Binary Release 0.8.1
+LucidDB Binary Release 0.7.4
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -12,7 +12,7 @@ This page explains how to install and run LucidDB:
 
 http://docs.eigenbase.org/LucidDbGettingStarted
 
-Source releases are also available:
+Source releases are also available.
 
 http://docs.eigenbase.org/LucidDbBuildFromSourceDistribution
 
@@ -45,49 +45,6 @@ http://issues.eigenbase.org
 
 ----------------------------------------------------------------------
 CHANGE HISTORY
-
-0.8.1 is a development snapshot; changes since 0.8.0 have not
-yet been finalized.
-
-Changes since 0.7.4 include
-
-- add new feature for warehouse labels
-- add new feature for hot/incremental/differential backup/restore
-- fix timestamp fractional seconds formatting when cast to VARCHAR
-- add new applib.contiguous_value_intervals UDX
-- add new sys_root.test_data_server and
-  sys_root.test_all_servers_for_wrapper system procedures for
-  testing links to SQL/MED data servers
-- add ext directories (e.g. for moodss) to distribution (LDB-189)
-- fix uninitialized variable which could cause bogus values
-  for page allocation performance counters (FNL-78)
-- rename non-standard POW function to SQL:2003 standard POWER (FRG-329)
-- improve join ordering to use column count when number of rows is the same
-- fix for join order optimization when multiple join factors have same weight
-- add fifo support to flaftile reader
-- add Mondrian aggregate designer support
-- suppress AWT workaround in distribution startup scripts (FRG-350)
-- ignore semijoin candidates with poor selectivity
-- fix validator to prevent duplicate aliases in the same FROM clause
-- JDK 1.6 build support
-- add table prefix mapping support to SQL/MED JDBC wrapper
-- add JNDI data source and connection pool support to SQL/MED JDBC wrapper
-- fix SQL/MED JDBC wrapper pushdown bug with WHERE boolean_column (FRG-339)
-- optimize away redundant buffering for upserts, deletes, and self-inserts
-- fix shutdown warning from loopback connections (FRG-345)
-- TPC-H query phrasing refinements
-- fix bug with default values in INSERT/MERGE with UNION source
-- fix flatfile reader bug where csv header row has missing column names
-- fix for correlated subqueries on SQL/MED JDBC foreign tables
-- fix issues with UDX input restarts (FRG-331)
-- improve agg-distinct rewrite to consolidate common subexpressions
-- fix native code error message rendering (LDB-177)
-- use statement-level queues for all warnings
-- fix executor inefficiency from accidental Boost graph copying
-- add support for NATURAL JOIN
-- optimize away some redundant casts
-- lucidDbAllocFile script usage/validation improvements
-- improve optimizer to reorder index intersections by selectivity
 
 Changes since 0.7.3 include
 

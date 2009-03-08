@@ -340,8 +340,7 @@ select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
     order by t."name", st."rowCount";
 alter system deallocate old;
 select sys_boot.mgmt.sleep(1000) from t where a = 1;
-select (cast(counter_value as bigint) < 
-        cast(applib.get_var('LABEL', 'pageCount') as bigint))
+select (counter_value < applib.get_var('LABEL', 'pageCount'))
     from sys_root.dba_performance_counters
         where counter_name = 'DatabasePagesAllocated';
 

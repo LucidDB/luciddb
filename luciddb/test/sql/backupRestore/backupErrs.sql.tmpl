@@ -1,5 +1,9 @@
 -- Test error conditions for backups
 
+-- negative padding parameter
+call sys_root.backup_database_if_space_available(
+    '@TEST_DIR@/tmpArchive', 'FULL', 'UNCOMPRESSED', -1);
+
 -- non-existent archive directory
 call sys_root.backup_database('@TEST_DIR@/badArchive', 'FULL', 'UNCOMPRESSED');
 

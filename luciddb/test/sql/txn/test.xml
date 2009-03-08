@@ -27,10 +27,6 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/txn/labelAliases.sql"/>
       </test>
 
-      <test name="labelAlterTable">
-        <junit-sql file="${open.dir}/luciddb/test/sql/txn/labelAlterTable.sql"/>
-      </test>
-
       <!-- Run this test last in this suite, so cleanup is done after it -->
       <test name="jdbcLabels">
         <junit testclass="com.lucidera.luciddb.test.LucidDbJdbcLabelTest"

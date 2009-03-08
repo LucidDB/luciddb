@@ -37,27 +37,3 @@ select 1/id from s.mock_fennel_table;
 select count(*) from s.t;
 
 drop schema s cascade;
-
--- tests for UPDATE
-
-create schema upsales;
-set schema 'upsales';
-
-create table upemps(
-  empno int primary key,
-  name varchar(10),
-  deptno int);
-insert into upemps
-  values
-    (1, 'Fred', 20),
-    (2, 'Bill', 10),
-    (3, 'Joe', 10);
-select * from upemps order by empno;
-
--- division by zero
-update upemps u set deptno = deptno/0;
-select * from upemps order by empno;
-
--- uniqueness violation
-update upemps u set empno = 4;
-select * from upemps order by empno;
