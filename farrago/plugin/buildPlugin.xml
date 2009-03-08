@@ -76,6 +76,10 @@
     <fail unless="plugin.model.prefix"/>
     <fail unless="plugin.model.package"/>
     <fail unless="plugin.factory.class"/>
+    <property
+       name="plugin.uml2mof.storageModel"
+       value="${uml2mof.default.storageModel}"/>
+
     <mkdir dir="${plugin.catalog.src.dir}"/>
     <mkdir dir="${plugin.classes.dir}"/>
     <copy file="${farrago.catalog.dir}/templates/BTreeRepos.properties" 
@@ -87,14 +91,16 @@
           umlFile="${plugin.xmi.dir}/${plugin.model.basename}Model.uml"
           umlBasename="${plugin.model.basename}Model"
           mofBasename="${plugin.model.basename}Mof"
-          xmiDir="${plugin.xmi.dir}"/>
+          xmiDir="${plugin.xmi.dir}"
+          storageModel="${plugin.uml2mof.storageModel}"/>
       </ac:then>
       <ac:else>
         <farrago.extractPoseidonModel 
           zumlFile="${plugin.xmi.dir}/${plugin.model.basename}Model.zuml"
           umlBasename="${plugin.model.basename}Model"
           mofBasename="${plugin.model.basename}Mof"
-          xmiDir="${plugin.xmi.dir}"/>
+          xmiDir="${plugin.xmi.dir}"
+          storageModel="${plugin.uml2mof.storageModel}"/>
       </ac:else>
     </ac:if>
     <farrago.transformExtensionModel
