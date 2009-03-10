@@ -234,6 +234,8 @@ public class FarragoOJRexImplementorTable
         registerContextOp(SqlStdOperatorTable.currentUserFunc);
         registerContextOp(SqlStdOperatorTable.currentRoleFunc);
         registerContextOp(SqlStdOperatorTable.currentPathFunc);
+        registerContextOp(SqlStdOperatorTable.currentCatalogFunc);
+        registerContextOp(SqlStdOperatorTable.currentSchemaFunc);
         registerContextOp(SqlStdOperatorTable.currentDateFunc);
         registerContextOp(SqlStdOperatorTable.currentTimeFunc);
         registerContextOp(SqlStdOperatorTable.currentTimestampFunc);

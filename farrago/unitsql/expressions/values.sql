@@ -58,6 +58,23 @@ values current_path;
 set path current_path || ', sys_cwm."Relational"';
 values current_path;
 
+-- test CURRENT_CATALOG and CURRENT_SCHEMA from SQL:2008
+values current_catalog;
+values current_schema;
+
+set catalog 'sys_boot';
+values current_catalog;
+values current_schema;
+
+set schema 'localdb.sales';
+values current_catalog;
+values current_schema;
+
+-- note that changing the catalog does not affect the schema
+set catalog 'sys_boot';
+values current_catalog;
+values current_schema;
+
 -- test LucidDB's standard-bending for 
 -- SQL:2003 Part 2 Section 9.3 Syntax Rule 3.a.iii.3
 -- (see http://sf.net/mailarchive/message.php?msg_id=13337379)

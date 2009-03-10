@@ -426,6 +426,32 @@ public class FarragoRuntimeContext
     /**
      * Called from generated code.
      *
+     * @return the value of context variable CURRENT_CATALOG.
+     */
+    public String getContextVariable_CURRENT_CATALOG()
+    {
+        return sessionVariables.catalogName;
+    }
+
+    /**
+     * Called from generated code.
+     *
+     * @return the value of context variable CURRENT_SCHEMA.
+     */
+    public String getContextVariable_CURRENT_SCHEMA()
+    {
+        // NOTE jvs 9-Mar-2009: SQL:2008 Part 2 Section 4.37.2 says the value
+        // for CURRENT_SCHEMA when no schema has been set is
+        // implementation-defined, so we use empty string since NULL
+        // values aren't supported for context variables.
+        return sessionVariables.schemaName == null
+            ? ""
+            : sessionVariables.schemaName;
+    }
+
+    /**
+     * Called from generated code.
+     *
      * @return the value of context variable CURRENT_PATH.
      *
      * @sql.99 Part 2 Section 6.3 General Rule 10

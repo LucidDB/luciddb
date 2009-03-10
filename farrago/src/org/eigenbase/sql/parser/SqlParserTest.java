@@ -5251,6 +5251,8 @@ public class SqlParserTest
         assertFalse(metadata.isReservedFunctionName("FOO"));
 
         assertTrue(metadata.isContextVariableName("CURRENT_USER"));
+        assertTrue(metadata.isContextVariableName("CURRENT_CATALOG"));
+        assertTrue(metadata.isContextVariableName("CURRENT_SCHEMA"));
         assertFalse(metadata.isContextVariableName("ABS"));
         assertFalse(metadata.isContextVariableName("FOO"));
 
@@ -5262,6 +5264,8 @@ public class SqlParserTest
 
         assertTrue(metadata.isKeyword("ABS"));
         assertTrue(metadata.isKeyword("CURRENT_USER"));
+        assertTrue(metadata.isKeyword("CURRENT_CATALOG"));
+        assertTrue(metadata.isKeyword("CURRENT_SCHEMA"));
         assertTrue(metadata.isKeyword("KEY"));
         assertTrue(metadata.isKeyword("SELECT"));
         assertTrue(metadata.isKeyword("HAVING"));
@@ -5269,6 +5273,8 @@ public class SqlParserTest
         assertFalse(metadata.isKeyword("BAR"));
 
         assertTrue(metadata.isReservedWord("SELECT"));
+        assertTrue(metadata.isReservedWord("CURRENT_CATALOG"));
+        assertTrue(metadata.isReservedWord("CURRENT_SCHEMA"));
         assertFalse(metadata.isReservedWord("KEY"));
 
         String jdbcKeywords = metadata.getJdbcKeywords();
