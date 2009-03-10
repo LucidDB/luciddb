@@ -51,7 +51,7 @@ public class FarragoJdbcUtil
     // load the Farrago engine driver directly may use it (intentionally
     // or unintentionally) by attempting to serialize exceptions
     // thrown via Farrago JDBC.
-    
+
     /**
      * Contains the serialization checker for each thread.
      */
@@ -258,18 +258,18 @@ public class FarragoJdbcUtil
      */
     private static class SerializationChecker
     {
-    	/**
-    	 * What classes should not be serialized.
-    	 * In particular:
+       /**
+         * What classes should not be serialized.
+         * In particular:
          *   org.eigenbase.sql.parser.SqlParseException
          *   org.eigenbase.sql.parser.SqlParserPos
          *   org.eigenbase.sql.SqlNode (and subclasses)
          *   net.sf.farrago.parser.impl.Token and ParseException
          *   or ...parser.impl.Token and ParseException in Aspen
-    	 */
-    	private final static Pattern NON_SERIALIAZABLE_CLASSES = Pattern.compile(
-    			"org\\.eigenbase\\.sql\\..*" + '|' +
-    			".*\\.parser\\.impl\\.[^.]*");
+         */
+        private final static Pattern NON_SERIALIAZABLE_CLASSES = Pattern.compile(
+            "org\\.eigenbase\\.sql\\..*" + '|' +
+            ".*\\.parser\\.impl\\.[^.]*");
         private final Set/*<Object>*/ active = new HashSet/*<Object>*/();
 
         /**
@@ -333,11 +333,6 @@ public class FarragoJdbcUtil
             if (!rmiClassLoader) {
                 String className = o.getClass().getName();
                 if (NON_SERIALIAZABLE_CLASSES.matcher(className).matches()) {
-                    return false;
-                }
-                if (className.startsWith("net.sf.farrago.parser.impl.")) {
-                    // e.g.
-                    //   net.sf.farrago.parser.impl.Token
                     return false;
                 }
             }
