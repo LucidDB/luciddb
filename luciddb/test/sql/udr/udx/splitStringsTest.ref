@@ -177,14 +177,6 @@
 +--------------+
 +--------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table emptyTable(c1 varchar(10));
-0: jdbc:luciddb:> select * from table(
-. . . . . . . . >   applib.split_rows(cursor(select c1 from emptyTable),'~','!',TRUE));
-+-----+
-| C1  |
-+-----+
-+-----+
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test with null input
 0: jdbc:luciddb:> call applib.create_var('splittest', null, 'xyz');
 0: jdbc:luciddb:> call applib.set_var('splittest', 'var', null);
@@ -193,46 +185,7 @@
 | OUT_STRINGS  |
 +--------------+
 +--------------+
-0: jdbc:luciddb:> -- test with null input to split_rows
-0: jdbc:luciddb:> create table status (c1 varchar(10));
-0: jdbc:luciddb:> insert into status values (null);
-0: jdbc:luciddb:> select * from status;
-+-----+
-| C1  |
-+-----+
-|     |
-+-----+
-0: jdbc:luciddb:> select * from table(
-. . . . . . . . >   applib.split_rows(cursor(select c1 from status),'~','!',TRUE));
-+-----+
-| C1  |
-+-----+
-|     |
-+-----+
-0: jdbc:luciddb:> select count(*) from table(
-. . . . . . . . >   applib.split_rows(cursor(select c1 from status),'~','!',TRUE)) where c1 is null;
-+---------+
-| EXPR$0  |
-+---------+
-| 1       |
-+---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create table status1 (c1 varchar(10), c2 varchar(10));
-0: jdbc:luciddb:> insert into status1 values (null,null);
-0: jdbc:luciddb:> select * from table(
-. . . . . . . . >   applib.split_rows(cursor(select c1,c2 from status1),row(c1),'~','!',TRUE));
-+-----+-----+
-| C1  | C2  |
-+-----+-----+
-|     |     |
-+-----+-----+
-0: jdbc:luciddb:> select count(*) from table(
-. . . . . . . . >   applib.split_rows(cursor(select c1,c2 from status1),row(c1),'~','!',TRUE)) where c1 is null;
-+---------+
-| EXPR$0  |
-+---------+
-| 1       |
-+---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test exception when more than one escape char
 0: jdbc:luciddb:> -- enable when LER-4686 is fixed

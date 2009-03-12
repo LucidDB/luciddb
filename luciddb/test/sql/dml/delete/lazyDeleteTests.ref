@@ -29,16 +29,16 @@
 0: jdbc:luciddb:> select * from sys_boot.jdbc_metadata.index_info_view 
 . . . . . . . . > where table_name = 'FISH'
 . . . . . . . . > order by 1,2,3,6;
-+------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |             INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_OR_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
-| LOCALDB    | DT2          | FISH        | false       |                  |                                    | 0     | 0                 |              |              | 4            | 0      |                   |
-| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$FISH$ID        | 1     | 1                 | ID           | A            | 0            | 0      |                   |
-| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$FISH$IS_OCEAN  | 1     | 1                 | IS_OCEAN     | A            | 0            | 0      |                   |
-| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$FISH$LOCATION  | 1     | 1                 | LOCATION     | A            | 0            | 0      |                   |
-| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$FISH$NAME      | 1     | 1                 | NAME         | A            | 0            | 0      |                   |
-| LOCALDB    | DT2          | FISH        | false       | LOCALDB          | SYS$DELETION_INDEX$FISH            | 3     |                   |              | A            | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |             INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | DT2          | FISH        | false       |                  |                                    | 0     | 0                 |              |               | 4            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$FISH$ID        | 1     | 1                 | ID           | A             | 0            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$FISH$IS_OCEAN  | 1     | 1                 | IS_OCEAN     | A             | 0            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$FISH$LOCATION  | 1     | 1                 | LOCATION     | A             | 0            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | true        | LOCALDB          | SYS$CLUSTERED_INDEX$FISH$NAME      | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
+| LOCALDB    | DT2          | FISH        | false       | LOCALDB          | SYS$DELETION_INDEX$FISH            | 3     |                   |              | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- try to drop the deletion index (should fail)
 0: jdbc:luciddb:> drop index "SYS$DELETION_INDEX$FISH";

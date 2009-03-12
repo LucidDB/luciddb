@@ -2,4 +2,6 @@ This directory contains scripts demonstrating a usable LucidDB
 performance monitoring dashboard based on moodss
 (http://moodss.sf.net).
 
-See http://pub.eigenbase.org/wiki/LucidDbMonitor for instructions.
+To use it:
+
+1) Download and install moodss

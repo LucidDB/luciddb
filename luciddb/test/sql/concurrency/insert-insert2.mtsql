@@ -40,7 +40,7 @@
   set schema 'concurrency';
 
   @sync
-  @sleep 2000
+  @sleep 1000
   insert into t2 select * from t2;
   @sync
 
@@ -52,7 +52,7 @@
   set schema 'concurrency';
 
   @sync
-  @sleep 2000
+  @sleep 1000
   @err insert into t1 select * from t1;
   @sync
 

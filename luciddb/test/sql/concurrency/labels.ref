@@ -119,7 +119,7 @@
 
 -- thread labeldropper1
 > drop label l1 cascade;
-net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot drop label "SYS_BOOT"."L1" because it is currently in use by a session
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cannot drop label "SYS_BOOT"."L1" because it is currently in use by a statement
 -- end of thread labeldropper1
 
 -- thread labeldropper2

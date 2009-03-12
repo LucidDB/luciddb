@@ -183,9 +183,9 @@
 '      FennelBufferRel'
 '        FennelReshapeRel'
 '          LhxJoinRel'
+'            LcsRowScanRel'
 '            FennelReshapeRel'
 '              LcsRowScanRel'
-'            LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- many to many self join semi join variations
 0: jdbc:luciddb:> explain plan excluding attributes for

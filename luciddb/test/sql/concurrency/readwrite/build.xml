@@ -38,9 +38,6 @@
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${rwconcurrency.dir}/gen" />
 
-  <!-- directory where blackhawk output should go -->
-  <property name="bh.log.basedir" value="${rwconcurrency.dir}/testlog" />
-
   <!-- directory of flat files -->
   <property name="ffsource.dir" value="${open.dir}/thirdparty/tpch/dataMultiProcess"/>
   <property name="ff.dir" value="${rwconcurrency.dir}/ff"/>
@@ -58,7 +55,6 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <!-- First, create the files used for queries -->
   <target name="create-db">
     <condition property="db.created">
       <available file="${ffsource.dir}/${datasize}" type="dir"/>
@@ -75,7 +71,12 @@
       </else>
     </if>
 
-    <!-- Generate 10 flatfiles for each table -->
+    <sync todir="${ff.dir}/${datasize}" verbose="true">
+      <fileset dir="${ffsource.dir}/${datasize}"/>
+    </sync>
+
+
+    <!-- generates 10 flatfiles for each table -->
     <condition property="db.created10">
       <available file="${ffsource.dir}/${datasize}-10" type="dir"/>
     </condition>
@@ -90,37 +91,32 @@
       </else>
     </if>
 
-    <!-- Then, create the files for updates -->
-    <condition property="updateFiles.created">
-      <available file="${ffsource.dir}/${datasize}-1/delete1.tbl" type="file"/>
-    </condition>
-
-    <if>
-      <istrue value="${updateFiles.created}"/>
-      <then/>
-      <else>
-        <exec executable="${thirdparty.dir}/tpch/createdbMultiProcess"
-          dir="${thirdparty.dir}/tpch">
-          <arg line="${datasize} 1 2"/>
-        </exec>
-      </else>
-    </if>
-    
-    <!-- Copy over the query files -->
-    <sync todir="${ff.dir}/${datasize}" verbose="true">
-      <fileset dir="${ffsource.dir}/${datasize}"/>
-    </sync>
-
-    <!-- Copy over the 10 flatfiles for each table -->
     <copy todir="${ff.dir}/${datasize}" verbose="true">
       <fileset dir="${ffsource.dir}/${datasize}-10"/>
     </copy>
 
-    <!-- Then, copy over the files used for updates -->
-    <copy todir="${ff.dir}/${datasize}" verbose="true">
-      <fileset dir="${ffsource.dir}/${datasize}-1"
-        includes="*.tbl,delete*.bcp,lineitemu*.bcp,ordersu*.bcp"/>
-    </copy>
+  </target>
+
+  <target name="copy-big-ref-files">
+    <condition property="to.download">
+      <and>
+        <http url="${bigrefsource.url}" />
+        <not>
+          <available file="${rwconcurrency.dir}/tpch-throughput-readonly.100M"/>
+        </not>
+      </and>
+    </condition>
+    <if>
+      <isset property="to.download"/>
+      <then>
+        <!-- copy raksha -> rwconcurrency.dir -->
+        <echo message="Downloading from Raksha..."/>
+        <exec dir="${rwconcurrency.dir}" executable="wget">
+          <arg line="--reject .html -q -np -nH --cut-dirs=4 ${bigrefsource.url}/tpch-throughput-readonly.100M" />
+        </exec>
+        <echo message="...download complete"/>
+      </then>
+    </if>
   </target>
 
   <target name="gen-sql">
@@ -137,6 +133,7 @@
       <filterset>
         <filter token="FFDIR" value="${ff.dir}/${datasize.param}"/>
         <filter token="DIR" value="${gensql.dir}/${datasize.param}"/>
+        <filter token="TEST_DIR" value="${rwconcurrency.dir}"/>
       </filterset>
     </copy>
 
@@ -150,6 +147,8 @@
     </copy>
 
   </target>
+
+  <property name="testlog.dir" value="${rwconcurrency.dir}"/>
 
   <target name="gen-all-sql">
     <!-- generate run.properties -->
@@ -169,6 +168,7 @@
   </target>
 
   <target name="test" depends="clean-test,gen-all-sql">
+    <property name="bh.log.basedir" value="${rwconcurrency.dir}/testlog" />
     <property name="bh.filter.runDuration" value="short,medium,null"/> 
     <property file="run.properties"/>
     <blackhawk.fork
@@ -177,16 +177,72 @@
       classpathref="test.classpath"/>
   </target>
 
+  <target name="create-archive-dirs">
+    <mkdir dir="${rwconcurrency.dir}/fullArchive"/>
+    <mkdir dir="${rwconcurrency.dir}/fullArchive2"/>
+  </target>
+
+  <target name="testBackupRestore" depends="clean-test,gen-all-sql,create-archive-dirs">
+    <antcall target="backup"/>
+    <antcall target="restoreBackup"/>
+    <antcall target="validateRestore"/>
+    <antcall target="cancelBackup"/>
+  </target>
+  
+  <target name="backup">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-concurBackup" />
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${rwconcurrency.dir}"
+      testscript="backup.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="restoreBackup">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-concurRestore" />
+    <property file="run.properties"/>
+    <ant dir="${open.dir}/luciddb" target="restoreCatalog"/>
+    <blackhawk.fork
+      basedir="${rwconcurrency.dir}"
+      testscript="restoreBackup.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="validateRestore">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-concurValidate" />
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${rwconcurrency.dir}"
+      testscript="validateRestore.xml"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="cancelBackup">
+    <property name="bh.log.basedir" value="${testlog.dir}/bh-cancelBackup" />
+    <property file="run.properties"/>
+    <blackhawk.fork
+      basedir="${rwconcurrency.dir}"
+      testscript="cancelBackup.xml"
+      classpathref="test.classpath"/>
+  </target>
+
   <target name="clean">
     <antcall target="clean-test"/>
     <delete dir="${ff.dir}"/>
     <delete file="datasize"/>
     <delete file="run.properties"/>
+    <delete file="tpch-throughput-readonly.100M"/>
   </target>
 
   <target name="clean-test">
-    <delete dir="${bh.log.basedir}"/>
+    <delete dir="${rwconcurrency.dir}/testlog"/>
+    <delete dir="${rwconcurrency.dir}/bh-concurBackup"/>
+    <delete dir="${rwconcurrency.dir}/bh-concurRestore"/>
+    <delete dir="${rwconcurrency.dir}/bh-concurValidate"/>
+    <delete dir="${rwconcurrency.dir}/bh-cancelBackup"/>
     <delete dir="${gensql.dir}"/>
+    <delete dir="${rwconcurrency.dir}/fullArchive"/>
+    <delete dir="${rwconcurrency.dir}/fullArchive2"/>
   </target>
 
 </project>

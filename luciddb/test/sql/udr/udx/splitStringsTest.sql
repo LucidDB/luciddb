@@ -100,29 +100,11 @@ select * from table(
     TRUE)
 );
 
-create table emptyTable(c1 varchar(10));
-select * from table(
-  applib.split_rows(cursor(select c1 from emptyTable),'~','!',TRUE));
-
 -- test with null input
 call applib.create_var('splittest', null, 'xyz');
 call applib.set_var('splittest', 'var', null);
 select * from table(applib.split_string_to_rows(applib.get_var('splittest', 'var'), ',', '!',TRUE));
--- test with null input to split_rows
-create table status (c1 varchar(10));
-insert into status values (null);
-select * from status;
-select * from table(
-  applib.split_rows(cursor(select c1 from status),'~','!',TRUE));
-select count(*) from table(
-  applib.split_rows(cursor(select c1 from status),'~','!',TRUE)) where c1 is null;
 
-create table status1 (c1 varchar(10), c2 varchar(10));
-insert into status1 values (null,null);
-select * from table(
-  applib.split_rows(cursor(select c1,c2 from status1),row(c1),'~','!',TRUE));
-select count(*) from table(
-  applib.split_rows(cursor(select c1,c2 from status1),row(c1),'~','!',TRUE)) where c1 is null;
 
 -- test exception when more than one escape char
 -- enable when LER-4686 is fixed

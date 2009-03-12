@@ -385,30 +385,4 @@ sqlline> !connect jdbc:luciddb: sa ""
 0: jdbc:luciddb:> -- from sys_root.dba_performance_counters
 0: jdbc:luciddb:> -- where counter_name = 'TempPagesAllocated';
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- LER-9476 -- make sure replacing the data server doesn't reset row counts
-0: jdbc:luciddb:> create schema s;
-0: jdbc:luciddb:> set schema 's';
-0: jdbc:luciddb:> create table rc(a int);
-0: jdbc:luciddb:> insert into rc values(1),(2),(3);
-0: jdbc:luciddb:> delete from rc where a = 2;
-0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
-. . . . . . . . >     from sys_root.dba_stored_tables where table_name = 'RC';
-+-------------+--------------------+--------------------+
-| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
-+-------------+--------------------+--------------------+
-| RC          | 2                  | 1                  |
-+-------------+--------------------+--------------------+
-0: jdbc:luciddb:> set schema 'sys_boot.sys_boot';
-0: jdbc:luciddb:> set path 'sys_boot.sys_boot';
-0: jdbc:luciddb:> create or replace server sys_column_store_data_server
-. . . . . . . . > local data wrapper sys_column_store;
-0: jdbc:luciddb:> -- these row counts should remain non-zero
-0: jdbc:luciddb:> select table_name, current_row_count, deleted_row_count
-. . . . . . . . >     from localdb.sys_root.dba_stored_tables where table_name = 'RC';
-+-------------+--------------------+--------------------+
-| TABLE_NAME  | CURRENT_ROW_COUNT  | DELETED_ROW_COUNT  |
-+-------------+--------------------+--------------------+
-| RC          | 2                  | 1                  |
-+-------------+--------------------+--------------------+
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

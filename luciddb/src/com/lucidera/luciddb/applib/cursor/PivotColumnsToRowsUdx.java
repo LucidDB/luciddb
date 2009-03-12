@@ -22,8 +22,6 @@ package com.lucidera.luciddb.applib.cursor;
 
 import java.sql.*;
 
-import com.lucidera.luciddb.applib.resource.*;
-
 /**
  * Pivots a table's columns to rows
  *
@@ -42,24 +40,18 @@ public abstract class PivotColumnsToRowsUdx
      */
     public static void execute(
         ResultSet inputSet, PreparedStatement resultInserter) 
-        throws SQLException, ApplibException
+        throws SQLException
     {
         // Validate ParameterMetaData requires two outputs
         assert(resultInserter.getParameterMetaData().getParameterCount() == 2);
 
         ResultSetMetaData rsmd = inputSet.getMetaData();
         int colNum = rsmd.getColumnCount();
-        if (inputSet.next()) {
-            for (int i = 1; i <= colNum; i++) {
-                resultInserter.setString(1, rsmd.getColumnLabel(i));
-                resultInserter.setString(2, inputSet.getString(i));
-                resultInserter.executeUpdate();
-            }
-            if (inputSet.next()) {
-                throw ApplibResourceObject.get().MoreThanOneRow.ex();
-            }
-        } else {
-            throw ApplibResourceObject.get().EmptyInput.ex();
+        inputSet.next();
+        for (int i = 1; i <= colNum; i++) {
+            resultInserter.setString(1, rsmd.getColumnLabel(i));
+            resultInserter.setString(2, inputSet.getString(i));
+            resultInserter.executeUpdate();
         }
     }        
 }

@@ -30,13 +30,9 @@
 
   <!-- override Farrago -->
   <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
-  <property name="project.catalog.schema" value="luciddb" />
   <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
   <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
-  <property name="build.init.properties" location="${backupRestore.dir}/build.init.properties" />
-  <property name="luciddb.dir" location="${open.dir}/luciddb" />
-  <import file="${luciddb.dir}/properties.xml" />
 
   <!-- directory of csv files -->
   <property name="data.dir" value="${open.dir}/luciddb/test/data"/>
@@ -387,14 +383,10 @@
     <delete dir="${backupRestore.dir}/incrArchive2"/>
     <delete dir="${backupRestore.dir}/diffArchive"/>
     <delete dir="${backupRestore.dir}/tmpArchive"/>
-    <chmod perm="u+w">
-      <dirset dir="${backupRestore.dir}" includes="nonWritableArchive"/>
-    </chmod>
+    <chmod dir="${backupRestore.dir}/nonWritableArchive" perm="u+w"/>
     <delete dir="${backupRestore.dir}/nonWritableArchive"/>
     <!-- this should have been done earlier, but just in case -->
-    <chmod perm="u+r">
-      <dirset dir="${backupRestore.dir}" includes="nonReadableArchive"/>
-    </chmod>
+    <chmod dir="${backupRestore.dir}/nonReadableArchive" perm="u+r"/>
     <delete dir="${backupRestore.dir}/nonReadableArchive"/>
   </target>
 
