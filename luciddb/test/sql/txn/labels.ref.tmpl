@@ -93,10 +93,9 @@
 | T           | 5                  | 1                  |
 | T2          | 1                  | 0                  |
 +-------------+--------------------+--------------------+
-0: jdbc:luciddb:> -- make sure there are 5 rows corresponding to T in RowCountStatistics,
-0: jdbc:luciddb:> -- corresponding to each of the labels (except the first, since the table
-0: jdbc:luciddb:> -- was empty when the first label was created) plus 1 for the DML statements
-0: jdbc:luciddb:> -- that occurred after the last label was created
+0: jdbc:luciddb:> -- make sure there are 6 rows corresponding to T in RowCountStatistics,
+0: jdbc:luciddb:> -- corresponding to each of the labels plus 1 for the DML statements that
+0: jdbc:luciddb:> -- occurred after the last label was created
 0: jdbc:luciddb:> select t."name", st."rowCount", st."deletedRowCount", st."analyzeRowCount"
 . . . . . . . . >     from
 . . . . . . . . >         sys_fem.med."StoredTable" t
@@ -110,6 +109,7 @@
 +-------+-----------+------------------+------------------+
 | name  | rowCount  | deletedRowCount  | analyzeRowCount  |
 +-------+-----------+------------------+------------------+
+| T     | 0         | 0                |                  |
 | T     | 1         | 0                |                  |
 | T     | 2         | 0                | 2                |
 | T     | 3         | 0                | 2                |
@@ -358,6 +358,7 @@ Error: Attempt to access table "LABEL"."T2", which is not visible to the current
 +-------+-----------+------------------+------------------+
 | name  | rowCount  | deletedRowCount  | analyzeRowCount  |
 +-------+-----------+------------------+------------------+
+| T     | 0         | 0                |                  |
 | T     | 1         | 0                |                  |
 | T     | 2         | 0                | 2                |
 | T     | 3         | 0                | 2                |
@@ -525,6 +526,7 @@ sqlline> !connect jdbc:luciddb:;schema="LABEL";label="L3" sa sa
 +-------+-----------+------------------+------------------+
 | name  | rowCount  | deletedRowCount  | analyzeRowCount  |
 +-------+-----------+------------------+------------------+
+| T     | 0         | 0                |                  |
 | T     | 1         | 0                |                  |
 | T     | 2         | 0                | 2                |
 | T     | 5         | 1                | 5                |
@@ -650,8 +652,7 @@ sqlline> !connect jdbc:luciddb:;schema="LABEL";label="L3" sa sa
 +---------+
 | 0       |
 +---------+
-0: jdbc:luciddb:> select (cast(counter_value as bigint) < 
-. . . . . . . . >         cast(applib.get_var('LABEL', 'pageCount') as bigint))
+0: jdbc:luciddb:> select (counter_value < applib.get_var('LABEL', 'pageCount'))
 . . . . . . . . >     from sys_root.dba_performance_counters
 . . . . . . . . >         where counter_name = 'DatabasePagesAllocated';
 +---------+

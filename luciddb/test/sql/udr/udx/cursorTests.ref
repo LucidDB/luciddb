@@ -313,18 +313,4 @@ Error: hey, hey, it's an exception (state=,code=0)
 | userCatalogEnabled        | false                               |
 +---------------------------+-------------------------------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --
-0: jdbc:luciddb:> -- UDX with empty input
-0: jdbc:luciddb:> --
-0: jdbc:luciddb:> select * from table(
-. . . . . . . . >     pivot_columns_to_rows(cursor(select * from t1 where aa = 0)));
-Error: Input contains no rows (state=,code=0)
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --
-0: jdbc:luciddb:> -- UDX with too many input rows
-0: jdbc:luciddb:> --
-0: jdbc:luciddb:> select * from table(
-. . . . . . . . >     pivot_columns_to_rows(cursor(select * from t1)));
-Error: Input contains more than one row (state=,code=0)
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -12,7 +12,7 @@
 0: jdbc:luciddb:> -- insert column list ommitted
 0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
 . . . . . . . . > when matched then update set n2=m2
-. . . . . . . . > when not matched then insert values (m1, power(m2,2));
+. . . . . . . . > when not matched then insert values (m1, pow(m2,2));
 0: jdbc:luciddb:> select * from t1 order by 2;
 +-----+---------+
 | N1  |   N2    |

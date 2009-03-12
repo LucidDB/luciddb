@@ -93,28 +93,15 @@ public abstract class PenultimateValuesUdx
         PenValueKey currKey = new PenValueKey(groupCols, inputSet);
         Object [] prevValues = new Object[nInput];
         Object [] penRow = new Object[nOutput];
-        // grouping and non-grouping input columns
-        int [] groupingCols = new int[groupCols.size()];
-        int [] nongroupingCols = new int[nInput - groupCols.size()];
         int [] noCheckCols = new int[groupCols.size() + 1];
         int dColIdx = inputSet.findColumn(designatedCols.get(0)) - 1;
 
         // get indexes for columns which don't need to be checked
-        // also get indexes of grouping and non-grouping columns
         for (int i = 0; i < groupCols.size(); i++) {
-            int groupIdx = inputSet.findColumn(groupCols.get(i)) - 1;
-            groupingCols[i] = groupIdx;
-            noCheckCols[i] = groupIdx;
+            noCheckCols[i] = inputSet.findColumn(groupCols.get(i)) - 1;
         }
         noCheckCols[noCheckCols.length - 1] = tsColIdx - 1;
         Arrays.sort(noCheckCols);
-        Arrays.sort(groupingCols);
-        for (int i = 0, j = 0; i < nInput; i++) {
-            if(Arrays.binarySearch(groupingCols, i) < 0) {
-                nongroupingCols[j] = i;
-                j++;
-            }
-        }
 
         while (inputSet.next()) {
             // timestamp col value must not be null
@@ -125,13 +112,7 @@ public abstract class PenultimateValuesUdx
 
             currKey.setValue(inputSet);
             if (first) {
-                setToCurrentRowValuesOrNull(
-                    inputSet,
-                    groupingCols,
-                    nongroupingCols,
-                    tsColIdx,
-                    prevValues,
-                    penRow);
+                setToCurrentRowValues(inputSet, prevValues, penRow);
                 prevKey.setValue(currKey);
                 first = false;
             } else {
@@ -145,13 +126,7 @@ public abstract class PenultimateValuesUdx
                 } else if (c > 0) {
                     // currKey comes after prevKey
                     emitUdxRow(resultInserter, penRow);
-                    setToCurrentRowValuesOrNull(
-                        inputSet,
-                        groupingCols,
-                        nongroupingCols,
-                        tsColIdx,
-                        prevValues,
-                        penRow);
+                    setToCurrentRowValues(inputSet, prevValues, penRow);
                     prevKey.setValue(currKey);
                 } else { 
                     // currKey equals prevKey, same group
@@ -208,26 +183,18 @@ public abstract class PenultimateValuesUdx
         resultInserter.executeUpdate();
     }
 
-    private static void setToCurrentRowValuesOrNull(
+    private static void setToCurrentRowValues(
         ResultSet inputSet,
-        int [] groupingCols,
-        int [] nongroupingCols,
-        int tsColIdx,
         Object [] prevRow,
         Object [] penRow)
         throws SQLException
     {
-        for (int i = 0, n = prevRow.length; i < n ; i++) {
+        for (int i = 0; i < prevRow.length ; i++) {
+            penRow[i] = inputSet.getObject(i+1);
             prevRow[i] = inputSet.getObject(i+1);
         }
-        for (int i = 0, n = groupingCols.length; i < n; i++) {
-            int idx = groupingCols[i];
-            penRow[idx] = inputSet.getObject(idx + 1);
-        }
-        for (int i = 0, n = nongroupingCols.length; i < n; i++) {
-            penRow[nongroupingCols[i]] = null;
-        }
-        penRow[penRow.length - 1] = inputSet.getTimestamp(tsColIdx);
+        // set until_timestamp to null
+        penRow[prevRow.length] = null;
     }
 
     private static String buildSortColumnString(

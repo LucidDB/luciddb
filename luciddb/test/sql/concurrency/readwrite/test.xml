@@ -8,6 +8,7 @@
             <test-suite-modifier value="rwconcurrency"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/concurrency/readwrite" target="copy-big-ref-files"/>
         <ant dir="${open.dir}/luciddb/test/sql/concurrency/readwrite" target="gen-all-sql"/>
         <ant dir="${open.dir}/luciddb/test/sql/concurrency/readwrite" target="create-db"/>
       </init-hook>
@@ -19,6 +20,16 @@
       <test name="analyze" requiresSuccess="setup">
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/analyze.mtsql"/>
+      </test>
+
+      <test name="backup" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/backup.mtsql"/>
+      </test>
+
+      <test name="restore" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/restore.mtsql"/>
       </test>
 
       <test name="insertSelect" requiresSuccess="setup">
@@ -91,14 +102,13 @@
       </test>
 
       <test name="tpchThroughputReadOnly" requiresSuccess="setup">
+        <test-metadata>
+          <runDuration>long</runDuration>
+        </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/tpch-throughput-readonly.mtsql"/>
       </test>
 
-      <test name="tpchThroughput" requiresSuccess="setup">
-        <junit-sql 
-          file="${open.dir}/luciddb/test/sql/concurrency/readwrite/gen/${datasize}/tpch-throughput.mtsql"/>
-      </test>
 
       <!-- test added for delete and sub-queries -->
 

@@ -1383,7 +1383,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 0: jdbc:luciddb:> -- SELECT n3, MOD(n3, 5) FROM TEST_REAL_TABLE ORDER BY 1;
 0: jdbc:luciddb:> -- SELECT n4, MOD(n4, 5) FROM TEST_REAL_TABLE ORDER BY 1;
 0: jdbc:luciddb:> -- SELECT n5, MOD(n5, 5) FROM TEST_REAL_TABLE ORDER BY 1;
-0: jdbc:luciddb:> SELECT n1, POWER(n1, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n1, POW(n1, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
 +--------------+-------------------------+
 |      N1      |         EXPR$1          |
 +--------------+-------------------------+
@@ -1400,7 +1400,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 123456       | 2.8678802168634497E25   |
 | 2147483647   | 4.5671926060252477E46   |
 +--------------+-------------------------+
-0: jdbc:luciddb:> SELECT n2, POWER(n2, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n2, POW(n2, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
 +----------+------------------------+
 |    N2    |         EXPR$1         |
 +----------+------------------------+
@@ -1417,7 +1417,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 32767    | 3.777316760726711E22   |
 | 234567   | 7.101246158180558E26   |
 +----------+------------------------+
-0: jdbc:luciddb:> SELECT n3, POWER(n3, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n3, POW(n3, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
 +----------+-------------------------+
 |    N3    |         EXPR$1          |
 +----------+-------------------------+
@@ -1434,7 +1434,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 3000     | 2.43E17                 |
 | 345678   | 4.9358130624825083E27   |
 +----------+-------------------------+
-0: jdbc:luciddb:> SELECT n4, POWER(n4, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n4, POW(n4, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
 +----------+------------------------+
 |    N4    |         EXPR$1         |
 +----------+------------------------+
@@ -1451,7 +1451,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 4000     | 1.024E18               |
 | 456789   | 1.988740807749747E28   |
 +----------+------------------------+
-0: jdbc:luciddb:> SELECT n5, POWER(n5, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n5, POW(n5, 5) FROM TEST_INTEGER_TABLE ORDER BY 1;
 +----------+------------------------+
 |    N5    |         EXPR$1         |
 +----------+------------------------+
@@ -1468,7 +1468,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 5000     | 3.125E18               |
 | 567890   | 5.906376210761976E28   |
 +----------+------------------------+
-0: jdbc:luciddb:> SELECT n1, POWER(n1, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n1, POW(n1, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 +------------+------------------------+
 |     N1     |         EXPR$1         |
 +------------+------------------------+
@@ -1484,7 +1484,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 12345      | 2.8671833852463546E20  |
 | 99999999   | 9.99999950000001E39    |
 +------------+------------------------+
-0: jdbc:luciddb:> SELECT n2, POWER(n2, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n2, POW(n2, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 +----------------+-----------------------+
 |       N2       |        EXPR$1         |
 +----------------+-----------------------+
@@ -1500,7 +1500,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 23456          | 7.100186636671596E21  |
 | 999999999999   | 9.99999999995E59      |
 +----------------+-----------------------+
-0: jdbc:luciddb:> SELECT n3, POWER(n3, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n3, POW(n3, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 +-----------------+-------------------------+
 |       N3        |         EXPR$1          |
 +-----------------+-------------------------+
@@ -1516,7 +1516,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 3300.33000      | 3.9154964610430694E17   |
 | 9999999.99999   | 9.999999999950007E34    |
 +-----------------+-------------------------+
-0: jdbc:luciddb:> SELECT n4, POWER(n4, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n4, POW(n4, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 +-------------+--------------------------+
 |     N4      |          EXPR$1          |
 +-------------+--------------------------+
@@ -1532,7 +1532,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 4400.440    | 1.64998698605271757E18   |
 | 99999.999   | 9.999999500000009E24     |
 +-------------+--------------------------+
-0: jdbc:luciddb:> SELECT n5, POWER(n5, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n5, POW(n5, 5) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 +--------------------+-------------------------+
 |         N5         |         EXPR$1          |
 +--------------------+-------------------------+
@@ -1548,7 +1548,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 5500.5500000000    | 5.0353606752097065E18   |
 | 99999.9999999999   | 9.99999999999995E24     |
 +--------------------+-------------------------+
-0: jdbc:luciddb:> SELECT n1, POWER(n1, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n1, POW(n1, 5) FROM TEST_REAL_TABLE ORDER BY 1;
 +---------------------+---------------------------+
 |         N1          |          EXPR$1           |
 +---------------------+---------------------------+
@@ -1566,7 +1566,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 1234567.0           | 2.867961522709958E30      |
 | 1.233E31            | 2.849806567461393E155     |
 +---------------------+---------------------------+
-0: jdbc:luciddb:> SELECT n2, POWER(n2, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n2, POW(n2, 5) FROM TEST_REAL_TABLE ORDER BY 1;
 +-------------+---------------------------+
 |     N2      |          EXPR$1           |
 +-------------+---------------------------+
@@ -1584,7 +1584,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 1.255E31    | 3.113283675565368E155     |
 | 1.0E38      | 9.999998401428564E189     |
 +-------------+---------------------------+
-0: jdbc:luciddb:> SELECT n3, POWER(n3, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n3, POW(n3, 5) FROM TEST_REAL_TABLE ORDER BY 1;
 +-------------+---------------------------+
 |     N3      |          EXPR$1           |
 +-------------+---------------------------+
@@ -1602,7 +1602,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 1.277E32    | 3.3958974273546794E160    |
 | 1.0E38      | 9.999998401428564E189     |
 +-------------+---------------------------+
-0: jdbc:luciddb:> SELECT n4, POWER(n4, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n4, POW(n4, 5) FROM TEST_REAL_TABLE ORDER BY 1;
 +-----------------------+-------------------------+
 |          N4           |         EXPR$1          |
 +-----------------------+-------------------------+
@@ -1620,7 +1620,7 @@ Error: From line 1, column 12 to line 1, column 23: No match found for function 
 | 1.23456789012345E14   | 2.8679718617336253E70   |
 | 1.287632E206          | Infinity                |
 +-----------------------+-------------------------+
-0: jdbc:luciddb:> SELECT n5, POWER(n5, 5) FROM TEST_REAL_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n5, POW(n5, 5) FROM TEST_REAL_TABLE ORDER BY 1;
 +-----------------------+-------------------------+
 |          N5           |         EXPR$1          |
 +-----------------------+-------------------------+

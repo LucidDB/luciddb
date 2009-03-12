@@ -14,7 +14,6 @@
         <test-suite-modifier value="nondb"/>
         <property name="foreign.db" value="nondb"/>
       </test-suite-call>
-      <test-suite-call testfile="test/sql/dml/merge/sanity.xml"/>
       <test-suite-call testfile="test/sql/txn/test.xml"/>
       <test-suite-call testfile="test/sql/company/test-idx.xml"/>
       <test-suite-call testfile="test/sql/calc/test.xml"/>

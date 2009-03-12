@@ -33,7 +33,7 @@ CREATE ROLE TPCHROLE;
 --/
 
 create server ff_tpch_server
-foreign data wrapper sys_file_wrapper
+foreign data wrapper "FLAT FILE"
 options(
     directory '@FFDIR@',
     file_extension '.tbl',
