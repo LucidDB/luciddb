@@ -318,6 +318,16 @@ ${farrago.test.jvmargs}
 
   <!-- End Enki Hibernate MDR properties -->
 
+  <!-- UML2MOF Defaults to Netbeans MDR's btree implementation.  That
+       implementation has a bug which intermittently causes ordered 
+       multi-value associations to be re-ordered during XMI import.
+       The re-ordering can cause attributes to be re-ordered which 
+       causes FRG-322. The memory implementation provides deterministic
+       output. -->
+  <property
+     name="uml2mof.default.storageModel"
+     value="org.netbeans.mdr.persistence.memoryimpl.StorageFactoryImpl"/>
+
   <!-- Classpaths -->
 
   <!-- Set a default for this classpath in case it's not set in a
@@ -612,6 +622,7 @@ ${farrago.test.jvmargs}
     <attribute name="umlmodelname" default="unspecified" />
     <attribute name="outputfilename" default="unspecified" />
     <attribute name="umlsansdiagrams" default="unspecified" />
+    <attribute name="storageModel" default="${uml2mof.default.storageModel}"/>
     <sequential>
       <xslt style="${farrago.xmi.dir}/deleteUmlDiagrams.xsl"
         in="@{umlmodelname}"
@@ -619,15 +630,9 @@ ${farrago.test.jvmargs}
       </xslt>
       <java classname="org.netbeans.lib.jmi.uml2mof.Main"
         fork="true" failonerror="true">
-        <!-- UML2MOF Defaults to Netbeans MDR's btree implementation.  That
-             implementation has a bug which intermittently causes ordered 
-             multi-value associations to be re-ordered during XMI import.
-             The re-ordering can cause attributes to be re-ordered which 
-             causes FRG-322. The memory implementation provides deterministic
-             output. -->
         <sysproperty
           key="org.netbeans.mdr.storagemodel.StorageFactoryClassName"
-          value="org.netbeans.mdr.persistence.memoryimpl.StorageFactoryImpl"/>
+          value="@{storageModel}"/>
         <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
         <classpath>
           <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
@@ -650,6 +655,7 @@ ${farrago.test.jvmargs}
     <attribute name="umlBasename" default="unspecified" />
     <attribute name="mofBasename" default="unspecified" />
     <attribute name="xmiDir" default="unspecified" />
+    <attribute name="storageModel" default="${uml2mof.default.storageModel}"/>
     <sequential>
       <unzip src="@{zumlFile}" dest="@{xmiDir}">
         <patternset>
@@ -658,7 +664,8 @@ ${farrago.test.jvmargs}
       </unzip>
       <farrago.uml2mof umlmodelname="@{xmiDir}/@{umlBasename}.xmi"
         outputfilename="@{xmiDir}/@{mofBasename}.xmi"
-        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"/>
+        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"
+        storageModel="@{storageModel}"/>
     </sequential>
   </macrodef>
 
@@ -669,6 +676,7 @@ ${farrago.test.jvmargs}
     <attribute name="umlBasename" default="unspecified" />
     <attribute name="mofBasename" default="unspecified" />
     <attribute name="xmiDir" default="unspecified" />
+    <attribute name="storageModel" default="${uml2mof.default.storageModel}"/>
     <sequential>
       <xslt style="${farrago.xmi.dir}/extractArgoModel.xsl"
         in="@{umlFile}"
@@ -676,7 +684,8 @@ ${farrago.test.jvmargs}
       </xslt>
       <farrago.uml2mof umlmodelname="@{xmiDir}/@{umlBasename}.xmi"
         outputfilename="@{xmiDir}/@{mofBasename}.xmi"
-        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"/>
+        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"
+        storageModel="@{storageModel}"/>
     </sequential>
   </macrodef>
 

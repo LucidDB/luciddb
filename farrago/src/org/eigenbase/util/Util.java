@@ -113,6 +113,14 @@ public class Util
      */
     private static Toolkit awtToolkit;
 
+    /**
+     * Maps classes to the map of their enum values. Uses a weak map so that
+     * classes are not prevented from being unloaded.
+     */
+    private static final Map<Class, Map<String, ? extends Enum>>
+        mapClazzToMapNameToEnum =
+        new WeakHashMap<Class, Map<String, ? extends Enum>>();
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -1744,9 +1752,17 @@ public class Util
     /**
      * Converts an {@link Iterable} whose members are automatically down-cast to
      * a given type.
+     *
+     * <p>All modifications are automatically written to the backing iterator.
+     * Not synchronized.
+     *
+     * @param iterable Backing iterable
+     * @param clazz Class to cast to
+     *
+     * @return An iterable whose members are of the desired type.
      */
     public static <E> Iterable<E> cast(
-        final Iterable<?> iterable,
+        final Iterable<? super E> iterable,
         final Class<E> clazz)
     {
         return new Iterable<E>() {
@@ -1887,12 +1903,44 @@ public class Util
      * @param clazz Enumeration class
      * @return map of values
      */
-    public static <T extends Enum<T>> Map<String, T> enumConstants(Class<T> clazz) {
-        HashMap<String, T> map = new HashMap<String, T>();
-        for (T t : clazz.getEnumConstants()) {
+    public static <T extends Enum<T>> Map<String, T> enumConstants(
+        Class<T> clazz)
+    {
+        final T[] ts = clazz.getEnumConstants();
+        if (ts == null) {
+            // not an enum type
+            return null;
+        }
+        Map<String, T> map = new HashMap<String, T>(ts.length * 2);
+        for (T t : ts) {
             map.put(t.name(), t);
         }
-        return map;
+        return Collections.unmodifiableMap(map);
+    }
+
+    /**
+     * Returns the value of an enumeration with a particular name.
+     *
+     * <p>Similar to {@link Enum#valueOf(Class, String)}, but returns
+     * {@code null} rather than throwing {@link IllegalArgumentException}.
+     *
+     * @param clazz Enum class
+     * @param name Name of enum constant
+     * @param <T> Enum class type
+     * @return Enum constant or null
+     */
+    @SuppressWarnings({"unchecked"})
+    public static synchronized <T extends Enum<T>> T enumVal(
+        Class<T> clazz,
+        String name)
+    {
+        Map<String, T> mapNameToEnum =
+            (Map<String, T>) mapClazzToMapNameToEnum.get(clazz);
+        if (mapNameToEnum == null) {
+            mapNameToEnum = enumConstants(clazz);
+            mapClazzToMapNameToEnum.put(clazz, mapNameToEnum);
+        }
+        return mapNameToEnum.get(name);
     }
 
     //~ Inner Classes ----------------------------------------------------------
