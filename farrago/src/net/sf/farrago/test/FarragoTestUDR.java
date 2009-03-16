@@ -447,7 +447,7 @@ public abstract class FarragoTestUDR
         int nInput = inputSet.getMetaData().getColumnCount();
         int nOutput = resultInserter.getParameterMetaData().getParameterCount();
         assert (nOutput == (nInput + 1))
-            : descibeInputOutput(inputSet, resultInserter);
+            : describeInputOutput(inputSet, resultInserter);
 
         // NOTE jvs 6-Aug-2006: This is just an example.  It's a terrible
         // digest; don't use it for anything real!
@@ -466,7 +466,7 @@ public abstract class FarragoTestUDR
         }
     }
 
-    private static String descibeInputOutput(
+    protected static String describeInputOutput(
         ResultSet inputSet, PreparedStatement resultInserter)
         throws SQLException
     {
