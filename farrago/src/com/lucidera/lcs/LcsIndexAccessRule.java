@@ -659,4 +659,4 @@ public class LcsIndexAccessRule
     }
 }
 
-//End LcsIndexAccessRule.java
+// End LcsIndexAccessRule.java

@@ -728,15 +728,14 @@ public class FarragoOJRexCastImplementor
                 // Note: this check for overflow should only be required
                 // when the string conversion does not perform a check.
                 checkOverflow();
-            }
-
-            // Casting from string to boolean relies on the runtime type.
-            // Note: string is trimmed by conversion method.
-            else if (
+            } else if (
                 (lhsType.getSqlTypeName() == SqlTypeName.BOOLEAN)
                 && SqlTypeUtil.inCharOrBinaryFamilies(rhsType)
                 && !SqlTypeUtil.isLob(rhsType))
             {
+                // Casting from string to boolean relies on the runtime type.
+                // Note: string is trimmed by conversion method.
+
                 //TODO: toString will cause too much garbage collection.
                 Expression str =
                     new MethodCall(
@@ -750,10 +749,8 @@ public class FarragoOJRexCastImplementor
                             NullablePrimitive.NullableBoolean.class),
                         "convertString",
                         new ExpressionList(str));
-            }
-
-            // In general, check for overflow
-            else {
+            } else {
+                // In general, check for overflow
                 checkOverflow();
             }
 

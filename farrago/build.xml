@@ -406,6 +406,12 @@ ${farrago.test.jvmargs}
       </fileset>
       <fileset dir="${farrago.parser.ddl.dir}/impl" includes="*.java,*.jj"/>
       <fileset dir="${farrago.parser.sql.dir}/impl" includes="*.java,*.jj"/>
+      <fileset 
+        dir="${farrago.src.dir}/examples/rng/src/net/sf/farrago/rng/parserimpl" 
+        includes="*.java,*.jj"/>
+      <fileset 
+        dir="${farrago.src.dir}/examples/rng/src/net/sf/farrago/rng/resource" 
+        includes="*.java"/>
       <fileset dir="${lurql.parser.dir}" includes="*.java"/>
     </delete>
   </target>

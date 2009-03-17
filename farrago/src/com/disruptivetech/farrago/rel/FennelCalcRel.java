@@ -90,8 +90,8 @@ public class FennelCalcRel
             "child's output type",
             child.getRowType(),
             true);
-        assert RelOptUtil.equal( // TODO: use stronger 'eq'
-
+        // TODO: use stronger 'eq'
+        assert RelOptUtil.equal(
             "program's output type",
             program.getOutputRowType(),
             "fennelCalcRel's output rowtype",

@@ -94,23 +94,16 @@ public class ThreadIteratorTest
 
     public void testDigits()
     {
-        Iterator digits =
+        ThreadIterator threadIterator =
             new ThreadIterator() {
-                int limit;
-
-                public ThreadIterator start(int limit)
-                {
-                    this.limit = limit;
-                    return super.start();
-                }
-
                 protected void doWork()
                 {
-                    for (int i = 0; i < limit; i++) {
+                    for (int i = 0; i < 10; i++) {
                         put(new Integer(i));
                     }
                 }
-            }.start(10);
+            };
+        Iterator digits = threadIterator.iterator();
         assertEquals(
             digits,
             new Integer[] {

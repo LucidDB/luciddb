@@ -54,7 +54,7 @@ class MedMqlDataServer
     public static final String PROP_URL = "URL";
 
     public static final String PROP_METAWEB_TYPE = "METAWEB_TYPE";
-    
+
     public static final String PROP_UDX_SPECIFIC_NAME = "UDX_SPECIFIC_NAME";
 
     public static final String DEFAULT_URL
@@ -107,7 +107,7 @@ class MedMqlDataServer
     {
         String udxSpecificName = getProperties().getProperty(
             PROP_UDX_SPECIFIC_NAME, DEFAULT_UDX_SPECIFIC_NAME);
-        
+
         requireProperty(tableProps, PROP_METAWEB_TYPE);
         String metawebType = tableProps.getProperty(PROP_METAWEB_TYPE);
         return new MedMqlColumnSet(

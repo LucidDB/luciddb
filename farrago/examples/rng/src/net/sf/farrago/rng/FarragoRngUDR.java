@@ -117,7 +117,7 @@ public abstract class FarragoRngUDR
      */
     public static int rng_next_int_internal(
         int n,
-        String rngName, 
+        String rngName,
         String filename)
         throws SQLException
     {

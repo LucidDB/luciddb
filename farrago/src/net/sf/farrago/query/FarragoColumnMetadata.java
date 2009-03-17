@@ -77,4 +77,4 @@ public class FarragoColumnMetadata
     }
 }
 
-// End FarragoRelMdUtil.java
+// End FarragoColumnMetadata.java

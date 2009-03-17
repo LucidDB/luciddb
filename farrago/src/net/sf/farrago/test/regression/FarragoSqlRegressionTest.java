@@ -89,11 +89,6 @@ public class FarragoSqlRegressionTest
             FarragoCalcSystemTest.VirtualMachine.Fennel
             .getAlterSystemCommand());
         runSqlLineTest(getName());
-
-        // stmt.execute(FarragoCalcSystemTest.VirtualMachine.Java
-        //      .getAlterSystemCommand());
-        // runSqlLineTest(getName());
-
     }
 }
 

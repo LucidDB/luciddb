@@ -45,7 +45,7 @@ public abstract class UnwrappableRJConnection extends RJConnection
     {
         super(rmiconn);
     }
-    
+
     protected UnwrappableRJConnection(
         RJDriverInterface drv,
         String url,

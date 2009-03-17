@@ -41,4 +41,4 @@ public interface SpecialDataValue
     Object getSpecialData();
 }
 
-// End DataValue.java
+// End SpecialDataValue.java

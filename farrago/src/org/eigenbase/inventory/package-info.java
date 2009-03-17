@@ -27,8 +27,8 @@
  * @version $Id$
  */
 @EigenbaseComponent(
-    name="Inventory Framework",
-    category=EigenbaseComponentCategory.Utility)
+    name = "Inventory Framework",
+    category = EigenbaseComponentCategory.Utility)
 package org.eigenbase.inventory;
 
 // End package-info.java

@@ -198,23 +198,23 @@ public class MockCatalogReader
 
     public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
     {
+        List<SqlMoniker> result;
         switch (names.size()) {
-        case 0: {
+        case 0:
             // looking for schema names
-            List<SqlMoniker> result = new ArrayList<SqlMoniker>();
+            result = new ArrayList<SqlMoniker>();
             for (MockSchema schema : schemas.values()) {
                 result.add(
                     new SqlMonikerImpl(schema.name, SqlMonikerType.Schema));
             }
             return result;
-        }
-        case 1: {
+        case 1:
             // looking for table names in the given schema
             MockSchema schema = schemas.get(names.get(0));
             if (schema == null) {
                 return Collections.emptyList();
             }
-            List<SqlMoniker> result = new ArrayList<SqlMoniker>();
+            result = new ArrayList<SqlMoniker>();
             for (String tableName : schema.tableNames) {
                 result.add(
                     new SqlMonikerImpl(
@@ -222,7 +222,6 @@ public class MockCatalogReader
                         SqlMonikerType.Table));
             }
             return result;
-        }
         default:
             return Collections.emptyList();
         }

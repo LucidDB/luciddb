@@ -39,9 +39,9 @@ import net.sf.farrago.trace.*;
  */
 public abstract class MedMqlUdx
 {
-    private static final Logger tracer = 
+    private static final Logger tracer =
         FarragoTrace.getClassTracer(MedMqlUdx.class);
-    
+
     public static void execute(
         String urlBase,
         String mql,
@@ -50,10 +50,10 @@ public abstract class MedMqlUdx
         throws Exception
     {
         boolean tracing = tracer.isLoggable(Level.FINE);
-        
+
         // FIXME jvs 7-Jan-2008:  use a proper JSON library
         // for all of this
-        
+
         if (tracing) {
             tracer.fine(mql);
         }
@@ -68,7 +68,7 @@ public abstract class MedMqlUdx
             rowMap.put(colName, iColumn);
             ++iColumn;
         }
-        
+
         String escaped = escapeUri(mql);
         String urlString = urlBase + "?query=" + escaped;
         if (tracing) {
@@ -183,26 +183,35 @@ public abstract class MedMqlUdx
         int len = s.length();
         for (int i = 0; i < len; i++) {
             int ch = s.charAt(i);
-            if ('A' <= ch && ch <= 'Z') {		// 'A'..'Z'
+            if ('A' <= ch && ch <= 'Z') {
+                // 'A'..'Z'
                 sbuf.append((char)ch);
-            } else if ('a' <= ch && ch <= 'z') {	// 'a'..'z'
+            } else if ('a' <= ch && ch <= 'z') {
+                // 'a'..'z'
                 sbuf.append((char)ch);
-            } else if ('0' <= ch && ch <= '9') {	// '0'..'9'
+            } else if ('0' <= ch && ch <= '9') {
+                // '0'..'9'
                 sbuf.append((char)ch);
-            } else if (ch == ' ') {			// space
+            } else if (ch == ' ') {
+                // space
                 sbuf.append('+');
-            } else if (ch == '-' || ch == '_'		// unreserved
+            } else if (ch == '-' || ch == '_'
                 || ch == '.' || ch == '!'
                 || ch == '~' || ch == '*'
                 || ch == '\'' || ch == '('
-                || ch == ')') {
+                || ch == ')')
+            {
+                // unreserved
                 sbuf.append((char)ch);
-            } else if (ch <= 0x007f) {		// other ASCII
+            } else if (ch <= 0x007f) {
+                // other ASCII
                 sbuf.append(hex[ch]);
-            } else if (ch <= 0x07FF) {		// non-ASCII <= 0x7FF
+            } else if (ch <= 0x07FF) {
+                // non-ASCII <= 0x7FF
                 sbuf.append(hex[0xc0 | (ch >> 6)]);
                 sbuf.append(hex[0x80 | (ch & 0x3F)]);
-            } else {					// 0x7FF < ch <= 0xFFFF
+            } else {
+                // 0x7FF < ch <= 0xFFFF
                 sbuf.append(hex[0xe0 | (ch >> 12)]);
                 sbuf.append(hex[0x80 | ((ch >> 6) & 0x3F)]);
                 sbuf.append(hex[0x80 | (ch & 0x3F)]);

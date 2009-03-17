@@ -123,4 +123,4 @@ public class DdlSetSessionParamStmt
     }
 }
 
-// End DdlSetSystemParam.java
+// End DdlSetSessionParamStmt.java

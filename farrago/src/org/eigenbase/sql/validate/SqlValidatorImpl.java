@@ -942,6 +942,8 @@ public class SqlValidatorImpl
             return node;
         }
 
+        SqlNode newOperand;
+
         // first transform operands and invoke generic call rewrite
         if (node instanceof SqlCall) {
             if (node instanceof SqlMerge) {
@@ -963,7 +965,7 @@ public class SqlValidatorImpl
                 } else {
                     childUnderFrom = false;
                 }
-                SqlNode newOperand =
+                newOperand =
                     performUnconditionalRewrites(operand, childUnderFrom);
                 if (newOperand != null) {
                     call.setOperand(i, newOperand);
@@ -995,7 +997,7 @@ public class SqlValidatorImpl
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {
                 SqlNode operand = list.get(i);
-                SqlNode newOperand =
+                newOperand =
                     performUnconditionalRewrites(
                         operand,
                         false);
@@ -1814,6 +1816,9 @@ public class SqlValidatorImpl
     {
         final SqlKind kind = node.getKind();
 
+        SqlNode expr;
+        SqlNode newExpr;
+
         // Add an alias if necessary.
         SqlNode newNode = node;
         if (alias == null) {
@@ -1852,9 +1857,13 @@ public class SqlValidatorImpl
             }
         }
 
+        SqlCall call;
+        SqlNode operand;
+        SqlNode newOperand;
+
         switch (kind.getOrdinal()) {
-        case SqlKind.AsORDINAL: {
-            final SqlCall call = (SqlCall) node;
+        case SqlKind.AsORDINAL:
+            call = (SqlCall) node;
             if (alias == null) {
                 alias = call.operands[1].toString();
             }
@@ -1862,8 +1871,8 @@ public class SqlValidatorImpl
             if (call.getOperands().length > 2) {
                 usingScope2 = null;
             }
-            final SqlNode expr = call.operands[0];
-            final SqlNode newExpr =
+            expr = call.operands[0];
+            newExpr =
                 registerFrom(
                     parentScope,
                     usingScope2,
@@ -1885,12 +1894,11 @@ public class SqlValidatorImpl
                     false);
             }
             return node;
-        }
 
-        case SqlKind.TableSampleORDINAL: {
-            final SqlCall call = (SqlCall) node;
-            final SqlNode expr = call.operands[0];
-            final SqlNode newExpr =
+        case SqlKind.TableSampleORDINAL:
+            call = (SqlCall) node;
+            expr = call.operands[0];
+            newExpr =
                 registerFrom(
                     parentScope,
                     usingScope,
@@ -1902,7 +1910,6 @@ public class SqlValidatorImpl
                 call.setOperand(0, newExpr);
             }
             return node;
-        }
 
         case SqlKind.JoinORDINAL:
             final SqlJoin join = (SqlJoin) node;
@@ -1983,10 +1990,10 @@ public class SqlValidatorImpl
                 alias,
                 forceNullable);
 
-        case SqlKind.CollectionTableORDINAL: {
-            SqlCall call = (SqlCall) node;
-            final SqlNode operand = call.operands[0];
-            final SqlNode newOperand =
+        case SqlKind.CollectionTableORDINAL:
+            call = (SqlCall) node;
+            operand = call.operands[0];
+            newOperand =
                 registerFrom(
                     parentScope,
                     usingScope,
@@ -1998,7 +2005,6 @@ public class SqlValidatorImpl
                 call.setOperand(0, newOperand);
             }
             return newNode;
-        }
 
         case SqlKind.SelectORDINAL:
         case SqlKind.UnionORDINAL:
@@ -2020,11 +2026,11 @@ public class SqlValidatorImpl
             if (!shouldAllowOverRelation()) {
                 throw kind.unexpected();
             }
-            SqlCall call = (SqlCall) node;
+            call = (SqlCall) node;
             final OverScope overScope = new OverScope(usingScope, call);
             scopes.put(call, overScope);
-            final SqlNode operand = call.operands[0];
-            final SqlNode newOperand =
+            operand = call.operands[0];
+            newOperand =
                 registerFrom(
                     parentScope,
                     overScope,

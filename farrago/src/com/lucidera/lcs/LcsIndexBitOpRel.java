@@ -140,4 +140,4 @@ public abstract class LcsIndexBitOpRel
     }
 }
 
-//End LcsIndexBitOpRel.java
+// End LcsIndexBitOpRel.java

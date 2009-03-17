@@ -103,6 +103,9 @@ public class SqlNodeToRexConverterImpl
         }
 
         BitString bitString;
+        SqlIntervalLiteral.IntervalValue intervalValue;
+        long l;
+
         switch (literal.getTypeName()) {
         case DECIMAL:
 
@@ -143,22 +146,20 @@ public class SqlNodeToRexConverterImpl
         case DATE:
             return rexBuilder.makeDateLiteral((Calendar) value);
 
-        case INTERVAL_YEAR_MONTH: {
-            SqlIntervalLiteral.IntervalValue intervalValue =
+        case INTERVAL_YEAR_MONTH:
+            intervalValue =
                 (SqlIntervalLiteral.IntervalValue) value;
-            long l = SqlParserUtil.intervalToMonths(intervalValue);
+            l = SqlParserUtil.intervalToMonths(intervalValue);
             return rexBuilder.makeIntervalLiteral(
                 l,
                 intervalValue.getIntervalQualifier());
-        }
-        case INTERVAL_DAY_TIME: {
-            SqlIntervalLiteral.IntervalValue intervalValue =
+        case INTERVAL_DAY_TIME:
+            intervalValue =
                 (SqlIntervalLiteral.IntervalValue) value;
-            long l = SqlParserUtil.intervalToMillis(intervalValue);
+            l = SqlParserUtil.intervalToMillis(intervalValue);
             return rexBuilder.makeIntervalLiteral(
                 l,
                 intervalValue.getIntervalQualifier());
-        }
         default:
             throw Util.unexpected(literal.getTypeName());
         }

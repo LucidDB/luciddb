@@ -85,4 +85,4 @@ public class LcsIndexMinusRel
     }
 }
 
-//End LcsIndexMinusRel.java
+// End LcsIndexMinusRel.java

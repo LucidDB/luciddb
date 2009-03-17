@@ -36,7 +36,7 @@ public class FarragoRngOperatorTable extends SqlStdOperatorTable
 
     public final FarragoRngNextRandomIntOperator nextRandomInt =
         new FarragoRngNextRandomIntOperator();
-    
+
     /**
      * Retrieves the singleton, creating it if necessary.
      *
@@ -50,7 +50,7 @@ public class FarragoRngOperatorTable extends SqlStdOperatorTable
         }
         return instance;
     }
-    
+
     /**
      * Returns the {@link org.eigenbase.util.Glossary#SingletonPattern
      * singleton} instance, creating it if necessary.

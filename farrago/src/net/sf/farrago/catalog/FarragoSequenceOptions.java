@@ -325,4 +325,4 @@ public class FarragoSequenceOptions
     }
 }
 
-// End FarragoSequenceGeneratorOptions.java
+// End FarragoSequenceOptions.java

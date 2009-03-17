@@ -861,6 +861,8 @@ public class SqlToRelConverter
         RexNode [] leftJoinKeysForIn = null;
         boolean isNotIn;
         boolean subqueryNeedsOuterJoin = bb.subqueryNeedsOuterJoin;
+        SqlCall call;
+        SqlSelect select;
 
         final RexNode expr = bb.mapSubqueryToExpr.get(node);
         if (expr != null) {
@@ -873,13 +875,12 @@ public class SqlToRelConverter
             convertCursor(bb, (SqlCall) node);
             return;
         case SqlKind.MultisetQueryConstructorORDINAL:
-        case SqlKind.MultisetValueConstructorORDINAL: {
+        case SqlKind.MultisetValueConstructorORDINAL:
             converted = convertMultisets(new SqlNode[] { node },
                 bb);
             break;
-        }
-        case SqlKind.InORDINAL: {
-            SqlCall call = (SqlCall) node;
+        case SqlKind.InORDINAL:
+            call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
 
             isNotIn = ((SqlInOperator) call.getOperator()).isNotIn();
@@ -972,8 +973,7 @@ public class SqlToRelConverter
                 joinType = JoinRelType.INNER;
             }
             break;
-        }
-        case SqlKind.ExistsORDINAL: {
+        case SqlKind.ExistsORDINAL:
             // "select from emp where exists (select a from T)"
             //
             // is converted to the following if the subquery is correlated:
@@ -983,21 +983,20 @@ public class SqlToRelConverter
             //
             // If there is no correlation, the expression is replaced with a
             // boolean indicating whether the subquery returned 0 or >= 1 row.
-            SqlCall call = (SqlCall) node;
-            SqlSelect select = (SqlSelect) call.getOperands()[0];
+            call = (SqlCall) node;
+            select = (SqlSelect) call.getOperands()[0];
             converted = convertExists(select, false, true, true);
             if (convertNonCorrelatedSubq(call, bb, converted, true)) {
                 return;
             }
             joinType = JoinRelType.LEFT;
             break;
-        }
         case SqlKind.ScalarQueryORDINAL:
 
             // Convert the subquery.  If it's non-correlated, convert it
             // to a constant expression.
-            SqlCall call = (SqlCall) node;
-            SqlSelect select = (SqlSelect) call.getOperands()[0];
+            call = (SqlCall) node;
+            select = (SqlSelect) call.getOperands()[0];
             converted = convertExists(select, false, false, true);
             if (convertNonCorrelatedSubq(call, bb, converted, false)) {
                 return;
@@ -3840,13 +3839,15 @@ public class SqlToRelConverter
                 return rex;
             }
 
+            boolean needTruthTest;
+
             // Sub-queries and OVER expressions are not like ordinary
             // expressions.
             switch (expr.getKind().getOrdinal()) {
             case SqlKind.CursorConstructorORDINAL:
             case SqlKind.SelectORDINAL:
             case SqlKind.ExistsORDINAL:
-            case SqlKind.ScalarQueryORDINAL: {
+            case SqlKind.ScalarQueryORDINAL:
                 rex = mapSubqueryToExpr.get(expr);
 
                 assert rex != null : "rex != null";
@@ -3865,7 +3866,7 @@ public class SqlToRelConverter
                 }
 
                 RexNode fieldAccess;
-                boolean needTruthTest = false;
+                needTruthTest = false;
 
                 // The indicator column is the last field of the subquery.
                 fieldAccess =
@@ -3889,14 +3890,12 @@ public class SqlToRelConverter
                             fieldAccess);
                 }
                 return fieldAccess;
-            }
-            case SqlKind.InORDINAL: {
+            case SqlKind.InORDINAL:
                 rex = mapSubqueryToExpr.get(expr);
 
                 assert rex != null : "rex != null";
 
                 RexNode rexNode;
-                boolean needTruthTest;
                 boolean isNotInFilter;
                 if (rex instanceof RexRangeRef) {
                     // IN was converted to subquery.
@@ -3951,10 +3950,8 @@ public class SqlToRelConverter
                     rexNode = rexBuilder.makeLiteral(true);
                 }
                 return rexNode;
-            }
-            case SqlKind.OverORDINAL: {
+            case SqlKind.OverORDINAL:
                 return convertOver(this, expr);
-            }
             default:
                 // fall through
             }

@@ -246,4 +246,4 @@ public class SqlNodeList
     }
 }
 
-//End SqlNodeList.java
+// End SqlNodeList.java

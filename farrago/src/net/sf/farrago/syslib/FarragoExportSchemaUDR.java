@@ -1514,12 +1514,11 @@ public abstract class FarragoExportSchemaUDR
             pathWithoutExtension,
             withBcp,
             deleteFailedFiles,
-            null, // fieldDelimiter
-            null, // fileExtension
-            null, // dateFormat
-            null, // timeFormat
-            null // timestampFormat
-            );
+            null,
+            null,
+            null,
+            null,
+            null);
     }
 
     /**
@@ -1561,12 +1560,11 @@ public abstract class FarragoExportSchemaUDR
             withBcp,
             true,
             deleteFailedFiles,
-            null, // fieldDelimiter
-            null, // fileExtension
-            null, // dateFormat
-            null, // timeFormat
-            null // timestampFormat
-            );
+            null,
+            null,
+            null,
+            null,
+            null);
     }
 
     /**

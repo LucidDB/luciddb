@@ -271,4 +271,4 @@ public class SqlSelectOperator
     }
 }
 
-//End SqlSelectOperator.java
+// End SqlSelectOperator.java

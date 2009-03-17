@@ -45,7 +45,7 @@ public class PushAggThroughUnionAllRule extends RelOptRule
 {
     public static final PushAggThroughUnionAllRule instance =
         new PushAggThroughUnionAllRule();
-    
+
     public PushAggThroughUnionAllRule()
     {
         super(
@@ -55,7 +55,7 @@ public class PushAggThroughUnionAllRule extends RelOptRule
                     new RelOptRuleOperand(UnionRel.class, RelOptRule.ANY)
                 }));
     }
-    
+
     public void onMatch(RelOptRuleCall call)
     {
         AggregateRel aggRel = (AggregateRel) call.rels[0];
@@ -88,12 +88,12 @@ public class PushAggThroughUnionAllRule extends RelOptRule
         for (int i = 0; i < aggRel.getGroupCount(); i++) {
             groupByKeyMask.set(i);
         }
-        
+
         boolean anyTransformed = false;
 
         // create corresponding aggs on top of each union child
         for (int i = 0; i < nUnionInputs; i++) {
-            boolean alreadyUnique = 
+            boolean alreadyUnique =
                 RelMdUtil.areColumnsDefinitelyUnique(
                     unionInputs[i],
                     groupByKeyMask);
@@ -117,7 +117,7 @@ public class PushAggThroughUnionAllRule extends RelOptRule
             // planners would succumb)
             return;
         }
-        
+
         // create a new union whose children are the aggs created above
         UnionRel newUnionRel = new UnionRel(cluster, newUnionInputs, true);
 

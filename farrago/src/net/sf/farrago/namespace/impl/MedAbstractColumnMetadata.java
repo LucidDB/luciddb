@@ -350,4 +350,4 @@ public abstract class MedAbstractColumnMetadata
         int fieldNo);
 }
 
-// End MedAbstractColumnMetadata
+// End MedAbstractColumnMetadata.java

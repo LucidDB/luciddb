@@ -60,7 +60,7 @@ public class FarragoPlannervizPluginFactory
         extends DelegatingInvocationHandler
     {
         private final FarragoSessionPersonality defaultPersonality;
-        
+
         PlannervizPersonality(FarragoSessionPersonality defaultPersonality)
         {
             this.defaultPersonality = defaultPersonality;

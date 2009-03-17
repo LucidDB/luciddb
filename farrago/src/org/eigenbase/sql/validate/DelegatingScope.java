@@ -152,10 +152,14 @@ public abstract class DelegatingScope
         if (identifier.isStar()) {
             return identifier;
         }
+
+        String tableName;
+        String columnName;
+
         switch (identifier.names.length) {
-        case 1: {
-            final String columnName = identifier.names[0];
-            final String tableName =
+        case 1:
+            columnName = identifier.names[0];
+            tableName =
                 findQualifyingTableName(columnName, identifier);
 
             //todo: do implicit collation here
@@ -171,10 +175,9 @@ public abstract class DelegatingScope
                     });
             validator.setOriginal(expanded, identifier);
             return expanded;
-        }
 
-        case 2: {
-            final String tableName = identifier.names[0];
+        case 2:
+            tableName = identifier.names[0];
             final SqlValidatorNamespace fromNs = resolve(tableName, null, null);
             if (fromNs == null) {
                 throw validator.newValidationError(
@@ -182,7 +185,7 @@ public abstract class DelegatingScope
                     EigenbaseResource.instance().TableNameNotFound.ex(
                         tableName));
             }
-            final String columnName = identifier.names[1];
+            columnName = identifier.names[1];
             final RelDataType fromRowType = fromNs.getRowType();
             final RelDataType type =
                 SqlValidatorUtil.lookupFieldType(fromRowType, columnName);
@@ -195,10 +198,8 @@ public abstract class DelegatingScope
                         columnName,
                         tableName));
             }
-        }
 
         default:
-
             // NOTE jvs 26-May-2004:  lengths greater than 2 are possible
             // for row and structured types
             assert identifier.names.length > 0;

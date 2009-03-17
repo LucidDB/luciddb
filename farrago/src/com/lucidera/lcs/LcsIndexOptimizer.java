@@ -2403,4 +2403,5 @@ public class LcsIndexOptimizer
         }
     }
 }
-//End LcsIndexOptimizer.java
+
+// End LcsIndexOptimizer.java

@@ -220,4 +220,4 @@ public abstract class ResultSetTestCase
     }
 }
 
-// End FarragoTestCase.java
+// End ResultSetTestCase.java

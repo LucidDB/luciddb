@@ -27,7 +27,7 @@ package org.eigenbase.inventory;
  * @author John V. Sichi
  * @version $Id$
  */
-public @interface EigenbaseComponent 
+public @interface EigenbaseComponent
 {
     /**
      * Name of component as it should appear in inventory reports.

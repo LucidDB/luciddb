@@ -158,4 +158,4 @@ public class LcsTableAlterRule
     }
 }
 
-// End LcsTableAppendRule
+// End LcsTableAlterRule.java

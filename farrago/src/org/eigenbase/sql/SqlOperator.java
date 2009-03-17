@@ -776,4 +776,4 @@ public abstract class SqlOperator
     }
 }
 
-//End SqlOperator.java
+// End SqlOperator.java

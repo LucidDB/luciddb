@@ -325,6 +325,7 @@ public class RexBuilder
             final RelDataType bigintType =
                 getTypeFactory().createSqlType(
                     SqlTypeName.BIGINT);
+            // todo: read bound
             result =
                 makeCall(
                     SqlStdOperatorTable.caseOperator,
@@ -335,7 +336,7 @@ public class RexBuilder
                             SqlStdOperatorTable.countOperator,
                             RexNode.EMPTY_ARRAY,
                             window),
-                        makeLiteral( // todo: read bound
+                        makeLiteral(
                             new BigDecimal(2),
                             bigintType,
                             SqlTypeName.DECIMAL)),

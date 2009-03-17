@@ -66,7 +66,7 @@ public class MedMqlForeignDataWrapper
     }
 
     // TODO jvs 6-Jan-2008:  implement getServerPropertyInfo
-    
+
     // implement FarragoMedDataWrapper
     public FarragoMedDataServer newServer(
         String serverMofId,

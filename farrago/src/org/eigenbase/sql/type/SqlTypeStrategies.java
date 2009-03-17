@@ -321,16 +321,15 @@ public abstract class SqlTypeStrategies
             SqlTypeFamily.DATETIME_INTERVAL,
             SqlTypeFamily.DATETIME);
 
+    // TODO: datetime+interval checking missing
+    // TODO: interval+datetime checking missing
     public static final SqlSingleOperandTypeChecker otcPlusOperator =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.Composition.OR,
             otcNumericX2,
             otcIntervalSameX2,
             otcDatetimeInterval,
-            otcIntervalDatetime
-            // TODO: datetime+interval checking missing
-            // TODO: interval+datetime checking missing
-            );
+            otcIntervalDatetime);
 
     /**
      * Type checking strategy for the "*" operator

@@ -48,7 +48,7 @@ public abstract class UnwrappableRJConnection
     {
         super(rmiconn);
     }
-    
+
     protected UnwrappableRJConnection(
         RJDriverInterface drv,
         String url,

@@ -793,10 +793,19 @@ public class CalcRexImplementorTableImpl
             return inReg;
         }
 
+        CalcReg alphaReg;
+        CalcReg modReg;
+        CalcReg resReg;
+        CalcReg ltReg;
+        CalcReg zeroReg;
+        CalcReg yReg;
+        String negLabel;
+        String resultLabel;
+
         CalcProgramBuilder.RegisterDescriptor resultDesc =
             translator.getCalcRegisterDescriptor(toType);
         switch (roundingMode) {
-        case HALF_UP: {
+        case HALF_UP:
             // Code generated for HALF_UP:
             //
             //                          34567 -34567
@@ -813,18 +822,18 @@ public class CalcRexImplementorTableImpl
             //   res := y - mod         35000 -35000
             CalcReg halfAlphaReg =
                 translator.builder.newInt8Literal(alpha / 2L);
-            CalcReg yReg = translator.builder.newLocal(resultDesc);
-            CalcReg ltReg =
+            yReg = translator.builder.newLocal(resultDesc);
+            ltReg =
                 translator.builder.newLocal(
                     CalcProgramBuilder.OpType.Bool,
                     -1);
-            CalcReg zeroReg = translator.builder.newInt8Literal(0);
+            zeroReg = translator.builder.newInt8Literal(0);
             CalcProgramBuilder.boolLessThan.add(
                 translator.builder,
                 ltReg,
                 inReg,
                 zeroReg);
-            final String negLabel = translator.newLabel();
+            negLabel = translator.newLabel();
             translator.builder.addLabelJumpTrue(negLabel, ltReg);
 
             // arithmetic for zero and positive values
@@ -833,7 +842,7 @@ public class CalcRexImplementorTableImpl
                 yReg,
                 inReg,
                 halfAlphaReg);
-            final String resultLabel = translator.newLabel();
+            resultLabel = translator.newLabel();
             translator.builder.addLabelJump(resultLabel);
 
             // arithmetic for negative values
@@ -846,22 +855,21 @@ public class CalcRexImplementorTableImpl
 
             // form the result
             translator.builder.addLabel(resultLabel);
-            CalcReg modReg = translator.builder.newLocal(resultDesc);
-            CalcReg alphaReg = translator.builder.newInt8Literal(alpha);
+            modReg = translator.builder.newLocal(resultDesc);
+            alphaReg = translator.builder.newInt8Literal(alpha);
             CalcProgramBuilder.integralNativeMod.add(
                 translator.builder,
                 modReg,
                 yReg,
                 alphaReg);
-            CalcReg resReg = translator.builder.newLocal(resultDesc);
+            resReg = translator.builder.newLocal(resultDesc);
             CalcProgramBuilder.nativeMinus.add(
                 translator.builder,
                 resReg,
                 yReg,
                 modReg);
             return resReg;
-        }
-        case DOWN: {
+        case DOWN:
             // Code generated for DOWN:
             //
             //                          34567 -34567
@@ -869,22 +877,21 @@ public class CalcRexImplementorTableImpl
             //   alpha := 1000
             //   mod := in % alpha        567   -567
             //   res := in - mod        34000 -34000
-            CalcReg alphaReg = translator.builder.newInt8Literal(alpha);
-            CalcReg modReg = translator.builder.newLocal(resultDesc);
+            alphaReg = translator.builder.newInt8Literal(alpha);
+            modReg = translator.builder.newLocal(resultDesc);
             CalcProgramBuilder.integralNativeMod.add(
                 translator.builder,
                 modReg,
                 inReg,
                 alphaReg);
-            CalcReg resReg = translator.builder.newLocal(resultDesc);
+            resReg = translator.builder.newLocal(resultDesc);
             CalcProgramBuilder.nativeMinus.add(
                 translator.builder,
                 resReg,
                 inReg,
                 modReg);
             return resReg;
-        }
-        case FLOOR: {
+        case FLOOR:
             // Code generated for FLOOR:
             //
             //                          34567 -34567 -34000
@@ -898,25 +905,25 @@ public class CalcRexImplementorTableImpl
             //   y := in - alpha              -35567
             // result:
             //   res := in - mod        34000 -35000  -34000
-            CalcReg alphaReg = translator.builder.newInt8Literal(alpha);
-            CalcReg modReg = translator.builder.newLocal(resultDesc);
+            alphaReg = translator.builder.newInt8Literal(alpha);
+            modReg = translator.builder.newLocal(resultDesc);
             CalcProgramBuilder.integralNativeMod.add(
                 translator.builder,
                 modReg,
                 inReg,
                 alphaReg);
-            CalcReg ltReg =
+            ltReg =
                 translator.builder.newLocal(
                     CalcProgramBuilder.OpType.Bool,
                     -1);
-            CalcReg zeroReg = translator.builder.newInt8Literal(0);
+            zeroReg = translator.builder.newInt8Literal(0);
             CalcProgramBuilder.boolLessThan.add(
                 translator.builder,
                 ltReg,
                 modReg,
                 zeroReg);
-            CalcReg yReg = translator.builder.newLocal(resultDesc);
-            final String negLabel = translator.newLabel();
+            yReg = translator.builder.newLocal(resultDesc);
+            negLabel = translator.newLabel();
             translator.builder.addLabelJumpTrue(negLabel, ltReg);
 
             // arithmetic for zero and positive values
@@ -924,7 +931,7 @@ public class CalcRexImplementorTableImpl
                 translator.builder,
                 yReg,
                 inReg);
-            final String resultLabel = translator.newLabel();
+            resultLabel = translator.newLabel();
             translator.builder.addLabelJump(resultLabel);
 
             // arithmetic for negative modulo values
@@ -937,14 +944,13 @@ public class CalcRexImplementorTableImpl
 
             // form the result
             translator.builder.addLabel(resultLabel);
-            CalcReg resReg = translator.builder.newLocal(resultDesc);
+            resReg = translator.builder.newLocal(resultDesc);
             CalcProgramBuilder.nativeMinus.add(
                 translator.builder,
                 resReg,
                 inReg,
                 modReg);
             return resReg;
-        }
         default:
             throw Util.unexpected(roundingMode);
         }

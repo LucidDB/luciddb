@@ -120,4 +120,4 @@ public class DdlSetSystemParamStmt
     }
 }
 
-// End DdlSetSystemParam.java
+// End DdlSetSystemParamStmt.java

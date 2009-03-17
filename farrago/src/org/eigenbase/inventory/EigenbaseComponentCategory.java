@@ -27,7 +27,7 @@ package org.eigenbase.inventory;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum EigenbaseComponentCategory 
+public enum EigenbaseComponentCategory
 {
     API,
     SPI,

@@ -191,4 +191,4 @@ public class LcsIndexAggRule
     }
 }
 
-// End LcsIndexOnlyAccessRule.java
+// End LcsIndexAggRule.java

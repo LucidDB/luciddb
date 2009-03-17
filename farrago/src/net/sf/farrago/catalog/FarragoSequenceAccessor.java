@@ -293,4 +293,4 @@ public class FarragoSequenceAccessor
     }
 }
 
-// End FarragoSequenceGenerator.java
+// End FarragoSequenceAccessor.java

@@ -335,7 +335,7 @@ public class FarragoStatsUtil
             }
             for (int j = 0; j < currentIterations; j++) {
                 char [] chars =
-                { valueDigits.charAt(i), valueDigits.charAt(j) };
+                    { valueDigits.charAt(i), valueDigits.charAt(j) };
                 String next = new String(chars);
                 if (distributionType > 0) {
                     next += valueDigits.charAt(0);

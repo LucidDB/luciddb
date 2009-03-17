@@ -126,4 +126,4 @@ public abstract class FarragoQueryNamedColumnSet
     }
 }
 
-// End FarragoTable.java
+// End FarragoQueryNamedColumnSet.java
