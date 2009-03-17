@@ -2482,6 +2482,7 @@ SqlNode StringLiteral(boolean strict) :
     String p;
     int nfrags = 0;
     List frags = null;
+    char unicodeEscapeChar = 0;
 }
 {
     // A continued string literal consists of a head fragment and one or more
@@ -2536,6 +2537,13 @@ SqlNode StringLiteral(boolean strict) :
         <PREFIXED_STRING_LITERAL>
         { charSet = SqlParserUtil.getCharacterSet(token.image); }
         | <QUOTED_STRING>
+        | <UNICODE_STRING_LITERAL>
+        {
+            // TODO jvs 2-Feb-2009:  support the explicit specification of
+            // a character set for Unicode string literals, per SQL:2003
+            unicodeEscapeChar = '\\';
+            charSet = "UTF16";
+        }
     )
     {
         p = SqlParserUtil.parseString(token.image);
@@ -2566,11 +2574,33 @@ SqlNode StringLiteral(boolean strict) :
         }
     ) *
     {
+    }
+    [
+        <UESCAPE> <QUOTED_STRING>
+        {
+            if (unicodeEscapeChar == 0) {
+                throw SqlUtil.newContextException(
+                    getPos(),
+                    EigenbaseResource.instance().UnicodeEscapeUnexpected.ex());
+            }
+            String s = SqlParserUtil.parseString(token.image);
+            unicodeEscapeChar = SqlParserUtil.checkUnicodeEscapeChar(s);
+        }
+    ]
+    {
+    }
+    {
         assert (nfrags > 0);
         if (nfrags == 1) {
-            return (SqlLiteral) frags.get(0); // just the head fragment
+            // just the head fragment
+            SqlLiteral lit = (SqlLiteral) frags.get(0);
+            return lit.unescapeUnicode(unicodeEscapeChar);
         } else {
             SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
+            for (int i = 0; i < rands.length; ++i) {
+                rands[i] = ((SqlLiteral) rands[i]).unescapeUnicode(
+                    unicodeEscapeChar);
+            }
             SqlParserPos pos2 = SqlParserPos.sum(rands);
             return SqlStdOperatorTable.literalChainOperator.createCall(
                 pos2, rands);
@@ -2806,6 +2836,7 @@ SqlDynamicParam DynamicParam() :
 String Identifier() :
 {
     String id;
+    char unicodeEscapeChar = '\\';
 }
 {
     (
@@ -2816,6 +2847,25 @@ String Identifier() :
         | <QUOTED_IDENTIFIER>
         {
             id = SqlParserUtil.strip(getToken(0).image, "\"");
+        }
+        | <UNICODE_QUOTED_IDENTIFIER>
+        {
+            id = getToken(0).image;
+            id = id.substring(id.indexOf('"'));
+            id = SqlParserUtil.strip(id, "\"");
+        }
+        [ <UESCAPE> <QUOTED_STRING>
+            {
+                String s = SqlParserUtil.parseString(token.image);
+                unicodeEscapeChar = SqlParserUtil.checkUnicodeEscapeChar(s);
+            }
+        ]
+        {
+        }
+        {
+            SqlLiteral lit = SqlLiteral.createCharString(id, "UTF16", getPos());
+            lit = lit.unescapeUnicode(unicodeEscapeChar);
+            return lit.toValue();
         }
         | id = NonReservedKeyWord()
     )
@@ -3661,10 +3711,12 @@ SqlIdentifier ContextVariable() :
 }
 {
     (
-        <CURRENT_DATE>
+        <CURRENT_CATALOG>
+        | <CURRENT_DATE>
         | <CURRENT_DEFAULT_TRANSFORM_GROUP>
         | <CURRENT_PATH>
         | <CURRENT_ROLE>
+        | <CURRENT_SCHEMA>
         | <CURRENT_TIME>
         | <CURRENT_TIMESTAMP>
         | <CURRENT_USER>
@@ -3991,10 +4043,12 @@ TOKEN :
     | < CUBE: "CUBE" >
     | < CUME_DIST: "CUME_DIST" >
     | < CURRENT: "CURRENT" >
+    | < CURRENT_CATALOG: "CURRENT_CATALOG" >
     | < CURRENT_DATE: "CURRENT_DATE" >
     | < CURRENT_DEFAULT_TRANSFORM_GROUP: "CURRENT_DEFAULT_TRANSFORM_GROUP" >
     | < CURRENT_PATH: "CURRENT_PATH" >
     | < CURRENT_ROLE: "CURRENT_ROLE" >
+    | < CURRENT_SCHEMA: "CURRENT_SCHEMA" >
     | < CURRENT_TIME: "CURRENT_TIME" >
     | < CURRENT_TIMESTAMP: "CURRENT_TIMESTAMP" >
     | < CURRENT_TRANSFORM_GROUP_FOR_TYPE: "CURRENT_TRANSFORM_GROUP_FOR_TYPE" >
@@ -4687,11 +4741,21 @@ TOKEN :
     |
     < PREFIXED_STRING_LITERAL: ("_" <CHARSETNAME> | "N") <QUOTED_STRING> >
     |
+    < UNICODE_STRING_LITERAL: "U" "&" <QUOTED_STRING> >
+    |
     < #CHARSETNAME: (["a"-"z","A"-"Z","0"-"9"])
     (["a"-"z","A"-"Z","0"-"9",":",".","-","_"])*
     >
 }
 
+TOKEN :
+{
+    < UNICODE_QUOTED_ESCAPE_CHAR:
+    <QUOTE>
+    (~["0"-"9","a"-"f","A"-"F","+","\""," ","\t","\n","\r","\f"])
+    <QUOTE>
+    >
+}
 
 /* SEPARATORS */
 
@@ -4810,6 +4874,8 @@ TOKEN :
         )*
     "\""
     >
+    |
+    < UNICODE_QUOTED_IDENTIFIER: "U" "&" <QUOTED_IDENTIFIER> >
     |
     < #LETTER:
     [

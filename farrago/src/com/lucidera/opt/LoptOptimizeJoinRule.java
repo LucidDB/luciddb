@@ -265,17 +265,19 @@ outerForLoop:
         // part of a self-join.  Restrict each factor to at most one
         // self-join.
         List<RelOptTable> repeatedTables = new ArrayList<RelOptTable>();
-        List<Integer> factors = new ArrayList<Integer>();
-        factors.addAll(simpleFactors.keySet());
+        TreeSet<Integer> sortedFactors = new TreeSet<Integer>();
+        sortedFactors.addAll(simpleFactors.keySet());
         Map<Integer, Integer> selfJoinPairs =
             new HashMap<Integer, Integer>();
-        for (int i = 0; i < factors.size(); i++) {
-            if (repeatedTables.contains(simpleFactors.get(factors.get(i)))) {
+        Integer[] factors =
+            sortedFactors.toArray(new Integer[sortedFactors.size()]);
+        for (int i = 0; i < factors.length; i++) {
+            if (repeatedTables.contains(simpleFactors.get(factors[i]))) {
                 continue;
             }
-            for (int j = i + 1; j < factors.size(); j++) {
-                int leftFactor = factors.get(i);
-                int rightFactor = factors.get(j);
+            for (int j = i + 1; j < factors.length; j++) {
+                int leftFactor = factors[i];
+                int rightFactor = factors[j];
                 if (Arrays.equals(
                     simpleFactors.get(leftFactor).getQualifiedName(),
                     simpleFactors.get(rightFactor).getQualifiedName()))

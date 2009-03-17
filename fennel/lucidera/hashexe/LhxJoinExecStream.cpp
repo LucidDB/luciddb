@@ -834,7 +834,7 @@ void LhxJoinExecStream::setHashInfo(
         TupleProjection &keyProj  = hashInfo.keyProj[inputIndex];
         TupleDescriptor &inputDesc  = hashInfo.inputDesc[inputIndex];
 
-        vector<bool> isKeyVarChar;
+        vector<LhxHashTrim> isKeyVarChar;
         TupleProjection dataProj;
 
         /*
@@ -842,11 +842,14 @@ void LhxJoinExecStream::setHashInfo(
          * insignificant).
          */
         for (int j = 0; j < keyProj.size(); j ++) {
-            if (inputDesc[keyProj[j]].pTypeDescriptor->getOrdinal()
-                == STANDARD_TYPE_VARCHAR) {
-                isKeyVarChar.push_back(true);
+            StoredTypeDescriptor::Ordinal ordinal =
+                inputDesc[keyProj[j]].pTypeDescriptor->getOrdinal();
+            if (ordinal == STANDARD_TYPE_VARCHAR) {
+                isKeyVarChar.push_back(HASH_TRIM_VARCHAR);
+            } else if (ordinal == STANDARD_TYPE_UNICODE_VARCHAR) {
+                isKeyVarChar.push_back(HASH_TRIM_UNICODE_VARCHAR);
             } else {
-                isKeyVarChar.push_back(false);
+                isKeyVarChar.push_back(HASH_TRIM_NONE);
             }
         }
 

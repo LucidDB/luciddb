@@ -567,7 +567,7 @@ create or replace view index_info_view as
         i.type,
         c."ordinal" + 1 as ordinal_position,
         c."name" as column_name,
-        'A' as asc_ord_desc,
+        'A' as asc_or_desc,
         i."CARDINALITY",
         convert_cwm_statistic_to_int(i.pages) as pages,
         i.filter_condition

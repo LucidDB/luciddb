@@ -1082,7 +1082,7 @@ public abstract class FarragoTestCase
                 // Ignore label aliases, as they'll get dropped by the
                 // cascaded drop of the base labels.
                 if (stmt.execute(
-                    "select \"name\" from sys_fem.med.\"Label\" +" +
+                    "select \"name\" from sys_fem.med.\"Label\" " +
                     "where \"ParentLabel\" is null"))
                 {
                     ResultSet rset = stmt.getResultSet();

@@ -25,6 +25,8 @@ package org.eigenbase.sql.fun;
 import java.util.HashSet;
 import java.util.Set;
 
+import java.nio.charset.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
@@ -35,7 +37,7 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 
 /**
  * SqlCastFunction. Note that the std functions are really singleton objects,
- * because they always get fetched via the StdOperatorTable. So you can't story
+ * because they always get fetched via the StdOperatorTable. So you can't store
  * any local info in the class and hence the return type data is maintained in
  * operand[1] through the validation phase.
  *
@@ -213,6 +215,19 @@ public class SqlCastFunction
                     EigenbaseResource.instance().CannotCastValue.ex(
                         validatedNodeType.toString(),
                         returnType.toString()));
+            }
+            return false;
+        }
+        if (SqlTypeUtil.areCharacterSetsMismatched(
+                validatedNodeType, returnType))
+        {
+            if (throwOnFailure) {
+                // Include full type string to indicate character
+                // set mismatch.
+                throw callBinding.newError(
+                    EigenbaseResource.instance().CannotCastValue.ex(
+                        validatedNodeType.getFullTypeString(),
+                        returnType.getFullTypeString()));
             }
             return false;
         }

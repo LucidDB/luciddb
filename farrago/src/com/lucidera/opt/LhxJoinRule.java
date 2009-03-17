@@ -148,7 +148,7 @@ public class LhxJoinRule
         BitSet joinKeyMap = new BitSet();
 
         // since rightJoinKeys can be more than simply inputrefs
-        // assume the adinality of the key to be the cardinality of all
+        // assume the cardinality of the key to be the cardinality of all
         // referenced fields.
 
         for (int i = 0; i < rightKeys.size(); i++) {

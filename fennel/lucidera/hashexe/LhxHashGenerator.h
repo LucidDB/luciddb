@@ -25,6 +25,8 @@
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
 
+#include "fennel/lucidera/hashexe/LhxHashBase.h"
+
 using namespace std;
 
 FENNEL_BEGIN_NAMESPACE
@@ -78,7 +80,7 @@ private:
      * @param [in] isVarChar if col is varchar type
      */
     void hashOneColumn(uint &hashValue, TupleDatum const &inputCol,
-        bool isVarChar);
+        LhxHashTrim isVarChar);
 
 public:
     /**
@@ -105,7 +107,7 @@ public:
      */
     uint hash(TupleData const &inputTuple, 
         TupleProjection const &keyProjection,
-        vector<bool> const &isKeyColVarChar);
+        vector<LhxHashTrim> const &isKeyColVarChar);
 
     /**
      * Compute hash value for a TupleDatum, on both value and length
@@ -116,7 +118,7 @@ public:
      *
      * @return the hash value
      */
-    uint hash(TupleDatum const &inputCol, bool isVarChar);
+    uint hash(TupleDatum const &inputCol, LhxHashTrim isVarChar);
 
     /**
      * Compute hash value from value stored in a buffer.
@@ -134,7 +136,8 @@ inline uint LhxHashGenerator::getLevel()
     return level;
 }
 
-inline uint LhxHashGenerator::hash(TupleDatum const &inputCol, bool isVarChar)
+inline uint LhxHashGenerator::hash(
+    TupleDatum const &inputCol, LhxHashTrim isVarChar)
 {
     uint hashValue = hashValueSeed;
     hashOneColumn(hashValue, inputCol, isVarChar);

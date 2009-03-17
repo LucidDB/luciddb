@@ -56,9 +56,8 @@ public abstract class EncodedCharPointer
         }
     }
 
-    /**
-     * @return the charset used for this pointer's encoding
-     */
+    // refine BytePointer to make this method abstract so that subclasses
+    // are forced to override it
     protected abstract String getCharsetName();
 
     // implement BytePointer
@@ -75,24 +74,6 @@ public abstract class EncodedCharPointer
     public Object getNullableData()
     {
         return toString();
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    public static class EncodedCharPointerWithCharset
-        extends EncodedCharPointer
-    {
-        protected final String charSet;
-
-        public EncodedCharPointerWithCharset(String charSet)
-        {
-            this.charSet = charSet;
-        }
-
-        protected String getCharsetName()
-        {
-            return charSet;
-        }
     }
 }
 

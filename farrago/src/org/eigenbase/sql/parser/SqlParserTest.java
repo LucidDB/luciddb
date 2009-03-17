@@ -30,6 +30,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.impl.*;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -1655,6 +1656,7 @@ public class SqlParserTest
             + "    \"\\(\" \\.\\.\\." + NL
             + "    <IDENTIFIER> \\.\\.\\." + NL
             + "    <QUOTED_IDENTIFIER> \\.\\.\\." + NL
+            + "    <UNICODE_QUOTED_IDENTIFIER> \\.\\.\\." + NL
             + "    ");
     }
 
@@ -1675,6 +1677,7 @@ public class SqlParserTest
             + "Was expecting one of:" + NL
             + "    <IDENTIFIER> \\.\\.\\." + NL
             + "    <QUOTED_IDENTIFIER> \\.\\.\\." + NL
+            + "    <UNICODE_QUOTED_IDENTIFIER> \\.\\.\\." + NL
             + "    ");
     }
 
@@ -5248,6 +5251,8 @@ public class SqlParserTest
         assertFalse(metadata.isReservedFunctionName("FOO"));
 
         assertTrue(metadata.isContextVariableName("CURRENT_USER"));
+        assertTrue(metadata.isContextVariableName("CURRENT_CATALOG"));
+        assertTrue(metadata.isContextVariableName("CURRENT_SCHEMA"));
         assertFalse(metadata.isContextVariableName("ABS"));
         assertFalse(metadata.isContextVariableName("FOO"));
 
@@ -5259,6 +5264,8 @@ public class SqlParserTest
 
         assertTrue(metadata.isKeyword("ABS"));
         assertTrue(metadata.isKeyword("CURRENT_USER"));
+        assertTrue(metadata.isKeyword("CURRENT_CATALOG"));
+        assertTrue(metadata.isKeyword("CURRENT_SCHEMA"));
         assertTrue(metadata.isKeyword("KEY"));
         assertTrue(metadata.isKeyword("SELECT"));
         assertTrue(metadata.isKeyword("HAVING"));
@@ -5266,6 +5273,8 @@ public class SqlParserTest
         assertFalse(metadata.isKeyword("BAR"));
 
         assertTrue(metadata.isReservedWord("SELECT"));
+        assertTrue(metadata.isReservedWord("CURRENT_CATALOG"));
+        assertTrue(metadata.isReservedWord("CURRENT_SCHEMA"));
         assertFalse(metadata.isReservedWord("KEY"));
 
         String jdbcKeywords = metadata.getJdbcKeywords();
@@ -5333,6 +5342,89 @@ public class SqlParserTest
         checkExpFails(
             "\"SUBSTRING\"('a' ^from^ 1)",
             "(?s).*Encountered \"from\" at .*");
+    }
+
+    public void testUnicodeLiteral()
+    {
+        // Note that here we are constructing a SQL statement which directly
+        // contains Unicode characters (not SQL Unicode escape sequences).  The
+        // escaping here is Java-only, so by the time it gets to the SQL
+        // parser, the literal already contains Unicode characters.
+        String in1 = "values _UTF16'"
+            + ConversionUtil.TEST_UNICODE_STRING + "'";
+        String out1 = "(VALUES (ROW(_UTF16'"
+            + ConversionUtil.TEST_UNICODE_STRING + "')))";
+        check(in1, out1);
+
+        // Without the U& prefix, escapes are left unprocessed
+        String in2 = "values '"
+            + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL + "'";
+        String out2 = "(VALUES (ROW('"
+            + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL + "')))";
+        check(in2, out2);
+
+        // Likewise, even with the U& prefix, if some other escape
+        // character is specified, then the backslash-escape
+        // sequences are not interpreted
+        String in3 =
+            "values U&'"
+            + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL
+            + "' UESCAPE '!'";
+        String out3 = "(VALUES (ROW(_UTF16'"
+            + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL + "')))";
+        check(in3, out3);
+    }
+
+    public void testUnicodeEscapedLiteral()
+    {
+        // Note that here we are constructing a SQL statement which 
+        // contains SQL-escaped Unicode characters to be handled
+        // by the SQL parser.
+        String in = "values U&'"
+            + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL + "'";
+        String out = "(VALUES (ROW(_UTF16'"
+            + ConversionUtil.TEST_UNICODE_STRING + "')))";
+        check(in, out);
+
+        // Verify that we can override with an explicit escape character
+        check(in.replaceAll("\\\\", "!") + "UESCAPE '!'", out);
+    }
+
+    public void testIllegalUnicodeEscape()
+    {
+        checkExpFails(
+            "U&'abc' UESCAPE '!!'",
+            ".*must be exactly one character.*");
+        checkExpFails(
+            "U&'abc' UESCAPE ''",
+            ".*must be exactly one character.*");
+        checkExpFails(
+            "U&'abc' UESCAPE '0'",
+            ".*hex digit.*");
+        checkExpFails(
+            "U&'abc' UESCAPE 'a'",
+            ".*hex digit.*");
+        checkExpFails(
+            "U&'abc' UESCAPE 'F'",
+            ".*hex digit.*");
+        checkExpFails(
+            "U&'abc' UESCAPE ' '",
+            ".*whitespace.*");
+        checkExpFails(
+            "U&'abc' UESCAPE '+'",
+            ".*plus sign.*");
+        checkExpFails(
+            "U&'abc' UESCAPE '\"'",
+            ".*double quote.*");
+        checkExpFails(
+            "'abc' UESCAPE ^'!'^",
+            ".*without Unicode literal introducer.*");
+        checkExpFails(
+            "^U&'\\0A'^",
+            ".*is not exactly four hex digits.*");
+        checkExpFails(
+            "^U&'\\wxyz'^",
+            ".*is not exactly four hex digits.*");
     }
 
     //~ Inner Interfaces -------------------------------------------------------

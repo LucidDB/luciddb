@@ -235,11 +235,13 @@ public:
         Ucs2ConstBuffer pStr1, Ucs2ConstBuffer pStr2, uint nChars)
     {
         for (uint i = 0; i < nChars; ++i) {
-            int c = *pStr2;
-            c -= *pStr1;
+            int c = *pStr1;
+            c -= *pStr2;
             if (c) {
                 return c;
             }
+            ++pStr1;
+            ++pStr2;
         }
         return 0;
     }

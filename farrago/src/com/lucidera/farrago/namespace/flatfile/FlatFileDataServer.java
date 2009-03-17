@@ -271,9 +271,11 @@ class FlatFileDataServer
         switch (schemaType) {
         case DESCRIBE:
             fieldTypes.add(
-                typeFactory.createSqlType(
-                    SqlTypeName.VARCHAR,
-                    DESCRIBE_COLUMN_LENGTH));
+                FlatFileBCPFile.forceSingleByte(
+                    typeFactory,
+                    typeFactory.createSqlType(
+                        SqlTypeName.VARCHAR,
+                        DESCRIBE_COLUMN_LENGTH)));
             fieldNames.add(DESCRIBE_COLUMN_NAME);
             break;
         case SAMPLE:
@@ -286,6 +288,9 @@ class FlatFileDataServer
                         size.intValue());
                 RelDataType nullableType =
                     typeFactory.createTypeWithNullability(type, true);
+                nullableType = FlatFileBCPFile.forceSingleByte(
+                    typeFactory,
+                    nullableType);
                 fieldTypes.add(nullableType);
                 fieldNames.add("COL" + i++);
             }

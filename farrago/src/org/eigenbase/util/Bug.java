@@ -108,6 +108,12 @@ public abstract class Bug
      */
     public static final boolean Dt1684Fixed = false;
 
+    /**
+     * Whether dtbug1684 "Integration issues"
+     * is fixed.
+     */
+    public static final boolean Dt1847Fixed = false;
+
     // kkrueger
 
     // mberkowitz

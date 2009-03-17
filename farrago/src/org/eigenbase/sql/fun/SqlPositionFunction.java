@@ -38,6 +38,10 @@ public class SqlPositionFunction
 {
     //~ Constructors -----------------------------------------------------------
 
+    // FIXME jvs 25-Jan-2009:  POSITION should verify that
+    // params are all same character set, like OVERLAY does implicitly
+    // as part of rtiDyadicStringSumPrecision
+    
     public SqlPositionFunction()
     {
         super(

@@ -132,6 +132,63 @@ Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
 | "SYS_BOOT"."JDBC_METADATA","LOCALDB"."SALES","SYS_CWM"."Relational"  |
 +----------------------------------------------------------------------+
 > 
+> -- test CURRENT_CATALOG and CURRENT_SCHEMA from SQL:2008
+> values current_catalog;
++------------------+
+| CURRENT_CATALOG  |
++------------------+
+| LOCALDB          |
++------------------+
+> values current_schema;
++-----------------+
+| CURRENT_SCHEMA  |
++-----------------+
+|                 |
++-----------------+
+> 
+> set catalog 'sys_boot';
+> values current_catalog;
++------------------+
+| CURRENT_CATALOG  |
++------------------+
+| SYS_BOOT         |
++------------------+
+> values current_schema;
++-----------------+
+| CURRENT_SCHEMA  |
++-----------------+
+|                 |
++-----------------+
+> 
+> set schema 'localdb.sales';
+> values current_catalog;
++------------------+
+| CURRENT_CATALOG  |
++------------------+
+| LOCALDB          |
++------------------+
+> values current_schema;
++-----------------+
+| CURRENT_SCHEMA  |
++-----------------+
+| SALES           |
++-----------------+
+> 
+> -- note that changing the catalog does not affect the schema
+> set catalog 'sys_boot';
+> values current_catalog;
++------------------+
+| CURRENT_CATALOG  |
++------------------+
+| SYS_BOOT         |
++------------------+
+> values current_schema;
++-----------------+
+| CURRENT_SCHEMA  |
++-----------------+
+| SALES           |
++-----------------+
+> 
 > -- test LucidDB's standard-bending for 
 > -- SQL:2003 Part 2 Section 9.3 Syntax Rule 3.a.iii.3
 > -- (see http://sf.net/mailarchive/message.php?msg_id=13337379)

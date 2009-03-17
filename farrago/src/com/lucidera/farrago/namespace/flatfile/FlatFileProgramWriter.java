@@ -207,6 +207,9 @@ public class FlatFileProgramWriter
             } else {
                 sourceTypes[i] = getTextType(targetType);
             }
+            sourceTypes[i] = FlatFileBCPFile.forceSingleByte(
+                typeFactory,
+                sourceTypes[i]);
             sourceNames[i] = targetTypes[i].getName();
         }
         RelDataType inputRowType =
@@ -225,7 +228,13 @@ public class FlatFileProgramWriter
                 skip = isCustom;
                 break;
             case JAVA_ONLY:
-                skip = !isCustom;
+                if (!isCustom) {
+                    if (sourceTypes[i] != targetTypes[i]) {
+                        skip = false;
+                    } else {
+                        skip = true;
+                    }
+                }
                 break;
             }
 

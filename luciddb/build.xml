@@ -527,6 +527,7 @@ ${farrago.test.jvmargs}
     <ant dir="test/sql/sqlserver-specific" target="clean"/>
     <ant dir="test/sql/sys" target="clean"/>
     <ant dir="test/sql/tpch" target="clean"/>
+    <ant dir="test/sql/ssb" target="clean"/>
     <ant dir="test/sql/txn" target="clean"/>
     <ant dir="test/sql/udr/udf" target="clean"/>
     <ant dir="test/sql/udr/udp" target="clean"/>

@@ -1,6 +1,8 @@
 > -- $Id$
 > -- Test Unicode data
 > 
+> -- FIXME jvs 5-Feb-2009:  collations are all messed up as usual
+> 
 > create schema uni;
 > 
 > -- should fail:  unknown character set
@@ -26,43 +28,940 @@ Error: DDL validation error near line 2, column 29: Character set UTF-8 unsuppor
 > create table uni.t5(
 > i int not null primary key, v varchar(10) character set "LATIN1");
 > 
-> insert into uni.t5 values (1, 'hi');
+> insert into uni.t5 values (1, 'Hi');
+> 
+> -- should fail:  cannot assign across character sets
+> insert into uni.t5 values (100, U&'Hi');
+Error: At line 0, column 0: Cannot assign to target field 'V' of type VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" from source field 'EXPR$1' of type CHAR(2) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL (state=,code=0)
 > 
 > select cast(v as varchar(1) character set "LATIN1") from uni.t5;
 +---------+
 | EXPR$0  |
 +---------+
-| h       |
+| H       |
 +---------+
 > 
 > -- should succeed:  2-byte Unicode
 > create table uni.t6(
 > i int not null primary key, v varchar(10) character set "UTF16");
 > 
-> insert into uni.t6 values (1, _UTF16'hi');
+> insert into uni.t6 values (1, U&'Hi');
+> 
+> -- should fail:  cannot assign across character sets
+> insert into uni.t6 values (100, 'Hi');
+Error: At line 0, column 0: Cannot assign to target field 'V' of type VARCHAR(10) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" from source field 'EXPR$1' of type CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL (state=,code=0)
 > 
 > select * from uni.t6;
 +----+-----+
 | I  |  V  |
 +----+-----+
-| 1  | hi  |
+| 1  | Hi  |
++----+-----+
+> 
+> -- test rebuild and analyze on Unicode data
+> alter table uni.t6 rebuild;
+> analyze table uni.t6 compute statistics for all columns;
+> 
+> select * from uni.t6;
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
 +----+-----+
 > 
 > select cast(v as varchar(1) character set "UTF16") from uni.t6;
 +---------+
 | EXPR$0  |
 +---------+
-| h       |
+| H       |
 +---------+
 > 
 > -- should fail:  unknown character set
 > select cast(v as varchar(1) character set "SANSKRIT") from uni.t6;
 Error: From line 1, column 18 to line 1, column 24: Character set SANSKRIT unsupported (state=,code=0)
 > 
-> -- FIXME:  single-byte to double-byte currently crashes in Fennel
-> -- select cast(v as varchar(1) character set "UTF16") from uni.t5;
+> -- should fail:  cast across character repertoires
+> select cast(v as varchar(1) character set "UTF16") from uni.t5;
+Error: From line 1, column 8 to line 1, column 50: Cast function cannot convert value of type VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" to type VARCHAR(1) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL (state=,code=0)
 > 
-> -- FIXME:  double-byte to single-byte currently crashes in Fennel
-> -- select cast(v as varchar(1) character set "LATIN1") from uni.t6;
+> select cast(v as varchar(1) character set "LATIN1") from uni.t6;
+Error: From line 1, column 8 to line 1, column 51: Cast function cannot convert value of type VARCHAR(10) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" to type VARCHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL (state=,code=0)
+> 
+> select cast(v as char(40) character set "LATIN1") from uni.t5;
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Hi                                        |
++-------------------------------------------+
+> 
+> select cast(v as char(40) character set "UTF16") from uni.t6;
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Hi                                        |
++-------------------------------------------+
+> 
+> -- should fail:  cast across character repertoires
+> select cast(v as char(40) character set "UTF16") from uni.t5;
+Error: From line 1, column 8 to line 1, column 48: Cast function cannot convert value of type VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" to type CHAR(40) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL (state=,code=0)
+> 
+> -- should fail:  cast across character repertoires
+> select cast(v as char(40) character set "LATIN1") from uni.t6;
+Error: From line 1, column 8 to line 1, column 49: Cast function cannot convert value of type VARCHAR(10) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" to type CHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL (state=,code=0)
+> 
+> select char_length(v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> select char_length(v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> select v||v from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| HiHi    |
++---------+
+> 
+> select v||v from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| HiHi    |
++---------+
+> 
+> -- should fail:  attempt to combine different character repertoires
+> select t5.v||t6.v from uni.t5,uni.t6;
+Error: From line 1, column 8 to line 1, column 17: VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" is not comparable to VARCHAR(10) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" (state=,code=0)
+> 
+> select substring(v from 1 for 1) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| H       |
++---------+
+> 
+> select substring(v from 1 for 1) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| H       |
++---------+
+> 
+> select substring(v from 2 for 1) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| i       |
++---------+
+> 
+> select substring(v from 2 for 1) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| i       |
++---------+
+> 
+> select substring(v from 2) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| i       |
++---------+
+> 
+> select substring(v from 2) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| i       |
++---------+
+> 
+> select overlay(v placing 'a' from 2 for 1) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| Ha      |
++---------+
+> 
+> -- should fail:  character set mismatch
+> select overlay(v placing U&'a' from 2 for 1) from uni.t5;
+Error: From line 1, column 8 to line 1, column 44: VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" is not comparable to CHAR(1) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL (state=,code=0)
+> 
+> select overlay(v placing U&'a' from 2 for 1) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| Ha      |
++---------+
+> 
+> select overlay(v placing 'ya' from 3 for 0) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| Hiya    |
++---------+
+> 
+> select overlay(v placing U&'ya' from 3 for 0) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| Hiya    |
++---------+
+> 
+> select position('i' in v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> -- FIXME:  should fail:  character set mismatch
+> -- select position(U&'i' in v) from uni.t5;
+> 
+> select position(U&'i' in v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> -- test explicit character set specification
+> select position(_UTF16'i' in v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+> 
+> select trim(both from '  a  ') from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| a       |
++---------+
+> 
+> -- FIXME:  implicit trim char should match character set automatically
+> -- select trim(both from U&'  a  ') from uni.t6;
+> 
+> select trim(both U&' ' from U&'  a  ') from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| a       |
++---------+
+> 
+> select upper(v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| HI      |
++---------+
+> 
+> select upper(v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| HI      |
++---------+
+> 
+> select lower(v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| hi      |
++---------+
+> 
+> select lower(v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| hi      |
++---------+
+> 
+> select initcap(v||v) from uni.t5;
++---------+
+| EXPR$0  |
++---------+
+| Hihi    |
++---------+
+> 
+> select initcap(v||v) from uni.t6;
++---------+
+| EXPR$0  |
++---------+
+| Hihi    |
++---------+
+> 
+> -- for comparison ops, first test with Fennel ReshapeExecStream
+> 
+> select * from uni.t5 where v = 'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> -- should fail:  character set mismatch
+> select * from uni.t6 where v = 'Hi';
+Error: From line 1, column 28 to line 1, column 35: Cannot apply = to the two different charsets UTF-16LE and ISO-8859-1 (state=,code=0)
+> 
+> select * from uni.t6 where v = U&'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v = U&'Hi  ';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v = U&'hi';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v > U&'H';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v >= U&'H';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v >= U&'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v >= U&'Ice';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v < U&'H';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v <= U&'Ice';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v <> U&'Hi';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v <> U&'bye';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> -- retest comparison ops with Java calc (concat operator prevents
+> -- usage of ReshapeExecStream)
+> 
+> select * from uni.t5 where v||'' = 'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||U&'' = U&'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||U&'' = U&'Hi  ';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||U&'' = U&'hi';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v||U&'' > U&'H';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||U&'' >= U&'H';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||U&'' >= U&'Hi';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||U&'' >= U&'Ice';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v||U&'' < U&'H';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v||U&'' <= U&'Ice';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v||U&'' <> U&'Hi';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v||U&'' <> U&'bye';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> 
+> -- test pattern matching
+> 
+> select * from uni.t5 where v like 'H%';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t5 where v like 'I%';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t5 where v like '_i';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t5 where v like '_a';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v like U&'H%';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v like U&'I%';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> select * from uni.t6 where v like U&'_i';
++----+-----+
+| I  |  V  |
++----+-----+
+| 1  | Hi  |
++----+-----+
+> 
+> select * from uni.t6 where v like U&'_a';
++----+----+
+| I  | V  |
++----+----+
++----+----+
+> 
+> -- should fail:  character set mismatch
+> 
+> select * from uni.t6 where v like 'H%';
+Error: From line 0, column 0 to line 1, column 38: Operands V, 'H%' not comparable to each other (state=,code=0)
+> 
+> 
+> -- test conversion
+> 
+> values cast(U&'123' as int);
++---------+
+| EXPR$0  |
++---------+
+| 123     |
++---------+
+> 
+> values cast(0.0 as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| .0      |
++---------+
+> 
+> values cast(1.2e80 as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| 1.2E80  |
++---------+
+> 
+> values cast(0 as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+> 
+> values cast(123.45 as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| 123.45  |
++---------+
+> 
+> values cast(true as varchar(128) character set "UTF16");
++---------+
+| EXPR$0  |
++---------+
+| TRUE    |
++---------+
+> 
+> values cast(date '1994-09-08' as varchar(128) character set "UTF16");
++-------------+
+|   EXPR$0    |
++-------------+
+| 1994-09-08  |
++-------------+
+> 
+> select cast(v as int) from uni.t6;
+Error: Cannot assign 'Hi' to a NUMERIC value: NumberFormatException (state=,code=0)
+> 
+> 
+> -- now insert some real Unicode data, and retest most operators;
+> -- note that we avoid directly retrieving Unicode so that the .ref file can
+> -- stay as plain ASCII
+> 
+> -- NOTE:  upper/lower/initcap do not seem to work on Greek letters; need
+> -- to find some other script where they work
+> 
+> insert into uni.t6 values (2, U&'\03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2');
+> 
+> create or replace function uni.convert_to_escaped(
+> s varchar(1024) character set "UTF16")
+> returns varchar(1024)
+> language java
+> no sql
+> external name 
+> 'class net.sf.farrago.test.FarragoTestUDR.convertUnicodeToEscapedForm';
+> 
+> select uni.convert_to_escaped(v) from uni.t6 order by 1;
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Hi                                        |
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-------------------------------------------+
+> 
+> select char_length(v) from uni.t6 where i=2;
++---------+
+| EXPR$0  |
++---------+
+| 8       |
++---------+
+> 
+> select uni.convert_to_escaped(v||v) from uni.t6 where i=2;
++-----------------------------------------------------------------------------------+
+|                                      EXPR$0                                       |
++-----------------------------------------------------------------------------------+
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2\03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-----------------------------------------------------------------------------------+
+> 
+> select uni.convert_to_escaped(substring(v from 1 for 1)) from uni.t6
+> where i=2;
++---------+
+| EXPR$0  |
++---------+
+| \03B1   |
++---------+
+> 
+> select uni.convert_to_escaped(substring(v from 2 for 3)) from uni.t6
+> where i=2;
++------------------+
+|      EXPR$0      |
++------------------+
+| \03BD\03B8\03C1  |
++------------------+
+> 
+> select uni.convert_to_escaped(substring(v from 2)) from uni.t6
+> where i=2;
++--------------------------------------+
+|                EXPR$0                |
++--------------------------------------+
+| \03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++--------------------------------------+
+> 
+> select uni.convert_to_escaped(overlay(v placing U&'n' from 2 for 1)) from uni.t6
+> where i=2;
++---------------------------------------+
+|                EXPR$0                 |
++---------------------------------------+
+| \03B1n\03B8\03C1\03C9\03C0\03BF\03C2  |
++---------------------------------------+
+> 
+> select position(U&'\03C1' in v) from uni.t6 where i=2;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+> 
+> -- test UESCAPE
+> select position(U&'!03C1' UESCAPE '!' in v) from uni.t6 where i=2;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+> 
+> -- doubled-up escape character gets replaced with a singleton
+> values U&'abc!!def' UESCAPE '!';
++----------+
+|  EXPR$0  |
++----------+
+| abc!def  |
++----------+
+> 
+> select uni.convert_to_escaped(trim(both U&' ' from U&' \03B1\03BD '))
+> from uni.t6 where i=2;
++-------------+
+|   EXPR$0    |
++-------------+
+| \03B1\03BD  |
++-------------+
+> 
+> select count(*) from uni.t6 where i=2 and v > U&'\03B1';
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+> 
+> select count(*) from uni.t6 where i=2 and v > U&'\03B3';
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+> 
+> select count(*) from uni.t6 
+> where i=2 and v = U&'\03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2';
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+> 
+> select count(*) from uni.t6 
+> where i=2 and v = U&'avast ye';
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+> 
+> -- verify that view columns inherit the underlying character set
+> create view uni.v6(vi,vv) as select * from uni.t6;
+> select uni.convert_to_escaped(vv) from uni.v6 order by vi;
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| Hi                                        |
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-------------------------------------------+
+> select "characterSetName"
+> from sys_cwm."Relational"."Column" 
+> where "name" = 'VV';
++-------------------+
+| characterSetName  |
++-------------------+
+| UTF-16LE          |
++-------------------+
+> 
+> create view uni.v1 as
+> select * from (values (trim(leading U&' ' from U&'oops  '))) as v(x);
+> create view uni.v2 as
+> select * from (values (trim(leading U&' ' from U&'oops    '))) as v(x);
+> 
+> -- verify that hash join does the right thing with trailing spaces
+> -- (ignores them for equality comparison purposes)
+> select count(*) from uni.v1, uni.v2 where v1.x=v2.x;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+> 
+> select * from uni.v1
+> union all
+> select * from uni.v2
+> order by x;
++-----------+
+|     X     |
++-----------+
+| oops      |
+| oops      |
++-----------+
+> 
+> -- verify that hash agg does the right thing with trailing spaces
+> -- (ignores them for equality comparison purposes)
+> select * from uni.v1
+> union
+> select * from uni.v2;
++---------+
+|    X    |
++---------+
+| oops    |
++---------+
+> 
+> -- test a UDF which returns Unicode data
+> 
+> create or replace function uni.generate_unicode_string()
+> returns varchar(1024) character set "UTF16"
+> language java
+> no sql
+> external name 
+> 'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeString';
+> 
+> -- test a UDF which returns Unicode data with supplemental characters
+> -- (Farrago does not actually support these, so they remain uncombined)
+> 
+> create or replace function uni.generate_unicode_supplemental_string()
+> returns varchar(1024) character set "UTF16"
+> language java
+> no sql
+> external name 
+> 'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeSupplementalString';
+> 
+> values uni.convert_to_escaped(uni.generate_unicode_string());
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-------------------------------------------+
+> 
+> values uni.convert_to_escaped(uni.generate_unicode_supplemental_string());
++-------------+
+|   EXPR$0    |
++-------------+
+| \D840\DC00  |
++-------------+
+> 
+> -- test a UDX which returns Unicode data
+> 
+> create function uni.generate_unicode_string_udx()
+> returns table(v varchar(1024) character set "UTF16")
+> language java
+> parameter style system defined java
+> no sql
+> external name 
+> 'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeStringUdx';
+> 
+> select uni.convert_to_escaped(v)
+> from table(uni.generate_unicode_string_udx());
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-------------------------------------------+
+> 
+> -- test a UDX which passes through Unicode data
+> create function uni.stringify(c cursor, delimiter varchar(128))
+> returns table(v varchar(65535) character set "UTF16")
+> language java
+> parameter style system defined java
+> no sql
+> external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+> 
+> select uni.convert_to_escaped(v)
+> from table(uni.stringify(
+>     cursor(values uni.generate_unicode_string()),
+>     '|'));
++-------------------------------------------+
+|                  EXPR$0                   |
++-------------------------------------------+
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  |
++-------------------------------------------+
+> 
+> -- test CSVJDBC reader with Unicode flatfiles
+> create or replace procedure uni.generate_test_csv(charset_name varchar(128))
+>   language java
+>   parameter style java
+>   reads sql data
+>   external name 
+>   'class net.sf.farrago.test.FarragoTestUDR.generateUnicodeTestCsv';
+> 
+> call uni.generate_test_csv('UTF-8');
+> call uni.generate_test_csv('UTF-16');
+> 
+> create server utf8_csv_server
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.relique.jdbc.csv.CsvDriver',
+>     url 'jdbc:relique:csv:${FARRAGO_HOME}/testgen/unicodeCsv',
+>     schema_name 'TESTDATA',
+>     extended_options 'TRUE',
+>     "charset" 'UTF-8');
+> 
+> create server utf16_csv_server
+> foreign data wrapper sys_jdbc
+> options(
+>     driver_class 'org.relique.jdbc.csv.CsvDriver',
+>     url 'jdbc:relique:csv:${FARRAGO_HOME}/testgen/unicodeCsv',
+>     schema_name 'TESTDATA',
+>     extended_options 'TRUE',
+>     "charset" 'UTF-16');
+> 
+> create foreign table uni.utf8_data(
+>     c1 varchar(50) character set "UTF16" not null,
+>     c2 varchar(50) character set "UTF16" not null)
+> server utf8_csv_server
+> options (table_name 'UTF-8');
+> 
+> create foreign table uni.utf16_data(
+>     c1 varchar(50) character set "UTF16" not null,
+>     c2 varchar(50) character set "UTF16" not null)
+> server utf16_csv_server
+> options (table_name 'UTF-16');
+> 
+> select uni.convert_to_escaped(c1) as c1,
+> uni.convert_to_escaped(c2) as c2
+> from uni.utf8_data order by c1;
++-------------------------------------------+-------------------------------------------+
+|                    C1                     |                    C2                     |
++-------------------------------------------+-------------------------------------------+
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  | \03C2\03BF\03C0\03C9\03C1\03B8\03BD\03B1  |
+| hello                                     | goodbye                                   |
++-------------------------------------------+-------------------------------------------+
+> 
+> select uni.convert_to_escaped(c1) as c1,
+> uni.convert_to_escaped(c2) as c2
+> from uni.utf16_data order by c1;
++-------------------------------------------+-------------------------------------------+
+|                    C1                     |                    C2                     |
++-------------------------------------------+-------------------------------------------+
+| \03B1\03BD\03B8\03C1\03C9\03C0\03BF\03C2  | \03C2\03BF\03C0\03C9\03C1\03B8\03BD\03B1  |
+| hello                                     | goodbye                                   |
++-------------------------------------------+-------------------------------------------+
+> 
+> -- test Unicode in identifiers
+> 
+> create table uni.U&"\03B1\03BD\03B8\03C1\03C9"(
+> U&"\03C0\03BF\03C2" int not null primary key);
+> 
+> insert into uni.U&"\03B1\03BD\03B8\03C1\03C9" values (1);
+> 
+> insert into uni.U&"!03B1!03BD!03B8!03C1!03C9" UESCAPE '!' values (2);
+> 
+> -- test flatfiles with single-byte data exposed as Unicode
+> create server flatfile_server
+> foreign data wrapper sys_file_wrapper
+> options (
+>     directory 'unitsql/med/flatfiles/',
+>     file_extension 'csv',
+>     with_header 'yes', 
+>     lenient 'no');
+> 
+> create foreign table uni.flatfile_explicit_table(
+>     id int not null,
+>     name varchar(50) character set "UTF16" not null,
+>     extra_field char(1) character set "UTF16" not null)
+> server flatfile_server
+> options (filename 'example');
+> 
+> select * from uni.flatfile_explicit_table order by extra_field;
++------+------------------------------------------+--------------+
+|  ID  |                   NAME                   | EXTRA_FIELD  |
++------+------------------------------------------+--------------+
+| 123  | Jonathan Ackerman                        | A            |
+| 234  | Grady O'Neil                             | B            |
+| 456  | Susan, Peter and Dave                    | C            |
+| 789  | Amelia "meals" Maurice                   | E            |
+| 123  | "S,"                                     | F            |
+| 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
++------+------------------------------------------+--------------+
+> 
+> -- verify that UNION type aggregation does not accidentally revert to ISO-8859-1
+> !set outputformat csv
+> explain plan for
+> select * from uni.v1
+> union all
+> select * from uni.v2;
+'column0'
+'IterConcatenateRel(all=[true])'
+'  IterCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):VARCHAR(8) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], X=[$t1])'
+'    FennelToIteratorConverter'
+'      FennelRenameRel(fieldNames=[[X]])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0=[{inputs}], expr#1=[_UTF-16LE'oops  '], EXPR$0=[$t1])'
+'            IterOneRowRel'
+'  FennelToIteratorConverter'
+'    FennelRenameRel(fieldNames=[[X]])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=[_UTF-16LE'oops    '], EXPR$0=[$t1])'
+'          IterOneRowRel'
+> 
+> explain plan for
+> select * from uni.flatfile_explicit_table;
+'column0'
+'IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER NOT NULL], expr#4=[CAST($t1):VARCHAR(50) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#5=[CAST($t2):CHAR(1) CHARACTER SET "UTF-16LE" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], ID=[$t3], NAME=[$t4], EXTRA_FIELD=[$t5])'
+'  FennelToIteratorConverter'
+'    FlatFileFennelRel(table=[[LOCALDB, UNI, FLATFILE_EXPLICIT_TABLE]])'
 > 
 > !quit

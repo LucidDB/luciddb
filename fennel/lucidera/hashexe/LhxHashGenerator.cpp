@@ -108,27 +108,30 @@ void LhxHashGenerator::hashOneBuffer(uint &hashValue, PConstBuffer pBuf,
 void LhxHashGenerator::hashOneColumn(
     uint &hashValue,
     TupleDatum const &inputCol,
-    bool isVarChar)
+    LhxHashTrim isVarChar)
 {
 
     uint trimmedLength = inputCol.cbData;
     PConstBuffer pData = inputCol.pData;
 
-    if (pData && isVarChar) {
+    if (pData) {
         /*
          * Only hash to the trimmed value.
          */
-        PConstBuffer charBegin = pData;
-        PConstBuffer charByte = charBegin + trimmedLength - 1;
-        
-        if (charBegin) {
-            /*
-             * Trim the char type value when it is not NULL.
-             */
-            while (*charByte == ' ' && charByte >= charBegin) {
-                charByte --;
+        if (isVarChar == HASH_TRIM_VARCHAR) {
+            PConstBuffer pChar = pData + trimmedLength - 1;
+            while ((pChar >= pData) && (*pChar == ' ')) {
+                --pChar;
             }
-            trimmedLength = charByte - charBegin + 1;
+            trimmedLength = pChar - pData + 1;
+        } else if (isVarChar == HASH_TRIM_UNICODE_VARCHAR) {
+            PConstBuffer pChar = pData + trimmedLength - 2;
+            while ((pChar >= pData)
+                && (*reinterpret_cast<uint16_t const *>(pChar) == ' '))
+            {
+                pChar -= 2;
+            }
+            trimmedLength = pChar - pData + 2;
         }
     }
 
@@ -159,7 +162,7 @@ void LhxHashGenerator::hashOneColumn(
 uint LhxHashGenerator::hash(
     TupleData const &inputTuple,
     TupleProjection const &keyProjection,
-    vector<bool> const &isKeyColVarChar)
+    vector<LhxHashTrim> const &isKeyColVarChar)
 {
     uint keyLength = keyProjection.size();
 

@@ -22,9 +22,11 @@
 */
 package org.eigenbase.util;
 
+import java.nio.*;
 import java.nio.charset.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.resource.*;
 
 
 /**
@@ -57,6 +59,8 @@ public class NlsString
      * @throws IllegalCharsetNameException If the given charset name is illegal
      * @throws UnsupportedCharsetException If no support for the named charset
      * is available in this instance of the Java virtual machine
+     * @throws RuntimeException If the given value cannot be
+     * represented in the given charset
      *
      * @pre theString != null
      */
@@ -76,6 +80,14 @@ public class NlsString
                 throw new UnsupportedCharsetException(charsetName);
             }
             this.charset = Charset.forName(javaCharsetName);
+            CharsetEncoder encoder = charset.newEncoder();
+            // dry run to see if encoding hits any problems
+            try {
+                encoder.encode(CharBuffer.wrap(value));
+            } catch (CharacterCodingException ex) {
+                throw EigenbaseResource.instance().CharsetEncoding.ex(
+                    value, javaCharsetName);
+            }
         } else {
             this.charsetName = null;
             this.charset = null;

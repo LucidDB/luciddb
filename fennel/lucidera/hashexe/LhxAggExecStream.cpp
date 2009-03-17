@@ -558,7 +558,7 @@ void LhxAggExecStream::setHashInfo(
     hashInfo.externalSegmentAccessor.pSegment = params.pTempSegment;
 
     TupleProjection keyProj;
-    vector<bool> isKeyColVarChar;
+    vector<LhxHashTrim> isKeyColVarChar;
 
     for (int i = 0; i < params.groupByKeyCount; i ++) {
         keyProj.push_back(i);
@@ -566,11 +566,14 @@ void LhxAggExecStream::setHashInfo(
          * Hashing is special for varchar types (the trailing blanks are
          * insignificant).
          */
-        if (inputDesc[i].pTypeDescriptor->getOrdinal()
-            == STANDARD_TYPE_VARCHAR) {
-            isKeyColVarChar.push_back(true);
+        StoredTypeDescriptor::Ordinal ordinal =
+            inputDesc[i].pTypeDescriptor->getOrdinal();
+        if (ordinal == STANDARD_TYPE_VARCHAR) {
+            isKeyColVarChar.push_back(HASH_TRIM_VARCHAR);
+        } else if (ordinal == STANDARD_TYPE_UNICODE_VARCHAR) {
+            isKeyColVarChar.push_back(HASH_TRIM_UNICODE_VARCHAR);
         } else {
-            isKeyColVarChar.push_back(false);
+            isKeyColVarChar.push_back(HASH_TRIM_NONE);
         }
     }
     hashInfo.keyProj.push_back(keyProj);    

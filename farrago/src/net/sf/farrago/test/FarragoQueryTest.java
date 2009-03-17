@@ -43,6 +43,7 @@ import net.sf.farrago.catalog.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.test.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -194,7 +195,6 @@ public class FarragoQueryTest
                 "Expected message about cursor still open but got '"
                 + ex.getMessage() + "'",
                 ex.getMessage().indexOf("cursor is still open") > -1);
-            ex.getMessage();
         } finally {
             if (stmt2 != null) {
                 stmt2.close();
@@ -774,6 +774,40 @@ public class FarragoQueryTest
             // The # character is part of the per-object logger, which
             // is not supposed to exist, so we expect to not see it.
             assertEquals(-1, s.indexOf('#'));
+        }
+    }
+
+    public void testUnicodeLiteral()
+        throws Exception
+    {
+        // Note that here we are constructing a SQL statement which directly
+        // contains Unicode characters (not SQL Unicode escape sequences).  The
+        // escaping here is Java-only, so by the time it gets to the SQL
+        // parser, the literal already contains Unicode characters.
+        String sql = "values U&'"
+            + ConversionUtil.TEST_UNICODE_STRING + "'";
+        Set<String> refSet = new HashSet<String>();
+        refSet.add(ConversionUtil.TEST_UNICODE_STRING);
+        resultSet = stmt.executeQuery(sql);
+        compareResultSet(refSet);
+    }
+
+    public void testUnencodableUnicodeLiteral()
+    {
+        // Negative test for Unicode characters without a Unicode
+        // introducer and no explicit _UTF16 character set
+        // (so ISO-8859-1 is used by default, and it can't encode
+        // the given characters).
+        String sql = "values '" + ConversionUtil.TEST_UNICODE_STRING + "'";
+        try {
+            stmt.executeQuery(sql);
+            Assert.fail("Expected error about encoding.");
+        } catch (SQLException ex) {
+            // verify expected error message
+            Assert.assertTrue(
+                "Expected message about encoding but got '"
+                + ex.getMessage() + "'",
+                ex.getMessage().indexOf("Failed to encode") > -1);
         }
     }
 

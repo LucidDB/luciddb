@@ -1437,8 +1437,60 @@ public class RexToCalcTranslator
             this.translator = translator;
         }
 
+        public Void visitInputRef(RexInputRef inputRef)
+        {
+            if (SqlTypeUtil.isUnicode(inputRef.getType())) {
+                throw new TranslationException();
+            }
+            return super.visitInputRef(inputRef);
+        }
+
+        public Void visitLocalRef(RexLocalRef localRef)
+        {
+            if (SqlTypeUtil.isUnicode(localRef.getType())) {
+                throw new TranslationException();
+            }
+            return super.visitLocalRef(localRef);
+        }
+
+        public Void visitCorrelVariable(RexCorrelVariable correlVariable)
+        {
+            if (SqlTypeUtil.isUnicode(correlVariable.getType())) {
+                throw new TranslationException();
+            }
+            return super.visitCorrelVariable(correlVariable);
+        }
+
+        public Void visitLiteral(RexLiteral literal)
+        {
+            if (SqlTypeUtil.isUnicode(literal.getType())) {
+                throw new TranslationException();
+            }
+            return super.visitLiteral(literal);
+        }
+
+        public Void visitFieldAccess(RexFieldAccess fieldAccess)
+        {
+            if (SqlTypeUtil.isUnicode(fieldAccess.getType())) {
+                throw new TranslationException();
+            }
+            return super.visitFieldAccess(fieldAccess);
+        }
+
         public Void visitCall(RexCall call)
         {
+            // Currently, the Fennel calc does not support Unicode data,
+            // so for now bail out if either the operands or the result type
+            // are Unicode.
+            if (SqlTypeUtil.isUnicode(call.getType())) {
+                throw new TranslationException();
+            }
+            for (RexNode operand : call.getOperands()) {
+                if (SqlTypeUtil.isUnicode(operand.getType())) {
+                    throw new TranslationException();
+                }
+            }
+            
             final SqlOperator op = call.getOperator();
             CalcRexImplementor implementor =
                 translator.implementorTable.get(op);

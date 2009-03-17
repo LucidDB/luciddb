@@ -29,18 +29,16 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 TraceSource::TraceSource()
 {
-    pTraceTarget.reset();
+    minimumLevel = TRACE_OFF;
 }
 
 TraceSource::TraceSource(SharedTraceTarget pTraceTargetInit,std::string nameInit)
 {
-    pTraceTarget.reset();
     initTraceSource(pTraceTargetInit,nameInit);
 }
 
 TraceSource::~TraceSource()
 {
-    pTraceTarget.reset();
 }
 
 void TraceSource::initTraceSource(
@@ -68,6 +66,7 @@ void TraceSource::trace(TraceLevel level,std::string message) const
 void TraceSource::disableTracing()
 {
     pTraceTarget.reset();
+    minimumLevel = TRACE_OFF;
 }
 
 FENNEL_END_CPPFILE("$Id$");

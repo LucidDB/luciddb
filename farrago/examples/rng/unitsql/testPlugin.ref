@@ -300,6 +300,7 @@ Was expecting one of:
     <BINARY_STRING_LITERAL> ...
     <PREFIXED_STRING_LITERAL> ...
     <QUOTED_STRING> ...
+    <UNICODE_STRING_LITERAL> ...
     "TRUE" ...
     "FALSE" ...
     "UNKNOWN" ...
@@ -329,6 +330,7 @@ Was expecting one of:
     "SPECIFIC" ...
     <IDENTIFIER> ...
     <QUOTED_IDENTIFIER> ...
+    <UNICODE_QUOTED_IDENTIFIER> ...
     "ABS" ...
     "AVG" ...
     "CARDINALITY" ...
@@ -363,9 +365,11 @@ Was expecting one of:
     "SQRT" ...
     "SUM" ...
     "UPPER" ...
+    "CURRENT_CATALOG" ...
     "CURRENT_DEFAULT_TRANSFORM_GROUP" ...
     "CURRENT_PATH" ...
     "CURRENT_ROLE" ...
+    "CURRENT_SCHEMA" ...
     "CURRENT_USER" ...
     "SESSION_USER" ...
     "SYSTEM_USER" ...
@@ -386,6 +390,7 @@ Was expecting one of:
 > -- verify that DROP CASCADE works correctly even without DDL personality
 > -- TODO:  use Java filesystem access to verify creation/deletion of .dat file
 > drop schema rngtest cascade;
+> drop schema sys_boot.old_stuff cascade;
 > 
 > -- verify that SELECT DISTINCT is working again
 > select distinct empno from sales.emps order by empno;
@@ -396,6 +401,47 @@ Was expecting one of:
 | 110    |
 | 120    |
 +--------+
+> 
+> -- NOTE jvs 4-Mar-2009:  This doesn't really belong here, but this
+> -- test is currently the only place where we restore a clean catalog,
+> -- so it's convenient for testing out the procedure for switching to Unicode
+> 
+> create schema typecheck;
+> 
+> create view typecheck.v as
+> select "characterSetName","collationName","ordinal"
+> from sys_fem."SQL2003"."AbstractColumn"
+> where "name" like 'ASC%DESC';
+> 
+> select * from typecheck.v;
++-------------------+---------------------------+----------+
+| characterSetName  |       collationName       | ordinal  |
++-------------------+---------------------------+----------+
+| ISO-8859-1        | ISO-8859-1$en_US$primary  | 9        |
++-------------------+---------------------------+----------+
+> 
+> -- should fail because tables still exist
+> call sys_boot.mgmt.change_default_character_set_to_unicode();
+Error: Cannot change default character set to Unicode because local tables
+have already been defined (state=,code=0)
+> 
+> drop schema sales cascade;
+> 
+> -- should succeed now since we dropped all the tables
+> call sys_boot.mgmt.change_default_character_set_to_unicode();
+> 
+> create view typecheck.v2 as select 'blah' as asc_or_desc from (values(0));
+> 
+> -- existing column should have switched from ISO-8859-1 to UNICODE,
+> -- and new column should also be UNICODE; note that collation
+> -- is currently incorrect for new column
+> select * from typecheck.v;
++-------------------+---------------------------+----------+
+| characterSetName  |       collationName       | ordinal  |
++-------------------+---------------------------+----------+
+| UTF-16LE          | UTF-16LE$en_US            | 9        |
+| UTF-16LE          | ISO-8859-1$en_US$primary  | 0        |
++-------------------+---------------------------+----------+
 > 
 > -- last thing we do is to prepare for a restore of pre-upgrade catalog contents
 > -- NOTE:  this will shut down the system, so don't add any commands

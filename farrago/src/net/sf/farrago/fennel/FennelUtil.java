@@ -237,7 +237,7 @@ public abstract class FennelUtil
         case INTERVAL_YEAR_MONTH:
             return FennelStandardTypeDescriptor.INT_64;
         case VARCHAR:
-            if (needUnicode(sqlType)) {
+            if (SqlTypeUtil.isUnicode(sqlType)) {
                 return FennelStandardTypeDescriptor.UNICODE_VARCHAR;
             } else {
                 return FennelStandardTypeDescriptor.VARCHAR;
@@ -246,7 +246,7 @@ public abstract class FennelUtil
         case MULTISET:
             return FennelStandardTypeDescriptor.VARBINARY;
         case CHAR:
-            if (needUnicode(sqlType)) {
+            if (SqlTypeUtil.isUnicode(sqlType)) {
                 return FennelStandardTypeDescriptor.UNICODE_CHAR;
             } else {
                 return FennelStandardTypeDescriptor.CHAR;
@@ -263,18 +263,6 @@ public abstract class FennelUtil
         default:
             throw Util.unexpected(sqlType.getSqlTypeName());
         }
-    }
-
-    private static boolean needUnicode(RelDataType sqlType)
-    {
-        Charset charset = sqlType.getCharset();
-        if (charset == null) {
-            return false;
-        }
-        if (charset.name().startsWith("UTF")) {
-            return true;
-        }
-        return false;
     }
 }
 

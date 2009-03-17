@@ -1,0 +1,52 @@
+-- SSB Schema creation
+--SET ECHO=ON
+
+-- As ADMIN, create a SSB schema and user
+--connect ADMIN ADMIN
+
+
+-- Create a role to be granted to user
+CREATE SCHEMA SSB;
+CREATE ROLE SSBROLE;
+
+-- Create a tablespace for SSB tables and indexes
+--create tablespace SSBTBS datafile 'ssb01.dat' size 250m;
+
+-- set explain plan level
+--alter system set explainplandetail=3;
+
+-- other
+--GRANT ALL on *.* to SSBROLE;
+
+-- create a user
+--CREATE USER SSB IDENTIFIED by SSB; 
+--GRANT SSBROLE to SSB;
+--ALTER USER SSB default SCHEMA SSB;
+--ALTER USER SSB default TABLESPACE SSBTBS;
+
+-- Connect as the new user
+--connect SSB SSB
+
+--create link SSB_LNK using FILE_DRIVER
+--defined by '"R:/testdata/ssb/data"',
+--'Link for SSB table load'
+--/
+
+create server ff_ssb_server
+foreign data wrapper sys_file_wrapper
+options(
+    directory '@FFDIR@',
+    file_extension '.tbl',
+    ctrl_file_extension '.bcp',
+    field_delimiter '|',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'no',
+    num_rows_scan '1',
+    log_directory '@DIR@'
+);
+
+import foreign schema "BCP" from server ff_ssb_server into ssb;
+
+set schema 'ssb';

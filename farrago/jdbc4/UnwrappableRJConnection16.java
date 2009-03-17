@@ -42,6 +42,8 @@ public abstract class UnwrappableRJConnection
     extends RJConnection
     implements Wrapper
 {
+    static final long serialVersionUID = 8754470401040578510L;
+
     protected UnwrappableRJConnection(RJConnectionInterface rmiconn)
     {
         super(rmiconn);

@@ -251,7 +251,8 @@ Error: DDL validation error near line 2, column 17: Must define structured objec
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered ")" at line 1, column 31.
 Was expecting one of:
     <IDENTIFIER> ...
-    <QUOTED_IDENTIFIER> ... (state=,code=0)
+    <QUOTED_IDENTIFIER> ...
+    <UNICODE_QUOTED_IDENTIFIER> ... (state=,code=0)
 > 
 > -- should fail:  unknown attribute type
 > create type bad_attrtype as (

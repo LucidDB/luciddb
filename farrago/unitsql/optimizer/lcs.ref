@@ -24,13 +24,13 @@
 > 
 > -- verify creation of system-defined clustered index
 > !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |             INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                    | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS         | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |             INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_OR_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                    | 0     | 0                 |              |              | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS         | 3     |                   |              | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A            | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
 > 
 > !set outputformat csv
 > -- verify that explain plan works
@@ -105,15 +105,15 @@
 > 
 > -- verify creation of system-defined clustered indices
 > !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+-----------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |         INDEX_NAME          | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+-----------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                             | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS  | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL        | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL        | 1     | 2                 | NAME         | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL        | 1     | 3                 | EMPID        | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+-----------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+-----------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |         INDEX_NAME          | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_OR_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+-----------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                             | 0     | 0                 |              |              | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS  | 3     |                   |              | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL        | 1     | 1                 | EMPNO        | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL        | 1     | 2                 | NAME         | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | EXPLICIT_LCSEMPS_ALL        | 1     | 3                 | EMPID        | A            | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+-----------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
 > 
 > -- verify that explain plan works
 > !set outputformat csv
@@ -237,13 +237,13 @@
 > 
 > -- verify creation of system-defined clustered index
 > !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |            INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                   | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS        | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$CITY  | 1     | 1                 | CITY         | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |            INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_OR_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                   | 0     | 0                 |              |              | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS        | 3     |                   |              | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$CITY  | 1     | 1                 | CITY         | A            | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+-----------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
 > 
 > -- verify that explain plan works
 > !set outputformat csv
@@ -458,14 +458,14 @@
 > 
 > -- verify creation of system-defined clustered indices
 > !indexes LCSEMPS
-+------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |             INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                    | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS         | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$NAME   | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |             INDEX_NAME             | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_OR_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | LCSEMPS     | false       |                  |                                    | 0     | 0                 |              |              | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | false       | LOCALDB          | SYS$DELETION_INDEX$LCSEMPS         | 3     |                   |              | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$EMPNO  | 1     | 1                 | EMPNO        | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | LCSEMPS     | true        | LOCALDB          | SYS$CLUSTERED_INDEX$LCSEMPS$NAME   | 1     | 1                 | NAME         | A            | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
 > 
 > -- verify that explain plan works
 > !set outputformat csv
@@ -919,15 +919,15 @@
 > 
 > -- verify that three indexes are created (not four)
 > !indexes RECTANGLES
-+------------+--------------+-------------+-------------+------------------+--------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |              INDEX_NAME              | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
-+------------+--------------+-------------+-------------+------------------+--------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
-| LOCALDB    | LCS          | RECTANGLES  | false       |                  |                                      | 0     | 0                 |              |               | 0            | 0      |                   |
-| LOCALDB    | LCS          | RECTANGLES  | false       | LOCALDB          | SYS$DELETION_INDEX$RECTANGLES        | 3     |                   |              | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$RECTANGLES$ID    | 1     | 1                 | ID           | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$RECTANGLES$NAME  | 1     | 1                 | NAME         | A             | 0            | 0      |                   |
-| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$RECTANGLES$R     | 1     | 1                 | R            | A             | 0            | 0      |                   |
-+------------+--------------+-------------+-------------+------------------+--------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
++------------+--------------+-------------+-------------+------------------+--------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |              INDEX_NAME              | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_OR_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+--------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
+| LOCALDB    | LCS          | RECTANGLES  | false       |                  |                                      | 0     | 0                 |              |              | 0            | 0      |                   |
+| LOCALDB    | LCS          | RECTANGLES  | false       | LOCALDB          | SYS$DELETION_INDEX$RECTANGLES        | 3     |                   |              | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$RECTANGLES$ID    | 1     | 1                 | ID           | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$RECTANGLES$NAME  | 1     | 1                 | NAME         | A            | 0            | 0      |                   |
+| LOCALDB    | LCS          | RECTANGLES  | true        | LOCALDB          | SYS$CLUSTERED_INDEX$RECTANGLES$R     | 1     | 1                 | R            | A            | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+--------------------------------------+-------+-------------------+--------------+--------------+--------------+--------+-------------------+
 > 
 > insert into rectangles values('Default', new rectangle(), 1);
 > 

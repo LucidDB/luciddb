@@ -1129,6 +1129,18 @@ public class SqlStdOperatorTable
         new SqlStringContextVariable("CURRENT_ROLE");
 
     /**
+     * The <code>CURRENT_CATALOG</code> function.
+     */
+    public static final SqlFunction currentCatalogFunc =
+        new SqlStringContextVariable("CURRENT_CATALOG");
+
+    /**
+     * The <code>CURRENT_SCHEMA</code> function.
+     */
+    public static final SqlFunction currentSchemaFunc =
+        new SqlStringContextVariable("CURRENT_SCHEMA");
+
+    /**
      * The <code>LOCALTIME [(<i>precision</i>)]</code> function.
      */
     public static final SqlFunction localTimeFunc =

@@ -1102,7 +1102,8 @@ SqlNode DefaultClause() :
     <DEFAULT_KW>
     (
         // TODO:  allow USER, CURRENT_USER, CURRENT_ROLE, SESSION_USER,
-        // SYSTEM_USER, CURRENT_PATH, <datetime value function>,
+        // SYSTEM_USER, CURRENT_PATH, CURRENT_CATALOG, CURRENT_SCHEMA,
+        // <datetime value function>,
         // <implicitly typed value specification>
         expression = Literal()
     )

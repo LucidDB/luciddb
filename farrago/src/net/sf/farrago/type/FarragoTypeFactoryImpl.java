@@ -884,8 +884,12 @@ public class FarragoTypeFactoryImpl
         if (type.getCharset() == null) {
             superclass = BytePointer.class;
         } else {
+            if (SqlTypeUtil.isUnicode(type)) {
+                superclass = Ucs2CharPointer.class;
+            } else {
+                superclass = EncodedCharPointer.class;
+            }
             String charsetName = type.getCharset().name();
-            superclass = EncodedCharPointer.class;
             memberDecls.add(
                 new MethodDeclaration(
                     new ModifierList(ModifierList.PROTECTED),

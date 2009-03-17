@@ -22,12 +22,21 @@
 #ifndef Fennel_LhxHashBase_Included
 #define Fennel_LhxHashBase_Included
 
+#include "fennel/segment/SegmentAccessor.h"
+
 using namespace std;
 
 // REVIEW jvs 25-Aug-2006:  This file should be named LhxHashInfo.h, right?
 
 FENNEL_BEGIN_NAMESPACE
 
+enum LhxHashTrim 
+{
+    HASH_TRIM_NONE,
+    HASH_TRIM_VARCHAR,
+    HASH_TRIM_UNICODE_VARCHAR
+};
+    
 /**
  * Information common to all hash execution components: join, aggregate.
  *
@@ -86,7 +95,7 @@ struct LhxHashInfo
     /*
      * If a key column is varchar type.
      */
-    vector< vector<bool> > isKeyColVarChar;
+    vector< vector<LhxHashTrim> > isKeyColVarChar;
 
     /*
      * In hash join, if an input can be filtered using bitmap saved from
