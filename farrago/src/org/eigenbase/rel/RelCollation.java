@@ -36,8 +36,6 @@ import java.util.*;
  */
 public interface RelCollation
 {
-    //~ Static fields/initializers ---------------------------------------------
-
     //~ Methods ----------------------------------------------------------------
 
     /**

@@ -55,6 +55,7 @@ public class SqlValidatorTest
      */
     protected static final boolean todo = false;
     public static final boolean todoTypeInference = false;
+    private static final String ANY = "(?s).*";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -65,7 +66,6 @@ public class SqlValidatorTest
 
     private final String ERR_IN_OPERANDS_INCOMPATIBLE =
         "Values passed to IN operator must have compatible types";
-    private static final String ANY = "(?s).*";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -591,7 +591,8 @@ public class SqlValidatorTest
     {
         checkExp("1 between 2 and 3");
         checkExp("'a' between 'b' and 'c'");
-        checkWholeExpFails("'' between 2 and 3",
+        checkWholeExpFails(
+            "'' between 2 and 3",
             "(?s).*Cannot apply 'BETWEEN' to arguments of type.*");
     }
 
@@ -841,6 +842,7 @@ public class SqlValidatorTest
     {
         checkFails("values 1.0 + ^NULL^", "(?s).*Illegal use of .NULL.*");
         checkExpFails("1.0 + ^NULL^", "(?s).*Illegal use of .NULL.*");
+
         // FIXME: SQL:2003 does not allow raw NULL in IN clause
         checkExp("1 in (1, null, 2)");
         checkExp("1 in (null, 1, null, 2)");
@@ -1177,8 +1179,9 @@ public class SqlValidatorTest
     public void testRow()
     {
         // double-nested rows can confuse validator namespace resolution
-        checkColumnType("select t.r.\"EXPR$1\".\"EXPR$2\" \n" +
-            "from (select ((1,2),(3,4,5)) r from dept) t",
+        checkColumnType(
+            "select t.r.\"EXPR$1\".\"EXPR$2\" \n"
+            + "from (select ((1,2),(3,4,5)) r from dept) t",
             "INTEGER NOT NULL");
     }
 
@@ -3916,30 +3919,30 @@ public class SqlValidatorTest
         // or the <order by clause> of a simple table query.
         // See 4.15.3 for detail
         checkWin(
-            "select *\n" +
-                " from emp\n" +
-                " where ^sum(sal) over (partition by deptno\n" +
-                "    order by empno\n" +
-                "    rows 3 preceding)^ > 10",
+            "select *\n"
+            + " from emp\n"
+            + " where ^sum(sal) over (partition by deptno\n"
+            + "    order by empno\n"
+            + "    rows 3 preceding)^ > 10",
             "Windowed aggregate expression is illegal in WHERE clause");
 
         checkWin(
-            "select *\n" +
-                " from emp\n" +
-                " group by ename, ^sum(sal) over (partition by deptno\n" +
-                "    order by empno\n" +
-                "    rows 3 preceding)^ + 10\n" +
-                "order by deptno",
+            "select *\n"
+            + " from emp\n"
+            + " group by ename, ^sum(sal) over (partition by deptno\n"
+            + "    order by empno\n"
+            + "    rows 3 preceding)^ + 10\n"
+            + "order by deptno",
             "Windowed aggregate expression is illegal in GROUP BY clause");
 
         checkWin(
-            "select *\n" +
-                " from emp\n" +
-                " join dept on emp.deptno = dept.deptno\n" +
-                " and ^sum(sal) over (partition by deptno\n" +
-                "    order by empno\n" +
-                "    rows 3 preceding)^ = dept.deptno + 40\n" +
-                "order by deptno",
+            "select *\n"
+            + " from emp\n"
+            + " join dept on emp.deptno = dept.deptno\n"
+            + " and ^sum(sal) over (partition by deptno\n"
+            + "    order by empno\n"
+            + "    rows 3 preceding)^ = dept.deptno + 40\n"
+            + "order by deptno",
             "Windowed aggregate expression is illegal in ON clause");
 
         // rule 3, a)
@@ -3954,7 +3957,6 @@ public class SqlValidatorTest
         checkWinFuncExpWithWinClause("sum(sal)", null);
 
         if (Bug.Dt1446Fixed) {
-
             // row_number function
             checkWinFuncExpWithWinClause(
                 "row_number() over (order by deptno)",
@@ -3966,7 +3968,9 @@ public class SqlValidatorTest
             checkWinFuncExpWithWinClause(
                 "percent_rank() over (order by empno)",
                 null);
-            checkWinFuncExpWithWinClause("cume_dist() over (order by empno)", null);
+            checkWinFuncExpWithWinClause(
+                "cume_dist() over (order by empno)",
+                null);
 
             // rule 6a
             // ORDER BY required with RANK & DENSE_RANK
@@ -3976,16 +3980,20 @@ public class SqlValidatorTest
             checkWin(
                 "select dense_rank() over ^(partition by deptno)^ from emp ",
                 "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
-            // The following fail but it is reported as window needing OBC due to
+            // The following fail but it is reported as window needing OBC due
+            // to
             // test sequence so
             // not really failing due to 6a
             //checkWin("select rank() over w from emp window w as ^(partition by
             //deptno)^",
-            //    "RANK or DENSE_RANK functions require ORDER BY clause in window
+            //    "RANK or DENSE_RANK functions require ORDER BY clause in
+            // window
             // specification");
-            //checkWin("select dense_rank() over w from emp window w as ^(partition
+            //checkWin("select dense_rank() over w from emp window w as
+            //^(partition
             //by deptno)^",
-            //    "RANK or DENSE_RANK functions require ORDER BY clause in window
+            //    "RANK or DENSE_RANK functions require ORDER BY clause in
+            // window
             // specification");
 
             // rule 6b
@@ -4014,15 +4022,28 @@ public class SqlValidatorTest
             checkWin(
                 "select percent_rank() over (rows 2 preceding ) from emp",
                 null);
-            checkWin("select cume_dist() over (rows 2 preceding ) from emp ", null);
+            checkWin(
+                "select cume_dist() over (rows 2 preceding ) from emp ",
+                null);
         } else {
             // Check for Rank function failure.
-            checkWinFuncExpWithWinClause("^dense_rank()^", "Function 'DENSE_RANK\\(\\)' is not defined");
-            checkWinFuncExpWithWinClause("^percent_rank()^", "Function 'PERCENT_RANK\\(\\)' is not defined");
-            checkWinFuncExpWithWinClause("^rank()^", "Function 'RANK\\(\\)' is not defined");
-            checkWinFuncExpWithWinClause("^cume_dist()^", "Function 'CUME_DIST\\(\\)' is not defined");
-            checkWinFuncExpWithWinClause("^row_number()^", "Function 'ROW_NUMBER\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause(
+                "^dense_rank()^",
+                "Function 'DENSE_RANK\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause(
+                "^percent_rank()^",
+                "Function 'PERCENT_RANK\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause(
+                "^rank()^",
+                "Function 'RANK\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause(
+                "^cume_dist()^",
+                "Function 'CUME_DIST\\(\\)' is not defined");
+            checkWinFuncExpWithWinClause(
+                "^row_number()^",
+                "Function 'ROW_NUMBER\\(\\)' is not defined");
         }
+
         // invalid column reference
         checkWinFuncExpWithWinClause(
             "sum(^invalidColumn^)",
@@ -4185,10 +4206,12 @@ public class SqlValidatorTest
 
     public void testPartitionByExpr()
     {
-        checkWinFuncExp("sum(sal) over (partition by empno + deptno order by empno range 5 preceding)",
+        checkWinFuncExp(
+            "sum(sal) over (partition by empno + deptno order by empno range 5 preceding)",
             null);
 
-        checkWinFuncExp("sum(sal) over (partition by ^empno + ename^ order by empno range 5 preceding)",
+        checkWinFuncExp(
+            "sum(sal) over (partition by ^empno + ename^ order by empno range 5 preceding)",
             "(?s)Cannot apply '\\+' to arguments of type '<INTEGER> \\+ <VARCHAR\\(20\\)>'.*");
     }
 
@@ -4240,10 +4263,9 @@ public class SqlValidatorTest
         // valid
         checkWinClauseExp("window w as (rows 2 preceding)", null);
 
-        // invalid tests
-        // exact numeric for the unsigned value specification
-        // The followoing two test fail as they should but in the parser: JR not anymore
-        // now the validator kicks out
+        // invalid tests exact numeric for the unsigned value specification The
+        // followoing two test fail as they should but in the parser: JR not
+        // anymore now the validator kicks out
         checkWinClauseExp(
             "window w as (rows ^-2.5^ preceding)",
             "ROWS value must be a non-negative integral constant");
@@ -4406,7 +4428,8 @@ public class SqlValidatorTest
         checkNegWindow(
             "rows between unbounded preceding and current row",
             null);
-        final String unboundedFollowing = "UNBOUNDED FOLLOWING window not supported";
+        final String unboundedFollowing =
+            "UNBOUNDED FOLLOWING window not supported";
         checkNegWindow(
             "rows between unbounded preceding and unbounded following",
             unboundedFollowing);
@@ -4615,15 +4638,19 @@ public class SqlValidatorTest
     public void testAsColumnList()
     {
         check("select d.a, b from dept as d(a, b)");
-        checkFails("select d.^deptno^ from dept as d(a, b)",
+        checkFails(
+            "select d.^deptno^ from dept as d(a, b)",
             "(?s).*Column 'DEPTNO' not found in table 'D'.*");
-        checkFails("select 1 from dept as d(^a^, b, c)",
-            "(?s).*List of column aliases must have same degree as table; " +
-                "table has 2 columns \\('DEPTNO', 'NAME'\\), " +
-                "whereas alias list has 3 columns.*");
-        checkResultType("select * from dept as d(a, b)",
+        checkFails(
+            "select 1 from dept as d(^a^, b, c)",
+            "(?s).*List of column aliases must have same degree as table; "
+            + "table has 2 columns \\('DEPTNO', 'NAME'\\), "
+            + "whereas alias list has 3 columns.*");
+        checkResultType(
+            "select * from dept as d(a, b)",
             "RecordType(INTEGER NOT NULL A, VARCHAR(10) NOT NULL B) NOT NULL");
-        checkResultType("select * from (values ('a', 1), ('bc', 2)) t (a, b)",
+        checkResultType(
+            "select * from (values ('a', 1), ('bc', 2)) t (a, b)",
             "RecordType(CHAR(2) NOT NULL A, INTEGER NOT NULL B) NOT NULL");
     }
 
@@ -4722,22 +4749,29 @@ public class SqlValidatorTest
         checkFails(
             "select 1 from emp, ^emp^",
             "Duplicate relation name 'EMP' in FROM clause");
+
         // implicit alias clashes with implicit alias, using join syntax
         checkFails(
             "select 1 from emp join ^emp^ on emp.empno = emp.mgrno",
             "Duplicate relation name 'EMP' in FROM clause");
+
         // explicit alias clashes with implicit alias
         checkFails(
             "select 1 from emp join ^dept as emp^ on emp.empno = emp.deptno",
             "Duplicate relation name 'EMP' in FROM clause");
+
         // implicit alias does not clash with overridden alias
         check("select 1 from emp as e join emp on emp.empno = e.deptno");
+
         // explicit alias does not clash with overridden alias
-        check("select 1 from emp as e join dept as emp on e.empno = emp.deptno");
+        check(
+            "select 1 from emp as e join dept as emp on e.empno = emp.deptno");
+
         // more than 2 in from clause
         checkFails(
             "select 1 from emp, dept, emp as e, ^dept as emp^, emp",
             "Duplicate relation name 'EMP' in FROM clause");
+
         // alias applied to subquery
         checkFails(
             "select 1 from emp, (^select 1 as x from (values (true))) as emp^",
@@ -4745,24 +4779,28 @@ public class SqlValidatorTest
         checkFails(
             "select 1 from emp, (^values (true,false)) as emp (b, c)^, dept as emp",
             "Duplicate relation name 'EMP' in FROM clause");
+
         // alias applied to table function. doesn't matter that table fn
         // doesn't exist - should find the alias problem first
         checkFails(
             "select 1 from emp, ^table(foo()) as emp^",
             "Duplicate relation name 'EMP' in FROM clause");
+
         // explicit table
         checkFails(
             "select 1 from emp, ^(table foo.bar.emp) as emp^",
             "Duplicate relation name 'EMP' in FROM clause");
+
         // alias does not clash with alias inherited from enclosing context
         check(
-            "select 1 from emp, dept where exists (\n" +
-                "  select 1 from emp where emp.empno = emp.deptno)");
+            "select 1 from emp, dept where exists (\n"
+            + "  select 1 from emp where emp.empno = emp.deptno)");
     }
 
     public void testInvalidGroupBy()
     {
-        checkFails("select ^empno^, deptno from emp group by deptno",
+        checkFails(
+            "select ^empno^, deptno from emp group by deptno",
             "Expression 'EMPNO' is not being grouped");
     }
 
@@ -4856,7 +4894,7 @@ public class SqlValidatorTest
         checkFails(
             "select 1, ^2^ from emp union select deptno, name from dept",
             "Type mismatch in column 2 of UNION");
-        
+
         checkFails(
             "select ^slacker^ from emp union select name from dept",
             "Type mismatch in column 1 of UNION");
@@ -4973,15 +5011,15 @@ public class SqlValidatorTest
     public void testNaturalJoinIncompatibleDatatype()
     {
         checkFails(
-            "select * from emp natural ^join^\n" +
-                "(select deptno, name as sal from dept)",
+            "select * from emp natural ^join^\n"
+            + "(select deptno, name as sal from dept)",
             "Column 'SAL' matched using NATURAL keyword or USING clause has incompatible types: cannot compare 'INTEGER' to 'VARCHAR\\(10\\)'");
 
         // make sal occur more than once on rhs, it is ignored and therefore
         // there is no error about incompatible types
         check(
-            "select * from emp natural join\n" +
-                " (select deptno, name as sal, 'foo' as sal from dept)");
+            "select * from emp natural join\n"
+            + " (select deptno, name as sal, 'foo' as sal from dept)");
     }
 
     public void testJoinUsingIncompatibleDatatype()
@@ -5184,7 +5222,8 @@ public class SqlValidatorTest
             "select empno as x from emp order by empno",
 
             // in sql92, empno is obscured by the alias
-            conformance.isSortByAliasObscures() ? "unknown column empno" :
+            conformance.isSortByAliasObscures() ? "unknown column empno"
+            :
             // otherwise valid
             null);
 
@@ -5401,13 +5440,13 @@ public class SqlValidatorTest
             + "group by empno, deptno "
             + "order by empno * sum(sal + 2)",
             tester.getConformance().isSortByAliasObscures() ? "xxxx" : null);
-        
+
         // Distinct on expressions with attempts to order on a column in
         // the underlying table
         checkFails(
             "select distinct cast(empno as bigint) "
             + "from emp order by ^empno^",
-            "Expression 'EMPNO' is not in the select clause");        
+            "Expression 'EMPNO' is not in the select clause");
         checkFails(
             "select distinct cast(empno as bigint) "
             + "from emp order by ^emp.empno^",
@@ -5415,46 +5454,43 @@ public class SqlValidatorTest
         checkFails(
             "select distinct cast(empno as bigint) as empno "
             + "from emp order by ^emp.empno^",
-            "Expression 'EMP.EMPNO' is not in the select clause");        
+            "Expression 'EMP.EMPNO' is not in the select clause");
         checkFails(
             "select distinct cast(empno as bigint) as empno "
             + "from emp as e order by ^e.empno^",
             "Expression 'E.EMPNO' is not in the select clause");
-        
+
         // These tests are primarily intended to test cases where sorting by
         // an alias is allowed.  But for instances that don't support sorting
         // by alias, the tests also verify that a proper exception is thrown.
         checkFails(
             "select distinct cast(empno as bigint) as empno "
             + "from emp order by ^empno^",
-            tester.getConformance().isSortByAlias() ?
-                null :
-                "Expression 'EMPNO' is not in the select clause");        
+            tester.getConformance().isSortByAlias() ? null
+            : "Expression 'EMPNO' is not in the select clause");
         checkFails(
             "select distinct cast(empno as bigint) as eno "
             + "from emp order by ^eno^",
-            tester.getConformance().isSortByAlias() ?
-                null :
-                "Column 'ENO' not found in any table");
+            tester.getConformance().isSortByAlias() ? null
+            : "Column 'ENO' not found in any table");
         checkFails(
             "select distinct cast(empno as bigint) as empno "
             + "from emp e order by ^empno^",
-            tester.getConformance().isSortByAlias() ?
-                null :
-                "Expression 'EMPNO' is not in the select clause");
-        
+            tester.getConformance().isSortByAlias() ? null
+            : "Expression 'EMPNO' is not in the select clause");
+
         // Distinct on expressions, sorting using ordinals.
         if (tester.getConformance().isSortByOrdinal()) {
             check(
-                "select distinct cast(empno as bigint) from emp order by 1");       
+                "select distinct cast(empno as bigint) from emp order by 1");
             check(
                 "select distinct cast(empno as bigint) as empno "
-                + "from emp order by 1");        
+                + "from emp order by 1");
             check(
                 "select distinct cast(empno as bigint) as empno "
                 + "from emp as e order by 1");
         }
-        
+
         // Distinct on expressions with ordering on expressions as well
         check(
             "select distinct cast(empno as varchar(10)) from emp "
@@ -5462,9 +5498,8 @@ public class SqlValidatorTest
         checkFails(
             "select distinct cast(empno as varchar(10)) as eno from emp "
             + " order by upper(^eno^)",
-            tester.getConformance().isSortByAlias() ?
-                null :
-                "Column 'ENO' not found in any table");
+            tester.getConformance().isSortByAlias() ? null
+            : "Column 'ENO' not found in any table");
     }
 
     public void testGroup()
@@ -5523,9 +5558,9 @@ public class SqlValidatorTest
         // -- this is not sql 2003 standard
         // -- see sql2003 part2,  7.9
         checkFails(
-            "select count(*)\n" +
-                "from emp\n" +
-                "where exists (select count(*) from dept group by ^emp^.empno)",
+            "select count(*)\n"
+            + "from emp\n"
+            + "where exists (select count(*) from dept group by ^emp^.empno)",
             "Table 'EMP' not found");
     }
 
@@ -5707,7 +5742,7 @@ public class SqlValidatorTest
     {
         String ERR_AGG_IN_GROUP_BY =
             "Aggregate expression is illegal in GROUP BY clause";
-        
+
         checkFails(
             "select count(*) from emp group by ^sum(empno)^",
             ERR_AGG_IN_GROUP_BY);
@@ -5717,7 +5752,7 @@ public class SqlValidatorTest
     {
         String ERR_AGG_IN_ORDER_BY =
             "Aggregate expression is illegal in ORDER BY clause of non-aggregating SELECT";
-        
+
         checkFails(
             "select empno from emp order by ^sum(empno)^",
             ERR_AGG_IN_ORDER_BY);
@@ -6045,10 +6080,11 @@ public class SqlValidatorTest
             "SELECT DISTINCT deptno from emp ORDER BY deptno, ^empno^",
             "Expression 'EMPNO' is not in the select clause");
         check("SELECT DISTINCT deptno from emp ORDER BY deptno + 2");
-        if (false) {   // Hersker 2008917: Julian will fix immediately after integration
-        checkFails(
-            "SELECT DISTINCT deptno from emp ORDER BY deptno, ^sum(empno)^",
-            "Expression 'SUM\\(`EMP`\\.`EMPNO`\\)' is not in the select clause");
+        if (false) { // Hersker 2008917: Julian will fix immediately after
+                     // integration
+            checkFails(
+                "SELECT DISTINCT deptno from emp ORDER BY deptno, ^sum(empno)^",
+                "Expression 'SUM\\(`EMP`\\.`EMPNO`\\)' is not in the select clause");
         }
 
         // The ORDER BY clause works on what is projected by DISTINCT - even if
@@ -6058,7 +6094,8 @@ public class SqlValidatorTest
             "Expression 'EMPNO' is not in the select clause");
 
         // redundant distinct; same query is in unitsql/optimizer/distinct.sql
-        check("select distinct * from (select distinct deptno from emp) order by 1");
+        check(
+            "select distinct * from (select distinct deptno from emp) order by 1");
 
         check("SELECT DISTINCT 5, 10+5, 'string' from emp");
     }
@@ -6137,9 +6174,10 @@ public class SqlValidatorTest
     {
         // Currently not supported. Should give validator error, but gives
         // internal error.
-        check("select * from emp as emps left outer join dept as depts\n" +
-            "on emps.deptno = depts.deptno and emps.deptno = (\n" +
-            "select min(deptno) from dept as depts2)");
+        check(
+            "select * from emp as emps left outer join dept as depts\n"
+            + "on emps.deptno = depts.deptno and emps.deptno = (\n"
+            + "select min(deptno) from dept as depts2)");
     }
 
     public void testRecordType()
@@ -6351,36 +6389,39 @@ public class SqlValidatorTest
         // if the validator is expanding identifiers (as the DT validator
         // does) then rewrites introduce table and column aliases
         boolean expand = validator.shouldExpandIdentifiers();
+
         // bare VALUES should be rewritten
         tester.checkRewrite(
             validator,
             "values (3)",
             TestUtil.fold(
                 expand
-                    ? "SELECT `EXPR$0`.`EXPR$0`\n"
-                    + "FROM (VALUES ROW(3)) AS `EXPR$0`"
-                    : "SELECT *\n"
-                    + "FROM (VALUES ROW(3))"));
+                ? ("SELECT `EXPR$0`.`EXPR$0`\n"
+                    + "FROM (VALUES ROW(3)) AS `EXPR$0`")
+                : ("SELECT *\n"
+                    + "FROM (VALUES ROW(3))")));
+
         // but VALUES under FROM should not...
         tester.checkRewrite(
             validator,
             "select * from (values (3))",
             TestUtil.fold(
                 expand
-                    ? "SELECT `EXPR$1`.`EXPR$0`\n"
-                    + "FROM (VALUES ROW(3)) AS `EXPR$1`"
-                    : "SELECT *\n"
-                    + "FROM (VALUES ROW(3))"));
+                ? ("SELECT `EXPR$1`.`EXPR$0`\n"
+                    + "FROM (VALUES ROW(3)) AS `EXPR$1`")
+                : ("SELECT *\n"
+                    + "FROM (VALUES ROW(3))")));
+
         // ...even if an alias is present
         tester.checkRewrite(
             validator,
             "select * from (values (3)) as fluff",
             TestUtil.fold(
                 expand
-                    ? "SELECT `FLUFF`.`EXPR$0`\n"
-                    + "FROM (VALUES ROW(3)) AS `FLUFF`"
-                    : "SELECT *\n"
-                    + "FROM (VALUES ROW(3)) AS `FLUFF`"));
+                ? ("SELECT `FLUFF`.`EXPR$0`\n"
+                    + "FROM (VALUES ROW(3)) AS `FLUFF`")
+                : ("SELECT *\n"
+                    + "FROM (VALUES ROW(3)) AS `FLUFF`")));
     }
 
     public void _testValuesWithAggFuncs()

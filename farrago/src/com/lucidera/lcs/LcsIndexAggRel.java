@@ -20,14 +20,13 @@
 */
 package com.lucidera.lcs;
 
+import java.util.*;
+
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-
-import java.util.List;
-import java.util.Arrays;
 
 
 /**

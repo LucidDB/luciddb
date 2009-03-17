@@ -35,7 +35,7 @@ import java.math.*;
 public enum FennelSearchEndpoint
 {
     /**
-     * Defines the beginning of an interval which is unbounded below.  The
+     * Defines the beginning of an interval which is unbounded below. The
      * associated key value should be all null.
      */
     SEARCH_UNBOUNDED_LOWER('-'),
@@ -61,7 +61,7 @@ public enum FennelSearchEndpoint
     SEARCH_CLOSED_UPPER(']'),
 
     /**
-     * Defines the end of an interval which is unbounded above.  The associated
+     * Defines the end of an interval which is unbounded above. The associated
      * key value should be all null.
      */
     SEARCH_UNBOUNDED_UPPER('+');

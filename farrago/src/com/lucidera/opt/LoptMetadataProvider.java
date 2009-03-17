@@ -106,7 +106,7 @@ public class LoptMetadataProvider
         mapParameterTypes(
             "areColumnsUnique",
             Collections.singletonList((Class) BitSet.class));
-        
+
         mapParameterTypes(
             "isVisibleInExplain",
             Collections.singletonList((Class) SqlExplainLevel.class));
@@ -167,7 +167,7 @@ public class LoptMetadataProvider
         if (nRowsInTable == null) {
             return null;
         }
-        
+
         // The selectivity of the rowscan's inputs are reflected in
         // "inputSelectivity," and the rowCount on the table reflects that
         // selectivity.  However, for the purpose of this method, nRowsInTable
@@ -324,12 +324,12 @@ public class LoptMetadataProvider
                     rel.getRight(),
                     null,
                     true);
-            if (leftResult == null || rightResult == null) {
+            if ((leftResult == null) || (rightResult == null)) {
                 return null;
             }
             return Math.min(leftResult, rightResult);
         }
-        
+
         Double result = computeDefaultCostWithFilters(rel, filter, false);
         if (result == null) {
             return null;
@@ -340,13 +340,13 @@ public class LoptMetadataProvider
         // computed by a formula that favors asymmetry between input sizes,
         // since hash join does better in that case (only the build side needs
         // to fit in memory).  This is bogus in cases where we can't even use
-        // hash join so we special case cartesian product joins and joins
-        // that can't be fully processed using hash joins.  Anyway, the
-        // factor works out to 10 in those non-hash-joinable cases or if
-        // the two inputs are of equal size.  It decreases exponentially down to
-        // to an asymptote of 1 representing one side being infinitely larger
-        // than the other.  If one input is twice as big as the other, the
-        // factor is 10^(1/2) = ~3.16.
+        // hash join so we special case cartesian product joins and joins that
+        // can't be fully processed using hash joins.  Anyway, the factor works
+        // out to 10 in those non-hash-joinable cases or if the two inputs are
+        // of equal size.  It decreases exponentially down to to an asymptote of
+        // 1 representing one side being infinitely larger than the other.  If
+        // one input is twice as big as the other, the factor is 10^(1/2) =
+        // ~3.16.
 
         Double leftRowCount = RelMetadataQuery.getRowCount(rel.getLeft());
         if (leftRowCount == null) {
@@ -361,22 +361,22 @@ public class LoptMetadataProvider
         if (maxInputRowCount > 0) {
             double joinRowCount = RelMetadataQuery.getRowCount(rel);
             double factor =
-                (rel.getCondition().isAlwaysTrue() ||
-                    !hashJoinable(rel)) ?
-                1.0 : (minInputRowCount / maxInputRowCount);
+                (rel.getCondition().isAlwaysTrue()
+                    || !hashJoinable(rel)) ? 1.0
+                : (minInputRowCount / maxInputRowCount);
             joinRowCount *= Math.pow(10.0, factor);
             result += joinRowCount;
         }
 
         return result;
     }
-    
+
     /**
      * Determines whether the join condition in a join can be fully processed
      * using a hash join.
-     * 
+     *
      * @param joinRel the join
-     * 
+     *
      * @return true if the join can be fully processed using a hash join
      */
     private boolean hashJoinable(JoinRel joinRel)
@@ -427,20 +427,19 @@ public class LoptMetadataProvider
         // logical relnodes, then this method may not be needed
         LhxJoinRelType joinType = rel.getJoinType();
         if (joinType == LhxJoinRelType.LEFTSEMI) {
-            assert (
-                groupKey.nextSetBit(
-                    rel.getLeft().getRowType().getFieldCount()) < 0);
+            assert (groupKey.nextSetBit(
+                rel.getLeft().getRowType().getFieldCount()) < 0);
             return RelMetadataQuery.getDistinctRowCount(
                 rel.getLeft(),
                 groupKey,
                 predicate);
-        } else if (joinType == LhxJoinRelType.RIGHTANTI ||
-            joinType == LhxJoinRelType.RIGHTSEMI)
+        } else if (
+            (joinType == LhxJoinRelType.RIGHTANTI)
+            || (joinType == LhxJoinRelType.RIGHTSEMI))
         {
             // the key references only columns on the right
-            assert (
-                groupKey.nextSetBit(
-                    rel.getRight().getRowType().getFieldCount()) < 0);
+            assert (groupKey.nextSetBit(
+                rel.getRight().getRowType().getFieldCount()) < 0);
             return RelMetadataQuery.getDistinctRowCount(
                 rel.getRight(),
                 groupKey,
@@ -563,17 +562,18 @@ public class LoptMetadataProvider
 
         return selectivity;
     }
-    
+
     public Double getRowCount(LcsRowScanRel rel)
     {
         Double result = FarragoRelMetadataProvider.getRowCountStat(rel, repos);
         if (result == null) {
             return null;
         }
+
         // Include selectivity of inputs into the rowscan
         return result * rel.getInputSelectivity();
     }
-    
+
     public Double getRowCount(LcsIndexSearchRel rel)
     {
         // This row count only includes the effects of applying this
@@ -585,10 +585,10 @@ public class LoptMetadataProvider
             FarragoRelMetadataProvider.getRowCountStat(
                 rel.getLcsTable(),
                 repos,
-                FennelRelUtil.getPreparingStmt(rel).getSession().
-                    getSessionLabelCreationTimestamp());
+                FennelRelUtil.getPreparingStmt(rel).getSession()
+                             .getSessionLabelCreationTimestamp());
         Double selec = rel.getIndexSelectivity();
-        if (result == null || selec == null) {
+        if ((result == null) || (selec == null)) {
             return null;
         }
         return result * selec;
@@ -862,21 +862,24 @@ public class LoptMetadataProvider
     {
         // If any of the columns in the projection correspond to the
         // rid column, then the column set is unique
-        for (int column = columns.nextSetBit(0); column >= 0;
+        for (
+            int column = columns.nextSetBit(0);
+            column >= 0;
             column = columns.nextSetBit(column + 1))
         {
             RelColumnOrigin colOrigin = getSimpleColumnOrigin(rel, column);
-            if (colOrigin != null &&
-                LucidDbSpecialOperators.isLcsRidColumnId(
+            if ((colOrigin != null)
+                && LucidDbSpecialOperators.isLcsRidColumnId(
                     colOrigin.getOriginColumnOrdinal()))
             {
                 return true;
             }
         }
+
         // Let another provider decide whether the columns are unique
         return null;
     }
-    
+
     public Boolean areColumnsUnique(LcsRowScanRel rel, BitSet columns)
     {
         return columnMd.areColumnsUnique(rel, columns, repos);
@@ -885,10 +888,10 @@ public class LoptMetadataProvider
     public Set<RelColumnOrigin> getSimpleColumnOrigins(
         ProjectRelBase rel,
         int iOutputColumn)
-    {        
+    {
         Set<RelColumnOrigin> colOrigins =
             columnOrigins.getColumnOrigins(rel, iOutputColumn);
-        
+
         // If the projection is the special case rid column, then treat
         // that as a non-derived column
         RexNode projExpr = rel.getProjectExps()[iOutputColumn];
@@ -905,10 +908,10 @@ public class LoptMetadataProvider
                     ridOrigin.add(
                         new RelColumnOrigin(
                             table,
-                            LucidDbOperatorTable.ldbInstance().
-                                getSpecialOpColumnId(
-                                    call.getOperator()),
-                                    false));
+                            LucidDbOperatorTable.ldbInstance()
+                                                .getSpecialOpColumnId(
+                                                    call.getOperator()),
+                            false));
                     return ridOrigin;
                 }
             }
@@ -930,19 +933,21 @@ public class LoptMetadataProvider
         int iOutputColumn)
     {
         Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
+
         // The row scan could be projected
-        Integer[] projectedColumns = rel.getProjectedColumns();
+        Integer [] projectedColumns = rel.getProjectedColumns();
         if (projectedColumns == null) {
             set.add(new RelColumnOrigin(rel.getTable(), iOutputColumn, false));
         } else {
             set.add(
-                new RelColumnOrigin(rel.getTable(), 
-                projectedColumns[iOutputColumn], 
-                false));
+                new RelColumnOrigin(
+                    rel.getTable(),
+                    projectedColumns[iOutputColumn],
+                    false));
         }
         return set;
     }
-    
+
     // Catch-all rule when none of the others apply.
     public Set<RelColumnOrigin> getSimpleColumnOrigins(
         RelNode rel,
@@ -955,17 +960,17 @@ public class LoptMetadataProvider
         }
         return columnOrigins.getColumnOrigins(rel, iOutputColumn);
     }
-    
+
     /**
-     * Determines the origin of a column, provided the column maps to a
-     * single column that isn't derived.
-     * 
+     * Determines the origin of a column, provided the column maps to a single
+     * column that isn't derived.
+     *
      * @param rel the RelNode of the column
-     * @param colOffset the offset of the column whose origin we are trying
-     * to determine
-     * 
-     * @return the origin of a column provided it's a simple column;
-     * otherwise, returns null 
+     * @param colOffset the offset of the column whose origin we are trying to
+     * determine
+     *
+     * @return the origin of a column provided it's a simple column; otherwise,
+     * returns null
      */
     public static RelColumnOrigin getSimpleColumnOrigin(
         RelNode rel,
@@ -984,15 +989,14 @@ public class LoptMetadataProvider
         }
         return coList[0];
     }
-    
+
     /**
      * Determines the origin of a RelNode, provided it maps to a single table,
      * optionally with filtering and projection.
-     * 
+     *
      * @param rel the RelNode
-     * 
-     * @return true if the RelNode is a simple table; otherwise, returns
-     * null
+     *
+     * @return true if the RelNode is a simple table; otherwise, returns null
      */
     public static RelOptTable getSimpleTableOrigin(RelNode rel)
     {
@@ -1008,6 +1012,32 @@ public class LoptMetadataProvider
             (RelColumnOrigin []) colOrigins.toArray(
                 new RelColumnOrigin[colOrigins.size()]);
         return coList[0].getOriginTable();
+    }
+
+    public Boolean isVisibleInExplain(
+        LcsIndexSearchRel rel,
+        SqlExplainLevel level)
+    {
+        return (level == SqlExplainLevel.ALL_ATTRIBUTES)
+            || rel.isVisibleInExplain();
+    }
+
+    public Boolean isVisibleInExplain(
+        LcsIndexMinusRel rel,
+        SqlExplainLevel level)
+    {
+        return level == SqlExplainLevel.ALL_ATTRIBUTES;
+    }
+
+    public Boolean isVisibleInExplain(
+        FennelValuesRel rel,
+        SqlExplainLevel level)
+    {
+        // Note that this method is defined here rather than
+        // FarragoRelMetadataProvider because only the LucidDbPersonality
+        // depends on this.
+        return (level == SqlExplainLevel.ALL_ATTRIBUTES)
+            || rel.isVisibleInExplain();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -1026,34 +1056,6 @@ public class LoptMetadataProvider
         {
             return LoptMetadataQuery.getSimpleColumnOrigins(rel, iOutputColumn);
         }
-    }
-    
-    public Boolean isVisibleInExplain(
-        LcsIndexSearchRel rel,
-        SqlExplainLevel level)
-    {
-        return
-            level == SqlExplainLevel.ALL_ATTRIBUTES ||
-            rel.isVisibleInExplain();
-    }
-    
-    public Boolean isVisibleInExplain(
-        LcsIndexMinusRel rel,
-        SqlExplainLevel level)
-    {
-        return level == SqlExplainLevel.ALL_ATTRIBUTES;
-    }
-    
-    public Boolean isVisibleInExplain(
-        FennelValuesRel rel,
-        SqlExplainLevel level)
-    {
-        // Note that this method is defined here rather than
-        // FarragoRelMetadataProvider because only the LucidDbPersonality
-        // depends on this.
-        return
-            level == SqlExplainLevel.ALL_ATTRIBUTES ||
-            rel.isVisibleInExplain();
     }
 }
 

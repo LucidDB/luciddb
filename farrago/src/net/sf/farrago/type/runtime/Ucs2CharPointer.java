@@ -26,6 +26,7 @@ import net.sf.farrago.resource.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util14.*;
 
+
 /**
  * Ucs2CharPointer specializes EncodedCharPointer to interpret its bytes as
  * characters encoded via a UCS-2 charset.
@@ -36,12 +37,14 @@ import org.eigenbase.util14.*;
 public class Ucs2CharPointer
     extends EncodedCharPointer
 {
+    //~ Methods ----------------------------------------------------------------
+
     // override BytePointer
     public int length()
     {
         return available() >>> 1;
     }
-    
+
     // override BytePointer
     protected void allocateOwnBytesForPrecision(int n)
     {
@@ -73,6 +76,7 @@ public class Ucs2CharPointer
             allocateOwnBytesForPrecision(precision);
             System.arraycopy(buf, pos, ownBytes, 0, len);
             buf = ownBytes;
+
             // FIXME jvs 21-Jan-2009:  code below assumes little-endian
             for (; len < precBytes; ++len) {
                 buf[len] = padByte;
@@ -107,9 +111,9 @@ public class Ucs2CharPointer
         int length,
         boolean useLength)
     {
-        assert(bp1 instanceof Ucs2CharPointer);
-        assert(bp2 instanceof Ucs2CharPointer);
-        
+        assert (bp1 instanceof Ucs2CharPointer);
+        assert (bp2 instanceof Ucs2CharPointer);
+
         if (!useLength) {
             length = (bp2.getByteCount() >>> 1);
         }
@@ -126,21 +130,22 @@ public class Ucs2CharPointer
     // override BytePointer
     public int position(BytePointer bp1)
     {
-        assert(bp1 instanceof Ucs2CharPointer);
-        
+        assert (bp1 instanceof Ucs2CharPointer);
+
         int p = super.positionImpl(bp1, 2);
         if (p == 0) {
             return p;
         }
         return (p >>> 1) + 1;
     }
-    
+
     // override BytePointer
     public char charAt(int index)
     {
         int x = pos + (index << 1);
         int b0 = buf[x];
         int b1 = buf[x + 1];
+
         // FIXME jvs 21-Jan-2009:  code below assumes little-endian
         return (char) ((b1 << 8) + b0);
     }
@@ -152,7 +157,7 @@ public class Ucs2CharPointer
         int b0 = ((int) c) & 0xFF;
         int b1 = ((int) c) >>> 8;
         buf[x] = (byte) b0;
-        buf[x+1] = (byte) b1;
+        buf[x + 1] = (byte) b1;
     }
 
     // override BytePointer
@@ -171,13 +176,13 @@ public class Ucs2CharPointer
     {
         return ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
     }
-    
+
     // override EncodedCharPointer
     public void trim(int trimOrdinal, BytePointer bp1, BytePointer bp2)
     {
-        assert(bp1 instanceof Ucs2CharPointer);
-        assert(bp2 instanceof Ucs2CharPointer);
-        
+        assert (bp1 instanceof Ucs2CharPointer);
+        assert (bp2 instanceof Ucs2CharPointer);
+
         boolean leading = false;
         boolean trailing = false;
         int i;
@@ -214,6 +219,7 @@ public class Ucs2CharPointer
                 // don't do it twice!  (FRG-319)
                 return;
             }
+
             // in case pos moved up, reduce cnt
             cnt = length();
             for (i = cnt - 1; i >= 0; i--) {
@@ -229,7 +235,7 @@ public class Ucs2CharPointer
     // override BytePointer
     public void upper(BytePointer bp1)
     {
-        assert(bp1 instanceof Ucs2CharPointer);
+        assert (bp1 instanceof Ucs2CharPointer);
         copyFrom(bp1);
         int n = length();
         for (int i = 0; i < n; i++) {
@@ -239,11 +245,11 @@ public class Ucs2CharPointer
             }
         }
     }
-    
+
     // override BytePointer
     public void lower(BytePointer bp1)
     {
-        assert(bp1 instanceof Ucs2CharPointer);
+        assert (bp1 instanceof Ucs2CharPointer);
         copyFrom(bp1);
         int n = length();
         for (int i = 0; i < n; i++) {
@@ -253,11 +259,11 @@ public class Ucs2CharPointer
             }
         }
     }
-    
+
     // override BytePointer
     public void initcap(BytePointer bp1)
     {
-        assert(bp1 instanceof Ucs2CharPointer);
+        assert (bp1 instanceof Ucs2CharPointer);
         boolean bWordBegin = true;
         copyFrom(bp1);
         int n = length();
@@ -279,7 +285,7 @@ public class Ucs2CharPointer
             }
         }
     }
-    
+
     // override BytePointer
     public long attemptFastAsciiByteToLong()
     {

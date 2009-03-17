@@ -41,6 +41,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.jmi.mem.*;
+
 import org.netbeans.api.mdr.*;
 
 
@@ -135,7 +136,7 @@ public class FarragoMdrReposImpl
 
         super.setRootPackage(farragoPackage);
 
-        mdrRepository = (EnkiMDRepository)modelLoader.getMdrRepos();
+        mdrRepository = (EnkiMDRepository) modelLoader.getMdrRepos();
 
         checkModelTimestamp("FarragoCatalog");
 
@@ -170,8 +171,8 @@ public class FarragoMdrReposImpl
         try {
             String storedTimestamp = mdrRepository.getAnnotation(extentName);
             String compiledTimestamp = prefix + getCompiledModelTimestamp();
-            if ((storedTimestamp == null) || 
-                !storedTimestamp.startsWith(prefix))
+            if ((storedTimestamp == null)
+                || !storedTimestamp.startsWith(prefix))
             {
                 // first time:  add timestamp
                 mdrRepository.setAnnotation(extentName, compiledTimestamp);
@@ -220,8 +221,9 @@ public class FarragoMdrReposImpl
     public FemFarragoConfig getCurrentConfig()
     {
         // TODO:  prevent updates
-        return (FemFarragoConfig)getEnkiMdrRepos().getByMofId(
-            currentConfigMofId, getConfigPackage().getFemFarragoConfig());
+        return (FemFarragoConfig) getEnkiMdrRepos().getByMofId(
+            currentConfigMofId,
+            getConfigPackage().getFemFarragoConfig());
     }
 
     // implement FarragoAllocation
@@ -249,7 +251,7 @@ public class FarragoMdrReposImpl
         super.beginReposSession();
         mdrRepository.beginSession();
     }
-    
+
     // implement FarragoRepos
     public void beginReposTxn(boolean writable)
     {
@@ -279,13 +281,13 @@ public class FarragoMdrReposImpl
         super.endReposSession();
         mdrRepository.endSession();
     }
-    
+
     // implement FarragoRepos
     public FarragoModelLoader getModelLoader()
     {
         return modelLoader;
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     protected class FarragoMemFactory

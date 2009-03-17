@@ -113,7 +113,7 @@ public class PushProjectPastSetOpRule
         // create a new setop whose children are the ProjectRels created above
         SetOpRel newSetOpRel =
             RelOptUtil.createNewSetOpRel(setOpRel, newSetOpInputs);
-        
+
         call.transformTo(newSetOpRel);
     }
 }

@@ -65,20 +65,20 @@ public interface FarragoSessionRuntimeContext
      * Throws an exception if execution has been canceled.
      */
     public void checkCancel();
-    
+
     /**
      * Associates an execution handle with the runtime context.
-     * 
+     *
      * @param execHandle the execution handle
      */
     public void setExecutionHandle(FennelExecutionHandle execHandle);
-    
+
     /**
      * Sets the state of the top-level cursor associated with this context.
      * {@link #checkCancel} is called both before the fetch request
-     * (active=true) and after the fetch (active=false).
-     * Not called for internal cursors such as UDX inputs
-     * and cursors opened via reentrant SQL from UDRs.
+     * (active=true) and after the fetch (active=false). Not called for internal
+     * cursors such as UDX inputs and cursors opened via reentrant SQL from
+     * UDRs.
      *
      * @param active true if cursor is beginning a fetch request; false if
      * cursor is ending a fetch request
@@ -164,15 +164,15 @@ public interface FarragoSessionRuntimeContext
     public FarragoRepos getRepos();
 
     /**
-     * Detaches the current MDR session from the running thread.  The detached
+     * Detaches the current MDR session from the running thread. The detached
      * session is stored for later re-attachment and is automatically
-     * re-attached and closed if when the runtime context is closed. 
+     * re-attached and closed if when the runtime context is closed.
      */
     public void detachMdrSession();
 
     /**
-     * Re-attaches a detached MDR session to the currently running thread,
-     * if any was previously detached.
+     * Re-attaches a detached MDR session to the currently running thread, if
+     * any was previously detached.
      */
     public void reattachMdrSession();
 

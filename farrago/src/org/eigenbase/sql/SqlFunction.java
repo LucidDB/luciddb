@@ -247,16 +247,17 @@ public class SqlFunction
             for (int i = 0; i < operands.length; ++i) {
                 RelDataType nodeType;
 
-                // for row arguments that should be converted to ColumnList types,
-                // set the nodeType to a ColumnList type but defer validating the
-                // arguments of the row constructor until we know for sure that the
-                // row argument maps to a ColumnList type
+                // for row arguments that should be converted to ColumnList
+                // types, set the nodeType to a ColumnList type but defer
+                // validating the arguments of the row constructor until we know
+                // for sure that the row argument maps to a ColumnList type
                 if ((operands[i].getKind() == SqlKind.Row)
                     && convertRowArgToColumnList)
                 {
                     containsRowArg = true;
                     RelDataTypeFactory typeFactory = validator.getTypeFactory();
-                    nodeType = typeFactory.createSqlType(SqlTypeName.COLUMN_LIST);
+                    nodeType =
+                        typeFactory.createSqlType(SqlTypeName.COLUMN_LIST);
                 } else {
                     nodeType = validator.deriveType(operandScope, operands[i]);
                 }
@@ -271,12 +272,13 @@ public class SqlFunction
                     argTypes,
                     getFunctionType());
 
-            // if we have a match on function name and parameter count, but couldn't
-            // find a function with  a COLUMN_LIST type, retry, but this time, don't
-            // convert the row argument to a COLUMN_LIST type; if we did find a
-            // match, go back and revalidate the row operands (corresponding to
-            // column references), now that we can set the scope to that of the
-            // source cursor referenced by that ColumnList type
+            // if we have a match on function name and parameter count, but
+            // couldn't find a function with  a COLUMN_LIST type, retry, but
+            // this time, don't convert the row argument to a COLUMN_LIST type;
+            // if we did find a match, go back and revalidate the row operands
+            // (corresponding to column references), now that we can set the
+            // scope to that of the source cursor referenced by that ColumnList
+            // type
             if (containsRowArg) {
                 if ((function == null)
                     && SqlUtil.matchRoutinesByParameterCount(
@@ -301,7 +303,9 @@ public class SqlFunction
                 }
             }
 
-            if (getFunctionType() == SqlFunctionCategory.UserDefinedConstructor) {
+            if (getFunctionType()
+                == SqlFunctionCategory.UserDefinedConstructor)
+            {
                 return validator.deriveConstructorType(
                     scope,
                     call,
@@ -321,11 +325,10 @@ public class SqlFunction
             // because otherwise later validation code will
             // choke on the unresolved function.
             call.setOperator(function);
-            return 
-                function.validateOperands(
-                    validator,
-                    operandScope,
-                    call);
+            return function.validateOperands(
+                validator,
+                operandScope,
+                call);
         } finally {
             validator.popFunctionCall();
         }

@@ -34,7 +34,7 @@ import javax.jmi.reflect.*;
 import net.sf.farrago.*;
 import net.sf.farrago.catalog.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
 
@@ -73,30 +73,30 @@ public class ProxyGen
             {
                 String name1 = mangle(m1.getName());
                 String name2 = mangle(m2.getName());
-                
+
                 return name1.compareTo(name2);
             }
-            
+
             private String mangle(String name)
             {
-                if (name.length() > 3 &&
-                    (name.startsWith("get") || name.startsWith("set")))
+                if ((name.length() > 3)
+                    && (name.startsWith("get") || name.startsWith("set")))
                 {
-                    return name.substring(3) + "_" + name.substring(0, 3);                    
-                } else if (name.length() > 2 && name.startsWith("is")) {
-                    return name.substring(2) + "_" + name.substring(0, 2);                                        
+                    return name.substring(3) + "_" + name.substring(0, 3);
+                } else if ((name.length() > 2) && name.startsWith("is")) {
+                    return name.substring(2) + "_" + name.substring(0, 2);
                 } else {
                     return name;
                 }
             }
         };
-        
+
     //~ Instance fields --------------------------------------------------------
 
     /**
      * Map from Class to corresponding C++ type name as String.
      */
-    private Map<Class, CppTypeInfo> cppTypeMap = 
+    private Map<Class, CppTypeInfo> cppTypeMap =
         new HashMap<Class, CppTypeInfo>();
 
     /**
@@ -166,7 +166,7 @@ public class ProxyGen
 
         cppTypeMap.put(Integer.TYPE, new CppTypeInfo("int32_t"));
         cppTypeMap.put(
-            Integer.class, 
+            Integer.class,
             new CppTypeInfo("int32_t", "constructJavaInteger", "int32Value"));
         javaTypeMap.put(Integer.TYPE, "I");
 
@@ -203,7 +203,9 @@ public class ProxyGen
         cppTypeMap.put(
             String.class,
             new CppTypeInfo(
-                "std::string", "constructJavaString", "constructString"));
+                "std::string",
+                "constructJavaString",
+                "constructString"));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -429,15 +431,15 @@ public class ProxyGen
         Arrays.sort(classes, classNameComparator);
         return classes;
     }
-    
-    /** 
-     * Sorts an array of Methods.  This is necessary in order to make output
-     * deterministic. Necessary because, for instance, 
-     * {@link Class#getDeclaredMethods()} does not guarantee that it returns 
-     * methods in any particular order, and in practice the order changes
-     * across versions (vendors?) of javac.
+
+    /**
+     * Sorts an array of Methods. This is necessary in order to make output
+     * deterministic. Necessary because, for instance, {@link
+     * Class#getDeclaredMethods()} does not guarantee that it returns methods in
+     * any particular order, and in practice the order changes across versions
+     * (vendors?) of javac.
      */
-    private static Method[] toSortedArray(Method[] methods)
+    private static Method [] toSortedArray(Method [] methods)
     {
         Arrays.sort(methods, methodNameComparator);
         return methods;
@@ -463,18 +465,18 @@ public class ProxyGen
     }
 
     /**
-     * Generates the C++ declaration for one setter method and its
-     * corresponding clear method (if any).  Only setters that take
-     * non-primitive types get clear methods.
+     * Generates the C++ declaration for one setter method and its corresponding
+     * clear method (if any). Only setters that take non-primitive types get
+     * clear methods.
      *
      * @param method .
      */
     public void generateSetterMethodDeclaration(Method method)
     {
-        CppTypeInfo cppTypeInfo = 
+        CppTypeInfo cppTypeInfo =
             getCppParameterTypeInfo(method.getParameterTypes()[0]);
         String cppTypeName = cppTypeInfo.cppTypeName;
-        
+
         pw.print("void ");
         pw.print(method.getName());
         pw.print("(const ");
@@ -486,7 +488,7 @@ public class ProxyGen
             pw.print(method.getName().substring(3));
             pw.println("();");
         }
-        
+
         // TODO:  make private?
         pw.print("static jmethodID meth_");
         pw.print(method.getName());
@@ -563,8 +565,8 @@ public class ProxyGen
     }
 
     /**
-     * Generates the C++ definition for one setter method and its 
-     * corresponding clear method (if any).
+     * Generates the C++ definition for one setter method and its corresponding
+     * clear method (if any).
      *
      * @param method .
      */
@@ -572,7 +574,7 @@ public class ProxyGen
     {
         Class<?> paramType = method.getParameterTypes()[0];
         CppTypeInfo cppTypeInfo = getCppParameterTypeInfo(paramType);
-        
+
         pw.print("void ");
         pw.print(getCppClassName(method.getDeclaringClass()));
         pw.print("::");
@@ -589,7 +591,7 @@ public class ProxyGen
         pw.print(cppTypeInfo.boxingHelperMethod);
         pw.println("(valueRef));");
         pw.println("}");
-        
+
         if (!cppTypeInfo.isPrimitive) {
             pw.print("void ");
             pw.print(getCppClassName(method.getDeclaringClass()));
@@ -601,7 +603,7 @@ public class ProxyGen
             pw.print("pEnv->CallVoidMethod(jObject,meth_");
             pw.print(method.getName());
             pw.println(",NULL);");
-            pw.println("}");            
+            pw.println("}");
         }
     }
 
@@ -618,8 +620,8 @@ public class ProxyGen
      * <li>args[2] = filename for C++ enumeration output
      * <li>args[3] = qualified name of source model package
      * <li>args[4] = prefix to use for generated objects
-     * <li>args[5] = (optional) qualified name of model package to reference
-     * as base; if this is not specified, generated objects are base classes
+     * <li>args[5] = (optional) qualified name of model package to reference as
+     * base; if this is not specified, generated objects are base classes
      * <li>args[6] = (optional) prefix to reference for base classes; must be
      * specified together with previous argument
      * </ul>
@@ -756,7 +758,7 @@ public class ProxyGen
         } else if (RefEnum.class.isAssignableFrom(returnType)) {
             return ReflectUtil.getUnqualifiedClassName(returnType);
         }
-        CppTypeInfo cppTypeInfo = cppTypeMap.get(returnType); 
+        CppTypeInfo cppTypeInfo = cppTypeMap.get(returnType);
         if (cppTypeInfo != null) {
             return cppTypeInfo.cppTypeName;
         }
@@ -772,7 +774,7 @@ public class ProxyGen
 
         throw new AssertionError("Unsupported type: " + parameterType);
     }
-    
+
     /**
      * Decides whether a Java method is a getter for a JMI attribute. We ignore
      * all others.
@@ -790,25 +792,24 @@ public class ProxyGen
 
     /**
      * Decides whether a Java method is setter for a JMI attribute that should
-     * be proxied.  Currently setter support is limited to properties with
-     * names that begin with "result" and that are a primitive type, a type
-     * that boxes a primitive (e.g. {@link Long}), or {@link String}.
-     * We ignore all methods that don't match.
-     * 
+     * be proxied. Currently setter support is limited to properties with names
+     * that begin with "result" and that are a primitive type, a type that boxes
+     * a primitive (e.g. {@link Long}), or {@link String}. We ignore all methods
+     * that don't match.
+     *
      * @param method the Java method
-     * 
+     *
      * @return true iff we consider it a setter
      */
     private boolean isSetter(Method method)
     {
         String methodName = method.getName();
-        return 
-            methodName.startsWith("setResult") && 
-            method.getReturnType() != Void.class && 
-            method.getParameterTypes().length == 1 && 
-            cppTypeMap.containsKey(method.getParameterTypes()[0]);
+        return methodName.startsWith("setResult")
+            && (method.getReturnType() != Void.class)
+            && (method.getParameterTypes().length == 1)
+            && cppTypeMap.containsKey(method.getParameterTypes()[0]);
     }
-    
+
     private String getJavaTypeSignature(Class clazz)
     {
         String s = javaTypeMap.get(clazz);
@@ -880,7 +881,8 @@ public class ProxyGen
                 pw.print(" = pEnv->GetMethodID(jClass,\"");
                 pw.print(methods[i].getName());
                 pw.print("\",\"(");
-                pw.print(getJavaTypeSignature(methods[i].getParameterTypes()[0]));
+                pw.print(
+                    getJavaTypeSignature(methods[i].getParameterTypes()[0]));
                 pw.println(")V\");");
             }
         }
@@ -912,14 +914,16 @@ public class ProxyGen
     {
         return javaToJmiMap.get(clazz);
     }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     private static class CppTypeInfo
     {
         public final String cppTypeName;
         public final boolean isPrimitive;
         public final String boxingHelperMethod;
         public final String unboxingHelperMethod;
-        
+
         protected CppTypeInfo(String cppTypeName)
         {
             this.cppTypeName = cppTypeName;
@@ -927,7 +931,7 @@ public class ProxyGen
             this.boxingHelperMethod = null;
             this.unboxingHelperMethod = null;
         }
-        
+
         protected CppTypeInfo(
             String cppTypeName,
             String boxingHelperMethod,
@@ -942,4 +946,3 @@ public class ProxyGen
 }
 
 // End ProxyGen.java
-

@@ -43,34 +43,34 @@ public class RelFieldCollation
     public static enum Direction
     {
         /**
-         * Ascending direction: A value is always followed by a greater
-         * or equal value.
+         * Ascending direction: A value is always followed by a greater or equal
+         * value.
          */
         Ascending,
 
         /**
-         * Strictly ascending direction: A value is always followed by a
-         * greater value.
+         * Strictly ascending direction: A value is always followed by a greater
+         * value.
          */
         StrictlyAscending,
 
         /**
-         * Descending direction: A value is always followed by a lesser
-         * or equal value.
+         * Descending direction: A value is always followed by a lesser or equal
+         * value.
          */
         Descending,
 
         /**
-         * Strictly descending direction: A value is always followed by a
-         * lesser value.
+         * Strictly descending direction: A value is always followed by a lesser
+         * value.
          */
         StrictlyDescending,
 
         /**
-         * Clustered direction: Values occur in no particular order, and
-         * the same value may occur in contiguous groups, but never occurs
-         * after that. This sort order tends to occur when values are
-         * ordered according to a hash-key.
+         * Clustered direction: Values occur in no particular order, and the
+         * same value may occur in contiguous groups, but never occurs after
+         * that. This sort order tends to occur when values are ordered
+         * according to a hash-key.
          */
         Clustered,
     }

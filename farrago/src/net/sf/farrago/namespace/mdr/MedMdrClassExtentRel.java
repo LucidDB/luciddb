@@ -28,13 +28,13 @@ import java.util.List;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.query.FarragoPreparingStmt;
-import net.sf.farrago.query.FarragoRelUtil;
+import net.sf.farrago.query.*;
+
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
@@ -81,10 +81,10 @@ class MedMdrClassExtentRel
             connection);
         this.mdrClassExtent = mdrClassExtent;
 
-        FarragoPreparingStmt preparingStmt = 
+        FarragoPreparingStmt preparingStmt =
             FarragoRelUtil.getPreparingStmt(this);
-        
-        rowClass = 
+
+        rowClass =
             JmiObjUtil.getClassForRefClass(
                 preparingStmt.getRepos().getMdrRepos(),
                 mdrClassExtent.refClass);

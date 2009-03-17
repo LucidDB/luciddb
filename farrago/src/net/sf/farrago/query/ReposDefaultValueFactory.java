@@ -199,6 +199,7 @@ public class ReposDefaultValueFactory
      * format.
      *
      * @param cwmExp Repository object representing an expression
+     *
      * @return Rex expression
      */
     private RexNode convertExpression(CwmExpression cwmExp)

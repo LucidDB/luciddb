@@ -41,6 +41,10 @@ import org.eigenbase.sql.validate.*;
 public class MockCatalogReader
     implements SqlValidatorCatalogReader
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    protected static final String defaultSchema = "SALES";
+
     //~ Instance fields --------------------------------------------------------
 
     protected final RelDataTypeFactory typeFactory;
@@ -49,7 +53,6 @@ public class MockCatalogReader
     protected final Map<String, MockSchema> schemas =
         new HashMap<String, MockSchema>();
     private final RelDataType addressType;
-    protected static final String defaultSchema = "SALES";
 
     //~ Constructors -----------------------------------------------------------
 

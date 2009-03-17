@@ -32,13 +32,7 @@ package org.eigenbase.sql.validate;
  */
 public enum SqlMonikerType
 {
-    Column,
-    Table,
-    View,
-    Schema,
-    Repository,
-    Function,
-    Keyword;
+    Column, Table, View, Schema, Repository, Function, Keyword;
 }
 
 // End SqlMonikerType.java

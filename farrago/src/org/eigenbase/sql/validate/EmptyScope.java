@@ -78,8 +78,7 @@ class EmptyScope
         return null;
     }
 
-    public void findAllColumnNames(
-        List<SqlMoniker> result)
+    public void findAllColumnNames(List<SqlMoniker> result)
     {
     }
 
@@ -129,10 +128,10 @@ class EmptyScope
 
     public SqlMonotonicity getMonotonicity(SqlNode expr)
     {
-        return (expr instanceof SqlLiteral)
-            || (expr instanceof SqlDynamicParam)
-            || (expr instanceof SqlDataTypeSpec)
-            ? SqlMonotonicity.Constant
+        return
+            ((expr instanceof SqlLiteral)
+                || (expr instanceof SqlDynamicParam)
+                || (expr instanceof SqlDataTypeSpec)) ? SqlMonotonicity.Constant
             : SqlMonotonicity.NotMonotonic;
     }
 

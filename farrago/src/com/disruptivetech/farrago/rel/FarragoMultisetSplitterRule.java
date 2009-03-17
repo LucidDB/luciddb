@@ -886,7 +886,8 @@ public class FarragoMultisetSplitterRule
             op = SqlStdOperatorTable.greaterThanOperator;
         }
         RexNode expr0 = RelOptUtil.createInputRef(aggregateRel, -1);
-        RexNode [] whenThenElse = {
+        RexNode [] whenThenElse =
+        {
             // when
             cluster.getRexBuilder().makeCall(
                 op,

@@ -35,7 +35,6 @@ import java.util.*;
 public class IntList
     extends ArrayList<Integer>
 {
-
     //~ Methods ----------------------------------------------------------------
 
     public int [] toIntArray()
@@ -48,9 +47,10 @@ public class IntList
      * <code>int</code>s.
      *
      * @param integers List of Integer objects
+     *
      * @return Array of primitive <code>int</code>s
      */
-    public static int[] toArray(List<Integer> integers)
+    public static int [] toArray(List<Integer> integers)
     {
         final int [] ints = new int[integers.size()];
         for (int i = 0; i < ints.length; i++) {
@@ -62,17 +62,16 @@ public class IntList
     /**
      * Returns a list backed by an array of primitive <code>int</code> values.
      *
-     * <p>The behavior is analogous to {@link Arrays#asList(Object[])}.
-     * Changes to the list are reflected in the array. The list cannot be
-     * extended.
+     * <p>The behavior is analogous to {@link Arrays#asList(Object[])}. Changes
+     * to the list are reflected in the array. The list cannot be extended.
      *
      * @param args Array of primitive <code>int</code> values
+     *
      * @return List backed by array
      */
-    public static List<Integer> asList(final int[] args)
+    public static List<Integer> asList(final int [] args)
     {
         return new AbstractList<Integer>() {
-
             public Integer get(int index)
             {
                 return args[index];
@@ -89,7 +88,6 @@ public class IntList
             }
         };
     }
-
 }
 
 // End IntList.java

@@ -21,12 +21,11 @@
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.util.*;
+import java.util.*;
 
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.keysindexes.*;
@@ -34,23 +33,23 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.*;
 
-import java.util.*;
-
-import javax.jmi.reflect.*;
 
 /**
- * DdlAlterTableStructureStmt represents an ALTER TABLE statement
- * which adds/drops columns or changes their datatype, implying
- * that stored tuples may need to be reshaped.  Currently it
- * can only handle addition of a new column at the end.  It extends
- * DdlRebuildTableStmt since the default implementation for the
- * reshape is to rebuild the entire table by copying from the
- * old structure to the new.
+ * DdlAlterTableStructureStmt represents an ALTER TABLE statement which
+ * adds/drops columns or changes their datatype, implying that stored tuples may
+ * need to be reshaped. Currently it can only handle addition of a new column at
+ * the end. It extends DdlRebuildTableStmt since the default implementation for
+ * the reshape is to rebuild the entire table by copying from the old structure
+ * to the new.
  *
  * @author John Sichi
  * @version $Id$
@@ -58,7 +57,11 @@ import javax.jmi.reflect.*;
 public class DdlAlterTableStructureStmt
     extends DdlReloadTableStmt
 {
+    //~ Instance fields --------------------------------------------------------
+
     private CwmTable origTable;
+
+    //~ Constructors -----------------------------------------------------------
 
     public DdlAlterTableStructureStmt(
         FarragoRepos repos,
@@ -66,24 +69,25 @@ public class DdlAlterTableStructureStmt
     {
         super(table);
 
-        JmiModelGraph transientModelGraph = new JmiModelGraph(
-            repos.getTransientFarragoPackage());
+        JmiModelGraph transientModelGraph =
+            new JmiModelGraph(
+                repos.getTransientFarragoPackage());
 
         // NOTE jvs 4-Dec-2008: Take a copy of the old table structure so that
         // we have it available for knowing how to access old stored tuples
         // while reshaping them.  We use the transient repository for this
         // purpose since we don't have versioning support in the persistent
         // repository.
-        
-        origTable = (CwmTable)
-            cloneRefObj(
+
+        origTable =
+            (CwmTable) cloneRefObj(
                 repos.getModelGraph(),
                 transientModelGraph,
                 table);
         for (CwmFeature feature : table.getFeature()) {
             CwmColumn column = (CwmColumn) feature;
-            CwmColumn origColumn = (CwmColumn)
-                cloneRefObj(
+            CwmColumn origColumn =
+                (CwmColumn) cloneRefObj(
                     repos.getModelGraph(),
                     transientModelGraph,
                     column);
@@ -92,18 +96,16 @@ public class DdlAlterTableStructureStmt
         }
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Clones an object from one repository to another, sort of.
      *
-     *<p>
-     *
-     * TODO jvs 4-Dec-2008:  make this handle more cases generically and
-     * then promote it to JmiObjUtil.
+     * <p>TODO jvs 4-Dec-2008: make this handle more cases generically and then
+     * promote it to JmiObjUtil.
      *
      * @param oldModelGraph model graph for the old repository
-     *
      * @param newModelGraph model graph for the new repository
-     *
      * @param oldObj object to be cloned
      *
      * @return result of cloning
@@ -122,6 +124,7 @@ public class DdlAlterTableStructureStmt
             newClassVertex.getRefClass().refCreateInstance(
                 Collections.EMPTY_LIST);
         SortedMap<String, Object> map = JmiObjUtil.getAttributeValues(oldObj);
+
         // The composition for default values causes problems, and
         // we don't actually need them, so toss 'em.
         map.remove("initialValue");
@@ -142,13 +145,13 @@ public class DdlAlterTableStructureStmt
                 getTable());
         setRecoveryRef(recoveryRef);
     }
-    
+
     // implement DdlReloadTableStmt
     protected CwmTable getOldTableStructureForIndexMap()
     {
         return origTable;
     }
-    
+
     // implement DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
@@ -166,8 +169,7 @@ public class DdlAlterTableStructureStmt
         }
         FarragoDataWrapperCache wrapperCache =
             ddlValidator.getDataWrapperCache();
-        FemDataServer femDataServer =
-            localTable.getServer();
+        FemDataServer femDataServer = localTable.getServer();
         FarragoMedLocalDataServer medDataServer =
             (FarragoMedLocalDataServer) wrapperCache.loadServerFromCatalog(
                 femDataServer);
@@ -176,7 +178,7 @@ public class DdlAlterTableStructureStmt
                 ddlValidator.getRepos().getLocalizedObjectName(femDataServer));
         }
     }
-    
+
     // override DdlReloadTableStmt
     protected boolean shouldRebuildIndexes(
         FarragoSessionDdlValidator ddlValidator)
@@ -192,11 +194,10 @@ public class DdlAlterTableStructureStmt
     }
 
     /**
-     * Recovers after a problem (either execution failure or system crash)
-     * while a table was being altered.
+     * Recovers after a problem (either execution failure or system crash) while
+     * a table was being altered.
      *
      * @param repos repository containing table definition
-     *
      * @param failedTable table to recover
      */
     public static void recover(
@@ -205,8 +206,8 @@ public class DdlAlterTableStructureStmt
     {
         // We need to delete the newly added column and any associated objects.
         // For now we can assume the new column is always at the end.
-        FemStoredColumn column = (FemStoredColumn)
-            failedTable.getFeature().remove(
+        FemStoredColumn column =
+            (FemStoredColumn) failedTable.getFeature().remove(
                 failedTable.getFeature().size() - 1);
 
         // For identity columns, we have to deal with the sequence
@@ -252,8 +253,9 @@ public class DdlAlterTableStructureStmt
         // index.  TODO jvs 9-Dec-2008:  clean up index storage,
         // maybe as part of FIXME in super.recoverFromFailure.
         Set<FemLocalIndex> indexes = new HashSet<FemLocalIndex>();
-        for (CwmIndexedFeature indexedFeature :
-                 kiPkg.getIndexedFeatures().getIndexedFeature(column))
+        for (
+            CwmIndexedFeature indexedFeature
+            : kiPkg.getIndexedFeatures().getIndexedFeature(column))
         {
             indexes.add((FemLocalIndex) indexedFeature.getIndex());
         }
@@ -269,7 +271,8 @@ public class DdlAlterTableStructureStmt
     }
 
     private static void deleteModelElement(
-        FarragoRepos repos, CwmModelElement element)
+        FarragoRepos repos,
+        CwmModelElement element)
     {
         // Get rid of granted privileges, which will have been
         // created automatically on behalf of the new element's creator.
@@ -283,12 +286,14 @@ public class DdlAlterTableStructureStmt
     // We're special-casing here the more general case of ALTER TABLE DROP
     // COLUMN.
     private static void deleteGrants(
-        FarragoRepos repos, CwmModelElement element)
+        FarragoRepos repos,
+        CwmModelElement element)
     {
         PrivilegeIsGrantedOnElement privAssoc =
             repos.getSecurityPackage().getPrivilegeIsGrantedOnElement();
-        List<FemGrant> grants = new ArrayList<FemGrant>(
-            privAssoc.getPrivilege(element));
+        List<FemGrant> grants =
+            new ArrayList<FemGrant>(
+                privAssoc.getPrivilege(element));
         for (FemGrant grant : grants) {
             grant.refDelete();
         }
@@ -301,7 +306,7 @@ public class DdlAlterTableStructureStmt
         super.recoverFromFailure(ddlValidator, session);
         recover(session.getRepos(), getTable());
     }
-    
+
     // override DdlReloadTableStmt
     public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
@@ -316,13 +321,14 @@ public class DdlAlterTableStructureStmt
         // Reset the creation timestamp on the new column to the
         // end-of-statement time so that labels created while the ALTER
         // was in progress will not have the column visible.
-        FemStoredColumn column = (FemStoredColumn)
-            getTable().getFeature().get(getTable().getFeature().size() - 1);
+        FemStoredColumn column =
+            (FemStoredColumn) getTable().getFeature().get(
+                getTable().getFeature().size() - 1);
         String timestamp = FarragoCatalogUtil.createTimestamp();
         column.setModificationTimestamp(timestamp);
         column.setCreationTimestamp(timestamp);
     }
-    
+
     // implement DdlReloadTableStmt
     protected String getReloadDml(SqlPrettyWriter writer)
     {
@@ -340,14 +346,15 @@ public class DdlAlterTableStructureStmt
         // the new generated values get associated with the correct existing
         // rows), which is currently true, but could be violated
         // by enabling a horizontal-parallel executor.
-    
+
         CwmTable table = getTable();
         int n = table.getFeature().size() - 1;
+
         // We only know how to handle adding one column at the end,
         // so do some sanity checking to make sure no one tried to
         // pull a fast one on us.
-        assert(n == origTable.getFeature().size());
-        
+        assert (n == origTable.getFeature().size());
+
         SqlIdentifier tableName = FarragoCatalogUtil.getQualifiedName(table);
 
         writer.print("insert into ");
@@ -356,8 +363,8 @@ public class DdlAlterTableStructureStmt
         for (int i = 0; i < n; ++i) {
             writer.sep(",");
             CwmFeature column = table.getFeature().get(i);
-            assert(column.getName().equals(
-                       origTable.getFeature().get(i).getName()));
+            assert (column.getName().equals(
+                origTable.getFeature().get(i).getName()));
             writer.identifier(column.getName());
         }
         writer.endList(frame);

@@ -24,11 +24,11 @@ package org.eigenbase.sql;
 
 import java.util.*;
 
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
-import org.eigenbase.reltype.*;
 
 
 /**

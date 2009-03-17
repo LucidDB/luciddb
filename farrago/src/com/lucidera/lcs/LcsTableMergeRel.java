@@ -76,9 +76,9 @@ public class LcsTableMergeRel
      * @param operation DML operation type
      * @param updateColumnList update column list in the update substatement
      * @param updateOnly merge only consists of an update substatement
-     * @param updateClusters if the merge executes by replacing the
-     * columns being updated as opposed to updating entire rows, then this is
-     * set to the list of clusters that will be replaced; otherwise, null
+     * @param updateClusters if the merge executes by replacing the columns
+     * being updated as opposed to updating entire rows, then this is set to the
+     * list of clusters that will be replaced; otherwise, null
      */
     public LcsTableMergeRel(
         RelOptCluster cluster,
@@ -121,7 +121,7 @@ public class LcsTableMergeRel
     {
         return updateOnly;
     }
-    
+
     public List<FemLocalIndex> getUpdateClusters()
     {
         return updateClusters;
@@ -201,7 +201,7 @@ public class LcsTableMergeRel
 
                         public RelDataType getFieldType(int index)
                         {
-                            int i = 
+                            int i =
                                 table.getRowType().getFieldOrdinal(
                                     getFieldName(index));
                             return table.getRowType().getFields()[i].getType();
@@ -295,7 +295,7 @@ public class LcsTableMergeRel
         //    omitted.
 
         FemExecutionStreamDef sourceStream;
-        if (!inputNeedBuffer(childFennelRel) || updateClusters != null) {
+        if (!inputNeedBuffer(childFennelRel) || (updateClusters != null)) {
             sourceStream = childInput;
         } else {
             sourceStream = newInputBuffer(repos);
@@ -309,7 +309,7 @@ public class LcsTableMergeRel
         // to the splitter that separates the insert and delete substreams
         FemSplitterStreamDef insertDeleteSplitter;
         FemExecutionStreamDef insertDeleteProducer;
-        if (insertOnly || updateClusters != null) {
+        if (insertOnly || (updateClusters != null)) {
             insertDeleteSplitter = null;
             insertDeleteProducer = sourceStream;
         } else {
@@ -366,7 +366,7 @@ public class LcsTableMergeRel
         }
         LcsAppendStreamDef appendStreamDef;
         if (updateClusters == null) {
-            appendStreamDef = 
+            appendStreamDef =
                 new LcsAppendStreamDef(
                     repos,
                     lcsTable,
@@ -390,7 +390,7 @@ public class LcsTableMergeRel
         // replace columns merge
         int writeRowCountParamId = 0;
         FemLbmSplicerStreamDef deleter = null;
-        if (!insertOnly && updateClusters == null) {
+        if (!insertOnly && (updateClusters == null)) {
             FennelRelParamId fennelParamId = implementor.allocateRelParamId();
             writeRowCountParamId =
                 implementor.translateParamId(fennelParamId).intValue();
@@ -517,9 +517,9 @@ public class LcsTableMergeRel
     }
 
     /**
-     * Creates a sort stream that sorts on the first column in the input,
-     * which corresponds to a rid column.
-     * 
+     * Creates a sort stream that sorts on the first column in the input, which
+     * corresponds to a rid column.
+     *
      * @return the created sort stream
      */
     private FemSortingStreamDef createRidSort(FennelRel sourceInput)
@@ -548,7 +548,7 @@ public class LcsTableMergeRel
 
         return sortingStream;
     }
-    
+
     /**
      * Creates a Reshape execution stream used within the MERGE execution stream
      * that optionally compares the rid column in its input to either null or

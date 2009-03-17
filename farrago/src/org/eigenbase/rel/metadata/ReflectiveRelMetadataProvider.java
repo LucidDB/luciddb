@@ -41,14 +41,15 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public abstract class ReflectiveRelMetadataProvider
-    implements RelMetadataProvider, ReflectiveVisitor
+    implements RelMetadataProvider,
+        ReflectiveVisitor
 {
     //~ Instance fields --------------------------------------------------------
 
     private final Map<String, List<Class>> parameterTypeMap;
 
-    private final ReflectiveVisitDispatcher<
-        ReflectiveRelMetadataProvider, RelNode> visitDispatcher;
+    private final ReflectiveVisitDispatcher<ReflectiveRelMetadataProvider,
+        RelNode> visitDispatcher;
 
     //~ Constructors -----------------------------------------------------------
 

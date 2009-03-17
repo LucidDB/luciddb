@@ -23,8 +23,8 @@ package org.eigenbase.rex;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorException;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 

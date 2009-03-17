@@ -34,12 +34,13 @@ import net.sf.farrago.query.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-public class LcsReplaceStreamDef extends LcsAppendStreamDef
+public class LcsReplaceStreamDef
+    extends LcsAppendStreamDef
 {
     //~ Instance fields --------------------------------------------------------
 
     List<FemLocalIndex> updateClusters;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     public LcsReplaceStreamDef(
@@ -59,7 +60,7 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
     protected void setupIndexes()
     {
         replaceColumns = true;
-        
+
         // Setup an index guide that only includes the clusters being replaced
         clusteredIndexes = updateClusters;
         indexGuide =
@@ -67,7 +68,7 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
                 lcsTable.getPreparingStmt().getFarragoTypeFactory(),
                 lcsTable.getCwmColumnSet(),
                 clusteredIndexes);
-        
+
         // Determine the list of relevant unclustered indexes by finding the
         // set of coverage indexes for each clustered index
         unclusteredIndexes = new ArrayList<FemLocalIndex>();
@@ -76,7 +77,7 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
                 repos,
                 lcsTable.getCwmColumnSet());
         for (FemLocalIndex cluster : updateClusters) {
-            List<FemLocalIndex> coverageList = 
+            List<FemLocalIndex> coverageList =
                 LcsIndexGuide.getIndexCoverageSet(
                     repos,
                     cluster,
@@ -88,15 +89,15 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
                     unclusteredIndexes.add(index);
                 }
             }
-        }      
+        }
     }
-    
+
     protected FemSplitterStreamDef createSplitter()
     {
         LcsTableMergeRel mergeRel = (LcsTableMergeRel) appendRel;
         return indexGuide.newSplitter(mergeRel.getExpectedInputRowType(0));
     }
-    
+
     protected void createClusterAppends(
         FennelRelImplementor implementor,
         List<FemLcsClusterAppendStreamDef> clusterAppendDefs)

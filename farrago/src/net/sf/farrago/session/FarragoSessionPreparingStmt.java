@@ -203,7 +203,7 @@ public interface FarragoSessionPreparingStmt
      * @return optimizer representation, or null if not found
      */
     public RelOptTable loadColumnSet(SqlIdentifier name);
-    
+
     /**
      * @return the root statement context for this statement
      */

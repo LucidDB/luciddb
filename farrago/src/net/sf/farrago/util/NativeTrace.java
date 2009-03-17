@@ -48,12 +48,10 @@ public class NativeTrace
 
     private static final int TRACE_PERFCOUNTER_UPDATE = 20000;
 
-    private static final String SEGMENT_LOGGER_PREFIX
-        = "net.sf.fennel.segment";
-    
-    private static final String XO_LOGGER_PREFIX
-        = "net.sf.fennel.xo";
-    
+    private static final String SEGMENT_LOGGER_PREFIX = "net.sf.fennel.segment";
+
+    private static final String XO_LOGGER_PREFIX = "net.sf.fennel.xo";
+
     //~ Instance fields --------------------------------------------------------
 
     private String loggerPrefix;
@@ -89,7 +87,8 @@ public class NativeTrace
     }
 
     private Logger getLogger(
-        String loggerSuffix, boolean stripLoggerIdentity)
+        String loggerSuffix,
+        boolean stripLoggerIdentity)
     {
         String loggerName = loggerPrefix + loggerSuffix;
         if (stripLoggerIdentity) {
@@ -123,7 +122,8 @@ public class NativeTrace
                         // look for the next dot (before bar)
                         int iDot =
                             loggerName.indexOf(
-                                '.', identityPrefix.length() + 1);
+                                '.',
+                                identityPrefix.length() + 1);
                         if (iDot > -1) {
                             loggerName = loggerName.substring(0, iDot);
                         }

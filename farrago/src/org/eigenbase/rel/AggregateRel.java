@@ -22,10 +22,9 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
+import java.util.*;
 
-import java.util.List;
-import java.util.Arrays;
+import org.eigenbase.relopt.*;
 
 
 /**

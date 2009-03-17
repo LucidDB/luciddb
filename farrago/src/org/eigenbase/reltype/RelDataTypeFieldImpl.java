@@ -22,7 +22,8 @@
 */
 package org.eigenbase.reltype;
 
-import java.io.Serializable;
+import java.io.*;
+
 
 /**
  * Default implementation of {@link RelDataTypeField}.
@@ -31,7 +32,8 @@ import java.io.Serializable;
  * @version $Id$
  */
 public class RelDataTypeFieldImpl
-    implements RelDataTypeField, Serializable
+    implements RelDataTypeField,
+        Serializable
 {
     //~ Instance fields --------------------------------------------------------
 

@@ -45,12 +45,12 @@ public abstract class FarragoReentrantStmt
     private FarragoSessionStmtContext rootStmtContext;
 
     //~ Constructors -----------------------------------------------------------
-    
+
     public FarragoReentrantStmt(FarragoSessionStmtContext rootStmtContext)
     {
         this.rootStmtContext = rootStmtContext;
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     protected FarragoSessionPreparingStmt getPreparingStmt()
@@ -62,7 +62,7 @@ public abstract class FarragoReentrantStmt
     {
         return stmtContext;
     }
-    
+
     protected FarragoSessionStmtContext getRootStmtContext()
     {
         return rootStmtContext;
@@ -103,7 +103,7 @@ public abstract class FarragoReentrantStmt
             preparingStmt.preImplement();
             executeImpl();
             rollback = false;
-        } catch (Throwable ex) {            
+        } catch (Throwable ex) {
             throw FarragoResource.instance().SessionReentrantStmtFailed.ex(ex);
         } finally {
             if (rollback && !reposTxnContext.isReadTxnInProgress()) {

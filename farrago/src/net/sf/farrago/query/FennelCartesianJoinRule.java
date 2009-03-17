@@ -22,7 +22,7 @@
 */
 package net.sf.farrago.query;
 
-import java.util.Collections;
+import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -117,7 +117,7 @@ public class FennelCartesianJoinRule
         if (rightRel == null) {
             return;
         }
-        
+
         // see if it makes sense to buffer the existing RHS; if not, try
         // the LHS, swapping the join operands if it does make sense to buffer
         // the LHS; but only if the join isn't a left outer join (since we

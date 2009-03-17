@@ -23,6 +23,7 @@
 package net.sf.farrago.test;
 
 import java.io.*;
+
 import java.nio.*;
 
 import java.util.*;
@@ -45,9 +46,11 @@ import org.eigenbase.util14.*;
 public class FennelTupleTest
     extends TestCase
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final String UNICODE_CHARSET =
         ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
-    
+
     //~ Methods ----------------------------------------------------------------
 
     private FennelTupleDescriptor buildDescriptor(
@@ -183,7 +186,8 @@ public class FennelTupleTest
             case FennelStandardTypeDescriptor.UNICODE_CHAR_ORDINAL:
             case FennelStandardTypeDescriptor.UNICODE_VARCHAR_ORDINAL:
                 try {
-                    d.getDatum(i).setString(((String) objs[i]),
+                    d.getDatum(i).setString(
+                        ((String) objs[i]),
                         UNICODE_CHARSET);
                 } catch (UnsupportedEncodingException ex) {
                     throw Util.newInternal(ex);
@@ -540,7 +544,8 @@ public class FennelTupleTest
             buildDescriptor(
                 o1,
                 new boolean[] {
-                    false, false, true, true, false, false, true, true},
+                    false, false, true, true, false, false, true, true
+                },
                 new int[] { 10, 20, 12, 8, 20, 40, 24, 16 });
 
         Object [] stringVals =

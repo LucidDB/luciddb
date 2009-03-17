@@ -29,23 +29,21 @@ import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql2rel.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.sql2rel.*;
 
 
 /**
- * Extends {@link FarragoReentrantStmtExecutor} to handle subqueries.
- * The subquery will be evaluated to a constant.
- * 
- * <p>
- * If the subquery is part of an EXISTS expression, the constant returned is
+ * Extends {@link FarragoReentrantStmtExecutor} to handle subqueries. The
+ * subquery will be evaluated to a constant.
+ *
+ * <p>If the subquery is part of an EXISTS expression, the constant returned is
  * either TRUE or FALSE depending on whether the subquery returned zero or at
  * least one row.
- * 
- * <p>
- * Otherwise, the subquery must be a scalar subquery.
- *  
+ *
+ * <p>Otherwise, the subquery must be a scalar subquery.
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
@@ -54,16 +52,20 @@ public class FarragoReentrantSubquery
 {
     // ~ Instance fields -------------------------------------------------------
 
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlCall subq;
     private final SqlToRelConverter parentConverter;
     private final boolean isExists;
     private final boolean isExplain;
 
     // ~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Constructs a FarragoReentrantSubquery.
-     * 
+     *
      * @param subq the subquery to evaluate
      * @param parentConverter sqlToRelConverter associated with the parent query
      * @param isExists whether the subquery is part of an EXISTS expression
@@ -79,8 +81,8 @@ public class FarragoReentrantSubquery
         List<RexNode> results)
     {
         super(
-            FennelRelUtil.getPreparingStmt(parentConverter.getCluster()).
-                getRootStmtContext(),
+            FennelRelUtil.getPreparingStmt(parentConverter.getCluster())
+                         .getRootStmtContext(),
             parentConverter.getRexBuilder(),
             results);
         FarragoSessionStmtContext rootContext = getRootStmtContext();
@@ -88,13 +90,15 @@ public class FarragoReentrantSubquery
             rootContext.setSaveFirstTxnCsn();
         }
         if (!isExists) {
-            assert(subq.getKind() == SqlKind.ScalarQuery);
+            assert (subq.getKind() == SqlKind.ScalarQuery);
         }
         this.subq = subq;
         this.parentConverter = parentConverter;
         this.isExists = isExists;
         this.isExplain = isExplain;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // ~ Methods ---------------------------------------------------------------
 
@@ -103,7 +107,7 @@ public class FarragoReentrantSubquery
     {
         SqlCall call = (SqlCall) subq;
         SqlSelect select = (SqlSelect) call.getOperands()[0];
-        
+
         // Convert the SqlNode tree to a RelNode tree; we need to do this
         // here so the RelNode tree is associated with the new preparing
         // stmt.
@@ -116,24 +120,27 @@ public class FarragoReentrantSubquery
                 preparingStmt);
         preparingStmt.setParentStmt(
             FennelRelUtil.getPreparingStmt(parentConverter.getCluster()));
+
         // Add to the new converter any subqueries that have already been
         // converted by the parent so we can avoid re-executing them
         sqlConverter.addConvertedNonCorrSubqs(
             parentConverter.getMapConvertedNonCorrSubqs());
         RelNode plan = sqlConverter.convertQuery(select, true, true);
+
         // The subquery cannot have dynamic parameters
         if (sqlConverter.getDynamicParamCount() > 0) {
             failed = true;
             return;
         }
-        
+
         List<RexNode> exprs = new ArrayList<RexNode>();
         RelDataType resultType = null;
-        
+
         if (!isExists) {
             // Non-EXISTS subqueries need to be converted to single-value
             // subqueries
-            plan = sqlConverter.convertToSingleValueSubq(select,  plan);
+            plan = sqlConverter.convertToSingleValueSubq(select, plan);
+
             // Create a dummy expression to store the type of the result.
             // When setting the type, derive the type based on what a
             // scalar subquery should return and create the type from the
@@ -146,9 +153,9 @@ public class FarragoReentrantSubquery
             resultType = rexBuilder.getTypeFactory().copyType(resultType);
             exprs.add(rexBuilder.makeInputRef(resultType, 0));
         }
-        
+
         plan = sqlConverter.decorrelate(select, plan);
-       
+
         // If the subquery is part of an EXPLAIN PLAN statement, don't
         // execute the subquery, but instead just return a dynamic parameter
         // as a placeholder for the subquery result.  Otherwise, execute
@@ -157,7 +164,7 @@ public class FarragoReentrantSubquery
         RexNode constExpr;
         if (isExplain) {
             if (isExists) {
-                resultType = 
+                resultType =
                     rexBuilder.getTypeFactory().createSqlType(
                         SqlTypeName.BOOLEAN);
             }
@@ -171,9 +178,10 @@ public class FarragoReentrantSubquery
             if (!failed && !isExists) {
                 constExpr = results.get(0);
                 if (constExpr.getType() != resultType) {
-                    constExpr = rexBuilder.makeCast(
-                        resultType,
-                        constExpr);
+                    constExpr =
+                        rexBuilder.makeCast(
+                            resultType,
+                            constExpr);
                     results.set(0, constExpr);
                 }
             }

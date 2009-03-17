@@ -227,7 +227,10 @@ public abstract class ReflectUtil
         String visitMethodName)
     {
         return invokeVisitorInternal(
-            visitor, visitee, hierarchyRoot, visitMethodName);
+            visitor,
+            visitee,
+            hierarchyRoot,
+            visitMethodName);
     }
 
     /**
@@ -313,8 +316,6 @@ public abstract class ReflectUtil
      * Looks up a visit method taking additional parameters beyond the
      * overloaded visitee type.
      *
-     * @see #createDispatcher(Class,Class)
-     *
      * @param visitorClass class of object whose visit method is to be invoked
      * @param visiteeClass class of object to be passed as a parameter to the
      * visit method
@@ -322,6 +323,8 @@ public abstract class ReflectUtil
      * @param additionalParameterTypes list of additional parameter types
      *
      * @return method found, or null if none found
+     *
+     * @see #createDispatcher(Class,Class)
      */
     public static Method lookupVisitMethod(
         Class<?> visitorClass,
@@ -331,19 +334,19 @@ public abstract class ReflectUtil
     {
         // Prepare an array to re-use in recursive calls.  The first argument
         // will have the visitee class substituted into it.
-        Class<?>[] paramTypes = new Class[1 + additionalParameterTypes.size()];
+        Class<?> [] paramTypes = new Class[1 + additionalParameterTypes.size()];
         int iParam = 0;
         paramTypes[iParam++] = null;
         for (Class<?> paramType : additionalParameterTypes) {
             paramTypes[iParam++] = paramType;
         }
-        
+
         // Cache Class to candidate Methods, to optimize the case where
         // the original visiteeClass has a diamond-shaped interface inheritance
-        // graph. (This is common, for example, in JMI.) The idea is to avoid 
+        // graph. (This is common, for example, in JMI.) The idea is to avoid
         // iterating over a single interface's method more than once in a call.
         Map<Class<?>, Method> cache = new HashMap<Class<?>, Method>();
-        
+
         return lookupVisitMethod(
             visitorClass,
             visiteeClass,
@@ -351,12 +354,12 @@ public abstract class ReflectUtil
             paramTypes,
             cache);
     }
-    
+
     private static Method lookupVisitMethod(
         final Class<?> visitorClass,
         final Class<?> visiteeClass,
         final String visitMethodName,
-        final Class<?>[] paramTypes,
+        final Class<?> [] paramTypes,
         final Map<Class<?>, Method> cache)
     {
         // Use containsKey since the result for a Class might be null.
@@ -369,12 +372,13 @@ public abstract class ReflectUtil
         paramTypes[0] = visiteeClass;
 
         try {
-            candidateMethod = visitorClass.getMethod(
-                visitMethodName,
-                paramTypes);
-            
+            candidateMethod =
+                visitorClass.getMethod(
+                    visitMethodName,
+                    paramTypes);
+
             cache.put(visiteeClass, candidateMethod);
-            
+
             return candidateMethod;
         } catch (NoSuchMethodException ex) {
             // not found:  carry on with lookup
@@ -391,7 +395,7 @@ public abstract class ReflectUtil
                     cache);
         }
 
-        Class<?>[] interfaces = visiteeClass.getInterfaces();
+        Class<?> [] interfaces = visiteeClass.getInterfaces();
         for (int i = 0; i < interfaces.length; ++i) {
             Method method =
                 lookupVisitMethod(
@@ -428,29 +432,27 @@ public abstract class ReflectUtil
         }
 
         cache.put(visiteeClass, candidateMethod);
-        
+
         return candidateMethod;
     }
 
     /**
-     * Creates a dispatcher for calls to {@link #lookupVisitMethod}.
-     * The dispatcher caches methods between invocations.
+     * Creates a dispatcher for calls to {@link #lookupVisitMethod}. The
+     * dispatcher caches methods between invocations.
      *
      * @param visitorBaseClazz Visitor base class
      * @param visiteeBaseClazz Visitee base class
      *
      * @return cache of methods
      */
-    public static
-        <R extends ReflectiveVisitor, E> ReflectiveVisitDispatcher<R, E>
-    createDispatcher(
+    public static <R extends ReflectiveVisitor, E> ReflectiveVisitDispatcher<R,
+        E> createDispatcher(
         final Class<R> visitorBaseClazz,
         final Class<E> visiteeBaseClazz)
     {
         assert ReflectiveVisitor.class.isAssignableFrom(visitorBaseClazz);
         assert Object.class.isAssignableFrom(visiteeBaseClazz);
-        return new ReflectiveVisitDispatcher<R, E>()
-        {
+        return new ReflectiveVisitDispatcher<R, E>() {
             final Map<List<Object>, Method> map =
                 new HashMap<List<Object>, Method>();
 
@@ -496,10 +498,15 @@ public abstract class ReflectUtil
             }
 
             public boolean invokeVisitor(
-                R visitor, E visitee, String visitMethodName)
+                R visitor,
+                E visitee,
+                String visitMethodName)
             {
                 return ReflectUtil.invokeVisitor(
-                    visitor, visitee, visiteeBaseClazz, visitMethodName);
+                    visitor,
+                    visitee,
+                    visiteeBaseClazz,
+                    visitMethodName);
             }
         };
     }

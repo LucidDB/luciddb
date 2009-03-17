@@ -24,6 +24,7 @@ package net.sf.farrago.util;
 
 import java.util.concurrent.atomic.*;
 
+
 /**
  * FarragoCacheEntry implements the interfaces for a cache entry.
  *
@@ -56,6 +57,7 @@ public class FarragoCacheEntry
     public FarragoCacheEntry(FarragoObjectCache parentCache)
     {
         this.parentCache = parentCache;
+
         // assume reusable; but really, assertions below should guarantee that
         // this is never even accessed until after initialize overwrites it
         isReusable = true;
@@ -75,14 +77,14 @@ public class FarragoCacheEntry
     // implement Entry
     public Object getValue()
     {
-        assert(isInitialized);
+        assert (isInitialized);
         return value;
     }
 
     // implement Entry
     public boolean isReusable()
     {
-        assert(isInitialized);
+        assert (isInitialized);
         return isReusable;
     }
 
@@ -105,7 +107,7 @@ public class FarragoCacheEntry
     // implement FarragoAllocation
     public void closeAllocation()
     {
-        assert(isInitialized);
+        assert (isInitialized);
         parentCache.unpin(this);
     }
 

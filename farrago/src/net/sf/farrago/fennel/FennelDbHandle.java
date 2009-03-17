@@ -36,7 +36,6 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.util.*;
 
 
@@ -47,7 +46,8 @@ import org.eigenbase.util.*;
  * @author John V. Sichi, turned into an interface by Hunter Payne
  * @version $Id$
  */
-public interface FennelDbHandle extends FarragoAllocation
+public interface FennelDbHandle
+    extends FarragoAllocation
 {
     //~ Methods ----------------------------------------------------------------
 
@@ -72,8 +72,8 @@ public interface FennelDbHandle extends FarragoAllocation
         FemTupleDescriptor tupleDesc);
 
     /**
-     * Executes a FemCmd object. If the command produces a resultHandle,
-     * it will be set after successful execution.
+     * Executes a FemCmd object. If the command produces a resultHandle, it will
+     * be set after successful execution.
      *
      * @param cmd instance of FemCmd with all parameters set
      *
@@ -82,13 +82,13 @@ public interface FennelDbHandle extends FarragoAllocation
     public long executeCmd(FemCmd cmd);
 
     /**
-     * Executes a FemCmd object, associating an optional execution handle
-     * with the command. If the command produces a resultHandle,
-     * it will be set after successful execution.
+     * Executes a FemCmd object, associating an optional execution handle with
+     * the command. If the command produces a resultHandle, it will be set after
+     * successful execution.
      *
      * @param cmd instance of FemCmd with all parameters set
-     * @param execHandle the execution handle associated with the command;
-     * null if there is no associated execution handle
+     * @param execHandle the execution handle associated with the command; null
+     * if there is no associated execution handle
      *
      * @return return handle as primitive
      */

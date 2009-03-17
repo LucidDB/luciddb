@@ -95,18 +95,18 @@ public class LurqlQueryTest
         try {
             // mask out source control Id
             addDiffMask("\\$Id.*\\$");
-    
+
             modelView = loadModelView("MOF");
-    
+
             assert (getName().endsWith(".lurql"));
             File fileSansExt =
                 new File(getName().substring(0, getName().length() - 6));
             OutputStream outputStream = openTestLogOutputStream(fileSansExt);
-    
+
             FileReader reader = new FileReader(getName());
             Writer writer = new OutputStreamWriter(outputStream);
             PrintWriter pw = new PrintWriter(writer);
-    
+
             LineNumberReader lineReader = new LineNumberReader(reader);
             StringBuffer sb = null;
             String action = null;
@@ -144,14 +144,13 @@ public class LurqlQueryTest
                     }
                 }
             }
-    
+
             pw.close();
             reader.close();
             writer.close();
-    
+
             diffTestLog();
-        }
-        finally {
+        } finally {
             txn.commit();
         }
     }

@@ -24,8 +24,8 @@ package net.sf.farrago.fennel;
 
 /**
  * FennelExecutionHandle provides a handle for passing execution state from
- * Farrago to Fennel.  The object containing the execution state is allocated
- * in Fennel and then accessed from Farrago via the handle.
+ * Farrago to Fennel. The object containing the execution state is allocated in
+ * Fennel and then accessed from Farrago via the handle.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -35,8 +35,8 @@ public class FennelExecutionHandle
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * The execution handle used in Farrago to access the Fennel object.  Set
-     * to 0 if the handle is invalid.
+     * The execution handle used in Farrago to access the Fennel object. Set to
+     * 0 if the handle is invalid.
      */
     private long execHandle;
 
@@ -59,7 +59,7 @@ public class FennelExecutionHandle
     {
         return execHandle;
     }
-    
+
     /**
      * Deallocates the Fennel object corresponding to the handle.
      */
@@ -70,7 +70,7 @@ public class FennelExecutionHandle
             execHandle = 0;
         }
     }
-    
+
     /**
      * Cancels execution of the statement corresponding to this handle.
      */

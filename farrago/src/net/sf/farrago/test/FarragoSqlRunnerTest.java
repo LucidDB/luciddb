@@ -155,7 +155,7 @@ public class FarragoSqlRunnerTest
         throws IOException, SQLException
     {
         addDiffMask("\\$Id.*\\$");
-        addDiffMask("jdbc:.*:>");   // allows testing with other drivers/URLs
+        addDiffMask("jdbc:.*:>"); // allows testing with other drivers/URLs
         String scriptBase =
             testScript.substring(
                 0,

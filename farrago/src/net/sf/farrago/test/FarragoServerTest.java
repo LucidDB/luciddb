@@ -31,12 +31,12 @@ import java.util.logging.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.server.*;
-import net.sf.farrago.db.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -52,9 +52,10 @@ import org.eigenbase.util14.*;
 public class FarragoServerTest
     extends TestCase
 {
-    //~ Static fields ----------------------------------------------------------
+    //~ Static fields/initializers ---------------------------------------------
 
-    static private final String stmtMismatch = "Returned statement does not match original";
+    static private final String stmtMismatch =
+        "Returned statement does not match original";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -95,7 +96,7 @@ public class FarragoServerTest
     protected boolean isJRockit()
     {
         // See http://issues.eigenbase.org/browse/FRG-316
-        
+
         String vmName = System.getProperty("java.vm.name");
         if (vmName == null) {
             return false;
@@ -109,7 +110,7 @@ public class FarragoServerTest
         if (isJRockit()) {
             return;
         }
-        
+
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -137,7 +138,7 @@ public class FarragoServerTest
         stopped = server.stopSoft();
         server = null;
         assertTrue(stopped);
-        
+
         // NOTE jvs 27-Nov-2008: next two calls are coverage for LDB-190, to
         // make sure a shutdown call on an already-shutdown DB is treated as a
         // NOP.
@@ -152,7 +153,7 @@ public class FarragoServerTest
         if (isJRockit()) {
             return;
         }
-        
+
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -183,7 +184,7 @@ public class FarragoServerTest
         if (isJRockit()) {
             return;
         }
-        
+
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -246,7 +247,7 @@ public class FarragoServerTest
         if (isJRockit()) {
             return;
         }
-        
+
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
@@ -300,7 +301,7 @@ public class FarragoServerTest
         server = null;
         assertTrue(stopped);
     }
-    
+
     /**
      * Tests error message when a 2nd server is started.
      */
@@ -310,7 +311,7 @@ public class FarragoServerTest
         if (isJRockit()) {
             return;
         }
-        
+
         if (System.getProperty("os.name").startsWith("Windows")) {
             // TODO jvs 1-Nov-2006:  Get spawn working on Windows too.
             return;

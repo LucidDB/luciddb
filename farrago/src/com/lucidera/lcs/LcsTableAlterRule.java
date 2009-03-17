@@ -20,20 +20,21 @@
  */
 package com.lucidera.lcs;
 
-import net.sf.farrago.query.*;
+import java.util.*;
+
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
-import java.util.*;
 
 /**
  * LcsTableAlterRule is a rule for converting an abstract {@link
- * TableModificationRel} into a corresponding {@link LcsTableAppendRel}
- * in the special case where it is being processed as part
- * of an ALTER TABLE ADD COLUMN statement.
+ * TableModificationRel} into a corresponding {@link LcsTableAppendRel} in the
+ * special case where it is being processed as part of an ALTER TABLE ADD COLUMN
+ * statement.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -43,9 +44,8 @@ public class LcsTableAlterRule
 {
     //~ Static fields/initializers ---------------------------------------------
 
-    public static final LcsTableAlterRule instance =
-        new LcsTableAlterRule();
-    
+    public static final LcsTableAlterRule instance = new LcsTableAlterRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -94,14 +94,15 @@ public class LcsTableAlterRule
             return;
         }
 
-        CwmTable newTable = (CwmTable)
-            ((LcsTable) tableModification.getTable()).getCwmColumnSet();
+        CwmTable newTable =
+            (CwmTable) ((LcsTable) tableModification.getTable())
+            .getCwmColumnSet();
 
         // Sanity check that ALTER TABLE added a single column.  A
         // more thorough check would verify that existing column
         // names and types stayed the same.
-        assert(
-            newTable.getFeature().size() == oldTable.getFeature().size() + 1);
+        assert (newTable.getFeature().size()
+            == (oldTable.getFeature().size() + 1));
 
         RelNode inputRel = tableModification.getChild();
 
@@ -117,11 +118,12 @@ public class LcsTableAlterRule
 
         // Project the input down to just the newly added column.  For adding a
         // UDT column, we may be dealing with multiple component fields.
-        LcsIndexGuide indexGuide = new LcsIndexGuide(
-            stmt.getFarragoTypeFactory(),
-            oldTable,
-            new ArrayList<FemLocalIndex>());
-            
+        LcsIndexGuide indexGuide =
+            new LcsIndexGuide(
+                stmt.getFarragoTypeFactory(),
+                oldTable,
+                new ArrayList<FemLocalIndex>());
+
         int nFieldsInput = inputRel.getRowType().getFieldCount();
         int nFieldsOld = indexGuide.getFlattenedRowType().getFieldCount();
         int nFieldsNew = nFieldsInput - nFieldsOld;
@@ -129,9 +131,10 @@ public class LcsTableAlterRule
         for (int i = 0; i < nFieldsNew; ++i) {
             projection.add(nFieldsOld + i);
         }
-        inputRel = CalcRel.createProject(
-            inputRel,
-            projection);
+        inputRel =
+            CalcRel.createProject(
+                inputRel,
+                projection);
 
         RelNode fennelInput =
             mergeTraitsAndConvert(

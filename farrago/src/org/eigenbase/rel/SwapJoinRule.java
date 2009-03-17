@@ -69,11 +69,11 @@ public class SwapJoinRule
     {
         return swap(join, false);
     }
-    
+
     /**
      * @param join join to be swapped
      * @param swapOuterJoins whether outer joins should be swapped
-     * 
+     *
      * @return swapped join if swapping possible; else null
      */
     public static RelNode swap(JoinRel join, boolean swapOuterJoins)

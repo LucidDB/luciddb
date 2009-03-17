@@ -33,7 +33,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.reltype.*;
 
 

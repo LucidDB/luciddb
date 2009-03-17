@@ -123,7 +123,7 @@ public class RelMdPopulationSize
         if (population == null) {
             return null;
         }
-        
+
         // No further computation required if the projection expressions are
         // all column references
         if (projCols.cardinality() == 0) {

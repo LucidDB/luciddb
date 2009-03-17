@@ -57,7 +57,10 @@ public class SqlAsOperator
     //~ Methods ----------------------------------------------------------------
 
     public void unparse(
-        SqlWriter writer, SqlNode[] operands, int leftPrec, int rightPrec)
+        SqlWriter writer,
+        SqlNode [] operands,
+        int leftPrec,
+        int rightPrec)
     {
         assert operands.length >= 2;
         final SqlWriter.Frame frame =

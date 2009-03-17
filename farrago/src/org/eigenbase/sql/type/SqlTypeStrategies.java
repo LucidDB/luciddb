@@ -26,7 +26,6 @@ import java.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.*;
 
 
@@ -185,7 +184,7 @@ public abstract class SqlTypeStrategies
                     if (throwOnFailure) {
                         throw callBinding.newError(
                             EigenbaseResource.instance()
-                                .ArgumentMustBePositiveInteger.ex(
+                            .ArgumentMustBePositiveInteger.ex(
                                 callBinding.getOperator().getName()));
                     }
                     return false;
@@ -997,8 +996,7 @@ public abstract class SqlTypeStrategies
                         throw opBinding.newError(
                             EigenbaseResource.instance().TypeNotComparable.ex(
                                 opBinding.getOperandType(0).getFullTypeString(),
-                                opBinding.getOperandType(1).getFullTypeString())
-                            );
+                                opBinding.getOperandType(1).getFullTypeString()));
                     }
 
                     pickedCollation =
@@ -1248,6 +1246,7 @@ public abstract class SqlTypeStrategies
                         break;
                     }
                 }
+
                 // REVIEW jvs 11-Nov-2008:  We can't assert this
                 // because SqlAdvisorValidator produces
                 // unknown types for incomplete expressions.

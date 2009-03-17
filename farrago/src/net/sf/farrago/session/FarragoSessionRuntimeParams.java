@@ -26,8 +26,8 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.plugin.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.plugin.FarragoPluginClassLoader;
 
 import org.eigenbase.reltype.*;
 
@@ -131,7 +131,7 @@ public class FarragoSessionRuntimeParams
     public FarragoWarningQueue warningQueue;
 
     /**
-     * The current time associated with the statement.  If set to zero, this
+     * The current time associated with the statement. If set to zero, this
      * indicates that no current time has yet been set for the statement.
      */
     public long currentTime;

@@ -21,7 +21,8 @@
 */
 package net.sf.farrago.session;
 
-import net.sf.farrago.catalog.FarragoRepos;
+import net.sf.farrago.catalog.*;
+
 
 /**
  * This class provides internal support for the implementation of {@link
@@ -40,6 +41,7 @@ public class FarragoSessionUdrContext
 
     private FarragoSession session;
     private FarragoRepos repos; // allows for overridding of the repository
+
     // that UDX's use.  Useful in a distributed extension of Farrago where
     // UDX might run in a variety of environments (especially for environments
     // without a FarragoSession)
@@ -77,7 +79,9 @@ public class FarragoSessionUdrContext
 
     public FarragoRepos getRepos()
     {
-        if (repos != null) return repos;
+        if (repos != null) {
+            return repos;
+        }
         return session.getRepos();
     }
 

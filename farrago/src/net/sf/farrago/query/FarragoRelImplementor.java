@@ -30,13 +30,14 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.ojrex.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.type.runtime.*;
-import net.sf.farrago.trace.FarragoTrace;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
@@ -58,6 +59,8 @@ public class FarragoRelImplementor
     implements FennelRelImplementor,
         FarragoOJRexRelImplementor
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     // trace with fennel plan
     private static final Logger tracer =
         FarragoTrace.getPreparedStreamGraphTracer();
@@ -82,13 +85,14 @@ public class FarragoRelImplementor
     private Map<List<RelPathEntry>, RelScope> relPathScopeMap;
 
     // all FarragoTransforms in the plan,
-    private List<FarragoTransformDef>  transformDefs;
+    private List<FarragoTransformDef> transformDefs;
+
     // the matching stream defs
     private List<FemJavaTransformStreamDef> transformStreamDefs;
+
     // indexes transformDefs by name of generated FarragoTransform subclass
     private Map<String, FarragoTransformDef> transformMap;
     private int nextTransformId;
-
 
     //~ Constructors -----------------------------------------------------------
 
@@ -154,11 +158,10 @@ public class FarragoRelImplementor
 
     public FennelDynamicParamId translateParamId(FennelRelParamId relParamId)
     {
-        return
-            translateParamId(
-                relParamId,
-                null,
-                FennelDynamicParamId.StreamType.UNKNOWN);
+        return translateParamId(
+            relParamId,
+            null,
+            FennelDynamicParamId.StreamType.UNKNOWN);
     }
 
     public FennelDynamicParamId translateParamId(
@@ -199,6 +202,7 @@ public class FarragoRelImplementor
         RelScope scope = relPathScopeMap.get(currRelPathList);
         if (scope == null) {
             scope = new RelScope();
+
             // Make a copy of the current list to store in the map,
             // since we'll continue adding and removing elements from the
             // current list
@@ -268,8 +272,7 @@ public class FarragoRelImplementor
      * functionality.
      *
      * @param rel Relational expression
-     * @param ordinal input position of the relational expression for its
-     * parent
+     * @param ordinal input position of the relational expression for its parent
      *
      * @return Plan
      */
@@ -327,7 +330,7 @@ public class FarragoRelImplementor
         return Collections.unmodifiableList(transformDefs);
     }
 
-    public void addTransform(RelNode rel,  ClassDeclaration decl)
+    public void addTransform(RelNode rel, ClassDeclaration decl)
     {
         FarragoTransformDef tdef = new FarragoTransformDef(rel, decl);
         transformDefs.add(tdef);
@@ -349,10 +352,10 @@ public class FarragoRelImplementor
         }
         if (tracer.isLoggable(Level.FINER)) {
             tracer.finer(
-                "compiled transforms: " +
-                printTransforms() +
-                "\n transform map now: " +
-                printTransformMap());
+                "compiled transforms: "
+                + printTransforms()
+                + "\n transform map now: "
+                + printTransformMap());
         }
     }
 
@@ -387,10 +390,8 @@ public class FarragoRelImplementor
     {
         StringBuilder buf = new StringBuilder("{");
         for (Map.Entry<String, FarragoTransformDef> e : transformMap.entrySet()) {
-            buf.append("\n")
-                .append(e.getKey())
-                .append(" => ")
-                .append(e.getValue());
+            buf.append("\n").append(e.getKey()).append(" => ").append(
+                e.getValue());
         }
         return buf.append("}").toString();
     }
@@ -580,8 +581,8 @@ public class FarragoRelImplementor
     }
 
     /**
-     * RelPathEntry keeps track of a RelNode and its input position within
-     * that node's parent RelNode in the execution stream graph.
+     * RelPathEntry keeps track of a RelNode and its input position within that
+     * node's parent RelNode in the execution stream graph.
      */
     public static class RelPathEntry
     {
@@ -602,9 +603,8 @@ public class FarragoRelImplementor
         public boolean equals(Object o)
         {
             RelPathEntry relPathEntry = (RelPathEntry) o;
-            return
-                (relPathEntry.relNode == relNode &&
-                    relPathEntry.ordinal == ordinal);
+            return ((relPathEntry.relNode == relNode)
+                && (relPathEntry.ordinal == ordinal));
         }
 
         public String toString()

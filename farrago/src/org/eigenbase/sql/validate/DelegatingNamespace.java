@@ -21,23 +21,28 @@
 */
 package org.eigenbase.sql.validate;
 
-import java.util.List;
+import java.util.*;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.util.Pair;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 
 /**
- * An implementation of {@link SqlValidatorNamespace} that delegates all
- * methods to an underlying object.
+ * An implementation of {@link SqlValidatorNamespace} that delegates all methods
+ * to an underlying object.
  *
  * @author jhyde
  * @version $Id$
  */
-public abstract class DelegatingNamespace implements SqlValidatorNamespace
+public abstract class DelegatingNamespace
+    implements SqlValidatorNamespace
 {
+    //~ Instance fields --------------------------------------------------------
+
     protected final SqlValidatorNamespace namespace;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a DelegatingNamespace.
@@ -48,6 +53,8 @@ public abstract class DelegatingNamespace implements SqlValidatorNamespace
     {
         this.namespace = namespace;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlValidator getValidator()
     {

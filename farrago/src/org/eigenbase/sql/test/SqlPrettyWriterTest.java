@@ -356,7 +356,8 @@ public class SqlPrettyWriterTest
     public void testWhereListItemsOnSeparateLinesOr()
         throws Exception
     {
-        checkPrettySeparateLines("select x"
+        checkPrettySeparateLines(
+            "select x"
             + " from y"
             + " where h is not null and i < j"
             + " or ((a or b) is true) and d not in (f,g)"
@@ -366,7 +367,8 @@ public class SqlPrettyWriterTest
     public void testWhereListItemsOnSeparateLinesAnd()
         throws Exception
     {
-        checkPrettySeparateLines("select x"
+        checkPrettySeparateLines(
+            "select x"
             + " from y"
             + " where h is not null and (i < j"
             + " or ((a or b) is true)) and (d not in (f,g)"

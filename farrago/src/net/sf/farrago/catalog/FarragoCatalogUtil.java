@@ -55,6 +55,16 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoCatalogUtil
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Enumeration of the different type of row count statistics
+     */
+    private enum RowCountStatType
+    {
+        ROW_COUNT, DELETED_ROW_COUNT, ANALYZE_ROW_COUNT
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -408,21 +418,22 @@ public abstract class FarragoCatalogUtil
         // any CwmIndex (or CqmSqlindex) instances, only FemLocalIndex
         // instances.  Netbeans MDR doesn't generate generic types for return
         // values, but Enki does.  Consider modifying calls to this method to
-        // do the conversion as necessary.  Or perhaps introduce a 
+        // do the conversion as necessary.  Or perhaps introduce a
         // getModelElementByType method.
-        
+
         // REVIEW: SWZ: 2008-04-23: Force deterministic order onto the indexes.
         // Many unit tests end up depending on this for reliable ordering
         // of output.
         List<FemLocalIndex> result = new ArrayList<FemLocalIndex>();
-        for(CwmIndex index:
-                repos.getKeysIndexesPackage().getIndexSpansClass().getIndex(
-                    table))
+        for (
+            CwmIndex index
+            : repos.getKeysIndexesPackage().getIndexSpansClass().getIndex(
+                table))
         {
-            result.add((FemLocalIndex)index);
+            result.add((FemLocalIndex) index);
         }
         Collections.sort(result, JmiMofIdComparator.instance);
-        
+
         return result;
     }
 
@@ -958,16 +969,19 @@ public abstract class FarragoCatalogUtil
         CwmModelElement grantedObject)
     {
         // Find the authId by name for grantor and grantee
-        FemAuthId grantorAuthId = 
+        FemAuthId grantorAuthId =
             FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
-        FemAuthId granteeAuthId = 
+        FemAuthId granteeAuthId =
             FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
 
-        assert(grantorAuthId != null);
-        assert(granteeAuthId != null);
-        
+        assert (grantorAuthId != null);
+        assert (granteeAuthId != null);
+
         return newCreationGrant(
-            repos, grantorAuthId, granteeAuthId, grantedObject);
+            repos,
+            grantorAuthId,
+            granteeAuthId,
+            grantedObject);
     }
 
     /**
@@ -999,7 +1013,7 @@ public abstract class FarragoCatalogUtil
         grant.setElement(grantedObject);
         return grant;
     }
-    
+
     /**
      * Determines the allowed access for a table
      *
@@ -1029,32 +1043,31 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Retrieves the current and deleted row counts for an abstract column
-     * set, optionally based on a label setting.
-     * 
+     * Retrieves the current and deleted row counts for an abstract column set,
+     * optionally based on a label setting.
+     *
      * @param table the abstract column set
-     * @param labelTimestamp creation timestamp of the label setting that 
+     * @param labelTimestamp creation timestamp of the label setting that
      * determines which row counts to retrieve; null if there is no label
      * setting
-     * @param rowCounts the row counts to be returned; the first element in
-     * the array is the current row count and the second is the deleted row
-     * count
+     * @param rowCounts the row counts to be returned; the first element in the
+     * array is the current row count and the second is the deleted row count
      */
     public static void getRowCounts(
         FemAbstractColumnSet table,
         Timestamp labelTimestamp,
-        Long[] rowCounts)
-    {      
+        Long [] rowCounts)
+    {
         // If there's no label setting, retrieve the latest stats.
         if (labelTimestamp == null) {
             rowCounts[0] = table.getRowCount();
             rowCounts[1] = table.getDeletedRowCount();
             return;
         }
-        
+
         // Older catalog versions and newly created tables only store
         // the row counts directly in the columnSet record so there won't
-        // be separate row count stat records yet. 
+        // be separate row count stat records yet.
         List<FemRowCountStatistics> rowCountStatsList =
             table.getRowCountStats();
         if (rowCountStatsList.isEmpty()) {
@@ -1068,8 +1081,8 @@ public abstract class FarragoCatalogUtil
             for (int i = rowCountStatsList.size() - 1; i >= 0; i--) {
                 FemRowCountStatistics stats = rowCountStatsList.get(i);
                 Timestamp statTime = getMaxTimestamp(table, stats);
-                if (statTime == null ||
-                    statTime.compareTo(labelTimestamp) < 0)
+                if ((statTime == null)
+                    || (statTime.compareTo(labelTimestamp) < 0))
                 {
                     rowCounts[0] = stats.getRowCount();
                     rowCounts[1] = stats.getDeletedRowCount();
@@ -1077,21 +1090,22 @@ public abstract class FarragoCatalogUtil
                 }
             }
         }
+
         // If we reach this point, then the current set of row counts were all
         // generated after the label setting, so no row count stats are
         // available.
         rowCounts[0] = null;
         rowCounts[1] = null;
     }
-    
+
     /**
-     * Returns the max of the dml and analyze timestamps stored in a row
-     * count statistics record.  If both timestamps are null, returns null.
-     * 
-     * @param table the abstract column set corresponding to the row count
-     * stats record
+     * Returns the max of the dml and analyze timestamps stored in a row count
+     * statistics record. If both timestamps are null, returns null.
+     *
+     * @param table the abstract column set corresponding to the row count stats
+     * record
      * @param stats the row count stats record
-     * 
+     *
      * @return maximum of the dml and analyze timestamps or null if both
      * timestamps are null
      */
@@ -1107,7 +1121,7 @@ public abstract class FarragoCatalogUtil
             } else {
                 return Timestamp.valueOf(dmlTime);
             }
-        } 
+        }
         if (dmlTime == null) {
             return Timestamp.valueOf(analyzeTime);
         }
@@ -1120,11 +1134,11 @@ public abstract class FarragoCatalogUtil
             return analyzeTimestamp;
         }
     }
-       
+
     /**
      * Updates the current and deleted row counts for an abstract column set,
      * creating new row count stat records as needed.
-     * 
+     *
      * @param table the abstract column set
      * @param rowCount the current row count
      * @param deletedRowCount the deleted row count
@@ -1135,7 +1149,7 @@ public abstract class FarragoCatalogUtil
         long rowCount,
         long deletedRowCount,
         FarragoRepos repos)
-    {       
+    {
         List<RowCountStat> rowCounts = new ArrayList<RowCountStat>();
         RowCountStat rowCountStat =
             new RowCountStat(RowCountStatType.ROW_COUNT, rowCount);
@@ -1147,11 +1161,11 @@ public abstract class FarragoCatalogUtil
         rowCounts.add(rowCountStat);
         updateRowCounts(table, rowCounts, repos);
     }
-    
+
     /**
-     * Updates various row counts for an abstract column set, creating new
-     * row count stat records as needed.
-     * 
+     * Updates various row counts for an abstract column set, creating new row
+     * count stat records as needed.
+     *
      * @param table the abstract column set
      * @param rowCounts list of row counts to be updated
      * @param repos repository
@@ -1163,14 +1177,14 @@ public abstract class FarragoCatalogUtil
     {
         List<FemRowCountStatistics> rowCountStatsList =
             table.getRowCountStats();
-        
+
         // There will be no rowCountStats record if this table was migrated
         // from an earlier version.  So, first migrate over the existing row
         // count stats stored in the table record.  Note that even in the
         // case where there are no stats yet, we'll create an initial record,
         // which will be overwritten with the new stats further below.
         if (rowCountStatsList.isEmpty()) {
-            FemRowCountStatistics rowCountStats = 
+            FemRowCountStatistics rowCountStats =
                 repos.newFemRowCountStatistics();
             rowCountStats.setColumnSet(table);
             rowCountStats.setRowCount(table.getRowCount());
@@ -1179,12 +1193,12 @@ public abstract class FarragoCatalogUtil
             rowCountStats.setAnalyzeTimestamp(table.getAnalyzeTime());
             // leave the dml timestamp set to null because we don't really
             // know what it is
-            
+
             // add the new record to our list
             rowCountStatsList = new ArrayList<FemRowCountStatistics>();
             rowCountStatsList.add(rowCountStats);
         }
-            
+
         // Determine if we need to create a new row count stats record or can
         // reuse the latest one.  We can reuse the latest if those stats were
         // created after the newest label was created.  When determining the
@@ -1192,17 +1206,18 @@ public abstract class FarragoCatalogUtil
         // analyze timestamps.
         FemRowCountStatistics rowCountStats =
             rowCountStatsList.get(rowCountStatsList.size() - 1);
-        Timestamp newestLabelTimestamp =
-            getNewestLabelCreationTimestamp(repos);
+        Timestamp newestLabelTimestamp = getNewestLabelCreationTimestamp(repos);
         Timestamp maxTimestamp = getMaxTimestamp(table, rowCountStats);
-        if (newestLabelTimestamp == null || maxTimestamp == null ||
-            newestLabelTimestamp.compareTo(maxTimestamp) < 0)
+        if ((newestLabelTimestamp == null)
+            || (maxTimestamp == null)
+            || (newestLabelTimestamp.compareTo(maxTimestamp) < 0))
         {
             setNewRowCounts(table, rowCountStats, rowCounts);
-        } else {              
+        } else {
             FemRowCountStatistics newRowCountStats =
                 repos.newFemRowCountStatistics();
-            newRowCountStats.setColumnSet(table);                             
+            newRowCountStats.setColumnSet(table);
+
             // initialize the record with the values from the previous
             // record
             newRowCountStats.setDmlTimestamp(rowCountStats.getDmlTimestamp());
@@ -1213,24 +1228,23 @@ public abstract class FarragoCatalogUtil
                 rowCountStats.getAnalyzeTimestamp());
             newRowCountStats.setAnalyzeRowCount(
                 rowCountStats.getAnalyzeRowCount());
+
             // now, set the new, current values
             setNewRowCounts(table, newRowCountStats, rowCounts);
         }
     }
-    
+
     /**
      * Updates the row count statistic for an abstract column set
      *
-     * @deprecated
-     * 
      * @param columnSet the column set whose row count will be updated
      * @param rowCount number of rows returned by column set
-     * @param updateRowCount if true, the
-     *        {@link FemAbstractColumnSet#setRowCount(Long)} property is
-     *        updated.
-     * @param updateAnalyzeRowCount if true, the
-     *        {@link FemAbstractColumnSet#setLastAnalyzeRowCount(Long)}
-     *        property is updated
+     * @param updateRowCount if true, the {@link
+     * FemAbstractColumnSet#setRowCount(Long)} property is updated.
+     * @param updateAnalyzeRowCount if true, the {@link
+     * FemAbstractColumnSet#setLastAnalyzeRowCount(Long)} property is updated
+     *
+     * @deprecated
      */
     public static void updateRowCount(
         FemAbstractColumnSet columnSet,
@@ -1249,14 +1263,13 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Updates the row count statistic for an abstract column set, creating 
-     * new row count stat records, as needed.
+     * Updates the row count statistic for an abstract column set, creating new
+     * row count stat records, as needed.
      *
      * @param columnSet the column set whose row count will be updated
      * @param rowCount number of rows returned by column set
      * @param updateRowCount if true, the current row count is updated
-     * @param updateAnalyzeRowCount if true, the analyze row count is
-     * updated
+     * @param updateAnalyzeRowCount if true, the analyze row count is updated
      */
     public static void updateRowCount(
         FemAbstractColumnSet columnSet,
@@ -1267,14 +1280,15 @@ public abstract class FarragoCatalogUtil
     {
         List<RowCountStat> rowCounts = new ArrayList<RowCountStat>();
         RowCountStat rowCountStat;
-        
+
         if (updateAnalyzeRowCount) {
-            rowCountStat = new RowCountStat(
-                RowCountStatType.ANALYZE_ROW_COUNT,
-                rowCount);
+            rowCountStat =
+                new RowCountStat(
+                    RowCountStatType.ANALYZE_ROW_COUNT,
+                    rowCount);
             rowCounts.add(rowCountStat);
         }
-        
+
         if (updateRowCount) {
             rowCountStat =
                 new RowCountStat(RowCountStatType.ROW_COUNT, rowCount);
@@ -1287,12 +1301,12 @@ public abstract class FarragoCatalogUtil
     /**
      * Retrieves the page count statistic for a local index, taking into
      * consideration the current label setting.
-     * 
+     *
      * @param index the index whose page count will be retrieved
-     * @param labelTimestamp creation timestamp of the label setting that 
+     * @param labelTimestamp creation timestamp of the label setting that
      * determines which page count to retrieve; null if there is no label
      * setting
-     * 
+     *
      * @return the page count for the index
      */
     public static Long getPageCount(
@@ -1303,11 +1317,11 @@ public abstract class FarragoCatalogUtil
         if (labelTimestamp == null) {
             return index.getPageCount();
         }
-            
+
         // Older catalog versions only store the page count directly in
         // the index record so there won't be separate page count
         // stat records yet.
-        List<FemIndexStatistics> indexStatsList = index.getIndexStats();    
+        List<FemIndexStatistics> indexStatsList = index.getIndexStats();
         if (indexStatsList.isEmpty()) {
             return index.getPageCount();
         } else {
@@ -1316,25 +1330,25 @@ public abstract class FarragoCatalogUtil
             // in.
             for (int i = indexStatsList.size() - 1; i >= 0; i--) {
                 FemIndexStatistics stats = indexStatsList.get(i);
-                Timestamp statTime =
-                    Timestamp.valueOf(stats.getAnalyzeTime());
+                Timestamp statTime = Timestamp.valueOf(stats.getAnalyzeTime());
                 if (statTime.compareTo(labelTimestamp) < 0) {
                     return stats.getPageCount();
                 }
             }
         }
+
         // The current set of stats were all generated after the label setting,
         // so no index page count is available.
         return null;
     }
-    
+
     /**
      * Updates the page count statistic for a local index in the index record.
      *
-     * @deprecated
-     * 
      * @param index the index whose page count will be updated
      * @param pageCount number of pages on disk used by index
+     *
+     * @deprecated
      */
     public static void updatePageCount(
         FemLocalIndex index,
@@ -1343,11 +1357,11 @@ public abstract class FarragoCatalogUtil
         index.setAnalyzeTime(createTimestamp());
         index.setPageCount(pageCount);
     }
-    
+
     /**
      * Updates the page count statistic for a local index, creating new index
      * stat records as needed.
-     * 
+     *
      * @param index the index whose page count will be updated
      * @param pageCount number of pages on disk used by index
      * @param repos repository
@@ -1357,9 +1371,9 @@ public abstract class FarragoCatalogUtil
         Long pageCount,
         FarragoRepos repos)
     {
-        String currTimestamp = createTimestamp();        
+        String currTimestamp = createTimestamp();
         List<FemIndexStatistics> indexStatsList = index.getIndexStats();
-        
+
         // There will be no indexStats record if this index was migrated
         // from an earlier version.  So, first migrate over the existing page
         // count stat stored in the index record.  In the case where there's
@@ -1374,41 +1388,43 @@ public abstract class FarragoCatalogUtil
                 indexStats.setPageCount(index.getPageCount());
                 indexStats.setAnalyzeTime(index.getAnalyzeTime());
             }
-            
+
             // Add the new record to the list of stats
             indexStatsList = new ArrayList<FemIndexStatistics>();
             indexStatsList.add(indexStats);
         }
 
         // Determine whether to update the latest record or create a new one.
-        FemIndexStatistics indexStats = 
+        FemIndexStatistics indexStats =
             indexStatsList.get(indexStatsList.size() - 1);
         Timestamp newestLabelTimestamp = getNewestLabelCreationTimestamp(repos);
-        if (newestLabelTimestamp == null || noExistingStat ||
-            newestLabelTimestamp.compareTo(Timestamp.valueOf(
-                indexStats.getAnalyzeTime())) < 0)
+        if ((newestLabelTimestamp == null)
+            || noExistingStat
+            || (newestLabelTimestamp.compareTo(
+                    Timestamp.valueOf(
+                        indexStats.getAnalyzeTime())) < 0))
         {
             indexStats.setPageCount(pageCount);
             indexStats.setAnalyzeTime(currTimestamp);
-        } else {              
+        } else {
             indexStats = repos.newFemIndexStatistics();
             indexStats.setLocalIndex(index);
             indexStats.setPageCount(pageCount);
             indexStats.setAnalyzeTime(currTimestamp);
         }
-        
+
         // Set the latest stats in the index record.
         index.setAnalyzeTime(currTimestamp);
         index.setPageCount(pageCount);
     }
-    
+
     /**
      * Retrieves the histogram for a column based on a label setting.
-     * 
+     *
      * @param column the column
      * @param labelTimestamp the creation timestamp of the label setting; null
      * if there is no label setting
-     * 
+     *
      * @return the corresponding histogram, if it exists
      */
     public static FemColumnHistogram getHistogram(
@@ -1417,21 +1433,22 @@ public abstract class FarragoCatalogUtil
     {
         List<FemColumnHistogram> histogramList = column.getHistogram();
         int listSize = histogramList.size();
-        
+
         // If there's no label setting, just return the latest histogram
-        if (labelTimestamp == null && listSize > 0) {
+        if ((labelTimestamp == null) && (listSize > 0)) {
             return histogramList.get(listSize - 1);
         }
+
         // Work backwards through the list until we find the first
         // histogram older than the label timestamp passed in.
         for (int i = listSize - 1; i >= 0; i--) {
             FemColumnHistogram histogram = histogramList.get(i);
-            Timestamp statTime =
-                Timestamp.valueOf(histogram.getAnalyzeTime());
+            Timestamp statTime = Timestamp.valueOf(histogram.getAnalyzeTime());
             if (statTime.compareTo(labelTimestamp) < 0) {
                 return histogram;
             }
         }
+
         // All histograms were created after the label timestamp passed in,
         // which means this column had no histograms at the time of the label
         // setting.
@@ -1469,7 +1486,7 @@ public abstract class FarragoCatalogUtil
         List<FemColumnHistogramBar> oldBars = histogram.getBar();
         int oldBarsCount = oldBars.size();
         if (oldBarsCount > barCount) {
-            Iterator<FemColumnHistogramBar> iter = 
+            Iterator<FemColumnHistogramBar> iter =
                 oldBars.listIterator(barCount);
             while (iter.hasNext()) {
                 FemColumnHistogramBar bar = iter.next();
@@ -1492,25 +1509,25 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Determines which histogram record should be updated.  Either the latest
+     * Determines which histogram record should be updated. Either the latest
      * one is reused, or a new one is created, if desired.
-     * 
+     *
      * @param repos repository
      * @param column the column for which the histogram will be created
-     * @param createNewHistogram if true and the latest record cannot be 
+     * @param createNewHistogram if true and the latest record cannot be
      * updated, then create a new histogram record
-     * 
-     * @return the histogram record to be updated or null if an existing
-     * record cannot be updated and a new one was not created
+     *
+     * @return the histogram record to be updated or null if an existing record
+     * cannot be updated and a new one was not created
      */
     public static FemColumnHistogram getHistogramForUpdate(
         FarragoRepos repos,
         FemAbstractColumn column,
         boolean createNewHistogram)
     {
-        FemColumnHistogram histogram;     
+        FemColumnHistogram histogram;
         List<FemColumnHistogram> histogramList = column.getHistogram();
-        
+
         // If there are no histogram records yet, create one.  Otherwise,
         // determine whether the newest histogram was created before or
         // after the newest label.  If it was created before, then create a
@@ -1526,10 +1543,10 @@ public abstract class FarragoCatalogUtil
             histogram = histogramList.get(histogramList.size() - 1);
             Timestamp newestLabelTimestamp =
                 getNewestLabelCreationTimestamp(repos);
-            if (newestLabelTimestamp != null &&
-                newestLabelTimestamp.compareTo(
-                    Timestamp.valueOf(histogram.getAnalyzeTime())) > 0)
-            {     
+            if ((newestLabelTimestamp != null)
+                && (newestLabelTimestamp.compareTo(
+                        Timestamp.valueOf(histogram.getAnalyzeTime())) > 0))
+            {
                 if (createNewHistogram) {
                     histogram = repos.newFemColumnHistogram();
                     histogram.setColumn(column);
@@ -1540,7 +1557,7 @@ public abstract class FarragoCatalogUtil
         }
         return histogram;
     }
-    
+
     /**
      * Updates system-maintained attributes of an object.
      *
@@ -1571,13 +1588,10 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Creates a new recovery reference for a recoverable action on an
-     * object.
+     * Creates a new recovery reference for a recoverable action on an object.
      *
      * @param repos repository in which object is defined
-     *
      * @param recoveryType description of recoverable action
-     *
      * @param modelElement object on which recovery would be needed
      */
     public static FemRecoveryReference createRecoveryReference(
@@ -1593,6 +1607,7 @@ public abstract class FarragoCatalogUtil
         dep.setKind("Recovery");
         dep.getClient().add(ref);
         dep.getSupplier().add(modelElement);
+
         // These are typically created outside of DdlValidator,
         // so fill in standard ModelElement attributes.
         ref.setVisibility(VisibilityKindEnum.VK_PUBLIC);
@@ -1604,22 +1619,22 @@ public abstract class FarragoCatalogUtil
 
     /**
      * Resets the row counts for a table
-     * 
-     * @deprecated
      *
      * @param table a column set table
+     *
+     * @deprecated
      */
     public static void resetRowCounts(FemAbstractColumnSet table)
-    {        
+    {
         long zero = 0;
         table.setRowCount(zero);
         table.setDeletedRowCount(zero);
     }
-    
+
     /**
      * Resets the row counts for a table, creating new row count stat records,
      * as needed.
-     * 
+     *
      * @param table a column set table
      * @param repos repository
      */
@@ -1629,12 +1644,12 @@ public abstract class FarragoCatalogUtil
     {
         updateRowCounts(table, 0, 0, repos);
     }
-    
+
     /**
-     * Sets various row counts for an abstract column set.  The counts are
-     * reflected both in the abstract column set record as well as the
-     * row count statistics record.
-     * 
+     * Sets various row counts for an abstract column set. The counts are
+     * reflected both in the abstract column set record as well as the row count
+     * statistics record.
+     *
      * @param table the abstract column set
      * @param rowCountStats the row count statistics
      * @param rowCounts the row counts to be set
@@ -1647,7 +1662,7 @@ public abstract class FarragoCatalogUtil
         String currTimestamp = createTimestamp();
         boolean rowCountSet = false;
         boolean analyzeCountSet = false;
-        
+
         for (RowCountStat rowCount : rowCounts) {
             if (rowCount.type == RowCountStatType.ROW_COUNT) {
                 table.setRowCount(rowCount.count);
@@ -1657,28 +1672,28 @@ public abstract class FarragoCatalogUtil
                 table.setDeletedRowCount(rowCount.count);
                 rowCountStats.setDeletedRowCount(rowCount.count);
             } else {
-                assert(rowCount.type == RowCountStatType.ANALYZE_ROW_COUNT);
-                table.setLastAnalyzeRowCount(rowCount.count);               
+                assert (rowCount.type == RowCountStatType.ANALYZE_ROW_COUNT);
+                table.setLastAnalyzeRowCount(rowCount.count);
                 table.setAnalyzeTime(currTimestamp);
                 rowCountStats.setAnalyzeTimestamp(currTimestamp);
                 rowCountStats.setAnalyzeRowCount(rowCount.count);
                 analyzeCountSet = true;
             }
         }
-        
+
         // If only the row count was set and not the analyze count, then
         // this is a dml update, so update the dml timestamp.
         if (rowCountSet && !analyzeCountSet) {
             rowCountStats.setDmlTimestamp(currTimestamp);
         }
     }
-    
+
     /**
      * Retrieves the creation timestamp of the most recently created label
      * stored in the catalog.
-     * 
+     *
      * @param repos repository
-     * 
+     *
      * @return creation timestamp of the newest label
      */
     public static Timestamp getNewestLabelCreationTimestamp(FarragoRepos repos)
@@ -1688,20 +1703,20 @@ public abstract class FarragoCatalogUtil
         for (FemLabel label : labels) {
             Timestamp timestamp =
                 Timestamp.valueOf(label.getCreationTimestamp());
-            if (newestTimestamp == null ||
-                timestamp.compareTo(newestTimestamp) > 0)
+            if ((newestTimestamp == null)
+                || (timestamp.compareTo(newestTimestamp) > 0))
             {
                 newestTimestamp = timestamp;
             }
         }
         return newestTimestamp;
     }
-    
+
     /**
      * Retrieves the csn of the oldest label stored in the catalog.
-     * 
+     *
      * @param repos repository
-     * 
+     *
      * @return csn of the oldest label; null if there are no labels
      */
     public static Long getOldestLabelCsn(FarragoRepos repos)
@@ -1714,26 +1729,25 @@ public abstract class FarragoCatalogUtil
                 continue;
             }
             long csn = label.getCommitSequenceNumber();
-            if (oldestCsn == null || csn < oldestCsn) {
+            if ((oldestCsn == null) || (csn < oldestCsn)) {
                 oldestCsn = csn;
             }
         }
         return oldestCsn;
     }
-    
+
     /**
      * Retrieves the creation timestamp of the labels that bound a specified
      * label.
-     * 
+     *
      * @param referenceLabel the label that will be used to determine the
      * boundaries
      * @param repos repository
-     * 
+     *
      * @return returns the lower and upper bound timestamps; if the specified
-     * label is the oldest, then the lowerBound is set to null; if the
-     * specified label is the newest, then the upperBound is set to null;
-     * therefore, if the specified label is the only label, then both bounds
-     * are set to null
+     * label is the oldest, then the lowerBound is set to null; if the specified
+     * label is the newest, then the upperBound is set to null; therefore, if
+     * the specified label is the only label, then both bounds are set to null
      */
     private static List<Timestamp> getLabelBounds(
         FemLabel referenceLabel,
@@ -1752,39 +1766,41 @@ public abstract class FarragoCatalogUtil
                 continue;
             }
             String timestamp = label.getCreationTimestamp();
+
             // Ignore new labels that haven't been created yet
             if (timestamp == null) {
                 continue;
             }
             Timestamp labelTimestamp = Timestamp.valueOf(timestamp);
             int rc = referenceTimestamp.compareTo(labelTimestamp);
-            
+
             // Find the newest label older than the reference label
-            if (rc > 0 &&
-                (lowerBound == null ||
-                    labelTimestamp.compareTo(lowerBound) > 0))
+            if ((rc > 0)
+                && ((lowerBound == null)
+                    || (labelTimestamp.compareTo(lowerBound) > 0)))
             {
                 lowerBound = labelTimestamp;
-                
-            // Find the oldest label newer than the reference label
-            } else if (rc < 0 &&
-                (upperBound == null ||
-                    labelTimestamp.compareTo(upperBound) < 0))
+
+                // Find the oldest label newer than the reference label
+            } else if (
+                (rc < 0)
+                && ((upperBound == null)
+                    || (labelTimestamp.compareTo(upperBound) < 0)))
             {
                 upperBound = labelTimestamp;
             }
         }
-        
+
         List<Timestamp> ret = new ArrayList<Timestamp>();
         ret.add(lowerBound);
         ret.add(upperBound);
         return ret;
     }
-    
+
     /*
      * Removes from the various catalog tables containing data statistics the
      * set of stats associated with a label.
-     * 
+     *
      * @param label the label
      * @param repos repository
      * @param usePreviewRefDelete whether to use the repository's preview
@@ -1794,25 +1810,26 @@ public abstract class FarragoCatalogUtil
         FemLabel label,
         FarragoRepos repos,
         boolean usePreviewRefDelete)
-    {   
+    {
         // Locate the stats associated with the label by determining the
         // timestamps of the two labels that bound the specified label.
         // Stats that fall within the timestamp range are candidates for
         // removal.
-        List<Timestamp> bounds = 
+        List<Timestamp> bounds =
             FarragoCatalogUtil.getLabelBounds(label, repos);
         Timestamp lowerBound = bounds.get(0);
         Timestamp upperBound = bounds.get(1);
         boolean onlyLabel = false;
+
         // If there are no bounds on both ends, then this is the only
         // label.  In that case, the candidates for removal are all stats
-        // older the label.  So, set the upper bound to the label's 
+        // older the label.  So, set the upper bound to the label's
         // timestamp.
-        if (lowerBound == null && upperBound == null) {
+        if ((lowerBound == null) && (upperBound == null)) {
             upperBound = Timestamp.valueOf(label.getCreationTimestamp());
             onlyLabel = true;
         }
-        
+
         try {
             // Start with RowCountStatistics
             removeObsoleteStatisticsFromTable(
@@ -1824,7 +1841,7 @@ public abstract class FarragoCatalogUtil
                 upperBound,
                 onlyLabel,
                 usePreviewRefDelete);
-    
+
             // Move on to ColumnHistogram
             removeObsoleteStatisticsFromTable(
                 repos,
@@ -1835,7 +1852,7 @@ public abstract class FarragoCatalogUtil
                 upperBound,
                 onlyLabel,
                 usePreviewRefDelete);
-            
+
             // Finally, IndexStatistics
             removeObsoleteStatisticsFromTable(
                 repos,
@@ -1846,17 +1863,17 @@ public abstract class FarragoCatalogUtil
                 upperBound,
                 onlyLabel,
                 usePreviewRefDelete);
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw Util.newInternal(e);
         }
-    }   
-   
+    }
+
     /**
-     * Removes statistics in between 2 timestamp boundaries, provided the
-     * stat is not the only remaining statistic record within the timestamp
-     * range.  The candidate stats are located by walking through a
-     * list of parent objects that reference stats.
-     * 
+     * Removes statistics in between 2 timestamp boundaries, provided the stat
+     * is not the only remaining statistic record within the timestamp range.
+     * The candidate stats are located by walking through a list of parent
+     * objects that reference stats.
+     *
      * @param <ParentType> the type of the object that references the stat
      * records
      * @param repos repository
@@ -1868,9 +1885,9 @@ public abstract class FarragoCatalogUtil
      * stats are handled as a special case
      * @param lowerBound the lower bound timestamp boundary
      * @param upperBound the upper bound timestamp boundary
-     * @param onlyLabel true if this is the special case where the label
-     * being dropped is the only remaining one; in this case, the lowerBound
-     * should be null
+     * @param onlyLabel true if this is the special case where the label being
+     * dropped is the only remaining one; in this case, the lowerBound should be
+     * null
      * @param usePreviewRefDelete whether to use the repository's preview
      * refDelete feature or just delete the objects
      */
@@ -1887,15 +1904,14 @@ public abstract class FarragoCatalogUtil
         throws Exception
     {
         EnkiMDRepository mdrRepos = repos.getEnkiMdrRepos();
-        
+
         for (ParentType parent : parentList) {
-            // We make a copy of the actual list to avoid modifying the 
+            // We make a copy of the actual list to avoid modifying the
             // repository when this method is used as part of previewRefDelete
             List<RefObject> statsList =
                 new ArrayList<RefObject>(
                     (List<RefObject>) statsGetter.invoke(parent));
 
-            
             // Determine the indices of the stats that are within the bounds
             int lowerIdx = -1;
             int upperIdx = -1;
@@ -1906,17 +1922,17 @@ public abstract class FarragoCatalogUtil
                 Timestamp statsTimestamp;
                 if (timestampGetter != null) {
                     statsTimestamp =
-                        Timestamp.valueOf((String) timestampGetter.invoke(
-                            stats));
+                        Timestamp.valueOf(
+                            (String) timestampGetter.invoke(
+                                stats));
                 } else {
-                    assert(stats instanceof FemRowCountStatistics);
+                    assert (stats instanceof FemRowCountStatistics);
                     statsTimestamp =
                         getMaxTimestamp(
                             (FemAbstractColumnSet) parent,
                             (FemRowCountStatistics) stats);
                 }
-                if (!timestampInRange(lowerBound, upperBound, statsTimestamp))
-                {
+                if (!timestampInRange(lowerBound, upperBound, statsTimestamp)) {
                     // Stats are ordered so if we're out of range and have
                     // already found an entry matching the lower bound,
                     // then we've exceeded the upper bound.
@@ -1933,17 +1949,17 @@ public abstract class FarragoCatalogUtil
                 }
                 i++;
             }
-            
+
             // We can only remove stats within the range if there 2 of them,
             // since we can't remove the newest one in the range.  Note that
             // because stats are removed as labels are dropped/replaced,
             // and there should never be more than one set of stats associated
             // with each label, the located range should never consist of more
             // than 2 sets of stats.
-            if (lowerIdx >= 0) {            
-                assert(upperIdx - lowerIdx <= 1);                
+            if (lowerIdx >= 0) {
+                assert ((upperIdx - lowerIdx) <= 1);
                 if (onlyLabel) {
-                    assert(lowerBound == null);
+                    assert (lowerBound == null);
                     if (statsList.size() >= 2) {
                         // For the special case where we're dropping the only
                         // label, there is a stat associated with that
@@ -1954,16 +1970,17 @@ public abstract class FarragoCatalogUtil
                         // upperIdx, we don't meet the criteria of having 2
                         // stats within the range.  So, bump up upperIdx so we
                         // can force the one stat to be dropped.
-                        assert(lowerIdx == upperIdx);
+                        assert (lowerIdx == upperIdx);
                         upperIdx++;
                     }
                 }
-                if (upperIdx - lowerIdx > 0) {
+                if ((upperIdx - lowerIdx) > 0) {
                     ListIterator<RefObject> listIter =
                         statsList.listIterator(lowerIdx);
                     i = lowerIdx;
+
                     // Remove all but the newest stat in the range
-                    while (i < upperIdx && listIter.hasNext()) {
+                    while ((i < upperIdx) && listIter.hasNext()) {
                         RefObject stats = listIter.next();
                         listIter.remove();
                         if (usePreviewRefDelete) {
@@ -1977,17 +1994,17 @@ public abstract class FarragoCatalogUtil
             }
         }
     }
-    
+
     /**
-     * Determines if a specified timestamp is within 2 bounds.  The bounds
-     * are non-inclusive.
-     * 
+     * Determines if a specified timestamp is within 2 bounds. The bounds are
+     * non-inclusive.
+     *
      * @param lowerBound the lower bound; if null, then there is no lower bound
      * @param upperBound the upper bound; if null, then there is no upper bound
-     * @param timestamp the timestamp; if null, the timestamp represents
-     * a very old timestamp and therefore only qualifies if there is no
-     * explicit lower bound
-     * 
+     * @param timestamp the timestamp; if null, the timestamp represents a very
+     * old timestamp and therefore only qualifies if there is no explicit lower
+     * bound
+     *
      * @return true if the timestamp is within bounds
      */
     private static boolean timestampInRange(
@@ -2002,21 +2019,21 @@ public abstract class FarragoCatalogUtil
                 return false;
             }
         }
-        if (lowerBound == null || timestamp.compareTo(lowerBound) > 0) {
-            if (upperBound == null || timestamp.compareTo(upperBound) < 0) {
+        if ((lowerBound == null) || (timestamp.compareTo(lowerBound) > 0)) {
+            if ((upperBound == null) || (timestamp.compareTo(upperBound) < 0)) {
                 return true;
             }
         }
         return false;
     }
-    
+
     /**
-     * Retrieves current backup data stored in the catalog.  Information
-     * on the full backup, if it exists, is always returned first, followed
-     * by information on the last backup.
-     * 
+     * Retrieves current backup data stored in the catalog. Information on the
+     * full backup, if it exists, is always returned first, followed by
+     * information on the last backup.
+     *
      * @param repos repository
-     * 
+     *
      * @return list containing current backup data
      */
     public static List<BackupData> getCurrentBackupData(FarragoRepos repos)
@@ -2024,10 +2041,10 @@ public abstract class FarragoCatalogUtil
         List<BackupData> retList = new ArrayList<BackupData>();
         Collection<FemSystemBackup> backups =
             repos.allOfType(FemSystemBackup.class);
-        assert(backups.size() == 0 || backups.size() == 2);
-        
+        assert ((backups.size() == 0) || (backups.size() == 2));
+
         for (FemSystemBackup backup : backups) {
-            assert(backup.getStatus() == BackupStatusTypeEnum.COMPLETED);
+            assert (backup.getStatus() == BackupStatusTypeEnum.COMPLETED);
             BackupData backupData =
                 new BackupData(
                     backup.getType(),
@@ -2039,14 +2056,14 @@ public abstract class FarragoCatalogUtil
                 retList.add(backupData);
             }
         }
-        
+
         return retList;
     }
-    
+
     /**
-     * Adds new records to the system backup catalog corresponding to
-     * a pending backup.
-     * 
+     * Adds new records to the system backup catalog corresponding to a pending
+     * backup.
+     *
      * @param repos repository
      * @param type type of backup
      * @param csn commit sequence number corresponding to the backup
@@ -2073,15 +2090,15 @@ public abstract class FarragoCatalogUtil
             }
         }
     }
-    
+
     /**
-     * Updates the system backup catalog data depending on whether the
-     * last pending backup (if any) succeeded or failed.
-     * 
+     * Updates the system backup catalog data depending on whether the last
+     * pending backup (if any) succeeded or failed.
+     *
      * @param repos repository
      * @param backupSucceeded true if the last backup succeeded
-     * @param setEndTimestamp if true, record the current timestamp as
-     * the ending timestamp when updating pending data to completed
+     * @param setEndTimestamp if true, record the current timestamp as the
+     * ending timestamp when updating pending data to completed
      */
     public static void updatePendingBackupData(
         FarragoRepos repos,
@@ -2090,7 +2107,7 @@ public abstract class FarragoCatalogUtil
     {
         Collection<FemSystemBackup> backups =
             repos.allOfType(FemSystemBackup.class);
-        
+
         // First see which pending records exist
         boolean pendingFull = false;
         boolean pendingLast = false;
@@ -2099,28 +2116,30 @@ public abstract class FarragoCatalogUtil
                 if (backup.getType() == BackupTypeEnum.LAST) {
                     pendingLast = true;
                 } else {
-                    assert(backup.getType() == BackupTypeEnum.FULL);
+                    assert (backup.getType() == BackupTypeEnum.FULL);
                     pendingFull = true;
                 }
             }
         }
+
         // If no pending records, there's no work to do
         if (!pendingFull && !pendingLast) {
             return;
         }
         if (pendingFull) {
-            assert(pendingLast);
+            assert (pendingLast);
         }
-        
+
         // If the last backup succeeded, delete the completed records
         // corresponding to the pending records, then update the pending
         // records to completed.  Otherwise, just delete the pending records.
         if (backupSucceeded) {
             for (FemSystemBackup backup : backups) {
-                if (backup.getStatus() == BackupStatusTypeEnum.COMPLETED &&
-                    ((pendingFull && backup.getType() == BackupTypeEnum.FULL)
-                    || (pendingLast &&
-                        backup.getType() == BackupTypeEnum.LAST)))
+                if ((backup.getStatus() == BackupStatusTypeEnum.COMPLETED)
+                    && ((pendingFull
+                            && (backup.getType() == BackupTypeEnum.FULL))
+                        || (pendingLast
+                            && (backup.getType() == BackupTypeEnum.LAST))))
                 {
                     backup.refDelete();
                 }
@@ -2140,17 +2159,9 @@ public abstract class FarragoCatalogUtil
             }
         }
     }
-    
-    /**
-     * Enumeration of the different type of row count statistics
-     */
-    private enum RowCountStatType
-    {
-        ROW_COUNT,
-        DELETED_ROW_COUNT,
-        ANALYZE_ROW_COUNT
-    }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Helper class used to represent a specific type of row count statistic
      */
@@ -2158,24 +2169,24 @@ public abstract class FarragoCatalogUtil
     {
         RowCountStatType type;
         long count;
-        
+
         RowCountStat(RowCountStatType type, long count)
         {
             this.type = type;
             this.count = count;
         }
     }
-    
+
     /**
-     * Helper class used to represent backup information stored in the
-     * backup catalog.
+     * Helper class used to represent backup information stored in the backup
+     * catalog.
      */
     public static class BackupData
     {
         public BackupType type;
         public long csn;
         public String startTimestamp;
-        
+
         BackupData(BackupType type, long csn, String startTimestamp)
         {
             this.type = type;

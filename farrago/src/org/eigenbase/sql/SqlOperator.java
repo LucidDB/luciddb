@@ -260,6 +260,7 @@ public abstract class SqlOperator
      *
      * @param pos Parser position
      * @param operands List of arguments
+     *
      * @return call to this operator
      */
     public final SqlCall createCall(
@@ -274,15 +275,18 @@ public abstract class SqlOperator
      * {@link SqlNodeList}.
      *
      * <p>The position of the resulting call inferred from the SqlNodeList.
-     * 
+     *
      * @param nodeList List of arguments
+     *
      * @return call to this operator
      */
     public final SqlCall createCall(
         SqlNodeList nodeList)
     {
         return createCall(
-            null, nodeList.getParserPosition(), nodeList.toArray());
+            null,
+            nodeList.getParserPosition(),
+            nodeList.toArray());
     }
 
     /**

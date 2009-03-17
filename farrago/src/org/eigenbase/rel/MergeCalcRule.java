@@ -22,7 +22,7 @@
 */
 package org.eigenbase.rel;
 
-import java.util.Collections;
+import java.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;

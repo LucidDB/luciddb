@@ -21,9 +21,9 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**

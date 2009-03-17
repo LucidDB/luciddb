@@ -181,6 +181,7 @@ public class DdlImportForeignSchemaStmt
         if (roster == null) {
             return null;
         }
+
         // keep roster as a sorted set so can report any missing
         // entries in a deterministic order (esp. for unit tests)
         Set<String> set = new TreeSet<String>();

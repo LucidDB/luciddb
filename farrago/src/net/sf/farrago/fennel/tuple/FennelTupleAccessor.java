@@ -153,8 +153,8 @@ public final class FennelTupleAccessor
 
     /**
      * Permutation in which attributes should be marshalled; null when
-     * !hasAlignedVar, in which case attributes should be marshalled
-     * in logical order.
+     * !hasAlignedVar, in which case attributes should be marshalled in logical
+     * order.
      */
     private List marshalOrder;
 
@@ -506,6 +506,7 @@ public final class FennelTupleAccessor
         // variable-width fields
         if (hasAlignedVar) {
             marshalOrder = new ArrayList();
+
             // add all of the fixed-width attributes
             for (int i = 0; i < attrAccessors.size(); ++i) {
                 FennelAttributeAccessor accessor =
@@ -514,9 +515,10 @@ public final class FennelTupleAccessor
                     marshalOrder.add(new Integer(i));
                 }
             }
+
             // then all of the variable-width attributes, in the correct order
             marshalOrder.addAll(varWidthAccessors);
-            assert(marshalOrder.size() == attrAccessors.size());
+            assert (marshalOrder.size() == attrAccessors.size());
         }
     }
 
@@ -751,8 +753,8 @@ public final class FennelTupleAccessor
      * Marshalls a tuple's values into a buffer.
      *
      * @param tuple the tuple to be marshalled
-     * @param tupleBuf the buffer into which to marshal
-     * (note that this accessor's own current tuple buffer remains unchanged)
+     * @param tupleBuf the buffer into which to marshal (note that this
+     * accessor's own current tuple buffer remains unchanged)
      */
     public void marshal(FennelTupleData tuple, ByteBuffer tupleBuf)
     {

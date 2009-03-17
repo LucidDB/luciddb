@@ -23,7 +23,7 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.*;
 
 
 /**

@@ -62,20 +62,20 @@ class FennelTempIdxSearchRel
      *
      * @param sourceRel underlying RelNode that will be used to populate the
      * temporary index to be searched
-     * @param indexKeys the projection from the sourceRel corresponding to
-     * the temporary index keys
-     * @param child input which produces the search directives and specifies
-     * the types of the search keys
-     * @param inputKeyProj the projection of input fields corresponding to
-     * the search keys
+     * @param indexKeys the projection from the sourceRel corresponding to the
+     * temporary index keys
+     * @param child input which produces the search directives and specifies the
+     * types of the search keys
+     * @param inputKeyProj the projection of input fields corresponding to the
+     * search keys
      * @param inputDirectiveProj the projection of input fields specifying the
      * search directives
-     * @param searchKeyParamIds dynamic parameter ids corresponding to
-     * the search keys
+     * @param searchKeyParamIds dynamic parameter ids corresponding to the
+     * search keys
      * @param keyOffsets offset within the search key that each dynamic
      * parameter corresponds to
-     * @param rootPageIdParamId dynamic parameter id that will be used to
-     * pass along the rootPageId of the temporary index to be searched
+     * @param rootPageIdParamId dynamic parameter id that will be used to pass
+     * along the rootPageId of the temporary index to be searched
      */
     public FennelTempIdxSearchRel(
         RelNode sourceRel,
@@ -190,6 +190,7 @@ class FennelTempIdxSearchRel
                 searchStream,
                 FennelDynamicParamId.StreamType.CONSUMER).intValue());
         searchStream.setRootPageId(-1);
+
         // Even though this stream reads data, it needs to be able to see
         // the data that was created by the same stream graph.
         searchStream.setReadOnlyCommittedData(false);

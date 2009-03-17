@@ -22,13 +22,15 @@
 */
 package net.sf.farrago.jdbc;
 
+import java.io.*;
+
+import java.lang.reflect.*;
+
 import java.sql.*;
 
-import java.util.logging.*;
-import java.util.regex.Pattern;
 import java.util.*;
-import java.lang.reflect.*;
-import java.io.*;
+import java.util.logging.*;
+import java.util.regex.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
@@ -52,12 +54,13 @@ public class FarragoJdbcUtil
     // or unintentionally) by attempting to serialize exceptions
     // thrown via Farrago JDBC.
 
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * Contains the serialization checker for each thread.
      */
-    private static final ThreadLocal/*<SerializationChecker>*/ threadChecker =
-        new ThreadLocal/*<SerializationChecker>*/()
-        {
+    private static final ThreadLocal /*<SerializationChecker>*/ threadChecker =
+        new ThreadLocal /*<SerializationChecker>*/() {
             protected Object /*SerializationChecker*/ initialValue()
             {
                 return new SerializationChecker();
@@ -88,8 +91,9 @@ public class FarragoJdbcUtil
         if (ex instanceof EigenbaseException) {
             String stmt = null;
             if (ex instanceof EigenbaseContextException) {
-                stmt = ((EigenbaseContextException)ex).getOriginalStatement();
+                stmt = ((EigenbaseContextException) ex).getOriginalStatement();
             }
+
             // TODO:  map for SQLState
             if (cause instanceof EigenbaseValidatorException) {
                 // We're looking at
@@ -98,6 +102,7 @@ public class FarragoJdbcUtil
                 // so the message should be
                 //   "Validation error at line 5, column 10: Bad column 'FOO'"
                 final String causeMessage = cause.getMessage();
+
                 //noinspection ThrowableInstanceNeverThrown
                 sqlExcn =
                     new FarragoSqlException(
@@ -179,7 +184,8 @@ public class FarragoJdbcUtil
      * statement that MAY be in the exception stack.
      *
      * @param ex top of exception stack
-     * @return Original input text that generated the error or  <code>null</code>
+     *
+     * @return Original input text that generated the error or <code>null</code>
      */
     public static String findInputString(final Throwable ex)
     {
@@ -191,10 +197,10 @@ public class FarragoJdbcUtil
             // EigenbaseContextException and FarragoSqlException both have a
             // getOriginalStatement() method.
             Method meth =
-                clazz.getMethod("getOriginalStatement", (Class[]) null);
-            Object valObj = meth.invoke(ex, (Object[]) null);
+                clazz.getMethod("getOriginalStatement", (Class []) null);
+            Object valObj = meth.invoke(ex, (Object []) null);
             if (valObj != null) {
-                return (String)valObj;
+                return (String) valObj;
             }
         } catch (IllegalAccessException e) {
             //intentionally empty
@@ -214,10 +220,10 @@ public class FarragoJdbcUtil
         // will try "next" first.
         try {
             // SQLException has a method getNextException()
-            Method meth = clazz.getMethod("getNextException", (Class[]) null);
-            Object valObj = meth.invoke(ex, (Object[]) null);
-            if ((valObj != null) && ((Throwable)valObj != ex)) {
-                String query = findInputString((Throwable)valObj);
+            Method meth = clazz.getMethod("getNextException", (Class []) null);
+            Object valObj = meth.invoke(ex, (Object []) null);
+            if ((valObj != null) && ((Throwable) valObj != ex)) {
+                String query = findInputString((Throwable) valObj);
                 if (query != null) {
                     return query;
                 }
@@ -234,17 +240,17 @@ public class FarragoJdbcUtil
         try {
             // FarragoSqlException has a method getOriginalThrowable().
             Method meth =
-                clazz.getMethod("getOriginalThrowable", (Class[]) null);
-            Object valObj = meth.invoke(ex, (Object[]) null);
+                clazz.getMethod("getOriginalThrowable", (Class []) null);
+            Object valObj = meth.invoke(ex, (Object []) null);
             if ((valObj != null) && ((Throwable) valObj != ex)) {
-                return findInputString((Throwable)valObj);
+                return findInputString((Throwable) valObj);
             }
         } catch (IllegalAccessException e) {
-             // intentionally empty
+            // intentionally empty
         } catch (NoSuchMethodException e) {
-             // intentionally empty
+            // intentionally empty
         } catch (InvocationTargetException e) {
-             // intentionally empty
+            // intentionally empty
         }
         return null;
     }
@@ -258,19 +264,18 @@ public class FarragoJdbcUtil
      */
     private static class SerializationChecker
     {
-       /**
-         * What classes should not be serialized.
-         * In particular:
-         *   org.eigenbase.sql.parser.SqlParseException
-         *   org.eigenbase.sql.parser.SqlParserPos
-         *   org.eigenbase.sql.SqlNode (and subclasses)
-         *   net.sf.farrago.parser.impl.Token and ParseException
-         *   or ...parser.impl.Token and ParseException in Aspen
+        /**
+         * What classes should not be serialized. In particular:
+         * org.eigenbase.sql.parser.SqlParseException
+         * org.eigenbase.sql.parser.SqlParserPos org.eigenbase.sql.SqlNode (and
+         * subclasses) net.sf.farrago.parser.impl.Token and ParseException or
+         * ...parser.impl.Token and ParseException in Aspen
          */
-        private final static Pattern NON_SERIALIAZABLE_CLASSES = Pattern.compile(
-            "org\\.eigenbase\\.sql\\..*" + '|' +
-            ".*\\.parser\\.impl\\.[^.]*");
-        private final Set/*<Object>*/ active = new HashSet/*<Object>*/();
+        private final static Pattern NON_SERIALIAZABLE_CLASSES =
+            Pattern.compile(
+                "org\\.eigenbase\\.sql\\..*" + '|'
+                + ".*\\.parser\\.impl\\.[^.]*");
+        private final Set /*<Object>*/ active = new HashSet /*<Object>*/();
 
         /**
          * Whether the client has the RMI class loader enabled. If true,
@@ -281,10 +286,11 @@ public class FarragoJdbcUtil
 
         /**
          * Converts a {@code Throwable} into a similar exception that is
-         * serializable. The original object, or at least its cause, is
-         * used if possible; and the new throwable has the same stack trace.
+         * serializable. The original object, or at least its cause, is used if
+         * possible; and the new throwable has the same stack trace.
          *
          * @param throwable Exception
+         *
          * @return Exception that is serializable and of the same general type
          */
         Throwable makeSerializable(Throwable throwable)
@@ -326,6 +332,7 @@ public class FarragoJdbcUtil
          * Returns whether an object is serializable.
          *
          * @param o Object
+         *
          * @return Whether object is serializable
          */
         boolean isSerializable(Object o)
@@ -353,23 +360,25 @@ public class FarragoJdbcUtil
                     // We know there are problems serializing
                     // EigenbaseParserException: specifically, the cause of a
                     // SqlParseException is usually a ParseException generated
-                    // by JavaCC, and this is not serializable because it contains
+                    // by JavaCC, and this is not serializable because it
+                    // contains
                     // Token.
                 } else if (o instanceof Serializable) {
                     // If you get this error, you should fix the class and make
-                    // sure all of its fields are types that extend Serializable.
-                    // Then as long as the instances of those types are being
-                    // honest, everything should be hunky dory.
+                    // sure all of its fields are types that extend
+                    // Serializable. Then as long as the instances of those
+                    // types are being honest, everything should be hunky dory.
                     System.out.println(
                         "Warning: Object [" + o + "] of class " + o.getClass()
-                            + " implements Serializable but is not serializable. "
-                            + "Error is as follows:");
+                        + " implements Serializable but is not serializable. "
+                        + "Error is as follows:");
                     e.printStackTrace(System.out);
                 }
                 return false;
             } catch (IOException e) {
                 throw new RuntimeException(
-                    "Error while testing serializability", e);
+                    "Error while testing serializability",
+                    e);
             } finally {
                 active.remove(o);
             }
@@ -409,7 +418,7 @@ public class FarragoJdbcUtil
          * Creates an exception with a message and a record of the undiluted
          * original exception.
          *
-         * @param reason   A description of the exception
+         * @param reason A description of the exception
          * @param original Original exception
          * @param originalStatement Original statement
          */
@@ -460,8 +469,8 @@ public class FarragoJdbcUtil
                 (SerializationChecker) threadChecker.get();
 
             // Replace original if it is not serializable.
-            if (original != null
-                && original != this
+            if ((original != null)
+                && (original != this)
                 && !checker.isSerializable(original))
             {
                 needNewException = true;
@@ -473,8 +482,8 @@ public class FarragoJdbcUtil
             // Replace next if it is not serializable.
             final SQLException next = getNextException();
             SQLException serializableNext;
-            if (next != null
-                && next != this
+            if ((next != null)
+                && (next != this)
                 && !checker.isSerializable(next))
             {
                 needNewException = true;
@@ -486,8 +495,8 @@ public class FarragoJdbcUtil
 
             final Throwable cause = getCause();
             Throwable serializableCause;
-            if (cause != null
-                && cause != this
+            if ((cause != null)
+                && (cause != this)
                 && !checker.isSerializable(cause))
             {
                 needNewException = true;

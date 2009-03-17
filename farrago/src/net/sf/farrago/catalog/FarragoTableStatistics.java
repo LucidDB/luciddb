@@ -22,6 +22,7 @@
 package net.sf.farrago.catalog;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.cwm.core.*;
@@ -52,10 +53,10 @@ public class FarragoTableStatistics
     /**
      * Initialize an object for retrieving table statistics
      *
-     * @deprecated
-     * 
      * @param repos the repository containing stats
      * @param table the table for which to retrieve stats
+     *
+     * @deprecated
      */
     public FarragoTableStatistics(
         FarragoRepos repos,
@@ -63,10 +64,10 @@ public class FarragoTableStatistics
     {
         this(repos, table, null);
     }
-    
+
     /**
-     * Initialize an object for retrieving table statistics, optionally
-     * based on a label setting.
+     * Initialize an object for retrieving table statistics, optionally based on
+     * a label setting.
      *
      * @param repos the repository containing stats
      * @param table the table for which to retrieve stats
@@ -88,7 +89,7 @@ public class FarragoTableStatistics
     // implement RelStatSource
     public Double getRowCount()
     {
-        Long[] rowCounts = new Long[2];
+        Long [] rowCounts = new Long[2];
         FarragoCatalogUtil.getRowCounts(
             table,
             labelTimestamp,

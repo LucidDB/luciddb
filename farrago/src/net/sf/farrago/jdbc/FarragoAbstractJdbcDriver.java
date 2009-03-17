@@ -127,9 +127,10 @@ public abstract class FarragoAbstractJdbcDriver
 
     /**
      * Indicates whether driver accepts URLs with host:port specification.
-     * Returns <code>false</code> by default.
-     * Subclassing drivers should override and return true to enable
-     * FarragoTestCase to create URLs with host:port specifications.
+     * Returns <code>false</code> by default. Subclassing drivers should
+     * override and return true to enable FarragoTestCase to create URLs with
+     * host:port specifications.
+     *
      * @return false
      */
     public boolean acceptsUrlWithHostPort()

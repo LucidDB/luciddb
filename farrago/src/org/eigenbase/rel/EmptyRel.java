@@ -25,22 +25,23 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 
+
 /**
  * <code>EmptyRel</code> represents a relational expression with zero rows.
  *
- * <p>EmptyRel can not be implemented, but serves as a token for rules to
- * match so that empty sections of queries can be eliminated.
+ * <p>EmptyRel can not be implemented, but serves as a token for rules to match
+ * so that empty sections of queries can be eliminated.
  *
  * <p>Rules:
+ *
  * <ul>
  * <li>Created by {@link net.sf.farrago.query.FarragoReduceValuesRule}</li>
  * <li>Triggers {@link org.eigenbase.rel.rules.RemoveEmptyRule}</li>
  * </ul>
  *
- * @see org.eigenbase.rel.ValuesRel
- *
  * @author jhyde
  * @version $Id$
+ * @see org.eigenbase.rel.ValuesRel
  */
 public class EmptyRel
     extends AbstractRelNode
@@ -51,9 +52,9 @@ public class EmptyRel
      * Creates a new EmptyRel.
      *
      * @param cluster Cluster
-     * @param rowType row type for tuples which would be produced by this rel
-     * if it actually produced any, but it doesn't (see,
-     * philosophy is good for something after all!)
+     * @param rowType row type for tuples which would be produced by this rel if
+     * it actually produced any, but it doesn't (see, philosophy is good for
+     * something after all!)
      */
     public EmptyRel(
         RelOptCluster cluster,
@@ -64,6 +65,8 @@ public class EmptyRel
             new RelTraitSet(CallingConvention.NONE));
         this.rowType = rowType;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override Object
     public EmptyRel clone()

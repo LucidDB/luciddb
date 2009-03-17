@@ -258,7 +258,7 @@ public abstract class OJPreparingStmt
 
         SqlToRelConverter sqlToRelConverter =
             getSqlToRelConverter(validator, connection);
-        
+
         SqlExplain sqlExplain = null;
         if (sqlQuery.isA(SqlKind.Explain)) {
             // dig out the underlying SQL statement

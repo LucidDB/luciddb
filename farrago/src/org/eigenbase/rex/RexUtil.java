@@ -675,9 +675,9 @@ public class RexUtil
      * Creates a record type with specified field names.
      *
      * <p>The array of field names may be null, or any of the names within it
-     * can be null. We recommend using explicit names where possible, because
-     * it makes it much easier to figure out the intent of fields when looking
-     * at planner output.
+     * can be null. We recommend using explicit names where possible, because it
+     * makes it much easier to figure out the intent of fields when looking at
+     * planner output.
      */
     public static RelDataType createStructType(
         RelDataTypeFactory typeFactory,

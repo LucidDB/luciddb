@@ -66,7 +66,7 @@ public class ArrayQueue<E>
     /**
      * The queue contents. Treated as a circular buffer.
      */
-    private E[] queue;
+    private E [] queue;
 
     /**
      * The current position of the head element of the queue.
@@ -91,7 +91,7 @@ public class ArrayQueue<E>
             throw new IllegalArgumentException();
         }
         this.capacity = capacity;
-        this.queue = (E[]) new Object[capacity];
+        this.queue = (E []) new Object[capacity];
         this.start = 0;
         this.end = 0;
     }
@@ -235,7 +235,7 @@ public class ArrayQueue<E>
      */
     public Iterator<E> iterator()
     {
-        E[] contents = (E[]) new Object[size()];
+        E [] contents = (E []) new Object[size()];
 
         copyQueueToArray(contents);
 
@@ -274,7 +274,7 @@ public class ArrayQueue<E>
         int size = size();
 
         int largerCapacity = capacity * 2;
-        E[] largerQueue = (E[]) new Object[largerCapacity];
+        E [] largerQueue = (E []) new Object[largerCapacity];
         copyQueueToArray(largerQueue);
 
         queue = largerQueue;
@@ -331,7 +331,7 @@ public class ArrayQueue<E>
      * otherQueue.length</code> must be greater than or equal to {@link
      * #size()}.
      */
-    private void copyQueueToArray(E[] otherQueue)
+    private void copyQueueToArray(E [] otherQueue)
     {
         assert (otherQueue.length >= size());
 

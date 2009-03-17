@@ -120,19 +120,19 @@ public class LucidDbRuntimeContext
     {
         return quota.errorCount;
     }
-    
+
     public int getTotalWarningCount()
     {
         return quota.warningCount;
     }
-    
+
     // override FarragoRuntimeContext
     public synchronized void closeAllocation()
     {
         if (isClosed) {
             return;
         }
-        
+
         // Print a summary message if there were any errors or warnings
         if ((quota.errorCount > 0) || (quota.warningCount > 0)) {
             // NOTE jvs 9-Jan-2007: Intentionally avoid conversion to absolute

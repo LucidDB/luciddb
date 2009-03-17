@@ -22,9 +22,9 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.EigenbaseException;
-import org.eigenbase.sql.validate.SqlValidatorException;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**

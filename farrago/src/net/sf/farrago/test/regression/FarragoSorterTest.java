@@ -148,18 +148,18 @@ public class FarragoSorterTest
             // compute external count dynamically based on cache size
             FemFennelConfig fennelConfig =
                 repos.getCurrentConfig().getFennelConfig();
-    
+
             // first, compute number of bytes in cache
             long nBytes = fennelConfig.getCachePageSize();
             nBytes *= fennelConfig.getCachePagesInit();
-    
+
             // next, scale up to desired sort size
             nBytes *= EXTERNAL_SCALE_FACTOR;
-    
-            // finally, convert from bytes to records, assuming 16 bytes per record
+
+            // finally, convert from bytes to records, assuming 16 bytes per
+            // record
             externalCount = nBytes / 16;
-        }
-        finally {
+        } finally {
             txn.commit();
         }
     }

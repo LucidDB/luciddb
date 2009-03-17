@@ -747,7 +747,8 @@ public abstract class SqlUtil
         Throwable e,
         String inputText)
     {
-        EigenbaseContextException ex = (EigenbaseContextException)newContextException(pos, e);
+        EigenbaseContextException ex =
+            (EigenbaseContextException) newContextException(pos, e);
         ex.setOriginalStatement(inputText);
         return ex;
     }
@@ -838,8 +839,8 @@ public abstract class SqlUtil
     }
 
     /**
-     * Translates a character set name from a SQL-level
-     * name into a Java-level name.
+     * Translates a character set name from a SQL-level name into a Java-level
+     * name.
      *
      * @param name SQL-level name
      *

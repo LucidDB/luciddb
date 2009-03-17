@@ -21,7 +21,7 @@
 */
 package org.eigenbase.sql.validate;
 
-import java.util.List;
+import java.util.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -47,7 +47,6 @@ public interface SqlValidatorWithHints
      * after {@link #validate(org.eigenbase.sql.SqlNode)}.
      *
      * @param topNode top of expression tree in which to lookup completion hints
-     *
      * @param pos indicates the position in the sql statement we want to get
      * completion hints for. For example, "select a.ename, b.deptno from
      * sales.emp a join sales.dept b "on a.deptno=b.deptno where empno=1";

@@ -392,11 +392,11 @@ class MedMdrJoinRelImplementor
             joinRel.getRightReference().getReferencedEnd().getType();
         leftKeyRefClass =
             (RefClass) rightRel.getRefObjectFromModelElement(leftKeyClassifier);
-        leftKeyClass = 
+        leftKeyClass =
             JmiObjUtil.getClassForRefClass(
                 implementor.getRepos().getMdrRepos(),
                 leftKeyRefClass);
-        
+
         boolean useAssocReflection = rightRel.useReflection;
 
         if (leftKeyClass == RefObject.class) {

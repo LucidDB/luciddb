@@ -99,7 +99,7 @@ public class LoptMetadataTest
     private RexBuilder rexBuilder;
 
     private FarragoReposTxnContext txn;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -190,11 +190,10 @@ public class LoptMetadataTest
                 990,
                 0,
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-        }
-        finally {
+        } finally {
             session.getRepos().endReposSession();
         }
-        
+
         stmt.executeUpdate(
             "create table DEPTS (deptno int, dname varchar(256))");
         session.getRepos().beginReposSession();
@@ -227,8 +226,7 @@ public class LoptMetadataTest
                 150,
                 0,
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-        }
-        finally {
+        } finally {
             session.getRepos().endReposSession();
         }
 
@@ -257,28 +255,29 @@ public class LoptMetadataTest
             + "   null, null, null)");
         stmt.executeUpdate(
             "analyze table WINES compute statistics for all columns");
-        
+
         localSetUp();
     }
 
-    public void tearDown() throws Exception
+    public void tearDown()
+        throws Exception
     {
         localTearDown();
         super.tearDown();
     }
-    
+
     private void localSetUp()
     {
         txn = repos.newTxnContext(true);
         txn.beginWriteTxn();
     }
-    
+
     private void localTearDown()
     {
         txn.commit();
         txn = null;
     }
-    
+
     protected void checkAbstract(
         FarragoPreparingStmt stmt,
         RelNode relBefore)
@@ -512,7 +511,7 @@ public class LoptMetadataTest
             Math.sqrt(tableRowCount * selectedRowCount),
             cost);
     }
-    
+
     public void testCumulativeCostRowScanWithInputs()
         throws Exception
     {
@@ -837,7 +836,7 @@ public class LoptMetadataTest
 
         // TODO: in and not in operators, but does IN work?
     }
-    
+
     public void testRowCountRowScanWithInputs()
         throws Exception
     {
@@ -904,7 +903,7 @@ public class LoptMetadataTest
             "select * from t1, t2 where t1.a = t2.a and t2.b = 1",
             1000 * DEFAULT_SARGABLE_SELECTIVITY);
     }
-    
+
     public void testRowCountJoinBigStats()
         throws Exception
     {
@@ -914,7 +913,11 @@ public class LoptMetadataTest
 
         stmt.executeUpdate("create table b(a int)");
         FarragoStatsUtil.setTableRowCount(
-            session, "", "", "B", Long.MAX_VALUE);
+            session,
+            "",
+            "",
+            "B",
+            Long.MAX_VALUE);
         FarragoStatsUtil.createColumnHistogram(
             session,
             "",
@@ -932,35 +935,34 @@ public class LoptMetadataTest
         // should exceed the max value of a double so Double.MAX_VALUE
         // should be returned.
         checkRowCountJoin(
-            "select * from b b1, b b2, b b3, b b4, b b5, b b6, b b7, b b8, "+
-            "b b9, b b10, b b11, b b12, b b13, b b14, b b15, b b16, b b17, " +
-            "b b18, b b19, b b20 " +
-            "where b1.a = b2.a and b2.a = b3.a and b3.a = b4.a and " +
-            "b4.a = b5.a and b5.a = b6.a and b6.a = b7.a and b7.a = b8.a and " +
-            "b8.a = b9.a and b9.a = b10.a and b10.a = b11.a and " +
-            "b11.a = b12.a and b12.a = b13.a and b13.a = b14.a and " +
-            "b14.a = b15.a and b15.a = b16.a and b16.a = b17.a and " +
-            "b17.a = b18.a and b18.a = b19.a and b19.a = b20.a",
+            "select * from b b1, b b2, b b3, b b4, b b5, b b6, b b7, b b8, "
+            + "b b9, b b10, b b11, b b12, b b13, b b14, b b15, b b16, b b17, "
+            + "b b18, b b19, b b20 "
+            + "where b1.a = b2.a and b2.a = b3.a and b3.a = b4.a and "
+            + "b4.a = b5.a and b5.a = b6.a and b6.a = b7.a and b7.a = b8.a and "
+            + "b8.a = b9.a and b9.a = b10.a and b10.a = b11.a and "
+            + "b11.a = b12.a and b12.a = b13.a and b13.a = b14.a and "
+            + "b14.a = b15.a and b15.a = b16.a and b16.a = b17.a and "
+            + "b17.a = b18.a and b18.a = b19.a and b19.a = b20.a",
             Double.MAX_VALUE);
     }
-    
+
     public void testRowCountLeftOuterJoinNoColStats()
         throws Exception
     {
         checkRowCountJoin(
-            "select * from emps e left outer join depts d "+
-            "on e.deptno = d.deptno and d.dname = 'foo'",
+            "select * from emps e left outer join depts d "
+            + "on e.deptno = d.deptno and d.dname = 'foo'",
             (double) COLSTORE_EMPS_ROWCOUNT);
     }
-    
+
     public void testRowCountRightOuterJoinNoColStats()
         throws Exception
     {
         checkRowCountJoin(
-            "select * from depts d right outer join emps e "+
-            "on e.deptno = d.deptno and d.dname = 'foo'",
+            "select * from depts d right outer join emps e "
+            + "on e.deptno = d.deptno and d.dname = 'foo'",
             (double) COLSTORE_EMPS_ROWCOUNT);
-        
     }
 
     public void testRowCountJoinNonEquiJoin()
@@ -1025,7 +1027,7 @@ public class LoptMetadataTest
         assertTrue(result != null);
         assertEquals(COLSTORE_EMPS_ROWCOUNT, result, EPSILON);
     }
-    
+
     public void testRowCountDistinctUnion()
         throws Exception
     {
@@ -1033,12 +1035,11 @@ public class LoptMetadataTest
         programBuilder.addRuleInstance(new UnionToDistinctRule());
         transformQuery(
             programBuilder.createProgram(),
-            "select * from " +
-            "(select name from emps union select dname from depts)");
+            "select * from "
+            + "(select name from emps union select dname from depts)");
 
         double expected = 90000 + 150;
-        Double result =
-            RelMetadataQuery.getRowCount(rootRel);
+        Double result = RelMetadataQuery.getRowCount(rootRel);
         assertEquals(
             expected,
             result.doubleValue(),
@@ -1442,7 +1443,7 @@ public class LoptMetadataTest
             assertTrue(boolResult.equals(true));
         }
     }
-    
+
     public void testUniqueRidColumn()
         throws Exception
     {
@@ -1456,7 +1457,7 @@ public class LoptMetadataTest
         Boolean result = RelMetadataQuery.areColumnsUnique(rootRel, key);
         assertTrue(result.equals(true));
     }
-    
+
     public void testNotUniqueIfRidAboveJoin()
         throws Exception
     {
@@ -1553,14 +1554,14 @@ public class LoptMetadataTest
             "select dname from "
             + "(select dname from depts union select name from emps)");
     }
-    
+
     public void testSimpleColumnOriginsJoin()
         throws Exception
     {
         checkNoSimpleColumnOrigin(
             "select e.name from emps e, depts d where e.deptno = d.deptno");
     }
-    
+
     public void testSimpleColumnOriginProjectedRowScan()
         throws Exception
     {

@@ -47,7 +47,7 @@ public class HepRuleCall
     HepRuleCall(
         RelOptPlanner planner,
         RelOptRuleOperand operand,
-        RelNode[] rels,
+        RelNode [] rels,
         Map<RelNode, List<RelNode>> nodeChildren)
     {
         super(planner, operand, rels, nodeChildren);

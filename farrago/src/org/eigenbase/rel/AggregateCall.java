@@ -21,27 +21,30 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlAggFunction;
-import org.eigenbase.util.IntList;
-
 import java.util.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Call to an aggregation function within an {@link AggregateRel}.
  *
  * @author jhyde
  * @version $Id$
-*/
+ */
 public class AggregateCall
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final Aggregation aggregation;
 
     /**
-     *  TODO jvs 24-Apr-2006:  make this array and its contents immutable
+     * TODO jvs 24-Apr-2006: make this array and its contents immutable
      *
-     * @deprecated todo: change all public uses to use {@link #getArgList},
-     * then make private
+     * @deprecated todo: change all public uses to use {@link #getArgList}, then
+     * make private
      */
     public final int [] args;
 
@@ -50,14 +53,16 @@ public class AggregateCall
     private final String name;
     private final List<Integer> argList;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates an AggregateCall.
      *
      * @param aggregation Aggregation
-     * @param distinct    Whether distinct
-     * @param argList     List of ordinals of arguments
-     * @param type        Result type
-     * @param name        Name
+     * @param distinct Whether distinct
+     * @param argList List of ordinals of arguments
+     * @param type Result type
+     * @param name Name
      */
     public AggregateCall(
         Aggregation aggregation,
@@ -72,6 +77,7 @@ public class AggregateCall
         assert argList != null;
         assert type != null;
         this.aggregation = aggregation;
+
         // Conversion from list to array to list is intentional. We want the
         // argList member to point to the same data as the args member.
         this.args = IntList.toArray(argList);
@@ -79,9 +85,11 @@ public class AggregateCall
         this.distinct = distinct;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Returns whether this AggregateCall is distinct, as in
-     * <code>COUNT(DISTINCT empno)</code>.
+     * Returns whether this AggregateCall is distinct, as in <code>
+     * COUNT(DISTINCT empno)</code>.
      *
      * @return whether distinct
      */
@@ -173,12 +181,12 @@ public class AggregateCall
     // override Object
     public int hashCode()
     {
-        return aggregation.hashCode()+argList.hashCode();
+        return aggregation.hashCode() + argList.hashCode();
     }
 
     /**
-     * Creates a binding of this call in the context of an {@link
-     * AggregateRel}, which can then be used to infer the return type.
+     * Creates a binding of this call in the context of an {@link AggregateRel},
+     * which can then be used to infer the return type.
      */
     public AggregateRelBase.AggCallBinding createBinding(
         AggregateRelBase aggregateRelBase)

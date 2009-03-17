@@ -77,7 +77,7 @@ public class SetopOperandTypeChecker
                     throw validator.newValidationError(
                         node,
                         EigenbaseResource.instance().ColumnCountMismatchInSetop
-                            .ex(
+                        .ex(
                             callBinding.getOperator().getName()));
                 } else {
                     return false;

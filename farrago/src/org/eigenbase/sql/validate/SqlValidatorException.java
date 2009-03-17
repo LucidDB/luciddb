@@ -51,6 +51,7 @@ public class SqlValidatorException
         Logger.getLogger("org.eigenbase.util.EigenbaseException");
 
     static final long serialVersionUID = -831683113957131387L;
+
     //~ Constructors -----------------------------------------------------------
 
     /**

@@ -21,7 +21,7 @@
 */
 package org.eigenbase.sql.validate;
 
-import java.util.List;
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -48,6 +48,7 @@ public interface SqlValidatorCatalogReader
      * Finds a table with the given name, possibly qualified.
      *
      * @param names Name of table
+     *
      * @return named table, or null if not found
      */
     SqlValidatorTable getTable(String [] names);
@@ -61,6 +62,7 @@ public interface SqlValidatorCatalogReader
      * factory is context-independent.
      *
      * @param typeName Name of type
+     *
      * @return named type, or null if not found
      */
     RelDataType getNamedType(SqlIdentifier typeName);

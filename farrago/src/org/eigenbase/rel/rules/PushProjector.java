@@ -303,7 +303,7 @@ public class PushProjector
             nProject++;
         }
         nRightProject = projRefs.cardinality() - nProject;
-        
+
         if ((childRel instanceof JoinRelBase)
             || (childRel instanceof SetOpRel))
         {
@@ -321,14 +321,14 @@ public class PushProjector
                 }
             }
         }
-        
+
         // no need to push projections if all children fields are being
         // referenced and there are no special preserve expressions; note
         // that we need to do this check after we've handled the 0-column
         // project cases
         if (((projRefs.cardinality() == nChildFields)
-            && (childPreserveExprs.size() == 0)
-            && (rightPreserveExprs.size() == 0)))
+                && (childPreserveExprs.size() == 0)
+                && (rightPreserveExprs.size() == 0)))
         {
             return true;
         }

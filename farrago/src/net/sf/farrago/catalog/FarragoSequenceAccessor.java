@@ -118,8 +118,7 @@ public class FarragoSequenceAccessor
         repos.beginReposSession();
         try {
             unreserve();
-        }
-        finally {
+        } finally {
             repos.endReposSession();
         }
         super.closeAllocation();

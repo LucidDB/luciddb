@@ -174,7 +174,9 @@ public class SqlCall
                 SqlParserPos idPos = id.getParserPosition();
                 if (idPos.toString().equals(pos.toString())) {
                     ((SqlValidatorImpl) validator).lookupNameCompletionHints(
-                        scope, Arrays.asList(id.names), pos,
+                        scope,
+                        Arrays.asList(id.names),
+                        pos,
                         hintList);
                     return;
                 }

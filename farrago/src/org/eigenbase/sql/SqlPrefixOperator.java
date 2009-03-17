@@ -97,9 +97,9 @@ public class SqlPrefixOperator
         return type;
     }
 
-
     public SqlMonotonicity getMonotonicity(
-        SqlCall call, SqlValidatorScope scope)
+        SqlCall call,
+        SqlValidatorScope scope)
     {
         if (getName().equals("-")) {
             return scope.getMonotonicity(call.getOperands()[0]).reverse();

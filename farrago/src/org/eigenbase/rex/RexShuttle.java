@@ -106,7 +106,8 @@ public class RexShuttle
      *
      * @param exprs Array of expressions
      * @param update If not null, sets this to true if any of the expressions
-     *   was modified
+     * was modified
+     *
      * @return Array of visited expressions
      */
     protected RexNode [] visitArray(RexNode [] exprs, boolean [] update)
@@ -115,7 +116,7 @@ public class RexShuttle
         for (int i = 0; i < exprs.length; i++) {
             RexNode operand = exprs[i];
             RexNode clonedOperand = operand.accept(this);
-            if (clonedOperand != operand && update != null) {
+            if ((clonedOperand != operand) && (update != null)) {
                 update[0] = true;
             }
             clonedOperands[i] = clonedOperand;

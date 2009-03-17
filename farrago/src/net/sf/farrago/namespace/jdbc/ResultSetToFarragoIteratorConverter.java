@@ -54,7 +54,8 @@ import org.eigenbase.util.*;
  */
 class ResultSetToFarragoIteratorConverter
     extends ConverterRelImpl
-    implements ConverterRel, JavaRel
+    implements ConverterRel,
+        JavaRel
 {
     //~ Constructors -----------------------------------------------------------
 

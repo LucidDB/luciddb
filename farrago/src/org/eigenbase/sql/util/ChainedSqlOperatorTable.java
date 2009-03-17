@@ -55,8 +55,8 @@ public class ChainedSqlOperatorTable
 
     /**
      * Adds an underlying table. The order in which tables are added is
-     * significant; tables added earlier have higher lookup precedence.
-     * A table is not added if it is already on the list.
+     * significant; tables added earlier have higher lookup precedence. A table
+     * is not added if it is already on the list.
      *
      * @param table table to add
      */

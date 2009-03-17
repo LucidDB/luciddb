@@ -23,6 +23,7 @@ package com.lucidera.lcs;
 import com.lucidera.query.*;
 
 import java.sql.*;
+
 import java.util.*;
 import java.util.logging.*;
 
@@ -93,7 +94,7 @@ public class LcsIndexOptimizer
     // best index mappings and its cost
     private Filter2IndexMapping bestMapping;
     private Double bestCost;
-    
+
     // The creation timestamp of the label setting; null if there is no label
     // set
     private Timestamp labelTimestamp;
@@ -106,8 +107,8 @@ public class LcsIndexOptimizer
     {
         this.rowScanRel = rowScanRel;
         labelTimestamp =
-            FennelRelUtil.getPreparingStmt(rowScanRel).getSession().
-                getSessionLabelCreationTimestamp();
+            FennelRelUtil.getPreparingStmt(rowScanRel).getSession()
+            .getSessionLabelCreationTimestamp();
         usableIndexes = new ArrayList<FemLocalIndex>();
 
         for (
@@ -182,7 +183,7 @@ public class LcsIndexOptimizer
                 tableRowCount
                 / (ByteLength * LcsIndexGuide.LbmBitmapSegMaxSize);
         }
-        bestMapping = new Filter2IndexMapping();     
+        bestMapping = new Filter2IndexMapping();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -242,7 +243,9 @@ public class LcsIndexOptimizer
         FemAbstractColumn col)
     {
         for (SargColumnFilter filter : filterSet) {
-            if (rowScanRel.getColumnForFieldAccess(filter.columnPos).equals(col)) {
+            if (rowScanRel.getColumnForFieldAccess(filter.columnPos).equals(
+                    col))
+            {
                 return filter;
             }
         }
@@ -1258,9 +1261,8 @@ public class LcsIndexOptimizer
                 // is interval filter
                 FemAbstractColumn lastFilterColumn =
                     rowScanRel.getColumnForFieldAccess(lastFilter.columnPos);
-                assert(
-                    indexedFeatures.get(mappedPos - 1).getFeature().equals(
-                        lastFilterColumn));
+                assert (indexedFeatures.get(mappedPos - 1).getFeature().equals(
+                    lastFilterColumn));
 
                 RelStatColumnStatistics colStats = null;
 
@@ -1471,8 +1473,8 @@ public class LcsIndexOptimizer
 
     /**
      * Selects from the clustered indexes on a table the one with the fewest
-     * number of pages.  If more than one has the fewest pages, pick based on
-     * the one that sorts alphabetically earliest, based on the index names.
+     * number of pages. If more than one has the fewest pages, pick based on the
+     * one that sorts alphabetically earliest, based on the index names.
      *
      * @param rowScan the table
      *
@@ -1484,7 +1486,7 @@ public class LcsIndexOptimizer
         // REVIEW jvs 21-Dec-2008:  Having a side effect like
         // this (sorting the clusteredIndexes list in place) is
         // a questionable practice.
-        
+
         List<FemLocalIndex> indexList = rowScan.clusteredIndexes;
         if (indexList.isEmpty()) {
             return null;
@@ -1492,8 +1494,8 @@ public class LcsIndexOptimizer
         Collections.sort(
             indexList,
             new IndexPageCountComparator(
-                FennelRelUtil.getPreparingStmt(rowScan).getSession().
-                getSessionLabelCreationTimestamp()));
+                FennelRelUtil.getPreparingStmt(rowScan).getSession()
+                             .getSessionLabelCreationTimestamp()));
         FarragoSession session =
             FennelRelUtil.getPreparingStmt(rowScan).getSession();
 
@@ -1501,7 +1503,7 @@ public class LcsIndexOptimizer
         // to do this filtering under any circumstances; currently
         // ALTER TABLE ADD COLUMN is the only known case where we
         // might see an invalid clustered index.
-        
+
         if (session.isReentrantAlterTableAddColumn()) {
             // We're doing ALTER TABLE ADD COLUMN; disqualify the new index
             // being created, since it doesn't have any rows in it yet, whereas
@@ -1613,8 +1615,8 @@ public class LcsIndexOptimizer
      * known to search to just one bitmap, then no merge is required. All other
      * cases, for example, when the input comes from a sort, a merge is
      * required.
-     * @param indexSelectivity the selectivity of the index being added; null
-     * if unknown
+     * @param indexSelectivity the selectivity of the index being added; null if
+     * unknown
      *
      * @return the new index intersect rel created
      */
@@ -1751,7 +1753,7 @@ public class LcsIndexOptimizer
         // applied on the same table.
         inputRelsToIntersect[numInputRelsToIntersect - 1] = newIndexAccessRel;
         Arrays.sort(inputRelsToIntersect, new RowCountComparator());
-        
+
         LcsIndexIntersectRel intersectRel =
             new LcsIndexIntersectRel(
                 cluster,
@@ -1782,8 +1784,8 @@ public class LcsIndexOptimizer
      * known to search to just one bitmap, then no merge is required. All other
      * cases, for example, when the input comes from a sort, a merge is
      * required.
-     * @param indexSelectivity selectivity of the new index being added; null
-     * if unknown
+     * @param indexSelectivity selectivity of the new index being added; null if
+     * unknown
      *
      * @return the new index access rel created
      */
@@ -1915,7 +1917,7 @@ public class LcsIndexOptimizer
         implements Comparator<FemLocalIndex>
     {
         private Timestamp labelTimestamp;
-        
+
         IndexPageCountComparator(Timestamp labelTimestamp)
         {
             this.labelTimestamp = labelTimestamp;
@@ -2377,11 +2379,10 @@ public class LcsIndexOptimizer
             return (obj instanceof MappedFilterSelectivityComparator);
         }
     }
-    
+
     /**
      * RowCountComparator is used to sort RelNodes based on their rowcounts,
-     * provided the counts are known.  Unknown rowcounts are always sorted 
-     * last.
+     * provided the counts are known. Unknown rowcounts are always sorted last.
      */
     private static class RowCountComparator
         implements Comparator<RelNode>
@@ -2390,7 +2391,7 @@ public class LcsIndexOptimizer
         {
             Double rows1 = RelMetadataQuery.getRowCount(r1);
             Double rows2 = RelMetadataQuery.getRowCount(r2);
-            if (rows1 != null && rows2 != null) {
+            if ((rows1 != null) && (rows2 != null)) {
                 return rows1.compareTo(rows2);
             } else if (rows1 != null) {
                 return -1;

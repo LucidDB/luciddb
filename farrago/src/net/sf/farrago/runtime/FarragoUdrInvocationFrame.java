@@ -40,7 +40,7 @@ class FarragoUdrInvocationFrame
     //~ Instance fields --------------------------------------------------------
 
     FarragoRuntimeContext context;
-    
+
     EnkiMDSession reposSession;
 
     FarragoSessionUdrContext udrContext;

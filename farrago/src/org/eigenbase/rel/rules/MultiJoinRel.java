@@ -100,7 +100,7 @@ public final class MultiJoinRel
         this.joinFieldRefCountsMap = joinFieldRefCountsMap;
         this.postJoinFilter = postJoinFilter;
     }
-    
+
     /*
      * @deprecated
      */
@@ -126,7 +126,7 @@ public final class MultiJoinRel
             projFields,
             joinFieldRefCountsMap,
             null);
-    }    
+    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -196,15 +196,15 @@ public final class MultiJoinRel
         // Note that we don't need to include the join field reference counts
         // in the digest because that field does not change for a given set
         // of inputs
-        Object[] objects = new Object[nExtraTerms - 1];
+        Object [] objects = new Object[nExtraTerms - 1];
         objects[0] = isFullOuterJoin;
         objects[1] = joinTypeNames;
         objects[2] = outerJoinConds;
         objects[3] = projFieldObjects;
         if (postJoinFilter != null) {
             objects[4] = postJoinFilter;
-        }   
-        
+        }
+
         pw.explain(this, terms, objects);
     }
 
@@ -288,7 +288,7 @@ public final class MultiJoinRel
     {
         return cloneJoinFieldRefCountsMap();
     }
-    
+
     /**
      * @return post-join filter associated with this MultiJoinRel
      */

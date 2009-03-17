@@ -92,8 +92,7 @@ public class FennelTupleData
         int i;
         for (i = 0; i < tupleDesc.getAttrCount(); ++i) {
             FennelTupleAttributeDescriptor attrDesc = tupleDesc.getAttr(i);
-            FennelTupleDatum datum =
-                new FennelTupleDatum(attrDesc.storageSize);
+            FennelTupleDatum datum = new FennelTupleDatum(attrDesc.storageSize);
             int ordinal = attrDesc.typeDescriptor.getOrdinal();
             switch (ordinal) {
             case FennelStandardTypeDescriptor.UNICODE_CHAR_ORDINAL:

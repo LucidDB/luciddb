@@ -27,8 +27,8 @@ import org.eigenbase.relopt.*;
 
 
 /**
- * PushFilterIntoMultiJoinRule implements the rule for pushing a
- * {@link FilterRel} into a {@link MultiJoinRel}.
+ * PushFilterIntoMultiJoinRule implements the rule for pushing a {@link
+ * FilterRel} into a {@link MultiJoinRel}.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -51,7 +51,7 @@ public class PushFilterIntoMultiJoinRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        FilterRel filterRel = (FilterRel) call.rels[0];        
+        FilterRel filterRel = (FilterRel) call.rels[0];
         MultiJoinRel multiJoinRel = (MultiJoinRel) call.rels[1];
 
         MultiJoinRel newMultiJoinRel =

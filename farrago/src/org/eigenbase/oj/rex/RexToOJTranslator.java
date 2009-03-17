@@ -257,8 +257,8 @@ public class RexToOJTranslator
             setTranslation(Literal.constantNull());
             break;
         case CHAR:
-            Literal lit =
-                Literal.makeLiteral(((NlsString) value).getValue());
+            Literal lit = Literal.makeLiteral(((NlsString) value).getValue());
+
             // Replace non-ASCII characters with Java Unicode escape
             // sequences to avoid encoding glitches in the generated
             // Java code.

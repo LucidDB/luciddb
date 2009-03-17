@@ -75,13 +75,14 @@ public class MockReposTxnContext
 
     public boolean isTxnInProgress()
     {
-        return isRead || isWrite || locked ;
+        return isRead || isWrite || locked;
     }
 
     public void rollback()
     {
         isRead = isWrite = locked = false;
     }
+
     public void beginLockedTxn(boolean readOnly)
     {
         assert !isRead && !isWrite && !locked;

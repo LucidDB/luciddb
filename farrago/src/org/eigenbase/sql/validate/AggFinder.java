@@ -37,7 +37,10 @@ import org.eigenbase.util.*;
 class AggFinder
     extends SqlBasicVisitor<Void>
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final boolean over;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -57,6 +60,7 @@ class AggFinder
      * Finds an aggregate.
      *
      * @param node Parse tree to search
+     *
      * @return First aggregate function in parse tree, or null if not found
      */
     public SqlNode findAgg(SqlNode node)

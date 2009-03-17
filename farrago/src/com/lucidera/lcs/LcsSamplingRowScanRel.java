@@ -21,6 +21,7 @@
 package com.lucidera.lcs;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -33,10 +34,11 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /*
- * LcsSamplingRowScanRel is the relational expression corresponding to a 
+ * LcsSamplingRowScanRel is the relational expression corresponding to a
  * sampling scan on a column store table.
- * 
+ *
  * This class exists separately from {@link LcsRowScanRel} to prevent rule
  * firings that would convert this row scan into something other than a
  * full row scan:  System sampling is not compatible with index scans.
@@ -46,16 +48,16 @@ import org.eigenbase.relopt.*;
  * to use a regular LcsRowScanRel for Bernoulli sampling and use this rel
  * only for system sampling.
  *
- * @author Stephan Zuercher 
+ * @author Stephan Zuercher
  * @version $Id$
  */
 public class LcsSamplingRowScanRel
     extends LcsRowScanRelBase
 {
     //~ Instance fields --------------------------------------------------------
-    
+
     final RelOptSamplingParameters samplingParams;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -67,28 +69,28 @@ public class LcsSamplingRowScanRel
      * @param clusteredIndexes clusters to use for table access
      * @param connection connection
      * @param projectedColumns array of 0-based table-relative column ordinals,
-     *                         or null to project all columns
+     * or null to project all columns
      */
     public LcsSamplingRowScanRel(
         RelOptCluster cluster,
-        RelNode[] children,
+        RelNode [] children,
         LcsTable lcsTable,
         List<FemLocalIndex> clusteredIndexes,
         RelOptConnection connection,
-        Integer[] projectedColumns,
+        Integer [] projectedColumns,
         RelOptSamplingParameters samplingParameters)
     {
         super(
             cluster,
-            children, 
+            children,
             lcsTable,
             clusteredIndexes,
-            connection, 
+            connection,
             projectedColumns,
-            true,  // full row scan
+            true, // full row scan
             new Integer[0], // no residual filters
             1.0);
-        
+
         this.samplingParams = samplingParameters;
     }
 
@@ -113,24 +115,25 @@ public class LcsSamplingRowScanRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        assert(isFullScan);
-        
+        assert (isFullScan);
+
         FemLcsRowScanStreamDef scanStream = createScanStream(implementor);
-        
+
         CwmColumnSet columnSet = lcsTable.getCwmColumnSet();
-        assert(columnSet instanceof FemAbstractColumnSet);
+        assert (columnSet instanceof FemAbstractColumnSet);
+
         // Don't allow caching of this plan, since it contains a row
         // count which could change at any moment.
-        ((FarragoPreparingStmt)connection).disableStatementCaching();
-        
+        ((FarragoPreparingStmt) connection).disableStatementCaching();
+
         Long rowCount;
-        Long[] rowCounts = new Long[2];
+        Long [] rowCounts = new Long[2];
         Timestamp labelTimestamp =
-            ((FarragoRelImplementor) implementor).getPreparingStmt().
-                getSession().getSessionLabelCreationTimestamp();
+            ((FarragoRelImplementor) implementor).getPreparingStmt()
+            .getSession().getSessionLabelCreationTimestamp();
         FarragoCatalogUtil.getRowCounts(
-            (FemAbstractColumnSet) columnSet, 
-            labelTimestamp, 
+            (FemAbstractColumnSet) columnSet,
+            labelTimestamp,
             rowCounts);
         if (samplingParams.isBernoulli()) {
             scanStream.setSamplingMode(
@@ -139,39 +142,36 @@ public class LcsSamplingRowScanRel
         } else {
             scanStream.setSamplingMode(TableSamplingModeEnum.SAMPLING_SYSTEM);
             rowCount = rowCounts[0];
-            assert(rowCount != null);
+            assert (rowCount != null);
         }
         scanStream.setSamplingRowCount(rowCount);
-        
+
         scanStream.setSamplingRate(samplingParams.getSamplingPercentage());
         scanStream.setSamplingRepeatable(samplingParams.isRepeatable());
         scanStream.setSamplingRepeatableSeed(
             samplingParams.getRepeatableSeed());
-        
+
         return scanStream;
     }
-    
+
     // override LcsRowScanRelBase
     public void explain(RelOptPlanWriter pw)
     {
         super.explain(
             pw,
-            new String[]
-            {
+            new String[] {
                 "mode",
                 "rate",
                 "repeatableSeed"
             },
-            new Object[]
-            {
+            new Object[] {
                 samplingParams.isBernoulli() ? "bernoulli" : "system",
                 samplingParams.getSamplingPercentage(),
                 samplingParams.isRepeatable()
-                    ? String.valueOf(samplingParams.getRepeatableSeed())
-                    : "-"
+                ? String.valueOf(samplingParams.getRepeatableSeed())
+                : "-"
             });
     }
-    
 }
 
 // End LcsSamplingRowScanRel.java

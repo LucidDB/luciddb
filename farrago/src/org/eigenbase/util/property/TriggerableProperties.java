@@ -22,9 +22,10 @@
 */
 package org.eigenbase.util.property;
 
+import java.lang.reflect.*;
+
 import java.util.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+
 
 /**
  * Base class for properties which can respond to triggers.
@@ -42,8 +43,8 @@ public class TriggerableProperties
     //~ Instance fields --------------------------------------------------------
 
     protected final Map triggers = new HashMap();
-    protected final Map/*<String, Property>*/ properties =
-        new HashMap/*<String, Property>*/();
+    protected final Map /*<String, Property>*/ properties =
+        new HashMap /*<String, Property>*/();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -110,15 +111,17 @@ public class TriggerableProperties
     }
 
     /**
-     * Returns the definition of a named property, or null if there is no
-     * such property.
+     * Returns the definition of a named property, or null if there is no such
+     * property.
      *
      * @param path Name of the property
+     *
      * @return Definition of property, or null if there is no property with this
-     *         name
+     * name
      */
-    public Property getPropertyDefinition(String path) {
-        final List/*<Property>*/ propertyList = getPropertyList();
+    public Property getPropertyDefinition(String path)
+    {
+        final List /*<Property>*/ propertyList = getPropertyList();
         for (int i = 0; i < propertyList.size(); i++) {
             Property property = (Property) propertyList.get(i);
             if (property.getPath().equals(path)) {
@@ -163,7 +166,7 @@ public class TriggerableProperties
      *
      * @return registered properties
      */
-    public Collection/*<Property>*/ getProperties()
+    public Collection /*<Property>*/ getProperties()
     {
         return Collections.unmodifiableCollection(properties.values());
     }
@@ -173,27 +176,28 @@ public class TriggerableProperties
      *
      * @return List of properties
      */
-    public List/*<Property>*/ getPropertyList() {
-        Field[] fields = getClass().getFields();
-        List/*<Property>*/ list = new ArrayList/*<Property>*/();
+    public List /*<Property>*/ getPropertyList()
+    {
+        Field [] fields = getClass().getFields();
+        List /*<Property>*/ list = new ArrayList /*<Property>*/();
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
-            if (!Modifier.isStatic(field.getModifiers()) &&
-                    Property.class.isAssignableFrom(
-                            field.getType())) {
+            if (!Modifier.isStatic(field.getModifiers())
+                && Property.class.isAssignableFrom(
+                    field.getType()))
+            {
                 try {
                     list.add((Property) field.get(this));
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(
                         "Error while accessing property '" + field.getName()
-                            + "'",
+                        + "'",
                         e);
                 }
             }
         }
         return list;
     }
-
 }
 
 // End TriggerableProperties.java

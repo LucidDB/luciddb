@@ -50,7 +50,7 @@ public interface RelImplementor
         RelNode parent,
         int ordinal,
         RelNode child);
-    
+
     /**
      * Called from {@link #visitChild} after the frame has been set up. Specific
      * implementors should override this method.
@@ -60,7 +60,7 @@ public interface RelImplementor
      * @return Interpretation of the return value is left to the implementor
      */
     Object visitChildInternal(RelNode child);
-    
+
     /**
      * Called from {@link #visitChild} after the frame has been set up. Specific
      * implementors should override this method.

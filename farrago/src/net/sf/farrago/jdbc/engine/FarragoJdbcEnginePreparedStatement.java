@@ -37,6 +37,7 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.jdbc4.*;
 
+
 /**
  * FarragoJdbcEnginePreparedStatement is an abstract base for Farrago
  * implementations of {@link java.sql.PreparedStatement}. Subclasses define
@@ -542,84 +543,84 @@ public abstract class FarragoJdbcEnginePreparedStatement
     {
         throw new UnsupportedOperationException("setNClob");
     }
-    
+
     // implement PreparedStatement
     public void setNClob(int i, NClob nclob)
         throws SQLException
     {
         throw new UnsupportedOperationException("setNClob");
     }
-    
+
     // implement PreparedStatement
     public void setNClob(int i, Reader reader, long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("setNClob");
     }
-    
+
     // implement PreparedStatement
     public void setBlob(int i, InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("setBlob");
     }
-    
+
     // implement PreparedStatement
     public void setBlob(int i, InputStream inputStream, long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("setBlob");
     }
-    
+
     // implement PreparedStatement
     public void setBinaryStream(int i, InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("setBinaryStream");
     }
-    
+
     // implement PreparedStatement
     public void setBinaryStream(int i, InputStream inputStream, long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("setBinaryStream");
     }
-    
+
     // implement PreparedStatement
     public void setAsciiStream(int i, InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("setAsciiStream");
     }
-    
+
     // implement PreparedStatement
     public void setAsciiStream(int i, InputStream inputStream, long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("setAsciiStream");
     }
-    
+
     // implement PreparedStatement
     public void setSQLXML(int i, SQLXML sqlxml)
         throws SQLException
     {
         throw new UnsupportedOperationException("setSQLXML");
     }
-    
+
     // implement PreparedStatement
     public void setNString(int i, String nstring)
         throws SQLException
     {
         throw new UnsupportedOperationException("setNString");
     }
-    
+
     // implement PreparedStatement
     public void setRowId(int i, RowId rowid)
         throws SQLException
     {
         throw new UnsupportedOperationException("setRowId");
     }
-    
+
     //
     // end JDBC 4 methods
     //

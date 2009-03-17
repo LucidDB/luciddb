@@ -40,6 +40,7 @@ import org.eigenbase.enki.mdr.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+
 import org.netbeans.api.mdr.*;
 
 
@@ -108,7 +109,7 @@ public class MedMdrDataServer
      */
     public EnkiMDRepository getMdrRepository()
     {
-        return (EnkiMDRepository)repository;
+        return (EnkiMDRepository) repository;
     }
 
     void initialize()

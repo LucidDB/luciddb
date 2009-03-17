@@ -51,8 +51,8 @@ public interface SubqueryConverter
      * @param isExplain whether the subquery is part of an EXPLAIN PLAN
      * statement
      *
-     * @return the equivalent expression or null if the subquery couldn't
-     * be converted
+     * @return the equivalent expression or null if the subquery couldn't be
+     * converted
      */
     public RexNode convertSubquery(
         SqlCall subquery,

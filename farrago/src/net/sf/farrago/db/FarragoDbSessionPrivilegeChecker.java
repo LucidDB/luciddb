@@ -50,7 +50,7 @@ public class FarragoDbSessionPrivilegeChecker
     private final Map<List<FemAuthId>, Set<FemAuthId>> authMap;
 
     private FemRole publicRole;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     public FarragoDbSessionPrivilegeChecker(FarragoSession session)
@@ -88,7 +88,6 @@ public class FarragoDbSessionPrivilegeChecker
                 inheritRoles(role, authSet);
             }
 
-            
             authSet.add(getPublicRole());
         }
 
@@ -107,15 +106,15 @@ public class FarragoDbSessionPrivilegeChecker
     private FemRole getPublicRole()
     {
         if (publicRole == null) {
-            publicRole = 
+            publicRole =
                 FarragoCatalogUtil.getRoleByName(
                     session.getRepos(),
                     FarragoCatalogInit.PUBLIC_ROLE_NAME);
         }
-        
+
         return publicRole;
     }
-    
+
     // implement FarragoSessionPrivilegeChecker
     public void checkAccess()
     {

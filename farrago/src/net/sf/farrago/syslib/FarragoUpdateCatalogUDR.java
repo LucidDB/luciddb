@@ -49,11 +49,13 @@ public class FarragoUpdateCatalogUDR
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Updates Farrago config objects in cases where they have been set to dummy values.
+     * Updates Farrago config objects in cases where they have been set to dummy
+     * values.
      */
     public static void updateConfiguration()
     {
         tracer.info("Updating Farrago system parameters");
+
         //FarragoSession session = FarragoUdrRuntime.getSession();
         //FarragoRepos repos = session.getRepos();
         FarragoRepos repos = FarragoUdrRuntime.getRepos();

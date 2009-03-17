@@ -24,17 +24,18 @@ package org.eigenbase.util;
 
 import java.io.*;
 
+import java.lang.management.*;
+
 import java.math.*;
 
 import java.util.*;
-import java.lang.management.MemoryType;
 
 import junit.framework.*;
 
 import junit.textui.*;
 
 import org.eigenbase.runtime.*;
-import org.eigenbase.test.DiffTestCase;
+import org.eigenbase.test.*;
 
 
 /**
@@ -424,15 +425,18 @@ public class UtilTest
     /**
      * Tests the difference engine, {@link DiffTestCase#diff}.
      */
-    public void testDiffLines() {
-        String[] before = {
+    public void testDiffLines()
+    {
+        String [] before =
+        {
             "Get a dose of her in jackboots and kilt",
             "She's killer-diller when she's dressed to the hilt",
             "She's the kind of a girl that makes The News of The World",
             "Yes you could say she was attractively built.",
             "Yeah yeah yeah."
         };
-        String[] after = {
+        String [] after =
+        {
             "Get a dose of her in jackboots and kilt",
             "(they call her \"Polythene Pam\")",
             "She's killer-diller when she's dressed to the hilt",
@@ -440,19 +444,22 @@ public class UtilTest
             "seem more interesting.",
             "Yes you could say she was attractively built."
         };
-        String diff = DiffTestCase.diffLines(
-            Arrays.asList(before), Arrays.asList(after));
+        String diff =
+            DiffTestCase.diffLines(
+                Arrays.asList(before),
+                Arrays.asList(after));
         assertEquals(
             diff,
-            TestUtil.fold("1a2\n" +
-                "> (they call her \"Polythene Pam\")\n" +
-                "3c4,5\n" +
-                "< She's the kind of a girl that makes The News of The World\n" +
-                "---\n" +
-                "> She's the kind of a girl that makes The Sunday Times\n" +
-                "> seem more interesting.\n" +
-                "5d6\n" +
-                "< Yeah yeah yeah.\n"));
+            TestUtil.fold(
+                "1a2\n"
+                + "> (they call her \"Polythene Pam\")\n"
+                + "3c4,5\n"
+                + "< She's the kind of a girl that makes The News of The World\n"
+                + "---\n"
+                + "> She's the kind of a girl that makes The Sunday Times\n"
+                + "> seem more interesting.\n"
+                + "5d6\n"
+                + "< Yeah yeah yeah.\n"));
     }
 
     /**
@@ -469,15 +476,18 @@ public class UtilTest
         // and returns at 02:00 LDT to 01:00 LST on the first Sunday in
         // November.
         if (false) {
-            assertEquals("PST-8PDT,M3.2.0,M11.1.0",
+            assertEquals(
+                "PST-8PDT,M3.2.0,M11.1.0",
                 Util.toPosix(TimeZone.getTimeZone("PST"), false));
 
-            assertEquals("PST-8PDT1,M3.2.0/2,M11.1.0/2",
+            assertEquals(
+                "PST-8PDT1,M3.2.0/2,M11.1.0/2",
                 Util.toPosix(TimeZone.getTimeZone("PST"), true));
         }
 
         // Tokyo has +ve offset, no DST
-        assertEquals("JST9",
+        assertEquals(
+            "JST9",
             Util.toPosix(TimeZone.getTimeZone("Asia/Tokyo"), true));
 
         // Sydney, Australia lies ten hours east of GMT and makes a one hour
@@ -494,19 +504,16 @@ public class UtilTest
             Util.toPosix(TimeZone.getTimeZone("Australia/Sydney"), true);
 
         if (posixTime.equals("EST10EST1,M10.5.0/2,M3.5.0/3")) {
-
             // older JVMs without the fix
             assertEquals("EST10EST1,M10.5.0/2,M3.5.0/3", posixTime);
-
         } else {
-
             // newer JVMs with the fix
             assertEquals("EST10EST1,M10.1.0/2,M4.1.0/3", posixTime);
         }
 
-
         // Paris, France. (Uses UTC_TIME time-transition mode.)
-        assertEquals("CET1CEST1,M3.5.0/2,M10.5.0/3",
+        assertEquals(
+            "CET1CEST1,M3.5.0/2,M10.5.0/3",
             Util.toPosix(TimeZone.getTimeZone("Europe/Paris"), true));
 
         assertEquals("UTC0",
@@ -514,8 +521,8 @@ public class UtilTest
     }
 
     /**
-     * Tests the methods {@link Util#enumConstants(Class)}
-     * and {@link Util#enumVal(Class, String)}.
+     * Tests the methods {@link Util#enumConstants(Class)} and {@link
+     * Util#enumVal(Class, String)}.
      */
     public void testEnumConstants()
     {

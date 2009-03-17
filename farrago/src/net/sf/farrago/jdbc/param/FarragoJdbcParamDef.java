@@ -133,7 +133,8 @@ public class FarragoJdbcParamDef
     {
         // TODO: Change to use client resources
         return new EigenbaseException(
-            "Cannot assign a value of Java class " + x.getClass().getName()
+            "Cannot assign a value of Java class " + x
+            .getClass().getName()
             + " to parameter of type " + paramMetaData.paramTypeStr,
             null);
 

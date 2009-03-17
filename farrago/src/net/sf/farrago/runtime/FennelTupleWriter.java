@@ -52,9 +52,9 @@ public abstract class FennelTupleWriter
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Marshals one tuple if it can fit; otherwise, throws either
-     * {@link BufferOverflowException} or {@link IndexOutOfBoundsException}
-     * (depending on whether absolute or relative puts are used).
+     * Marshals one tuple if it can fit; otherwise, throws either {@link
+     * BufferOverflowException} or {@link IndexOutOfBoundsException} (depending
+     * on whether absolute or relative puts are used).
      *
      * @param sliceBuffer buffer to be filled with marshalled tuple data; on
      * entry, the buffer position is 0; on return, the buffer position should be

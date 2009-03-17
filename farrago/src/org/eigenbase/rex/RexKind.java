@@ -160,8 +160,8 @@ public enum RexKind
     Times,
 
     /**
-     * An arithmetic operator ({@link #Divide}, {@link #Minus},
-     * {@link #MinusPrefix}, {@link #Plus}, {@link #Times}).
+     * An arithmetic operator ({@link #Divide}, {@link #Minus}, {@link
+     * #MinusPrefix}, {@link #Plus}, {@link #Times}).
      */
     Arithmetic(new RexKind[] { Divide, Minus, MinusPrefix, Plus, Times }),
 

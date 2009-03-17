@@ -221,7 +221,7 @@ public class BasicSqlType
     public Charset getCharset()
         throws RuntimeException
     {
-        return wrappedCharset == null ? null : wrappedCharset.getCharset();
+        return (wrappedCharset == null) ? null : wrappedCharset.getCharset();
     }
 
     // implement RelDataType
@@ -361,7 +361,6 @@ public class BasicSqlType
             precision,
             scale);
     }
-
 }
 
 // End BasicSqlType.java

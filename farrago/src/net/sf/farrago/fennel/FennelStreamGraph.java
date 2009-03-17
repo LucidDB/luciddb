@@ -24,8 +24,8 @@ package net.sf.farrago.fennel;
 
 import java.sql.*;
 
+import java.util.*;
 import java.util.logging.*;
-import java.util.ArrayList;
 
 import net.sf.farrago.*;
 import net.sf.farrago.fem.fennel.*;
@@ -89,16 +89,21 @@ public class FennelStreamGraph
 
     /**
      * Find the inputs of a specified stream in the graph.
+     *
      * @param streamName names a stream
+     *
      * @return a list of the names of the inputs, in input-edge order.
      */
-    public String[] getInputStreams(String streamName)
+    public String [] getInputStreams(String streamName)
     {
-        // REVIEW mberkowitz 12-Oct-2008. For simplicity, not using FennelStreamHandle here.
+        // REVIEW mberkowitz 12-Oct-2008. For simplicity, not using
+        // FennelStreamHandle here.
         traceGraphHandle("get inputs of a stream");
         ArrayList<String> inputList = new ArrayList<String>();
         FennelStorage.tupleStreamGraphGetInputStreams(
-            streamGraphHandle, streamName, inputList);
+            streamGraphHandle,
+            streamName,
+            inputList);
         if (tracer.isLoggable(Level.FINER)) {
             StringBuilder msg = new StringBuilder("The inputs of string ");
             msg.append(streamName).append(" are: ( ");

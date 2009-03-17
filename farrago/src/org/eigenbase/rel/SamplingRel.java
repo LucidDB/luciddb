@@ -19,29 +19,37 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 
+
 /**
- * SamplingRel represents the TABLESAMPLE BERNOULLI or SYSTEM keyword applied
- * to a table, view or subquery. 
+ * SamplingRel represents the TABLESAMPLE BERNOULLI or SYSTEM keyword applied to
+ * a table, view or subquery.
  *
  * @author Stephan Zuercher
  */
 public class SamplingRel
     extends SingleRel
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final RelOptSamplingParameters params;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public SamplingRel(
-        RelOptCluster cluster, RelNode child, RelOptSamplingParameters params)
+        RelOptCluster cluster,
+        RelNode child,
+        RelOptSamplingParameters params)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE), child);
 
         this.params = params;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelNode clone()
     {
@@ -67,9 +75,9 @@ public class SamplingRel
             new Object[] {
                 params.isBernoulli() ? "bernoulli" : "system",
                 params.getSamplingPercentage(),
-                params.isRepeatable()
-                    ? params.getRepeatableSeed()
-                    : "-"
+                params.isRepeatable() ? params.getRepeatableSeed() : "-"
             });
     }
 }
+
+// End SamplingRel.java

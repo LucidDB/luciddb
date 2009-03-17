@@ -217,7 +217,7 @@ public class RelMdDistinctRowCount
         ProjectRelBase rel,
         BitSet groupKey,
         RexNode predicate)
-    {    
+    {
         BitSet baseCols = new BitSet();
         BitSet projCols = new BitSet();
         RexNode [] projExprs = rel.getChildExps();
@@ -247,7 +247,7 @@ public class RelMdDistinctRowCount
                 rel.getChild(),
                 baseCols,
                 modifiedPred);
-        
+
         if (distinctRowCount == null) {
             return null;
         } else if (!notPushable.isEmpty()) {
@@ -257,7 +257,7 @@ public class RelMdDistinctRowCount
                     notPushable);
             distinctRowCount *= RelMdUtil.guessSelectivity(preds);
         }
-        
+
         // No further computation required if the projection expressions
         // are all column references
         if (projCols.cardinality() == 0) {

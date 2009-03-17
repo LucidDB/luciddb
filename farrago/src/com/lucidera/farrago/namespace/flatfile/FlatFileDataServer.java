@@ -154,13 +154,14 @@ class FlatFileDataServer
         try {
             if (schemaType == FlatFileParams.SchemaType.QUERY) {
                 String [] foreignName =
-                    {
-                        this.getProperties().getProperty("NAME"),
-                        FlatFileParams.SchemaType.QUERY.getSchemaName(),
-                        filename
-                    };
+                {
+                    this.getProperties().getProperty("NAME"),
+                    FlatFileParams.SchemaType.QUERY.getSchemaName(),
+                    filename
+                };
                 if (params.getNumRowsScan() > 0) {
                     long avgRowSize = sampleAndCreateBcp(foreignName, null);
+
                     // Estimated number of rows == file length / avg row length
                     if (avgRowSize > 0) {
                         numRows = dataFile.length() / avgRowSize;
@@ -288,9 +289,10 @@ class FlatFileDataServer
                         size.intValue());
                 RelDataType nullableType =
                     typeFactory.createTypeWithNullability(type, true);
-                nullableType = FlatFileBCPFile.forceSingleByte(
-                    typeFactory,
-                    nullableType);
+                nullableType =
+                    FlatFileBCPFile.forceSingleByte(
+                        typeFactory,
+                        nullableType);
                 fieldTypes.add(nullableType);
                 fieldNames.add("COL" + i++);
             }
@@ -416,6 +418,7 @@ class FlatFileDataServer
                             sumRows += col.length();
                         }
                     }
+
                     // add one per column for delimiter size
                     sumRows += cols.length;
 
@@ -430,8 +433,8 @@ class FlatFileDataServer
                 }
                 if (bcpFile != null) {
                     if (!bcpFile.write(cols, params)) {
-                        throw FarragoResource.instance().FileWriteFailed.
-                            ex(bcpFile.fileName);
+                        throw FarragoResource.instance().FileWriteFailed.ex(
+                            bcpFile.fileName);
                     }
                 }
                 return sumRows / numRowsScan;

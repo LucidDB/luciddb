@@ -34,7 +34,7 @@ import net.sf.farrago.query.*;
 
 import openjava.ptree.Literal;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
@@ -290,9 +290,10 @@ class FtrsIndexScanRel
             // an unclustered index scan, so if somehow we ever
             // ended up choosing one of those for ALTER TABLE
             // ADD COLUMN, I think we'd be in trouble.
-            indexGuide = new FtrsIndexGuide(
-                stmt.getFarragoTypeFactory(),
-                oldTable);
+            indexGuide =
+                new FtrsIndexGuide(
+                    stmt.getFarragoTypeFactory(),
+                    oldTable);
         }
         scanStream.setTupleDesc(
             indexGuide.getCoverageTupleDescriptor(index));

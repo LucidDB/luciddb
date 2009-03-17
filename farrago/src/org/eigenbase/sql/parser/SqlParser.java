@@ -26,7 +26,7 @@ import java.io.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.impl.*;
-import org.eigenbase.util.EigenbaseContextException;
+import org.eigenbase.util.*;
 
 
 /**
@@ -67,7 +67,6 @@ public class SqlParser
                 this.originalInput = new String(buffer, 0, count);
                 reader.reset();
             } catch (IOException e) {
-
             }
         }
         parser = new SqlParserImpl(reader);
@@ -87,8 +86,11 @@ public class SqlParser
         try {
             return parser.SqlExpressionEof();
         } catch (Throwable ex) {
-            if ((ex instanceof EigenbaseContextException) && (originalInput != null)) {
-                ((EigenbaseContextException)ex).setOriginalStatement(originalInput);
+            if ((ex instanceof EigenbaseContextException)
+                && (originalInput != null))
+            {
+                ((EigenbaseContextException) ex).setOriginalStatement(
+                    originalInput);
             }
             throw parser.normalizeException(ex);
         }
@@ -109,8 +111,11 @@ public class SqlParser
         try {
             return parser.SqlQueryEof();
         } catch (Throwable ex) {
-            if ((ex instanceof EigenbaseContextException) && (originalInput != null)) {
-                ((EigenbaseContextException)ex).setOriginalStatement(originalInput);
+            if ((ex instanceof EigenbaseContextException)
+                && (originalInput != null))
+            {
+                ((EigenbaseContextException) ex).setOriginalStatement(
+                    originalInput);
             }
             throw parser.normalizeException(ex);
         }
@@ -129,8 +134,11 @@ public class SqlParser
         try {
             return parser.SqlStmtEof();
         } catch (Throwable ex) {
-            if ((ex instanceof EigenbaseContextException) && (originalInput != null)) {
-                ((EigenbaseContextException)ex).setOriginalStatement(originalInput);
+            if ((ex instanceof EigenbaseContextException)
+                && (originalInput != null))
+            {
+                ((EigenbaseContextException) ex).setOriginalStatement(
+                    originalInput);
             }
             throw parser.normalizeException(ex);
         }

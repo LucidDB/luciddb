@@ -229,7 +229,7 @@ public class FarragoJavaUdxRel
             omitServerMofId = true;
         }
 
-        switch(pw.getDetailLevel()) {
+        switch (pw.getDetailLevel()) {
         case NO_ATTRIBUTES:
         case EXPPLAN_ATTRIBUTES:
             omitServerMofId = true;
@@ -262,7 +262,7 @@ public class FarragoJavaUdxRel
         for (int i = 0; i < inputs.length; ++i) {
             childExprs[i] =
                 implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
-            
+
             Variable varChild = implementor.newVariable();
             executeMethodBody.add(
                 new VariableDeclaration(
@@ -277,7 +277,7 @@ public class FarragoJavaUdxRel
                         "addRestartableInput",
                         new ExpressionList(
                             varChild))));
-            
+
             OJClass rowClass =
                 OJUtil.typeToOJClass(
                     inputs[i].getRowType(),

@@ -103,7 +103,7 @@ public class FarragoTupleIterResultSet
 
     /**
      * Signals that all aspects of opening this ResultSet have completed
-     * successfully.  After this method is called, the ResultSet must
+     * successfully. After this method is called, the ResultSet must
      * (eventually) be closed or else resources may be leaked.
      */
     public void setOpened()
@@ -114,7 +114,7 @@ public class FarragoTupleIterResultSet
             runtimeContext.detachMdrSession();
         }
     }
-    
+
     // implement ResultSet
     public boolean next()
         throws SQLException
@@ -163,7 +163,7 @@ public class FarragoTupleIterResultSet
                     runtimeContext.detachMdrSession();
                     detachMdrSession = false;
                 }
-                
+
                 // Inform context that we're done with cursor processing until
                 // next fetch call.
                 try {

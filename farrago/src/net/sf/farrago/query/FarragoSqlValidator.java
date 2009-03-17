@@ -234,7 +234,7 @@ public class FarragoSqlValidator
                             deriveType(cursorScope, operands[i]);
                             setValidatedNodeType(operands[i], origNodeType);
                             parentCursorMap.put(
-                                clParam.getName(), 
+                                clParam.getName(),
                                 sourceCursor);
                             break;
                         }

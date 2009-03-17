@@ -45,6 +45,16 @@ import org.eigenbase.sql.*;
  */
 public interface SqlTester
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Name of a virtual machine that can potentially implement an operator.
+     */
+    public enum VmName
+    {
+        FENNEL, JAVA, EXPAND
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -187,9 +197,8 @@ public interface SqlTester
         String type);
 
     /**
-     * Checks that a query returns one column of an expected type. For
-     * example, <code>checkType("VALUES (1 + 2)", "INTEGER NOT
-     * NULL")</code>.
+     * Checks that a query returns one column of an expected type. For example,
+     * <code>checkType("VALUES (1 + 2)", "INTEGER NOT NULL")</code>.
      *
      * @param sql Query expression
      * @param type Type string
@@ -231,7 +240,7 @@ public interface SqlTester
      */
     void setFor(
         SqlOperator operator,
-        VmName... unimplementedVmNames);
+        VmName ... unimplementedVmNames);
 
     /**
      * Checks that an aggregate expression returns the expected result.
@@ -266,7 +275,7 @@ public interface SqlTester
      */
     void checkWinAgg(
         String expr,
-        String[] inputValues,
+        String [] inputValues,
         String windowSpec,
         String type,
         Object result,
@@ -291,16 +300,6 @@ public interface SqlTester
     interface TypeChecker
     {
         void checkType(RelDataType type);
-    }
-
-    /**
-     * Name of a virtual machine that can potentially implement an operator.
-     */
-    public enum VmName
-    {
-        FENNEL,
-        JAVA,
-        EXPAND
     }
 }
 

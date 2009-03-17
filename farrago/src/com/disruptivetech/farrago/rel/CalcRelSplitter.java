@@ -454,7 +454,8 @@ levelLoop:
                 fieldNames[i] =
                     child.getRowType().getFields()[inputIndex].getName();
                 if (fieldNames[i].startsWith("$")
-                    && !fieldNames[i].startsWith("$EXPR")) {
+                    && !fieldNames[i].startsWith("$EXPR"))
+                {
                     // Don't inherit field names like '$3' from child: that's
                     // confusing.
                     fieldNames[i] = "$" + i;
@@ -572,6 +573,7 @@ levelLoop:
      *
      * @param value Value to search for
      * @param map Map to search in
+     *
      * @return Ordinal of value in map, or -1 if not found
      */
     private static int indexOf(int value, int [] map)

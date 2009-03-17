@@ -1456,8 +1456,9 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
         </fileset>
       </classpath>
     </taskdef>
-    <jalopy backup="false" convention="${farrago.src.dir}/jalopy.xml"
-      classpathref="farrago.jalopy.classpath" history="NONE" force="true">
+    <jalopy backup="false" convention="${farrago.src.dir}/jalopy.xml" 
+      threads="2" classpathref="farrago.jalopy.classpath" history="NONE" 
+      force="true">
       <fileset dir="${farrago.src.dir}">
         <include name="**/*.java"/>
         <exclude name="org/eigenbase/inventory/**/*.java"/>

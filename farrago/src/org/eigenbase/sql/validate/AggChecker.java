@@ -116,9 +116,9 @@ class AggChecker
         throw validator.newValidationError(
             originalExpr,
             distinct
-                ? EigenbaseResource.instance().NotSelectDistinctExpr.ex(
+            ? EigenbaseResource.instance().NotSelectDistinctExpr.ex(
                 exprString)
-                : EigenbaseResource.instance().NotGroupExpr.ex(exprString));
+            : EigenbaseResource.instance().NotGroupExpr.ex(exprString));
     }
 
     public Void visit(SqlCall call)
@@ -134,6 +134,7 @@ class AggChecker
                     EigenbaseResource.instance().NotSelectDistinctExpr.ex(
                         exprString));
             }
+
             // For example, 'sum(sal)' in 'SELECT sum(sal) FROM emp GROUP
             // BY deptno'
             return null;

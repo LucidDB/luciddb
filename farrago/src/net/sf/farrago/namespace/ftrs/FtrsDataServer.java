@@ -209,7 +209,7 @@ class FtrsDataServer
     {
         return false;
     }
-    
+
     // implement FarragoMedDataServer
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
@@ -223,7 +223,9 @@ class FtrsDataServer
     {
         return true;
     }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     // REVIEW jvs 24-Aug-2008:  do stuff for FtrsIndexSearchRel too?
 
     public static class FtrsRelMetadataProvider
@@ -237,7 +239,7 @@ class FtrsDataServer
         {
             this.repos = repos;
             columnMd = new FtrsColumnMetadata();
-            
+
             List<Class> args = new ArrayList<Class>();
             args.add((Class) BitSet.class);
             args.add((Class) RexNode.class);
@@ -251,7 +253,7 @@ class FtrsDataServer
                 "areColumnsUnique",
                 Collections.singletonList((Class) BitSet.class));
         }
-        
+
         public Double getDistinctRowCount(
             FtrsIndexScanRel rel,
             BitSet groupKey,
@@ -286,6 +288,7 @@ class FtrsDataServer
         {
             FtrsIndexScanRel scanRel = (FtrsIndexScanRel) rel;
             int origColOrdinal = keyCol.getOrdinal();
+
             // TODO zfong 5/29/06 - The code below does not account for UDTs.
             // origColOrdinal represents an unflattened column ordinal.  It
             // needs to be converted to a flattened ordinal.  Furthermore, the

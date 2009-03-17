@@ -53,7 +53,7 @@ public class SqlCeilFunction
     //~ Methods ----------------------------------------------------------------
 
     public SqlMonotonicity getMonotonicity(
-        SqlCall call, 
+        SqlCall call,
         SqlValidatorScope scope)
     {
         SqlNode node = (SqlNode) call.operands[0];

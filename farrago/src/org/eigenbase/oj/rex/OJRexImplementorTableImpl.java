@@ -623,7 +623,9 @@ public class OJRexImplementorTableImpl
                 // "new saffron.runtime.ComparatorAndObject(comparator, null)"
                 Expression arg =
                     implementor.translateInputField(
-                        rel, 0, call.getArgList().get(0));
+                        rel,
+                        0,
+                        call.getArgList().get(0));
                 return new AllocationExpression(
                     new TypeName("saffron.runtime.ComparatorAndObject"),
                     new ExpressionList(

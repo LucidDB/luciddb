@@ -22,9 +22,9 @@
 */
 package net.sf.farrago.query;
 
-import java.util.*;
-
 import java.nio.charset.*;
+
+import java.util.*;
 
 import net.sf.farrago.fem.fennel.*;
 
@@ -103,17 +103,17 @@ public class FennelReshapeRule
 
             List<CompOperatorEnum> op = new ArrayList<CompOperatorEnum>();
             if (!isConditionSimple(
-                calcRel,
-                filterExprs,
-                filterList,
-                filterLiterals,
-                op))
+                    calcRel,
+                    filterExprs,
+                    filterList,
+                    filterLiterals,
+                    op))
             {
                 return;
             }
 
             compOp = op.get(0);
-            filterOrdinals = filterList.toArray(new Integer[filterList.size()]);         
+            filterOrdinals = filterList.toArray(new Integer[filterList.size()]);
         }
 
         RelNode fennelInput =
@@ -136,8 +136,8 @@ public class FennelReshapeRule
                 compOp,
                 filterOrdinals,
                 filterLiterals,
-                new FennelRelParamId [] {},
-                new Integer [] {},
+                new FennelRelParamId[] {},
+                new Integer[] {},
                 null);
 
         call.transformTo(reshapeRel);
@@ -234,7 +234,7 @@ public class FennelReshapeRule
                 return false;
             }
         }
-        
+
         return ((origType == castType)
             || ((origTypeName == SqlTypeName.CHAR)
                 && (castTypeName == SqlTypeName.VARCHAR))
@@ -287,10 +287,10 @@ public class FennelReshapeRule
         List<RexInputRef> filterCols = new ArrayList<RexInputRef>();
         List<RexNode> filterOperands = new ArrayList<RexNode>();
         if (FennelRelUtil.extractSimplePredicates(
-            sargBindingList,
-            filterCols,
-            filterOperands,
-            op))
+                sargBindingList,
+                filterCols,
+                filterOperands,
+                op))
         {
             for (RexInputRef filterCol : filterCols) {
                 filterList.add(filterCol.getIndex());

@@ -31,8 +31,8 @@ package org.eigenbase.sarg;
 public enum SargSetOperator
 {
     /**
-     * Set intersection over any number of children
-     * (no children => universal set).
+     * Set intersection over any number of children (no children => universal
+     * set).
      */
     INTERSECTION,
 

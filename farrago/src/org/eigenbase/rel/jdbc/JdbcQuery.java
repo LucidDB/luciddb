@@ -75,8 +75,7 @@ public class JdbcQuery
      * @param cluster {@link RelOptCluster}  this relational expression belongs
      * to
      * @param connection a {@link RelOptConnection}; must also implement {@link
-     * DataSource}, because that's how we will acquire the JDBC
-     * connection
+     * DataSource}, because that's how we will acquire the JDBC connection
      * @param sql SQL parse tree, may be null, otherwise must be a SELECT
      * statement
      * @param dataSource Provides a JDBC connection to run this query against.

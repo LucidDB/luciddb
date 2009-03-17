@@ -21,14 +21,13 @@
 */
 package net.sf.farrago.query;
 
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-
-import java.util.List;
-import java.util.Arrays;
 
 
 /**
@@ -113,7 +112,6 @@ public class FennelAggRel
 
         return aggStream;
     }
-
 }
 
 // End FennelAggRel.java

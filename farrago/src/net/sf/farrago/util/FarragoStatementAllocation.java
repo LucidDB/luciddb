@@ -53,7 +53,7 @@ public class FarragoStatementAllocation
         this.conn = conn;
         this.stmt = stmt;
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     public void setResultSet(ResultSet resultSet)
@@ -75,7 +75,7 @@ public class FarragoStatementAllocation
             if (conn != null) {
                 try {
                     conn.close();
-                } catch(SQLException e) {
+                } catch (SQLException e) {
                     // REVIEW:  is it OK to suppress?  Should at least trace.
                 }
             }

@@ -36,11 +36,11 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jdbc4.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
-import org.eigenbase.jdbc4.*;
 
 /**
  * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
@@ -49,7 +49,8 @@ import org.eigenbase.jdbc4.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineConnection extends Unwrappable
+public class FarragoJdbcEngineConnection
+    extends Unwrappable
     implements FarragoConnection,
         FarragoSessionConnectionSource
 {
@@ -79,7 +80,7 @@ public class FarragoJdbcEngineConnection extends Unwrappable
         try {
             initConnection(info);
         } catch (SQLException e) {
-            close();        // prevent leak
+            close(); // prevent leak
             throw e;
         }
     }
@@ -681,11 +682,11 @@ public class FarragoJdbcEngineConnection extends Unwrappable
         throw new UnsupportedOperationException("createBlob");
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     //
     // end JDBC 4 methods
     //
-
-    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Implementation of {@link FarragoMedDataWrapperInfo} which fleetingly

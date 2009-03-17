@@ -81,7 +81,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     private static final String REPEAT = "@repeat";
     private static final String SYNC = "@sync";
     private static final String TIMEOUT = "@timeout";
-    private static final String ROWLIMIT="@rowlimit";
+    private static final String ROWLIMIT = "@rowlimit";
     private static final String PREPARE = "@prepare";
     private static final String FETCH = "@fetch";
     private static final String CLOSE = "@close";
@@ -129,7 +129,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 new StateDatum(CLOSE, THREAD_STATE),
                 new StateDatum(SLEEP, THREAD_STATE),
                 new StateDatum(SQL, THREAD_STATE),
-                new StateDatum(ERR, THREAD_STATE),         
+                new StateDatum(ERR, THREAD_STATE),
                 new StateDatum(END, POST_THREAD_STATE)
             }),
 
@@ -143,7 +143,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 new StateDatum(FETCH, REPEAT_STATE),
                 new StateDatum(CLOSE, REPEAT_STATE),
                 new StateDatum(SLEEP, REPEAT_STATE),
-                new StateDatum(SQL, REPEAT_STATE),         
+                new StateDatum(SQL, REPEAT_STATE),
                 new StateDatum(ERR, THREAD_STATE),
                 new StateDatum(END, THREAD_STATE)
             }),
@@ -494,8 +494,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                             trimmedLine.substring(ROWLIMIT_LEN).trim();
                         String limitStr = firstWord(args);
                         int limit = Integer.parseInt(limitStr);
-                        assert(limit >= 0) : "Rowlimit must be >= 0";
-                        
+                        assert (limit >= 0) : "Rowlimit must be >= 0";
+
                         String sql =
                             readSql(
                                 skipFirstWord(args).trim(),
@@ -675,9 +675,10 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                     continue;
                 }
 
-                if (line.startsWith("select") ||
-                    line.startsWith("values") ||
-                    line.startsWith("explain")) {
+                if (line.startsWith("select")
+                    || line.startsWith("values")
+                    || line.startsWith("explain"))
+                {
                     return true;
                 } else {
                     return false;
@@ -1035,31 +1036,31 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             return false;
         }
     }
-    
+
     private static abstract class CommandWithTimeoutAndRowLimit
         extends CommandWithTimeout
     {
         private int rowLimit;
-        
+
         private CommandWithTimeoutAndRowLimit(long timeout)
         {
             this(timeout, 0);
         }
-        
+
         private CommandWithTimeoutAndRowLimit(long timeout, int rowLimit)
         {
             super(timeout);
             this.rowLimit = rowLimit;
         }
-        
+
         protected void setRowLimit(Statement stmt)
             throws SQLException
         {
-            assert(rowLimit >= 0);
+            assert (rowLimit >= 0);
             if (rowLimit > 0) {
                 stmt.setMaxRows(rowLimit);
             }
-        }       
+        }
     }
 
     /**
@@ -1086,7 +1087,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         {
             this(sql, timeout, 0);
         }
-        
+
         private SelectCommand(String sql, long timeout, int rowLimit)
         {
             super(timeout, rowLimit);

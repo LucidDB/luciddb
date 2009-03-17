@@ -48,8 +48,10 @@ public class FennelValuesRel
     extends ValuesRelBase
     implements FennelRel
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final boolean isVisibleInExplain;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -78,7 +80,7 @@ public class FennelValuesRel
             new RelTraitSet(FENNEL_EXEC_CONVENTION));
         this.isVisibleInExplain = isVisibleInExplain;
     }
-    
+
     /**
      * Creates a new FennelValuesRel. Note that tuples passed in become owned by
      * this rel (without a deep copy), so caller must not modify them after this
@@ -128,7 +130,7 @@ public class FennelValuesRel
         // TODO:  if tuples.size() == 1, say it's trivially sorted
         return RelFieldCollation.emptyCollationArray;
     }
-    
+
     public boolean isVisibleInExplain()
     {
         return isVisibleInExplain;

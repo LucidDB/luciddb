@@ -21,21 +21,25 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlNode;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
  * Implementation of {@link SqlValidatorNamespace} for a field of a record.
  *
- * <p>A field is not a very interesting namespace - except if the field has
- * a record or multiset type - but this class exists to make fields behave
+ * <p>A field is not a very interesting namespace - except if the field has a
+ * record or multiset type - but this class exists to make fields behave
  * similarly to other records for purposes of name resolution.
  *
- * @version $Id$
  * @author jhyde
+ * @version $Id$
  */
-class FieldNamespace extends AbstractNamespace
+class FieldNamespace
+    extends AbstractNamespace
 {
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a FieldNamespace.
      *
@@ -50,6 +54,8 @@ class FieldNamespace extends AbstractNamespace
         assert dataType != null;
         this.rowType = dataType;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void setRowType(RelDataType rowType)
     {

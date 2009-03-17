@@ -156,6 +156,7 @@ public interface FarragoSessionDdlValidator
      * @param obj object being defined
      * @param pos parser offset
      * @param body text of body
+     *
      * @return body text with preceding whitespace removed
      */
     public String setParserOffset(
@@ -283,15 +284,15 @@ public interface FarragoSessionDdlValidator
         SqlValidatorException ex);
 
     /**
-     * Deletes the given object and cascades deletion as necessary to 
-     * subordinate objects.  Implementation of deletion is handled with
-     * the highest performance possible given the underlying repository
+     * Deletes the given object and cascades deletion as necessary to
+     * subordinate objects. Implementation of deletion is handled with the
+     * highest performance possible given the underlying repository
      * implementation.
-     * 
+     *
      * @param obj object to delete
      */
     public void deleteObject(RefObject obj);
-    
+
     /**
      * Adds a {@link FarragoSessionDdlDropRule}.
      *
@@ -332,10 +333,10 @@ public interface FarragoSessionDdlValidator
      * @param analyzedSql Analyzed SQL for the view definition
      */
     void fixupView(FemLocalView view, FarragoSessionAnalyzedSql analyzedSql);
-    
+
     /**
      * Obtains the single consistent timestamp for this DDL transaction.
-     * 
+     *
      * @return the timestamp for this DDL transaction
      */
     public String obtainTimestamp();

@@ -36,7 +36,8 @@ import org.eigenbase.sql.parser.*;
 
 
 /**
- * MedJdbcPushDownRule is a rule to push filters and projections down to Jdbc source
+ * MedJdbcPushDownRule is a rule to push filters and projections down to Jdbc
+ * source
  *
  * @author Sunny Choi
  * @version $Id$
@@ -91,10 +92,14 @@ class MedJdbcPushDownRule
 
         if (projOnFilter) {
             topProj = (ProjectRel) call.rels[0];
+
             // handle any expressions in the projection
-            PushProjector pushProject = new PushProjector(
-                topProj, null, filter.getChild(), 
-                Collections.<SqlOperator>emptySet());
+            PushProjector pushProject =
+                new PushProjector(
+                    topProj,
+                    null,
+                    filter.getChild(),
+                    Collections.<SqlOperator>emptySet());
             ProjectRel newProj = pushProject.convertProject(null);
             if (newProj != null) {
                 topProj = (ProjectRel) newProj.getChild();
@@ -110,9 +115,12 @@ class MedJdbcPushDownRule
         if (!filterOnly) {
             bottomProj = (ProjectRel) call.rels[relLength - 2];
             if (projectOnly) {
-                PushProjector pushProject = new PushProjector(
-                    bottomProj, null, queryRel, 
-                    Collections.<SqlOperator>emptySet());
+                PushProjector pushProject =
+                    new PushProjector(
+                        bottomProj,
+                        null,
+                        queryRel,
+                        Collections.<SqlOperator>emptySet());
                 ProjectRel newProj = pushProject.convertProject(null);
                 if (newProj != null) {
                     bottomProj = (ProjectRel) newProj.getChild();
@@ -129,7 +137,7 @@ class MedJdbcPushDownRule
         SqlNode filterNode = null;
         if (!projectOnly) {
             // REVIEW: SWZ: 2008-08-29: Doesn't handle the case where the
-            // filter is simply a boolean value: 
+            // filter is simply a boolean value:
             // select * from sales.emps where slacker
             // (slacker = true or where slacker is true work fine, though)
             // In my example, the cast to RexCell fails. (Logged as FRG-339.)
@@ -166,15 +174,13 @@ class MedJdbcPushDownRule
         }
 
         List<SqlIdentifier> projList = null;
-        String[] fieldNames = null;
-        RelDataType[] fieldTypes = null;
+        String [] fieldNames = null;
+        RelDataType [] fieldTypes = null;
 
         // push down projection
         if (projOnFilter) {
-            projList =
-                new ArrayList<SqlIdentifier>();
-            List<RelDataTypeField> fields =
-                topProj.getRowType().getFieldList();
+            projList = new ArrayList<SqlIdentifier>();
+            List<RelDataTypeField> fields = topProj.getRowType().getFieldList();
             int fieldLen = fields.size();
             fieldNames = new String[fieldLen];
             fieldTypes = new RelDataType[fieldLen];
@@ -188,8 +194,7 @@ class MedJdbcPushDownRule
                 fieldTypes[i] = field.getType();
             }
         } else if (!filterOnly) {
-            projList =
-                new ArrayList<SqlIdentifier>();
+            projList = new ArrayList<SqlIdentifier>();
             List<RelDataTypeField> fields =
                 bottomProj.getRowType().getFieldList();
             int fieldLen = fields.size();
@@ -208,10 +213,11 @@ class MedJdbcPushDownRule
 
         SqlNodeList projection = queryRel.getSql().getSelectList();
         if (projList != null) {
-            projection = new SqlNodeList(
-                Collections.unmodifiableList(
-                    projList),
-                SqlParserPos.ZERO);
+            projection =
+                new SqlNodeList(
+                    Collections.unmodifiableList(
+                        projList),
+                    SqlParserPos.ZERO);
         }
 
         if (filterNode == null) {
@@ -290,7 +296,7 @@ class MedJdbcPushDownRule
         } catch (SQLException ex) {
             return;
         }
-        
+
         RelDataType rt = queryRel.getRowType();
         if (!filterOnly) {
             RexBuilder rexBuilder = queryRel.getCluster().getRexBuilder();
@@ -308,19 +314,21 @@ class MedJdbcPushDownRule
                 selectWithFilter);
 
         if (newTopProject != null) {
-            rel = new ProjectRel(
-                newTopProject.getCluster(),
-                rel,
-                newTopProject.getProjectExps(),
-                newTopProject.getRowType(),
-                newTopProject.getFlags(),
-                newTopProject.getCollationList());
+            rel =
+                new ProjectRel(
+                    newTopProject.getCluster(),
+                    rel,
+                    newTopProject.getProjectExps(),
+                    newTopProject.getRowType(),
+                    newTopProject.getFlags(),
+                    newTopProject.getCollationList());
         }
 
         call.transformTo(rel);
     }
 
-    private String getSourceFieldName(MedJdbcQueryRel queryRel, String name) {
+    private String getSourceFieldName(MedJdbcQueryRel queryRel, String name)
+    {
         String fieldName = name;
         if (!queryRel.columnSet.directory.server.lenient) {
             List<RelDataTypeField> fieldList =

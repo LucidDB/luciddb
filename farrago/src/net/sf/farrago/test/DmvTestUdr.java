@@ -103,7 +103,7 @@ public abstract class DmvTestUdr
             FarragoProperties.instance().expandProperties(
                 dotFilename);
         FileWriter dotWriter = new FileWriter(dotFilename);
-        ((EnkiMDRepository)context.getMdrRepos()).beginSession();
+        ((EnkiMDRepository) context.getMdrRepos()).beginSession();
         try {
             String lurql = readFileAsString(lurqlFilename);
             JmiQueryProcessor queryProcessor =
@@ -137,7 +137,7 @@ public abstract class DmvTestUdr
                 dotWriter);
         } finally {
             dotWriter.close();
-            ((EnkiMDRepository)context.getMdrRepos()).endSession();
+            ((EnkiMDRepository) context.getMdrRepos()).endSession();
         }
     }
 

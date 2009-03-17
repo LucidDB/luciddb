@@ -1565,9 +1565,11 @@ public class CalcProgramBuilder
          * Returns the list of registers of a given type.
          *
          * @param registerSetType Type of register
+         *
          * @return list of registers of given type, never null
          */
-        public final List<CalcReg> getRegisterList(RegisterSetType registerSetType)
+        public final List<CalcReg> getRegisterList(
+            RegisterSetType registerSetType)
         {
             return sets.get(registerSetType.ordinal());
         }

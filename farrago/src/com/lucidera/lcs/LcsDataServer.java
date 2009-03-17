@@ -184,7 +184,7 @@ class LcsDataServer
         throws SQLException
     {
         // Verify that no column has a collection for its type, because
-        // we don't support those...yet.  Store columns in LinkedHashSet 
+        // we don't support those...yet.  Store columns in LinkedHashSet
         // so we create their cluster indexes in a deterministic order.
         Set<CwmColumn> uncoveredColumns =
             new LinkedHashSet<CwmColumn>(
@@ -384,7 +384,7 @@ class LcsDataServer
     {
         return index.isClustered();
     }
-    
+
     // implement FarragoMedLocalDataServer
     public boolean supportsAlterTableAddColumn()
     {

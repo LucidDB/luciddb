@@ -127,13 +127,14 @@ class VolcanoRuleMatch
             if (targetImportance > importance) {
                 importance = targetImportance;
 
-                // If the equivalence class is cheaper than the target, bump
-                // up the importance of the rule. A converter is an easy way to
+                // If the equivalence class is cheaper than the target, bump up
+                // the importance of the rule. A converter is an easy way to
                 // make the plan cheaper, so we'd hate to miss this opportunity.
                 //
-                // REVIEW: jhyde, 2007/12/21: This rule seems to make sense,
-                // but is disabled until it has been proven.
-                if (subset != null
+                //
+                // REVIEW: jhyde, 2007/12/21: This rule seems to make sense, but is
+                // disabled until it has been proven.
+                if ((subset != null)
                     && subset.bestCost.isLt(targetSubset.bestCost)
                     && false)
                 {
@@ -178,8 +179,8 @@ class VolcanoRuleMatch
 
     /**
      * Returns a guess as to which subset (that is equivalence class of
-     * relational expressions combined with a set of physical traits) the
-     * result of this rule will belong to.
+     * relational expressions combined with a set of physical traits) the result
+     * of this rule will belong to.
      *
      * @return expected subset, or null if we cannot guess
      */
@@ -189,9 +190,10 @@ class VolcanoRuleMatch
             return targetSubset;
         }
         final RelTrait targetTrait = getRule().getOutTrait();
-        if (targetSet != null && targetTrait != null) {
+        if ((targetSet != null) && (targetTrait != null)) {
             final RelTraitSet targetTraitSet = rels[0].getTraits().clone();
             targetTraitSet.setTrait(targetTrait.getTraitDef(), targetTrait);
+
             // Find the subset in the target set which matches the expected
             // set of traits. It may not exist yet.
             targetSubset = targetSet.getSubset(targetTraitSet);

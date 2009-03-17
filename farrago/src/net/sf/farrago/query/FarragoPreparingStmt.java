@@ -53,7 +53,7 @@ import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
@@ -246,7 +246,7 @@ public class FarragoPreparingStmt
 
     /**
      * Sets the parent FarragoPreparingStmt corresponding to this statement.
-     * This is used when this is a reentrant statement.  The parent corresponds
+     * This is used when this is a reentrant statement. The parent corresponds
      * to the statement that requires the reentrant statement.
      *
      * @param parentStmt the parent of this statement
@@ -394,7 +394,7 @@ public class FarragoPreparingStmt
 
     protected List<FarragoTransformDef> getTransformDefs()
     {
-         return relImplementor.getTransforms();
+        return relImplementor.getTransforms();
     }
 
     // implement FarragoSessionPreparingStmt
@@ -486,7 +486,10 @@ public class FarragoPreparingStmt
     }
 
     // expose to this package, for FarragoTransformDef
-    protected Class compileClass(String packageName, String className, String source)
+    protected Class compileClass(
+        String packageName,
+        String className,
+        String source)
     {
         return super.compileClass(packageName, className, source);
     }
@@ -562,16 +565,15 @@ public class FarragoPreparingStmt
             if (!streamDefSet.isEmpty()) {
                 FemCmdPrepareExecutionStreamGraph cmdPrepareStream =
                     getRepos().newFemCmdPrepareExecutionStreamGraph();
-                
+
                 // FIXME jvs 22-Jul-2008:  this does not play well
                 // with statement caching, since different sessions
                 // may have different settings for DOP, but the DOP
                 // is not part of the cache key
                 cmdPrepareStream.setDegreeOfParallelism(
                     getSession().getSessionVariables().getInteger(
-                        FarragoDefaultSessionPersonality.DEGREE_OF_PARALLELISM)
-                    );
-                
+                        FarragoDefaultSessionPersonality.DEGREE_OF_PARALLELISM));
+
                 Collection<FemExecutionStreamDef> streamDefs =
                     cmdPrepareStream.getStreamDefs();
                 streamDefs.addAll(streamDefSet);
@@ -1070,8 +1072,8 @@ public class FarragoPreparingStmt
             sqlToRelConverter.setDefaultValueFactory(
                 new ReposDefaultValueFactory(this));
             if (getSession().getSessionVariables().getBoolean(
-                FarragoDefaultSessionPersonality.
-                    REDUCE_NON_CORRELATED_SUBQUERIES))
+                    FarragoDefaultSessionPersonality
+                    .REDUCE_NON_CORRELATED_SUBQUERIES))
             {
                 sqlToRelConverter.setSubqueryConverter(
                     new ScalarSubqueryConverter(this));
@@ -1389,18 +1391,17 @@ public class FarragoPreparingStmt
         // tables that were created prior to when the label was created.
         Timestamp labelTimestamp =
             getSession().getSessionLabelCreationTimestamp();
-        if (labelTimestamp != null && table instanceof FemLocalTable) {
+        if ((labelTimestamp != null) && (table instanceof FemLocalTable)) {
             FemAnnotatedElement annotated = (FemAnnotatedElement) table;
             Timestamp objectCreateTimestamp =
                 Timestamp.valueOf(annotated.getCreationTimestamp());
             if (objectCreateTimestamp.compareTo(labelTimestamp) > 0) {
-                throw
-                    FarragoResource.instance().
-                        ValidatorAccessObjectNonVisibleToLabel.
-                            ex(getRepos().getLocalizedObjectName(table));
+                throw FarragoResource.instance()
+                .ValidatorAccessObjectNonVisibleToLabel.ex(
+                    getRepos().getLocalizedObjectName(table));
             }
         }
-        
+
         addDependency(table, action);
 
         if (table.getVisibility() == null) {
@@ -1421,8 +1422,8 @@ public class FarragoPreparingStmt
                 if (dep.getNamespace() instanceof FemRecoveryReference) {
                     FemRecoveryReference recoveryRef =
                         (FemRecoveryReference) dep.getNamespace();
-                    if (recoveryRef.getRecoveryType() ==
-                        RecoveryTypeEnum.ALTER_TABLE_ADD_COLUMN)
+                    if (recoveryRef.getRecoveryType()
+                        == RecoveryTypeEnum.ALTER_TABLE_ADD_COLUMN)
                     {
                         --nColumnsActual;
                         break;
@@ -1430,13 +1431,13 @@ public class FarragoPreparingStmt
                 }
             }
 
-
             // If a label is set, hide any columns which were created
             // after the label
             if (labelTimestamp != null) {
                 while (nColumnsActual > 1) {
-                    FemStoredColumn column = (FemStoredColumn)
-                        table.getFeature().get(nColumnsActual - 1);
+                    FemStoredColumn column =
+                        (FemStoredColumn) table.getFeature().get(
+                            nColumnsActual - 1);
                     Timestamp columnCreateTimestamp =
                         Timestamp.valueOf(column.getCreationTimestamp());
                     if (columnCreateTimestamp.compareTo(labelTimestamp) > 0) {
@@ -1449,17 +1450,20 @@ public class FarragoPreparingStmt
                     }
                 }
             }
-            
+
             // Now truncate the row if necessary
             if (nColumnsActual < nColumnsTotal) {
-                rowType = getFarragoTypeFactory().createStructType(
-                    RelOptUtil.getFieldTypeList(rowType).subList(
-                        0, nColumnsActual),
-                    RelOptUtil.getFieldNameList(rowType).subList(
-                        0, nColumnsActual));
+                rowType =
+                    getFarragoTypeFactory().createStructType(
+                        RelOptUtil.getFieldTypeList(rowType).subList(
+                            0,
+                            nColumnsActual),
+                        RelOptUtil.getFieldNameList(rowType).subList(
+                            0,
+                            nColumnsActual));
             }
         }
-        
+
         SqlAccessType allowedAccess =
             FarragoCatalogUtil.getTableAllowedAccess(table);
         return newValidatorTable(

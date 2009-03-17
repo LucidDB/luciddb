@@ -259,7 +259,7 @@ public class LucidDbSqlValidator
         // ON LCS_RID("SYS$SRC"."SYS$ANON1") = LCS_RID("SYS$TGT"."I")
         // AND "J" > 10
         // WHEN MATCHED THEN UPDATE SET "I" = "I" + 1, "J" = 7
-        
+
         // LCS_RID doesn't care which column we choose (only which table
         // reference it comes from), so we can arbitrarily pick the first
         // column in the table.
@@ -277,18 +277,20 @@ public class LucidDbSqlValidator
                 // let validator complain about non-existent table
                 return null;
             }
-            colName =
-                relOptTable.getRowType().getFieldList().get(0).getName();
+            colName = relOptTable.getRowType().getFieldList().get(0).getName();
         }
         SqlNode colRef = null;
-        SqlIdentifier colId = new SqlIdentifier(
-            new String [] { alias, colName }, SqlParserPos.ZERO);
-        SqlNode lcsRidCall = LucidDbOperatorTable.lcsRidFunc.createCall(
-            SqlParserPos.ZERO,
-            colId);
+        SqlIdentifier colId =
+            new SqlIdentifier(
+                new String[] { alias, colName },
+                SqlParserPos.ZERO);
+        SqlNode lcsRidCall =
+            LucidDbOperatorTable.lcsRidFunc.createCall(
+                SqlParserPos.ZERO,
+                colId);
         return lcsRidCall;
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

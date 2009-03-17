@@ -22,9 +22,10 @@
 */
 package org.eigenbase.sql.type;
 
+import java.io.*;
+
 import org.eigenbase.reltype.*;
 
-import java.io.Serializable;
 
 /**
  * Abstract base class for SQL implementations of {@link RelDataType}.
@@ -34,7 +35,8 @@ import java.io.Serializable;
  */
 public abstract class AbstractSqlType
     extends RelDataTypeImpl
-    implements Cloneable, Serializable
+    implements Cloneable,
+        Serializable
 {
     //~ Instance fields --------------------------------------------------------
 

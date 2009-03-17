@@ -23,12 +23,12 @@ package org.eigenbase.rel;
 
 import java.util.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlValidatorException;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 
@@ -78,7 +78,7 @@ public abstract class AggregateRelBase
     {
         // REVIEW jvs 5-Apr-2008:  Shouldn't this just return true always?
         // How can the result of aggregation have any duplicates?
-        
+
         return (aggCalls.size() == 0)
             && (groupCount == getChild().getRowType().getFieldList().size());
     }
@@ -178,8 +178,8 @@ public abstract class AggregateRelBase
                 public RelDataType getFieldType(int index)
                 {
                     if (index < groupCount) {
-                       return getChild().getRowType().getFields()[index]
-                           .getType();
+                        return getChild().getRowType().getFields()[index]
+                            .getType();
                     } else {
                         final AggregateCall aggCall =
                             aggCalls.get(index - groupCount);
@@ -191,8 +191,8 @@ public abstract class AggregateRelBase
     }
 
     /**
-     * Returns whether the inferred type of an {@link AggregateCall} matches
-     * the type it was given when it was created.
+     * Returns whether the inferred type of an {@link AggregateCall} matches the
+     * type it was given when it was created.
      *
      * @param aggCall Aggregate call
      * @param fail Whether to fail if the types do not match
@@ -232,8 +232,8 @@ public abstract class AggregateRelBase
 
     /**
      * Implementation of the {@link SqlOperatorBinding} interface for an {@link
-     * AggregateCall aggregate call} applied to a set of operands in the context of a
-     * {@link AggregateRel}.
+     * AggregateCall aggregate call} applied to a set of operands in the context
+     * of a {@link AggregateRel}.
      */
     public static class AggCallBinding
         extends SqlOperatorBinding
@@ -244,10 +244,10 @@ public abstract class AggregateRelBase
         /**
          * Creates an AggCallBinding
          *
-         * @param typeFactory  Type factory
-         * @param aggFunction  Aggregation function
+         * @param typeFactory Type factory
+         * @param aggFunction Aggregation function
          * @param aggregateRel Relational expression which is context
-         * @param operands     Operand ordinals
+         * @param operands Operand ordinals
          */
         AggCallBinding(
             RelDataTypeFactory typeFactory,

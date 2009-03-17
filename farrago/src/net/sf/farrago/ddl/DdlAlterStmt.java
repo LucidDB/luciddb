@@ -30,9 +30,8 @@ import net.sf.farrago.session.*;
 
 
 /**
- * DdlAlterStmt represents some but not all DDL ALTER statements.
- * For others, see {@link DdlAlterTableStructureStmt},
- * {@link DdlRebuildTableStmt}, and 
+ * DdlAlterStmt represents some but not all DDL ALTER statements. For others,
+ * see {@link DdlAlterTableStructureStmt}, {@link DdlRebuildTableStmt}, and
  * {@link DdlSetSystemParamStmt}.
  *
  * @author Stephan Zuercher
@@ -66,7 +65,7 @@ public abstract class DdlAlterStmt
         super(alterElement);
     }
 
-    // REVIEW: SWZ: 2008-02-26: Eliminate this constructor if no red-zone 
+    // REVIEW: SWZ: 2008-02-26: Eliminate this constructor if no red-zone
     // subclasses require it.
     /**
      * @deprecated

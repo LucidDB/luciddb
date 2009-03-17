@@ -112,8 +112,8 @@ public abstract class SqlTypeUtil
      * Returns whether the operands to a call are char type-comparable.
      *
      * @param binding Binding of call to operands
-     * @param operands Operands to check for compatibility; usually the
-     * operands of the bound call, but not always
+     * @param operands Operands to check for compatibility; usually the operands
+     * of the bound call, but not always
      * @param throwOnFailure Whether to throw an exception on failure
      *
      * @return whether operands are valid
@@ -123,7 +123,7 @@ public abstract class SqlTypeUtil
      */
     public static boolean isCharTypeComparable(
         SqlCallBinding binding,
-        SqlNode[] operands,
+        SqlNode [] operands,
         boolean throwOnFailure)
     {
         final SqlValidator validator = binding.getValidator();
@@ -219,8 +219,7 @@ public abstract class SqlTypeUtil
         RelDataType type)
     {
         for (SqlNode operand : call.operands) {
-            RelDataType operandType =
-                validator.deriveType(scope, operand);
+            RelDataType operandType = validator.deriveType(scope, operand);
 
             if (containsNullable(operandType)) {
                 RelDataTypeFactory typeFactory = validator.getTypeFactory();
@@ -364,9 +363,9 @@ public abstract class SqlTypeUtil
      */
     public static boolean inSameFamilyOrNull(RelDataType t1, RelDataType t2)
     {
-        return t1.getSqlTypeName() == SqlTypeName.NULL ||
-            t2.getSqlTypeName() == SqlTypeName.NULL ||
-            t1.getFamily() == t2.getFamily();
+        return (t1.getSqlTypeName() == SqlTypeName.NULL)
+            || (t2.getSqlTypeName() == SqlTypeName.NULL)
+            || (t1.getFamily() == t2.getFamily());
     }
 
     /**
@@ -761,17 +760,18 @@ public abstract class SqlTypeUtil
         if (areCharacterSetsMismatched(toType, fromType)) {
             return false;
         }
-        
+
         return toType.getFamily() == fromType.getFamily();
     }
 
     /**
-     * Determines whether two types both have different character sets.  If one
+     * Determines whether two types both have different character sets. If one
      * or the other type has no character set (e.g. in cast from INT to
      * VARCHAR), that is not a mismatch.
      *
      * @param t1 first type
      * @param t2 second type
+     *
      * @return true iff mismatched
      */
     public static boolean areCharacterSetsMismatched(
@@ -884,7 +884,7 @@ public abstract class SqlTypeUtil
         // this method is called from at least one place (MedJdbcNameDirectory)
         // where internally a cast across character repertoires is OK.  Should
         // probably clean that up.
-        
+
         SqlTypeAssignmentRules rules = SqlTypeAssignmentRules.instance();
         return rules.canCastFrom(tn1, tn2, coerce);
     }
@@ -1171,6 +1171,7 @@ public abstract class SqlTypeUtil
      * @param factory Type factory
      * @param type1 First type
      * @param type2 Second type
+     *
      * @return whether types are equal, ignoring nullability
      */
     public static boolean equalSansNullability(
@@ -1193,16 +1194,17 @@ public abstract class SqlTypeUtil
     /**
      * Adds a field to a record type at a specified position.
      *
-     * <p>For example, if type is <code>(A integer, B boolean)</code>,
-     * and fieldType is <code>varchar(10)</code>, then
-     * <code>prepend(typeFactory, type, 0, "Z", fieldType)</code>
-     * will return <code>(Z varchar(10), A integer, B boolean)</code>.
+     * <p>For example, if type is <code>(A integer, B boolean)</code>, and
+     * fieldType is <code>varchar(10)</code>, then <code>prepend(typeFactory,
+     * type, 0, "Z", fieldType)</code> will return <code>(Z varchar(10), A
+     * integer, B boolean)</code>.
      *
      * @param typeFactory Type factory
      * @param type Record type
      * @param at Ordinal to add field
      * @param fieldName Name of new field
      * @param fieldType Type of new field
+     *
      * @return Extended record type
      */
     public static RelDataType addField(
@@ -1213,8 +1215,7 @@ public abstract class SqlTypeUtil
         final RelDataType fieldType)
     {
         return typeFactory.createStructType(
-            new RelDataTypeFactory.FieldInfo()
-            {
+            new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
                     return type.getFieldCount() + 1;
@@ -1241,16 +1242,16 @@ public abstract class SqlTypeUtil
                     }
                     return type.getFieldList().get(index).getType();
                 }
-            }
-        );
+            });
     }
 
     /**
-     * Returns the ordinal of a given field in a record type, or -1 if the
-     * field is not found.
+     * Returns the ordinal of a given field in a record type, or -1 if the field
+     * is not found.
      *
      * @param type Record type
      * @param fieldName Name of field
+     *
      * @return Ordinal of field
      */
     public static int findField(RelDataType type, String fieldName)
@@ -1269,22 +1270,24 @@ public abstract class SqlTypeUtil
      * Records a struct type with no fields.
      *
      * @param typeFactory Type factory
+     *
      * @return Struct type with no fields
      */
     public static RelDataType createEmptyStructType(
         RelDataTypeFactory typeFactory)
     {
         return typeFactory.createStructType(
-            new RelDataType[0], new String[0]);
+            new RelDataType[0],
+            new String[0]);
     }
 
     /**
-     * Returns whether two types are comparable. They need to be scalar types
-     * of the same family, or struct types whose fields are pairwise
-     * comparable.
+     * Returns whether two types are comparable. They need to be scalar types of
+     * the same family, or struct types whose fields are pairwise comparable.
      *
      * @param type1 First type
      * @param type2 Second type
+     *
      * @return Whether types are comparable
      */
     public static boolean isComparable(RelDataType type1, RelDataType type2)
@@ -1351,36 +1354,43 @@ public abstract class SqlTypeUtil
         return charset.name().startsWith("UTF");
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Convenience class for building a struct type with several fields.
      *
      * <p>TypeBuilder is more convenient because it supports chained calls to
      * add one field at a time. The chained syntax means that you can use a
      * TypeBuilder in contexts where only an expression is allowed, for example
-     * in a field initializer. There are several overloadings of the
-     * <code>add</code> method for types which take different parameters, and
-     * you can explicitly state whether you want a field to be nullable.
+     * in a field initializer. There are several overloadings of the <code>
+     * add</code> method for types which take different parameters, and you can
+     * explicitly state whether you want a field to be nullable.
      *
      * <p>For example, to create the type
      *
-     * <blockquote><pre>
+     * <blockquote>
+     * <pre>
      * (A BOOLEAN NOT NULL, B VARCHAR(10), C DECIMAL(6,2))
-     * </pre></blockquote>
+     * </pre>
+     * </blockquote>
      *
      * the code is
      *
-     * <blockquote><pre>
+     * <blockquote>
+     * <pre>
      * RelDataTypeFactory typeFactory;
      * return new TypeBuilder(typeFactory)
      *     .add("A", SqlTypeName.BOOLEAN, false)
      *     .add("B", SqlTypeName.VARCHAR(10), true)
      *     .add("C", SqlTypeName.DECIMAL, 6, 2, false)
      *     .type();
-     * </pre></blockquote>
+     * </pre>
+     * </blockquote>
      *
      * <p>The equivalent conventional code is:
      *
-     * <blockquote><pre>
+     * <blockquote>
+     * <pre>
      * RelDataTypeFactory typeFactory;
      * String[] names = {"A", "B", "C"};
      * RelDataType[] types = {
@@ -1391,7 +1401,8 @@ public abstract class SqlTypeUtil
      *    typeFactory.createSqlType(SqlTypeName.DECIMAL, 6, 2)
      * };
      * return typeFactory.createStructType(names, types);
-     * </pre></blockquote>
+     * </pre>
+     * </blockquote>
      */
     public static class TypeBuilder
     {
@@ -1438,7 +1449,8 @@ public abstract class SqlTypeUtil
             int scale,
             boolean nullable)
         {
-            RelDataType type = typeFactory.createSqlType(typeName, precision, scale);
+            RelDataType type =
+                typeFactory.createSqlType(typeName, precision, scale);
             if (nullable) {
                 type = typeFactory.createTypeWithNullability(type, nullable);
             }
@@ -1449,8 +1461,7 @@ public abstract class SqlTypeUtil
         public RelDataType type()
         {
             return typeFactory.createStructType(
-                new RelDataTypeFactory.FieldInfo()
-                {
+                new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {
                         return fieldList.size();
@@ -1465,8 +1476,7 @@ public abstract class SqlTypeUtil
                     {
                         return fieldList.get(index).getType();
                     }
-                }
-            );
+                });
         }
     }
 }

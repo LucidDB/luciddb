@@ -22,17 +22,15 @@
 */
 package org.eigenbase.sql.fun;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import java.nio.charset.*;
+
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlMonotonicity;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.*;
 
 
 /**
@@ -48,34 +46,8 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 public class SqlCastFunction
     extends SqlFunction
 {
-    private class TypeFamilyCast
-    {
-        private final RelDataTypeFamily castFrom;
-        private final RelDataTypeFamily castTo;
+    //~ Instance fields --------------------------------------------------------
 
-        public TypeFamilyCast(
-            RelDataTypeFamily castFrom,
-            RelDataTypeFamily castTo)
-        {
-            this.castFrom = castFrom;
-            this.castTo = castTo;
-        }
-        @Override
-        public boolean equals(Object obj)
-        {
-            // TODO Auto-generated method stub
-            if (obj.getClass()!=TypeFamilyCast.class) return false;
-            TypeFamilyCast other = (TypeFamilyCast) obj;
-            return this.castFrom.equals(other.castFrom)
-                && this.castTo.equals(other.castTo);
-        }
-        @Override
-        public int hashCode()
-        {
-            // TODO Auto-generated method stub
-            return castFrom.hashCode()+castTo.hashCode();
-        }  
-    }
     private final Set<TypeFamilyCast> nonMonotonicPreservingCasts =
         createNonMonotonicPreservingCasts();
 
@@ -100,45 +72,57 @@ public class SqlCastFunction
     private Set<TypeFamilyCast> createNonMonotonicPreservingCasts()
     {
         Set<TypeFamilyCast> result = new HashSet<TypeFamilyCast>();
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.EXACT_NUMERIC,
-            SqlTypeFamily.CHARACTER));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.NUMERIC,
-            SqlTypeFamily.CHARACTER));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.APPROXIMATE_NUMERIC,
-            SqlTypeFamily.CHARACTER));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.DATETIME_INTERVAL,
-            SqlTypeFamily.CHARACTER));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.CHARACTER,
-            SqlTypeFamily.EXACT_NUMERIC));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.CHARACTER,
-            SqlTypeFamily.NUMERIC));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.CHARACTER,
-            SqlTypeFamily.APPROXIMATE_NUMERIC));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.CHARACTER,
-            SqlTypeFamily.DATETIME_INTERVAL));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.DATETIME,
-            SqlTypeFamily.TIME));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.TIMESTAMP,
-            SqlTypeFamily.TIME));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.TIME,
-            SqlTypeFamily.DATETIME));
-        result.add(new TypeFamilyCast(
-            SqlTypeFamily.TIME,
-            SqlTypeFamily.TIMESTAMP));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.EXACT_NUMERIC,
+                SqlTypeFamily.CHARACTER));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.NUMERIC,
+                SqlTypeFamily.CHARACTER));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.APPROXIMATE_NUMERIC,
+                SqlTypeFamily.CHARACTER));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.DATETIME_INTERVAL,
+                SqlTypeFamily.CHARACTER));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.EXACT_NUMERIC));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.NUMERIC));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.APPROXIMATE_NUMERIC));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.CHARACTER,
+                SqlTypeFamily.DATETIME_INTERVAL));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.DATETIME,
+                SqlTypeFamily.TIME));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.TIMESTAMP,
+                SqlTypeFamily.TIME));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.TIME,
+                SqlTypeFamily.DATETIME));
+        result.add(
+            new TypeFamilyCast(
+                SqlTypeFamily.TIME,
+                SqlTypeFamily.TIMESTAMP));
         return result;
     }
-    
+
     private boolean isMonotonicPreservingCast(
         RelDataTypeFamily castFrom,
         RelDataTypeFamily castTo)
@@ -146,7 +130,7 @@ public class SqlCastFunction
         return !nonMonotonicPreservingCasts.contains(
             new TypeFamilyCast(castFrom, castTo));
     }
-    
+
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
     {
@@ -219,7 +203,8 @@ public class SqlCastFunction
             return false;
         }
         if (SqlTypeUtil.areCharacterSetsMismatched(
-                validatedNodeType, returnType))
+                validatedNodeType,
+                returnType))
         {
             if (throwOnFailure) {
                 // Include full type string to indicate character
@@ -256,17 +241,53 @@ public class SqlCastFunction
         writer.endFunCall(frame);
     }
 
-    @Override
-    public SqlMonotonicity getMonotonicity(SqlCall call, SqlValidatorScope scope)
+    @Override public SqlMonotonicity getMonotonicity(
+        SqlCall call,
+        SqlValidatorScope scope)
     {
         RelDataTypeFamily castFrom =
-            scope.getValidator().deriveType(scope, call.operands[0]).getFamily();
+            scope.getValidator().deriveType(scope, call.operands[0])
+            .getFamily();
         RelDataTypeFamily castTo =
-            scope.getValidator().deriveType(scope, call.operands[1]).getFamily();
+            scope.getValidator().deriveType(scope, call.operands[1])
+            .getFamily();
         if (isMonotonicPreservingCast(castFrom, castTo)) {
             return call.operands[0].getMonotonicity(scope);
         } else {
             return SqlMonotonicity.NotMonotonic;
+        }
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class TypeFamilyCast
+    {
+        private final RelDataTypeFamily castFrom;
+        private final RelDataTypeFamily castTo;
+
+        public TypeFamilyCast(
+            RelDataTypeFamily castFrom,
+            RelDataTypeFamily castTo)
+        {
+            this.castFrom = castFrom;
+            this.castTo = castTo;
+        }
+
+        @Override public boolean equals(Object obj)
+        {
+            // TODO Auto-generated method stub
+            if (obj.getClass() != TypeFamilyCast.class) {
+                return false;
+            }
+            TypeFamilyCast other = (TypeFamilyCast) obj;
+            return this.castFrom.equals(other.castFrom)
+                && this.castTo.equals(other.castTo);
+        }
+
+        @Override public int hashCode()
+        {
+            // TODO Auto-generated method stub
+            return castFrom.hashCode() + castTo.hashCode();
         }
     }
 }

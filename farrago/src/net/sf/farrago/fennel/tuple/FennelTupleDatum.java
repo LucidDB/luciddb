@@ -62,8 +62,8 @@ public class FennelTupleDatum
     private int capacity;
 
     /**
-     * if character data, whether the attribute descriptor is Unicode;
-     * otherwise false
+     * if character data, whether the attribute descriptor is Unicode; otherwise
+     * false
      */
     private boolean isUnicode;
 
@@ -481,8 +481,8 @@ public class FennelTupleDatum
     }
 
     /**
-     * Sets the isUnicode flag; this is non-public because it is private
-     * to TupleData initialization.
+     * Sets the isUnicode flag; this is non-public because it is private to
+     * TupleData initialization.
      */
     void setUnicode(boolean isUnicode)
     {

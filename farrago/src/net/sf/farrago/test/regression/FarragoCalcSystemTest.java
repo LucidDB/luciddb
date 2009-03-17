@@ -312,10 +312,10 @@ public class FarragoCalcSystemTest
 
         public boolean canImplement(SqlOperator op)
         {
-            return (this == Java || this == Auto)
-                && javaTab.get(op) != null
-                || (this == Fennel || this == Auto)
-                && fennelTab.get(op) != null;
+            return (((this == Java) || (this == Auto))
+                && (javaTab.get(op) != null))
+                || (((this == Fennel) || (this == Auto))
+                    && (fennelTab.get(op) != null));
         }
     }
 }

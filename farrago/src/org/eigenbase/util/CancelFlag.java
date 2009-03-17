@@ -29,7 +29,11 @@ package org.eigenbase.util;
  */
 public class CancelFlag
 {
+    //~ Instance fields --------------------------------------------------------
+
     private boolean cancelRequested;
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return whether a cancellation has been requested

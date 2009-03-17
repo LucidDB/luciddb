@@ -58,8 +58,8 @@ class FennelIdxWriteRel
      * @param child input the provides the records to be written to the index
      * @param discardDuplicates whether duplicates should be discard during
      * inserts
-     * @param monotonicInserts whether the records to be written are provided
-     * in increasing key order and therefore can be written to the index in
+     * @param monotonicInserts whether the records to be written are provided in
+     * increasing key order and therefore can be written to the index in
      * monotonic mode
      * @param rootPageIdParamId dynamic parameter id corresponding to the
      * temporary index that will be written
@@ -100,7 +100,7 @@ class FennelIdxWriteRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dInputRows =  RelMetadataQuery.getRowCount(getChild());
+        double dInputRows = RelMetadataQuery.getRowCount(getChild());
 
         // CPU cost is proportional to number of columns projected
         // I/O cost is proportional to pages of index scanned

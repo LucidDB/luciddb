@@ -221,6 +221,7 @@ public abstract class FennelAttributeAccessor
             tupleAccessor.getCurrentTupleBuf().position(fixedOffset);
             value.setLength(value.getCapacity());
             int len = value.getLength();
+
             // NOTE jvs 18-Jun-2007:  call setRawBytes unconditionally,
             // otherwise a zero-length string gets converted into
             // a null value.

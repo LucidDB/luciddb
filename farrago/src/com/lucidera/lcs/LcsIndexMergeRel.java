@@ -95,7 +95,7 @@ class LcsIndexMergeRel
         // TODO:  the real thing(sorter costing + merge cost)
         return planner.makeTinyCost();
     }
-    
+
     // override RelNode
     public double getRows()
     {

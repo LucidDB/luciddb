@@ -72,7 +72,7 @@ public class DdlDropStmt
         // rest.
         ddlValidator.deleteObject(getModelElement());
     }
-    
+
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {

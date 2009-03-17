@@ -72,13 +72,13 @@ public class DdlSetSessionParamStmt
     {
         FarragoSession session = ddlValidator.getInvokingSession();
         String valueString = paramValue.toValue();
-        
+
         session.getPersonality().validateSessionVariable(
             ddlValidator,
             session.getSessionVariables(),
             paramName,
             valueString);
-        
+
         // Retrieve the underlying label object
         if (paramName.equals(FarragoDefaultSessionPersonality.LABEL)) {
             // Labels can't be set inside UDR's because UDR's currently
@@ -105,7 +105,7 @@ public class DdlSetSessionParamStmt
     {
         visitor.visit(this);
     }
-    
+
     /**
      * @return the name of the parameter being set
      */
@@ -113,7 +113,7 @@ public class DdlSetSessionParamStmt
     {
         return paramName;
     }
-    
+
     /**
      * @return the value of the parameter if the label parameter is being set
      */

@@ -70,8 +70,7 @@ public class OrderByScope
         return orderList;
     }
 
-    public void findAllColumnNames(
-        List<SqlMoniker> result)
+    public void findAllColumnNames(List<SqlMoniker> result)
     {
         final SqlValidatorNamespace ns = validator.getNamespace(select);
         addColumnNames(ns, result);

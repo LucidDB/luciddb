@@ -42,8 +42,8 @@ public enum JmiDeletionAction
     INVALIDATE,
 
     /**
-     * Cascade the modification recursively to the object on the
-     * other side of the association.
+     * Cascade the modification recursively to the object on the other side of
+     * the association.
      */
     CASCADE
 }

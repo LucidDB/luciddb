@@ -427,9 +427,10 @@ public class LoptSemiJoinOptimizer
                 LoptMetadataProvider.getSimpleColumnOrigin(
                     factRel,
                     keyIter.next());
+
             // can't use the rid column as a semijoin key
-            if (colOrigin == null ||
-                LucidDbSpecialOperators.isLcsRidColumnId(
+            if ((colOrigin == null)
+                || LucidDbSpecialOperators.isLcsRidColumnId(
                     colOrigin.getOriginColumnOrdinal()))
             {
                 removeKey = true;
@@ -445,7 +446,7 @@ public class LoptSemiJoinOptimizer
                 } else {
                     // the tables must match because the column has
                     // a simple origin
-                    assert(table == theTable);
+                    assert (table == theTable);
                 }
             }
             if (!removeKey) {
@@ -668,7 +669,7 @@ public class LoptSemiJoinOptimizer
         if (selectivity > .5) {
             return 0;
         }
-        
+
         RelOptCost factCost = RelMetadataQuery.getCumulativeCost(factRel);
 
         // if not enough information, return a low score

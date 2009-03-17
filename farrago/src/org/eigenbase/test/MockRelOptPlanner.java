@@ -95,7 +95,8 @@ public class MockRelOptPlanner
      * @param rel Relational expression
      * @param parent Parent relational expression
      * @param ordinalInParent Ordinal of relational expression among its
-     *                        siblings
+     * siblings
+     *
      * @return whether match occurred
      */
     private boolean matchRecursive(
@@ -142,6 +143,7 @@ public class MockRelOptPlanner
      * @param operand Root operand of rule
      * @param rel Relational expression
      * @param bindings Bindings, populated on successful match
+     *
      * @return whether relational expression matched rule
      */
     private boolean match(
@@ -211,7 +213,9 @@ public class MockRelOptPlanner
             RelNode [] rels)
         {
             super(
-                planner, operand, rels,
+                planner,
+                operand,
+                rels,
                 Collections.<RelNode, List<RelNode>>emptyMap());
         }
 

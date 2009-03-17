@@ -382,7 +382,7 @@ public class JmiMemTest
         assertTrue(table.refIsInstanceOf(femLocalTableClass, false));
 
         FemCmdOpenDatabase cmdOpenDatabase = factory.newFemCmdOpenDatabase();
-        RefObject beginTxnClass = 
+        RefObject beginTxnClass =
             factory.getFennelPackage().getFemCmdBeginTxn().refMetaObject();
         assertFalse(cmdOpenDatabase.refIsInstanceOf(beginTxnClass, true));
         assertFalse(cmdOpenDatabase.refIsInstanceOf(beginTxnClass, false));
@@ -563,7 +563,7 @@ public class JmiMemTest
         {
             throw new UnsupportedOperationException();
         }
-        
+
         public void beginReposTxn(boolean writable)
         {
             throw new UnsupportedOperationException();
@@ -623,7 +623,7 @@ public class JmiMemTest
         {
             return newTxnContext(false);
         }
-        
+
         // implement FarragoRepos
         public FarragoReposTxnContext newTxnContext(boolean manageReposSession)
         {
@@ -669,4 +669,3 @@ public class JmiMemTest
 }
 
 // End JmiMemTest.java
-

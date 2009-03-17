@@ -111,8 +111,8 @@ public interface FarragoMedLocalDataServer
      *
      * @param index definition of the index to verify
      * @param rootPageId root PageId of index
-     * @param estimate whether to estimate statistics for a quicker result
-     *                 (and at the cost of no unique key count)
+     * @param estimate whether to estimate statistics for a quicker result (and
+     * at the cost of no unique key count)
      * @param txnContext Fennel txn context
      *
      * @return index statistics for the specified index
@@ -157,8 +157,8 @@ public interface FarragoMedLocalDataServer
         throws SQLException;
 
     /**
-     * Checks whether ALTER TABLE ADD COLUMN is implemented for
-     * tables stored by this local data server.
+     * Checks whether ALTER TABLE ADD COLUMN is implemented for tables stored by
+     * this local data server.
      *
      * @return whether ALTER TABLE ADD COLUMN can be executed
      */

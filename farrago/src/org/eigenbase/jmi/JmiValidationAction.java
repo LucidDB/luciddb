@@ -22,8 +22,7 @@
 package org.eigenbase.jmi;
 
 /**
- * Enumerates the possible actions taken during validation of a
- * JmiChangeSet.
+ * Enumerates the possible actions taken during validation of a JmiChangeSet.
  *
  * @author John V. Sichi
  * @version $Id$

@@ -28,6 +28,7 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * A rule for directly aggregating off of an unclustered index scan.
  *
@@ -43,7 +44,7 @@ public class LcsIndexAggRule
      * The singletons
      *
      * <p>TODO: handle CalcRel after sort order has been cleaned up
-     */   
+     */
     public final static LcsIndexAggRule instanceRowScan =
         new LcsIndexAggRule(
             new RelOptRuleOperand(
@@ -51,7 +52,7 @@ public class LcsIndexAggRule
                 new RelOptRuleOperand(
                     LcsRowScanRel.class)),
             "row scan");
-    
+
     public final static LcsIndexAggRule instanceNormalizer =
         new LcsIndexAggRule(
             new RelOptRuleOperand(

@@ -45,31 +45,16 @@ import org.eigenbase.util.*;
 public class FarragoOJRexBuiltinImplementor
     extends FarragoOJRexImplementor
 {
+    //~ Enums ------------------------------------------------------------------
 
     /**
      * Enumeration of SQL operators that can be implemented in OJ.
      */
-    public enum Function {
-        FLOOR,
-        CEIL,
-        ABS,
-        POWER,
-        LN,
-        LOG10,
-        SUBSTRING,
-        OVERLAY,
-        MOD,
-        EXP,
-        CONCAT,
-        TRIM,
-        POSITION,
-        CHAR_LENGTH,
-        CHARACTER_LENGTH,
-        UPPER,
-        LOWER,
-        INITCAP,
-        CONVERT,
-        TRANSLATE,
+    public enum Function
+    {
+        FLOOR, CEIL, ABS, POWER, LN, LOG10, SUBSTRING, OVERLAY, MOD, EXP,
+        CONCAT, TRIM, POSITION, CHAR_LENGTH, CHARACTER_LENGTH, UPPER, LOWER,
+        INITCAP, CONVERT, TRANSLATE,
     }
 
     //~ Instance fields --------------------------------------------------------

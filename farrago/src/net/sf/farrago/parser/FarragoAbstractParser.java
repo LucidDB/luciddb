@@ -56,7 +56,6 @@ public abstract class FarragoAbstractParser
 
     private boolean parsingComplete = false;
 
-
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionParser
@@ -166,7 +165,6 @@ public abstract class FarragoAbstractParser
             final SqlParserPos pos = spex.getPos();
             if (pos != null) {
                 x = SqlUtil.newContextException(pos, actualEx, sql);
-
             } else {
                 x = spex;
             }

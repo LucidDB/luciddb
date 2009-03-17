@@ -32,7 +32,7 @@ import org.eigenbase.relopt.*;
  * LcsRowScanRel is the relational expression corresponding to a scan on a
  * column store table.
  *
- * @author Zelaine Fong 
+ * @author Zelaine Fong
  * @version $Id$
  */
 public class LcsRowScanRel
@@ -65,8 +65,14 @@ public class LcsRowScanRel
         double inputSelectivity)
     {
         super(
-            cluster, children, lcsTable, clusteredIndexes, connection, 
-            projectedColumns, isFullScan, resCols, 
+            cluster,
+            children,
+            lcsTable,
+            clusteredIndexes,
+            connection,
+            projectedColumns,
+            isFullScan,
+            resCols,
             inputSelectivity);
     }
 

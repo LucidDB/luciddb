@@ -18,7 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.lucidera.lcs;
 
 import net.sf.farrago.query.*;
@@ -27,15 +26,18 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
+
 /**
- * LcsSamplingRowScanRule converts a {@link SamplingRel} applied to 
- * an {@link LcsRowScanRel} into a {@link LcsSamplingRowScanRel}.
+ * LcsSamplingRowScanRule converts a {@link SamplingRel} applied to an {@link
+ * LcsRowScanRel} into a {@link LcsSamplingRowScanRel}.
  *
  * @author Stephan Zuercher
  */
 public class LcsSamplingRowScanRule
     extends RelOptRule
 {
+    //~ Constructors -----------------------------------------------------------
+
     public LcsSamplingRowScanRule()
     {
         super(
@@ -44,29 +46,31 @@ public class LcsSamplingRowScanRule
                 new RelOptRuleOperand(LcsRowScanRel.class, ANY)));
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelRel.FENNEL_EXEC_CONVENTION;
     }
-    
+
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        SamplingRel origSamplingRel = (SamplingRel)call.rels[0];
-        LcsRowScanRel origScanRel = (LcsRowScanRel)call.rels[1];
-        
+        SamplingRel origSamplingRel = (SamplingRel) call.rels[0];
+        LcsRowScanRel origScanRel = (LcsRowScanRel) call.rels[1];
+
         Util.permAssert(origScanRel.isFullScan, "Cannot sample index scans");
         Util.permAssert(
-            !origScanRel.hasResidualFilters(), 
+            !origScanRel.hasResidualFilters(),
             "Cannot sample scans with residual filters");
-        
+
         RelOptCluster cluster = origScanRel.getCluster();
         RelOptConnection connection = origScanRel.getConnection();
-        RelNode[] origScanRelInputs = origScanRel.getInputs();
+        RelNode [] origScanRelInputs = origScanRel.getInputs();
         LcsTable lcsTable = origScanRel.lcsTable;
-        
-        RelOptSamplingParameters samplingParams = 
+
+        RelOptSamplingParameters samplingParams =
             origSamplingRel.getSamplingParameters();
 
         LcsSamplingRowScanRel samplingScanRel =
@@ -78,8 +82,9 @@ public class LcsSamplingRowScanRule
                 connection,
                 origScanRel.projectedColumns,
                 samplingParams);
-        
+
         call.transformTo(samplingScanRel);
     }
-
 }
+
+// End LcsSamplingRowScanRule.java

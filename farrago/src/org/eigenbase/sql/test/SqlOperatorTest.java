@@ -22,8 +22,8 @@
 */
 package org.eigenbase.sql.test;
 
-import org.eigenbase.test.*;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.test.*;
 
 
 /**
@@ -39,9 +39,8 @@ public class SqlOperatorTest
     //~ Instance fields --------------------------------------------------------
 
     private SqlTester tester =
-        (SqlTester)
-            new SqlValidatorTestCase("dummy").getTester(
-                SqlConformance.Default);
+        (SqlTester) new SqlValidatorTestCase("dummy").getTester(
+            SqlConformance.Default);
 
     //~ Constructors -----------------------------------------------------------
 

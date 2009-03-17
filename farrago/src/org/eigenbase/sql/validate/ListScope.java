@@ -97,8 +97,7 @@ public abstract class ListScope
         }
     }
 
-    public void findAllColumnNames(
-        List<SqlMoniker> result)
+    public void findAllColumnNames(List<SqlMoniker> result)
     {
         for (SqlValidatorNamespace ns : children) {
             addColumnNames(ns, result);

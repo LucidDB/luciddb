@@ -25,11 +25,11 @@ package net.sf.farrago.jdbc.engine;
 import java.sql.*;
 
 import net.sf.farrago.jdbc.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.resource.FarragoResource;
 
-import org.eigenbase.util14.*;
 import org.eigenbase.jdbc4.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -40,11 +40,10 @@ import org.eigenbase.jdbc4.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineStatement extends Unwrappable
+public class FarragoJdbcEngineStatement
+    extends Unwrappable
     implements FarragoStatement
 {
-    //~ Static fields/initializers ---------------------------------------------
-
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -173,8 +172,8 @@ public class FarragoJdbcEngineStatement extends Unwrappable
         try {
             stmtContext.prepare(sql, true);
             if (!stmtContext.isPrepared() || stmtContext.isPreparedDml()) {
-                throw FarragoJdbcEngineDriver.
-                    newSqlException(ERRMSG_NOT_A_QUERY + sql);
+                throw FarragoJdbcEngineDriver.newSqlException(
+                    ERRMSG_NOT_A_QUERY + sql);
             }
             stmtContext.execute();
             ResultSet resultSet = openCursorResultSet();
@@ -499,9 +498,10 @@ public class FarragoJdbcEngineStatement extends Unwrappable
     //
     // begin JDBC 4 methods
     //
-    
+
     // implement Statement
-    public boolean isPoolable() throws SQLException
+    public boolean isPoolable()
+        throws SQLException
     {
         return false;
     }
@@ -512,7 +512,7 @@ public class FarragoJdbcEngineStatement extends Unwrappable
     {
         throw new UnsupportedOperationException("setPoolable");
     }
-    
+
     // implement Statement
     public boolean isClosed()
         throws SQLException

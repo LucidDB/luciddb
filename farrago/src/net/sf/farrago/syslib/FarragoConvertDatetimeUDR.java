@@ -24,8 +24,8 @@ package net.sf.farrago.syslib;
 import java.sql.*;
 
 import java.text.*;
-import java.util.Calendar;
 
+import java.util.Calendar;
 
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
@@ -157,12 +157,14 @@ public abstract class FarragoConvertDatetimeUDR
             ret = df.parse(s).getTime();
         } catch (ParseException ex) {
             // check for format string with week and year
-            if ((format.indexOf("w") != -1) && (format.length() <= s.length()))
+            if ((format.indexOf("w") != -1)
+                && (format.length() <= s.length()))
             {
                 return getPartialWeeks(format, s, df);
             } else {
                 throw FarragoResource.instance().InvalidDateString.ex(
-                    format, s);
+                    format,
+                    s);
             }
         }
         return ret;
@@ -173,37 +175,40 @@ public abstract class FarragoConvertDatetimeUDR
         int year = -1;
         int week = -1;
         java.util.Date ret = null;
-        
+
         if (format.length() > s.length()) {
             throw FarragoResource.instance().InvalidDateString.ex(
-                format, s);
+                format,
+                s);
         }
 
         // parses for parial weeks
         int fptr = 0;
-        for (int sptr=0; sptr < s.length(); sptr++) {
+        for (int sptr = 0; sptr < s.length(); sptr++) {
             char c = format.charAt(fptr);
             switch (c) {
-
             // year
-            case 'y': 
-                if (((fptr+4) <= format.length()) && 
-                    ((sptr+4) <= s.length()) &&
-                    (format.substring(fptr, fptr+4).equals("yyyy")))
+            case 'y':
+                if (((fptr + 4) <= format.length())
+                    && ((sptr + 4) <= s.length())
+                    && (format.substring(fptr, fptr + 4).equals("yyyy")))
                 {
                     // checks if next four chars are an integer
                     try {
-                        year = 
+                        year =
                             Integer.parseInt(
-                                s.substring(sptr, sptr+4));
+                                s.substring(sptr, sptr + 4));
                     } catch (NumberFormatException e) {
-                        throw FarragoResource.instance(
-                            ).InvalidDateString.ex(format, s);
+                        throw FarragoResource.instance().InvalidDateString.ex(
+                            format,
+                            s);
                     }
                 } else {
-                    throw FarragoResource.instance(
-                        ).InvalidDateString.ex(format, s);
+                    throw FarragoResource.instance().InvalidDateString.ex(
+                        format,
+                        s);
                 }
+
                 // increments index past year format
                 sptr += 3;
                 fptr += 3;
@@ -212,68 +217,76 @@ public abstract class FarragoConvertDatetimeUDR
             // week
             case 'w':
                 int temp = -1;
+
                 // checks for partial week 1
-                if ((s.charAt(sptr) == '1') && (sptr == fptr) && 
-                    (format.length() == s.length()))
+                if ((s.charAt(sptr) == '1')
+                    && (sptr == fptr)
+                    && (format.length() == s.length()))
                 {
                     week = 1;
-                } 
+                }
 
                 // checks for partial week 01
-                if ((s.charAt(sptr) == '0') && (sptr == fptr) &&
-                    (format.length() < s.length())) 
+                if ((s.charAt(sptr) == '0')
+                    && (sptr == fptr)
+                    && (format.length() < s.length()))
                 {
                     // check if next char is 1
                     try {
                         temp =
                             Integer.parseInt(
-                                String.valueOf(s.charAt(sptr+1)));
+                                String.valueOf(s.charAt(sptr + 1)));
                         if (temp == 1) {
                             week = 1;
                             sptr += 1;
                         }
                     } catch (NumberFormatException e) {
-                        throw FarragoResource.instance(
-                            ).InvalidDateString.ex(format, s);
+                        throw FarragoResource.instance().InvalidDateString.ex(
+                            format,
+                            s);
                     }
                 }
 
                 // checks for partial week 53 or 54
-                if ((s.charAt(sptr) == '5') && (sptr == fptr) &&
-                    (format.length() < s.length()))
+                if ((s.charAt(sptr) == '5')
+                    && (sptr == fptr)
+                    && (format.length() < s.length()))
                 {
                     // checks if next char is an integer
                     try {
-                        temp = 
+                        temp =
                             Integer.parseInt(
-                                String.valueOf(s.charAt(sptr+1)));
+                                String.valueOf(s.charAt(sptr + 1)));
                         if (temp == 3) {
                             week = 53;
                             sptr += 1;
                         } else if (temp == 4) {
                             week = 54;
                             sptr += 1;
-                        } else { 
+                        } else {
                             // do nothing
                         }
                     } catch (NumberFormatException e) {
                         // week is not 53 or 54
-                        throw FarragoResource.instance(
-                            ).InvalidDateString.ex(format, s);
+                        throw FarragoResource.instance().InvalidDateString.ex(
+                            format,
+                            s);
                     }
                 }
                 break;
             default:
+
                 // not week or year
                 if (format.charAt(fptr) != s.charAt(sptr)) {
-                    throw FarragoResource.instance(
-                        ).InvalidDateString.ex(format, s);
+                    throw FarragoResource.instance().InvalidDateString.ex(
+                        format,
+                        s);
                 }
             }
 
             fptr += 1;
-        } 
-                
+        }
+
         if ((week > -1) && (year > -1)) {
             Calendar cal = df.getCalendar();
             cal.clear();
@@ -288,17 +301,19 @@ public abstract class FarragoConvertDatetimeUDR
                     // week 53 is a partial week
                     cal.add(Calendar.DAY_OF_MONTH, 7);
                     ret = cal.getTime();
-                } else if ((week ==54) && (checkDate < 18)) {
+                } else if ((week == 54) && (checkDate < 18)) {
                     // week 54 exists
                     cal.add(Calendar.DAY_OF_MONTH, 14);
                     ret = cal.getTime();
                 } else {
-                    throw FarragoResource.instance(
-                        ).InvalidDateString.ex(format, s);
+                    throw FarragoResource.instance().InvalidDateString.ex(
+                        format,
+                        s);
                 }
             } else {
-                throw FarragoResource.instance(
-                    ).InvalidDateString.ex(format, s);
+                throw FarragoResource.instance().InvalidDateString.ex(
+                    format,
+                    s);
             }
         }
         if (ret != null) {

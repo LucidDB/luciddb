@@ -23,8 +23,8 @@ package com.disruptivetech.farrago.volcano;
 import java.io.*;
 
 import java.util.*;
-import java.util.regex.*;
 import java.util.logging.*;
+import java.util.regex.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
@@ -340,8 +340,7 @@ public class VolcanoPlanner
 
     public RelNode changeTraits(final RelNode rel, RelTraitSet toTraits)
     {
-        assert !rel.getTraits().equals(toTraits) :
-            "pre: !rel.getTraits().equals(toTraits)";
+        assert !rel.getTraits().equals(toTraits) : "pre: !rel.getTraits().equals(toTraits)";
 
         RelNode rel2 = ensureRegistered(rel, null);
         if (rel2.getTraits().equals(toTraits)) {
@@ -897,6 +896,7 @@ SUBSET_LOOP:
      * Dumps the internal state of this VolcanoPlanner to a writer.
      *
      * @param pw Print writer
+     *
      * @see #normalizePlan(String)
      */
     void dump(PrintWriter pw)
@@ -1405,27 +1405,30 @@ SUBSET_LOOP:
      * Normalizes references to subsets within the string representation of a
      * plan.
      *
-     * <p>This is useful when writing tests: it helps to ensure
-     * that tests don't break when an extra rule is introduced that
-     * generates a new subset and causes subsequent subset numbers to be
-     * off by one.
+     * <p>This is useful when writing tests: it helps to ensure that tests don't
+     * break when an extra rule is introduced that generates a new subset and
+     * causes subsequent subset numbers to be off by one.
      *
      * <p>For example,
+     *
      * <blockquote>
      * FennelAggRel.FENNEL_EXEC(child=Subset#17.FENNEL_EXEC,groupCount=1,EXPR$1=COUNT())
      * &nbsp;&nbsp;FennelSortRel.FENNEL_EXEC(child=Subset#2.FENNEL_EXEC,key=[0],discardDuplicates=false)
      * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(child=Subset#4.FENNEL_EXEC,expr#0..8={inputs},expr#9=3456,DEPTNO=$t7,$f0=$t9)
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(table=[CATALOG, SALES, EMP])
-     * </blockquote>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(table=[CATALOG,
+     * SALES, EMP])</blockquote>
+     *
      * becomes
+     *
      * <blockquote>
      * FennelAggRel.FENNEL_EXEC(child=Subset#{0}.FENNEL_EXEC,groupCount=1,EXPR$1=COUNT())
      * &nbsp;&nbsp;FennelSortRel.FENNEL_EXEC(child=Subset#{1}.FENNEL_EXEC,key=[0],discardDuplicates=false)
      * &nbsp;&nbsp;&nbsp;&nbsp;FennelCalcRel.FENNEL_EXEC(child=Subset#{2}.FENNEL_EXEC,expr#0..8={inputs},expr#9=3456,DEPTNO=$t7,$f0=$t9)
-     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(table=[CATALOG, SALES, EMP])
-     * </blockquote>
+     * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;MockTableImplRel.FENNEL_EXEC(table=[CATALOG,
+     * SALES, EMP])</blockquote>
      *
      * @param plan Plan
+     *
      * @return Normalized plan
      */
     public static String normalizePlan(String plan)

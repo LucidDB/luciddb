@@ -52,9 +52,11 @@ import org.eigenbase.util14.*;
  * @since May 5, 2004
  */
 public abstract class SqlDateTimeWithoutTZ
-    implements AssignableValue, SpecialDataValue
+    implements AssignableValue,
+        SpecialDataValue
 {
-    // REVIEW mb 28-Nov-08 Why not implement NullableValue, since its methods are defined below?
+    // REVIEW mb 28-Nov-08 Why not implement NullableValue, since its methods
+    // are defined below?
 
     //~ Static fields/initializers ---------------------------------------------
 

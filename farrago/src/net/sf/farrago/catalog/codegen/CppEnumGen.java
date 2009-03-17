@@ -65,13 +65,13 @@ public class CppEnumGen
      * based on the subset of non-inherited public static final data members
      * contained by enumClass and having exact type enumSymbolType. Enumeration
      * order (and hence implied ordinals) is on the current locale's collation
-     * order for the enum field names.  This ordering may not hold in the
-     * future, so no C++ code should be written which depends on the current
+     * order for the enum field names. This ordering may not hold in the future,
+     * so no C++ code should be written which depends on the current
      * deterministic ordering.
      *
-     * <p>TODO: Support integer ordinals.  Also, we'd prefer to preserve
-     * the original metamodel ordering in order to relax the ordering
-     * condition above.     
+     * <p>TODO: Support integer ordinals. Also, we'd prefer to preserve the
+     * original metamodel ordering in order to relax the ordering condition
+     * above.
      *
      * @param enumName name to give C++ enum
      * @param enumClass Java class to be interpreted as an enumeration; this

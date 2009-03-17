@@ -25,7 +25,7 @@ import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.Pair;
+import org.eigenbase.util.*;
 
 
 /**
@@ -39,18 +39,17 @@ import org.eigenbase.util.Pair;
  * namespace contains the constituent columns) and a subquery (the namespace
  * contains the columns in the SELECT clause of the subquery).
  *
- * <p>These various kinds of namespace are implemented by classes
- * {@link IdentifierNamespace} for table names,
- * {@link SelectNamespace} for SELECT queries, {@link SetopNamespace} for
- * UNION, EXCEPT and INTERSECT, and so forth.
- * But if you are looking at a SELECT query and call
- * {@link SqlValidator#getNamespace(org.eigenbase.sql.SqlNode)}, you may not
- * get a SelectNamespace. Why? Because the validator is allowed to wrap
- * namespaces in other objects which implement {@link SqlValidatorNamespace}.
- * Your SelectNamespace will be there somewhere, but might be one or two levels
- * deep. Don't try to cast the namespace or use <code>instanceof</code>; use
- * {@link SqlValidatorNamespace#unwrap(Class)} and
- * {@link SqlValidatorNamespace#isWrapperFor(Class)} instead.</p>
+ * <p>These various kinds of namespace are implemented by classes {@link
+ * IdentifierNamespace} for table names, {@link SelectNamespace} for SELECT
+ * queries, {@link SetopNamespace} for UNION, EXCEPT and INTERSECT, and so
+ * forth. But if you are looking at a SELECT query and call {@link
+ * SqlValidator#getNamespace(org.eigenbase.sql.SqlNode)}, you may not get a
+ * SelectNamespace. Why? Because the validator is allowed to wrap namespaces in
+ * other objects which implement {@link SqlValidatorNamespace}. Your
+ * SelectNamespace will be there somewhere, but might be one or two levels deep.
+ * Don't try to cast the namespace or use <code>instanceof</code>; use {@link
+ * SqlValidatorNamespace#unwrap(Class)} and {@link
+ * SqlValidatorNamespace#isWrapperFor(Class)} instead.</p>
  *
  * @author jhyde
  * @version $Id$
@@ -113,9 +112,9 @@ public interface SqlValidatorNamespace
     SqlNode getNode();
 
     /**
-     * Returns the parse tree node that at is at the root of this namespace
-     * and includes all decorations. If there are no decorations, returns the
-     * same as {@link #getNode()}.
+     * Returns the parse tree node that at is at the root of this namespace and
+     * includes all decorations. If there are no decorations, returns the same
+     * as {@link #getNode()}.
      */
     SqlNode getEnclosingNode();
 
@@ -123,10 +122,11 @@ public interface SqlValidatorNamespace
      * Looks up a child namespace of a given name.
      *
      * <p>For example, in the query <code>select e.name from emps as e</code>,
-     * <code>e</code> is an {@link IdentifierNamespace} which has a child
-     * <code>name</code> which is a {@link FieldNamespace}.
+     * <code>e</code> is an {@link IdentifierNamespace} which has a child <code>
+     * name</code> which is a {@link FieldNamespace}.
      *
      * @param name Name of namespace
+     *
      * @return Namespace
      */
     SqlValidatorNamespace lookupChild(String name);
@@ -135,6 +135,7 @@ public interface SqlValidatorNamespace
      * Returns whether this namespace has a field of a given name.
      *
      * @param name Field name
+     *
      * @return Whether field exists
      */
     boolean fieldExists(String name);
@@ -145,7 +146,7 @@ public interface SqlValidatorNamespace
      * called "TIMESTAMP", then the list would contain a {@link
      * org.eigenbase.sql.SqlIdentifier} called "TIMESTAMP".
      */
-    List<Pair<SqlNode,SqlMonotonicity>> getMonotonicExprs();
+    List<Pair<SqlNode, SqlMonotonicity>> getMonotonicExprs();
 
     /**
      * Returns whether and how a given column is sorted.
@@ -176,10 +177,11 @@ public interface SqlValidatorNamespace
     <T> T unwrap(Class<T> clazz);
 
     /**
-     * Returns whether this namespace implements a given interface, or wraps
-     * a class which does.
+     * Returns whether this namespace implements a given interface, or wraps a
+     * class which does.
      *
      * @param clazz Interface
+     *
      * @return Whether namespace implements given interface
      */
     boolean isWrapperFor(Class<?> clazz);

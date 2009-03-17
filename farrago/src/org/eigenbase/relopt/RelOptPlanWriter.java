@@ -93,7 +93,7 @@ public class RelOptPlanWriter
             explainInputs(inputs);
             return;
         }
-        
+
         RexNode [] children = rel.getChildExps();
         assert terms.length
             == (inputs.length + children.length

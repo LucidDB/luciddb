@@ -22,13 +22,12 @@
 package org.eigenbase.util;
 
 /**
- * Object which can be a target for a reflective visitation (see
- * {@link ReflectUtil#invokeVisitor(ReflectiveVisitor, Object, Class, String)}.
+ * Object which can be a target for a reflective visitation (see {@link
+ * ReflectUtil#invokeVisitor(ReflectiveVisitor, Object, Class, String)}.
  *
- * <p>This is a tagging interface: it has no methods, and is not even
- * required in order to use reflective visitation, but serves to advise
- * users of the class of the intended use of the class and refer them to
- * auxilliary classes.
+ * <p>This is a tagging interface: it has no methods, and is not even required
+ * in order to use reflective visitation, but serves to advise users of the
+ * class of the intended use of the class and refer them to auxilliary classes.
  *
  * @author Julian Hyde
  * @version $Id$

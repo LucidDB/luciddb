@@ -120,7 +120,7 @@ public class LucidDbTestCleanup
         try {
             cleanup.execute();
         } finally {
-            cleanup.getRepos().getEnkiMdrRepos().endSession();            
+            cleanup.getRepos().getEnkiMdrRepos().endSession();
         }
     }
 

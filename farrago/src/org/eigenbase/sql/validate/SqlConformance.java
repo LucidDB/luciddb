@@ -30,17 +30,11 @@ package org.eigenbase.sql.validate;
  */
 public enum SqlConformance
 {
-    Default,
-    Strict92,
-    Strict99,
-    Pragmatic99,
-    Oracle10g,
-    Sql2003,
-    Pragmatic2003;
+    Default, Strict92, Strict99, Pragmatic99, Oracle10g, Sql2003, Pragmatic2003;
 
     /**
-     * Whether 'order by 2' is interpreted to mean 'sort by the 2nd column
-     * in the select list'.
+     * Whether 'order by 2' is interpreted to mean 'sort by the 2nd column in
+     * the select list'.
      */
     public boolean isSortByOrdinal()
     {
@@ -57,8 +51,8 @@ public enum SqlConformance
     }
 
     /**
-     * Whether 'order by x' is interpreted to mean 'sort by the select list
-     * item whose alias is x' even if there is a column called x.
+     * Whether 'order by x' is interpreted to mean 'sort by the select list item
+     * whose alias is x' even if there is a column called x.
      */
     public boolean isSortByAlias()
     {
@@ -73,8 +67,8 @@ public enum SqlConformance
     }
 
     /**
-     * Whether "empno" is invalid in "select empno as x from emp order by
-     * empno" because the alias "x" obscures it.
+     * Whether "empno" is invalid in "select empno as x from emp order by empno"
+     * because the alias "x" obscures it.
      */
     public boolean isSortByAliasObscures()
     {

@@ -21,31 +21,36 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.util.Filterator;
-import org.eigenbase.util.Util;
-
 import java.util.*;
 
-import junit.framework.TestCase;
+import junit.framework.*;
+
+import org.eigenbase.util.*;
+
 
 /**
  * Unit test for {@link Filterator}.
  *
  * @author jhyde
- * @since September 6, 2006
  * @version $Id$
+ * @since September 6, 2006
  */
-public class FilteratorTest extends TestCase
+public class FilteratorTest
+    extends TestCase
 {
+    //~ Methods ----------------------------------------------------------------
+
     public void testOne()
     {
         final List<String> tomDickHarry = Arrays.asList("tom", "dick", "harry");
         final Filterator<String> filterator =
             new Filterator<String>(tomDickHarry.iterator(), String.class);
+
         // call hasNext twice
         assertTrue(filterator.hasNext());
         assertTrue(filterator.hasNext());
         assertEquals("tom", filterator.next());
+
         // call next without calling hasNext
         assertEquals("dick", filterator.next());
         assertTrue(filterator.hasNext());
@@ -71,7 +76,8 @@ public class FilteratorTest extends TestCase
         final ArrayList arrayList = new ArrayList();
         final HashSet hashSet = new HashSet();
         final LinkedList linkedList = new LinkedList();
-        Collection[] collections = {
+        Collection [] collections =
+        {
             null,
             arrayList,
             hashSet,
@@ -80,10 +86,13 @@ public class FilteratorTest extends TestCase
         };
         final Filterator<List> filterator =
             new Filterator<List>(
-                Arrays.asList(collections).iterator(), List.class);
+                Arrays.asList(collections).iterator(),
+                List.class);
         assertTrue(filterator.hasNext());
+
         // skips null
         assertTrue(arrayList == filterator.next());
+
         // skips the HashSet
         assertTrue(linkedList == filterator.next());
         assertFalse(filterator.hasNext());
@@ -91,7 +100,7 @@ public class FilteratorTest extends TestCase
 
     public void testBox()
     {
-        final Number[] numbers = {1, 2, 3.14, 4, null, 6E23};
+        final Number [] numbers = { 1, 2, 3.14, 4, null, 6E23 };
         List<Integer> result = new ArrayList<Integer>();
         for (int i : Util.filter(Arrays.asList(numbers), Integer.class)) {
             result.add(i);

@@ -80,9 +80,8 @@ public class FarragoOJRexTruthTestImplementor
                 maybeNegate(
                     isnull,
                     !negated),
-                negated
-                    ? BinaryExpression.LOGICAL_OR
-                    : BinaryExpression.LOGICAL_AND,
+                negated ? BinaryExpression.LOGICAL_OR
+                : BinaryExpression.LOGICAL_AND,
                 maybeNegate(
                     val,
                     negated == isTrue));

@@ -186,7 +186,8 @@ public final class CalcRel
         String [] fieldNames,
         boolean optimize)
     {
-        assert (fieldNames == null) || (fieldNames.length == exprs.length) : "fieldNames=" + fieldNames + ", exprs=" + exprs;
+        assert (fieldNames == null) || (fieldNames.length == exprs.length) : "fieldNames="
+            + fieldNames + ", exprs=" + exprs;
         final RelOptCluster cluster = child.getCluster();
         RexProgramBuilder builder =
             new RexProgramBuilder(

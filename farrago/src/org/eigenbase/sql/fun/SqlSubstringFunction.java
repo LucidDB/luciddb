@@ -22,8 +22,9 @@
 */
 package org.eigenbase.sql.fun;
 
+import java.math.*;
+
 import java.util.*;
-import java.math.BigDecimal;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -198,22 +199,23 @@ public class SqlSubstringFunction
         writer.endFunCall(frame);
     }
 
-
     public SqlMonotonicity getMonotonicity(
-        SqlCall call, SqlValidatorScope scope)
+        SqlCall call,
+        SqlValidatorScope scope)
     {
         // SUBSTRING(x FROM 0 FOR constant) has same monotonicity as x
         if (call.operands.length == 3) {
             final SqlMonotonicity mono0 =
                 call.operands[0].getMonotonicity(scope);
-            if (mono0 != SqlMonotonicity.NotMonotonic
-                && call.operands[1].getMonotonicity(scope)
-                == SqlMonotonicity.Constant
-                && call.operands[1] instanceof SqlLiteral
+            if ((mono0 != SqlMonotonicity.NotMonotonic)
+                && (call.operands[1].getMonotonicity(scope)
+                    == SqlMonotonicity.Constant)
+                && (call.operands[1] instanceof SqlLiteral)
                 && ((SqlLiteral) call.operands[1]).bigDecimalValue().equals(
-                BigDecimal.ZERO)
-                && call.operands[2].getMonotonicity(scope)
-                == SqlMonotonicity.Constant) {
+                    BigDecimal.ZERO)
+                && (call.operands[2].getMonotonicity(scope)
+                    == SqlMonotonicity.Constant))
+            {
                 return mono0.unstrict();
             }
         }

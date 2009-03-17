@@ -22,10 +22,11 @@
 */
 package org.eigenbase.reltype;
 
+import java.io.*;
+
 import java.nio.charset.*;
 
 import java.util.*;
-import java.io.Serializable;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -71,12 +72,12 @@ public abstract class RelDataTypeImpl
     }
 
     /**
-     * Default constructor, to allow derived classes such as
-     * {@link BasicSqlType} to be {@link Serializable}.
+     * Default constructor, to allow derived classes such as {@link
+     * BasicSqlType} to be {@link Serializable}.
      *
-     * <p>(The serialization specification says that a class can be
-     * serializable even if its base class is not serializable, provided that
-     * the base class has a public or protected zero-args constructor.)
+     * <p>(The serialization specification says that a class can be serializable
+     * even if its base class is not serializable, provided that the base class
+     * has a public or protected zero-args constructor.)
      */
     protected RelDataTypeImpl()
     {

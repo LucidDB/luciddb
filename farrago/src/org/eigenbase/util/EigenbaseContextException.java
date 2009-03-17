@@ -103,10 +103,9 @@ public class EigenbaseContextException
         Throwable cause,
         String inputText)
     {
-        this(message,cause,0,0,0,0);
+        this(message, cause, 0, 0, 0, 0);
         this.originalStatement = inputText;
     }
-
 
     //~ Methods ----------------------------------------------------------------
 
@@ -186,14 +185,12 @@ public class EigenbaseContextException
     }
 
     /**
-     *
      * @param originalStatement - String to associate with the current context
      */
     public void setOriginalStatement(String originalStatement)
     {
         this.originalStatement = originalStatement;
     }
-
 }
 
 // End EigenbaseContextException.java

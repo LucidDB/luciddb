@@ -38,9 +38,9 @@ import org.eigenbase.sql.fun.*;
 
 /**
  * FennelReshapeRel represents the Fennel implementation of an execution stream
- * that does projections, simple casting, and simple filtering.  Filtering
- * can done against either literal values passed in through a stream parameter,
- * or against dynamic parameters read during runtime.
+ * that does projections, simple casting, and simple filtering. Filtering can
+ * done against either literal values passed in through a stream parameter, or
+ * against dynamic parameters read during runtime.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -70,15 +70,15 @@ class FennelReshapeRel
      * @param child child input
      * @param projection ordinals of the columns to be projected from the input
      * @param outputRowType row type of the output (includes dynamic parameters
-     * that are to be outputted) with dynamic parameters appearing at the
-     * end of the row
+     * that are to be outputted) with dynamic parameters appearing at the end of
+     * the row
      * @param compOp comparison operator
      * @param filterOrdinals ordinals corresponding to inputs that need to be
      * filtered; they're filtered against either literals or dynamic parameters;
      * in the case where dynamic parameters are being compared, the trailing
      * ordinals represent the columns to be compared against the parameters
-     * @param filterLiterals list of literals to be compared against the
-     * leading columns specified by filterOrdinals
+     * @param filterLiterals list of literals to be compared against the leading
+     * columns specified by filterOrdinals
      * @param dynamicParamIds dynamic parameters to be read by this rel
      * @param paramCompareOffsets array of offsets within the input tuple that
      * each dynamic parameter should be compared against; if the dynamic
@@ -160,14 +160,14 @@ class FennelReshapeRel
             List<RexNode> filterList = new ArrayList<RexNode>();
 
             if (filterLiterals.size() > 0) {
-                assert(filterLiterals.size() == filterOrdinals.length);
+                assert (filterLiterals.size() == filterOrdinals.length);
                 for (int i = 0; i < filterOrdinals.length; i++) {
                     addFilter(
                         filterOrdinals[i],
                         fields,
                         compOp,
                         filterLiterals.get(i),
-                        (i == filterOrdinals.length - 1),
+                        (i == (filterOrdinals.length - 1)),
                         filterList,
                         rexBuilder);
                 }
@@ -179,8 +179,8 @@ class FennelReshapeRel
                     nFilterParams++;
                 }
             }
-            assert(
-                nFilterParams + filterLiterals.size() == filterOrdinals.length);
+            assert ((nFilterParams + filterLiterals.size())
+                == filterOrdinals.length);
 
             // For the filters being compared to dynamic parameters, just
             // use placeholder dynamic parameters in the filter expression
@@ -196,9 +196,9 @@ class FennelReshapeRel
                             rexBuilder.makeDynamicParam(
                                 fields[paramCompareOffsets[i]].getType(),
                                 0),
-                                (count == nFilterParams),
-                                filterList,
-                                rexBuilder);
+                            (count == nFilterParams),
+                            filterList,
+                            rexBuilder);
                     }
                 }
             }
@@ -225,9 +225,10 @@ class FennelReshapeRel
                 filterOrdinal);
 
         SqlBinaryOperator sqlOp = null;
+
         // The comparison operator is really only relevant to the last
         // filter.  All preceeding filters are always equality.
-        if (!lastFilter || compOp == CompOperatorEnum.COMP_EQ) {
+        if (!lastFilter || (compOp == CompOperatorEnum.COMP_EQ)) {
             sqlOp = SqlStdOperatorTable.equalsOperator;
         } else if (compOp == CompOperatorEnum.COMP_GE) {
             sqlOp = SqlStdOperatorTable.greaterThanOrEqualOperator;
@@ -280,6 +281,7 @@ class FennelReshapeRel
             objects[idx - 1] = Arrays.asList(paramCompareOffsets);
             nameList[idx++] = "paramCompareOffsets";
         }
+
         // need to include the output rowtype in the digest to properly
         // handle casting
         objects[idx - 1] = outputRowType.getFullTypeString();

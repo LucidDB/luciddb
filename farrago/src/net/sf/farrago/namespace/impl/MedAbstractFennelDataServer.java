@@ -25,13 +25,13 @@ import java.sql.*;
 
 import java.util.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
-
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
+
+import org.eigenbase.jmi.*;
 
 
 /**
@@ -149,10 +149,9 @@ public abstract class MedAbstractFennelDataServer
             cmd.setIncludeTuples(getIncludeTuples(index));
             getFennelDbHandle().executeCmd(cmd);
             long pageCount = cmd.getResultPageCount();
-            long uniqueKeyCount = 
-                cmd.getResultUniqueKeyCount() == null 
-                    ? -1
-                    : cmd.getResultUniqueKeyCount().longValue();
+            long uniqueKeyCount =
+                (cmd.getResultUniqueKeyCount() == null) ? -1
+                : cmd.getResultUniqueKeyCount().longValue();
             if (implicitTxn) {
                 txnContext.commit();
             }

@@ -176,7 +176,7 @@ public class FarragoDbSession
     private FarragoDbSessionInfo sessionInfo;
 
     private Pattern optRuleDescExclusionFilter;
-    
+
     private SessionLabel sessionLabel;
 
     private boolean isLoopback;
@@ -201,11 +201,14 @@ public class FarragoDbSession
         txnIdRef = new TxnIdRef();
         sessionLabel = null;
 
-        boolean requireExistingEngine = info.getProperty(
-            "requireExistingEngine", "false").equalsIgnoreCase("true");
-        database = FarragoDbSingleton.pinReference(
-            sessionFactory,
-            requireExistingEngine);
+        boolean requireExistingEngine =
+            info.getProperty(
+                "requireExistingEngine",
+                "false").equalsIgnoreCase("true");
+        database =
+            FarragoDbSingleton.pinReference(
+                sessionFactory,
+                requireExistingEngine);
         FarragoDbSingleton.addSession(database, this);
         boolean success = false;
         try {
@@ -262,9 +265,8 @@ public class FarragoDbSession
         } else {
             repos = database.getUserRepos();
             reentrantMdrSession = false;
-        }            
+        }
 
-        
         FarragoReposTxnContext txn = repos.newTxnContext(true);
         txn.beginReadTxn();
         try {
@@ -304,7 +306,7 @@ public class FarragoDbSession
                         throw FarragoResource.instance().SessionLoginFailed.ex(
                             repos.getLocalizedObjectName(sessionUser));
                     }
-                    
+
                     try {
                         lc.logout();
                     } catch (LoginException ex) {
@@ -324,7 +326,7 @@ public class FarragoDbSession
                 defaultNamespace = femUser.getDefaultNamespace();
             }
             if (defaultNamespace == null) {
-                sessionVariables.catalogName = 
+                sessionVariables.catalogName =
                     repos.getSelfAsCatalog().getName();
             } else if (defaultNamespace instanceof CwmCatalog) {
                 sessionVariables.catalogName = defaultNamespace.getName();
@@ -333,8 +335,7 @@ public class FarragoDbSession
                 sessionVariables.catalogName =
                     defaultNamespace.getNamespace().getName();
             }
-        }
-        finally {
+        } finally {
             txn.commit();
         }
 
@@ -351,18 +352,17 @@ public class FarragoDbSession
         personality.loadDefaultSessionVariables(sessionVariables);
 
         // If a session label has been specified, make sure the personality
-        // supports snapshot reads and the label is valid             
+        // supports snapshot reads and the label is valid
         String labelName = info.getProperty("label", null);
         if (labelName != null) {
             if (!getPersonality().supportsFeature(
-                EigenbaseResource.instance().PersonalitySupportsSnapshots))
+                    EigenbaseResource.instance().PersonalitySupportsSnapshots))
             {
-                throw 
-                    EigenbaseResource.instance().PersonalitySupportsSnapshots.
-                        ex();
+                throw EigenbaseResource.instance().PersonalitySupportsSnapshots
+                .ex();
             }
             txn.beginReadTxn();
-            try {        
+            try {
                 FemLabel label =
                     (FemLabel) FarragoCatalogUtil.getModelElementByName(
                         repos.allOfType(FemLabel.class),
@@ -375,12 +375,11 @@ public class FarragoDbSession
                     FarragoDefaultSessionPersonality.LABEL,
                     labelName);
                 setSessionLabel(label);
-            }
-            finally {
+            } finally {
                 txn.commit();
             }
         }
-        
+
         sessionInfo = new FarragoDbSessionInfo(this, database);
     }
 
@@ -449,7 +448,7 @@ public class FarragoDbSession
     {
         return warningQueue;
     }
-    
+
     // implement FarragoSession
     public synchronized FarragoSessionStmtContext newStmtContext(
         FarragoSessionStmtParamDefFactory paramDefFactory)
@@ -565,14 +564,14 @@ public class FarragoDbSession
     {
         // NOTE jvs 18-Nov-2008:  don't mark this method as
         // synchronized; see FRG-294 for why.
-        
+
         // TODO jvs 9-Mar-2006:  Unify txn state.
         if (txnIdRef.txnId != null) {
             return true;
         }
 
         FennelTxnContext contextToCheck = fennelTxnContext;
-        
+
         if (contextToCheck == null) {
             return false;
         }
@@ -658,7 +657,7 @@ public class FarragoDbSession
             info.getStmtContext().cancel();
         }
     }
-    
+
     // implement FarragoSession
     public void disableSubqueryReduction()
     {
@@ -679,6 +678,7 @@ public class FarragoDbSession
             // statement context, and then tries to acquire
             // FarragoDbSingleton.class lock
             super.closeAllocation();
+
             // The following will unlock any session labels set by the
             // reentrant session.
             // NOTE zfong 8/6/08 - In the case of a UDR session, this is
@@ -781,18 +781,18 @@ public class FarragoDbSession
         }
         return analyzedSql;
     }
-    
+
     private void setSessionLabel(FemLabel label)
     {
         FarragoDdlLockManager ddlLockManager =
             getDatabase().getDdlLockManager();
-     
+
         // Unlock the current label
         if (sessionLabel != null) {
             ddlLockManager.removeObjectsInUse(this);
             tracer.info("Session label reset to null");
         }
-       
+
         // If the label is an alias, determine the base label that the
         // alias maps to.  This will make it possible to reset the alias to
         // a new base label even though the original base label is still
@@ -810,7 +810,7 @@ public class FarragoDbSession
                     label.getCommitSequenceNumber(),
                     label.getCreationTimestamp());
         }
-      
+
         if (sessionLabel != null) {
             // Lock the new label
             Set<String> mofId = new HashSet<String>();
@@ -821,7 +821,7 @@ public class FarragoDbSession
                 "Session label set to \"" + label.getName() + "\"");
         }
     }
-    
+
     // implement FarragoSession
     public Long getSessionLabelCsn()
     {
@@ -831,26 +831,26 @@ public class FarragoDbSession
             return sessionLabel.getCommitSequenceNumber();
         }
     }
-    
+
     // implement FarragoSession
     public Timestamp getSessionLabelCreationTimestamp()
-    {      
+    {
         if (sessionLabel == null) {
             return null;
         } else {
             return Timestamp.valueOf(sessionLabel.getCreationTimestamp());
         }
     }
-    
+
     /**
-     * @return true if the session has a label setting and it is not
-     * temporarily disabled
+     * @return true if the session has a label setting and it is not temporarily
+     * disabled
      */
     private boolean isSessionLabelEnabled()
     {
         return (sessionLabel != null);
     }
-    
+
     public FarragoSessionAnalyzedSql getAnalysisBlock(
         RelDataTypeFactory typeFactory)
     {
@@ -895,8 +895,7 @@ public class FarragoDbSession
         txn.beginReadTxn();
         try {
             sessionIndexMap.onCommit();
-        }
-        finally {
+        } finally {
             txn.commit();
         }
     }
@@ -1094,12 +1093,12 @@ public class FarragoDbSession
                 sqlTimingTracer,
                 "begin prepare");
 
-        // The local variable is necessary to insure that the repository 
+        // The local variable is necessary to insure that the repository
         // session can be closed if the statement causes a shutdown.
-        final FarragoRepos repos = this.repos; 
+        final FarragoRepos repos = this.repos;
         repos.beginReposSession();
         reposSessionEnded = false;
-        
+
         FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(repos);
 
@@ -1203,13 +1202,15 @@ public class FarragoDbSession
                 if (stmt.getDynamicParamRowType().getFieldList().size() > 0) {
                     owner.closeAllocation();
                     throw FarragoResource.instance()
-                        .SessionNoExecuteImmediateParameters.ex(sql);
+                    .SessionNoExecuteImmediateParameters.ex(sql);
                 }
+
                 // DML statements are disallowed if a session label is set.
                 // For CALL statements, the contents of the UDP determines
                 // whether the call can be executed.
-                if (stmt.isDml() && stmt.getTableModOp() != null &&
-                    isSessionLabelEnabled())
+                if (stmt.isDml()
+                    && (stmt.getTableModOp() != null)
+                    && isSessionLabelEnabled())
                 {
                     owner.closeAllocation();
                     throw FarragoResource.instance().ReadOnlySession.ex();
@@ -1219,14 +1220,14 @@ public class FarragoDbSession
         }
 
         FarragoSessionDdlStmt ddlStmt = (FarragoSessionDdlStmt) parsedObj;
-        
+
         // DDL statements are disallowed if a session label is set.  The
         // exceptions are the SET statements that only impact the current
         // session.
-        if (isSessionLabelEnabled() &&
-            !(ddlStmt instanceof DdlSetContextStmt ||
-            ddlStmt instanceof DdlSetSessionParamStmt ||
-            ddlStmt instanceof DdlSetSessionImplementationStmt))
+        if (isSessionLabelEnabled()
+            && !((ddlStmt instanceof DdlSetContextStmt)
+                || (ddlStmt instanceof DdlSetSessionParamStmt)
+                || (ddlStmt instanceof DdlSetSessionImplementationStmt)))
         {
             throw FarragoResource.instance().ReadOnlySession.ex();
         }
@@ -1298,12 +1299,12 @@ public class FarragoDbSession
     }
 
     /**
-     * Marks the target table for a DDL statement as in-use.  This allows us to
+     * Marks the target table for a DDL statement as in-use. This allows us to
      * subsequently release the MDR repository lock acquired at the start of
      * query preparation. Marking the table as in-use prevents it from being
-     * dropped while the repository is unlocked.  The lock is released in 
-     * {@link DdlExecutionVisitor} during the execution of some types of
-     * long-running DdlStmt.
+     * dropped while the repository is unlocked. The lock is released in {@link
+     * DdlExecutionVisitor} during the execution of some types of long-running
+     * DdlStmt.
      *
      * @param stmtContext context of the DDL statement
      * @param ddlStmt the DDL statement
@@ -1382,7 +1383,7 @@ public class FarragoDbSession
             if (shutDownRequested) {
                 repos.endReposSession();
                 reposSessionEnded = true;
-                
+
                 closeAllocation();
                 database.shutdown();
                 if (catalogDumpRequested) {
@@ -1402,18 +1403,17 @@ public class FarragoDbSession
             }
         }
     }
-    
+
     /**
-     * Turns on a flag indicating whether a shutdown request has been
-     * made.
-     * 
+     * Turns on a flag indicating whether a shutdown request has been made.
+     *
      * @param val whether to set the flag to true or false
      */
     public void setShutdownRequest(boolean val)
     {
         shutdownRequested = val;
     }
-    
+
     /**
      * @return true if a metamodel dump has been requested
      */
@@ -1446,7 +1446,7 @@ public class FarragoDbSession
     {
         return (getSessionIndexMap().getOldTableStructure() != null);
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     private class DdlExecutionVisitor
@@ -1574,12 +1574,12 @@ public class FarragoDbSession
         public void visit(DdlMultipleTransactionStmt stmt)
         {
             Util.permAssert(
-                reposTxnContext.isTxnInProgress(), 
+                reposTxnContext.isTxnInProgress(),
                 "must be in repos txn");
-            
+
             boolean readOnly = !stmt.completeRequiresWriteTxn();
             boolean needRecovery = false;
-            
+
             FarragoSession session = ddlValidator.newReentrantSession();
             try {
                 stmt.prepForExecuteUnlocked(ddlValidator, session);
@@ -1590,26 +1590,30 @@ public class FarragoDbSession
                 needRecovery = true;
                 stmt.executeUnlocked(ddlValidator, session);
                 needRecovery = false;
-                
+
                 reposTxnContext.beginLockedTxn(readOnly);
                 stmt.completeAfterExecuteUnlocked(
-                    ddlValidator, session, true);
+                    ddlValidator,
+                    session,
+                    true);
             } finally {
                 if (needRecovery) {
                     reposTxnContext.beginLockedTxn(readOnly);
                     stmt.completeAfterExecuteUnlocked(
-                        ddlValidator, session, false);
+                        ddlValidator,
+                        session,
+                        false);
                     reposTxnContext.commit();
                 }
                 ddlValidator.releaseReentrantSession(session);
             }
         }
-        
+
         // implement DdlVisitor
         public void visit(DdlSetSessionParamStmt stmt)
         {
             if (stmt.getParamName().equals(
-                FarragoDefaultSessionPersonality.LABEL))
+                    FarragoDefaultSessionPersonality.LABEL))
             {
                 setSessionLabel(stmt.getLabelParamValue());
             }

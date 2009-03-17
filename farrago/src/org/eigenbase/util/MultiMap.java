@@ -32,9 +32,7 @@ import java.util.*;
  * use the additional methods {@link #putMulti} and {@link #getMulti}. Values
  * are returned in the order in which they were added.</p>
  *
- *<p>
- *
- * TODO jvs 21-Jul-2007:  unit test for this class
+ * <p>TODO jvs 21-Jul-2007: unit test for this class
  *
  * @author jhyde
  * @version $Id$

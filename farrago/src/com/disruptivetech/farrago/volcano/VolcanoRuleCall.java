@@ -32,8 +32,8 @@ import org.eigenbase.util.*;
  * <code>VolcanoRuleCall</code> implements the {@link RelOptRuleCall} interface
  * for VolcanoPlanner.
  *
- * @version $Id$
  * @author jhyde
+ * @version $Id$
  */
 public class VolcanoRuleCall
     extends RelOptRuleCall
@@ -62,7 +62,9 @@ public class VolcanoRuleCall
         RelNode [] rels)
     {
         super(
-            planner, operand, rels,
+            planner,
+            operand,
+            rels,
             Collections.<RelNode, List<RelNode>>emptyMap());
         this.volcanoPlanner = planner;
     }
@@ -266,6 +268,7 @@ public class VolcanoRuleCall
      * Recursively matches operands above a given solve order.
      *
      * @param solve Solver order of operand
+     *
      * @pre solve &gt; 0
      * @pre solve &lt;= rule.operands.length
      */

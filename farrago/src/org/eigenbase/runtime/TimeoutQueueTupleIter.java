@@ -157,15 +157,13 @@ public class TimeoutQueueTupleIter
             try {
                 // Empty the queue -- the thread will wait for us to consume
                 // all items in the queue, hanging the join call.
-                while (queueIterator.hasNext(/*0*/)) {
+                while (queueIterator.hasNext( /*0*/)) {
                     queueIterator.next();
                 }
                 thread.join(timeoutMillis);
             } catch (InterruptedException e) {
-                // ignore
-//            } catch (QueueIterator.TimeoutException e) {
-                // not actually possible - because hasNext(timeout=0) means to
-                // poll
+                // ignore } catch (QueueIterator.TimeoutException e) { not
+                // actually possible - because hasNext(timeout=0) means to poll
             }
             thread = null;
         }

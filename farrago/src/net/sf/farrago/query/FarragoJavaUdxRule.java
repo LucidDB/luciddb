@@ -64,7 +64,7 @@ public class FarragoJavaUdxRule
     public void onMatch(RelOptRuleCall call)
     {
         TableFunctionRel callRel = (TableFunctionRel) call.rels[0];
-        final RelNode[] inputs = callRel.getInputs().clone();
+        final RelNode [] inputs = callRel.getInputs().clone();
 
         for (int i = 0; i < inputs.length; i++) {
             RelNode input = inputs[i];

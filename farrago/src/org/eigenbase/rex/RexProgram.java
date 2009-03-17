@@ -821,7 +821,8 @@ loop:
         final HashSet<String> paramIdSet = new HashSet<String>();
         apply(
             new RexVisitorImpl<Void>(true) {
-                public Void visitCorrelVariable(RexCorrelVariable correlVariable)
+                public Void visitCorrelVariable(
+                    RexCorrelVariable correlVariable)
                 {
                     paramIdSet.add(correlVariable.getName());
                     return null;

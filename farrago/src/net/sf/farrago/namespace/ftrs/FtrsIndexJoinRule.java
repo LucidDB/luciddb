@@ -193,7 +193,9 @@ class FtrsIndexJoinRule
 
             RelDataType castRowType =
                 typeFactory.createJoinType(
-                    new RelDataType[] { leftRel.getRowType(), rightStructType });
+                    new RelDataType[] {
+                        leftRel.getRowType(), rightStructType
+                    });
             RexNode [] castExps = new RexNode[leftFieldCount + 1];
             String [] fieldNames = new String[leftFieldCount + 1];
             RexBuilder rexBuilder = leftRel.getCluster().getRexBuilder();

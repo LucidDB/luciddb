@@ -136,7 +136,8 @@ public class DdlRoutineHandler
                             routine.getParameter(),
                             FemRoutineParameter.class))
                     {
-                        if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN)
+                        if (param.getKind()
+                            == ParameterDirectionKindEnum.PDK_RETURN)
                         {
                             continue;
                         }
@@ -152,7 +153,7 @@ public class DdlRoutineHandler
                 }
             }
         }
-        
+
         if (FarragoCatalogUtil.isTableFunction(routine)) {
             routine.setUdx(true);
             validateAttributeSet(routine);

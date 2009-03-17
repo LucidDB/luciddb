@@ -79,7 +79,8 @@ public abstract class ProjectRelBase
         this.rowType = rowType;
         this.flags = flags;
         this.collationList =
-            collationList.isEmpty() ? Collections.<RelCollation>emptyList() : collationList;
+            collationList.isEmpty() ? Collections.<RelCollation>emptyList()
+            : collationList;
         assert isValid(true);
     }
 

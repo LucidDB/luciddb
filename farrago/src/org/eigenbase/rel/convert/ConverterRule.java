@@ -142,7 +142,8 @@ public abstract class ConverterRule
                 if (((ConverterRule) getRule()).getTraitDef()
                     == ((ConverterRel) rel).getTraitDef())
                 {
-                    RelOptPlanner.tracer.finest("trying to match " + rel + ": false");
+                    RelOptPlanner.tracer.finest(
+                        "trying to match " + rel + ": false");
                     return false;
                 }
             }

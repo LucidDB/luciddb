@@ -187,7 +187,7 @@ class MedMockLocalDataServer
     {
         return;
     }
-    
+
     // implement FarragoMedLocalDataServer
     public boolean supportsAlterTableAddColumn()
     {

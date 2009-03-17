@@ -42,8 +42,7 @@ abstract class RelOptTestBase
     protected abstract DiffRepository getDiffRepos();
 
     /**
-     * Checks the plan for a SQL statement before/after executing a given
-     * rule.
+     * Checks the plan for a SQL statement before/after executing a given rule.
      *
      * @param rule Planner rule
      * @param sql SQL query
@@ -94,8 +93,8 @@ abstract class RelOptTestBase
     }
 
     /**
-     * Checks the plan for a SQL statement before/after executing a given
-     * rule, with a pre-program to prepare the tree.
+     * Checks the plan for a SQL statement before/after executing a given rule,
+     * with a pre-program to prepare the tree.
      *
      * @param preProgram Program to execute before comparing before state
      * @param rule Planner rule
@@ -118,8 +117,8 @@ abstract class RelOptTestBase
     }
 
     /**
-     * Checks the plan for a SQL statement before/after executing a given
-     * rule, with a pre-program to prepare the tree.
+     * Checks the plan for a SQL statement before/after executing a given rule,
+     * with a pre-program to prepare the tree.
      *
      * @param preProgram Program to execute before comparing before state
      * @param planner Planner
@@ -169,10 +168,11 @@ abstract class RelOptTestBase
      * Creates a program which is a sequence of rules.
      *
      * @param rules Sequence of rules
+     *
      * @return Program
      */
     protected static HepProgram createProgram(
-        RelOptRule... rules)
+        RelOptRule ... rules)
     {
         final HepProgramBuilder builder = new HepProgramBuilder();
         for (RelOptRule rule : rules) {

@@ -86,7 +86,8 @@ import org.eigenbase.util.*;
  */
 public class FennelToIteratorConverter
     extends ConverterRelImpl
-    implements JavaRel, ConverterRel
+    implements JavaRel,
+        ConverterRel
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -137,7 +138,7 @@ public class FennelToIteratorConverter
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    @SuppressWarnings({"CloneDoesntCallSuperClone"})
+    @SuppressWarnings({ "CloneDoesntCallSuperClone" })
     public FennelToIteratorConverter clone()
     {
         FennelToIteratorConverter clone =

@@ -23,20 +23,24 @@
 package org.eigenbase.relopt;
 
 /**
- * RelOptSamplingParameters represents the parameters necessary to produce
- * a sample of a relation.
- * 
+ * RelOptSamplingParameters represents the parameters necessary to produce a
+ * sample of a relation.
+ *
  * <p>It's parameters are derived from the SQL 2003 TABLESAMPLE clause.
- * 
+ *
  * @author Stephan Zuercher
  */
 public class RelOptSamplingParameters
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final boolean isBernoulli;
     private final float samplingPercentage;
     private final boolean isRepeatable;
     private final int repeatableSeed;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public RelOptSamplingParameters(
         boolean isBernoulli,
         float samplingPercentage,
@@ -49,54 +53,55 @@ public class RelOptSamplingParameters
         this.repeatableSeed = repeatableSeed;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Indicates whether Bernoulli or system sampling should be performed.
-     * Bernoulli sampling requires the decision whether to include each row in 
-     * the the sample to be independent across rows.  System sampling allows
+     * Bernoulli sampling requires the decision whether to include each row in
+     * the the sample to be independent across rows. System sampling allows
      * implementation-dependent behavior.
-     * 
-     * 
-     * @return true if Bernoulli sampling is configured, false for system 
-     *         sampling
+     *
+     * @return true if Bernoulli sampling is configured, false for system
+     * sampling
      */
     public boolean isBernoulli()
     {
         return isBernoulli;
     }
-    
+
     /**
-     * Returns the sampling percentage.  For Bernoulli sampling, the sampling 
-     * percentage is the likelihood that any given row will be included in
-     * the sample.  For system sampling, the sampling percentage indicates
-     * (roughly) what percentage of the rows will appear in the sample.   
-     * 
+     * Returns the sampling percentage. For Bernoulli sampling, the sampling
+     * percentage is the likelihood that any given row will be included in the
+     * sample. For system sampling, the sampling percentage indicates (roughly)
+     * what percentage of the rows will appear in the sample.
+     *
      * @return the sampling percentage between 0.0 and 1.0, exclusive
      */
     public float getSamplingPercentage()
     {
         return samplingPercentage;
     }
-    
+
     /**
-     * Indicates whether the sample results should be repeatable.  Sample
-     * results are only required to repeat if no changes have been made
-     * to the relation's content or structure.  If the sample is configured
-     * to be repeatable, then a user-specified seed value can be obtained via
-     * {@link #getRepeatableSeed()}.
-     * 
+     * Indicates whether the sample results should be repeatable. Sample results
+     * are only required to repeat if no changes have been made to the
+     * relation's content or structure. If the sample is configured to be
+     * repeatable, then a user-specified seed value can be obtained via {@link
+     * #getRepeatableSeed()}.
+     *
      * @return true if the sample results should be repeatable
      */
     public boolean isRepeatable()
     {
         return isRepeatable;
     }
-    
+
     /**
-     * If {@link #isRepeatable()} returns <tt>true</tt>, this method returns
-     * a user-specified seed value.  Samples of the same, unmodified relation
-     * should be identical if the sampling mode, sampling percentage and 
+     * If {@link #isRepeatable()} returns <tt>true</tt>, this method returns a
+     * user-specified seed value. Samples of the same, unmodified relation
+     * should be identical if the sampling mode, sampling percentage and
      * repeatable seed are the same.
-     * 
+     *
      * @return seed value for repeatable samples
      */
     public int getRepeatableSeed()
@@ -104,3 +109,5 @@ public class RelOptSamplingParameters
         return repeatableSeed;
     }
 }
+
+// End RelOptSamplingParameters.java

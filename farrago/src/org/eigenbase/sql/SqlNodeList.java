@@ -24,10 +24,10 @@ package org.eigenbase.sql;
 
 import java.util.*;
 
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 
 /**
@@ -145,9 +145,8 @@ public class SqlNodeList
     void andOrList(SqlWriter writer, SqlKind sepKind)
     {
         SqlBinaryOperator sepOp =
-            sepKind == SqlKind.And
-                ? SqlStdOperatorTable.andOperator
-                : SqlStdOperatorTable.orOperator;
+            (sepKind == SqlKind.And) ? SqlStdOperatorTable.andOperator
+            : SqlStdOperatorTable.orOperator;
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = list.get(i);
             writer.sep(sepKind.getName(), false);
@@ -159,7 +158,7 @@ public class SqlNodeList
             // in a 3-node list will look as follows:
             //   0 <- node1 -> 4  5 <- node2 -> 4  5 <- node3 -> 0
             int lprec = (i == 0) ? 0 : sepOp.getRightPrec();
-            int rprec = (i == list.size() - 1) ? 0 : sepOp.getLeftPrec();
+            int rprec = (i == (list.size() - 1)) ? 0 : sepOp.getLeftPrec();
             node.unparse(writer, lprec, rprec);
         }
     }
@@ -167,14 +166,13 @@ public class SqlNodeList
     void _andOrList(SqlWriter writer, SqlKind sepKind)
     {
         SqlBinaryOperator sepOp =
-            sepKind == SqlKind.And
-                ? SqlStdOperatorTable.andOperator
-                : SqlStdOperatorTable.orOperator;
+            (sepKind == SqlKind.And) ? SqlStdOperatorTable.andOperator
+            : SqlStdOperatorTable.orOperator;
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = list.get(i);
             writer.sep(sepKind.getName(), false);
             int lprec = (i == 0) ? 0 : sepOp.getRightPrec();
-            int rprec = (i == list.size() - 1) ? 0 : sepOp.getLeftPrec();
+            int rprec = (i == (list.size() - 1)) ? 0 : sepOp.getLeftPrec();
             node.unparse(writer, lprec, rprec);
         }
     }

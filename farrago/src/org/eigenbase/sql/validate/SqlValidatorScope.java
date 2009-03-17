@@ -95,8 +95,8 @@ public interface SqlValidatorScope
     void findAllColumnNames(List<SqlMoniker> result);
 
     /**
-     * Collects the {@link SqlMoniker}s of all table aliases (uses of tables
-     * in query FROM clauses) available in this scope.
+     * Collects the {@link SqlMoniker}s of all table aliases (uses of tables in
+     * query FROM clauses) available in this scope.
      *
      * @param result a list of monikers to add the result to
      */

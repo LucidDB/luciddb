@@ -29,22 +29,23 @@ import java.sql.*;
 import java.util.*;
 import java.util.regex.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
-import org.eigenbase.jmi.*;
 
-import net.sf.farrago.resource.*;
-import javax.jmi.reflect.*;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.sql2003.*;
 
 /**
  * FarragoManagementUDR is a set of user-defined routines providing access to
@@ -178,7 +179,8 @@ public abstract class FarragoManagementUDR
             resultInserter.setBoolean(++i,
                 s.isTxnInProgress());
             resultInserter.setString(
-                ++i, v.get(FarragoDefaultSessionPersonality.LABEL));
+                ++i,
+                v.get(FarragoDefaultSessionPersonality.LABEL));
             resultInserter.executeUpdate();
         }
     }
@@ -264,7 +266,7 @@ public abstract class FarragoManagementUDR
     {
         exportCatalog(xmiFile, false);
     }
-    
+
     /**
      * Exports the catalog repository contents as an XMI file.
      *
@@ -302,7 +304,7 @@ public abstract class FarragoManagementUDR
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
-        FarragoReposTxnContext reposTxnContext = 
+        FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(repos, true);
         reposTxnContext.beginReadTxn();
 
@@ -317,8 +319,7 @@ public abstract class FarragoManagementUDR
                 }
                 resultInserter.executeUpdate();
             }
-        }
-        finally {
+        } finally {
             reposTxnContext.commit();
         }
     }
@@ -619,20 +620,20 @@ public abstract class FarragoManagementUDR
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
-        FarragoReposTxnContext reposTxnContext = 
+        FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(repos, true);
         reposTxnContext.beginReadTxn();
         String text;
         try {
-            RefObject refObj = 
+            RefObject refObj =
                 (RefObject) repos.getMdrRepos().getByMofId(mofId);
             if (refObj == null) {
                 throw FarragoResource.instance().ValidatorUnknownObject.ex(
                     "MOFID " + mofId);
             }
-            
+
             Object expr = refObj.refGetValue(attributeName);
-            
+
             if (expr == null) {
                 text = null;
             } else if (expr instanceof CwmExpression) {
@@ -640,11 +641,10 @@ public abstract class FarragoManagementUDR
             } else {
                 text = expr.toString();
             }
-        }
-        finally {
+        } finally {
             reposTxnContext.commit();
         }
-        
+
         // special case for null
         if (text == null) {
             // emit a single null value
@@ -653,7 +653,7 @@ public abstract class FarragoManagementUDR
             resultInserter.executeUpdate();
             return;
         }
-        
+
         // special case for empty string
         int textLength = text.length();
         if (textLength == 0) {
@@ -662,7 +662,7 @@ public abstract class FarragoManagementUDR
             resultInserter.executeUpdate();
             return;
         }
-        
+
         // break up text into chunks of maximum size 1024 characters
         int begin = 0;
         do {
@@ -679,8 +679,7 @@ public abstract class FarragoManagementUDR
     }
 
     /**
-     * Sets a filter on the optimizer rules to be used in the
-     * current session.
+     * Sets a filter on the optimizer rules to be used in the current session.
      *
      * @param regex regular expression for rule names to be excluded
      */
@@ -706,8 +705,8 @@ public abstract class FarragoManagementUDR
     }
 
     /**
-     * Deletes a file or directory.  Attempts to delete a non-empty
-     * directory will fail.
+     * Deletes a file or directory. Attempts to delete a non-empty directory
+     * will fail.
      */
     public static void deleteFileOrDirectory(String path)
         throws Exception
@@ -716,11 +715,11 @@ public abstract class FarragoManagementUDR
             throw FarragoResource.instance().FileDeletionFailed.ex(path);
         }
     }
-    
+
     /**
-     * Backs up the database, but without checking that there's enough space
-     * to perform the backup.
-     * 
+     * Backs up the database, but without checking that there's enough space to
+     * perform the backup.
+     *
      * @param archiveDirectory the pathname of the directory where the backup
      * files will be created
      * @param backupType string value indicating whether the backup is a FULL,
@@ -743,11 +742,11 @@ public abstract class FarragoManagementUDR
                 0);
         backup.backupDatabase();
     }
-    
+
     /**
-     * Backs up the database, checking that there's enough space to perform
-     * the backup.
-     * 
+     * Backs up the database, checking that there's enough space to perform the
+     * backup.
+     *
      * @param archiveDirectory the pathname of the directory where the backup
      * files will be created
      * @param backupType string value indicating whether the backup is a FULL,
@@ -773,10 +772,10 @@ public abstract class FarragoManagementUDR
                 padding);
         backup.backupDatabase();
     }
-    
+
     /**
      * Restores a database from backup.
-     * 
+     *
      * @param archiveDirectory the directory containing the backup
      */
     public static void restoreDatabase(String archiveDirectory)
@@ -795,7 +794,7 @@ public abstract class FarragoManagementUDR
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
-        FarragoReposTxnContext reposTxnContext = 
+        FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(repos, true);
         reposTxnContext.beginWriteTxn();
         try {
@@ -804,8 +803,7 @@ public abstract class FarragoManagementUDR
             if (!c.isEmpty()) {
                 throw FarragoResource.instance().ChangeToUnicodeFailed.ex();
             }
-            String characterSetName =
-                ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
+            String characterSetName = ConversionUtil.NATIVE_UTF16_CHARSET_NAME;
             String collationName =
                 ConversionUtil.NATIVE_UTF16_CHARSET_NAME + "$en_US";
             c = repos.getRelationalPackage().getCwmCatalog().refAllOfType();
@@ -816,8 +814,7 @@ public abstract class FarragoManagementUDR
             }
             c = repos.getRelationalPackage().getCwmColumn().refAllOfType();
             for (Object obj : c) {
-                FemAbstractTypedElement column =
-                    (FemAbstractTypedElement) obj;
+                FemAbstractTypedElement column = (FemAbstractTypedElement) obj;
                 setElementToUnicode(
                     FarragoCatalogUtil.toFemSqltypedElement(column),
                     characterSetName,

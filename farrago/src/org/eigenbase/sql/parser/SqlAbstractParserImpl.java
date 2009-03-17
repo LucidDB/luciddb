@@ -277,6 +277,47 @@ public abstract class SqlAbstractParserImpl
         sql92ReservedWordSet = Collections.unmodifiableSet(set);
     }
 
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Type-safe enum for context of acceptable expressions.
+     */
+    protected enum ExprContext
+    {
+        /**
+         * Accept any kind of expression in this context.
+         */
+        ACCEPT_ALL,
+
+        /**
+         * Accept any kind of expression in this context, with the exception of
+         * CURSOR constructors.
+         */
+        ACCEPT_NONCURSOR,
+
+        /**
+         * Accept only query expressions in this context.
+         */
+        ACCEPT_QUERY,
+
+        /**
+         * Accept only non-query expressions in this context.
+         */
+        ACCEPT_NONQUERY,
+
+        /**
+         * Accept only parenthesized queries or non-query expressions in this
+         * context.
+         */
+        ACCEPT_SUBQUERY,
+
+        /**
+         * Accept only CURSOR constructors, parenthesized queries, or non-query
+         * expressions in this context.
+         */
+        ACCEPT_CURSOR;
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -306,6 +347,7 @@ public abstract class SqlAbstractParserImpl
      * @param funcType Type of function
      * @param functionQualifier Qualifier
      * @param operands Operands to call
+     *
      * @return Call
      */
     protected SqlCall createCall(
@@ -436,45 +478,6 @@ public abstract class SqlAbstractParserImpl
     }
 
     //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Type-safe enum for context of acceptable expressions.
-     */
-    protected enum ExprContext
-    {
-        /**
-         * Accept any kind of expression in this context.
-         */
-        ACCEPT_ALL,
-
-        /**
-         * Accept any kind of expression in this context, with the exception of
-         * CURSOR constructors.
-         */
-        ACCEPT_NONCURSOR,
-
-        /**
-         * Accept only query expressions in this context.
-         */
-        ACCEPT_QUERY,
-
-        /**
-         * Accept only non-query expressions in this context.
-         */
-        ACCEPT_NONQUERY,
-
-        /**
-         * Accept only parenthesized queries or non-query expressions in this
-         * context.
-         */
-        ACCEPT_SUBQUERY,
-
-        /**
-         * Accept only CURSOR constructors, parenthesized queries, or non-query
-         * expressions in this context.
-         */
-        ACCEPT_CURSOR;
-    }
 
     /**
      * Default implementation of the {@link Metadata} interface.

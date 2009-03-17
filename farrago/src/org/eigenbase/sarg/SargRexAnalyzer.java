@@ -44,9 +44,8 @@ public class SargRexAnalyzer
     private final SargFactory factory;
 
     /**
-     * If true, conjuntions on the same input reference are disallowed, as
-     * well as all disjunctions.  Also, only a single range predicate is
-     * allowed.
+     * If true, conjuntions on the same input reference are disallowed, as well
+     * as all disjunctions. Also, only a single range predicate is allowed.
      */
     private final boolean simpleMode;
 
@@ -71,13 +70,13 @@ public class SargRexAnalyzer
     private List<SargBinding> sargBindingList;
 
     private Map<SargExpr, RexNode> sarg2RexMap;
-    
+
     /**
      * If >= 0, treat RexInputRefs whose index is within the range
      * [lowerRexInputIdx, upperRexInputIdx) as coordinates in expressions
      */
     private int lowerRexInputIdx;
-    
+
     /**
      * If >= 0, treat RexInputRefs whose index is within the range
      * [lowerRexInputIdx, upperRexInputIdx) as coordinates in expressions
@@ -92,7 +91,7 @@ public class SargRexAnalyzer
     {
         this(factory, simpleMode, -1, -1);
     }
-    
+
     SargRexAnalyzer(
         SargFactory factory,
         boolean simpleMode,
@@ -103,9 +102,8 @@ public class SargRexAnalyzer
         this.simpleMode = simpleMode;
         this.lowerRexInputIdx = lowerRexInputRef;
         this.upperRexInputIdx = upperRexInputRef;
-        assert(
-            (lowerRexInputIdx < 0 && upperRexInputIdx < 0) ||
-            (lowerRexInputIdx >= 0 && upperRexInputIdx >= 0));
+        assert (((lowerRexInputIdx < 0) && (upperRexInputIdx < 0))
+            || ((lowerRexInputIdx >= 0) && (upperRexInputIdx >= 0)));
 
         convertletMap = new HashMap<SqlOperator, CallConvertlet>();
 
@@ -223,7 +221,7 @@ public class SargRexAnalyzer
             // don't need this anymore
             // will be have new mapping put back if currSargExpr remain
             // unchanged.
-            sarg2RexMap.remove(currSargExpr);           
+            sarg2RexMap.remove(currSargExpr);
             recomp = false;
 
             // search the rest of the list to find SargExpr on the same col.
@@ -260,7 +258,7 @@ public class SargRexAnalyzer
             }
 
             if (recomp) {
-                assert(!simpleMode);
+                assert (!simpleMode);
                 if (!testDynamicParamSupport(currSargExpr)) {
                     // Oops, we can't actually support the conjunction we
                     // recomposed.  Toss it.  (We could do a better job by at
@@ -306,7 +304,7 @@ public class SargRexAnalyzer
         // keep a list of them.  We also only allow one non-point expression.
         List<Integer> boundRefList = new ArrayList<Integer>();
         boolean rangeFound = false;
-        
+
         for (RexNode rexPred : rexCFList) {
             sargBinding = analyze(rexPred);
             if (sargBinding != null) {
@@ -431,7 +429,7 @@ public class SargRexAnalyzer
         }
 
         RexNode newAndNode = sarg2RexMap.get(sargBindingList.get(0).getExpr());
-        
+
         for (int i = 1; i < sargBindingList.size(); i++) {
             RexNode nextNode =
                 sarg2RexMap.get(sargBindingList.get(i).getExpr());
@@ -654,14 +652,14 @@ public class SargRexAnalyzer
             }
             return null;
         }
-        
+
         private boolean isRealRexInputRef(RexInputRef inputRef)
         {
-            if (lowerRexInputIdx < 0 && upperRexInputIdx < 0) {
+            if ((lowerRexInputIdx < 0) && (upperRexInputIdx < 0)) {
                 return true;
             }
             int idx = inputRef.getIndex();
-            if (idx >= lowerRexInputIdx && idx < upperRexInputIdx) {
+            if ((idx >= lowerRexInputIdx) && (idx < upperRexInputIdx)) {
                 return false;
             } else {
                 return true;

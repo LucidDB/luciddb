@@ -181,13 +181,13 @@ public class LhxJoinRule
                 null,
                 numBuildRows.longValue(),
                 cndBuildKey.longValue());
-        
+
         // Need to project the new output(left+key+right+key) to the original
         // join output(left+right).
         // The projection needs to happen before additional filtering since
         // filtering condition references the original output ordinals.
         rel = RelOptUtil.createProjectJoinRel(outputProj, rel);
-        
+
         transformCall(call, rel, nonEquiCondition);
     }
 

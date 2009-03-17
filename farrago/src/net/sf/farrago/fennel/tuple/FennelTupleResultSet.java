@@ -80,7 +80,7 @@ abstract public class FennelTupleResultSet
     {
         this.desc = desc;
         this.metaData = metaData;
-        this.tupleAlignment = tupleAlignment ;
+        this.tupleAlignment = tupleAlignment;
         this.tupleAlignmentMask = tupleAlignment - 1;
     }
 
@@ -88,7 +88,7 @@ abstract public class FennelTupleResultSet
         FennelTupleDescriptor desc,
         ResultSetMetaData metaData)
     {
-        this(desc,metaData,FennelTupleAccessor.TUPLE_ALIGN_JVM);
+        this(desc, metaData, FennelTupleAccessor.TUPLE_ALIGN_JVM);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -249,8 +249,7 @@ abstract public class FennelTupleResultSet
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
             String charsetName =
-                d.isUnicode()
-                ? ConversionUtil.NATIVE_UTF16_CHARSET_NAME
+                d.isUnicode() ? ConversionUtil.NATIVE_UTF16_CHARSET_NAME
                 : "ISO-8859-1";
             try {
                 return new String(

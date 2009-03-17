@@ -85,7 +85,7 @@ public final class JoinRel
             variablesStopped,
             false);
     }
-    
+
     /**
      * Creates a JoinRel, flagged with whether it has been translated to a
      * semi-join.

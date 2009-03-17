@@ -21,10 +21,11 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.util.Pair;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * The name-resolution scope of a OVER clause. The objects visible are those in
@@ -41,8 +42,8 @@ import java.util.List;
  *         RANGE BETWEEN 2 PRECEDING AND 2 FOLLOWING))
  * </pre>
  * </blockquote>
- * <p/>
  *
+ * <p/>
  * <p>We need to use the {@link OverScope} as a {@link SqlValidatorNamespace}
  * when resolving names used in the window specification.</p>
  *
@@ -89,7 +90,7 @@ public class OverScope
 
         if (children.size() == 1) {
             final SqlValidatorNamespace child = children.get(0);
-            final List<Pair<SqlNode,SqlMonotonicity>> monotonicExprs =
+            final List<Pair<SqlNode, SqlMonotonicity>> monotonicExprs =
                 child.getMonotonicExprs();
             for (Pair<SqlNode, SqlMonotonicity> pair : monotonicExprs) {
                 if (expr.equalsDeep(pair.left, false)) {

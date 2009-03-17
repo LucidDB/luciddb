@@ -53,13 +53,13 @@ public final class CorrelatorRel
     /**
      * Creates a CorrelatorRel.
      *
-     * @param cluster       cluster this relational expression belongs to
-     * @param left          left input relational expression
-     * @param right         right input relational expression
-     * @param joinCond      join condition
-     * @param correlations  set of expressions to set as variables each time a
-     *                      row arrives from the left input
-     * @param joinType      join type
+     * @param cluster cluster this relational expression belongs to
+     * @param left left input relational expression
+     * @param right right input relational expression
+     * @param joinCond join condition
+     * @param correlations set of expressions to set as variables each time a
+     * row arrives from the left input
+     * @param joinType join type
      */
     public CorrelatorRel(
         RelOptCluster cluster,
@@ -85,12 +85,12 @@ public final class CorrelatorRel
     /**
      * Creates a CorrelatorRel with no join condition.
      *
-     * @param cluster       cluster this relational expression belongs to
-     * @param left          left input relational expression
-     * @param right         right input relational expression
-     * @param correlations  set of expressions to set as variables each time a
-     *                      row arrives from the left input
-     * @param joinType      join type
+     * @param cluster cluster this relational expression belongs to
+     * @param left left input relational expression
+     * @param right right input relational expression
+     * @param correlations set of expressions to set as variables each time a
+     * row arrives from the left input
+     * @param joinType join type
      */
     public CorrelatorRel(
         RelOptCluster cluster,
@@ -167,8 +167,8 @@ public final class CorrelatorRel
         /**
          * Creates a correlation.
          *
-         * @param id       Identifier
-         * @param offset   Offset
+         * @param id Identifier
+         * @param offset Offset
          */
         public Correlation(int id, int offset)
         {

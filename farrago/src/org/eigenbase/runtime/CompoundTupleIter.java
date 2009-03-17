@@ -76,7 +76,8 @@ public class CompoundTupleIter
 
     public boolean setTimeout(long timeout, boolean asUnderflow)
     {
-        // try to set a timeout on all underlings, but return false if any refused.
+        // try to set a timeout on all underlings, but return false if any
+        // refused.
         boolean result = true;
         for (int i = 0; i < iterators.length; i++) {
             result &= iterators[i].setTimeout(timeout, asUnderflow);
@@ -271,15 +272,21 @@ public class CompoundTupleIter
                         new BoxTupleIter(
                             makeCalcTupleIter(
                                 makeTupleIter(
-                                    new String[] { "400", "401", "402", "403" }))),
+                                    new String[] {
+                                        "400", "401", "402", "403"
+                                    }))),
                         new BoxTupleIter(
                             makeCalcTupleIter(
                                 makeTupleIter(
-                                    new String[] { "500", "501", "502", "503" }))),
+                                    new String[] {
+                                        "500", "501", "502", "503"
+                                    }))),
                         new BoxTupleIter(
                             makeCalcTupleIter(
                                 makeTupleIter(
-                                    new String[] { "600", "601", "602", "603" })))
+                                    new String[] {
+                                        "600", "601", "602", "603"
+                                    })))
                     });
             assertUnboxedEquals(
                 iterator,

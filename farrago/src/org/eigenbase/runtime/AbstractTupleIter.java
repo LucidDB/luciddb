@@ -28,11 +28,14 @@ package org.eigenbase.runtime;
  * @author Marc Berkowitz
  * @version $Id$
  */
-public abstract class AbstractTupleIter implements TupleIter
+public abstract class AbstractTupleIter
+    implements TupleIter
 {
+    //~ Methods ----------------------------------------------------------------
+
     public boolean setTimeout(long timeout, boolean asUnderflow)
     {
-        return false;                   // by default, don't provide a timeout
+        return false; // by default, don't provide a timeout
     }
 
     public void restart()

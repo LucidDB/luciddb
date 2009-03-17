@@ -23,14 +23,17 @@
 package org.eigenbase.test;
 
 import java.io.*;
+
 import java.lang.reflect.*;
-import java.nio.charset.Charset;
+
+import java.nio.charset.*;
+
 import java.util.*;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**

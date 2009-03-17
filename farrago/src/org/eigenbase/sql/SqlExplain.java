@@ -40,8 +40,6 @@ public class SqlExplain
     public static final int DEPTH_OPERAND = 2;
     public static final int AS_XML_OPERAND = 3;
     public static final int OPERAND_COUNT = 4;
-    
-    private final int nDynamicParams;
 
     //~ Enums ------------------------------------------------------------------
 
@@ -53,6 +51,10 @@ public class SqlExplain
     {
         Type, Logical, Physical,
     }
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final int nDynamicParams;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -110,7 +112,7 @@ public class SqlExplain
     {
         return nDynamicParams;
     }
-    
+
     /**
      * @return whether physical plan implementation should be returned
      */

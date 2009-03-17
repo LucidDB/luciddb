@@ -21,18 +21,20 @@
 package com.lucidera.lcs;
 
 import com.lucidera.farrago.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
- * LcsRemoveRidExprRule is a rule for converting rid expressions that appear
- * in a {@link ProjectRel} whose child is a {@link EmptyRel} into BIGINT null
- * literals.  Since the child of the project produces no rows, it doesn't
- * matter what the rid expression returns, so long as the type of the constant
- * matches the original type of the rid expression.
+ * LcsRemoveRidExprRule is a rule for converting rid expressions that appear in
+ * a {@link ProjectRel} whose child is a {@link EmptyRel} into BIGINT null
+ * literals. Since the child of the project produces no rows, it doesn't matter
+ * what the rid expression returns, so long as the type of the constant matches
+ * the original type of the rid expression.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -60,9 +62,9 @@ public class LcsRemoveRidExprRule
         // Only fire the rule if there is at least one rid expression
         // somewhere in one of the projection expressions.
         ProjectRel project = (ProjectRel) call.rels[0];
-        RexNode[] projExprs = project.getChildExps();
+        RexNode [] projExprs = project.getChildExps();
         int projLen = projExprs.length;
-        RexNode[] newProjExprs = new RexNode[projLen];
+        RexNode [] newProjExprs = new RexNode[projLen];
         RexBuilder rexBuilder = project.getCluster().getRexBuilder();
         RidExprConverter converter = new RidExprConverter(rexBuilder);
         for (int i = 0; i < projLen; i++) {
@@ -71,13 +73,13 @@ public class LcsRemoveRidExprRule
         if (!converter.foundRidExpr()) {
             return;
         }
-        
-        String[] fieldNames = new String[projLen];
-        RelDataTypeField[] fields = project.getRowType().getFields();
+
+        String [] fieldNames = new String[projLen];
+        RelDataTypeField [] fields = project.getRowType().getFields();
         for (int i = 0; i < projLen; i++) {
             fieldNames[i] = fields[i].getName();
         }
-        
+
         ProjectRel newProject =
             CalcRel.createProject(
                 call.rels[1],
@@ -85,7 +87,9 @@ public class LcsRemoveRidExprRule
                 fieldNames);
         call.transformTo(newProject);
     }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Shuttle that locates rid expressions and converts them to literals with
      * the value 0.
@@ -95,13 +99,13 @@ public class LcsRemoveRidExprRule
     {
         private RexBuilder rexBuilder;
         private boolean ridExprFound;
-        
+
         public RidExprConverter(RexBuilder rexBuilder)
         {
             this.rexBuilder = rexBuilder;
             ridExprFound = false;
         }
-        
+
         public RexNode visitCall(RexCall call)
         {
             if (call.getOperator() == LucidDbOperatorTable.lcsRidFunc) {
@@ -111,7 +115,7 @@ public class LcsRemoveRidExprRule
                 return super.visitCall(call);
             }
         }
-        
+
         public boolean foundRidExpr()
         {
             return ridExprFound;

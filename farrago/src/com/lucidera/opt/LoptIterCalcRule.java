@@ -53,7 +53,7 @@ public abstract class LoptIterCalcRule
                     new RelOptRuleOperand(
                         TableAccessRelBase.class,
                         ANY))));
-    
+
     public static LoptIterCalcRule lcsRowScanInstance =
         new LcsRowScanRule(
             new RelOptRuleOperand(
@@ -121,7 +121,7 @@ public abstract class LoptIterCalcRule
                     new RelOptRuleOperand(
                         LhxJoinRel.class,
                         ANY))));
-    
+
     public static LoptIterCalcRule nestedLoopJoinInstance =
         new NestedLoopJoinRule(
             new RelOptRuleOperand(
@@ -131,7 +131,7 @@ public abstract class LoptIterCalcRule
                     new RelOptRuleOperand(
                         FennelNestedLoopJoinRel.class,
                         ANY))));
-    
+
     public static LoptIterCalcRule cartesianJoinInstance =
         new CartesianJoinRule(
             new RelOptRuleOperand(
@@ -238,10 +238,8 @@ public abstract class LoptIterCalcRule
         StringBuffer sb = new StringBuffer(action);
         sb.append(".").append(qualifiedName[2]);
         if (rel != null) {
-            sb.append(".")
-                .append(rel.getId())
-                .append("_")
-                .append(Util.getFileTimestamp());
+            sb.append(".").append(rel.getId()).append("_").append(
+                Util.getFileTimestamp());
         }
         return sb.toString();
     }
@@ -297,7 +295,7 @@ public abstract class LoptIterCalcRule
             transformToTag(call, calc, tag);
         }
     }
-    
+
     /**
      * A rule for tagging a calculator on top of a column store row scan.
      */
@@ -520,7 +518,7 @@ public abstract class LoptIterCalcRule
             transformToTag(call, calc, tag);
         }
     }
-    
+
     /**
      * A rule for tagging a calculator on top of a nested loop join.
      */
@@ -568,7 +566,7 @@ public abstract class LoptIterCalcRule
             transformToTag(call, calc, tag);
         }
     }
-    
+
     /**
      * A default rule for tagging any calculator
      */

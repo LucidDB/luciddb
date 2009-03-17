@@ -190,7 +190,7 @@ public class FarragoTypeFactoryImpl
 
                     charsetName =
                         SqlUtil.translateCharacterSetName(charsetName);
-                    assert(charsetName != null);
+                    assert (charsetName != null);
                     Charset charSet = Charset.forName(charsetName);
                     type =
                         createTypeWithCharsetAndCollation(

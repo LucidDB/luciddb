@@ -24,8 +24,8 @@ package org.eigenbase.sql;
 
 import java.sql.*;
 
+import java.util.*;
 import java.util.regex.*;
-import java.util.List;
 
 import org.eigenbase.util.*;
 

@@ -22,19 +22,20 @@
 */
 package net.sf.farrago.db;
 
-import java.sql.SQLException;
+import java.sql.*;
+
 import java.util.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
-
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.CwmTable;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
-import net.sf.farrago.resource.FarragoResource;
-import net.sf.farrago.session.FarragoSessionIndexMap;
+import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
+
+import org.eigenbase.jmi.*;
 
 
 /**
@@ -162,13 +163,13 @@ class FarragoDbSessionIndexMap
     {
         return null;
     }
-    
+
     // implement FarragoSessionIndexMap
     public CwmTable getOldTableStructure()
     {
         return null;
     }
-    
+
     // implement FarragoAllocation
     public void closeAllocation()
     {
@@ -181,7 +182,7 @@ class FarragoDbSessionIndexMap
             for (String indexMofId : list) {
                 dropIndexStorage(privateDataWrapperCache, indexMofId, false);
             }
-        
+
             // TODO:  make Fennel drop temporary indexes on recovery also
             // NOTE:  do this last, so that we don't release data wrappers
             // until we're done using them for drops above
@@ -198,7 +199,7 @@ class FarragoDbSessionIndexMap
     public void onCommit()
     {
         for (String indexMofId : tempIndexRootMap.keySet()) {
-            FemLocalIndex index = 
+            FemLocalIndex index =
                 (FemLocalIndex) repos.getMdrRepos().getByMofId(indexMofId);
 
             String temporaryScope =
@@ -239,7 +240,7 @@ class FarragoDbSessionIndexMap
         if (updateMap) {
             setIndexRoot(index, indexRoot);
         }
-        
+
         return indexRoot;
     }
 
@@ -251,7 +252,7 @@ class FarragoDbSessionIndexMap
     {
         dropIndexStorageImpl(wrapperCache, index, null, truncate);
     }
-    
+
     // implement FarragoSessionIndexMap
     public void dropIndexStorage(
         FarragoDataWrapperCache wrapperCache,
@@ -269,11 +270,11 @@ class FarragoDbSessionIndexMap
     {
         FarragoReposTxnContext txn = repos.newTxnContext(true);
         if (index == null) {
-            assert(indexMofId != null);
+            assert (indexMofId != null);
             txn.beginReadTxn();
             index = (FemLocalIndex) repos.getMdrRepos().getByMofId(indexMofId);
         } else {
-            assert(indexMofId == null);
+            assert (indexMofId == null);
             indexMofId = index.refMofId();
         }
         try {
@@ -289,11 +290,13 @@ class FarragoDbSessionIndexMap
             String localizedIndexName = repos.getLocalizedObjectName(index);
             try {
                 long root = getIndexRoot(index);
+
                 // The dropIndex call is the potentially long-running part, so
                 // before invoking it, end our repository transaction if we
                 // started one.  We've already been careful to dig out anything
                 // we need from the repository by this point.
                 txn.commit();
+
                 // FIXME jvs 11-Dec-2008:  We're still passing in
                 // the index reference here.  The local data wrapper
                 // SPI needs to be fixed to avoid this.  We're probably
@@ -345,9 +348,9 @@ class FarragoDbSessionIndexMap
     {
         String mofId = JmiObjUtil.toMofId(id);
 
-        FemLocalIndex index = 
+        FemLocalIndex index =
             (FemLocalIndex) repos.getMdrRepos().getByMofId(mofId);
-        
+
         return index;
     }
 

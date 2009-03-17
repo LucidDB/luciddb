@@ -26,7 +26,7 @@ import java.util.*;
 
 import javax.jmi.model.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 

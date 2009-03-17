@@ -40,8 +40,7 @@ import org.eigenbase.sql.type.*;
 
 /**
  * FarragoReentrantStmtExecutor extends {@link FarragoReentrantStmt} by
- * providing a base method for executing a query plan and returning its
- * result.
+ * providing a base method for executing a query plan and returning its result.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -51,19 +50,26 @@ public abstract class FarragoReentrantStmtExecutor
 {
     // ~ Instance fields -------------------------------------------------------
 
-    protected final RexBuilder rexBuilder;
-    protected final List<RexNode> results;
-    protected boolean failed; 
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final Logger tracer =
         FarragoTrace.getClassTracer(FarragoReentrantStmtExecutor.class);
 
     // ~ Constructors ----------------------------------------------------------
-    
+
+    //~ Instance fields --------------------------------------------------------
+
+    protected final RexBuilder rexBuilder;
+    protected final List<RexNode> results;
+    protected boolean failed;
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Constructs a FarragoReentrantStmtExecutor.
      *
-     * @param rootStmtContext statement context for the root statement of
-     * this reentrant statement
+     * @param rootStmtContext statement context for the root statement of this
+     * reentrant statement
      * @param rexBuilder rex builder
      * @param results the resulting evaluated expressions
      */
@@ -79,17 +85,18 @@ public abstract class FarragoReentrantStmtExecutor
 
     // ~ Methods ---------------------------------------------------------------
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Executes a query given a plan containing the corresponding RelNode
-     * tree.
-     * 
+     * Executes a query given a plan containing the corresponding RelNode tree.
+     *
      * @param plan the query to be executed
      * @param exprs list of expressions that will be evaluated
      * @param isExists whether the query being executed is part of an EXISTS
      * expression; in this case, the result is either a TRUE or FALSE boolean
      * literal, depending on whether the query returns zero or at least one row
-     * @param excludeReduceExprRule true if this execution is already being
-     * done to reduce individual expressions
+     * @param excludeReduceExprRule true if this execution is already being done
+     * to reduce individual expressions
      */
     protected void executePlan(
         RelNode plan,
@@ -126,7 +133,7 @@ public abstract class FarragoReentrantStmtExecutor
                 // can surprise us.
                 failed = true;
             }
-        } else {      
+        } else {
             if (isExists) {
                 results.add(rexBuilder.makeLiteral(true));
             } else {
@@ -135,7 +142,7 @@ public abstract class FarragoReentrantStmtExecutor
         }
         resultSet.close();
     }
-    
+
     private void getResultRow(List<RexNode> exprs, ResultSet resultSet)
         throws Exception
     {
@@ -198,7 +205,7 @@ public abstract class FarragoReentrantStmtExecutor
 
         assert (!resultSet.next());
     }
-    
+
     // TODO jvs 26-May-2006:  Get rid of this.
     private SqlTypeName broadenType(SqlTypeName typeName)
     {

@@ -74,14 +74,14 @@ public interface RelOptCost
 
     /**
      * Compares this to another cost, allowing for slight roundoff errors.
-     * 
+     *
      * @param cost another cost
-     * 
+     *
      * @return true iff this is the same as the other cost within a roundoff
      * margin of error
      */
     public boolean isEqWithEpsilon(RelOptCost cost);
-    
+
     /**
      * Compares this to another cost.
      *
@@ -130,13 +130,12 @@ public interface RelOptCost
     /**
      * Computes the ratio between this cost and another cost.
      *
-     *
      * <p>divideBy is the inverse of {@link #multiplyBy(double)}. For any
-     * finite, non-zero cost and factor f,
-     * <code>cost.divideBy(cost.multiplyBy(f))</code> yields
-     * <code>1 / f</code>.
+     * finite, non-zero cost and factor f, <code>
+     * cost.divideBy(cost.multiplyBy(f))</code> yields <code>1 / f</code>.
      *
      * @param cost Other cost
+     *
      * @return Ratio between costs
      */
     public double divideBy(RelOptCost cost);

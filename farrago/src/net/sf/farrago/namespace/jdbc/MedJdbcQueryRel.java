@@ -99,17 +99,17 @@ class MedJdbcQueryRel
             "getResultSet",
             new ExpressionList());
     }
-    
+
     // override JdbcQuery
     public MedJdbcQueryRel clone()
     {
-        MedJdbcQueryRel clone = 
+        MedJdbcQueryRel clone =
             new MedJdbcQueryRel(
-                columnSet, 
-                getCluster(), 
-                getRowType(), 
-                connection, 
-                dialect, 
+                columnSet,
+                getCluster(),
+                getRowType(),
+                connection,
+                dialect,
                 getSql());
         clone.inheritTraitsFrom(this);
         return clone;

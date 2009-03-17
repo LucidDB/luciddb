@@ -30,11 +30,9 @@ import java.util.*;
  * Cancellation is implemented synchronously and without any delay, making it
  * easy to avoid shutdown races.
  *
- * <p>
- *
- * NOTE jvs 13-Aug-2007: The shutdown mechanism requires that cancellation not
- * happen via any other means.  If it does, the shutdown could result in an
- * {@link IllegalStateException} or a hang.  Use {@link FarragoTimerTask} to
+ * <p>NOTE jvs 13-Aug-2007: The shutdown mechanism requires that cancellation
+ * not happen via any other means. If it does, the shutdown could result in an
+ * {@link IllegalStateException} or a hang. Use {@link FarragoTimerTask} to
  * avoid the implicit cancellation which can occur when a timer task throws an
  * exception.
  *

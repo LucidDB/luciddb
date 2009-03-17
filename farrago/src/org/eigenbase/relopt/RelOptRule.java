@@ -38,6 +38,14 @@ import org.eigenbase.util.*;
  */
 public abstract class RelOptRule
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * Shorthand for {@link RelOptRuleOperand.Dummy#ANY}.
+     */
+    public static final RelOptRuleOperand.Dummy ANY =
+        RelOptRuleOperand.Dummy.ANY;
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -56,12 +64,6 @@ public abstract class RelOptRule
      * Flattened list of operands.
      */
     public RelOptRuleOperand [] operands;
-
-    /**
-     * Shorthand for {@link RelOptRuleOperand.Dummy#ANY}.
-     */
-    public static final RelOptRuleOperand.Dummy ANY =
-        RelOptRuleOperand.Dummy.ANY;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -213,15 +215,14 @@ public abstract class RelOptRule
     /**
      * Returns whether this rule could possibly match the given operands.
      *
-     * <p> This method is an opportunity to apply side-conditions to a rule.
-     * The {@link RelOptPlanner} calls this method after matching all
-     * operands of the rule, and before calling
-     * {@link #onMatch(RelOptRuleCall)}.
+     * <p>This method is an opportunity to apply side-conditions to a rule. The
+     * {@link RelOptPlanner} calls this method after matching all operands of
+     * the rule, and before calling {@link #onMatch(RelOptRuleCall)}.
      *
      * <p>In implementations of {@link RelOptPlanner} which may queue up a
-     * matched {@link RelOptRuleCall} for a long time before calling
-     * {@link #onMatch(RelOptRuleCall)}, this method is beneficial because it
-     * allows the planner to discard rules earlier in the process.
+     * matched {@link RelOptRuleCall} for a long time before calling {@link
+     * #onMatch(RelOptRuleCall)}, this method is beneficial because it allows
+     * the planner to discard rules earlier in the process.
      *
      * <p>The default implementation of this method returns <code>true</code>.
      * It is acceptable for any implementation of this method to give a false
@@ -231,7 +232,9 @@ public abstract class RelOptRule
      *
      * <p>The following script is useful to identify rules which commonly
      * produce no successors. You should override this method for these rules:
-     * <blockquote><pre><code>awk '
+     *
+     * <blockquote>
+     * <pre><code>awk '
      * /Apply rule/ {rule=$4; ruleCount[rule]++;}
      * /generated 0 successors/ {ruleMiss[rule]++;}
      * END {
@@ -239,11 +242,12 @@ public abstract class RelOptRule
      *   for (i in ruleCount) {
      *     printf "%-30s %5d %5d\n", i, ruleCount[i], ruleMiss[i];
      *   }
-     * } ' FarragoTrace.log</code></pre></blockquote>
+     * } ' FarragoTrace.log</code></pre>
+     * </blockquote>
      *
+     * @param call Rule call which has been determined to match all operands of
+     * this rule
      *
-     * @param call Rule call which has been determined to match all operands
-     *   of this rule
      * @return whether this RelOptRule matches a given RelOptRuleCall
      */
     public boolean matches(RelOptRuleCall call)
@@ -261,10 +265,10 @@ public abstract class RelOptRule
      * a new expression, then calls back {@link RelOptRuleCall#transformTo} to
      * register the expression.</p>
      *
+     * @param call Rule call
+     *
      * @see #matches(RelOptRuleCall)
      * @pre matches(call)
-     *
-     * @param call Rule call
      */
     public abstract void onMatch(RelOptRuleCall call);
 
@@ -278,8 +282,8 @@ public abstract class RelOptRule
     }
 
     /**
-     * Returns the trait which will be modified as a result of firing this
-     * rule, or null if the rule is not a converter rule.
+     * Returns the trait which will be modified as a result of firing this rule,
+     * or null if the rule is not a converter rule.
      */
     public RelTrait getOutTrait()
     {

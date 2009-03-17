@@ -124,10 +124,10 @@ class FarragoExecutableJavaStmt
 
             // NOTE jvs 1-May-2004: This sequence is subtle.  We can't open all
             // Fennel tuple streams yet, since some may take Java streams as
-            // input, and the Java streams are created by stmtMethod.invoke below
-            // (which calls the generated execute stmtMethod to obtain an iterator).
-            // This means that the generated execute must NOT try to prefetch
-            // any data, since the Fennel streams aren't open yet. In
+            // input, and the Java streams are created by stmtMethod.invoke
+            // below (which calls the generated execute stmtMethod to obtain an
+            // iterator). This means that the generated execute must NOT try to
+            // prefetch any data, since the Fennel streams aren't open yet. In
             // particular, Java iterator implementations must not do prefetch in
             // the constructor (always wait for hasNext/next).
             TupleIter iter =

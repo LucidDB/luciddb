@@ -41,21 +41,21 @@ public enum JmiAssocMapping
     COPY,
 
     /**
-     * The association edge should be preserved in the transformed graph,
-     * but its direction should be reversed.
+     * The association edge should be preserved in the transformed graph, but
+     * its direction should be reversed.
      */
     REVERSAL,
 
     /**
-     * The two ends of the association should be contracted into
-     * one vertex in the transformed graph.
+     * The two ends of the association should be contracted into one vertex in
+     * the transformed graph.
      */
     CONTRACTION,
 
     /**
-     * The association edge should be interpreted as a hierarchical structure
-     * to be superimposed on the graph, with the source as parent and the
-     * target as child.
+     * The association edge should be interpreted as a hierarchical structure to
+     * be superimposed on the graph, with the source as parent and the target as
+     * child.
      */
     HIERARCHY
 }

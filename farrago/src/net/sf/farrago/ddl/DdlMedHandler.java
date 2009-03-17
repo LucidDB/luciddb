@@ -131,7 +131,7 @@ public class DdlMedHandler
         // FIXME jvs 21-Jun-2007:  promote methods up to
         // FarragoSessionDdlValidator level instead of downcasting.
         DdlValidator ddlValidator = (DdlValidator) validator;
-        
+
         if (!ddlValidator.isReplace()
             || ddlValidator.isReplacingType(femServer))
         {

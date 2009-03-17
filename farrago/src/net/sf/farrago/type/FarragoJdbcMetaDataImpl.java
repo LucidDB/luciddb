@@ -24,10 +24,9 @@ package net.sf.farrago.type;
 
 import java.sql.*;
 
+import org.eigenbase.jdbc4.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
-
-import org.eigenbase.jdbc4.*;
 
 
 /**
@@ -36,7 +35,8 @@ import org.eigenbase.jdbc4.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcMetaDataImpl extends Unwrappable
+public class FarragoJdbcMetaDataImpl
+    extends Unwrappable
 {
     //~ Instance fields --------------------------------------------------------
 

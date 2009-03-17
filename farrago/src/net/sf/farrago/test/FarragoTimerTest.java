@@ -21,26 +21,32 @@
 */
 package net.sf.farrago.test;
 
+import java.util.*;
+import java.util.logging.*;
+
+import junit.framework.*;
+
 import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
 
-import junit.framework.*;
-
-import java.util.*;
-import java.util.logging.*;
 
 /**
- * FarragoTimerTest tests {@link FarragoTimerAllocation} and
- * {@link FarragoTimerTask}.
+ * FarragoTimerTest tests {@link FarragoTimerAllocation} and {@link
+ * FarragoTimerTask}.
  *
  * @author John Sichi
  * @version $Id$
  */
-public class FarragoTimerTest extends TestCase
+public class FarragoTimerTest
+    extends TestCase
 {
+    //~ Instance fields --------------------------------------------------------
+
     int nTicks;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new FarragoTimerTest object.
      */
@@ -49,6 +55,8 @@ public class FarragoTimerTest extends TestCase
     {
         super(testName);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void testGoodTask()
     {
@@ -62,7 +70,7 @@ public class FarragoTimerTest extends TestCase
     public void testBadTask()
     {
         executeTask(new BadTask());
-        
+
         // Verify that timer stopped ticking after burp.
         assertEquals(3, nTicks);
     }
@@ -86,7 +94,10 @@ public class FarragoTimerTest extends TestCase
         }
     }
 
-    private class GoodTask extends FarragoTimerTask
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class GoodTask
+        extends FarragoTimerTask
     {
         GoodTask()
         {
@@ -100,7 +111,8 @@ public class FarragoTimerTest extends TestCase
         }
     }
 
-    private class BadTask extends FarragoTimerTask
+    private class BadTask
+        extends FarragoTimerTask
     {
         BadTask()
         {

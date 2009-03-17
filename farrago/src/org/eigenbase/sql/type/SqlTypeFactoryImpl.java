@@ -61,8 +61,8 @@ public class SqlTypeFactoryImpl
         int precision)
     {
         assertBasic(typeName);
-        assert precision >= 0 ||
-            precision == BasicSqlType.PRECISION_NOT_SPECIFIED;
+        assert (precision >= 0)
+            || (precision == BasicSqlType.PRECISION_NOT_SPECIFIED);
         RelDataType newType = new BasicSqlType(typeName, precision);
         newType = SqlTypeUtil.addCharsetAndCollation(newType, this);
         return canonize(newType);
@@ -75,8 +75,8 @@ public class SqlTypeFactoryImpl
         int scale)
     {
         assertBasic(typeName);
-        assert precision >= 0 ||
-            precision == BasicSqlType.PRECISION_NOT_SPECIFIED;
+        assert (precision >= 0)
+            || (precision == BasicSqlType.PRECISION_NOT_SPECIFIED);
         RelDataType newType = new BasicSqlType(typeName, precision, scale);
         newType = SqlTypeUtil.addCharsetAndCollation(newType, this);
         return canonize(newType);
@@ -245,7 +245,7 @@ public class SqlTypeFactoryImpl
                 Charset charset2 = resultType.getCharset();
                 SqlCollation collation1 = type.getCollation();
                 SqlCollation collation2 = resultType.getCollation();
-                
+
                 // TODO:  refine collation combination rules
                 int precision =
                     Math.max(
@@ -305,10 +305,11 @@ public class SqlTypeFactoryImpl
                     }
                 }
                 if (charset != null) {
-                    resultType = createTypeWithCharsetAndCollation(
-                        resultType,
-                        charset,
-                        collation);
+                    resultType =
+                        createTypeWithCharsetAndCollation(
+                            resultType,
+                            charset,
+                            collation);
                 }
             } else if (SqlTypeUtil.isExactNumeric(type)) {
                 if (SqlTypeUtil.isExactNumeric(resultType)) {

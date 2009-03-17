@@ -22,38 +22,47 @@
 */
 package net.sf.farrago.query;
 
-import java.lang.reflect.Constructor;
+import java.lang.reflect.*;
+
 import java.util.logging.*;
+
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.util.Util;
-import net.sf.farrago.fennel.FennelStreamGraph;
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.session.FarragoSessionRuntimeContext;
-import net.sf.farrago.trace.FarragoTrace;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Defines a {@link net.sf.farrago.runtime.FarragoTransform}, the java peer of a
  * fennel::JavaTransformExecStream. A FarragoTransformDef is constructed by a
- * FarragoRelImplementor and then handed off to a FarragoExecutableJavaStmt, which
- * instantiates the FarragoTransform.
+ * FarragoRelImplementor and then handed off to a FarragoExecutableJavaStmt,
+ * which instantiates the FarragoTransform.
  *
  * @author Marc Berkowitz
  */
 public class FarragoTransformDef
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     // trace with fennel plan
     private static final Logger tracer =
         FarragoTrace.getPreparedStreamGraphTracer();
+
+    //~ Instance fields --------------------------------------------------------
 
     private RelNode relNode;
     private ClassDeclaration sourceCode;
     private Class objectCode;
     private String className;
     private String streamName;
-    private FarragoTransform.InputBinding[] inputBindings;
+    private FarragoTransform.InputBinding [] inputBindings;
+
+    //~ Constructors -----------------------------------------------------------
 
     FarragoTransformDef(RelNode relNode, ClassDeclaration sourceCode)
     {
@@ -61,13 +70,15 @@ public class FarragoTransformDef
         this.sourceCode = sourceCode;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public String toString()
     {
-        return "[FarragoTransformDef" +
-            " rel: " + relNode +
-            " class:" + className +
-            " stream:" + streamName +
-            "]";
+        return "[FarragoTransformDef"
+            + " rel: " + relNode
+            + " class:" + className
+            + " stream:" + streamName
+            + "]";
     }
 
     void setStreamName(String s)
@@ -108,7 +119,7 @@ public class FarragoTransformDef
     {
         FennelStreamGraph graph = conn.getFennelStreamGraph();
         assert (streamName != null);
-        String[] inputStreams = graph.getInputStreams(streamName);
+        String [] inputStreams = graph.getInputStreams(streamName);
         int n = inputStreams.length;
         this.inputBindings = new FarragoTransform.InputBinding[n];
         for (int i = 0; i < n; i++) {
@@ -117,7 +128,8 @@ public class FarragoTransformDef
         }
     }
 
-    public void init(FarragoSessionRuntimeContext fsrc) throws Error
+    public void init(FarragoSessionRuntimeContext fsrc)
+        throws Error
     {
         if (tracer.isLoggable(Level.FINEST)) {
             tracer.finest("init " + this);

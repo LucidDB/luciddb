@@ -22,6 +22,7 @@
 package net.sf.farrago.server;
 
 import java.io.*;
+
 import java.rmi.registry.*;
 
 import net.sf.farrago.catalog.*;
@@ -54,7 +55,7 @@ public abstract class FarragoAbstractServer
     protected int rmiRegistryPort;
 
     protected int singleListenerPort;
-    
+
     protected long connectionTimeoutMillis;
 
     //~ Constructors -----------------------------------------------------------
@@ -90,10 +91,12 @@ public abstract class FarragoAbstractServer
         rmiRegistryPort = config.getServerRmiRegistryPort();
 
         singleListenerPort = config.getServerSingleListenerPort();
-        
+
         Long longObjValue = config.getConnectionTimeoutMillis();
-        connectionTimeoutMillis = (longObjValue == null ? 
-            FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS : longObjValue.longValue());
+        connectionTimeoutMillis =
+            ((longObjValue == null)
+                ? FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS
+                : longObjValue.longValue());
 
         if (rmiRegistryPort == -1) {
             rmiRegistryPort = releaseProps.jdbcUrlPortDefault.get();
@@ -182,21 +185,20 @@ public abstract class FarragoAbstractServer
         // Load the database instance
         FarragoDatabase db = FarragoDbSingleton.pinReference(sessionFactory);
 
-        FarragoReposTxnContext txn = 
+        FarragoReposTxnContext txn =
             new FarragoReposTxnContext(db.getSystemRepos(), true);
         try {
             txn.beginReadTxn();
-            
+
             FemFarragoConfig config = db.getSystemRepos().getCurrentConfig();
-    
+
             configureNetwork(
                 releaseProps,
                 config);
-        }
-        finally {
+        } finally {
             txn.commit();
         }
-        
+
         pw.println(res.ServerStartingNetwork.str());
 
         boolean success = false;

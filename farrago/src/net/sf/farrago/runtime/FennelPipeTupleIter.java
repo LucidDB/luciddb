@@ -59,7 +59,9 @@ public class FennelPipeTupleIter
     // byteBuffer is the current buffer, and belongs exclusively to the reader
     // (this object)
 
-    /** buffers from the writer, not yet read */
+    /**
+     * buffers from the writer, not yet read
+     */
     private final ArrayQueue<ByteBuffer> moreBuffers;
 
     //~ Constructors -----------------------------------------------------------

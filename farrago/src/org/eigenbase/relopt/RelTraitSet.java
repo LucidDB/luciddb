@@ -46,7 +46,7 @@ public class RelTraitSet
      *
      * @param traits Traits
      */
-    public RelTraitSet(RelTrait... traits)
+    public RelTraitSet(RelTrait ... traits)
     {
         this.traits = new RelTrait[traits.length];
 
@@ -165,6 +165,7 @@ public class RelTraitSet
      * <p>After canonization, t1.equals(t2) if and only if t1 == t2.
      *
      * @param trait Trait
+     *
      * @return Trait in canonical form
      */
     private RelTrait canonize(RelTrait trait)
@@ -227,11 +228,11 @@ public class RelTraitSet
         return true;
     }
 
-
     /**
      * Returns whether this trait set contains a given trait.
      *
      * @param trait Sought trait
+     *
      * @return Whether set contains given trait
      */
     public boolean contains(RelTrait trait)
@@ -256,8 +257,9 @@ public class RelTraitSet
             if (i > 0) {
                 s.append('.');
             }
-            if (trait == null
-                && traits.length == 1) {
+            if ((trait == null)
+                && (traits.length == 1))
+            {
                 // Special format for a list containing a single null trait;
                 // otherwise its string appears as "null", which is the same
                 // as if the whole trait set were null, and so confusing.
@@ -278,6 +280,7 @@ public class RelTraitSet
      * Finds the index of a trait of a given type in this set.
      *
      * @param traitDef Sought trait definition
+     *
      * @return index of trait, or -1 if not found
      */
     private int findIndex(RelTraitDef traitDef)

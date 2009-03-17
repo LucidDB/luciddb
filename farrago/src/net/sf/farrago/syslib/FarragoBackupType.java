@@ -29,9 +29,7 @@ package net.sf.farrago.syslib;
  */
 public enum FarragoBackupType
 {
-    FULL,
-    INCREMENTAL,
-    DIFFERENTIAL
+    FULL, INCREMENTAL, DIFFERENTIAL
 }
 
 // End FarragoBackupType.java

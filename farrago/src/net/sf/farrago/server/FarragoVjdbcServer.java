@@ -25,8 +25,9 @@ import de.simplicit.vjdbc.server.config.*;
 import de.simplicit.vjdbc.server.rmi.*;
 import de.simplicit.vjdbc.util.*;
 
-import java.rmi.*;
 import java.io.*;
+
+import java.rmi.*;
 
 import java.sql.*;
 
@@ -101,10 +102,12 @@ public class FarragoVjdbcServer
         vjdbcConfig = VJdbcConfiguration.singleton();
         if (connectionTimeoutMillis == -1) {
             // -1 means never timeout, so set OCCT checking period to 0
-            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
             vjdbcConfig.getOcctConfiguration().setCheckingPeriodInMillis(0);
         } else {
-            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(connectionTimeoutMillis);
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                connectionTimeoutMillis);
         }
 
         RmiConfiguration rmiConfig = new RmiConfiguration();

@@ -60,7 +60,8 @@ import org.eigenbase.util.*;
  */
 public class IteratorToFennelConverter
     extends ConverterRelImpl
-    implements FennelRel, ConverterRel
+    implements FennelRel,
+        ConverterRel
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -79,14 +80,14 @@ public class IteratorToFennelConverter
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * The RelNode path that leads to this node when invoking this node
-     * to generate Java code
+     * The RelNode path that leads to this node when invoking this node to
+     * generate Java code
      */
     List<FarragoRelImplementor.RelPathEntry> javaRelPath;
 
     /**
-     * The RelNode path that leads to this node when invoking this node
-     * to setup the Fennel child streams
+     * The RelNode path that leads to this node when invoking this node to setup
+     * the Fennel child streams
      */
     List<FarragoRelImplementor.RelPathEntry> fennelRelPath;
 
@@ -115,11 +116,10 @@ public class IteratorToFennelConverter
             child);
 
         farragoTransformClassNameMap =
-            new HashMap<
-                List<FarragoRelImplementor.RelPathEntry>, String>();
+            new HashMap<List<FarragoRelImplementor.RelPathEntry>, String>();
         childStreamDefsMap =
-            new HashMap<
-                List<FarragoRelImplementor.RelPathEntry>, List<ChildStream>>();
+            new HashMap<List<FarragoRelImplementor.RelPathEntry>,
+                List<ChildStream>>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -508,8 +508,7 @@ public class IteratorToFennelConverter
     {
         assert (childStreamDefsMap.containsKey(javaRelPath));
 
-        List<ChildStream> childStreamDefs =
-            childStreamDefsMap.get(javaRelPath);
+        List<ChildStream> childStreamDefs = childStreamDefsMap.get(javaRelPath);
         childStreamDefs.add(new ChildStream(childStreamDef, implicit));
     }
 
@@ -527,11 +526,11 @@ public class IteratorToFennelConverter
             (FarragoRelImplementor) implementor;
         initFennelInvocation(farragoRelImplementor.getRelPathEntry());
 
-        assert (farragoTransformClassNameMap.containsKey(fennelRelPath))
-            : "path " + fennelRelPath
+        assert (farragoTransformClassNameMap.containsKey(fennelRelPath)) : "path "
+            + fennelRelPath
             + " not in class map" + farragoTransformClassNameMap;
-        assert (childStreamDefsMap.containsKey(fennelRelPath))
-            : "path " + fennelRelPath
+        assert (childStreamDefsMap.containsKey(fennelRelPath)) : "path "
+            + fennelRelPath
             + " not in streamDef map" + childStreamDefsMap;
 
         // A single instance of this class may appear in multiple
@@ -542,8 +541,7 @@ public class IteratorToFennelConverter
         String farragoTransformClassName =
             farragoTransformClassNameMap.get(fennelRelPath);
 
-        List<ChildStream> childStreams =
-            childStreamDefsMap.get(fennelRelPath);
+        List<ChildStream> childStreams = childStreamDefsMap.get(fennelRelPath);
 
         FemJavaTransformStreamDef streamDef =
             newJavaTransformStreamDef(implementor);

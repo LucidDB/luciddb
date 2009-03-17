@@ -59,9 +59,9 @@ public class SargEndpoint
     protected final RelDataType dataType;
 
     /**
-     * Coordinate for this endpoint, constrained to be either
-     * {@link RexLiteral}, {@link RexInputRef}, {@link RexDynamicParam}, or
-     * null to represent infinity (positive or negative infinity is implied by
+     * Coordinate for this endpoint, constrained to be either {@link
+     * RexLiteral}, {@link RexInputRef}, {@link RexDynamicParam}, or null to
+     * represent infinity (positive or negative infinity is implied by
      * boundType).
      */
     protected RexNode coordinate;
@@ -138,8 +138,8 @@ public class SargEndpoint
     {
         // validate the input
         assert (coordinate != null);
-        if (!(coordinate instanceof RexDynamicParam) &&
-            !(coordinate instanceof RexInputRef))
+        if (!(coordinate instanceof RexDynamicParam)
+            && !(coordinate instanceof RexInputRef))
         {
             assert (coordinate instanceof RexLiteral);
             RexLiteral literal = (RexLiteral) coordinate;
@@ -447,10 +447,13 @@ public class SargEndpoint
                 // one is a dynamic param but the other isn't
                 return false;
             }
-        } else if ((coordinate instanceof RexInputRef)
-            || (other.coordinate instanceof RexInputRef)) {
+        } else if (
+            (coordinate instanceof RexInputRef)
+            || (other.coordinate instanceof RexInputRef))
+        {
             if ((coordinate instanceof RexInputRef)
-                && (other.coordinate instanceof RexInputRef)) {
+                && (other.coordinate instanceof RexInputRef))
+            {
                 // make sure it's the same RexInputRef
                 RexInputRef r1 = (RexInputRef) coordinate;
                 RexInputRef r2 = (RexInputRef) other.coordinate;

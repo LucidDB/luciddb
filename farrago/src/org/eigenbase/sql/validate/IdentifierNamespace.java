@@ -27,7 +27,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.Pair;
+import org.eigenbase.util.*;
 
 
 /**
@@ -53,7 +53,7 @@ public class IdentifierNamespace
     /**
      * List of monotonic expressions. Set on validate.
      */
-    private List<Pair<SqlNode,SqlMonotonicity>> monotonicExprs;
+    private List<Pair<SqlNode, SqlMonotonicity>> monotonicExprs;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -151,7 +151,7 @@ public class IdentifierNamespace
         return null;
     }
 
-    public List<Pair<SqlNode,SqlMonotonicity>> getMonotonicExprs()
+    public List<Pair<SqlNode, SqlMonotonicity>> getMonotonicExprs()
     {
         return monotonicExprs;
     }

@@ -160,8 +160,8 @@ public class SqlToRelTestBase
                 if (monotonicity != SqlMonotonicity.NotMonotonic) {
                     final RelFieldCollation.Direction direction =
                         monotonicity.isDecreasing()
-                            ? RelFieldCollation.Direction.Descending
-                            : RelFieldCollation.Direction.Ascending;
+                        ? RelFieldCollation.Direction.Descending
+                        : RelFieldCollation.Direction.Ascending;
                     collationList.add(
                         new RelCollationImpl(
                             Collections.singletonList(

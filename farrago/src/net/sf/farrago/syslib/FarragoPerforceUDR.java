@@ -21,20 +21,25 @@
 */
 package net.sf.farrago.syslib;
 
-import java.net.*;
 import java.io.*;
+
+import java.net.*;
+
 import java.sql.*;
+
 
 /**
  * FarragoPerforceUDR is a set of user-defined routines for accessing
- * information from the Eigenbase Perforce server.  Currently just
- * for fun, and guaranteed brittle.
+ * information from the Eigenbase Perforce server. Currently just for fun, and
+ * guaranteed brittle.
  *
  * @author John Sichi
  * @version $Id$
  */
 public abstract class FarragoPerforceUDR
 {
+    //~ Methods ----------------------------------------------------------------
+
     public static void getChangelists(
         String filePattern,
         int maxChanges,
@@ -123,7 +128,7 @@ public abstract class FarragoPerforceUDR
                     if ((i == -1) || (j == -1)) {
                         continue;
                     }
-                    line = line.substring(i+1, j);
+                    line = line.substring(i + 1, j);
                 }
 
                 if (line.endsWith("</td>")) {

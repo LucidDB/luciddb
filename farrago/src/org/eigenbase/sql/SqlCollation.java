@@ -22,14 +22,15 @@
 */
 package org.eigenbase.sql;
 
+import java.io.*;
+
 import java.nio.charset.*;
 
 import java.util.*;
-import java.io.Serializable;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.SerializableCharset;
+import org.eigenbase.util.*;
 import org.eigenbase.util.*;
 
 
@@ -41,7 +42,8 @@ import org.eigenbase.util.*;
  * @version $Id$
  * @since Mar 23, 2004
  */
-public class SqlCollation implements Serializable
+public class SqlCollation
+    implements Serializable
 {
     //~ Enums ------------------------------------------------------------------
 
@@ -87,8 +89,7 @@ public class SqlCollation implements Serializable
         SqlParserUtil.ParsedCollation parseValues =
             SqlParserUtil.parseCollation(collation);
         Charset charset = parseValues.getCharset();
-        this.wrappedCharset =
-            SerializableCharset.forCharset(charset);
+        this.wrappedCharset = SerializableCharset.forCharset(charset);
         locale = parseValues.getLocale();
         strength = parseValues.getStrength();
         String c = charset.name().toUpperCase() + "$" + locale.toString();
@@ -148,9 +149,9 @@ public class SqlCollation implements Serializable
      *
      * @return the resulting collation sequence
      *
-     * @throws EigenbaseException {@link EigenbaseResource#InvalidCompare}
-     * or {@link EigenbaseResource#DifferentCollations} if no collating
-     * sequence can be deduced
+     * @throws EigenbaseException {@link EigenbaseResource#InvalidCompare} or
+     * {@link EigenbaseResource#DifferentCollations} if no collating sequence
+     * can be deduced
      *
      * @sql.99 Part 2 Section 4.2.3 Table 2
      */

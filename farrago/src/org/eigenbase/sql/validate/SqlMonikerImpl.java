@@ -24,6 +24,7 @@ package org.eigenbase.sql.validate;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 
+
 /**
  * A generic implementation of {@link SqlMoniker}.
  *

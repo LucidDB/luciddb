@@ -800,7 +800,7 @@ public class SqlLiteral
         if (unicodeEscapeChar == 0) {
             return this;
         }
-        assert(SqlTypeUtil.inCharFamily(getTypeName()));
+        assert (SqlTypeUtil.inCharFamily(getTypeName()));
         NlsString ns = (NlsString) value;
         String s = ns.getValue();
         StringBuilder sb = new StringBuilder();
@@ -808,14 +808,14 @@ public class SqlLiteral
         for (int i = 0; i < n; ++i) {
             char c = s.charAt(i);
             if (c == unicodeEscapeChar) {
-                if (n > i+1) {
-                    if (s.charAt(i+1) == unicodeEscapeChar) {
+                if (n > (i + 1)) {
+                    if (s.charAt(i + 1) == unicodeEscapeChar) {
                         sb.append(unicodeEscapeChar);
                         ++i;
                         continue;
                     }
                 }
-                if (i + 5 > n) {
+                if ((i + 5) > n) {
                     throw SqlUtil.newContextException(
                         getParserPosition(),
                         EigenbaseResource.instance().UnicodeEscapeMalformed.ex(
@@ -832,6 +832,7 @@ public class SqlLiteral
                             i));
                 }
                 sb.append((char) v);
+
                 // skip hexits
                 i += 4;
             } else {
@@ -839,7 +840,9 @@ public class SqlLiteral
             }
         }
         ns = new NlsString(
-            sb.toString(), ns.getCharsetName(), ns.getCollation());
+            sb.toString(),
+            ns.getCharsetName(),
+            ns.getCollation());
         return new SqlCharStringLiteral(ns, getParserPosition());
     }
 

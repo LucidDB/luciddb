@@ -39,9 +39,9 @@ import java.util.regex.*;
 import junit.framework.*;
 
 import net.sf.farrago.db.*;
-import net.sf.farrago.session.*;
+import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.jdbc.FarragoStatement;
+import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 
 import org.eigenbase.relopt.*;
@@ -426,20 +426,24 @@ public class FarragoJdbcTest
         stmt.execute(sql);
         sql = "set schema 'BAD_VOLCANO'";
         stmt.execute(sql);
-        sql = "create view vemps(eno, name, deptno, doubleage) "
+        sql =
+            "create view vemps(eno, name, deptno, doubleage) "
             + "as select empno, upper(name), deptno, age * 2 from sales.emps";
         stmt.execute(sql);
-        sql = "create view vdepts(name, deptno) "
+        sql =
+            "create view vdepts(name, deptno) "
             + "as select upper(name), deptno from sales.depts";
         stmt.execute(sql);
-        sql = "create jar test_personality_plugin library "
+        sql =
+            "create jar test_personality_plugin library "
             + "'class net.sf.farrago.test.FarragoTestPersonalityFactory' "
             + "options(0)";
         stmt.execute(sql);
         sql = "alter session implementation set jar test_personality_plugin";
         stmt.execute(sql);
 
-        sql = "explain plan for "
+        sql =
+            "explain plan for "
             + "select ve.name, ve.doubleage, vd.name "
             + "from vemps ve, vdepts vd "
             + "where ve.deptno = vd.deptno";
@@ -458,14 +462,14 @@ public class FarragoJdbcTest
         throws Exception
     {
         String sql = "select name, 'special unique snowflake' from sales.depts";
-        
+
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoDatabase db =
             ((FarragoDbSession) farragoConnection.getSession()).getDatabase();
         FarragoSessionTxnMgr oldTxnMgr = db.getTxnMgr();
-        FarragoSessionTxnMgr delayTxnMgr = new FarragoDbNullTxnMgr() 
-            {
+        FarragoSessionTxnMgr delayTxnMgr =
+            new FarragoDbNullTxnMgr() {
                 // implement FarragoSessionTxnMgr
                 public void accessTables(
                     FarragoSessionTxnId txnId,
@@ -486,7 +490,6 @@ public class FarragoJdbcTest
             db.setTxnMgr(oldTxnMgr);
         }
     }
-    
 
     protected void queryCancel(boolean synchronous, String executorType)
         throws Exception
@@ -2636,10 +2639,11 @@ public class FarragoJdbcTest
     }
 
     /**
-     * Tests orphan statement and resultset cleanup.
-     * REVIEW: test ALL Statement methods?
+     * Tests orphan statement and resultset cleanup. REVIEW: test ALL Statement
+     * methods?
      */
-    public void testOrphans() throws Exception
+    public void testOrphans()
+        throws Exception
     {
         final String sql1 = "SELECT * FROM sales.emps";
         final String sql2 = "SELECT * FROM sales.depts";
@@ -2652,6 +2656,7 @@ public class FarragoJdbcTest
         PreparedStatement pstmt2 = conn.prepareStatement(sql2);
         tracer.fine("orphaning two new prepared statements");
         conn.close();
+
         // orphaned statements should have been closed
         // and should now throw exceptions if used.
         assertFalse("executeQuery pstmt1", tryExecuteQuery(pstmt1));
@@ -2659,7 +2664,7 @@ public class FarragoJdbcTest
 
         // abandon prepared statements after executing the query
         conn = tester.newConnection();
-        conn.setAutoCommit(false);  // allow two open cursors at once
+        conn.setAutoCommit(false); // allow two open cursors at once
         pstmt1 = conn.prepareStatement(sql1);
         ResultSet rs1 = pstmt1.executeQuery();
         assertNotNull("rs1 null", rs1);
@@ -2668,6 +2673,7 @@ public class FarragoJdbcTest
         assertNotNull("rs2 null", rs2);
         tracer.fine("orphaning two used prepared statements");
         conn.close();
+
         // orphaned statements should have been closed along with resultsets
         // and should now throw exceptions if used.
         // REVIEW (hersker): FarragoTupleIterResultSet has "detached sessions"
@@ -2688,7 +2694,7 @@ public class FarragoJdbcTest
 
         // abandon plain statements after executing the query
         conn = tester.newConnection();
-        conn.setAutoCommit(false);  // allow two open cursors at once
+        conn.setAutoCommit(false); // allow two open cursors at once
         stmt1 = conn.createStatement();
         rs1 = stmt1.executeQuery(sql1);
         assertNotNull("rs1 null", rs1);
@@ -3591,7 +3597,9 @@ public class FarragoJdbcTest
         }
     }
 
-    /** attempts executeQuery on a plain Statement. */
+    /**
+     * attempts executeQuery on a plain Statement.
+     */
     private boolean tryExecuteQuery(Statement stmt, String sql)
     {
         try {
@@ -3601,7 +3609,10 @@ public class FarragoJdbcTest
             return false;
         }
     }
-    /** attempts executeQuery on a PreparedStatement. */
+
+    /**
+     * attempts executeQuery on a PreparedStatement.
+     */
     private boolean tryExecuteQuery(PreparedStatement stmt)
     {
         try {
@@ -3612,32 +3623,36 @@ public class FarragoJdbcTest
         }
     }
 
-    /** attempts to use a ResultSet. */
+    /**
+     * attempts to use a ResultSet.
+     */
     private boolean tryResultSet(ResultSet rset)
     {
         try {
-            boolean bool = rset.next();     // should not return
+            boolean bool = rset.next(); // should not return
             fail("ResultSet did not throw, bool=" + bool);
-            return bool;                    // keep compiler happy
+            return bool; // keep compiler happy
         } catch (SQLException e) {
             return false;
         }
     }
 
     /**
-     * Tests inserting timestamp values via a dynamic parameter with and
-     * without a calendar object.
+     * Tests inserting timestamp values via a dynamic parameter with and without
+     * a calendar object.
      *
      * @see PreparedStatement#setTimestamp(int, java.sql.Timestamp)
-     * @see PreparedStatement#setTimestamp(int, java.sql.Timestamp, java.util.Calendar)
+     * @see PreparedStatement#setTimestamp(int, java.sql.Timestamp,
+     * java.util.Calendar)
      */
-    public void testSetTimestamp() throws SQLException
+    public void testSetTimestamp()
+        throws SQLException
     {
         Calendar calendar;
         Timestamp ts;
         final String insert =
-            "insert into datatypes_schema.dataTypes_table" +
-                " (id, \"Column 15: timestamp(0)\") values (1, ?)";
+            "insert into datatypes_schema.dataTypes_table"
+            + " (id, \"Column 15: timestamp(0)\") values (1, ?)";
         preparedStmt = connection.prepareStatement(insert);
         stmt = connection.createStatement();
 
@@ -3690,13 +3705,13 @@ public class FarragoJdbcTest
         }
     }
 
-    private void assertTimestampBecomes(String expected) throws SQLException
+    private void assertTimestampBecomes(String expected)
+        throws SQLException
     {
-        final String delete =
-            "delete from datatypes_schema.dataTypes_table";
+        final String delete = "delete from datatypes_schema.dataTypes_table";
         final String select =
-            "select cast(\"Column 15: timestamp(0)\" as varchar(30)) " +
-                "from datatypes_schema.dataTypes_table";
+            "select cast(\"Column 15: timestamp(0)\" as varchar(30)) "
+            + "from datatypes_schema.dataTypes_table";
 
         stmt.executeUpdate(delete);
         final int rowCount = preparedStmt.executeUpdate();
@@ -3718,7 +3733,8 @@ public class FarragoJdbcTest
 
         public Connection getConnection();
 
-        public Connection newConnection() throws Exception;
+        public Connection newConnection()
+            throws Exception;
 
         public Statement getStatement();
     }
@@ -3760,7 +3776,8 @@ public class FarragoJdbcTest
             return FarragoTestCase.connection;
         }
 
-        public Connection newConnection() throws Exception
+        public Connection newConnection()
+            throws Exception
         {
             // return new connection for which caller is responsible
             return FarragoTestCase.newConnection();
@@ -4321,7 +4338,8 @@ public class FarragoJdbcTest
         private static final TestSqlType [] typesBinary = {
             Binary, Varbinary
         };
-        private static final TestSqlType [] typesDateTime = {
+        private static final TestSqlType [] typesDateTime =
+        {
             Time, Date, Timestamp
         };
         public static final int VALID = 0;

@@ -23,6 +23,8 @@ package net.sf.farrago.ddl;
 
 import java.util.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.defimpl.*;
@@ -37,12 +39,11 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.*;
 import org.eigenbase.util.*;
 
-import javax.jmi.reflect.*;
 
 /**
- * DdlReloadTableStmt is an abstract base for statements which
- * need to self-insert data from an existing table.  Currently
- * this includes ALTER TABLE REBUILD and ALTER TABLE ADD COLUMN.
+ * DdlReloadTableStmt is an abstract base for statements which need to
+ * self-insert data from an existing table. Currently this includes ALTER TABLE
+ * REBUILD and ALTER TABLE ADD COLUMN.
  *
  * @author John Pham
  * @author John Sichi
@@ -60,6 +61,7 @@ public abstract class DdlReloadTableStmt
     private FarragoRepos repos;
     private FarragoSessionIndexMap baseIndexMap;
     private FarragoDataWrapperCache wrapperCache;
+
     // map from index MOFID to index root PageID
     private Map<String, Long> writeIndexMap;
     private FarragoSessionIndexMap rebuildMap;
@@ -99,17 +101,17 @@ public abstract class DdlReloadTableStmt
         wrapperCache = ddlValidator.getDataWrapperCache();
         SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
-        
+
         rebuildingIndexes = shouldRebuildIndexes(ddlValidator);
         writeIndexMap = new HashMap<String, Long>();
         baseIndexMap = ddlValidator.getIndexMap();
-        
+
         // Create new index roots, which depends on index creation validation
         // events being triggered
         if (rebuildingIndexes) {
             for (
                 FemLocalIndex index
-                    : FarragoCatalogUtil.getTableIndexes(repos, table))
+                : FarragoCatalogUtil.getTableIndexes(repos, table))
             {
                 // Keep the old deletion index, because it will not be loaded
                 if (FarragoCatalogUtil.isDeletionIndex(index)) {
@@ -127,24 +129,24 @@ public abstract class DdlReloadTableStmt
         // in the catalog, but for LucidDB with page versioning
         // enabled, it seems superfluous since we just version
         // the existing roots (so existing plans remain valid).
-        
+
         // Update the table's timestamp (for a normal DdlStmt executing in
         // preValidate this happens as a result of DdlValidator's event
         // monitoring).  It's necessary so that any cached plans involving this
         // table will expire, but it's hokey since for ALTER TABLE REBUILD the
         // table definition hasn't actually changed.
         FarragoCatalogUtil.updateAnnotatedElement(
-            (FemLocalTable)table,
+            (FemLocalTable) table,
             ddlValidator.obtainTimestamp(),
             false);
-        
+
         reloadSql = getReloadDml(writer);
 
         // Nullify the table reference so that later
         // transactions will know to reload it.
         table = null;
     }
-    
+
     // implement DdlMultipleTransactionStmt
     public void executeUnlocked(
         FarragoSessionDdlValidator ddlValidator,
@@ -162,6 +164,7 @@ public abstract class DdlReloadTableStmt
         FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
         boolean success = false;
         stmtContext.prepare(reloadSql, true);
+
         // NOTE jvs 11-Dec-2008:  As a side-effect, this may also
         // update row counts in the catalog as appropriate to
         // the session personality.  There's a small window in between
@@ -169,7 +172,7 @@ public abstract class DdlReloadTableStmt
         // still end up out of sync, but no more so than any other
         // DDL statement.
         stmtContext.execute();
-        
+
         // Nullify table since getTable() was most likely called from the
         // reentrant SQL.
         table = null;
@@ -180,8 +183,7 @@ public abstract class DdlReloadTableStmt
         if (!FarragoProperties.instance().testTableReloadSleep.isSet()) {
             return;
         }
-        int millis =
-            FarragoProperties.instance().testTableReloadSleep.get();
+        int millis = FarragoProperties.instance().testTableReloadSleep.get();
         try {
             Thread.currentThread().sleep(millis);
         } catch (InterruptedException ex) {
@@ -214,7 +216,7 @@ public abstract class DdlReloadTableStmt
         // garbage; this applies to both FTRS and LCS,
         // and to both REBUILD and ADD COLUMN.
     }
-    
+
     // implement DdlMultipleTransactionStmt
     public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
@@ -228,24 +230,25 @@ public abstract class DdlReloadTableStmt
         if (recoveryRefMofId != null) {
             // Regardless of success or failure, delete the recoveryRef
             // if it exists, since it is only for crash recovery.
-            FemRecoveryReference recoveryRef = (FemRecoveryReference)
-                session.getRepos().getEnkiMdrRepos().getByMofId(
+            FemRecoveryReference recoveryRef =
+                (FemRecoveryReference) session.getRepos().getEnkiMdrRepos()
+                .getByMofId(
                     recoveryRefMofId,
                     session.getRepos().getMedPackage()
-                    .getFemRecoveryReference());
+                           .getFemRecoveryReference());
             recoveryRef.refDelete();
             recoveryRefMofId = null;
         }
-        
+
         if (!success) {
             recoverFromFailure(ddlValidator, session);
             return;
         }
-        
+
         FarragoRepos repos = session.getRepos();
         for (
             FemLocalIndex index
-                : FarragoCatalogUtil.getTableIndexes(repos, getTable()))
+            : FarragoCatalogUtil.getTableIndexes(repos, getTable()))
         {
             if (index.isInvalid()) {
                 // Indicate that we've successfully built the index.
@@ -271,7 +274,7 @@ public abstract class DdlReloadTableStmt
                 // end-of-stmt timestamp, instead of reusing the one generated
                 // at the beginning?  Also, should the table's timestamp
                 // likewise be set here rather than at the beginning?
-                
+
                 // Update the index's timestamp (for a normal DdlStmt executing
                 // in preValidate this happens behind the scenes).
                 FarragoCatalogUtil.updateAnnotatedElement(
@@ -291,17 +294,16 @@ public abstract class DdlReloadTableStmt
         // one shot auto-reset trap
         FarragoProperties.instance().remove(
             FarragoProperties.instance().testTableReloadCrash.getPath());
-        
+
         throw new RuntimeException("simulating ALTER TABLE crash");
     }
 
     /**
-     * Determines whether statement execution should rebuild all
-     * indexes on the table.  Some ooptimzed reloads may be
-     * able to avoid this.
+     * Determines whether statement execution should rebuild all indexes on the
+     * table. Some ooptimzed reloads may be able to avoid this.
      *
      * @param ddlValidator validator for this DDL statement
-     * 
+     *
      * @return whether to rebuild
      */
     protected boolean shouldRebuildIndexes(
@@ -311,9 +313,8 @@ public abstract class DdlReloadTableStmt
     }
 
     /**
-     * Generates the SQL to be used to reload the table.  Note that
-     * this is called from prepForExecuteUnlocked, so it is allowed
-     * to call getTable().
+     * Generates the SQL to be used to reload the table. Note that this is
+     * called from prepForExecuteUnlocked, so it is allowed to call getTable().
      *
      * @param writer writer to uses for generating SQL
      *
@@ -337,22 +338,23 @@ public abstract class DdlReloadTableStmt
     protected CwmTable getTable()
     {
         if (table == null) {
-            table = (CwmTable) repos.getEnkiMdrRepos().getByMofId(
-                tableMofId,
-                tableClass);
+            table =
+                (CwmTable) repos.getEnkiMdrRepos().getByMofId(
+                    tableMofId,
+                    tableClass);
         }
         return table;
     }
 
     /**
-     * @return the old table structure if the table structure
-     * is being altered, or null if no change is taking place
+     * @return the old table structure if the table structure is being altered,
+     * or null if no change is taking place
      */
     protected CwmTable getOldTableStructureForIndexMap()
     {
         return null;
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
@@ -370,8 +372,8 @@ public abstract class DdlReloadTableStmt
         private Map<String, Long> writeIndexMap;
 
         /**
-         * Constructs a ReloadTableIndexMap as a wrapper around a standard
-         * index map.
+         * Constructs a ReloadTableIndexMap as a wrapper around a standard index
+         * map.
          *
          * @param internalMap the original index map
          * @param writeIndexMap a mapping of roots to be returned for writes
@@ -421,13 +423,13 @@ public abstract class DdlReloadTableStmt
         {
             internalMap.instantiateTemporaryTable(wrapperCache, table);
         }
-        
+
         // implement FarragoSessionIndexMap
         public CwmTable getReloadTable()
         {
             return getTable();
         }
-    
+
         // implement FarragoSessionIndexMap
         public CwmTable getOldTableStructure()
         {

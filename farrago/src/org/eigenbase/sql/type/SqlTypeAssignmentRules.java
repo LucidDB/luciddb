@@ -344,12 +344,13 @@ public class SqlTypeAssignmentRules
     private static <K, V> HashMap<K, V> copy(Map<K, V> map)
     {
         HashMap<K, V> copy = new HashMap<K, V>();
-        for (Iterator<Map.Entry<K, V>> i =
-                 map.entrySet().iterator(); i.hasNext(); )
+        for (
+            Iterator<Map.Entry<K, V>> i = map.entrySet().iterator();
+            i.hasNext();)
         {
             Map.Entry<K, V> e = i.next();
             if (e.getValue() instanceof Set) {
-                copy.put(e.getKey(), (V) copy((Set)e.getValue()));
+                copy.put(e.getKey(), (V) copy((Set) e.getValue()));
             } else {
                 copy.put(e.getKey(), e.getValue());
             }

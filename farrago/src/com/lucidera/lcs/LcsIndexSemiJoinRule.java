@@ -90,7 +90,8 @@ public class LcsIndexSemiJoinRule
         //         LcsRowScanRel.class,
         //         new RelOptRuleOperand(
         //             LcsIndexMergeRel.class,
-        //                 new RelOptRuleOperand(LcsIndexSearchRel.class, ANY))))
+        //                 new RelOptRuleOperand(LcsIndexSearchRel.class,
+        // ANY))))
 
         super(rule);
         description = "LcsIndexSemiJoinRule: " + id;
@@ -244,7 +245,7 @@ public class LcsIndexSemiJoinRule
 
         Double rowScanInputSelectivity =
             RelMdUtil.computeSemiJoinSelectivity(semiJoin);
-        
+
         RelNode [] inputRels =
             addNewIndexAccessRel(
                 call,

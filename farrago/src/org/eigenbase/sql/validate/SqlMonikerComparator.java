@@ -25,8 +25,8 @@ import java.util.*;
 
 
 /**
- * A general-purpose implementation of {@link Comparator} to compare
- * {@link SqlMoniker} values.
+ * A general-purpose implementation of {@link Comparator} to compare {@link
+ * SqlMoniker} values.
  *
  * @author tleung
  * @version $Id$

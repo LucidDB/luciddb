@@ -118,28 +118,29 @@ public class FarragoMetadataTest
             + "constraint unique_null unique(c2, c3))");
         stmt.executeUpdate(
             "create index idx on tab(c4)");
-        
+
         localSetUp();
     }
 
-    public void tearDown() throws Exception
+    public void tearDown()
+        throws Exception
     {
         localTearDown();
         super.tearDown();
     }
-    
+
     private void localSetUp()
     {
         repos.beginReposSession();
         repos.beginReposTxn(false);
     }
-    
+
     private void localTearDown()
     {
         repos.endReposTxn(false);
         repos.endReposSession();
     }
-    
+
     protected void checkAbstract(
         FarragoPreparingStmt stmt,
         RelNode relBefore)
@@ -497,8 +498,10 @@ public class FarragoMetadataTest
             programBuilder.createProgram(),
             sql);
         BitSet emptyKey = new BitSet();
-        boolean result = RelMdUtil.areColumnsDefinitelyUnique(
-            rootRel, emptyKey);
+        boolean result =
+            RelMdUtil.areColumnsDefinitelyUnique(
+                rootRel,
+                emptyKey);
         assertTrue(result);
     }
 
@@ -864,8 +867,8 @@ public class FarragoMetadataTest
         // number of distinct values from applying the filter and
         // having clause
         double expected =
-            TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY *
-            DEFAULT_EQUAL_SELECTIVITY;
+            TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY
+            * DEFAULT_EQUAL_SELECTIVITY;
         checkDistinctRowCount(rootRel, groupKey, expected);
     }
 

@@ -401,7 +401,10 @@ public class FennelWindowRel
                 // rows. Does not include the expression to form the output
                 // record.
                 RexProgram combinedProgram =
-                    makeProgram(getCluster().getRexBuilder(), inputProgram, partition.overList);
+                    makeProgram(
+                        getCluster().getRexBuilder(),
+                        inputProgram,
+                        partition.overList);
 
                 windowPartitionDef.setInitializeProgram(
                     translator.getAggProgram(combinedProgram, AggOp.Init));
@@ -441,7 +444,10 @@ public class FennelWindowRel
                         this);
 
                 RexProgram combinedProgram =
-                    makeProgram(getCluster().getRexBuilder(), inputProgram, partition.overList);
+                    makeProgram(
+                        getCluster().getRexBuilder(),
+                        inputProgram,
+                        partition.overList);
 
                 String outputProgramString =
                     translator.generateProgram(
@@ -449,9 +455,9 @@ public class FennelWindowRel
                         outputProgram);
 
                 return new String[] {
-                		translator.getAggProgram(combinedProgram, AggOp.Init),
-                		translator.getAggProgram(combinedProgram, AggOp.Add),
-                		translator.getAggProgram(combinedProgram, AggOp.Drop),
+                        translator.getAggProgram(combinedProgram, AggOp.Init),
+                        translator.getAggProgram(combinedProgram, AggOp.Add),
+                        translator.getAggProgram(combinedProgram, AggOp.Drop),
                         outputProgramString
                     };
             }
@@ -479,8 +485,7 @@ public class FennelWindowRel
         RexProgram bottomProgram,
         List<RexWinAggCall> overList)
     {
-        assert bottomProgram.getCondition() == null
-            : "pre: bottomPogram.getCondition() == null";
+        assert bottomProgram.getCondition() == null : "pre: bottomPogram.getCondition() == null";
         assert bottomProgram.isValid(true);
 
         final RexProgramBuilder topProgramBuilder =
@@ -502,8 +507,7 @@ public class FennelWindowRel
                 bottomProgram,
                 rexBuilder);
 
-        assert mergedProgram.getProjectList().size() == overList.size()
-            : "post: return.getProjectList().size() == overList.size()";
+        assert mergedProgram.getProjectList().size() == overList.size() : "post: return.getProjectList().size() == overList.size()";
         return mergedProgram;
     }
 
@@ -770,7 +774,7 @@ public class FennelWindowRel
          * Creates a RexWinAggCall.
          *
          * @param aggFun Aggregate function
-         * @param type   Result type
+         * @param type Result type
          * @param operands Operands to call
          * @param ordinal Ordinal within its partition
          */

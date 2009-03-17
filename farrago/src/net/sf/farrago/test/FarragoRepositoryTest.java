@@ -22,12 +22,10 @@
 package net.sf.farrago.test;
 
 import java.io.*;
+
 import java.util.*;
 
 import javax.xml.parsers.*;
-
-import org.xml.sax.*;
-import org.xml.sax.helpers.*;
 
 import junit.framework.*;
 
@@ -37,6 +35,9 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.util.*;
+
+import org.xml.sax.*;
+import org.xml.sax.helpers.*;
 
 
 /**
@@ -79,19 +80,19 @@ public class FarragoRepositoryTest
         FarragoReposTxnContext txn = repos.newTxnContext(true);
         try {
             txn.beginWriteTxn();
-            
+
             FemAnnotatedElement element =
                 (FemAnnotatedElement) repos.getSelfAsCatalog();
-    
+
             String TAG_NAME = "SHIP_TO";
             String TAG_VALUE = "BUGS_BUNNY";
-    
+
             assertNull(repos.getTagAnnotation(element, TAG_NAME));
             repos.setTagAnnotationValue(element, TAG_NAME, TAG_VALUE);
             assertEquals(
                 TAG_VALUE,
                 repos.getTagAnnotationValue(element, TAG_NAME));
-    
+
             FemTagAnnotation tag = repos.getTagAnnotation(element, TAG_NAME);
             assertNotNull(tag);
             assertEquals(
@@ -100,11 +101,10 @@ public class FarragoRepositoryTest
             assertEquals(
                 TAG_VALUE,
                 tag.getValue());
-    
+
             // Clean up the repo
             tag.refDelete();
-        }
-        finally {
+        } finally {
             txn.commit();
         }
     }
@@ -114,7 +114,7 @@ public class FarragoRepositoryTest
         FarragoReposTxnContext txn = repos.newTxnContext(true);
         try {
             txn.beginReadTxn();
-            
+
             // Verify an existing object
             CwmCatalog catalog = repos.getSelfAsCatalog();
             CwmSchema schema =
@@ -125,11 +125,10 @@ public class FarragoRepositoryTest
                 (CwmTable) FarragoCatalogUtil.getModelElementByName(
                     schema.getOwnedElement(),
                     "DEPTS");
-    
+
             List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(tbl);
             assertEquals(0, errs.size());
-        }
-        finally {
+        } finally {
             txn.commit();
         }
     }
@@ -197,7 +196,7 @@ public class FarragoRepositoryTest
             txn.rollback();
         }
     }
-    
+
     private String stripDollarImpl(String str)
     {
         // Handle Enki Hibernate vs. Netbeans difference in class names
@@ -208,19 +207,22 @@ public class FarragoRepositoryTest
     {
         assertEquals("ISO-8859-1", repos.getDefaultCharsetName());
     }
-    
-    public void testInvalidCharFilter() throws Exception
+
+    public void testInvalidCharFilter()
+        throws Exception
     {
-        String[] validFiles = {
+        String [] validFiles =
+        {
             "valid-utf8.xml",
             "valid-utf8-bom.xml",
             "valid-utf16be.xml",
             "valid-utf16be-bom.xml",
             "valid-utf16le.xml",
-            "valid-utf16le-bom.xml",            
+            "valid-utf16le-bom.xml",
         };
-        
-        String[] invalidFiles = { 
+
+        String [] invalidFiles =
+        {
             "invalid-ascii.xml",
             "invalid-utf8.xml",
             "invalid-utf8-bom.xml",
@@ -229,63 +231,62 @@ public class FarragoRepositoryTest
             "invalid-utf16le.xml",
             "invalid-utf16le-bom.xml",
         };
-        
-        String[] allFiles = 
+
+        String [] allFiles =
             new String[validFiles.length + invalidFiles.length];
-        for(int i = 0; i < validFiles.length; i++) {
+        for (int i = 0; i < validFiles.length; i++) {
             allFiles[i] = validFiles[i];
         }
-        for(int i = 0; i < invalidFiles.length; i++) {
+        for (int i = 0; i < invalidFiles.length; i++) {
             allFiles[i + validFiles.length] = invalidFiles[i];
         }
-        
+
         SAXParserFactory spf = SAXParserFactory.newInstance();
         SAXParser parser = spf.newSAXParser();
-        
+
         // Verify that these files pass XML parsing.
         final String DIR =
             FarragoProperties.instance().expandProperties(
                 "${FARRAGO_HOME}/testcases/xml");
-        for(String filename: validFiles) {
+        for (String filename : validFiles) {
             File file = new File(DIR, filename);
-            
+
             parser.reset();
-            
+
             // will throw on invalid file
             parser.parse(file, new DefaultHandler());
         }
-        
+
         // Verify that these files cause XML parsing to fail.
-        for(String filename: invalidFiles) {
+        for (String filename : invalidFiles) {
             File file = new File(DIR, filename);
-            
+
             parser.reset();
             try {
                 parser.parse(file, new DefaultHandler());
-                
+
                 fail("Missing expected exception");
-            }
-            catch(SAXParseException e) {
+            } catch (SAXParseException e) {
                 // Expected.
             }
         }
-        
+
         // Verify that we're able to filter out the invalid chars and parse
         // all the files.
-        for(String filename: allFiles) {
+        for (String filename : allFiles) {
             File file = new File(DIR, filename);
 
             FileInputStream in = new FileInputStream(file);
             FarragoReposUtil.InvalidXmlCharFilterInputStream filter =
                 new FarragoReposUtil.InvalidXmlCharFilterInputStream(in);
-            
+
             parser.reset();
             parser.parse(
-                filter, 
+                filter,
                 new DefaultHandler() {
                     private int elemNum = -1;
-                    @Override
-                    public void startElement(
+
+                    @Override public void startElement(
                         String uri,
                         String localName,
                         String name,
@@ -293,41 +294,43 @@ public class FarragoRepositoryTest
                     {
                         String value;
                         elemNum++;
-                        
-                        switch(elemNum) {
+
+                        switch (elemNum) {
                         case 0: // test
                             return;
-                            
+
                         case 1:
                         case 2: // elem
                             value = attributes.getValue(0);
                             break;
-                            
+
                         default:
                             fail("too many elements");
                             return;
                         }
-                        
+
                         assertTrue(value.startsWith("a" + elemNum));
                         if (value.length() > 2) {
                             assertEquals(3, value.length());
                             assertTrue(value.endsWith(":"));
                         }
                     }
-                    
-                    @Override
-                    public void characters(char[] ch, int start, int length)
+
+                    @Override public void characters(
+                        char [] ch,
+                        int start,
+                        int length)
                     {
-                        if (elemNum < 1 || elemNum > 2) {
+                        if ((elemNum < 1) || (elemNum > 2)) {
                             return;
                         }
-                        
+
                         String value = new String(ch, start, length);
                         value = value.trim();
                         if (value.length() == 0) {
                             return;
                         }
-                        
+
                         assertTrue(value.startsWith("e" + elemNum));
                         if (value.length() > 2) {
                             assertEquals(3, value.length());
@@ -335,9 +338,9 @@ public class FarragoRepositoryTest
                         }
                     }
                 });
-            
+
             filter.close();
-        }        
+        }
     }
 }
 

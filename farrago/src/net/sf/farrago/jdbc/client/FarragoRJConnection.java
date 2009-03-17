@@ -31,9 +31,10 @@ import java.util.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.rmi.*;
 
+import org.eigenbase.jdbc4.*;
+
 import org.objectweb.rmijdbc.*;
 
-import org.eigenbase.jdbc4.*;
 
 /**
  * JDBC connection to Farrago across an RMI transport.

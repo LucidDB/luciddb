@@ -375,7 +375,7 @@ public class FarragoDataWrapperCache
             // TODO:  better resource usage estimation for wrappers
             entry.initialize(wrapper, 1000, true);
         }
-                
+
         // implement CachedObjectFactory
         public boolean isStale(Object value)
         {
@@ -423,7 +423,7 @@ public class FarragoDataWrapperCache
             // TODO:  better resource usage estimation for servers
             entry.initialize(server, 10000, true);
         }
-                
+
         // implement CachedObjectFactory
         public boolean isStale(Object value)
         {

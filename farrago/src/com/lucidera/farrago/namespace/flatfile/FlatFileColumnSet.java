@@ -110,10 +110,10 @@ class FlatFileColumnSet
     // implement RelOptTable
     public double getRowCount()
     {
-    	if (numRows < 0) {
+        if (numRows < 0) {
             return super.getRowCount();
-    	}
-    	return numRows;
+        }
+        return numRows;
     }
 
     // implement RelOptTable

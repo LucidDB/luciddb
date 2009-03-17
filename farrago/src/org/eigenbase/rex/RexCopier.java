@@ -25,20 +25,24 @@ package org.eigenbase.rex;
 /**
  * Shuttle which creates a deep copy of a Rex expression.
  *
- * <p>This is useful when copying objects from one type factory or builder
- * to another.
+ * <p>This is useful when copying objects from one type factory or builder to
+ * another.
  *
  * <p>Due to the laziness of the author, not all Rex types are supported at
  * present.
  *
- * @see RexBuilder#copy(RexNode)
- *
- * @version $Id$
  * @author jhyde
-*/
-class RexCopier extends RexShuttle
+ * @version $Id$
+ * @see RexBuilder#copy(RexNode)
+ */
+class RexCopier
+    extends RexShuttle
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final RexBuilder builder;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a RexCopier.
@@ -49,6 +53,8 @@ class RexCopier extends RexShuttle
     {
         this.builder = builder;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RexNode visitOver(RexOver over)
     {

@@ -23,23 +23,23 @@ package org.eigenbase.runtime;
 
 import java.util.*;
 
-// REVIEW mberkowitz 1-Nov-2008.
-// This adapter is used only to present a FarragoJavaUdxIterator as a TupleIter.
-// Redundant since a FarragoJavaUdxIterator can be a TupleIter itself, and provide a
-// correct, non-blocking fetchNext(). However some farrago queries depend on
-// fetchNext() to block: eg in unitsql/expressions/udfInvocation.sql,
-// SELECT * FROM TABLE(RAMP(5)) ORDER BY 1;
+
+// REVIEW mberkowitz 1-Nov-2008. This adapter is used only to present a
+// FarragoJavaUdxIterator as a TupleIter. Redundant since a
+// FarragoJavaUdxIterator can be a TupleIter itself, and provide a correct,
+// non-blocking fetchNext(). However some farrago queries depend on fetchNext()
+// to block: eg in unitsql/expressions/udfInvocation.sql, SELECT * FROM
+// TABLE(RAMP(5)) ORDER BY 1;
 //
 // Consequently, I've made FarragoJavaUdxIterator implement TupleIter as well as
 // RestartableIterator, but as a kludge I've retained this adapter for farrago
 // queries.
 
-
 /**
- * <code>RestartableIteratorTupleIter</code> adapts an underlying
- * {@link RestartableIterator} as a {@link TupleIter}.
- * It is an imperfect adaptor; {@link #fetchNext} blocks when a
- * real TupleIter would return {@link TupleIter.NoDataReason#UNDERFLOW}.
+ * <code>RestartableIteratorTupleIter</code> adapts an underlying {@link
+ * RestartableIterator} as a {@link TupleIter}. It is an imperfect adaptor;
+ * {@link #fetchNext} blocks when a real TupleIter would return {@link
+ * TupleIter.NoDataReason#UNDERFLOW}.
  *
  * @author John V. Sichi
  * @version $Id$

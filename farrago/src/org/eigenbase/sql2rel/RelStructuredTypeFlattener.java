@@ -549,7 +549,7 @@ public class RelStructuredTypeFlattener
     {
         rel.flattenRel(this);
     }
-    
+
     public void rewriteGeneric(RelNode rel)
     {
         RelNode newRel = rel.clone();
@@ -718,10 +718,11 @@ public class RelStructuredTypeFlattener
     private class RewriteRelVisitor
         extends RelVisitor
     {
-        private final ReflectiveVisitDispatcher<
-            RelStructuredTypeFlattener,RelNode> dispatcher =
+        private final ReflectiveVisitDispatcher<RelStructuredTypeFlattener,
+            RelNode> dispatcher =
             ReflectUtil.createDispatcher(
-                RelStructuredTypeFlattener.class, RelNode.class);
+                RelStructuredTypeFlattener.class,
+                RelNode.class);
 
         // implement RelVisitor
         public void visit(RelNode p, int ordinal, RelNode parent)

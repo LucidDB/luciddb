@@ -32,15 +32,13 @@ import org.eigenbase.sql2rel.*;
 
 
 /**
- * ScalarSubqueryConverter converts subqueries to scalar constants by
- * evaulating them and passing back the resulting constant expression.
- * By doing so, this means that the statement containing the subquery can no
- * longer be cached.
- * 
- * <p> 
- * This class can also be used to convert EXISTS subqueries by replacing
- * the EXISTS with a boolean value indicating whether the subquery returns
- * zero (FALSE) or at least one (TRUE) row.
+ * ScalarSubqueryConverter converts subqueries to scalar constants by evaulating
+ * them and passing back the resulting constant expression. By doing so, this
+ * means that the statement containing the subquery can no longer be cached.
+ *
+ * <p>This class can also be used to convert EXISTS subqueries by replacing the
+ * EXISTS with a boolean value indicating whether the subquery returns zero
+ * (FALSE) or at least one (TRUE) row.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -48,19 +46,19 @@ import org.eigenbase.sql2rel.*;
 public class ScalarSubqueryConverter
     implements SubqueryConverter
 {
-    //~ Instance fields
-    
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoSessionPreparingStmt stmt;
-    
+
     //~ Constructors -----------------------------------------------------------
-    
+
     public ScalarSubqueryConverter(FarragoSessionPreparingStmt stmt)
     {
         this.stmt = stmt;
     }
-    
+
     //~ Methods ----------------------------------------------------------------
-    
+
     // implement SubqueryConverter
     public boolean canConvertSubquery()
     {

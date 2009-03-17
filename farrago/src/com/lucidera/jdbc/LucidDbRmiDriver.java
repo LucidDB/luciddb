@@ -39,6 +39,8 @@ public class LucidDbRmiDriver
         new LucidDbRmiDriver().register();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // override FarragoAbstractJdbcDriver
     public String getBaseUrl()
     {

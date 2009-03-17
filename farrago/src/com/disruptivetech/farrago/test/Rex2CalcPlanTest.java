@@ -20,10 +20,10 @@
 */
 package com.disruptivetech.farrago.test;
 
-import java.util.*;
-
 import com.disruptivetech.farrago.calc.*;
 import com.disruptivetech.farrago.rel.*;
+
+import java.util.*;
 
 import junit.framework.*;
 
@@ -338,10 +338,7 @@ public class Rex2CalcPlanTest
             + "substring('a' from 1),"
             + "substring(cast('a' as char(2)) from 1),"
             + "substring('a' from 1 for 10),"
-            + (
-                Bug.Frg296Fixed
-                    ? "substring('a' from 'a' for '\\' ),"
-                    : "")
+            + (Bug.Frg296Fixed ? "substring('a' from 'a' for '\\' )," : "")
             + "'a'||'a'||'b'"
             + " FROM emp WHERE empno > 10";
         tester.check(sql, false, false);
@@ -742,7 +739,9 @@ public class Rex2CalcPlanTest
                 final RelNode [] rels)
             {
                 super(
-                    null, operand, rels,
+                    null,
+                    operand,
+                    rels,
                     Collections.<RelNode, List<RelNode>>emptyMap());
             }
 

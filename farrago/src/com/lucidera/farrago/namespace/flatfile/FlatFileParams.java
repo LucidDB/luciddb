@@ -97,25 +97,28 @@ class FlatFileParams
     public enum SchemaType
     {
         /**
-         * Schema name for a special type of query that returns a
-         * one column result with space separated columns sizes
+         * Schema name for a special type of query that returns a one column
+         * result with space separated columns sizes
          */
         DESCRIBE("DESCRIBE"),
+
         /**
-         * Schema name for a special type of query that returns parsed
-         * text columns (including headers) as they appear in a text file.
-         * Sample queries are limited to a specified number of rows
+         * Schema name for a special type of query that returns parsed text
+         * columns (including headers) as they appear in a text file. Sample
+         * queries are limited to a specified number of rows
          */
         SAMPLE("SAMPLE"),
+
         /**
-         * Schema name for a typical query, in which columns are casted
-         * to typed data
+         * Schema name for a typical query, in which columns are casted to typed
+         * data
          */
         QUERY(new String[] { "BCP", "DEFAULT" }),
+
         /**
          * Schema name for a query in which columns are returned as text.
-         * Similar to sample, except headers are not returned, and there
-         * is no limit on the amount of rows returned.
+         * Similar to sample, except headers are not returned, and there is no
+         * limit on the amount of rows returned.
          */
         QUERY_TEXT("TEXT");
 

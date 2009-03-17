@@ -37,14 +37,14 @@ import javax.jmi.reflect.*;
 import javax.security.auth.login.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.ddl.*;
-import net.sf.farrago.defimpl.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.ddl.*;
+import net.sf.farrago.defimpl.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.plugin.*;
@@ -53,17 +53,18 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.enki.mdr.*;
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
-import org.eigenbase.resource.EigenbaseResource;
+
 
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
@@ -188,15 +189,17 @@ public class FarragoDatabase
                 // NOTE jvs 8-Dec-2008:  a pure-Java DBMS based on Farrago
                 // would need some non-Fennel mechanism for detecting that
                 // catalog recovery is needed.
-                
+
                 if (systemRepos.isFennelEnabled()) {
                     FarragoReposTxnContext txn = systemRepos.newTxnContext();
                     try {
                         txn.beginWriteTxn();
-                        boolean recoveryRequired = loadFennel(
-                            startOfWorldAllocation,
-                            sessionFactory.newFennelCmdExecutor(),
-                            init);
+                        boolean recoveryRequired =
+                            loadFennel(
+                                startOfWorldAllocation,
+                                sessionFactory.newFennelCmdExecutor(),
+                                init);
+
                         // This updateCatalog step always needs to run to deal
                         // with the case of starting up after a restore (in
                         // which case recoveryRequired=false).
@@ -238,9 +241,9 @@ public class FarragoDatabase
                     addAllocation(new ReposSwitcher());
                 }
 
-                // Start up timer.  This comes last so that the first thing we do
-                // in close is to cancel it, avoiding races with other shutdown
-                // activity.
+                // Start up timer.  This comes last so that the first thing we
+                // do in close is to cancel it, avoiding races with other
+                // shutdown activity.
                 Timer timer = new Timer("Farrago Watchdog Timer");
                 new FarragoTimerAllocation(this, timer);
                 timer.schedule(new WatchdogTask(),
@@ -296,7 +299,7 @@ public class FarragoDatabase
      */
     public void flushCodeCache()
     {
-        // REVIEW: SWZ 2008-09-15: Seems to me that this (and other changes 
+        // REVIEW: SWZ 2008-09-15: Seems to me that this (and other changes
         // to code cache size) should be synchronized.
 
         // Flush code cache in an attempt to close loopback sessions.
@@ -339,9 +342,8 @@ public class FarragoDatabase
     }
 
     /**
-     * Sets the transaction manager for this database.  This
-     * is intended only for use by white-box tests; it should
-     * not be called otherwise.
+     * Sets the transaction manager for this database. This is intended only for
+     * use by white-box tests; it should not be called otherwise.
      *
      * @param txnMgr new transaction manager
      */
@@ -556,8 +558,7 @@ public class FarragoDatabase
     }
 
     /**
-     * Updates the catalog on startup, taking care of any cleanup
-     * or recovery.
+     * Updates the catalog on startup, taking care of any cleanup or recovery.
      *
      * @param recoveryRequired true if starting up after a crash
      */
@@ -572,8 +573,8 @@ public class FarragoDatabase
         // No repos transaction needed since we're already inside one.
         List<FemRecoveryReference> refs =
             new ArrayList<FemRecoveryReference>(
-                systemRepos.getMedPackage().getFemRecoveryReference().
-                refAllOfType());
+                systemRepos.getMedPackage().getFemRecoveryReference()
+                           .refAllOfType());
 
         // NOTE jvs 9-Dec-2008:  even when recoveryRequired=false,
         // refs may be non-empty, since we may be restoring from
@@ -583,12 +584,11 @@ public class FarragoDatabase
         for (FemRecoveryReference ref : refs) {
             // TODO jvs 8-Dec-2008:  proper dispatch mechanism
             // once we have more of these; for now there's only one
-            assert(ref.getRecoveryType()
+            assert (ref.getRecoveryType()
                 == RecoveryTypeEnum.ALTER_TABLE_ADD_COLUMN);
-            CwmDependency dep =
-                ref.getClientDependency().iterator().next();
+            CwmDependency dep = ref.getClientDependency().iterator().next();
             CwmModelElement element = dep.getSupplier().iterator().next();
-            assert(element instanceof CwmTable);
+            assert (element instanceof CwmTable);
             DdlAlterTableStructureStmt.recover(
                 systemRepos,
                 (CwmTable) element);
@@ -597,10 +597,9 @@ public class FarragoDatabase
     }
 
     /**
-     * Simulates the catalog recovery which would occur on startup
-     * after a crash.  This allows tests to set up a crash representation
-     * in the catalog and then invoke recovery without actually having
-     * to bring down the JVM.
+     * Simulates the catalog recovery which would occur on startup after a
+     * crash. This allows tests to set up a crash representation in the catalog
+     * and then invoke recovery without actually having to bring down the JVM.
      */
     public void simulateCatalogRecovery()
         throws Exception
@@ -614,22 +613,22 @@ public class FarragoDatabase
             txn.rollback();
         }
     }
-    
+
     /**
      * Cleans up the system backup catalog by either removing pending backup
      * data if the last backup failed, or by updating the pending data to
      * completed, if the last backup succeeded.
-     * 
+     *
      * @param backupSucceeded whether the last backup was successful
-     * @param setEndTimestamp if true, record the current timestamp as
-     * the ending timestamp when updating pending data to completed
+     * @param setEndTimestamp if true, record the current timestamp as the
+     * ending timestamp when updating pending data to completed
      */
     public void cleanupBackupData(
         boolean backupSucceeded,
         boolean setEndTimestamp)
         throws Exception
     {
-        FarragoReposTxnContext reposTxnContext = 
+        FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(systemRepos, true);
         try {
             reposTxnContext.beginWriteTxn();
@@ -640,15 +639,15 @@ public class FarragoDatabase
             reposTxnContext.commit();
         } finally {
             reposTxnContext.rollback();
-        }       
+        }
     }
 
-    private void filterMapNullValues(Map<String,Object> configMap)
+    private void filterMapNullValues(Map<String, Object> configMap)
     {
-        Iterator<Map.Entry<String,Object>> configMapIter =
+        Iterator<Map.Entry<String, Object>> configMapIter =
             configMap.entrySet().iterator();
         while (configMapIter.hasNext()) {
-            Map.Entry<String,Object> entry = configMapIter.next();
+            Map.Entry<String, Object> entry = configMapIter.next();
             if (entry.getValue() == null) {
                 configMapIter.remove();
             }
@@ -709,7 +708,7 @@ public class FarragoDatabase
     }
 
     /**
-     * Sets the fennel DB handle used by the database.  Allows non fennel
+     * Sets the fennel DB handle used by the database. Allows non fennel
      * implementations to override the handle and substitute your own
      * implementation
      */
@@ -823,10 +822,10 @@ public class FarragoDatabase
         if (cancelOnly) {
             stmt.cancel();
         } else {
-            // LER-7874 - kill comes from another thread, make sure we've 
-            // detached that thread's session (if any) so we can attach the 
+            // LER-7874 - kill comes from another thread, make sure we've
+            // detached that thread's session (if any) so we can attach the
             // to the running statement's session and end it.
-            EnkiMDRepository mdrRepos = systemRepos.getEnkiMdrRepos(); 
+            EnkiMDRepository mdrRepos = systemRepos.getEnkiMdrRepos();
             EnkiMDSession detachedReposSession = mdrRepos.detachSession();
             try {
                 stmt.kill();
@@ -1036,7 +1035,7 @@ public class FarragoDatabase
 
             return null;
         }
-        
+
         String key = sql + ";label=";
         FarragoDbSession session = (FarragoDbSession) stmt.getSession();
         Long labelCsn = session.getSessionLabelCsn();
@@ -1169,7 +1168,8 @@ public class FarragoDatabase
 
             if (cachePagesMax <= 0) {
                 throw FarragoResource.instance().InvalidParam.ex(
-                    "1", upperBound);
+                    "1",
+                    upperBound);
             }
         }
 
@@ -1178,9 +1178,10 @@ public class FarragoDatabase
             FemFennelConfig config =
                 systemRepos.getCurrentConfig().getFennelConfig();
             int cachePages = config.getCachePagesInit();
-            if (paramVal < 0 || paramVal > cachePages) {
+            if ((paramVal < 0) || (paramVal > cachePages)) {
                 throw FarragoResource.instance().InvalidParam.ex(
-                    "0", "'cachePagesInit'");
+                    "0",
+                    "'cachePagesInit'");
             }
         }
 
@@ -1188,7 +1189,8 @@ public class FarragoDatabase
             int paramVal = ddlStmt.getParamValue().intValue(false);
             if (paramVal < 1) {
                 throw FarragoResource.instance().InvalidParam.ex(
-                    "1", String.valueOf(Integer.MAX_VALUE));
+                    "1",
+                    String.valueOf(Integer.MAX_VALUE));
             }
         }
 
@@ -1244,13 +1246,13 @@ public class FarragoDatabase
         if (!systemRepos.isFennelEnabled()) {
             return;
         }
-        
+
         // Find the csn of the oldest label.  Since the catalog is locked
-        // for the duration of this statement, it isn't possible for 
+        // for the duration of this statement, it isn't possible for
         // a CREATE LABEL statement to sneak in and invalidate the result of
         // this call.
         Long labelCsn = FarragoCatalogUtil.getOldestLabelCsn(userRepos);
-        
+
         FemCmdAlterSystemDeallocate cmd =
             systemRepos.newFemCmdAlterSystemDeallocate();
         cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));

@@ -22,6 +22,7 @@
 package net.sf.farrago.catalog;
 
 import java.sql.*;
+
 import java.util.*;
 import java.util.logging.*;
 
@@ -38,6 +39,7 @@ import net.sf.farrago.trace.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.type.*;
+
 import org.netbeans.api.mdr.events.*;
 
 
@@ -154,13 +156,13 @@ public abstract class FarragoAbstractCatalogInit
         typeAlias.setName(aliasName);
         typeAlias.setType(type);
     }
-    
+
     protected void updateSystemParameters()
     {
-        // If migrated from a catalog version where these parameters 
+        // If migrated from a catalog version where these parameters
         // don't exist, they will be set to null; so set them to default
         // values.
-        // 
+        //
         // NOTE zfong 5/22/08 - Make sure to also update
         // {@link FarragoTestCase#saveParameters(FarragoRepos) to avoid
         // resetting these parameters to their original null values.
@@ -169,15 +171,16 @@ public abstract class FarragoAbstractCatalogInit
             config.setConnectionTimeoutMillis(
                 new Long(FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS));
         }
-        
+
         if (repos.isFennelEnabled()) {
             FemFennelConfig fennelConfig = config.getFennelConfig();
             if (fennelConfig.getFreshmenPageQueuePercentage() == null) {
                 fennelConfig.setFreshmenPageQueuePercentage(
                     new Integer(
-                        FarragoCatalogInit.DEFAULT_FRESHMEN_PAGE_QUEUE_PERCENTAGE));
+                        FarragoCatalogInit
+                        .DEFAULT_FRESHMEN_PAGE_QUEUE_PERCENTAGE));
             }
-            if (fennelConfig.getPageHistoryQueuePercentage() ==  null) {
+            if (fennelConfig.getPageHistoryQueuePercentage() == null) {
                 fennelConfig.setPageHistoryQueuePercentage(
                     new Integer(
                         FarragoCatalogInit.DEFAULT_PAGE_HISTORY_QUEUE_PERCENTAGE));

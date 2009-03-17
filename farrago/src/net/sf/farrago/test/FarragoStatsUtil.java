@@ -219,10 +219,10 @@ public class FarragoStatsUtil
                     tableName);
             FemAbstractColumn column = lookupColumn(columnSet, columnName);
 
-            Long[] rowCountStats = new Long[2];
+            Long [] rowCountStats = new Long[2];
             FarragoCatalogUtil.getRowCounts(
-                columnSet, 
-                null, 
+                columnSet,
+                null,
                 rowCountStats);
             long rowCount = rowCountStats[0];
             long sampleRows = (rowCount * samplePercent) / 100;
@@ -262,7 +262,7 @@ public class FarragoStatsUtil
                 column,
                 distinctValues,
                 false,
-                (float)samplePercent,
+                (float) samplePercent,
                 sampleRows,
                 barCount,
                 rowsPerBar,

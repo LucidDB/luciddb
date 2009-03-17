@@ -50,9 +50,9 @@ public abstract class FarragoMedUDR
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Tests that a connection can be established to a particular
-     * SQL/MED local or foreign data server.  If no exception
-     * is thrown, the test was successful.
+     * Tests that a connection can be established to a particular SQL/MED local
+     * or foreign data server. If no exception is thrown, the test was
+     * successful.
      *
      * @param serverName name of data server to test
      */
@@ -60,7 +60,7 @@ public abstract class FarragoMedUDR
         String serverName)
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
-        FarragoReposTxnContext txn = 
+        FarragoReposTxnContext txn =
             new FarragoReposTxnContext(session.getRepos(), true);
         txn.beginReadTxn();
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
@@ -75,10 +75,10 @@ public abstract class FarragoMedUDR
             stmtValidator.closeAllocation();
         }
     }
-    
+
     /**
      * Tests that a connection can be established for all SQL/MED servers
-     * instantiated from a particular data wrapper.  If no exception is thrown,
+     * instantiated from a particular data wrapper. If no exception is thrown,
      * the test was successful.
      *
      * @param wrapperName name of data wrapper to test
@@ -87,7 +87,7 @@ public abstract class FarragoMedUDR
         String wrapperName)
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
-        FarragoReposTxnContext txn = 
+        FarragoReposTxnContext txn =
             new FarragoReposTxnContext(session.getRepos(), true);
         txn.beginReadTxn();
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
@@ -111,7 +111,7 @@ public abstract class FarragoMedUDR
             stmtValidator.closeAllocation();
         }
     }
-    
+
     /**
      * Queries SQL/MED connection information for a foreign data server.
      *
@@ -138,7 +138,7 @@ public abstract class FarragoMedUDR
         }
 
         FarragoSession session = FarragoUdrRuntime.getSession();
-        FarragoReposTxnContext txn = 
+        FarragoReposTxnContext txn =
             new FarragoReposTxnContext(session.getRepos(), true);
         txn.beginReadTxn();
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
@@ -221,7 +221,7 @@ public abstract class FarragoMedUDR
         throws SQLException
     {
         FarragoSession session = FarragoUdrRuntime.getSession();
-        FarragoReposTxnContext txn = 
+        FarragoReposTxnContext txn =
             new FarragoReposTxnContext(session.getRepos(), true);
         txn.beginReadTxn();
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();

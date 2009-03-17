@@ -28,6 +28,7 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.namespace.impl.*;
 
 import org.apache.commons.dbcp.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -146,14 +147,14 @@ class MedJdbcColumnSet
         Connection loopbackConnection = directory.server.getConnection();
         if (!(loopbackConnection instanceof FarragoJdbcEngineConnection)) {
             Connection conn = loopbackConnection;
-            while(conn != null && conn instanceof DelegatingConnection) {
-                conn = ((DelegatingConnection)conn).getDelegate();
+            while ((conn != null) && (conn instanceof DelegatingConnection)) {
+                conn = ((DelegatingConnection) conn).getDelegate();
             }
             if (!(conn instanceof FarragoJdbcEngineConnection)) {
                 return null;
             }
         }
-        
+
         String catalogName = directory.server.catalogName;
         if (catalogName == null) {
             // No catalog name specified, so try to query the connection for

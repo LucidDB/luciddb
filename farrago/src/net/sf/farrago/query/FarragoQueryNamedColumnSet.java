@@ -28,7 +28,7 @@ import net.sf.farrago.cwm.relational.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlMonotonicity;
+import org.eigenbase.sql.validate.*;
 
 
 /**

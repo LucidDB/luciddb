@@ -29,10 +29,9 @@ import java.sql.*;
 
 import java.util.*;
 
+import org.eigenbase.jdbc4.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
-
-import org.eigenbase.jdbc4.*;
 
 
 /**
@@ -228,7 +227,8 @@ public abstract class AbstractIterResultSet
     // ------------------------------------------------------------------------
     // NOTE jvs 30-May-2003:  I made this public because iSQL wanted it that
     // way for reflection.
-    public class MetaData extends Unwrappable
+    public class MetaData
+        extends Unwrappable
         implements ResultSetMetaData
     {
         public boolean isAutoIncrement(int column)

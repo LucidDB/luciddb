@@ -107,11 +107,11 @@ public abstract class FarragoUdrRuntime
             FarragoRuntimeContext.getUdrInvocationFrame();
         frame.context.checkCancel();
     }
-    
+
     /**
      * Associates an execution handle with the context associated with the
      * executing UDR.
-     * 
+     *
      * @param execHandle the execution handle
      */
     public static void setExecutionHandle(FennelExecutionHandle execHandle)
@@ -135,8 +135,8 @@ public abstract class FarragoUdrRuntime
     }
 
     /**
-     * Gets the FarragoRepos for this context.  Only system UDR's are allowed
-     * to call this.
+     * Gets the FarragoRepos for this context. Only system UDR's are allowed to
+     * call this.
      *
      * @return a FarragoRepos
      */
@@ -226,7 +226,7 @@ public abstract class FarragoUdrRuntime
             FarragoRuntimeContext.getUdrInvocationFrame();
         frame.context.handleRowErrorCompletion(ex, tag);
     }
-    
+
     /*
      * @return true if a UDR is currently executing
      */

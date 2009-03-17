@@ -21,46 +21,46 @@
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.util.*;
-
-import junit.framework.*;
-
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
+import junit.framework.*;
+
+import net.sf.farrago.util.*;
+
 import org.eigenbase.util.*;
+
 
 /**
  * <code>FarragoObjectCacheTest</code> is a unit test for {@link
  * FarragoObjectCache}.
  *
- *<p>
+ * <p>Premise: inner class RentalCarAgency maintains a fleet of rental cars and
+ * assigns them to customers as requested. The agency is lucky enough to be able
+ * to manufacture new cars on demand! (It uses a private factory to do this.)
+ * However, it has a fixed number of tires it can outfit them with (due to a
+ * terrible rubber tree blight). So, it sometimes has to destroy old cars to
+ * salvage their tires. (For real usage patterns, read "object memory usage" for
+ * "tires".)
  *
- * Premise: inner class RentalCarAgency maintains a fleet of rental cars and
- * assigns them to customers as requested.  The agency is lucky enough to be
- * able to manufacture new cars on demand!  (It uses a private factory to do
- * this.)  However, it has a fixed number of tires it can outfit them with (due
- * to a terrible rubber tree blight).  So, it sometimes has to destroy old cars
- * to salvage their tires.  (For real usage patterns, read "object memory
- * usage" for "tires".)
+ * <p>TODO:
  *
- *<p>
- *
- * TODO:
- *
- *<ul>
- *<li>test setMaxBytes
- *<li>test explicit discard
- *<li>test that discardAll forces new creations subsequently
- *<li>test with non-uniform numbers of tires
- *<li>test other victimization policies once they exist
- *</ul>
+ * <ul>
+ * <li>test setMaxBytes
+ * <li>test explicit discard
+ * <li>test that discardAll forces new creations subsequently
+ * <li>test with non-uniform numbers of tires
+ * <li>test other victimization policies once they exist
+ * </ul>
  *
  * @author John Sichi
  * @version $Id$
  */
-public class FarragoObjectCacheTest extends TestCase
+public class FarragoObjectCacheTest
+    extends TestCase
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * Default cache size limit.
      */
@@ -71,11 +71,15 @@ public class FarragoObjectCacheTest extends TestCase
      */
     static final int MAX_MILEAGE = 10000;
 
+    //~ Instance fields --------------------------------------------------------
+
     RentalCarAgency agency;
 
     AtomicInteger nCarsCreated;
 
     AtomicInteger nCarsDestroyed;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoObjectCacheTest object.
@@ -88,6 +92,8 @@ public class FarragoObjectCacheTest extends TestCase
         nCarsCreated = new AtomicInteger();
         nCarsDestroyed = new AtomicInteger();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void tearDown()
     {
@@ -103,8 +109,8 @@ public class FarragoObjectCacheTest extends TestCase
     }
 
     /**
-     * Tests a scenario where two cars are rented at the same time.
-     * A single thread acts as customer for both cars.
+     * Tests a scenario where two cars are rented at the same time. A single
+     * thread acts as customer for both cars.
      */
     public void testOneThreadOverlappingExclusive()
     {
@@ -174,18 +180,18 @@ public class FarragoObjectCacheTest extends TestCase
 
     /**
      * Tests a scenario where a car is rented, driven a long way, and then
-     * returned, so that a subsequent rental request forces creation
-     * of a new car (discarding the old one).
+     * returned, so that a subsequent rental request forces creation of a new
+     * car (discarding the old one).
      */
     public void testOneThreadSequentialStale()
     {
-        runOneThreadSequential("Sport 2-door", 10*MAX_MILEAGE, true);
+        runOneThreadSequential("Sport 2-door", 10 * MAX_MILEAGE, true);
     }
 
     /**
-     * Tests a scenario where a car is rented, smoked in, and then
-     * returned, so that a subsequent rental request forces creation
-     * of a new car (discarding the old one).
+     * Tests a scenario where a car is rented, smoked in, and then returned, so
+     * that a subsequent rental request forces creation of a new car (discarding
+     * the old one).
      */
     public void testOneThreadSequentialNonReusable()
     {
@@ -262,8 +268,8 @@ public class FarragoObjectCacheTest extends TestCase
     }
 
     /**
-     * Tests a scenario where the same car is rented by two customers
-     * at the same time.  A single thread acts as both customers.
+     * Tests a scenario where the same car is rented by two customers at the
+     * same time. A single thread acts as both customers.
      */
     public void testOneThreadShared()
     {
@@ -325,9 +331,8 @@ public class FarragoObjectCacheTest extends TestCase
     }
 
     /**
-     * Tests a scenario where new cars are constantly requested
-     * and then returned, causing old cars to be recycled for
-     * their tires.
+     * Tests a scenario where new cars are constantly requested and then
+     * returned, causing old cars to be recycled for their tires.
      */
     public void testOneThreadVictimization()
     {
@@ -360,7 +365,7 @@ public class FarragoObjectCacheTest extends TestCase
                 // keeps increasing, since we shouldn't have hit
                 // tire recycling limit yet.
                 assertTrue(tiresCurrent > tiresPrev);
-            } else if (i > MAX_TIRES - 10) {
+            } else if (i > (MAX_TIRES - 10)) {
                 // For last ten cars, verify that tire count in fleet
                 // has hit steady-state, since we've hit the recycling limit,
                 // and the number of tires per car is fixed.
@@ -383,10 +388,8 @@ public class FarragoObjectCacheTest extends TestCase
         // Let tearDown take care of cleanup verification.
     }
 
-
     /**
-     * Tests a scenario where an exception is thrown during
-     * initialization.
+     * Tests a scenario where an exception is thrown during initialization.
      */
     public void testOneThreadFailedInitialization()
     {
@@ -428,17 +431,17 @@ public class FarragoObjectCacheTest extends TestCase
         // descriptions times 4 tires is 28 tires, so set limit to 25.
         agency = new RentalCarAgency(exclusive, 25);
 
-        List<String> carDescriptions = Arrays.asList(
-            new String []
-            {
-                "Economy 4-door",
-                "Economy 4-door (Smoking)",
-                "Compact 2-door",
-                "Compact 4-door",
-                "Sporty Lemon 2-door",
-                "Minivan 8-door (w/Escape Pod)",
-                "SUV"
-            });
+        List<String> carDescriptions =
+            Arrays.asList(
+                new String[] {
+                    "Economy 4-door",
+                    "Economy 4-door (Smoking)",
+                    "Compact 2-door",
+                    "Compact 4-door",
+                    "Sporty Lemon 2-door",
+                    "Minivan 8-door (w/Escape Pod)",
+                    "SUV"
+                });
         List<CustomerThread> threads = new ArrayList<CustomerThread>();
         int nThreads = 4;
 
@@ -449,6 +452,7 @@ public class FarragoObjectCacheTest extends TestCase
                 thread.start();
                 threads.add(thread);
             }
+
             // Run for three seconds.  The transactions are very quick,
             // so this is long enough to flush out most problems, including
             // hitting the max mileage.
@@ -478,21 +482,23 @@ public class FarragoObjectCacheTest extends TestCase
         assertTrue(tiresCurrent <= MAX_TIRES);
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * RentalCar exemplifies a reusable object.
      */
-    private class RentalCar implements FarragoAllocation
+    private class RentalCar
+        implements FarragoAllocation
     {
         private String description;
         private int mileage;
         private boolean isDriving;
 
         /**
-         * Creates a new car, with an initial mileage of 0 coming
-         * out of the factory.
+         * Creates a new car, with an initial mileage of 0 coming out of the
+         * factory.
          *
-         * @param description bland description of this car,
-         * e.g. "SUV 12-Door"
+         * @param description bland description of this car, e.g. "SUV 12-Door"
          */
         RentalCar(String description)
         {
@@ -530,13 +536,14 @@ public class FarragoObjectCacheTest extends TestCase
                 assertFalse(isDriving);
                 isDriving = true;
                 mileage += miles;
+
                 // Yield here to increase the chance that another thread
                 // will see the isDriving state.
                 Thread.yield();
                 isDriving = false;
             } else {
                 // Hold the wheel for me, please.
-                synchronized(this) {
+                synchronized (this) {
                     mileage += miles;
                 }
             }
@@ -551,8 +558,7 @@ public class FarragoObjectCacheTest extends TestCase
         }
 
         /**
-         * @return whether this car is old enough that it ought
-         * to be discarded
+         * @return whether this car is old enough that it ought to be discarded
          */
         public boolean isOld()
         {
@@ -560,8 +566,8 @@ public class FarragoObjectCacheTest extends TestCase
         }
 
         /**
-         * @return whether this car is a "smoking" vehicle, meaning it can
-         * never be reused since that lingering smell is so nasty
+         * @return whether this car is a "smoking" vehicle, meaning it can never
+         * be reused since that lingering smell is so nasty
          */
         public boolean isSmokingVehicle()
         {
@@ -569,8 +575,8 @@ public class FarragoObjectCacheTest extends TestCase
         }
 
         /**
-         * @return whether this vehicle comes with an "escape pod"
-         * (another rental car inside of it!)
+         * @return whether this vehicle comes with an "escape pod" (another
+         * rental car inside of it!)
          */
         public boolean hasEscapePod()
         {
@@ -578,8 +584,8 @@ public class FarragoObjectCacheTest extends TestCase
         }
 
         /**
-         * Tests this car's quality after fabrication, throwing
-         * a {@link LemonException} if unacceptable.
+         * Tests this car's quality after fabrication, throwing a {@link
+         * LemonException} if unacceptable.
          */
         public void assureQuality()
         {
@@ -595,7 +601,7 @@ public class FarragoObjectCacheTest extends TestCase
          */
         public boolean isTooOld()
         {
-            return mileage > 2*MAX_MILEAGE;
+            return mileage > (2 * MAX_MILEAGE);
         }
 
         // implement ClosableAllocation
@@ -605,7 +611,8 @@ public class FarragoObjectCacheTest extends TestCase
         }
     }
 
-    private class LemonException extends RuntimeException
+    private class LemonException
+        extends RuntimeException
     {
         LemonException()
         {
@@ -614,8 +621,8 @@ public class FarragoObjectCacheTest extends TestCase
     }
 
     /**
-     * RentalCarAgreement encapsulates the assignment of a car to a customer
-     * for a duration.
+     * RentalCarAgreement encapsulates the assignment of a car to a customer for
+     * a duration.
      */
     private class RentalCarAgreement
     {
@@ -626,8 +633,8 @@ public class FarragoObjectCacheTest extends TestCase
         /**
          * Creates a new agreement.
          *
-         * @param pinnedEntry reference to pinned cache entry, which
-         * implements the checkout of a car from a fleet
+         * @param pinnedEntry reference to pinned cache entry, which implements
+         * the checkout of a car from a fleet
          */
         RentalCarAgreement(FarragoObjectCache.Entry pinnedEntry)
         {
@@ -645,8 +652,7 @@ public class FarragoObjectCacheTest extends TestCase
     }
 
     /**
-     * RentalCarAgency exemplifies a cache of reusable
-     * objects.
+     * RentalCarAgency exemplifies a cache of reusable objects.
      */
     private class RentalCarAgency
         implements FarragoObjectCache.CachedObjectFactory
@@ -658,13 +664,11 @@ public class FarragoObjectCacheTest extends TestCase
         /**
          * Creates a new agency.
          *
-         * @param exclusiveRentals if true, cars are rented out exclusively;
-         * if false, cars can be shared by customers as long as the
-         * description of the car is the same (more like hailing a cab
-         * and sharing the ride)
-         *
-         * @param maxTires maximum number of tires which can exist
-         * in fleet at any one time
+         * @param exclusiveRentals if true, cars are rented out exclusively; if
+         * false, cars can be shared by customers as long as the description of
+         * the car is the same (more like hailing a cab and sharing the ride)
+         * @param maxTires maximum number of tires which can exist in fleet at
+         * any one time
          */
         RentalCarAgency(boolean exclusiveRentals, long maxTires)
         {
@@ -717,6 +721,7 @@ public class FarragoObjectCacheTest extends TestCase
             String description = (String) key;
             RentalCar car = new RentalCar(description);
             car.assureQuality();
+
             // for now, all cars have four tires; "smoking" cars
             // can never be shared or even reused
             entry.initialize(car, 4, !car.isSmokingVehicle());
@@ -730,8 +735,8 @@ public class FarragoObjectCacheTest extends TestCase
         }
 
         /**
-         * @return current number of tires on all cars in fleet
-         * (regardless of whether those cars are currently rented out)
+         * @return current number of tires on all cars in fleet (regardless of
+         * whether those cars are currently rented out)
          */
         public long getTiresInFleet()
         {
@@ -739,9 +744,9 @@ public class FarragoObjectCacheTest extends TestCase
         }
 
         /**
-         * Decommissions all cars in the fleet; subsequent requests will
-         * require creation of new cars.  May only be called
-         * when no cars are currently rented out.
+         * Decommissions all cars in the fleet; subsequent requests will require
+         * creation of new cars. May only be called when no cars are currently
+         * rented out.
          */
         public void decommissionEntireFleet()
         {
@@ -757,9 +762,9 @@ public class FarragoObjectCacheTest extends TestCase
         }
 
         /**
-         * Shuts down this agency and verifies that its business affairs
-         * were cleanly terminated.  May only be called when
-         * no cars are currently rented out.
+         * Shuts down this agency and verifies that its business affairs were
+         * cleanly terminated. May only be called when no cars are currently
+         * rented out.
          */
         public void shutDown()
         {
@@ -771,10 +776,10 @@ public class FarragoObjectCacheTest extends TestCase
     }
 
     /**
-     * CustomerThread exemplifies a thread which uses objects from the
-     * cache.
+     * CustomerThread exemplifies a thread which uses objects from the cache.
      */
-    private class CustomerThread extends Thread
+    private class CustomerThread
+        extends Thread
     {
         private boolean success;
 
@@ -787,8 +792,8 @@ public class FarragoObjectCacheTest extends TestCase
         /**
          * Creates a new customer thread.
          *
-         * @param carDescriptions list of car descriptions the customer
-         * should rent, one after another
+         * @param carDescriptions list of car descriptions the customer should
+         * rent, one after another
          */
         public CustomerThread(List<String> carDescriptions)
         {
@@ -845,8 +850,10 @@ public class FarragoObjectCacheTest extends TestCase
         {
             try {
                 RentalCar car = rca.getCar();
+
                 // Make sure we got the car we asked for.
                 assertEquals(description, car.getDescription());
+
                 // And make sure we didn't get some old junker.  Note
                 // that there's some tolerance here between
                 // isOld and isTooOld, since in the shared
@@ -860,6 +867,7 @@ public class FarragoObjectCacheTest extends TestCase
                     assertEquals(0, car.getMileage());
                     sawSmokingVehicle = true;
                 }
+
                 // Now, take it for a test-drive.
                 car.drive(100);
             } finally {

@@ -24,9 +24,9 @@ package org.eigenbase.sql.validate;
 import java.util.*;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.Pair;
+import org.eigenbase.util.*;
 
 
 /**
@@ -174,9 +174,9 @@ public class SelectScope
         if ((orderList.size() > 0)) {
             SqlNode order0 = (SqlNode) orderList.get(0);
             monotonicity = SqlMonotonicity.Increasing;
-            if (order0 instanceof SqlCall &&
-                ((SqlCall) order0).getOperator()
-                    == SqlStdOperatorTable.descendingOperator)
+            if ((order0 instanceof SqlCall)
+                && (((SqlCall) order0).getOperator()
+                    == SqlStdOperatorTable.descendingOperator))
             {
                 monotonicity = monotonicity.reverse();
                 order0 = ((SqlCall) order0).getOperands()[0];
@@ -195,7 +195,7 @@ public class SelectScope
             // Compute on demand first call.
             orderList = new SqlNodeList(SqlParserPos.ZERO);
             if (children.size() == 1) {
-                final List<Pair<SqlNode,SqlMonotonicity>> monotonicExprs =
+                final List<Pair<SqlNode, SqlMonotonicity>> monotonicExprs =
                     children.get(0).getMonotonicExprs();
                 if (monotonicExprs.size() > 0) {
                     orderList.add(monotonicExprs.get(0).left);

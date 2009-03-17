@@ -167,7 +167,8 @@ public class VolcanoPlannerTraitTest
             planner.changeTraits(
                 noneRel,
                 new RelTraitSet(
-                    CallingConvention.ITERATOR, ALT_TRAIT2));
+                    CallingConvention.ITERATOR,
+                    ALT_TRAIT2));
 
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
@@ -248,8 +249,9 @@ public class VolcanoPlannerTraitTest
     private static class AltTraitDef
         extends RelTraitDef
     {
-        private MultiMap<RelTrait, Pair<RelTrait, ConverterRule>> conversionMap =
-            new MultiMap<RelTrait, Pair<RelTrait, ConverterRule>>();
+        private MultiMap<RelTrait, Pair<RelTrait, ConverterRule>>
+            conversionMap =
+                new MultiMap<RelTrait, Pair<RelTrait, ConverterRule>>();
 
         public Class getTraitClass()
         {
@@ -270,7 +272,8 @@ public class VolcanoPlannerTraitTest
             RelTrait fromTrait = rel.getTraits().getTrait(this);
 
             if (conversionMap.containsKey(fromTrait)) {
-                for (Pair<RelTrait, ConverterRule> traitAndRule
+                for (
+                    Pair<RelTrait, ConverterRule> traitAndRule
                     : conversionMap.getMulti(fromTrait))
                 {
                     RelTrait trait = traitAndRule.left;
@@ -297,7 +300,8 @@ public class VolcanoPlannerTraitTest
             RelTrait toTrait)
         {
             if (conversionMap.containsKey(fromTrait)) {
-                for (Pair<RelTrait, ConverterRule> traitAndRule
+                for (
+                    Pair<RelTrait, ConverterRule> traitAndRule
                     : conversionMap.getMulti(fromTrait))
                 {
                     if (traitAndRule.left == toTrait) {

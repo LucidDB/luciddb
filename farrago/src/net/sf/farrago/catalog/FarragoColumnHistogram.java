@@ -22,6 +22,7 @@
 package net.sf.farrago.catalog;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.fem.med.*;
@@ -76,10 +77,10 @@ public class FarragoColumnHistogram
      * Initializes a column statistics reader. The statistics are not actually
      * analyzed until the user calls {@link #evaluate()}.
      *
-     * @deprecated
-     * 
      * @param column column to analyze
      * @param sequence optional predicate on the column
+     *
+     * @deprecated
      */
     protected FarragoColumnHistogram(
         FemAbstractColumn column,
@@ -87,7 +88,7 @@ public class FarragoColumnHistogram
     {
         this(column, sequence, null);
     }
-    
+
     /**
      * Initializes a column statistics reader. The statistics are not actually
      * analyzed until the user calls {@link #evaluate()}.
@@ -139,7 +140,7 @@ public class FarragoColumnHistogram
             cardinality = null;
             return;
         }
-        
+
         if (sequence == null) {
             selectivity = 1.0;
             cardinality = Double.valueOf(valueCount);
@@ -151,24 +152,25 @@ public class FarragoColumnHistogram
         assert (bars.size() == barCount) : "invalid histogram bar count";
 
         List<HistogramBarCoverage> coverages = getCoverage(sequence);
-        
+
         if (coverages == null) {
             selectivity = null;
             cardinality = null;
             return;
         }
-        
+
         readCoverages(coverages);
     }
 
     /**
      * Computes the histogram bar coverage of an ordered sequence of intervals.
-     * Coverage can only be computed if the end points of each interval in
-     * the sequence are either literal or infinite.
-     * 
+     * Coverage can only be computed if the end points of each interval in the
+     * sequence are either literal or infinite.
+     *
      * @param sequence sequence to lookup
-     * @return List of HistogramBarCoverage instance of null if coverage
-     *         cannot be computed.
+     *
+     * @return List of HistogramBarCoverage instance of null if coverage cannot
+     * be computed.
      */
     private List<HistogramBarCoverage> getCoverage(
         SargIntervalSequence sequence)
@@ -181,13 +183,13 @@ public class FarragoColumnHistogram
 
         int minBar = 0;
         for (SargInterval interval : sequence.getList()) {
-            if (!checkEndpoint(interval.getLowerBound()) ||
-                !checkEndpoint(interval.getUpperBound()))
+            if (!checkEndpoint(interval.getLowerBound())
+                || !checkEndpoint(interval.getUpperBound()))
             {
                 // Can't handle non-literal endpoints, signal the caller.
                 return null;
             }
-            
+
             HistogramRange range = new HistogramRange(bars, interval, minBar);
             range.evaluate();
             if (range.isEmpty()) {
@@ -204,18 +206,18 @@ public class FarragoColumnHistogram
     /**
      * Check if the given SargEndpoint is infinite or is bounded by a literal
      * expression.
-     * 
+     *
      * @param endpoint the endpoint to evaluate
+     *
      * @return true if the endpoint is infinite or bounded by a literal; false
-     *         otherwise
+     * otherwise
      */
     private boolean checkEndpoint(SargEndpoint endpoint)
     {
-        return 
-            !endpoint.isFinite() || 
-            endpoint.getCoordinate() instanceof RexLiteral;
+        return !endpoint.isFinite()
+            || (endpoint.getCoordinate() instanceof RexLiteral);
     }
-    
+
     /**
      * Reads collective coverages finally make estimates on requested
      * attributes. This implementation looks at each bar separately, estimating

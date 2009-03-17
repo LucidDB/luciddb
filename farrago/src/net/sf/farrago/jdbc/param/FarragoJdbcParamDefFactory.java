@@ -37,8 +37,12 @@ import java.sql.*;
  */
 public class FarragoJdbcParamDefFactory
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final FarragoJdbcParamDefFactory INSTANCE =
         new FarragoJdbcParamDefFactory();
+
+    //~ Constructors -----------------------------------------------------------
 
     // use the singleton
     private FarragoJdbcParamDefFactory()

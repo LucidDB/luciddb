@@ -21,13 +21,13 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.resgen.ResourceDefinition;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.SqlOperatorTable;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeFactoryImpl;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -116,7 +116,7 @@ public class SqlValidatorFeatureTest
             "select name from ^dept tablesample substitute('sample_dept')^",
             EigenbaseResource.instance().SQLFeatureExt_T613_Substitution);
     }
-    
+
     private void checkFeature(String sql, ResourceDefinition feature)
     {
         // Test once with feature enabled:  should pass

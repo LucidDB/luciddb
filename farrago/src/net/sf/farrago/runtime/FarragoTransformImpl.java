@@ -23,9 +23,10 @@ package net.sf.farrago.runtime;
 
 import java.nio.*;
 
+import net.sf.farrago.resource.*;
+
 import org.eigenbase.runtime.*;
 
-import net.sf.farrago.resource.*;
 
 /**
  * FarragoTransformImpl provides a base class for generated implementations of
@@ -48,12 +49,10 @@ public abstract class FarragoTransformImpl
     /**
      * Initialze this FarragoTransformImpl. Generated FarragoTransform
      * implementations should pass their generated FennelTupleWriter and
-     * TupleIter implementations here.
-     *
-     * A subclass (not an anonymous subclass) may pass <code>null</code> for
-     * <code>tupleWriter</code> or <code>tupleIter</code> iff it has a different way
-     * to read or write its data and iff it overrides {@link #execute} and {@link
-     * #restart} as appropriate.
+     * TupleIter implementations here. A subclass (not an anonymous subclass)
+     * may pass <code>null</code> for <code>tupleWriter</code> or <code>
+     * tupleIter</code> iff it has a different way to read or write its data and
+     * iff it overrides {@link #execute} and {@link #restart} as appropriate.
      *
      * @param tupleWriter FennelTupleWriter that can marshal this transform's
      * output tuple format.
@@ -66,7 +65,9 @@ public abstract class FarragoTransformImpl
         this.next = null;
     }
 
-    /** for named subclasses, not for generated transforms */
+    /**
+     * for named subclasses, not for generated transforms
+     */
     protected TupleIter getTupleIter()
     {
         return tupleIter;

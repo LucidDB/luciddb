@@ -22,12 +22,11 @@
 */
 package net.sf.farrago.util;
 
-import java.util.Properties;
-import java.util.logging.Logger;
+import java.util.*;
+import java.util.logging.*;
 
-import org.eigenbase.enki.mdr.EnkiMDRepository;
-import org.eigenbase.enki.mdr.MDRepositoryFactory;
-import org.eigenbase.enki.netbeans.MdrTraceUtil;
+import org.eigenbase.enki.mdr.*;
+import org.eigenbase.enki.netbeans.*;
 
 
 // NOTE:  This class gets compiled independently of everything else since
@@ -61,14 +60,14 @@ public abstract class MdrUtil
     {
         String classNameProp =
             "org.netbeans.mdr.storagemodel.StorageFactoryClassName";
-        
+
         if (storageFactoryClassName != null) {
             storageProps.put(classNameProp, storageFactoryClassName);
         }
-        
-        EnkiMDRepository repos = 
+
+        EnkiMDRepository repos =
             MDRepositoryFactory.newMDRepository(storageProps);
-        
+
         return repos;
     }
 
