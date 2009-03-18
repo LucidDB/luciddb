@@ -53,7 +53,7 @@ class BTreeBuilder : public BTreeAccessBase
     friend class FixedBuildLevel;
     friend class VariableBuildLevel;
     friend class DynamicBuildLevel;
-    
+
     std::vector<SharedBTreeBuildLevel> levels;
 
     SharedSegment pTempSegment;
@@ -61,7 +61,7 @@ class BTreeBuilder : public BTreeAccessBase
 // ----------------------------------------------------------------------
 // internal helper methods
 // ----------------------------------------------------------------------
-    
+
     static uint calculateChildEntriesPerNode(
         RecordNum parentLevelTotalEntries,
         RecordNum childLevelTotalEntries,
@@ -69,7 +69,7 @@ class BTreeBuilder : public BTreeAccessBase
 
     static uint calculateNodesOnLevel(
         uint nChildEntries,uint nEntriesPerChildNode);
-    
+
     uint getRootHeight()
     {
         return levels.size() - 1;

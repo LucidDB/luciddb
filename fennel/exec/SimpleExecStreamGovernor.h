@@ -94,7 +94,7 @@ class SimpleExecStreamGovernor : public ExecStreamGovernor
         std::vector<SharedExecStream> &streams,
         boost::scoped_array<ExecStreamResourceRequirements> const &reqts,
         boost::scoped_array<double> const &sqrtDiffOptMin,
-        double totalSqrtDiffs, 
+        double totalSqrtDiffs,
         uint excessAvailable, bool assignOpt);
 
 public:

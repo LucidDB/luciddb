@@ -39,9 +39,9 @@ class ConfigMap : public TraceSource
     typedef std::map<std::string,std::string> StringMap;
     typedef StringMap::iterator StringMapIter;
     typedef StringMap::const_iterator StringMapConstIter;
-    
+
     StringMap paramVals;
-    
+
 public:
     /**
      * Creates an empty map.
@@ -68,7 +68,7 @@ public:
      * @param dumpStream target stream
      */
     void dumpParams(std::ostream &dumpStream) const;
-    
+
     /**
      * Merges in all the parameters from another map.
      * New values override current values.

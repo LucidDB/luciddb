@@ -49,7 +49,7 @@ using namespace fennel;
 class BTreeTxnTest
     : virtual public ThreadedTestBase
 {
-    struct TestThreadData 
+    struct TestThreadData
     {
         std::subtractive_rng randomNumberGenerator;
         SharedBTreeReader pReader;
@@ -67,10 +67,10 @@ class BTreeTxnTest
         OP_CHECKPOINT,
         OP_MAX
     };
-    
+
     // NOTE:  this matches the Fennel Tuple format, so it can be used
     // directly for input into BTreeWriter
-    struct Record 
+    struct Record
     {
         int32_t key;
         int32_t value;
@@ -79,7 +79,7 @@ class BTreeTxnTest
     SharedDatabase pDatabase;
 
     BTreeDescriptor treeDescriptor;
-    
+
     boost::thread_specific_ptr<TestThreadData> pTestThreadData;
     PageId rootPageId;
 
@@ -90,7 +90,7 @@ class BTreeTxnTest
     uint nKeysPerScan;
 
     uint nSecondsBetweenCheckpoints;
-    
+
     void testTxns();
 
     void insertTxn();
@@ -99,7 +99,7 @@ class BTreeTxnTest
     void testCheckpoint();
 
     void endTxn(SharedLogicalTxn pTxn);
-    
+
     uint generateRandomNumber(uint iMax);
 
     void createTree();
@@ -108,13 +108,13 @@ class BTreeTxnTest
     BTreeWriter &getWriter();
     TupleData &getKeyData();
     void bindKey(int32_t &key);
-    
+
 public:
     explicit BTreeTxnTest();
 
     virtual void testCaseSetUp();
     virtual void testCaseTearDown();
-    
+
     virtual void threadInit();
     virtual void threadTerminate();
     virtual bool testThreadedOp(int iOp);
@@ -138,7 +138,7 @@ BTreeTxnTest::BTreeTxnTest()
         "deleteThreads",-1);
     threadCounts[OP_SCAN] = configMap.getIntParam(
         "scanThreads",-1);
-        
+
     if (nSecondsBetweenCheckpoints < nSeconds) {
         threadCounts[OP_CHECKPOINT] = 1;
     } else {
@@ -151,7 +151,7 @@ BTreeTxnTest::BTreeTxnTest()
 void BTreeTxnTest::testCaseSetUp()
 {
     // TODO:  cleanup
-    
+
     configMap.setStringParam(
         Database::paramDatabaseDir,".");
     configMap.setStringParam(
@@ -173,10 +173,10 @@ void BTreeTxnTest::testCaseSetUp()
         configMap,
         DeviceMode::createNew,
         shared_from_this());
-    
+
     statsTimer.addSource(pDatabase);
     statsTimer.start();
-    
+
     rootPageId = NULL_PAGE_ID;
     createTree();
     pDatabase->checkpointImpl();
@@ -185,7 +185,7 @@ void BTreeTxnTest::testCaseSetUp()
 void BTreeTxnTest::testCaseTearDown()
 {
     statsTimer.stop();
-    
+
     pDatabase.reset();
     pCache.reset();
 }
@@ -221,7 +221,7 @@ void BTreeTxnTest::threadInit()
         pDatabase->getSegmentFactory()->newScratchSegment(
             pCache,
             1);
-    
+
     pTestThreadData->pWriter.reset(
         new BTreeWriter(treeDescriptor,scratchAccessor));
 }
@@ -231,7 +231,7 @@ void BTreeTxnTest::threadTerminate()
     pTestThreadData.reset();
     ThreadedTestBase::threadTerminate();
 }
-    
+
 uint BTreeTxnTest::generateRandomNumber(uint iMax)
 {
     return pTestThreadData->randomNumberGenerator(iMax);
@@ -273,7 +273,7 @@ void BTreeTxnTest::testTxns()
 
     statsTimer.addSource(pDatabase);
     statsTimer.start();
-    
+
     StandardTypeDescriptorFactory typeFactory;
     SegmentAccessor scratchAccessor =
         pDatabase->getSegmentFactory()->newScratchSegment(
@@ -292,7 +292,7 @@ void BTreeTxnTest::testTxns()
 
     // FIXME jvs 8-Mar-2004:  Turn this back on once NOTE above is taken
     // care of.  Tautological checks are just to shut warnings up.
-    
+
     // BOOST_CHECK_EQUAL(nEntries,nEntriesRecovered);
     BOOST_CHECK_EQUAL(nEntries,nEntries);
     BOOST_CHECK_EQUAL(nEntriesRecovered,nEntriesRecovered);
@@ -344,7 +344,7 @@ void BTreeTxnTest::scanTxn()
     }
     reader.endSearch();
 }
-    
+
 void BTreeTxnTest::endTxn(SharedLogicalTxn pTxn)
 {
     if (testRollback) {

@@ -39,19 +39,19 @@ FENNEL_BEGIN_NAMESPACE
  * allow them to mix.  In this case, there are only two groups, but any number
  * of groups is supported, as long as they have unique integer identifiers.
  * Note that there are no provisions for preventing starvation, or whatever the
- * equally unpleasant equivalent is in this example. 
+ * equally unpleasant equivalent is in this example.
  */
 class GroupLock : public SynchMonitoredObject
 {
     uint nHolders;
     uint iHeldGroup;
-    
+
 public:
     explicit GroupLock();
     ~GroupLock();
-    
+
     bool waitFor(uint iGroup,uint iTimeout = ETERNITY);
-    
+
     /**
      * // TODO:  pass the group key to release as well,
      * and assert that it matches iHeldGroup

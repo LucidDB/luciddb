@@ -42,7 +42,7 @@ public:
         FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testUncommittedReads);
         FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testDeallocateOld);
     }
-  
+
     void testSnapshotReads()
     {
         // Create and initialize a VersionedRandomAllocationSegment using
@@ -200,7 +200,7 @@ public:
         testSkipWrite(7);
         closeStorage();
 
-        uint totalPages = 
+        uint totalPages =
             nDiskPages +
             nDiskPages/3 + ((nDiskPages % 3) ? 1 : 0) +
             nDiskPages/5 + ((nDiskPages % 5) ? 1 : 0) +
@@ -243,13 +243,13 @@ public:
         // Save cache stats before deallocation.
         CacheStats statsBefore;
         pCache->collectStats(statsBefore);
-        
+
         for (int i = opaqueToInt(firstPageId);
             i < 100 + opaqueToInt(firstPageId); i++)
         {
             pSnapshotRandomSegment->deallocatePageRange(PageId(i), PageId(i));
         }
-        
+
         // Get cache stats after deallocation and compare.
         CacheStats statsAfter;
         pCache->collectStats(statsAfter);
@@ -257,7 +257,7 @@ public:
         // Count of unused pages should not go up since deallocation is
         // deferred.
         BOOST_CHECK(statsAfter.nMemPagesUnused <= statsBefore.nMemPagesUnused);
-        
+
         closeStorage();
 
         // Deallocate old pages, but set the oldestActiveTxnId to TxnId(0) so

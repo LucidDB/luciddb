@@ -43,7 +43,7 @@ Backtrace::~Backtrace()
     }
 }
 
-Backtrace::Backtrace(size_t maxdepth) 
+Backtrace::Backtrace(size_t maxdepth)
     :ownbuf(true), bufsize(maxdepth + 1)
 {
 #ifndef __MINGW32__
@@ -101,7 +101,7 @@ ostream& Backtrace::print(ostream& os) const
         for (int i = 1; i < depth; i++) {
             // Attempt to demangle C++ function names.
             // Input is of the form "imagename(mangledname+offset) [0xaddr]"
-            
+
             char *pSymbol = syms[i];
             char *pLeftParen = strchr(pSymbol, '(');
             char *pPlus = strchr(pSymbol, '+');
@@ -114,7 +114,7 @@ ostream& Backtrace::print(ostream& os) const
             if (pLeftParen && (pLeftParen[1] != '_')) {
                 pLeftParen = NULL;
             }
-            
+
             if (!pLeftParen || !pPlus || (pLeftParen > pPlus)
                 || !pLeftBracket || !pRightBracket
                 || (pLeftBracket > pRightBracket)
@@ -133,7 +133,7 @@ ostream& Backtrace::print(ostream& os) const
             libInfo.baseAddress = 0;
             libInfo.pImageName = pSymbol;
             dl_iterate_phdr(lookupLibraryBase, &libInfo);
-            
+
             // dump everything up to lparen
             os << pSymbol << '(';
 
@@ -248,7 +248,7 @@ void AutoBacktrace::install(bool includeSegFault)
     if (includeSegFault) {
         installSignal(SIGSEGV);
     }
-    
+
     installSignal(SIGBUS);
 #endif
 }

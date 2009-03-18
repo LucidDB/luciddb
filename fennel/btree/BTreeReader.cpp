@@ -151,7 +151,7 @@ bool BTreeReader::searchForKey(
 }
 
 bool BTreeReader::searchForKeyInternal(
-    TupleData const &key, DuplicateSeek dupSeek, bool leastUpper, 
+    TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
     PageId startPageId, LockMode initialLockMode, ReadMode readMode)
 {
     singular = false;

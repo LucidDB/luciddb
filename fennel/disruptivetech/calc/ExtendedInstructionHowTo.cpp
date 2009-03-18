@@ -130,9 +130,9 @@ RegisterReference is the generic type. RegisterRef is a templated
 subclass that provides accessor functions. This templating provides some
 type checking.
 </p>
-<p> 
+<p>
 Access native types, such as integers, floats, etc. through the
-member function RegisterRef::value. 
+member function RegisterRef::value.
 </p>
 <p>
 Set a value to NULL with RegisterRef::toNull, check if it is null
@@ -211,7 +211,7 @@ for example "22001".
 If the library chooses to throw an exception, the ExtendedInstruction
 should catch the string, set the result to NULL, and re-throw the
 string.  The ExtendedInstruction class will catch this string and
-re-throw it with the appropriate Calculator wrappers.  
+re-throw it with the appropriate Calculator wrappers.
 </p>
 <p>
 If there is an error condition not handled by the SQL99 spec, a
@@ -289,7 +289,7 @@ CALL 'strCatA2(O0, C0);</pre>
 
 */
 
-struct ExtendedInstructionHowTo 
+struct ExtendedInstructionHowTo
 {
         // NOTE:  dummy class for doxygen
 };

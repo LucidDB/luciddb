@@ -48,7 +48,7 @@ protected:
      * Descriptor for tree being accessed.
      */
     BTreeDescriptor treeDescriptor;
-    
+
     /**
      * Descriptor for pure keys (common across leaf and non-leaf tuples).
      */
@@ -69,7 +69,7 @@ protected:
      * Accessor for non-leaf nodes.
      */
     boost::scoped_ptr<BTreeNodeAccessor> pNonLeafNodeAccessor;
-    
+
     /**
      * Accessor for leaf nodes.
      */
@@ -79,7 +79,7 @@ protected:
      * Maximum size for a leaf-level tuple.
      */
     uint cbTupleMax;
-    
+
     // ----------------------------------------------------------------------
     // protected inlines below are defined in BTreeAccessBaseImpl.h
     // ----------------------------------------------------------------------
@@ -93,7 +93,7 @@ protected:
      * @return node accessor
      */
     inline BTreeNodeAccessor &getLeafNodeAccessor(BTreeNode const &node);
-    
+
     /**
      * Gets the node accessor for a non-leaf node, asserting that the
      * node really is a non-leaf.
@@ -124,7 +124,7 @@ protected:
      * @return child PageId
      */
     inline PageId getChildForCurrent();
-    
+
     /**
      * Accesses a non-leaf tuple and gets its child PageId.
      *
@@ -159,7 +159,7 @@ protected:
      */
     inline void setRightSibling(
         BTreeNode &leftNode,PageId leftPageId,PageId rightPageId);
-    
+
     /**
      * Gets the first child of a non-leaf node.
      *
@@ -183,7 +183,7 @@ public:
      * @return the CacheAccessor used to access the BTree's pages
      */
     inline SharedCacheAccessor getCacheAccessor() const;
-    
+
     /**
      * @return the BTree's root PageId
      */
@@ -208,7 +208,7 @@ public:
      * @return TupleDescriptor for tuples stored by this BTree
      */
     inline TupleDescriptor const &getTupleDescriptor() const;
-    
+
     /**
      * @return TupleDescriptor for keys indexed by this BTree
      */
@@ -239,7 +239,7 @@ inline SharedCacheAccessor BTreeAccessBase::getCacheAccessor() const
 {
     return treeDescriptor.segmentAccessor.pCacheAccessor;
 }
-    
+
 inline PageId BTreeAccessBase::getRootPageId() const
 {
     return treeDescriptor.rootPageId;
@@ -259,7 +259,7 @@ inline TupleDescriptor const &BTreeAccessBase::getTupleDescriptor() const
 {
     return treeDescriptor.tupleDescriptor;
 }
-    
+
 inline TupleDescriptor const &BTreeAccessBase::getKeyDescriptor() const
 {
     return keyDescriptor;

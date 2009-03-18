@@ -33,7 +33,7 @@ class FennelExcn : public std::exception
 {
 protected:
     std::string msg;
-    
+
 public:
     /**
      * Construct a new FennelExcn.

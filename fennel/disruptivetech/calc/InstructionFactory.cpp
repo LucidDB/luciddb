@@ -40,7 +40,7 @@ InstructionFactory::createInstruction(
 // Create a Jump instruction
 Instruction*
 InstructionFactory::createInstruction(
-    string const & name, 
+    string const & name,
     TProgramCounter pc,
     RegisterReference* operand)
 {
@@ -57,7 +57,7 @@ Instruction*
 InstructionFactory::createInstructionHelper(InstructionSignature const &sig)
 {
     InstructionCreateFunction createFn = instructionTable[sig.compute()];
-    
+
     if (createFn) {
         return createFn(sig);
     } else {
@@ -68,7 +68,7 @@ InstructionFactory::createInstructionHelper(InstructionSignature const &sig)
 // Create an Extended instruction
 Instruction*
 InstructionFactory::createInstruction(
-    string const & name, 
+    string const & name,
     string const & function,
     vector<RegisterReference*> const &operands)
 {

@@ -83,7 +83,7 @@ public:
      * batch that has already been written into the cluster page
      */
     uint oLastValHighMark;  // value high mark before the batch
-    
+
     /**
      * Size of batch records in fixed mode case
      */

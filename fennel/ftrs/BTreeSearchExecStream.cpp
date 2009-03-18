@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -33,7 +33,7 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
 {
     BTreeReadExecStream::prepare(params);
     ConduitExecStream::prepare(params);
-    
+
     leastUpper = true;
     outerJoin = params.outerJoin;
     searchKeyParams = params.searchKeyParams;
@@ -68,7 +68,7 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
 
         directiveData.compute(inputDirectiveDesc);
     }
-    
+
     if (params.inputKeyProj.size()) {
         TupleProjection inputKeyProj = params.inputKeyProj;
         if (params.inputDirectiveProj.size()) {
@@ -110,7 +110,7 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
         // key type for both lower and upper bounds.
         assert(upperBoundDesc == inputKeyDesc);
     }
-    
+
     preFilterNulls = false;
     if ((outerJoin && inputKeyDesc.containsNullable()) ||
         searchKeyParams.size() > 0)
@@ -130,16 +130,16 @@ void BTreeSearchExecStream::prepare(BTreeSearchExecStreamParams const &params)
             }
         }
     }
-    
+
     inputJoinAccessor.bind(inputAccessor,params.inputJoinProj);
 
     TupleDescriptor joinDescriptor;
     joinDescriptor.projectFrom(inputDesc,params.inputJoinProj);
-    
+
     TupleProjection readerKeyProj = treeDescriptor.keyProjection;
     readerKeyProj.resize(inputKeyDesc.size());
     readerKeyData.compute(inputKeyDesc);
-    
+
     nJoinAttributes = params.outputTupleDesc.size() - params.outputProj.size();
 }
 
@@ -175,7 +175,7 @@ ExecStreamResult BTreeSearchExecStream::execute(
     if (rc != EXECRC_YIELD) {
         return rc;
     }
-    
+
     uint nTuples = 0;
     assert(quantum.nTuplesMax > 0);
 
@@ -291,7 +291,7 @@ bool BTreeSearchExecStream::searchForKey()
         if (pSearchKey->size() <= 1) {
             pReader->searchFirst();
             break;
-        } 
+        }
         // otherwise, this is the case where we have > 1 key and a
         // non-equality search on the last key; in this case, we need
         // to position to the equality portion of the key
@@ -328,7 +328,7 @@ bool BTreeSearchExecStream::searchForKey()
             }
         }
     }
-        
+
     if (!match) {
         if (!outerJoin) {
             pReader->endSearch();
@@ -347,7 +347,7 @@ bool BTreeSearchExecStream::searchForKey()
     if (inputJoinAccessor.size()) {
         inputJoinAccessor.unmarshal(tupleData);
     }
-    
+
     return true;
 }
 
@@ -362,7 +362,7 @@ void BTreeSearchExecStream::readUpperBoundKey()
     } else {
         // If there are an odd number of parameters, determine whether the
         // first parameter in the second group of parameters corresponds
-        // to the lower or upper bound.  If there are an even number of 
+        // to the lower or upper bound.  If there are an even number of
         // parameters, always read that first parameter.
         uint nParams = searchKeyParams.size();
         // The search key projection in the case of dynamic parameters

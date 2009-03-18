@@ -43,7 +43,7 @@ struct BTreeNode : public StoredNode
      * knew what was on a page, we wouldn't need to prefetch it!).
      */
     PageId rightSibling;
-    
+
     /**
      * Number of entries stored on this node.
      */
@@ -68,7 +68,7 @@ struct BTreeNode : public StoredNode
     // NOTE:  interpretation of the data is dependent on the node's height in
     // the tree and the way in which the tree is defined.
     // See BTreeNodeAccessor.
-    
+
     /**
      * @return writable start of data after header
      */
@@ -76,7 +76,7 @@ struct BTreeNode : public StoredNode
     {
         return reinterpret_cast<PBuffer>(this + 1);
     }
-    
+
     /**
      * @return read-only start of data after header
      */

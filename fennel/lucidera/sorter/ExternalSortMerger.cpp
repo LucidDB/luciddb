@@ -41,7 +41,7 @@ ExternalSortMerger::ExternalSortMerger(ExternalSortInfo &sortInfoIn)
 
     keyAccessor.bind(tupleAccessor,sortInfo.keyProj);
     keyAccessor2.bind(tupleAccessor2,sortInfo.keyProj);
-    
+
     nMergeMemPages = sortInfo.nSortMemPages + 1;
 
     ppRunAccessors.reset(new SharedExternalSortRunAccessor[nMergeMemPages]);
@@ -157,7 +157,7 @@ void ExternalSortMerger::heapify(uint i)
             highest = r;
         }
     }
-    
+
     if (highest != i) {
         heapExchange(highest,i);
         heapify(highest);
@@ -198,7 +198,7 @@ ExternalSortRC ExternalSortMerger::checkFetch()
 ExternalSortRC ExternalSortMerger::fetch(uint nTuplesRequested)
 {
     sortInfo.stream.checkAbort();
-    
+
     if (nTuplesRequested > EXTSORT_FETCH_ARRAY_SIZE) {
         nTuplesRequested = EXTSORT_FETCH_ARRAY_SIZE;
     }

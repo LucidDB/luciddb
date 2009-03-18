@@ -91,7 +91,7 @@ void *VMAllocator::allocate(int *pErrorCode)
     // alignment for O_DIRECT file access.
     cbActualAlloc += 2*getpagesize();
 #endif
-    
+
     void *v = ::mmap(
         NULL,cbActualAlloc,
         PROT_READ | PROT_WRITE,MAP_PRIVATE | MAP_ANONYMOUS,-1,0);
@@ -101,7 +101,7 @@ void *VMAllocator::allocate(int *pErrorCode)
         }
         return NULL;
     }
-    
+
 #ifndef NDEBUG
     PBuffer p = static_cast<PBuffer>(v);
     memset(p, 0xFE, getpagesize());
@@ -125,7 +125,7 @@ void *VMAllocator::allocate(int *pErrorCode)
         return NULL;
     }
 #endif
-    
+
     if (bLockPages) {
         if (::mlock(v,cbAlloc)) {
             if (pErrorCode != NULL) {
@@ -159,7 +159,7 @@ int VMAllocator::deallocate(void *p, int *pErrorCode)
             return -1;
         }
     }
-    
+
     uint cbActualAlloc = cbAlloc;
 #ifndef NDEBUG
     PBuffer p2 = static_cast<PBuffer>(p);

@@ -37,10 +37,10 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 class LbmRepeatingAggComputer : public AggComputer
 {
     AggComputer *pComputer;
-    
+
 public:
     explicit LbmRepeatingAggComputer(AggComputer *pComputer);
-    
+
     // implement AggComputer
     virtual void setInputAttrIndex(uint iInputAttrIndex);
 
@@ -63,7 +63,7 @@ public:
     virtual void initAccumulator(
         TupleDatum &accumulatorDatumSrc,
         TupleDatum &accumulatorDatumDest);
-    
+
     virtual void updateAccumulator(
         TupleDatum &accumulatorDatumSrc,
         TupleDatum &accumulatorDatumDest,

@@ -61,7 +61,7 @@ public:
     explicit RandomAccessFileDevice(
         std::string filename,
         DeviceMode mode);
-    
+
 // ----------------------------------------------------------------------
 // Implementation of RandomAccessDevice interface (q.v.)
 // ----------------------------------------------------------------------

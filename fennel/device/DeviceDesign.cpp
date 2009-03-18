@@ -73,7 +73,7 @@ place
 
 <li>a list of RandomAccessRequestBinding instances specifying the mapping from
 device storage to virtual memory locations (making possible scatter/gather
-transfers) 
+transfers)
 
 </ul>
 
@@ -219,7 +219,7 @@ The device library depends on the common and synch libraries (TODO:  links).
 <hr>
 
  */
-struct DeviceDesign 
+struct DeviceDesign
 {
     // NOTE:  dummy class for doxygen
 };

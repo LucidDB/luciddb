@@ -45,7 +45,7 @@ FENNEL_BEGIN_NAMESPACE
 class DynamicParam
 {
     friend class DynamicParamManager;
-    
+
     boost::scoped_array<FixedBuffer> pBuffer;
     TupleAttributeDescriptor desc;
     TupleDatum datum;
@@ -71,7 +71,7 @@ class DynamicParamManager
     ParamMap paramMap;
 
     DynamicParam &getParamInternal(DynamicParamId dynamicParamId);
-    
+
 public:
     /**
      * Creates a new dynamic parameter.  Initially, a dynamic parameter
@@ -86,7 +86,7 @@ public:
      * will occur if dynamicParamId is already in use
      */
     void createParam(
-        DynamicParamId dynamicParamId, 
+        DynamicParamId dynamicParamId,
         const TupleAttributeDescriptor &attrDesc,
         bool failIfExists = true);
 
@@ -125,9 +125,9 @@ public:
      * @param dest destination tupledata for parameter
      */
     void readParam(DynamicParamId dynamicParamId, TupleDatum &dest);
-    
+
     /**
-     * Deletes all dynamic parameters 
+     * Deletes all dynamic parameters
      */
     void deleteAllParams();
 };

@@ -51,7 +51,7 @@ class SegmentFactory
         public boost::enable_shared_from_this<SegmentFactory>
 {
     friend class TempSegDestructor;
-    
+
     static ParamName paramTraceSegments;
 
     /**
@@ -89,7 +89,7 @@ public:
     static SharedSegmentFactory newSegmentFactory(
         ConfigMap const &configMap,
         SharedTraceTarget pTraceTarget);
-    
+
     virtual ~SegmentFactory();
 
     /**
@@ -307,7 +307,7 @@ public:
         SharedCache pCache,
         DeviceMode deviceMode,
         std::string deviceFileName);
-    
+
     /**
      * Some implementations of the Segment interface extend the interface with
      * implementation-specific features.  dynamicCast provides access to a
@@ -351,7 +351,7 @@ public:
 
     /**
      * Casts a shared segment to a SnapshotRandomAllocationSegment, if the
-     * segment is in fact a SnapshotRandomAllocationSegment.  It may be 
+     * segment is in fact a SnapshotRandomAllocationSegment.  It may be
      * necessary to extract the SnapshotRandomAllocationSegment from a
      * DynamicDelegatingSegment.
      *
@@ -365,12 +365,12 @@ public:
 class TempSegDestructor : public ClosableObjectDestructor
 {
     SharedSegmentFactory pSegmentFactory;
-    
+
 public:
     explicit TempSegDestructor(SharedSegmentFactory);
     void operator()(Segment *pSegment);
 };
-    
+
 FENNEL_END_NAMESPACE
 
 #endif

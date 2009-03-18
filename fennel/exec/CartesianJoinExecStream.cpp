@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -41,7 +41,7 @@ void CartesianJoinExecStream::prepare(
     assert(pRightBufAccessor);
 
     leftOuter = params.leftOuter;
-    
+
     SharedExecStream pLeftInput = pGraph->getStreamInput(getStreamId(), 0);
     assert(pLeftInput);
     pRightInput = pGraph->getStreamInput(getStreamId(), 1);
@@ -53,10 +53,10 @@ void CartesianJoinExecStream::prepare(
         ", right input " << pRightInput->getStreamId() <<
         ' ' << pRightInput->getName());
 
-   
+
     TupleDescriptor const &leftDesc = pLeftBufAccessor->getTupleDesc();
     TupleDescriptor const &rightDesc = pRightBufAccessor->getTupleDesc();
-    
+
     TupleDescriptor outputDesc;
     outputDesc.insert(outputDesc.end(),leftDesc.begin(),leftDesc.end());
     uint iFirstRight = outputDesc.size();
@@ -75,7 +75,7 @@ void CartesianJoinExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     nLeftAttributes = leftDesc.size();
-    
+
     ConfluenceExecStream::prepare(params);
 }
 
@@ -104,7 +104,7 @@ ExecStreamResult CartesianJoinExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     // TODO:  lots of small optimizations possible here
-    
+
     // TODO jvs 6-Nov-2004: one big optimization would be to perform
     // buffer-to-buffer joins instead of row-to-buffer joins.  This would
     // reduce the number of times the right input needs to be iterated by the
@@ -117,7 +117,7 @@ ExecStreamResult CartesianJoinExecStream::execute(
     // re-execute the right hand side.
 
     uint nTuplesProduced = 0;
-    
+
     for (;;) {
         if (!pLeftBufAccessor->isTupleConsumptionPending()) {
             if (pLeftBufAccessor->getState() == EXECBUF_EOS) {
@@ -156,7 +156,7 @@ ExecStreamResult CartesianJoinExecStream::execute(
                         } else {
                             return EXECRC_BUF_OVERFLOW;
                         }
-                        
+
                         if (nTuplesProduced >= quantum.nTuplesMax) {
                             return EXECRC_QUANTUM_EXPIRED;
                         }
@@ -184,15 +184,15 @@ ExecStreamResult CartesianJoinExecStream::execute(
                     outputData, nLeftAttributes);
                 break;
             }
-            
+
             if (pOutAccessor->produceTuple(outputData)) {
                 ++nTuplesProduced;
             } else {
                 return EXECRC_BUF_OVERFLOW;
             }
-            
+
             pRightBufAccessor->consumeTuple();
-            
+
             if (nTuplesProduced >= quantum.nTuplesMax) {
                 return EXECRC_QUANTUM_EXPIRED;
             }

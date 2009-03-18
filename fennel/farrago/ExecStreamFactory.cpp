@@ -93,7 +93,7 @@ ExecStreamEmbryo const &ExecStreamFactory::visitStream(
     ProxyExecutionStreamDef &streamDef)
 {
     bool created = false;
-    
+
     // first give sub-factories a shot
     std::vector<SharedExecStreamSubFactory>::iterator ppSubFactory;
     for (ppSubFactory = subFactories.begin();
@@ -345,7 +345,7 @@ void ExecStreamFactory::visit(ProxyValuesStreamDef &streamDef)
     streamDef.pEnv->GetByteArrayRegion(
         jbytes, 0, params.bufSize,
         reinterpret_cast<jbyte *>(params.pTupleBuffer.get()));
-    
+
     embryo.init(new ValuesExecStream(), params);
 }
 
@@ -452,7 +452,7 @@ void ExecStreamFactory::createPrivateScratchSegment(ExecStreamParams &params)
 {
     // Make sure global scratch segment was already set up.
     assert(params.pCacheAccessor);
-    
+
     params.scratchAccessor =
         pDatabase->getSegmentFactory()->newScratchSegment(
             pDatabase->getCache());
@@ -481,7 +481,7 @@ void ExecStreamFactory::readTableWriterStreamParams(
     params.pTableWriterFactory = pTableWriterFactory;
     params.tableId = ANON_PAGE_OWNER_ID;
     params.pActionMutex = &(pDatabase->getCheckpointThread()->getActionMutex());
-    
+
     SharedProxyIndexWriterDef pIndexWriterDef = streamDef.getIndexWriter();
     for (; pIndexWriterDef; ++pIndexWriterDef) {
         FtrsTableIndexWriterParams indexParams;

@@ -67,7 +67,7 @@ inline uint calcWidth(uint n)
     // round up the width to a value which can be
     // represented by two bit vectors (where each vector
     // has length 1, 2, 4, 8, or 16
-    switch (w) {    
+    switch (w) {
     case  7: w = 8; break;
     case 11: w = 12; break;
     case 13:
@@ -99,7 +99,7 @@ inline uint bitVecWidth(uint l, WidthVec w)
     WidthVec t;
     int i,j;
 
-    for (po2 = 1, iW = 0; l ; l >>= 1, po2 *= 2) 
+    for (po2 = 1, iW = 0; l ; l >>= 1, po2 *= 2)
         if (l & 0x1) t[iW++] = po2;
 
     for (i = iW-1, j = 0; i >= 0 ; w[j++] = t[i--]);
@@ -121,8 +121,8 @@ inline uint bitVecWidth(uint l, WidthVec w)
  * @param pVec vector storage
  */
 inline uint bitVecPtr(
-    uint iCount, uint iW, WidthVec w, PtrVec p, uint8_t *pVec) 
-{   
+    uint iCount, uint iW, WidthVec w, PtrVec p, uint8_t *pVec)
+{
     uint i;
     uint8_t *t;
 
@@ -180,7 +180,7 @@ inline void readBitVecs(
     memset(v, 0, sizeof(uint16_t) * count);
 
     // read bit arrays
-    for (i = 0, b = 0; i < iV; i++) {   
+    for (i = 0, b = 0; i < iV; i++) {
         // w[i] contains the width of the bit vector
         // read append each vector bits into v[i], b is the bit position
         // of the next append
@@ -190,10 +190,10 @@ inline void readBitVecs(
             break;
 
         case 8:
-            for (j = 0; j < count; j++) 
+            for (j = 0; j < count; j++)
                 v[j] = (p[i] + pos)[j];
             break;
-    
+
         case 4:
             for (j = 0, k = pos*4;  j < count; j++, k += 4)
                 readBits(p[i][k/8], 4, k % 8, &v[j], b);

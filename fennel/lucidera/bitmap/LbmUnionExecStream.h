@@ -43,7 +43,7 @@ struct LbmUnionExecStreamParams : public ConfluenceExecStreamParams
     LcsRid maxRid;
 
     /**
-     * Parameter id for the dynamic parameter used to limit the 
+     * Parameter id for the dynamic parameter used to limit the
      * number of rids that should appear in an input tuple. Producers
      * for this stream should respect the limitation.
      *
@@ -207,7 +207,7 @@ class LbmUnionExecStream : public ConfluenceExecStream
     bool isSegmentLimitSet();
 
     /**
-     * Reads a byte segment.  If the previous byte segment was 
+     * Reads a byte segment.  If the previous byte segment was
      * not written, then the previous segment is returned.
      */
     ExecStreamResult readSegment();
@@ -215,7 +215,7 @@ class LbmUnionExecStream : public ConfluenceExecStream
     /**
      * Attempts to write a segment to the workspace. First eagerly
      * flushes contents of workspace. If contents cannot be flushed,
-     * returns false. Once contents have been flushed, write the 
+     * returns false. Once contents have been flushed, write the
      * segment to the workspace. This should always succeed due to
      * the limit on tuple size.
      */
@@ -228,9 +228,9 @@ class LbmUnionExecStream : public ConfluenceExecStream
     void transferLast();
 
     /**
-     * Transfers data from workspace to writer. Returns false if unable to 
-     * transfer all completed workspace contents. For example, returns false 
-     * if the writer is unable to accept more data or if yielding due to  
+     * Transfers data from workspace to writer. Returns false if unable to
+     * transfer all completed workspace contents. For example, returns false
+     * if the writer is unable to accept more data or if yielding due to
      * the limitation on number of segments.
      */
     bool transfer();

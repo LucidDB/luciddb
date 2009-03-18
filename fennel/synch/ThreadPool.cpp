@@ -34,7 +34,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 class PooledThread : public Thread
 {
     ThreadPoolBase &pool;
-    
+
 public:
     explicit PooledThread(ThreadPoolBase &poolInit)
         : pool(poolInit)
@@ -86,7 +86,7 @@ void ThreadPoolBase::stop()
     state = STATE_STOPPED;
     condition.notify_all();
     guard.unlock();
-    
+
     for (uint i = 0; i < threads.size(); ++i) {
         threads[i]->join();
     }

@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -63,7 +63,7 @@ void ExecStreamScheduler::addGraph(SharedExecStreamGraph pGraph)
         std::ofstream dotStream(dotFileName.c_str());
         pGraph->renderGraphviz(dotStream);
     }
-    
+
     // if any of the streams in the new graph require tracing, then
     // disable our tracing short-circuit
     std::vector<SharedExecStream> streams = pGraph->getSortedStreams();
@@ -124,7 +124,7 @@ void ExecStreamScheduler::tracePreExecution(
 
     traceStreamBuffers(stream, TRACE_FINEST, TRACE_FINEST);
 }
-    
+
 void ExecStreamScheduler::tracePostExecution(
     ExecStream &stream,
     ExecStreamResult rc)
@@ -136,7 +136,7 @@ void ExecStreamScheduler::tracePostExecution(
 
     traceStreamBuffers(stream, TRACE_FINEST, TRACE_FINER);
 }
-    
+
 void ExecStreamScheduler::traceStreamBuffers(
     ExecStream &stream,
     TraceLevel inputTupleTraceLevel,
@@ -192,13 +192,13 @@ void ExecStreamScheduler::traceStreamBuffers(
 
 void ExecStreamScheduler::traceStreamBufferContents(
     ExecStream &stream,
-    ExecStreamBufAccessor &bufAccessor, 
+    ExecStreamBufAccessor &bufAccessor,
     TraceLevel traceLevel)
 {
     TupleDescriptor const &tupleDesc = bufAccessor.getTupleDesc();
     TupleData tupleData(tupleDesc);
     TupleAccessor &tupleAccessor = bufAccessor.getScratchTupleAccessor();
-    
+
     for (PConstBuffer pTuple = bufAccessor.getConsumptionStart();
          pTuple != bufAccessor.getConsumptionEnd();
          pTuple += tupleAccessor.getCurrentByteCount())

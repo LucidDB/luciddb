@@ -62,7 +62,7 @@ struct LbmGeneratorExecStreamParams :
      * loaded
      */
     DynamicParamId insertRowCountParamId;
-    
+
     /**
      * True if bitmap index is being loaded as part of a create index
      * statement
@@ -92,7 +92,7 @@ struct LbmGeneratorExecStreamParams :
 class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
 {
     /**
-     * Number of misc scratch pages needed; excludes pages for generating 
+     * Number of misc scratch pages needed; excludes pages for generating
      * bitmap entries
      */
     uint numMiscScratchPages;
@@ -359,7 +359,7 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
 
     /**
      * Flushes out an existing buffer currently in use by another LbmEntry.
-     * 
+     *
      * @param addRid the current rid being added that requires a buffer flush
      *
      * @return pointer to buffer if flush of entry was successful; otherwise

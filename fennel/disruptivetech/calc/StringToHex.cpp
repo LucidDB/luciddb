@@ -32,7 +32,7 @@ using namespace fennel;
 using namespace std;
 
 // returns a hex-coded string
-string 
+string
 stringToHex(char const * const buf)
 {
     assert(buf != NULL);
@@ -60,4 +60,4 @@ stringToHex(char const * const buf, uint buflen)
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End StringToHex
+// End StringToHex.cpp

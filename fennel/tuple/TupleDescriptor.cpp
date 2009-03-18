@@ -83,7 +83,7 @@ int TupleDescriptor::compareTuples(
     TupleData const &tuple1,
     TupleData const &tuple2) const
 {
-    int keyComp;    
+    int keyComp;
     // REVIEW:  should pass n as a param instead of recalculating it each time
     size_t keyCount = std::min(tuple1.size(),tuple2.size());
     keyCount = std::min(keyCount,size());
@@ -140,7 +140,7 @@ int TupleDescriptor::compareTuplesKey(
     uint keyCount) const
 {
     assert(keyCount <= std::min(tuple1.size(), tuple2.size()));
-    
+
     for (uint i = 0; i < keyCount; ++i) {
         TupleDatum const &datum1 = tuple1[i];
         TupleDatum const &datum2 = tuple2[i];
@@ -223,7 +223,7 @@ void TupleDescriptor::readPersistent(
     for (uint i = 0; i < n; ++i) {
         uint32_t iData;
         stream.readValue(iData);
-        StoredTypeDescriptor const &typeDescriptor = 
+        StoredTypeDescriptor const &typeDescriptor =
             typeFactory.newDataType(ntohl(iData));
         stream.readValue(iData);
         bool isNullable = ntohl(iData);
@@ -245,7 +245,7 @@ void TupleProjection::writePersistent(
         stream.writeValue(iData);
     }
 }
-    
+
 void TupleProjection::readPersistent(
     ByteInputStream &stream)
 {
@@ -290,11 +290,11 @@ bool TupleDescriptor::storageEqual(
 
     TupleAttributeDescriptor const * us;
     TupleAttributeDescriptor const * them;
-    
+
     for (uint i = 0; i < sz; ++i) {
         us = &(*this)[i];
         them = &other[i];
-        if ((us->pTypeDescriptor->getOrdinal() != 
+        if ((us->pTypeDescriptor->getOrdinal() !=
              them->pTypeDescriptor->getOrdinal()) ||
             us->cbStorage != them->cbStorage) {
             return false;
@@ -331,7 +331,7 @@ std::ostream &operator<<(
 {
     StoredTypeDescriptor::Ordinal ordinal =
         attrDesc.pTypeDescriptor->getOrdinal();
-    
+
     if (ordinal < STANDARD_TYPE_END) {
         str << "type = " << StandardTypeDescriptor::toString(
             StandardTypeDescriptorOrdinal(ordinal));

@@ -42,13 +42,13 @@ FileDevice::FileDevice(
 {
     filename = filenameInit;
     mode = openMode;
-    
+
 #ifdef __MINGW32__
 
     DWORD fdwCreate = mode.create ? CREATE_ALWAYS : OPEN_EXISTING;
 
     DWORD fdwFlags = FILE_FLAG_OVERLAPPED;
-    
+
     DWORD fdwAccess = GENERIC_READ;
     if (!mode.readOnly) {
         fdwAccess |= GENERIC_WRITE;
@@ -71,7 +71,7 @@ FileDevice::FileDevice(
     // log file for read while it was still open for write by the original
     // txn.  Should probably fix the tests instead, in case allowing sharing
     // could hinder performance.
-    
+
     handle = reinterpret_cast<int>(
         CreateFile(
             filename.c_str(),
@@ -104,7 +104,7 @@ FileDevice::FileDevice(
     }
 
 #else
-    
+
     int access = O_LARGEFILE;
     int permission = S_IRUSR;
     if (mode.readOnly) {
@@ -129,7 +129,7 @@ FileDevice::FileDevice(
         // O_DIRECT is set from AioLinuxScheduler, because it is required
         // for libaio.
     }
-    
+
     handle = ::open(filename.c_str(), access, permission);
     if (!isOpen()) {
         std::ostringstream oss;
@@ -150,7 +150,7 @@ FileDevice::FileDevice(
         }
         cbFile = initialSize;
     }
-    
+
 #endif
 }
 
@@ -220,7 +220,7 @@ void FileDevice::transfer(RandomAccessRequest const &request)
     largeInt.QuadPart = request.cbOffset;
     binding.Offset = largeInt.LowPart;
     binding.OffsetHigh = largeInt.HighPart;
-    
+
     DWORD dwActual = 0;
     BOOL bCompleted;
     if (request.type == RandomAccessRequest::READ) {

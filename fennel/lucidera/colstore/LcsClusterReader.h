@@ -32,7 +32,7 @@
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
- 
+
 /**
  * Structure representing a contiguous run of rids that need to be read.
  */
@@ -187,7 +187,7 @@ class LcsClusterReader :
 
     /**
      * Finds the range in the current block which contains "Rid".  Does not
-     * search backwards.  
+     * search backwards.
      *
      * @param rid rid to be located
      *
@@ -290,7 +290,7 @@ public:
      * Gets first page in a cluster
      *
      * @param pBlock output param returning cluster page
-     * 
+     *
      * @return true if page available
      */
     bool getFirstClusterPageForRead(PConstLcsClusterNode &pBlock);
@@ -299,7 +299,7 @@ public:
      * Gets next page in a cluster, based on current position in btree
      *
      * @param pBlock output param returning cluster page
-     * 
+     *
      * @return true if page available
      */
     bool getNextClusterPageForRead(PConstLcsClusterNode &pBlock);
@@ -341,7 +341,7 @@ public:
      */
     inline uint getRangeRowsLeft() const;
 
-    /** 
+    /**
      * Positions scan on the rid, moving to a new range if necessary
      *
      * @param rid rid to position to

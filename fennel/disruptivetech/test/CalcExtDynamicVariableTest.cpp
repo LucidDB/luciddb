@@ -53,7 +53,7 @@ public:
         CalcInit::instance();
         FENNEL_UNIT_TEST_CASE(CalcExtDynamicVariableTest, testCalcExtDynamicVariable);
     }
-     
+
     virtual ~CalcExtDynamicVariableTest()
     {
     }
@@ -153,7 +153,7 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     dynamicData[5].pData = (PConstBuffer) &data5;
     dpm.createParam(DynamicParamId(5), outTupleDesc[5]);
     dpm.writeParam(DynamicParamId(5), dynamicData[5]);
-    
+
     int16_t data6 = 0xFFFF;
     dynamicData[6].pData = (PConstBuffer) &data6;
     dpm.createParam(DynamicParamId(6), outTupleDesc[6]);
@@ -220,6 +220,7 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     BOOST_CHECK(!memcmp("def",outTuple[12].pData,3));
     BOOST_CHECK(!memcmp("ghi",outTuple[13].pData,3));
 }
-    
+
 FENNEL_UNIT_TEST_SUITE(CalcExtDynamicVariableTest);
 
+// End CalcExtDynamicVariableTest.cpp

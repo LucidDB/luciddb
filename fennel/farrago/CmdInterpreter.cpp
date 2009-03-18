@@ -141,7 +141,7 @@ CmdInterpreter::TxnHandle* CmdInterpreter::newTxnHandle()
 CmdInterpreter::DbHandle::~DbHandle()
 {
     statsTimer.stop();
-    
+
     // close database before trace
     if (pDb) {
         pDb->close();
@@ -150,12 +150,12 @@ CmdInterpreter::DbHandle::~DbHandle()
 
     JniUtil::shutdown();
 }
-    
+
 CmdInterpreter::TxnHandle::~TxnHandle()
 {
     JniUtil::decrementHandleCount(TXNHANDLE_TRACE_TYPE_STR, this);
 }
-    
+
 CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
 {
     if (javaRuntimeContext) {
@@ -164,7 +164,7 @@ CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
     }
     JniUtil::decrementHandleCount(STREAMGRAPHHANDLE_TRACE_TYPE_STR, this);
 }
-    
+
 JavaTraceTarget *CmdInterpreter::newTraceTarget()
 {
     return new JavaTraceTarget();
@@ -198,7 +198,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     DeviceMode openMode = cmd.isCreateDatabase()
         ? DeviceMode::createNew
         : DeviceMode::load;
-    
+
     std::auto_ptr<DbHandle> pDbHandle(newDbHandle());
     JniUtil::incrementHandleCount(DBHANDLE_TRACE_TYPE_STR, pDbHandle.get());
 
@@ -262,10 +262,10 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
         pCache->getAllocatedPageCount() != cacheParams.nMemPagesInit)
     {
         FENNEL_DELEGATE_TRACE(
-            TRACE_WARNING, 
+            TRACE_WARNING,
             pDb,
             "Unable to allocate "
-            << cacheParams.nMemPagesInit 
+            << cacheParams.nMemPagesInit
             << " (of "
             << cacheParams.nMemPagesMax
             << " max) cache pages; allocated "
@@ -275,7 +275,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 
     setDbHandle(cmd.getResultHandle(),pDbHandle.release());
 }
-    
+
 void CmdInterpreter::visit(ProxyCmdCloseDatabase &cmd)
 {
     DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
@@ -362,16 +362,16 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
         }
     }
 }
-    
+
 void CmdInterpreter::getBTreeForIndexCmd(
     ProxyIndexCmd &cmd,PageId rootPageId,BTreeDescriptor &treeDescriptor)
 {
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
-    
+
     readTupleDescriptor(
         treeDescriptor.tupleDescriptor,
         *(cmd.getTupleDesc()),pTxnHandle->pDb->getTypeFactory());
-    
+
     CmdInterpreter::readTupleProjection(
         treeDescriptor.keyProjection,cmd.getKeyProj());
 
@@ -391,7 +391,7 @@ void CmdInterpreter::visit(ProxyCmdCreateIndex &cmd)
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SXMutexSharedGuard actionMutexGuard(
         pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
-    
+
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,NULL_PAGE_ID,treeDescriptor);
     BTreeBuilder builder(treeDescriptor);
@@ -415,7 +415,7 @@ void CmdInterpreter::visit(ProxyCmdVerifyIndex &cmd)
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SXMutexSharedGuard actionMutexGuard(
         pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
-    
+
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
     TupleProjection leafPageIdProj;
@@ -450,7 +450,7 @@ void CmdInterpreter::dropOrTruncateIndex(
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
     SXMutexSharedGuard actionMutexGuard(
         pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
-    
+
     BTreeDescriptor treeDescriptor;
     getBTreeForIndexCmd(cmd,PageId(cmd.getRootPageId()),treeDescriptor);
     TupleProjection leafPageIdProj;
@@ -477,7 +477,7 @@ void CmdInterpreter::beginTxn(ProxyBeginTxnCmd &cmd, bool readOnly, TxnId csn)
 
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
-    
+
     std::auto_ptr<TxnHandle> pTxnHandle(newTxnHandle());
     JniUtil::incrementHandleCount(TXNHANDLE_TRACE_TYPE_STR, pTxnHandle.get());
     pTxnHandle->pDb = pDb;
@@ -485,11 +485,11 @@ void CmdInterpreter::beginTxn(ProxyBeginTxnCmd &cmd, bool readOnly, TxnId csn)
     // TODO:  CacheAccessor factory
     pTxnHandle->pTxn = pDb->getTxnLog()->newLogicalTxn(pDb->getCache());
     pTxnHandle->pResourceGovernor = pDbHandle->pResourceGovernor;
-    
+
     // NOTE:  use a null scratchAccessor; individual ExecStreamGraphs
     // will have their own
     SegmentAccessor scratchAccessor;
-    
+
     pTxnHandle->pFtrsTableWriterFactory = SharedFtrsTableWriterFactory(
         new FtrsTableWriterFactory(
             pDb,
@@ -532,11 +532,11 @@ void CmdInterpreter::visit(ProxyCmdBeginTxnWithCsn &cmd)
 void CmdInterpreter::visit(ProxyCmdSavepoint &cmd)
 {
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
-    
+
     // block checkpoints during this method
     SXMutexSharedGuard actionMutexGuard(
         pTxnHandle->pDb->getCheckpointThread()->getActionMutex());
-    
+
     setSvptHandle(
         cmd.getResultHandle(),
         pTxnHandle->pTxn->createSavepoint());
@@ -551,7 +551,7 @@ void CmdInterpreter::visit(ProxyCmdCommit &cmd)
     bool txnBlocksCheckpoint = !pTxnHandle->readOnly && pDb->shouldForceTxns();
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
-    
+
     if (pDb->areSnapshotsEnabled()) {
         // Commit the current txn, and start a new one so the versioned
         // pages that we're now going to commit will be marked with a txnId
@@ -715,7 +715,7 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
         pTxnHandle->pDb->getSegmentFactory());
     pStreamGraphHandle->pExecStreamFactory->setGraphEmbryo(graphEmbryo);
     ExecStreamBuilder streamBuilder(
-        graphEmbryo, 
+        graphEmbryo,
         *(pStreamGraphHandle->pExecStreamFactory));
     streamBuilder.buildStreamGraph(cmd, true);
     pStreamGraphHandle->pExecStreamFactory.reset();
@@ -765,7 +765,7 @@ void CmdInterpreter::readTupleDescriptor(
     tupleDesc.clear();
     SharedProxyTupleAttrDescriptor pAttr = javaTupleDesc.getAttrDescriptor();
     for (; pAttr; ++pAttr) {
-        StoredTypeDescriptor const &typeDescriptor = 
+        StoredTypeDescriptor const &typeDescriptor =
             typeFactory.newDataType(pAttr->getTypeOrdinal());
         tupleDesc.push_back(
             TupleAttributeDescriptor(

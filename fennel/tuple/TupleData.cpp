@@ -30,7 +30,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void TupleDatum::memCopyFrom(TupleDatum const &other)
 {
     cbData = other.cbData;
-    
+
     /*
      * Performs memcpy from "other".
      * Sets pData to NULL if it is NULL in "other".

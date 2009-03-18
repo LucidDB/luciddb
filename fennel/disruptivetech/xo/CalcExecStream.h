@@ -57,7 +57,7 @@ class CalcExecStream : public ConduitExecStream
      * TupleDescriptor for input tuples.
      */
     TupleDescriptor inputDesc;
-    
+
     /**
      * TupleData for input tuples.
      */

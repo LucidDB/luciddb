@@ -42,7 +42,7 @@ class CacheImpl;
 /**
  * Embedded link class for PageBucket lists.
  */
-class PageBucketListNode : public IntrusiveListNode 
+class PageBucketListNode : public IntrusiveListNode
 {
 };
 
@@ -65,12 +65,12 @@ public:
          * The page contents are invalid (either unmapped or newly allocated).
          */
         DATA_INVALID,
-        
+
         /**
          * The last transfer failed (so the page contents are invalid).
          */
         DATA_ERROR,
-        
+
         /**
          * No transfer is in progress, and the page contains valid, unmodified
          * data.
@@ -86,14 +86,14 @@ public:
          * A disk write is in progress (so the page contains valid data).
          */
         DATA_WRITE,
-        
+
         /**
          * A disk read is in progress (so the page does not yet contain valid
          * data).
          */
         DATA_READ
     };
-    
+
 private:
     template <class PageT,class VictimPolicyT>
     friend class CacheImpl;
@@ -105,13 +105,13 @@ private:
      * @see getCache()
      */
     Cache &cache;
-    
+
     /**
      * Mutex protecting this Page's state variables.  This is only held
-     * internally by CacheImpl for very short durations.  
+     * internally by CacheImpl for very short durations.
      */
     StrictMutex mutex;
-    
+
     /**
      * Synchronization object used to implement shared and exclusive locks.
      * This is held for long durations (across cache lock/unlock calls).
@@ -122,11 +122,11 @@ private:
      * Allocated buffer memory, or NULL if page is currently unallocated.
      */
     PBuffer pBuffer;
-    
+
     // NOTE: the data members below should only be accessed while the
     // page mutex is held.  This includes indirect access via accessors such as
     // getBlockId().
-    
+
     /**
      * The BlockId to which this page is currently mapped,
      * or NULL_BLOCK_ID if unmapped.
@@ -178,7 +178,7 @@ private:
     {
         ioCompletionCondition.wait(guard);
     }
-    
+
     /**
      * Waits for pending I/O to complete while holding a try-mutex.
      */
@@ -186,7 +186,7 @@ private:
     {
         ioCompletionCondition.wait(guard);
     }
-    
+
     /**
      * @return true if an exclusive lock is held on this page by some thread
      */
@@ -206,7 +206,7 @@ private:
 public:
     explicit CachePage(Cache &,PBuffer);
     virtual ~CachePage();
-    
+
     /**
      * @return the cache which manages this page
      */
@@ -231,7 +231,7 @@ public:
     {
         return (dataStatus >= DATA_WRITE);
     }
-    
+
     /**
      * @return is the page data valid?
      */
@@ -270,7 +270,7 @@ public:
         assert(lock.isLocked(LOCKMODE_S) || isExclusiveLockHeld());
         return pBuffer;
     }
-    
+
     /**
      * Obtains a writable pointer to the page contents, marking the page
      * dirty.  The page must be locked in exclusive mode first.  The number
@@ -322,7 +322,7 @@ public:
 #ifdef DEBUG
         int errorCode;
         if (getCache().getAllocator().setProtection(
-                pBuffer, getCache().getPageSize(), false, &errorCode)) 
+                pBuffer, getCache().getPageSize(), false, &errorCode))
         {
             throw SysCallExcn("memory protection failed", errorCode);
         }

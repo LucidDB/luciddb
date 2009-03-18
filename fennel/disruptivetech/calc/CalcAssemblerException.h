@@ -45,9 +45,9 @@ public:
     {
         if (msg.length() > 0) msg += ": ";
         msg += "Invalid type ";
-        msg += StandardTypeDescriptor::toString(type); 
+        msg += StandardTypeDescriptor::toString(type);
         msg += ", expecting ";
-        msg += StandardTypeDescriptor::toString(expected);  
+        msg += StandardTypeDescriptor::toString(expected);
     }
     ~InvalidTypeException() throw() {}
 
@@ -72,8 +72,8 @@ public:
         : FennelExcn(str), mType(type), mValue(value)
     {
         ostringstream ostr("");
-        ostr << "Invalid value " << value << " for type " 
-             << StandardTypeDescriptor::toString(type); 
+        ostr << "Invalid value " << value << " for type "
+             << StandardTypeDescriptor::toString(type);
         if (msg.length() > 0) msg += ": ";
         msg += ostr.str();
     }
@@ -91,13 +91,13 @@ protected:
  * The CalcAssemblerException contains a description of the error, and the location
  * in the program where the error occured if available.  The text of the program code
  * itself may also be included in the exception.
- */ 
+ */
 class CalcAssemblerException: public FennelExcn
 {
 public:
     //! Constructs CalcAssemblerException with location information
     explicit
-    CalcAssemblerException(string str, CalcYYLocType loc) 
+    CalcAssemblerException(string str, CalcYYLocType loc)
         : FennelExcn(str), mDescription(str), mLoc(loc), mLocValid(true)
     {
         msg += getLocationString();
@@ -105,7 +105,7 @@ public:
 
     //! Constructs CalcAssemblerException without location information
     explicit
-    CalcAssemblerException(string str) 
+    CalcAssemblerException(string str)
         : FennelExcn(str), mDescription(str), mLocValid(false)
     {
     }
@@ -119,7 +119,7 @@ public:
         mLoc = loc;
         msg = mDescription + getLocationString();
     }
-    
+
     //! Sets the program text associated with this exception
     void setCode(string s)
     {
@@ -143,12 +143,12 @@ public:
             // would be to fix the bug that causes a supposedly valid
             // mLoc to have wildly out-of-range values.
 
-            if (mLoc.first_pos <= mLoc.last_pos && 
-                mLoc.first_pos < s.length()) 
+            if (mLoc.first_pos <= mLoc.last_pos &&
+                mLoc.first_pos < s.length())
             {
-                mCodeSnippet = 
+                mCodeSnippet =
                     s.substr(
-                        mLoc.first_pos, 
+                        mLoc.first_pos,
                         mLoc.last_pos - mLoc.first_pos + 1);
             } else {
                 mCodeSnippet = s;
@@ -175,9 +175,9 @@ public:
         if (mLocValid)
         {
             ostringstream ostr(locStr);
-            ostr << " (at line:col " << mLoc.first_line << ":" << mLoc.first_column 
-                 << " to " << mLoc.last_line << ":" << mLoc.last_column 
-                 << ", characters " << mLoc.first_pos << " to " << mLoc.last_pos << ")"; 
+            ostr << " (at line:col " << mLoc.first_line << ":" << mLoc.first_column
+                 << " to " << mLoc.last_line << ":" << mLoc.last_column
+                 << ", characters " << mLoc.first_pos << " to " << mLoc.last_pos << ")";
             locStr = ostr.str();
         }
         else {
@@ -187,9 +187,9 @@ public:
     }
 
     //! String describing the error
-    string mDescription;  
+    string mDescription;
     //! Location of the error
-    CalcYYLocType mLoc; 
+    CalcYYLocType mLoc;
     //! Indicates whether the location (mLoc) is valid or not
     bool mLocValid;
     //! The complete text of the program code that was being assembled

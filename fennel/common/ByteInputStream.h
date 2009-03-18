@@ -37,7 +37,7 @@ class ByteInputStream : virtual public ByteStream
      * First buffered byte of data.
      */
     PConstBuffer pFirstByte;
-    
+
     /**
      * Next buffered byte of data.
      */
@@ -56,7 +56,7 @@ protected:
      * setBuffer or nullifyBuffer.
      */
     virtual void readNextBuffer() = 0;
-    
+
     /**
      * Must be implemented by derived class if seekBackward is
      * to be supported.
@@ -83,12 +83,12 @@ protected:
      * @return number of bytes remaining in current buffer
      */
     uint getBytesAvailable() const;
-    
+
     /**
      * @return number of bytes already consumed from current buffer
      */
     uint getBytesConsumed() const;
-    
+
 public:
     /**
      * Reads bytes from the stream.
@@ -113,7 +113,7 @@ public:
     {
         return readBytes(&value,sizeof(value));
     }
-    
+
     /**
      * Copyless alternative for reading bytes from the stream.
      * Provides direct access to the stream's internal buffer, but doesn't
@@ -165,7 +165,7 @@ public:
      */
     void seekBackward(uint cb);
 
-    
+
     /**
      * Creates a new uninitialized marker for this stream.  The returned marker
      * must be passed to mark() in order to initialize it.
@@ -173,7 +173,7 @@ public:
      * @return shared pointer to new marker
      */
     virtual SharedByteStreamMarker newMarker();
-    
+
     /**
      * Marks the current stream position in preparation for a future call to
      * reset().  How long this marker remains valid depends upon the

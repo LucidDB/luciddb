@@ -46,7 +46,7 @@ class StandardTypeTest : virtual public TestBase, public TraceSource
     void testStandardTypeIsFixedLenArray();
     void testStandardTypeIsTextArray();
     void testStandardTypeIsBinaryArray();
-    
+
 public:
     explicit StandardTypeTest()
         : TraceSource(shared_from_this(),"StandardTypeTest")
@@ -63,7 +63,7 @@ public:
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsTextArray);
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsBinaryArray);
     }
-    
+
     virtual ~StandardTypeTest()
     {
     }
@@ -79,7 +79,7 @@ void StandardTypeTest::testStandardTypeToString()
     BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
     BOOST_REQUIRE(STANDARD_TYPE_MIN <= STANDARD_TYPE_INT_8);
     BOOST_REQUIRE(STANDARD_TYPE_END > STANDARD_TYPE_VARBINARY);
-    
+
     for (i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; i++) {
         v = StandardTypeDescriptorOrdinal(i);
         str = StandardTypeDescriptor::toString(v);
@@ -338,6 +338,4 @@ void StandardTypeTest::testStandardTypeIsBinaryArray()
 
 FENNEL_UNIT_TEST_SUITE(StandardTypeTest);
 
-// End TestTuple.cpp
-
-    
+// End StandardTypeTest.cpp

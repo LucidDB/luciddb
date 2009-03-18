@@ -46,7 +46,7 @@ void TraceSource::initTraceSource(
     std::string nameInit)
 {
     assert(!pTraceTarget.get());
-    
+
     pTraceTarget = pTraceTargetInit;
     name = nameInit;
     if (isTracing()) {

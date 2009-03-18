@@ -33,18 +33,18 @@ FENNEL_BEGIN_NAMESPACE
  * makes it easier to instantiate a shared_ptr which takes care of automatic
  * close on destruction (see ClosableObjectDestructor).
  */
-class ClosableObject 
+class ClosableObject
 {
 protected:
     /**
      * Must be implemented by derived class to release any resources.
      */
     virtual void closeImpl() = 0;
-    
+
     bool needsClose;
 
     explicit ClosableObject();
-    
+
 public:
     /**
      * Destructor.  An assertion violation will result if the object has not
@@ -70,7 +70,7 @@ public:
  * A destructor functor for use as the "D" parameter to a
  * boost::shared_ptr constructor.
  */
-class ClosableObjectDestructor 
+class ClosableObjectDestructor
 {
 public:
     void operator()(ClosableObject *pClosableObject)

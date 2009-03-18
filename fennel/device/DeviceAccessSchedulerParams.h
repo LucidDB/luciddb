@@ -32,7 +32,7 @@ class ConfigMap;
  * DeviceAccessSchedulerParams defines parameters used to create a
  * DeviceAccessScheduler.
  */
-class DeviceAccessSchedulerParams 
+class DeviceAccessSchedulerParams
 {
 public:
     static ParamName paramSchedulerType;
@@ -44,7 +44,7 @@ public:
     static ParamVal valAioPollingScheduler;
     static ParamVal valAioSignalScheduler;
     static ParamVal valAioLinuxScheduler;
-    
+
     /**
      * Enumeration of available scheduler implementations
      */
@@ -60,7 +60,7 @@ public:
      * Type of scheduler to create.
      */
     SchedulerType schedulerType;
-    
+
     /**
      * True if using the default scheduler type, as opposed to the one that was
      * explicitly specified in the configuration file
@@ -79,7 +79,7 @@ public:
      * be able to handle; additional requests will be queued.
      */
     uint maxRequests;
-    
+
     /**
      * Defines a default set of scheduler parameters.
      */

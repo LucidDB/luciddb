@@ -69,7 +69,7 @@ public:
         FENNEL_UNIT_TEST_CASE(SqlRegExpTest, testSqlRegExpSimilarAsciiEscape);
         FENNEL_UNIT_TEST_CASE(SqlRegExpTest, testSqlRegExpSimilarAsciiException);
     }
-    
+
     virtual ~SqlRegExpTest()
     {
     }
@@ -82,11 +82,11 @@ SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
     bool result = false;
     int i;
 
-    const char* test[][2] = { 
+    const char* test[][2] = {
         // pattern, matchValue
 
         // SQL99 Part 2 Section 8.5 General Rule 3.d.i
-        { "",    "" },           
+        { "",    "" },
 
         { "_",   "a" },
         { "a",   "a" },
@@ -123,13 +123,13 @@ SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
         { ".|*%",             ".|*?+(){}[]^$" },
 
         { "\\",      "\\" },
-        { "a\\c",    "a\\c"}, 
-        { "a\\%de",  "a\\cde"}, 
-        { "a\\_de",  "a\\cde"}, 
-        { "a\\.de",  "a\\.de"}, 
+        { "a\\c",    "a\\c"},
+        { "a\\%de",  "a\\cde"},
+        { "a\\_de",  "a\\cde"},
+        { "a\\.de",  "a\\.de"},
 
         { "X", "X" }  // end sentinal
-        
+
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
@@ -156,7 +156,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-            
+
         }
         catch (...) {
             // unexpected exception
@@ -165,10 +165,10 @@ SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
         }
 
         if (!result) {
-            BOOST_MESSAGE("|" << test[i][1] << 
+            BOOST_MESSAGE("|" << test[i][1] <<
                           "| |" << test[i][0] << "|");
         }
-        
+
         BOOST_CHECK(result);
     }
 }
@@ -178,7 +178,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiFalse()
 {
     bool result = false;
     int i;
-    const char* test[][2] = { 
+    const char* test[][2] = {
         // pattern,    matchValue
         { "",    "a" },
         { "_",    "" },
@@ -214,13 +214,13 @@ SqlRegExpTest::testSqlRegExpLikeAsciiFalse()
 
         { "\\",      "a" },
         { "a",       "\\" },
-        { "a\\c",    "a\\"},    
-        { "a\\c",    "\\c"},    
-        { "\\c",    "a\\"},    
-        { "a\\",    "\\c"},    
+        { "a\\c",    "a\\"},
+        { "a\\c",    "\\c"},
+        { "\\c",    "a\\"},
+        { "a\\",    "\\c"},
 
         { "X",    "X" }  // end sentinal
-        
+
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
@@ -246,17 +246,17 @@ SqlRegExpTest::testSqlRegExpLikeAsciiFalse()
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-            
+
         }
         catch (...) {
             // unexpected exception
             BOOST_MESSAGE("unexpected unknown exception");
             BOOST_CHECK(0);
         }
-                
+
 
         if (result) {
-            BOOST_MESSAGE("|" << test[i][1] << 
+            BOOST_MESSAGE("|" << test[i][1] <<
                           "| |" << test[i][0] << "|");
         }
 
@@ -271,7 +271,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
     bool result = false;
     int i;
 
-    const char* test[][3] = { 
+    const char* test[][3] = {
         // pattern, matchValue, escape
         // define new escape
         { "_",      "a",  "#" },
@@ -319,7 +319,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
         { ")%",    "%",   ")" },
 
         { "X",     "X",   "X" }  // end sentinal
-        
+
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
@@ -346,7 +346,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-            
+
         }
         catch (...) {
             // unexpected exception
@@ -355,7 +355,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
         }
 
         if (!result) {
-            BOOST_MESSAGE("|" << test[i][1] << 
+            BOOST_MESSAGE("|" << test[i][1] <<
                           "| |" << test[i][0] << "|");
         }
 
@@ -369,7 +369,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
     bool result = false;
     int i;
 
-    const char* test[][3] = { 
+    const char* test[][3] = {
         // pattern, matchValue, escape
 
         { "_",    "ab",  "#" },
@@ -414,7 +414,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
 
 
         { "X",    "X",   "X" }  // end sentinal
-        
+
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
@@ -441,7 +441,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-            
+
         }
         catch (...) {
             // unexpected exception
@@ -450,7 +450,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
         }
 
         if (result) {
-            BOOST_MESSAGE("|" << test[i][1] << 
+            BOOST_MESSAGE("|" << test[i][1] <<
                           "| |" << test[i][0] << "|");
         }
 
@@ -465,7 +465,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiException()
     bool result = false;
     int i;
 
-    const char* test[][4] = { 
+    const char* test[][4] = {
         // pattern, matchValue, escape, exception
         { "=",       "a",       "=",       "22025" },
         { "=a",       "a",       "=",      "22025" },
@@ -474,7 +474,7 @@ SqlRegExpTest::testSqlRegExpLikeAsciiException()
         { "a",       "a",       "\\\\",    "22019" },
 
         { "X",       "X",       "X",       "X" }  // end sentinal
-        
+
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
@@ -508,10 +508,10 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
     bool result = false;
     int i;
 
-    const char* test[][3] = { 
+    const char* test[][3] = {
         // pattern, matchValue, result
 
-        // {2} 
+        // {2}
         // SQL2003 Part 2 Section 8.6 General Rule 6.a & 7.d
         { "a{2}",      "aa",     "t" },
         { "a{2}b",     "aab",    "t" },
@@ -545,7 +545,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[bc]{2}",   "",       "f" },
         { "[bc]{2}",   "bbc",    "f" },
 
-        // {2,3} 
+        // {2,3}
         // SQL2003 Part 2 Section 8.6 General Rule 6.b & 7.d
         // <upper limit> w/ <high value>
         { "a{2,3}",    "aa",     "t" },
@@ -823,7 +823,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[a-c]",     "a",     "t" },
         { "[a-c]",     "b",     "t" },
         { "[a-c]",     "c",     "t" },
-        
+
         { "[a]",       "",      "f" },
         { "[a]",       "b",     "f" },
         { "[a]",       "ab",    "f" },
@@ -840,7 +840,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[^a]",      "b",     "t" },
         { "[^ab]",     "c",     "t" },
         { "[^a-c]",    "d",     "t" },
-        
+
         { "[^a]",      "",      "f" },
         { "[^a]",      "a",     "f" },
         { "[^a]",      "ab",    "f" },
@@ -864,7 +864,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[a^b]",     "aa",    "t" },
         { "[a-c^d-f]", "ad",    "t" },
         { "[a-c^d-f]", "cf",    "t" },
-        
+
         { "[a^b]",     "",      "f" },
         { "[a^b]",     "a",     "f" },
         { "[a^b]",     "b",     "f" },
@@ -1033,12 +1033,12 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { ".",        "a",      "f" },
 
         { "X",  "X",  "X" }  // end sentinal
-        
+
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
         BOOST_MESSAGE(" ===== Ascii Similar " << i <<
-                      " " << test[i][0] << " " << 
+                      " " << test[i][0] << " " <<
                       test[i][1] << " " << test[i][2]);
         try {
             SqlSimilarPrep<1,1>(test[i][0],
@@ -1063,24 +1063,24 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-            
+
         }
         catch (...) {
             // unexpected exception
             BOOST_MESSAGE("unexpected unknown exception");
             BOOST_CHECK(0);
         }
-        
+
         if (*(test[i][2]) == 't') {
             if (!result) {
-                BOOST_MESSAGE("|" << test[i][1] << 
+                BOOST_MESSAGE("|" << test[i][1] <<
                               "| |" << test[i][0] << "| expPat=|" <<
                               expPat << "|");
             }
             BOOST_CHECK(result);
         } else {
             if (result) {
-                BOOST_MESSAGE("|" << test[i][1] << 
+                BOOST_MESSAGE("|" << test[i][1] <<
                               "| |" << test[i][0] << "| expPat=|" <<
                               expPat << "|");
             }
@@ -1095,7 +1095,7 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
     bool result = false;
     int i;
 
-    const char* test[][4] = { 
+    const char* test[][4] = {
         // pattern, matchValue, escape
 
         // define a new escape
@@ -1182,7 +1182,7 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
         { "((",      "a",       "(", "f" },
 
         { "X",       "X",       "X", "X" }  // end sentinal
-        
+
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
@@ -1211,7 +1211,7 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-            
+
         }
         catch (...) {
             // unexpected exception
@@ -1219,17 +1219,17 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
             BOOST_CHECK(0);
         }
 
-        
+
         if (*(test[i][3]) == 't') {
             if (!result) {
-                BOOST_MESSAGE("|" << test[i][1] << 
+                BOOST_MESSAGE("|" << test[i][1] <<
                               "| |" << test[i][0] << "| expPat=|" <<
                               expPat << "|");
             }
             BOOST_CHECK(result);
         } else {
             if (result) {
-                BOOST_MESSAGE("|" << test[i][1] << 
+                BOOST_MESSAGE("|" << test[i][1] <<
                               "| |" << test[i][0] << "| expPat=|" <<
                               expPat << "|");
             }
@@ -1245,11 +1245,11 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiException()
     bool result = false;
     int i;
 
-    const char* test[][4] = { 
+    const char* test[][4] = {
         // pattern, matchValue, escape, exception
-        { "[[:ALPHA:]]", 
+        { "[[:ALPHA:]]",
                   "a",   ":",     "2200B" },
-        { "[[:alpha:]]", 
+        { "[[:alpha:]]",
                   "a",   ":",     "2200B" },
 
         { "a",    "a",   "ab",    "22019" },
@@ -1260,11 +1260,11 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiException()
         // escaping a non-special char
         { "=a",   "a",   "=",     "2201B" },
         // invalid regular character set name
-        { "[[:foo:]]", 
+        { "[[:foo:]]",
                   "a",   "=",     "2201B" },
         // mixed case regular character set name
         // (code allows lower case, outside of standard)
-        { "[[:Alnum:]]", 
+        { "[[:Alnum:]]",
                   "a",   "=",     "2201B" },
         // sql-only special character in character set
         { "[_]",  "a",   "=",     "2201B" },
@@ -1355,4 +1355,4 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiException()
 
 FENNEL_UNIT_TEST_SUITE(SqlRegExpTest);
 
-    
+// End SqlRegExpTest.cpp

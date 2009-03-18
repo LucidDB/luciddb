@@ -72,7 +72,7 @@ ExecStreamResult ExternalSortOutput::fetch(
         }
 
         while (iCurrentTuple < pFetchArray->nTuples) {
-            PConstBuffer pSrcTuple = 
+            PConstBuffer pSrcTuple =
                 pFetchArray->ppTupleBuffers[iCurrentTuple];
             uint cbTuple = tupleAccessor.getBufferByteCount(pSrcTuple);
             if (cbTuple > cbRemaining) {
@@ -88,7 +88,7 @@ ExecStreamResult ExternalSortOutput::fetch(
             iCurrentTuple++;
         }
     }
-    
+
  done:
     if (pNextTuple == pOutBuf) {
         bufAccessor.markEOS();

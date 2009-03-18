@@ -41,7 +41,7 @@ struct ExternalSortInfo
      * details.
      */
     ExecStream &stream;
-    
+
     /**
      * Accessor for segment used to store runs externally.
      */
@@ -66,7 +66,7 @@ struct ExternalSortInfo
      * @see ExternalSortExecStreamParams
      */
     std::vector<bool> descendingKeyColumns;
-    
+
     /**
      * Descriptor for projected sort key tuples.
      */

@@ -67,7 +67,7 @@ protected:
      * SXMutex used to synchronize checkpoints with write actions.
      */
     SXMutex checkpointMutex;
-    
+
     /**
      * Flag indicating that the cache should be dynamically resized
      * during the multi-threaded portion of the test.
@@ -75,7 +75,7 @@ protected:
     bool bTestResize;
 
     uint generateRandomNumber(uint iMax);
-    
+
 public:
     /**
      * The various operations that can be run in the multi-threaded test.
@@ -101,7 +101,7 @@ public:
     explicit PagingTestBase();
 
     virtual ~PagingTestBase();
-    
+
     /**
      * Scribbles on the contents of a page.  The data written is derived from
      * the parameter x.
@@ -117,7 +117,7 @@ public:
     virtual void unlockPage(CachePage &page,LockMode lockMode) = 0;
     virtual void prefetchPage(uint iPage) = 0;
     virtual void prefetchBatch(uint iPage,uint nPagesPerBatch) = 0;
-    
+
     /**
      * Carries out one operation on a page.  This involves locking the page,
      * calling verifyPage or fillPage, and then unlocking the page.
@@ -143,7 +143,7 @@ public:
      * Gets the LockMode corresponding to an OpType.
      */
     LockMode getLockMode(OpType opType);
-    
+
     /**
      * Carries out an operation on each disk page in order from
      * 0 to nDiskPages-1.
@@ -151,7 +151,7 @@ public:
      * @param opType see testOp
      */
     void testSequentialOp(OpType opType);
-    
+
     /**
      * Carries out an operation on nRandomOps pages selected at random.
      *
@@ -191,7 +191,7 @@ public:
      * Performs a periodic checkpoint.
      */
     virtual void testCheckpoint();
-    
+
     /**
      * Initializes all disk pages, filling them with information based
      * on their block numbers.
@@ -226,22 +226,22 @@ public:
     void testSkipWrite(uint n);
 
     virtual void testAllocate();
-    
+
     virtual void testDeallocate();
 
     void testCheckpointGuarded();
 
     void testCacheResize();
-    
+
     /**
      * Carries out specified tests in multi-threaded mode.
      */
     void testMultipleThreads();
-    
+
     virtual void threadInit();
-    
+
     virtual void threadTerminate();
-    
+
     virtual bool testThreadedOp(int iOp);
 };
 

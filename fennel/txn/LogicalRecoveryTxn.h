@@ -69,13 +69,13 @@ class LogicalRecoveryTxn
     {
         return pParticipantFactory ? false : true;
     }
-    
+
     void recoverParticipant(
         LogicalTxnParticipant *pLoggedParticipant);
 
     LogicalTxnParticipant *swizzleParticipant(
         LogicalTxnParticipant *pParticipant);
-    
+
 public:
     /**
      * Constructor.
@@ -89,7 +89,7 @@ public:
     explicit LogicalRecoveryTxn(
         SharedByteInputStream pTxnInputStream,
         LogicalTxnParticipantFactory *pParticipantFactory);
-    
+
     virtual ~LogicalRecoveryTxn();
 
     /**

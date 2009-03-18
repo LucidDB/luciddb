@@ -35,7 +35,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * ExecStreamBuilder builds a prepared ExecStreamGraph from its 
+ * ExecStreamBuilder builds a prepared ExecStreamGraph from its
  * Java representation.  It builds a graph in three phases:
  *
  * <ul>
@@ -45,27 +45,27 @@ FENNEL_BEGIN_NAMESPACE
  * </ul>
  *
  * <p><b>Cache.</b>
- * A new scratch segment is allocated by the builder and is shared between 
+ * A new scratch segment is allocated by the builder and is shared between
  * the graph and its streams.
  *
  * <p><b>Tracing.</b>
- *   All streams are assigned a trace 
- *     name of: <code>xo.<i>streamName</i></code>  Depending on a the 
- *     TraceTarget, this typically corresponds to a trace property like 
+ *   All streams are assigned a trace
+ *     name of: <code>xo.<i>streamName</i></code>  Depending on a the
+ *     TraceTarget, this typically corresponds to a trace property like
  *     <code>org.eigenbase.fennel.xo.<i>streamName</i></code>
  *
  * <p><b>Buffer Provisioning.</b>
- * Provisioning adapters are special streams interposed between two other 
- * streams when the producer's result provisioning does not meet the 
- * consumer's input requirements.  They are interposed during the dataflow 
+ * Provisioning adapters are special streams interposed between two other
+ * streams when the producer's result provisioning does not meet the
+ * consumer's input requirements.  They are interposed during the dataflow
  * phase.  They are named: <code><i>producerName</i>.provisioner</code>
  *
  * <p><b>Interposition.</b>
- * When provisioning adapters are appended to a stream, they 
- * consume the original stream's output and produce a new output.  To make 
- * the appended streams work transparently, the chain of streams is 
- * treated as a single unit.  Subsequent access to the stream's output is 
- * available through the graph by finding the "last" stream registered 
+ * When provisioning adapters are appended to a stream, they
+ * consume the original stream's output and produce a new output.  To make
+ * the appended streams work transparently, the chain of streams is
+ * treated as a single unit.  Subsequent access to the stream's output is
+ * available through the graph by finding the "last" stream registered
  * under the original stream's name.
  */
 class ExecStreamBuilder : public boost::noncopyable
@@ -74,14 +74,14 @@ class ExecStreamBuilder : public boost::noncopyable
      * Embryo for graph being built up.
      */
     ExecStreamGraphEmbryo &graphEmbryo;
-    
+
     /**
      * Factory for creating ExecStream objects.
      */
     ExecStreamFactory &streamFactory;
-    
+
     /**
-     * Allocates a stream based on stream definition, adds the stream to a 
+     * Allocates a stream based on stream definition, adds the stream to a
      * graph and records how to prepare the stream.
      */
     void buildStream(
@@ -121,7 +121,7 @@ public:
      * @param streamFactory factory for creating streams
      */
     explicit ExecStreamBuilder(
-        ExecStreamGraphEmbryo &graphEmbryo, 
+        ExecStreamGraphEmbryo &graphEmbryo,
         ExecStreamFactory &streamFactory);
 
     virtual ~ExecStreamBuilder();

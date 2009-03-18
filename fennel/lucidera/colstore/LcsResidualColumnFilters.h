@@ -48,7 +48,7 @@ struct LcsResidualFilter
      * upper bound directive
      */
     SearchEndpoint upperBoundDirective;
-  
+
     /**
      * row buffer for the corresponding input row
      */
@@ -92,7 +92,7 @@ struct LcsResidualColumnFilters
      * projection of input stream for upper bound
      */
     TupleProjection upperBoundProj;
-    
+
     /**
      * contains individual predicate info
      */

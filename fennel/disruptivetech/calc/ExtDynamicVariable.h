@@ -28,13 +28,13 @@
 FENNEL_BEGIN_NAMESPACE
 
 //! dynamicVaraiable. Gets the dynamic variable corresponding to id and casts
-//! into a 4 byte integer 
+//! into a 4 byte integer
 void
 dynamicVariable(RegisterRef<int> *result,
        RegisterRef<int> *id);
 
 class ExtendedInstructionTable;
-        
+
 void
 ExtDynamicVariableRegister(ExtendedInstructionTable* eit);
 

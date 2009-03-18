@@ -42,7 +42,7 @@ public:
      * Creates a new null device.
      */
     explicit RandomAccessNullDevice();
-    
+
 // ----------------------------------------------------------------------
 // Implementation of RandomAccessDevice interface (q.v.)
 // ----------------------------------------------------------------------

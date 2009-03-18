@@ -61,7 +61,7 @@ SegmentFactory::SegmentFactory(
     firstTempDeviceId = DeviceId(512);
     tempDeviceIdBitset.resize(512);
 }
-    
+
 SegmentFactory::~SegmentFactory()
 {
 }
@@ -89,7 +89,7 @@ SharedSegment SegmentFactory::newRandomAllocationSegment(
     bool bFormat,
     bool deferInit)
 {
-    RandomAllocationSegment *pRandomSegment = 
+    RandomAllocationSegment *pRandomSegment =
         new RandomAllocationSegment(delegateSegment);
     SharedSegment pSegment(pRandomSegment,ClosableObjectDestructor());
     SharedSegment tracingSegment =
@@ -111,7 +111,7 @@ SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
     bool bFormat,
     bool deferInit)
 {
-    VersionedRandomAllocationSegment *pVersionedRandomSegment = 
+    VersionedRandomAllocationSegment *pVersionedRandomSegment =
         new VersionedRandomAllocationSegment(delegateSegment, pTempSegment);
     SharedSegment pSegment(pVersionedRandomSegment, ClosableObjectDestructor());
     SharedSegment tracingSegment =
@@ -334,7 +334,7 @@ SnapshotRandomAllocationSegment *SegmentFactory::getSnapshotSegment(
         SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
             pSegment);
     if (pSnapshotSegment == NULL) {
-        DynamicDelegatingSegment *pDynamicSegment = 
+        DynamicDelegatingSegment *pDynamicSegment =
             SegmentFactory::dynamicCast<DynamicDelegatingSegment *>(
                 pSegment);
         if (pDynamicSegment != NULL) {

@@ -146,7 +146,7 @@ public:
 
     // Expected value of this register
     T mValue;
-    
+
     // Should we check the value?  Is it suppose to be NULL?
     ERegisterCheck  mCheckValue;
 
@@ -169,7 +169,7 @@ public:
     CalcTestInfo(StandardTypeDescriptorOrdinal type)
         : typeOrdinal(type) {}
     virtual ~CalcTestInfo() {}
-    
+
     void add(string desc, T* pV, TProgramCounter pc, uint line = 0)
     {
         if (line)
@@ -246,7 +246,7 @@ public:
         // Check type of output registers and value
         for (uint i=0; i < outputTupleDesc.size(); i++)
         {
-            if (outputTupleDesc[i].pTypeDescriptor->getOrdinal() != 
+            if (outputTupleDesc[i].pTypeDescriptor->getOrdinal() !=
                 static_cast<StoredTypeDescriptor::Ordinal>(typeOrdinal))
             {
                 ostringstream message("");
@@ -261,7 +261,7 @@ public:
             if (!mOutRegInfo[i].checkTupleDatum(outputTuple[i]))
             {
                 ostringstream message("");
-                message << "Tuple datum mismatch: Register " << i 
+                message << "Tuple datum mismatch: Register " << i
                         << " should be " << mOutRegInfo[i].toString()
                         << ".";
                 BOOST_ERROR(message.str());
@@ -273,7 +273,7 @@ public:
         if (calc.mWarnings.size() != mWarnings.size())
         {
             ostringstream message("");
-            message << "# of warnings should be " << mWarnings.size() 
+            message << "# of warnings should be " << mWarnings.size()
                     << " not " << calc.mWarnings.size();
             BOOST_ERROR(message.str());
             return false;
@@ -294,14 +294,14 @@ public:
             if (strcmp(calc.mWarnings[i].str, mWarnings[i].str))
             {
                 ostringstream message("");
-                message << "Message should be |" << mWarnings[i].str 
+                message << "Message should be |" << mWarnings[i].str
                         << "| not |" << calc.mWarnings[i].str << "| at PC="
                         << mWarnings[i].pc ;
                 BOOST_ERROR(message.str());
                 return false;
-            } 
+            }
         }
-        
+
         return true;
     }
 
@@ -315,20 +315,20 @@ public:
     StandardTypeDescriptorOrdinal typeOrdinal;
 };
 
-class CalcAssemblerTestCase 
+class CalcAssemblerTestCase
 {
 public:
     static const uint MAX_WIDTH = 512;
 
-    explicit 
+    explicit
     CalcAssemblerTestCase(uint line, const char* desc, const char* code)
-        : mDescription(desc), mProgram(code), mAssemblerError(NULL), 
+        : mDescription(desc), mProgram(code), mAssemblerError(NULL),
           mInputTuple(NULL), mExpectedOutputTuple(NULL), mInputBuf(NULL),
-          mExpOutputBuf(NULL), mFailed(false), mAssembled(false), 
+          mExpOutputBuf(NULL), mFailed(false), mAssembled(false),
           mID(++testID), mLine(line), mCalc(0)
     { }
 
-    ~CalcAssemblerTestCase() 
+    ~CalcAssemblerTestCase()
     {
         if (mInputTuple) delete mInputTuple;
         if (mExpectedOutputTuple) delete mExpectedOutputTuple;
@@ -351,7 +351,7 @@ public:
         return testID;
     }
 
-    void fail(const char *exp, const char* actual) 
+    void fail(const char *exp, const char* actual)
     {
         assert(exp);
         assert(actual);
@@ -370,7 +370,7 @@ public:
         assert(exp);
         assert(actual);
         assert(mDescription);
-        if (verbose) 
+        if (verbose)
         {
             ostringstream message("");
             message << "test " << mID << " passed: | ";
@@ -381,7 +381,7 @@ public:
         nPassed++;
     }
 
-    bool assemble() 
+    bool assemble()
     {
         assert(!mFailed && !mAssembled);
         assert(mProgram != NULL);
@@ -399,14 +399,14 @@ public:
             mAssembled = true;
 
             if (mAssemblerError) {
-                // Hmmm, we were expecting an error while assembling 
-                // What happened? 
+                // Hmmm, we were expecting an error while assembling
+                // What happened?
                 string errorStr = "Error assembling program: ";
                 errorStr += mAssemblerError;
                 fail(errorStr.c_str(), "Program assembled.");
             }
         }
-        catch (CalcAssemblerException& ex) 
+        catch (CalcAssemblerException& ex)
         {
             if (mAssemblerError) {
                 // We are expecting an error
@@ -460,18 +460,18 @@ public:
 
         TupleDescriptor inputTupleDesc = mCalc.getInputRegisterDescriptor();
         TupleDescriptor outputTupleDesc = mCalc.getOutputRegisterDescriptor();
-        
+
         FixedBuffer* outputBuf;
         TupleData* outputTuple = CalcAssembler::createTupleData(outputTupleDesc, &outputBuf);
-        
+
         mCalc.bind(mInputTuple, outputTuple);
-    
+
         mCalc.exec();
-    
+
         string instr = tupleToString(inputTupleDesc, mInputTuple);
         string outstr = tupleToString(outputTupleDesc, outputTuple);
         string expoutstr = tupleToString(outputTupleDesc, mExpectedOutputTuple);
-        
+
         if (pChecker == NULL)
         {
             // For now, let's just use the string representation of the tuples for comparison
@@ -537,7 +537,7 @@ public:
     template <typename T>
     void setTupleDatum(TupleDatum& datum, T value)
     {
-        *(reinterpret_cast<T*>(const_cast<PBuffer>(datum.pData))) = value;    
+        *(reinterpret_cast<T*>(const_cast<PBuffer>(datum.pData))) = value;
     }
 
     template <typename T>
@@ -614,7 +614,7 @@ public:
         assert(mInputTuple != NULL);
         assert(index < mInputTuple->size());
         TupleDescriptor inputTupleDesc = mCalc.getInputRegisterDescriptor();
-        return toLiteralString((*mInputTuple)[index], 
+        return toLiteralString((*mInputTuple)[index],
                                inputTupleDesc[index].pTypeDescriptor->getOrdinal());
     }
 
@@ -668,7 +668,7 @@ public:
         assert(mExpectedOutputTuple != NULL);
         assert(index < mExpectedOutputTuple->size());
         TupleDescriptor outputTupleDesc = mCalc.getOutputRegisterDescriptor();
-        return toLiteralString((*mExpectedOutputTuple)[index], 
+        return toLiteralString((*mExpectedOutputTuple)[index],
                                outputTupleDesc[index].pTypeDescriptor->getOrdinal());
     }
 
@@ -720,7 +720,7 @@ protected:
 
     void testInvalidPrograms();
     void testStandardTypes();
-    
+
     void testComments();
 
     void testBoolInstructions(StandardTypeDescriptorOrdinal type);
@@ -757,31 +757,31 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testJump);
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testExtended);
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testComments);
-        
+
     // FIXME jvs 21-Mar-2006:  these still don't work on Win32
 #ifndef __MINGW32__
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testInvalidPrograms);
         FENNEL_UNIT_TEST_CASE(CalcAssemblerTest, testStandardTypes);
 #endif
     }
-    
+
     virtual ~CalcAssemblerTest()
     {
     }
- 
+
 };
 
 // Converts a tuple data to its literal string representation in the
 // assembler.
 // NOTE: This may be different from its normal string representation
 //       using the TuplePrinter.
-string CalcAssemblerTestCase::toLiteralString(TupleDatum &datum, 
+string CalcAssemblerTestCase::toLiteralString(TupleDatum &datum,
                                               uint typeOrdinal)
 {
 
     // NOTE jvs 25-May-2007:  casts to int64_t below are required
     // for a 64-bit build to pass
-    
+
     ostringstream ostr("");
     if (datum.pData != NULL)
     {
@@ -969,7 +969,7 @@ void CalcAssemblerTestCase::writeMinData(TupleDatum &datum,uint typeOrdinal)
 string CalcAssemblerTest::getTypeString(StandardTypeDescriptorOrdinal type, uint arraylen)
 {
     string typestr = StandardTypeDescriptor::toString(type);
-    if (StandardTypeDescriptor::isArray(type)) 
+    if (StandardTypeDescriptor::isArray(type))
     {
         ostringstream size("");
         size << "," << arraylen;
@@ -999,7 +999,7 @@ void CalcAssemblerTest::addUnaryInstructions(ostringstream& ostr,
         ostr << opcode << " O" << outreg++ << ", I"
              << i << ";" << endl;
 }
-                                        
+
 void CalcAssemblerTest::addBinaryInstructions(ostringstream& ostr,
                                               string opcode,
                                               uint& outreg,
@@ -1039,26 +1039,26 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
     expectedCalcOut.add(modstr, (T) (min%max), pc++, __LINE__);    // I0 % I1 (min % max)
     expectedCalcOut.add(modstr, pNULL,   pc++, __LINE__);          // I0 % I2 (min % NULL)
     expectedCalcOut.add(modstr, (T) (min%mid),  pc++, __LINE__);   // I0 % I3 (min % 10)
-    
+
     if (min != zero)
         expectedCalcOut.add(modstr, (T) (max%min), pc++, __LINE__); // I1 % I0 (max % min)
     else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I1 % I0 (max % min)
     expectedCalcOut.add(modstr, (T) (max%max), pc++, __LINE__);    // I1 % I1 (max % max)
     expectedCalcOut.add(modstr, pNULL,   pc++, __LINE__);          // I1 % I2 (max % NULL)
     expectedCalcOut.add(modstr, (T) (max%mid), pc++, __LINE__);    // I1 % I3 (max % 10)
-    
+
     expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I0 (NULL % min)
     expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I1 (NULL % max)
     expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I2 (NULL % NULL)
     expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);      // I2 % I3 (NULL % 10)
-    
+
     if (min != zero)
         expectedCalcOut.add(modstr, (T) (mid%min), pc++, __LINE__); // I3 % I0 (mid % min)
     else expectedCalcOut.add(modstr, divbyzero, pc++, __LINE__);    // I3 % I0 (mid % min)
     expectedCalcOut.add(modstr, (T) (mid%max), pc++, __LINE__);    // I3 % I1 (10 % max)
     expectedCalcOut.add(modstr, pNULL, pc++, __LINE__);            // I3 % I2 (10 % NULL)
     expectedCalcOut.add(modstr, (T) (mid%mid), pc++, __LINE__);    // I3 % I3 (10 % 10)
-    
+
     // Test AND
     string andstr = string("AND ") + typestr;
     addBinaryInstructions(instostr, "AND", outreg, inregs);
@@ -1066,22 +1066,22 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
     expectedCalcOut.add(andstr, (T) (min&max), pc++, __LINE__);    // I0 & I1 (min & max)
     expectedCalcOut.add(andstr, pNULL,   pc++, __LINE__);          // I0 & I2 (min & NULL)
     expectedCalcOut.add(andstr, (T) (min&mid),  pc++, __LINE__);   // I0 & I3 (min & 10)
-        
+
     expectedCalcOut.add(andstr, (T) (max&min), pc++, __LINE__);    // I1 & I0 (max & min)
     expectedCalcOut.add(andstr, (T) (max&max), pc++, __LINE__);    // I1 & I1 (max & max)
     expectedCalcOut.add(andstr, pNULL,   pc++, __LINE__);          // I1 & I2 (max & NULL)
     expectedCalcOut.add(andstr, (T) (max&mid), pc++, __LINE__);    // I1 & I3 (max & 10)
-    
+
     expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I0 (NULL & min)
     expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I1 (NULL & max)
     expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I2 (NULL & NULL)
     expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);      // I2 & I3 (NULL & 10)
-        
+
     expectedCalcOut.add(andstr, (T) (mid&min), pc++, __LINE__);    // I3 & I0 (10 & min)
     expectedCalcOut.add(andstr, (T) (mid&max), pc++, __LINE__);    // I3 & I1 (10 & max)
     expectedCalcOut.add(andstr, pNULL, pc++, __LINE__);            // I3 & I2 (10 & NULL)
     expectedCalcOut.add(andstr, (T) (mid&mid), pc++, __LINE__);    // I3 & I3 (10 & 10)
-    
+
     // Test OR
     string orstr = string("OR ") + typestr;
     addBinaryInstructions(instostr, "OR", outreg, inregs);
@@ -1089,22 +1089,22 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
     expectedCalcOut.add(orstr, (T) (min|max), pc++, __LINE__);    // I0 | I1 (min | max)
     expectedCalcOut.add(orstr, pNULL,   pc++, __LINE__);          // I0 | I2 (min | NULL)
     expectedCalcOut.add(orstr, (T) (min|mid),  pc++, __LINE__);   // I0 | I3 (min | 10)
-    
+
     expectedCalcOut.add(orstr, (T) (max|min), pc++, __LINE__);    // I1 | I0 (max | min)
     expectedCalcOut.add(orstr, (T) (max|max), pc++, __LINE__);    // I1 | I1 (max | max)
     expectedCalcOut.add(orstr, pNULL,   pc++, __LINE__);          // I1 | I2 (max | NULL)
     expectedCalcOut.add(orstr, (T) (max|mid), pc++, __LINE__);    // I1 | I3 (max | 10)
-    
+
     expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I0 (NULL | min)
     expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I1 (NULL | max)
     expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I2 (NULL | NULL)
     expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);      // I2 | I3 (NULL | 10)
-    
+
     expectedCalcOut.add(orstr, (T) (mid|min), pc++, __LINE__);    // I3 | I0 (10 | min)
     expectedCalcOut.add(orstr, (T) (mid|max), pc++, __LINE__);    // I3 | I1 (10 | max)
     expectedCalcOut.add(orstr, pNULL, pc++, __LINE__);            // I3 | I2 (10 | NULL)
     expectedCalcOut.add(orstr, (T) (mid|mid), pc++, __LINE__);    // I3 | I3 (10 | 10)
-    
+
     // Test SHFL
     string shflstr = string("SHFL ") + typestr;
     addBinaryInstructions(instostr, "SHFL", outreg, inregs);
@@ -1112,7 +1112,7 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
     expectedCalcOut.add(shflstr, (T) (min<<max), pc++, __LINE__);    // I0 << I1 (min << max)
     expectedCalcOut.add(shflstr, pNULL,   pc++, __LINE__);           // I0 << I2 (min << NULL)
     expectedCalcOut.add(shflstr, (T) (min<<mid),  pc++, __LINE__);   // I0 << I3 (min << 10)
-    
+
     expectedCalcOut.add(shflstr, (T) (max<<min), pc++, __LINE__);    // I1 << I0 (max << min)
     // NOTE jvs 28-Oct-2006:  I disabled the check for this because
     // shifting by more than the number of bits in the result
@@ -1127,17 +1127,17 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
     expectedCalcOut.addRegister(shflstr, pc++);    // I1 << I1 (max << max)
     expectedCalcOut.add(shflstr, pNULL,   pc++, __LINE__);           // I1 << I2 (max << NULL)
     expectedCalcOut.add(shflstr, (T) (max<<mid), pc++, __LINE__);    // I1 << I3 (max << 10)
-    
+
     expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I0 (NULL << min)
     expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I1 (NULL << max)
     expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I2 (NULL << NULL)
     expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);      // I2 << I3 (NULL << 10)
-    
+
     expectedCalcOut.add(shflstr, (T) (mid<<min), pc++, __LINE__);    // I3 << I0 (10 << min)
     expectedCalcOut.add(shflstr, (T) (mid<<max), pc++, __LINE__);    // I3 << I1 (10 << max)
     expectedCalcOut.add(shflstr, pNULL, pc++, __LINE__);             // I3 << I2 (10 << NULL)
     expectedCalcOut.add(shflstr, (T) (mid<<mid), pc++, __LINE__);    // I3 << I3 (10 << 10)
-    
+
     // Test SHFR
     string shfrstr = string("SHFR ") + typestr;
     addBinaryInstructions(instostr, "SHFR", outreg, inregs);
@@ -1145,23 +1145,23 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
     expectedCalcOut.add(shfrstr, (T) (min>>max), pc++, __LINE__);    // I0 >> I1 (min >> max)
     expectedCalcOut.add(shfrstr, pNULL,   pc++, __LINE__);           // I0 >> I2 (min >> NULL)
     expectedCalcOut.add(shfrstr, (T) (min>>mid),  pc++, __LINE__);   // I0 >> I3 (min >> 10)
-        
+
     expectedCalcOut.add(shfrstr, (T) (max>>min), pc++, __LINE__);    // I1 >> I0 (max >> min)
     // NOTE jvs 28-Oct-2006:  see corresponding note above on (max << max)
     expectedCalcOut.addRegister(shfrstr, pc++);    // I1 >> I1 (max >> max)
     expectedCalcOut.add(shfrstr, pNULL,   pc++, __LINE__);           // I1 >> I2 (max >> NULL)
     expectedCalcOut.add(shfrstr, (T) (max>>mid), pc++, __LINE__);    // I1 >> I3 (max >> 10)
-    
+
     expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I0 (NULL >> min)
     expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I1 (NULL >> max)
     expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I2 (NULL >> NULL)
     expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);      // I2 >> I3 (NULL >> 10)
-    
+
     expectedCalcOut.add(shfrstr, (T) (mid>>min), pc++, __LINE__);    // I3 >> I0 (10 >> min)
     expectedCalcOut.add(shfrstr, (T) (mid>>max), pc++, __LINE__);    // I3 >> I1 (10 >> max)
     expectedCalcOut.add(shfrstr, pNULL, pc++, __LINE__);             // I3 >> I2 (10 >> NULL)
     expectedCalcOut.add(shfrstr, (T) (mid>>mid), pc++, __LINE__);    // I3 >> I3 (10 >> 10)
-    
+
     assert(outreg == static_cast<uint>(pc));
 
     // Form test string
@@ -1171,7 +1171,7 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
     testostr << "I " << createRegisterString(typestr, inregs) << ";" << endl;
     testostr << "O " << createRegisterString(typestr, outreg) << ";" << endl;
     testostr << "T;" << endl;
-    
+
     testostr << instostr.str();
 
     string teststr = testostr.str();
@@ -1192,7 +1192,7 @@ void CalcAssemblerTest::testIntegralNativeInstructions(StandardTypeDescriptorOrd
 
 }
 
-/** 
+/**
  * Test instructions that returns a native type
  * @param type Type of the operands
  * Instructions tested are:
@@ -1234,7 +1234,7 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
 #if defined(USING_NOISY_ARITHMETIC) && USING_NOISY_ARITHMETIC
     if (std::numeric_limits<T>::is_signed && std::numeric_limits<T>::is_integer)
         expectedCalcOut.add(addstr, overflow, pc++, __LINE__);     // I0 + I0 (min + min)
-    else 
+    else
         expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);// I0 + I0 (min + min)
 #else
     expectedCalcOut.add(addstr, (T) (min+min), pc++, __LINE__);    // I0 + I0 (min + min)
@@ -1276,7 +1276,7 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
 #endif
     expectedCalcOut.add(addstr, pNULL, pc++, __LINE__);            // I3 + I2 (10 + NULL)
     expectedCalcOut.add(addstr, (T) (mid+mid), pc++, __LINE__);    // I3 + I3 (10 + 10)
-    
+
     // Test SUB
     addBinaryInstructions(instostr, "SUB", outreg, inregs);
     string substr = string("SUB ") + typestr;
@@ -1506,7 +1506,7 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     testostr << "I " << createRegisterString(typestr, inregs) << ";" << endl;
     testostr << "O " << createRegisterString(typestr, outreg) << ";" << endl;
     testostr << "T;" << endl;
-    
+
     testostr << instostr.str();
 
     string teststr = testostr.str();
@@ -1526,7 +1526,7 @@ void CalcAssemblerTest::testNativeInstructions(StandardTypeDescriptorOrdinal typ
     }
 }
 
-/** 
+/**
  * Test instructions that returns a boolean
  * @param type Type of the operands
  * Instructions tested are:
@@ -1552,7 +1552,7 @@ void CalcAssemblerTest::testBoolInstructions(StandardTypeDescriptorOrdinal type)
     bool bTrue   = true;
     bool* pFalse = &bFalse;
     bool* pTrue  = &bTrue;
-    
+
     // Make copy of input registers to local registers
     instostr << "MOVE L0, I0;" << endl;
     instostr << "MOVE L1, I1;" << endl;
@@ -1688,7 +1688,7 @@ void CalcAssemblerTest::testBoolInstructions(StandardTypeDescriptorOrdinal type)
         boolout.push_back(pTrue);  // I2, I1
         boolout.push_back(NULL);   // I2, I2
     }
-    else 
+    else
     {
         // Test GE
         addBinaryInstructions(instostr, "GE", outreg, inregs);
@@ -1701,7 +1701,7 @@ void CalcAssemblerTest::testBoolInstructions(StandardTypeDescriptorOrdinal type)
         boolout.push_back(NULL);   // I2, I0
         boolout.push_back(NULL);   // I2, I1
         boolout.push_back(NULL);   // I2, I2
-        
+
         // Test LE
         addBinaryInstructions(instostr, "LE", outreg, inregs);
         boolout.push_back(pTrue);  // I0, I0
@@ -1725,11 +1725,11 @@ void CalcAssemblerTest::testBoolInstructions(StandardTypeDescriptorOrdinal type)
     testostr << "L " << createRegisterString(typestr, inregs) << ";" << endl;
     testostr << "O " << createRegisterString(boolstr, outreg) << ";" << endl;
     testostr << "T;" << endl;
-    
+
     testostr << instostr.str();
 
     string teststr = testostr.str();
-    
+
     CalcAssemblerTestCase testCase1(__LINE__, testdesc.c_str(),
                                     teststr.c_str());
     if (testCase1.assemble())
@@ -1803,14 +1803,14 @@ void CalcAssemblerTest::testStandardTypes()
     min[STANDARD_TYPE_DOUBLE] = "2.22507e-308";
     max[STANDARD_TYPE_DOUBLE] = "1.79769e+308";
 
-    // TODO: What to do for underflow of floats/doubles? 
+    // TODO: What to do for underflow of floats/doubles?
     // Looks like they are just turned into 0s.
     underflow[STANDARD_TYPE_REAL] = "1.17549e-46";
     overflow[STANDARD_TYPE_REAL] = "3.40282e+39";
     underflow[STANDARD_TYPE_DOUBLE] = "2.22507e-324";
     overflow[STANDARD_TYPE_DOUBLE] = "1.79769e+309";
 
-    for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END_NO_UNICODE; i++) 
+    for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END_NO_UNICODE; i++)
     {
         // First test setting output = input (using move)
         // Also test tonull
@@ -1849,21 +1849,21 @@ void CalcAssemblerTest::testStandardTypes()
             assert (testCase1.getInput(1) == max[type]);
         }
 
-        // Now test literal binding for the type 
+        // Now test literal binding for the type
         // For min, max, NULL
         ostringstream testostr2("");
         testostr2 << "O " << createRegisterString(typestr, 3) << ";" << endl;
         testostr2 << "C " << createRegisterString(typestr, 3) << ";" << endl;
-        testostr2 << "V " << testCase1.getInput(0) 
+        testostr2 << "V " << testCase1.getInput(0)
                   << ", " << testCase1.getInput(1)
                   << ", " << testCase1.getInput(2)
-                  << ";" << endl; 
+                  << ";" << endl;
         testostr2 << "T;" << endl;
         testostr2 << "MOVE O0, C0;" << endl;
         testostr2 << "MOVE O1, C1;" << endl;
         testostr2 << "MOVE O2, C2;" << endl;
         string teststr2 = testostr2.str();
-        
+
         CalcAssemblerTestCase testCase2(__LINE__, testdesc.c_str(),
                                         teststr2.c_str());
         if (testCase2.assemble())
@@ -1876,7 +1876,7 @@ void CalcAssemblerTest::testStandardTypes()
 
         if (!StandardTypeDescriptor::isArray(type))
         {
-            // Now test literal binding for the type 
+            // Now test literal binding for the type
             // For overflow and underflow
             ostringstream testostr3("");
             testostr3 << "O " << createRegisterString(typestr, 1) << ";" << endl;
@@ -1886,7 +1886,7 @@ void CalcAssemblerTest::testStandardTypes()
             testostr3 << "MOVE O0, C0;" << endl;
 
             string teststr3 = testostr3.str();
-            
+
             CalcAssemblerTestCase testCase3(__LINE__, testdesc.c_str(),
                                             teststr3.c_str());
             if (type == STANDARD_TYPE_INT_64 || type == STANDARD_TYPE_DOUBLE)
@@ -1907,7 +1907,7 @@ void CalcAssemblerTest::testStandardTypes()
             testostr4 << "MOVE O0, C0;" << endl;
 
             string teststr4 = testostr4.str();
-            
+
             CalcAssemblerTestCase testCase4(__LINE__, testdesc.c_str(),
                                             teststr4.c_str());
             if (type == STANDARD_TYPE_UINT_64 || type == STANDARD_TYPE_DOUBLE)
@@ -1981,20 +1981,20 @@ void CalcAssemblerTest::testLiteralBinding()
 {
     // Test invalid literals
     // Test overflow of u2
-    CalcAssemblerTestCase testCase1(__LINE__, "OVERFLOW U2", 
+    CalcAssemblerTestCase testCase1(__LINE__, "OVERFLOW U2",
                                     "O u2; C u2; V 777777; T; ADD O0, C0, C0;");
     testCase1.expectAssemblerError(
         "bad numeric conversion");
     testCase1.assemble();
 
     // Test binding a float to a u2
-    CalcAssemblerTestCase testCase2(__LINE__, "BADVALUE U2", 
+    CalcAssemblerTestCase testCase2(__LINE__, "BADVALUE U2",
                                     "O u2; C u2; V 2451.342; T; ADD O0, C0, C0;");
     testCase2.expectAssemblerError("Invalid value");
     testCase2.assemble();
 
     // Test binding a float with exponentials
-    CalcAssemblerTestCase testCase2b(__LINE__, "EXP", 
+    CalcAssemblerTestCase testCase2b(__LINE__, "EXP",
                                     "O r, r; C r, r;\nV 24.0e-4, 54.0E6;\n"
                                     "T;\nMOVE O0, C0; MOVE O1, C1;");
     if (testCase2b.assemble()) {
@@ -2004,13 +2004,13 @@ void CalcAssemblerTest::testLiteralBinding()
     }
 
     // Test binding a negative number to a u4
-    CalcAssemblerTestCase testCase3(__LINE__, "NEGVALUE U4", 
+    CalcAssemblerTestCase testCase3(__LINE__, "NEGVALUE U4",
                                     "O u4; C u4; V -513; T; ADD O0, C0, C0;");
     testCase3.expectAssemblerError("Invalid value");
     testCase3.assemble();
 
     // Test binding a valid u2 that is out of range for a s2
-    CalcAssemblerTestCase testCase4(__LINE__, "NEGVALUE U4", 
+    CalcAssemblerTestCase testCase4(__LINE__, "NEGVALUE U4",
                                     "O s2; C s2; V 40000; T; ADD O0, C0, C0;");
     testCase4.expectAssemblerError(
         "bad numeric conversion");
@@ -2046,7 +2046,7 @@ void CalcAssemblerTest::testLiteralBinding()
         testCase9.setExpectedOutput<uint64_t>(1, 60000000);
         testCase9.test();
     }
- 
+
     // Test bind a string (varchar)
     string teststr10;
     teststr10 = "O vc,8; C vc,8; V 0x";
@@ -2063,7 +2063,7 @@ void CalcAssemblerTest::testLiteralBinding()
     teststr11 = "O vc,8, u8; C vc,8, u8; V 0x";
     teststr11 += stringToHex("muchtoolongstring");
     teststr11 += "; T; MOVE O0, C0;";
-    
+
     CalcAssemblerTestCase testCase11(__LINE__, "STRING (VARCHAR) TOO LONG", teststr11.c_str());
     testCase11.expectAssemblerError("too long");
     testCase11.assemble();
@@ -2100,12 +2100,12 @@ void CalcAssemblerTest::testAdd()
         testCase1.test();
     }
 
-    CalcAssemblerTestCase testCase2(__LINE__, "ADD UNKNOWN INST", 
+    CalcAssemblerTestCase testCase2(__LINE__, "ADD UNKNOWN INST",
                                     "I u2, u4;\nO u4;\nT;\nADD O0, I0, I1;");
     testCase2.expectAssemblerError("not a registered instruction");
     testCase2.assemble();
 
-    CalcAssemblerTestCase testCase3(__LINE__, "ADD O0 I0", 
+    CalcAssemblerTestCase testCase3(__LINE__, "ADD O0 I0",
                                     "I u2, u4;\nO u4;\nT;\nADD O0, I0;");
     testCase3.expectAssemblerError("not a registered instruction");
     testCase3.assemble();
@@ -2168,7 +2168,7 @@ void CalcAssemblerTest::testPointer()
 void CalcAssemblerTest::testJump()
 {
     // Test valid Jump True
-    CalcAssemblerTestCase testCase1(__LINE__, "JUMP TRUE", 
+    CalcAssemblerTestCase testCase1(__LINE__, "JUMP TRUE",
                                     "I u2, u2;\nO u2, u2;\nL bo;\n"
                                     "C u2, u2;\nV 0, 1;\nT;\n"
                                     "MOVE O0, C0;\nMOVE O1, C0;\n"
@@ -2199,13 +2199,13 @@ void CalcAssemblerTest::testJump()
         testCase3.setInput<uint16_t>(0, 15);
         testCase3.setExpectedOutput<uint16_t>(0, 30);
         testCase3.test();
-    }    
+    }
 }
 
 void CalcAssemblerTest::testReturn()
 {
     // Test the return instruction
-    CalcAssemblerTestCase testCase1(__LINE__, "RETURN", 
+    CalcAssemblerTestCase testCase1(__LINE__, "RETURN",
                                     "I u2;\nO u2;\n"
                                     "T;\n"
                                     "MOVE O0, I0;\n"
@@ -2229,15 +2229,15 @@ void CalcAssemblerTest::testExtended()
     // Test valid function
     ExtendedInstructionTable* table = InstructionFactory::getExtendedInstructionTable();
     assert(table != NULL);
-    
+
     vector<StandardTypeDescriptorOrdinal> parameterTypes;
 
     // define a function
     parameterTypes.resize(2);
     parameterTypes[0] = STANDARD_TYPE_UINT_32;
     parameterTypes[1] = STANDARD_TYPE_REAL;
-    table->add("convert", 
-               parameterTypes, 
+    table->add("convert",
+               parameterTypes,
                (ExtendedInstruction2<int32_t, float>*) NULL,
                &convertFloatToInt);
 
@@ -2250,7 +2250,7 @@ void CalcAssemblerTest::testExtended()
         testCase1.setInput<float>(0, 53.34);
         testCase1.setExpectedOutput<uint32_t>(0, 53);
         testCase1.test();
-    }    
+    }
 
     CalcAssemblerTestCase testCase2(__LINE__, "CONVERT INT TO FLOAT (NOT REGISTERED)",
                                     "I u4; O r;\n"
@@ -2266,7 +2266,7 @@ void CalcAssemblerTest::testInvalidPrograms()
 
     CalcAssemblerTestCase testCase1(__LINE__, "JUNK", "Junk");
     testCase1.expectAssemblerError(parse_error);
-    testCase1.assemble();    
+    testCase1.assemble();
 
     // Test unregistered instruction
     CalcAssemblerTestCase testCase2(__LINE__, "UNKNOWN INST", "I u2, u4;\nO u4;\nT;\nBAD O0, I0;");
@@ -2278,7 +2278,7 @@ void CalcAssemblerTest::testInvalidPrograms()
     testCase3.expectAssemblerError("not a registered instruction");
     testCase3.assemble();
 
-    CalcAssemblerTestCase testCase4(__LINE__, "BAD SIGNATURE", 
+    CalcAssemblerTestCase testCase4(__LINE__, "BAD SIGNATURE",
                                     "I u2, u4;\nO u4;\nT;\nBAD O0, I0, I0, I1;");
     testCase4.expectAssemblerError(parse_error);
     testCase4.assemble();
@@ -2305,7 +2305,7 @@ void CalcAssemblerTest::testComments()
 {
     const char* parse_error = "error";
 
-    CalcAssemblerTestCase testCase1(__LINE__, "COMMENTS (ONE LINE)", 
+    CalcAssemblerTestCase testCase1(__LINE__, "COMMENTS (ONE LINE)",
                                     "I u2;\nO /* comments */ u2;\n"
                                     "T;\n"
                                     "MOVE O0, I0;\n"
@@ -2317,7 +2317,7 @@ void CalcAssemblerTest::testComments()
         testCase1.test();
     }
 
-    CalcAssemblerTestCase testCase2(__LINE__, "COMMENTS (MULTILINE)", 
+    CalcAssemblerTestCase testCase2(__LINE__, "COMMENTS (MULTILINE)",
                                     "I u2;\nO u2; /* *****\n*****/\n"
                                     "T;\n"
                                     "MOVE O0, I0;\n"
@@ -2329,7 +2329,7 @@ void CalcAssemblerTest::testComments()
         testCase2.test();
     }
 
-    CalcAssemblerTestCase testCase3(__LINE__, "COMMENTS (MULTIPLE)", 
+    CalcAssemblerTestCase testCase3(__LINE__, "COMMENTS (MULTIPLE)",
                                     "I u2;\nO u2;\n"
                                     "T;\n"
                                     "MOVE O0, /* /* MOVE\n****\nO0 */ I0;\n"
@@ -2341,7 +2341,7 @@ void CalcAssemblerTest::testComments()
         testCase3.test();
     }
 
-    CalcAssemblerTestCase testCase4(__LINE__, "UNCLOSED COMMENT", 
+    CalcAssemblerTestCase testCase4(__LINE__, "UNCLOSED COMMENT",
                                     "I u2;\nO u2;\n"
                                     "T;\n"
                                     "MOVE O0, /* I0;\n"
@@ -2350,7 +2350,7 @@ void CalcAssemblerTest::testComments()
     testCase4.expectAssemblerError("Unterminated comment");
     testCase4.assemble();
 
-    CalcAssemblerTestCase testCase5(__LINE__, "CLOSE COMMENT ONLY", 
+    CalcAssemblerTestCase testCase5(__LINE__, "CLOSE COMMENT ONLY",
                                     "I u2;\nO u2;\n"
                                     "T;\n"
                                     "MOVE O0, */ I0;\n"
@@ -2368,7 +2368,7 @@ int main (int argc, char **argv)
     ProgramName = argv[0];
     InstructionFactory inst();
     InstructionFactory::registerInstructions();
-  
+
     try {
         CalcAssemblerTest test;
         test.testAssembler();
@@ -2376,14 +2376,14 @@ int main (int argc, char **argv)
     catch (exception& ex)
     {
         cerr << ex.what() << endl;
-    } 
+    }
 
-    cout << CalcAssemblerTestCase::getPassedNumber() << "/" 
+    cout << CalcAssemblerTestCase::getPassedNumber() << "/"
          << CalcAssemblerTestCase::getTestNumber() << " tests passed" << endl;
-    return CalcAssemblerTestCase::getFailedNumber(); 
+    return CalcAssemblerTestCase::getFailedNumber();
 }
 
-#endif 
+#endif
 FENNEL_UNIT_TEST_SUITE(CalcAssemblerTest);
 
-// End CalcAssemblerTest
+// End CalcAssemblerTest.cpp

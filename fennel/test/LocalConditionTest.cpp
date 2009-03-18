@@ -35,17 +35,17 @@ public:
     StrictMutex mutex;
     LocalCondition cond;
     bool bFlag;
-    
+
     explicit LocalConditionTest()
     {
         bFlag = 0;
         FENNEL_UNIT_TEST_CASE(LocalConditionTest,testNotifyAll);
     }
-    
+
     virtual ~LocalConditionTest()
     {
     }
-    
+
     void testNotifyAll();
 };
 
@@ -54,9 +54,9 @@ class TestThread : public Thread
     LocalConditionTest &test;
 
 public:
-    
+
     TestThread(LocalConditionTest &testInit)
-        : test(testInit)    
+        : test(testInit)
     {
     }
 

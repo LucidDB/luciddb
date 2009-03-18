@@ -64,7 +64,7 @@ struct LogicalTxnEventMemento
      * Transaction event which caused this memento to be created.
      */
     Event event;
-    
+
     /**
      * Unique identifier for committed transaction.
      */

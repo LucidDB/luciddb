@@ -233,12 +233,12 @@ void ExtremeAggComputer::clearAccumulator(TupleDatum &accumulatorDatum)
 }
 
 inline void ExtremeAggComputer::copyInputToAccumulator(
-    TupleDatum &accumulatorDatum, 
+    TupleDatum &accumulatorDatum,
     TupleDatum const &inputDatum)
 {
     // Use the utility function to copy from inputDatum's buffer to
     // accumulatorDatum.
-    accumulatorDatum.memCopyFrom(inputDatum);    
+    accumulatorDatum.memCopyFrom(inputDatum);
 }
 
 void ExtremeAggComputer::updateAccumulator(
@@ -319,7 +319,7 @@ void ExtremeAggComputer::updateAccumulator(
     }
 
     TupleDatum const &inputDatum = inputTuple[iInputAttr];
-    
+
     if (!accumulatorDatumSrc.pData) {
         accumulatorDatumDest.memCopyFrom(inputDatum);
     } else if (inputDatum.pData) {
@@ -336,12 +336,12 @@ void ExtremeAggComputer::updateAccumulator(
         if (c <= 0) {
             // for MAX, input has to be greater than accumulator for accumulator
             // to be updated
-            accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc); 
+            accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc);
         } else {
-            accumulatorDatumDest.memCopyFrom(inputDatum);            
+            accumulatorDatumDest.memCopyFrom(inputDatum);
         }
     } else {
-        accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc); 
+        accumulatorDatumDest.memCopyFrom(accumulatorDatumSrc);
     }
 }
 

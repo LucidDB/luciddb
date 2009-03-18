@@ -71,7 +71,7 @@ public:
         // initialize to 0, because this doesn't match the non-DEBUG
         // behavior, AND actually breaks some  code (scary but true)
     }
-    
+
     explicit OpaqueInteger(T t)
     {
         val = t;
@@ -226,7 +226,7 @@ public:
     {
         return OpaqueInteger<T,Dummy>(val-i.val);
     }
-    
+
     T getWrapped() const
     {
         return val;
@@ -234,7 +234,7 @@ public:
 };
 
 /**
- * Use opaqueToInt to explicitly cast an OpaqueInteger back to the 
+ * Use opaqueToInt to explicitly cast an OpaqueInteger back to the
  * wrapped type.
  */
 template<class T,class Dummy>

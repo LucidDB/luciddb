@@ -37,7 +37,7 @@ class SynchMonitoredObject
 protected:
     StrictMutex mutex;
     LocalCondition condition;
-    
+
     explicit SynchMonitoredObject();
 };
 

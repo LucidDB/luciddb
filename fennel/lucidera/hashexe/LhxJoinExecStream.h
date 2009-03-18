@@ -58,7 +58,7 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
 
     // REVIEW jvs 25-Aug-2006: See my comments on LhxAggExecStreamParams
     // regarding these fields (w.r.t. comment cross-refs).
-    
+
     /**
      * Initial stats provided by the optimizer for resource allocation.
      * cndKeys: key cardinality of the initial built input chosen by the
@@ -101,7 +101,7 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
      * Join keys from the right input.
      */
     TupleProjection rightKeyProj;
-  
+
     /**
      * Join keys from the right input.
      */
@@ -139,7 +139,7 @@ class LhxJoinExecStream : public ConfluenceExecStream
 {
     // REVIEW jvs 26-Aug-2006:  Fennel convention for enum names is
     // all uppercase with underscores
-    
+
     enum LhxDefaultJoinInputIndex {
         DefaultProbeInputIndex=0, DefaultBuildInputIndex=1
     };
@@ -149,7 +149,7 @@ class LhxJoinExecStream : public ConfluenceExecStream
         ProduceBuild, ProducePending,
         Partition, CreateChildPlan, GetNextPlan, Done
     };
-    
+
     /**
      * Input tuple.
      */

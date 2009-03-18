@@ -179,7 +179,7 @@ ExecStreamResult JavaTransformExecStream::execute(
     // in the case where no outputs are defined?  There are no
     // unit tests demonstrating this pattern in Fennel, but
     // there should be.
-    
+
     int cb = pEnv->CallIntMethod(
         farragoTransform,
         JniUtil::methFarragoTransformExecute,

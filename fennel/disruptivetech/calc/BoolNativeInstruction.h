@@ -44,7 +44,7 @@ public:
     explicit
     BoolNativeInstruction(RegisterRef<bool>* result,
                           RegisterRef<TMPLT>* op1,
-                          RegisterRef<TMPLT>* op2, 
+                          RegisterRef<TMPLT>* op2,
                           StandardTypeDescriptorOrdinal nativeType)
         : NativeInstruction<TMPLT>(op1, op2, nativeType),
           mResult(result)
@@ -59,10 +59,10 @@ protected:
 template <typename TMPLT>
 class BoolNativeEqual : public BoolNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     BoolNativeEqual(RegisterRef<bool>* result,
-                    RegisterRef<TMPLT>* op1, 
+                    RegisterRef<TMPLT>* op1,
                     RegisterRef<TMPLT>* op2,
                     StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -70,12 +70,12 @@ public:
     virtual
     ~BoolNativeEqual() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() == 
+        } else if (NativeInstruction<TMPLT>::mOp1->value() ==
                    NativeInstruction<TMPLT>::mOp2->value()) {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
@@ -88,8 +88,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       BoolNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -115,10 +115,10 @@ public:
 template <typename TMPLT>
 class BoolNativeNotEqual : public BoolNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     BoolNativeNotEqual(RegisterRef<bool>* result,
-                       RegisterRef<TMPLT>* op1, 
+                       RegisterRef<TMPLT>* op1,
                        RegisterRef<TMPLT>* op2,
                        StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -126,12 +126,12 @@ public:
     virtual
     ~BoolNativeNotEqual() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() == 
+        } else if (NativeInstruction<TMPLT>::mOp1->value() ==
                    NativeInstruction<TMPLT>::mOp2->value()) {
             BoolNativeInstruction<TMPLT>::mResult->value(false);
         } else {
@@ -144,8 +144,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       BoolNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -171,10 +171,10 @@ public:
 template <typename TMPLT>
 class BoolNativeGreater : public BoolNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     BoolNativeGreater(RegisterRef<bool>* result,
-                      RegisterRef<TMPLT>* op1, 
+                      RegisterRef<TMPLT>* op1,
                       RegisterRef<TMPLT>* op2,
                       StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -182,12 +182,12 @@ public:
     virtual
     ~BoolNativeGreater() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() > 
+        } else if (NativeInstruction<TMPLT>::mOp1->value() >
                    NativeInstruction<TMPLT>::mOp2->value()) {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
@@ -200,8 +200,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       BoolNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -227,10 +227,10 @@ public:
 template <typename TMPLT>
 class BoolNativeGreaterEqual : public BoolNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     BoolNativeGreaterEqual(RegisterRef<bool>* result,
-                           RegisterRef<TMPLT>* op1, 
+                           RegisterRef<TMPLT>* op1,
                            RegisterRef<TMPLT>* op2,
                            StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -238,12 +238,12 @@ public:
     virtual
     ~BoolNativeGreaterEqual() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() >= 
+        } else if (NativeInstruction<TMPLT>::mOp1->value() >=
                    NativeInstruction<TMPLT>::mOp2->value()) {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
@@ -256,8 +256,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       BoolNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -283,10 +283,10 @@ public:
 template <typename TMPLT>
 class BoolNativeLess : public BoolNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     BoolNativeLess(RegisterRef<bool>* result,
-                   RegisterRef<TMPLT>* op1, 
+                   RegisterRef<TMPLT>* op1,
                    RegisterRef<TMPLT>* op2,
                    StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -294,12 +294,12 @@ public:
     virtual
     ~BoolNativeLess() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() < 
+        } else if (NativeInstruction<TMPLT>::mOp1->value() <
                    NativeInstruction<TMPLT>::mOp2->value()) {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
@@ -311,8 +311,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       BoolNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -338,10 +338,10 @@ public:
 template <typename TMPLT>
 class BoolNativeLessEqual : public BoolNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     BoolNativeLessEqual(RegisterRef<bool>* result,
-                        RegisterRef<TMPLT>* op1, 
+                        RegisterRef<TMPLT>* op1,
                         RegisterRef<TMPLT>* op2,
                         StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -349,12 +349,12 @@ public:
     virtual
     ~BoolNativeLessEqual() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             BoolNativeInstruction<TMPLT>::mResult->toNull();
-        } else if (NativeInstruction<TMPLT>::mOp1->value() <= 
+        } else if (NativeInstruction<TMPLT>::mOp1->value() <=
                    NativeInstruction<TMPLT>::mOp2->value()) {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
@@ -367,8 +367,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       BoolNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -394,17 +394,17 @@ public:
 template <typename TMPLT>
 class BoolNativeIsNull : public BoolNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     BoolNativeIsNull(RegisterRef<bool>* result,
-                     RegisterRef<TMPLT>* op1, 
+                     RegisterRef<TMPLT>* op1,
                      StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, nativeType)
     { }
     virtual
     ~BoolNativeIsNull() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (NativeInstruction<TMPLT>::mOp1->isNull()) {
             BoolNativeInstruction<TMPLT>::mResult->value(true);
@@ -418,8 +418,8 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       BoolNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -443,17 +443,17 @@ public:
 template <typename TMPLT>
 class BoolNativeIsNotNull : public BoolNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     BoolNativeIsNotNull(RegisterRef<bool>* result,
-                        RegisterRef<TMPLT>* op1, 
+                        RegisterRef<TMPLT>* op1,
                         StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, nativeType)
     { }
     virtual
     ~BoolNativeIsNotNull() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (NativeInstruction<TMPLT>::mOp1->isNull()) {
             BoolNativeInstruction<TMPLT>::mResult->value(false);
@@ -467,8 +467,8 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       BoolNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 

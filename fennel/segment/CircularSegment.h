@@ -48,7 +48,7 @@ class CircularSegment : public DelegatingSegment
     friend class SegmentFactory;
 
     SharedCheckpointProvider pCheckpointProvider;
-    
+
     BlockNum oldestPageNum;
 
     // TODO:  change design doc diagram from newestPageId to nextPageId
@@ -57,13 +57,13 @@ class CircularSegment : public DelegatingSegment
     BlockNum nPages;
 
     BlockNum checkpointThreshold1,checkpointThreshold2;
-    
+
     explicit CircularSegment(
         SharedSegment delegateSegment,
         SharedCheckpointProvider pCheckpointProvider,
         PageId oldestPageId,
         PageId newestPageId);
-    
+
 public:
     virtual ~CircularSegment();
 

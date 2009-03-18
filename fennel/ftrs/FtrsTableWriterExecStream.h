@@ -99,10 +99,10 @@ class FtrsTableWriterExecStream
     void createSavepoint();
     void commitSavepoint();
     void rollbackSavepoint();
-    
+
 public:
     explicit FtrsTableWriterExecStream();
-    
+
     // implement ExecStream
     virtual void prepare(FtrsTableWriterExecStreamParams const &params);
     virtual void getResourceRequirements(

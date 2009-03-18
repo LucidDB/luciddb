@@ -92,7 +92,7 @@ struct BTreePrefetchSearchExecStreamParams : public BTreeSearchExecStreamParams
  * @author Zelaine Fong
  * @version $Id$
  */
-class BTreePrefetchSearchExecStream : 
+class BTreePrefetchSearchExecStream :
     public BTreeSearchExecStream,
     public SegPageEntryIterSource<BTreePrefetchSearchKey>
 {
@@ -256,7 +256,7 @@ protected:
     bool innerSearchLoop();
 
     /**
-     * Reads the search directives and keys from the input stream, and 
+     * Reads the search directives and keys from the input stream, and
      * initializes the data for use in the btree searches used to pre-fetch
      * leaf pages.
      */

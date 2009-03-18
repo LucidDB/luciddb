@@ -85,7 +85,7 @@ public:
      * @return number of keys stored on node
      */
     inline uint getKeyCount(BTreeNode const &node) const;
-    
+
     /**
      * Clears the contents of a node, converting it to an empty root.
      *

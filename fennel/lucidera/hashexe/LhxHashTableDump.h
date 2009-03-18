@@ -44,7 +44,7 @@ class LhxHashTableDump : public TraceSource
      * which dumps are generated.
      */
     TraceLevel traceLevel;
-    
+
 public:
     explicit LhxHashTableDump(
         TraceLevel traceLevelInit,

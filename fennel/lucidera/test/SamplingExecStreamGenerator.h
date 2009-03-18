@@ -49,8 +49,8 @@ public:
     explicit BernoulliSamplingExecStreamGenerator(
         boost::shared_ptr<MockProducerExecStreamGenerator> const &generatorInit,
         float prob, uint seed, uint nColumnsInit)
-        : generator(generatorInit), 
-          rng(new BernoulliRng(prob)), 
+        : generator(generatorInit),
+          rng(new BernoulliRng(prob)),
           nColumns(nColumnsInit),
           iChildRow((uint)-1),
           iLastRow((uint)-1)
@@ -95,7 +95,7 @@ public:
     explicit SystemSamplingExecStreamGenerator(
         boost::shared_ptr<MockProducerExecStreamGenerator> const &generatorInit,
         float rate, uint nRows, uint nColumnsInit, uint nClumps)
-        : generator(generatorInit), 
+        : generator(generatorInit),
           nColumns(nColumnsInit),
           iChildRow((uint)-1),
           iLastRow((uint)-1),
@@ -103,10 +103,10 @@ public:
     {
         uint sampleSize = (uint)round((double)nRows * (double)rate);
         clumpSize = (uint)round((double)sampleSize / (double)nClumps);
-        clumpDistance = 
+        clumpDistance =
             (uint)round((double)(nRows - sampleSize) / (double)(nClumps - 1));
 
-        uint rowsRequired = 
+        uint rowsRequired =
             (clumpSize + clumpDistance) * (nClumps - 1) + clumpSize;
         if (rowsRequired > nRows && clumpDistance > 0) {
             clumpDistance--;

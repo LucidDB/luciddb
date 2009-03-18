@@ -50,11 +50,11 @@ class LogicalTxn
     enum State
     {
         STATE_LOGGING_TXN,
-        
+
         STATE_LOGGING_ACTION,
 
         STATE_ROLLING_BACK,
-        
+
         STATE_ROLLED_BACK,
 
         STATE_COMMITTED
@@ -106,7 +106,7 @@ class LogicalTxn
      * Collection of LogicalTxnParticipants which have joined this txn.
      */
     std::vector<SharedLogicalTxnParticipant> participants;
-    
+
     explicit LogicalTxn(
         TxnId txnId,
         SharedLogicalTxnLog pLog,
@@ -122,7 +122,7 @@ class LogicalTxn
         LogicalActionType actionType);
 
 public:
-    
+
     virtual ~LogicalTxn();
 
     /**
@@ -133,7 +133,7 @@ public:
      * for the duration of the txn
      */
     void addParticipant(SharedLogicalTxnParticipant pParticipant);
-    
+
     /**
      * Begins an action description log entry.  After this, the
      * participant must write the action description to the txn's output
@@ -170,7 +170,7 @@ public:
      * @param svptId savepoint to commit
      */
     void commitSavepoint(SavepointId svptId);
-    
+
     /**
      * Aborts the transaction.
      *

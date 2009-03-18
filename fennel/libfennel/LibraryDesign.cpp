@@ -73,7 +73,7 @@ the segment layer.
 <hr>
 
  */
-struct LibraryDesign 
+struct LibraryDesign
 {
     // NOTE:  dummy class for doxygen
 };

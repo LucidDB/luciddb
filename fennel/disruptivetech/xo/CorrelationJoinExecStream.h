@@ -33,15 +33,15 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Mapping an id to an left input column
  */
-struct Correlation 
+struct Correlation
 {
     DynamicParamId dynamicParamId;
     uint leftAttributeOrdinal;
 
-    Correlation(DynamicParamId id, uint offset) : 
-        dynamicParamId(id), 
+    Correlation(DynamicParamId id, uint offset) :
+        dynamicParamId(id),
         leftAttributeOrdinal(offset)
-    { 
+    {
         //empty
     }
 };

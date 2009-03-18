@@ -59,7 +59,7 @@ class BTreeLeafReader : public BTreeReader
      * @return false if the leaf page is empty
      */
     virtual bool searchExtreme(bool first);
-    
+
 public:
     explicit BTreeLeafReader(BTreeDescriptor const &descriptor);
 
@@ -81,7 +81,7 @@ public:
         TupleData const &key,
         DuplicateSeek dupSeek,
         bool leastUpper = true);
-    
+
     /**
      * Searches for the next tuple in the current leaf page.  Can be used
      * after either searchFirst or searchForKey has positioned within the leaf,

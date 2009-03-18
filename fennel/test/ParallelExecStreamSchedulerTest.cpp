@@ -32,9 +32,9 @@
 class ParallelExecStreamSchedulerTest : public ExecStreamTestSuite
 {
     ThreadTracker threadTracker;
-    
+
     uint degreeOfParallelism;
-    
+
     // override ExecStreamTestBase
     virtual ExecStreamScheduler *newScheduler()
     {
@@ -59,7 +59,7 @@ public:
     {
         degreeOfParallelism =
             configMap.getIntParam(paramDegreeOfParallelism, 4);
-        
+
         FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testScratchBufferExecStream);
         FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testDoubleBufferExecStream);
         FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
@@ -100,7 +100,7 @@ public:
         FENNEL_EXTRA_UNIT_TEST_CASE(
             ExecStreamTestSuite,
             testNestedLoopJoinExecStream2);
-            
+
         FENNEL_UNIT_TEST_CASE(
             ExecStreamTestSuite,
             testSplitterPlusBarrier);

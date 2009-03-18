@@ -49,7 +49,7 @@ void LogicalRecoveryTxn::redoActions(
     while (pTxnInputStream->getOffset() < (cbStart + cbRedo)) {
         LogicalTxnActionHeader actionHeader;
         pTxnInputStream->readValue(actionHeader);
-        
+
         switch(actionHeader.actionType) {
         case ACTION_TXN_DESCRIBE_PARTICIPANT:
             recoverParticipant(actionHeader.pParticipant);
@@ -106,7 +106,7 @@ void LogicalRecoveryTxn::undoActions(
     FileSize minActionOffset)
 {
     assert(isMAXU(nActionsMax) || !minActionOffset);
-    
+
     uint nActions = 0;
     uint cbActionExpected = svptEnd.cbActionPrev;
     uint seekDist = 0;
@@ -119,7 +119,7 @@ void LogicalRecoveryTxn::undoActions(
         }
         LogicalTxnActionHeader actionHeader;
         pTxnInputStream->readValue(actionHeader);
-        
+
         switch(actionHeader.actionType) {
         case ACTION_TXN_DESCRIBE_PARTICIPANT:
             if (swizzleParticipant(actionHeader.pParticipant)) {

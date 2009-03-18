@@ -35,9 +35,9 @@ FENNEL_BEGIN_NAMESPACE
 class DelegatingSegment : public Segment
 {
     SharedSegment pDelegateSegment;
-    
+
     virtual void closeImpl();
-    
+
 public:
     /**
      * Constructs a new DelegatingSegment.
@@ -46,14 +46,14 @@ public:
      */
     explicit DelegatingSegment(
         SharedSegment delegateSegment);
-    
+
     virtual ~DelegatingSegment();
 
     SharedSegment const &getDelegateSegment() const
     {
         return pDelegateSegment;
     }
-    
+
     // implement the Segment interface
     virtual BlockNum getAllocatedSizeInPages();
     virtual BlockNum getNumPagesOccupiedHighWater();

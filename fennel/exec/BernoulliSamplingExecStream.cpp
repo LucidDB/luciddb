@@ -51,7 +51,7 @@ void BernoulliSamplingExecStream::open(bool restart)
         samplingRng->reseed(repeatableSeed);
     } else if (!restart) {
         samplingRng->reseed(static_cast<uint32_t>(time(0)));
-    }        
+    }
 
     producePending = false;
 }
@@ -83,7 +83,7 @@ ExecStreamResult BernoulliSamplingExecStream::execute(
             pInAccessor->consumeTuple();
             continue;
         }
-        
+
         pInAccessor->getConsumptionTupleAccessor().unmarshal(data);
 
         producePending = true;

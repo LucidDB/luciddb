@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -226,7 +226,7 @@ class UniqExecStream : public ConduitExecStream
     TupleData previousTuple;
     TupleData currentTuple;
     boost::scoped_array<FixedBuffer> pLastTupleSaved;
-    
+
 public:
     // implement ExecStream
     virtual void prepare(UniqExecStreamParams const &params);
@@ -235,7 +235,7 @@ public:
     virtual void closeImpl();
 };
 \endverbatim
-    
+
 Note that the open, execute and closeImpl methods override base
 ExecStream methods, while the prepare method overloads instead since
 its parameter signature is different.  So even though prepare is
@@ -285,11 +285,11 @@ Here is the code for UniqExecStream:
 void UniqExecStream::prepare(UniqExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
-    
+
     assert(pInAccessor->getTupleDesc() == pOutAccessor->getTupleDesc();
-    
+
     failOnDuplicate = params.failOnDuplicate;
-    
+
     previousTuple.compute(pInAccessor->getTupleDesc());
     currentTuple.compute(pInAccessor->getTupleDesc());
 }
@@ -378,7 +378,7 @@ ExecStreamResult UniqExecStream::execute(ExecStreamQuantum const &quantum)
                 return EXECRC_BUF_UNDERFLOW;
             }
             pInAccessor->unmarshalTuple(currentTuple);
-            
+
             if (previousTupleValid) {
                 int c = pInAccessor->getTupleDesc().compareTuples(
                     lastTuple, currentTuple);
@@ -393,8 +393,8 @@ ExecStreamResult UniqExecStream::execute(ExecStreamQuantum const &quantum)
             } else {
                 previousTupleValid = true;
             }
-            
-            TupleAccessor &tupleAccessor = 
+
+            TupleAccessor &tupleAccessor =
                 pInAccessor->getScratchTupleAccessor();
             memcpy(
                 pLastTupleSaved.get(),
@@ -403,7 +403,7 @@ ExecStreamResult UniqExecStream::execute(ExecStreamQuantum const &quantum)
             tupleAccessor.setCurrentTupleBuf(pLastTupleSaved.get());
             tupleAccessor.unmarshal(lastTuple);
         }
-        
+
         if (!pOutAccessor->produceTuple(lastTuple)) {
             return EXECRC_BUF_OVERFLOW;
         }
@@ -502,7 +502,7 @@ Once the distinctness test has passed, it is necessary to save a copy
 of the new values in currentTuple as lastTuple:
 
 \verbatim
-            TupleAccessor &tupleAccessor = 
+            TupleAccessor &tupleAccessor =
                 pInAccessor->getScratchTupleAccessor();
             memcpy(
                 pLastTupleSaved.get(),
@@ -647,11 +647,11 @@ void UniqExecStreamTest::testWithDuplicates()
     mockParams.outputTupleDesc.push_back(attrDesc);
     mockParams.nRows = 5000;     // at least two buffers
     mockParams.pGenerator.reset(new RampDuplicateExecStreamGenerator());
-    
+
     ExecStreamEmbryo mockStreamEmbryo;
     mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
-    
+
     UniqExecStreamParams uniqParams;
     uniqParams.failOnDuplicate = false;
 
@@ -682,7 +682,7 @@ through unchanged.
 when the failOnDuplicate parameter is set to true.
 
 </ul>
-    
+
 <hr>
 
 <h3>Models and Factories</h3>
@@ -732,7 +732,7 @@ Follow the example of other visit methods nearby.
 
 <h3>Optimizer Rules</h3>
 
-Of course, even though Farrago now knows how to instantiate your stream, 
+Of course, even though Farrago now knows how to instantiate your stream,
 you are not done yet, because Farrago does not yet know anything about
 the semantics of your stream.  So the next step is to write an
 optimizer rule.  Such a big topic is out of scope for this document
@@ -789,14 +789,14 @@ class UniqExecStream : public ConduitExecStream
     SegPageLock bufferLock;     // NEW
     SegmentAccessor scratchAccessor; // NEW
     PBuffer pLastTupleSaved;    // CHANGED
-    
+
 public:
     // implement ExecStream
     virtual void prepare(UniqExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void closeImpl();
-    
+
     // NEW
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
@@ -806,14 +806,14 @@ public:
 void UniqExecStream::prepare(UniqExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
-    
+
     assert(pInAccessor->getTupleDesc() == pOutAccessor->getTupleDesc();
-    
+
     failOnDuplicate = params.failOnDuplicate;
-    
+
     previousTuple.compute(pInAccessor->getTupleDesc());
     currentTuple.compute(pInAccessor->getTupleDesc());
-    
+
     // NEW
     scratchAccessor = params.scratchAccessor;
     bufferLock.accessSegment(scratchAccessor);
@@ -836,7 +836,7 @@ void UniqExecStream::open(bool restart)
     if (!restart) {
         uint cbTupleMax =
             pInAccessor->getConsumptionTupleAccessor().getMaxByteCount();
-            
+
         // CHANGED
         bufferLock.allocatePage();
         assert(bufferLock.getPage().getCache().getPageSize() >= cbTupleMax);
@@ -849,7 +849,7 @@ void UniqExecStream::closeImpl()
     // CHANGED
     pLastTupleSaved = NULL;
     bufferLock.unlock();
-    
+
     ConduitExecStream::closeImpl();
 }
 \endverbatim

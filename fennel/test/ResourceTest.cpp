@@ -36,13 +36,13 @@ using namespace fennel;
 class ResourceTest : virtual public TestBase
 {
 public:
-    
+
     explicit ResourceTest()
     {
         FENNEL_UNIT_TEST_CASE(ResourceTest, testEnUsLocale);
         FENNEL_UNIT_TEST_CASE(ResourceTest, testConcurrency);
     }
-    
+
     void testEnUsLocale();
     void testConcurrency();
 };
@@ -71,7 +71,7 @@ public:
         std::string desc, boost::barrier &barrier, int count)
         : Thread(desc), barrier(barrier), count(count), completed(0)
     {
-        // 
+        //
         for(int i = 0; i < count; i++) {
             std::stringstream ss;
             ss << "var_" << (i + 1);

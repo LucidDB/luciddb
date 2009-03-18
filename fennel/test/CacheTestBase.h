@@ -55,7 +55,7 @@ protected:
      * Parameters for cache initialization.
      */
     CacheParams cacheParams;
-    
+
     /**
      * Cache instance being tested.
      */
@@ -70,7 +70,7 @@ protected:
      * Size of cache in memory pages.
      */
     uint nMemPages;
-    
+
     /**
      * Size of device in disk pages.
      */
@@ -80,7 +80,7 @@ protected:
      * Disk page size.
      */
     uint cbPageFull;
-    
+
     /**
      * Fixed ID to assign to data device.
      */
@@ -88,7 +88,7 @@ protected:
 
 public:
     explicit CacheTestBase();
-    
+
     Cache &getCache();
 
     virtual SharedCache newCache();
@@ -96,7 +96,7 @@ public:
     SharedRandomAccessDevice openDevice(
         std::string devName,DeviceMode openMode,uint nDevicePages,
         DeviceId deviceId);
-    
+
     virtual void openStorage(DeviceMode openMode);
 
     virtual void closeStorage();

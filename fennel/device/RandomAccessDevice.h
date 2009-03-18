@@ -40,7 +40,7 @@ class RandomAccessDevice : boost::noncopyable
 {
 public:
     virtual ~RandomAccessDevice();
-    
+
     /**
      * Gets the current size of this device.
      *
@@ -77,7 +77,7 @@ public:
      */
     virtual void prepareTransfer(
         RandomAccessRequest &request) = 0;
-    
+
     /**
      * Forces any buffered writes to permanent storage (e.g. fsync for a file
      * device).

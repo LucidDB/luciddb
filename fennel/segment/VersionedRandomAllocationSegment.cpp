@@ -49,7 +49,7 @@ void VersionedRandomAllocationSegment::initForUse()
     // Since we will be accessing SegmentAllocationNode pages, we need to
     // acquire a mutex on the allocationNodeMap.
     SXMutexSharedGuard mapGuard(mapMutex);
-    
+
     RandomAllocationSegmentBase::initForUse();
 }
 
@@ -403,7 +403,7 @@ void VersionedRandomAllocationSegment::updateAllocNodes(
         SharedModifiedPageEntry pModEntry = iter->second;
 
         assert(isPageIdAllocated(pageId));
- 
+
         ExtentNum extentNum;
         BlockNum iPageInExtent;
         uint iSegAlloc;
@@ -758,7 +758,7 @@ bool VersionedRandomAllocationSegment::getOldPageIds(
             // which we can never deallocate
             for (uint j = 1; j < nPagesPerExtent; j++) {
 
-                VersionedPageEntry const &pageEntry = 
+                VersionedPageEntry const &pageEntry =
                     extentNode.getPageEntry(j);
                 if (pageEntry.ownerId == UNALLOCATED_PAGE_OWNER_ID) {
                     continue;
@@ -884,7 +884,7 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
         uint iSegAlloc;
         splitPageId(chainPageId, iSegAlloc, extentNum, iPageInExtent);
         assert(iPageInExtent);
-        
+
         SegmentAccessor selfAccessor(getTracingSegment(), pCache);
         PageId extentPageId = getExtentAllocPageId(extentNum);
         VersionedExtentAllocLock extentAllocLock(selfAccessor);
@@ -909,7 +909,7 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
         }
 
         if (anchorCsn == NULL_TXN_ID ||
-            pageEntry.allocationCsn < anchorCsn) 
+            pageEntry.allocationCsn < anchorCsn)
         {
             anchorCsn = pageEntry.allocationCsn;
             anchorPageId = chainPageId;
@@ -1060,7 +1060,7 @@ void VersionedRandomAllocationSegment::deallocatePageChain(
         getCommittedPageEntryCopy(nextPageId, pageEntry);
 
         if (pageEntry.allocationCsn < deallocationCsn) {
-            
+
             // Deallocate the page entry and chain the previous page
             // entry to the page chained from the deallocated entry.
             // All of this is being done in the permanent page entry.
@@ -1141,7 +1141,7 @@ void VersionedRandomAllocationSegment::skipDeferredDeallocations(
     PageId pageId,
     std::hash_set<PageId> &deallocatedPageSet)
 {
-    // Add all the pages in the chain to the deallocated page set so we'll 
+    // Add all the pages in the chain to the deallocated page set so we'll
     // skip over them.  All the other pages in the chain should also be
     // marked as deallocation-deferred.
     PageId chainPageId = pageId;
@@ -1269,7 +1269,7 @@ BlockNum VersionedRandomAllocationSegment::backupAllocationNodes(
                 for (uint j = 1; j < nPagesPerExtent; j++) {
 
                     checkAbort(abortFlag);
-                    VersionedPageEntry const &pageEntry = 
+                    VersionedPageEntry const &pageEntry =
                         extentNode.getPageEntry(j);
                     if (pageEntry.ownerId != UNALLOCATED_PAGE_OWNER_ID &&
                        (lowerBoundCsn == NULL_TXN_ID ||
@@ -1376,7 +1376,7 @@ void VersionedRandomAllocationSegment::locateDataPages(
             for (uint j = 1; j < nPagesPerExtent; j++) {
 
                 checkAbort(abortFlag);
-                VersionedPageEntry const &pageEntry = 
+                VersionedPageEntry const &pageEntry =
                     extentNode.getPageEntry(j);
                 // Ignore pages outside the csn boundaries
                 if (pageEntry.ownerId == UNALLOCATED_PAGE_OWNER_ID ||
@@ -1469,17 +1469,17 @@ void VersionedRandomAllocationSegment::restoreFromBackup(
             break;
         }
     }
-   
+
     // Walk through the allocation node pages just restored, looking for
     // the page entries within the lower and upper bounds, and restore them.
     // But first make sure to wait for the writes of the remaining extent
     // allocation node pages to complete.
     pBackupDevice->waitForPendingWrites();
     locateDataPages(
-        pBackupDevice, 
-        lowerBoundCsn, 
-        upperBoundCsn, 
-        false, 
+        pBackupDevice,
+        lowerBoundCsn,
+        upperBoundCsn,
+        false,
         abortFlag);
 }
 
@@ -1491,6 +1491,6 @@ void VersionedRandomAllocationSegment::checkAbort(
     }
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/segment/VersionedRandomAllocationSegment.cpp#16 $");
 
 // End VersionedRandomAllocationSegment.cpp

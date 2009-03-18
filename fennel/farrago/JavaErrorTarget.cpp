@@ -67,7 +67,7 @@ void JavaErrorTarget::notifyError(
 
     // NOTE jvs 21-Aug-2007:  use ref reapers here since this
     // may be called over and over before control returns to Java
-    
+
     jstring javaSource = pEnv->NewStringUTF(source.c_str());
     JniLocalRefReaper javaSourceReaper(pEnv, javaSource);
     jboolean javaIsWarning = (level == ROW_WARNING) ? true : false;

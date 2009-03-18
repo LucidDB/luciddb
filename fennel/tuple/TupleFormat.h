@@ -29,13 +29,13 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * TupleFormat enumerates the ways in which a tuple can be marshalled.
  */
-enum TupleFormat 
+enum TupleFormat
 {
     /**
      * Standard tuple format.
      */
     TUPLE_FORMAT_STANDARD,
-        
+
     /**
      * Treat variable-width  attributes as fixed width (using maximum width).
      * Allows nulls.

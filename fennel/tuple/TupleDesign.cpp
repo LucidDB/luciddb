@@ -292,7 +292,7 @@ it has been computed are:
 
 <ul>
 
-<li>marshal:  given a TupleData instance, gather its discontiguous data values 
+<li>marshal:  given a TupleData instance, gather its discontiguous data values
 into a contiguous buffer for storage.  The TupleData instance is not modified.
 
 <li>unmarshal: given a contiguous buffer previously written by a marshal() call
@@ -340,7 +340,7 @@ uint32_t readStoredMachineIpAddress(FILE *file)
 \endverbatim
 
 The diagram below shows the effect of the marshal and unmarshal operations.
-The gray boxes are internal length-indicator fields described later on: 
+The gray boxes are internal length-indicator fields described later on:
 
 <hr>
 \image html TupleAccess.gif
@@ -542,7 +542,7 @@ The TuplePrinter class provides a simple means of rendering tuple values
 as text.
 
  */
-struct TupleDesign 
+struct TupleDesign
 {
     // NOTE:  dummy class for doxygen
 };

@@ -39,7 +39,7 @@ public:
           mOp2()
     { }
     explicit
-    BoolInstruction(RegisterRef<bool>* result, RegisterRef<bool>* op1) 
+    BoolInstruction(RegisterRef<bool>* result, RegisterRef<bool>* op1)
         : mResult(result),
           mOp1(op1),
           mOp2()
@@ -75,7 +75,7 @@ protected:
 
 class BoolOr : public BoolInstruction
 {
-public: 
+public:
     explicit
     BoolOr(RegisterRef<bool>* result,
            RegisterRef<bool>* op1,
@@ -83,7 +83,7 @@ public:
         : BoolInstruction(result, op1, op2)
     { }
 
-    virtual 
+    virtual
     ~BoolOr() { }
 
     static const char* longName();
@@ -91,10 +91,10 @@ public:
     static int numArgs();
     void describe(string& out, bool values) const;
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         // SQL99 Part 2 Section 6.30 Table 14
         pc++;
-        
+
         if (mOp1->isNull()) {
             if (mOp2->isNull() || mOp2->value() == false) {
                 mResult->toNull();
@@ -139,7 +139,7 @@ public:
 
 class BoolAnd : public BoolInstruction
 {
-public: 
+public:
     explicit
     BoolAnd(RegisterRef<bool>* result,
             RegisterRef<bool>* op1,
@@ -199,7 +199,7 @@ public:
 
 class BoolNot : public BoolInstruction
 {
-public: 
+public:
     explicit
     BoolNot(RegisterRef<bool>* result,
             RegisterRef<bool>* op1)

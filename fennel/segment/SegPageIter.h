@@ -53,7 +53,7 @@ class SegPageIter
      * up
      */
     uint prefetchThrottleRate;
-    
+
     /**
      * Current slot in the prefetchQueue that needs to be populated
      */
@@ -80,7 +80,7 @@ protected:
      * Accessor for the Segment containing the pages to be visited.
      */
     SegmentAccessor segmentAccessor;
-    
+
     /**
      * PageId at which to stop iteration.
      */
@@ -125,7 +125,7 @@ protected:
      * @param pageId the id of the page to be pre-fetched
      */
     void prefetchPage(PageId pageId);
-    
+
 public:
     /**
      * Constructor:  iterator starts out singular.

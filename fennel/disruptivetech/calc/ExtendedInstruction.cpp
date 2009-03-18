@@ -28,7 +28,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 // -- ExtendedInstructionDef methods ------------------------------------------
 
-string ExtendedInstructionDef::computeSignature() 
+string ExtendedInstructionDef::computeSignature()
 {
     string sig = _name;
     sig += "(";

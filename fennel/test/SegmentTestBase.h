@@ -52,7 +52,7 @@ protected:
      * PageOwnerId to use when allocating pages.
      */
     PageOwnerId objId;
-    
+
 public:
     virtual void openStorage(DeviceMode openMode);
 
@@ -61,15 +61,15 @@ public:
     virtual void unlockPage(CachePage &page,LockMode lockMode);
 
     virtual void prefetchPage(uint iPage);
-    
+
     virtual void prefetchBatch(uint,uint);
-    
+
     virtual void testAllocate();
-    
+
     virtual void testDeallocate();
-    
+
     virtual void testCheckpoint();
-    
+
     explicit SegmentTestBase();
 
     void testSingleThread();

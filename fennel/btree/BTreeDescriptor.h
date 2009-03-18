@@ -38,12 +38,12 @@ struct BTreeDescriptor
      * Accessor for segment storing BTree.
      */
     SegmentAccessor segmentAccessor;
-    
+
     /**
      * Descriptor for leaf tuples.
      */
     TupleDescriptor tupleDescriptor;
-    
+
     /**
      * Projection from tupleDescriptor to key.
      */
@@ -53,7 +53,7 @@ struct BTreeDescriptor
      * PageOwnerId used to mark pages.  Defaults to ANON_PAGE_OWNER_ID.
      */
     PageOwnerId pageOwnerId;
-    
+
     /**
      * PageId of the root node, which never changes.  Set to NULL_PAGE_ID for a
      * new tree.

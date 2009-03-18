@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -77,7 +77,7 @@ ExecStreamResult MockProducerExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     if (pGenerator) {
-        TuplePrinter tuplePrinter; 
+        TuplePrinter tuplePrinter;
         uint nTuples = 0;
         boost::scoped_array<int64_t> values(new int64_t[outputData.size()]);
         for(int col=0;col<outputData.size();++col) {
@@ -98,7 +98,7 @@ ExecStreamResult MockProducerExecStream::execute(
             for (int col=0;col<outputData.size();++col) {
                 values.get()[col] = pGenerator->generateValue(nRowsProduced, col);
             }
-            
+
             bool rc = pOutAccessor->produceTuple(outputData);
             assert(rc);
             ++nTuples;
@@ -117,7 +117,7 @@ ExecStreamResult MockProducerExecStream::execute(
         pOutAccessor->markEOS();
         return EXECRC_EOS;
     }
-    
+
     // NOTE: implementation below is kept lean and mean
     // intentionally so that it can be used to drive other streams with minimal
     // overhead during profiling
@@ -125,7 +125,7 @@ ExecStreamResult MockProducerExecStream::execute(
     uint cb = pOutAccessor->getProductionAvailable();
     uint nRows = std::min<uint64_t>(nRowsMax - nRowsProduced, cb / cbTuple);
     uint cbBatch = nRows * cbTuple;
-    
+
     // TODO:  pOutAccessor->validateTupleSize(?);
     if (cbBatch) {
         cb -= cbBatch;
@@ -134,7 +134,7 @@ ExecStreamResult MockProducerExecStream::execute(
         memset(pBuffer,0,cbBatch);
         pOutAccessor->produceData(pBuffer + cbBatch);
         pOutAccessor->requestConsumption();
-    } 
+    }
     if (nRowsProduced == nRowsMax) {
         pOutAccessor->markEOS();
         return EXECRC_EOS;
@@ -143,7 +143,7 @@ ExecStreamResult MockProducerExecStream::execute(
     }
 }
 
-uint64_t MockProducerExecStream::getProducedRowCount() 
+uint64_t MockProducerExecStream::getProducedRowCount()
 {
     uint waitingRowCount = pOutAccessor->getConsumptionTuplesAvailable();
     return nRowsProduced - waitingRowCount;

@@ -51,23 +51,23 @@ protected:
 
     PageId  savedRootPageId;
     BTreeDescriptor btreeDescriptor;
-    
+
     void testLoadSingleCol(
         uint nRows,
         uint startRid,
         bool newRoot,
-        SharedMockProducerExecStreamGenerator pGeneratorInit, 
+        SharedMockProducerExecStreamGenerator pGeneratorInit,
         std::string testName = "LcsClusterAppendExecStreamTest");
-    
+
     void testLoadMultiCol(
         uint nRows,
         uint nCols,
         bool newRoot,
         SharedMockProducerExecStreamGenerator pGeneratorInit,
         std::string testName = "LcsClusterAppendExecStreamTest");
-    
+
     void verifyClusterPages(std::string testName, uint nCols);
-    
+
     void testScanSingleCol(
         uint nrows,
         SharedMockProducerExecStreamGenerator pGeneratorInit,
@@ -112,7 +112,7 @@ public:
     }
     void testCaseSetUp();
     void testCaseTearDown();
-    
+
     void testSingleColNoDupNewRoot();
     void testSingleColNoDupOldRoot();
 
@@ -121,7 +121,7 @@ public:
 
     void testSingleColStairNewRoot();
     void testSingleColStairOldRoot();
-    
+
     void testMultiColNoDupNewRoot();
     void testMultiColNoDupOldRoot();
 
@@ -183,7 +183,7 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     bool newRoot,
     SharedMockProducerExecStreamGenerator pGeneratorInit,
     std::string testName)
-{    
+{
     SharedMockProducerExecStreamGenerator pGenerator = pGeneratorInit;
 
     MockProducerExecStreamParams mockParams;
@@ -200,7 +200,7 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
         pSegmentFactory->newScratchSegment(pCache, 10);
     lcsAppendParams.pCacheAccessor = pCache;
     lcsAppendParams.pSegment = pRandomSegment;
-    
+
     lcsAppendParams.inputProj.push_back(0);
 
     // initialize the btree parameter portion of lcsAppendParams
@@ -221,7 +221,7 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     // Set up BTreeExecStreamParams using default values from BTreeDescriptor.
     lcsAppendParams.segmentId = btreeDescriptor.segmentId;
     lcsAppendParams.pageOwnerId = btreeDescriptor.pageOwnerId;
-    
+
     // setup temporary btree descriptor to get an empty page to start the btree
     btreeDescriptor.segmentAccessor.pSegment = lcsAppendParams.pSegment;
     btreeDescriptor.segmentAccessor.pCacheAccessor = pCache;
@@ -240,14 +240,14 @@ void LcsClusterAppendExecStreamTest::testLoadSingleCol(
     lcsAppendParams.rootPageId = btreeDescriptor.rootPageId = savedRootPageId;
 
     /*
-      Now use the above initialized parameter 
+      Now use the above initialized parameter
      */
     LcsClusterAppendExecStream *lcsStream = new LcsClusterAppendExecStream();
 
     ExecStreamEmbryo lcsAppendStreamEmbryo;
     lcsAppendStreamEmbryo.init(lcsStream, lcsAppendParams);
     lcsAppendStreamEmbryo.getStream()->setName("LcsClusterAppendExecStream");
-    
+
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, lcsAppendStreamEmbryo);
 
@@ -274,7 +274,7 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     bool newRoot,
     SharedMockProducerExecStreamGenerator pGeneratorInit,
     std::string testName)
-{    
+{
     SharedMockProducerExecStreamGenerator pGenerator = pGeneratorInit;
 
     MockProducerExecStreamParams mockParams;
@@ -293,7 +293,7 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
         pSegmentFactory->newScratchSegment(pCache, 10);
     lcsAppendParams.pCacheAccessor = pCache;
     lcsAppendParams.pSegment = pRandomSegment;
-    
+
     // initialize the btree parameter portion of lcsAppendParams
     // BTree tuple desc only has one column
     (lcsAppendParams.tupleDesc).push_back(attrDesc_int64);
@@ -310,11 +310,11 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     }
     lcsAppendParams.pRootMap = 0;
     lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
-    
+
     // Set up BTreeExecStreamParams using default values from BTreeDescriptor.
     lcsAppendParams.segmentId = btreeDescriptor.segmentId;
     lcsAppendParams.pageOwnerId = btreeDescriptor.pageOwnerId;
-    
+
     // setup temporary btree descriptor to get an empty page to start the btree
 
     btreeDescriptor.segmentAccessor.pSegment = lcsAppendParams.pSegment;
@@ -322,7 +322,7 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     btreeDescriptor.tupleDescriptor = lcsAppendParams.tupleDesc;
     btreeDescriptor.keyProjection = lcsAppendParams.keyProj;
     btreeDescriptor.rootPageId = newRoot ? NULL_PAGE_ID : savedRootPageId;
-    
+
     BTreeBuilder builder(btreeDescriptor, pRandomSegment);
 
     // if BTree root not yet setup
@@ -334,13 +334,13 @@ void LcsClusterAppendExecStreamTest::testLoadMultiCol(
     lcsAppendParams.rootPageId = btreeDescriptor.rootPageId = savedRootPageId;
 
     /*
-      Now use the above initialized parameter 
+      Now use the above initialized parameter
      */
     ExecStreamEmbryo lcsAppendStreamEmbryo;
     lcsAppendStreamEmbryo.init(new LcsClusterAppendExecStream(),
                                lcsAppendParams);
     lcsAppendStreamEmbryo.getStream()->setName("LcsClusterAppendExecStream");
-    
+
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, lcsAppendStreamEmbryo);
 
@@ -363,7 +363,7 @@ void LcsClusterAppendExecStreamTest::testScanSingleCol(
 
     // setup parameters into scan
     //  single cluster with only one column, project that single column
-    
+
     LcsRowScanExecStreamParams scanParams;
     scanParams.hasExtraFilter = false;
     scanParams.isFullScan = true;
@@ -395,7 +395,7 @@ void LcsClusterAppendExecStreamTest::testScanSingleCol(
 
     SharedExecStream pOutputStream =
         prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
-    
+
     // result should be sequence of rows
     verifyOutput(*pOutputStream, nrows, *pResultGenerator);
 }
@@ -431,7 +431,7 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
 
     // setup parameters into scan
     //  single cluster with only n columns, project all columns
-    
+
     LcsRowScanExecStreamParams scanParams;
     scanParams.hasExtraFilter = false;
     scanParams.isFullScan = true;
@@ -466,15 +466,15 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
 
     SharedExecStream pOutputStream =
         prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
-    
+
     // result should be sequence of rows
     verifyOutput(*pOutputStream, nrows, *pResultGenerator);
 }
 
 void LcsClusterAppendExecStreamTest::testCaseSetUp()
-{    
+{
     ExecStreamUnitTestBase::testCaseSetUp();
-    
+
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     attrDesc_bitmap = TupleAttributeDescriptor(
@@ -499,7 +499,7 @@ void LcsClusterAppendExecStreamTest::testSingleColNoDupNewRoot()
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
-    
+
     testLoadSingleCol(
         848, 0, true,  pGenerator, "testSingleColNoDupNewRoot");
     resetExecStreamTest();
@@ -544,7 +544,7 @@ void LcsClusterAppendExecStreamTest::testSingleColConstNewRoot()
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
-    
+
     testLoadSingleCol(
         848, 0, true, pGenerator, "testSingleColConstNewRoot");
     resetExecStreamTest();
@@ -637,7 +637,7 @@ void LcsClusterAppendExecStreamTest::testMultiColNoDupNewRoot()
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new RampExecStreamGenerator());
-    
+
     testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColNoDupNewRoot");
     resetExecStreamTest();
     testScanMultiCol(848, 3, pGenerator, pResultGenerator);
@@ -683,7 +683,7 @@ void LcsClusterAppendExecStreamTest::testMultiColConstNewRoot()
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
-    
+
     testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColConstNewRoot");
     resetExecStreamTest();
 
@@ -702,7 +702,7 @@ void LcsClusterAppendExecStreamTest::testMultiColConstOldRoot()
     // 1. load 10 rows
     // 2. load 10 more rows
     // 3. scan 20 rows
-    
+
     SharedMockProducerExecStreamGenerator pGenerator =
         SharedMockProducerExecStreamGenerator(new ConstExecStreamGenerator(72));
     SharedMockProducerExecStreamGenerator pResultGenerator =
@@ -726,7 +726,7 @@ void LcsClusterAppendExecStreamTest::testMultiColStairNewRoot()
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
     SharedMockProducerExecStreamGenerator pResultGenerator =
         SharedMockProducerExecStreamGenerator(new StairCaseExecStreamGenerator(1,  7));
-    
+
     testLoadMultiCol(848, 3, true,  pGenerator,  "testMultiColStairNewRoot");
     resetExecStreamTest();
 

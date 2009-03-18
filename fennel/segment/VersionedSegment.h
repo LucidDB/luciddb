@@ -58,7 +58,7 @@ class VersionedSegment : public DelegatingSegment
 
     // TODO:  use a 64-bit crc instead
     boost::crc_32_type crcComputer;
-    
+
     PageMap dataToLogMap;
 
     explicit VersionedSegment(
@@ -66,9 +66,9 @@ class VersionedSegment : public DelegatingSegment
         SharedSegment logSegment,
         PseudoUuid const &onlineUuid,
         SegVersionNum versionNumber);
-    
+
     uint64_t computeChecksum(void const *pPageData);
-    
+
 public:
     virtual ~VersionedSegment();
 
@@ -115,13 +115,13 @@ public:
      * after a crash
      */
     PageId getRecoveryPageId() const;
-    
+
     /**
      * @return the PageId of the oldest log page still needed for recovery
      * while online
      */
     PageId getOnlineRecoveryPageId() const;
-    
+
     /**
      * Gets the version number of a locked page.
      *
@@ -135,7 +135,7 @@ public:
      * @return the current version number for this segment
      */
     SegVersionNum getVersionNumber() const;
-    
+
     /**
      * @return the WAL segment
      */
@@ -150,7 +150,7 @@ public:
      * call
      */
     void deallocateCheckpointedLog(CheckpointType checkpointType);
-    
+
     // implement the Segment interface
     virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
     virtual void delegatedCheckpoint(

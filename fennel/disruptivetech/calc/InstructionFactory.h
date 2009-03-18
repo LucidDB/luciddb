@@ -51,14 +51,14 @@ public:
     // Creates a Jump instruction
     static Instruction*
     createInstruction(
-        string const &name, 
+        string const &name,
         TProgramCounter pc,
         RegisterReference* operand); // add const?
 
     // Creates an Extended instruction
     static Instruction*
     createInstruction(
-        string const &name, 
+        string const &name,
         string const &function,
         vector<RegisterReference*> const &operands);
 
@@ -73,7 +73,7 @@ public:
     static void
     registerInstructions();
 
-    static StringToCreateFn* 
+    static StringToCreateFn*
     getInstructionTable()
     {
         return &instructionTable;

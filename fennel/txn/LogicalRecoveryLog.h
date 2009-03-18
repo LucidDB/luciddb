@@ -48,7 +48,7 @@ class LogicalRecoveryLog
     TxnMap checkpointTxnMap;
 
     LogicalTxnParticipantFactory &participantFactory;
-    
+
     SharedSegmentFactory pSegmentFactory;
 
     SegmentAccessor logSegmentAccessor;
@@ -65,7 +65,7 @@ class LogicalRecoveryLog
         LogicalTxnEventMemento const &commitMemento,
         LogicalTxnEventMemento const *pCheckpointMemento,
         SharedSegInputStream pTxnInputStream);
-    
+
     void undoTxn(
         LogicalTxnEventMemento const &checkpointMemento,
         SharedSegInputStream pTxnInputStream);
@@ -94,10 +94,10 @@ public:
         SegmentAccessor const &logSegmentAccessor,
         PseudoUuid const &onlineUuid,
         SharedSegmentFactory pSegmentFactory);
-        
+
     virtual ~LogicalRecoveryLog();
     void recover(LogicalTxnLogCheckpointMemento const &memento);
-    
+
     /**
      * Gets the relative filename for a long transaction log.  This is
      * deterministic based on the TxnId.

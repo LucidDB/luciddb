@@ -142,7 +142,7 @@ public:
     ExecStreamResult advanceToByte(LbmByteNumber byteNum);
 
     /**
-     * Reads the current byte segment, based on current position 
+     * Reads the current byte segment, based on current position
      *
      * @param startRid returns rid value corresponding to the start
      * of the current byte segment

@@ -60,7 +60,7 @@ SharedFtrsTableWriter FtrsTableWriterFactory::newTableWriter(
     pool.push_back(pNewWriter);
     return pNewWriter;
 }
-    
+
 SharedLogicalTxnParticipant FtrsTableWriterFactory::loadParticipant(
     LogicalTxnClassId classId,
     ByteInputStream &logStream)
@@ -114,6 +114,6 @@ LogicalTxnClassId FtrsTableWriterFactory::getParticipantClassId()
     return LogicalTxnClassId(0xaa6576b8efadbcdcLL);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/ftrs/FtrsTableWriterFactory.cpp#6 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/ftrs/FtrsTableWriterFactory.cpp#7 $");
 
 // End FtrsTableWriterFactory.cpp

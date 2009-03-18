@@ -49,7 +49,7 @@ class LbmEntryDump : public TraceSource
      * which dumps are generated.
      */
     TraceLevel traceLevel;
-    
+
 public:
     explicit LbmEntryDump(TraceLevel traceLevelInit,
         SharedTraceTarget pTraceTarget, string name);

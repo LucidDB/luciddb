@@ -23,7 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/synch/GroupLock.h"
- 
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 GroupLock::GroupLock()

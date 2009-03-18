@@ -228,3 +228,5 @@ string FennelResource::flatfileNoMappedColumns(const std::string &p0, const std:
 }
 
 } // end namespace fennel
+
+// End FennelResource.cpp

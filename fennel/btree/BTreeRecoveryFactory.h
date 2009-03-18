@@ -45,18 +45,18 @@ class BTreeRecoveryFactory : public LogicalTxnParticipantFactory
     StoredTypeDescriptorFactory const &typeFactory;
 
     std::hash_map<PageId,SharedLogicalTxnParticipant> writerMap;
-    
+
 public:
     explicit BTreeRecoveryFactory(
         SegmentAccessor segmentAccessor,
         SegmentAccessor scratchAccessor,
         StoredTypeDescriptorFactory const &typeFactory);
-    
+
     // implement the LogicalTxnParticipantFactory interface
     virtual SharedLogicalTxnParticipant loadParticipant(
         LogicalTxnClassId classId,
         ByteInputStream &logStream);
-    
+
     static LogicalTxnClassId getParticipantClassId();
 };
 

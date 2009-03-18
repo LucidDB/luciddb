@@ -59,7 +59,7 @@ class CalcInstFactoryTest : virtual public TestBase, public TraceSource
     static char const * const pointerArray;
     static char const * const nativeIntegral;
     static char const * const nativeIntegralValues;
-    
+
 public:
     explicit CalcInstFactoryTest()
         : TraceSource(shared_from_this(),"CalcInstFactoryTest")
@@ -77,25 +77,25 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcInstFactoryTest, testPointerPointer);
         FENNEL_UNIT_TEST_CASE(CalcInstFactoryTest, testReturn);
     }
-    
+
     virtual ~CalcInstFactoryTest()
     {
     }
 };
 
 char const * const
-CalcInstFactoryTest::all = 
+CalcInstFactoryTest::all =
 "s1, u1, s2, u2, s4, u4, s8, u8, bo, r, d, c, vc, b, vb";
-// 0   1   2   3   4   5   6   7   8   9  10 11 12  13 14 
+// 0   1   2   3   4   5   6   7   8   9  10 11 12  13 14
 
 char const * const
 CalcInstFactoryTest::nativeNotBool =
 "s1, u1, s2, u2, s4, u4, s8, u8, r, d";
-// 0   1   2   3   4   5   6   7   8  9 
+// 0   1   2   3   4   5   6   7   8  9
 char const * const
 CalcInstFactoryTest::nativeNotBoolValues =
 "1, 2, 3, 4, 5, 6, 7, 8, 9.0, 10.0";
-// 0  1  2  3  4  5  6  7  8    9 
+// 0  1  2  3  4  5  6  7  8    9
 
 char const * const
 CalcInstFactoryTest::pointerArray =
@@ -159,7 +159,7 @@ CalcInstFactoryTest::testBool()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -211,7 +211,7 @@ CalcInstFactoryTest::testBoolNative()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -260,7 +260,7 @@ CalcInstFactoryTest::testIntegralNative()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -307,7 +307,7 @@ CalcInstFactoryTest::testIntegralPointer()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -347,7 +347,7 @@ CalcInstFactoryTest::testPointerIntegral()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -400,7 +400,7 @@ CalcInstFactoryTest::testBoolPointer()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -495,7 +495,7 @@ CalcInstFactoryTest::testNativeNative()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -545,7 +545,7 @@ CalcInstFactoryTest::testPointerPointer()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -571,7 +571,7 @@ CalcInstFactoryTest::testReturn()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -585,3 +585,4 @@ CalcInstFactoryTest::testReturn()
 
 FENNEL_UNIT_TEST_SUITE(CalcInstFactoryTest);
 
+// End CalcInstFactoryTest.cpp

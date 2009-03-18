@@ -46,7 +46,7 @@ class AioSignalHandlerThread;
 class AioSignalScheduler : public DeviceAccessScheduler
 {
     friend class AioSignalHandlerThread;
-    
+
     StrictMutex mutex;
     LocalCondition quitCondition;
     struct sigaction saOld;
@@ -67,7 +67,7 @@ public:
      */
     explicit AioSignalScheduler(
         DeviceAccessSchedulerParams const &);
-    
+
     /**
      * Destructor:  stop must already have been called.
      */

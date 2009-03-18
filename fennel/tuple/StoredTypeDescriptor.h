@@ -45,7 +45,7 @@ public:
     typedef uint Ordinal;
 
     virtual ~StoredTypeDescriptor();
-    
+
     /**
      * @return the ordinal representing this type.
      */
@@ -63,7 +63,7 @@ public:
      * for bit types, this yields the size of the unmarshalled representation
      */
     virtual uint getFixedByteCount() const = 0;
-    
+
     /**
      * Gets the number of bytes required to store the narrowest value with this
      * type, given a particular max byte count.  For a fixed-width

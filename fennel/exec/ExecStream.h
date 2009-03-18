@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -66,7 +66,7 @@ protected:
      * execution, and the extra locking overhead would be frivolous.
      */
     ExecStreamGraph *pGraph;
-    
+
     /**
      * Identifier for this stream; local to its containing graph.
      */
@@ -118,24 +118,24 @@ protected:
 
     // interface methods below are protected because they should only be called
     // indirectly via ExecStreamGraph interface
-    
+
     /**
      * Implements ClosableObject.  ExecStream implementations may
      * override this to release any resources acquired while open.
      */
     virtual void closeImpl();
-    
+
 public:
     /**
      * @return reference to containing graph
      */
     inline ExecStreamGraph &getGraph() const;
-    
+
     /**
      * @return the identifier for this stream within containing graph
      */
     inline ExecStreamId getStreamId() const;
-    
+
     /**
      * Initializes the buffer accessors for inputs to this stream.  This
      * method is only ever called once, before prepare.
@@ -180,7 +180,7 @@ public:
      *
      * @param optType Receives the value indicating the accuracy of the
      * optQuantity parameter.  This parameter is optional and defaults to
-     * EXEC_RESOURCE_ACCURATE if omitted.  If the optimum setting is an 
+     * EXEC_RESOURCE_ACCURATE if omitted.  If the optimum setting is an
      * estimate or no value can be specified (e.g., due to lack of statistics),
      * then this parameter needs to be used to indicate a non-accurate
      * optimum resource setting.
@@ -205,7 +205,7 @@ public:
      */
     virtual void setResourceAllocation(
         ExecStreamResourceQuantity &quantity);
-        
+
     /**
      * Opens this stream, acquiring any resources needed in order to be able to
      * fetch data.  A precondition is that input streams
@@ -215,17 +215,17 @@ public:
      * reset itself to start from the beginning of its result set
      */
     virtual void open(bool restart);
-    
+
     /**
      * Sets unique name of this stream.
      */
     virtual void setName(std::string const &);
-        
+
     /**
      * @return the name of this stream, as known by the optimizer
      */
     virtual std::string const &getName() const;
-        
+
     /**
      * Executes this stream.
      *
@@ -234,7 +234,7 @@ public:
      * @return code indicating reason execution ceased
      */
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum) = 0;
-    
+
     /**
      * Queries whether this stream's implementation may block when execute()
      * is called.  For accurate scheduling, non-blocking implementations

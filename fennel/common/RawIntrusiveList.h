@@ -38,7 +38,7 @@ class RawIntrusiveList
 {
     friend class RawIntrusiveListIter;
     friend class RawIntrusiveListMutator;
-    
+
 protected:
     /**
      * Number of nodes in this list.
@@ -54,7 +54,7 @@ protected:
      * Last node in this list.
      */
     IntrusiveListNode *pBack;
-    
+
     explicit RawIntrusiveList()
     {
         pFront = NULL;
@@ -66,16 +66,16 @@ protected:
     {
         return *pFront;
     }
-    
+
     IntrusiveListNode &back() const
     {
         return *pBack;
     }
-    
+
     void push_front(IntrusiveListNode &t);
-    
+
     void push_back(IntrusiveListNode &t);
-    
+
     bool remove(IntrusiveListNode &);
 
 public:
@@ -94,7 +94,7 @@ public:
     {
         return nNodes ? false : true;
     }
-    
+
     /**
      * Truncates this list to zero nodes.
      *
@@ -111,22 +111,22 @@ public:
 class RawIntrusiveListIter {
 protected:
     IntrusiveListNode *pCurr;
-    
+
     explicit RawIntrusiveListIter()
-        : pCurr(NULL) 
+        : pCurr(NULL)
     {
     }
-    
+
     explicit RawIntrusiveListIter(RawIntrusiveList const &l)
-        : pCurr(l.pFront) 
+        : pCurr(l.pFront)
     {
     }
-    
+
     IntrusiveListNode *getCurrent() const
     {
         return pCurr;
     }
-    
+
     void repositionToFront(RawIntrusiveList const &l)
     {
         pCurr = l.pFront;
@@ -151,19 +151,19 @@ public:
 class RawIntrusiveListMutator
 {
     friend class RawIntrusiveList;
-    
+
 protected:
     IntrusiveListNode *pCurr,*pPrev;
     RawIntrusiveList *pList;
     bool bJustDeleted;
-    
+
     explicit RawIntrusiveListMutator()
     {
         pList = NULL;
         pCurr = pPrev = NULL;
         bJustDeleted = 0;
     }
-    
+
     explicit RawIntrusiveListMutator(RawIntrusiveList &l)
         : pCurr(l.pFront), pPrev(NULL), pList(&l)
     {
@@ -182,9 +182,9 @@ protected:
         pCurr = pList->pFront;
         pPrev = NULL;
     }
-    
+
     IntrusiveListNode *detach();
-    
+
 public:
     /**
      * Advances iterator position to next node.
@@ -200,19 +200,19 @@ public:
             }
         }
     }
-    
+
     /**
      * Moves the current node to the front of the list.  This iterator will
      * advance to the original successor on next increment.
      */
     void promoteCurrToFront();
-    
+
     /**
      * Moves the current node to the back of the list.  This iterator will
      * advance to the original successor on next increment.
      */
     void demoteCurrToBack();
-    
+
     /**
      * Moves the front node of the list to just before the current node.
      * Iterator position is unchanged.
@@ -222,7 +222,7 @@ public:
     /**
      * Moves iterator position to front of list.
      */
-    void repositionToFront() 
+    void repositionToFront()
     {
         bJustDeleted = 0;
         pCurr = pList->pFront;

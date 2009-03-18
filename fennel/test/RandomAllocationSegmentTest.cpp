@@ -33,9 +33,9 @@ using namespace fennel;
 class RandomAllocationSegmentTest : virtual public SegmentTestBase
 {
     // TODO jvs 13-Jan-2008:  Need many more tests here...
-    
+
     void testAllocateAndDeallocate();
-    
+
 public:
     explicit RandomAllocationSegmentTest()
     {
@@ -48,7 +48,7 @@ void RandomAllocationSegmentTest::testAllocateAndDeallocate()
 {
     openStorage(DeviceMode::createNew);
     openRandomSegment();
-    
+
     // Allocate 100 pages
     std::vector<PageId> pageList;
     uint n = 100;
@@ -63,7 +63,7 @@ void RandomAllocationSegmentTest::testAllocateAndDeallocate()
         segPageLock.getPage().getWritableData();
         segPageLock.unlock();
     }
-    
+
     // Verify that all are still allocated
     for (uint i = 0; i < n; ++i) {
         BOOST_CHECK(pRandomSegment->isPageIdAllocated(pageList[i]));
@@ -77,11 +77,11 @@ void RandomAllocationSegmentTest::testAllocateAndDeallocate()
     // count
     uint highWaterMarkBefore = pRandomSegment->getNumPagesOccupiedHighWater();
     BOOST_REQUIRE(highWaterMarkBefore > n);
-    
+
     // Save cache stats before deallocation
     CacheStats statsBefore;
     pCache->collectStats(statsBefore);
-    
+
     // Deallocate all
     for (uint i = 0; i < n; ++i) {
         PageId pageId = pageList[i];
@@ -96,11 +96,11 @@ void RandomAllocationSegmentTest::testAllocateAndDeallocate()
     // Get cache stats after deallocation and compare
     CacheStats statsAfter;
     pCache->collectStats(statsAfter);
-    
+
     // Count of unused pages should go up since deallocation results
     // in discard.
     BOOST_CHECK(statsAfter.nMemPagesUnused > statsBefore.nMemPagesUnused);
-        
+
     // Verify that all are still deallocated
     for (uint i = 0; i < n; ++i) {
         BOOST_CHECK(!pRandomSegment->isPageIdAllocated(pageList[i]));

@@ -57,7 +57,7 @@ protected:
      */
     void testNormalizer(
         uint nRows,
-        uint nKeys, 
+        uint nKeys,
         std::vector<int> const &repeatSeqValues);
 
 public:
@@ -166,7 +166,7 @@ void LbmNormalizerExecStreamTest::testCloseRepeats()
 
 void LbmNormalizerExecStreamTest::testNormalizer(
     uint nRows,
-    uint nKeys, 
+    uint nKeys,
     std::vector<int> const &repeatSeqValues)
 {
     initKeyBitmap(nRows, repeatSeqValues);

@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -41,14 +41,14 @@ struct BarrierExecStreamParams : public ConfluenceExecStreamParams
     /**
      * Return mode for the stream
      */
-    BarrierReturnMode returnMode;   
+    BarrierReturnMode returnMode;
 
     /**
      * Ordered list of dynamic parameter ids
      */
     std::vector<DynamicParamId> parameterIds;
 };
-    
+
 /**
  * BarrierExecStream is a synchronizing barrier to wait for the completion of
  * several upstream producers and generate a status output for the downstream
@@ -73,7 +73,7 @@ class BarrierExecStream : public ConfluenceExecStream
     /**
      * Whether output has been produced.
      */
-    bool isDone;    
+    bool isDone;
 
     /**
      * Tuple used for sanity check on inputs
@@ -81,7 +81,7 @@ class BarrierExecStream : public ConfluenceExecStream
     TupleData compareTuple;
 
     /**
-     * A reference to the output accessor 
+     * A reference to the output accessor
      * contained in SingleOutputExecStream::pOutAccessor
      */
     TupleAccessor *outputTupleAccessor;
@@ -100,7 +100,7 @@ class BarrierExecStream : public ConfluenceExecStream
      * 0-based ordinal of next input from which to read
      */
     uint iInput;
-    
+
     /**
      * Mode that determines what the stream should return
      */
@@ -159,7 +159,7 @@ class BarrierExecStream : public ConfluenceExecStream
 
 public:
     // implement ExecStream
-    virtual void prepare(BarrierExecStreamParams const &params);    
+    virtual void prepare(BarrierExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual ExecStreamBufProvision getOutputBufProvision() const;

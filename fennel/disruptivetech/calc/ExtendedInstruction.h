@@ -58,7 +58,7 @@ protected:
         vector<StandardTypeDescriptorOrdinal> const &parameterTypes)
         : _name(name),
           _parameterTypes(parameterTypes),
-          _signature(computeSignature()) 
+          _signature(computeSignature())
     {
     }
 public:
@@ -73,7 +73,7 @@ public:
      * Returns the parameter types of this instruction.
      */
     const vector<StandardTypeDescriptorOrdinal> &getParameterTypes()
-    { 
+    {
         return _parameterTypes;
     }
     /**
@@ -118,7 +118,7 @@ protected:
         vector<StandardTypeDescriptorOrdinal> const &parameterTypes,
         typename T::Functor functor)
         : ExtendedInstructionDef(name, parameterTypes),
-          _functor(functor) 
+          _functor(functor)
     {
         assert(functor != NULL);
     }
@@ -127,7 +127,7 @@ public:
 
     // implement ExtendedInstructionDef
     ExtendedInstruction *createInstruction(
-        vector<RegisterReference *> const &regs) 
+        vector<RegisterReference *> const &regs)
     {
         return T::create(*this,regs);
     }
@@ -140,7 +140,7 @@ public:
  * allow a programmer to extend Calculator with greater ease than
  * adding regular instructions. See ExtendedInstructionHowTo for
  * details.
- * 
+ *
  * Derived classes are typically (though not necessarily) templates
  * such as ExtendedInstruction1.
  */
@@ -151,9 +151,9 @@ protected:
 
     template <typename T>
     static void describeArg(
-        string &out, 
-        bool values, 
-        RegisterRef<T> * const reg) 
+        string &out,
+        bool values,
+        RegisterRef<T> * const reg)
     {
         out += reg->toString();
         if (values) {
@@ -169,14 +169,14 @@ protected:
 
 public:
     explicit
-    ExtendedInstruction() 
+    ExtendedInstruction()
     { }
     // implement Instruction
     const char *longName() const
-    { 
-        return const_cast<ExtendedInstructionDef &>(getDef()).getName().c_str(); 
+    {
+        return const_cast<ExtendedInstructionDef &>(getDef()).getName().c_str();
     }
-    const char *shortName() const 
+    const char *shortName() const
     {
         return const_cast<ExtendedInstructionDef &>(getDef()).getName().c_str();
     }
@@ -219,7 +219,7 @@ public:
 
     static ExtendedInstruction0 *create(
         DefT &def,
-        vector<RegisterReference *> const &regRefs) 
+        vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 0);
         return new ExtendedInstruction0(def);
@@ -232,7 +232,7 @@ public:
         out += _def.getSignature();
         out += "'";
     }
-    void exec(TProgramCounter &pc) const 
+    void exec(TProgramCounter &pc) const
     {
         pc++;
         try {
@@ -282,7 +282,7 @@ public:
 
     static ExtendedInstruction0Context *create(
         DefT &def,
-        vector<RegisterReference *> const &regRefs) 
+        vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 0);
         return new ExtendedInstruction0Context(def);
@@ -303,7 +303,7 @@ public:
             // TODO: in virtual above.
             (*_def._functor)(
                 const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(_ctx));
-            
+
         } catch (char const * str) {
             throw CalcMessage(str, pc - 1);
         }
@@ -352,7 +352,7 @@ public:
 
     static ExtendedInstruction1<T0> *create(
         DefT &def,
-        vector<RegisterReference *> const &regRefs) 
+        vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 1);
         // todo:        assert(regRefs[0].getType() == T0::typeCode);
@@ -369,7 +369,7 @@ public:
         out += "' ";
         describeArg(out, values, _reg0);
     }
-    void exec(TProgramCounter &pc) const 
+    void exec(TProgramCounter &pc) const
     {
         pc++;
         try {
@@ -423,10 +423,10 @@ public:
           _ctx(0),
           _reg0(reg0)
     { }
-    
+
     static ExtendedInstruction1Context<T0> *create(
         DefT &def,
-        vector<RegisterReference *> const &regRefs) 
+        vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 1);
         // todo:        assert(regRefs[0].getType() == T0::typeCode);
@@ -503,7 +503,7 @@ public:
         RegisterRef<T1>* const reg1)
         : _def(def),
           _reg0(reg0),
-          _reg1(reg1) 
+          _reg1(reg1)
     { }
 
     static ExtendedInstruction2<T0,T1> *create(
@@ -586,7 +586,7 @@ public:
         : _def(def),
           _ctx(0),
           _reg0(reg0),
-          _reg1(reg1) 
+          _reg1(reg1)
     { }
 
     static ExtendedInstruction2Context<T0,T1> *create(
@@ -731,7 +731,7 @@ public:
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     * 
+     *
      */
     typedef void (*Functor)(
         boost::scoped_ptr<ExtendedInstructionContext>& ctx,
@@ -827,7 +827,7 @@ public:
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     * 
+     *
      */
     typedef void (*Functor)(
         RegisterRef<T0>* const reg0,
@@ -895,7 +895,7 @@ public:
         out += ", ";
         describeArg(out, values, _reg3);
     }
-    void exec(TProgramCounter &pc) const 
+    void exec(TProgramCounter &pc) const
     {
         pc++;
         try {
@@ -922,7 +922,7 @@ public:
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     * 
+     *
      */
     typedef void (*Functor)(
         boost::scoped_ptr<ExtendedInstructionContext>& ctx,
@@ -1025,7 +1025,7 @@ public:
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     * 
+     *
      */
     typedef void (*Functor)(RegisterRef<T0>* const reg0,
                             RegisterRef<T1>* const reg1,
@@ -1071,7 +1071,7 @@ public:
 
     static ExtendedInstruction5<T0,T1,T2,T3,T4> *create(
         DefT &def,
-        vector<RegisterReference *> const &regRefs) 
+        vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 5);
         return new ExtendedInstruction5<T0,T1,T2,T3,T4>(
@@ -1127,7 +1127,7 @@ public:
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     * 
+     *
      */
     typedef void (*Functor)(boost::scoped_ptr<ExtendedInstructionContext>& ctx,
                             RegisterRef<T0>* const reg0,
@@ -1176,7 +1176,7 @@ public:
 
     static ExtendedInstruction5Context<T0,T1,T2,T3,T4> *create(
         DefT &def,
-        vector<RegisterReference *> const &regRefs) 
+        vector<RegisterReference *> const &regRefs)
     {
         assert(regRefs.size() == 5);
         return new ExtendedInstruction5Context<T0,T1,T2,T3,T4>(

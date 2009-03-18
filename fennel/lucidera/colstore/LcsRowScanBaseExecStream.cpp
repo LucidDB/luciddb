@@ -104,11 +104,11 @@ void LcsRowScanBaseExecStream::prepare(
 
         // need to select at least one column from cluster, except in the
         // cases where we're only selecting special columns or when there
-        // are filter columns; in the former case, we'll just arbitrarily 
+        // are filter columns; in the former case, we'll just arbitrarily
         // read the first column, but not actually project it
         if (allSpecial) {
-           clusterProj.push_back(0); 
-        } 
+           clusterProj.push_back(0);
+        }
         pClu->initColumnReaders(
             params.lcsClusterScanDefs[i].clusterTupleDesc.size(),
             clusterProj);
@@ -158,7 +158,7 @@ void LcsRowScanBaseExecStream::getResourceRequirements(
     // - 1 for cluster page
     // - 1 for btree page
     minQuantity.nCachePages += (nClusters * 2);
-    
+
     optQuantity = minQuantity;
 }
 
@@ -186,14 +186,14 @@ bool LcsRowScanBaseExecStream::readColVals(
         for (uint iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
 
             // Get value of each column and load it to the appropriate
-            // tuple datum entry 
+            // tuple datum entry
             PBuffer curValue = pScan->clusterCols[iCluCol].getCurrentValue();
             uint idx = projMap[colStart + iCluCol];
 
             attrAccessors[idx].loadValue(tupleData[idx], curValue);
             if (pScan->clusterCols[iCluCol].getFilters().hasResidualFilters) {
                 if (!pScan->clusterCols[iCluCol].applyFilters(projDescriptor,
-                    tupleData)) 
+                    tupleData))
                 {
                     return false;
                 }

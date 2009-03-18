@@ -113,7 +113,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcCastTest, Overflow);
         FENNEL_UNIT_TEST_CASE(CalcCastTest, Underflow);
     }
-    
+
     virtual ~CalcCastTest()
     {
     }
@@ -126,9 +126,9 @@ CalcCastTest::testRoundInstruction()
     ostringstream pg("");
     int idx;
 
-    const char * const all = 
+    const char * const all =
         "s1, u1, s2, u2, s4, u4, s8, u8, r, r, r, r, r, d, d, d, d, d";
-    //   0   1   2   3   4   5   6   7   8  9  10 11 12 13 14 15 16 17  
+    //   0   1   2   3   4   5   6   7   8  9  10 11 12 13 14 15 16 17
 
     pg << "O " << all << ";" << endl;
     pg << "L " << all << ";" << endl;
@@ -146,7 +146,7 @@ CalcCastTest::testRoundInstruction()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -245,7 +245,7 @@ CalcCastTest::testExe(SetFunction setF,
                       int numSrcTypes,
                       char const * const destTypeStr,
                       int numDestTypes,
-                      int warningCombos[][2], 
+                      int warningCombos[][2],
                       bool roundValues)
 {
     ostringstream pg(""), typeProduct("");
@@ -276,7 +276,7 @@ CalcCastTest::testExe(SetFunction setF,
         }
     }
 
-    destIdx = 0; 
+    destIdx = 0;
     pc = 0;
     for (srcIdx = 0; srcIdx < numSrcTypes; srcIdx++) {
         for (idx = 0; idx < numDestTypes; idx++) {
@@ -290,7 +290,7 @@ CalcCastTest::testExe(SetFunction setF,
                 pg << ", S";
             } else {
                 pg << ", I";
-            } 
+            }
             pg << srcIdx << ";";
             pg << "    /* " << pc++ << (warn ? " WARN" : "");
             pg << " src=" << srcIdx << " dest=" << idx <<  "  */" << endl;
@@ -303,7 +303,7 @@ CalcCastTest::testExe(SetFunction setF,
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -318,7 +318,7 @@ CalcCastTest::testExe(SetFunction setF,
     calc.bind(&inTuple, &outTuple);
 
     setF(inTuple);
-    
+
     calc.exec();
     BOOST_MESSAGE("Calculator Warnings: |" << calc.warnings() << "|");
     checkF(outTuple, numSrcTypes, calc.mWarnings, expectedWarnings);
@@ -468,7 +468,7 @@ CalcCastTest::PassAll()
 {
     char const * const all =
         "s1, u1, s2, u2, s4, u4, s8, u8, r, d";
-    //   0   1   2   3   4   5   6   7   8  9  
+    //   0   1   2   3   4   5   6   7   8  9
 
     int warningCombos[][2] = {
         // src index from just above, then dest index from just above
@@ -571,10 +571,10 @@ CalcCastTest::NegValues()
     char const * const src =
         "s1, s2, s4, s8, r, d";
     //   0   1   2   3   4  5
- 
+
     char const * const dest =
         "s1, u1, s2, u2, s4, u4, s8, u8, r, d";
-    //   0   1   2   3   4   5   6   7   8  9  
+    //   0   1   2   3   4   5   6   7   8  9
 
     // combinations of types above that should generate warnings
     int warningCombos[][2] = {
@@ -712,36 +712,36 @@ void
 CalcCastTest::OverflowSet(TupleDataWithBuffer& inTuple)
 {
     int idx = 0;
-    
+
     *(reinterpret_cast<int8_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<int8_t>::max();
     *(reinterpret_cast<uint8_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<uint8_t>::max();
     *(reinterpret_cast<int16_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<int16_t>::max();
     *(reinterpret_cast<uint16_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<uint16_t>::max();
     *(reinterpret_cast<int32_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<int32_t>::max();
     *(reinterpret_cast<uint32_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<uint32_t>::max();
     *(reinterpret_cast<int64_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<int64_t>::max();
     *(reinterpret_cast<uint64_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<uint64_t>::max();
     *(reinterpret_cast<float *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<float>::max();
     *(reinterpret_cast<double *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<double>::max();
 }
 
@@ -788,17 +788,17 @@ CalcCastTest::Overflow()
         {  5,  3  },  // u4 -> s2
         {  5,  4  },  // u4 -> s2
         {  6,  0  },  // etc...
-        {  6,  1  },  
-        {  6,  2  },  
-        {  6,  3  },  
-        {  6,  4  },  
-        {  6,  5  },  
-        {  7,  0  },  
-        {  7,  1  },  
-        {  7,  2  },  
-        {  7,  3  },  
-        {  7,  4  },  
-        {  7,  5  },  
+        {  6,  1  },
+        {  6,  2  },
+        {  6,  3  },
+        {  6,  4  },
+        {  6,  5  },
+        {  7,  0  },
+        {  7,  1  },
+        {  7,  2  },
+        {  7,  3  },
+        {  7,  4  },
+        {  7,  5  },
         {  7,  6  },  // u8 -> s8
         // REVIEW jvs 14-Aug-2005:  When I upgraded
         // to boost 1.33, the semantics for these two changed.
@@ -808,21 +808,21 @@ CalcCastTest::Overflow()
         {  7,  8  },  // u8 -> r (loss of precision)
         {  7,  9  },  // u8 -> d (loss of precision)
         */
-        {  8,  0  },  
-        {  8,  1  },  
-        {  8,  2  },  
-        {  8,  3  },  
-        {  8,  4  },  
-        {  8,  5  },  
+        {  8,  0  },
+        {  8,  1  },
+        {  8,  2  },
+        {  8,  3  },
+        {  8,  4  },
+        {  8,  5  },
         {  8,  6  },  // man, you'd think I'da automated this by now.
-        {  8,  7  },  
-        {  9,  0  },  
-        {  9,  1  },  
-        {  9,  2  },  
-        {  9,  3  },  
-        {  9,  4  },  
-        {  9,  5  },  
-        {  9,  6  },  
+        {  8,  7  },
+        {  9,  0  },
+        {  9,  1  },
+        {  9,  2  },
+        {  9,  3  },
+        {  9,  4  },
+        {  9,  5  },
+        {  9,  6  },
         {  9,  7  },
         {  9,  8  },  // d -> r
 
@@ -844,40 +844,40 @@ CalcCastTest::UnderflowSet(TupleDataWithBuffer& inTuple)
 {
 
     int idx = 0;
-    
+
     *(reinterpret_cast<int8_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<int8_t>::min();
     *(reinterpret_cast<uint8_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<uint8_t>::min();
     *(reinterpret_cast<int16_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<int16_t>::min();
     *(reinterpret_cast<uint16_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<uint16_t>::min();
     *(reinterpret_cast<int32_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<int32_t>::min();
     *(reinterpret_cast<uint32_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<uint32_t>::min();
     *(reinterpret_cast<int64_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<int64_t>::min();
     *(reinterpret_cast<uint64_t *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         std::numeric_limits<uint64_t>::min();
 
     // Note: min() for approx type is the smallest positive
     // number, not the most negative number. Unary minus of max()
     // gives smallest possible (very negative) number.
     *(reinterpret_cast<float *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         -std::numeric_limits<float>::max();
     *(reinterpret_cast<double *>
-      (const_cast<PBuffer>(inTuple[idx++].pData))) = 
+      (const_cast<PBuffer>(inTuple[idx++].pData))) =
         -std::numeric_limits<double>::max();
 }
 
@@ -967,3 +967,4 @@ CalcCastTest::Underflow()
 
 FENNEL_UNIT_TEST_SUITE(CalcCastTest);
 
+// End CalcCastTest.cpp

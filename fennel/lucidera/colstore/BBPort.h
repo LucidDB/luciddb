@@ -27,7 +27,7 @@ FENNEL_BEGIN_NAMESPACE
 // This file defines some types and macros used in the Broadbase code.
 // Code being ported can include it temporarily until all references to these
 // constructs have been cleaned up.
-    
+
 typedef int INT;
 typedef uint8_t BYTE;
 typedef BYTE *PBYTE;

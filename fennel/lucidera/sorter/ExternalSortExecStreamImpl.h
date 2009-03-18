@@ -9,12 +9,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -91,7 +91,7 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
      * Synchronization for availability status in runLoaders array.
      */
     StrictMutex runLoaderMutex;
-    
+
     /**
      * Helper used to read final run when stored externally.
      */
@@ -111,7 +111,7 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
      * Synchronization for storedRuns.
      */
     StrictMutex storedRunMutex;
-    
+
     /**
      * Information on runs stored externally.
      */
@@ -149,7 +149,7 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
      * (non-parallel version).
      */
     void computeFirstResult();
-    
+
     /**
      * Performs enough sorting to be able to start returning results
      * (parallel version).
@@ -162,7 +162,7 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
      * @param runLoader loaded run to sort
      */
     void sortRun(ExternalSortRunLoader &runLoader);
-    
+
     /**
      * Stores one run.
      *
@@ -210,13 +210,13 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
      * Releases resources associated with this stream.
      */
     void releaseResources();
-    
+
     // implement ExecStream
     virtual void closeImpl();
-    
+
 public:
     explicit ExternalSortExecStreamImpl();
-    
+
     // implement ExecStream
     virtual void prepare(ExternalSortExecStreamParams const &params);
     virtual void open(bool restart);

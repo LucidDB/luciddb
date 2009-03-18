@@ -34,9 +34,9 @@ class CorrelationJoinExecStreamTestSuite : public ExecStreamUnitTestBase
     TupleDescriptor descInt64;
     TupleAttributeDescriptor descAttrVarbinary16;
     TupleDescriptor descVarbinary16;
-    
+
 public:
-    explicit CorrelationJoinExecStreamTestSuite(bool addAllTests = true); 
+    explicit CorrelationJoinExecStreamTestSuite(bool addAllTests = true);
     void testCorrelationJoin();
 };
 

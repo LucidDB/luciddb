@@ -55,7 +55,7 @@ class LcsClusterVerifier : public LcsClusterReader
 
 public:
     explicit LcsClusterVerifier(BTreeDescriptor const &treeDescriptor);
- 
+
     /**
      * Retrieves cluster page data for the current cluster page
      */

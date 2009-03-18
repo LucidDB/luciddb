@@ -124,3 +124,4 @@ SqlStrLenOct(int strLenBytes)
 
 FENNEL_END_NAMESPACE
 
+// End SqlString.cpp

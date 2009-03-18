@@ -64,7 +64,7 @@ PBuffer BTreeHeapNodeAccessor::allocateEntry(
     node.nEntries++;
     node.cbTotalFree -= cbEntryWithOverhead;
     node.cbCompactFree -= cbEntryWithOverhead;
-        
+
     return pAllocation;
 }
 
@@ -73,7 +73,7 @@ void BTreeHeapNodeAccessor::deallocateEntry(
 {
     tupleAccessor.setCurrentTupleBuf(getEntryForReadInline(node,iEntry));
     uint cbEntry = tupleAccessor.getCurrentByteCount();
-    
+
     // see comments in BTreeCompactNodeAccessor::deallocateEntry
     if (iEntry != node.nEntries-1) {
         // delete the entry from the offset array

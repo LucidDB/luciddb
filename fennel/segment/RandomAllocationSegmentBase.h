@@ -157,7 +157,7 @@ protected:
      * is immutable.
      */
     ExtentNum nExtentsPerSegAlloc;
-    
+
     explicit RandomAllocationSegmentBase(
         SharedSegment delegateSegment);
 
@@ -171,7 +171,7 @@ protected:
     inline PageId getSegAllocPageId(uint iSegPage) const;
 
     /**
-     * Retrieves the pageId of the SegmentAllocationNode that should be 
+     * Retrieves the pageId of the SegmentAllocationNode that should be
      * updated when updates are made to that node.
      *
      * @param origSegAllocPageId original SegmentAllocationNode pageId
@@ -198,7 +198,7 @@ protected:
     inline PageId getExtentAllocPageId(ExtentNum extentNum) const;
 
     /**
-     * Retrieves the pageId of the extent allocation node that should be 
+     * Retrieves the pageId of the extent allocation node that should be
      * updated when updates are made to that node.
      *
      * @param extentNum absolute 0-based extent number
@@ -332,7 +332,7 @@ protected:
      * size of the underlying segment.
      */
     uint inferSegAllocCount();
-    
+
     /**
      * Formats allocation pages based on current size of underlying segment,
      * marking all pages as deallocated.

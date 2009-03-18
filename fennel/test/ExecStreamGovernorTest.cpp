@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -54,7 +54,7 @@ class ExecStreamGovernorTest : public ExecStreamUnitTestBase
      * @param optReqts opt resource requirements for each producer
      * @param optTypes opt resource setting type for each producer
      * @param expected expected resources that the resource governor will
-     * allocate to each producer 
+     * allocate to each producer
      * @param exception true if the test is expected to return an exception
      * indicating that scratch pages have been exhausted; default is false
      */
@@ -134,7 +134,7 @@ void ExecStreamGovernorTest::testOptLessAccurate()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 2 - min=20, opt=40, optType=EXEC_RESOURCE_ACCURATE, expected=40
     quantity.nCachePages = 20;
     minReqts.push_back(quantity);
@@ -143,7 +143,7 @@ void ExecStreamGovernorTest::testOptLessAccurate()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     testGovernor(nProducers, minReqts, optReqts, optTypes, expected);
 }
 
@@ -173,7 +173,7 @@ void ExecStreamGovernorTest::testOptLessEstimate()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 2 - min=15, opt=17, optType=EXEC_RESOURCE_ACCURATE, expected=17
     quantity.nCachePages = 15;
     minReqts.push_back(quantity);
@@ -182,7 +182,7 @@ void ExecStreamGovernorTest::testOptLessEstimate()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 3 - min=20, opt=23, optType=EXEC_RESOURCE_ESTIMATE, expected=38
     quantity.nCachePages = 20;
     minReqts.push_back(quantity);
@@ -231,7 +231,7 @@ void ExecStreamGovernorTest::testOptEqualEstimate()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ESTIMATE;
     optTypes.push_back(optType);
-    
+
     // producer 2 - min=15, opt=17, optType=EXEC_RESOURCE_ACCURATE, expected=17
     quantity.nCachePages = 15;
     minReqts.push_back(quantity);
@@ -240,7 +240,7 @@ void ExecStreamGovernorTest::testOptEqualEstimate()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 3 - min=20, opt=23, optType=EXEC_RESOURCE_ACCURATE, expected=23
     quantity.nCachePages = 20;
     minReqts.push_back(quantity);
@@ -289,7 +289,7 @@ void ExecStreamGovernorTest::testInBetween()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 2 - min=15, opt=31, optType=EXEC_RESOURCE_ESTIMATE, expected=19
     quantity.nCachePages = 15;
     minReqts.push_back(quantity);
@@ -299,7 +299,7 @@ void ExecStreamGovernorTest::testInBetween()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ESTIMATE;
     optTypes.push_back(optType);
-    
+
     // producer 3 - min=20, opt=0, optType=EXEC_RESOURCE_UNBOUNDED, expected=31
     quantity.nCachePages = 20;
     minReqts.push_back(quantity);
@@ -355,7 +355,7 @@ void ExecStreamGovernorTest::testMinGreaterAllocation()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 2 - min=55, opt=55, optType=EXEC_RESOURCE_ACCURATE, expected=55
     quantity.nCachePages = 55;
     minReqts.push_back(quantity);
@@ -363,7 +363,7 @@ void ExecStreamGovernorTest::testMinGreaterAllocation()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     testGovernor(nProducers, minReqts, optReqts, optTypes, expected);
 }
 
@@ -392,7 +392,7 @@ void ExecStreamGovernorTest::testMinEqualAllocation()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 2 - min=45, opt=50, optType=EXEC_RESOURCE_ACCURATE, expected=45
     quantity.nCachePages = 45;
     minReqts.push_back(quantity);
@@ -402,7 +402,7 @@ void ExecStreamGovernorTest::testMinEqualAllocation()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     testGovernor(nProducers, minReqts, optReqts, optTypes, expected);
 }
 
@@ -429,7 +429,7 @@ void ExecStreamGovernorTest::testMinGreaterAvailable()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 2 - min=46, opt=46, optType=EXEC_RESOURCE_ACCURATE, expected=46
     quantity.nCachePages = 46;
     minReqts.push_back(quantity);
@@ -437,7 +437,7 @@ void ExecStreamGovernorTest::testMinGreaterAvailable()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     testGovernor(nProducers, minReqts, optReqts, optTypes, expected, true);
 }
 
@@ -464,7 +464,7 @@ void ExecStreamGovernorTest::testReturnResources()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 2 - min=45, opt=45, optType=EXEC_RESOURCE_ACCURATE, expected=45
     quantity.nCachePages = 45;
     minReqts.push_back(quantity);
@@ -472,7 +472,7 @@ void ExecStreamGovernorTest::testReturnResources()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     testGovernor(nProducers, minReqts, optReqts, optTypes, expected);
 
     resetExecStreamTest();
@@ -488,7 +488,7 @@ void ExecStreamGovernorTest::testReturnResources()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     // producer 2 - min=50, opt=50, optType=EXEC_RESOURCE_ACCURATE, expected=50
     quantity.nCachePages = 50;
     minReqts.push_back(quantity);
@@ -496,7 +496,7 @@ void ExecStreamGovernorTest::testReturnResources()
     expected.push_back(quantity);
     optType = EXEC_RESOURCE_ACCURATE;
     optTypes.push_back(optType);
-    
+
     testGovernor(nProducers, minReqts, optReqts, optTypes, expected);
 }
 

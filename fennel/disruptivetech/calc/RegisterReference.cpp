@@ -69,7 +69,7 @@ RegisterSetBinding::RegisterSetBinding(TupleData* base, const TupleData* shadow,
 
 }
 
-void 
+void
 RegisterReference::setCalc(Calculator* calcP) {
     mRegisterSetP = calcP->mRegisterSetBinding;
     mRegisterSetDescP = calcP->mRegisterSetDescriptor;
@@ -81,7 +81,7 @@ RegisterReference::setCalc(Calculator* calcP) {
     }
 }
 
-void 
+void
 RegisterReference::cachePointer() {
     if (mProp & (EPropCachePointer|EPropPtrReset)) {
         TupleDatum *bind = getBinding();
@@ -131,6 +131,6 @@ RegisterReference::toString() const
 
 
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/disruptivetech/calc/RegisterReference.cpp#8 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/disruptivetech/calc/RegisterReference.cpp#9 $");
 
 // End RegisterReference.cpp

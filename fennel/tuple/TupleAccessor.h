@@ -63,7 +63,7 @@ class TupleAccessor : public boost::noncopyable
      * order.
      */
     std::vector<uint> marshalOrder;
-    
+
     /**
      * @see getMaxByteCount()
      */
@@ -78,7 +78,7 @@ class TupleAccessor : public boost::noncopyable
      * Precomputed size of bit field array (in bits).
      */
     uint nBitFields;
-    
+
     /**
      * Precomputed byte offset for bit array.
      */
@@ -108,7 +108,7 @@ class TupleAccessor : public boost::noncopyable
      * present.
      */
     bool bAlignedVar;
-    
+
     /**
      * @see getCurrentTupleBuf()
      */
@@ -190,7 +190,7 @@ public:
     {
         return iBitFieldOffset;
     }
-    
+
     /**
      * Accesses the buffer storing the current tuple image.
      *
@@ -283,7 +283,7 @@ public:
     {
         return *(ppAttributeAccessors[iAttribute]);
     }
-    
+
     /**
      * Marshals a tuple's values into a buffer.
      *
@@ -301,9 +301,9 @@ public:
     {
         return ppAttributeAccessors.size();
     }
-    
+
     // TODO:  private
-    
+
     /**
      * @return the array of bit fields for the current tuple image
      */
@@ -325,7 +325,7 @@ public:
             const_cast<PBuffer>(pTupleBuf),
             iIndirectOffset);
     }
-    
+
     /**
      * Resolves an indirect offset into a pointer to the data offset.
      *

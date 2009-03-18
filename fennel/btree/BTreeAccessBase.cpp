@@ -38,7 +38,7 @@ BTreeAccessBase::BTreeAccessBase(BTreeDescriptor const &treeDescriptorInit)
     keyDescriptor.projectFrom(
         treeDescriptor.tupleDescriptor,
         treeDescriptor.keyProjection);
-    
+
     // TODO:  fine-tuning (in some cases fixed-width may be better for short
     // variable-width tuples, and indirection may be good for long fixed-width
     // tuples)
@@ -50,7 +50,7 @@ BTreeAccessBase::BTreeAccessBase(BTreeDescriptor const &treeDescriptorInit)
     typedef BTreeKeyedNodeAccessor<
         BTreeCompactNodeAccessor,TupleAccessor>
         FixedNonLeafNodeAccessor;
-    
+
     // supported non-leaf accessor types
     typedef BTreeKeyedNodeAccessor<
         BTreeHeapNodeAccessor,TupleProjectionAccessor>
@@ -77,7 +77,7 @@ BTreeAccessBase::BTreeAccessBase(BTreeDescriptor const &treeDescriptorInit)
         pLeafNodeAccessor.reset(pLeafNodeAccessorImpl);
         pLeafNodeAccessorImpl->pKeyAccessor = &leafKeyAccessor;
     }
-    
+
     if (tmpNonLeafAccessor.isFixedWidth()) {
         FixedNonLeafNodeAccessor *pNonLeafNodeAccessorImpl =
             new FixedNonLeafNodeAccessor();
@@ -93,10 +93,10 @@ BTreeAccessBase::BTreeAccessBase(BTreeDescriptor const &treeDescriptorInit)
     }
 
     pLeafNodeAccessor->tupleDescriptor = treeDescriptor.tupleDescriptor;
-    
+
     pNonLeafNodeAccessor->tupleDescriptor = keyDescriptor;
     StandardTypeDescriptorFactory stdTypeFactory;
-        
+
     // TODO:  make PageId storage type selection automatic
     assert(sizeof(PageId) == sizeof(uint64_t));
     TupleAttributeDescriptor pageIdDesc(
@@ -109,7 +109,7 @@ BTreeAccessBase::BTreeAccessBase(BTreeDescriptor const &treeDescriptorInit)
     pChildAccessor = &(
         pNonLeafNodeAccessor->tupleAccessor.getAttributeAccessor(
             getKeyProjection().size()));
-          
+
     leafKeyAccessor.bind(
         pLeafNodeAccessor->tupleAccessor,
         getKeyProjection());
@@ -138,7 +138,7 @@ PageId BTreeAccessBase::getFirstChild(PageId parentPageId)
     return NULL_PAGE_ID;
 }
 
-void BTreeAccessBase::setRootPageId(PageId rootPageId) 
+void BTreeAccessBase::setRootPageId(PageId rootPageId)
 {
     treeDescriptor.rootPageId = rootPageId;
 }

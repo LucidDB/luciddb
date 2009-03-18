@@ -59,7 +59,7 @@ public:
     explicit
     PointerPointerInstruction(RegisterRef<PTR_TYPE>* result,
                               RegisterRef<PTR_TYPE>* op1,
-                              RegisterRef<OP2T>* op2, 
+                              RegisterRef<OP2T>* op2,
                               StandardTypeDescriptorOrdinal pointerType)
         : mResult(result),
           mOp1(op1),
@@ -68,7 +68,7 @@ public:
     {
         assert(StandardTypeDescriptor::isArray(pointerType));
     }
-    ~PointerPointerInstruction() { 
+    ~PointerPointerInstruction() {
         // If (0) to reduce performance impact of template type checking
         if (0) PointerInstruction_NotAPointerType<PTR_TYPE>();
     }
@@ -85,10 +85,10 @@ protected:
 template <typename PTR_TYPE>
 class PointerAdd : public PointerPointerInstruction<PTR_TYPE, PointerOperandT>
 {
-public: 
+public:
     explicit
     PointerAdd(RegisterRef<PTR_TYPE>* result,
-               RegisterRef<PTR_TYPE>* op1, 
+               RegisterRef<PTR_TYPE>* op1,
                RegisterRef<PointerOperandT>* op2,
                StandardTypeDescriptorOrdinal pointerType)
         : PointerPointerInstruction<PTR_TYPE, PointerOperandT>(result,
@@ -99,9 +99,9 @@ public:
     virtual
     ~PointerAdd() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->isNull() || 
+        if (PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->isNull() ||
             PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->isNull()) {
             PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->toNull();
             PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->length(0);
@@ -126,18 +126,18 @@ public:
     }
 
     static const char* longName() { return "PointerAdd"; }
-    static const char* shortName() { return "ADD"; } 
+    static const char* shortName() { return "ADD"; }
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult, 
-                       PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1, 
+                       PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult,
+                       PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1,
                        PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2);
     }
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        return InstructionSignature(shortName(), 
+        return InstructionSignature(shortName(),
                                     regDesc(0, numArgs()-1, type, 1));
     }
 
@@ -160,10 +160,10 @@ public:
 template <typename PTR_TYPE>
 class PointerSub : public PointerPointerInstruction<PTR_TYPE, PointerOperandT>
 {
-public: 
+public:
     explicit
     PointerSub(RegisterRef<PTR_TYPE>* result,
-               RegisterRef<PTR_TYPE>* op1, 
+               RegisterRef<PTR_TYPE>* op1,
                RegisterRef<PointerOperandT>* op2,
                StandardTypeDescriptorOrdinal pointerType)
         : PointerPointerInstruction<PTR_TYPE, PointerOperandT>(result,
@@ -171,21 +171,21 @@ public:
                                                                op2,
                                                                pointerType)
     { }
-    virtual 
+    virtual
     ~PointerSub() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->isNull() || 
+        if (PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->isNull() ||
             PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->isNull()) {
             PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->toNull();
             PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult->length(0);
         } else {
-            // Educated guess: Length increases. If incorrect, compiler is 
+            // Educated guess: Length increases. If incorrect, compiler is
             // responsible for resetting the length correctly with
             // Instruction PointerPutLength
-            uint newLength = 
-               PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->length() + 
+            uint newLength =
+               PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->length() +
                PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2->value();
             uint maxLength = PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1->storage();
             if (newLength > maxLength) newLength = maxLength;
@@ -202,12 +202,12 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult, 
-                       PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1, 
+                       PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mResult,
+                       PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp1,
                        PointerPointerInstruction<PTR_TYPE, PointerOperandT>::mOp2);
     }
 
-    static InstructionSignature 
+    static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
         return InstructionSignature(shortName(),
                                     regDesc(0, numArgs()-1, type, 1));
@@ -228,7 +228,7 @@ public:
 template <typename PTR_TYPE>
 class PointerMove : public PointerPointerInstruction<PTR_TYPE, PTR_TYPE>
 {
-public: 
+public:
     explicit
     PointerMove(RegisterRef<PTR_TYPE>* result,
                 RegisterRef<PTR_TYPE>* op1,
@@ -237,17 +237,17 @@ public:
                                                         op1,
                                                         pointerType)
     { }
-    virtual 
+    virtual
     ~PointerMove() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1->isNull()) {
             PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->toNull();
             PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->length(0);
         } else {
             PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->
-               pointer(PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1->pointer(), 
+               pointer(PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1->pointer(),
                        PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1->length());
         }
     }
@@ -255,15 +255,15 @@ public:
     static const char* shortName() { return "MOVE"; }
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), 
-                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult, 
-                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1, 
+        describeHelper(out, values, longName(), shortName(),
+                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult,
+                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1,
                        PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        return InstructionSignature(shortName(), 
+        return InstructionSignature(shortName(),
                                     regDesc(0, numArgs(), type, 0));
     }
 
@@ -280,7 +280,7 @@ public:
 template <typename PTR_TYPE>
 class PointerRef : public PointerPointerInstruction<PTR_TYPE, PTR_TYPE>
 {
-public: 
+public:
     explicit
     PointerRef(RegisterRef<PTR_TYPE>* result,
                RegisterRef<PTR_TYPE>* op1,
@@ -289,10 +289,10 @@ public:
                                                         op1,
                                                         pointerType)
     { }
-    virtual 
+    virtual
     ~PointerRef() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->
             refer(PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1);
@@ -302,14 +302,14 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult, 
-                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1, 
+                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult,
+                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1,
                        PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        return InstructionSignature(shortName(), 
+        return InstructionSignature(shortName(),
                                     regDesc(0, numArgs(), type, 0));
     }
 
@@ -327,7 +327,7 @@ public:
 template <typename PTR_TYPE>
 class PointerToNull : public PointerPointerInstruction<PTR_TYPE, PTR_TYPE>
 {
-public: 
+public:
     explicit
     PointerToNull(RegisterRef<PTR_TYPE>* result,
                   StandardTypeDescriptorOrdinal pointerType)
@@ -336,7 +336,7 @@ public:
     virtual
     ~PointerToNull() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->toNull();
         PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult->length(0);
@@ -346,8 +346,8 @@ public:
     static int numArgs() { return 1; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult, 
-                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1, 
+                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mResult,
+                       PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp1,
                        PointerPointerInstruction<PTR_TYPE, PTR_TYPE>::mOp2);
     }
 

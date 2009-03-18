@@ -39,7 +39,7 @@ FENNEL_BEGIN_NAMESPACE
 struct SegStreamNode : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0x99f28198d53750a5LL;
-    
+
     uint cbData;
 };
 
@@ -70,7 +70,7 @@ typedef SegNodeLock<SegStreamNode> SegStreamLock;
 /**
  * Memento for a position within a SegStream.
  */
-struct SegStreamPosition 
+struct SegStreamPosition
 {
     /**
      * Physical position.
@@ -123,7 +123,7 @@ public:
     SharedSegment getSegment() const;
 
     /**
-     * @return segment accessor used by this stream 
+     * @return segment accessor used by this stream
      */
     SegmentAccessor const &getSegmentAccessor() const;
 };
@@ -135,14 +135,14 @@ public:
 class SegStreamMarker : public ByteStreamMarker
 {
     friend class SegInputStream;
-    
+
     /**
      * Position for random-access mark/reset.
      */
     SegStreamPosition segPos;
 
     explicit SegStreamMarker(SegStream const &segStream);
-    
+
     // implement ByteStreamMarker
     virtual FileSize getOffset() const;
 };

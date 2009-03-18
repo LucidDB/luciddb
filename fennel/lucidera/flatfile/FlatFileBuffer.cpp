@@ -66,7 +66,7 @@ void FlatFileBuffer::open()
 
     // NOTE jvs 17-Oct-2008:  we use fopen here instead of ifstream
     // in case we want to support popen("gunzip") in the future.
-    
+
     pFile = fopen(path.c_str(), "r");
     if (!pFile) {
         throw FennelExcn(
@@ -141,7 +141,7 @@ bool FlatFileBuffer::isDone()
     return isComplete() && getReadPtr() >= getEndPtr();
 }
 
-void FlatFileBuffer::setReadPtr(char *ptr) 
+void FlatFileBuffer::setReadPtr(char *ptr)
 {
     assert(pBuffer <= pCurrent && pCurrent <= ptr && ptr <= getEndPtr());
     pCurrent = ptr;

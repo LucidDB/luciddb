@@ -45,7 +45,7 @@ void FtrsTableWriterExecStream::prepare(
     actionType = params.actionType;
     pActionMutex = params.pActionMutex;
     assert(pActionMutex);
-    
+
     TupleAccessor &outputTupleAccessor =
         pOutAccessor->getScratchTupleAccessor();
     TupleDescriptor const &outputTupleDesc = pOutAccessor->getTupleDesc();
@@ -60,7 +60,7 @@ void FtrsTableWriterExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &optQuantity)
 {
     ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
-    
+
     // REVIEW:  update/delete resources
 
     // This is to account for total number of pages needed to perform an
@@ -72,7 +72,7 @@ void FtrsTableWriterExecStream::getResourceRequirements(
 
     // each BTreeWriter currently needs a private scratch page
     minQuantity.nCachePages += pTableWriter->getIndexCount();
-    
+
     optQuantity = minQuantity;
 }
 
@@ -80,14 +80,14 @@ void FtrsTableWriterExecStream::open(bool restart)
 {
     ConduitExecStream::open(restart);
     assert(pTxn);
-    
+
     // REVIEW:  close/restart?
-    
+
     // block checkpoints while joining txn
     SXMutexSharedGuard actionMutexGuard(*pActionMutex);
     pTxn->addParticipant(pTableWriter);
     actionMutexGuard.unlock();
-    
+
     nTuples = 0;
     pTableWriter->openIndexWriters();
     isDone = false;
@@ -101,7 +101,7 @@ ExecStreamResult FtrsTableWriterExecStream::execute(
         pOutAccessor->markEOS();
         return EXECRC_EOS;
     }
-    
+
     if (pInAccessor->getState() == EXECBUF_EOS) {
         // we've processed all input,  so commit what we've written
         // and return row count as our output
@@ -178,10 +178,10 @@ void FtrsTableWriterExecStream::commitSavepoint()
     if (svptId == NULL_SVPT_ID) {
         return;
     }
-    
+
     SavepointId svptIdCopy = svptId;
     svptId = NULL_SVPT_ID;
-    
+
     // block checkpoints while committing savepoint
     SXMutexSharedGuard actionMutexGuard(*pActionMutex);
     pTxn->commitSavepoint(svptIdCopy);
@@ -192,10 +192,10 @@ void FtrsTableWriterExecStream::rollbackSavepoint()
     if (svptId == NULL_SVPT_ID) {
         return;
     }
-    
+
     SavepointId svptIdCopy = svptId;
     svptId = NULL_SVPT_ID;
-    
+
     // block checkpoints while rolling back savepoint
     SXMutexSharedGuard actionMutexGuard(*pActionMutex);
     pTxn->rollback(&svptIdCopy);

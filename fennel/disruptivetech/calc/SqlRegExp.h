@@ -39,7 +39,7 @@ FENNEL_BEGIN_NAMESPACE
 #error "endian not defined"
 #endif
 
-/** \file SqlRegExp.h 
+/** \file SqlRegExp.h
  *
  * SqlRegExp is a library of string fuctions that perform according to
  * the SQL99 standard and implement the LIKE and SIMILAR operators.
@@ -107,9 +107,9 @@ SqlLikePrep(char const * const pattern,
                     throw "22019";
                 }
             }
-            
+
             expPat.assign(pattern, patternLenBytes);
-            
+
             // Escape all of ".", "|", "*", "?", "+",
             //        "(", ")", "{", "}", "[", "]", "^", "$", and "\"
             //        so they have no meaning to regex.
@@ -127,9 +127,9 @@ SqlLikePrep(char const * const pattern,
                         // Invalid Escape Sequence
                         throw "22025";
                     }
-                    if (escapeIsRegexpSpecial && 
+                    if (escapeIsRegexpSpecial &&
                         expPat[pos+1] == escapeChar) {
-                        expPat[pos] = '\\'; // replace escape char 
+                        expPat[pos] = '\\'; // replace escape char
                         pos+=2;             // move past subsequent escape char
                     } else {
                         expPat.erase(pos, 1); // remove escape char
@@ -164,7 +164,7 @@ SqlLikePrep(char const * const pattern,
                     }
                 }
             }
-            
+
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
             // Convert pattern to ICU regex pattern
@@ -194,7 +194,7 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
         if (escapeLenBytes == 1) {
             escapeChar = *escape;
             sqlSpecial.append(1, escapeChar);
-        
+
             // Define special characters for SQL2003 Part 2 Section 8.6 General
             // Rule 3.b. (See also Syntax Rule 6.)  Added <right brace> to these
             // list as it appears at first glance to be an omission from the
@@ -204,7 +204,7 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
 
             if (strchr(SqlSimilarPrepGeneralRule3b, escapeChar)) {
                 // Escape char is special char. Must not be
-                // present in pattern unless it part of a 
+                // present in pattern unless it part of a
                 // correctly formed <escape character>
                 size_t pos = 0;
                 while ((pos = expPat.find(escapeChar, pos)) !=
@@ -240,7 +240,7 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
 }
 
 
-// StrSimilarPrepRewriteCharEnumeration 
+// StrSimilarPrepRewriteCharEnumeration
 // Helper to StrSimilarPrepReWrite -
 // Changes regular character set identifier strings (e.g.: [:ALPHA:])
 // into corresponding regex strings.
@@ -266,7 +266,7 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
         } else if (!expPat.compare(pos, 2, "[:")) {
             // no-op
         } else {
-            // The <character enumeration> does not contain a 
+            // The <character enumeration> does not contain a
             // <regular character set identifier>.
             //
             // SQL2003 Part 2 Section 8.6 Syntax Rule 5 and Syntax Rule 6.  Only
@@ -290,7 +290,7 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
                     break;
                 } else {
                     // A special char (as defined by Syntax Rule 6) found
-                    // unescaped inside character enumeration 
+                    // unescaped inside character enumeration
                     //
                     // SQL2003 Part 2 Section 8.6 General Rule 2
                     // Data Exception - Invalid Regular Expression
@@ -414,7 +414,7 @@ SqlSimilarPrepReWrite(char escapeChar,
                     // Delete one of the two <escape><escape> chars:
                     expPat.erase(pos, 1);
                     // Move past the sole remaining <escape> char:
-                    pos++; 
+                    pos++;
                 } else {
                     // Malformed <escaped char>. Attempt to escape a
                     // non special character.  SQL2003 Part 2 Section 8.6 Syntax
@@ -460,11 +460,11 @@ SqlSimilarPrepReWrite(char escapeChar,
                     expPat.replace(pos, 1, ".*");
                     pos += 2;
                     break;
-                case '\\': 
+                case '\\':
                     //
                     // Characters that boost::regex treats as special:
                     // ".|*?+(){}[]^$\\":
-                    // Characters boost::regex treats as special, on top of 
+                    // Characters boost::regex treats as special, on top of
                     // SqlSimilarPrepSyntaxRule6:
                     // "\\.$"
                     //
@@ -512,7 +512,7 @@ SqlSimilarPrepReWrite(char escapeChar,
 //!
 //! See SQL99 Part 2 Section 8.6 and SQL2003 Part 2 Section 8.6. This routine adheres to SQL2003
 //! as published in the working draft, except as noted below:
-//! 
+//!
 //! Does not support  General Rule 7L which
 //! allows the definition of both included and excluded characters
 //! from sets at the same time. e.g.: [abc^def]. Seems to be of low value.

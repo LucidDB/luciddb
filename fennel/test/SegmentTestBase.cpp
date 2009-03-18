@@ -117,7 +117,7 @@ void SegmentTestBase::testAllocate()
 void SegmentTestBase::testDeallocate()
 {
     assert(pRandomSegment);
-        
+
     uint i;
     SegmentAccessor segmentAccessor(pRandomSegment,pCache);
     for (i = 0; i < nRandomOps; ++i) {

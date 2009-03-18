@@ -39,7 +39,7 @@ public:
     virtual
     ~ReturnInstruction() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         // Force pc past end of program
         pc = TPROGRAMCOUNTERMAX;
     }
@@ -65,10 +65,10 @@ public:
 };
 
 //! Add a warning/exception to the message queue.
-//! 
+//!
 //! Code is expected to be a valid SQL99 error code, eg, 22011, or a
 //! valid extension thereof. When code is NULL, an exception is not
-//! raised- becomes a no-op. Note: instruction does not 
+//! raised- becomes a no-op. Note: instruction does not
 //! terminate execution.
 class RaiseInstruction : public Instruction
 {
@@ -81,7 +81,7 @@ public:
     ~RaiseInstruction() { }
 
     virtual void exec(TProgramCounter& pc) const {
-        pc++; 
+        pc++;
         if (!mCode->isNull()) {
             throw CalcMessage(mCode->pointer(), pc - 1);
         }
@@ -104,7 +104,7 @@ public:
     create(InstructionSignature const & sig)
     {
         assert(sig.size() == numArgs());
-        return new 
+        return new
             RaiseInstruction(static_cast<RegisterRef<char*>*> (sig[0]));
     }
 private:

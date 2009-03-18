@@ -46,7 +46,7 @@ void JniProxy::init(JniEnvRef pEnvInit,jobject jObjectInit)
 JniProxyVisitor::~JniProxyVisitor()
 {
 }
-    
+
 void JniProxyVisitor::unhandledVisit()
 {
     permAssert(false);

@@ -322,7 +322,7 @@ void TupleAccessor::compute(
     initFixedAccessors(tuple,aligned8);
     initFixedAccessors(tuple,aligned4);
     initFixedAccessors(tuple,aligned2);
-    
+
     if (pFirstVariableAccessor) {
         iFirstVarEndIndirectOffset = cbMaxStorage;
     } else {
@@ -334,13 +334,13 @@ void TupleAccessor::compute(
             cbMaxStorage;
         cbMaxStorage += sizeof(StoredValueOffset);
     }
-    
+
     if (pFirstVariableAccessor) {
         iLastVarEndIndirectOffset = cbMaxStorage - sizeof(StoredValueOffset);
     } else {
         iLastVarEndIndirectOffset = MAXU;
     }
-    
+
     initFixedAccessors(tuple,unalignedFixed);
 
     if (nBitFields) {
@@ -489,7 +489,7 @@ void TupleAccessor::resetCurrentTupleBuf()
 void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
 {
     uint n = std::min(tuple.size() - iFirstDatum,ppAttributeAccessors.size());
-    
+
     if ((format == TUPLE_FORMAT_NETWORK) || bAlignedVar) {
         // for TUPLE_FORMAT_NETWORK, unmarshal attributes individually
         for (uint i = 0; i < n; ++i) {
@@ -501,7 +501,7 @@ void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
 
     // for other formats, we can go a little faster by avoiding per-attribute
     // call overhead
-    
+
     uint iNextVarOffset = iFirstVarOffset;
     StoredValueOffset const *pNextVarEndOffset =
         referenceIndirectOffset(iFirstVarEndIndirectOffset);
@@ -543,9 +543,9 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
 #if DEBUG_TUPLE_ACCESS
     *reinterpret_cast<MagicNumber *>(pTupleBufDest) = TUPLE_MAGIC_NUMBER;
 #endif
-    
+
     pTupleBuf = pTupleBufDest;
-            
+
     uint iNextVarOffset = iFirstVarOffset;
     StoredValueOffset *pNextVarEndOffset =
         referenceIndirectOffset(pTupleBufDest,iFirstVarEndIndirectOffset);
@@ -585,7 +585,7 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
             assert(!isMAXU(accessor.iNullBit));
         }
         if (!isMAXU(accessor.iEndIndirectOffset)) {
-            assert(pNextVarEndOffset == 
+            assert(pNextVarEndOffset ==
                 referenceIndirectOffset(accessor.iEndIndirectOffset));
             if (value.pData) {
                 iNextVarOffset += value.cbData;

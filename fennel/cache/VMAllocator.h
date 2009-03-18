@@ -50,7 +50,7 @@ public:
      * will be allocated at any one time
      */
     explicit VMAllocator(size_t cbAlloc,size_t nLocked = 0);
-    
+
     virtual ~VMAllocator();
 
 // ----------------------------------------------------------------------

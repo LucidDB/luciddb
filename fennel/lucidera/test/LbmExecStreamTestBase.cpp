@@ -89,12 +89,12 @@ void LbmExecStreamTestBase::generateBitmaps(
     }
     // write out the last LbmEntry
     produceEntry(lbmEntry, bitmapTupleAccessor, bmInput);
-    
+
     assert(bmInput.currBufSize <= bmInput.fullBufSize);
 }
 
 void LbmExecStreamTestBase::produceEntry(
-    LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, 
+    LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor,
     BitmapInput &bmInput)
 {
     TupleData bitmapTuple = lbmEntry.produceEntryTuple();
@@ -121,7 +121,7 @@ void LbmExecStreamTestBase::initValuesExecStream(
 void LbmExecStreamTestBase::initSorterExecStream(
     ExternalSortExecStreamParams &params,
     ExecStreamEmbryo &embryo,
-    TupleDescriptor const &outputDesc, 
+    TupleDescriptor const &outputDesc,
     uint nKeys)
 {
     params.outputTupleDesc = outputDesc;
@@ -144,7 +144,7 @@ void LbmExecStreamTestBase::initSorterExecStream(
 
 void LbmExecStreamTestBase::initNormalizerExecStream(
     LbmNormalizerExecStreamParams &params,
-    ExecStreamEmbryo &embryo, 
+    ExecStreamEmbryo &embryo,
     uint nKeys)
 {
     TupleProjection keyProj;
@@ -190,7 +190,7 @@ void LbmExecStreamTestBase::generateBitmaps(
     // write out the last LbmEntry
     produceEntry(
         lbmEntry, bitmapTupleAccessor, pBuf, bufSize, nBitmaps, includeKeys);
-    
+
     assert(bufSize <= fullBufSize);
 }
 
@@ -273,7 +273,7 @@ uint LbmExecStreamTestBase::getTupleInterval(
 }
 
 void LbmExecStreamTestBase::testCaseSetUp()
-{    
+{
     ExecStreamUnitTestBase::testCaseSetUp();
 
     bitmapColSize = pRandomSegment->getUsablePageSize()/8;
@@ -293,7 +293,7 @@ void LbmExecStreamTestBase::testCaseSetUp()
     bitmapTupleData[1].cbData = 0;
     bitmapTupleData[2].pData = NULL;
     bitmapTupleData[2].cbData = 0;
-        
+
     bitmapTupleAccessor.compute(bitmapTupleDesc);
 }
 

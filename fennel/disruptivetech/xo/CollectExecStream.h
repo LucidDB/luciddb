@@ -41,7 +41,7 @@ struct CollectExecStreamParams : public ConduitExecStreamParams
 };
 
 /**
- * CollectExecStream reads all tuples from a child stream and collects them 
+ * CollectExecStream reads all tuples from a child stream and collects them
  * into a single tuple which is written to one output tuple.
  *
  * @author Wael Chatila
@@ -55,13 +55,13 @@ private:
     boost::scoped_array<FixedBuffer> pOutputBuffer;
     uint bytesWritten;
     bool alreadyWrittenToOutput;
-    
+
 public:
     virtual void prepare(CollectExecStreamParams const &params);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void open(bool restart);
     virtual void close();
-    
+
 };
 
 FENNEL_END_NAMESPACE

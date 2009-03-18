@@ -90,7 +90,7 @@ class LhxAggExecStream : public ConduitExecStream
 {
     // REVIEW jvs 26-Aug-2006:  Fennel convention for enum names is
     // all uppercase with underscores
-    
+
     enum LhxAggState {
         ForcePartitionBuild, Build, Produce, ProducePending,
         Partition, CreateChildPlan, GetNextPlan, Done
@@ -139,7 +139,7 @@ class LhxAggExecStream : public ConduitExecStream
     // REVIEW jvs 25-Aug-2006:  Next three fields need comments, maybe
     // a reference to somewhere else explaining the plan concept.  Is
     // it true that isTopPlan can be derived from (curPlan == rootPlan.get())?
-    
+
     /*
      * Plan
      */
@@ -155,17 +155,17 @@ class LhxAggExecStream : public ConduitExecStream
     // REVIEW jvs 25-Aug-2006: This will always be 0, right?  In that case, use
     // a static const to make it obvious, and assert accordingly in ::prepare.
     // And then use BUILD_INPUT_INDEX naming convention.
-    
+
     /**
      * Index of build input(should be 0 for agg)
      */
     uint buildInputIndex;
-  
+
     /**
      * Partition context used in recursive partitioning.
      */
     LhxPartitionInfo partInfo;
-    
+
     /**
      * The build partition (which is also the only partition)
      */
@@ -199,7 +199,7 @@ class LhxAggExecStream : public ConduitExecStream
      * The next state of the AggExecStream
      */
     LhxAggState nextState;
-  
+
 
     // REVIEW jvs 25-Aug-2006: This is so temporary that it is never
     // even referenced anywhere?
@@ -211,7 +211,7 @@ class LhxAggExecStream : public ConduitExecStream
     // REVIEW jvs 25-Aug-2006:  Next two fields need comments, maybe
     // a reference to somewhere else explaining the concept of partial
     // aggregation.
-    
+
     AggComputerList aggComputers;
     AggComputerList partialAggComputers;
 

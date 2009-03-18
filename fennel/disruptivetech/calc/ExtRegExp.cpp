@@ -35,7 +35,7 @@ public:
     ExtRegExpContext(boost::regex const & re,
                      string const pat) :
         regex(re),
-        pattern(pat) 
+        pattern(pat)
     {
     }
     boost::regex regex;
@@ -45,7 +45,7 @@ public:
 
 void
 strLikeEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
-               RegisterRef<bool>* result,   
+               RegisterRef<bool>* result,
                RegisterRef<char*>* matchValue,
                RegisterRef<char*>* pattern,
                RegisterRef<char*>* escape) // may be NULL if called by strLikeA
@@ -77,7 +77,7 @@ strLikeEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
                 context.reset(new ExtRegExpContext(regex, pat));
             }
             catch (boost::bad_expression badexp) {
-                // SQL99 Part 2 Section 8.5 General Rule 3.b.i2 *seems* like 
+                // SQL99 Part 2 Section 8.5 General Rule 3.b.i2 *seems* like
                 // best fit here.
                 // Data Exception - Invalid Escape Sequence
                 throw "22025";
@@ -87,7 +87,7 @@ strLikeEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
         }
         regexP = &(ctxP->regex);
         patP = &(ctxP->pattern);
-    
+
         result->value(SqlRegExp<1,1>(matchValue->pointer(),
                                      matchValue->length(),
                                      pattern->length(),
@@ -97,7 +97,7 @@ strLikeEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
 
 void
 strLikeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
-         RegisterRef<bool>* result,   
+         RegisterRef<bool>* result,
          RegisterRef<char*>* matchValue,
          RegisterRef<char*>* pattern)
 {
@@ -108,10 +108,10 @@ strLikeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
 // escape may be NULL if called by strSimilarA
 void
 strSimilarEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
-                  RegisterRef<bool>* result,   
+                  RegisterRef<bool>* result,
                   RegisterRef<char*>* matchValue,
                   RegisterRef<char*>* pattern,
-                  RegisterRef<char*>* escape) 
+                  RegisterRef<char*>* escape)
 {
     assert(StandardTypeDescriptor::isTextArray(matchValue->type()));
     assert(StandardTypeDescriptor::isTextArray(pattern->type()));
@@ -149,7 +149,7 @@ strSimilarEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
         }
         regexP = &(ctxP->regex);
         patP = &(ctxP->pattern);
-    
+
         result->value(SqlRegExp<1,1>(matchValue->pointer(),
                                      matchValue->length(),
                                      pattern->length(),
@@ -159,9 +159,9 @@ strSimilarEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
 
 void
 strSimilarA(boost::scoped_ptr<ExtendedInstructionContext>& context,
-            RegisterRef<bool>* result,   
+            RegisterRef<bool>* result,
             RegisterRef<char*>* matchValue,
-            RegisterRef<char*>* pattern) 
+            RegisterRef<char*>* pattern)
 {
     strSimilarEscapeA(context, result, matchValue, pattern, 0);
 }
@@ -171,13 +171,13 @@ ExtRegExpRegister(ExtendedInstructionTable* eit)
 {
     assert(eit != NULL);
 
-    // JK 2004/5/27: Are all of these combinations really needed?    
+    // JK 2004/5/27: Are all of these combinations really needed?
     int i;
     for (i=0; i < 8; i++) {
         vector<StandardTypeDescriptorOrdinal> params;
-        
+
         params.push_back(STANDARD_TYPE_BOOL);
-        
+
         if (i & 0x01) {
             params.push_back(STANDARD_TYPE_CHAR);
         } else {
@@ -216,4 +216,4 @@ ExtRegExpRegister(ExtendedInstructionTable* eit)
 
 FENNEL_END_NAMESPACE
 
-        
+// End ExtRegExp.cpp

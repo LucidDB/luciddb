@@ -34,7 +34,7 @@ DeviceIdPagePredicate::DeviceIdPagePredicate(DeviceId deviceIdinit)
 {
     deviceId = deviceIdinit;
 }
-    
+
 bool DeviceIdPagePredicate::operator()(CachePage const &page)
 {
     return CompoundId::getDeviceId(page.getBlockId()) == deviceId;

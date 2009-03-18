@@ -70,7 +70,7 @@ public:
     explicit
     NativeInstruction(StandardTypeDescriptorOrdinal nativeType)
         : mOp1(),
-          mOp2(), 
+          mOp2(),
           mNativeType(nativeType)
     {
         assert(StandardTypeDescriptor::isNative(nativeType));
@@ -79,14 +79,14 @@ public:
     NativeInstruction(RegisterRef<TMPLT>* op1,
                       StandardTypeDescriptorOrdinal nativeType)
         : mOp1(op1),
-          mOp2(), 
+          mOp2(),
           mNativeType(nativeType)
     {
         assert(StandardTypeDescriptor::isNative(nativeType));
     }
     explicit
     NativeInstruction(RegisterRef<TMPLT>* op1,
-                      RegisterRef<TMPLT>* op2, 
+                      RegisterRef<TMPLT>* op2,
                       StandardTypeDescriptorOrdinal nativeType)
         : mOp1(op1),
           mOp2(op2),

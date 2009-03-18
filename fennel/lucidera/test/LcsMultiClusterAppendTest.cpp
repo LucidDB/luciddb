@@ -54,12 +54,12 @@ protected:
     TupleAttributeDescriptor attrDesc_bitmap;
 
     vector<boost::shared_ptr<BTreeDescriptor> > bTreeClusters;
-    
+
     /**
      * Loads nClusters clusters, each cluster containing nCols columns and
      * nRows rows.
      *
-     * Column values are generated using a duplicate column generator, 
+     * Column values are generated using a duplicate column generator,
      * where the number duplicate values in a column is equal to the column
      * number, assuming 1-based column numbers.  I.e.,
      *  column1 - 0, 1, 2, ...
@@ -111,7 +111,7 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
                                              uint nClusters)
 {
     // setup input stream
-    
+
     MockProducerExecStreamParams mockParams;
     for (uint i = 0; i < nCols * nClusters; i++) {
         mockParams.outputTupleDesc.push_back(attrDesc_int64);
@@ -140,16 +140,16 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
     splitterStreamEmbryo.getStream()->setName("SplitterExecStream");
 
     // setup loader streams
-    
+
     vector<ExecStreamEmbryo> lcsAppendEmbryos;
     for (uint i = 0; i < nClusters; i++) {
-    
+
         LcsClusterAppendExecStreamParams lcsAppendParams;
         lcsAppendParams.scratchAccessor =
             pSegmentFactory->newScratchSegment(pCache, 10);
         lcsAppendParams.pCacheAccessor = pCache;
         lcsAppendParams.pSegment = pRandomSegment;
-    
+
         // initialize the btree parameter portion of lcsAppendParams
         // BTree tuple desc only has one column
         (lcsAppendParams.tupleDesc).push_back(attrDesc_int64);
@@ -166,7 +166,7 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
         }
         lcsAppendParams.pRootMap = 0;
         lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
-    
+
         // setup temporary btree descriptor to get an empty page to start
         // the btree
 
@@ -177,17 +177,17 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
         pBTreeDesc->segmentAccessor.pCacheAccessor = pCache;
         pBTreeDesc->tupleDescriptor = lcsAppendParams.tupleDesc;
         pBTreeDesc->keyProjection = lcsAppendParams.keyProj;
-        pBTreeDesc->rootPageId = NULL_PAGE_ID; 
+        pBTreeDesc->rootPageId = NULL_PAGE_ID;
         lcsAppendParams.pageOwnerId = pBTreeDesc->pageOwnerId;
         lcsAppendParams.segmentId = pBTreeDesc->segmentId;
-    
+
         BTreeBuilder builder(*pBTreeDesc, pRandomSegment);
         builder.createEmptyRoot();
         lcsAppendParams.rootPageId = pBTreeDesc->rootPageId =
             builder.getRootPageId();
 
-        // Now use the above initialized parameter 
-     
+        // Now use the above initialized parameter
+
         LcsClusterAppendExecStream *lcsStream =
             new LcsClusterAppendExecStream();
 
@@ -200,7 +200,7 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
     }
 
     // setup barrier stream
-    
+
     BarrierExecStreamParams barrierParams;
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
     barrierParams.returnMode = BARRIER_RET_ANY_INPUT;
@@ -226,7 +226,7 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
 {
     // setup parameters into scan
     //  nClusters cluster with nCols columns each
-    
+
     LcsRowScanExecStreamParams scanParams;
     scanParams.hasExtraFilter = false;
     scanParams.isFullScan = true;
@@ -296,7 +296,7 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
 }
 
 void LcsMultiClusterAppendTest::testCaseSetUp()
-{    
+{
     ExecStreamUnitTestBase::testCaseSetUp();
 
     attrDesc_int64 = TupleAttributeDescriptor(

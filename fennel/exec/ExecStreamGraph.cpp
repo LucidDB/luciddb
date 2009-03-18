@@ -136,7 +136,7 @@ int ExecStreamGraphImpl::getStreamCount()
     return boost::num_vertices(graphRep) - freeVertices.size();
 }
 
-ExecStreamGraphImpl::Vertex 
+ExecStreamGraphImpl::Vertex
 ExecStreamGraphImpl::addVertex(SharedExecStream pStream)
 {
     Vertex v = newVertex();
@@ -285,7 +285,7 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
     permAssert(isPrepared && src.isPrepared);
     permAssert(isOpen == src.isOpen);
 
-    // map a source vertex ID to the ID of the copied target vertex 
+    // map a source vertex ID to the ID of the copied target vertex
     std::map<Vertex, Vertex> vmap;
 
     // copy the nodes (with attached streams)
@@ -328,7 +328,7 @@ void ExecStreamGraphImpl::mergeFrom(
     permAssert(isPrepared && src.isPrepared);
     permAssert(isOpen == src.isOpen);
 
-    // map a source vertex ID to the ID of the copied target vertex 
+    // map a source vertex ID to the ID of the copied target vertex
     std::map<Vertex, Vertex> vmap;
 
     // Copy the nodes (with attached streams)

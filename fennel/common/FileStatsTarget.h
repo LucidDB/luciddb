@@ -38,7 +38,7 @@ class FileStatsTarget : public StatsTarget
 {
     std::string filename;
     std::ofstream snapshotStream;
-    
+
 public:
     /**
      * Creates a new FileStatsTarget.

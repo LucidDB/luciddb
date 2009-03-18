@@ -64,7 +64,7 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
     // determine min and max size of bitmap entries
 
     LbmEntry::getSizeBounds(
-        bitmapTupleDesc, 
+        bitmapTupleDesc,
         treeDescriptor.segmentAccessor.pSegment->getUsablePageSize(),
         minBitmapSize,
         maxBitmapSize);
@@ -146,7 +146,7 @@ ExecStreamResult LbmGeneratorExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     // read the start rid and num of rows to load
-    
+
     if (inAccessors[0]->getState() == EXECBUF_EOS) {
         if (doneReading) {
             pOutAccessor->markEOS();
@@ -171,7 +171,7 @@ ExecStreamResult LbmGeneratorExecStream::execute(
             numRowsToLoad =
                 *reinterpret_cast<RecordNum const *> (inputTuple[0].pData);
             ridRun.nRids = numRowsToLoad;
-            startRid = 
+            startRid =
                 *reinterpret_cast<LcsRid const *> (inputTuple[1].pData);
         }
         currRid = startRid;
@@ -213,7 +213,7 @@ ExecStreamResult LbmGeneratorExecStream::execute(
     }
 
     // take care of any pending flushes first
-    
+
     switch (producePending) {
     case LBM_ENTRYFLUSH_PENDING:
         // outputTuple already contains the pending tuple to be flushed
@@ -400,7 +400,7 @@ bool LbmGeneratorExecStream::generateBitmaps()
             // reset buffer before loading new value, in case previous
             // row had nulls
             bitmapTuple.resetBuffer();
-            
+
             attrAccessors[0].loadValue(bitmapTuple[0], curValue);
             initRidAndBitmap(bitmapTuple, &currRid);
         }
@@ -474,7 +474,7 @@ bool LbmGeneratorExecStream::advanceReader(SharedLcsClusterReader &pScan)
 {
     if (!pScan->advance(1)) {
         return false;
-    } 
+    }
     syncColumns(pScan);
     return true;
 }
@@ -614,7 +614,7 @@ PBuffer LbmGeneratorExecStream::flushBuffer(LcsRid addRid)
     // cycle through the entries in round robin order in determining which
     // to flush
     //
-    // NOTE zfong 6-Jan-2006: We may want to change this to a more 
+    // NOTE zfong 6-Jan-2006: We may want to change this to a more
     // sophisticated scheme where we flush on a LRU basis
     PBuffer retPtr;
     uint nAttempts = 0;

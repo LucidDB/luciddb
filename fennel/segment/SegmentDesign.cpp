@@ -296,7 +296,7 @@ as BTrees where the page allocation/deallocation pattern is unpredictable.
 <a name="SnapshotRandomAllocationSegment"></a>
 <h3>VersionedRandomAllocationSegment and SnapshotRandomAllocationSegment</h3>
 
-VersionedRandomAllocationSegment and SnapshotRandomAllocationSegment are 
+VersionedRandomAllocationSegment and SnapshotRandomAllocationSegment are
 companion segments that implement snapshot-consistent, multi-versioned, random
 data access.
 VersionedRandomAllocationSegment provides the underlying multi-versioned,
@@ -325,14 +325,14 @@ chain back to the anchor page.
 <p>
 
 In order to support recovery and transaction rollbacks, changes made to the
-segment and extent maps of a VersionedRandomAllocationSegment are not 
+segment and extent maps of a VersionedRandomAllocationSegment are not
 written to the segment's pages until a transaction is committed.
 This is implemented by maintaining temporary copies of the pages containing
 these maps.
 As new pages are allocated, the allocations are reflected in these temporary
 pages.
 Only when a transaction commits are the changes corresponding to that
-transaction copied back to the 
+transaction copied back to the
 permanent pages in the VersionedRandomAllocationSegment.
 In the case of rollback, any uncommitted changes corresponding to the
 transaction are removed from the temporary pages.
@@ -345,7 +345,7 @@ transactions from allocating the same page.
 SnapshotRandomAllocationSegment is responsible for maintaining and keeping
 track of page allocations, deallocations, and updates for a specific
 transaction.
-This is in contrast to VersionedRandomAllocationSegment which maintains 
+This is in contrast to VersionedRandomAllocationSegment which maintains
 page allocations and deallocations for all active transactions.
 Normally, you will have one SnapshotRandomAllocationSegment per transaction
 with more than one SnapshotRandomAllocationSegment associated with the same
@@ -439,7 +439,7 @@ corresponding to a different transaction over time) to the same object,
 one way of doing this is to make use of a DynamicDelegatingSegment.
 Unlike a DelegatingSegment, you can dynamically set the underlying delegate
 in a DynamicDelegatingSegment.
-In other words, as you switch to a new transaction, you can switch the 
+In other words, as you switch to a new transaction, you can switch the
 delegate of a DynamicDelegatingSegment to the SnapshotRandomAllocationSegment
 corresponding to the new transaction.
 
@@ -624,7 +624,7 @@ it.
 <li> If the checksum recorded in the footer does not match a recovery checksum
 computed from the page contents, the page is considered invalid and recovery
 terminates (successfully, under the assumption that the page represents the
-result of an incomplete write at the end of the log).  TBD:  onlineUuid. 
+result of an incomplete write at the end of the log).  TBD:  onlineUuid.
 
 <li> If the page version is older than the latest version number, the page is
 skipped and recovery continues (TBD: why does this happen?  I think fuzzy
@@ -803,7 +803,7 @@ mirroring).
 <hr>
 
  */
-struct SegmentDesign 
+struct SegmentDesign
 {
     // NOTE:  dummy class for doxygen
 };

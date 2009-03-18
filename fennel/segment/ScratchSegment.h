@@ -58,18 +58,18 @@ class ScratchSegment : public Segment, public CacheAccessor
      * Mutex protecting page list.
      */
     StrictMutex mutex;
-    
+
     explicit ScratchSegment(
         SharedCache pCache,
         uint nPagesMax);
-    
+
     // implement ClosableObject
     virtual void closeImpl();
 
     void clearPages();
-    
+
 public:
-    
+
     // implementation of Segment interface
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);

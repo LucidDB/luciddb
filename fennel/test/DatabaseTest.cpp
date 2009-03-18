@@ -46,9 +46,9 @@ class DatabaseTest
         public LogicalTxnParticipantFactory
 {
     static const LogicalActionType ACTION_INCREMENT;
-    
+
     static const LogicalActionType ACTION_INCREMENT_FORCE;
-    
+
     struct TestNode : public StoredNode
     {
         static const MagicNumber MAGIC_NUMBER = 0xa496c71bff0d41bdLL;
@@ -57,7 +57,7 @@ class DatabaseTest
     };
 
     typedef SegNodeLock<TestNode> TestPageLock;
-    
+
     SharedCache pCache;
     SharedDatabase pDatabase;
     PageId persistentPageId;
@@ -71,7 +71,7 @@ class DatabaseTest
     void verifyData(uint x);
     PageId writeData(uint x);
     void addTxnParticipant(SharedLogicalTxn);
-    
+
 public:
     explicit DatabaseTest()
     {
@@ -106,7 +106,7 @@ public:
 
         FENNEL_UNIT_TEST_CASE(DatabaseTest,testForceTxns);
     }
-    
+
     virtual ~DatabaseTest()
     {
     }
@@ -115,11 +115,11 @@ public:
     {
         pDatabase.reset();
     }
-    
+
     void testCreateEmpty();
     void testLoadEmpty();
     void testRecoverEmpty();
-    
+
     void testCreateData();
     void testLoadData();
     void testRecoverData(bool);
@@ -130,9 +130,9 @@ public:
     void testRecoverDataWithFlush();
     void testRecoverDataWithoutFlush();
     void testForceTxns();
-    
+
     void executeForceTxn();
-    
+
     // implement LogicalTxnParticipant
     virtual LogicalTxnClassId getParticipantClassId() const;
     virtual void describeParticipant(ByteOutputStream &logStream);
@@ -274,7 +274,7 @@ void DatabaseTest::testForceTxns()
 
     // Allocate an extra page for use below.
     PageId extraPageId = writeData(42);
-    
+
     pDatabase.reset();
     loadDatabase();
 
@@ -288,7 +288,7 @@ void DatabaseTest::testForceTxns()
     executeForceTxn();
 
     pageLock.unlock();
-    
+
     pDatabase.reset();
 }
 

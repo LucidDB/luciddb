@@ -423,7 +423,7 @@ bool BTreePrefetchSearchExecStream::testNonLeafInterval()
         // will be the last matching key.
         if (pfLowerBoundData.size() > 1) {
             nodeAccessor.unmarshalKey(readerKeyData);
-            int c = 
+            int c =
                 inputKeyDesc.compareTuplesKey(
                     pfLowerBoundData,
                     readerKeyData,

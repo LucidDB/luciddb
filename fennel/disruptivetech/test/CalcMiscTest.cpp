@@ -47,7 +47,7 @@ class CalcMiscTest : virtual public TestBase, public TraceSource
     void testCalcReturn();
     void testCalcRaise();
     void testCalcContinueOnException();
-    
+
 public:
     explicit CalcMiscTest()
         : TraceSource(shared_from_this(),"CalcMiscTest")
@@ -61,7 +61,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcRaise);
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcContinueOnException);
     }
-    
+
     virtual ~CalcMiscTest()
     {
     }
@@ -87,7 +87,7 @@ CalcMiscTest::testCalcStatusReg()
     // BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -119,7 +119,7 @@ CalcMiscTest::testCalcStatusReg()
     BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
                         (const_cast<PBuffer>((*statusTuple)[2].pData))),
                       6);
-    
+
 }
 
 void
@@ -141,7 +141,7 @@ CalcMiscTest::testCalcStatusRegZero()
     // BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -227,7 +227,7 @@ CalcMiscTest::testCalcRefInst()
     //    BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -253,7 +253,7 @@ CalcMiscTest::testCalcRefInst()
                 break;
             case 'L':
             case 'C':
-                // no trivial way to verify that pointers 
+                // no trivial way to verify that pointers
                 // are identical w/o breaking object encapsulation
                 // of calculator. instead, see if data matches up.
                 // should be sufficent.
@@ -279,7 +279,7 @@ CalcMiscTest::testCalcRefInst()
                                               (outTuple[outReg].pData),
                                               "11",
                                               2));
-                    
+
                 } else if (regFrom == 12) {
                     // char string
                     BOOST_CHECK_EQUAL(0,
@@ -313,7 +313,7 @@ CalcMiscTest::testCalcReturn()
     // BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -361,7 +361,7 @@ CalcMiscTest::testCalcRaise()
     //    BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -418,7 +418,7 @@ CalcMiscTest::testCalcContinueOnException()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -480,3 +480,4 @@ CalcMiscTest::testCalcContinueOnException()
 
 FENNEL_UNIT_TEST_SUITE(CalcMiscTest);
 
+// End CalcMiscTest.cpp

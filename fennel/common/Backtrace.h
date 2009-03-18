@@ -49,7 +49,7 @@ class Backtrace
     void** addrbuf;                     // [bufsize]
 
 #ifndef __MINGW32__
-    struct LibraryInfo 
+    struct LibraryInfo
     {
         ElfW(Addr) baseAddress;
         char const *pImageName;
@@ -115,7 +115,7 @@ class AutoBacktrace {
 #endif
 
     AutoBacktrace() {}                  // hide constructor
-    
+
     static void installSignal(int signum);
 public:
     /**
@@ -140,7 +140,7 @@ public:
      * @param outStream receives backtrace if signal is handled
      */
     static void setOutputStream(std::ostream &outStream);
-    
+
     /**
      * Unsets a target stream for backtrace.
      */
@@ -158,7 +158,7 @@ public:
 };
 
 FENNEL_END_NAMESPACE
-    
+
 #endif
-    
+
 // End Backtrace.h

@@ -38,7 +38,7 @@ class ByteArrayInputStream : public ByteInputStream
     virtual void readNextBuffer();
     virtual void readPrevBuffer();
     virtual void closeImpl();
-    
+
     explicit ByteArrayInputStream(
         PConstBuffer pBuffer,
         uint cbBuffer);

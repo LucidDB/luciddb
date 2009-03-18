@@ -107,7 +107,7 @@ public:
      *
      * @param page the page being moved
      */
-    void moveToHead(IntrusiveDListNode &page) 
+    void moveToHead(IntrusiveDListNode &page)
     {
         if (head == &page) {
             return;
@@ -184,7 +184,7 @@ public:
         return len;
     }
 
-    /** 
+    /**
      * @return a pointer to the head of the queue; NULL if the queue is empty
      */
     IntrusiveDListNode *getHead()
@@ -280,7 +280,7 @@ public:
 
 /**
  * TwoQVictim is the attributes class which must be a base for any CachePage
- * type which will be cached using a TwoQVictimPolicy.  
+ * type which will be cached using a TwoQVictimPolicy.
  */
 class TwoQVictim : public IntrusiveDListNode
 {
@@ -458,7 +458,7 @@ public:
  *
  * <p>
  * One other extension in our implementation is we maintain separate queues
- * of dirty pages for pages currently in the freshmen and popular-unpinned 
+ * of dirty pages for pages currently in the freshmen and popular-unpinned
  * queues.  These queues are subsets of their "parent" queues.  By separating
  * out dirty pages, this makes locating candidate pages for flushing
  * more efficient when you have a large number of cache pages, many of which
@@ -475,7 +475,7 @@ class TwoQVictimPolicy
      * SXMutex protecting the queues
      */
     SXMutex mutex;
-    
+
     /**
      * FIFO queue of popular, pinned pages.  No need to make it LRU since
      * pages from this queue can't be victimized.
@@ -632,7 +632,7 @@ class TwoQVictimPolicy
                     assert(isPageClean(page));
                 }
             } else {
-            
+
                 // The page was originally free and now needs to be put
                 // into the popular-unpinned queue.
                 assert(isPageClean(page));
@@ -651,7 +651,7 @@ public:
      * victims in optimal order.  This type must be a model for a standard
      * forward iterator.  For TwoQVictimPolicy, this is accomplished by
      * iterating over two doubly-linked list of pages corresponding to
-     * queues, one after the other. 
+     * queues, one after the other.
      */
     typedef TwoQPageListIter<PageT> PageIterator;
 
@@ -756,7 +756,7 @@ public:
                 historyQueue[i] = NULL_BLOCK_ID;
             }
         }
-                
+
         nCachePages = nCachePagesInit;
         maxFreshmenQueueLen = nCachePages * freshmenQueuePercentage / 100;
         maxHistoryQueueLen = newHistoryQueueLen;
@@ -819,9 +819,9 @@ public:
      *
      * <li>If the page is currently in the popular-unpinned queue and it's
      * being pinned, then it's added to the popular-pinned queue.  Otherwise,
-     * if it's not being pinned, it's added to the tail of the popular-unpinned 
+     * if it's not being pinned, it's added to the tail of the popular-unpinned
      * queue.
-     * 
+     *
      * <li>If the page is not currently in the cache and it's in the history
      * queue, it's added to one of the popular queues, depending on whether
      * it's being pinned.  Otherwise, if it's not in the history queue, then
@@ -970,7 +970,7 @@ public:
             freshmenQueue.remove(page);
             TwoQDirtyPage &dirtyPageNode = page.TwoQVictim::getDirtyPageNode();
             if (dirtyPageNode.getDirtyState() ==
-                TwoQDirtyPage::PAGE_DIRTY_FRESHMAN) 
+                TwoQDirtyPage::PAGE_DIRTY_FRESHMAN)
             {
                 dirtyFreshmenQueue.remove(dirtyPageNode);
                 dirtyPageNode.setDirtyState(TwoQDirtyPage::PAGE_CLEAN);
@@ -996,7 +996,7 @@ public:
     /**
      * Receives notification from CacheImpl that a page no longer needs to be
      * pinned.
-     * 
+     *
      * @param page the unpinned page
      */
     void notifyPageUnpin(PageT &page)
@@ -1006,7 +1006,7 @@ public:
         assert(
             state != TwoQVictim::PAGE_STATE_POPULAR_UNPINNED &&
             state != TwoQVictim::PAGE_STATE_FREE);
-        
+
         // If the page is poular and pinned, move it to the popular-unpinned
         // queues.
         if (state == TwoQVictim::PAGE_STATE_POPULAR_PINNED) {
@@ -1176,7 +1176,7 @@ public:
                         dirtyPopularUnpinnedQueue.getHead()),
                     static_cast<TwoQDirtyPage *>(dirtyFreshmenQueue.getHead())),
                 DirtyPageIterator());
-        } 
+        }
         else {
             return std::pair<DirtyPageIterator, DirtyPageIterator>(
                 DirtyPageIterator(

@@ -51,7 +51,7 @@ class QuotaCacheAccessor : public TransactionalCacheAccessor
 
     void incrementUsage();
     void decrementUsage();
-    
+
 public:
     /**
      * Constructor.
@@ -84,7 +84,7 @@ public:
     {
         return nPagesLocked;
     }
-    
+
     // implement the CacheAccessor interface
     virtual CachePage *lockPage(
         BlockId blockId,

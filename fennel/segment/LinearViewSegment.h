@@ -46,21 +46,21 @@ class LinearViewSegment : public DelegatingSegment
     friend class SegmentFactory;
 
     std::vector<PageId> pageTable;
-    
+
     LinearViewSegment(
         SharedSegment delegateSegment,
         PageId firstPageId);
 
 public:
     virtual ~LinearViewSegment();
-    
+
     /**
      * @return the starting PageId in the underlying segment
      */
     PageId getFirstPageId() const;
-    
+
     // implementation of Segment interface
-    
+
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId);

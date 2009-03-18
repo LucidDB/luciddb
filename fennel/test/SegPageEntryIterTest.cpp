@@ -51,7 +51,7 @@ public:
     {
         testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, -1, 0);
     }
-    
+
     void testBoundedIter()
     {
         testIter(
@@ -71,27 +71,27 @@ public:
     {
         testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 0, 0);
     }
-    
+
     void testReject()
     {
         testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, -1, 251);
     }
-    
+
     void testRejectNoPrefetch()
     {
         testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 0, 19);
     }
-    
+
     void testQueueSize1()
     {
         testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 1, 0);
     }
-    
+
     void testRejectQueueSize1()
     {
         testIter(FIRST_LINEAR_PAGE_ID, NULL_PAGE_ID, false, 1, 7);
     }
-    
+
     void testIter(
         PageId beginPageId, PageId endPageId, bool bLock, int queueSize,
         uint rejectRate)

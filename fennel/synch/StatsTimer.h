@@ -41,12 +41,12 @@ class StatsTimer : private TimerThreadClient
     std::vector<SharedStatsSource> sources;
     TimerThread timerThread;
     uint intervalInMillis;
-    
+
     virtual uint getTimerIntervalMillis();
     virtual void onThreadStart();
     virtual void onTimerInterval();
     virtual void onThreadEnd();
-    
+
 public:
     /**
      * Creates a new StatsTimer without any initial target.
@@ -54,7 +54,7 @@ public:
      * @param intervalInMillis interval between publications
      */
     explicit StatsTimer(uint intervalInMillis);
-    
+
     /**
      * Creates a new StatsTimer with an initial target.
      *

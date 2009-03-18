@@ -61,7 +61,7 @@ private:
     uint8_t *magicTable;
 
     // REVIEW jvs 25-Aug-2006: hashValues below are actually inout, right?
-    
+
     /**
      * Compute hash value from value stored in a buffer.
      *
@@ -105,7 +105,7 @@ public:
      *
      * @return the hash value
      */
-    uint hash(TupleData const &inputTuple, 
+    uint hash(TupleData const &inputTuple,
         TupleProjection const &keyProjection,
         vector<LhxHashTrim> const &isKeyColVarChar);
 

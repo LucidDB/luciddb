@@ -38,7 +38,7 @@ class PagePredicate
 {
 public:
     virtual ~PagePredicate();
-    
+
     /**
      * Tests the predicate.
      *
@@ -56,10 +56,10 @@ public:
 class DeviceIdPagePredicate : public PagePredicate
 {
     DeviceId deviceId;
-    
+
 public:
     explicit DeviceIdPagePredicate(DeviceId);
-    
+
     virtual bool operator()(CachePage const &page);
 };
 
@@ -70,10 +70,10 @@ public:
 class MappedPageListenerPredicate : public PagePredicate
 {
     MappedPageListener &listener;
-    
+
 public:
     explicit MappedPageListenerPredicate(MappedPageListener &);
-    
+
     virtual bool operator()(CachePage const &page);
 };
 

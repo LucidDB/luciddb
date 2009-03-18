@@ -51,7 +51,7 @@ class BTreeTest : virtual public SegStorageTestBase
         RANDOM
     };
 
-    struct Record 
+    struct Record
     {
         int32_t key;
         int32_t secondKey;
@@ -59,7 +59,7 @@ class BTreeTest : virtual public SegStorageTestBase
     };
 
     BTreeDescriptor descriptor;
-    
+
     TupleAccessor tupleAccessor;
     TupleData keyData;
     TupleData tupleData;
@@ -71,32 +71,32 @@ class BTreeTest : virtual public SegStorageTestBase
     int32_t readValue();
     int32_t readMultiKeyValue();
     void verifyTree(uint nRecordsExpected,uint nLevelsExpected);
-    
+
     void testBulkLoadOneLevelNewRoot()
     {
         testBulkLoad(200,1,true);
     }
-    
+
     void testBulkLoadOneLevelReuseRoot()
     {
         testBulkLoad(200,1,false);
     }
-    
+
     void testBulkLoadTwoLevelsNewRoot()
     {
         testBulkLoad(20000,2,true);
     }
-    
+
     void testBulkLoadTwoLevelsReuseRoot()
     {
         testBulkLoad(20000,2,false);
     }
-    
+
     void testBulkLoadThreeLevels()
     {
         testBulkLoad(200000,3,true);
     }
-    
+
     void testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot);
     void testScan(
         SharedByteInputStream,
@@ -126,7 +126,7 @@ class BTreeTest : virtual public SegStorageTestBase
     void marshalRecord();
     void marshalMultiKeyRecord();
     void unmarshalRecord(SharedByteInputStream pInputStream);
-    
+
     void testMultiKeySearches(uint nKey1, uint nKey2);
 
     void testSmallMultiKeySearches()
@@ -159,7 +159,7 @@ public:
         // descriptor should run before these.
         FENNEL_UNIT_TEST_CASE(BTreeTest,testSmallMultiKeySearches);
         FENNEL_UNIT_TEST_CASE(BTreeTest,testBigMultiKeySearches);
-        
+
         StandardTypeDescriptorFactory stdTypeFactory;
         TupleAttributeDescriptor attrDesc(
             stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
@@ -220,10 +220,10 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
 {
     BlockNum nPagesAllocatedInitially =
         pRandomSegment->getAllocatedSizeInPages();
-    
+
     descriptor.rootPageId = NULL_PAGE_ID;
     BTreeBuilder builder(descriptor,pRandomSegment);
-    
+
     keyData.compute(builder.getKeyDescriptor());
     keyData[0].pData = reinterpret_cast<PConstBuffer>(&record.key);
 
@@ -280,7 +280,7 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
     // intermediate searches
     pInputStream->seekSegPos(startPos);
     testSearch(pInputStream,nRecords,false);
-    
+
     // Make sure we can scan all tuples
     pInputStream->seekSegPos(startPos);
     testScan(pInputStream,nRecords,false,false);
@@ -291,7 +291,7 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
 
     // Recheck tree integriy
     verifyTree(nRecords/2,nLevelsExpected);
-    
+
     // Rescan to make sure deletions were performed correctly
     pInputStream->seekSegPos(startPos);
     testScan(pInputStream,nRecords,true,false);
@@ -394,7 +394,7 @@ void BTreeTest::testScan(
     }
 
     reader.endSearch();
-    
+
     if (!deletion) {
         found = reader.searchLast();
         if (!found) {
@@ -444,7 +444,7 @@ void BTreeTest::testInserts(InsertType insertType)
     uint nRecords = 200000;
     descriptor.rootPageId = NULL_PAGE_ID;
     BTreeBuilder builder(descriptor,pRandomSegment);
-    
+
     keyData.compute(builder.getKeyDescriptor());
     keyData[0].pData = reinterpret_cast<PConstBuffer>(&record.key);
 
@@ -514,7 +514,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
     // key sequencing from 0 to nKey2-1
     descriptor.rootPageId = NULL_PAGE_ID;
     BTreeBuilder builder(descriptor,pRandomSegment);
-    
+
     tupleData.compute(descriptor.tupleDescriptor);
 
     builder.createEmptyRoot();
@@ -558,7 +558,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
         // NOTE jvs 27-May-2007:  due to FNL-65, ignore bogus return
         // value for DUP_SEEK_END
         reader.searchForKey(keyData,DUP_SEEK_END);
-        
+
         if (i == nKey1 - 1) {
             if (!reader.isSingular()) {
                 BOOST_FAIL(
@@ -574,7 +574,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
     reader.endSearch();
 
     // Test the scenario where we delete the last key on a leaf page and
-    // then reinsert it with a larger second key value forcing it into the 
+    // then reinsert it with a larger second key value forcing it into the
     // next leaf page.  Since we don't know which key is at the end of a
     // leaf page, delete/reinsert all of them.
     //
@@ -615,7 +615,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
         BOOST_CHECK_EQUAL(i+nKey2,readMultiKeyValue());
 
         reader.searchForKey(keyData,DUP_SEEK_END);
-        
+
         if (i == nKey1 - 1) {
             if (!reader.isSingular()) {
                 BOOST_FAIL(
@@ -630,7 +630,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
 
         record.secondKey = 0;
         reader.searchForKey(multiKeyData,DUP_SEEK_END);
-        
+
         reader.getTupleAccessorForRead().unmarshal(tupleData);
         BOOST_CHECK_EQUAL(i,readKey());
         BOOST_CHECK_EQUAL(nKey2,readSecondKey());

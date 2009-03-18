@@ -237,7 +237,7 @@ void SnapshotRandomAllocationSegment::deallocatePageRange(
     // really haven't been freed yet and still may be referenced by other
     // threads.  The pages will be removed from the cache when they are
     // actually freed.
-    
+
     PageId chainPageId = startPageId;
     VersionedPageEntry pageEntry;
     do {
@@ -363,7 +363,7 @@ void SnapshotRandomAllocationSegment::commitChanges(TxnId commitCsn)
         true,
         getTracingSegment());
     modPageEntriesMap.clear();
-    snapshotPageMap.clear(); 
+    snapshotPageMap.clear();
 }
 
 void SnapshotRandomAllocationSegment::rollbackChanges()
@@ -377,7 +377,7 @@ void SnapshotRandomAllocationSegment::rollbackChanges()
         false,
         getTracingSegment());
     modPageEntriesMap.clear();
-    snapshotPageMap.clear(); 
+    snapshotPageMap.clear();
 }
 
 MappedPageListener *SnapshotRandomAllocationSegment::getMappedPageListener(
@@ -473,7 +473,7 @@ void SnapshotRandomAllocationSegment::versionPage(
     SXMutexExclusiveGuard mapGuard(modPageMapMutex);
 
     // Link the destination anchor to the page following the source anchor,
-    // and then link the source anchor to the original page following the 
+    // and then link the source anchor to the original page following the
     // destination anchor.
     pVersionedRandomSegment->getLatestPageEntryCopy(
         srcAnchorPageId,

@@ -81,7 +81,7 @@ void ExternalSortRunAccessor::storeRun(
         SegOutputStream::newSegOutputStream(
             sortInfo.externalSegmentAccessor);
     pStoredRun->beginWrite(pSegOutputStream);
-    
+
     ExternalSortFetchArray &fetchArray = pObjLoad.bindFetchArray();
 
     ExternalSortRC rc;
@@ -112,7 +112,7 @@ ExternalSortFetchArray &ExternalSortRunAccessor::bindFetchArray()
 ExternalSortRC ExternalSortRunAccessor::fetch(uint nTuplesRequested)
 {
     sortInfo.stream.checkAbort();
-    
+
     if (nTuplesRequested > EXTSORT_FETCH_ARRAY_SIZE) {
         nTuplesRequested = EXTSORT_FETCH_ARRAY_SIZE;
     }

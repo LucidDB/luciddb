@@ -67,7 +67,7 @@ protected:
      * True if need to move to the next bit
      */
     bool moveNext;
-    
+
     /**
      * Next rid value that should be read
      */
@@ -276,7 +276,7 @@ public:
     ~LbmDeletionIndexReader();
 
     /**
-     * Initializes reader to search for RIDs stored in a btree 
+     * Initializes reader to search for RIDs stored in a btree
      * specified BTreeReader
      *
      * @param btreeReader input btree reader

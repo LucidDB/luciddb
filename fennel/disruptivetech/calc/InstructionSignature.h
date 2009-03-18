@@ -74,7 +74,7 @@ private:
     bool hasRegisters;
     TProgramCounter pc;
     bool hasPc;
-    
+
     void registersToTypes();
 };
 
@@ -92,7 +92,7 @@ typedef Instruction*(*InstructionCreateFunction)
 typedef std::map< string, InstructionCreateFunction > StringToCreateFn;
 
 //! StringCreateFnIterator is a STL iterator on the StringToCreateFn table.
-typedef 
+typedef
 std::map< string, InstructionCreateFunction >::iterator StringToCreateFnIter;
 
 

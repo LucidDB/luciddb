@@ -26,7 +26,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 class FennelExcn;
-    
+
 /**
  * ThreadTracker defines an interface for receiving callbacks
  * before and after a thread runs.  The default implementation

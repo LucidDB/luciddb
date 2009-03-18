@@ -68,11 +68,11 @@ class LcsColumnReader : public boost::noncopyable
      * Width of bit vectors
      */
     WidthVec width;
-    
+
     /* Number of entries per vector
      */
     uint iV;
-    
+
     /**
      * Pointer to appropriate bit vector read function
      */
@@ -85,7 +85,7 @@ class LcsColumnReader : public boost::noncopyable
     const PBuffer (LcsColumnReader:: *pGetCurrentValueFunc) ();
 
     /**
-     * Filters associated with this column 
+     * Filters associated with this column
      */
     LcsResidualColumnFilters filters;
 
@@ -180,7 +180,7 @@ public:
      * Returns true if current batch for column is compressed
      */
     bool batchIsCompressed() const
-    { 
+    {
         return pBatch->mode == LCS_COMPRESSED;
     }
 
@@ -188,7 +188,7 @@ public:
      * Returns true if current batch for column is fixed
      */
     bool batchIsFixed() const
-    { 
+    {
         return pBatch->mode == LCS_FIXED;
     }
 
@@ -214,7 +214,7 @@ public:
      * Returns number of distinct values in batch
      */
     uint getBatchValCount() const
-    { 
+    {
         return pBatch->nVal;
     }
 
@@ -222,7 +222,7 @@ public:
      * Returns base pointer of batch
      */
     const PBuffer getBatchBase() const
-    { 
+    {
         return pBase;
     }
 
@@ -230,11 +230,11 @@ public:
      * Returns table of offsets from base
      */
     const uint16_t *getBatchOffsets() const
-    { 
+    {
         return (const uint16_t *) pValues;
     }
 
-    /** 
+    /**
      * Gets iValCode-th value
      *
      * @param iValCode code corresponding to value to be retrieved from batch
@@ -253,7 +253,7 @@ public:
      * code for the value of the indexed column at rid 1000 + i.  To convert
      * this code to a value, use "GetBatchValue(pValCodes[i])".
      *
-     * Note: This method may be used only with compressed batches.  
+     * Note: This method may be used only with compressed batches.
      *
      * @param count how many value codes to read
      *
@@ -279,7 +279,7 @@ public:
      * @param outputTupleData is the TupleData to compare with
      *
      * returns true iff the tuple passes the predicates
-     */ 
+     */
     bool applyFilters(TupleDescriptor &projDescriptor,
         TupleData &outputTupleData);
 };

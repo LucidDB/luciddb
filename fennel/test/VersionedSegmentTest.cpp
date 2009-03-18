@@ -35,7 +35,7 @@ class VersionedSegmentTest : virtual public SegmentTestBase
     SharedRandomAccessDevice pLogDevice;
     PageId firstLogPageId;
     PseudoUuid onlineUuid;
-    
+
 public:
     virtual void openSegmentStorage(DeviceMode openMode)
     {
@@ -58,7 +58,7 @@ public:
             versionNumber);
         pLinearSegment = pVersionedSegment;
     }
-    
+
     virtual void closeStorage()
     {
         closeLinearSegment();
@@ -95,7 +95,7 @@ public:
         closeStorage();
         firstLogPageId = NULL_PAGE_ID;
     }
-    
+
     virtual void fillPage(CachePage &page,uint x)
     {
         SegmentTestBase::fillPage(page,x+versionNumber);

@@ -50,7 +50,7 @@ public:
     /**
      * Handle type for a database.
      */
-    struct DbHandle 
+    struct DbHandle
     {
         SharedDatabase pDb;
         boost::shared_ptr<TraceTarget> pTraceTarget;
@@ -65,11 +65,11 @@ public:
 
         virtual ~DbHandle();            // make class polymorphic
     };
-    
+
     /**
      * Handle type which combines a database with a txn.
      */
-    struct TxnHandle 
+    struct TxnHandle
     {
         SharedDatabase pDb;
         SharedLogicalTxn pTxn;
@@ -162,7 +162,7 @@ protected:
     virtual DbHandle *newDbHandle();    /// factory method
     virtual TxnHandle *newTxnHandle();  /// factory method
     void deleteDbHandle(DbHandle *);
-    
+
     void setDbHandle(SharedProxyDbHandle,DbHandle *);
     void setTxnHandle(SharedProxyTxnHandle,TxnHandle *);
     void setStreamGraphHandle(SharedProxyStreamGraphHandle,StreamGraphHandle *);
@@ -289,8 +289,8 @@ inline CmdInterpreter::ExecutionHandle
 }
 
 // The following macros are used for tracing the JniUtil handle count.
-// They are defined here to allow for the allocation of these handle 
-// types from other locations while still deallocating them in the 
+// They are defined here to allow for the allocation of these handle
+// types from other locations while still deallocating them in the
 // handle class destructors (handle count tracing depends on the handle
 // type string being the same at allocation and deallocation time).
 #define DBHANDLE_TRACE_TYPE_STR ("DbHandle")

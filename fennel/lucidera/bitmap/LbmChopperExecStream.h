@@ -38,8 +38,8 @@ FENNEL_BEGIN_NAMESPACE
 struct LbmChopperExecStreamParams : public ConfluenceExecStreamParams
 {
     /**
-     * Parameter id for the dynamic parameter used to limit the 
-     * number of rids that should appear in an output tuple. Can be 
+     * Parameter id for the dynamic parameter used to limit the
+     * number of rids that should appear in an output tuple. Can be
      * set by consumers of this stream.
      */
     DynamicParamId ridLimitParamId;
@@ -131,7 +131,7 @@ class LbmChopperExecStream : public ConfluenceExecStream
     LcsRid currentEndRid;
 
     /**
-     * Reads a byte segment.  If the previous byte segment was 
+     * Reads a byte segment.  If the previous byte segment was
      * not written, then the previous segment is returned.
      */
     ExecStreamResult readSegment();

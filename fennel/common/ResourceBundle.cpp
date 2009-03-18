@@ -79,7 +79,7 @@ const set<string> ResourceBundle::getKeys() const
 
     map<string, string>::const_iterator iter = _messages.begin(),
         end = _messages.end();
-  
+
     while(iter != end) {
         keys.insert((*iter).first);
         iter++;
@@ -114,8 +114,8 @@ const string &ResourceBundle::getMessage(const string &key) const
 
 bool ResourceBundle::hasMessage(const string &key) const
 {
-    return 
-        _messages.find(key) != _messages.end() 
+    return
+        _messages.find(key) != _messages.end()
         || (_parent && _parent->hasMessage(key));
 }
 
@@ -143,7 +143,7 @@ static string convertPropertyToBoost(string &message)
     bool quoted = false;
     char ch;
     char nextCh;
-  
+
     for(int i = 0, n = message.length(); i < n; i++) {
         ch = message[i];
         nextCh = (i + 1 < n) ? message[i + 1] : 0;
@@ -193,9 +193,9 @@ static string convertPropertyToBoost(string &message)
         bool done = false;
         while(!done && i < n) {
             ch = message[i];
-        
+
             switch(ch) {
-            default: 
+            default:
                 i++;
                 break;
 
@@ -203,14 +203,14 @@ static string convertPropertyToBoost(string &message)
                 quotedPattern = !quotedPattern;
                 i++;
                 break;
-            
+
             case LEFT_BRACE:
                 if (!quotedPattern) {
                     bracketDepth++;
                 }
                 i++;
                 break;
-            
+
             case RIGHT_BRACE:
                 if (!quotedPattern) {
                     if (bracketDepth > 0) {
@@ -225,7 +225,7 @@ static string convertPropertyToBoost(string &message)
                 break;
             }
         }
-    
+
         if (i == n) {
             // couldn't find end of pattern -- give up
             return message;
@@ -286,7 +286,7 @@ void ResourceBundle::loadMessages()
         if (tryEnvVar) {
             const char *fennelHome = getenv("FENNEL_HOME");
             if (fennelHome == NULL) return; // give up
-      
+
             string path = string(fennelHome) + "/common/" + fileName;
             in.open(path.c_str(), ios::in);
             if (!in.good()) {
@@ -320,3 +320,5 @@ void ResourceBundle::loadMessages()
 }
 
 FENNEL_END_CPPFILE("$Id$");
+
+// End ResourceBundle.cpp

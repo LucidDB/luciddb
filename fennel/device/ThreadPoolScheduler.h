@@ -37,13 +37,13 @@ FENNEL_BEGIN_NAMESPACE
 class ThreadPoolScheduler : public DeviceAccessScheduler
 {
     ThreadPool<RandomAccessRequest> pool;
-    
+
 public:
     /**
      * Constructor.
      */
     explicit ThreadPoolScheduler(DeviceAccessSchedulerParams const &);
-    
+
     /**
      * Destructor:  stop must already have been called.
      */

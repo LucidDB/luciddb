@@ -57,7 +57,7 @@ protected:
      */
     void testSortedAgg(
         uint nRows,
-        uint nKeys, 
+        uint nKeys,
         std::vector<int> const &repeatSeqValues);
 
 public:
@@ -169,7 +169,7 @@ void LbmSortedAggExecStreamTest::testScanPartKey()
 
 void LbmSortedAggExecStreamTest::testSortedAgg(
     uint nRows,
-    uint nKeys, 
+    uint nKeys,
     std::vector<int> const &repeatSeqValues)
 {
     initKeyBitmap(nRows, repeatSeqValues);

@@ -33,10 +33,10 @@ FENNEL_BEGIN_NAMESPACE
  * TraceSource is a common base for all classes which write messages to
  * a TraceTarget.
  */
-class TraceSource 
+class TraceSource
 {
     SharedTraceTarget pTraceTarget;
-    
+
     std::string name;
 
     TraceLevel minimumLevel;
@@ -62,7 +62,7 @@ protected:
 
 public:
     virtual ~TraceSource();
-    
+
     /**
      * For use when initialization has to be deferred until after construction.
      *
@@ -72,7 +72,7 @@ public:
      */
     virtual void initTraceSource(
         SharedTraceTarget pTraceTarget, std::string name);
-    
+
     /**
      * Records a trace message.  Normally only called via FENNEL_TRACE.
      *
@@ -89,12 +89,12 @@ public:
     {
         return pTraceTarget.get() ? true : false;
     }
-    
+
     /**
      * Determines whether a particular level is being traced.
      *
      * @param level trace level to test
-     * 
+     *
      * @return true iff tracing is enabled for the given level
      */
     bool isTracingLevel(TraceLevel level) const
@@ -121,10 +121,10 @@ public:
 
     /**
      * Gets the name of this source. Useful to construct nested names for
-     * subcomponents that are also TraceSources. 
+     * subcomponents that are also TraceSources.
      * @return the name
      */
-    std::string getTraceSourceName() const 
+    std::string getTraceSourceName() const
     {
         return name;
     }
@@ -133,7 +133,7 @@ public:
      * Sets the name of this source. Useful to construct dynamic names for
      * fine-grained filtering.
      */
-    void setTraceSourceName(std::string const& n) 
+    void setTraceSourceName(std::string const& n)
     {
         name = n;
     }
@@ -166,7 +166,7 @@ do { \
 // to operator <<?
 
 // return a string id for the current thread
-inline char *get_tid(char *tidstr, int cb) 
+inline char *get_tid(char *tidstr, int cb)
 {
     snprintf(tidstr, cb, "%d", getCurrentThreadId());
     return tidstr;

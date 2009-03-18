@@ -42,11 +42,11 @@ class RandomAccessFileDeviceTest : virtual public TestBase
     static const uint ZERO_SIZE;
     static const uint HALF_SIZE;
     static const uint FULL_SIZE;
-    
+
     DeviceAccessSchedulerParams schedParams;
     SharedRandomAccessDevice pRandomAccessDevice;
     DeviceMode baseMode;
-    
+
     void openDevice(DeviceMode openMode,std::string devName)
     {
         if (openMode.create) {
@@ -133,7 +133,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
     {
         StrictMutex mutex;
         LocalCondition cond;
-            
+
     public:
         int nTarget;
         int nSuccess;
@@ -153,7 +153,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         {
             return mutex;
         }
-            
+
         void notifyTransferCompletion(bool b)
         {
             StrictMutexGuard mutexGuard(mutex);
@@ -175,7 +175,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         }
     };
 
-    class Binding : public RandomAccessRequestBinding 
+    class Binding : public RandomAccessRequestBinding
     {
         Listener &listener;
         uint cb;
@@ -190,17 +190,17 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         virtual ~Binding()
         {
         }
-            
+
         virtual PBuffer getBuffer() const
         {
             return pBuffer;
         }
-            
+
         virtual uint getBufferSize() const
         {
             return cb;
         }
-            
+
         virtual void notifyTransferCompletion(bool bSuccess)
         {
             listener.notifyTransferCompletion(bSuccess);
@@ -238,7 +238,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         allocator.deallocate(pBuf);
         allocator.deallocate(pBuf2);
     }
-    
+
     void testAsyncIOImpl(
         int n, uint cbSector,
         PBuffer pBuf, PBuffer pBuf2, FileSize cbOffset = 0)
@@ -262,12 +262,12 @@ class RandomAccessFileDeviceTest : virtual public TestBase
             FileSize cbFileActual = pRandomAccessDevice->getSizeInBytes();
             BOOST_CHECK_EQUAL(cbFile, cbFileActual);
         }
-        
+
         pScheduler->registerDevice(pRandomAccessDevice);
         std::string s = "Four score and seven years ago.";
         char const *writeBuf = s.c_str();
         uint cb = s.size();
-        
+
         Listener writeListener(n);
         RandomAccessRequest writeRequest;
         writeRequest.pDevice = pRandomAccessDevice.get();
@@ -287,11 +287,11 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         StrictMutexGuard mutexGuard(writeListener.getMutex());
         pScheduler->schedule(writeRequest);
         mutexGuard.unlock();
-        
+
         writeListener.waitForAll();
         BOOST_CHECK_EQUAL(n, writeListener.nSuccess);
         pRandomAccessDevice->flush();
-        
+
         if (!openMode.temporary) {
             pScheduler->unregisterDevice(pRandomAccessDevice);
             closeDevice();
@@ -299,7 +299,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
             openDevice(openMode,devName);
             pScheduler->registerDevice(pRandomAccessDevice);
         }
-        
+
         Listener readListener(n + 1);
         RandomAccessRequest readRequest;
         readRequest.pDevice = pRandomAccessDevice.get();
@@ -324,7 +324,7 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         Binding *pBinding = new Binding(
             readListener, cbSector, pBuf2);
         readRequest2.bindingList.push_back(*pBinding);
-        
+
         pScheduler->schedule(readRequest);
         pScheduler->schedule(readRequest2);
         readListener.waitForAll();
@@ -335,14 +335,14 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         }
         std::string s3(reinterpret_cast<char *>(pBuf2),cb);
         BOOST_CHECK_EQUAL(s,s3);
-        
+
         pScheduler->unregisterDevice(pRandomAccessDevice);
         closeDevice();
 
         pScheduler->stop();
         delete pScheduler;
     }
-    
+
 public:
     explicit RandomAccessFileDeviceTest()
     {
@@ -358,7 +358,7 @@ public:
         FENNEL_EXTRA_UNIT_TEST_CASE(
             RandomAccessFileDeviceTest,testLargeFile);
     }
-    
+
     void testPermanentNoDirect()
     {
         baseMode = DeviceMode::load;
@@ -371,14 +371,14 @@ public:
         baseMode.temporary = true;
         runModeTests();
     }
-    
+
     void testPermanentDirect()
     {
         baseMode = DeviceMode::load;
         baseMode.direct = true;
         runModeTests();
     }
-    
+
     void runModeTests()
     {
         testDeviceCreation();
@@ -386,7 +386,7 @@ public:
         testShrink();
         testAsyncIO();
     }
-    
+
     virtual void testCaseTearDown()
     {
         closeDevice();

@@ -52,7 +52,7 @@ FlatFileRowDescriptor::FlatFileRowDescriptor() :
     bounded = true;
 }
 
-void FlatFileRowDescriptor::setUnbounded() 
+void FlatFileRowDescriptor::setUnbounded()
 {
     bounded = false;
 }
@@ -91,8 +91,8 @@ FlatFileParser::FlatFileParser(
 }
 
 void FlatFileParser::scanRow(
-    const char *buffer, 
-    int size, 
+    const char *buffer,
+    int size,
     const FlatFileRowDescriptor &columns,
     FlatFileRowParseResult &result)
 {
@@ -177,7 +177,7 @@ void FlatFileParser::scanRow(
         scanRowEnd(
             columnResult.next,
             buffer+size-columnResult.next,
-            rowDelim, 
+            rowDelim,
             result));
 }
 
@@ -214,9 +214,9 @@ const char *FlatFileParser::scanRowEnd(
 }
 
 const char *FlatFileParser::scanRowDelim(
-    const char *buffer, 
-    int size, 
-    bool search) 
+    const char *buffer,
+    int size,
+    bool search)
 {
     const char *read = buffer;
     const char *end = buffer + size;
@@ -239,7 +239,7 @@ bool FlatFileParser::isRowDelim(char c)
 void FlatFileParser::scanColumn(
     const char *buffer,
     uint size,
-    uint maxLength, 
+    uint maxLength,
     FlatFileColumnParseResult &result)
 {
     if (fixed) {
@@ -304,7 +304,7 @@ void FlatFileParser::scanColumn(
             read++;
         }
     }
-    
+
     uint resultSize = read - buffer;
     result.setResult(type, const_cast<char *>(buffer), resultSize);
 }
@@ -312,7 +312,7 @@ void FlatFileParser::scanColumn(
 void FlatFileParser::scanFixedColumn(
     const char *buffer,
     uint size,
-    uint maxLength, 
+    uint maxLength,
     FlatFileColumnParseResult &result)
 {
     assert(buffer != NULL);
@@ -367,7 +367,7 @@ void FlatFileParser::stripQuoting(
 }
 
 uint FlatFileParser::stripQuoting(
-    char *buffer, uint sizeIn, bool untrimmed) 
+    char *buffer, uint sizeIn, bool untrimmed)
 {
     assert(buffer != NULL);
     if (sizeIn == 0) {

@@ -64,7 +64,7 @@ struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
     TupleProjection residualFilterCols;
 
     /**
-     * The configured sampling mode for this row scan: off, Bernoulli or 
+     * The configured sampling mode for this row scan: off, Bernoulli or
      * system.
      */
     TableSamplingMode samplingMode;
@@ -109,18 +109,18 @@ struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
 class LcsRowScanExecStream : public LcsRowScanBaseExecStream
 {
     /**
-     * Tuple data for all columns read from all clusters, including    
+     * Tuple data for all columns read from all clusters, including
      * filter columns
      */
     TupleDataWithBuffer outputTupleData;
 
     /**
-     * This variable is used to control the initialization 
-     * of residual filters.  It's 1 less than the index of 
-     * the first filtering input to read.  After open, it's 
+     * This variable is used to control the initialization
+     * of residual filters.  It's 1 less than the index of
+     * the first filtering input to read.  After open, it's
      * initializaed to 0.  On execute, the filtering inputs
      * are read sequentially, while this variable is incremented,
-     * until an underflow or all filtering inputs have been read. 
+     * until an underflow or all filtering inputs have been read.
      * On return due to an underflow, this variable allows reading to
      * resume where it had left off.
      */
@@ -140,7 +140,7 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      * Tuple data for input stream
      */
     TupleData ridTupleData;
-    
+
     /**
      * Rid reader
      */
@@ -191,7 +191,7 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      */
     bool hasExtraFilter;
 
-    /** 
+    /**
      * true if produceTuple pending
      */
     bool producePending;

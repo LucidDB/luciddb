@@ -45,7 +45,7 @@ class ExternalSortTask
      * The pre-loaded run to be sorted and stored by this task.
      */
     ExternalSortRunLoader &runLoader;
-    
+
 public:
     explicit ExternalSortTask(
         ExternalSortExecStreamImpl &sortStreamInit,
@@ -54,7 +54,7 @@ public:
           runLoader(runLoaderInit)
     {
     }
-    
+
     /**
      * Executes this request; this satisfies the ThreadPool Task signature,
      * allowing instances of this class to be submitted as a Task to

@@ -93,7 +93,7 @@ main(int argc, char *argv[])
 
     int handle = open(fileName, access, permission);
     if (handle < 0) {
-        printf("Failed to open file '%s'\n", fileName); 
+        printf("Failed to open file '%s'\n", fileName);
         exit(errno);
     }
     if (flock(handle, LOCK_EX|LOCK_NB) < 0) {

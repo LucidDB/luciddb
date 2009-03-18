@@ -43,11 +43,11 @@ typedef uint32_t PointerSizeT;
 
 //! Only integral type that can be used in pointer algebra.
 //!
-//! Would be nice if this was signed, but the presence of 
+//! Would be nice if this was signed, but the presence of
 //! both PointerAdd and PointerSub probably make it OK for
 //! this to be unsigned. It is probably more convenient for
 //! a compiler to have this the same type as PointerOperandT
-//! to avoid a type conversion. 
+//! to avoid a type conversion.
 //!
 //! This typedef must be compatible with the size TupleStorageByteLength
 //! But, to prevent problems between say 32bit and 64 bit machines, this

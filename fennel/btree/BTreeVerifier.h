@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * BTreeStatistics is used to return information about the tree computed
  * as a side-effect of verification.
  */
-struct BTreeStatistics 
+struct BTreeStatistics
 {
     /**
      * Number of levels in tree.
@@ -44,12 +44,12 @@ struct BTreeStatistics
      * Number of non-leaf nodes in tree.
      */
     RecordNum nNonLeafNodes;
-    
+
     /**
      * Number of leaf nodes in tree.
      */
     RecordNum nLeafNodes;
-    
+
     /**
      * Number of leaf tuples in tree.
      */
@@ -72,9 +72,9 @@ class BTreeVerifier : public BTreeAccessBase
      * infinity.
      */
     TupleData lowerBoundKey;
-    
+
     /**
-     * Key data used for verifying that all keys in a node are 
+     * Key data used for verifying that all keys in a node are
      * less than or equal to an expected upper bound.  If size is 0, represents
      * positive infinity.
      */
@@ -144,7 +144,7 @@ class BTreeVerifier : public BTreeAccessBase
      */
     void verifyChildren(
         BTreeNode const &node);
-    
+
 public:
     explicit BTreeVerifier(BTreeDescriptor const &);
     virtual ~BTreeVerifier();

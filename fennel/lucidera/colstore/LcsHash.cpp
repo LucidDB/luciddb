@@ -27,7 +27,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 /*
  * need to play with several value to get a good MagicTable
  */
-static uint8_t MagicTable[256] = 
+static uint8_t MagicTable[256] =
 {
     1,    87,   49,   12,   176,  178,  102,  166,  121,  193,  6,    84,
     249,  230,  44,   163,  14,   197,  213,  181,  161,  85,   218,  80,
@@ -80,7 +80,7 @@ void LcsHash::init(
      */
     memset(hashBlockInit,0,blockSizeInit);
     hash.init(hashBlockInit,  blockSizeInit);
-    
+
     columnId                = columnIdInit;
     valCnt                  = 0;
     maxValueSize            = 0;
@@ -104,7 +104,7 @@ void LcsHash::init(
      */
     colTupleBuffer.reset(
         new FixedBuffer[attrAccessor.getMaxByteCount()]);
-    
+
     compareInst = SharedLcsCompareColKeyUsingOffsetIndex(
         new LcsCompareColKeyUsingOffsetIndex(
             clusterBlockWriter, &hash, colTupleDesc, columnId, attrAccessor));
@@ -134,7 +134,7 @@ void LcsHash::insert(
     uint16_t    newValueOffset;
     LcsHashValueNode  *vPtr=0;
     TupleStorageByteLength storageLength;
-    
+
     /*
      * Compression mode could change dynamically so we have to check everytime.
      * If this batch will not be compressed, then there is no reason to
@@ -145,7 +145,7 @@ void LcsHash::insert(
     key = noCompress ? 0 : computeKey(dataWithLen);
 
     *undoInsert     = false;
-        
+
     /*
      * If value is not in hash, or
      * if we are not in compress mode
@@ -185,7 +185,7 @@ void LcsHash::insert(
         newNode = hash.getNewValueNode();
         newNode->valueOffset = newValueOffset;
         *valOrd = valCnt ++;
-        valOrd->setValueInBatch(); 
+        valOrd->setValueInBatch();
         newNode->valueOrd = *valOrd;
 
         hash.insertNewValueNode(key, newNode);
@@ -194,9 +194,9 @@ void LcsHash::insert(
          * Prepares undo action.
          */
         undo.set(NEWENTRY, key, maxValueSize, 0);
-        
+
         storageLength = attrAccessor.getStoredByteCount(dataWithLen);
-        
+
         if (storageLength > maxValueSize)
             maxValueSize = storageLength;
 
@@ -214,7 +214,7 @@ void LcsHash::insert(
         bool bFirstTimeInBatch = !valOrd->isValueInBatch();
 
         *undoInsert = !clusterBlockWriter->addValue(columnId, bFirstTimeInBatch);
-        
+
         if(*undoInsert)
         {
             /*
@@ -266,7 +266,7 @@ void LcsHash::undoInsert(PBuffer dataWithLen)
             /*
              * Value already existed in the batch.
              */
-            clusterBlockWriter->undoValue(columnId, NULL, false); 
+            clusterBlockWriter->undoValue(columnId, NULL, false);
             break;
         }
     case NEWENTRY:
@@ -275,7 +275,7 @@ void LcsHash::undoInsert(PBuffer dataWithLen)
              * First time in block.
              *
              * To remove the a new value entry
-             * 1) decrements the total count, 
+             * 1) decrements the total count,
              * 2) resets location where next value entry will gox
              * 3) removes entry from hash
              * 4) resets maximum value size
@@ -284,7 +284,7 @@ void LcsHash::undoInsert(PBuffer dataWithLen)
             valCnt--;
             hash.undoNewValueNode(undo.key);
             maxValueSize = undo.origMaxValueSize;
-            clusterBlockWriter->undoValue(columnId, dataWithLen, true); 
+            clusterBlockWriter->undoValue(columnId, dataWithLen, true);
             break;
         }
     case NEWBATCHVALUE:
@@ -293,8 +293,8 @@ void LcsHash::undoInsert(PBuffer dataWithLen)
              * Already in block but first time in batch.
              * Need to remove value from batch
              */
-            clusterBlockWriter->undoValue(columnId, NULL, true); 
-            (&undo.vPtr->valueOrd)->clearValueInBatch();        
+            clusterBlockWriter->undoValue(columnId, NULL, true);
+            (&undo.vPtr->valueOrd)->clearValueInBatch();
             break;
         }
     }
@@ -311,7 +311,7 @@ bool LcsHash::search(
     bool    compareRes;
 
     attrAccessor.loadValue(colTuple[0], dataWithLen);
-    
+
     for( valueNode = hash.getFirstValueNode(key);
          valueNode != NULL;
          valueNode = hash.getNextValueNode(valueNode))
@@ -335,7 +335,7 @@ bool LcsHash::search(
          * Prepare for next loadValue.
          */
         searchTuple.resetBuffer();
-        
+
         if (compareRes == 0)
         {
             numMatches++;
@@ -345,8 +345,8 @@ bool LcsHash::search(
             return true;
         }
     }
-    
-    colTuple.resetBuffer();    
+
+    colTuple.resetBuffer();
     /*
      * No Match.
      */
@@ -363,7 +363,7 @@ void LcsHash::prepareCompressedBatch(
     uint16_t    i;
     uint16_t    *rowWORDArray=(uint16_t*)rowArray;
     *numVals        = 0;
-  
+
     /*
      * Puts all value ordinals in batch in Vals array.
      */
@@ -379,12 +379,12 @@ void LcsHash::prepareCompressedBatch(
      */
     std::sort(offsetIndexVector, offsetIndexVector + (*numVals),
               LcsCompare(compareInst));
-    
+
     /*
      * Now OffsetIndexVector is sorted. Sets sortedOrd,  which is basically index
      * into the OffsetIndexVector,  in valueNodes array.
      */
-    for( i = 0; i < *numVals; i++ ) {   
+    for( i = 0; i < *numVals; i++ ) {
         hash.valueNodes[offsetIndexVector[i]].sortedOrd = i;
     }
 
@@ -398,7 +398,7 @@ void LcsHash::prepareCompressedBatch(
         offsetIndexVector[i] =
             hash.valueNodes[offsetIndexVector[i]].valueOffset;
     }
-  
+
     /*
      * Stores the index to OffsetIndexVector in the Row array. Now the
      * rowWORDArray contains indices to the OffsetIndexVector,  which conains
@@ -458,12 +458,12 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
      * try to avoid it.
      */
     bool noCompress = clusterBlockWriter->noCompressMode(columnId);
-  
+
     for( i = 0; i < numVals && !(hash.isFull()); i++ )
     {
         dataWithLen = clusterBlockWriter->getOffsetPtr(columnId,lastValOff);
         key = noCompress ? 0 : computeKey(dataWithLen);
-  
+
         /*
          * If value is not in hash, or if we are not in compress mode (in which
          * case we allow duplicates in the hash table), then adds value to the
@@ -472,9 +472,9 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
         if (noCompress || !search(key, dataWithLen, &dummy))
         {
             newNode = hash.getNewValueNode();
-            
+
             valOrd = valCnt++;
-            newNode->valueOrd = valOrd; 
+            newNode->valueOrd = valOrd;
             newNode->valueOffset=(uint16_t)lastValOff;
 
             hash.insertNewValueNode(key,  newNode);
@@ -483,7 +483,7 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
             if( storageLength > maxValueSize )
                 maxValueSize = storageLength;
         }
-      
+
         lastValOff = clusterBlockWriter->getNextVal(columnId,
             (uint16_t)lastValOff);
     }
@@ -542,7 +542,7 @@ void LcsHashTable::init(PBuffer hashBlockInit, uint hashBlockSizeInit)
     hashBlock     = hashBlockInit;
     hashBlockSize = hashBlockSizeInit;
     memset(hashBlock, 0, hashBlockSize);
-    
+
     /*
      * hashTableSize is the size for entry array. Reserve space assuming no
      * one valueNode for each entry(no empty entry, and no overflow).
@@ -580,7 +580,7 @@ LcsCompareColKeyUsingOffsetIndex::LcsCompareColKeyUsingOffsetIndex(
     colTuple1.computeAndAllocate(colTupleDesc);
     colTuple2.computeAndAllocate(colTupleDesc);
     attrAccessor = attrAccessorInit;
-    
+
     /*
      * Both tuples should have just one column.
      */
@@ -593,7 +593,7 @@ bool LcsCompareColKeyUsingOffsetIndex::lessThan(
     const uint16_t colKeyOffsetIndex2)
 {
     bool isLessThan = false;
-    
+
     /*
      * Using index, locates the offset in the hash table then using offset,
      * constructs TupleDatum of the column "columnId".
@@ -602,12 +602,12 @@ bool LcsCompareColKeyUsingOffsetIndex::lessThan(
         colTuple1[0],
         clusterBlockWriter->getOffsetPtr(
             columnId, hashTable->valueNodes[colKeyOffsetIndex1].valueOffset));
-    
+
     attrAccessor.loadValue(
         colTuple2[0],
         clusterBlockWriter->getOffsetPtr(
             columnId, hashTable->valueNodes[colKeyOffsetIndex2].valueOffset));
-    
+
     /*
      * The std::sort interface requires a "less than" operator. Returns true if
      * first value is less than the second value.
@@ -622,4 +622,4 @@ bool LcsCompareColKeyUsingOffsetIndex::lessThan(
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End LcsRowScanExecStream.cpp
+// End LcsHash.cpp

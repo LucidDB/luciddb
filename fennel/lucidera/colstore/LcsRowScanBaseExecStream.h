@@ -74,7 +74,7 @@ protected:
      * in the output projection
      */
     std::vector<uint> projMap;
-    
+
     /**
      * Number of clusters to be scanned
      */
@@ -117,7 +117,7 @@ protected:
      * Accessors used for loading actual column values.
      */
     std::vector<UnalignedAttributeAccessor> attrAccessors;
-    
+
     /**
      * Reads column values based on current position of cluster reader
      *

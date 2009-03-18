@@ -37,7 +37,7 @@
 using namespace fennel;
 
 /**
- * Unit test for backup and restore of database header pages and a 
+ * Unit test for backup and restore of database header pages and a
  * VersionedRandomAllocationSegment.
  */
 class BackupRestoreTest : virtual public SnapshotSegmentTestBase
@@ -50,7 +50,7 @@ class BackupRestoreTest : virtual public SnapshotSegmentTestBase
     };
 
     typedef SegNodeLock<TestNode> TestPageLock;
-    
+
     SharedDatabase pDatabase;
     PageId persistentPageId;
 
@@ -101,7 +101,7 @@ public:
      */
     void testBackupRestoreCompressed();
 };
-  
+
 void BackupRestoreTest::testBackupRestoreUncompressed()
 {
     testBackupRestore(false);
@@ -122,7 +122,7 @@ void BackupRestoreTest::createSnapshotData()
         shared_from_this());
 
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
-    SharedSegment pSegment = 
+    SharedSegment pSegment =
         pDatabase->getSegmentFactory()->newSnapshotRandomAllocationSegment(
             pDatabase->getDataSegment(),
             pDatabase->getDataSegment(),
@@ -182,9 +182,9 @@ void BackupRestoreTest::testHeaderBackupRestore()
     TxnId fullTxnId =
         pDatabase->initiateBackup(
             fullBackup,
-            false, 
-            0, 
-            NULL_TXN_ID, 
+            false,
+            0,
+            NULL_TXN_ID,
             "",
             dataDeviceSize,
             aborted);
@@ -198,9 +198,9 @@ void BackupRestoreTest::testHeaderBackupRestore()
     std::string incrBackup1 = "incrBackup1.dat";
     TxnId incrTxnId1 =
         pDatabase->initiateBackup(
-            incrBackup1, 
-            true, 
-            0, 
+            incrBackup1,
+            true,
+            0,
             fullTxnId,
             "",
             dataDeviceSize,
@@ -210,7 +210,7 @@ void BackupRestoreTest::testHeaderBackupRestore()
     uint nPagesBefore =
         pDatabase->getDataSegment()->getAllocatedSizeInPages();
     pDatabase->deallocateOldPages(incrTxnId1);
-    uint nPagesAfter = 
+    uint nPagesAfter =
         pDatabase->getDataSegment()->getAllocatedSizeInPages();
     BOOST_REQUIRE(nPagesBefore == nPagesAfter);
 
@@ -229,9 +229,9 @@ void BackupRestoreTest::testHeaderBackupRestore()
     std::string incrBackup2 = "incrBackup2.dat";
     TxnId incrTxnId2 =
         pDatabase->initiateBackup(
-            incrBackup2, 
-            true, 
-            4096, 
+            incrBackup2,
+            true,
+            4096,
             incrTxnId1,
             "",
             dataDeviceSize,
@@ -305,10 +305,10 @@ void BackupRestoreTest::testBackupCleanup()
 
     std::string fullBackup = "fullBackup.dat";
 
-    // Set the space padding to the amount of space currently available 
+    // Set the space padding to the amount of space currently available
     // multipled by 1000.  This should result in a failure unless some other
     // user is using this filesystem and either:
-    // A) that user is freeing up a large amount of space, or 
+    // A) that user is freeing up a large amount of space, or
     // B) that user is freeing up space and the filesystem is short on space,
     //    in which case, multiplying by 1000 doesn't yield a large enough value
     //    to offset the amount that the user has freed
@@ -321,8 +321,8 @@ void BackupRestoreTest::testBackupCleanup()
         pDatabase->initiateBackup(
             fullBackup,
             true,
-            spaceAvailable * 1000, 
-            NULL_TXN_ID, 
+            spaceAvailable * 1000,
+            NULL_TXN_ID,
             "",
             dataDeviceSize,
             aborted);
@@ -332,14 +332,14 @@ void BackupRestoreTest::testBackupCleanup()
         if (errMsg.find("Insufficient space") != 0) {
             BOOST_FAIL("Wrong exception returned");
         }
-    } 
+    }
 
     // Make sure ALTER SYSTEM DEALLOCATE OLD is enabled, even after the
     // exception
     uint nPagesBefore =
         pDatabase->getDataSegment()->getAllocatedSizeInPages();
     pDatabase->deallocateOldPages(pDatabase->getLastCommittedTxnId());
-    uint nPagesAfter = 
+    uint nPagesAfter =
         pDatabase->getDataSegment()->getAllocatedSizeInPages();
     BOOST_REQUIRE(nPagesBefore > nPagesAfter);
 
@@ -350,9 +350,9 @@ void BackupRestoreTest::testBackupCleanup()
     // Initiate a new backup and then abort it.
     pDatabase->initiateBackup(
         fullBackup,
-        false, 
+        false,
         0,
-        NULL_TXN_ID, 
+        NULL_TXN_ID,
         getCompressionProgram(true),
         dataDeviceSize,
         aborted);
@@ -363,7 +363,7 @@ void BackupRestoreTest::testBackupCleanup()
     nPagesBefore =
         pDatabase->getDataSegment()->getAllocatedSizeInPages();
     pDatabase->deallocateOldPages(pDatabase->getLastCommittedTxnId());
-    nPagesAfter = 
+    nPagesAfter =
         pDatabase->getDataSegment()->getAllocatedSizeInPages();
     BOOST_REQUIRE(nPagesBefore > nPagesAfter);
 
@@ -376,7 +376,7 @@ void BackupRestoreTest::testBackupCleanup()
 void BackupRestoreTest::executeSnapshotTxn(int i)
 {
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
-    SharedSegment pSegment = 
+    SharedSegment pSegment =
         pDatabase->getSegmentFactory()->newSnapshotRandomAllocationSegment(
             pDatabase->getDataSegment(),
             pDatabase->getDataSegment(),
@@ -406,7 +406,7 @@ void BackupRestoreTest::verifySnapshotData(uint x)
     // Lock the original page, but because we're accessing the segment
     // through a snapshot segment with the csn set to that of the last
     // committed transaction, we'll pick up the latest version of the page.
-    SharedSegment pSegment = 
+    SharedSegment pSegment =
         pDatabase->getSegmentFactory()->newSnapshotRandomAllocationSegment(
             pDatabase->getDataSegment(),
             pDatabase->getDataSegment(),
@@ -576,8 +576,8 @@ void BackupRestoreTest::restore(
             pRandomAccessDevice);
     bool abortFlag = false;
     pVRSegment->restoreFromBackup(
-        pBackupDevice, 
-        lowerBoundCsn, 
+        pBackupDevice,
+        lowerBoundCsn,
         upperBoundCsn,
         abortFlag);
 

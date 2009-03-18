@@ -48,7 +48,7 @@ class BTreeReadersTest : virtual public SegStorageTestBase
         iValueMax = 1000000000
     };
 
-    struct LeafRecord 
+    struct LeafRecord
     {
         int32_t key;
         int32_t value;
@@ -56,7 +56,7 @@ class BTreeReadersTest : virtual public SegStorageTestBase
 
     BTreeDescriptor treeDescriptor;
     TupleDescriptor nonLeafDescriptor;
-    
+
     TupleAccessor leafTupleAccessor;
     TupleData keyData;
     TupleData leafTupleData;
@@ -69,29 +69,29 @@ class BTreeReadersTest : virtual public SegStorageTestBase
     int32_t readNonLeafKey();
     PageId readPageId();
     int32_t readLeafValue();
-    
+
     void testOneLevel()
     {
         testReaders(200);
     }
-    
+
     void testTwoLevels()
     {
         testReaders(20000);
     }
-    
+
     void testThreeLevels()
     {
         testReaders(200000);
     }
-    
+
     void testReaders(uint nRecords);
     void testScan(SharedByteInputStream, uint nRecords);
     void testSearch(SharedByteInputStream, uint nRecords);
 
     void marshalLeafRecord();
     void unmarshalLeafRecord(SharedByteInputStream pInputStream);
-    
+
 public:
     explicit BTreeReadersTest()
     {
@@ -160,7 +160,7 @@ void BTreeReadersTest::testReaders(uint nRecords)
 
     treeDescriptor.rootPageId = NULL_PAGE_ID;
     BTreeBuilder builder(treeDescriptor, pRandomSegment);
-    
+
     keyData.compute(builder.getKeyDescriptor());
     keyData[0].pData = reinterpret_cast<PConstBuffer>(&leafRecord.key);
 
@@ -262,7 +262,7 @@ void BTreeReadersTest::testScan(
 {
     // Read records from both leaf and non-leaf pages starting from left
     // to right.
- 
+
     BTreeNonLeafReader nonLeafReader(treeDescriptor);
     BTreeLeafReader leafReader(treeDescriptor);
 

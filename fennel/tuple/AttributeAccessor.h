@@ -77,12 +77,12 @@ public:
     TupleStorageByteLength cbStorage;
 
     virtual ~AttributeAccessor();
-    
+
     /**
      * Unmarshals the attribute's value by setting up the
      * data pointer, length, and null indicator; does not actually copy any
      * data.
-     * 
+     *
      * @param tupleAccessor containing TupleAccessor set up
      * with the current tuple image to be accessed
      *

@@ -35,7 +35,7 @@ DynamicParam::DynamicParam(TupleAttributeDescriptor const &descInit)
 }
 
 void DynamicParamManager::createParam(
-    DynamicParamId dynamicParamId, 
+    DynamicParamId dynamicParamId,
     const TupleAttributeDescriptor &attrDesc,
     bool failIfExists)
 {
@@ -54,7 +54,7 @@ void DynamicParamManager::createParam(
 void DynamicParamManager::deleteParam(DynamicParamId dynamicParamId)
 {
     StrictMutexGuard mutexGuard(mutex);
-    
+
     assert(paramMap.find(dynamicParamId) != paramMap.end());
     paramMap.erase(dynamicParamId);
     assert(paramMap.find(dynamicParamId) == paramMap.end());
@@ -64,7 +64,7 @@ void DynamicParamManager::writeParam(
     DynamicParamId dynamicParamId, const TupleDatum &src)
 {
     StrictMutexGuard mutexGuard(mutex);
-    
+
     DynamicParam &param = getParamInternal(dynamicParamId);
     if (src.pData) {
         assert(src.cbData <= param.getDesc().cbStorage);

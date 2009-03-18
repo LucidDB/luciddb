@@ -82,7 +82,7 @@ void SegStorageTestBase::closeRandomSegment()
         pRandomSegment.reset();
     }
 }
-    
+
 void SegStorageTestBase::closeVersionedRandomSegment()
 {
     if (pVersionedRandomSegment) {
@@ -110,7 +110,7 @@ void SegStorageTestBase::closeStorage()
 
 SegStorageTestBase::SegStorageTestBase()
 {
-    pSegmentFactory = 
+    pSegmentFactory =
         SegmentFactory::newSegmentFactory(configMap,shared_from_this());
 }
 

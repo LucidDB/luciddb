@@ -30,13 +30,13 @@ BTreeCompactNodeAccessor::BTreeCompactNodeAccessor()
 {
     cbEntry = MAXU;
 }
-    
+
 void BTreeCompactNodeAccessor::onInit()
 {
     BTreeNodeAccessor::onInit();
     cbEntry = tupleAccessor.getMaxByteCount();
 }
-    
+
 PBuffer BTreeCompactNodeAccessor::allocateEntry(
     BTreeNode &node,uint iEntry,uint)
 {

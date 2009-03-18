@@ -36,11 +36,11 @@ class ByteArrayOutputStream : public ByteOutputStream
 {
     PBuffer pBuffer;
     uint cbBuffer;
-    
+
     // implement the ByteOutputStream interface
     virtual void flushBuffer(uint cbRequested);
     virtual void closeImpl();
-    
+
     explicit ByteArrayOutputStream(
         PBuffer pBuffer,
         uint cbBuffer);

@@ -82,9 +82,9 @@ inline void add(RegisterRef<STDTYPE>* node, RegisterRef<char*>* aggDataBlock)
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogram<STDTYPE> *pAcc =
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
-    
 
-    // Process the new node. 
+
+    // Process the new node.
     pAcc->addRow(node);
 }
 
@@ -95,7 +95,7 @@ inline void add(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
     WinAggHistogramStrA *pAcc =
         *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
 
-    // Process the new node. 
+    // Process the new node.
     pAcc->addRow(node);
 }
 
@@ -124,7 +124,7 @@ inline void drop(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogramStrA *pAcc =
         *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
-    
+
     pAcc->dropRow(node);
 }
 
@@ -166,7 +166,7 @@ inline void max(RegisterRef<STDTYPE>* result, RegisterRef<char*>* aggDataBlock)
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogram<STDTYPE> *pAcc =
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
-    
+
     // return max value
     pAcc->getMax(result);
 }
@@ -194,7 +194,7 @@ inline void avg(
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogram<STDTYPE> *pAcc =
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
-    
+
     // return average
     pAcc->getAvg(result);
 }
@@ -214,7 +214,7 @@ inline void sum(
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogram<STDTYPE> *pAcc =
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
-    
+
     // return sum
     pAcc->getSum(result);
 }
@@ -234,7 +234,7 @@ inline void count(
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogram<STDTYPE> *pAcc =
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
-    
+
     // return count
     pAcc->getCount(result);
 }
@@ -262,7 +262,7 @@ inline void firstValue(
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogram<STDTYPE> *pAcc =
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
-    
+
     // return last value
     pAcc->getFirstValue(result);
 }
@@ -290,7 +290,7 @@ inline void lastValue(
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogram<STDTYPE> *pAcc =
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
-    
+
     // return first value
     pAcc->getLastValue(result);
 }
@@ -445,7 +445,7 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
     // WinAggInit.  Overloaded for each supported data
     // type.  Note that we have to have a separate init
     // for each data type but the other support functions
-    // only have to support int64_t and double.  When the 
+    // only have to support int64_t and double.  When the
     // calc programs are built the small types are cast up
     // to the supported types.
     vector<StandardTypeDescriptorOrdinal> params_mm64_init;
@@ -484,7 +484,7 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
     vector<StandardTypeDescriptorOrdinal> params_ad_I64;
     params_ad_I64.push_back(STANDARD_TYPE_INT_64);
     params_ad_I64.push_back(STANDARD_TYPE_VARBINARY);
-    
+
     eit->add("WinAggAdd", params_ad_I64,
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &WinAggAdd);
@@ -529,19 +529,19 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
     vector<StandardTypeDescriptorOrdinal> params_mmd_init;
     params_mmd_init.push_back(STANDARD_TYPE_VARBINARY);
     params_mmd_init.push_back(STANDARD_TYPE_DOUBLE);
-    
+
     eit->add("WinAggInit", params_mmd_init,
         (ExtendedInstruction2<char*,double>*) NULL,
         &WinAggInit);
-    
+
     vector<StandardTypeDescriptorOrdinal> params_mmr_init;
     params_mmr_init.push_back(STANDARD_TYPE_VARBINARY);
     params_mmr_init.push_back(STANDARD_TYPE_REAL);
-    
+
     eit->add("WinAggInit", params_mmr_init,
         (ExtendedInstruction2<char*,float>*) NULL,
         &WinAggInit);
-    
+
     vector<StandardTypeDescriptorOrdinal> params_DBL_funcs;
     params_DBL_funcs.push_back(STANDARD_TYPE_DOUBLE);
     params_DBL_funcs.push_back(STANDARD_TYPE_VARBINARY);
@@ -582,11 +582,11 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
     vector<StandardTypeDescriptorOrdinal> params_mmvc_init;
     params_mmvc_init.push_back(STANDARD_TYPE_VARBINARY);
     params_mmvc_init.push_back(STANDARD_TYPE_VARCHAR);
-    
+
     eit->add("WinAggInit", params_mmvc_init,
         (ExtendedInstruction2<char*,char*>*) NULL,
         &WinAggInit);
-    
+
     vector<StandardTypeDescriptorOrdinal> params_StrA_funcs;
     params_StrA_funcs.push_back(STANDARD_TYPE_VARCHAR);
     params_StrA_funcs.push_back(STANDARD_TYPE_VARBINARY);
@@ -618,11 +618,11 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
     vector<StandardTypeDescriptorOrdinal> params_mmc_init;
     params_mmc_init.push_back(STANDARD_TYPE_VARBINARY);
     params_mmc_init.push_back(STANDARD_TYPE_CHAR);
-    
+
     eit->add("WinAggInit", params_mmc_init,
         (ExtendedInstruction2<char*,char*>*) NULL,
         &WinAggInit);
-    
+
     vector<StandardTypeDescriptorOrdinal> params_StrA2_funcs;
     params_StrA2_funcs.push_back(STANDARD_TYPE_CHAR);
     params_StrA2_funcs.push_back(STANDARD_TYPE_VARBINARY);
@@ -654,4 +654,5 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
 
 
 FENNEL_END_CPPFILE("$Id$");
-        
+
+// End ExtWinAggFuncs.cpp

@@ -38,7 +38,7 @@ public:
     NullMutex()
     {
     }
-    
+
     ~NullMutex()
     {
     }
@@ -54,7 +54,7 @@ public:
     explicit NullMutexGuard(NullMutex &)
     {
     }
-    
+
     ~NullMutexGuard()
     {
     }
@@ -62,7 +62,7 @@ public:
     void lock()
     {
     }
-    
+
     void unlock()
     {
     }
@@ -71,7 +71,7 @@ public:
     {
         return true;
     }
-    
+
     operator const void*() const
     {
         return this;

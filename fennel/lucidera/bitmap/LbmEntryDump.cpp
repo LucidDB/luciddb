@@ -63,7 +63,7 @@ uint LbmEntryDump::dump(BTreeDescriptor const &treeDescriptor, bool printRID)
         if (!pReader->searchNext()) {
             pReader->endSearch();
             break;
-        }        
+        }
     }
 
     return numTuples;

@@ -39,10 +39,10 @@ class LockHolderId
         TYPE_THREAD,
         TYPE_TXN
     };
-    
+
     TxnId holderId;
     HolderType holderType;
-    
+
 public:
     /**
      * Creates a new null holder.

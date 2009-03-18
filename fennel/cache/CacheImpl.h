@@ -251,12 +251,12 @@ class CacheImpl : public Cache, private TimerThreadClient
      * Mutex coupled with freePageCondition.
      */
     StrictMutex freePageMutex;
-    
+
     /**
      * Condition variable used for notification of free page availability.
      */
     LocalCondition freePageCondition;
-    
+
     /**
      * A fixed-size vector of pointers to cache pages; we can get away with
      * this because currently the number of pages is fixed at initialization.
@@ -278,7 +278,7 @@ class CacheImpl : public Cache, private TimerThreadClient
      * Set only if bufferAllocator is owned by this cache.
      */
     boost::scoped_ptr<CacheAllocator> pBufferAllocator;
-    
+
     /**
      * The realization for the VictimPolicy model.  See
      * LRUVictimPolicy for general information on the collaboration between
@@ -327,7 +327,7 @@ class CacheImpl : public Cache, private TimerThreadClient
 // ----------------------------------------------------------------------
 // CacheImpl internal helper methods
 // ----------------------------------------------------------------------
-    
+
     /**
      * Finds a page by BlockId within a particular bucket.  If found,
      * waits for any pending read and then increments the page reference count;
@@ -377,7 +377,7 @@ class CacheImpl : public Cache, private TimerThreadClient
      * @return true if the asynch page request did not require retry
      */
     bool readPageAsync(PageT &page);
-    
+
     /**
      * Writes the given page asynchronously.
      *
@@ -390,7 +390,7 @@ class CacheImpl : public Cache, private TimerThreadClient
     /**
      * Translates a BlockId into the byte offset of the corresponding device
      * block.
-     * 
+     *
      * @param blockId the BlockId to translate
      *
      * @return byte offset within device
@@ -414,9 +414,9 @@ class CacheImpl : public Cache, private TimerThreadClient
      * allows the helper methods to verify the calling logic.
      */
     void assertCorrectBucket(PageBucketT &bucket,BlockId const &blockId);
-    
+
     /**
-     * Unmaps a currently mapped page, but does not add it to the free list.  
+     * Unmaps a currently mapped page, but does not add it to the free list.
      * Also notifies victimPolicy of the unmapping.  The page must have
      * no outstanding references.
      *
@@ -451,7 +451,7 @@ class CacheImpl : public Cache, private TimerThreadClient
      * page mapping); otherwise, finds the existing mapping (and notifies
      * victimPolicy of the page access).
      *
-     * @param bucket the bucket to contain the Page; must be 
+     * @param bucket the bucket to contain the Page; must be
      * the same as getHashBucket(blockId)
      *
      * @param newPage a free page to map (previously obtained from
@@ -502,14 +502,14 @@ class CacheImpl : public Cache, private TimerThreadClient
      * @param x reference to counter to be updated
      */
     void incrementCounter(AtomicCounter &x);
-    
+
     /**
      * Decrements a counter variable safely.
      *
      * @param x reference to counter to be updated
      */
     void decrementCounter(AtomicCounter &x);
-    
+
     /**
      * Increments a statistical counter.  Can be defined to NOP to increase
      * cache performance if statistics aren't important.
@@ -517,7 +517,7 @@ class CacheImpl : public Cache, private TimerThreadClient
      * @param x reference to counter to be updated
      */
     void incrementStatsCounter(AtomicCounter &x);
-    
+
     /**
      * Decrements a statistical counter.  Can be defined to NOP to increase
      * cache performance if statistics aren't important.
@@ -530,7 +530,7 @@ class CacheImpl : public Cache, private TimerThreadClient
      * Clears stats which are tracked since initialization.
      */
     void initializeStats();
-    
+
     /**
      * Handles initial allocation of pages and attempts to handle any
      * associated out-of-memory errors.
@@ -563,7 +563,7 @@ class CacheImpl : public Cache, private TimerThreadClient
 // ----------------------------------------------------------------------
 // Implementation of private Cache interface (q.v.)
 // ----------------------------------------------------------------------
-    
+
     void markPageDirty(CachePage &page);
     void notifyTransferCompletion(CachePage &,bool);
 
@@ -576,7 +576,7 @@ class CacheImpl : public Cache, private TimerThreadClient
 
 protected:
     void closeImpl();
-    
+
 public:
 // ----------------------------------------------------------------------
 // Implementation of public Cache interface (q.v.)
@@ -616,7 +616,7 @@ public:
     {
         return *pDeviceAccessScheduler;
     }
-    
+
 };
 
 FENNEL_END_NAMESPACE

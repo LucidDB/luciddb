@@ -63,7 +63,7 @@ class SegNodeLock;
 struct IntrusiveListNode
 {
     IntrusiveListNode *pNext;
-    
+
 #ifdef DEBUG
     IntrusiveListNode()
     {
@@ -80,7 +80,7 @@ struct IntrusiveListNode
 
 class MaxU {
 public:
-    MaxU(){}    
+    MaxU(){}
     operator uint8_t() const
     { return 0xFF; }
     operator uint16_t() const
@@ -132,7 +132,7 @@ enum LockMode
      * Exclusive lock; fail immediately rather than waiting.
      */
     LOCKMODE_X_NOWAIT
-    
+
 // NOTE:  enumeration order is significant
 };
 
@@ -161,7 +161,7 @@ enum CheckpointType
      * Flush some dirty data (criteria for flush is context-specific).
      */
     CHECKPOINT_FLUSH_FUZZY
-    
+
 // NOTE:  enumeration order is significant
 };
 
@@ -192,7 +192,7 @@ enum DuplicateSeek
  * serving as typo-safe parameter names.
  */
 typedef char const * const ParamName;
-    
+
 /**
  * ParamName can be used to declare static string symbolic constants
  * serving as early-bound parameter values.
@@ -252,7 +252,7 @@ typedef int LogicalActionType;
 // Set of pageIds
 typedef std::set<PageId> PageSet;
 typedef PageSet::const_iterator PageSetConstIter;
-    
+
 /**
  * Sentinel value for an invalid PageId.
  */

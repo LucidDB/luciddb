@@ -51,7 +51,7 @@ void
 mathAbs(RegisterRef<long long>* result,
 	RegisterRef<long long>* x);
 
-//! mathPow. Calculates x^y. 
+//! mathPow. Calculates x^y.
 //!
 //! Throws an error and sets the result to null if x<0 and y is not an integer value
 void
@@ -61,7 +61,7 @@ mathPow(RegisterRef<double>* result,
 
 
 class ExtendedInstructionTable;
-        
+
 void
 ExtMathRegister(ExtendedInstructionTable* eit);
 

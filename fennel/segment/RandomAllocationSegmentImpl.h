@@ -44,7 +44,7 @@ struct ExtentAllocationNode : public StoredNode
     {
         return reinterpret_cast<PageEntry *>(this+1)[i];
     }
-    
+
     PageEntry const &getPageEntry(uint i) const
     {
         return reinterpret_cast<PageEntry const *>(this+1)[i];

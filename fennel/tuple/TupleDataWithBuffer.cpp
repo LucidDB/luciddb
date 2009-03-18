@@ -54,3 +54,5 @@ TupleDataWithBuffer::~TupleDataWithBuffer()
 }
 
 FENNEL_END_CPPFILE("$Id$");
+
+// End TupleDataWithBuffer.cpp

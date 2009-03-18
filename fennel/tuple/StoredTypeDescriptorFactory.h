@@ -37,7 +37,7 @@ class StoredTypeDescriptorFactory
 {
 public:
     virtual ~StoredTypeDescriptorFactory();
-    
+
     /**
      * Instantiates a StoredTypeDescriptor.
      *

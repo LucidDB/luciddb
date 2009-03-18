@@ -50,7 +50,7 @@ public:
         std::string sourceName);
 
     virtual ~TracingSegment();
-    
+
     // implement the Segment interface
     virtual void setPageSuccessor(PageId pageId, PageId successorId);
     virtual BlockId translatePageId(PageId);

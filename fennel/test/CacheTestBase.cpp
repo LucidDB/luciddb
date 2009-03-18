@@ -43,7 +43,7 @@ Cache &CacheTestBase::getCache()
 {
     return *pCache;
 }
-    
+
 typedef CacheImpl<
     CachePage,
     RandomVictimPolicy<CachePage>
@@ -96,7 +96,7 @@ SharedRandomAccessDevice CacheTestBase::openDevice(
     pCache->registerDevice(deviceId,pDevice);
     return pDevice;
 }
-    
+
 void CacheTestBase::openStorage(DeviceMode openMode)
 {
     // make a test.dat filename unique to each process
@@ -107,7 +107,7 @@ void CacheTestBase::openStorage(DeviceMode openMode)
 
     statsTimer.addSource(pCache);
     statsTimer.start();
-    
+
     pRandomAccessDevice = openDevice(
         testDataFile.str(),openMode,nDiskPages,dataDeviceId);
 }
@@ -143,7 +143,7 @@ void CacheTestBase::closeDevice(
 CacheTestBase::CacheTestBase()
 {
     cacheParams.readConfig(configMap);
-    
+
     nDiskPages = configMap.getIntParam("diskPages",1000);
     dataDeviceId = DeviceId(23);
     nMemPages = cacheParams.nMemPagesMax;
@@ -161,7 +161,7 @@ CacheTestBase::CacheTestBase()
                   << std::endl;
         exit(-1);
     }
-    
+
 }
 
 // End CacheTestBase.cpp

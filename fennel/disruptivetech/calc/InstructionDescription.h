@@ -50,12 +50,12 @@ public:
 
     // C'tor for exactly one type
     explicit
-    RegDesc(StandardTypeDescriptorOrdinal typeArg) : 
+    RegDesc(StandardTypeDescriptorOrdinal typeArg) :
         type(typeArg),
         group(REGDESC_NONE)
     {
     }
-   
+
     // C'tor for a group of types
     explicit
     RegDesc(Groups groupArg) :
@@ -63,7 +63,7 @@ public:
         group(groupArg)
     {
     }
-    
+
     bool
     match(StandardTypeDescriptorOrdinal m);
 
@@ -103,7 +103,7 @@ public:
     {
         return name;
     }
-    
+
 private:
     string name;
     vector<RegDesc> registerdesc;

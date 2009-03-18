@@ -41,10 +41,10 @@ class BTreeHeapNodeAccessor : public BTreeNodeAccessor
 
     inline EntryOffset const *getEntryOffsetPointer(
         BTreeNode const &node,uint iEntry);
-    
+
     inline EntryOffset *getEntryOffsetPointer(
         BTreeNode &node,uint iEntry);
-    
+
     inline uint getEntryOffset(BTreeNode const &node,uint iEntry);
 
     inline uint getEntrySizeWithOverhead(uint cbEntry);
@@ -73,7 +73,7 @@ BTreeHeapNodeAccessor::getEntryOffsetPointer(
     return reinterpret_cast<EntryOffset const *>(node.getDataForRead())
         + iEntry;
 }
-    
+
 inline BTreeHeapNodeAccessor::EntryOffset *
 BTreeHeapNodeAccessor::getEntryOffsetPointer(
     BTreeNode &node,uint iEntry)
@@ -81,7 +81,7 @@ BTreeHeapNodeAccessor::getEntryOffsetPointer(
     return reinterpret_cast<EntryOffset *>(node.getDataForWrite())
         + iEntry;
 }
-    
+
 inline uint BTreeHeapNodeAccessor::getEntryOffset(
     BTreeNode const &node,uint iEntry)
 {

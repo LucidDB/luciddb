@@ -194,7 +194,7 @@ unitTestBool()
     Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
-    // set up register references to symbolically point to 
+    // set up register references to symbolically point to
     // their corresponding storage locations -- makes for easy test case
     // generation. again, a compiler wouldn't do things in quite
     // this way
@@ -207,7 +207,7 @@ unitTestBool()
                                          i,
                                          STANDARD_TYPE_BOOL);
         c.appendRegRef(bOutP[i]);
-        bLoP[i] = new RegisterRef<bool>(RegisterReference::ELocal, 
+        bLoP[i] = new RegisterRef<bool>(RegisterReference::ELocal,
                                         i,
                                         STANDARD_TYPE_BOOL);
         c.appendRegRef(bLoP[i]);
@@ -369,7 +369,7 @@ unitTestBool()
 
     for (i = 0; i < pc; i++) {
         c.appendInstruction(instP[i]);
-    } 
+    }
     c.bind(RegisterReference::ELiteral,
            &literal,
            tupleDesc);
@@ -386,7 +386,7 @@ unitTestBool()
            &status,
            tupleDesc);
     c.exec();
-  
+
     string out;
     for (i = 0; i < pc; i++) {
         instP[i]->describe(out, true);
@@ -670,7 +670,7 @@ unitTestLong()
       (const_cast<PBuffer>
        (literal[falseIdx+registersize].pData))) = false;
 
-  
+
     // null out last element of each type
     int nullidx = registersize - 1;
     literal[nullidx].pData = NULL;
@@ -716,10 +716,10 @@ unitTestLong()
     Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
-    // set up register references to symbolically point to 
+    // set up register references to symbolically point to
     // their corresponding storage locations -- makes for easy test case
     // generation. again, a compiler wouldn't do things in quite
-    // this way 
+    // this way
     for (i=0; i < registersize; i++) {
         bInP[i] = new RegisterRef<int32_t>(RegisterReference::EInput,
                                            i,
@@ -744,7 +744,7 @@ unitTestLong()
         bLiteralBoolP[i] = new RegisterRef<bool>(RegisterReference::ELiteral,
                                                  i+registersize,
                                                  STANDARD_TYPE_BOOL);
-        
+
         c.appendRegRef(bLiteralBoolP[i]);
     }
 
@@ -930,10 +930,10 @@ unitTestLong()
     instP[pc++] = new BoolNativeLessEqual<int32_t>(bOutBoolP[outBoolC++], bLiP[12], bLiP[nullidx], isLong);
     instP[pc++] = new BoolNativeLessEqual<int32_t>(bOutBoolP[outBoolC++], bLiP[nullidx], bLiP[3], isLong);
     instP[pc++] = new BoolNativeLessEqual<int32_t>(bOutBoolP[outBoolC++], bLiP[nullidx], bLiP[nullidx], isLong);
-  
+
     // isnull
     instP[pc++] = new BoolNativeIsNull<int32_t>(bOutBoolP[outBoolC++], bLiP[12], isLong);
-    instP[pc++] = new BoolNativeIsNull<int32_t>(bOutBoolP[outBoolC++], bLiP[nullidx], isLong); 
+    instP[pc++] = new BoolNativeIsNull<int32_t>(bOutBoolP[outBoolC++], bLiP[nullidx], isLong);
     // isnotnull
     instP[pc++] = new BoolNativeIsNotNull<int32_t>(bOutBoolP[outBoolC++], bLiP[12], isLong);
     instP[pc++] = new BoolNativeIsNotNull<int32_t>(bOutBoolP[outBoolC++], bLiP[nullidx], isLong);
@@ -1053,14 +1053,14 @@ unitTestLong()
     if (output[outC++].pData != NULL) fail("longdiv3", __LINE__);
     if (output[outC++].pData != NULL) fail("longdiv4", __LINE__);
     if (output[outC++].pData != NULL) fail("longdiv5", __LINE__);
-    // div by zero 
+    // div by zero
     assert(outC == divbyzero);
     if (output[outC++].pData != NULL) fail("longdiv6", __LINE__);
     deque<CalcMessage>::iterator iter = c.mWarnings.begin();
     if (iter->pc != divbyzero)
         fail("longdiv by zero failed, pc wrong\n", __LINE__);
     string expectederror("22012");
-    if (expectederror.compare(iter->str)) 
+    if (expectederror.compare(iter->str))
         fail("longdiv by zero failed string was wrong", __LINE__);
 
     // neg
@@ -1085,7 +1085,7 @@ unitTestLong()
     if (output[outC++].pData != NULL) fail("longmod7", __LINE__);
     if (output[outC++].pData != NULL) fail("longmod8", __LINE__);
     if (output[outC++].pData != NULL) fail("longmod9", __LINE__);
-  
+
     // mod by zero
     assert(outC == modbyzero);
     if (output[outC++].pData != NULL) fail("longmod10", __LINE__);
@@ -1093,7 +1093,7 @@ unitTestLong()
     if (iter->pc != modbyzero)
         fail("longmod by zero failed, pc wrong\n", __LINE__);
     expectederror = "22012";
-    if (expectederror.compare(iter->str)) 
+    if (expectederror.compare(iter->str))
         fail("longmod by zero failed string was wrong", __LINE__);
 
     // bitwise and
@@ -1381,7 +1381,7 @@ unitTestFloat()
     TupleData output = tupleDataFixedOutput;
     TupleData local = tupleDataFixedLocal;
     TupleData status = tupleDataFixedStatus;
-  
+
     // null out last element of each type
     int nullidx = registersize - 1;
     literal[nullidx].pData = NULL;
@@ -1414,7 +1414,7 @@ unitTestFloat()
     // something so regular and pre-determined
     RegisterRef<float> **fInP, **fOutP, **fLoP, **fLiP;
     RegisterRef<bool> **bOutP;
-    
+
     fInP = new RegisterRef<float>*[registersize];
     fOutP = new RegisterRef<float>*[registersize];
     fLoP = new RegisterRef<float>*[registersize];
@@ -1426,20 +1426,20 @@ unitTestFloat()
     Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
-    // set up register references to symbolically point to 
+    // set up register references to symbolically point to
     // their corresponding storage locations -- makes for easy test case
     // generation. again, a compiler wouldn't do things in quite
-    // this way 
+    // this way
     for (i=0; i < registersize; i++) {
         fInP[i] = new RegisterRef<float>(RegisterReference::EInput,
-                                         i, 
+                                         i,
                                          STANDARD_TYPE_REAL);
         c.appendRegRef(fInP[i]);
         fOutP[i] = new RegisterRef<float>(RegisterReference::EOutput,
                                           i,
                                           STANDARD_TYPE_REAL);
         c.appendRegRef(fOutP[i]);
-        fLoP[i] = new RegisterRef<float>(RegisterReference::ELocal, 
+        fLoP[i] = new RegisterRef<float>(RegisterReference::ELocal,
                                          i,
                                          STANDARD_TYPE_REAL);
         c.appendRegRef(fLoP[i]);
@@ -1471,7 +1471,7 @@ unitTestFloat()
     instP[pc++] = new NativeAdd<float>(fOutP[outC++], fLiP[10], fLiP[9], isFloat);
     instP[pc++] = new NativeAdd<float>(fOutP[outC++], fLiP[0], fLiP[0], isFloat);
     instP[pc++] = new NativeAdd<float>(fOutP[outC++], fLiP[neg], fLiP[neg], isFloat); // -0 + -0
-    instP[pc++] = new NativeAdd<float>(fOutP[outC++], fLiP[neg+1], fLiP[neg+2], isFloat); 
+    instP[pc++] = new NativeAdd<float>(fOutP[outC++], fLiP[neg+1], fLiP[neg+2], isFloat);
 
     instP[pc++] = new NativeAdd<float>(fOutP[outC++], fLiP[nullidx], fLiP[9], isFloat);
     instP[pc++] = new NativeAdd<float>(fOutP[outC++], fLiP[10], fLiP[nullidx], isFloat);
@@ -1619,10 +1619,10 @@ unitTestFloat()
     instP[pc++] = new BoolNativeLessEqual<float>(bOutP[outBoolC++], fLiP[12], fLiP[nullidx], isFloat);
     instP[pc++] = new BoolNativeLessEqual<float>(bOutP[outBoolC++], fLiP[nullidx], fLiP[3], isFloat);
     instP[pc++] = new BoolNativeLessEqual<float>(bOutP[outBoolC++], fLiP[nullidx], fLiP[nullidx], isFloat);
-  
+
     // isnull
     instP[pc++] = new BoolNativeIsNull<float>(bOutP[outBoolC++], fLiP[12], isFloat);
-    instP[pc++] = new BoolNativeIsNull<float>(bOutP[outBoolC++], fLiP[nullidx], isFloat); 
+    instP[pc++] = new BoolNativeIsNull<float>(bOutP[outBoolC++], fLiP[nullidx], isFloat);
     // isnotnull
     instP[pc++] = new BoolNativeIsNotNull<float>(bOutP[outBoolC++], fLiP[12], isFloat);
     instP[pc++] = new BoolNativeIsNotNull<float>(bOutP[outBoolC++], fLiP[nullidx], isFloat);
@@ -1717,21 +1717,21 @@ unitTestFloat()
     if (output[outC++].pData != NULL) fail("floatdiv7", __LINE__);
     if (output[outC++].pData != NULL) fail("floatdiv8", __LINE__);
     if (output[outC++].pData != NULL) fail("floatdiv9", __LINE__);
-    // div by zero 
+    // div by zero
     assert(outC == divbyzero);
     if (output[outC++].pData != NULL) fail("floatdiv10", __LINE__);
     deque<CalcMessage>::iterator iter = c.mWarnings.begin();
     if (iter->pc != divbyzero)
         fail("floatdiv by zero failed, pc wrong\n", __LINE__);
     string expectederror("22012");
-    if (expectederror.compare(iter->str)) 
+    if (expectederror.compare(iter->str))
         fail("floatdiv by zero failed string was wrong", __LINE__);
 
     if (output[outC++].pData != NULL) fail("floatdiv11", __LINE__);
     iter++;
     if (iter->pc != divbyzero+1)
         fail("floatdiv by zero failed, pc wrong\n", __LINE__);
-    if (expectederror.compare(iter->str)) 
+    if (expectederror.compare(iter->str))
         fail("floatdiv by zero failed string was wrong", __LINE__);
 
 
@@ -1859,12 +1859,12 @@ unitTestFloat()
     delete [] fLoP;
     delete [] fLiP;
     delete [] bOutP;
-     
+
     for (i = 0; i < lastPC; i++) {
         delete instP[i];
     }
     delete [] instP;
- 
+
 }
 
 void
@@ -1893,12 +1893,12 @@ unitTestPointer()
     for (i=0;i < registersize; i++) {
         // pointers in first "half"
         StoredTypeDescriptor const &typeDesc = typeFactory.newDataType(STANDARD_TYPE_VARCHAR);
-        // tell descriptor the size 
+        // tell descriptor the size
         tupleDesc.push_back(TupleAttributeDescriptor(typeDesc,
                                                      isNullable,
                                                      bufferlen));
         idx++;
-    
+
     }
     const int ulongIdx = idx;
     for (i=0;i < registersize; i++) {
@@ -1975,7 +1975,7 @@ unitTestPointer()
 
 
     TupleData::iterator itr;
-    
+
     // Set up some useful literals
     itr = literal.begin();
     for(i=0; i < registersize; i++, itr++) {
@@ -1991,7 +1991,7 @@ unitTestPointer()
     for(i=0; i < registersize; i++, itr++) {
         *(reinterpret_cast<bool *>(const_cast<PBuffer>(itr->pData))) = false;
     }
-  
+
     // Put some data other tuples as well
     itr = input.begin();
     for(i=0; i < registersize; i++, itr++) {
@@ -2041,7 +2041,7 @@ unitTestPointer()
        (literal[falseIdx+boolIdx].pData))) = false;
 
 
-  
+
     // null out last element of each type
     int pointerNullIdx = pointerIdx + registersize - 1;
     int ulongNullIdx = ulongIdx + registersize - 1;
@@ -2066,7 +2066,7 @@ unitTestPointer()
     output[pointerNullIdx].cbData = 0;
     output[ulongNullIdx].cbData = 0;
     output[boolNullIdx].cbData = 0;
-    
+
     local[pointerNullIdx].pData = NULL;
     local[ulongNullIdx].pData = NULL;
     local[boolNullIdx].pData = NULL;
@@ -2119,13 +2119,13 @@ unitTestPointer()
     Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
-    // set up register references to symbolically point to 
+    // set up register references to symbolically point to
     // their corresponding storage locations -- makes for easy test case
     // generation. again, a compiler wouldn't do things in quite
     // this way.
     for (i=0; i < registersize; i++) {
-        cpInP[i] = new RegisterRef<char *>(RegisterReference::EInput, 
-                                           pointerIdx + i, 
+        cpInP[i] = new RegisterRef<char *>(RegisterReference::EInput,
+                                           pointerIdx + i,
                                            STANDARD_TYPE_VARCHAR);
         c.appendRegRef(cpInP[i]);
         cpOutP[i] = new RegisterRef<char *>(RegisterReference::EOutput,
@@ -2137,7 +2137,7 @@ unitTestPointer()
                                            STANDARD_TYPE_VARCHAR);
         c.appendRegRef(cpLoP[i]);
         cpLiP[i] = new RegisterRef<char *>(RegisterReference::ELiteral,
-                                           pointerIdx + i, 
+                                           pointerIdx + i,
                                            STANDARD_TYPE_VARCHAR);
         c.appendRegRef(cpLiP[i]);
 
@@ -2154,7 +2154,7 @@ unitTestPointer()
                                                    STANDARD_TYPE_INT_32);
         c.appendRegRef(lLoP[i]);
         lLiP[i] = new RegisterRef<PointerOperandT>(RegisterReference::ELiteral,
-                                                   ulongIdx + i, 
+                                                   ulongIdx + i,
                                                    STANDARD_TYPE_INT_32);
         c.appendRegRef(lLiP[i]);
 
@@ -2167,7 +2167,7 @@ unitTestPointer()
                                          STANDARD_TYPE_BOOL);
         c.appendRegRef(bOutP[i]);
         bLoP[i] = new RegisterRef<bool>(RegisterReference::ELocal,
-                                        boolIdx + i, 
+                                        boolIdx + i,
                                         STANDARD_TYPE_BOOL);
         c.appendRegRef(bLoP[i]);
         bLiP[i] = new RegisterRef<bool>(RegisterReference::ELiteral,
@@ -2185,7 +2185,7 @@ unitTestPointer()
     instP = new InstructionPtr[200];
     int pc = 0, outCp = 0, outL=0, outB = 0, localCp = 0;
     int nullRegister = registersize - 1;
-    
+
     StandardTypeDescriptorOrdinal isVC = STANDARD_TYPE_VARCHAR;
 
     // add
@@ -2194,7 +2194,7 @@ unitTestPointer()
     instP[pc++] = new PointerAdd<char *>(cpOutP[2], cpLiP[2], lLiP[2], isVC); // add 2
 
     outCp = 3;
-    instP[pc++] = new PointerAdd<char *>(cpOutP[outCp++], cpLiP[nullRegister], lLiP[2], isVC); 
+    instP[pc++] = new PointerAdd<char *>(cpOutP[outCp++], cpLiP[nullRegister], lLiP[2], isVC);
     instP[pc++] = new PointerAdd<char *>(cpOutP[outCp++], cpLiP[0], lLiP[nullRegister], isVC);
     instP[pc++] = new PointerAdd<char *>(cpOutP[outCp++], cpLiP[nullRegister], lLiP[nullRegister], isVC);
 
@@ -2205,7 +2205,7 @@ unitTestPointer()
     instP[pc++] = new PointerSub<char *>(cpOutP[outCp++], cpOutP[1], lLiP[1], isVC); // sub 1
     instP[pc++] = new PointerSub<char *>(cpOutP[outCp++], cpOutP[2], lLiP[2], isVC); // sub 2
 
-    instP[pc++] = new PointerSub<char *>(cpOutP[outCp++], cpLiP[nullRegister], lLiP[2], isVC); 
+    instP[pc++] = new PointerSub<char *>(cpOutP[outCp++], cpLiP[nullRegister], lLiP[2], isVC);
     instP[pc++] = new PointerSub<char *>(cpOutP[outCp++], cpLiP[0], lLiP[nullRegister], isVC);
     instP[pc++] = new PointerSub<char *>(cpOutP[outCp++], cpLiP[nullRegister], lLiP[nullRegister], isVC);
 
@@ -2279,7 +2279,7 @@ unitTestPointer()
 
     // isnull
     instP[pc++] = new BoolPointerIsNull<char *>(bOutP[outB++], cpLiP[0], isVC);
-    instP[pc++] = new BoolPointerIsNull<char *>(bOutP[outB++], cpLiP[nullRegister], isVC); 
+    instP[pc++] = new BoolPointerIsNull<char *>(bOutP[outB++], cpLiP[nullRegister], isVC);
 
     // isnotnull
     instP[pc++] = new BoolPointerIsNotNull<char *>(bOutP[outB++], cpLiP[0], isVC);
@@ -2356,20 +2356,20 @@ unitTestPointer()
     // add
     if (output[outCp].pData != literal[pointerIdx + 0].pData) fail("pointeradd1", __LINE__);
     if (output[outCp++].cbData != bufferlen - 0) fail("pointeradd2", __LINE__);
-    
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) != 
+
+    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
         ((reinterpret_cast<const char *>(literal[pointerIdx + 1].pData)) +
          *(reinterpret_cast<const int32_t *>(literal[ulongIdx + 1].pData))))
         fail("pointeradd3", __LINE__);
-    if (output[outCp++].cbData != 
+    if (output[outCp++].cbData !=
         bufferlen - *(reinterpret_cast<const int32_t *>(literal[ulongIdx + 1].pData)))
         fail("pointeradd4", __LINE__);
 
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) != 
+    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
         ((reinterpret_cast<const char *>(literal[pointerIdx + 2].pData)) +
          *(reinterpret_cast<const int32_t *>(literal[ulongIdx + 2].pData))))
         fail("pointeradd5", __LINE__);
-    if (output[outCp++].cbData != 
+    if (output[outCp++].cbData !=
         bufferlen - *(reinterpret_cast<const int32_t *>(literal[ulongIdx + 2].pData)))
         fail("pointeradd6", __LINE__);
 
@@ -2384,13 +2384,13 @@ unitTestPointer()
     if (output[outCp].pData != literal[pointerIdx + 0].pData) fail("pointersub1", __LINE__);
     if (output[outCp++].cbData != bufferlen + 0) fail("pointersub2", __LINE__);
 
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) != 
+    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
         ((reinterpret_cast<const char *>(literal[pointerIdx + 1].pData))))
         fail("pointersub3", __LINE__);
     if (output[outCp++].cbData != bufferlen) fail("pointersub4", __LINE__);
 
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) != 
-        ((reinterpret_cast<const char *>(literal[pointerIdx + 2].pData)))) 
+    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
+        ((reinterpret_cast<const char *>(literal[pointerIdx + 2].pData))))
         fail("pointersub5", __LINE__);
     if (output[outCp++].cbData != bufferlen) fail("pointersub6", __LINE__);
 
@@ -2408,15 +2408,15 @@ unitTestPointer()
     if (output[outCp].pData != NULL) fail("pointermove3", __LINE__);
     if (output[outCp++].cbData != 0) fail("pointermove4", __LINE__);
 
-    if ((reinterpret_cast<const char *>(output[outCp].pData)) != 
-        ((reinterpret_cast<const char *>(literal[pointerIdx + 3].pData)))) 
+    if ((reinterpret_cast<const char *>(output[outCp].pData)) !=
+        ((reinterpret_cast<const char *>(literal[pointerIdx + 3].pData))))
         fail("pointermove5", __LINE__);
     if (output[outCp++].cbData != bufferlen) fail("pointermove6", __LINE__);
 
     if (output[outCp].pData != NULL) fail("pointermove7", __LINE__);
     if (output[outCp++].cbData != 0) fail("pointermove8", __LINE__);
 
-    
+
     // equal
     if (*(output[outB++].pData) != true) fail("pointerequal1", __LINE__);
     if (*(output[outB++].pData) != false) fail("pointerequal2", __LINE__);
@@ -2497,7 +2497,7 @@ unitTestPointer()
     if (*(output[outL++].pData) != bufferlen) fail("pointergetsize8", __LINE__);
     if (*(output[outL++].pData) != bufferlen) fail("pointergetsize9", __LINE__);
     if (*(output[outL++].pData) != bufferlen) fail("pointergetsize10", __LINE__);
-    
+
 
     cout << "Calculator Warnings: " << c.warnings() << endl;
 
@@ -2646,7 +2646,7 @@ unitTestWarnings()
     Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
-    // set up register references to symbolically point to 
+    // set up register references to symbolically point to
     // their corresponding storage locations -- makes for easy test case
     // generation. again, a compiler wouldn't do things in quite
     // this way.
@@ -2664,7 +2664,7 @@ unitTestWarnings()
                                          STANDARD_TYPE_REAL);
         c.appendRegRef(fLoP[i]);
         fLiP[i] = new RegisterRef<float>(RegisterReference::ELiteral,
-                                         floatIdx + i, 
+                                         floatIdx + i,
                                          STANDARD_TYPE_REAL);
         c.appendRegRef(fLiP[i]);
     }
@@ -2678,7 +2678,7 @@ unitTestWarnings()
     Instruction **instP;
     instP = new InstructionPtr[200];
     int pc = 0, outF = 0;
-    
+
     StandardTypeDescriptorOrdinal isFloat = STANDARD_TYPE_REAL;
 
     // Force a warning
@@ -2722,11 +2722,11 @@ unitTestWarnings()
     deque<CalcMessage>::iterator iter = c.mWarnings.begin();
     if (iter->pc != 0) fail("warning:pc", __LINE__);
     string expectederror("22012");
-    if (expectederror.compare(iter->str)) 
+    if (expectederror.compare(iter->str))
         fail("warning:div by zero failed string wasn't as expected", __LINE__);
     string expectedwarningstring("[0]:PC=0 Code=22012 ");
     cout << "|" << expectedwarningstring << "|" << endl;
-    
+
     if (expectedwarningstring.compare(c.warnings()))
         fail("warning:warning string wasn't as expected", __LINE__);
 
@@ -2743,13 +2743,13 @@ unitTestWarnings()
     output[0].pData = reinterpret_cast<const uint8_t *>( &horriblehack );
 
     printf("Rerunning calculator\n");
-    
+
     c.bind(&input, &output);
     c.exec();
 
     cout << "Calculator Warnings: " << c.warnings() << endl;
 
-    if (!c.mWarnings.empty()) 
+    if (!c.mWarnings.empty())
         fail("warning:warning deque has data", __LINE__);
     if (c.warnings().compare(""))
         fail("warning:warning string empty", __LINE__);
@@ -2893,7 +2893,7 @@ unitTestPointerCache()
     Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
-    // set up register references to symbolically point to 
+    // set up register references to symbolically point to
     // their corresponding storage locations -- makes for easy test case
     // generation. again, a compiler wouldn't do things in quite
     // this way.
@@ -2902,12 +2902,12 @@ unitTestPointerCache()
                                           doubleIdx + i,
                                           STANDARD_TYPE_DOUBLE);
         c.appendRegRef(fInP[i]);
-        fOutP[i] = new RegisterRef<double>(RegisterReference::EOutput, 
+        fOutP[i] = new RegisterRef<double>(RegisterReference::EOutput,
                                            doubleIdx + i,
                                            STANDARD_TYPE_DOUBLE);
         c.appendRegRef(fOutP[i]);
         fLoP[i] = new RegisterRef<double>(RegisterReference::ELocal,
-                                          doubleIdx + i, 
+                                          doubleIdx + i,
                                           STANDARD_TYPE_DOUBLE);
         c.appendRegRef(fLoP[i]);
         fLiP[i] = new RegisterRef<double>(RegisterReference::ELiteral,
@@ -2925,8 +2925,8 @@ unitTestPointerCache()
     Instruction **instP;
     instP = new InstructionPtr[200];
     int pc = 0, outF = 0, liF = 0;
-    
-    
+
+
     StandardTypeDescriptorOrdinal isDouble = STANDARD_TYPE_DOUBLE;
 
     // copy some of the literals into the output register
@@ -2986,7 +2986,7 @@ unitTestPointerCache()
             fail("pointercache2", __LINE__);
         }
     }
-    
+
     // OK, now be mean and yank the literals right out from under
     // Calculator. The memory is still allocated and available
     // for the cached pointers. Note that the calculator will have
@@ -2998,7 +2998,7 @@ unitTestPointerCache()
     }
 
     printf("Rerunning calculator\n");
-    
+
     c.bind(&input, &output);
     c.exec();
 
@@ -3056,12 +3056,12 @@ unitTestNullableLocal()
     for (i=0;i < registersize; i++) {
         // pointers in first "half"
         StoredTypeDescriptor const &typeDesc = typeFactory.newDataType(STANDARD_TYPE_VARCHAR);
-        // tell descriptor the size 
+        // tell descriptor the size
         tupleDesc.push_back(TupleAttributeDescriptor(typeDesc,
                                                      isNullable,
                                                      bufferlen));
         idx++;
-    
+
     }
     const int boolIdx = idx;
     for (i=0;i < registersize; i++) {
@@ -3206,7 +3206,7 @@ unitTestNullableLocal()
     Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
-    // set up register references to symbolically point to 
+    // set up register references to symbolically point to
     // their corresponding storage locations -- makes for easy test case
     // generation. again, a compiler wouldn't do things in quite
     // this way.
@@ -3219,11 +3219,11 @@ unitTestNullableLocal()
                                             pointerIdx + i,
                                             STANDARD_TYPE_VARCHAR);
         c.appendRegRef(cpOutP[i]);
-        cpLoP[i] = new RegisterRef<char *>(RegisterReference::ELocal, 
+        cpLoP[i] = new RegisterRef<char *>(RegisterReference::ELocal,
                                            pointerIdx + i,
                                            STANDARD_TYPE_VARCHAR);
         c.appendRegRef(cpLoP[i]);
-        cpLiP[i] = new RegisterRef<char *>(RegisterReference::ELiteral, 
+        cpLiP[i] = new RegisterRef<char *>(RegisterReference::ELiteral,
                                            pointerIdx + i,
                                            STANDARD_TYPE_VARCHAR);
         c.appendRegRef(cpLiP[i]);
@@ -3233,7 +3233,7 @@ unitTestNullableLocal()
                                         STANDARD_TYPE_BOOL);
         c.appendRegRef(bInP[i]);
         bOutP[i] = new RegisterRef<bool>(RegisterReference::EOutput,
-                                         boolIdx + i, 
+                                         boolIdx + i,
                                          STANDARD_TYPE_BOOL);
         c.appendRegRef(bOutP[i]);
         bLoP[i] = new RegisterRef<bool>(RegisterReference::ELocal,
@@ -3255,13 +3255,13 @@ unitTestNullableLocal()
     instP = new InstructionPtr[200];
     int pc = 0, outCp = 0, outB = 0;
     StandardTypeDescriptorOrdinal isVC = STANDARD_TYPE_VARCHAR;
-    
+
     // set success flag to false
     instP[pc++] = new BoolMove(bOutP[0], bLiP[falseIdx]);
 
     // test booleans and thus all natives
 
-    // check that boolean local register 0 is not null    
+    // check that boolean local register 0 is not null
     instP[pc++] = new BoolIsNotNull(bLoP[1], bLoP[0]);
     instP[pc] = new JumpTrue(pc+2, bLoP[1]); pc++;
     instP[pc++] = new ReturnInstruction();
@@ -3277,7 +3277,7 @@ unitTestNullableLocal()
 
     // test pointers
 
-    // check that pointer local register 0 is not null    
+    // check that pointer local register 0 is not null
     instP[pc++] = new BoolPointerIsNotNull<char *>(bLoP[3], cpLoP[0], isVC);
     instP[pc] = new JumpTrue(pc+2, bLoP[3]); pc++;
     instP[pc++] = new ReturnInstruction();
@@ -3305,7 +3305,7 @@ unitTestNullableLocal()
     }
 
     printf("first run\n");
-    
+
     c.bind(RegisterReference::ELiteral,
            &literal,
            tupleDesc);
@@ -3322,7 +3322,7 @@ unitTestNullableLocal()
            &status,
            tupleDesc);
     c.exec();
-    
+
     printf("after first run\n");
 
     string out;
@@ -3341,7 +3341,7 @@ unitTestNullableLocal()
 
     outCp = 0; // now indexes into output tuple, not outputregisterref
     outB = boolIdx;  // now indexs into output tuple, not outputregisterref
-    
+
     // check status flag in output
     if (*(output[boolIdx].pData) != true) fail("nullablelocal1", __LINE__);
     // check that actual pointer was not nulled out
@@ -3355,7 +3355,7 @@ unitTestNullableLocal()
 
 
     printf("second run\n");
-    
+
     c.bind(&input, &output);
     c.exec();
 
@@ -3527,7 +3527,7 @@ unitTestStatusRegister()
     Calculator c(&dpm,0,0,0,0,0,0);
     c.outputRegisterByReference(false);
 
-    // set up register references to symbolically point to 
+    // set up register references to symbolically point to
     // their corresponding storage locations -- makes for easy test case
     // generation. again, a compiler wouldn't do things in quite
     // this way.
@@ -3537,14 +3537,14 @@ unitTestStatusRegister()
                                             STANDARD_TYPE_UINT_16);
         c.appendRegRef(fInP[i]);
         fOutP[i] = new RegisterRef<uint16_t>(RegisterReference::EOutput,
-                                             u_int16Idx + i, 
+                                             u_int16Idx + i,
                                              STANDARD_TYPE_UINT_16);
         c.appendRegRef(fOutP[i]);
         fLoP[i] = new RegisterRef<uint16_t>(RegisterReference::ELocal,
                                             u_int16Idx + i,
                                             STANDARD_TYPE_UINT_16);
         c.appendRegRef(fLoP[i]);
-        fLiP[i] = new RegisterRef<uint16_t>(RegisterReference::ELiteral, 
+        fLiP[i] = new RegisterRef<uint16_t>(RegisterReference::ELiteral,
                                             u_int16Idx + i,
                                             STANDARD_TYPE_UINT_16);
         c.appendRegRef(fLiP[i]);
@@ -3617,7 +3617,7 @@ unitTestStatusRegister()
             fail("statusregister1", __LINE__);
         }
     }
-    
+
     delete [] fInP;
     delete [] fOutP;
     delete [] fLoP;
@@ -3654,3 +3654,5 @@ boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
 {
     return NULL;
 }
+
+// End testCalc.cpp

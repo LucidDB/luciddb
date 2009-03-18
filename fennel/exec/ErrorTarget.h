@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * Row error severity levels. Keep this consistent with
  * net.sf.farrago.NativeRuntimeContext
  */
-enum ErrorLevel 
+enum ErrorLevel
 {
     ROW_ERROR = 1000,
     ROW_WARNING = 500
@@ -43,7 +43,7 @@ enum ErrorLevel
  * Typically, many or all ErrorSouce instances post errors to the same
  * ErrorTarget.
  */
-class ErrorTarget 
+class ErrorTarget
 {
 public:
 
@@ -62,9 +62,9 @@ public:
      *
      * @param capacity the size of the error buffer
      *
-     * @param index position of the column whose processing caused the 
-     *   exception to occur. -1 indicates that no column was culpable. 
-     *   0 indicates that a filter condition was being processed. Otherwise 
+     * @param index position of the column whose processing caused the
+     *   exception to occur. -1 indicates that no column was culpable.
+     *   0 indicates that a filter condition was being processed. Otherwise
      *   this parameter should be a 1-indexed column position.
      */
     virtual void notifyError(

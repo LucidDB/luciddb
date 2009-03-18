@@ -66,7 +66,7 @@ void PseudoUuid::generate()
     assert(result == UUID_RC_OK);
 
     size_t len = UUID_LENGTH;
-    result = 
+    result =
         uuid_export(
             apiData,
             UUID_FMT_BIN,
@@ -79,7 +79,7 @@ void PseudoUuid::generate()
 #else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
 
 #ifdef FENNEL_UUID_REAL
-    
+
     uuid_generate(data);
 
 #else /* FENNEL_UUID_FAKE */
@@ -93,7 +93,7 @@ void PseudoUuid::generate()
     assert(sizeof(x) <= sizeof(data));
     memcpy(&data,&x,sizeof(x));
 #endif
-    
+
 #endif
 
 #endif
@@ -120,7 +120,7 @@ uint8_t PseudoUuid::getByte(int index) const
 
 const uint8_t *PseudoUuid::getBytes() const
 {
-#ifdef FENNEL_UUID_REAL    
+#ifdef FENNEL_UUID_REAL
     return reinterpret_cast<const uint8_t *>(&data);
 #else
     return data;
@@ -138,35 +138,35 @@ int PseudoUuid::hashCode() const
 
 string PseudoUuid::toString() const
 {
-    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on 
+    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on
     // the library's version).  Those two methods produce different output
     // for the same UUID.
     ostringstream ostr;
-    
+
     for(int i = 0; i < sizeof(data); i++) {
         if (i == 4 || i == 6 || i == 8 || i == 10) {
             ostr << "-";
         }
-        
+
         ostr << hex << setw(2) << setfill('0') << (int) (data[i] & 0xFF);
     }
-    
+
     return ostr.str();
 }
 
 void PseudoUuid::parse(string uuid) throw (FennelExcn)
 {
-    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on 
+    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on
     // the library's version).  Those two methods produce different output
     // for the same UUID
     uint8_t id[UUID_LENGTH];
     if (uuid.length() != 36) {
         ostringstream errstr;
-        errstr << "Invalid UUID format: length " << uuid.length() 
+        errstr << "Invalid UUID format: length " << uuid.length()
                << ", expected 36";
         throw FennelExcn(errstr.str());
     }
-    
+
     istringstream istr(uuid);
     char hexchars[3];
     char *endptr;

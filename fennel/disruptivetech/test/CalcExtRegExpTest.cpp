@@ -67,11 +67,11 @@ class CalcExtRegExpTest : virtual public TestBase, public TraceSource
     int cmpTupNull(TupleDatum const & tup);
     void printOutput(TupleData const & tup,
                      Calculator const & calc);
-    void refLocalOutput(ostringstream& pg, 
+    void refLocalOutput(ostringstream& pg,
                         int count);
     static const char* truncErr;
     static const char* substrErr;
-    
+
 public:
     explicit CalcExtRegExpTest()
         : TraceSource(shared_from_this(),"CalcExtRegExpTest")
@@ -83,7 +83,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtRegExpTest, testCalcExtRegExpSimilarAVarChar);
         FENNEL_UNIT_TEST_CASE(CalcExtRegExpTest, testCalcExtRegExpSimilarAChar);
     }
-     
+
     virtual ~CalcExtRegExpTest()
     {
     }
@@ -144,11 +144,11 @@ CalcExtRegExpTest::printOutput(TupleData const & tup,
 
 // copy-by-reference locals into identical output register
 void
-CalcExtRegExpTest::refLocalOutput(ostringstream& pg, 
+CalcExtRegExpTest::refLocalOutput(ostringstream& pg,
                                   int count)
 {
     int i;
-    
+
     for (i = 0; i < count; i++) {
         pg << "REF O" << i << ", L" << i << ";" << endl;
     }
@@ -164,7 +164,7 @@ CalcExtRegExpTest::likeHelper(TupleDataWithBuffer const & outTuple,
     int i;
     deque<CalcMessage>::iterator iter = dq.begin();
     deque<CalcMessage>::iterator end = dq.end();
-    
+
     for (i = 0; i < validoutputs; i++) {
         if (cmpTupBool(outTuple[i], exp[i])) {
             BOOST_MESSAGE("error on valid output [" << i << "]");
@@ -194,7 +194,7 @@ CalcExtRegExpTest::likeHelper(TupleDataWithBuffer const & outTuple,
     BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22025"));
     iter++;
     BOOST_CHECK(iter == end);
-                      
+
 }
 
 
@@ -224,7 +224,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAVarChar()
     pg << "L " << outloc.str();
     pg << "C " << constants.str();
     pg << "V 0x" << stringToHex("_");  // 0
-    pg << ", 0x" << stringToHex("%");  // 1 
+    pg << ", 0x" << stringToHex("%");  // 1
     pg << ", 0x" << stringToHex("=");  // 2
     pg << ", 0x" << stringToHex("=_"); // 3
     pg << ", 0x" << stringToHex("=%"); // 4
@@ -261,15 +261,15 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAVarChar()
     int validoutputs = 15;
 
     // null cases no escape
-    pg << "CALL 'strLikeA3(L15, C10, C1);" << endl; 
+    pg << "CALL 'strLikeA3(L15, C10, C1);" << endl;
     pg << "CALL 'strLikeA3(L16, C5, C10);" << endl;
 
     // null cases escape
-    pg << "CALL 'strLikeA4(L17, C10, C1, C2);" << endl; 
+    pg << "CALL 'strLikeA4(L17, C10, C1, C2);" << endl;
     pg << "CALL 'strLikeA4(L18, C5, C10, C2);" << endl;
     pg << "CALL 'strLikeA4(L19, C5, C1, C10);" << endl;
     int nulloutputs = 20;
-    
+
     // exception cases
     // 22019 -- invalid escape character, >1 char in escape
     pg << "CALL 'strLikeA4(L20, C5, C1, C4);" << endl;
@@ -282,7 +282,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAVarChar()
     refLocalOutput(pg, outputs);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -301,7 +301,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAVarChar()
 
     likeHelper(outTuple, exp, validoutputs, nulloutputs,
                calc.mWarnings);
-    
+
 
     // run twice to check that cached regex is, at least at first
     // glance, working correctly.
@@ -319,10 +319,10 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAChar()
     pg << "L bo, bo, bo, bo, bo, bo, bo, bo;" << endl;
     pg << "C c,1, c,2, c,1, vc,1, vc,2, vc,1;" << endl;
     pg << "V 0x" << stringToHex("%");  // 0
-    pg << ", 0x" << stringToHex("ab"); // 1 
+    pg << ", 0x" << stringToHex("ab"); // 1
     pg << ", 0x" << stringToHex("=");  // 2
     pg << ", 0x" << stringToHex("%");  // 3
-    pg << ", 0x" << stringToHex("ab"); // 4 
+    pg << ", 0x" << stringToHex("ab"); // 4
     pg << ", 0x" << stringToHex("=");  // 5
     pg << ";" << endl;
     pg << "T;" << endl;
@@ -346,7 +346,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAChar()
     refLocalOutput(pg, 8);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -372,7 +372,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAChar()
             BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], true));
         }
     }
-    
+
     // run twice to check that cached regex is, at least at first
     // glance, working correctly.
     calc.exec();
@@ -396,7 +396,7 @@ CalcExtRegExpTest::similarHelper(TupleDataWithBuffer const & outTuple,
     int i;
     deque<CalcMessage>::iterator iter = dq.begin();
     deque<CalcMessage>::iterator end = dq.end();
-    
+
     for (i = 0; i < validoutputs; i++) {
         if (cmpTupBool(outTuple[i], exp[i])) {
             BOOST_MESSAGE("error on valid output [" << i << "]");
@@ -469,7 +469,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAVarChar()
     pg << "L " << outloc.str();
     pg << "C " << constants.str();
     pg << "V 0x" << stringToHex("_");  // 0
-    pg << ", 0x" << stringToHex("%");  // 1 
+    pg << ", 0x" << stringToHex("%");  // 1
     pg << ", 0x" << stringToHex("=");  // 2
     pg << ", 0x" << stringToHex("=_"); // 3
     pg << ", 0x" << stringToHex("=%"); // 4
@@ -511,14 +511,14 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAVarChar()
     int validoutputs = 15;
 
     // null cases
-    pg << "CALL 'strSimilarA3(L15, C15, C1);" << endl; 
+    pg << "CALL 'strSimilarA3(L15, C15, C1);" << endl;
     pg << "CALL 'strSimilarA3(L16, C5, C15);" << endl;
 
-    pg << "CALL 'strSimilarA4(L17, C15, C1, C9);" << endl; 
+    pg << "CALL 'strSimilarA4(L17, C15, C1, C9);" << endl;
     pg << "CALL 'strSimilarA4(L18, C5, C15, C9);" << endl;
     pg << "CALL 'strSimilarA4(L19, C5, C1, C15);" << endl;
     int nulloutputs = 20;
-    
+
     // exception cases
     // 2200B -- escape character conflict (: as escape)
     pg << "CALL 'strSimilarA4(L20, C5, C11, C10);" << endl;
@@ -537,7 +537,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAVarChar()
     refLocalOutput(pg, outputs);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -556,7 +556,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAVarChar()
 
     similarHelper(outTuple, exp, validoutputs, nulloutputs,
                   calc.mWarnings);
-    
+
 
     // run twice to check that cached regex is, at least at first
     // glance, working correctly.
@@ -574,10 +574,10 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAChar()
     pg << "L bo, bo, bo, bo, bo, bo, bo, bo;" << endl;
     pg << "C c,1, c,2, c,1, vc,1, vc,2, vc,1 ;" << endl;
     pg << "V 0x" << stringToHex("%");  // 0
-    pg << ", 0x" << stringToHex("ab"); // 1 
+    pg << ", 0x" << stringToHex("ab"); // 1
     pg << ", 0x" << stringToHex("=");  // 2
     pg << ", 0x" << stringToHex("%");  // 3
-    pg << ", 0x" << stringToHex("ab"); // 4 
+    pg << ", 0x" << stringToHex("ab"); // 4
     pg << ", 0x" << stringToHex("=");  // 5
     pg << ";" << endl;
     pg << "T;" << endl;
@@ -601,7 +601,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAChar()
     refLocalOutput(pg, 8);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -627,7 +627,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAChar()
             BOOST_CHECK_EQUAL(0, cmpTupBool(outTuple[i], true));
         }
     }
-    
+
     // run twice to check that cached regex is, at least at first
     // glance, working correctly.
     calc.exec();
@@ -644,3 +644,4 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAChar()
 
 FENNEL_UNIT_TEST_SUITE(CalcExtRegExpTest);
 
+// End CalcExtRegExpTest.cpp

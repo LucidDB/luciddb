@@ -112,14 +112,14 @@ class SegStreamTest : virtual public SegStorageTestBase
         BOOST_CHECK(!nChars);
         BOOST_CHECK(!pInputStream->getReadPointer(1));
     }
-    
+
 public:
     explicit SegStreamTest()
     {
         // Grow page-by-page since preallocation will result in garbage at end
         // of stream.
         nDiskPages = 0;
-        
+
         FENNEL_UNIT_TEST_CASE(SegStreamTest,testWriteSeg);
         FENNEL_UNIT_TEST_CASE(SegStreamTest,testReadSeg);
         FENNEL_UNIT_TEST_CASE(SegStreamTest,testMarkReset);
@@ -167,7 +167,7 @@ public:
         segmentAccessor.reset();
         closeStorage();
     }
-    
+
     void testWriteSpillAndRead()
     {
         openStorage(DeviceMode::createNew);
@@ -181,7 +181,7 @@ public:
         pInputStream.reset();
         closeStorage();
     }
-    
+
 };
 
 FENNEL_UNIT_TEST_SUITE(SegStreamTest);

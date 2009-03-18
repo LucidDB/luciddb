@@ -31,7 +31,7 @@ DelegatingCacheAccessor::DelegatingCacheAccessor(
     : pDelegate(pDelegateInit)
 {
 }
-    
+
 CachePage *DelegatingCacheAccessor::lockPage(
     BlockId blockId,
     LockMode lockMode,

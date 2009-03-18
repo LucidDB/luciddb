@@ -89,11 +89,11 @@ public:
      * one binding
      */
     void transfer(RandomAccessRequest const &request);
-    
+
     void flush();
-    
+
     void close();
-    
+
     /**
      * @return whether the device file is currently open
      */
@@ -106,7 +106,7 @@ public:
     {
         return cbFile;
     }
-    
+
     void setSizeInBytes(FileSize cbNew);
 };
 

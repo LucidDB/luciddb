@@ -37,7 +37,7 @@ class SegStorageTestBase : virtual public CacheTestBase
 {
 protected:
     SharedSegmentFactory pSegmentFactory;
-    
+
     /**
      * Segment supporting linear page allocation.
      */
@@ -66,7 +66,7 @@ public:
     virtual void openRandomSegment();
 
     SharedSegment createLinearDeviceSegment(DeviceId deviceId,uint nPages);
-    
+
     void closeLinearSegment();
 
     void closeRandomSegment();
@@ -76,7 +76,7 @@ public:
     void closeSnapshotRandomSegment();
 
     virtual void closeStorage();
-    
+
     explicit SegStorageTestBase();
 };
 

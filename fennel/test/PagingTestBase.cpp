@@ -48,7 +48,7 @@ void PagingTestBase::threadTerminate()
     g_pRNG.reset();
     ThreadedTestBase::threadTerminate();
 }
-    
+
 uint PagingTestBase::generateRandomNumber(uint iMax)
 {
     return (*g_pRNG)(iMax);
@@ -115,7 +115,7 @@ bool PagingTestBase::testOp(OpType opType,uint iPage,bool bNice)
     return true;
 }
 
-char const *PagingTestBase::getOpName(OpType opType) 
+char const *PagingTestBase::getOpName(OpType opType)
 {
     switch(opType) {
     case OP_ALLOCATE:
@@ -175,7 +175,7 @@ void PagingTestBase::testSequentialOp(OpType opType)
     BOOST_MESSAGE(
         "completed " << n << " " << getOpName(opType) << " ops");
 }
-    
+
 void PagingTestBase::testRandomOp(OpType opType)
 {
     uint n = 0;
@@ -189,7 +189,7 @@ void PagingTestBase::testRandomOp(OpType opType)
     StrictMutexGuard mutexGuard(logMutex);
     BOOST_MESSAGE(
         "completed " << n << " " << getOpName(opType) << " ops");
-    
+
 }
 
 void PagingTestBase::testSkipOp(OpType opType, uint n)
@@ -279,7 +279,7 @@ void PagingTestBase::testAllocate()
 {
     permAssert(false);
 }
-    
+
 void PagingTestBase::testDeallocate()
 {
     permAssert(false);
@@ -363,9 +363,9 @@ PagingTestBase::PagingTestBase()
     } else {
         threadCounts[OP_RESIZE_CACHE] = 0;
     }
-    
+
     cbPageUsable = 0;
-    
+
     threadInit();
 }
 

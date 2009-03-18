@@ -56,7 +56,7 @@ void SegStreamAllocation::endWrite()
     assert(pSegOutputStream);
 
     nPagesWritten = pSegOutputStream->getPageCount();
-    
+
     SegmentAccessor segmentAccessor = pSegOutputStream->getSegmentAccessor();
     PageId firstPageId = pSegOutputStream->getFirstPageId();
     pSegOutputStream->close();
@@ -65,7 +65,7 @@ void SegStreamAllocation::endWrite()
         // go directly to UNALLOCATED
         return;
     }
-    
+
     // go to state READING
     pSegInputStream = SegInputStream::newSegInputStream(
         segmentAccessor,
@@ -87,7 +87,7 @@ void SegStreamAllocation::closeImpl()
         // deallocate them
         endWrite();
     }
-    
+
     if (pSegInputStream) {
         // state READING
         assert(!pSegOutputStream);

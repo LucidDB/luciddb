@@ -41,7 +41,7 @@ void LbmSegmentWriter::reset()
     firstWrite = true;
 }
 
-bool LbmSegmentWriter::isEmpty() 
+bool LbmSegmentWriter::isEmpty()
 {
     return firstWrite;
 }
@@ -84,7 +84,7 @@ bool LbmSegmentWriter::addSegment(
         // write out the first set of segments up to the first intermediate
         // zero, if there is one; otherwise, we just end up writing out
         // all of the segments passed in
-        
+
         bitmapTuple[0].pData = (PConstBuffer) &startRid;
         // if the length can't be encoded in a segment descriptor, then
         // we have to treat this bitmap as a single bitmap
@@ -129,6 +129,6 @@ TupleData const &LbmSegmentWriter::produceSegmentTuple()
     return segmentEntry.produceEntryTuple();
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmSegmentWriter.cpp#6 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmSegmentWriter.cpp#7 $");
 
 // End LbmSegmentWriter.cpp

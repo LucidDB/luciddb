@@ -40,3 +40,5 @@ ExtendedInstructionTable::signatures()
 }
 
 FENNEL_END_NAMESPACE
+
+// End ExtendedInstructionTable.cpp

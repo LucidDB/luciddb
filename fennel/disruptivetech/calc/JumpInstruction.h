@@ -51,7 +51,7 @@ protected:
 
 class Jump : public JumpInstruction
 {
-public: 
+public:
     explicit
     Jump(TProgramCounter pc)
         : JumpInstruction(pc)
@@ -84,15 +84,15 @@ public:
 
 class JumpTrue : public JumpInstruction
 {
-public: 
+public:
     explicit
     JumpTrue(TProgramCounter pc, RegisterRef<bool>* op)
-        : JumpInstruction (pc, op) 
+        : JumpInstruction (pc, op)
     { }
     virtual
     ~JumpTrue() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         if (!mOp->isNull() && mOp->value() == true) {
             pc = mJumpTo;
         } else {
@@ -122,21 +122,21 @@ public:
 
 class JumpFalse : public JumpInstruction
 {
-public: 
+public:
     explicit
     JumpFalse(TProgramCounter pc, RegisterRef<bool>* op)
-        : JumpInstruction (pc, op) 
+        : JumpInstruction (pc, op)
     { }
     virtual
     ~JumpFalse() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         if (!mOp->isNull() && mOp->value() == false) {
             pc = mJumpTo;
         } else {
             pc++;
         }
-        
+
     }
 
     static const char * longName();
@@ -163,21 +163,21 @@ public:
 
 class JumpNull : public JumpInstruction
 {
-public: 
+public:
     explicit
     JumpNull(TProgramCounter pc, RegisterRef<bool>* op)
-        : JumpInstruction (pc, op) 
+        : JumpInstruction (pc, op)
     { }
     virtual
     ~JumpNull() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         if (mOp->isNull()) {
             pc = mJumpTo;
         } else {
             pc++;
         }
-        
+
     }
 
     static const char * longName();
@@ -203,15 +203,15 @@ public:
 
 class JumpNotNull : public JumpInstruction
 {
-public: 
+public:
     explicit
     JumpNotNull(TProgramCounter pc, RegisterRef<bool>* op)
-        : JumpInstruction (pc, op) 
+        : JumpInstruction (pc, op)
     { }
     virtual
     ~JumpNotNull() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         if (!mOp->isNull()) {
             pc = mJumpTo;
         } else {

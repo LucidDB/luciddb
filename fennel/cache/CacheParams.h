@@ -33,7 +33,7 @@ class ConfigMap;
 /**
  * CacheParams defines parameters used to instantiate a Cache.
  */
-class CacheParams 
+class CacheParams
 {
 public:
     static ParamName paramMaxPages;

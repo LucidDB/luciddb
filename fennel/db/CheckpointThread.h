@@ -49,10 +49,10 @@ class CheckpointThread :
      * itself down.
      */
     void closeImpl();
-    
+
     // implement Thread
     virtual void run();
-    
+
 public:
     /**
      * Creates a checkpoint thread for the given database (no more than

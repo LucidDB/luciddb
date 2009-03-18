@@ -134,7 +134,7 @@ void SegPageEntryIter<EntryT>::operator ++ ()
     assert(currPageId != endPageId);
 
     entryQueue.pop_front();
-    
+
     // If the queue is empty, we have to try and pre-fetch some more entries.
     // Worst case, we'll hit the ending page.  The queueSize == 1 case needs
     // special handling because:

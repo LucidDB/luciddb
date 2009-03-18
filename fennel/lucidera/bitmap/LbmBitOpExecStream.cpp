@@ -88,7 +88,7 @@ void LbmBitOpExecStream::open(bool restart)
         // allocate a temporary buffer for the bit operation; the temporary
         // buffer should not be larger than what a LbmEntry supports
         bitmapBufSize = LbmEntry::getMaxBitmapSize(bitmapColSize);
-        byteSegBuf.reset(new FixedBuffer[bitmapBufSize]); 
+        byteSegBuf.reset(new FixedBuffer[bitmapBufSize]);
         pByteSegBuf = byteSegBuf.get();
 
     } else {

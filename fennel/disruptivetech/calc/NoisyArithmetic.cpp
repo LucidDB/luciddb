@@ -24,7 +24,7 @@
 // error conditions (overflow, divide-by-zero etc.)
 //
 // TODO:
-//      1. How does little/big endian effect the bit shift used in 
+//      1. How does little/big endian effect the bit shift used in
 //          unsigned multiplication?
 //      3. Shift/Bit/Round operator etc.
 //
@@ -42,7 +42,7 @@
 #include <assert.h>
 #ifndef DTBUG1490
 #pragma STDC FENV_ACCESS ON         /* notify compiler we expect to use fp exceptions,
-                                    this is the standard way of stopping compiler 
+                                    this is the standard way of stopping compiler
                                     from introducing optimizations which don't play well
                                     with fp status registers */
 #endif
@@ -104,7 +104,7 @@ static void Raise(TExceptionCBData *pData,
     template <> type Noisy<type>::neg( TProgramCounter,                     \
         const type right,                                                   \
         TExceptionCBData *pExData ) throw( CalcMessage )                    \
-    { return right * -1; }                                      
+    { return right * -1; }
 DO(char)
 DO(signed char)
 DO(unsigned char)
@@ -290,7 +290,7 @@ inline void maybe_raise_fe_exception( TExceptionCBData *pExData,
     else if ( fe & FE_UNDERFLOW ) {
         Raise( pExData, pc, S_UNDR );
         }
-    else if ( fe & FE_OVERFLOW ) { 
+    else if ( fe & FE_OVERFLOW ) {
         Raise( pExData, pc, S_OVER );
         }
     else if ( fe & FE_INVALID ) {
@@ -317,7 +317,7 @@ because of an ignored S_INEX, see above comment.
 --- */
 
 
-        
+
 #if defined(DTBUG1490) && DTBUG1490
     /* instruct gcc *NEVER* to inline functions, thereby forcing the actual fp
     operation to occur before we test it's result.... */
@@ -455,7 +455,7 @@ SIGNED_NEG(long int)
 UNSIGNED_DIV(unsigned long int)
 UNSIGNED_NEG(unsigned long int)
 #endif
-    
+
 FLOATING_ADD(float)
 FLOATING_ADD(double)
 FLOATING_ADD(long double)
@@ -496,3 +496,4 @@ FLOATING_NEG(long double)
 
 FENNEL_END_CPPFILE("$Id$");
 
+// End NoisyArithmetic.cpp

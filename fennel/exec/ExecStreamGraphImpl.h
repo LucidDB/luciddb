@@ -33,7 +33,7 @@
 #include <boost/graph/filtered_graph.hpp>
 
 // REVIEW:  can this be pulled into fennel namespace somehow?
-namespace boost 
+namespace boost
 {
 enum vertex_data_t { vertex_data };
 enum edge_data_t { edge_data };
@@ -71,7 +71,7 @@ public:
     typedef std::pair<FgEdgeIter,FgEdgeIter> FgEdgeIterPair;
     typedef std::pair<FgOutEdgeIter,FgOutEdgeIter> FgOutEdgeIterPair;
     typedef std::pair<FgInEdgeIter,FgInEdgeIter> FgInEdgeIterPair;
-    
+
     typedef boost::property_map<FullGraphRep, boost::edge_weight_t>::type
         EdgeWeightMap;
 
@@ -81,7 +81,7 @@ public:
 
         // NOTE jvs 6-Jan-2006:  Lack of keyword "explicit" on constructors
         // here is intentional.
-        
+
         ExplicitEdgePredicate()
         {
         }
@@ -96,7 +96,7 @@ public:
             return boost::get(weightMap, edge) > 0;
         }
     };
-    
+
     typedef boost::filtered_graph<FullGraphRep, ExplicitEdgePredicate>
         GraphRep;
     typedef boost::graph_traits<GraphRep>::vertex_iterator VertexIter;
@@ -117,11 +117,11 @@ protected:
     // view selecting just the explicit dataflows.  Code which
     // accesses the graph needs to decide which view it wants
     // and use the corresponding iterators.
-    
+
     FullGraphRep graphRep;
-    
+
     GraphRep filteredGraph;
-    
+
     typedef std::map<std::string,ExecStreamId> StreamMap;
     typedef StreamMap::const_iterator StreamMapConstIter;
     typedef std::map<std::pair<std::string, uint>,ExecStreamId> EdgeMap;
@@ -140,7 +140,7 @@ protected:
      * Map of name to stream
      */
     StreamMap streamMap;
-    
+
     /**
      * Map of name and output arc to stream output, after add-ons
      */
@@ -205,7 +205,7 @@ protected:
      * Whether to allow execution without a real transaction.
      */
     bool allowDummyTxnId;
-    
+
     virtual void closeImpl();
     virtual void sortStreams();
     virtual void openStream(SharedExecStream pStream);
@@ -219,7 +219,7 @@ protected:
     virtual void clear();
     /** adds a node */
     virtual Vertex addVertex(SharedExecStream pStream);
-    
+
     // manage the free list
     /** @return an available Vertex, first trying the free list */
     Vertex newVertex();
@@ -235,7 +235,7 @@ protected:
 public:
     explicit ExecStreamGraphImpl();
     virtual ~ExecStreamGraphImpl() {}
-    
+
     inline GraphRep const &getGraphRep();
     inline FullGraphRep const &getFullGraphRep();
     inline SharedExecStream getStreamFromVertex(Vertex);
@@ -336,7 +336,7 @@ inline SharedExecStreamBufAccessor &
 {
     return boost::get(boost::edge_data,graphRep)[edge];
 }
-    
+
 inline ExecStreamBufAccessor &ExecStreamGraphImpl::getBufAccessorFromEdge(
     Edge edge)
 {

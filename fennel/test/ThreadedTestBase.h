@@ -73,9 +73,9 @@ protected:
     virtual ~ThreadedTestBase();
 
     virtual void threadInit();
-    
+
     virtual void threadTerminate();
-    
+
     /**
      * Test implementation must be supplied by derived test class.
      *
@@ -84,23 +84,23 @@ protected:
      * @return true if test should run again
      */
     virtual bool testThreadedOp(int iOp) = 0;
-    
+
     /**
      * Executes specified test threads.
      */
     void runThreadedTestCase();
 };
 
-class ThreadedTestBaseTask 
+class ThreadedTestBaseTask
 {
     ThreadedTestBase &test;
     int iOp;
-    
+
 public:
     explicit ThreadedTestBaseTask(
         ThreadedTestBase &testCaseInit,
         int iOpInit);
-    
+
     void execute();
 };
 

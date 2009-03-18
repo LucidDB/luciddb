@@ -40,7 +40,7 @@ public:
              const vector<StandardTypeDescriptorOrdinal> &parameterTypes,
              T *dummy,
              typename T::Functor functor) {
-        FunctorExtendedInstructionDef<T> *pDef = 
+        FunctorExtendedInstructionDef<T> *pDef =
             new FunctorExtendedInstructionDef<T>(name, parameterTypes,
                                                  functor);
         _defsByName[pDef->getSignature()] = pDef;

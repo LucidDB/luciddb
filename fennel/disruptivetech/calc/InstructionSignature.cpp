@@ -78,7 +78,7 @@ InstructionSignature(string const & name,
     registersToTypes();
 }
 
-string 
+string
 InstructionSignature::compute() const
 {
     ostringstream ostr;
@@ -159,6 +159,6 @@ InstructionSignature::registersToTypes()
 
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/disruptivetech/calc/InstructionSignature.cpp#7 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/disruptivetech/calc/InstructionSignature.cpp#8 $");
 
 // End InstructionSignature.cpp

@@ -27,7 +27,7 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 // REVIEW:  There are a lot of optimizations possible for reducing the number
-// of arithmetic operations required by various methods.  
+// of arithmetic operations required by various methods.
 
 // TODO:  unit test for segment growth
 
@@ -75,7 +75,7 @@ void RandomAllocationSegmentBase::format()
     // calculate number of pages in last SegAllocNode
     BlockNum nRemainderPages = DelegatingSegment::getAllocatedSizeInPages();
     nRemainderPages -= (nExtents*nPagesPerExtent+nSegAllocPages);
-    
+
     if (nRemainderPages) {
         // last SegAllocNode is not full; add number of remainder extents,
         // rounding down
@@ -96,9 +96,9 @@ void RandomAllocationSegmentBase::format()
     bool bigEnough = DelegatingSegment::ensureAllocatedSize(
         nExtents*nPagesPerExtent + nSegAllocPages);
     permAssert(bigEnough);
-    
+
     // format each SegAllocNode
-    
+
     ExtentNum extentNum = 0;
     SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     SegAllocLock segAllocLock(selfAccessor);
@@ -121,7 +121,7 @@ void RandomAllocationSegmentBase::format()
             // terminate SegAllocNode chain at last node
             segAllocNode.nextSegAllocPageId = NULL_PAGE_ID;
         }
-        
+
         // format extent array
         segAllocNode.nPagesPerExtent = nPagesPerExtent;
         segAllocNode.nExtents = std::min(nExtents,nExtentsPerSegAlloc);
@@ -145,7 +145,7 @@ uint RandomAllocationSegmentBase::inferSegAllocCount()
 {
     BlockNum nPages = DelegatingSegment::getAllocatedSizeInPages();
     // round up
-    return nPages/nPagesPerSegAlloc + 
+    return nPages/nPagesPerSegAlloc +
         (nPages%nPagesPerSegAlloc?1:0);
 }
 
@@ -161,7 +161,7 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
     PageId origSegAllocPageId = getFirstSegAllocPageId();
     PageId segAllocPageId = getSegAllocPageIdForWrite(origSegAllocPageId);
     for (uint iSegAlloc = 0; ; ++iSegAlloc) {
-        
+
         // Initially access the node for read because we may not actually
         // update it if all extents in the node are full.  Once we need
         // to update the node, we'll acquire a writable node.
@@ -201,7 +201,7 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
             segAllocPageId = getSegAllocPageIdForWrite(origSegAllocPageId);
             continue;
         }
-        
+
         // We have to extend the underlying segment, so we need to prevent
         // anyone else from trying to do the same thing at the same time.  So
         // hold onto segAllocLock during this process.
@@ -230,11 +230,11 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
             SegmentAllocationNode::ExtentEntry &writableExtentEntry =
                 writableSegAllocNode.getExtentEntry(
                     writableSegAllocNode.nExtents - 1);
-            
+
             // -2 = -1 for extent allocation node, -1 for page we're
             // about to allocate
             writableExtentEntry.nUnallocatedPages = nPagesPerExtent - 2;
-            
+
             incrementPageCounters();
             // another increment for the extent page
             incrementPagesOccupiedCounter();
@@ -345,7 +345,7 @@ void RandomAllocationSegmentBase::deallocatePageId(PageId pageId)
     // Discard the page from the cache
     BlockId blockId = DelegatingSegment::translatePageId(pageId);
     pCache->discardPage(blockId);
-    
+
     ExtentNum extentNum;
     BlockNum iPageInExtent;
     uint iSegAlloc;
@@ -356,7 +356,7 @@ void RandomAllocationSegmentBase::deallocatePageId(PageId pageId)
     // increasing the corresponding free page count on the segment page;
     // otherwise someone calling allocatePageId at the same time could fail
     freePageEntry(extentNum, iPageInExtent);
-    
+
     SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     SegAllocLock segAllocLock(selfAccessor);
     PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
@@ -392,7 +392,7 @@ bool RandomAllocationSegmentBase::testPageId(
     if (!DelegatingSegment::isPageIdAllocated(pageId)) {
         return false;
     }
-    
+
     uint iSegAlloc;
     ExtentNum extentNum;
     BlockNum iPageInExtent;

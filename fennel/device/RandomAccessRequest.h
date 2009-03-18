@@ -62,7 +62,7 @@ class RandomAccessRequestBinding : public IntrusiveListNode
 public:
     explicit RandomAccessRequestBinding();
     virtual ~RandomAccessRequestBinding();
-    
+
     /**
      * @return memory address where transfer should start.
      */
@@ -73,7 +73,7 @@ public:
      * transfer.
      */
     virtual uint getBufferSize() const = 0;
-    
+
     /**
      * Receives notification when a transfer completes.
      *
@@ -90,7 +90,7 @@ public:
  * RandomAccessRequestBinding memory locations need not be contiguous
  * (scatter/gather).
  */
-class RandomAccessRequest 
+class RandomAccessRequest
 {
 public:
     enum Type { READ, WRITE};

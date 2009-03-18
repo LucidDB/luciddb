@@ -79,7 +79,7 @@ public:
      * @return result
      */
     ExecStreamResult fetch(ExecStreamBufAccessor &bufAccessor);
-    
+
     /**
      * Releases any resources acquired by this object.
      */

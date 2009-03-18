@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
  * CacheStats defines performance/activity statistics collected by the cache;
  * these can be obtained as a snapshot from Cache::collectStats().
  */
-class CacheStats 
+class CacheStats
 {
 public:
     /**
@@ -38,7 +38,7 @@ public:
      * read (since last snapshot).
      */
     uint nHits;
-    
+
     /**
      * Number of times a page access was satisfied without a disk
      * read (since cache initialization).
@@ -91,7 +91,7 @@ public:
      * Number of disk pages written (since cache initialization).
      */
     uint nPageWritesSinceInit;
-    
+
     /**
      * Number of rejected cache pre-fetch requests (since last snapshot).
      */

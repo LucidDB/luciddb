@@ -30,7 +30,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 typedef uint8_t UnsignedByte;
-    
+
 /**
  * ByteBuffer allows access to an array of buffers as a single
  * memory space. It allows for optimization with direct memory access.
@@ -41,7 +41,7 @@ typedef uint8_t UnsignedByte;
  *
  * This class neither allocates nor deallocates memory, except through
  * shared pointers. As usual, indexes are zero-based.
- *    
+ *
  * @author John Pham
  * @version $Id$
  */
@@ -56,7 +56,7 @@ class ByteBuffer
     /**
      * Returns which buffer to use to access pos
      */
-    inline uint getI(uint pos) 
+    inline uint getI(uint pos)
     {
         uint i = pos >> bufferShift;
         assert(i < nBuffers);
@@ -76,7 +76,7 @@ class ByteBuffer
     /**
      * Merges (OR's) one buffer into another
      */
-    static void memmerge(PBuffer dest, PConstBuffer src, uint len) 
+    static void memmerge(PBuffer dest, PConstBuffer src, uint len)
     {
         PBuffer end = dest + len;
         while (dest < end) {
@@ -88,7 +88,7 @@ public:
     explicit ByteBuffer();
 
     /**
-     * Provides storage for the virtual byte buffer 
+     * Provides storage for the virtual byte buffer
      */
     void init(
         boost::shared_array<PBuffer> ppBuffers, uint nBuffers, uint bufSize);
@@ -101,7 +101,7 @@ public:
     /**
      * Returns the byte at pos
      */
-    inline UnsignedByte getByte(uint pos) 
+    inline UnsignedByte getByte(uint pos)
     {
         return ppBuffers[getI(pos)][getJ(pos)];
     }
@@ -156,7 +156,7 @@ public:
  * for entries between start and end. However, the start may be advanced, as
  * data is read. The end may be advanced as more data is written. The
  * amount of data is limited by the buffer's capacity, and data cannot be
- * written past the limit. 
+ * written past the limit.
  *
  * The contents of a ByteWindow can be considered to be initialized
  * to zero. A ByteWindow neither allocates nor frees any memory.
@@ -209,7 +209,7 @@ class ByteWindow
      * Returns size of buffer starting at index, which is not wrapped
      * by the circular buffer.
      */
-    inline uint getUnwrappedMemSize(IndexT index) 
+    inline uint getUnwrappedMemSize(IndexT index)
     {
         assert(start <= index && index <= start + windowSize);
         return windowSize - getOffset(index);
@@ -279,7 +279,7 @@ public:
      * Advances the start of the buffer, releasing part of the
      * buffer to store more values.
      */
-    void advance(IndexT pos) 
+    void advance(IndexT pos)
     {
         assert (pos >= start);
 
@@ -323,7 +323,7 @@ public:
     /**
      * Merge a byte into the buffer
      */
-    void mergeByte(IndexT index, UnsignedByte val) 
+    void mergeByte(IndexT index, UnsignedByte val)
     {
         assert(index >= start);
         assert(index < getLimit());
@@ -342,7 +342,7 @@ public:
         assert(len < windowSize);
         assert(index + len <= getLimit());
         assert(len > 0);
-        
+
         // zero from end to index
         IndexT writeEnd = index + len;
         if (writeEnd > end) {

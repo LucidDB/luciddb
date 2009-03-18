@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -60,7 +60,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
 {
     pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryo);
     std::vector<ExecStreamEmbryo>::iterator it;
-    
+
     // save all transforms
     for (it = transforms.begin(); it != transforms.end(); ++it) {
         pGraphEmbryo->saveStreamEmbryo(*it);
@@ -112,7 +112,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceTransformGraph(
         pGraphEmbryo->saveStreamEmbryo(*it);
     }
     pGraphEmbryo->saveStreamEmbryo(confluenceStreamEmbryo);
-    
+
     for (it = sourceStreamEmbryos.begin(); it != sourceStreamEmbryos.end();
         ++it)
     {
@@ -136,7 +136,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceTransformGraph(
         previousStream = *it;
     }
 
-    
+
     SharedExecStream pAdaptedStream =
         pGraphEmbryo->addAdapterFor(previousStream.getStream()->getName(), 0,
                                     BUFPROV_PRODUCER);
@@ -186,10 +186,10 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
             sourceStreamEmbryosList[i].back().getStream()->getName(),
             confluenceStreamEmbryo.getStream()->getName());
     }
-    
+
     SharedExecStream pAdaptedStream =
         pGraphEmbryo->addAdapterFor(
-            confluenceStreamEmbryo.getStream()->getName(), 0, 
+            confluenceStreamEmbryo.getStream()->getName(), 0,
             BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(
         pAdaptedStream->getStreamId());
@@ -251,7 +251,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareDAG(
     }
 
     pGraphEmbryo->saveStreamEmbryo(destStreamEmbryo);
-    
+
     pGraphEmbryo->addDataflow(
         srcStreamEmbryo.getStream()->getName(),
         splitterStreamEmbryo.getStream()->getName());
@@ -270,7 +270,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareDAG(
 
     if (createSink) {
         pAdaptedStream = pGraphEmbryo->addAdapterFor(
-            destStreamEmbryo.getStream()->getName(), 0, 
+            destStreamEmbryo.getStream()->getName(), 0,
             BUFPROV_PRODUCER);
         pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
@@ -302,7 +302,7 @@ void ExecStreamUnitTestBase::resetExecStreamTest()
         pScheduler->stop();
     }
     tearDownExecStreamTest();
-                
+
     pScheduler.reset(newScheduler());
     pGraph = newStreamGraph();
     pGraphEmbryo = newStreamGraphEmbryo(pGraph);
@@ -323,7 +323,7 @@ void ExecStreamUnitTestBase::verifyOutput(
     bool stopEarly)
 {
     // TODO:  assertions about output tuple
-    
+
     pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
@@ -335,7 +335,7 @@ void ExecStreamUnitTestBase::verifyOutput(
             break;
         }
         BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        const uint nCol = 
+        const uint nCol =
             bufAccessor.getConsumptionTupleAccessor().size();
         BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
         BOOST_REQUIRE(nCol >= 1);
@@ -348,7 +348,7 @@ void ExecStreamUnitTestBase::verifyOutput(
             BOOST_REQUIRE(nRows < nRowsExpected);
             bufAccessor.unmarshalTuple(inputTuple);
             for (int col=0;col<nCol;++col) {
-                int64_t actualValue = 
+                int64_t actualValue =
                     *reinterpret_cast<int64_t const *>(inputTuple[col].pData);
                 int64_t expectedValue = generator.generateValue(nRows, col);
                 if (actualValue != expectedValue) {
@@ -369,12 +369,12 @@ void ExecStreamUnitTestBase::verifyOutput(
 }
 
 void ExecStreamUnitTestBase::verifyConstantOutput(
-    ExecStream &stream, 
+    ExecStream &stream,
     const TupleData &expectedTuple,
     uint nRowsExpected)
 {
     // TODO:  assertions about output tuple
-    
+
     pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
@@ -401,7 +401,7 @@ void ExecStreamUnitTestBase::verifyConstantOutput(
         bufAccessor.consumeTuple();
         ++nRows;
         if (c) {
-#if 1 
+#if 1
             TupleDescriptor statusDesc = bufAccessor.getTupleDesc();
             TuplePrinter tuplePrinter;
             tuplePrinter.print(std::cout, statusDesc, actualTuple);
@@ -422,7 +422,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
     PBuffer expectedBuffer)
 {
     // TODO:  assertions about output tuple
-    
+
     TupleAccessor expectedOutputAccessor;
     expectedOutputAccessor.compute(outputTupleDesc);
     TupleData expectedTuple(outputTupleDesc);
@@ -439,7 +439,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
         }
         BOOST_REQUIRE(bufAccessor.getTupleDesc() == outputTupleDesc);
         BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        const uint nCol = 
+        const uint nCol =
             bufAccessor.getConsumptionTupleAccessor().size();
         BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
         BOOST_REQUIRE(nCol >= 1);
@@ -471,3 +471,4 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
 
 FENNEL_END_CPPFILE("$Id$");
 
+// End ExecStreamUnitTestBase.cpp

@@ -51,7 +51,7 @@ class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
         CompositeExecStreamGenerator &verifier,
         uint forcePartitionLevel, bool enableJoinFilter,bool enableSubPartStat,
         bool needSort, bool fakeInterrupt);
-    
+
 public:
     explicit LhxJoinExecStreamTest()
     {
@@ -98,7 +98,7 @@ public:
 
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConstCleanup);
     }
-    
+
     /*
      * Match two identical sets.
      */
@@ -279,7 +279,7 @@ void LhxJoinExecStreamTest::testSequentialImpl(
     TupleDescriptor inputDesc;
     TupleDescriptor outputDesc;
     TupleProjection outputProj;
-    
+
     uint i;
 
     for (i = 0; i < numColsLeft; i++) {
@@ -295,7 +295,7 @@ void LhxJoinExecStreamTest::testSequentialImpl(
          */
         outColumnGenerators.push_back(
             SharedInt64ColumnGenerator(new SeqColumnGenerator()));
-        outputDesc.push_back(attrDesc);        
+        outputDesc.push_back(attrDesc);
         outputProj.push_back(i);
     }
 
@@ -308,7 +308,7 @@ void LhxJoinExecStreamTest::testSequentialImpl(
          */
         outColumnGenerators.push_back(
             SharedInt64ColumnGenerator(new SeqColumnGenerator()));
-        outputDesc.push_back(attrDesc);        
+        outputDesc.push_back(attrDesc);
         outputProj.push_back(i);
     }
 
@@ -354,7 +354,7 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
     TupleDescriptor inputDesc;
     TupleDescriptor outputDesc;
     TupleProjection outputProj;
-    
+
     uint i;
 
     for (i = 0; i < numColsLeft; i++) {
@@ -366,7 +366,7 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
                 DupColumnGenerator(numRows*numRows/cndKeyLeft/cndKeyRight)));
 
         inputDesc.push_back(attrDesc);
-        outputDesc.push_back(attrDesc);        
+        outputDesc.push_back(attrDesc);
         outputProj.push_back(i);
     }
 
@@ -378,7 +378,7 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
             SharedInt64ColumnGenerator(new
                 DupColumnGenerator(numRows*numRows/cndKeyLeft/cndKeyRight)));
 
-        outputDesc.push_back(attrDesc);        
+        outputDesc.push_back(attrDesc);
         outputProj.push_back(i);
     }
 
@@ -392,7 +392,7 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
 
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
-    uint numResRows = (cndKeyLeft > cndKeyRight) ? 
+    uint numResRows = (cndKeyLeft > cndKeyRight) ?
         (numRows * numRows/cndKeyLeft) :
         (numRows * numRows/cndKeyRight);
 
@@ -421,7 +421,7 @@ void LhxJoinExecStreamTest::testImpl(
     MockProducerExecStreamParams mockParams;
     mockParams.outputTupleDesc = inputDesc;
     mockParams.nRows = numInputRows;
-    
+
     mockParams.pGenerator = pLeftGenerator;
     ExecStreamEmbryo leftInputStreamEmbryo;
     leftInputStreamEmbryo.init(new MockProducerExecStream(),mockParams);
@@ -480,9 +480,9 @@ void LhxJoinExecStreamTest::testImpl(
     ExecStreamEmbryo joinStreamEmbryo;
     joinStreamEmbryo.init(new LhxJoinExecStream(),joinParams);
     joinStreamEmbryo.getStream()->setName("LhxJoinExecStream");
-    
+
     SharedExecStream pOutputStream;
-   
+
     if (needSort) {
         ExternalSortExecStreamParams sortParams;
         sortParams.outputTupleDesc = outputDesc;
@@ -499,7 +499,7 @@ void LhxJoinExecStreamTest::testImpl(
         sortStreamEmbryo.init(
             ExternalSortExecStream::newExternalSortExecStream(),sortParams);
         sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
-        
+
         pOutputStream = prepareConfluenceTransformGraph(
             leftInputStreamEmbryo, rightInputStreamEmbryo, joinStreamEmbryo,
             sortStreamEmbryo);

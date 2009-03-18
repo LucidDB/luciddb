@@ -41,7 +41,7 @@ FENNEL_BEGIN_NAMESPACE
 // NOTE jvs 2-Jun-2007:  And it turns out that there were big problems
 // with boost::read_write_mutex, so it has been removed from the Boost
 // thread library, at least for now.
-    
+
 /**
  * An SXMutex implements a standard readers/writers exclusion scheme: any
  * number of shared-lock threads may hold the lock at one time, during which
@@ -85,16 +85,16 @@ public:
 
     explicit SXMutex();
     ~SXMutex();
-    
+
     bool waitFor(
         LockMode lockMode,uint iTimeout = ETERNITY,
         TxnId txnId = IMPLICIT_TXN_ID);
     void release(LockMode lockMode, TxnId txnId = IMPLICIT_TXN_ID);
     bool tryUpgrade(TxnId txnId = IMPLICIT_TXN_ID);
-    
+
     bool isLocked(LockMode lockdMode) const;
     void setSchedulingPolicy(SchedulingPolicy schedulingPolicy);
-    
+
 private:
     SchedulingPolicy schedulingPolicy;
     uint nShared,nExclusive,nExclusivePending;
@@ -111,7 +111,7 @@ class SXMutexGuard : public boost::noncopyable
 {
     SXMutex &rwLock;
     bool m_locked;
-    
+
 public:
     explicit SXMutexGuard(SXMutex& mx, bool initially_locked=true)
         : rwLock(mx), m_locked(false)
@@ -120,7 +120,7 @@ public:
             lock();
         }
     }
-    
+
     ~SXMutexGuard()
     {
         if (m_locked) {
@@ -134,7 +134,7 @@ public:
         rwLock.waitFor(lockMode);
         m_locked = true;
     }
-    
+
     void unlock()
     {
         assert(m_locked);
@@ -146,7 +146,7 @@ public:
     {
         return m_locked;
     }
-    
+
     operator const void*() const
     {
         return m_locked ? this : 0;

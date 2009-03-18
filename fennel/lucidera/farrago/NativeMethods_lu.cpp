@@ -56,9 +56,9 @@ class ExecStreamSubFactory_lu
 {
     ExecStreamFactory *pExecStreamFactory;
     ExecStreamEmbryo *pEmbryo;
-    
+
     bool created;
-    
+
     char readCharParam(const std::string &val)
     {
         assert(val.size() <= 1);
@@ -86,11 +86,11 @@ class ExecStreamSubFactory_lu
     }
 
     void readColumnList(
-        ProxyFlatFileTupleStreamDef &streamDef, 
+        ProxyFlatFileTupleStreamDef &streamDef,
         std::vector<std::string> &names)
     {
         SharedProxyColumnName pColumnName = streamDef.getColumn();
-        
+
         for (; pColumnName; ++pColumnName) {
             names.push_back(pColumnName->getName());
         }
@@ -106,14 +106,14 @@ class ExecStreamSubFactory_lu
         }
 
         SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
-        
+
         ExternalSortExecStreamParams params;
 
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
-        
+
         // ExternalSortStream requires a private ScratchSegment.
         pExecStreamFactory->createPrivateScratchSegment(params);
-        
+
         params.distinctness = streamDef.getDistinctness();
         params.pTempSegment = pDatabase->getTempSegment();
         params.storeFinalRun = false;
@@ -155,7 +155,7 @@ class ExecStreamSubFactory_lu
         params.trim = streamDef.isTrim();
         params.mapped = streamDef.isMapped();
         readColumnList(streamDef, params.columnNames);
-        
+
         params.numRowsScan = streamDef.getNumRowsScan();
         params.calcProgram = streamDef.getCalcProgram();
         if (params.numRowsScan > 0 && params.calcProgram.size() > 0) {
@@ -196,7 +196,7 @@ class ExecStreamSubFactory_lu
     {
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         pExecStreamFactory->readBTreeStreamParams(params, streamDef);
-        
+
         // LcsClusterAppendExecStream requires a private ScratchSegment.
         pExecStreamFactory->createPrivateScratchSegment(params);
 
@@ -221,7 +221,7 @@ class ExecStreamSubFactory_lu
         params.samplingRate = streamDef.getSamplingRate();
         params.samplingIsRepeatable = streamDef.isSamplingRepeatable();
         params.samplingRepeatableSeed = streamDef.getSamplingRepeatableSeed();
-        params.samplingClumps = 
+        params.samplingClumps =
             LcsRowScanExecStreamParams::defaultSystemSamplingClumps;
         params.samplingRowCount = streamDef.getSamplingRowCount();
 
@@ -317,7 +317,7 @@ class ExecStreamSubFactory_lu
         // LbmUnionExecStream requires a private ScratchSegment.
         pExecStreamFactory->createPrivateScratchSegment(params);
 
-        params.startRidParamId = 
+        params.startRidParamId =
             pExecStreamFactory->readDynamicParamId(
                 streamDef.getConsumerSridParamId());
 
@@ -363,7 +363,7 @@ class ExecStreamSubFactory_lu
             pExecStreamFactory->readDynamicParamId(
                 streamDef.getStartRidParamId());
     }
-    
+
     // implement FemVisitor
     virtual void visit(ProxyLhxJoinStreamDef &streamDef)
     {
@@ -390,7 +390,7 @@ class ExecStreamSubFactory_lu
         params.leftInner     = streamDef.isLeftInner();
         params.leftOuter     = streamDef.isLeftOuter();
         params.rightInner    = streamDef.isRightInner();
-        params.rightOuter    = streamDef.isRightOuter();        
+        params.rightOuter    = streamDef.isRightOuter();
         params.setopDistinct = streamDef.isSetopDistinct();
         params.setopAll      = streamDef.isSetopAll();
 
@@ -495,18 +495,18 @@ class ExecStreamSubFactory_lu
         pExecStreamFactory = &factory;
         pEmbryo = &embryo;
         created = true;
-        
+
         // dispatch based on polymorphic stream type
         FemVisitor::visitTbl.accept(*this, streamDef);
-        
+
         return created;
     }
 };
 
 #ifdef __MINGW32__
 extern "C" JNIEXPORT BOOL APIENTRY DllMain(
-    HANDLE hModule, 
-    DWORD  ul_reason_for_call, 
+    HANDLE hModule,
+    DWORD  ul_reason_for_call,
     LPVOID lpReserved)
 {
     return TRUE;

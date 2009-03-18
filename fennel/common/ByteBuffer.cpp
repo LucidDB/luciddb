@@ -51,12 +51,12 @@ void ByteBuffer::init(
     }
 }
 
-uint ByteBuffer::getSize() 
+uint ByteBuffer::getSize()
 {
     return nBuffers * bufferSize;
 }
 
-void ByteBuffer::setMem(uint pos, UnsignedByte value, uint len) 
+void ByteBuffer::setMem(uint pos, UnsignedByte value, uint len)
 {
     assert(pos + len <= getSize());
     uint current = pos;

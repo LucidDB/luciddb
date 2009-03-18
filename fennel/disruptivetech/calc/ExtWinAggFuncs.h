@@ -28,7 +28,7 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * Registers extended instructions for Windowed aggregation function support
- * 
+ *
  */
 void
 ExtWinAggFuncRegister(ExtendedInstructionTable* eit);

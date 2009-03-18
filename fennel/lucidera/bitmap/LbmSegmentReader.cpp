@@ -39,9 +39,9 @@ void LbmSegmentReader::init(
     boost::dynamic_bitset<> *pBitmapInit)
 {
     LbmSegmentReaderBase::init(
-        pInAccessorInit, 
-        bitmapSegTuple, 
-        setBitmapInit, 
+        pInAccessorInit,
+        bitmapSegTuple,
+        setBitmapInit,
         pBitmapInit);
     initCommon();
 }
@@ -61,7 +61,7 @@ void LbmSegmentReader::init(
 {
     LbmSegmentReaderBase::init(
         pTupleReaderInit,
-        bitmapSegTuple, 
+        bitmapSegTuple,
         setBitmapInit,
         pBitmapInit);
     initCommon();
@@ -117,7 +117,7 @@ ExecStreamResult LbmSegmentReader::advanceToByte(LbmByteNumber byteNum)
         pSegStart -= delta;
         byteSegOffset += delta;
     }
-    
+
     return EXECRC_YIELD;
 }
 

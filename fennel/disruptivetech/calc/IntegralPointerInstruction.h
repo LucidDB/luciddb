@@ -40,7 +40,7 @@ public:
           mOp1(op1),
           mPointerType(pointerType)
     { }
-    ~IntegralPointerInstruction() { 
+    ~IntegralPointerInstruction() {
         // If (0) to reduce performance impact of template type checking
         if (0) PointerInstruction_NotAPointerType<PTR_TYPE>();
     }
@@ -54,17 +54,17 @@ protected:
 template <typename PTR_TYPE>
 class PointerGetSize : public IntegralPointerInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     PointerGetSize(RegisterRef<PointerSizeT>* result,
-                   RegisterRef<PTR_TYPE>* op1, 
+                   RegisterRef<PTR_TYPE>* op1,
                    StandardTypeDescriptorOrdinal pointerType)
         : IntegralPointerInstruction<PTR_TYPE>(result, op1, pointerType)
     { }
     virtual
     ~PointerGetSize() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
 
         if (IntegralPointerInstruction<PTR_TYPE>::mOp1->isNull()) {
@@ -82,7 +82,7 @@ public:
     void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
         describeHelper(out, values, longName(), shortName(),
-                       IntegralPointerInstruction<PTR_TYPE>::mResult, 
+                       IntegralPointerInstruction<PTR_TYPE>::mResult,
                        IntegralPointerInstruction<PTR_TYPE>::mOp1, &mOp2);
     }
 
@@ -107,17 +107,17 @@ public:
 template <typename PTR_TYPE>
 class PointerGetMaxSize : public IntegralPointerInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     PointerGetMaxSize(RegisterRef<PointerSizeT>* result,
-                      RegisterRef<PTR_TYPE>* op1, 
+                      RegisterRef<PTR_TYPE>* op1,
                       StandardTypeDescriptorOrdinal pointerType)
         : IntegralPointerInstruction<PTR_TYPE>(result, op1, pointerType)
     { }
     virtual
     ~PointerGetMaxSize() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
 
         if (IntegralPointerInstruction<PTR_TYPE>::mOp1->isNull()) {
@@ -135,7 +135,7 @@ public:
     void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
         describeHelper(out, values, longName(), shortName(),
-                       IntegralPointerInstruction<PTR_TYPE>::mResult, 
+                       IntegralPointerInstruction<PTR_TYPE>::mResult,
                        IntegralPointerInstruction<PTR_TYPE>::mOp1, &mOp2);
     }
 

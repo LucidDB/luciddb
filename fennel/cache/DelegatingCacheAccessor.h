@@ -36,7 +36,7 @@ FENNEL_BEGIN_NAMESPACE
 class DelegatingCacheAccessor : public CacheAccessor
 {
     SharedCacheAccessor pDelegate;
-    
+
 public:
     /**
      * Constructor.
@@ -45,7 +45,7 @@ public:
      */
     explicit DelegatingCacheAccessor(
         SharedCacheAccessor pDelegate);
-    
+
     // implement the CacheAccessor interface
     virtual CachePage *lockPage(
         BlockId blockId,

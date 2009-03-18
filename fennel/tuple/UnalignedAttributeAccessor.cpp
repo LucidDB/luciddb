@@ -69,7 +69,7 @@ inline void UnalignedAttributeAccessor::compressInt64(
     // are handled as if they were negative here, but
     // the consumer of the TupleDatum won't be aware of that,
     // and the sign-extension in uncompress will be a no-op).
-    
+
     assert(datum.cbData == 8);
     int64_t intVal = *reinterpret_cast<int64_t const *> (datum.pData);
     uint len;
@@ -147,9 +147,9 @@ void UnalignedAttributeAccessor::storeValue(
     PBuffer pDataWithLen) const
 {
     assert(isInitialized());
-    
+
     PBuffer tmpDataPtr = pDataWithLen;
-      
+
     if (!datum.pData) {
         /*
          * NULL is stored as a special one-byte length: 0x00
@@ -161,7 +161,7 @@ void UnalignedAttributeAccessor::storeValue(
          * This storage format can only encode values shorter than 0x7fff bytes.
          */
         assert(datum.cbData <= TWO_BYTE_MAX_LENGTH);
-      
+
         if (isCompressedInt64) {
             // strip off leading zeros from 8-byte ints
             compressInt64(datum, tmpDataPtr);
@@ -255,7 +255,7 @@ TupleStorageByteLength UnalignedAttributeAccessor::getStoredByteCount(
 TupleStorageByteLength UnalignedAttributeAccessor::getMaxByteCount() const
 {
     assert(isInitialized());
-    
+
     if (omitLengthIndicator) {
         return cbStorage;
     } else {

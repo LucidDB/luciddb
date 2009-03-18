@@ -55,7 +55,7 @@ TestBase::TestBase()
     testName = configMap.getStringParam(paramTestSuiteName);
     traceLevel = static_cast<TraceLevel>(
         configMap.getIntParam(paramTraceLevel,TRACE_CONFIG));
-    std::string traceStdoutParam = 
+    std::string traceStdoutParam =
         configMap.getStringParam(paramTraceStdout,"");
     traceStdout = ((traceStdoutParam.length() == 0) ? false : true);
 
@@ -150,7 +150,7 @@ void TestBase::readParams(int argc,char **argv)
         std::string dictFileName = "dictWords";
         configMap.setStringParam(paramDictionaryFileName,dictFileName);
     }
-    
+
     if (verbose) {
         configMap.dumpParams(std::cout);
     }
@@ -189,7 +189,7 @@ void TestBase::TestCaseGroup::addTest(std::string name, test_unit *tu)
     items.push_back(Item(name, tu));
 }
 
-test_unit* 
+test_unit*
 TestBase::TestCaseGroup::findTest(std::string name) const
 {
     for (std::vector<Item>::const_iterator p = items.begin();
@@ -235,7 +235,7 @@ void TestBase::afterTestCase(std::string testCaseName)
 void TestBase::testCaseSetUp()
 {
 }
-    
+
 void TestBase::testCaseTearDown()
 {
 }

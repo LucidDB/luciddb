@@ -225,7 +225,7 @@ class LbmMinusExecStream : public LbmBitOpExecStream
         LcsRid baseRid, PBuffer baseByteSeg, uint baseLen);
 
     /**
-     * Determines which subtrahend contains the minimum rid value in its 
+     * Determines which subtrahend contains the minimum rid value in its
      * current input stream.
      *
      * @param minInput returns input number corresponding to the subtrahend

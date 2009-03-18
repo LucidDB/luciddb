@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -74,7 +74,7 @@ struct ReshapeExecStreamParams : public ConduitExecStreamParams
 {
     /**
      * Comparison operator. Set to COMP_NOOP if no comparisons need to be done.
-     * Note that NULLs are currently treated like any other value.  I.e., 
+     * Note that NULLs are currently treated like any other value.  I.e.,
      * COMP_EQ will match NULL values.
      */
     CompOperator compOp;
@@ -224,7 +224,7 @@ class ReshapeExecStream : public ConduitExecStream
      */
     bool producePending;
 
-    /** 
+    /**
      * Initializes tuple descriptors and data that will be used in
      * comparisons
      *

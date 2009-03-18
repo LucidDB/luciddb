@@ -49,7 +49,7 @@ void ConfigMap::readParams(std::istream &paramStream)
         paramVals[name] = value;
     }
 }
-    
+
 void ConfigMap::dumpParams(std::ostream &dumpStream) const
 {
     for (StringMapConstIter pPair = paramVals.begin();

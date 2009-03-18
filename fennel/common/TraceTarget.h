@@ -50,7 +50,7 @@ enum TraceLevel {
  * TraceTarget defines a tracing interface to be implemented by callers to
  * Fennel.
  */
-class TraceTarget 
+class TraceTarget
 {
 public:
     virtual ~TraceTarget();

@@ -45,7 +45,7 @@ void FileStatsTarget::beginSnapshot()
     // TODO:  re-enable this.  I disabled it since /tmp/fennel.stats
     // can't be opened on mingw; need to parameterize it better
     // (or put in Performance Monitor integration)
-    
+
     // assert(snapshotStream.good());
 }
 

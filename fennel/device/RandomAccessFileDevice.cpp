@@ -42,23 +42,23 @@ RandomAccessFileDevice::RandomAccessFileDevice(
 RandomAccessDevice::~RandomAccessDevice()
 {
 }
-    
+
 FileSize RandomAccessFileDevice::getSizeInBytes()
 {
     return FileDevice::getSizeInBytes();
 }
-    
+
 void RandomAccessFileDevice::setSizeInBytes(FileSize cbNew)
 {
     FileDevice::setSizeInBytes(cbNew);
 }
-    
+
 void RandomAccessFileDevice::transfer(RandomAccessRequest const &request)
 {
     assert(request.pDevice == this);
     FileDevice::transfer(request);
 }
-    
+
 void RandomAccessFileDevice::prepareTransfer(RandomAccessRequest &request)
 {
     assert(request.pDevice == this);
@@ -107,7 +107,7 @@ void RandomAccessFileDevice::prepareTransfer(RandomAccessRequest &request)
     assert(cbOffset == request.cbOffset + request.cbTransfer);
 #endif
 }
-    
+
 void RandomAccessFileDevice::flush()
 {
     FileDevice::flush();

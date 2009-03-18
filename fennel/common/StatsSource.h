@@ -36,7 +36,7 @@ class StatsSource
 {
 public:
     virtual ~StatsSource();
-    
+
     /**
      * Writes a current stats snapshot to a StatsTarget.
      *

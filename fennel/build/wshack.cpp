@@ -13,3 +13,5 @@ static void instantiate_ws()
 }
 
 _STLP_END_NAMESPACE
+
+// End wshack.cpp

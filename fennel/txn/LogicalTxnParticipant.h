@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
 class LogicalTxnParticipant
 {
     friend class LogicalTxn;
-    
+
     LogicalTxn *pTxn;
 
     bool loggingEnabled;
@@ -66,7 +66,7 @@ public:
      * be used during recovery to find the correct LogicalTxnParticipantFactory
      */
     virtual LogicalTxnClassId getParticipantClassId() const = 0;
-    
+
     /**
      * Called by LogicalTxn the first time an action is logged for this
      * participant.  The participant must implement this by writing a
@@ -92,7 +92,7 @@ public:
     virtual void undoLogicalAction(
         LogicalActionType actionType,
         ByteInputStream &logStream) = 0;
-    
+
     /**
      * Performs redo for one logical action during recovery.  The
      * implementation must consume ALL log data for this action, even if some

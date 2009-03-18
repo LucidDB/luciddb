@@ -79,7 +79,7 @@ PageId BTreeVerifier::verifyNode(
     // for optimized build, we don't check node magic numbers implicitly,
     // so do it explicitly here
     permAssert(node.magicNumber == BTreeNode::MAGIC_NUMBER);
-    
+
     if (isMAXU(expectedHeight)) {
         stats.nLevels = node.height + 1;
     } else {
@@ -95,7 +95,7 @@ PageId BTreeVerifier::verifyNode(
             returnPageId = node.rightSibling;
         }
     }
-    
+
     BTreeNodeAccessor &nodeAccessor = getNodeAccessor(node);
 
     // TODO:  delegate to nodeAccessor for checking node integrity
@@ -117,7 +117,7 @@ PageId BTreeVerifier::verifyNode(
                 }
                 permAssert(c <= 0);
                 // TODO:  for unique, assert(c == 0)
-                
+
                 if (countUniqueKeys && c == -1) {
                     // Only count differences in the first column of the key.
                     stats.nUniqueKeys++;

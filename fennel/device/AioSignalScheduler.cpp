@@ -45,7 +45,7 @@ public:
     }
     virtual void run();
 };
-    
+
 static void aio_handler(int,siginfo_t *pSiginfo,void *)
 {
     assert(pSiginfo->si_code == SI_ASYNCIO);
@@ -69,7 +69,7 @@ AioSignalScheduler::AioSignalScheduler(
     DeviceAccessSchedulerParams const &params)
 {
     // TODO:  pass params.maxSimultaneousRequests on to OS
-    
+
     // block signal in this thread so that child threads will also have it
     // blocked
     int rc;
@@ -81,14 +81,14 @@ AioSignalScheduler::AioSignalScheduler(
 
     // TODO:  come up with a way to ensure signal is blocked in all threads
     // except the one spawned below
-    
+
     struct sigaction sa;
     sa.sa_flags = SA_SIGINFO;
     sa.sa_sigaction = aio_handler;
     sigemptyset(&(sa.sa_mask));
     rc = sigaction(SIGRTMIN,&sa,&saOld);
     assert(!rc);
-    
+
     quit = false;
     for (uint i = 0; i < params.nThreads; ++i) {
         AioSignalHandlerThread *pThread = new AioSignalHandlerThread(*this);
@@ -118,10 +118,10 @@ bool AioSignalScheduler::schedule(RandomAccessRequest &request)
         pBinding->aio_sigevent.sigev_signo = SIGRTMIN;
         pBinding->aio_sigevent.sigev_value.sival_ptr = pBinding;
 
-    	// static_cast assigned to lpBinding is a workaround
-    	// for a gcc bug that shows up on Ubuntu 8.04 when
-   	// passing pBinding to aio_* methods
-    	aiocb *lpBinding = static_cast<aiocb *>(pBinding);
+        // static_cast assigned to lpBinding is a workaround
+        // for a gcc bug that shows up on Ubuntu 8.04 when
+        // passing pBinding to aio_* methods
+        aiocb *lpBinding = static_cast<aiocb *>(pBinding);
 
         if (request.type == RandomAccessRequest::READ) {
             rc = aio_read(lpBinding);
@@ -148,7 +148,7 @@ void AioSignalScheduler::stop()
         deleteAndNullify(threads[i]);
     }
     threads.clear();
-    
+
     int rc = sigaction(SIGRTMIN,&saOld,NULL);
     assert(!rc);
 }

@@ -35,7 +35,7 @@ inline BTreeNodeAccessor &BTreeAccessBase::getLeafNodeAccessor(
     assert(!node.height);
     return *pLeafNodeAccessor;
 }
-    
+
 inline BTreeNodeAccessor &BTreeAccessBase::getNonLeafNodeAccessor(
     BTreeNode const &node)
 {
@@ -60,7 +60,7 @@ inline PageId BTreeAccessBase::getChildForCurrent()
         pNonLeafNodeAccessor->tupleAccessor,childDatum);
     return *reinterpret_cast<PageId const *>(childDatum.pData);
 }
-    
+
 inline PageId BTreeAccessBase::getChild(BTreeNode const &node,uint iChild)
 {
     getNonLeafNodeAccessor(node).accessTuple(node,iChild);

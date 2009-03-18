@@ -48,17 +48,17 @@ protected:
         STATE_STOPPING,
         STATE_STOPPED
     };
-    
+
     std::vector<PooledThread *> threads;
     State state;
     LocalCondition stoppingCondition;
     ThreadTracker *pThreadTracker;
-    
+
     explicit ThreadPoolBase();
     virtual ~ThreadPoolBase();
     virtual bool isQueueEmpty() = 0;
     virtual void runOneTask(StrictMutexGuard &) = 0;
-    
+
 public:
     /**
      * Starts the given number of threads in the pool.
@@ -66,14 +66,14 @@ public:
      * @param nThreads number of threads to start
      */
     void start(uint nThreads);
-    
+
     /**
      * Shuts down the pool, waiting for any pending tasks to complete.
      * The start/stop calls should never be invoked from more than one thread
      * simultaneously.
      */
     void stop();
-    
+
     /**
      * Sets a tracker to use for created threads.
      *
@@ -100,7 +100,7 @@ class ThreadPool : public ThreadPoolBase
     {
         return queue.empty();
     }
-    
+
     virtual void runOneTask(StrictMutexGuard &guard)
     {
         Task task = queue.front();
@@ -109,7 +109,7 @@ class ThreadPool : public ThreadPoolBase
         task.execute();
         guard.lock();
     }
-    
+
 public:
     /**
      * Constructor.

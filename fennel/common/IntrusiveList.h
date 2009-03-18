@@ -53,7 +53,7 @@ template <class T,class DerivedListNode = IntrusiveListNode>
 class IntrusiveList : public RawIntrusiveList
 {
     typedef RawIntrusiveList super;
-    
+
 public:
     /**
      * Adds an element to the front of the list.
@@ -64,7 +64,7 @@ public:
     {
         super::push_front(static_cast<DerivedListNode &>(element));
     }
-    
+
     /**
      * Adds an element to the back of the list.
      *
@@ -83,7 +83,7 @@ public:
         return static_cast<T &>(
             static_cast<DerivedListNode &>(super::front()));
     }
-    
+
     /**
      * @return a reference to the element at the back of the list
      */
@@ -92,7 +92,7 @@ public:
         return static_cast<T &>(
             static_cast<DerivedListNode &>(super::back()));
     }
-    
+
     /**
      * Finds and removes a specified element by address (not equality).
      *
@@ -114,15 +114,15 @@ template <class T,class DerivedListNode = IntrusiveListNode>
 class IntrusiveListIter : public RawIntrusiveListIter
 {
     typedef RawIntrusiveListIter super;
-    
+
 public:
     /**
      * Constructs a singular iterator.
      */
-    explicit IntrusiveListIter() 
+    explicit IntrusiveListIter()
     {
     }
-    
+
     /**
      * Constructs an iterator positioned at the front of a given list.
      *
@@ -142,7 +142,7 @@ public:
         return static_cast<T *>(
             static_cast<DerivedListNode *>(getCurrent()));
     }
-    
+
     /**
      * @return pointer to current element
      */
@@ -151,7 +151,7 @@ public:
         return static_cast<T *>(
             static_cast<DerivedListNode *>(getCurrent()));
     }
-    
+
     /**
      * @return reference to current element
      */
@@ -171,7 +171,7 @@ public:
     {
         super::repositionToFront(list);
     }
-};                                        
+};
 
 /**
  * IntrusiveListMutator is the companion mutator for InstrusiveList.  It allows
@@ -181,15 +181,15 @@ template <class T,class DerivedListNode = IntrusiveListNode>
 class IntrusiveListMutator : public RawIntrusiveListMutator
 {
     typedef RawIntrusiveListMutator super;
-    
-public:                                
+
+public:
     /**
      * Constructs a singular mutator.
      */
-    explicit IntrusiveListMutator() 
+    explicit IntrusiveListMutator()
     {
     }
-    
+
     /**
      * Constructs a mutator positioned at the front of a given list.
      *
@@ -200,7 +200,7 @@ public:
         : super(list)
     {
     }
-    
+
     /**
      * @return pointer to current element
      */
@@ -209,7 +209,7 @@ public:
         return static_cast<T *>(
             static_cast<DerivedListNode *>(getCurrent()));
     }
-    
+
     /**
      * @return reference to current element
      */
@@ -218,7 +218,7 @@ public:
         return static_cast<T *>(
             static_cast<DerivedListNode *>(getCurrent()));
     }
-    
+
     /**
      * @return reference to current element
      */
@@ -239,7 +239,7 @@ public:
         return static_cast<T *>(
             static_cast<DerivedListNode *>(super::detach()));
     }
-    
+
     /**
      * Repositions this mutator to the front of a given list.
      *
@@ -250,7 +250,7 @@ public:
     {
         super::repositionToFront(list);
     }
-    
+
     /**
      * Repositions this mutator to the front of the current list.
      */

@@ -50,7 +50,7 @@ struct DatabaseHeader : public StoredNode
     // to rationalize the numbering scheme so that arch component
     // is one component and Fennel structural version is another;
     // the current scheme isn't scalable as we keep adding architectures!
-    
+
     // Magic number history:
     // Original value:  0xb1b7b315d821d90aLL;
 #ifndef __MINGW32__

@@ -34,7 +34,7 @@ class DeviceAccessSchedulerParams;
  * initiate access requests on devices and handle their completions
  * asynchronously.  For more information, see DeviceDesign.
  */
-class DeviceAccessScheduler 
+class DeviceAccessScheduler
 {
 public:
     /**
@@ -46,7 +46,7 @@ public:
      */
     static DeviceAccessScheduler *newScheduler(
         DeviceAccessSchedulerParams const &params);
-    
+
     virtual ~DeviceAccessScheduler();
 
     /**
@@ -57,7 +57,7 @@ public:
      */
     virtual void registerDevice(
         SharedRandomAccessDevice pDevice);
-    
+
     /**
      * Unregisters a device.
      * The default implementation does nothing.
@@ -66,7 +66,7 @@ public:
      */
     virtual void unregisterDevice(
         SharedRandomAccessDevice pDevice);
-    
+
     /**
      * Initiates a request, the details of which must already have been defined
      * by the caller.  When the request completes, this scheduler will call

@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -79,7 +79,7 @@ struct BTreeSearchExecStreamParams
      * (May be empty.)
      */
     TupleProjection inputJoinProj;
-    
+
     /**
      * Projection of single input attribute to be used as a directive
      * controlling interval searches.  If empty, all input keys are
@@ -112,7 +112,7 @@ class BTreeSearchExecStream
         LOWER_BOUND_DIRECTIVE = 0,
         UPPER_BOUND_DIRECTIVE = 1
     };
-    
+
 protected:
     TupleProjectionAccessor inputKeyAccessor;
     TupleProjectionAccessor inputJoinAccessor;
@@ -167,7 +167,7 @@ protected:
      * @return true if tuple limit reached
      */
     virtual bool reachedTupleLimit(uint nTuples);
-    
+
     /**
      * Searches the btree for a specific key.
      *

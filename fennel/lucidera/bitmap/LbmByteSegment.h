@@ -31,17 +31,17 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * This class encapsulates a single byte segment, as opposed to
  * a tuple which contains a set of them
- */    
+ */
 class LbmByteSegment
 {
 public:
     static const uint bitsInByte[];
-    
+
     LbmByteNumber byteNum;
     PBuffer byteSeg;
     uint len;
 
-    inline void reset() 
+    inline void reset()
     {
         byteNum = (LbmByteNumber) 0;
         byteSeg = NULL;
@@ -87,13 +87,13 @@ public:
      *
      * This function assumes bytes are reverse order.
      */
-    void advanceToByteNum(LbmByteNumber newStartByteNum) 
+    void advanceToByteNum(LbmByteNumber newStartByteNum)
     {
         // ignore null values
         if (isNull()) {
             return;
         }
-        
+
         // check if the segment will have valid data after truncation
         if (getEnd() <= newStartByteNum) {
             reset();
@@ -132,7 +132,7 @@ public:
     /**
      * Counts the number of bits in an array
      */
-    static uint countBits(PConstBuffer pBuf, uint len) 
+    static uint countBits(PConstBuffer pBuf, uint len)
     {
         uint total = 0;
         for (uint i = 0; i < len; i++) {
@@ -157,7 +157,7 @@ public:
      *
      * This function assumes bytes are in order.
      */
-    void print(std::ostream &output) 
+    void print(std::ostream &output)
     {
         output << std::dec << opaqueToInt(byteNum) << ".";
         output << std::dec << len << " (";

@@ -46,7 +46,7 @@ class LogicalTxnLog
 
     typedef std::vector<SharedLogicalTxn> TxnList;
     typedef std::vector<SharedLogicalTxn>::iterator TxnListIter;
-    
+
     typedef std::vector<SharedSegment> SegList;
     typedef std::vector<SharedSegment>::iterator SegListIter;
 
@@ -103,7 +103,7 @@ class LogicalTxnLog
         SharedSegmentFactory pSegmentFactory);
 
     void removeTxn(SharedLogicalTxn pTxn);
-    
+
     void commitTxn(SharedLogicalTxn pTxn);
 
     void rollbackTxn(SharedLogicalTxn pTxn);
@@ -130,7 +130,7 @@ public:
         SegmentAccessor const &logSegmentAccessor,
         PseudoUuid const &onlineUuid,
         SharedSegmentFactory pSegmentFactory);
-        
+
     virtual ~LogicalTxnLog();
 
     /**

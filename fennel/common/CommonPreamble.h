@@ -105,7 +105,7 @@ struct hash< fennel::OpaqueInteger<T,Dummy> >
         return hash<T>()(fennel::opaqueToInt(key));
     }
 };
- 
+
 } // namespace std
 
 // Memory management
@@ -288,7 +288,7 @@ do { \
 // REVIEW: JK 1/19/2006: Replace with cpu_to_be64(x) ?
 // Network to Host conversion for 64 bit quantities
 #define ntohll(x) ( ( (uint64_t) ntohl ((uint32_t)( x )) << 32 ) |  \
-                    ntohl ((uint32_t)(x >> 32))) 
+                    ntohl ((uint32_t)(x >> 32)))
 
 #define htonll(x) ntohll(x)
 

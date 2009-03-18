@@ -44,7 +44,7 @@ class TupleTest : virtual public TestBase, public TraceSource
 
     TupleDescriptor tupleDesc;
     TupleAccessor tupleAccessor;
-    
+
     void writeMinData(TupleDatum &datum,uint typeOrdinal);
     void writeMaxData(TupleDatum &datum,uint typeOrdinal);
     void writeSampleData(TupleDatum &datum,uint typeOrdinal);
@@ -52,7 +52,7 @@ class TupleTest : virtual public TestBase, public TraceSource
     void checkData(TupleData const &tupleData1,TupleData const &tupleData2);
     void checkAlignment(
         TupleAttributeDescriptor const &desc, PConstBuffer pBuf);
-        
+
     void testStandardTypesNullable();
     void testStandardTypesNotNull();
     void testStandardTypesNetworkNullable();
@@ -74,7 +74,7 @@ class TupleTest : virtual public TestBase, public TraceSource
         std::string s = oss.str();
         FENNEL_TRACE(TRACE_FINE,s);
     }
-    
+
 public:
     explicit TupleTest()
         : TraceSource(shared_from_this(),"TupleTest")
@@ -90,7 +90,7 @@ public:
         // is set to 1.
         FENNEL_EXTRA_UNIT_TEST_CASE(TupleTest,testDebugAccess);
     }
-    
+
     virtual ~TupleTest()
     {
     }
@@ -149,10 +149,10 @@ void TupleTest::testStandardTypes(
     boost::scoped_array<FixedBuffer> pTupleBufFixed(
         new FixedBuffer[tupleAccessor.getMaxByteCount()]);
     tupleAccessorFixed.setCurrentTupleBuf(pTupleBufFixed.get(), false);
-    
+
     TupleData tupleDataFixed(tupleDesc);
     tupleAccessorFixed.unmarshal(tupleDataFixed);
-    
+
     TupleData::iterator pDatum = tupleDataFixed.begin();
     for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; ++i) {
         writeMinData(*pDatum,i);
@@ -172,7 +172,7 @@ void TupleTest::testStandardTypes(
     uint cbMaxData = testMarshal(tupleDataFixed);
     BOOST_CHECK(cbMaxData > cbMinData);
     BOOST_CHECK(cbMaxData <= tupleAccessor.getMaxByteCount());
-    
+
     pDatum = tupleDataFixed.begin();
     for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; ++i) {
         writeSampleData(*pDatum,i);
@@ -200,7 +200,7 @@ uint TupleTest::testMarshal(TupleData const &tupleDataFixed)
 {
     FENNEL_TRACE(TRACE_FINE,"reference tuple:");
     traceTuple(tupleDataFixed);
-    boost::scoped_array<FixedBuffer> pTupleBufVar( 
+    boost::scoped_array<FixedBuffer> pTupleBufVar(
         new FixedBuffer[tupleAccessor.getMaxByteCount()]);
 
     uint cbTuple = tupleAccessor.getByteCount(tupleDataFixed);
@@ -213,7 +213,7 @@ uint TupleTest::testMarshal(TupleData const &tupleDataFixed)
     traceTuple(tupleDataTogether);
     BOOST_CHECK_EQUAL(cbTuple,tupleAccessor.getByteCount(tupleDataTogether));
     checkData(tupleDataFixed,tupleDataTogether);
-    
+
     TupleData tupleDataIndividual(tupleDesc);
     for (uint i = 0; i < tupleDataIndividual.size(); ++i) {
         tupleAccessor.getAttributeAccessor(i).unmarshalValue(
@@ -493,7 +493,7 @@ void TupleTest::testDebugAccess()
     boost::scoped_array<FixedBuffer> buf(
         new FixedBuffer[tupleAccessor.getMaxByteCount()]);
     memset(buf.get(), 0, tupleAccessor.getMaxByteCount());
-    
+
     // This should cause an assertion failure when TupleAccessor.cpp's
     // DEBUG_TUPLE_ACCESS is set to 1.
     tupleAccessor.setCurrentTupleBuf(buf.get());
@@ -541,7 +541,7 @@ void TupleTest::testLoadStoreUnaligned()
 
     // test special case of empty string
     loadStore2ByteLenData(0);
-    
+
     // test null data
     loadStoreNullData(STANDARD_TYPE_INT_64, 8);
     loadStoreNullData(STANDARD_TYPE_INT_32, 4);
@@ -559,7 +559,7 @@ void TupleTest::testLoadStoreUnaligned()
     accessor_int16.storeValue(tupleDatum, storageBuf);
     uint len = accessor_int16.getStoredByteCount(storageBuf);
     BOOST_REQUIRE(len == 2);
-    
+
     FixedBuffer loadBuf[4];
     tupleDatum.cbData = 0xff;
     tupleDatum.pData = loadBuf;
@@ -599,7 +599,7 @@ void TupleTest::loadStore8ByteInts(int64_t initialValue, uint8_t nextByte)
     // to generate the different test values.  Do this 8 times.  For each
     // value, try the value, value - 1, value + 1, as well as the negative of
     // each of those three values.
-    
+
     int64_t intVal = initialValue;
     for (int i = 0; i < 8; i++) {
         intVal <<= 8;

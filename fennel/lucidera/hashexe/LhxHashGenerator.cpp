@@ -28,7 +28,7 @@ using namespace std;
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-static uint8_t LhxHashGeneratorMagicTable[256] = 
+static uint8_t LhxHashGeneratorMagicTable[256] =
 {
     1,    87,   49,   12,   176,  178,  102,  166,  121,  193,  6,    84,
     249,  230,  44,   163,  14,   197,  213,  181,  161,  85,   218,  80,
@@ -64,7 +64,7 @@ void LhxHashGenerator::init(uint levelInit)
     if (levelInit > 63) {
         ostringstream errMsg;
         errMsg << " Hash recursion level can not be deeper than 63";
-        throw FennelExcn(errMsg.str());      
+        throw FennelExcn(errMsg.str());
     }
 
     level = levelInit;
@@ -138,7 +138,7 @@ void LhxHashGenerator::hashOneColumn(
     // REVIEW jvs 25-Aug-2006:  Since the call below uses
     // sizeof(TupleStorageByteLength), shouldn't trimmedLength
     // be declared to match?
-    
+
     /*
      * First hash the length
      * However, ignore length field if pData is NULL.

@@ -84,7 +84,7 @@ ExecStreamResult LbmChopperExecStream::execute(
 {
     ridLimit = *reinterpret_cast<RecordNum const *>(
         pDynamicParamManager->getParam(ridLimitParamId).getDatum().pData);
-    
+
     uint nTuples = 0;
     ExecStreamResult status;
     while (nTuples < quantum.nTuplesMax) {
@@ -167,7 +167,7 @@ bool LbmChopperExecStream::writeSegment()
         if (opaqueToInt(endRid - currentSrid) > ridLimit) {
             return false;
         }
-    }        
+    }
 
     // try to add segment to writer
     PBuffer byteSeg = inputSegment.byteSeg - (inputSegment.len - 1);

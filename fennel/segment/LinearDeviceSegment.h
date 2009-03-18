@@ -33,14 +33,14 @@ FENNEL_BEGIN_NAMESPACE
  * LinearDeviceSegmentParams defines initialization parameters for
  * LinearDeviceSegment.
  */
-struct LinearDeviceSegmentParams 
+struct LinearDeviceSegmentParams
 {
     /**
      * BlockId of the first page in the segment; the
      * owning device must already be registered with the cache.
      */
     BlockId firstBlockId;
-    
+
     /**
      * Minimum number of pages in segment.  If the device isn't big enough, it
      * is automatically extended when the segment is created.
@@ -89,20 +89,20 @@ class LinearDeviceSegment : public Segment
     SharedRandomAccessDevice pDevice;
     BlockId firstBlockId;
     BlockNum nPagesMax,nPagesAllocated,nPagesIncrement,nPagesExtended;
-    
+
     explicit LinearDeviceSegment(
         SharedCache cache,
         LinearDeviceSegmentParams const &);
-    
+
     BlockNum getAvailableDevicePages() const;
-    
+
 public:
     virtual ~LinearDeviceSegment();
 
     DeviceId getDeviceId() const;
-    
+
     // implementation of Segment interface
-    
+
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId);

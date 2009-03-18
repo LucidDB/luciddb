@@ -36,7 +36,7 @@ FENNEL_BEGIN_NAMESPACE
 // pthread_mutex_init may return EBUSY if the mutex initially contains certain
 // bit patterns.
 template <class BoostMutex>
-class FennelMutex 
+class FennelMutex
 {
     int dummy;
     BoostMutex boostMutex;
@@ -52,7 +52,7 @@ public:
         : dummy(zeroBoostMutex())
     {
     }
-    
+
     operator BoostMutex &()
     {
         return boostMutex;

@@ -36,12 +36,12 @@ JavaTraceTarget::JavaTraceTarget()
     jclass classNativeTrace = pEnv->FindClass(
         "net/sf/farrago/util/NativeTrace");
 
-    jmethodID methInstance = 
+    jmethodID methInstance =
         pEnv->GetStaticMethodID(
             classNativeTrace, "instance",
             "()Lnet/sf/farrago/util/NativeTrace;");
 
-    jobject javaTraceInit = 
+    jobject javaTraceInit =
         pEnv->CallStaticObjectMethod(classNativeTrace, methInstance);
 
     JniUtil::incrementHandleCount(JAVATRACETARGET_TYPE_STR, this);
@@ -58,8 +58,8 @@ JavaTraceTarget::JavaTraceTarget()
         "(Ljava/lang/String;)I");
 }
 
-JavaTraceTarget::JavaTraceTarget(        
-    jobject javaTraceInit, jmethodID methTraceInit, 
+JavaTraceTarget::JavaTraceTarget(
+    jobject javaTraceInit, jmethodID methTraceInit,
     jmethodID methGetSourceTraceLevelInit)
 {
     JniEnvAutoRef pEnv;
@@ -91,7 +91,7 @@ void JavaTraceTarget::notifyTrace(
 
     // NOTE jvs 21-Aug-2007:  use ref reapers here since this
     // may be called over and over before control returns to Java
-    
+
     jstring javaSource = pEnv->NewStringUTF(source.c_str());
     JniLocalRefReaper javaSourceReaper(pEnv, javaSource);
     jstring javaMessage = pEnv->NewStringUTF(message.c_str());

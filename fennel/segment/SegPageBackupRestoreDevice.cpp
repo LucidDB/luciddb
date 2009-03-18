@@ -75,7 +75,7 @@ void BackupRestorePage::notifyTransferCompletion(bool bSuccess)
     StrictMutexGuard mutexGuard(sharedPtr->getMutex());
 
     if (isRead) {
-        sharedPtr->notifyReadTransferCompletion(*this, bSuccess);   
+        sharedPtr->notifyReadTransferCompletion(*this, bSuccess);
     } else {
         sharedPtr->notifyWriteTransferCompletion(*this, bSuccess);
     }
@@ -150,7 +150,7 @@ void SegPageBackupRestoreDevice::init()
             cmd << compressionProgram.c_str() << " -dc "
                 << backupFilePathname.c_str();
         } else {
-            cmd << compressionProgram.c_str() << " > " 
+            cmd << compressionProgram.c_str() << " > "
                 << backupFilePathname.c_str();
         }
         backupFile = popen(cmd.str().c_str(), mode);
@@ -278,7 +278,7 @@ BackupRestorePage *SegPageBackupRestoreDevice::getFreeScratchPage()
             freeScratchPageQueue.pop_back();
             return freePage;
         }
-    
+
         // If no page is available, wait for one to become available (with
         // timeout just in case)
         boost::xtime atv;

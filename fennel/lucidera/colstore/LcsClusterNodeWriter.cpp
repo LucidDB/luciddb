@@ -138,7 +138,7 @@ PLcsClusterNode LcsClusterNodeWriter::allocateClusterPage(LcsRid firstRid)
     if (clusterLock.isLocked()) {
         // Remember the predecessor so that we can chain it below.
         prevPageId = clusterLock.getPageId();
-        
+
         // Kick off an asynchronous write on the page we've just finished
         // so that when it comes time to checkpoint or victimize,
         // maybe it will be on disk already.
@@ -169,7 +169,7 @@ void LcsClusterNodeWriter::init(
 
     // initialize lastVal, firstVal, and nVal fields in the header
     // to point to the appropriate positions in the indexBlock
-    
+
     setHdrOffsets(pHdr);
 
     minSzLeft = nClusterCols * (LcsMaxLeftOver * sizeof(uint16_t) +
@@ -417,7 +417,7 @@ bool LcsClusterNodeWriter::addValue(uint column, PBuffer pVal, uint16_t *oVal)
     uint16_t lastValOffset;
     int oldSzLeft = szLeft;
     uint szVal = attrAccessors[column].getStoredByteCount(pVal);
-    
+
     // if we are in forced fixed compression mode,
     // see if the maximum record size in this batch has increased.
     // if so, adjust the szLeft based on the idea that each previous element
@@ -496,7 +496,7 @@ void LcsClusterNodeWriter::undoValue(
     // so we still need to call undoValue
     uint szVal =
         (pVal) ? attrAccessors[column].getStoredByteCount(pVal) : 0;
-  
+
     // add back size subtracted for offset
     szLeft += (sizeof(uint16_t) + szVal) ;
     assert(szLeft >= 0);
@@ -943,7 +943,7 @@ RecordNum LcsClusterNodeWriter::moveFromIndexToTemp()
     uint b;
 
     batchDirOffset.reset(new uint16_t[pHdr->nBatch]);
-    
+
     // First move the values
     //
     // copy values from index for all columns starting with the
@@ -1068,7 +1068,7 @@ void LcsClusterNodeWriter::moveFromTempToIndex()
 
     // Copy values from temporary blocks for all columns starting with the
     // 1st column in cluster.
-    
+
     for (offset = (uint16_t) szBlock, column = 0; column < nClusterCols;
         column++)
     {
@@ -1182,11 +1182,11 @@ void LcsClusterNodeWriter::moveFromTempToIndex()
 void LcsClusterNodeWriter::allocArrays()
 {
     // allocate arrays only if they have not been allocated already
-    if (!arraysAllocated) {        
+    if (!arraysAllocated) {
         arraysAllocated = true;
 
         batchDirs.reset(new LcsBatchDir[nClusterCols]);
-        
+
         pValBank.reset(new PBuffer[nClusterCols]);
 
         // allocate larger buffers for the individual pages in the value bank
@@ -1208,11 +1208,11 @@ void LcsClusterNodeWriter::allocArrays()
         valBankStart.reset(new uint16_t[nClusterCols]);
 
         forceModeCount.reset(new uint[nClusterCols]);
-        
+
         bForceMode.reset(new ForceMode[nClusterCols]);
 
         oValBank.reset(new uint16_t[nClusterCols]);
-    
+
         batchOffset.reset(new uint16_t[nClusterCols]);
 
         batchCount.reset(new uint[nClusterCols]);

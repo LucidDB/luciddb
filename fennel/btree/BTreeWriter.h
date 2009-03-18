@@ -42,7 +42,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      * LogicalActionType for inserting an entry into a BTree.
      */
     static const LogicalActionType ACTION_INSERT = 1;
-    
+
     /**
      * LogicalActionType for deleting an entry from a BTree.
      */
@@ -52,7 +52,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      * Accessor for scratch segment.
      */
     SegmentAccessor scratchAccessor;
-    
+
     /**
      * Lock on scratch page used during splits.
      */
@@ -81,7 +81,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
     bool monotonic;
 
     inline void optimizeRootLockMode();
-    
+
     /**
      * Performs compaction on a node to free up space for inserting a tuple.
      * This method uses swapBuffers for efficiency; as a side-effect,
@@ -163,7 +163,7 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      * @param logStream stream containing tuple image
      */
     void insertLogged(ByteInputStream &logStream);
-    
+
     /**
      * Deletes a tuple read from a log stream.
      *
@@ -210,7 +210,7 @@ public:
         BTreeDescriptor const &descriptor,
         SegmentAccessor const &scratchAccessor,
         bool monotonic = false);
-    
+
     virtual ~BTreeWriter();
 
     /**
@@ -226,7 +226,7 @@ public:
     void insertTupleData(
         TupleData const &tupleData,
         Distinctness distinctness);
-    
+
     /**
      * Inserts a tuple from a marshalled tuple buffer.  If the key already
      * exists, and distinctness is set to DUP_FAIL, a BTreeDuplicateKeyExcn

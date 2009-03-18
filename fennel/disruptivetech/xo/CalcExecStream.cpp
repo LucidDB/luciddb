@@ -171,7 +171,7 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
                 ++nRead;
             }
         }
-        
+
         FENNEL_TRACE(TRACE_FINER, "output row " << nWritten);
         if (!pOutAccessor->produceTuple(outputData)) {
             TRACE_RETURN;

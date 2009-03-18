@@ -112,7 +112,7 @@ void RawIntrusiveListMutator::demoteCurrToBack()
         pCurr = pList->pFront;
     }
     bJustDeleted = 1;
-}    
+}
 
 void RawIntrusiveListMutator::demoteFrontBeforeCurr()
 {
@@ -128,7 +128,7 @@ void RawIntrusiveListMutator::demoteFrontBeforeCurr()
     pPrev = pPrev->pNext = pOldFront;
     pOldFront->pNext = pCurr;
 }
-                                                            
+
 IntrusiveListNode *RawIntrusiveListMutator::detach()
 {
     assert(pCurr);

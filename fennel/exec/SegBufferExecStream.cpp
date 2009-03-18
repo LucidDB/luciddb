@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -55,13 +55,13 @@ void SegBufferExecStream::open(bool restart)
 {
     assert(pInAccessor);
     assert(pInAccessor->getProvision() == BUFPROV_CONSUMER);
-    
+
     assert(pOutAccessor);
     assert(pOutAccessor->getProvision() == BUFPROV_PRODUCER);
 
     // TODO jvs 1-June-2006:  generalize SegStreamAllocation to handle
     // the multipass usage requirements here
-    
+
     if (restart) {
         pOutAccessor->clear();
         if (multipass) {
@@ -114,7 +114,7 @@ void SegBufferExecStream::openBufferForRead(bool destroy)
         pByteInputStream->endPrefetch();
         pByteInputStream->seekSegPos(restartPos);
     }
-    
+
     if (destroy) {
         pByteInputStream->setDeallocate(true);
     }

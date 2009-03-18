@@ -35,7 +35,7 @@ QuotaCacheAccessor::QuotaCacheAccessor(
       maxLockedPages(maxLockedPagesInit)
 {
 }
-    
+
 QuotaCacheAccessor::~QuotaCacheAccessor()
 {
     assert(!nPagesLocked);

@@ -26,7 +26,7 @@
 #include "fennel/common/ClosableObject.h"
 
 FENNEL_BEGIN_NAMESPACE
-    
+
 /**
  * SegStreamAllocation is a helper for managing the allocation state
  * of storage created by SegOutputStream when it is used as temp
@@ -55,21 +55,21 @@ class SegStreamAllocation : public ClosableObject
      * while in state WRITING.
      */
     BlockNum nPagesWritten;
-    
+
     /**
      * Non-singular iff in state WRITING.
      */
     SharedSegOutputStream pSegOutputStream;
-    
+
     /**
      * Non-singular iff in state READING.
      */
     SharedSegInputStream pSegInputStream;
-    
+
 protected:
     // implement ClosableObject
     virtual void closeImpl();
-    
+
 public:
     /**
      * Creates a shared pointer to a new SegStreamAllocation, initially in the
@@ -87,7 +87,7 @@ public:
      * newSegStreamAllocation() instead.
      */
     explicit SegStreamAllocation();
-    
+
     /**
      * Changes state from UNALLOCATED to WRITING.
      *

@@ -90,12 +90,12 @@ bool Locale::operator<(const Locale &rhs) const
     int langCmp = this->getLanguage().compare(rhs.getLanguage());
     if (langCmp < 0) return true;
     if (langCmp > 0) return false;
-    
+
     // same language, check country
     int countryCmp = this->getCountry().compare(rhs.getCountry());
     if (countryCmp < 0) return true;
     if (countryCmp > 0) return false;
-    
+
     // same country, check variant
     int variantCmp = this->getVariant().compare(rhs.getVariant());
     if (variantCmp < 0) return true;
@@ -121,7 +121,7 @@ string Locale::getDisplayName() const
 {
     if (_lang.empty()) return DEFAULT_LOCALE_DISPLAY;
 
-    return 
+    return
         _lang
         + (_country.empty() ? "" : (string("_") + _country))
         + (_variant.empty() ? "" : (string("_") + _variant));
@@ -164,3 +164,4 @@ ostream &operator<<(ostream &str, const Locale &loc)
 
 FENNEL_END_CPPFILE("$Id$");
 
+// End Locale.cpp

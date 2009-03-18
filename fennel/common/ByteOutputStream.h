@@ -38,18 +38,18 @@ class ByteOutputStream : virtual public ByteStream
      * Next position to write in output buffer.
      */
     PBuffer pNextByte;
-    
+
     /**
      * Number of writable bytes remaining in output buffer.
      */
     uint cbWritable;
-    
+
 protected:
     /**
      * Current write latency mode.
      */
     WriteLatency writeLatency;
-    
+
     explicit ByteOutputStream();
 
     /**
@@ -70,7 +70,7 @@ protected:
      * @param cbBuffer number of bytes in buffer
      */
     void setBuffer(PBuffer pBuffer,uint cbBuffer);
-    
+
     /**
      * @return number of bytes remaining to be written in current buffer
      */
@@ -125,7 +125,7 @@ public:
      * @param writeLatency new WriteLatency setting
      */
     virtual void setWriteLatency(WriteLatency writeLatency);
-    
+
     /**
      * Writes a fixed-size type to the stream.
      *

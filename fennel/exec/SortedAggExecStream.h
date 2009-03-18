@@ -40,7 +40,7 @@ struct SortedAggExecStreamParams : public ConduitExecStreamParams
     explicit SortedAggExecStreamParams()
     {
         groupByKeyCount = 0;
-    }    
+    }
 };
 
 /**
@@ -58,7 +58,7 @@ class SortedAggExecStream : public ConduitExecStream
         STATE_PRODUCING,
         STATE_DONE
     };
-    
+
     State state;
 
     AggComputerList aggComputers;
@@ -68,12 +68,12 @@ class SortedAggExecStream : public ConduitExecStream
     TupleDataWithBuffer prevTuple;
     TupleData outputTuple;
     bool prevTupleValid;
-    
+
     inline void clearAccumulator();
     inline void updateAccumulator();
     inline void computeOutput();
 
-    // Methods to store and compare group by keys 
+    // Methods to store and compare group by keys
     inline void copyPrevGroupByKey();
     inline void setCurGroupByKey();
     inline int  compareGroupByKeys();
@@ -83,7 +83,7 @@ protected:
     virtual AggComputer *newAggComputer(
         AggFunction aggFunction,
         TupleAttributeDescriptor const *pAttrDesc);
-   
+
 public:
     // implement ExecStream
     virtual void prepare(SortedAggExecStreamParams const &params);

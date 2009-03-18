@@ -68,7 +68,7 @@ struct StringDesc : public TupleDatum
         copyFrom(other);
         return *this;
     }
-    
+
 
     void copyFrom(StringDesc const &other)
     {
@@ -91,7 +91,7 @@ public:
           nullRows(0),
           queue()
     {}
-                       
+
     ~WinAggHistogramStrA()
     {}
 
@@ -120,7 +120,7 @@ public:
     //! Input - New value to be added to the tree
     //
     void addRow(RegisterRef<char*>* node);
-    
+
     //! dropRow - Removes a value from the tree and updates
     //! the running sum.
     //!

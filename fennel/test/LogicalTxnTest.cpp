@@ -44,7 +44,7 @@ class LogicalTxnTest
 {
     static const int participantDescription;
     static const LogicalActionType ACTION_TEST;
-    
+
     SharedLogicalTxnLog pTxnLog;
     LogicalTxnLogCheckpointMemento firstCheckpointMemento;
     LogicalTxnLogCheckpointMemento intermediateCheckpointMemento;
@@ -67,7 +67,7 @@ public:
 
         // TODO jvs 26-Oct-2007:  need multi-threading tests,
         // e.g. for FNL-68
-        
+
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testTxnIdSequence);
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackEmpty);
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackShort);
@@ -92,7 +92,7 @@ public:
 
     void testTxn(int nActions,int iCheckpoint = -1,int iSvpt = -1);
     void testActions(int nActions,int iFirst);
-    
+
     void testRollback(
         int nActions,
         bool checkpoint = false);
@@ -100,7 +100,7 @@ public:
     void testRollbackEmpty();
     void testRollbackShort();
     void testRollbackLong();
-    
+
     void testRollbackSavepointNoGap();
     void testRollbackSavepointGap();
     void testRollbackSavepoint(bool gap);
@@ -240,7 +240,7 @@ void LogicalTxnTest::testRollbackSavepoint(bool gap)
         testActions(40,200);
         expected.push_back(ExpectedRange(239,200));
     }
-        
+
     // roll everything back
     expected.push_back(ExpectedRange(50,0));
     rollbackFull();
@@ -271,7 +271,7 @@ void LogicalTxnTest::testCheckpointCommitSavepoint()
 
     // log 40 new actions (200 through 239)
     testActions(40,200);
-    
+
     commit();
     SharedLogicalRecoveryLog pRecoveryLog = createRecoveryLog();
 

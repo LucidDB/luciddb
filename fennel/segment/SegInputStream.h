@@ -40,7 +40,7 @@ class SegInputStream : public SegStream, public ByteInputStream
 {
 protected:
     SegPageIter pageIter;
-    
+
     /**
      * PageId of current page.
      */
@@ -58,9 +58,9 @@ protected:
 
     explicit SegInputStream(
         SegmentAccessor const &,PageId,uint cbExtraHeader = 0);
-    
+
     virtual void lockBuffer();
-    
+
 public:
     /**
      * Creates a new SegInputStream, positioned
@@ -68,7 +68,7 @@ public:
      *
      * @param segmentAccessor accessor for the segment containing the stream
      * data
-     * 
+     *
      * @param beginPageId the first page of stream data; if the default
      * FIRST_LINEAR_PAGE_ID is passed, the segment must support
      * LINEAR_ALLOCATION, and the stream starts at the first page of the
@@ -117,7 +117,7 @@ public:
 
     // override ByteInputStream
     virtual SharedByteStreamMarker newMarker();
-    
+
     // override ByteInputStream
     virtual void mark(ByteStreamMarker &marker);
 

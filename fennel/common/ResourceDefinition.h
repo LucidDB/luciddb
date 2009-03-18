@@ -61,12 +61,12 @@ public:
     std::string format(const t0 &p0, const t1 &p1, const t2 &p2) const
     {
         boost::format fmt = prepareFormatter(3);
-      
+
         return boost::io::str(fmt % p0 % p1 % p2);
     }
 
     template<typename t0, typename t1, typename t2, typename t3>
-    std::string format(const t0 &p0, const t1 &p1, const t2 &p2, 
+    std::string format(const t0 &p0, const t1 &p1, const t2 &p2,
                        const t3 &p3) const
     {
         boost::format fmt = prepareFormatter(4);

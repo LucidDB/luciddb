@@ -86,7 +86,7 @@ void ParallelExecStreamScheduler::addGraph(
     SharedExecStreamGraph pGraphInit)
 {
     assert(!pGraph);
-    
+
     ExecStreamScheduler::addGraph(pGraphInit);
     pGraph = pGraphInit;
 }
@@ -95,7 +95,7 @@ void ParallelExecStreamScheduler::removeGraph(
     SharedExecStreamGraph pGraphInit)
 {
     assert(pGraph == pGraphInit);
-    
+
     pGraph.reset();
     ExecStreamScheduler::removeGraph(pGraphInit);
 }
@@ -193,7 +193,7 @@ void ParallelExecStreamScheduler::stop()
     // doesn't invoke pScheduler->stop() until *after* the exception
     // has been completely handled and is no longer referenced.
     pPendingExcn.reset();
-    
+
     completedQueue.clear();
     inhibitedQueue.clear();
 }
@@ -261,7 +261,7 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
     FENNEL_TRACE(
         TRACE_FINE,
         "entering readStream " << stream.getName());
-    
+
     ExecStreamId current = stream.getStreamId();
     ExecStreamGraphImpl &graphImpl =
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
@@ -296,7 +296,7 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
     if (pPendingExcn) {
         pPendingExcn->throwSelf();
     }
-    
+
     return bufAccessor;
 }
 
@@ -307,7 +307,7 @@ void ParallelExecStreamScheduler::processCompletedTask(
     ExecStreamGraphImpl &graphImpl =
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
     ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
-    
+
     streamStateMap[current].state = SS_SLEEPING;
     alterNeighborInhibition(current, -1);
 
@@ -370,7 +370,7 @@ void ParallelExecStreamScheduler::processCompletedTask(
 void ParallelExecStreamScheduler::signalSentinel(ExecStreamId sentinelId)
 {
     alterNeighborInhibition(sentinelId, +1);
-    
+
     StrictMutexGuard mutexGuard(mutex);
     streamStateMap[sentinelId].state = SS_RUNNING;
     sentinelCondition.notify_all();
@@ -401,7 +401,7 @@ void ParallelExecStreamScheduler::tryExecuteTask(ExecStream &stream)
     ExecStreamQuantum quantum;
     ExecStreamResult rc = executeStream(stream, quantum);
     ParallelExecResult result(stream.getStreamId(), rc);
-    
+
     StrictMutexGuard mutexGuard(mutex);
     completedQueue.push_back(result);
     condition.notify_one();

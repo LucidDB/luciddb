@@ -48,7 +48,7 @@ protected:
     void testBTreeInsertExecStream(bool useDynamicBTree, uint nRows);
     void testNestedLoopJoinExecStream(uint nRowsLeft, uint nRowsRight);
     virtual uint getDegreeOfParallelism();
-    
+
 public:
     /**
      * Create a ExecStreamTestSuite
@@ -114,13 +114,13 @@ public:
     void testSingleValueAggExecStream();
     void testMergeImplicitPullInputs();
     void testSplitterPlusBarrier();
-    
+
     void testCartesianJoinExecStreamOuter()
     {
         // iterate multiple outer buffers
         testCartesianJoinExecStream(10000,5);
     }
-    
+
     void testCartesianJoinExecStreamInner()
     {
         // iterate multiple inner buffers
@@ -131,7 +131,7 @@ public:
     {
         testGroupAggExecStreamNrows(10000);
     }
-    
+
     // 258*2 values seems to be the point at which buffer
     // overflow occurs, so test that case as well as +/- 1
     // from there
@@ -139,12 +139,12 @@ public:
     {
         testGroupAggExecStreamNrows(257*2);
     }
-    
+
     void testGroupAggExecStream3()
     {
         testGroupAggExecStreamNrows(258*2);
     }
-    
+
     void testGroupAggExecStream4()
     {
         testGroupAggExecStreamNrows(259*2);

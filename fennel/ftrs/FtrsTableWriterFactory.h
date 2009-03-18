@@ -50,7 +50,7 @@ class FtrsTableWriterFactory : public LogicalTxnParticipantFactory
 
     void loadIndex(
         TupleDescriptor const &,FtrsTableIndexWriterParams &,ByteInputStream &);
-    
+
 public:
     explicit FtrsTableWriterFactory(
         SharedSegmentMap pSegmentMap,
@@ -59,12 +59,12 @@ public:
         SegmentAccessor scratchAccessor);
 
     SharedFtrsTableWriter newTableWriter(FtrsTableWriterParams const &params);
-    
+
     // implement the LogicalTxnParticipantFactory interface
     virtual SharedLogicalTxnParticipant loadParticipant(
         LogicalTxnClassId classId,
         ByteInputStream &logStream);
-    
+
     static LogicalTxnClassId getParticipantClassId();
 };
 

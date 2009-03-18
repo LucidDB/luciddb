@@ -46,7 +46,7 @@ struct TupleAttributeDescriptor
     TupleStorageByteLength cbStorage;
 
     explicit TupleAttributeDescriptor();
-    
+
     explicit TupleAttributeDescriptor(
         StoredTypeDescriptor const &typeDescriptor,
         bool isNullable = false,
@@ -64,7 +64,7 @@ class TupleProjection : public std::vector<uint>
 public:
     void writePersistent(
         ByteOutputStream &) const;
-    
+
     void readPersistent(
         ByteInputStream &);
 
@@ -101,7 +101,7 @@ public:
     int compareTuples(
         TupleData const &tuple1,
         TupleData const &tuple2) const;
-    
+
     int compareTuples(
         TupleData const &tuple1, TupleProjection const &proj1,
         TupleData const &tuple2, TupleProjection const &proj2,
@@ -109,7 +109,7 @@ public:
 
     void writePersistent(
         ByteOutputStream &) const;
-    
+
     void readPersistent(
         ByteInputStream &,
         StoredTypeDescriptorFactory const &);

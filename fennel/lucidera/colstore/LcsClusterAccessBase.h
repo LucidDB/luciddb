@@ -44,9 +44,9 @@ protected:
      * Accessor for segment storing both btree and cluster pages.
      */
     SegmentAccessor segmentAccessor;
-   
+
     /**
-     * Buffer lock for the actual cluster node pages.  Shares the same 
+     * Buffer lock for the actual cluster node pages.  Shares the same
      * segment as the btree corresponding to the cluster.
      */
     ClusterPageLock clusterLock;
@@ -95,7 +95,7 @@ protected:
      * Returns RID from btree tuple
      */
     LcsRid readRid();
-    
+
     /**
      * Returns cluster pageid from btree tuple
      */

@@ -59,11 +59,11 @@ void ThreadedTestBase::runThreadedTestCase()
 
     // initialize a barrier to make sure they all start at once
     pStartBarrier.reset(new boost::barrier(nThreads));
-    
+
     // fire 'em up
     ThreadPool<ThreadedTestBaseTask> threadPool;
     threadPool.start(nThreads);
-    
+
     // and distribute the tasks
     for (uint i = 0; i < threadCounts.size(); ++i) {
         for (int j = 0; j < threadCounts[i]; ++j) {

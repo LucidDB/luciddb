@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
 
 CalcInit* CalcInit::_instance = NULL;
 
-CalcInit* 
+CalcInit*
 CalcInit::instance()
 {
     // Warning: Not thread safe
@@ -47,7 +47,7 @@ CalcInit::instance()
     ExtCastRegister(InstructionFactory::getExtendedInstructionTable());
     ExtDynamicVariableRegister(InstructionFactory::getExtendedInstructionTable());
     ExtWinAggFuncRegister(InstructionFactory::getExtendedInstructionTable());
-    
+
     // Add new init calls here
 
     return _instance;
@@ -55,3 +55,5 @@ CalcInit::instance()
 
 
 FENNEL_END_NAMESPACE
+
+// End CalcInit.cpp

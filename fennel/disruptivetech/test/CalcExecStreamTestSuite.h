@@ -60,9 +60,9 @@ protected:
         TupleDescriptor const &outputDesc,
         uint expectedFactor,
         uint nRowsInput = 1000);
-    
+
     void testConstantOneForOneImpl(uint nRowsInput = 1000);
-    
+
 public:
     explicit CalcExecStreamTestSuite(bool addAllTests = true);
 
@@ -70,22 +70,22 @@ public:
      * Tests with program that produces same amount of output as input.
      */
     void testConstantOneForOne();
-    
+
     /**
      * Tests with no input.
      */
     void testEmptyInput();
-    
+
     /**
      * Tests with program that produces twice as much output as input.
      */
     void testConstantTwoForOne();
-    
+
     /**
      * Tests with program that produces half as much output as input.
      */
     void testConstantOneForTwo();
-    
+
     /**
      * Tests with program that produces a tuple which overflows output buffer.
      */

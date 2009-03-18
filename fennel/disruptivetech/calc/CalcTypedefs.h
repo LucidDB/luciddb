@@ -28,7 +28,7 @@ FENNEL_BEGIN_NAMESPACE
  * CalcYYLocType provides the location of the token or expression being
  * parsed.
  */
-typedef struct 
+typedef struct
 {
   int first_line;
   int first_column;

@@ -35,7 +35,7 @@
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
-    
+
 /**
  * AioLinuxScheduler implements DeviceAccessScheduler via Linux-specific
  * kernel-mode libaio calls.
@@ -126,7 +126,7 @@ public:
     virtual void registerDevice(SharedRandomAccessDevice pDevice);
     virtual bool schedule(RandomAccessRequest &request);
     virtual void stop();
-    
+
 // ----------------------------------------------------------------------
 // Implementation of Thread interface (q.v.)
 // ----------------------------------------------------------------------
@@ -136,7 +136,7 @@ public:
 FENNEL_END_NAMESPACE
 
 #endif
-    
+
 #endif
 
 // End AioLinuxScheduler.h

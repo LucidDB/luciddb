@@ -32,9 +32,9 @@ void LcsColumnReader::sync()
     pBatch = &pScan->pRangeBatches[colOrd];
     pValues = pScan->pLeaf + pBatch->oVal;
     pBase = pScan->pLeaf - pScan->delta[colOrd];
-   
+
     filters.filteringBitmap.resize(0);
- 
+
     if (batchIsCompressed()) {
         // where the bit vectors start
         const PBuffer pBit = pValues + (sizeof(uint16_t) * pBatch->nVal);
@@ -43,7 +43,7 @@ void LcsColumnReader::sync()
         // calculate bit vector widths
         iV = bitVecWidth(nBits, width);
         bitVecPtr(pBatch->nRow, iV, width, origin, (PBuffer) pBit);
-    
+
         uint totWidth;
         if (iV == 1) {
             totWidth = width[0];
@@ -187,7 +187,7 @@ bool LcsColumnReader::applyFilters(
     }
 
     for (uint k = 0; k < filters.filterData.size(); k++) {
-        
+
         LcsResidualFilter *filter = filters.filterData[k].get();
 
         if (filter->lowerBoundDirective != SEARCH_UNBOUNDED_LOWER) {
@@ -240,7 +240,7 @@ uint LcsColumnReader::findVal(
     // to get iterators and functors in a form STL likes, and because
     // (I'm assuming) the code below was taken straight from Broadbase,
     // where it was already heavily exercised.
-    
+
     uint iLo = 0, iHi = getBatchValCount(), iResult;
     int cmp = 0;
     TupleProjection &boundProj = highBound ?
@@ -272,10 +272,10 @@ uint LcsColumnReader::findVal(
                 }
             }
             return iResult;
-        } else if (cmp > 0) {       
-            iHi = iMid;    
+        } else if (cmp > 0) {
+            iHi = iMid;
         } else {
-            iLo = iMid + 1;    
+            iLo = iMid + 1;
         }
     }
 

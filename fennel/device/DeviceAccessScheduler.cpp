@@ -71,10 +71,10 @@ DeviceAccessScheduler::newScheduler(
     DeviceAccessSchedulerParams const &params)
 {
     switch(params.schedulerType) {
-        
+
     case DeviceAccessSchedulerParams::THREAD_POOL_SCHEDULER:
         return new ThreadPoolScheduler(params);
-        
+
 #ifdef __MINGW32__
     case DeviceAccessSchedulerParams::IO_COMPLETION_PORT_SCHEDULER:
         return new IoCompletionPortScheduler(params);
@@ -98,14 +98,14 @@ DeviceAccessScheduler::newScheduler(
             }
         }
 #endif
-        
+
 #ifdef USE_AIO_H
     case DeviceAccessSchedulerParams::AIO_POLLING_SCHEDULER:
         return new AioPollingScheduler(params);
     case DeviceAccessSchedulerParams::AIO_SIGNAL_SCHEDULER:
         return new AioSignalScheduler(params);
 #endif
-        
+
     default:
         // fall through to use ThreadPoolScheduler as a fallback
         break;
@@ -125,14 +125,14 @@ RandomAccessRequestBinding::RandomAccessRequestBinding()
     if (!hEvent) {
         throw new SysCallExcn("CreateEvent failed");
     }
-#endif    
+#endif
 }
 
 RandomAccessRequestBinding::~RandomAccessRequestBinding()
 {
 #ifdef __MINGW32__
     CloseHandle(hEvent);
-#endif    
+#endif
 }
 
 void RandomAccessRequest::execute()

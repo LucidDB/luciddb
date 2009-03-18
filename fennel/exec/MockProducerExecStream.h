@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -58,7 +58,7 @@ class MockProducerExecStreamGenerator
 {
 public:
     virtual ~MockProducerExecStreamGenerator();
-    
+
     /**
      * Generates one data value.
      *
@@ -70,10 +70,10 @@ public:
 
 typedef boost::shared_ptr<MockProducerExecStreamGenerator>
     SharedMockProducerExecStreamGenerator;
-    
+
 typedef boost::shared_ptr<MockProducerExecStreamGenerator>
     SharedMockProducerExecStreamGenerator;
-    
+
 /**
  * MockProducerExecStreamParams defines parameters for MockProducerExecStream.
  */
@@ -97,7 +97,7 @@ struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
      */
     bool saveTuples;
 
-    /** 
+    /**
      * When not null, print each generated tuple to this stream, for tracing or for
      * later comparison.  Allowed only when a generator is provided.
      */
@@ -140,8 +140,8 @@ public:
     virtual void prepare(MockProducerExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
-    
-    const std::vector<std::string>& getRowVector() { 
+
+    const std::vector<std::string>& getRowVector() {
         return const_cast<const std::vector<std::string>&>(savedTuples);
     }
 

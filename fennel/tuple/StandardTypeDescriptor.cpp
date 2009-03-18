@@ -46,23 +46,23 @@ class NumericType : public StoredTypeDescriptor
     {
         return typeOrdinal;
     }
-    
+
     virtual uint getBitCount() const
     {
         return 0;
     }
-    
+
     virtual uint getFixedByteCount() const
     {
         return sizeof(T);
     }
-    
+
     virtual uint getMinByteCount(uint cbMaxWidth) const
     {
         assert(cbMaxWidth == sizeof(T));
         return cbMaxWidth;
     }
-    
+
     virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return sizeof(T);
@@ -136,22 +136,22 @@ class CharType : public StoredTypeDescriptor
     {
         return STANDARD_TYPE_CHAR;
     }
-    
+
     virtual uint getBitCount() const
     {
         return 0;
     }
-    
+
     virtual uint getFixedByteCount() const
     {
         return 0;
     }
-    
+
     virtual uint getMinByteCount(uint cbMaxWidth) const
     {
         return cbMaxWidth;
     }
-    
+
     virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return 1;
@@ -184,17 +184,17 @@ class UnicodeCharType : public StoredTypeDescriptor
     {
         return STANDARD_TYPE_UNICODE_CHAR;
     }
-    
+
     virtual uint getBitCount() const
     {
         return 0;
     }
-    
+
     virtual uint getFixedByteCount() const
     {
         return 0;
     }
-    
+
     virtual uint getMinByteCount(uint cbMaxWidth) const
     {
         return cbMaxWidth;
@@ -229,7 +229,7 @@ class UnicodeCharType : public StoredTypeDescriptor
         int c = compareStrings(pStr1, pStr2, nChars);
         return c;
     }
-    
+
 public:
     static inline int compareStrings(
         Ucs2ConstBuffer pStr1, Ucs2ConstBuffer pStr2, uint nChars)
@@ -253,22 +253,22 @@ class VarCharType : public StoredTypeDescriptor
     {
         return STANDARD_TYPE_VARCHAR;
     }
-    
+
     virtual uint getBitCount() const
     {
         return 0;
     }
-    
+
     virtual uint getFixedByteCount() const
     {
         return 0;
     }
-    
+
     virtual uint getMinByteCount(uint cbMaxWidth) const
     {
         return 0;
     }
-    
+
     virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return 1;
@@ -324,17 +324,17 @@ class UnicodeVarCharType : public StoredTypeDescriptor
     {
         return STANDARD_TYPE_UNICODE_VARCHAR;
     }
-    
+
     virtual uint getBitCount() const
     {
         return 0;
     }
-    
+
     virtual uint getFixedByteCount() const
     {
         return 0;
     }
-    
+
     virtual uint getMinByteCount(uint cbMaxWidth) const
     {
         return 0;
@@ -399,22 +399,22 @@ class BinaryType : public StoredTypeDescriptor
     {
         return STANDARD_TYPE_BINARY;
     }
-    
+
     virtual uint getBitCount() const
     {
         return 0;
     }
-    
+
     virtual uint getFixedByteCount() const
     {
         return 0;
     }
-    
+
     virtual uint getMinByteCount(uint cbMaxWidth) const
     {
         return cbMaxWidth;
     }
-    
+
     virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return 1;
@@ -445,22 +445,22 @@ class VarBinaryType : public StoredTypeDescriptor
     {
         return STANDARD_TYPE_VARBINARY;
     }
-    
+
     virtual uint getBitCount() const
     {
         return 0;
     }
-    
+
     virtual uint getFixedByteCount() const
     {
         return 0;
     }
-    
+
     virtual uint getMinByteCount(uint cbMaxWidth) const
     {
         return 0;
     }
-    
+
     virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return 1;
@@ -515,7 +515,7 @@ static UnicodeCharType stdUNICODE_CHAR;
 static UnicodeVarCharType stdUNICODE_VARCHAR;
 
 /**
- * NOTE: Any changes must be copied into 
+ * NOTE: Any changes must be copied into
  * 1) enum StandardTypeDescriptorOrdinal
  * 2) net.sf.farrago.query.FennelRelUtil.convertSqlTypeNumberToFennelTypeOrdinal
  * 3) StandardTypeDescriptor class

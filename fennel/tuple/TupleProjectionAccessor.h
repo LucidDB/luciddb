@@ -37,11 +37,11 @@ class TupleProjection;
  * selected attributes of a tuple, as explained in
  * the <a href="structTupleDesign.html#TupleProjection">design docs</a>.
  */
-class TupleProjectionAccessor 
+class TupleProjectionAccessor
 {
     TupleAccessor const *pTupleAccessor;
     std::vector<AttributeAccessor const *> ppAttributeAccessors;
-    
+
 public:
     explicit TupleProjectionAccessor();
 
@@ -50,7 +50,7 @@ public:
         TupleProjection const &tupleProjection);
 
     virtual ~TupleProjectionAccessor();
-    
+
     void unmarshal(TupleData &tuple) const
     {
         unmarshal(tuple.begin());

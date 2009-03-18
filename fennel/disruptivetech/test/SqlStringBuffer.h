@@ -54,13 +54,13 @@ public:
 
     bool verify();
     void randomize(uint start = 'A',
-                   uint lower = ' ', 
+                   uint lower = ' ',
                    uint upper = '~');
     void
     patternfill(uint start = 'A',
                 uint lower = ' ',
                 uint upper = '~');
-    
+
 
     char * mStr;           // valid string start. (includes left padding)
     char * mRightP;        // right bumper start. valid string ends 1 before here
@@ -94,7 +94,7 @@ public:
     void init();
     bool verify();
     void randomize(uint start = 'A',
-                   uint lower = ' ', 
+                   uint lower = ' ',
                    uint upper = '~');
     void patternfill(uint start = 'A',
                      uint lower = ' ',

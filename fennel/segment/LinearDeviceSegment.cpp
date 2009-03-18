@@ -111,11 +111,11 @@ PageId LinearDeviceSegment::allocatePageId(PageOwnerId)
     // nothing to do with PageOwnerId
 
     BlockNum newBlockNum = nPagesAllocated;
-    
+
     if (!ensureAllocatedSize(nPagesAllocated + 1)) {
         return NULL_PAGE_ID;
     }
-    
+
     return getLinearPageId(newBlockNum);
 }
 

@@ -38,16 +38,16 @@ FENNEL_BEGIN_NAMESPACE
 class CrcSegOutputStream : public SegOutputStream
 {
     PseudoUuid onlineUuid;
-    
+
     // TODO:  use a 64-bit crc instead
     boost::crc_32_type crcComputer;
-    
+
     virtual void writeExtraHeaders(SegStreamNode &node);
-    
+
     explicit CrcSegOutputStream(
         SegmentAccessor const &segmentAccessor,
         PseudoUuid onlineUuid);
-    
+
 public:
     /**
      * Creates a new CrcSegOutputStream.

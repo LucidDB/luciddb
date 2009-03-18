@@ -111,7 +111,7 @@ class ExternalSortRunLoader : public ExternalSortSubStream
      * Pointer to first free byte in current index buffer.
      */
     PBuffer pIndexBuffer;
-    
+
     /**
      * Pointer to end of current index buffer.
      */
@@ -158,7 +158,7 @@ class ExternalSortRunLoader : public ExternalSortSubStream
      * @return whether the buffer was allocated successfully
      */
     bool allocateDataBuffer();
-    
+
     /**
      * Allocates one index buffer.
      *
@@ -174,12 +174,12 @@ class ExternalSortRunLoader : public ExternalSortSubStream
      * @return read/write reference to pointer to tuple
      */
     inline PBuffer &getPointerArrayEntry(uint iTuple);
-    
+
     inline void quickSortSwap(uint l,uint r);
     uint quickSortPartition(uint i,uint j,PBuffer pivot);
     PBuffer quickSortFindPivot(uint l,uint r);
     void quickSort(uint l,uint r);
-    
+
 public:
     /**
      * Flag used only during parallel sort.  When set, this loader
@@ -220,7 +220,7 @@ public:
      * @return number of tuples loaded so far in current run
      */
     uint getLoadedTupleCount();
-    
+
     /**
      * Releases any resources acquired by this loader.
      */

@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -42,7 +42,7 @@ struct BTreeParams
      * Segment containing BTree.
      */
     SharedSegment pSegment;
-    
+
     /**
      * Root of BTree, or NULL_PAGE_ID for variable root.
      */
@@ -52,12 +52,12 @@ struct BTreeParams
      * SegmentId of segment storing BTree.
      */
     SegmentId segmentId;
-        
+
     /**
      * PageOwnerId used to mark pages.
      */
     PageOwnerId pageOwnerId;
-    
+
     /**
      * TupleDescriptor for BTree entries.
      */
@@ -115,7 +115,7 @@ protected:
     SharedBTreeAccessBase pBTreeAccessBase;
     SharedBTreeReader pBTreeReader;
     DynamicParamId rootPageIdParamId;
-    
+
     virtual SharedBTreeReader newReader();
     SharedBTreeWriter newWriter(bool monotonic = false);
 

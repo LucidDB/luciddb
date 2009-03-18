@@ -47,14 +47,14 @@ FENNEL_BEGIN_NAMESPACE
 class TestBase
     : public TraceTarget,
         public boost::enable_shared_from_this<TestBase>
-    
+
 {
 protected:
     /**
      * Boost test suite.
      */
     TestSuite *pTestSuite;
-    
+
     boost::shared_ptr<TestBase> pTestObj;
 
     /**
@@ -66,7 +66,7 @@ protected:
      * Protects traceStream.
      */
     StrictMutex traceMutex;
-    
+
     /**
      * Name of test.
      */
@@ -116,9 +116,9 @@ protected:
      * Collects a group of named test-case definitions.
      * Preserves the order; allows lookup by name.
      */
-    class TestCaseGroup 
+    class TestCaseGroup
     {
-        struct Item 
+        struct Item
         {
             std::string name;
             boost::unit_test::test_unit * tu;
@@ -144,7 +144,7 @@ public:
     static ParamName paramStatsFileName;
     static ParamName paramTraceStdout;
     static ParamName paramDegreeOfParallelism;
-    
+
     /**
      * Configuration parameters.  The reason this is static is so that no
      * constructor parameters (which burden virtual bases) are needed.
@@ -165,13 +165,13 @@ public:
      * method is invoked.  Default is no-op.
      */
     virtual void testCaseSetUp();
-    
+
     /**
      * Equivalent to JUnit TestCase.tearDown; this is called after each test
      * case method is invoked.  Default is no-op.
      */
     virtual void testCaseTearDown();
-    
+
     // implement TraceTarget
     virtual void notifyTrace(
         std::string source,TraceLevel level,std::string message);
@@ -191,7 +191,7 @@ public:
 private:
     std::string name;
     boost::shared_ptr<UserTestClass> pUserTestCase;
-    
+
 public:
     // Constructor
     TestWrapperTemplate(

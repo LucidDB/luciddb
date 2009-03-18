@@ -164,7 +164,7 @@ bool LcsClusterReader::position(LcsRid rid)
             return false;
         }
     }
-    
+
     found = positionInBlock(rid);
     // page ends before "rid"; we must be off the last block
     if (!found)
@@ -199,7 +199,7 @@ void LcsClusterReader::moveToBlock(PageId clusterPageId)
     pLHdr = &page;
     setUpBlock();
 }
-        
+
 bool LcsClusterReader::moveToBlockWithRid(LcsRid rid)
 {
     PageId clusterPageId;
@@ -290,7 +290,7 @@ void LcsClusterReader::setUpBlock()
 bool LcsClusterReader::advance(uint nRids)
 {
     uint newPos = nRangePos + nRids;
-    
+
     if (newPos < pRangeBatches->nRow) {
         nRangePos = newPos;
         return true;

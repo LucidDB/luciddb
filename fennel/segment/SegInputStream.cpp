@@ -138,7 +138,7 @@ void SegInputStream::seekSegPos(SegStreamPosition const &pos)
     } else {
         consumeReadPointer(cb);
     }
-    
+
     cbOffset = pos.cbOffset;
 }
 
@@ -161,7 +161,7 @@ SharedByteStreamMarker SegInputStream::newMarker()
 void SegInputStream::mark(ByteStreamMarker &marker)
 {
     assert(&(marker.getStream()) == this);
-    
+
     // memorize SegStream-specific info
     SegStreamMarker &segMarker =
         dynamic_cast<SegStreamMarker &>(marker);
@@ -179,7 +179,7 @@ void SegInputStream::reset(ByteStreamMarker const &marker)
     // disable prefetch during seek
     bool prefetch = !pageIter.isSingular();
     endPrefetch();
-    
+
     seekSegPos(segMarker.segPos);
 
     // restore prefetch preference

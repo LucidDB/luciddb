@@ -76,4 +76,4 @@ bool CachePage::isScratchLocked() const
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End Page.cpp
+// End CachePage.cpp

@@ -42,7 +42,7 @@ SqlStringBuffer(int storage,    // maximum size of string in characters
                 uint text,      // fill text w/this
                 uint pad,       // pad w/this
                 int leftBumper, // In characters
-                int rightBumper) : 
+                int rightBumper) :
     mStorage(storage),
     mSize(size),
     mLeftPad(leftpad),
@@ -84,7 +84,7 @@ SqlStringBuffer::verify()
 
 void
 SqlStringBuffer::randomize(uint start,
-                           uint lower, 
+                           uint lower,
                            uint upper)
 {
     patternfill(start, lower, upper);
@@ -100,13 +100,13 @@ SqlStringBuffer::patternfill(uint start,
 {
     uint c = start; // deal with overflow easier than char
     int toGen = mSize;
-        
+
     string r;
 
     while(toGen) {
         r.push_back(static_cast<unsigned char>(c));
         toGen--;
-        if (++c > upper) c = lower; 
+        if (++c > upper) c = lower;
     }
     mS.replace(mLeftBump + mLeftPad, mSize, r);
 }
@@ -211,7 +211,7 @@ SqlStringBufferUCS2::verify()
 
 void
 SqlStringBufferUCS2::randomize(uint start,
-                               uint lower, 
+                               uint lower,
                                uint upper)
 {
     patternfill(start, lower, upper);
@@ -261,7 +261,7 @@ SqlStringBufferUCS2::patternfill(uint start,
         mStrPostPad[i++] = (c >> 8) & 0xff;
         mStrPostPad[i++] = c & 0xff;
 #endif
-        if (++c > upper) c = lower; 
+        if (++c > upper) c = lower;
     }
 }
 
@@ -283,7 +283,7 @@ SqlStringBufferUCS2::dump()
         ret += buf;
         i++;
     }
-   
+
     ret += "\nLeft Bumper:\n";
     i = 0;
     while (i < mLeftBump) {
@@ -295,7 +295,7 @@ SqlStringBufferUCS2::dump()
     ret += "\nText:\n";
     i = 0;
     while(i < mStorage) {
-        sprintf(buf, "%d: 0x%x (%c) 0x%x (%c)\n", i, 
+        sprintf(buf, "%d: 0x%x (%c) 0x%x (%c)\n", i,
                 mStr[i], (mStr[i] >= ' ' ? mStr[i] : '_'),
                 mStr[i+1], (mStr[i+1] >= ' ' ? mStr[i+1] : '_'));
         ret += buf;
@@ -320,3 +320,5 @@ SqlStringBufferUCS2::equal(SqlStringBufferUCS2 const &other)
     if (memcmp(other.mLeftP, mLeftP, mTotal)) return false;
     return true;
 }
+
+// End SqlStringBuffer.cpp

@@ -45,17 +45,17 @@ class AioPollingScheduler : public DeviceAccessScheduler, public Thread
     StrictMutex mutex;
     LocalCondition newRequestPending;
     bool quit;
-    
+
     std::vector<aiocb *> currentRequests;
     std::vector<aiocb *> newRequests;
-    
+
 public:
     /**
      * Constructor.
      */
     explicit AioPollingScheduler(
         DeviceAccessSchedulerParams const &);
-    
+
     /**
      * Destructor:  stop must already have been called.
      */
@@ -66,7 +66,7 @@ public:
 // ----------------------------------------------------------------------
     virtual bool schedule(RandomAccessRequest &request);
     virtual void stop();
-    
+
 // ----------------------------------------------------------------------
 // Implementation of Thread interface (q.v.)
 // ----------------------------------------------------------------------

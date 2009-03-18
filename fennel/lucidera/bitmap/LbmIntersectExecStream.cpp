@@ -120,7 +120,7 @@ bool LbmIntersectExecStream::intersectSegments(uint len)
             permAssert(addRid == currRid);
         }
         // byte segments are stored in reverse order, so currByteSeg points
-        // to the end of the buffer whereas pByteSegBuf points to the 
+        // to the end of the buffer whereas pByteSegBuf points to the
         // beginning but needs to be filled in backwards
         for (int j = 0; j < len; j++) {
             pByteSegBuf[len - j - 1] &= currByteSeg[-j];

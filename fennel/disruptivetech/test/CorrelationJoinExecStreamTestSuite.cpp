@@ -50,7 +50,7 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
     paramsMockLeft.outputTupleDesc.push_back(descAttrInt64);
     paramsMockLeft.pGenerator.reset(new RampExecStreamGenerator);
     paramsMockLeft.nRows = 5000;
-    
+
     ExecStreamEmbryo leftStreamEmbryo;
     leftStreamEmbryo.init(new MockProducerExecStream(),paramsMockLeft);
     leftStreamEmbryo.getStream()->setName("LeftProducerExecStream");
@@ -58,23 +58,23 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
     DynamicParamId dynamicParamId(1);
     MockProducerExecStreamParams paramsMockRight(paramsMockLeft);
     paramsMockRight.pGenerator.reset(new DynamicParamExecStreamGenerator(
-                                            dynamicParamId, 
+                                            dynamicParamId,
                                             pGraph->getDynamicParamManager()));
     paramsMockRight.nRows = 10;
-    
+
     ExecStreamEmbryo rightStreamEmbryo;
     rightStreamEmbryo.init(new MockProducerExecStream(),paramsMockRight);
     rightStreamEmbryo.getStream()->setName("RightProducerExecStream");
 
     CorrelationJoinExecStreamParams paramsJoin;
-    
+
     Correlation correlation(dynamicParamId, 0);
     paramsJoin.correlations.push_back(correlation);
-   
+
     ExecStreamEmbryo joinStreamEmbryo;
     joinStreamEmbryo.init(new CorrelationJoinExecStream(),paramsJoin);
     joinStreamEmbryo.getStream()->setName("CorrelationJoinExecStream");
-    
+
     SharedExecStream pOutputStream = prepareConfluenceGraph(
         leftStreamEmbryo,
         rightStreamEmbryo,
@@ -82,7 +82,9 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
 
     StairCaseExecStreamGenerator rampExpectedGenerator(
         1, paramsMockRight.nRows);
-    verifyOutput(*pOutputStream, 
-                 paramsMockLeft.nRows * paramsMockRight.nRows, 
+    verifyOutput(*pOutputStream,
+                 paramsMockLeft.nRows * paramsMockRight.nRows,
                  rampExpectedGenerator);
 }
+
+// End CorrelationJoinExecStreamTestSuite.cpp

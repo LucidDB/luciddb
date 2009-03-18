@@ -37,13 +37,13 @@ FENNEL_BEGIN_NAMESPACE
 #error "endian not defined"
 #endif
 
-/** \file SqlString.h 
+/** \file SqlString.h
  *
  * SqlString is a library of string fuctions that perform according to
  * the SQL99 standard.
  *
  * These functions are called by ExtendedInstructions in ExtString.h
- * 
+ *
  * This library supports 8-bit characters, labeled somewhat
  * misleadingly as Ascii, and fixed width 2-byte UCS2 characters. No
  * assumptions are made about alignment of ASCII strings. UCS2 strings
@@ -57,7 +57,7 @@ FENNEL_BEGIN_NAMESPACE
  * UTF-8, UTF-16 and UTF-32 encodings.
  *
  * The template is:
- * 
+ *
  * <code> template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>. </code>
  *
  * A <b>code unit</b> is the atomic unit that represents part or all
@@ -83,15 +83,15 @@ FENNEL_BEGIN_NAMESPACE
  */
 
 
-//! Strcat. SQL VARCHAR & CHAR. Ascii & UCS2.  
+//! Strcat. SQL VARCHAR & CHAR. Ascii & UCS2.
 //! dest = dest || str. Returns new length in bytes.
 //!
 //! If either string is variable width, the result is variable
 //! width: per SQL99 Part 2 Section 6.27 Syntax Rule 3.a.i.
-//! If both strings are fixed width, the result is fixed width, 
+//! If both strings are fixed width, the result is fixed width,
 //! per item ii.
 //!
-//! Note that CHAR('1  ') || CHAR('2 ') = CHAR('1  2 ') and 
+//! Note that CHAR('1  ') || CHAR('2 ') = CHAR('1  2 ') and
 //! not CHAR('12   ').
 //!
 //! When called repeatedly to cat multiple strings together (e.g. A || B || C),
@@ -117,15 +117,15 @@ SqlStrCat(char* dest,
 //!
 //! This is an optimization for creating a concatenated string from
 //! two other strings, eliminating a separate string copy. The
-//! assumption is that this is the common case with concatenation. 
+//! assumption is that this is the common case with concatenation.
 //! Subsequent concatenations may occur with other form.
 //!
 //! If either string is variable width, the result is variable
 //! width: per SQL99 Part 2 Section 6.27 Syntax Rule 3.a.i.
-//! If both strings are fixed width, the result is fixed width, 
+//! If both strings are fixed width, the result is fixed width,
 //! item ii.
 //!
-//! Note: CHAR('1  ') || CHAR('2 ') is CHAR('1  2 ') and 
+//! Note: CHAR('1  ') || CHAR('2 ') is CHAR('1  2 ') and
 //! is not CHAR('12   ').
 //!
 //! When used with CHARs, ignore the return value, and set
@@ -157,7 +157,7 @@ SqlStrCmp_Bin(char const * const str1,
 //! str1 and str2 can be any combination of VARCHAR and/or CHAR.
 //! Supports only PAD SPACE mode. TODO: Support NO PAD mode.
 //!
-//! References: 
+//! References:
 //! SQL2003 Part 2 Section 4.2.2.
 //! SQL99 Part 2 Section 4.2.1.
 //! SQL2003 Part 2 Section 8.2 General Rule 3.
@@ -165,7 +165,7 @@ SqlStrCmp_Bin(char const * const str1,
 //! SQL2003 Part 2 Section 10.5 General Rule 2 (default to PAD SPACE).
 //! SQL99 Part 2 Section 10.6 General Rule 2: (default to PAD SPACE).
 //!
-//! Note: Extending a shorter string with spaces is equivalent to 
+//! Note: Extending a shorter string with spaces is equivalent to
 //! ignoring trailing spaces on both strings, and performing a more
 //! conventional strcmp-type operation. For example 'A ' == 'A'
 //! becomes 'A ' == 'A ' or equivalently, 'A', 'A'. 'AB ' == 'A'
@@ -189,14 +189,14 @@ SqlStrCmp(char const * const str1,
 {
     assert(str1LenBytes >= 0);
     assert(str2LenBytes >= 0);
-    
+
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
             char const * start = str1;
             char const * end = str1 + str1LenBytes;
             int str1TrimLenBytes;
             int str2TrimLenBytes;
-    
+
             if (end != start) {
                 end--;
                 while (end != start && *end == trimchar) end--;
@@ -206,14 +206,14 @@ SqlStrCmp(char const * const str1,
 
             start = str2;
             end = str2 + str2LenBytes;
-            
+
             if (end != start) {
                 end--;
                 while (end != start && *end == trimchar) end--;
                 if (end != start || *end != trimchar) end++;
             }
             str2TrimLenBytes = end - start;
-            return SqlStrCmp_Bin(str1, str1TrimLenBytes, 
+            return SqlStrCmp_Bin(str1, str1TrimLenBytes,
                                  str2, str2TrimLenBytes);
 #if 0
             int minLenBytes = str1TrimLenBytes > str2TrimLenBytes ?
@@ -382,13 +382,13 @@ SqlStrOverlay(char* dest,
             if (lenChar < 0 || startChar < 1) {
                 // Overlay is defined in terms of substring. These conditions
                 // would, I believe, generate a substring error. Also
-                // another "reference" sql database gets angry under these 
+                // another "reference" sql database gets angry under these
                 // conditions. Therefore:
                 // Per SQL99 Part 2 Section 6.18 General Rule 3.d, generate a
                 // "data exception substring error". SQL99 22.1 22-011
                 throw "22011";
             }
-    
+
             int leftLenBytes = startChar - 1;         // 1-index to 0-index
             if (leftLenBytes > strLenBytes) leftLenBytes = strLenBytes;
 
@@ -399,7 +399,7 @@ SqlStrOverlay(char* dest,
             assert(leftLenBytes >= 0);
             assert(rightLenBytes >= 0);
             assert(rightP >= str);
-    
+
             if (leftLenBytes + rightLenBytes + overLenBytes > destStorageBytes) {
                 // SQL99 22.1 22-001 "String Data Right truncation"
                 throw "22001";
@@ -413,7 +413,7 @@ SqlStrOverlay(char* dest,
             dp += overLenBytes;
             memcpy(dp, rightP, rightLenBytes);
             dp += rightLenBytes;
-    
+
             return dp - dest;
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
@@ -441,7 +441,7 @@ SqlStrPos(char const * const str,
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
             // SQL99 Part 2 Section 6.17 General Rule 2.a.
-            if (!findLenBytes) return 1;             
+            if (!findLenBytes) return 1;
             // SQL99 Part 2 Section 6.17 General Rule 2.c.
             if (findLenBytes > strLenBytes) return 0;
 
@@ -479,12 +479,12 @@ SqlStrPos(char const * const str,
     return 0; // TODO: Fix this
 }
 
-//! Substring by reference. Returns VARCHAR. Accepts CHAR/VARCHAR. 
+//! Substring by reference. Returns VARCHAR. Accepts CHAR/VARCHAR.
 //! Ascii, no UCS2. Sets dest to start of of substring.
 //! Returns length of substring.
-//! 
+//!
 //! Note that subStart is 1-indexed, as per SQL99 spec.
-//! All substring parameters are handled as signed, as spec implies that they 
+//! All substring parameters are handled as signed, as spec implies that they
 //! could be negative. Some combinations of subStart and subLenBytes may throw an
 //! exception.
 //! Results in a VARCHAR.
@@ -518,11 +518,11 @@ SqlStrSubStr(char const ** dest,
 
             if (subStartChar > strLenBytes || e < 1) {
                 return 0;
-            } 
+            }
 
             int s1 = 1;
             if (subStartChar > s1) s1 = subStartChar;
-        
+
             int e1 = strLenBytes + 1;
             if (e < e1) e1 = e;
 
@@ -534,11 +534,11 @@ SqlStrSubStr(char const ** dest,
                 throw "22001";
             }
             if (l1 < 0) {
-                // Expected behavior not clear. 
+                // Expected behavior not clear.
                 // "data exception substring error". SQL99 22.1 22-011
                 throw "22011";
             }
-    
+
             // - 1 converts from 1-indexed to 0-indexed
             *dest = str + s1 - 1;
             return l1;
@@ -617,7 +617,7 @@ SqlStrAlterCase(char* dest,
 
             switch(Action) {
             case AlterCaseUpper:
-                newLenUChar = u_strToUpper(reinterpret_cast<UChar*>(dest), 
+                newLenUChar = u_strToUpper(reinterpret_cast<UChar*>(dest),
                                            destStorageUChar,
                                            reinterpret_cast<UChar const *>(src),
                                            srcLenUChar,
@@ -626,7 +626,7 @@ SqlStrAlterCase(char* dest,
 
                 break;
             case AlterCaseLower:
-                newLenUChar = u_strToLower(reinterpret_cast<UChar*>(dest), 
+                newLenUChar = u_strToLower(reinterpret_cast<UChar*>(dest),
                                            destStorageUChar,
                                            reinterpret_cast<UChar const *>(src),
                                            srcLenUChar,
@@ -669,7 +669,7 @@ SqlStrAlterCase(char* dest,
 //! Trim character code points that require more than one code unit are
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
-int 
+int
 SqlStrTrim(char* dest,
            int destStorageBytes,
            char const * const str,
@@ -682,7 +682,7 @@ SqlStrTrim(char* dest,
     char const * end = str + strLenBytes;
     assert(strLenBytes >= 0);
     int newLenBytes;
-    
+
     if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
             // ASCII
@@ -749,7 +749,7 @@ SqlStrTrim(char* dest,
 //! Trim character code points that require more than one code unit are
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
-int 
+int
 SqlStrTrim(char const ** result,
            char const * const str,
            int strLenBytes,
@@ -804,7 +804,7 @@ SqlStrTrim(char const ** result,
         // Note: Potentially UTF16 can be handled by UCS2 code
         throw std::logic_error("no UTF8/16/32");
     }
-    
+
     *result = start;
     return end - start;
 }
@@ -886,7 +886,7 @@ SqlStrCastToExact(char const * const str,
                         int64_t tmp;
                         tmp = rv * 10 + (*(ptr++) - '0');
                         if (tmp < rv) {
-                            if (negative) { 
+                            if (negative) {
                                 if (-tmp == std::numeric_limits<int64_t>::min()) {
                                     // okay
                                 } else {
@@ -894,7 +894,7 @@ SqlStrCastToExact(char const * const str,
                                 }
                             } else {
                                 overflow = true;
-                            }                                
+                            }
                         }
                         rv = tmp;
                     } else {
@@ -1037,10 +1037,10 @@ SqlStrCastToExact(char const * const str,
             bool decimal_parsed = false;
             bool roundup = false;
             bool overflow = false;
-            int ignored = 0; 
+            int ignored = 0;
             int decimal_position = 0;
             int mantissa_digits = 0, parsed_digits = 0;
-            int digit;         
+            int digit;
             int64_t mantissa = 0;
             int64_t exponent = 0;
             while (ptr < end) {
@@ -1057,7 +1057,7 @@ SqlStrCastToExact(char const * const str,
                             int64_t tmp;
                             tmp = mantissa * 10 + digit;
                             if (tmp < mantissa) {
-                                if (negative) { 
+                                if (negative) {
                                     if (-tmp == std::numeric_limits<int64_t>::min()) {
                                         // okay
                                     } else {
@@ -1067,7 +1067,7 @@ SqlStrCastToExact(char const * const str,
                                 } else {
                                     // data exception -- numeric value out of range
                                     overflow = true;
-                                }                                
+                                }
                             }
                             mantissa = tmp;
                         } else {
@@ -1098,7 +1098,7 @@ SqlStrCastToExact(char const * const str,
                     // parse exponent, move into next state
                     ptr++;
                     if (ptr < end) {
-                        if (*ptr == '+' || *ptr == '-' || 
+                        if (*ptr == '+' || *ptr == '-' ||
                             (*ptr >= '0' && *ptr <= '9')) {
                             exponent = SqlStrCastToExact
                                 <CodeUnitBytes, MaxCodeUnitsPerCodePoint>
@@ -1108,7 +1108,7 @@ SqlStrCastToExact(char const * const str,
                         }
                     } else {
                         parsed = false;
-                    } 
+                    }
                     ptr = end;
                     break;
                 } else if (*ptr == padChar) {
@@ -1154,7 +1154,7 @@ SqlStrCastToExact(char const * const str,
                 mantissa++;
             }
 
-            int parsed_scale = 
+            int parsed_scale =
                 parsed_digits - ignored - decimal_position - exponent;
 
             if (mantissa_digits - parsed_scale > precision - scale) {
@@ -1162,9 +1162,9 @@ SqlStrCastToExact(char const * const str,
                 // data exception -- numeric value out of range
                 // (if leading significant digits are lost)
                 throw "22003";
-            }                          
+            }
 
-            rv = mantissa;           
+            rv = mantissa;
 
             if (scale > parsed_scale) {
                 int64_t tmp;
@@ -1192,7 +1192,7 @@ SqlStrCastToExact(char const * const str,
                     // Check if digit will increase/overflow
                     if (rv == SqlExactMax(mantissa_digits - adjust_scale, negative)) {
                         mantissa_digits++;
-                        if (mantissa_digits - parsed_scale 
+                        if (mantissa_digits - parsed_scale
                             > precision - scale) {
                             // SQL2003 Part 2 Section 6.12 General Rule 8.a.ii
                             // data exception -- numeric value out of range
@@ -1202,7 +1202,7 @@ SqlStrCastToExact(char const * const str,
                     }
                     rv++;
                 }
-            } 
+            }
 
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
@@ -1351,13 +1351,13 @@ SqlStrCastFromExact(char* dest,
                 // truncation
                 throw "22001";
             }
-            
-            
+
+
 #ifdef SECOND_ALTERNATIVE_IMPLEMENTATION_DOES_NOT_WORK_ON_CYGWIN
-            
-            // Older glibc returns -1 from snprintf. logic gets 
+
+            // Older glibc returns -1 from snprintf. logic gets
             // complicated
-            
+
             rv = snprintf(dest, destStorageBytes, "%" FMT_INT64, src);
             if (rv == destStorageBytes) {
                 // Would have fit, except for the null termination. Do
@@ -1388,7 +1388,7 @@ SqlStrCastFromExact(char* dest,
             // termination is 21 bytes. Add one to round up to 22 bytes.
 
             // if storage >= 22 bytes, snprintf directly into dest
-            // as a first-order optimization. 
+            // as a first-order optimization.
             if (destStorageBytes >= 22) {
                 rv = snprintf(dest, destStorageBytes, "%" FMT_INT64, src);
                 assert(rv <= destStorageBytes); // impossible?
@@ -1467,14 +1467,14 @@ SqlStrCastFromExact(char* dest,
         if (CodeUnitBytes == 1) {
             // ASCII
 
-            // TODO: Check performance of current implementation against 
+            // TODO: Check performance of current implementation against
             // TODO: a version with % and /10, etc.
 
             if (scale == 0) {
                 // Scale is 0, same as normal cast
                 rv = SqlStrCastFromExact
                     <CodeUnitBytes, MaxCodeUnitsPerCodePoint>
-                    (dest, destStorageBytes, src, fixed, padchar);        
+                    (dest, destStorageBytes, src, fixed, padchar);
             } else if (scale > 0) {
                 // Positive Scale
                 int ndigits, decimal, sign = 0;
@@ -1482,13 +1482,13 @@ SqlStrCastFromExact(char* dest,
                 rv = snprintf(buf, 35, "%" FMT_INT64, abs(src));
                 // snprintf does not return null termination in length
                 assert(rv >= 0 && rv <= 35);
-                
+
                 ndigits = rv;
                 if (src < 0) {
                     sign = 1;
                     rv++;
                 }
-                
+
                 // Figure out where to add decimal point
                 decimal = ndigits - scale;
                 if (decimal < 0) {
@@ -1497,24 +1497,24 @@ SqlStrCastFromExact(char* dest,
                 } else {
                     rv += 1;
                 }
-                
+
                 // Check if there is enough space
                 if (rv > destStorageBytes) {
                     // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
                     // length) "22001" data exception -- string data, right
                     // truncation
-                    
+
                     // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
                     // length) "22001" data exception -- string data, right
                     // truncation
                     throw "22001";
                 }
-                
+
                 // Copy into destination buffer, placing the '.' appropriately
                 if (sign) {
                     dest[0] = '-';
                 }
-                
+
                 if (decimal < 0) {
                     int pad = -decimal;
                     dest[sign] = '.';
@@ -1525,12 +1525,12 @@ SqlStrCastFromExact(char* dest,
                     dest[decimal + sign] = '.';
                     memcpy(dest + sign + 1 + decimal, buf + decimal, scale);
                 }
-                
+
                 if (fixed) {
                     memset(dest + rv, padchar, destStorageBytes - rv);
                     rv = destStorageBytes;
-                }        
-                
+                }
+
             } else {
                 // Negative Scale
                 int nzeros = (src != 0)? -scale: 0;
@@ -1548,7 +1548,7 @@ SqlStrCastFromExact(char* dest,
                     // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
                     // length) "22001" data exception -- string data, right
                     // truncation
-            
+
                     // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
                     // length) "22001" data exception -- string data, right
                     // truncation
@@ -1558,12 +1558,12 @@ SqlStrCastFromExact(char* dest,
                 // Add zeros
                 memcpy(dest, buf, len);
                 memset(dest + len, '0', nzeros);
-                
+
                 if (fixed) {
                     memset(dest + rv, padchar, destStorageBytes - rv);
                     rv = destStorageBytes;
-                }        
-            }            
+                }
+            }
         } else if (CodeUnitBytes == 2) {
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
@@ -1620,7 +1620,7 @@ SqlStrCastFromApprox(char* dest,
                 } else {
                     // SQL99 Part 2 Section 6.22 General Rule 8.b.iii.4 (fixed
                     // length) "22001" data exception - string
-                    
+
                     // SQL99 Part 2 Section 6.22 General Rule 9.b.iii.3
                     // (variable length) "22001" data exception -- string data,
                     // right truncation
@@ -1630,7 +1630,7 @@ SqlStrCastFromApprox(char* dest,
 
                 // Note: can't always snprintf directly into dest, due to
                 // null termination wasting a byte.
-                
+
                 //! %E gives [-]d.dddE[+,-]dd format
                 //! %.16 gives, roughly, maximum precision for a double on
                 //! a x86. This should be parameterized.
@@ -1650,7 +1650,7 @@ SqlStrCastFromApprox(char* dest,
                     strcpy(buf, "-INF");
                     rv = 4;
                 }
-                
+
                 // Trim trailing zeros from mantissa, and initial zeros
                 // from exponent
                 int buflen = rv;
@@ -1662,7 +1662,7 @@ SqlStrCastFromApprox(char* dest,
                 if ((buflen > eindex) && buf[eindex] == 'E') {
                     // Normal number with exponent
 
-                    // Round up if needed                    
+                    // Round up if needed
                     if ((buf[eindex-1] >= '5') && (buf[eindex-1] <= '9')) {
                         buf[eindex-1] = '0';
                         for (int i=eindex-2; i>=last_nonzero; i--) {
@@ -1690,13 +1690,13 @@ SqlStrCastFromApprox(char* dest,
                         }
                     }
 
-                    // Ignore last digit 
+                    // Ignore last digit
                     // only need 16 digits in total, 15 digits after '.'
                     for (int i=eindex-2; i>=0; i--) {
                         if ((buf[i] >= '1') && (buf[i] <= '9')) {
                             last_nonzero = i;
                             break;
-                        }                   
+                        }
                     }
                     eneg = (buf[eindex+1] == '-')? 1:0;
                     for (int i = eindex + 1; i < buflen; i++) {
@@ -1724,7 +1724,7 @@ SqlStrCastFromApprox(char* dest,
                         dest[rv++] = 'E';
                         if (eneg) {
                             dest[rv++] = '-';
-                        } 
+                        }
                         // Copy exponent
                         memcpy(dest + rv, buf + (buflen - explen), explen);
                         rv += explen;
@@ -1732,7 +1732,7 @@ SqlStrCastFromApprox(char* dest,
                 } else {
                     // SQL99 Part 2 Section 6.22 General Rule 8.b.iii.4 (fixed
                     // length) "22001" data exception - string
-                    
+
                     // SQL99 Part 2 Section 6.22 General Rule 9.b.iii.3
                     // (variable length) "22001" data exception -- string data,
                     // right truncation
@@ -1892,7 +1892,7 @@ SqlStrCastToChar(char *dest,
 //!
 //! See SQL2003 Part 2 Section 5.3 Format &lt;boolean literal&gt; and
 //! General Rules 10 for details on the format of a boolean.
-//! Boolean can be true, false, or unknown (null). 
+//! Boolean can be true, false, or unknown (null).
 //! This method only casts from 'true' and 'false'.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 bool
@@ -1974,7 +1974,7 @@ SqlStrCastFromBoolean(char* dest,
                 memcpy(dest, "FALSE", 5);
                 rv = 5;
             } else {
-                // SQL2003 Part 2 Section 6.12 General Rule 
+                // SQL2003 Part 2 Section 6.12 General Rule
                 // 10.e.iii (fixed length) and 11.e.iii (variable length)
                 // "22018" data exception -- invalid character value for cast
                 throw "22018";

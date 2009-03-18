@@ -38,7 +38,7 @@ FENNEL_BEGIN_NAMESPACE
  * given the TupleDescriptor obtained from
  * Calculator::getOutputRegisterDescriptor and from
  * Calculator::getInputRegisterDescriptor()
- * 
+ *
  */
 class TupleDataWithBuffer : public TupleData
 {

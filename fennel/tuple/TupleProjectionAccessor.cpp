@@ -37,7 +37,7 @@ TupleProjectionAccessor::TupleProjectionAccessor()
 TupleProjectionAccessor::~TupleProjectionAccessor()
 {
 }
-    
+
 void TupleProjectionAccessor::bind(
     TupleAccessor const &tupleAccessor,
     TupleProjection const &tupleProjection)

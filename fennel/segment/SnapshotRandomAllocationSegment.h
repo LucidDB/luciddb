@@ -65,7 +65,7 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
     // briefly taking a StrictMutex under the covers.  Alternatively,
     // we could keep this class unchanged and then arrange for each
     // thread to get its own instance (maintaining its own private cache).
-    
+
     /**
      * Mutex that ensures only a single thread is modifying modPageEntriesMap.
      * It also ensures that the map is in sync with the allocations and
@@ -158,7 +158,7 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
 
     /**
      * Determines whether a snapshot page corresponds to a newly allocated one.
-     *          
+     *
      * @param pageId pageId of the page in question
      *
      * @return true if the page is newly allocated; false otherwise

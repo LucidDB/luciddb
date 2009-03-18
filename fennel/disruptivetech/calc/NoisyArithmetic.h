@@ -68,7 +68,7 @@ template <typename TMPL>
 
 FENNEL_END_NAMESPACE
 
-#endif 
+#endif
 
 // End NoisyAritchmetic.h
 

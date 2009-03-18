@@ -80,13 +80,13 @@ public:
         BlockId blockId = makeBlockId(iPage);
         getCache().prefetchPage(blockId);
     }
-    
-    virtual void prefetchBatch(uint iPage,uint nPagesPerBatch)    
+
+    virtual void prefetchBatch(uint iPage,uint nPagesPerBatch)
     {
         BlockId blockId = makeBlockId(iPage);
         getCache().prefetchBatch(blockId,nPagesPerBatch);
     }
-    
+
     explicit CacheTest()
     {
         // disable irrelevant threads
@@ -94,7 +94,7 @@ public:
         threadCounts[OP_DEALLOCATE] = 0;
 
         cbPageUsable = cbPageFull;
-        
+
         FENNEL_UNIT_TEST_CASE(CacheTest,testSingleThread);
         FENNEL_UNIT_TEST_CASE(CacheTest,testQuotaCacheAccessor);
         FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
@@ -224,7 +224,7 @@ public:
         // and it was still unable to munmap any pages once it ran out.
         params.cbPage = 32 * 1024;
 
-        params.nMemPagesMax = 
+        params.nMemPagesMax =
             computeMaxPagesUpperBound(addrSpaceSize, params.cbPage);
         params.nMemPagesInit = params.nMemPagesMax;
 
@@ -247,7 +247,7 @@ public:
     {
         struct rlimit savedLimits;
 
-        rlim_t addrSpaceSize = 
+        rlim_t addrSpaceSize =
             setAddressSpaceLimit(SMALL_ADDR_SPACE, savedLimits);
 
         CacheParams params;
@@ -256,11 +256,11 @@ public:
         // testLargeCacheInit.
         params.cbPage = 32 * 1024;
 
-        params.nMemPagesMax = 
+        params.nMemPagesMax =
             computeMaxPagesUpperBound(addrSpaceSize, params.cbPage);
-        params.nMemPagesInit = 
+        params.nMemPagesInit =
             (params.nMemPagesMax / 2) < 1000
-            ? (params.nMemPagesMax / 2) 
+            ? (params.nMemPagesMax / 2)
             : 1000;
 
         BOOST_CHECK_NO_THROW(pCache = Cache::newCache(params));

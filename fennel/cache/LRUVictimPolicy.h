@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
 
 /**
  * LRUVictim is the attributes class which must be a base for any CachePage type
- * which will be cached using an LRUVictimPolicy.  
+ * which will be cached using an LRUVictimPolicy.
  */
 class LRUVictim : public IntrusiveDListNode
 {
@@ -48,7 +48,7 @@ class LRUVictim : public IntrusiveDListNode
  *
  * Note that any realization for PageT must inherit both CachePage and
  * LRUVictim as bases.
- * 
+ *
  */
 template <class PageT>
 class LRUVictimPolicy
@@ -57,13 +57,13 @@ class LRUVictimPolicy
      * SXMutex protecting LRU page chain.
      */
     SXMutex mutex;
-    
+
     /**
      * Most-recently accessed page; this is one end of a queue implemented
      * as a doubly-linked list.
      */
     PageT *pageLRU;
-    
+
     /**
      * Least-recently accessed page; this is the other end of a
      * queue implemented as a doubly-linked list.
@@ -108,7 +108,7 @@ public:
      * Guard for write access to mutex.
      */
     typedef SXMutexExclusiveGuard ExclusiveGuard;
-    
+
     /**
      * All models for VictimPolicy must have a default constructor.
      */
@@ -250,7 +250,7 @@ public:
     /**
      * Receives notification from CacheImpl that a page no longer needs to be
      * pinned.
-     * 
+     *
      * @param page the unpinned page
      */
     void notifyPageUnpin(PageT &page)

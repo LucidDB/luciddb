@@ -19,7 +19,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 // InstructionArgs.h
-// Include this file if you intend to manipulate instructions directly, 
+// Include this file if you intend to manipulate instructions directly,
 // otherwise include Calculator.h
 //
 */
@@ -35,20 +35,20 @@ FENNEL_BEGIN_NAMESPACE
 
 // InstructionArgs
 // A class that can represent all possible arguments to
-// an Instruction constructor. 
+// an Instruction constructor.
 class InstructionArgs
 {
 public:
     explicit
-    InstructionArgs (const vector<RegisterReference*>o) 
+    InstructionArgs (const vector<RegisterReference*>o)
         : operands(o),
           pcSet(false)
     {
     }
 
     explicit
-    InstructionArgs (const vector<RegisterReference*>o, 
-                    TProgramCounter p) 
+    InstructionArgs (const vector<RegisterReference*>o,
+                    TProgramCounter p)
         : operands(o),
           pc(p),
           pcSet(true)

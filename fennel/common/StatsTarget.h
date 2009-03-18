@@ -39,24 +39,24 @@ public:
      * Receives notification that stats polling is starting via a TimerThread.
      */
     virtual void onThreadStart();
-    
+
     /**
      * Receives notification that stats polling via a TimerThread is ending.
      */
     virtual void onThreadEnd();
-    
+
     /**
      * Begins recording a snapshot.  Called before all writeCounter invocations
      * for the snapshot.
      */
     virtual void beginSnapshot() = 0;
-    
+
     /**
      * Finishes recording a snapshot.  Called after all writeCounter invocations
      * for the snapshot.
      */
     virtual void endSnapshot() = 0;
-    
+
     /**
      * Writes one int counter.  This is called from a StatsSource
      * implementation in response to writeStats().

@@ -58,14 +58,14 @@ protected:
      * Dummy stack implementation used when we don't care about keeping track
      * of PageId's on the way down.
      */
-    class NullPageStack 
+    class NullPageStack
     {
     public:
         void push_back(PageId)
         {
         }
     };
-    
+
     inline void accessLeafTuple();
 
     /**
@@ -108,7 +108,7 @@ protected:
      * TupleData used as a temp variable for comparisons while searching.
      */
     TupleData comparisonKeyData;
-    
+
     /**
      * Key being sought.  NULL except while search in progress.
      */
@@ -118,7 +118,7 @@ protected:
      * TupleData for key used in searches.
      */
     TupleData searchKeyData;
-    
+
     /**
      * Searches a node for the current search key.
      *
@@ -204,7 +204,7 @@ protected:
         TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
         PageStack &pageStack, PageId startPageId, LockMode initialLockMode,
         ReadMode readMode);
-    
+
     /**
      * @see searchForKeyTemplate()
      */
@@ -311,7 +311,7 @@ public:
         TupleData const &key,
         DuplicateSeek dupSeek,
         bool leastUpper = true);
-    
+
     /**
      * Searches for the next tuple.  Can be used after either searchFirst
      * or searchForKey, but illegal when isSingular().

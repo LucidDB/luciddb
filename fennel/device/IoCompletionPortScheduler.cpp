@@ -43,7 +43,7 @@ public:
     }
     virtual void run();
 };
-    
+
 IoCompletionPortScheduler::IoCompletionPortScheduler(
     DeviceAccessSchedulerParams const &params)
 {
@@ -57,7 +57,7 @@ IoCompletionPortScheduler::IoCompletionPortScheduler(
     if (!hCompletionPort) {
         throw SysCallExcn("CreateIoCompletionPort failed for scheduler");
     }
-    
+
     for (uint i = 0; i < params.nThreads; ++i) {
         IoCompletionPortThread *pThread = new IoCompletionPortThread(*this);
         pThread->start();
@@ -78,7 +78,7 @@ bool IoCompletionPortScheduler::schedule(RandomAccessRequest &request)
     assert(isStarted());
 
     // TODO:  use ReadFileScatter/WriteFileGather
-    
+
     FileSize cbOffset = request.cbOffset;
     RandomAccessRequest::BindingListMutator bindingMutator(request.bindingList);
     while (bindingMutator) {

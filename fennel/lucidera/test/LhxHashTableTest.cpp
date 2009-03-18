@@ -43,7 +43,7 @@ class LhxHashTableTest : virtual public SegStorageTestBase
     LhxHashInfo hashInfo;
     uint buildInputIndex;
 
-    uint writeHashTable(LhxHashInfo const &hashInfo, LhxHashTable &hashTable, 
+    uint writeHashTable(LhxHashInfo const &hashInfo, LhxHashTable &hashTable,
         SharedLhxPartition destPartition);
 
     uint readPartition(
@@ -84,7 +84,7 @@ void LhxHashTableTest::testCaseSetUp()
     openRandomSegment();
     hashInfo.externalSegmentAccessor.pSegment = pRandomSegment;
     hashInfo.externalSegmentAccessor.pCacheAccessor = pCache;
-    hashInfo.memSegmentAccessor = 
+    hashInfo.memSegmentAccessor =
         pSegmentFactory->newScratchSegment(pCache, 100);
 }
 
@@ -99,7 +99,7 @@ void LhxHashTableTest::testCaseTearDown()
 
     hashInfo.memSegmentAccessor.pSegment->deallocatePageRange(NULL_PAGE_ID, NULL_PAGE_ID);
     hashInfo.externalSegmentAccessor.reset();
-    hashInfo.memSegmentAccessor.reset(); 
+    hashInfo.memSegmentAccessor.reset();
     SegStorageTestBase::testCaseTearDown();
 }
 
@@ -113,7 +113,7 @@ uint LhxHashTableTest::writeHashTable(LhxHashInfo const &hashInfo,
     hashTableReader.init(&hashTable, hashInfo, buildInputIndex);
     hashTableReader.bindKey(NULL);
     TupleData outputTuple;
-        
+
     outputTuple.compute(hashInfo.inputDesc[destPartition->inputIndex]);
 
     //write to a paritition
@@ -135,7 +135,7 @@ uint LhxHashTableTest::readPartition(LhxHashInfo &hashInfo,
     TupleData outputTuple;
     TuplePrinter tuplePrinter;
     TupleDescriptor &inputTupleDesc = hashInfo.inputDesc[1];
-        
+
     outputTuple.compute(hashInfo.inputDesc[srcPartition->inputIndex]);
 
     reader.open(srcPartition, (LhxHashInfo const &)hashInfo);
@@ -155,7 +155,7 @@ uint LhxHashTableTest::readPartition(LhxHashInfo &hashInfo,
 
             tuplesRead ++;
         }
-        
+
         reader.consumeTuple();
     }
     reader.close();
@@ -177,7 +177,7 @@ void LhxHashTableTest::testInsert(
 {
     LhxHashTable hashTable;
 
-    hashInfo.numCachePages = maxBlockCount; 
+    hashInfo.numCachePages = maxBlockCount;
 
     TupleAttributeDescriptor attrDesc_int32 =
         TupleAttributeDescriptor(
@@ -215,7 +215,7 @@ void LhxHashTableTest::testInsert(
      * Calculate key cardinality, assuming there's no correlation between key
      * cols.
      */
-    uint cndKeys = 1;    
+    uint cndKeys = 1;
     for (i = 0; i < numKeyCols; i ++) {
         cndKeys *= repeatSeqValues[i];
     }
@@ -257,29 +257,29 @@ void LhxHashTableTest::testInsert(
      * Insert some tuples.
      */
     for (i = 0; i < numRows; i ++) {
-        
+
         for (j = 0; j < numCols; j++) {
             colValues[j] = i % repeatSeqValues[j];
             inputTuple[j].pData = (PBuffer)&(colValues[j]);
         }
-        
+
         status =
             hashTable.addTuple(inputTuple);
-        
+
         assert(status);
     }
-        
+
     LhxHashTableReader hashTableReader;
     hashTableReader.init(&hashTable, hashInfo, buildInputIndex);
     TupleData outputTuple;
-    
+
     outputTuple.compute(inputTupleDesc);
-    
+
     TuplePrinter tuplePrinter;
     ostringstream dataTrace;
     dataTrace << "All Inserted Tuples:\n";
     uint numTuples = 0;
-    
+
     /*
      * verify that the hash table reader can see all the tuples.
      */
@@ -289,7 +289,7 @@ void LhxHashTableTest::testInsert(
         numTuples ++;
     }
     assert (numTuples == numRows);
-    
+
     /*
      * Verify that the keys are inserted.
      */
@@ -302,12 +302,12 @@ void LhxHashTableTest::testInsert(
      * matched rows.
      */
     for (i = 0; i < numRows; i ++) {
-        
+
         for (j = 0; j < numCols; j++) {
             colValues[j] = i % repeatSeqValues[j];
             inputTuple[j].pData = (PBuffer)&(colValues[j]);
         }
-        
+
         PBuffer matchingKey =
             hashTable.findKey(inputTuple, keyColsProj, true);
 
@@ -320,13 +320,13 @@ void LhxHashTableTest::testInsert(
             }
         }
     }
-    
+
     assert (numTuples == numRows);
-    
+
     if (dumpHashTable) {
         LhxHashTableDump hashTableDump(
             TRACE_INFO,
-            shared_from_this(), 
+            shared_from_this(),
             "LhxHashTableTest");
         hashTableDump.dump(hashTable);
         hashTableDump.dump(dataTrace.str());
@@ -339,9 +339,9 @@ void LhxHashTableTest::testInsert(
 
         //write to a paritition
         uint tuplesWritten =
-            writeHashTable((LhxHashInfo const &)hashInfo, 
+            writeHashTable((LhxHashInfo const &)hashInfo,
                 hashTable, partition);
-        
+
         //read from the same paritition
         ostringstream dataTrace;
 
@@ -353,7 +353,7 @@ void LhxHashTableTest::testInsert(
         if (dumpHashTable) {
             LhxHashTableDump hashTableDump(
                 TRACE_INFO,
-                shared_from_this(), 
+                shared_from_this(),
                 "LhxHashTableTest");
             hashTableDump.dump(dataTrace.str());
         }
@@ -386,12 +386,12 @@ void LhxHashTableTest::testInsert(
 
         assert (tuplesWritten[0] == numRows &&
                 tuplesWritten[0] == tuplesWritten[1]);
-        
+
         uint tuplesRead[2];
         SharedLhxPlan plan = SharedLhxPlan(new LhxPlan());
 
         plan->init(WeakLhxPlan(), 0, partitions, false);
-        
+
         LhxPlan *leafPlan;
         uint numLeafPlanCreated = 1;
         uint numLeafPlanRead = 0;
@@ -419,10 +419,10 @@ void LhxHashTableTest::testInsert(
 
         tuplesRead[0] = 0;
         tuplesRead[1] = 0;
-            
-        // get the first leaf 
+
+        // get the first leaf
         leafPlan = plan->getFirstLeaf();
-        
+
         while (leafPlan) {
             numLeafPlanRead ++;
             for (int j = 0; j < 2; j ++) {
@@ -436,14 +436,14 @@ void LhxHashTableTest::testInsert(
                 if (dumpHashTable) {
                     LhxHashTableDump hashTableDump(
                         TRACE_INFO,
-                        shared_from_this(), 
+                        shared_from_this(),
                         "LhxHashTableTest");
                     hashTableDump.dump(dataTrace.str());
                 }
             }
             leafPlan = leafPlan->getNextLeaf();
         }
-        
+
         assert (numLeafPlanRead == numLeafPlanCreated);
         assert ((tuplesRead[0] == tuplesRead[1]) &&
             (tuplesRead[0] == numRows));

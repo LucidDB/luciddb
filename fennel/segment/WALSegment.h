@@ -39,16 +39,16 @@ FENNEL_BEGIN_NAMESPACE
 class WALSegment : public DelegatingSegment
 {
     friend class SegmentFactory;
-    
+
     mutable StrictMutex mutex;
     PageSet dirtyPageSet;
 
     explicit WALSegment(SharedSegment logSegment);
-    
+
 public:
 
     virtual ~WALSegment();
-    
+
     /**
      * Determines the ID of the lowest dirty log page.
      *

@@ -44,7 +44,7 @@ private:
      * uniform random number generator
      */
     boost::mt19937 uniformRng;
-    
+
     /**
      * Bernoulli distribution converter
      */
@@ -55,7 +55,7 @@ private:
      * a uniform RNG.
      */
     boost::variate_generator<
-        boost::mt19937 &, 
+        boost::mt19937 &,
         boost::bernoulli_distribution<float> > rng;
 
 public:

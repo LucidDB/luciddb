@@ -84,7 +84,7 @@ class LhxPartitionWriter
      * Stream used for writing to a partition
      */
     SharedSegOutputStream pSegOutputStream;
-    
+
     /**
      * Tuple accessor to marshal the tuple from join inputs.
      */
@@ -126,7 +126,7 @@ class LhxPartitionReader
      * Helper used for reading a partition
      */
     SharedSegInputStream pSegInputStream;
-    
+
     /**
      * Tuple accessor to unmarshal the disk content to the outputTuple.
      */
@@ -165,7 +165,7 @@ public:
 // all uppercase with underscores.  Enums declared at top level
 // need prefix, e.g. LHX_PARTITION_UNDERFLOW, since we don't use
 // namespaces below the fennel level.
-    
+
 enum LhxPartitionState {
     PartitionUnderflow, PartitionEndOfData
 };
@@ -235,7 +235,7 @@ struct LhxPartitionInfo
      * memory (i.e. from the hash table).
      */
     bool partitionMemory;
-    
+
     LhxPartitionInfo() {reader = NULL; hashTableReader = NULL;}
 
     // REVIEW jvs 25-Aug-2006:  Unless input parameter can be NULL,
@@ -310,7 +310,7 @@ class LhxPlan : public enable_shared_from_this<LhxPlan>
     WeakLhxPlan parentPlan;
     SharedLhxPlan firstChildPlan;
     SharedLhxPlan siblingPlan;
-    
+
     /**
      * Add sibling plan.
      */
@@ -368,7 +368,7 @@ public:
         bool enableSubPartStat,
         bool enableSwing);
 
-    
+
     /**
      * Generate partitions for the child plans.
      */
@@ -387,7 +387,7 @@ public:
      */
     void createChildren(LhxPartitionInfo &partInfo, bool enableSubPartStat,
         bool enableSwing);
-    
+
     /**
      * Get the partition level of this plan.
      */
@@ -410,7 +410,7 @@ public:
     /*
      * Get the join side corresponding to the input index.
      * 0 : probe side
-     * 1 : build side 
+     * 1 : build side
      */
     inline uint getJoinSide(uint inputIndex);
 
@@ -521,12 +521,12 @@ inline SharedLhxPartition LhxPlan::getPartition(uint inputIndex)
 inline uint LhxPlan::getJoinSide(uint inputIndex)
 {
     uint i = 0;
-    while ((joinSideToInputMap[i] != inputIndex) 
+    while ((joinSideToInputMap[i] != inputIndex)
         && (i < partitions.size()))
     {
         i ++;
     }
-    
+
     return i;
 }
 

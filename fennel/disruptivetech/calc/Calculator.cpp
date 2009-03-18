@@ -152,10 +152,10 @@ void  Calculator::unbind(RegisterReference::ERegisterSet regset, bool unbindDesc
 }
 
 void
-	Calculator::bind(RegisterReference::ERegisterSet regset,
-	                 TupleData* data,
-	                 const TupleDescriptor& desc)
-	{
+    Calculator::bind(RegisterReference::ERegisterSet regset,
+                     TupleData* data,
+                     const TupleDescriptor& desc)
+{
     assert(mIsUsingAssembler ? mIsAssembling : true);
     assert(regset < RegisterReference::ELastSet);
     assert(data); // Not strictly needed

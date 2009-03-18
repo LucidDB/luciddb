@@ -49,13 +49,13 @@ class FuzzyCheckpointSet : public PagePredicate
     std::vector<BlockId> newDirtyPages;
 
     PagePredicate *pDelegatePagePredicate;
-    
+
 public:
     /**
      * Constructs a new FuzzyCheckpointSet.
      */
     explicit FuzzyCheckpointSet();
-    
+
     /**
      * Forget all dirty pages.
      */

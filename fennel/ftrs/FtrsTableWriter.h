@@ -42,7 +42,7 @@ struct FtrsTableIndexWriterParams : public BTreeInsertExecStreamParams
 /**
  * FtrsTableWriterParams defines parameters for instantiating a FtrsTableWriter.
  */
-struct FtrsTableWriterParams : public ConduitExecStreamParams 
+struct FtrsTableWriterParams : public ConduitExecStreamParams
 {
     /**
      * Parameters for individual indexes making up table.
@@ -61,7 +61,7 @@ struct FtrsTableWriterParams : public ConduitExecStreamParams
     TupleProjection updateProj;
 };
 
-struct FtrsTableIndexWriter 
+struct FtrsTableIndexWriter
 {
     SharedBTreeWriter pWriter;
     Distinctness distinctness;
@@ -107,7 +107,7 @@ class FtrsTableWriter : public LogicalTxnParticipant
     inline void copyNewValues();
     inline void copyOldValues();
     inline bool searchForIndexKey(FtrsTableIndexWriter &);
-    
+
     explicit FtrsTableWriter(FtrsTableWriterParams const &params);
     PageOwnerId getTableId();
 
@@ -116,22 +116,22 @@ public:
      * LogicalActionType for inserting a table tuple.
      */
     static const LogicalActionType ACTION_INSERT;
-    
+
     /**
      * LogicalActionType for deleting a table tuple.
      */
     static const LogicalActionType ACTION_DELETE;
-    
+
     /**
      * LogicalActionType for updating a table tuple.
      */
     static const LogicalActionType ACTION_UPDATE;
-    
+
     /**
      * LogicalActionType for reversing the update of a table tuple.
      */
     static const LogicalActionType ACTION_REVERSE_UPDATE;
-    
+
     /**
      * Reads all tuples from a buffer and uses them as input to perform the
      * requested action on the target table.

@@ -46,7 +46,7 @@ struct VersionedExtentAllocationNode : public StoredNode
     {
         return reinterpret_cast<VersionedPageEntry *>(this+1)[i];
     }
-    
+
     VersionedPageEntry const &getPageEntry(uint i) const
     {
         return reinterpret_cast<VersionedPageEntry const *>(this+1)[i];
@@ -121,7 +121,7 @@ PageId VersionedRandomAllocationSegment::getTempAllocNodePage(
 
     // Update the map
     pModAllocNode->updateCount++;
-    
+
     if (iter == allocationNodeMap.end()) {
         allocationNodeMap.insert(
             ModifiedAllocationNodeMap::value_type(

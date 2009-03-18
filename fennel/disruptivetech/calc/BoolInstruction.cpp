@@ -67,12 +67,12 @@ BoolAnd::describe(string& out, bool values) const {
 }
 
 
-const char * 
+const char *
 BoolNot::longName()
 {
     return "BoolNot";
 }
-const char * 
+const char *
 BoolNot::shortName()
 {
     return "NOT";
@@ -88,12 +88,12 @@ BoolNot::describe(string& out, bool values) const {
 }
 
 
-const char * 
+const char *
 BoolMove::longName()
 {
     return "BoolMove";
 }
-const char * 
+const char *
 BoolMove::shortName()
 {
     return "MOVE";
@@ -109,12 +109,12 @@ BoolMove::describe(string& out, bool values) const {
 }
 
 
-const char * 
+const char *
 BoolRef::longName()
 {
     return "BoolRef";
 }
-const char * 
+const char *
 BoolRef::shortName()
 {
     return "REF";
@@ -151,13 +151,13 @@ BoolIs::describe(string& out, bool values) const {
 }
 
 
-const char * 
-BoolIsNot::longName() 
+const char *
+BoolIsNot::longName()
 {
     return "BoolIsNot";
 }
-const char * 
-BoolIsNot::shortName() 
+const char *
+BoolIsNot::shortName()
 {
     return "ISNOT";
 }
@@ -192,13 +192,13 @@ BoolEqual::describe(string& out, bool values) const {
 }
 
 
-const char * 
-BoolNotEqual::longName() 
+const char *
+BoolNotEqual::longName()
 {
     return "BoolNotEqual";
 }
-const char * 
-BoolNotEqual::shortName() 
+const char *
+BoolNotEqual::shortName()
 {
     return "NE";
 }
@@ -212,13 +212,13 @@ BoolNotEqual::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
 }
 
-const char * 
-BoolGreater::longName() 
+const char *
+BoolGreater::longName()
 {
     return "BoolGreater";
 }
-const char * 
-BoolGreater::shortName() 
+const char *
+BoolGreater::shortName()
 {
     return "GT";
 }
@@ -232,13 +232,13 @@ BoolGreater::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
 }
 
-const char * 
-BoolGreaterEqual::longName() 
+const char *
+BoolGreaterEqual::longName()
 {
     return "BoolGreaterEqual";
 }
-const char * 
-BoolGreaterEqual::shortName() 
+const char *
+BoolGreaterEqual::shortName()
 {
     return "GE";
 }
@@ -252,13 +252,13 @@ BoolGreaterEqual::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
 }
 
-const char * 
-BoolLess::longName() 
+const char *
+BoolLess::longName()
 {
     return "BoolLess";
 }
-const char * 
-BoolLess::shortName() 
+const char *
+BoolLess::shortName()
 {
     return "LT";
 }
@@ -272,13 +272,13 @@ BoolLess::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
 }
 
-const char * 
-BoolLessEqual::longName() 
+const char *
+BoolLessEqual::longName()
 {
     return "BoolLessEqual";
 }
-const char * 
-BoolLessEqual::shortName() 
+const char *
+BoolLessEqual::shortName()
 {
     return "LE";
 }
@@ -292,13 +292,13 @@ BoolLessEqual::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
 }
 
-const char * 
-BoolIsNull::longName() 
+const char *
+BoolIsNull::longName()
 {
     return "BoolIsNull";
 }
-const char * 
-BoolIsNull::shortName() 
+const char *
+BoolIsNull::shortName()
 {
     return "ISNULL";
 }
@@ -312,13 +312,13 @@ BoolIsNull::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
 }
 
-const char * 
-BoolIsNotNull::longName() 
+const char *
+BoolIsNotNull::longName()
 {
     return "BoolIsNotNull";
 }
-const char * 
-BoolIsNotNull::shortName() 
+const char *
+BoolIsNotNull::shortName()
 {
     return "ISNOTNULL";
 }
@@ -332,13 +332,13 @@ BoolIsNotNull::describe(string& out, bool values) const {
     describeHelper(out, values, longName(), shortName(), mResult, mOp1, mOp2);
 }
 
-const char * 
-BoolToNull::longName() 
+const char *
+BoolToNull::longName()
 {
     return "BoolToNull";
 }
-const char * 
-BoolToNull::shortName() 
+const char *
+BoolToNull::shortName()
 {
     return "TONULL";
 }

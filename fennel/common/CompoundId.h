@@ -75,7 +75,7 @@ class CompoundId
     static const uint64_t DEVICE_ID_MASK =   0xFFF0000000000000ULL;
     static const uint64_t BYTE_OFFSET_MASK = 0x000FFFFF00000000ULL;
     static const uint64_t BLOCK_NUM_MASK =   0x00000000FFFFFFFFULL;
-    
+
     /**
      * Number of bits to right-shift a masked PageId to extract the DeviceId.
      */
@@ -101,7 +101,7 @@ public:
      * Extracts the BlockNum from a PageId or BlockId.
      *
      * @param pageId the PageId or BlockId to access
-     * 
+     *
      * @return the extracted BlockNum
      */
     template <class PageOrBlockId>
@@ -135,7 +135,7 @@ public:
     {
         setBlockNum(pageId,getBlockNum(pageId)+1);
     }
-    
+
     /**
      * Decrements the BlockNum of a PageId or BlockId.
      *
@@ -146,7 +146,7 @@ public:
     {
         setBlockNum(pageId,getBlockNum(pageId)-1);
     }
-    
+
     /**
      * Extracts the DeviceId from a PageId or BlockId.
      *
@@ -160,7 +160,7 @@ public:
         return DeviceId(
             (opaqueToInt(pageId) & DEVICE_ID_MASK) >> DEVICE_ID_SHIFT);
     }
-        
+
     /**
      * Sets just the DeviceId of a PageId or BlockId.
      *
@@ -229,7 +229,7 @@ public:
             opaqueToInt(getPageId(segByteId))
             | (SegByteIdPrimitive(offset) << BYTE_OFFSET_SHIFT));
     }
-    
+
     /**
      * Compares two PageIds.
      *
@@ -245,7 +245,7 @@ public:
         return (p1 > p2) ? 1
             : ((p1 < p2) ? -1 : 0);
     }
-    
+
     /**
      * Compares two SegByteIds.
      *
@@ -261,7 +261,7 @@ public:
         return (t1 > t2) ? 1
             : ((t1 < t2) ? -1 : 0);
     }
-    
+
     /**
      * @return the maximum number of devices permitted by the page ID
      * encoding

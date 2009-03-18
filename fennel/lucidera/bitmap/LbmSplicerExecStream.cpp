@@ -41,7 +41,7 @@ void LbmSplicerExecStream::prepare(LbmSplicerExecStreamParams const &params)
         writeBTreeDesc,
         params.bTreeParams[0],
         params.pCacheAccessor);
-    
+
     insertRowCountParamId = params.insertRowCountParamId;
     computeRowCount = (opaqueToInt(insertRowCountParamId) == 0);
     writeRowCountParamId = params.writeRowCountParamId;
@@ -132,7 +132,7 @@ void LbmSplicerExecStream::open(bool restart)
             emptyTable = false;
             emptyTableUnknown = true;
         }
-        
+
         bTreeWriter = SharedBTreeWriter(
             new BTreeWriter(writeBTreeDesc, scratchAccessor, emptyTable));
         bTreeWriterMoved = true;
@@ -220,9 +220,9 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     // no more input; write out last bitmap entry and produce final row count
-    // which is either stored in a dynamic parameter set upstream or is 
+    // which is either stored in a dynamic parameter set upstream or is
     // computed by splicer
-    
+
     if (pInAccessor->getState() == EXECBUF_EOS) {
         if (currEntry) {
             insertBitmapEntry();
@@ -483,11 +483,11 @@ void LbmSplicerExecStream::findBetterEntry(TupleData const &bitmapEntry)
                         bTreeTupleData[0].pData));
             LcsRid newRid = *reinterpret_cast<LcsRid const *>
                 (bitmapEntry[0].pData);
-            LcsRid currRid = 
+            LcsRid currRid =
                 LbmSegment::roundToByteBoundary(pCurrentEntry->getStartRID());
 
             if ((currRid > newRid && currRid > bTreeRid) ||
-                (newRid >= bTreeRid && bTreeRid > currRid)) 
+                (newRid >= bTreeRid && bTreeRid > currRid))
             {
                 // If the current entry is a superset of the btree entry found,
                 // then ignore the btree entry, and continuing splicing into

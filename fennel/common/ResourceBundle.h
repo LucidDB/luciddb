@@ -100,21 +100,21 @@ _GRB *makeInstance(
             _GRB *parentBundle = makeInstance<_GRB, _BC, _BC_ITER>(
                 bundleCache,
                 locale.getParentLocale());
-      
+
             bundle->setParent(parentBundle);
         } else if (locale != Locale("")) {
             // lookup the default bundle
             _GRB *defaultBundle = makeInstance<_GRB, _BC, _BC_ITER>(
                 bundleCache,
                 Locale(""));
-      
+
             bundle->setParent(defaultBundle);
         }
-    
+
         bundleCache[locale] = bundle;
         return bundle;
     }
-  
+
     return (*iter).second;
 }
 

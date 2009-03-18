@@ -39,7 +39,7 @@ const uint lnByte = 3;          // length of byte expressed in hex char inc.
                                 // spaces
 const uint lnChar = 1;          // length of a char field
 
-// number of hex bytes in a line 
+// number of hex bytes in a line
 const uint nByte = (lnLen - lnValIdx - lnColLen - lnSep) / (lnByte + lnChar);
 
 // offset to byte fields
@@ -90,7 +90,7 @@ void LcsClusterDump::dump(
     setHdrOffsets(pHdr);
 
     // print header
-    
+
     callTrace("Cluster Page Dump - PageId %ld", pageId);
     callTrace("-----------------------------");
     callTrace("Header");
@@ -117,7 +117,7 @@ void LcsClusterDump::dump(
         // Need to find out the offset to apply to column offsets.
         int col = i % nClusterCols;
         uint16_t deltaVal = delta[col];
-        
+
         switch (pBatch[i].mode) {
         case LCS_COMPRESSED:
             mode = "Compressed";
@@ -145,7 +145,7 @@ void LcsClusterDump::dump(
 
             nBits = calcWidth(pBatch[i].nVal);
 
-            // calculate the bit vector widthes, sum(w[i]) is nBits 
+            // calculate the bit vector widthes, sum(w[i]) is nBits
             iV = bitVecWidth(nBits, w);
 
             // this is where the bit vectors start
@@ -165,7 +165,7 @@ void LcsClusterDump::dump(
                 buf[0]= 0;
                 count = min(uint(pBatch[i].nRow - j), MaxReadBatch);
                 // read rows j to j+count -1
-                readBitVecs(v, iV, w, p, j, count);     
+                readBitVecs(v, iV, w, p, j, count);
 
                 for (k = 0; k < count; k++, j++) {
                     if ((j % 8) == 0) {
@@ -255,14 +255,14 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV, uint col)
     st[lnValIdx + l] = 0;
 
     for(j = 0 ; j < sz; j++) {
-        if (j && ((j % nByte) == 0)) {  
+        if (j && ((j % nByte) == 0)) {
             callTrace("%s", st);
             memset(st, ' ', lnLen);
         }
-        
+
         k = oByte + lnByte * (j % nByte);
         l = sprintf(st + k, "%2X ", p[j]);
-        st[k + l] = ' '; 
+        st[k + l] = ' ';
         st[oStr + (j % nByte)] =  isprint(p[j]) ? p[j] : '.';
     }
 

@@ -54,13 +54,13 @@ SharedLogicalTxnParticipant BTreeRecoveryFactory::loadParticipant(
     if (pParticipant) {
         return pParticipant;
     }
-    
+
     pParticipant = SharedBTreeWriter(
         new BTreeWriter(
             descriptor,scratchAccessor));
 
     writerMap[descriptor.rootPageId] = pParticipant;
-    
+
     return pParticipant;
 }
 

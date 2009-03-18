@@ -89,3 +89,5 @@ boost::format ResourceDefinition::prepareFormatter(int numArgs) const
 }
 
 FENNEL_END_CPPFILE("$Id$");
+
+// End ResourceDefinition.cpp

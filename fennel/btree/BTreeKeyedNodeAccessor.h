@@ -47,17 +47,17 @@ public:
         NodeAccessor::tupleAccessor.setCurrentTupleBuf(
             NodeAccessor::getEntryForReadInline(node,iEntry));
     }
-    
+
     virtual void accessTuple(BTreeNode const &node,uint iEntry)
     {
         return accessTupleInline(node,iEntry);
     }
-    
+
     virtual void unmarshalKey(TupleData &keyData)
     {
         pKeyAccessor->unmarshal(keyData);
     }
-    
+
     virtual uint binarySearch(
         BTreeNode const &node,
         TupleDescriptor const &keyDescriptor,
@@ -106,7 +106,7 @@ public:
         if (((base != probe) && (base < node.nEntries)) ||
             ((node.nEntries == 1) && (node.height != 0)))
         {
-            // one entry: +infinity            
+            // one entry: +infinity
             accessTupleInline(node,base);
         }
         return base;

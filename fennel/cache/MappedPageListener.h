@@ -34,21 +34,21 @@ class CachePage;
  * implementations (not pure virtual) so derived classes only need to override
  * those of interest.
  */
-class MappedPageListener 
+class MappedPageListener
 {
 public:
     virtual ~MappedPageListener();
 
     /**
      * Receives notification from CacheImpl as soon as a page is mapped, before
-     * any I/O is initiated to retrieve the page contents. 
+     * any I/O is initiated to retrieve the page contents.
      * Called with the page mutex held, so the implementation must
      * take care to avoid deadlock.
      *
      * @param page the page being mapped
      */
     virtual void notifyPageMap(CachePage &page);
-    
+
     /**
      * Receives notification from CacheImpl just before a page is unmapped.
      * Called with the page mutex held, so the implementation must take care to
@@ -57,7 +57,7 @@ public:
      * @param page the page being unmapped
      */
     virtual void notifyPageUnmap(CachePage &page);
-    
+
     /**
      * Receives notification from CacheImpl after a page read completes.
      * Called with the page mutex held, so the implementation must take care to
@@ -66,7 +66,7 @@ public:
      * @param page the page read
      */
     virtual void notifyAfterPageRead(CachePage &page);
-    
+
     /**
      * Receives notification from CacheImpl the first time a page becomes dirty
      * after it has been mapped (but before the contents have changed).
@@ -92,7 +92,7 @@ public:
      * @param page the page to be flushed
      */
     virtual bool canFlushPage(CachePage &page);
-    
+
     /**
      * Receives notification from CacheImpl just before a dirty page is flushed
      * to disk.  Allows some logging action to be taken; for example, flushing
@@ -103,7 +103,7 @@ public:
      * @param page the page to be flushed
      */
     virtual void notifyBeforePageFlush(CachePage &page);
-    
+
     /**
      * Receives notification from CacheImpl when a page flush completes
      * successfully.  Called with the page mutex held, so the implementation

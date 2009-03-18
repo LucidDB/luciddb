@@ -52,7 +52,7 @@ LogicalTxn::LogicalTxn(
     // states, eliminating the overhead of a full-cache checkpoint when log is
     // committed.
     pOutputStream->setWriteLatency(WRITE_EAGER_ASYNC);
-    
+
     state = STATE_LOGGING_TXN;
     svpt.cbActionPrev = 0;
     svpt.cbLogged = 0;
@@ -141,7 +141,7 @@ void LogicalTxn::rollback(SavepointId const *pSvptId)
     // do this now so that participants don't try to write to log during
     // rollback
     forgetAllParticipants();
-    
+
     SharedSegment pLongLogSegment = pOutputStream->getSegment();
     SharedByteInputStream pInputStream =
         pOutputStream->getInputStream(SEEK_STREAM_END);
@@ -211,7 +211,7 @@ void LogicalTxn::rollbackToSavepoint(LogicalTxnSavepoint &oldSvpt)
         participants.begin(),
         participants.end(),
         boost::bind(&LogicalTxnParticipant::enableLogging,_1,false));
-    
+
     // TODO:  for short logs, could just reuse memory
 
     SharedByteInputStream pInputStream =

@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * change before execution terminates, or change before a Calculator
  * XO can read the message.
  */
-class CalcMessage 
+class CalcMessage
 {
 public:
     /**
@@ -40,7 +40,7 @@ public:
      * strA can be either null terminated or simply 5 characters long.
      */
     explicit
-    CalcMessage(const char* strA, TProgramCounter pcA) 
+    CalcMessage(const char* strA, TProgramCounter pcA)
         : pc(pcA)
     {
         memcpy(str, strA, 5);

@@ -98,7 +98,7 @@ void LcsClusterReplaceExecStream::getResourceRequirements(
     // original cluster values -- one for the rid to pageId btree and another
     // for the actual cluster page.
     minQuantity.nCachePages += 2;
-    
+
     optQuantity = minQuantity;
 }
 
@@ -118,9 +118,9 @@ void LcsClusterReplaceExecStream::open(bool restart)
 
     // Determine how many rows are in the original cluster
     origNumRows = pOrigClusterReader->getNumRows();
-    
+
     if (!restart) {
-       
+
         // Save the root pageId in a dynamic parameter so it can be read
         // downstream, if a parameter is specified
         if (opaqueToInt(newClusterRootParamId) > 0) {

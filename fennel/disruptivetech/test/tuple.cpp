@@ -124,7 +124,7 @@ tupleFiddle()
 
   // Create another TupleData object that will be nullable
   TupleData tupleDataNullable = tupleDataFixed;
-  
+
   // null out last element of each type
   for (i = 1; i <= 3; i++) {
     tupleDataNullable[(i*num)-1].pData = NULL;
@@ -139,7 +139,7 @@ tupleFiddle()
 
   // Re-point third string to part way into first string
   tupleDataNullable[2].pData = (tupleDataNullable[0].pData+1);
-  
+
   // Print out the modified nullable tuple
   tuplePrinter.print(cout, tupleDesc, tupleDataNullable);
   cout << endl;
@@ -158,3 +158,4 @@ boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
     return NULL;
 }
 
+// End tuple.cpp

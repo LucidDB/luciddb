@@ -32,7 +32,7 @@ class LinearViewSegmentTest : virtual public SegmentTestBase
 {
     uint nDiskPagesTotal;
     PageId firstPageId;
-    
+
 public:
     explicit LinearViewSegmentTest()
     {
@@ -40,7 +40,7 @@ public:
         FENNEL_UNIT_TEST_CASE(SegmentTestBase,testSingleThread);
         FENNEL_UNIT_TEST_CASE(PagingTestBase,testMultipleThreads);
     }
-  
+
     virtual void openSegmentStorage(DeviceMode openMode)
     {
         nDiskPages = nDiskPagesTotal;
@@ -56,7 +56,7 @@ public:
             pSegmentFactory->newLinearViewSegment(pRandomSegment,firstPageId);
         pLinearSegment = pLinearViewSegment;
     }
-    
+
     virtual void testAllocateAll()
     {
         SegmentTestBase::testAllocateAll();

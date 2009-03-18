@@ -43,11 +43,11 @@ class IoCompletionPortThread;
 class IoCompletionPortScheduler : public DeviceAccessScheduler
 {
     friend class IoCompletionPortThread;
-    
+
     HANDLE hCompletionPort;
     std::vector<IoCompletionPortThread *> threads;
     bool quit;
-    
+
     bool isStarted() const
     {
         return !threads.empty();
@@ -58,7 +58,7 @@ public:
      * Constructor.
      */
     explicit IoCompletionPortScheduler(DeviceAccessSchedulerParams const &);
-    
+
     /**
      * Destructor:  stop must already have been called.
      */

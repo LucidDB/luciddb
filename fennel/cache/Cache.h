@@ -72,7 +72,7 @@ public:
      * can ever be mapped to this device.
      */
     static const DeviceId NULL_DEVICE_ID;
-    
+
     /**
      * Factory method.  This creates a cache which uses TwoQVictimPolicy.
      * To create a cache with custom policies, include CacheImpl.h and
@@ -130,7 +130,7 @@ public:
 // ----------------------------------------------------------------------
 // Accessor Methods
 // ----------------------------------------------------------------------
-    
+
     /**
      * @return the size of cached pages (in bytes)
      */
@@ -144,7 +144,7 @@ public:
 // ----------------------------------------------------------------------
 // Device Registration and Operations
 // ----------------------------------------------------------------------
-    
+
     /**
      * Registers the given device with the Cache; must be called exactly
      * once before any other caching operations can be requested for pages of
@@ -178,7 +178,7 @@ public:
 // ----------------------------------------------------------------------
 // Global Operations on Pages; also see CacheAccessor methods
 // ----------------------------------------------------------------------
-    
+
     /**
      * Flushes and/or unmaps selected pages.
      *
@@ -239,7 +239,7 @@ public:
 
     // implementation of StatsSource
     virtual void writeStats(StatsTarget &target);
-    
+
 private:
     // notification methods called from friend Page
     virtual void notifyTransferCompletion(CachePage &,bool bSuccess) = 0;

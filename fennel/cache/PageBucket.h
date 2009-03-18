@@ -35,17 +35,17 @@ FENNEL_BEGIN_NAMESPACE
  * BlockIds; a collection of free pages is also maintained as a bucket.
  */
 template <class PageT>
-class PageBucket 
+class PageBucket
 {
 public:
-    
+
     // typedefs for the list of Pages in this bucket; CachePage objects have
     // embedded links dedicated for this purpose to avoid dynamic allocation for
     // each map/unmap operation.
     typedef IntrusiveList<PageT,PageBucketListNode> PageList;
     typedef IntrusiveListIter<PageT,PageBucketListNode> PageListIter;
     typedef IntrusiveListMutator<PageT,PageBucketListNode> PageListMutator;
-    
+
     /**
      * SXMutex protecting this bucket.
      */
@@ -55,7 +55,7 @@ public:
      * List of pages in this bucket.
      */
     PageList pageList;
-    
+
     explicit PageBucket()
     {
     }

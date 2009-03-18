@@ -76,7 +76,7 @@ int getCurrentThreadId()
 void hexDump(std::ostream &o,void const *v,uint cb,uint cbDone)
 {
     boost::io::ios_all_saver streamStateSaver(o);
-    
+
     PConstBuffer b = (PConstBuffer) v;
     uint cbLine = 16,cbThis;
     o.fill('0');

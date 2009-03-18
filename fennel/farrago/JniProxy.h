@@ -67,8 +67,8 @@ protected:
     jobject constructJavaInteger(const int32_t &value)
     {
         return pEnv->CallStaticObjectMethod(
-            JniUtil::classInteger, 
-            JniUtil::methIntegerValueOf, 
+            JniUtil::classInteger,
+            JniUtil::methIntegerValueOf,
             static_cast<jint>(value));
     }
 
@@ -80,8 +80,8 @@ protected:
     jobject constructJavaLong(const int64_t &value)
     {
         return pEnv->CallStaticObjectMethod(
-            JniUtil::classLong, 
-            JniUtil::methLongValueOf, 
+            JniUtil::classLong,
+            JniUtil::methLongValueOf,
             static_cast<jlong>(value));
     }
 
@@ -93,8 +93,8 @@ protected:
     jobject constructJavaShort(const int16_t &value)
     {
         return pEnv->CallStaticObjectMethod(
-            JniUtil::classShort, 
-            JniUtil::methShortValueOf, 
+            JniUtil::classShort,
+            JniUtil::methShortValueOf,
             static_cast<jshort>(value));
     }
 
@@ -106,8 +106,8 @@ protected:
     jobject constructJavaDouble(const double &value)
     {
         return pEnv->CallStaticObjectMethod(
-            JniUtil::classDouble, 
-            JniUtil::methDoubleValueOf, 
+            JniUtil::classDouble,
+            JniUtil::methDoubleValueOf,
             static_cast<jdouble>(value));
     }
 
@@ -119,8 +119,8 @@ protected:
     jobject constructJavaFloat(const float &value)
     {
         return pEnv->CallStaticObjectMethod(
-            JniUtil::classFloat, 
-            JniUtil::methFloatValueOf, 
+            JniUtil::classFloat,
+            JniUtil::methFloatValueOf,
             static_cast<jfloat>(value));
     }
 
@@ -132,8 +132,8 @@ protected:
     jobject constructJavaBoolean(const bool &value)
     {
         return pEnv->CallStaticObjectMethod(
-            JniUtil::classBoolean, 
-            JniUtil::methBooleanValueOf, 
+            JniUtil::classBoolean,
+            JniUtil::methBooleanValueOf,
             static_cast<jboolean>(value));
     }
 
@@ -147,9 +147,9 @@ public:
      * The Java object being proxied.
      */
     jobject jObject;
-    
+
     explicit JniProxy();
-    
+
     virtual ~JniProxy();
 
     /**
@@ -201,7 +201,7 @@ public:
     void operator ++ ()
     {
         assert(jIter);
-        boost::shared_ptr<T>::get()->jObject = 
+        boost::shared_ptr<T>::get()->jObject =
             JniUtil::getNextFromIter(boost::shared_ptr<T>::get()->pEnv,jIter);
         if (!(boost::shared_ptr<T>::get()->jObject)) {
             // iteration exhausted, so become singular
@@ -214,7 +214,7 @@ public:
  * JniProxyVisitor is the base for all classes which need to visit one or more
  * instances of JniProxy polymorphically.
  */
-class JniProxyVisitor 
+class JniProxyVisitor
 {
 public:
     virtual ~JniProxyVisitor();
@@ -238,10 +238,10 @@ public:
         virtual ~VisitorMethod()
         {
         }
-        
+
         virtual void execute(JniProxyVisitor &visitor,JniProxy &) = 0;
     };
-    
+
     /**
      * Use shared_ptr to manage allocation of VisitorMethods.
      */
@@ -257,7 +257,7 @@ public:
      * The dispatch table.
      */
     MethodMap methodMap;
-    
+
     /**
      * Called by generated code once for each proxy class.
      *

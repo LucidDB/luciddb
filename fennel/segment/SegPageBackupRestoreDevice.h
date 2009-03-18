@@ -97,7 +97,7 @@ public:
      */
     void setBufferSize(uint bufferSize);
 
-    /** 
+    /**
      * @return the counter that determines the order in which pages are
      * written to the backup file
      */
@@ -122,7 +122,7 @@ public:
 /**
  * Device used to backup and restore pages from a data segment.
  */
-class SegPageBackupRestoreDevice 
+class SegPageBackupRestoreDevice
     : public boost::noncopyable,
         public ClosableObject,
         public boost::enable_shared_from_this<SegPageBackupRestoreDevice>
@@ -288,7 +288,7 @@ class SegPageBackupRestoreDevice
     /**
      * Puts the scratch page that is no longer being used back into the
      * free scratch page queue, increments counters tracking which page needs
-     * to be written next to the backup file, and notifies any threads 
+     * to be written next to the backup file, and notifies any threads
      * waiting for a free scratch page.
      *
      * @param scratchPage scratch page that's now free

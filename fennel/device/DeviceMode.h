@@ -35,7 +35,7 @@ struct DeviceMode
     bool sequential : 1;
 
     enum Initializer { load = 0, createNew = 1 };
-    
+
     explicit DeviceMode()
     {
         init();
@@ -46,12 +46,12 @@ struct DeviceMode
         init();
         create = i;
     }
-    
+
     DeviceMode(DeviceMode const &mode)
     {
         init(mode);
     }
-    
+
     void operator = (DeviceMode const &mode)
     {
         init(mode);
@@ -66,7 +66,7 @@ private:
         direct = 0;
         sequential = 0;
     }
-    
+
     void init(DeviceMode const &mode)
     {
         create = mode.create;

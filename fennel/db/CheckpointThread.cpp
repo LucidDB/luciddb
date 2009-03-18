@@ -53,7 +53,7 @@ void CheckpointThread::run()
         CheckpointType currentType = checkpointType;
         checkpointType = CHECKPOINT_DISCARD;
         mutexGuard.unlock();
-        
+
         SXMutexExclusiveGuard actionMutexGuard(actionMutex);
         database.checkpointImpl(currentType);
         actionMutexGuard.unlock();

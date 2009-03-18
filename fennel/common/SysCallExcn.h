@@ -57,7 +57,7 @@ public:
      * @param msgInit a description of the failure from the program's point of
      * view; SysCallExcn will append additional information from the OS
      *
-     * @param errCodeInit OS error code used to generate additional 
+     * @param errCodeInit OS error code used to generate additional
      * information
      */
     explicit SysCallExcn(std::string msgInit, int errCodeInit);

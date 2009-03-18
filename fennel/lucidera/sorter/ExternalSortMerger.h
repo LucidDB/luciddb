@@ -115,7 +115,7 @@ class ExternalSortMerger : public ExternalSortSubStream
     TupleProjectionAccessor keyAccessor2;
     TupleData keyData;
     TupleData keyData2;
-    
+
 // ----------------------------------------------------------------------
 // private methods
 // ----------------------------------------------------------------------

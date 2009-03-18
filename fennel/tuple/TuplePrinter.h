@@ -42,7 +42,7 @@ class TuplePrinter
 
     void preVisitValue();
     void postVisitValue();
-    
+
     // implement DataVisitor
     virtual void preVisitDocument(std::string);
     virtual void postVisitDocument();
@@ -64,7 +64,7 @@ class TuplePrinter
     virtual void visitSegByteId(SegByteId);
     virtual void visitFormatted(char const *);
     virtual void visitBytes(void const *v, TupleStorageByteLength iBytes);
-    
+
 public:
     explicit TuplePrinter();
 

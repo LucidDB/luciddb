@@ -30,7 +30,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void SortedAggExecStream::prepare(SortedAggExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
-    
+
     inputTuple.compute(pInAccessor->getTupleDesc());
 
     /*
@@ -48,11 +48,11 @@ void SortedAggExecStream::prepare(SortedAggExecStreamParams const &params)
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
 
     groupByKeyCount = params.groupByKeyCount;
-    
+
     for (int i = 0; i < groupByKeyCount; i ++) {
         prevTupleDesc.push_back(inputDesc[i]);
     }
-        
+
     /*
       Compute the accumulator result portion of prevTupleDesc based on
       requested aggregate function invocations, and instantiate polymorphic
@@ -85,7 +85,7 @@ void SortedAggExecStream::prepare(SortedAggExecStreamParams const &params)
                 pInputAttr));
         aggComputers.back().setInputAttrIndex(pInvocation->iInputAttr);
     }
-    
+
     // Sanity check:  the output shape we computed should agree with
     // the descriptor (if any) in the supplied plan.
     if (!params.outputTupleDesc.empty()) {
@@ -124,7 +124,7 @@ inline void SortedAggExecStream::copyPrevGroupByKey()
       resetBuffer restores the pointers to the associated buffer.
     */
     prevTuple.resetBuffer();
-    
+
     for (int i = 0; i < groupByKeyCount; i ++) {
         prevTuple[i].memCopyFrom(inputTuple[i]);
     }
@@ -140,18 +140,18 @@ inline int SortedAggExecStream::compareGroupByKeys()
     int ret =
         (pInAccessor->getTupleDesc()).compareTuplesKey(prevTuple,
                                                   inputTuple,
-                                                  groupByKeyCount);    
+                                                  groupByKeyCount);
     return ret;
 }
 
 inline void SortedAggExecStream::computeOutput()
 {
     int i;
-    
+
     for (i = 0; i < groupByKeyCount; i ++) {
         outputTuple[i] = prevTuple[i];
     }
-    
+
     for (i = 0; i < aggComputers.size(); i ++) {
         aggComputers[i].computeOutput(outputTuple[i+groupByKeyCount],
             prevTuple[i+groupByKeyCount]);
@@ -174,14 +174,14 @@ void SortedAggExecStream::open(bool restart)
       Ignore prevTupleValid field when not doing groupby's.
     */
     prevTupleValid = (groupByKeyCount > 0) ? false : true;
-    
+
     state = STATE_ACCUMULATING;
 }
 
 inline ExecStreamResult SortedAggExecStream::produce()
 {
     assert (state == STATE_PRODUCING);
-    
+
     // attempt to write output
     bool success = pOutAccessor->produceTuple(outputTuple);
     if (success) {
@@ -204,24 +204,24 @@ ExecStreamResult SortedAggExecStream::execute(ExecStreamQuantum const &quantum)
 {
     int keyComp;
     ExecStreamResult rc;
-    
+
     /*
       Perform EOS processing first, since there can be a result tuple which is
       not produced yet.
     */
     if (pInAccessor->getState() == EXECBUF_EOS) {
-        
+
         if (!prevTupleValid) {
             state = STATE_DONE;
         }
-        
+
         // no more input is coming
         if (state == STATE_DONE) {
             // already produced output
             pOutAccessor->markEOS();
             return EXECRC_EOS;
         }
-        
+
         if (state == STATE_ACCUMULATING) {
             // compute final output and get ready to write it
             computeOutput();
@@ -261,11 +261,11 @@ ExecStreamResult SortedAggExecStream::execute(ExecStreamQuantum const &quantum)
         if (!pInAccessor->demandData()) {
             return EXECRC_BUF_UNDERFLOW;
         }
-        
+
         assert (state == STATE_ACCUMULATING);
 
         pInAccessor->unmarshalTuple(inputTuple);
-        
+
         if (prevTupleValid) {
             keyComp = compareGroupByKeys();
             assert(keyComp <= 0);
@@ -289,7 +289,7 @@ ExecStreamResult SortedAggExecStream::execute(ExecStreamQuantum const &quantum)
             updateAccumulator();
             pInAccessor->consumeTuple();
         }
-        
+
         if (state == STATE_PRODUCING) {
             rc = produce();
             if (rc != EXECRC_YIELD) {
@@ -297,7 +297,7 @@ ExecStreamResult SortedAggExecStream::execute(ExecStreamQuantum const &quantum)
             }
         }
     }
-    
+
     return EXECRC_YIELD;
 }
 

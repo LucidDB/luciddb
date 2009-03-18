@@ -42,7 +42,7 @@ class CacheAccessor : public boost::noncopyable
 {
 public:
     virtual ~CacheAccessor();
-    
+
     /**
      * Locks a page into memory with the specified concurrency mode.  When the
      * page contents are no longer needed, the caller must invoke the
@@ -84,7 +84,7 @@ public:
      *
      *</ul>
      *
-     * 
+     *
      * @param blockId the BlockId of the page to be locked
      *
      * @param lockMode the desired concurrency mode
@@ -109,7 +109,7 @@ public:
         bool readIfUnmapped = true,
         MappedPageListener *pMappedPageListener = NULL,
         TxnId txnId = IMPLICIT_TXN_ID) = 0;
-    
+
     /**
      * Releases lock held on page.
      *
@@ -134,7 +134,7 @@ public:
      * @param blockId the BlockId of the page to be discarded
      */
     virtual void discardPage(BlockId blockId) = 0;
-    
+
     /**
      * Hints that a page should be prefetched in preparation for a
      * future lock request.

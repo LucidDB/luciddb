@@ -52,7 +52,7 @@ class StringExecStreamGenerator
 {
 public:
     virtual ~StringExecStreamGenerator() {}
-    
+
     /**
      * Generates one data value.
      *
@@ -64,13 +64,13 @@ public:
 class StringExecStreamGeneratorImpl : public StringExecStreamGenerator
 {
     std::vector<std::string> values;
-    
+
 public:
     void insert(const std::string &value)
     {
         values.push_back(value);
     }
-    
+
     // Implement StringExecStreamGenerator
     const std::string &generateValue(uint iRow)
     {
@@ -106,7 +106,7 @@ class FlatFileExecStreamTest : public ExecStreamUnitTestBase
         ExecStream &stream,
         uint nRowsExpected,
         StringExecStreamGenerator &generator);
-        
+
 public:
     explicit FlatFileExecStreamTest()
     {
@@ -124,7 +124,7 @@ void FlatFileExecStreamTest::testBuffer()
 {
     FixedBuffer fixedBuffer[8];
     std::string path = "flatfile/buffer";
-    
+
     SharedFlatFileBuffer pFileBuffer;
     pFileBuffer.reset(new FlatFileBuffer(path), ClosableObjectDestructor());
     pFileBuffer->open();
@@ -157,7 +157,7 @@ void FlatFileExecStreamTest::testParser()
 
     // quote a delimiter
     checkColumnScan(
-        parser, "\"all that\n is \"gold, ", 
+        parser, "\"all that\n is \"gold, ",
         FlatFileColumnParseResult::FIELD_DELIM, 19, 20);
 
     // quotes are valid for char columns
@@ -231,7 +231,7 @@ void FlatFileExecStreamTest::checkStrip(
 
 void FlatFileExecStreamTest::checkColumnScan(
     FlatFileParser &parser,
-    const char *string, 
+    const char *string,
     FlatFileColumnParseResult::DelimiterType type,
     uint size,
     uint offset)
@@ -239,7 +239,7 @@ void FlatFileExecStreamTest::checkColumnScan(
     char buffer[128];
     assert(strlen(string) < sizeof(buffer));
     strcpy(buffer, string);
-    
+
     FlatFileColumnParseResult result;
     parser.scanColumn(buffer, strlen(buffer), sizeof(buffer), result);
 
@@ -255,7 +255,7 @@ void FlatFileExecStreamTest::testStream()
         stdTypeFactory.newDataType(STANDARD_TYPE_VARCHAR),
         false,
         32);
-    
+
     FlatFileExecStreamParams flatfileParams;
     flatfileParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache,1);
@@ -267,7 +267,7 @@ void FlatFileExecStreamTest::testStream()
     flatfileParams.quoteChar = '"';
     flatfileParams.escapeChar = '\\';
     flatfileParams.header = false;
-    
+
     ExecStreamEmbryo flatfileStreamEmbryo;
     flatfileStreamEmbryo.init(
         FlatFileExecStream::newFlatFileExecStream(), flatfileParams);
@@ -292,7 +292,7 @@ void FlatFileExecStreamTest::verifyOutput(
 {
     // TODO:  assertions about output tuple, or better yet, use proper tuple
     // access
-    
+
     pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
@@ -304,7 +304,7 @@ void FlatFileExecStreamTest::verifyOutput(
             break;
         }
         BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
-        const uint nCol = 
+        const uint nCol =
             bufAccessor.getConsumptionTupleAccessor().size();
         BOOST_REQUIRE(nCol == bufAccessor.getTupleDesc().size());
         BOOST_REQUIRE(nCol >= 1);
@@ -336,4 +336,4 @@ void FlatFileExecStreamTest::verifyOutput(
 
 FENNEL_UNIT_TEST_SUITE(FlatFileExecStreamTest);
 
-// End FlatFileStreamTest.cpp
+// End FlatFileExecStreamTest.cpp

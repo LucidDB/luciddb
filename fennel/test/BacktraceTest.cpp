@@ -36,13 +36,13 @@ class BacktraceTest : virtual public TestBase, public TraceSource
     void testDeliberateBacktrace();
     void testBacktraceOnAbort();
 public:
-    explicit BacktraceTest() 
+    explicit BacktraceTest()
         : TraceSource(shared_from_this(),"BacktraceTest")
     {
         FENNEL_UNIT_TEST_CASE(BacktraceTest, testDeliberateBacktrace);
         // FENNEL_UNIT_TEST_CASE(BacktraceTest, testBacktraceOnAbort);
     }
-    
+
     virtual ~BacktraceTest()
     {
     }
@@ -62,4 +62,4 @@ void BacktraceTest::testBacktraceOnAbort()
 
 FENNEL_UNIT_TEST_SUITE(BacktraceTest);
 
-
+// End BacktraceTest.cpp

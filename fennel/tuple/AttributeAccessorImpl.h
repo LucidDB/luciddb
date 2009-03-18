@@ -105,7 +105,7 @@ public:
         value.data16 = ntohs(*reinterpret_cast<uint16_t const *>(value.pData));
         value.pData = reinterpret_cast<PConstBuffer>(&(value.data16));
     }
-    
+
     void marshalValueData(
         PBuffer pDestData,
         TupleDatum const &value) const
@@ -132,7 +132,7 @@ public:
         value.data32 = ntohl(*reinterpret_cast<uint32_t const *>(value.pData));
         value.pData = reinterpret_cast<PConstBuffer>(&(value.data32));
     }
-    
+
     void marshalValueData(
         PBuffer pDestData,
         TupleDatum const &value) const
@@ -159,7 +159,7 @@ public:
         value.data64 = ntohll(*reinterpret_cast<uint64_t const *>(value.pData));
         value.pData = reinterpret_cast<PConstBuffer>(&(value.data64));
     }
-    
+
     void marshalValueData(
         PBuffer pDestData,
         TupleDatum const &value) const

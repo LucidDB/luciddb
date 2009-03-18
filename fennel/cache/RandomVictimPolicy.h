@@ -74,7 +74,7 @@ public:
         {
             return policy.pages[iPage];
         }
-        
+
     public:
         PageIterator(RandomVictimPolicy &policyInit,uint iPageInit)
             : policy(policyInit)
@@ -94,12 +94,12 @@ public:
         {
             return getCurrent();
         }
-        
+
         operator PageT * () const
         {
             return getCurrent();
         }
-        
+
         PageT &operator * () const
         {
             return *getCurrent();
@@ -111,7 +111,7 @@ public:
             return iPage == other.iPage;
         }
     };
-    
+
     typedef PageIterator DirtyPageIterator;
 
     RandomVictimPolicy()

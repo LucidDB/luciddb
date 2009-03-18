@@ -86,7 +86,7 @@ CacheImpl<PageT,VictimPolicyT>
         close();
         throw ex;
     }
-    
+
     // initialize null device
     registerDevice(
         NULL_DEVICE_ID,
@@ -152,7 +152,7 @@ void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
     uint nPagesMax = 0;
     uint nPagesInit = 0;
 
-    // Make two attempts: First, use the configured values.  If that fails, 
+    // Make two attempts: First, use the configured values.  If that fails,
     // try again with default nMemPagesMax.  If that fails, throw in the towel.
     for(int attempts = 0; attempts < 2; attempts++) {
         bool allocError = false;
@@ -366,7 +366,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     PageBucketT &bucket = getHashBucket(blockId);
     PageT *page = lookupPage(bucket,blockId,true);
     if (page) {
-        assert(page->pMappedPageListener == pMappedPageListener); 
+        assert(page->pMappedPageListener == pMappedPageListener);
         // note that lookupPage incremented page's reference count for us, so
         // it's safe from victimization from here on
         incrementStatsCounter(nCacheHits);
@@ -383,7 +383,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
             bucket,*page,blockId,pMappedPageListener,readIfUnmapped);
         if (&mappedPage == page) {
             // mapPage found no existing mapping, so initiate read from disk if
-            // necessary 
+            // necessary
             if (readIfUnmapped) {
                 readPageAsync(*page);
             }
@@ -402,11 +402,11 @@ PageT *CacheImpl<PageT,VictimPolicyT>
             }
         }
     }
-    
+
     incrementStatsCounter(nCacheRequests);
 
     // now acquire the requested lock
-    
+
     if (!page->lock.waitFor(lockMode,ETERNITY,txnId)) {
         // NoWait failed; release reference
         assert((lockMode == LOCKMODE_S_NOWAIT) ||
@@ -422,7 +422,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
         // if we're locking the page for write, then need to make sure
         // that any pending write completes before this thread starts
         // changing the contents
-        
+
         // REVIEW: can we use double-checked idiom here?
         StrictMutexGuard pageGuard(page->mutex);
         while (page->dataStatus == CachePage::DATA_WRITE) {
@@ -560,7 +560,7 @@ PageT &CacheImpl<PageT,VictimPolicyT>
     page->dataStatus = CachePage::DATA_DIRTY;
     CompoundId::setDeviceId(page->blockId,NULL_DEVICE_ID);
     CompoundId::setBlockNum(page->blockId,blockNum);
-    
+
     return *page;
 }
 
@@ -581,7 +581,7 @@ bool CacheImpl<PageT,VictimPolicyT>
         rejectedPrefetch();
         return false;
     }
-    
+
     PageBucketT &bucket = getHashBucket(blockId);
     bool bPendingRead = true;
     // don't need to increment the page reference count since the pending
@@ -613,7 +613,7 @@ void CacheImpl<PageT,VictimPolicyT>
 {
     assert(blockId != NULL_BLOCK_ID);
     assert(nPagesPerBatch > 1);
-    
+
     SharedRandomAccessDevice &pDevice = getDevice(
         CompoundId::getDeviceId(blockId));
     DeviceAccessScheduler &scheduler = getDeviceAccessScheduler(*pDevice);
@@ -704,7 +704,7 @@ uint CacheImpl<PageT,VictimPolicyT>
 
     uint nPages = 0;
     bool countPages = true;
-    
+
     FlushPhase flushPhase;
     if (checkpointType >= CHECKPOINT_FLUSH_AND_UNMAP) {
         flushPhase = phaseInitiate;
@@ -868,7 +868,7 @@ void CacheImpl<PageT,VictimPolicyT>
     case CachePage::DATA_WRITE:
         {
             if (!bSuccess) {
-                std::cerr << "Write failed for page 0x" << std::hex << 
+                std::cerr << "Write failed for page 0x" << std::hex <<
                     opaqueToInt(page.getBlockId());
                 ::abort();
             }
@@ -910,7 +910,7 @@ void CacheImpl<PageT,VictimPolicyT>
     bool bValid = page.isDataValid();
     page.dataStatus = CachePage::DATA_DIRTY;
     victimPolicy.notifyPageDirty(static_cast<PageT &>(page));
-    
+
     // No synchronization required during notification because caller already
     // holds exclusive lock on page.  The notification is called AFTER the page
     // has already been marked dirty in case the listener needs to write to
@@ -931,7 +931,7 @@ uint CacheImpl<PageT,VictimPolicyT>
 {
     return idleFlushInterval;
 }
-    
+
 template <class PageT,class VictimPolicyT>
 void CacheImpl<PageT,VictimPolicyT>
 ::onTimerInterval()
@@ -949,11 +949,11 @@ void CacheImpl<PageT,VictimPolicyT>::closeImpl()
     if (timerThread.isStarted()) {
         timerThread.stop();
     }
-    
+
     if (pDeviceAccessScheduler) {
         pDeviceAccessScheduler->stop();
     }
-    
+
     // unregister the null device
     if (getDevice(NULL_DEVICE_ID)) {
         unregisterDevice(NULL_DEVICE_ID);
@@ -1074,7 +1074,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
         }
     }
     victimSharedGuard.unlock();
-    
+
     // no free pages, so wait for one (with timeout just in case)
     StrictMutexGuard freePageGuard(freePageMutex);
     boost::xtime atv;
@@ -1233,7 +1233,7 @@ void CacheImpl<PageT,VictimPolicyT>
     if (page.isDirty()) {
         decrementCounter(nDirtyPages);
     }
-    
+
     // NOTE:  to get the locking sequence safe for deadlock avoidance,
     // we're going to have to release the page mutex.  To indicate that the
     // page is being unmapped (so that no one else tries to lock it or
@@ -1242,7 +1242,7 @@ void CacheImpl<PageT,VictimPolicyT>
     page.blockId = NULL_BLOCK_ID;
     page.dataStatus = CachePage::DATA_INVALID;
     pageGuard.unlock();
-    
+
     PageBucketT &bucket = getHashBucket(blockId);
     SXMutexExclusiveGuard bucketGuard(bucket.mutex);
     bool bFound = bucket.pageList.remove(page);
@@ -1408,8 +1408,8 @@ inline bool CacheImpl<PageT,VictimPolicyT>
 {
     // NOTE:  the hasBlockId() check is to prevent us from trying to
     // victimize a page that is in transit between the free list and
-    // a mapping; maybe such pages should have nReferences 
-    // non-zero instead? 
+    // a mapping; maybe such pages should have nReferences
+    // non-zero instead?
     return page.hasBlockId()
         && !page.nReferences
         && !page.isTransferInProgress();

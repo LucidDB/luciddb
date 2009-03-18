@@ -35,14 +35,14 @@ class CountAggComputer : public AggComputer
 {
 protected:
     inline uint64_t &interpretDatum(TupleDatum &);
-    
+
     inline void clearAccumulatorImpl(
         TupleDatum &accumulatorDatum);
     inline void initAccumulatorImpl(
         TupleDatum &accumulatorDatum);
     inline void updateAccumulatorImpl(
         TupleDatum &accumulatorDatum);
-    
+
 public:
     // implement AggComputer
     virtual void computeOutput(
@@ -132,14 +132,14 @@ class ExtremeAggComputer : public AggComputer
     bool isResultNull;
 
     inline void copyInputToAccumulator(
-        TupleDatum &accumulatorDatum, 
+        TupleDatum &accumulatorDatum,
         TupleDatum const &inputDatum);
 
 public:
     explicit ExtremeAggComputer(
         AggFunction aggFunctionInit,
         TupleAttributeDescriptor const &attrDesc);
-    
+
     // implement AggComputer
     virtual void clearAccumulator(
         TupleDatum &accumulatorDatum);
@@ -148,7 +148,7 @@ public:
     virtual void updateAccumulator(
         TupleDatum &accumulatorDatum,
         TupleData const &inputTuple);
-    
+
     // implement AggComputer
     virtual void computeOutput(
         TupleDatum &outputDatum,
@@ -179,21 +179,21 @@ class SumAggComputer : public AggComputer
      * True until a non-null input value is seen.
      */
     bool isResultNull;
-    
+
     inline T &interpretDatum(TupleDatum &datum)
     {
         assert(datum.cbData == sizeof(T));
         assert(datum.pData);
         return *reinterpret_cast<T *>(const_cast<PBuffer>(datum.pData));
     }
-    
+
     inline T const &interpretDatum(TupleDatum const &datum)
     {
         assert(datum.cbData == sizeof(T));
         assert(datum.pData);
         return *reinterpret_cast<T const *>(datum.pData);
     }
-    
+
 public:
     // implement AggComputer
     virtual void clearAccumulator(TupleDatum &accumulatorDatum)
@@ -261,18 +261,18 @@ public:
         TupleData const &inputTuple)
     {
         TupleDatum const &inputDatum = inputTuple[iInputAttr];
-        
+
         if (!accumulatorDatumSrc.pData) {
             accumulatorDatumDest.memCopyFrom(inputDatum);
         } else {
             T sumSrc = interpretDatum(accumulatorDatumSrc);
             T &sumDest = interpretDatum(accumulatorDatumDest);
-            
+
             if (inputDatum.pData) {
                 T sumInput = interpretDatum(inputDatum);
                 sumDest = sumSrc + sumInput;
             } else {
-                sumDest = sumSrc;                
+                sumDest = sumSrc;
             }
         }
     }

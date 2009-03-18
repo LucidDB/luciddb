@@ -56,7 +56,7 @@ class BTreeNonLeafReader : public BTreeReader
      * @return always returns true since it is never called on an empty tree
      */
     virtual bool searchExtreme(bool first);
-    
+
 public:
     explicit BTreeNonLeafReader(BTreeDescriptor const &descriptor);
 
@@ -86,7 +86,7 @@ public:
      */
     virtual bool searchForKey(TupleData const &key,DuplicateSeek dupSeek,
                       bool leastUpper = true);
-    
+
     /**
      * Searches for the next tuple at the level just above the leaf.  Can be
      * used after either searchFirst or searchForKey, but illegal when

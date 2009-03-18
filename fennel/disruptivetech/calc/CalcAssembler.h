@@ -48,7 +48,7 @@ extern int CalcYYparse (void *);
  * <ol>
  *    <li>Create TupleDescriptors to describe all registers</li>
  *    <li>Create Literal, Local, and Status Tuples and bind
- *        them to the Calculator register sets</li> 
+ *        them to the Calculator register sets</li>
  *    <li>Initializes literal values in the Literal Register Set</li>
  *    <li>Create and insert instructions into the Calculator</li>
  *    <li>Verifies the format of serialized programs</li>
@@ -76,7 +76,7 @@ public:
         TupleDescriptor const& tupleDes,
         FixedBuffer** buf);
 
-    static RegisterReference* 
+    static RegisterReference*
     createRegisterReference(
         RegisterReference::ERegisterSet setIndex,
         TRegisterIndex                  regIndex,
@@ -94,10 +94,10 @@ public:
         }
         catch (FennelExcn& ex) {
             throw CalcAssemblerException(ex.getMessage(), location);
-        }   
+        }
         catch (std::exception& ex) {
             throw CalcAssemblerException(ex.what(), location);
-        }   
+        }
         if (inst == NULL) {
             string error;
             error = "Error instantiating instruction: " + name;
@@ -183,10 +183,10 @@ public:
         }
         catch (FennelExcn& ex) {
             throw CalcAssemblerException(ex.getMessage(), location);
-        }   
+        }
         catch (std::exception& ex) {
             throw CalcAssemblerException(ex.what(), location);
-        }   
+        }
 
         if (inst == NULL) {
             stringstream errorStr("Error instantiating instruction: ");
@@ -212,10 +212,10 @@ public:
         }
         catch (FennelExcn& ex) {
             throw CalcAssemblerException(ex.getMessage(), location);
-        }   
+        }
         catch (std::exception& ex) {
             throw CalcAssemblerException(ex.what(), location);
-        }   
+        }
 
         if (inst == NULL) {
             InstructionSignature sig(function, operands);
@@ -230,23 +230,23 @@ public:
     }
 
     static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,  
+			      TupleDatum& tupleDatum,
 			      TupleAttributeDescriptor& desc,
 			      double value);
     static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,  
+			      TupleDatum& tupleDatum,
 			      TupleAttributeDescriptor& desc,
 			      uint64_t value);
     static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,  
+			      TupleDatum& tupleDatum,
 			      TupleAttributeDescriptor& desc,
 			      int64_t value);
     static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,  
+			      TupleDatum& tupleDatum,
 			      TupleAttributeDescriptor& desc,
 			      string value);
     static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,  
+			      TupleDatum& tupleDatum,
 			      TupleAttributeDescriptor& desc,
 			      PConstBuffer buffer);
 
@@ -270,7 +270,7 @@ protected:
 
     /**
      * Binds registers to the calculator
-     * CalcYYparse should call this function after parsing the register 
+     * CalcYYparse should call this function after parsing the register
      * definitions and literal values to bind the TupleData to the calculator
      * registers.
      * @note This function must be called after all tuples have been allocated
@@ -292,7 +292,7 @@ protected:
      * @see  bindNextLiteral
      */
     template <typename T>
-    void bindRegisterValue(RegisterReference::ERegisterSet setIndex, 
+    void bindRegisterValue(RegisterReference::ERegisterSet setIndex,
                            TRegisterIndex regIndex, T value)
     {
         try {
@@ -311,31 +311,31 @@ protected:
             // Other exception - let's make the error clearer
             ostringstream errorStr("");
             errorStr << "Error binding register "
-                     << RegisterReference::toString(setIndex, regIndex) 
+                     << RegisterReference::toString(setIndex, regIndex)
                      << ": " << ex.getMessage();
             throw CalcAssemblerException(errorStr.str(), getLexer().getLocation());
         }
         catch (exception& ex) {
             // Other exception - let's make the error clearer
             ostringstream errorStr("");
-            errorStr << "Error binding register: " 
-                     << RegisterReference::toString(setIndex, regIndex) 
+            errorStr << "Error binding register: "
+                     << RegisterReference::toString(setIndex, regIndex)
                      << ": " << ex.what();
             throw CalcAssemblerException(errorStr.str(), getLexer().getLocation());
         }
     }
 
     /**
-     * Binds the templated value to the next literal register. 
-     * A CalcAssemblerException with the location of the current token is 
+     * Binds the templated value to the next literal register.
+     * A CalcAssemblerException with the location of the current token is
      * thrown if there is an error binding the value to the register.
      * @param value Value to bind to the register
      * @throw CalcAssemblerException
-     * @note  CalcYYparse calls this function to bind individual literal value 
-     *        as they are parsed one by one.  Before calling this function, 
+     * @note  CalcYYparse calls this function to bind individual literal value
+     *        as they are parsed one by one.  Before calling this function,
      *        bindRegisters() should be called to allocate memory for the
-     *        TupleData and bind them to the registers. After all literal 
-     *        values are bound, bindLiteralsDone() should be called to check 
+     *        TupleData and bind them to the registers. After all literal
+     *        values are bound, bindLiteralsDone() should be called to check
      *        that all literal registers have been initialized.
      * @see   bindLiteralsDone()
      * @see   bindRegisters()
@@ -348,16 +348,16 @@ protected:
     }
 
     /**
-     * Finishes binding literal values to registers.  This function should be 
-     * called by CalcYYparse after all parsing literal values to check that 
-     * all literal registers have been initialized. 
+     * Finishes binding literal values to registers.  This function should be
+     * called by CalcYYparse after all parsing literal values to check that
+     * all literal registers have been initialized.
      */
     void bindLiteralDone();
-    
-    // CalcYYparse uses the two functions below to add a register 
-    
+
+    // CalcYYparse uses the two functions below to add a register
+
     /**
-     * Sets the current register set.  
+     * Sets the current register set.
      * @param setIndex Register set index
      */
     void selectRegisterSet(RegisterReference::ERegisterSet setIndex);
@@ -403,7 +403,7 @@ protected:
      * @return RegisterReference pointer
      * @throw  FennelExcn Exception indicating the register index is out of bounds
      */
-    RegisterReference* getRegister(RegisterReference::ERegisterSet setIndex, 
+    RegisterReference* getRegister(RegisterReference::ERegisterSet setIndex,
                                    TRegisterIndex regIndex);
 
     /**
@@ -413,7 +413,7 @@ protected:
      * @return Type of the register
      * @throw  FennelExcn Exception indicating the register index is out of bounds
      */
-    StandardTypeDescriptorOrdinal  getRegisterType(RegisterReference::ERegisterSet setIndex, 
+    StandardTypeDescriptorOrdinal  getRegisterType(RegisterReference::ERegisterSet setIndex,
                                                    TRegisterIndex regIndex);
 
     /**
@@ -434,11 +434,11 @@ protected:
      * Verifies that the program counter is valid
      * @param pc the program counter
      * @param loc
-     * @throw CalcAssemblerException Exception indicating that the PC is invalid 
-     */ 
+     * @throw CalcAssemblerException Exception indicating that the PC is invalid
+     */
     void checkPC(TProgramCounter pc, CalcYYLocType& loc) {
         assert(mCalc->mCode.size() > 0);
-        if (pc >= static_cast<TProgramCounter>(mCalc->mCode.size())) 
+        if (pc >= static_cast<TProgramCounter>(mCalc->mCode.size()))
         {
             ostringstream errorStr("");
             errorStr << "Invalid PC " << pc << ": PC should be between 0 and "
@@ -448,16 +448,16 @@ protected:
     }
 
     /**
-     * Saves the maximum PC.  It is impossible to check the PC until we have 
+     * Saves the maximum PC.  It is impossible to check the PC until we have
      * assembled the entire program and it is too much trouble to keep track of
      * every PC to see if they are valid or not.  Instead, we will just keep
-     * track of the maximum PC, and if it is valid, then all PCs should be 
+     * track of the maximum PC, and if it is valid, then all PCs should be
      * valid.  If it is not, then we will just report on that PC.
      */
-    void saveMaxPC(TProgramCounter pc) 
+    void saveMaxPC(TProgramCounter pc)
     {
         assert(pc > 0);
-        if (pc > mMaxPC) 
+        if (pc > mMaxPC)
         {
             mMaxPC = pc;
             mMaxPCLoc = getLexer().getLocation();

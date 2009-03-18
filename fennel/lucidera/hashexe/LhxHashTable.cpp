@@ -68,7 +68,7 @@ void LhxHashDataAccessor::unpack(
         /*
          * Set pointers in the outputTuple.
          */
-        dataAccessor.unmarshal(outputTuple);        
+        dataAccessor.unmarshal(outputTuple);
     }
 }
 
@@ -153,7 +153,7 @@ void LhxHashKeyAccessor::unpack(
         /*
          * Set pointers in the outputtuple.
          */
-        keyAccessor.unmarshal(outputTuple);        
+        keyAccessor.unmarshal(outputTuple);
     }
 }
 
@@ -164,7 +164,7 @@ bool LhxHashKeyAccessor::matches(
     assert(inputKeyProj.size() == keyColsProj.size());
 
     inputKey.projectFrom(inputTuple, inputKeyProj);
-    
+
     keyAccessor.unmarshal(keyTuple);
 
     currentKey.projectFrom(keyTuple, keyColsProj);
@@ -196,7 +196,7 @@ void LhxHashBlockAccessor::init(uint usablePageSize)
 }
 
 void LhxHashBlockAccessor::setCurrent(PBuffer blockPtrInit, bool valid,
-    bool clearContent) 
+    bool clearContent)
 {
     LhxHashNodeAccessor::setCurrent(blockPtrInit);
     freePtr = getBuffer();
@@ -219,7 +219,7 @@ void LhxHashBlockAccessor::setCurrent(PBuffer blockPtrInit, bool valid,
 PBuffer LhxHashBlockAccessor::allocBuffer(uint bufSize)
 {
     PBuffer resultPtr = freePtr;
-    
+
     if (freePtr + bufSize > endPtr) {
         resultPtr = NULL;
     } else {
@@ -258,8 +258,8 @@ void LhxHashTable::init(
      */
     RecordNum cndKeys = hashInfo.cndKeys[buildInputIndex];
     uint usablePageSize = scratchAccessor.pSegment->getUsablePageSize();
-    
-    calculateNumSlots(cndKeys, usablePageSize, maxBlockCount);    
+
+    calculateNumSlots(cndKeys, usablePageSize, maxBlockCount);
 
     /*
      * special hash table properties.
@@ -302,7 +302,7 @@ void LhxHashTable::init(
     TupleDescriptor dataDesc;
     TupleProjection keyColsProjInKey;
     TupleProjection aggsProjInKey;
-    
+
     uint keyCount = keyColsProj.size();
     for (i = 0; i < keyCount; i++) {
         keyDesc.push_back(buildTupleDesc[keyColsProj[i]]);
@@ -342,7 +342,7 @@ void LhxHashTable::init(
     aggResultTuple.computeAndAllocate(hashInfo.inputDesc[buildInputIndex]);
 
     isGroupBy = true;
-    
+
     if (aggList->size() > 0) {
         hasAggregates = true;
     } else {
@@ -353,7 +353,7 @@ void LhxHashTable::init(
 PBuffer LhxHashTable::allocBlock()
 {
     PBuffer resultBlock;
-    
+
     if (currentBlockCount < maxBlockCount) {
         currentBlockCount ++;
         /*
@@ -362,7 +362,7 @@ PBuffer LhxHashTable::allocBlock()
         bufferLock.allocatePage();
         resultBlock = bufferLock.getPage().getWritableData();
         bufferLock.unlock();
-        
+
         /*
          * The new block is not linked in yet.
          */
@@ -380,7 +380,7 @@ PBuffer LhxHashTable::allocBlock()
 PBuffer LhxHashTable::allocBuffer(uint bufSize)
 {
     PBuffer resultBuf = nodeBlockAccessor.allocBuffer(bufSize);
-    
+
     if (!resultBuf) {
         /*
          * Current block out of memory
@@ -393,17 +393,17 @@ PBuffer LhxHashTable::allocBuffer(uint bufSize)
             nodeBlockAccessor.setNext(newBlock);
             currentBlock = newBlock;
         }
-        
+
         if (currentBlock) {
             nodeBlockAccessor.setCurrent(currentBlock, false, false);
             resultBuf = nodeBlockAccessor.allocBuffer(bufSize);
-            
+
             assert (resultBuf);
         }
     }
-    
+
     return resultBuf;
-}     
+}
 
 bool LhxHashTable::allocateResources(bool reuse)
 {
@@ -420,7 +420,7 @@ bool LhxHashTable::allocateResources(bool reuse)
     }
 
     currentBlock = firstBlock;
-    
+
     /*
      * Should be able to allocate at least one block.
      */
@@ -433,7 +433,7 @@ bool LhxHashTable::allocateResources(bool reuse)
      */
     nodeBlockAccessor.setCurrent(currentBlock, false, true);
     slotBlocks.push_back(currentBlock);
-            
+
     if (numSlots <= numSlotsPerBlock) {
         /*
          * This will be the first "node block", i.e. it contains key or
@@ -462,7 +462,7 @@ bool LhxHashTable::allocateResources(bool reuse)
                 return false;
             }
         }
-            
+
         /*
          * New block is linked to the end of the allocated block list.
          */
@@ -528,7 +528,7 @@ void LhxHashTable::calculateNumSlots(
     numSlots =
         max(slotsNeeded(cndKeys), slotsLow);
 
-    numSlots = min(numSlots, slotsHigh);    
+    numSlots = min(numSlots, slotsHigh);
 }
 
 void LhxHashTable::calculateSize(
@@ -536,7 +536,7 @@ void LhxHashTable::calculateSize(
     uint inputIndex,
     BlockNum &numBlocks)
 {
-    uint usablePageSize = 
+    uint usablePageSize =
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize()
         - sizeof(PBuffer);
 
@@ -557,7 +557,7 @@ void LhxHashTable::calculateSize(
 
     TupleDescriptor keyDesc;
     keyDesc.projectFrom(inputDesc, keyProj);
-    
+
     TupleDescriptor dataDesc;
     dataDesc.projectFrom(inputDesc, dataProj);
 
@@ -577,7 +577,7 @@ void LhxHashTable::calculateSize(
     tmpKey.init(keyDesc, tmpKeyProj, tmpAggsProj);
     tmpData.init(dataDesc);
 
-    double totalBytes = 
+    double totalBytes =
         slotsNeeded(cndKeys) * sizeof(PBuffer)
         + cndKeys * tmpKey.getAvgStorageSize()
         + numRows * tmpData.getAvgStorageSize();
@@ -596,7 +596,7 @@ PBuffer *LhxHashTable::getSlot(uint slotNum)
     uint slotsPerBlock = blockAccessor.getSlotsPerBlock();
 
     blockAccessor.setCurrent(slotBlocks[slotNum/slotsPerBlock], true, false);
-    
+
     slot = blockAccessor.getSlot(slotNum%slotsPerBlock);
 
     assert (slot);
@@ -612,12 +612,12 @@ PBuffer LhxHashTable::findKeyLocation(
 {
     uint slotNum =
         (hashGen.hash(inputTuple, inputKeyProj, isKeyColVarChar)) % numSlots;
-    
+
     PBuffer *slot = getSlot(slotNum);
     PBuffer keyLocation = (PBuffer)slot;
     PBuffer firstKey = *slot;
     PBuffer nextKey;
-    
+
     if (firstKey) {
         /*
          * Keep searching if the key has already been linked to keys in the
@@ -660,7 +660,7 @@ bool LhxHashTable::addKeyData(TupleData const &inputTuple)
     // other calculations like resource estimation.
     uint slotNum =
         (hashGen.hash(inputTuple, keyColsProj, isKeyColVarChar)) % numSlots;
-    
+
     PBuffer *slot = getSlot(slotNum);
     PBuffer *newLastSlot = NULL;
 
@@ -825,7 +825,7 @@ bool LhxHashTable::aggData(PBuffer destKeyLoc, TupleData const &inputTuple)
             aggResultTuple[aggsProj[i]],
             inputTuple);
     }
-    
+
     hashKeyAccessor.checkStorageSize(aggResultTuple, maxBufferSize);
 
     uint newResultSize =
@@ -843,7 +843,7 @@ bool LhxHashTable::aggData(PBuffer destKeyLoc, TupleData const &inputTuple)
          * again.
          */
         newKey = allocBuffer(newResultSize);
-    
+
         if (newKey) {
             /*
              * Save the current key's next slot so we can set it in the new
@@ -917,7 +917,7 @@ bool LhxHashTable::addTuple(TupleData const &inputTuple)
              * Need to copy destKey out as destKeyLoc might not be aligned.
              */
             memcpy((PBuffer*)&destKey, destKeyLoc, sizeof(PBuffer));
-            
+
             assert (destKey);
 
             return addData(destKey, inputTuple);
@@ -941,11 +941,11 @@ PBuffer LhxHashTable::findKey(
     destKeyLoc =
         findKeyLocation(inputTuple, inputKeyProj, isProbing,
             removeDuplicateProbe);
-    
+
     if (destKeyLoc) {
         /*
          * Need to copy destKey out as destKeyLoc might not be aligned.
-         */    
+         */
         memcpy((PBuffer)&destKey, destKeyLoc, sizeof(PBuffer));
         return destKey;
     } else {
@@ -954,12 +954,12 @@ PBuffer LhxHashTable::findKey(
 }
 
 string LhxHashTable::printSlot(uint slotNum)
-{    
+{
     ostringstream slotTrace;
     PBuffer *slot = getSlot(slotNum);
 
     slotTrace << "[Slot] [" << slotNum << "] [" << slot <<"]\n";
-    
+
     /*
      * Print all keys in this slot.
      */
@@ -1060,7 +1060,7 @@ bool LhxHashTableReader::advanceSlot()
             return false;
         }
     }
-    
+
     hashKeyAccessor.setCurrent(curKey, true);
 
     if (!isGroupBy) {
@@ -1084,7 +1084,7 @@ bool LhxHashTableReader::advanceKey()
             }
         }
     }
-    
+
     if (curKey) {
         hashKeyAccessor.setCurrent(curKey, true);
         if (!isGroupBy) {
@@ -1151,7 +1151,7 @@ void LhxHashTableReader::init(
         keyDesc.push_back(outputTupleDesc[keyColsProj[i]]);
         keyColsProjInKey.push_back(i);
     }
-    
+
     keyColsAndAggsProj = keyColsProj;
     uint aggsProjSize = aggsProj.size();
 
@@ -1171,7 +1171,7 @@ void LhxHashTableReader::init(
 
     hashTable = hashTableInit;
     isGroupBy = hashTable->isHashGroupBy();
- 
+
     /*
      * By default, this reader is not associated with any key, i.e. it covers
      * the whole hash table.
@@ -1199,7 +1199,7 @@ bool LhxHashTableReader::getNext(TupleData &outputTuple)
     }
 
     if (advanceData()) {
-        produceTuple(outputTuple);        
+        produceTuple(outputTuple);
         return true;
     } else {
         if (boundKey) {

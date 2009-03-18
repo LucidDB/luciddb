@@ -75,19 +75,19 @@ protected:
      * @param node the node being flushed
      */
     virtual void writeExtraHeaders(SegStreamNode &node);
-    
+
 public:
     /**
      * Creates a new SegOutputStream.
      *
      * @param segmentAccessor accessor for the segment in which to store the
      * data
-     * 
+     *
      * @return shared_ptr to new SegOutputStream
      */
     static SharedSegOutputStream newSegOutputStream(
         SegmentAccessor const &segmentAccessor);
-    
+
     /**
      * Gets the first PageId allocated.  For non-linear segments, this is
      * required in order to be able to read the data back via SegInputStream.

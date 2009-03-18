@@ -69,7 +69,7 @@ protected:
     uuid_t data;
 
 #else /* FENNEL_UUID_FAKE || FENNEL_UUID_REAL_NEW */
-    /* 
+    /*
      * For FENNEL_UUID_REAL_NEW, uuid_t is not longer a concrete type.
      * To keep PseudoUuid simple, we use the new API to copy UUIDs into
      * our own array.
@@ -105,7 +105,7 @@ public:
     int hashCode() const;
 
     bool operator == (PseudoUuid const &) const;
-    
+
     bool operator != (PseudoUuid const &other) const
     {
         return !(*this == other);
@@ -114,9 +114,9 @@ public:
     uint8_t getByte(int) const;
 
     const uint8_t *getBytes() const;
-    
+
     /**
-     * Converts  an  input UUID string of the form 
+     * Converts  an  input UUID string of the form
      * 1b4e28ba-2fa1-11d2-883f-b9a761bde3fb
      * into the internal representation.
      *

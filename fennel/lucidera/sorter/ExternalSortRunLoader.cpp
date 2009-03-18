@@ -39,7 +39,7 @@ ExternalSortRunLoader::ExternalSortRunLoader(ExternalSortInfo &sortInfoIn)
     runningParallelTask = false;
 
     bufferLock.accessSegment(sortInfo.memSegmentAccessor);
-    
+
     tupleAccessor.compute(sortInfo.tupleDesc);
     tupleAccessor2.compute(sortInfo.tupleDesc);
 
@@ -109,7 +109,7 @@ void ExternalSortRunLoader::startRun()
 PBuffer ExternalSortRunLoader::allocateBuffer()
 {
     PBuffer pBuffer;
-    
+
     if (!freeBuffers.empty()) {
         pBuffer = freeBuffers.back();
         freeBuffers.pop_back();
@@ -119,10 +119,10 @@ PBuffer ExternalSortRunLoader::allocateBuffer()
     if ((indexBuffers.size() + dataBuffers.size()) >= nMemPagesMax) {
         return NULL;
     }
-    
+
     bufferLock.allocatePage();
     pBuffer = bufferLock.getPage().getWritableData();
-    
+
     // REVIEW jvs 12-June-2004:  we rely on the fact that the underlying
     // ScratchSegment keeps the page pinned for us; need to make this
     // official.
@@ -164,7 +164,7 @@ void ExternalSortRunLoader::releaseResources()
 
     // REVIEW jvs 12-June-2004:  see corresponding comment above in
     // allocateBuffer()
-    
+
     sortInfo.memSegmentAccessor.pSegment->deallocatePageRange(
         NULL_PAGE_ID,NULL_PAGE_ID);
 }

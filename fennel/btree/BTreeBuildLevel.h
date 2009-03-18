@@ -46,7 +46,7 @@ protected:
      * Owning BTreeBuilder.
      */
     BTreeBuilder &builder;
-    
+
     /**
      * BTreeNodeAccessor to use for accessing nodes in this level.
      */
@@ -102,7 +102,7 @@ protected:
     void processInput(ByteInputStream &sortedInputStream);
 
     void unmarshalLastKey();
-    
+
     BTreeNode *allocateAndLinkNewNode();
 
     BTreeNode &allocatePage();
@@ -110,14 +110,14 @@ protected:
     explicit BTreeBuildLevel(
         BTreeBuilder &builderInit,
         BTreeNodeAccessor &nodeAccessorInit);
-        
+
     virtual bool isNodeFull(BTreeNode const &node,uint cbTuple);
 
     virtual void indexLastKey(bool finalize) = 0;
 
 public:
     virtual ~BTreeBuildLevel();
-    
+
     void indexLastChild();
 };
 
@@ -137,15 +137,15 @@ class FixedBuildLevel : public BTreeBuildLevel
 class VariableBuildLevel : public BTreeBuildLevel
 {
     friend class BTreeBuilder;
-    
+
     SharedSegOutputStream pParentKeyStream;
-    
+
     explicit VariableBuildLevel(
         BTreeBuilder &builderInit,
         BTreeNodeAccessor &nodeAccessorInit);
-    
+
     SharedSegInputStream getParentKeyStream();
-    
+
     // implement the BTreeBuildLevel interface
     virtual void indexLastKey(bool finalize);
 
@@ -156,11 +156,11 @@ public:
 class DynamicBuildLevel : public BTreeBuildLevel
 {
     friend class BTreeBuilder;
-    
+
     explicit DynamicBuildLevel(
         BTreeBuilder &builderInit,
         BTreeNodeAccessor &nodeAccessorInit);
-    
+
     // implement the BTreeBuildLevel interface
     virtual void indexLastKey(bool finalize);
 };

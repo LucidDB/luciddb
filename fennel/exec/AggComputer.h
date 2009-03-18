@@ -32,7 +32,7 @@ class StoredTypeDescriptor;
 class TupleAttributeDescriptor;
 class TupleData;
 class TupleDatum;
-    
+
 /**
  * Abstract base class representing computation of a single aggregate function
  * over a collection of scalar values all having the same group key.  In order
@@ -48,10 +48,10 @@ class AggComputer
 {
 protected:
     int iInputAttr;
-    
+
 public:
     explicit AggComputer();
-    
+
     virtual ~AggComputer();
 
     /**
@@ -129,7 +129,7 @@ public:
     virtual void initAccumulator(
         TupleDatum &accumulatorDatumSrc,
         TupleDatum &accumulatorDatumDest) = 0;
-    
+
     /**
      * Computes a new accumulator from an existing accumulator dataum and a new
      * input tuple.

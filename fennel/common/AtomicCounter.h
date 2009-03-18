@@ -50,7 +50,7 @@ public:
     {
         _M_incr();
     }
-    
+
     void operator -- ()
     {
         _M_decr();

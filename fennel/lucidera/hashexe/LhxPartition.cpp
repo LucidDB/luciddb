@@ -71,14 +71,14 @@ void LhxPartitionWriter::open(
     hashTableReader.init(&hashTable, hashInfo, destPartition->inputIndex);
 
     hashInfo.numCachePages = savedNumCachePages;
-    
+
     uint cndKeys = hashInfo.cndKeys.back();
     uint usablePageSize =
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize();
 
     hashTable.calculateNumSlots(cndKeys, usablePageSize, numWriterCachePages);
 
-    partialAggTuple.compute(hashInfo.inputDesc[destPartition->inputIndex]);    
+    partialAggTuple.compute(hashInfo.inputDesc[destPartition->inputIndex]);
 }
 
 void LhxPartitionWriter::close()
@@ -93,7 +93,7 @@ void LhxPartitionWriter::close()
             PBuffer pDestBuf =
                 pSegOutputStream->getWritePointer(tupleStorageLength);
             tupleAccessor.marshal(partialAggTuple, pDestBuf);
-            pSegOutputStream->consumeWritePointer(tupleStorageLength);    
+            pSegOutputStream->consumeWritePointer(tupleStorageLength);
         }
     }
     destPartition->segStream->endWrite();
@@ -105,12 +105,12 @@ void LhxPartitionWriter::marshalTuple(TupleData const &inputTuple)
     uint tupleStorageLength = tupleAccessor.getByteCount(inputTuple);
     PBuffer pDestBuf = pSegOutputStream->getWritePointer(tupleStorageLength);
     tupleAccessor.marshal(inputTuple, pDestBuf);
-    pSegOutputStream->consumeWritePointer(tupleStorageLength);    
+    pSegOutputStream->consumeWritePointer(tupleStorageLength);
 }
 
 void LhxPartitionWriter::aggAndMarshalTuple(TupleData const &inputTuple)
 {
-    
+
     while (!hashTable.addTuple(inputTuple)) {
         /*
          * Write everything out to partition.
@@ -121,7 +121,7 @@ void LhxPartitionWriter::aggAndMarshalTuple(TupleData const &inputTuple)
             PBuffer pDestBuf =
                 pSegOutputStream->getWritePointer(tupleStorageLength);
             tupleAccessor.marshal(partialAggTuple, pDestBuf);
-            pSegOutputStream->consumeWritePointer(tupleStorageLength);    
+            pSegOutputStream->consumeWritePointer(tupleStorageLength);
         }
         bool reuse = true;
         /*
@@ -143,7 +143,7 @@ void LhxPartitionReader::open(
 {
     bufState = EXECBUF_NONEMPTY;
     srcPartition = srcPartitionInit;
-    
+
     if (!srcPartition->segStream) {
         /*
          * source has never been written to, which means the source
@@ -166,14 +166,14 @@ void LhxPartitionReader::open(
         /*
          * Since reader now gets input stream from the partition,
          * this inputStream will delete content that is read.
-         * This also means each partition can only be read once. 
+         * This also means each partition can only be read once.
          */
         pSegInputStream = srcPartition->segStream->getInputStream();
         pSegInputStream->startPrefetch();
     }
 }
 
-void LhxPartitionReader::close() 
+void LhxPartitionReader::close()
 {
     if (srcIsInputStream) {
         /*
@@ -202,7 +202,7 @@ void LhxPartitionReader::consumeTuple()
         streamBufAccessor->consumeTuple();
     } else {
         tupleAccessor.resetCurrentTupleBuf();
-        pSegInputStream->consumeReadPointer(tupleStorageLength);        
+        pSegInputStream->consumeReadPointer(tupleStorageLength);
     }
 }
 
@@ -230,7 +230,7 @@ bool LhxPartitionReader::demandData()
         uint bytesReadable = 0;
         PConstBuffer pSrcBuf =
             pSegInputStream->getReadPointer(1, &bytesReadable);
-        
+
         /*
          * If readable data does not fill a tuple, it means the segment stream
          * has reached EOD.
@@ -268,7 +268,7 @@ void LhxPartitionInfo::init(LhxHashInfo *hashInfoInit)
         writerList.push_back(
             SharedLhxPartitionWriter(new LhxPartitionWriter()));
     }
-    
+
     filteredRowCountList.reset(
         new uint[numInputs * LhxPlan::LhxChildPartCount]);
 }
@@ -294,7 +294,7 @@ void LhxPartitionInfo::open(
      * Reset the reader and bind it to no particular key(will read the
      * whole hash table).
      */
-    hashTableReader->bindKey(NULL);    
+    hashTableReader->bindKey(NULL);
 
     /*
      * The build reader is from the LhxJoinExecStream and is already open.
@@ -357,7 +357,7 @@ void LhxPartitionInfo::open(
      * Reset the reader and bind it to no particular key (will read the
      * whole hash table).
      */
-    hashTableReader->bindKey(NULL);    
+    hashTableReader->bindKey(NULL);
 
     // REVIEW jvs 26-Aug-2006:  no join if doing agg...
     /*
@@ -381,7 +381,7 @@ void LhxPartitionInfo::open(
     subPartStatList.clear();
     joinFilterList.clear();
     shared_array<uint> curSubPartStat;
-    
+
     for (i = 0; i < numInputs * LhxPlan::LhxChildPartCount; i ++) {
         destPartitionList.push_back(
             SharedLhxPartition(
@@ -417,7 +417,7 @@ void LhxPartitionInfo::open(
 void LhxPartitionInfo::close()
 {
     reader->close();
-    
+
     uint numWriters = writerList.size();
 
     for (uint i = 0; i < numWriters; i ++) {
@@ -428,7 +428,7 @@ void LhxPartitionInfo::close()
      * Partial aggregate hash tables used inside the writers(one HT
      * for each writer) share the same scratch buffer space.
      * Release the buffer pages used by these hash tables at the end,
-     * after all writers have been closed(so that there will be no more 
+     * after all writers have been closed(so that there will be no more
      * scratch page alloc calls).
      */
     for (uint i = 0; i < numWriters; i ++) {
@@ -516,21 +516,21 @@ void LhxPlan::init(
      * input. The input with the smaller side witll be the build side for the
      * join: joinSide for the build will map to the index of this input.
      */
-    if (enableSwing && 
+    if (enableSwing &&
         (numInputs == 2) && (inputSize[0] < inputSize[1])) {
         joinSideToInputMap[0] = 1;
         joinSideToInputMap[1] = 0;
     }
 
     subPartToChildMap.reset();
-    
+
     if (enableSubPartStat) {
         /*
          * Use build side sub part stat to divide both inputs into child
          * partitions. Needs to be called after the join sides have been
          * assigned.
          */
-        mapSubPartToChild(subPartStats);        
+        mapSubPartToChild(subPartStats);
     }
 }
 
@@ -555,7 +555,7 @@ void LhxPlan::mapSubPartToChild(
     }
 
     shared_array<uint> buildChildPartSize = childPartSize[buildIndex];
-    
+
     for (i = 0; i < LhxChildPartCount; i ++) {
         buildChildPartSize[i] = 0;
     }
@@ -588,7 +588,7 @@ void LhxPlan::mapSubPartToChild(
         uint probeIndex = getProbeInput();
         shared_array<uint> probeChildPartSize = childPartSize[probeIndex];
         shared_array<uint> probeSubPartStat = subPartStats[probeIndex];
-        
+
         for (i = 0; i < LhxChildPartCount; i ++) {
             probeChildPartSize[i] = 0;
         }
@@ -640,7 +640,7 @@ LhxPartitionState LhxPlan::generatePartitions(
     TupleData inputTuple;
     TupleDescriptor inputTupleDesc = reader->getTupleDesc();
     inputTuple.compute(inputTupleDesc);
-    
+
     uint prevHashKey;
     uint hashKey;
     uint nextHashKey;
@@ -668,7 +668,7 @@ LhxPartitionState LhxPlan::generatePartitions(
             hashKey = hashGen.hash(hashTableTuple,
                 hashInfo.keyProj[curInputIndex],
                 hashInfo.isKeyColVarChar[curInputIndex]);
-            
+
             childPartIndex = calculateChildIndex(hashKey, curInputIndex);
 
             if (hashInfo.useJoinFilter[curInputIndex]) {
@@ -696,7 +696,7 @@ LhxPartitionState LhxPlan::generatePartitions(
                  */
                 writeToPartition = true;
             }
-            
+
             if (writeToPartition) {
                 writerList[childPartIndex]->marshalTuple(hashTableTuple);
 
@@ -723,7 +723,7 @@ LhxPartitionState LhxPlan::generatePartitions(
                 joinFilterList[childPartIndex]->set(hashKey % filterSize);
             }
         }
-        
+
         if (isAggregate) {
             /*
              * release the agg exec stream hash table scratch pages
@@ -772,7 +772,7 @@ LhxPartitionState LhxPlan::generatePartitions(
                     continue;
                 }
             }
-            
+
             if (!reader->demandData()) {
                 if (partitionLevel == 0) {
                     /*
@@ -796,29 +796,29 @@ LhxPartitionState LhxPlan::generatePartitions(
                     }
                 }
             }
-            
+
             reader->unmarshalTuple(inputTuple);
         }
-        
+
         writeToPartition = false;
 
         hashKey = hashGen.hash(inputTuple,
             hashInfo.keyProj[curInputIndex],
             hashInfo.isKeyColVarChar[curInputIndex]);
-        
+
         childPartIndex = calculateChildIndex(hashKey, curInputIndex);
 
         nextHashKey = hashGenNext.hash(inputTuple,
             hashInfo.keyProj[curInputIndex],
             hashInfo.isKeyColVarChar[curInputIndex]);
-        
+
         statIndex = nextHashKey % LhxSubPartCount;
 
         if (!isAggregate) {
             if (hashInfo.useJoinFilter[curInputIndex]) {
                 /*
                  * Use input filter if there exists one
-                 */                
+                 */
                 if (isBuildChildPart(childPartIndex)) {
                     /*
                      * Build input.  Note top level build input does not have
@@ -909,7 +909,7 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
     for (j = 0; j < numInputs; j ++) {
         reader.open(partitions[j], hashInfo);
         outputTuple.compute(hashInfo.inputDesc[j]);
-    
+
         for (i = 0; i < LhxChildPartCount; i ++) {
             uint index = j * LhxChildPartCount + i;
             destPartitionList[index].reset(
@@ -917,29 +917,29 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
             destPartitionList[index]->inputIndex = j;
             writerList[i].open(destPartitionList[index], hashInfo);
         }
-    
+
         for (;;) {
             if (!reader.isTupleConsumptionPending()) {
                 if (reader.getState() == EXECBUF_EOS) {
                     /*
                      * The current plan is completely partitioned.
                      */
-                    break;                    
+                    break;
                 }
                 if (!reader.demandData()) {
                     break;
                 }
                 reader.unmarshalTuple(outputTuple);
             }
-            
-            childNum = 
-                hashGen.hash(outputTuple, hashInfo.keyProj[j], 
+
+            childNum =
+                hashGen.hash(outputTuple, hashInfo.keyProj[j],
                     hashInfo.isKeyColVarChar[j]) % LhxChildPartCount;
 
             writerList[childNum].marshalTuple(outputTuple);
             reader.consumeTuple();
         }
-    
+
         for (i = 0; i < LhxChildPartCount; i ++) {
             writerList[i].close();
         }
@@ -948,7 +948,7 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
          * Partial aggregate hash tables used inside the writers(one HT
          * for each writer) share the same scratch buffer space.
          * Release the buffer pages used by these hash tables at the end,
-         * after all writers have been closed(so that there will be no more 
+         * after all writers have been closed(so that there will be no more
          * scratch page alloc calls).
          */
         for (i = 0; i < LhxChildPartCount; i ++) {
@@ -973,7 +973,7 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
             partitionList,
             enableSubPartStat);
 
-        newChildPlan->addSibling(firstChildPlan);     
+        newChildPlan->addSibling(firstChildPlan);
         firstChildPlan = newChildPlan;
     }
 }
@@ -1006,7 +1006,7 @@ void LhxPlan::createChildren(LhxPartitionInfo &partInfo,
             enableSubPartStat,
             enableSwing);
 
-        newChildPlan->addSibling(firstChildPlan);     
+        newChildPlan->addSibling(firstChildPlan);
         firstChildPlan = newChildPlan;
     }
     partInfo.destPartitionList.clear();
@@ -1107,7 +1107,7 @@ string LhxPlan::toString()
         planTrace << childPlan->toString();
         childPlan = childPlan->siblingPlan;
     }
-    
+
     return planTrace.str();
 }
 

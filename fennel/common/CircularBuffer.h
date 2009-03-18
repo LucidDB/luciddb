@@ -228,7 +228,7 @@ public:
  * Iterator over a circular buffer.  The iterator starts at the 0th position
  * in the underlying circular buffer and always increases, even as positions
  * in the underlying circular buffer are recycled.
- * 
+ *
  * <p>
  * Incrementing this iterator has not affect on the contents of the underlying
  * buffer.
@@ -248,13 +248,13 @@ class CircularBufferIter
     uint currPos;
 
 public:
-    
+
     explicit CircularBufferIter(CircularBuffer<T> *pCircularBufferInit)
     {
         pCircularBuffer = pCircularBufferInit;
         reset();
     }
-    
+
     /**
      * Resets the iterator to the initial starting position
      */
@@ -271,7 +271,7 @@ public:
         assert(!pCircularBuffer->empty());
         currPos++;
     }
-    
+
     /**
      * @return reference to the entry at the current iterator position
      */
@@ -290,7 +290,7 @@ public:
      */
     bool end()
     {
-        return 
+        return
             (pCircularBuffer->empty() ||
                 currPos > pCircularBuffer->getLastPos());
     }

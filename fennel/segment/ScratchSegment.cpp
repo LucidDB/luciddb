@@ -89,9 +89,9 @@ BlockNum ScratchSegment::getNumPagesExtended()
 PageId ScratchSegment::allocatePageId(PageOwnerId)
 {
     StrictMutexGuard mutexGuard(mutex);
-    
+
     // nothing to do with PageOwnerId
-    
+
     if (getAllocatedSizeInPages() >= nPagesMax) {
         return NULL_PAGE_ID;
     }
@@ -106,7 +106,7 @@ void ScratchSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
 {
     assert(startPageId == NULL_PAGE_ID);
     assert(endPageId == NULL_PAGE_ID);
-    
+
     StrictMutexGuard mutexGuard(mutex);
     clearPages();
 }
@@ -139,7 +139,7 @@ CachePage *ScratchSegment::lockPage(
     TxnId txnId)
 {
     StrictMutexGuard mutexGuard(mutex);
-    
+
     assert(CompoundId::getDeviceId(blockId) == Cache::NULL_DEVICE_ID);
     BlockNum blockNum = CompoundId::getBlockNum(blockId);
     assert(blockNum < pages.size());

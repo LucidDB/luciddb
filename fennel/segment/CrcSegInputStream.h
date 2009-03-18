@@ -38,19 +38,19 @@ FENNEL_BEGIN_NAMESPACE
 class CrcSegInputStream : public SegInputStream
 {
     PseudoUuid onlineUuid;
-    
+
     // TODO:  use a 64-bit crc instead
     boost::crc_32_type crcComputer;
-    
+
     explicit CrcSegInputStream(
         SegmentAccessor const &segmentAccessor,
         PseudoUuid onlineUuid,
         PageId beginPageId);
-    
+
     inline bool lockBufferParanoid();
-    
+
     virtual void lockBuffer();
-    
+
 public:
     /**
      * Creates a new CrcSegInputStream.

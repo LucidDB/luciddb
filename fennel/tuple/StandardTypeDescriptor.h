@@ -33,7 +33,7 @@ FENNEL_BEGIN_NAMESPACE
  * StandardDataTypeOrdinal enumerates the ordinals of the standard types
  * provided by fennel.  Order matters.  Extension data types should
  * start from EXTENSION_TYPE_MIN.
- * NOTE: Any changes must be copied into 
+ * NOTE: Any changes must be copied into
  * 1) enum StandardTypeDescriptorOrdinal
  * 2) net.sf.farrago.query.FennelUtil.convertSqlTypeNameToFennelType
  * 4) net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor
@@ -62,12 +62,12 @@ enum StandardTypeDescriptorOrdinal
     STANDARD_TYPE_UNICODE_CHAR = 16,
     STANDARD_TYPE_UNICODE_VARCHAR = 17,
     STANDARD_TYPE_END,
-    
+
     /**
      * Matches RecordNum type.
      */
     STANDARD_TYPE_RECORDNUM = STANDARD_TYPE_INT_64,
-    
+
     EXTENSION_TYPE_MIN = 1000,
 };
 
@@ -120,7 +120,7 @@ public:
             throw std::invalid_argument("fennel/tuple/StandardTypeDescriptor::toString");
         }
     }
-    
+
     static inline StandardTypeDescriptorOrdinal
     fromString(char const * const str)
     {
@@ -183,11 +183,11 @@ public:
                 break;
             }
         }
-        
+
         throw std::invalid_argument("fennel/tuple/StandardTypeDescriptor::fromString");
         return EXTENSION_TYPE_MIN;
     }
-    
+
     static inline bool
     isNative(StandardTypeDescriptorOrdinal st)
     {
@@ -196,7 +196,7 @@ public:
         }
         return false;
     }
-    
+
     // Useful for instructions like +, -, etc.
     static inline bool
     isNativeNotBool(StandardTypeDescriptorOrdinal st)
@@ -232,7 +232,7 @@ public:
         }
         return false;
     }
-    
+
 
     static inline bool
     isApprox(StandardTypeDescriptorOrdinal st)
@@ -243,7 +243,7 @@ public:
         }
         return false;
     }
-    
+
     static inline bool
     isArray(StandardTypeDescriptorOrdinal st)
     {
@@ -275,7 +275,7 @@ public:
         }
         return false;
     }
-    
+
     static inline bool
     isTextArray(StandardTypeDescriptorOrdinal st)
     {
@@ -297,7 +297,7 @@ public:
         }
         return false;
     }
-    
+
 private:
     explicit
     StandardTypeDescriptor();

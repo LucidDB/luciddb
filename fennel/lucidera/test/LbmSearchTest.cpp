@@ -62,7 +62,7 @@ protected:
      * BTrees corresponding to the clusters
      */
     vector<boost::shared_ptr<BTreeDescriptor> > bTreeClusters;
-    
+
     /**
      * Saved root pageids of btrees corresponding to clusters; used to
      * append to existing table and to read from them
@@ -107,7 +107,7 @@ protected:
      * @param keyProj projection corresponding to the bitmap index keys;
      * excludes start rid
      * @param nKeys number of keys in the bitmap index; excludes start
-     * rid from key count 
+     * rid from key count
      */
     void  initBTreeBitmapDesc(
         TupleDescriptor &tupleDesc, TupleProjection &keyProj, uint nKeys);
@@ -124,7 +124,7 @@ protected:
     /**
      * Loads a table with nClusters clusters, 1 column per cluster, and nRows
      * rows.
-     * 
+     *
      *<p>
 
      * Each column has a repeating sequence of values based on the value in the
@@ -132,7 +132,7 @@ protected:
      * values:
      *
      * (0, 1, 2, ..., n-1, 0, 1, 2, ..., n-1, 0, 1, 2, ...).
-     *  
+     *
      * Then a single bitmap index is created on all columns.
      *
      * @param nRows number of rows to load
@@ -141,7 +141,7 @@ protected:
      * @param newRoot if true, append to existing table
      */
     void loadTableAndIndex(
-        uint nRows, uint nClusters, std::vector<int> const &repeatSeqValues, 
+        uint nRows, uint nClusters, std::vector<int> const &repeatSeqValues,
         bool newRoot);
 
     /**
@@ -221,7 +221,7 @@ protected:
      * search stream using dynamic parameters
      */
     void initEqualSearch(
-        uint nKeys, uint nInputTuples, boost::scoped_array<uint64_t> &vals, 
+        uint nKeys, uint nInputTuples, boost::scoped_array<uint64_t> &vals,
         char &lowerDirective, char &upperDirective,
         TupleAccessor &inputTupleAccessor, TupleData &inputTupleData,
         boost::shared_array<FixedBuffer> &inputBuffer,
@@ -263,7 +263,7 @@ void LbmSearchTest::testScanTwoLevel()
 
 void LbmSearchTest::testScans(uint nRows)
 {
-    uint nClusters = 3; 
+    uint nClusters = 3;
     std::vector<int> repeatSeqValues;
 
     // load the data
@@ -286,7 +286,7 @@ void LbmSearchTest::testScans(uint nRows)
 void LbmSearchTest::testMultipleRanges()
 {
     uint nRows = 20000;
-    uint nClusters = 1; 
+    uint nClusters = 1;
     std::vector<int> repeatSeqValues;
 
     // load a table with a single index on a single column
@@ -297,14 +297,14 @@ void LbmSearchTest::testMultipleRanges()
     testScanFullKey(nRows, nClusters, repeatSeqValues, false, false);
 
     resetExecStreamTest();
-    
+
     // Setup the following search keys.  Note that these keys weren't randomly
     // selected.  Some of them correspond to boundary conditions.
     // 1. key < 8
     // 2. key > 10 && key <= 17
     // 3. key >= 44 and key < 60
     // 4. key > 71
-    
+
     TupleDescriptor inputTupleDesc;
     for (uint i = 0; i < 2; i++) {
         inputTupleDesc.push_back(attrDesc_char1);
@@ -504,7 +504,7 @@ void LbmSearchTest::testScanPartialKey(
 }
 
 void LbmSearchTest::initEqualSearch(
-    uint nKeys, uint nInputTuples, boost::scoped_array<uint64_t> &vals, 
+    uint nKeys, uint nInputTuples, boost::scoped_array<uint64_t> &vals,
     char &lowerDirective, char &upperDirective,
     TupleAccessor &inputTupleAccessor, TupleData &inputTupleData,
     boost::shared_array<FixedBuffer> &inputBuffer,
@@ -560,7 +560,7 @@ void LbmSearchTest::loadTableAndIndex(
     bTreeBitmaps.clear();
 
     // 1. setup mock input stream
-    
+
     MockProducerExecStreamParams mockParams;
     for (uint i = 0; i < nClusters; i++) {
         mockParams.outputTupleDesc.push_back(attrDesc_int64);
@@ -591,10 +591,10 @@ void LbmSearchTest::loadTableAndIndex(
     splitterStreamEmbryo.getStream()->setName("ClusterSplitterExecStream");
 
     // 3. setup loader streams
-    
+
     vector<ExecStreamEmbryo> lcsAppendEmbryos;
     for (uint i = 0; i < nClusters; i++) {
-    
+
         LcsClusterAppendExecStreamParams lcsAppendParams;
         boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
             boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());
@@ -626,8 +626,8 @@ void LbmSearchTest::loadTableAndIndex(
         lcsAppendParams.rootPageId = pBTreeDesc->rootPageId =
             savedBTreeClusterRootIds[i];
 
-        // Now use the above initialized parameter 
-     
+        // Now use the above initialized parameter
+
         ExecStreamEmbryo lcsAppendStreamEmbryo;
         lcsAppendStreamEmbryo.init(
             new LcsClusterAppendExecStream(), lcsAppendParams);
@@ -638,7 +638,7 @@ void LbmSearchTest::loadTableAndIndex(
     }
 
     // 4. setup barrier stream for cluster loads
-    
+
     BarrierExecStreamParams barrierParams;
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
@@ -661,12 +661,12 @@ void LbmSearchTest::loadTableAndIndex(
 
     // create streams for bitmap generator, sort, and bitmap splicer to
     // build an index on all columns
-   
+
     std::vector<std::vector<ExecStreamEmbryo> > createBitmapStreamList;
         std::vector<ExecStreamEmbryo> createBitmapStream;
 
     // 6. setup generator
-    
+
     LbmGeneratorExecStreamParams generatorParams;
     struct LcsClusterScanDef clusterScanDef;
     clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
@@ -715,7 +715,7 @@ void LbmSearchTest::loadTableAndIndex(
     createBitmapStream.push_back(generatorStreamEmbryo);
 
     // 7. setup sorter
-    
+
     ExternalSortExecStreamParams sortParams;
     initBTreeBitmapDesc(
         sortParams.outputTupleDesc, sortParams.keyProj, nKeys);
@@ -727,7 +727,7 @@ void LbmSearchTest::loadTableAndIndex(
     sortParams.storeFinalRun = false;
     sortParams.estimatedNumRows = MAXU;
     sortParams.earlyClose = false;
-    
+
     ExecStreamEmbryo sortStreamEmbryo;
     sortStreamEmbryo.init(
         ExternalSortExecStream::newExternalSortExecStream(), sortParams);
@@ -817,7 +817,7 @@ void LbmSearchTest::initClusterScanDef(
 {
     clusterScanDef.pSegment =
         bTreeClusters[bTreeIndex]->segmentAccessor.pSegment;
-    clusterScanDef.pCacheAccessor = 
+    clusterScanDef.pCacheAccessor =
         bTreeClusters[bTreeIndex]->segmentAccessor.pCacheAccessor;
     clusterScanDef.tupleDesc = bTreeClusters[bTreeIndex]->tupleDescriptor;
     clusterScanDef.keyProj = bTreeClusters[bTreeIndex]->keyProjection;
@@ -853,7 +853,7 @@ void LbmSearchTest::initBTreeTupleDesc(
 }
 
 void LbmSearchTest::testCaseSetUp()
-{    
+{
     LbmExecStreamTestBase::testCaseSetUp();
 
     attrDesc_char1 = TupleAttributeDescriptor(
@@ -991,7 +991,7 @@ void LbmSearchTest::testScanIdx(
 
     SharedExecStream pOutputStream = prepareTransformGraph(
         valuesStreamEmbryo, indexScanStreamEmbryo);
-    
+
     bitmapTupleAccessor.setCurrentTupleBuf(expectedBitmaps);
     verifyBufferedOutput(
         *pOutputStream, bitmapTupleDesc, expectedNBitmaps, expectedBitmaps);

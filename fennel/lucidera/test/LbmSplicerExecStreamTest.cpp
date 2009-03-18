@@ -285,7 +285,7 @@ void LbmSplicerExecStreamTest::testSpliceRids(
         resetExecStreamTest();
     }
 
-    // Read the btree bitmap entries and confirm that they contain all 
+    // Read the btree bitmap entries and confirm that they contain all
     // of the rids that were inserted.  The rids should be in a sequence
     // from 0 to totalRids - 1.
     BTreeReader reader(bTreeDesc);
@@ -397,7 +397,7 @@ void LbmSplicerExecStreamTest::testSpliceWithKeys(
 
     } while (currRidIdx < rids.size());
 
-    // Read the btree bitmap entries and confirm that they contain all 
+    // Read the btree bitmap entries and confirm that they contain all
     // of the rids that were inserted.
     BTreeReader reader(bTreeDesc);
     bool rc = reader.searchFirst();
@@ -548,7 +548,7 @@ void LbmSplicerExecStreamTest::testLER5968()
         bTreeDesc);
     resetExecStreamTest();
 
-    // Read the btree bitmap entries and confirm that they contain all 
+    // Read the btree bitmap entries and confirm that they contain all
     // of the rids that were inserted.  Explicitly make sure there are
     // three btree entries.
     BTreeReader reader(bTreeDesc);
@@ -622,7 +622,7 @@ void LbmSplicerExecStreamTest::testLER6473()
     tupleAccessor.marshal(tupleData, buffer.get() + bufferSize);
     bufferSize += tupleAccessor.getCurrentByteCount();
 
-    // Then create a singleton that's further away 
+    // Then create a singleton that's further away
     rid += 64 + 1;
     rids.push_back(rid);
     tupleData[1].pData = (PConstBuffer) &rid;
@@ -670,7 +670,7 @@ void LbmSplicerExecStreamTest::testLER6473()
         5,
         bTreeDesc);
 
-    // Read the btree bitmap entries and confirm that they contain all 
+    // Read the btree bitmap entries and confirm that they contain all
     // of the rids that were inserted.
     BTreeReader reader(bTreeDesc);
     bool rc = reader.searchFirst();
@@ -811,7 +811,7 @@ void LbmSplicerExecStreamTest::spliceInput(
     splicerParams.bTreeParams.push_back(bTreeParams);
     splicerParams.outputTupleDesc.push_back(attrDesc_int64);
     splicerParams.writeRowCountParamId = DynamicParamId(0);
-    
+
     // In the case where there are index keys, we need to create a dynamic
     // parameter that passes in the rowcount of the number of tuples to
     // be spliced
@@ -884,7 +884,7 @@ void LbmSplicerExecStreamTest::initBTreeTupleDesc(
 }
 
 void LbmSplicerExecStreamTest::testCaseSetUp()
-{    
+{
     ExecStreamUnitTestBase::testCaseSetUp();
 
     attrDesc_int64 = TupleAttributeDescriptor(

@@ -50,22 +50,22 @@ enum SearchEndpoint
      * Defines the beginning of an interval which has an open bound below.
      */
     SEARCH_OPEN_LOWER = '(',
-    
+
     /**
      * Defines the beginning of an interval which has a closed bound below.
      */
     SEARCH_CLOSED_LOWER = '[',
-    
+
     /**
      * Defines the end of an interval which has an open bound above.
      */
     SEARCH_OPEN_UPPER = ')',
-    
+
     /**
      * Defines the end of an interval which has a closed bound above.
      */
     SEARCH_CLOSED_UPPER = ']',
-    
+
     /**
      * Defines the end of an interval which is unbounded above.  The associated
      * key value should be all null.

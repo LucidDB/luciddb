@@ -45,7 +45,7 @@ struct LcsClusterReplaceExecStreamParams :
  * tuple that has the same values as the existing tuple in the original
  * cluster at that same rid position.
  *
- * <p>After processing all input, the rid to cluster pageId btree map 
+ * <p>After processing all input, the rid to cluster pageId btree map
  * corresponding to the cluster is versioned off of the original btree's
  * rootPageId.  So, this execution stream requires the underlying segment
  * corresponding to the cluster to be a snapshot segment.

@@ -38,9 +38,9 @@ FENNEL_BEGIN_NAMESPACE
 class DynamicDelegatingSegment : public Segment
 {
     WeakSegment delegateSegment;
-    
+
     virtual void closeImpl();
-    
+
 public:
     /**
      * Constructs a new DynamicDelegatingSegment.
@@ -49,11 +49,11 @@ public:
      */
     explicit DynamicDelegatingSegment(
         WeakSegment delegatingSegment);
-    
+
     virtual ~DynamicDelegatingSegment();
 
     void setDelegatingSegment(WeakSegment delegatingSegment);
-    
+
     SharedSegment getDelegateSegment();
 
     // implement the Segment interface

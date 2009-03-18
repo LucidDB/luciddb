@@ -47,7 +47,7 @@ public:
     {
         testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,0);
     }
-    
+
     void testBoundedIter()
     {
         testIter(
@@ -68,7 +68,7 @@ public:
         // throttles.
         testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,3);
     }
-    
+
     void testLowPrefetchRejects()
     {
         // Low pre-fetch reject rate.  This will allow the rate to throttle

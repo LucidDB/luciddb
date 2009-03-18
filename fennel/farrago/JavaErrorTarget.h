@@ -30,7 +30,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * JavaErrorTarget implements ErrorTarget by calling back into the 
+ * JavaErrorTarget implements ErrorTarget by calling back into the
  * Farrago error handling facility.
  */
 class JavaErrorTarget : public ErrorTarget

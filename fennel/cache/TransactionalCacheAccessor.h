@@ -38,7 +38,7 @@ FENNEL_BEGIN_NAMESPACE
 class TransactionalCacheAccessor : public DelegatingCacheAccessor
 {
     TxnId implicitTxnId;
-    
+
 public:
     /**
      * Constructor.

@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -34,7 +34,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
  *
  *<li><code>SectionId</code> is the numbered or named section in the table of
  *contents, e.g. "Section 4.18.9" or "Annex A"
- * 
+ *
  *
  *<li><code>ItemType</code> is one of { Table, Syntax Rule, Access Rule,
  *General Rule, or Leveling Rule }
@@ -62,7 +62,7 @@ struct SQL92
  * the format
  * <code>&lt;PartId&gt; &lt;SectionId&gt;
  * [ ItemType &lt;ItemId&gt; ]</code>, where
- * 
+ *
  *<ul>
  *
  *<li><code>PartId</code> is the numbered part (up to Part 5)
@@ -96,7 +96,7 @@ struct SQL99
  * the format
  * <code>&lt;PartId&gt; &lt;SectionId&gt;
  * [ ItemType &lt;ItemId&gt; ]</code>, where
- * 
+ *
  *<ul>
  *
  *<li><code>PartId</code> is the numbered part

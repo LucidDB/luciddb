@@ -30,13 +30,13 @@ using namespace std;
 
 FENNEL_BEGIN_NAMESPACE
 
-enum LhxHashTrim 
+enum LhxHashTrim
 {
     HASH_TRIM_NONE,
     HASH_TRIM_VARCHAR,
     HASH_TRIM_UNICODE_VARCHAR
 };
-    
+
 /**
  * Information common to all hash execution components: join, aggregate.
  *
@@ -65,7 +65,7 @@ struct LhxHashInfo
     SegmentAccessor memSegmentAccessor;
 
     /**
-     * Cache pages to use by this join. These pages are used for 
+     * Cache pages to use by this join. These pages are used for
      * (1) building hash table
      * (2) buffering I/O for writing out to partitions on disk.
      */
@@ -91,7 +91,7 @@ struct LhxHashInfo
     vector<TupleDescriptor> inputDesc;
 
     vector<TupleProjection> keyProj;
-    
+
     /*
      * If a key column is varchar type.
      */
