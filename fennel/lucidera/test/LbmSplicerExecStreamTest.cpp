@@ -394,7 +394,6 @@ void LbmSplicerExecStreamTest::testSpliceWithKeys(
             bTreeDesc);
 
         resetExecStreamTest();
-
     } while (currRidIdx < rids.size());
 
     // Read the btree bitmap entries and confirm that they contain all
@@ -607,7 +606,7 @@ void LbmSplicerExecStreamTest::testLER6473()
     tupleData[3].pData = NULL;
     tupleData[3].cbData = 0;
     lbmEntry.setEntryTuple(tupleData);
-    for ( ; ; rid += 16) {
+    for (;; rid += 16) {
         bool rc = lbmEntry.setRID(LcsRid(rid));
         if (!rc) {
             break;

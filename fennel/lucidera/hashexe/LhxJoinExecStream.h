@@ -141,7 +141,7 @@ class LhxJoinExecStream : public ConfluenceExecStream
     // all uppercase with underscores
 
     enum LhxDefaultJoinInputIndex {
-        DefaultProbeInputIndex=0, DefaultBuildInputIndex=1
+        DefaultProbeInputIndex = 0, DefaultBuildInputIndex = 1
     };
 
     enum LhxJoinState {
@@ -274,37 +274,37 @@ class LhxJoinExecStream : public ConfluenceExecStream
      * Plan returns matched tuples from the probe side.
      * If curPlan is NULL, uses the default probe side where inputIndex == 0.
      */
-    inline bool returnProbeInner(LhxPlan *curPlan=NULL);
+    inline bool returnProbeInner(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns matched tuples from the build side.
      */
-    inline bool returnBuildInner(LhxPlan *curPlan=NULL);
+    inline bool returnBuildInner(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns non-matched tuples from the probe side.
      */
-    inline bool returnProbeOuter(LhxPlan *curPlan=NULL);
+    inline bool returnProbeOuter(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns non-matched tuples from the build side.
      */
-    inline bool returnBuildOuter(LhxPlan *curPlan=NULL);
+    inline bool returnBuildOuter(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns matched tuples from both join sides.
      */
-    inline bool returnInner(LhxPlan *curPlan=NULL);
+    inline bool returnInner(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns tuples, matched or non-matched, from the probe side.
      */
-    inline bool returnProbe(LhxPlan *curPlan=NULL);
+    inline bool returnProbe(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns tuples, matched or non-matched, from the build side.
      */
-    inline bool returnBuild(LhxPlan *curPlan=NULL);
+    inline bool returnBuild(LhxPlan *curPlan = NULL);
 
 public:
     /*
@@ -345,7 +345,7 @@ inline bool LhxJoinExecStream::returnProbeOuter(LhxPlan *curPlan)
 
 inline bool LhxJoinExecStream::returnBuildOuter(LhxPlan *curPlan)
 {
-    uint buildInput = (curPlan == NULL)? 1 : curPlan->getBuildInput();
+    uint buildInput = (curPlan == NULL) ? 1 : curPlan->getBuildInput();
     return joinType->test(buildInput * 2 + 1);
 }
 

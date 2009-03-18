@@ -123,7 +123,7 @@ protected:
             std::string name;
             boost::unit_test::test_unit * tu;
             Item(std::string name, boost::unit_test::test_unit* tu)
-                :name(name), tu(tu) {}
+                : name(name), tu(tu) {}
         };
         /** the test cases, in order of definition */
         std::vector<Item> items;
@@ -271,10 +271,10 @@ do { \
     TestWrapper::FunctionType params [] = \
         { &UserTestClass::testMethodName }; \
     boost::unit_test::test_unit *tu = \
-        boost::unit_test::make_test_case<TestWrapper>( \
+        boost::unit_test::make_test_case<TestWrapper>(\
             &TestWrapper::runTest, \
             #testMethodName, \
-            boost::shared_ptr<TestWrapper>(new TestWrapper( \
+            boost::shared_ptr<TestWrapper>(new TestWrapper(\
                 #testMethodName, \
                 pDerivedTestObj)), \
             params, \

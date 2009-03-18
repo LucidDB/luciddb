@@ -60,10 +60,8 @@ void LcsColumnReader::sync()
         //      (1,-)
         //
 
-        switch (totWidth)
-        {
+        switch (totWidth) {
         // single vector
-
         case 16:    // width 1 = 16
             pFuncReadBitVec = readBitVec16;
             break;
@@ -178,7 +176,6 @@ uint16_t LcsColumnReader::getCurrentValueCode() const
 bool LcsColumnReader::applyFilters(
     TupleDescriptor &projDescriptor, TupleData &outputTupleData)
 {
-
     if (!filters.filteringBitmap.empty()) {
         /*
          * bitmap filtering
@@ -187,7 +184,6 @@ bool LcsColumnReader::applyFilters(
     }
 
     for (uint k = 0; k < filters.filterData.size(); k++) {
-
         LcsResidualFilter *filter = filters.filterData[k].get();
 
         if (filter->lowerBoundDirective != SEARCH_UNBOUNDED_LOWER) {

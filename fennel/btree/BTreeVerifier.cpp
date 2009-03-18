@@ -157,7 +157,7 @@ void BTreeVerifier::verifyChildren(BTreeNode const &node)
     for (uint i = 0; i < node.nEntries; ++i) {
         PageId nextChildPageId;
         if (i + 1 < node.nEntries) {
-            nextChildPageId = getChild(node,i+1);
+            nextChildPageId = getChild(node,i + 1);
         } else {
             nextChildPageId = getFirstChild(node.rightSibling);
         }

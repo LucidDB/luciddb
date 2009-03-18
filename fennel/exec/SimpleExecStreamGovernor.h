@@ -127,4 +127,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End ExecStreamGovernor.h
+// End SimpleExecStreamGovernor.h

@@ -166,12 +166,12 @@ void TupleAccessor::compute(
             pNewAccessor->iValueBit = nBitFields;
             nBitFields++;
         } else {
-            assert((cbMin%iAlign) == 0);
+            assert((cbMin % iAlign) == 0);
             bool bArray =
                 StandardTypeDescriptor::isArray(
                     StandardTypeDescriptorOrdinal(
                         attr.pTypeDescriptor->getOrdinal()));
-            switch(iAlign) {
+            switch (iAlign) {
             case 2:
                 if (bNullable) {
                     if ((format == TUPLE_FORMAT_NETWORK) && !bArray) {
@@ -231,7 +231,7 @@ void TupleAccessor::compute(
                 }
                 break;
             }
-            switch(iAlign) {
+            switch (iAlign) {
             case 1:
                 unalignedFixed.push_back(iAttr);
                 break;
@@ -572,7 +572,7 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
                 }
                 assert(value.cbData <= accessor.cbStorage);
                 accessor.marshalValueData(
-                    pTupleBufDest+iOffset,
+                    pTupleBufDest + iOffset,
                     value);
             } else {
                 bitFields[accessor.iValueBit] =

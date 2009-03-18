@@ -59,7 +59,7 @@ bool BTreeReader::searchExtremeInternal(bool first, ReadMode readMode)
     for (;;) {
         pageLock.lockPage(pageId,lockMode);
         BTreeNode const &node = pageLock.getNodeForRead();
-        switch(node.height) {
+        switch (node.height) {
         case 0:
             // at leaf level
             if (!adjustRootLockMode(lockMode)) {

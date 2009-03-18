@@ -88,17 +88,27 @@ bool Locale::operator!=(const Locale &rhs) const {
 bool Locale::operator<(const Locale &rhs) const
 {
     int langCmp = this->getLanguage().compare(rhs.getLanguage());
-    if (langCmp < 0) return true;
-    if (langCmp > 0) return false;
+    if (langCmp < 0) {
+        return true;
+    }
+    if (langCmp > 0) {
+        return false;
+    }
 
     // same language, check country
     int countryCmp = this->getCountry().compare(rhs.getCountry());
-    if (countryCmp < 0) return true;
-    if (countryCmp > 0) return false;
+    if (countryCmp < 0) {
+        return true;
+    }
+    if (countryCmp > 0) {
+        return false;
+    }
 
     // same country, check variant
     int variantCmp = this->getVariant().compare(rhs.getVariant());
-    if (variantCmp < 0) return true;
+    if (variantCmp < 0) {
+        return true;
+    }
     return false;
 }
 
@@ -119,7 +129,9 @@ const string &Locale::getVariant() const
 
 string Locale::getDisplayName() const
 {
-    if (_lang.empty()) return DEFAULT_LOCALE_DISPLAY;
+    if (_lang.empty()) {
+        return DEFAULT_LOCALE_DISPLAY;
+    }
 
     return
         _lang

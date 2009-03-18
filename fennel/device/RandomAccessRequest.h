@@ -93,7 +93,11 @@ public:
 class RandomAccessRequest
 {
 public:
-    enum Type { READ, WRITE};
+    enum Type {
+        READ,
+        WRITE
+    };
+
     typedef IntrusiveList<RandomAccessRequestBinding> BindingList;
     typedef IntrusiveListIter<RandomAccessRequestBinding> BindingListIter;
     typedef IntrusiveListMutator<RandomAccessRequestBinding>

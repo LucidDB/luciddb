@@ -117,7 +117,7 @@ public:
 /**
  * LbmRidReader provides an interface for reading RIDs from an input stream
  */
-class LbmRidReader: public LbmRidReaderBase
+class LbmRidReader : public LbmRidReaderBase
 {
 public:
     /**
@@ -314,8 +314,7 @@ public:
 inline bool LbmIterableRidReader::searchForNextRid()
 {
     ExecStreamResult rc = readRidAndAdvance(bufferedRid);
-    switch (rc)
-    {
+    switch (rc) {
     case EXECRC_YIELD:
         buffered = true;
         break;

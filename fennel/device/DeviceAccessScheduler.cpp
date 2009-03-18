@@ -70,8 +70,7 @@ DeviceAccessScheduler *
 DeviceAccessScheduler::newScheduler(
     DeviceAccessSchedulerParams const &params)
 {
-    switch(params.schedulerType) {
-
+    switch (params.schedulerType) {
     case DeviceAccessSchedulerParams::THREAD_POOL_SCHEDULER:
         return new ThreadPoolScheduler(params);
 

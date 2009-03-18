@@ -81,8 +81,7 @@ CacheImpl<PageT,VictimPolicyT>
     try {
         pDeviceAccessScheduler = DeviceAccessScheduler::newScheduler(
             params.schedParams);
-    }
-    catch (FennelExcn &ex) {
+    } catch (FennelExcn &ex) {
         close();
         throw ex;
     }
@@ -154,7 +153,7 @@ void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
 
     // Make two attempts: First, use the configured values.  If that fails,
     // try again with default nMemPagesMax.  If that fails, throw in the towel.
-    for(int attempts = 0; attempts < 2; attempts++) {
+    for (int attempts = 0; attempts < 2; attempts++) {
         bool allocError = false;
         int allocErrorCode = 0;
         char allocErrorMsg[allocErrorMsgSize + 1] = { 0 };
@@ -193,7 +192,7 @@ void CacheImpl<PageT,VictimPolicyT>::allocatePages(CacheParams const &params)
                 PageT &page = *new PageT(*this,pBuffer);
                 pages[i] = &page;
             }
-        } catch(std::exception &excn) {
+        } catch (std::exception &excn) {
             allocError = true;
             allocErrorCode = 0;
             if (dynamic_cast<std::bad_alloc *>(&excn) != NULL) {
@@ -296,7 +295,7 @@ void CacheImpl<PageT,VictimPolicyT>::setAllocatedPageCount(
 
             if (pBuffer == NULL) {
                 // Release each allocated buffer and re-throw
-                for(int i = 0; i < nMemPagesToAllocate; i++) {
+                for (int i = 0; i < nMemPagesToAllocate; i++) {
                     if (buffers[i] == NULL) {
                         break;
                     }
@@ -479,7 +478,6 @@ void CacheImpl<PageT,VictimPolicyT>
     }
     page.nReferences--;
     if (!page.nReferences) {
-
         if (bFree) {
             // The page lock was acquired via lockScratch, so return it to
             // the free list.  No need to notify the victimPolicy since
@@ -864,7 +862,7 @@ void CacheImpl<PageT,VictimPolicyT>
     // some recovery conditions, and will be detected as an assertion when the
     // caller invokes readablePage() on the locked page.  Callers in recovery
     // can use isDataValid() to avoid the assertion.
-    switch(page.dataStatus) {
+    switch (page.dataStatus) {
     case CachePage::DATA_WRITE:
         {
             if (!bSuccess) {
@@ -916,7 +914,7 @@ void CacheImpl<PageT,VictimPolicyT>
     // has already been marked dirty in case the listener needs to write to
     // the page (otherwise an infinite loop would occur).
     pageGuard.unlock();
-    if (page.pMappedPageListener){
+    if (page.pMappedPageListener) {
         page.pMappedPageListener->notifyPageDirty(page,bValid);
     }
 }
@@ -1384,7 +1382,7 @@ inline PageBucket<PageT> &CacheImpl<PageT,VictimPolicyT>
 {
     std::hash<BlockId> hasher;
     size_t hashCode = hasher(blockId);
-    return *(pageTable[hashCode%pageTable.size()]);
+    return *(pageTable[hashCode % pageTable.size()]);
 }
 
 template <class PageT,class VictimPolicyT>

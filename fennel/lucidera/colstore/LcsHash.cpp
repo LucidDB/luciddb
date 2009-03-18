@@ -132,7 +132,7 @@ void LcsHash::insert(
 {
     uint        key;
     uint16_t    newValueOffset;
-    LcsHashValueNode  *vPtr=0;
+    LcsHashValueNode *vPtr = 0;
     TupleStorageByteLength storageLength;
 
     /*
@@ -152,8 +152,7 @@ void LcsHash::insert(
      * (in which case we allow duplicates in the hash table),
      * then adds value to the hash.
      */
-    if(noCompress || !search(key, dataWithLen, valOrd, &vPtr))
-    {
+    if (noCompress || !search(key, dataWithLen, valOrd, &vPtr)) {
         LcsHashValueNode       *newNode;
 
         /*
@@ -166,8 +165,7 @@ void LcsHash::insert(
             !clusterBlockWriter->addValue(columnId, dataWithLen,
                 &newValueOffset);
 
-        if (*undoInsert)
-        {
+        if (*undoInsert) {
             /*
              * Prepares undo action.
              */
@@ -197,26 +195,22 @@ void LcsHash::insert(
 
         storageLength = attrAccessor.getStoredByteCount(dataWithLen);
 
-        if (storageLength > maxValueSize)
+        if (storageLength > maxValueSize) {
             maxValueSize = storageLength;
-
-    }
-
-    /*
-     * We found the value in the hash (from the Search() call above),
-     * so it is already in the block,
-     * but it still may not be part of the current batch.
-     * Whether it is or not, call addValue(), so that we can adjust
-     * space left in the block.
-     */
-    else
-    {
+        }
+    } else {
+        /*
+         * We found the value in the hash (from the Search() call above),
+         * so it is already in the block,
+         * but it still may not be part of the current batch.
+         * Whether it is or not, call addValue(), so that we can adjust
+         * space left in the block.
+         */
         bool bFirstTimeInBatch = !valOrd->isValueInBatch();
 
         *undoInsert = !clusterBlockWriter->addValue(columnId, bFirstTimeInBatch);
 
-        if(*undoInsert)
-        {
+        if (*undoInsert) {
             /*
              * Prepares undo action.
              */
@@ -230,12 +224,9 @@ void LcsHash::insert(
         /*
          * Prepares undo action.
          */
-        if ( bFirstTimeInBatch )
-        {
+        if (bFirstTimeInBatch) {
             undo.set(NEWBATCHVALUE, key, maxValueSize, vPtr);
-        }
-        else
-        {
+        } else {
             undo.set(NOTHING, key, maxValueSize, 0);
         }
     }
@@ -259,8 +250,7 @@ void LcsHash::undoInsert(TupleDatum &colTupleDatum)
 
 void LcsHash::undoInsert(PBuffer dataWithLen)
 {
-    switch(undo.what)
-    {
+    switch (undo.what) {
     case NOTHING:
         {
             /*
@@ -312,7 +302,7 @@ bool LcsHash::search(
 
     attrAccessor.loadValue(colTuple[0], dataWithLen);
 
-    for( valueNode = hash.getFirstValueNode(key);
+    for (valueNode = hash.getFirstValueNode(key);
          valueNode != NULL;
          valueNode = hash.getNextValueNode(valueNode))
      {
@@ -322,8 +312,9 @@ bool LcsHash::search(
          * Skips invalid hash entries.
          * Entries were invalidated by clearFixedEntries.
          */
-        if( valueNode->valueOffset == 0 )
+        if (valueNode->valueOffset == 0) {
             continue;
+        }
 
         attrAccessor.loadValue(
             searchTuple[0],
@@ -336,11 +327,12 @@ bool LcsHash::search(
          */
         searchTuple.resetBuffer();
 
-        if (compareRes == 0)
-        {
+        if (compareRes == 0) {
             numMatches++;
             *valOrd = valueNode->valueOrd;
-            if(vNode) *vNode = valueNode;
+            if (vNode) {
+                *vNode = valueNode;
+            }
             colTuple.resetBuffer();
             return true;
         }
@@ -367,7 +359,7 @@ void LcsHash::prepareCompressedBatch(
     /*
      * Puts all value ordinals in batch in Vals array.
      */
-    for(i=0; i < valCnt; i++) {
+    for (i = 0; i < valCnt; i++) {
         if ((hash.valueNodes[i].valueOrd).isValueInBatch()) {
             hash.valueNodes[i].sortedOrd = *numVals;
             offsetIndexVector[(*numVals)++] = i;
@@ -384,7 +376,7 @@ void LcsHash::prepareCompressedBatch(
      * Now OffsetIndexVector is sorted. Sets sortedOrd,  which is basically index
      * into the OffsetIndexVector,  in valueNodes array.
      */
-    for( i = 0; i < *numVals; i++ ) {
+    for (i = 0; i < *numVals; i++) {
         hash.valueNodes[offsetIndexVector[i]].sortedOrd = i;
     }
 
@@ -394,7 +386,7 @@ void LcsHash::prepareCompressedBatch(
      * OffsetIndexVector will contain offsets sorted based on the values they
      * point to.
      */
-    for( i = 0; i < *numVals; i++) {
+    for (i = 0; i < *numVals; i++) {
         offsetIndexVector[i] =
             hash.valueNodes[offsetIndexVector[i]].valueOffset;
     }
@@ -404,7 +396,7 @@ void LcsHash::prepareCompressedBatch(
      * rowWORDArray contains indices to the OffsetIndexVector,  which conains
      * offsets sorted based on the column values they point to.
      */
-    for( i = 0; i < numRows; i++ ) {
+    for (i = 0; i < numRows; i++) {
         rowWORDArray[i] = hash.valueNodes[rowWORDArray[i]].sortedOrd;
     }
 }
@@ -422,8 +414,9 @@ void LcsHash::prepareFixedOrVariableBatch(
     /*
      * Stores the offset to the column values in rowWORDArray
      */
-    for( i = 0; i < numRows; i++ )
+    for (i = 0; i < numRows; i++) {
         rowWORDArray[i] = pValueNodes[rowWORDArray[i]].valueOffset;
+    }
 }
 
 
@@ -435,7 +428,7 @@ void LcsHash::clearFixedEntries()
     if (!clusterBlockWriter->noCompressMode(columnId)) {
         for (uint i = 0; i < valCnt; i++) {
             if ((hash.valueNodes[i].valueOrd).isValueInBatch()) {
-                hash.valueNodes[i].valueOffset=0;
+                hash.valueNodes[i].valueOffset = 0;
             }
         }
     }
@@ -459,8 +452,7 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
      */
     bool noCompress = clusterBlockWriter->noCompressMode(columnId);
 
-    for( i = 0; i < numVals && !(hash.isFull()); i++ )
-    {
+    for (i = 0; i < numVals && !(hash.isFull()); i++) {
         dataWithLen = clusterBlockWriter->getOffsetPtr(columnId,lastValOff);
         key = noCompress ? 0 : computeKey(dataWithLen);
 
@@ -469,19 +461,19 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
          * case we allow duplicates in the hash table), then adds value to the
          * hash.
          */
-        if (noCompress || !search(key, dataWithLen, &dummy))
-        {
+        if (noCompress || !search(key, dataWithLen, &dummy)) {
             newNode = hash.getNewValueNode();
 
             valOrd = valCnt++;
             newNode->valueOrd = valOrd;
-            newNode->valueOffset=(uint16_t)lastValOff;
+            newNode->valueOffset = (uint16_t) lastValOff;
 
             hash.insertNewValueNode(key,  newNode);
 
             storageLength = attrAccessor.getStoredByteCount(dataWithLen);
-            if( storageLength > maxValueSize )
+            if (storageLength > maxValueSize) {
                 maxValueSize = storageLength;
+            }
         }
 
         lastValOff = clusterBlockWriter->getNextVal(columnId,
@@ -495,14 +487,13 @@ void LcsHash::startNewBatch(uint leftOvers)
      * If the hash is full we need to start over. Otherwise just clear the
      * entries used in building th eprevious batch.
      */
-    if(clusterBlockWriter->noCompressMode(columnId) ||
+    if (clusterBlockWriter->noCompressMode(columnId) ||
         hash.isFull(leftOvers))
     {
         hash.resetHash();
         valCnt       = 0;
         maxValueSize = 0;
-    }
-    else {
+    } else {
         hash.resetBatch();
     }
 }
@@ -521,9 +512,9 @@ uint LcsHash::computeKey(PBuffer dataWithLen)
      * Compute the hash key over all the bytes, inlcuding the length
      * bytes. This saves the implicit memcpy in loadValue.
      */
-    for( i = 0;
+    for (i = 0;
          i < colSize;
-         oldKeyVal[0]=keyVal[0], oldKeyVal[1]=keyVal[1], i++, dataWithLen++)
+         oldKeyVal[0] = keyVal[0], oldKeyVal[1] = keyVal[1], i++, dataWithLen++)
     {
         keyVal[0] = magicTable[oldKeyVal[0] ^ *dataWithLen];
         keyVal[1] = magicTable[oldKeyVal[1] ^ *dataWithLen];
@@ -547,7 +538,8 @@ void LcsHashTable::init(PBuffer hashBlockInit, uint hashBlockSizeInit)
      * hashTableSize is the size for entry array. Reserve space assuming no
      * one valueNode for each entry(no empty entry, and no overflow).
      */
-    hashTableSize = hashBlockSize/(sizeof(uint16_t) + sizeof(LcsHashValueNode));
+    hashTableSize = hashBlockSize /
+        (sizeof(uint16_t) + sizeof(LcsHashValueNode));
 
     /*
      * entry points to the beginning of the hashBlock

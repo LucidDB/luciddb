@@ -335,7 +335,7 @@ void LbmSearchTest::testMultipleRanges()
 
     // setup the expected bitmap result values
     boost::scoped_array<FixedBuffer> expectedBitmaps;
-    uint bufferSize = ((nRows/repeatSeqValues[0]/8 + 1) * 60) * 24;
+    uint bufferSize = ((nRows / repeatSeqValues[0] / 8 + 1) * 60) * 24;
     expectedBitmaps.reset(new FixedBuffer[bufferSize]);
     PBuffer bitmapBuf = expectedBitmaps.get();
     uint expectedNBitmaps = 0;
@@ -409,7 +409,6 @@ void LbmSearchTest::testScanFullKey(
         skipRows *= repeatSeqValues[i];
     }
     for (uint i = 0; i < skipRows; i++) {
-
         // generate input keys for search
         for (uint j = 0; j < nKeys; j++) {
             vals[j] = i % repeatSeqValues[j];
@@ -418,7 +417,7 @@ void LbmSearchTest::testScanFullKey(
 
         // generate expected bitmap result
         boost::scoped_array<FixedBuffer> expectedBitmaps;
-        uint bufferSize = (nRows/skipRows + 1) * 16;
+        uint bufferSize = (nRows / skipRows + 1) * 16;
         expectedBitmaps.reset(new FixedBuffer[bufferSize]);
         uint expectedNBitmaps = 0;
         uint expectedBufSize = 0;
@@ -465,21 +464,23 @@ void LbmSearchTest::testScanPartialKey(
         skipRows *= repeatSeqValues[i];
     }
     boost::scoped_array<FixedBuffer> expectedBitmaps;
-    uint bufferSize = (nRows/skipRows/8 + 1) * 12 * repeatSeqValues[nKeys-1];
+    uint bufferSize = (nRows / skipRows / 8 + 1)
+        * 12 * repeatSeqValues[nKeys - 1];
     expectedBitmaps.reset(new FixedBuffer[bufferSize]);
     PBuffer bitmapBuf = expectedBitmaps.get();
     uint expectedNBitmaps = 0;
     uint curBufSize = 0;
 
     for (uint i = 0; i < repeatSeqValues[nKeys - 1]; i++) {
-
         uint start;
         if (i == 0) {
             start = 0;
         } else {
             // look for the first rid where the last key is equal to "i" and
             // the preceeding keys are all 0
-            for (start = i; start < nRows; start += repeatSeqValues[nKeys-1]) {
+            for (start = i; start < nRows;
+                 start += repeatSeqValues[nKeys - 1])
+            {
                 uint j;
                 for (j = 0; j < nKeys - 1; j++) {
                     if (start % repeatSeqValues[j] != 0) {
@@ -495,7 +496,7 @@ void LbmSearchTest::testScanPartialKey(
             }
         }
         generateBitmaps(
-            nRows, start, skipRows * repeatSeqValues[nKeys-1],
+            nRows, start, skipRows * repeatSeqValues[nKeys - 1],
             bitmapBuf, curBufSize, bufferSize, expectedNBitmaps);
     }
     testScanIdx(
@@ -594,7 +595,6 @@ void LbmSearchTest::loadTableAndIndex(
 
     vector<ExecStreamEmbryo> lcsAppendEmbryos;
     for (uint i = 0; i < nClusters; i++) {
-
         LcsClusterAppendExecStreamParams lcsAppendParams;
         boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
             boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());

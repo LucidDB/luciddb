@@ -618,7 +618,6 @@ class TwoQVictimPolicy
             page.TwoQVictim::setState(TwoQVictim::PAGE_STATE_POPULAR_PINNED);
 
         } else {
-
             // Move the page to the end of the popular-unpinned queues.
             if (state == TwoQVictim::PAGE_STATE_POPULAR_UNPINNED) {
                 popularUnpinnedQueue.moveToTail(page);
@@ -632,7 +631,6 @@ class TwoQVictimPolicy
                     assert(isPageClean(page));
                 }
             } else {
-
                 // The page was originally free and now needs to be put
                 // into the popular-unpinned queue.
                 assert(isPageClean(page));
@@ -942,7 +940,6 @@ public:
                 assert(isPageClean(page));
             }
         } else {
-
             // If the page is currently in the freshmen queue, add it to
             // the history queue, unless the page is being discarded.
             // Remove the page currently at the head of the history queue,
@@ -1176,8 +1173,7 @@ public:
                         dirtyPopularUnpinnedQueue.getHead()),
                     static_cast<TwoQDirtyPage *>(dirtyFreshmenQueue.getHead())),
                 DirtyPageIterator());
-        }
-        else {
+        } else {
             return std::pair<DirtyPageIterator, DirtyPageIterator>(
                 DirtyPageIterator(
                     static_cast<TwoQDirtyPage *>(dirtyFreshmenQueue.getHead()),

@@ -81,3 +81,5 @@ std::ostream &operator<<(std::ostream &str, const Locale &loc);
 FENNEL_END_NAMESPACE
 
 #endif // not Fennel_Locale_Included
+
+// End Locale.h

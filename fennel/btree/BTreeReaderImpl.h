@@ -209,7 +209,7 @@ inline bool BTreeReader::searchForKeyTemplate(
             }
         }
 
-        switch(pNode->height) {
+        switch (pNode->height) {
         case 0:
             // at leaf level
             iTupleOnLowestLevel = iKeyBound;

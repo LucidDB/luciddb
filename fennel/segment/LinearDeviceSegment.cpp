@@ -39,7 +39,7 @@ LinearDeviceSegmentParams::LinearDeviceSegmentParams()
 
 BlockNum LinearDeviceSegment::getAvailableDevicePages() const
 {
-    return pDevice->getSizeInBytes()/getFullPageSize() -
+    return pDevice->getSizeInBytes() / getFullPageSize() -
         CompoundId::getBlockNum(firstBlockId);
 }
 

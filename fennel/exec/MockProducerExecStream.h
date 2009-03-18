@@ -42,7 +42,10 @@ template <class T>
 class ColumnGenerator
 {
 public:
-    virtual ~ColumnGenerator() {};
+    virtual ~ColumnGenerator()
+    {
+    }
+
     virtual T next() = 0;
 };
 

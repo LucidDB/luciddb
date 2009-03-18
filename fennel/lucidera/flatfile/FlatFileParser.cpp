@@ -170,13 +170,15 @@ void FlatFileParser::scanRow(
             result.addColumn(offset, columnResult.size);
         }
         offset = columnResult.next - row;
-        if (done) break;
+        if (done) {
+            break;
+        }
     }
     result.current = const_cast<char *>(row);
     result.next = const_cast<char *>(
         scanRowEnd(
             columnResult.next,
-            buffer+size-columnResult.next,
+            buffer + size - columnResult.next,
             rowDelim,
             result));
 }
@@ -201,7 +203,7 @@ const char *FlatFileParser::scanRowEnd(
     // if a row delimiter was not encountered while scanning the row,
     // search for the next row delimiter character
     if (!rowDelim) {
-        read = scanRowDelim(read, end-read, true);
+        read = scanRowDelim(read, end - read, true);
         if (read == end) {
             return read;
         }
@@ -209,7 +211,7 @@ const char *FlatFileParser::scanRowEnd(
     result.nRowDelimsRead++;
 
     // search for the first non- row delimiter character
-    read = scanRowDelim(read, end-read, false);
+    read = scanRowDelim(read, end - read, false);
     return read;
 }
 
@@ -405,7 +407,7 @@ uint FlatFileParser::stripQuoting(
             *write++ = *read++;
         }
     }
-    return write-buffer;
+    return write - buffer;
 }
 
 uint FlatFileParser::trim(char *buffer, uint size)
@@ -429,7 +431,7 @@ uint FlatFileParser::trim(char *buffer, uint size)
     while (read < end) {
         *write++ = *read++;
     }
-    return write-buffer;
+    return write - buffer;
 }
 
 FENNEL_END_CPPFILE("$Id$");

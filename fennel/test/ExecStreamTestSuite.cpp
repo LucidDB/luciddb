@@ -754,7 +754,7 @@ void ExecStreamTestSuite::testMergeImplicitPullInputs()
 
     // setup the generator for the expected result -- 0's, followed by 1's,
     // followed by 2's, etc.
-    StairCaseExecStreamGenerator expectedResultGenerator(1, nRows/nInputs);
+    StairCaseExecStreamGenerator expectedResultGenerator(1, nRows / nInputs);
 
     verifyOutput(*pOutputStream, nRows, expectedResultGenerator);
 }

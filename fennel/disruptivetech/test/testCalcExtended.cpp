@@ -110,8 +110,8 @@ void convertStringToExactNumber(RegisterRef<int>* regOut,
     uint srcL = regIn->getS();
     // TODO: Change the following proof-of-concept code into
     // TODO: something real.
-    char *nullTermStr = new char [srcL+1];
-    nullTermStr[srcL+1] = 0;
+    char *nullTermStr = new char[srcL + 1];
+    nullTermStr[srcL + 1] = 0;
     memcpy(nullTermStr, regIn->pointer(), srcL);
     regOut->value(strtol(nullTermStr, 0, 10));
     delete [] nullTermStr;
@@ -120,15 +120,15 @@ void convertStringToExactNumber(RegisterRef<int>* regOut,
 
 TODO: Nope this is a disaster JR 6/07 (valueToString() returns "Unimpl");
     const char *pString = regIn->valueToString().c_str();
-    assert( pString );
-    int iValue = atoi( pString );
-    regOut->value( iValue );
+    assert(pString);
+    int iValue = atoi(pString);
+    regOut->value(iValue);
 #endif
 
     // Try original pointer casting code updated to new class interface
     // This code is the same as above
     uint srcL = regIn->stringLength();
-    char *nullTermStr = new char [srcL+1];
+    char *nullTermStr = new char[srcL + 1];
     nullTermStr[srcL] = 0;
     memcpy(nullTermStr, regIn->pointer(), srcL);
     regOut->value(strtol(nullTermStr, 0, 10));
@@ -171,8 +171,8 @@ void convertExactNumberToString(RegisterRef<char *>* regOut,
 TODO: JR 6/07 ... valueToStringis not implemented yet ...
 // re-enabled the above ...
     const char *pString = regIn->valueToString().c_str();
-    assert( pString );
-    regOut->value( const_cast<char*>(pString) );
+    assert(pString);
+    regOut->value( const_cast<char*>(pString));
 #endif
 }
 #endif
@@ -407,7 +407,6 @@ public:
                     T &val)
     {
         val = (reinterpret_cast<T>(const_cast<PBuffer>(_tupleDataOutput[i].pData)));
-
     }
 };
 // ----------------------------------------------------------------------
@@ -473,7 +472,7 @@ void testConvertDoubleToFloat(double val, float expected)
     float f;
     c.getOutput(0, f);
     cout << f << endl;
-    assert( fabs(expected - f) < 0.0001 );
+    assert(fabs(expected - f) < 0.0001);
 };
 
 void testConvertFloatToDouble(float val, double expected)
@@ -519,7 +518,7 @@ void testConvertFloatToDouble(float val, double expected)
     double d;
     c.getOutput(0, d);
     cout << d << endl;
-    assert( fabs(expected - d) < 0.0001 );
+    assert(fabs(expected - d) < 0.0001);
 };
 
 
@@ -682,7 +681,7 @@ void testConvertDecimal(const char * const str, int val, int exp, int expected)
     int i;
     c.getOutput(0, i);
     //cout << i << endl;
-    assert( abs(expected - i)<0.00001 );
+    assert(abs(expected - i)<0.00001);
 };
 
 void testConvertStringToExactNumber(const char *str, int expected)
@@ -794,13 +793,17 @@ void testConvertExactNumberToString(int num, char *expected)
 }
 #endif
 void testStringToApproximateNumber(char *str, float expected)
-{}
+{
+}
 void testApproximateNumberToString(float expected, char *str)
-{}
+{
+}
 void testStringToDate(char *str, long long expected)
-{}
+{
+}
 void testDateToString(long long d, char *expected)
-{}
+{
+}
 
 // ----------------------------------------------------------------------
 // test cases

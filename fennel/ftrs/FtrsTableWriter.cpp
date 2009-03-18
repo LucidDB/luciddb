@@ -169,7 +169,7 @@ inline void FtrsTableWriter::modifySomeIndexes(
     IndexWriterVector::iterator &first,
     IndexWriterVector::iterator last)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
         for (; first != last; ++first) {
             insertIntoIndex(*first);
@@ -270,7 +270,7 @@ void FtrsTableWriter::executeUpdate(bool reverse)
 
 inline void FtrsTableWriter::executeTuple(LogicalActionType actionType)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
     case ACTION_DELETE:
         modifyAllIndexes(actionType);
@@ -364,7 +364,7 @@ void FtrsTableWriter::undoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
         redoLogicalAction(ACTION_DELETE,logStream);
         break;

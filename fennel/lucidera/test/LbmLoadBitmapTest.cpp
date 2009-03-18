@@ -296,7 +296,6 @@ void LbmLoadBitmapTest::testLoad(
 
     vector<ExecStreamEmbryo> lcsAppendEmbryos;
     for (uint i = 0; i < nClusters; i++) {
-
         LcsClusterAppendExecStreamParams lcsAppendParams;
         boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
             boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());
@@ -366,7 +365,6 @@ void LbmLoadBitmapTest::testLoad(
 
     std::vector<std::vector<ExecStreamEmbryo> > createBitmapStreamList;
     for (uint i = 0; i < nClusters + 1; i++) {
-
         if (i == 1 && nClusters == 1) {
             /*
              * There's only one column.
@@ -617,7 +615,7 @@ void LbmLoadBitmapTest::initBTreeTupleDesc(
     uint varColSize;
 
     // The default page size is 4K.
-    varColSize = pRandomSegment->getUsablePageSize()/8;
+    varColSize = pRandomSegment->getUsablePageSize() / 8;
     // varColSize = 256;
 
     tupleDesc.push_back(

@@ -257,7 +257,7 @@ inline bool LbmSegment::adjustSegLength(uint8_t &segDescByte, uint segLen)
         return false;
     }
     segDescByte &= ~LbmSegLengthMask;
-    segDescByte |= (uint8_t) ((segLen -1) << LbmHalfByteSize);
+    segDescByte |= (uint8_t) ((segLen - 1) << LbmHalfByteSize);
     return true;
 }
 

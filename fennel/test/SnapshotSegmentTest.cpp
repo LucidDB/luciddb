@@ -92,7 +92,7 @@ public:
         // Make sure new pages have been allocated before we roll them back
         assert(
             pVersionedRandomSegment->getAllocatedSizeInPages() ==
-            nDiskPages + nDiskPages/5 + ((nDiskPages % 5) ? 1 : 0));
+            nDiskPages + nDiskPages / 5 + ((nDiskPages % 5) ? 1 : 0));
         commit = false;
         closeStorage();
         commit = true;
@@ -202,9 +202,9 @@ public:
 
         uint totalPages =
             nDiskPages +
-            nDiskPages/3 + ((nDiskPages % 3) ? 1 : 0) +
-            nDiskPages/5 + ((nDiskPages % 5) ? 1 : 0) +
-            nDiskPages/7 + ((nDiskPages % 7) ? 1 : 0);
+            nDiskPages / 3 + ((nDiskPages % 3) ? 1 : 0) +
+            nDiskPages / 5 + ((nDiskPages % 5) ? 1 : 0) +
+            nDiskPages / 7 + ((nDiskPages % 7) ? 1 : 0);
 
         // Deallocate pages -- set the oldestActiveTxnId at TxnId(3).  No
         // pages should be deallocated.

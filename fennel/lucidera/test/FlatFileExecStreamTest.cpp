@@ -133,10 +133,10 @@ void FlatFileExecStreamTest::testBuffer()
     checkRead(*pFileBuffer, "12345671");
     BOOST_CHECK_EQUAL(pFileBuffer->getReadPtr(), (char *)fixedBuffer);
 
-    pFileBuffer->setReadPtr(pFileBuffer->getReadPtr()+7);
+    pFileBuffer->setReadPtr(pFileBuffer->getReadPtr() + 7);
     checkRead(*pFileBuffer, "12345676");
 
-    pFileBuffer->setReadPtr(pFileBuffer->getReadPtr()+6);
+    pFileBuffer->setReadPtr(pFileBuffer->getReadPtr() + 6);
     checkRead(*pFileBuffer, "7654\n");
     BOOST_CHECK(pFileBuffer->isComplete());
 }
@@ -197,7 +197,7 @@ void FlatFileExecStreamTest::checkRead(
 {
     uint size = strlen(string);
     buffer.read();
-    BOOST_CHECK_EQUAL(buffer.getEndPtr()-buffer.getReadPtr(), size);
+    BOOST_CHECK_EQUAL(buffer.getEndPtr() - buffer.getReadPtr(), size);
     BOOST_CHECK_EQUAL(strncmp(buffer.getReadPtr(), string, size), 0);
 }
 

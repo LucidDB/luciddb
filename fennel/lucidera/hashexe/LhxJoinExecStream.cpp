@@ -44,7 +44,7 @@ void LhxJoinExecStream::prepare(
     inputTuple.reset(new TupleData[2]);
     inputTupleSize.reset(new uint[2]);
 
-    for (int inputIndex = 0; inputIndex < numInputs; inputIndex ++ ) {
+    for (int inputIndex = 0; inputIndex < numInputs; inputIndex++) {
         inputTuple[inputIndex].compute(
             inAccessors[inputIndex]->getTupleDesc());
         inputTupleSize[inputIndex] = inputTuple[inputIndex].size();
@@ -222,10 +222,8 @@ void LhxJoinExecStream::open(bool restart)
 
 ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    while (true)
-    {
-        switch (joinState)
-        {
+    while (true) {
+        switch (joinState) {
         case ForcePartitionBuild:
             {
                 TupleData &buildTuple = inputTuple[curPlan->getBuildInput()];
@@ -753,7 +751,7 @@ void LhxJoinExecStream::setHashInfo(
     LhxJoinExecStreamParams const &params)
 {
     uint numInputs = inAccessors.size();
-    for (int inputIndex = 0; inputIndex < numInputs; inputIndex ++ ) {
+    for (int inputIndex = 0; inputIndex < numInputs; inputIndex++) {
         hashInfo.streamBufAccessor.push_back(inAccessors[inputIndex]);
         hashInfo.inputDesc.push_back(
             inAccessors[inputIndex]->getTupleDesc());
@@ -829,8 +827,7 @@ void LhxJoinExecStream::setHashInfo(
     hashInfo.externalSegmentAccessor.pCacheAccessor = params.pCacheAccessor;
     hashInfo.externalSegmentAccessor.pSegment = params.pTempSegment;
 
-    for (int inputIndex = 0; inputIndex < numInputs; inputIndex ++ ) {
-
+    for (int inputIndex = 0; inputIndex < numInputs; inputIndex++) {
         TupleProjection &keyProj  = hashInfo.keyProj[inputIndex];
         TupleDescriptor &inputDesc  = hashInfo.inputDesc[inputIndex];
 

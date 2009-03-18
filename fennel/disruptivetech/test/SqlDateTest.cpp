@@ -186,7 +186,6 @@ SqlDateTest::testSqlDateToStr_Ascii()
                     BOOST_CHECK(t.verify());
                     //                    cout << t.mStr << endl;
                 }
-
             }
         }
     }
@@ -243,7 +242,6 @@ SqlDateTest::testSqlTimeToStr_Ascii()
                     BOOST_CHECK(t.verify());
                     //              cout << t.mStr << endl;
                 }
-
             }
         }
     }
@@ -350,7 +348,6 @@ SqlDateTest::testSqlStrToDate_Ascii()
 void
 SqlDateTest::testUniversalTime()
 {
-
     int64_t t = UniversalTime();
     int64_t ts = UniversalTimestamp();
 

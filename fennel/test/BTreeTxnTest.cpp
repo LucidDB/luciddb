@@ -364,7 +364,7 @@ bool BTreeTxnTest::testThreadedOp(int iOp)
         pDatabase->getCheckpointThread()->getActionMutex(),false);
     assert(iOp < OP_MAX);
     OpType op = static_cast<OpType>(iOp);
-    switch(op) {
+    switch (op) {
     case OP_INSERT:
         checkpointSharedGuard.lock();
         insertTxn();

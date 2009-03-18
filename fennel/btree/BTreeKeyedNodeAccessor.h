@@ -80,7 +80,7 @@ public:
                 searchKey,scratchKey);
             if (j == 0) {
                 found = true;
-                switch(dupSeek) {
+                switch (dupSeek) {
                 case DUP_SEEK_ANY:
                     return probe;
                 case DUP_SEEK_BEGIN:
@@ -119,8 +119,9 @@ public:
         TupleData &scratchKey)
     {
         int nKeys = NodeAccessor::getKeyCount(node);
-        if (nKeys == 0)
+        if (nKeys == 0) {
             return -1;
+        }
         accessTupleInline(node, 0);
         pKeyAccessor->unmarshal(scratchKey);
         int compareResult = keyDescriptor.compareTuples(searchKey, scratchKey);

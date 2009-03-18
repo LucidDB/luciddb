@@ -337,7 +337,7 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
         SharedCache pCache = pDbHandle->pDb->getCache();
         // need to set aside at least 5 pages per statement
         if (nStatements <= 0 ||
-            nStatements > pCache->getMaxLockedPages()/5)
+            nStatements > pCache->getMaxLockedPages() / 5)
         {
             throw InvalidParamExcn("1", "'cachePagesInit/5'");
         }
@@ -736,8 +736,7 @@ void CmdInterpreter::visit(ProxyCmdCreateStreamHandle &cmd)
         pStream =
             pStreamGraphHandle->pExecStreamGraph->findLastStream(
             cmd.getStreamName(), 0);
-    }
-    else {
+    } else {
         pStream =
             pStreamGraphHandle->pExecStreamGraph->findStream(
             cmd.getStreamName());

@@ -110,7 +110,7 @@ inline BlockNum RandomAllocationSegmentBase::makePageNum(
     ExtentNum extentNum,BlockNum iPageInExtent) const
 {
     // weird calculation to take into account interspersal of SegAllocNodes
-    uint nSegPages = extentNum/nExtentsPerSegAlloc + 1;
+    uint nSegPages = extentNum / nExtentsPerSegAlloc + 1;
     return iPageInExtent + extentNum*nPagesPerExtent + nSegPages;
 }
 

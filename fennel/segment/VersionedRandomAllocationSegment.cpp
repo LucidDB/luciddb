@@ -165,7 +165,6 @@ void VersionedRandomAllocationSegment::deallocatePageRange(
     if (startPageId == NULL_PAGE_ID) {
         format();
     } else {
-
         // Note that we cannot discard deferred-deallocation pages from cache
         // because they really haven't been freed yet and still may be
         // referenced by other threads.  The pages will be removed from the
@@ -569,7 +568,6 @@ void VersionedRandomAllocationSegment::updateExtentEntry(
     // SegmentAllocationNode
 
     if (allocationCount) {
-
         // Update the permanent page if we're committing.  Otherwise, update
         // the temporary page, reverting the allocations/deallocations.
         PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
@@ -614,7 +612,6 @@ void VersionedRandomAllocationSegment::allocateAllocNodes(
     PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
     segAllocLock.lockExclusive(segAllocPageId);
     if (segAllocLock.checkMagicNumber()) {
-
         // If the SegmentAllocationNode has already been allocated and this
         // is the first call to this method, check if we need to allocate
         // VersionedExtentAllocationNodes.  Otherwise, set the
@@ -627,7 +624,6 @@ void VersionedRandomAllocationSegment::allocateAllocNodes(
             node.nextSegAllocPageId = nextPageId;
         }
     } else {
-
         // Allocate a new page and then recursively call this method to set
         // the nextSegAllocPageId on the predecessor SegmentAllocationNode
         // to the newly allocated page, allocating that SegmentAllocationNode
@@ -727,7 +723,6 @@ bool VersionedRandomAllocationSegment::getOldPageIds(
     SegAllocLock segAllocLock(selfAccessor);
 
     while (numOldPages < numPages) {
-
         PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
         segAllocLock.lockShared(segAllocPageId);
         SegmentAllocationNode const &segAllocNode =
@@ -757,7 +752,6 @@ bool VersionedRandomAllocationSegment::getOldPageIds(
             // Start at pageEntry 1 to skip past the extent header page,
             // which we can never deallocate
             for (uint j = 1; j < nPagesPerExtent; j++) {
-
                 VersionedPageEntry const &pageEntry =
                     extentNode.getPageEntry(j);
                 if (pageEntry.ownerId == UNALLOCATED_PAGE_OWNER_ID) {
@@ -924,17 +918,17 @@ TxnId VersionedRandomAllocationSegment::getOldestTxnId(
                 }
                 newestOldCsn = pageEntry.allocationCsn;
                 newestOldPageId = chainPageId;
-
-            // It's possible to have two page entries with the same
-            // csn if a page is truncated and then versioned within the same
-            // transaction.
-            } else if
-                (((nextNewestOldCsn == NULL_TXN_ID) ||
-                    (pageEntry.allocationCsn > nextNewestOldCsn)) &&
-                (pageEntry.allocationCsn != newestOldCsn))
-            {
-                nextNewestOldCsn = pageEntry.allocationCsn;
-                nextNewestOldPageId = chainPageId;
+            } else {
+                if (((nextNewestOldCsn == NULL_TXN_ID) ||
+                        (pageEntry.allocationCsn > nextNewestOldCsn)) &&
+                    (pageEntry.allocationCsn != newestOldCsn))
+                {
+                    // It's possible to have two page entries with the same csn
+                    // if a page is truncated and then versioned within the
+                    // same transaction.
+                    nextNewestOldCsn = pageEntry.allocationCsn;
+                    nextNewestOldPageId = chainPageId;
+                }
             }
         }
         assert(pageEntry.versionChainPageId != NULL_PAGE_ID);
@@ -1060,7 +1054,6 @@ void VersionedRandomAllocationSegment::deallocatePageChain(
         getCommittedPageEntryCopy(nextPageId, pageEntry);
 
         if (pageEntry.allocationCsn < deallocationCsn) {
-
             // Deallocate the page entry and chain the previous page
             // entry to the page chained from the deallocated entry.
             // All of this is being done in the permanent page entry.
@@ -1232,7 +1225,6 @@ BlockNum VersionedRandomAllocationSegment::backupAllocationNodes(
     BlockNum nDataPages = 0;
 
     while (true) {
-
         PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
         segAllocLock.lockShared(segAllocPageId);
         pBackupDevice->writeBackupPage(
@@ -1255,7 +1247,6 @@ BlockNum VersionedRandomAllocationSegment::backupAllocationNodes(
                 extentAllocLock.getPage().getReadableData());
 
             if (countDataPages) {
-
                 // Don't bother looping through the entries if we know none
                 // are allocated
                 if (extentEntry.nUnallocatedPages == nPagesPerExtent - 1) {
@@ -1267,7 +1258,6 @@ BlockNum VersionedRandomAllocationSegment::backupAllocationNodes(
 
                 // Start at pageEntry 1 to skip past the extent header page
                 for (uint j = 1; j < nPagesPerExtent; j++) {
-
                     checkAbort(abortFlag);
                     VersionedPageEntry const &pageEntry =
                         extentNode.getPageEntry(j);
@@ -1325,7 +1315,6 @@ void VersionedRandomAllocationSegment::locateDataPages(
     }
 
     while (true) {
-
         PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
         segAllocLock.lockShared(segAllocPageId);
         // In the case of a backup, make a copy of the allocation nodes so
@@ -1374,7 +1363,6 @@ void VersionedRandomAllocationSegment::locateDataPages(
 
             // Start at pageEntry 1 to skip past the extent header page
             for (uint j = 1; j < nPagesPerExtent; j++) {
-
                 checkAbort(abortFlag);
                 VersionedPageEntry const &pageEntry =
                     extentNode.getPageEntry(j);
@@ -1426,7 +1414,6 @@ void VersionedRandomAllocationSegment::restoreFromBackup(
     ExtentNum extentNum = 0;
 
     while (true) {
-
         // Restore the allocation node page from the backup file, writing it
         // to disk.  Then wait for the write to complete before reading it
         // into cache, so we're ensured that we pick up the completed write.
@@ -1491,6 +1478,6 @@ void VersionedRandomAllocationSegment::checkAbort(
     }
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/segment/VersionedRandomAllocationSegment.cpp#16 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End VersionedRandomAllocationSegment.cpp

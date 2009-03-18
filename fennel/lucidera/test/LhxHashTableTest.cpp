@@ -201,7 +201,7 @@ void LhxHashTableTest::testInsert(
     for (i = 0; i < numCols; i ++) {
         inputDesc.push_back(attrDesc_int32);
 
-        if ( i < numKeyCols) {
+        if (i < numKeyCols) {
             keyProj.push_back(i);
             isKeyVarChar.push_back(HASH_TRIM_NONE);
         } else if (i < numKeyCols + numAggs) {
@@ -257,7 +257,6 @@ void LhxHashTableTest::testInsert(
      * Insert some tuples.
      */
     for (i = 0; i < numRows; i ++) {
-
         for (j = 0; j < numCols; j++) {
             colValues[j] = i % repeatSeqValues[j];
             inputTuple[j].pData = (PBuffer)&(colValues[j]);
@@ -302,7 +301,6 @@ void LhxHashTableTest::testInsert(
      * matched rows.
      */
     for (i = 0; i < numRows; i ++) {
-
         for (j = 0; j < numCols; j++) {
             colValues[j] = i % repeatSeqValues[j];
             inputTuple[j].pData = (PBuffer)&(colValues[j]);
@@ -472,7 +470,7 @@ void LhxHashTableTest::testInsert1Ka()
         /*
          * At least one value, hence + 1.
          */
-        values.push_back(i+10);
+        values.push_back(i + 10);
     }
 
     for (i = 0; i < numAggs; i ++) {
@@ -480,7 +478,7 @@ void LhxHashTableTest::testInsert1Ka()
     }
 
     for (i = 0; i < numDataCols; i ++) {
-        values.push_back(i+1);
+        values.push_back(i + 1);
     }
 
     testInsert(
@@ -509,7 +507,7 @@ void LhxHashTableTest::testInsert1Kb()
         /*
          * At least one value, hence + 1.
          */
-        values.push_back(i+10);
+        values.push_back(i + 10);
     }
 
     for (i = 0; i < numAggs; i ++) {
@@ -517,7 +515,7 @@ void LhxHashTableTest::testInsert1Kb()
     }
 
     for (i = 0; i < numDataCols; i ++) {
-        values.push_back(i+1);
+        values.push_back(i + 1);
     }
 
     testInsert(

@@ -156,7 +156,6 @@ void LcsClusterAppendExecStream::init()
 
     // get blocks from cache to use as temporary space and initialize arrays
     for (uint i = 0; i < numColumns; i++) {
-
         bufferLock.allocatePage();
         rowBlock[i] = bufferLock.getPage().getWritableData();
         bufferLock.unlock();
@@ -182,7 +181,7 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
 {
     uint i, j, k;
     bool canFit = false;
-    bool undoInsert= false;
+    bool undoInsert = false;
 
     if (isDone) {
         // already returned final result
@@ -191,7 +190,6 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
     }
 
     for (i = 0; i < quantum.nTuplesMax; i++) {
-
         // if we have finished processing the previous row, retrieve
         // the next cluster tuple and then convert the columns in the
         // cluster into individual tuples, one per cluster column
@@ -199,7 +197,6 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
 
         // no more input; produce final row count
         if (rc == EXECRC_EOS) {
-
             // since we're done adding rows to the index, write the last batch
             // and block
             if (rowCnt) {
@@ -243,17 +240,14 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
         undoInsert = false;
 
         for (j = 0; j < numColumns; j++) {
-
             hash[j].insert(
                 clusterColsTupleData[j], &hashValOrd[j], &undoInsert);
 
             if (undoInsert) {
-
                 // rollback cluster columns already inserted
                 // j has not been incremented yet, so the condition should be
                 //     k <= j
                 for (k = 0; k <= j; k++) {
-
                     hash[k].undoInsert(clusterColsTupleData[k]);
                 }
                 break;
@@ -271,7 +265,6 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
         }
 
         if (canFit) {
-
             // Add the pointers from the batch to the data values
             for (j = 0; j < numColumns; j++) {
                 addValueOrdinal(j, hashValOrd[j].getValOrd());
@@ -284,7 +277,6 @@ ExecStreamResult LcsClusterAppendExecStream::compress(
                 writeBatch(false);
             }
         } else {
-
             // since we can't fit anymore values write out current batch
             writeBatch(false);
 
@@ -482,7 +474,6 @@ void LcsClusterAppendExecStream::loadExistingBlock()
     //  3) the code to add values to a batch gets upset if
     //                      szLeft < 0
     for (i = 0; i < numColumns; i++) {
-
         //reset everytime through loop
         rowCnt = startRowCnt;
         lcsBlockBuilder->describeLastBatch(i, anLeftOvers, aiFixedSize[i]);
@@ -499,7 +490,6 @@ void LcsClusterAppendExecStream::loadExistingBlock()
 
     // Start a new batch for each column.
     for (i = 0; i < numColumns; i++) {
-
         //reset everytime through loop
         rowCnt = startRowCnt;
 
@@ -513,7 +503,6 @@ void LcsClusterAppendExecStream::loadExistingBlock()
         // NOTE: we are guaranteed to be able to add these values back
         // to the current block
         if (anLeftOvers > 0) {
-
             uint8_t *val;
             bool undoInsert = false;
 
@@ -554,10 +543,11 @@ void LcsClusterAppendExecStream::addValueOrdinal(uint column, uint16_t vOrd)
 
 bool LcsClusterAppendExecStream::isRowArrayFull()
 {
-    if (rowCnt >= nRowsMax)
+    if (rowCnt >= nRowsMax) {
         return true;
-    else
+    } else {
         return false;
+    }
 }
 
 void LcsClusterAppendExecStream::writeBatch(bool lastBatch)
@@ -610,7 +600,6 @@ void LcsClusterAppendExecStream::writeBatch(bool lastBatch)
             }
 
         } else {
-
             uint16_t numVals;
 
             // write orderVals to oVals and remap val ords in row array
@@ -638,7 +627,6 @@ void LcsClusterAppendExecStream::writeBatch(bool lastBatch)
     // out these rows in a small batch.  Roll back the entire batch (putting
     // rolled back results in tempBuf) and move to next block
     if (!lastBatch && origRowCnt < 8) {
-
         // rollback each batch
         for (i = 0; i < numColumns; i++) {
             lcsBlockBuilder->rollBackLastBatch(i, tempBuf[i].get());
@@ -685,7 +673,6 @@ void LcsClusterAppendExecStream::writeBatch(bool lastBatch)
 void LcsClusterAppendExecStream::writeBlock()
 {
     if (indexBlockDirty) {
-
         // If the rowCnt is not zero, then the last batch was not on
         // a boundary of 8 so we need to write the last batch
         if (rowCnt) {

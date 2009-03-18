@@ -80,7 +80,7 @@ ExecStreamResult DoubleBufferExecStream::execute(ExecStreamQuantum const &)
 {
     if (pFrontBuffer) {
         // both front and back buffers are active
-        switch(pOutAccessor->getState()) {
+        switch (pOutAccessor->getState()) {
         case EXECBUF_NONEMPTY:
         case EXECBUF_OVERFLOW:
             // consumer isn't done with front buffer, so we can't swap yet
@@ -95,7 +95,7 @@ ExecStreamResult DoubleBufferExecStream::execute(ExecStreamQuantum const &)
             return EXECRC_EOS;
         }
     }
-    switch(pInAccessor->getState()) {
+    switch (pInAccessor->getState()) {
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:
         // producer has given us data, so fall through to swap

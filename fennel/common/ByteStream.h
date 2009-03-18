@@ -65,7 +65,9 @@ class ByteStreamMarker
 
 protected:
     explicit ByteStreamMarker(ByteStream const &stream);
-    virtual ~ByteStreamMarker() {};
+    virtual ~ByteStreamMarker()
+    {
+    }
 
 public:
     /**
@@ -93,7 +95,9 @@ class SequentialByteStreamMarker : public ByteStreamMarker
     FileSize cbOffset;
 
 public:
-    virtual ~SequentialByteStreamMarker() {};
+    virtual ~SequentialByteStreamMarker()
+    {
+    }
 
 protected:
     explicit SequentialByteStreamMarker(ByteStream const &stream);

@@ -127,7 +127,7 @@ public:
         // A bit ugly, but rather fast.
         switch (*str) {
         case 's':
-            switch(*(str+1)) {
+            switch (*(str + 1)) {
             case '1':
                 return STANDARD_TYPE_INT_8;
             case '2':
@@ -141,7 +141,7 @@ public:
             }
             break;
         case 'u':
-            switch(*(str+1)) {
+            switch (*(str + 1)) {
             case '1':
                 return STANDARD_TYPE_UINT_8;
             case '2':
@@ -163,7 +163,7 @@ public:
         case 'U':
             return STANDARD_TYPE_UNICODE_CHAR;
         case 'v':
-            switch(*(str+1)) {
+            switch (*(str + 1)) {
             case 'c':
                 return STANDARD_TYPE_VARCHAR;
             case 'b':
@@ -174,7 +174,7 @@ public:
                 break;
             }
         case 'b':
-            switch(*(str+1)) {
+            switch (*(str + 1)) {
             case 'o':
                 return STANDARD_TYPE_BOOL;
             case 0:         // string null terminator

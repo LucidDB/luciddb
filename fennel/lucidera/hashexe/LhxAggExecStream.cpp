@@ -157,14 +157,12 @@ void LhxAggExecStream::open(bool restart)
 
 ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    while (true)
-    {
+    while (true) {
         // REVIEW jvs 25-Aug-2006:  Some compilers do better if you
         // put the most commonly used cases first in a switch.  Definitely
         // from a "follow-the-logic" standpoint, a testing-only state
         // like ForcePartitionBuild belongs last.
-        switch (aggState)
-        {
+        switch (aggState) {
             // REVIEW jvs 25-Aug-2006:  I'm not sure that repeating all
             // of this code between the ForcePartitionBuild and Build
             // states is worth it just to remove one test from the
@@ -492,7 +490,7 @@ void LhxAggExecStream::setAggComputers(
          pInvocation != aggInvocations.end();
          ++pInvocation)
     {
-        switch(pInvocation->aggFunction) {
+        switch (pInvocation->aggFunction) {
         case AGG_FUNC_COUNT:
             partialAggFunction = AGG_FUNC_SUM;
             break;
@@ -621,7 +619,7 @@ void LhxAggExecStream::setHashInfo(
          pInvocation != params.aggInvocations.end();
          ++pInvocation)
     {
-        switch(pInvocation->aggFunction) {
+        switch (pInvocation->aggFunction) {
         case AGG_FUNC_COUNT:
             keyDesc.push_back(countDesc);
             break;

@@ -98,7 +98,7 @@ public:
 
     virtual void fillPage(CachePage &page,uint x)
     {
-        SegmentTestBase::fillPage(page,x+versionNumber);
+        SegmentTestBase::fillPage(page,x + versionNumber);
     }
 
     virtual void testCheckpoint()
@@ -119,7 +119,7 @@ public:
         assert(pVersionedSegment);
         SegVersionNum pageVersion = pVersionedSegment->getPageVersion(page);
         assert(pageVersion <= versionNumber);
-        SegmentTestBase::verifyPage(page,x+pageVersion);
+        SegmentTestBase::verifyPage(page,x + pageVersion);
     }
 };
 

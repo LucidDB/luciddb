@@ -68,7 +68,7 @@ bool CrcSegInputStream::lockBufferParanoid()
         return false;
     }
     crcComputer.reset();
-    crcComputer.process_bytes(pCrc+1,node.cbData);
+    crcComputer.process_bytes(pCrc + 1,node.cbData);
     if (pCrc->checksum != crcComputer.checksum()) {
         return false;
     }

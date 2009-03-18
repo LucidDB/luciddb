@@ -120,7 +120,6 @@ void LcsClusterReplaceExecStream::open(bool restart)
     origNumRows = pOrigClusterReader->getNumRows();
 
     if (!restart) {
-
         // Save the root pageId in a dynamic parameter so it can be read
         // downstream, if a parameter is specified
         if (opaqueToInt(newClusterRootParamId) > 0) {

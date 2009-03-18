@@ -72,7 +72,7 @@ void ScratchBufferExecStream::open(bool restart)
 
 ExecStreamResult ScratchBufferExecStream::execute(ExecStreamQuantum const &)
 {
-    switch(pOutAccessor->getState()) {
+    switch (pOutAccessor->getState()) {
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:
         return EXECRC_BUF_OVERFLOW;
@@ -91,7 +91,7 @@ ExecStreamResult ScratchBufferExecStream::execute(ExecStreamQuantum const &)
         assert(pInAccessor->getState() == EXECBUF_EOS);
         return EXECRC_EOS;
     }
-    switch(pInAccessor->getState()) {
+    switch (pInAccessor->getState()) {
     case EXECBUF_OVERFLOW:
     case EXECBUF_NONEMPTY:
         if (!pLastConsumptionEnd) {

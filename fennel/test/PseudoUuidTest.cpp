@@ -60,7 +60,7 @@ void PseudoUuidTest::testGeneration()
 
     uuid.generate();
 
-    for(int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
+    for (int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
         if (uuid.getByte(i) != 0) {
             // non-zero byte
             return;
@@ -76,7 +76,7 @@ void PseudoUuidTest::testInvalid()
 
     uuid.generateInvalid();
 
-    for(int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
+    for (int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
         BOOST_CHECK_MESSAGE(
             uuid.getByte(i) == (uint8_t)0xFF, "invalid UUID not all 0xFF");
     }
@@ -97,19 +97,19 @@ void PseudoUuidTest::testParsing()
 {
     PseudoUuid uuid1("00010203-0405-0607-0809-0A0B0C0D0E0F");
 
-    for(int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
+    for (int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
         BOOST_CHECK_EQUAL(i, uuid1.getByte(i));
     }
 
     PseudoUuid uuid2("00000000-0000-0000-0000-000000000000");
 
-    for(int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
+    for (int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
         BOOST_CHECK_EQUAL(0, uuid2.getByte(i));
     }
 
     PseudoUuid uuid3("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF");
 
-    for(int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
+    for (int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
         BOOST_CHECK_EQUAL((uint8_t)0xff, uuid3.getByte(i));
     }
 

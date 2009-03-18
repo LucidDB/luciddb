@@ -149,7 +149,7 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
 
         ExecStreamGraphImpl::Edge edge;
 
-        switch(rc) {
+        switch (rc) {
         case EXECRC_EOS:
             // find a consumer that is not in EOS state
             if (!findNextConsumer(graphImpl, graphRep, stream, edge, current,
@@ -189,7 +189,6 @@ bool DfsTreeExecStreamScheduler::findNextConsumer(
     ExecStreamGraphImpl::OutEdgeIterPair outEdges =
         boost::out_edges(current,graphRep);
     for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
-
         edge = *(outEdges.first);
         current = boost::target(edge,graphRep);
         if (boost::out_degree(current,graphRep) == 0) {

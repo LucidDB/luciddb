@@ -261,7 +261,6 @@ bool VersionedSegment::canFlushPage(CachePage &page)
 
 void VersionedSegment::prepareOnlineRecovery()
 {
-
     // For simplicity, force entire log out to disk first, but don't discard
     // it, since we're about to read it during recovery.
     logSegment->checkpoint(CHECKPOINT_FLUSH_ALL);

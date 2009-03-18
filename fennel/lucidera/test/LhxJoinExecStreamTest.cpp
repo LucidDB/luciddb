@@ -360,7 +360,7 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
     for (i = 0; i < numColsLeft; i++) {
         leftColumnGenerators.push_back(
             SharedInt64ColumnGenerator(new
-                DupColumnGenerator(numRows/cndKeyLeft)));
+                DupColumnGenerator(numRows / cndKeyLeft)));
         outColumnGenerators.push_back(
             SharedInt64ColumnGenerator(new
                 DupColumnGenerator(numRows*numRows/cndKeyLeft/cndKeyRight)));
@@ -373,7 +373,7 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
     for (; i < numColsLeft + numColsRight; i++) {
         rightColumnGenerators.push_back(
             SharedInt64ColumnGenerator(new
-                DupColumnGenerator(numRows/cndKeyRight)));
+                DupColumnGenerator(numRows / cndKeyRight)));
         outColumnGenerators.push_back(
             SharedInt64ColumnGenerator(new
                 DupColumnGenerator(numRows*numRows/cndKeyLeft/cndKeyRight)));
@@ -393,8 +393,8 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
     uint numResRows = (cndKeyLeft > cndKeyRight) ?
-        (numRows * numRows/cndKeyLeft) :
-        (numRows * numRows/cndKeyRight);
+        (numRows * numRows / cndKeyLeft) :
+        (numRows * numRows / cndKeyRight);
 
     testImpl(numRows, keyCount, cndKeys, numResRows, inputDesc, outputDesc,
         outputProj, pLeftGenerator, pRightGenerator, verifier,

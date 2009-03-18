@@ -120,7 +120,7 @@ PageId CircularSegment::allocatePageId(PageOwnerId)
 
     // This wraparound should never be hit in practice.  If it is, a
     // restart which truncates logs should fix it.
-    assert(!isMAXU(nextPageNum+1));
+    assert(!isMAXU(nextPageNum + 1));
 
     PageId pageId = Segment::getLinearPageId(nextPageNum);
     ++nextPageNum;

@@ -114,7 +114,7 @@ public:
      */
     uint countBits()
     {
-        return countBits(byteSeg-len+1, len);
+        return countBits(byteSeg - len + 1, len);
     }
 
     /**
@@ -146,7 +146,9 @@ public:
         for (uint i = 0; i < 256; i++) {
             uint slowBits = 0;
             for (uint j = 0; j < 8; j++) {
-                if (i & (1 << j)) slowBits++;
+                if (i & (1 << j)) {
+                    slowBits++;
+                }
             }
             assert (slowBits == bitsInByte[i]);
         }

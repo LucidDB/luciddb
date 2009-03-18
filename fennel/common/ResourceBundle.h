@@ -121,3 +121,5 @@ _GRB *makeInstance(
 FENNEL_END_NAMESPACE
 
 #endif // not Fennel_ResourceBundle_Included
+
+// End ResourceBundle.h

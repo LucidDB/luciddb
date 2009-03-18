@@ -143,7 +143,7 @@ void ExecStreamFactory::readBarrierDynamicParams(
     ProxyBarrierStreamDef &streamDef)
 {
     SharedProxyDynamicParameter dynamicParam = streamDef.getDynamicParameter();
-    for ( ; dynamicParam; ++dynamicParam) {
+    for (; dynamicParam; ++dynamicParam) {
         DynamicParamId p = (DynamicParamId) dynamicParam->getParameterId();
         params.parameterIds.push_back(p);
     }
@@ -382,7 +382,7 @@ void ExecStreamFactory::visit(ProxyReshapeStreamDef &streamDef)
         params.outputProj, streamDef.getOutputProjection());
 
     SharedProxyReshapeParameter dynamicParam = streamDef.getReshapeParameter();
-    for ( ; dynamicParam; ++dynamicParam) {
+    for (; dynamicParam; ++dynamicParam) {
         int offset = dynamicParam->getCompareOffset();
         ReshapeParameter reshapeParam(
             DynamicParamId(dynamicParam->getDynamicParamId()),
@@ -401,7 +401,7 @@ void ExecStreamFactory::visit(ProxyNestedLoopJoinStreamDef &streamDef)
     params.leftOuter = streamDef.isLeftOuter();
 
     SharedProxyCorrelation dynamicParam = streamDef.getLeftJoinKey();
-    for ( ; dynamicParam; ++dynamicParam) {
+    for (; dynamicParam; ++dynamicParam) {
         NestedLoopJoinKey joinKey(
             DynamicParamId(dynamicParam->getId()),
             dynamicParam->getOffset());
@@ -613,7 +613,7 @@ void ExecStreamFactory::readBTreeSearchStreamParams(
     }
 
     SharedProxyCorrelation dynamicParam = streamDef.getSearchKeyParameter();
-    for ( ; dynamicParam; ++dynamicParam) {
+    for (; dynamicParam; ++dynamicParam) {
         BTreeSearchKeyParameter searchKeyParam(
             DynamicParamId(dynamicParam->getId()),
             dynamicParam->getOffset());

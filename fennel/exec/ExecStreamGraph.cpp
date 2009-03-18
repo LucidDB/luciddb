@@ -48,8 +48,8 @@ SharedExecStreamGraph ExecStreamGraph::newExecStreamGraph()
 }
 
 ExecStreamGraph::ExecStreamGraph()
-    :pScheduler(NULL),
-     pDynamicParamManager(new DynamicParamManager())
+    : pScheduler(NULL),
+      pDynamicParamManager(new DynamicParamManager())
 {
 }
 
@@ -190,7 +190,7 @@ void ExecStreamGraphImpl::removeFromStreamOutMap(SharedExecStream p)
         EdgeMap::iterator startNameRange =
             streamOutMap.find(std::make_pair(name, 0));
         EdgeMap::iterator endNameRange =
-            streamOutMap.find(std::make_pair(name, outCt-1));
+            streamOutMap.find(std::make_pair(name, outCt - 1));
         streamOutMap.erase(startNameRange, endNameRange);
     }
 }

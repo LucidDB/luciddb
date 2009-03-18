@@ -92,7 +92,6 @@ ExecStreamResult MockResourceExecStream::execute(
 
     if (numToAllocate == expected.nCachePages) {
         for (uint i = 0; i < numToAllocate; i++) {
-
             // REVIEW jvs 8-Sept--2006: The NULL_PAGE_ID case will never
             // happen, because allocatePage asserts; you probably meant to use
             // tryAllocatePage instead.  But the case must never actually be

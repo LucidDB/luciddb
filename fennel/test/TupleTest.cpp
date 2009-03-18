@@ -255,7 +255,7 @@ void TupleTest::checkAlignment(
 {
     uint iAlign = desc.pTypeDescriptor->getAlignmentByteCount(
         desc.cbStorage);
-    switch(iAlign) {
+    switch (iAlign) {
     case 1:
         return;
     case 2:
@@ -273,7 +273,7 @@ void TupleTest::checkAlignment(
 void TupleTest::writeMinData(TupleDatum &datum,uint typeOrdinal)
 {
     PBuffer pData = const_cast<PBuffer>(datum.pData);
-    switch(typeOrdinal) {
+    switch (typeOrdinal) {
     case STANDARD_TYPE_BOOL:
         *(reinterpret_cast<bool *>(pData)) = false;
         break;
@@ -346,7 +346,7 @@ void TupleTest::writeMinData(TupleDatum &datum,uint typeOrdinal)
 void TupleTest::writeMaxData(TupleDatum &datum,uint typeOrdinal)
 {
     PBuffer pData = const_cast<PBuffer>(datum.pData);
-    switch(typeOrdinal) {
+    switch (typeOrdinal) {
     case STANDARD_TYPE_BOOL:
         *(reinterpret_cast<bool *>(pData)) = true;
         break;
@@ -416,11 +416,13 @@ void TupleTest::writeSampleData(TupleDatum &datum,uint typeOrdinal)
     /* Some sample data that's between min and max */
     std::subtractive_rng randomNumberGenerator(time(NULL));
     PBuffer pData = const_cast<PBuffer>(datum.pData);
-    switch(typeOrdinal) {
+    switch (typeOrdinal) {
     case STANDARD_TYPE_BOOL:
-        if (randomNumberGenerator(2))
+        if (randomNumberGenerator(2)) {
             *(reinterpret_cast<bool *>(pData)) = true;
-        else *(reinterpret_cast<bool *>(pData)) = false;
+        } else {
+            *(reinterpret_cast<bool *>(pData)) = false;
+        }
         break;
     case STANDARD_TYPE_INT_8:
         *(reinterpret_cast<int8_t *>(pData)) =  0x28;

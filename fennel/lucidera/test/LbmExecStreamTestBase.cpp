@@ -67,8 +67,7 @@ void LbmExecStreamTestBase::generateBitmaps(
     }
 
     // add on the remaining rids
-    while (input.pStream->hasNext())
-    {
+    while (input.pStream->hasNext()) {
         rid = LcsRid(input.pStream->getNext());
         if (rid >= LcsRid(nRows)) {
             break;
@@ -203,7 +202,7 @@ void LbmExecStreamTestBase::produceEntry(
         int nKeys = keyBitmapTupleData.size() - bitmapTuple.size();
         assert(nKeys > 0);
         for (uint i = 0; i < bitmapTupleData.size(); i++) {
-            keyBitmapTupleData[nKeys+i] = bitmapTuple[i];
+            keyBitmapTupleData[nKeys + i] = bitmapTuple[i];
         }
         keyBitmapTupleAccessor.marshal(keyBitmapTupleData, pBuf + bufSize);
         bufSize += keyBitmapTupleAccessor.getCurrentByteCount();
@@ -276,7 +275,7 @@ void LbmExecStreamTestBase::testCaseSetUp()
 {
     ExecStreamUnitTestBase::testCaseSetUp();
 
-    bitmapColSize = pRandomSegment->getUsablePageSize()/8;
+    bitmapColSize = pRandomSegment->getUsablePageSize() / 8;
     attrDesc_bitmap = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
         true, bitmapColSize);

@@ -80,19 +80,36 @@ struct IntrusiveListNode
 
 class MaxU {
 public:
-    MaxU(){}
+    MaxU()
+    {
+    }
+
     operator uint8_t() const
-    { return 0xFF; }
+    {
+        return 0xFF;
+    }
+
     operator uint16_t() const
-    { return 0xFFFF; }
+    {
+        return 0xFFFF;
+    }
+
     operator uint32_t() const
-    { return 0xFFFFFFFF; }
+    {
+        return 0xFFFFFFFF;
+    }
+
     operator uint64_t() const
-    { return 0xFFFFFFFFFFFFFFFFLL; }
+    {
+        return 0xFFFFFFFFFFFFFFFFLL;
+    }
+
     // TODO:  something better
 #ifdef __CYGWIN__
     operator uint() const
-    { return 0xFFFFFFFFFFFFFFFFLL; }
+    {
+        return 0xFFFFFFFFFFFFFFFFLL;
+    }
 #endif
 };
 

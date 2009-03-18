@@ -56,7 +56,6 @@ string ResourceDefinition::format() const
                 % _bundle->getBaseName()
                 % _bundle->getLocale().getDisplayName()
                 % _key).str();
-
     }
 }
 
@@ -68,7 +67,7 @@ boost::format ResourceDefinition::prepareFormatter(int numArgs) const
     } else {
         stringstream formatSpecifier;
         formatSpecifier << "%1%.%2%.%3%(";
-        for(int i = 0; i < numArgs; i++) {
+        for (int i = 0; i < numArgs; i++) {
             if (i != 0) {
                 formatSpecifier << ", ";
             }

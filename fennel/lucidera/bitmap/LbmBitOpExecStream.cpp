@@ -75,7 +75,7 @@ void LbmBitOpExecStream::open(bool restart)
     if (!outputBuf) {
         // allocate output buffer; the output buffer size is based on the size
         // required for building a LbmEntry
-        uint bitmapColSize = pOutAccessor->getTupleDesc()[nKeys+1].cbStorage;
+        uint bitmapColSize = pOutAccessor->getTupleDesc()[nKeys + 1].cbStorage;
         uint outputBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
         outputBuf.reset(new FixedBuffer[outputBufSize]);
 
@@ -171,7 +171,6 @@ bool LbmBitOpExecStream::flush()
 bool LbmBitOpExecStream::addSegments()
 {
     while (addLen > 0) {
-
         if (segmentWriter.addSegment(addRid, addByteSeg, addLen)) {
             break;
         }

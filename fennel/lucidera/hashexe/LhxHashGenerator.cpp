@@ -72,10 +72,10 @@ void LhxHashGenerator::init(uint levelInit)
 
     uint base = level * 4;
     hashValueSeed
-        = (uint8_t(base    ) << 24)
+        = (uint8_t(base) << 24)
         | (uint8_t(base + 1) << 16)
-        | (uint8_t(base + 2) << 8 )
-        | (uint8_t(base + 3)      );
+        | (uint8_t(base + 2) << 8)
+        | (uint8_t(base + 3));
 }
 
 // REVIEW jvs 25-Aug-2006: Awww, the fancy bit-twiddling from Broadbase is
@@ -110,7 +110,6 @@ void LhxHashGenerator::hashOneColumn(
     TupleDatum const &inputCol,
     LhxHashTrim isVarChar)
 {
-
     uint trimmedLength = inputCol.cbData;
     PConstBuffer pData = inputCol.pData;
 
@@ -171,8 +170,7 @@ uint LhxHashGenerator::hash(
      */
     uint hashValue = hashValueSeed;
 
-    for (int i = 0; i < keyLength; i ++)
-    {
+    for (int i = 0; i < keyLength; i++) {
         TupleDatum const &col = inputTuple[keyProjection[i]];
         hashOneColumn(hashValue, col, isKeyColVarChar[i]);
     }

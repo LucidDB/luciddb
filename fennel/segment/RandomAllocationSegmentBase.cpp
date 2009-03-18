@@ -47,7 +47,7 @@ RandomAllocationSegmentBase::RandomAllocationSegmentBase(
     // calculate immutable segment parameters based on page size
 
     nExtentsPerSegAlloc =
-        (getUsablePageSize()-sizeof(SegmentAllocationNode))
+        (getUsablePageSize() - sizeof(SegmentAllocationNode))
         / sizeof(SegmentAllocationNode::ExtentEntry);
 
     nPagesOccupiedHighWater = 0;
@@ -79,7 +79,7 @@ void RandomAllocationSegmentBase::format()
     if (nRemainderPages) {
         // last SegAllocNode is not full; add number of remainder extents,
         // rounding down
-        nExtents += nRemainderPages/nPagesPerExtent;
+        nExtents += nRemainderPages / nPagesPerExtent;
     } else {
         // last SegAllocNode is full
         nExtents += nExtentsPerSegAlloc;
@@ -103,7 +103,6 @@ void RandomAllocationSegmentBase::format()
     SegmentAccessor selfAccessor(getTracingSegment(), pCache);
     SegAllocLock segAllocLock(selfAccessor);
     for (uint iSegAlloc = 0; iSegAlloc < nSegAllocPages; iSegAlloc++) {
-
         PageId segAllocPageId = getSegAllocPageId(iSegAlloc);
         segAllocLock.lockExclusive(segAllocPageId);
 
@@ -145,8 +144,8 @@ uint RandomAllocationSegmentBase::inferSegAllocCount()
 {
     BlockNum nPages = DelegatingSegment::getAllocatedSizeInPages();
     // round up
-    return nPages/nPagesPerSegAlloc +
-        (nPages%nPagesPerSegAlloc?1:0);
+    return nPages / nPagesPerSegAlloc +
+        (nPages % nPagesPerSegAlloc ? 1 : 0);
 }
 
 PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
@@ -161,7 +160,6 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
     PageId origSegAllocPageId = getFirstSegAllocPageId();
     PageId segAllocPageId = getSegAllocPageIdForWrite(origSegAllocPageId);
     for (uint iSegAlloc = 0; ; ++iSegAlloc) {
-
         // Initially access the node for read because we may not actually
         // update it if all extents in the node are full.  Once we need
         // to update the node, we'll acquire a writable node.
@@ -249,14 +247,14 @@ PageId RandomAllocationSegmentBase::allocatePageIdFromSegment(
         // makePageNum request enough space to fit the first extent of a new
         // SegAllocNode.
         if (!DelegatingSegment::ensureAllocatedSize(
-                makePageNum(extentNum+1,0)))
+                makePageNum(extentNum + 1,0)))
         {
             // couldn't grow
             return NULL_PAGE_ID;
         }
 
         SegAllocLock newSegAllocLock(segAccessor);
-        origSegAllocPageId = getSegAllocPageId(iSegAlloc+1);
+        origSegAllocPageId = getSegAllocPageId(iSegAlloc + 1);
         segAllocPageId = getSegAllocPageIdForWrite(origSegAllocPageId);
         newSegAllocLock.lockExclusive(segAllocPageId);
         newSegAllocLock.setMagicNumber();
@@ -283,8 +281,8 @@ void RandomAllocationSegmentBase::splitPageId(
     ExtentNum &extentNum,BlockNum &iPageInExtent) const
 {
     // calculate block number relative to containing SegAllocNode
-    BlockNum iPageInSegAlloc = getLinearBlockNum(pageId)%nPagesPerSegAlloc;
-    iSegAlloc = getLinearBlockNum(pageId)/nPagesPerSegAlloc;
+    BlockNum iPageInSegAlloc = getLinearBlockNum(pageId) % nPagesPerSegAlloc;
+    iSegAlloc = getLinearBlockNum(pageId) / nPagesPerSegAlloc;
     if (!iPageInSegAlloc) {
         // this is the SegAllocNode itself!
         extentNum = MAXU;
@@ -293,8 +291,8 @@ void RandomAllocationSegmentBase::splitPageId(
         // account for the SegAllocNode
         --iPageInSegAlloc;
         extentNum =
-            iPageInSegAlloc/nPagesPerExtent + nExtentsPerSegAlloc * iSegAlloc;
-        iPageInExtent = iPageInSegAlloc%nPagesPerExtent;
+            iPageInSegAlloc / nPagesPerExtent + nExtentsPerSegAlloc * iSegAlloc;
+        iPageInExtent = iPageInSegAlloc % nPagesPerExtent;
     }
 }
 

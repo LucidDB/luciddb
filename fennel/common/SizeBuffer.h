@@ -39,7 +39,9 @@ class SizeBuffer : public boost::noncopyable
 {
 public:
     explicit SizeBuffer(uint capacity, uint length = 0);
-    ~SizeBuffer() { }
+    ~SizeBuffer()
+    {
+    }
     void length(uint length);
     uint length() const;
     uint capacity() const;

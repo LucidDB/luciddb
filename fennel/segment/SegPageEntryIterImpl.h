@@ -93,7 +93,6 @@ void SegPageEntryIter<EntryT>::prefetchPages(PageId prevPageId, bool oneIter)
     // Continue retrieving pageIds while we have available space in
     // the prefetch queue
     while (nFreePageSlots != 0 || oneIter) {
-
         // But make sure we have space in the entryQueue
         if (!entryQueue.spaceAvailable()) {
             break;

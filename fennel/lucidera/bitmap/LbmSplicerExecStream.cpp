@@ -261,14 +261,12 @@ ExecStreamResult LbmSplicerExecStream::execute(ExecStreamQuantum const &quantum)
             }
             upsertSingleton(inputTuple);
         } else if (!currEntry) {
-
             // if the key already exists in the index, splice the
             // entry just read to the existing btree entry
             if (existingEntry(inputTuple)) {
                 spliceEntry(inputTuple);
             }
         } else {
-
             // Compare the key values of the currentEntry with the
             // input tuple.  If they're the same, try splicing with
             // currentEntry.  Otherwise, write out currentEntry and
@@ -354,7 +352,6 @@ bool LbmSplicerExecStream::findBTreeEntry(
         findMatchingBTreeEntry(bitmapEntry, bTreeTupleData, (nIdxKeys > 0));
 
     if (match == false) {
-
         if (nIdxKeys == 0) {
             // If there are no index keys, then we are splicing individual
             // rids.  In that case, we should always be splicing into the
@@ -382,7 +379,6 @@ bool LbmSplicerExecStream::findBTreeEntry(
             match = true;
 
         } else {
-
             // In the case where we have actual index keys, we've done a
             // least upper bound search to locate the entry.  See if
             // the keys without the startRid match.  If they do, then we've
@@ -476,7 +472,6 @@ void LbmSplicerExecStream::findBetterEntry(TupleData const &bitmapEntry)
     assert(computeRowCount);
     if (!isEmpty()) {
         if (findBTreeEntry(bitmapEntry, bTreeTupleData)) {
-
             LcsRid bTreeRid =
                 LbmSegment::roundToByteBoundary(
                     *reinterpret_cast<LcsRid const *> (
@@ -612,7 +607,7 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
         {
             firstValidation = false;
             currUniqueKey.resetBuffer();
-            for (uint i= 0; i < nIdxKeys; i++) {
+            for (uint i = 0; i < nIdxKeys; i++) {
                 currUniqueKey[i].memCopyFrom(inputTuple[i]);
             }
             nKeyRows = countKeyRows(inputTuple);
@@ -654,10 +649,10 @@ ExecStreamResult LbmSplicerExecStream::getValidatedTuple()
         inputTuple[nIdxKeys].pData =
             reinterpret_cast<PConstBuffer>(getUpsertRidPtr());
         inputTuple[nIdxKeys].cbData = 8;
-        inputTuple[nIdxKeys+1].pData = NULL;
-        inputTuple[nIdxKeys+1].cbData = 0;
-        inputTuple[nIdxKeys+2].pData = NULL;
-        inputTuple[nIdxKeys+2].cbData = 0;
+        inputTuple[nIdxKeys + 1].pData = NULL;
+        inputTuple[nIdxKeys + 1].cbData = 0;
+        inputTuple[nIdxKeys + 2].pData = NULL;
+        inputTuple[nIdxKeys + 2].cbData = 0;
         return EXECRC_YIELD;
     }
 
@@ -703,7 +698,7 @@ void LbmSplicerExecStream::postViolation(
     const TupleData &input, const TupleData &violation)
 {
     if (!errorTuple.size()) {
-        for (uint i = 0; i < nIdxKeys+1; i++) {
+        for (uint i = 0; i < nIdxKeys + 1; i++) {
             errorDesc.push_back(bitmapTupleDesc[i]);
         }
         errorTuple.compute(errorDesc);

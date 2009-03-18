@@ -290,7 +290,7 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
     testScan(pInputStream,nRecords,true,true);
 
     // Recheck tree integriy
-    verifyTree(nRecords/2,nLevelsExpected);
+    verifyTree(nRecords / 2,nLevelsExpected);
 
     // Rescan to make sure deletions were performed correctly
     pInputStream->seekSegPos(startPos);
@@ -333,7 +333,7 @@ void BTreeTest::testSearch(
         reader.getTupleAccessorForRead().unmarshal(tupleData);
         BOOST_CHECK_EQUAL(record.key,readKey());
         BOOST_CHECK_EQUAL(record.value,readValue());
-        if (!(i%10000)) {
+        if (!(i % 10000)) {
             BOOST_MESSAGE(
                 "found value = " << readValue()
                 << " key = " << readKey());
@@ -380,7 +380,7 @@ void BTreeTest::testScan(
         lastKey = readKey();
         BOOST_CHECK_EQUAL(record.key,lastKey);
         BOOST_CHECK_EQUAL(record.value,readValue());
-        if (!(i%10000)) {
+        if (!(i % 10000)) {
             BOOST_MESSAGE(
                 "scanned value = " << readValue()
                 << " key = " << lastKey);
@@ -566,9 +566,9 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
             }
         } else {
             reader.getTupleAccessorForRead().unmarshal(tupleData);
-            BOOST_CHECK_EQUAL(i+1,readKey());
+            BOOST_CHECK_EQUAL(i + 1,readKey());
             BOOST_CHECK_EQUAL(0,readSecondKey());
-            BOOST_CHECK_EQUAL(i+1,readMultiKeyValue());
+            BOOST_CHECK_EQUAL(i + 1,readMultiKeyValue());
         }
     }
     reader.endSearch();
@@ -612,7 +612,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
         reader.getTupleAccessorForRead().unmarshal(tupleData);
         BOOST_CHECK_EQUAL(i,readKey());
         BOOST_CHECK_EQUAL(nKey2,readSecondKey());
-        BOOST_CHECK_EQUAL(i+nKey2,readMultiKeyValue());
+        BOOST_CHECK_EQUAL(i + nKey2,readMultiKeyValue());
 
         reader.searchForKey(keyData,DUP_SEEK_END);
 
@@ -623,9 +623,9 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
             }
         } else {
             reader.getTupleAccessorForRead().unmarshal(tupleData);
-            BOOST_CHECK_EQUAL(i+1,readKey());
+            BOOST_CHECK_EQUAL(i + 1,readKey());
             BOOST_CHECK_EQUAL(nKey2,readSecondKey());
-            BOOST_CHECK_EQUAL(i+1+nKey2,readMultiKeyValue());
+            BOOST_CHECK_EQUAL(i + 1 + nKey2,readMultiKeyValue());
         }
 
         record.secondKey = 0;
@@ -634,7 +634,7 @@ void BTreeTest::testMultiKeySearches(uint nKey1, uint nKey2)
         reader.getTupleAccessorForRead().unmarshal(tupleData);
         BOOST_CHECK_EQUAL(i,readKey());
         BOOST_CHECK_EQUAL(nKey2,readSecondKey());
-        BOOST_CHECK_EQUAL(i+nKey2,readMultiKeyValue());
+        BOOST_CHECK_EQUAL(i + nKey2,readMultiKeyValue());
     }
 }
 

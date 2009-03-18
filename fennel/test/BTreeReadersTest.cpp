@@ -221,7 +221,6 @@ void BTreeReadersTest::testSearch(
     BTreeNonLeafReader nonLeafReader(treeDescriptor);
     BTreeLeafReader leafReader(treeDescriptor);
     for (uint i = 0; i < nRecords; ++i) {
-
         // First search for the leaf pageId containing the desired key value
         // using the nonLeafReader, provided this is a multi-level tree.
         // If not, then directly search the leaf.
@@ -279,7 +278,6 @@ void BTreeReadersTest::testScan(
     }
 
     for (uint i = 0; i < nRecords;) {
-
         unmarshalLeafRecord(pInputStream);
         PageId leafPageId;
         if (rootOnly) {

@@ -44,7 +44,7 @@ Backtrace::~Backtrace()
 }
 
 Backtrace::Backtrace(size_t maxdepth)
-    :ownbuf(true), bufsize(maxdepth + 1)
+    : ownbuf(true), bufsize(maxdepth + 1)
 {
 #ifndef __MINGW32__
     addrbuf = new void * [bufsize];
@@ -53,7 +53,7 @@ Backtrace::Backtrace(size_t maxdepth)
 }
 
 Backtrace::Backtrace(size_t bufsize, void** buffer)
-    :ownbuf(false), bufsize(bufsize)
+    : ownbuf(false), bufsize(bufsize)
 {
 #ifndef __MINGW32__
     addrbuf = buffer;
@@ -69,7 +69,7 @@ void Backtrace::print(int fd) const
 #ifndef __MINGW32__
     // skip 1st stack frame (the Backtrace constructor)
     if (depth > 1) {
-        backtrace_symbols_fd(addrbuf+1, depth-1, fd);
+        backtrace_symbols_fd(addrbuf + 1, depth - 1, fd);
     }
 #endif
 }

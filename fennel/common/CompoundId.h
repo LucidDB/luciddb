@@ -133,7 +133,7 @@ public:
     template <class PageOrBlockId>
     static void incBlockNum(PageOrBlockId &pageId)
     {
-        setBlockNum(pageId,getBlockNum(pageId)+1);
+        setBlockNum(pageId,getBlockNum(pageId) + 1);
     }
 
     /**
@@ -144,7 +144,7 @@ public:
     template <class PageOrBlockId>
     static void decBlockNum(PageOrBlockId &pageId)
     {
-        setBlockNum(pageId,getBlockNum(pageId)-1);
+        setBlockNum(pageId,getBlockNum(pageId) - 1);
     }
 
     /**

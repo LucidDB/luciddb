@@ -136,7 +136,6 @@ ExecStreamResult LbmRidReaderBase::advanceToRid(LcsRid rid)
 
     // do we need a new byte?
     if (rid >= roundToByteBoundary(curRid) + LbmOneByteSize) {
-
         // mark current byte as invalid, so that call to search
         // will read in a new byte with the desired rid
         curByte = 0;
@@ -266,7 +265,7 @@ bool LbmDeletionIndexReader::searchForRid(LcsRid rid)
     // be restarted if the tuple has changed or if the rid we are searching
     // for would be positioned before the last rid read.
     bool sameTuple = (currTuple && prevSrid == foundSrid);
-    if ( (!sameTuple) || rid < btreeRid ) {
+    if (!sameTuple || (rid < btreeRid)) {
         initRidReader();
     }
 
@@ -281,6 +280,6 @@ bool LbmDeletionIndexReader::searchForRid(LcsRid rid)
     return (btreeRid == rid);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmRidReader.cpp#8 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmRidReader.cpp#9 $");
 
 // End LbmRidReader.cpp

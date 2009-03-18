@@ -303,7 +303,7 @@ class RampDuplicateExecStreamGenerator : public MockProducerExecStreamGenerator
 public:
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
-        return iRow/2;
+        return iRow / 2;
     }
 };
 
@@ -494,8 +494,7 @@ public:
     {
         int res;
 
-        if ((((nextValue-initialValue) / width) % 2)) {
-
+        if ((((nextValue - initialValue) / width) % 2)) {
             res = nextValue + curValue++ / numDups;
             if (curValue == numDups) {
                 curValue = 0;

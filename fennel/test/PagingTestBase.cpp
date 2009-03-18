@@ -58,9 +58,9 @@ void PagingTestBase::fillPage(CachePage &page,uint x)
 {
     uint *p = reinterpret_cast<uint *>(page.getWritableData());
     assert(cbPageUsable);
-    uint n = cbPageUsable/sizeof(uint);
+    uint n = cbPageUsable / sizeof(uint);
     for (uint i = 0; i < n; i++) {
-        p[i] = x+i;
+        p[i] = x + i;
     }
     uint r = generateRandomNumber(n);
     p[r] = 0;
@@ -70,10 +70,10 @@ void PagingTestBase::verifyPage(CachePage &page,uint x)
 {
     uint const *p = reinterpret_cast<uint const *>(page.getReadableData());
     assert(cbPageUsable);
-    uint n = cbPageUsable/sizeof(uint);
+    uint n = cbPageUsable / sizeof(uint);
     uint nZeros = 0;
     for (uint i = 0; i < n; i++) {
-        if (p[i] != x+i) {
+        if (p[i] != x + i) {
             assert(!p[i]);
             nZeros++;
         }
@@ -98,7 +98,7 @@ bool PagingTestBase::testOp(OpType opType,uint iPage,bool bNice)
     } else {
         fillPage(page,iPage);
     }
-    switch(lockMode) {
+    switch (lockMode) {
     case LOCKMODE_X_NOWAIT:
         lockMode = LOCKMODE_X;
         break;
@@ -117,7 +117,7 @@ bool PagingTestBase::testOp(OpType opType,uint iPage,bool bNice)
 
 char const *PagingTestBase::getOpName(OpType opType)
 {
-    switch(opType) {
+    switch (opType) {
     case OP_ALLOCATE:
         return "allocate";
     case OP_READ_SEQ:
@@ -141,7 +141,7 @@ char const *PagingTestBase::getOpName(OpType opType)
 
 LockMode PagingTestBase::getLockMode(OpType opType)
 {
-    switch(opType) {
+    switch (opType) {
     case OP_ALLOCATE:
         return LOCKMODE_X;
     case OP_READ_SEQ:
@@ -306,13 +306,13 @@ void PagingTestBase::testCheckpointGuarded()
 
 void PagingTestBase::testCacheResize()
 {
-    snooze(nSeconds/3);
-    getCache().setAllocatedPageCount(nMemPages/2);
+    snooze(nSeconds / 3);
+    getCache().setAllocatedPageCount(nMemPages / 2);
     StrictMutexGuard mutexGuard(logMutex);
     BOOST_MESSAGE("shrank cache");
     mutexGuard.unlock();
-    snooze(nSeconds/3);
-    getCache().setAllocatedPageCount(nMemPages-1);
+    snooze(nSeconds / 3);
+    getCache().setAllocatedPageCount(nMemPages - 1);
     mutexGuard.lock();
     BOOST_MESSAGE("expanded cache");
     mutexGuard.unlock();
@@ -379,7 +379,7 @@ bool PagingTestBase::testThreadedOp(int iOp)
     SXMutexSharedGuard checkpointSharedGuard(checkpointMutex,false);
     assert(iOp < OP_MAX);
     OpType op = static_cast<OpType>(iOp);
-    switch(op) {
+    switch (op) {
     case PagingTestBase::OP_WRITE_SEQ:
         checkpointSharedGuard.lock();
         // fall through

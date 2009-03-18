@@ -39,7 +39,7 @@ void SegStorageTestBase::openSegmentStorage(DeviceMode openMode)
     pLinearSegment = createLinearDeviceSegment(
         dataDeviceId,
         openMode.create ? 0
-        : pRandomAccessDevice->getSizeInBytes()/cbPageFull);
+        : pRandomAccessDevice->getSizeInBytes() / cbPageFull);
 }
 
 void SegStorageTestBase::openRandomSegment()

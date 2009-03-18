@@ -87,7 +87,6 @@ void LcsRowScanExecStream::prepareResidualFilters(
                  */
                 for (uint k = 0; k < projMap.size(); k++) {
                     if (projMap[k] == valueCols[j]) {
-
                         clusterPos = k - realClusterStart -
                             nonClusterCols.size();
 
@@ -400,12 +399,10 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
-
         uint iClu;
         bool passedFilter;
 
         while (!producePending) {
-
             // No need to fill the rid run buffer each time through the loop
             if (!ridRunsBuilt && ridRuns.nFreeSpace() > 100) {
                 ExecStreamResult rc = fillRidRunBuffer();
@@ -442,7 +439,6 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 
             // Then go through each cluster, forming rows and checking ranges
             for (iClu = 0, passedFilter = true; iClu <  nClusters; iClu++) {
-
                 SharedLcsClusterReader &pScan = pClusters[iClu];
 
                 // Resync the cluster reader to the current rid position
@@ -617,7 +613,7 @@ ExecStreamResult LcsRowScanExecStream::fillRidRunBuffer()
                     if (++numClumpsBuilt == numClumps) {
                         ridRunsBuilt = true;
                     }
-                } else  {
+                } else {
                     // We only have enough rids for a partial clump
                     clumpPos += nRows;
                 }
@@ -658,7 +654,6 @@ ExecStreamResult LcsRowScanExecStream::fillRidRunBuffer()
         if (isFullScan) {
             inputRid += nRows;
         }
-
     } while (ridRuns.spaceAvailable() && !ridRunsBuilt);
 
     // Write out the last run

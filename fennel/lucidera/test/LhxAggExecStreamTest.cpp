@@ -237,7 +237,7 @@ void LhxAggExecStreamTest::testGroupCountImpl(uint forcePartitionLevel)
     aggParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 100);
     aggParams.pTempSegment = pRandomSegment;
-    aggParams.cndGroupByKeys = numRows/2;
+    aggParams.cndGroupByKeys = numRows / 2;
     aggParams.numRows = numRows;
     aggParams.forcePartitionLevel = forcePartitionLevel;
     aggParams.enableSubPartStat = true;

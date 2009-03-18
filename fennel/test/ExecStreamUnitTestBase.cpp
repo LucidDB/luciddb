@@ -179,7 +179,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
         // connect streams in each sourceStreamEmbryos list in a cascade
         for (int j = 1; j < sourceStreamEmbryosList[i].size(); j++) {
             pGraphEmbryo->addDataflow(
-                sourceStreamEmbryosList[i][j-1].getStream()->getName(),
+                sourceStreamEmbryosList[i][j - 1].getStream()->getName(),
                 sourceStreamEmbryosList[i][j].getStream()->getName());
         }
         pGraphEmbryo->addDataflow(
@@ -245,7 +245,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareDAG(
         // connect streams in each interStreamEmbryos list in a cascade
         for (int j = 1; j < interStreamEmbryos[i].size(); j++) {
             pGraphEmbryo->addDataflow(
-                interStreamEmbryos[i][j-1].getStream()->getName(),
+                interStreamEmbryos[i][j - 1].getStream()->getName(),
                 interStreamEmbryos[i][j].getStream()->getName());
         }
     }
@@ -347,7 +347,7 @@ void ExecStreamUnitTestBase::verifyOutput(
             }
             BOOST_REQUIRE(nRows < nRowsExpected);
             bufAccessor.unmarshalTuple(inputTuple);
-            for (int col=0;col<nCol;++col) {
+            for (int col = 0; col < nCol; ++col) {
                 int64_t actualValue =
                     *reinterpret_cast<int64_t const *>(inputTuple[col].pData);
                 int64_t expectedValue = generator.generateValue(nRows, col);

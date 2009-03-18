@@ -179,7 +179,7 @@ inline char *get_tid(char *tidstr, int cb)
 #define FENNEL_TRACE_THREAD(level, expr) \
 { \
     char tidstr[32]; \
-    FENNEL_TRACE( \
+    FENNEL_TRACE(\
         level, \
         "[thread " << fennel::get_tid(tidstr,sizeof(tidstr)) << "] " << expr); \
 }

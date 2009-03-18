@@ -53,7 +53,7 @@ class LbmEntryDump : public TraceSource
 public:
     explicit LbmEntryDump(TraceLevel traceLevelInit,
         SharedTraceTarget pTraceTarget, string name);
-    uint dump(BTreeDescriptor const &treeDescriptor, bool printRID=false);
+    uint dump(BTreeDescriptor const &treeDescriptor, bool printRID = false);
 };
 
 FENNEL_END_NAMESPACE

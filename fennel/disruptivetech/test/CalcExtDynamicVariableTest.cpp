@@ -76,9 +76,9 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
 {
     ostringstream pg("");
     const char* typesArray[] = {"s4", "u4", "s8", "u8", "s1", "u1", "s2","u2", "bo", "r", "d", "c,4", "vc,4", "b,4"};
-    const uint N = sizeof(typesArray)/sizeof(typesArray[0]);
+    const uint N = sizeof(typesArray) / sizeof(typesArray[0]);
     string types;
-    for (int i=0; i<N; i++) {
+    for (int i = 0; i < N; i++) {
         if (i>0) {
             types += ", ";
         }
@@ -87,7 +87,7 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     pg << "O " << types << ";" << endl;
     pg << "L " << types << ";" << endl;
     pg << "C ";
-    for (int i=0; i<N; i++) {
+    for (int i = 0; i < N; i++) {
         if (i>0) {
             pg << ", ";
         }
@@ -95,7 +95,7 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     }
     pg << ";" << endl;
     pg << "V ";
-    for (int i=0; i<N; i++) {
+    for (int i = 0; i < N; i++) {
         if (i>0) {
             pg << ", ";
         }
@@ -103,10 +103,10 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     }
     pg << ";" << endl;
     pg << "T;" << endl;
-    for (int i=0; i<N; i++) {
+    for (int i = 0; i < N; i++) {
         pg << "CALL 'dynamicVariable(L" << i << ", C" << i << ");" << endl;
     }
-    for (int i=0; i<N; i++) {
+    for (int i = 0; i < N; i++) {
         pg << "REF O" << i << ", L" << i << ";" << endl;
     }
 
@@ -115,8 +115,7 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
 

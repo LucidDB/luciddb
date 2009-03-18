@@ -121,14 +121,14 @@ void LbmUnionExecStreamTest::testTwoInputs()
     // evens from 20 .. 500
     LbmNumberStreamInput input1;
     input1.pStream =
-        SharedNumberStream( new SkipNumberStream(20, 500, 2) );
+        SharedNumberStream(new SkipNumberStream(20, 500, 2));
     input1.bitmapSize = 4;
     inputData.push_back(input1);
 
     // multiples of 3 from 300 .. 990
     LbmNumberStreamInput input2;
     input2.pStream =
-        SharedNumberStream( new SkipNumberStream(300, 990, 3) );
+        SharedNumberStream(new SkipNumberStream(300, 990, 3));
     input2.bitmapSize = 8;
     inputData.push_back(input2);
 
@@ -143,21 +143,21 @@ void LbmUnionExecStreamTest::testThreeInputs()
     // multiples of 7 from 21 .. 700
     LbmNumberStreamInput input1;
     input1.pStream =
-        SharedNumberStream( new SkipNumberStream(21, 700, 7) );
+        SharedNumberStream(new SkipNumberStream(21, 700, 7));
     input1.bitmapSize = 4;
     inputData.push_back(input1);
 
     // multiples of 3 from 300 .. 990
     LbmNumberStreamInput input2;
     input2.pStream =
-        SharedNumberStream( new SkipNumberStream(300, 990, 3) );
+        SharedNumberStream(new SkipNumberStream(300, 990, 3));
     input2.bitmapSize = 8;
     inputData.push_back(input2);
 
     // multiples of 5 from 500 .. 1050
     LbmNumberStreamInput input3;
     input3.pStream =
-        SharedNumberStream( new SkipNumberStream(500, 1050, 5) );
+        SharedNumberStream(new SkipNumberStream(500, 1050, 5));
     input3.bitmapSize = 8;
     inputData.push_back(input3);
 
@@ -172,14 +172,14 @@ void LbmUnionExecStreamTest::testLargeRids()
     // multiples of 4 from 5000020 .. 5000500
     LbmNumberStreamInput input1;
     input1.pStream =
-        SharedNumberStream( new SkipNumberStream(5000020, 5000500, 4) );
+        SharedNumberStream(new SkipNumberStream(5000020, 5000500, 4));
     input1.bitmapSize = 4;
     inputData.push_back(input1);
 
     // multiples of 5 from 5000300 .. 5000990
     LbmNumberStreamInput input2;
     input2.pStream =
-        SharedNumberStream( new SkipNumberStream(5000300, 5000990, 5) );
+        SharedNumberStream(new SkipNumberStream(5000300, 5000990, 5));
     input2.bitmapSize = 8;
     inputData.push_back(input2);
 
@@ -194,21 +194,21 @@ void LbmUnionExecStreamTest::testSparse()
     // multiples of 13 from 26 .. 1300
     LbmNumberStreamInput input1;
     input1.pStream =
-        SharedNumberStream( new SkipNumberStream(26, 1300, 13) );
+        SharedNumberStream(new SkipNumberStream(26, 1300, 13));
     input1.bitmapSize = 4;
     inputData.push_back(input1);
 
     // multiples of 17 from 340 ... 1700
     LbmNumberStreamInput input2;
     input2.pStream =
-        SharedNumberStream( new SkipNumberStream(340, 1700, 17) );
+        SharedNumberStream(new SkipNumberStream(340, 1700, 17));
     input2.bitmapSize = 8;
     inputData.push_back(input2);
 
     // multiples of 11 from 1100 .. 2200
     LbmNumberStreamInput input3;
     input3.pStream =
-        SharedNumberStream( new SkipNumberStream(1100, 2200, 11) );
+        SharedNumberStream(new SkipNumberStream(1100, 2200, 11));
     input3.bitmapSize = 8;
     inputData.push_back(input3);
 
@@ -223,28 +223,28 @@ void LbmUnionExecStreamTest::testGaps()
     // multiples of 13 from 26 .. 520
     LbmNumberStreamInput input1;
     input1.pStream =
-        SharedNumberStream( new SkipNumberStream(26, 520, 13) );
+        SharedNumberStream(new SkipNumberStream(26, 520, 13));
     input1.bitmapSize = 4;
     inputData.push_back(input1);
 
     // multiples of 17 from 680 .. 1020
     LbmNumberStreamInput input2;
     input2.pStream =
-        SharedNumberStream( new SkipNumberStream(680, 1020, 17) );
+        SharedNumberStream(new SkipNumberStream(680, 1020, 17));
     input2.bitmapSize = 8;
     inputData.push_back(input2);
 
     // multiples of 11 from 1199 ..
     LbmNumberStreamInput input3;
     input3.pStream =
-        SharedNumberStream( new SkipNumberStream(1320, 1540, 11) );
+        SharedNumberStream(new SkipNumberStream(1320, 1540, 11));
     input3.bitmapSize = 8;
     inputData.push_back(input3);
 
     // multiples of 19 from 3800 .. 7600
     LbmNumberStreamInput input4;
     input4.pStream =
-        SharedNumberStream( new SkipNumberStream(1330, 1900, 11) );
+        SharedNumberStream(new SkipNumberStream(1330, 1900, 11));
     input4.bitmapSize = 8;
     inputData.push_back(input4);
 

@@ -79,8 +79,7 @@ static struct TOp {
 { "mul", OP_MUL, 2 },
 { "div", OP_DIV, 2 },
 { "neg", OP_NEG, 1 },
-{ 0, 0 }
-};
+{ 0, 0 }};
 static struct TType {
     const char *pName;
     int iCode;
@@ -90,7 +89,7 @@ static struct TType {
 {
 { "char", T_C, "%hhi", "%hhd" },
 { "signed char", T_SC, "%hhi", "%hhd" },
-{ "unsigned char", T_UC, "%hhu", "%hhu" },        /* TODO, doesn't allow unsigned hex, octals */
+{ "unsigned char", T_UC, "%hhu", "%hhu" },
 { "short", T_S, "%hi", "%hd"  },
 { "unsigned short", T_US, "%hu", "%hu" },
 { "int", T_I32, "%i", "%d"  },
@@ -100,8 +99,7 @@ static struct TType {
 { "float", T_F, "%e", "%e" },
 { "double", T_D, "%le", "%le" },
 { "long double", T_LD, "%lle", "%lle" },
-{ 0, 0 }
-};
+{ 0, 0 }};
 enum { SHORT_MSG_LENGTH=7, LONG_MSG_LENGTH/*hack*/=512, FIXED_ARGS=3 };
 union TSuper {
     char c;

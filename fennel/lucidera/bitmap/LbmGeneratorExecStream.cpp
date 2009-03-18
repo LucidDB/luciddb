@@ -196,7 +196,6 @@ ExecStreamResult LbmGeneratorExecStream::execute(
 
         // position to the starting rid
         for (uint iClu = 0; iClu < nClusters; iClu++) {
-
             SharedLcsClusterReader &pScan = pClusters[iClu];
             if (!pScan->position(startRid)) {
                 // empty table
@@ -298,11 +297,9 @@ ExecStreamResult LbmGeneratorExecStream::generateMultiKeyBitmaps(
             // row contained nulls
             bitmapTuple.resetBuffer();
             for (uint iClu = 0; iClu < nClusters; iClu++) {
-
                 SharedLcsClusterReader &pScan = pClusters[iClu];
 
                 if (currRid >= pScan->getRangeEndRid()) {
-
                     // move to the next batch if this particular cluster
                     // reader has reached the end of its batch
                     if (!pScan->nextRange()) {
@@ -465,8 +462,9 @@ bool LbmGeneratorExecStream::generateSingletons()
         // advance to the next rid; if at the end of the batch,
         // return to caller; else, continue reading from current
         // batch
-        if (!advanceReader(pScan))
+        if (!advanceReader(pScan)) {
             return true;
+        }
     } while (true);
 }
 
@@ -564,8 +562,8 @@ void LbmGeneratorExecStream::initRidAndBitmap(
     TupleData &bitmapTuple, LcsRid* pCurrRid)
 {
     bitmapTuple[nIdxKeys].pData = (PConstBuffer) pCurrRid;
-    bitmapTuple[nIdxKeys+1].pData = NULL;
-    bitmapTuple[nIdxKeys+2].pData = NULL;
+    bitmapTuple[nIdxKeys + 1].pData = NULL;
+    bitmapTuple[nIdxKeys + 2].pData = NULL;
 }
 
 bool LbmGeneratorExecStream::addRidToBitmap(
@@ -588,7 +586,6 @@ bool LbmGeneratorExecStream::addRidToBitmap(
             bitmapTable[keycode].pBitmap->setEntryTuple(initBitmap);
         }
     } else {
-
         if (!bitmapTable[keycode].bufferPtr) {
             // no assigned buffer yet; get a buffer by flushing
             // out an existing entry

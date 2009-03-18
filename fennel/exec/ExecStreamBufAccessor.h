@@ -573,7 +573,7 @@ inline PBuffer ExecStreamBufAccessor::getProductionEnd() const
 
 inline uint ExecStreamBufAccessor::getProductionAvailable() const
 {
-    return pProducer? (pBufEnd - pProducer) : 0;
+    return pProducer ? (pBufEnd - pProducer) : 0;
 }
 
 inline ExecStreamBufState ExecStreamBufAccessor::getState() const
@@ -656,8 +656,9 @@ inline bool ExecStreamBufAccessor::produceTuple(TupleData const &tupleData)
         return true;
     } else {
         validateTupleSize(tupleData);
-        if (getState() == EXECBUF_NONEMPTY)
+        if (getState() == EXECBUF_NONEMPTY) {
             requestConsumption();
+        }
         return false;
     }
 }

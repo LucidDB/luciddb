@@ -57,7 +57,9 @@ enum ExternalSortRC
 class ExternalSortSubStream
 {
 public:
-    virtual ~ExternalSortSubStream() {};
+    virtual ~ExternalSortSubStream()
+    {
+    }
 
     /**
      * Binds the fetch array which will be used implicitly by
@@ -113,4 +115,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End ExternalSubStream.h
+// End ExternalSortSubStream.h

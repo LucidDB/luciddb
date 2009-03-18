@@ -628,7 +628,7 @@ void LcsClusterReplaceExecStreamTest::testCaseSetUp()
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     attrDesc_bitmap = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_CHAR),
-        true, pRandomSegment->getUsablePageSize()/8);
+        true, pRandomSegment->getUsablePageSize() / 8);
 
     savedRootPageId = NULL_PAGE_ID;
 }

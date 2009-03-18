@@ -110,7 +110,6 @@ void LhxPartitionWriter::marshalTuple(TupleData const &inputTuple)
 
 void LhxPartitionWriter::aggAndMarshalTuple(TupleData const &inputTuple)
 {
-
     while (!hashTable.addTuple(inputTuple)) {
         /*
          * Write everything out to partition.
@@ -662,7 +661,6 @@ LhxPartitionState LhxPlan::generatePartitions(
         hashTableTuple.compute(hashTableTupleDesc);
 
         while ((partInfo.hashTableReader)->getNext(hashTableTuple)) {
-
             writeToPartition = false;
 
             hashKey = hashGen.hash(hashTableTuple,

@@ -32,7 +32,6 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct LbmIntersectExecStreamParams : public LbmBitOpExecStreamParams
 {
-
 };
 
 /**

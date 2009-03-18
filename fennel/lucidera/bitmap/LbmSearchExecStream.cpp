@@ -41,7 +41,6 @@ void LbmSearchExecStream::prepare(LbmSearchExecStreamParams const &params)
     startRidParamId = params.startRidParamId;
     ridInKey = (startRidParamId > DynamicParamId(0));
     if (ridInKey) {
-
         startRidDatum.pData = (PConstBuffer) &startRid;
         startRidDatum.cbData = sizeof(startRid);
 
@@ -49,7 +48,6 @@ void LbmSearchExecStream::prepare(LbmSearchExecStreamParams const &params)
         // been setup
         TupleDescriptor ridKeyDesc = inputKeyDesc;
         if (inputKeyDesc.size() == treeDescriptor.keyProjection.size() - 1) {
-
             StandardTypeDescriptorFactory stdTypeFactory;
             TupleAttributeDescriptor attrDesc(
                 stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));

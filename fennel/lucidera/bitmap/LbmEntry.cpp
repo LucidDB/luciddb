@@ -110,7 +110,6 @@ void LbmEntry::setEntryTuple(TupleData const &indexTuple)
     currentEntrySize = 0;
 
     for (int i = 0; i < entryTuple.size(); i ++) {
-
         if (i != segmentField) {
             entryTuple[i].pData = scratchBuffer + currentEntrySize;
         } else {
@@ -159,7 +158,7 @@ void LbmEntry::setEntryTuple(TupleData const &indexTuple)
 
     startRID = *((LcsRid *)entryTuple[RIDField].pData);
 
-    if (isSingleton(indexTuple)){
+    if (isSingleton(indexTuple)) {
         /*
          * Case 1, or 2
          */
@@ -517,7 +516,7 @@ bool LbmEntry::singleton2Bitmap()
 {
     if (setRIDNewSegment(startRID)) {
         startRID = roundToByteBoundary(startRID);
-        entryTuple[entryTuple.size()-2].pData = pSegDescStart;
+        entryTuple[entryTuple.size() - 2].pData = pSegDescStart;
         return true;
     } else {
         return false;
@@ -533,7 +532,6 @@ bool LbmEntry::setRID(LcsRid rid)
      * First prepare the current LbmEntry for insert.
      */
     if (isSingleton()) {
-
         /*
          * If adding RID to a singleton LbmEntry, change the singleton to
          * bitmap entry
@@ -578,7 +576,7 @@ bool LbmEntry::setRID(LcsRid rid)
          */
         uint distance = opaqueToInt(rid - currSegByteStartRID);
 
-        assert(distance>=0);
+        assert(distance >= 0);
 
         if (distance < LbmOneByteSize) {
             /*
@@ -599,8 +597,9 @@ bool LbmEntry::setRID(LcsRid rid)
                  * Then figure out if there's space left to begin a new
                  * segment and segment descriptor
                  */
-                if (!setRIDNewSegment(rid))
+                if (!setRIDNewSegment(rid)) {
                     return false;
+                }
             } else {
                 /*
                  * No room for descriptor in the same LbmEntry, tell caller to
@@ -620,7 +619,7 @@ int LbmEntry::compareEntry(
 {
     return tupleDesc.compareTuplesKey(entryTuple,
                                       inputTuple,
-                                      entryTuple.size()-3);
+                                      entryTuple.size() - 3);
 }
 
 
@@ -682,7 +681,7 @@ uint LbmEntry::getMergeSpaceRequired(TupleData const &inputTuple)
         mergeSpaceRequired = 2;
     } else if (isSingleBitmap(inputTuple)) {
         // single bitmap
-        uint segDescCount = (inputSegLength /LbmMaxSegSize) + 1;
+        uint segDescCount = (inputSegLength / LbmMaxSegSize) + 1;
         mergeSpaceRequired = segDescCount + inputSegLength;
     } else {
         // compressed bitmap
@@ -1023,7 +1022,6 @@ bool LbmEntry::spliceSingleton(TupleData &inputTuple)
     // special case where the current entry is the minimum entry and we are
     // trying to splice a rid in front of it
     if (inputStartRID < startRID) {
-
         // reverse the roles of current and input and merge the original
         // current into the original input; first copy the current to the
         // temporary merge buffer
@@ -1479,8 +1477,9 @@ TupleData const &LbmEntry::produceEntryTuple()
     /*
      * If singleton, just return the tuple.
      */
-    if (isSingleton())
+    if (isSingleton()) {
         return entryTuple;
+    }
 
     /*
      * Set up all the data pointers in entryTuple.
@@ -1662,7 +1661,7 @@ string LbmEntry::dumpSegRID(
         for (i = 0; i < segBytes; i++) {
             seg --;
             bitmapByte = *(uint8_t *)seg;
-            for(byteLength = 8; byteLength > 0; byteLength --) {
+            for (byteLength = 8; byteLength > 0; byteLength--) {
                 if (bitmapByte % 2) {
                     entryTrace << prefix << opaqueToInt(srid) << "]\n";
                 }
@@ -1715,7 +1714,7 @@ string LbmEntry::dumpBitmapRID(
     for (uint i = 0; i < segBytes; i++) {
         seg --;
         bitmapByte = *(uint8_t *)seg;
-        for(byteLength = 8; byteLength > 0; byteLength --) {
+        for (byteLength = 8; byteLength > 0; byteLength--) {
             if (bitmapByte % 2) {
                 entryTrace << prefix << opaqueToInt(srid) << "]\n";
             }
@@ -1756,8 +1755,7 @@ string LbmEntry::toBitmapString(TupleData const&inputTuple)
 
     if (isSingleton(inputTuple)) {
         tupleTrace <<"Singleton";
-    }
-    else {
+    } else {
         PBuffer segDesc = (PBuffer)inputTuple[tupleSize - 2].pData;
         /*
          * segments are stored backward.
@@ -1876,8 +1874,7 @@ string LbmEntry::toString()
 
     if (isSingleton()) {
         tupleTrace <<"Singleton";
-    }
-    else {
+    } else {
         PBuffer pSegDesc = pSegDescStart;
         /*
          * segments are stored backward.
@@ -1953,7 +1950,7 @@ void LbmEntry::getSizeBounds(
 
     // Adjust max size based on page size. Try to fit a least minEntryPerPage
     // in a page.
-    uint maxEntrySizeForPage = pageSize/LbmMinEntryPerPage;
+    uint maxEntrySizeForPage = pageSize / LbmMinEntryPerPage;
 
     if (maxEntrySizeForPage < minEntrySize) {
         maxEntrySize = minEntrySize;
@@ -2013,7 +2010,7 @@ void LbmEntry::generateSegRIDs(
         for (i = 0; i < segBytes; i++) {
             seg --;
             bitmapByte = *(uint8_t *)seg;
-            for(byteLength = 8; byteLength > 0; byteLength --) {
+            for (byteLength = 8; byteLength > 0; byteLength--) {
                 if (bitmapByte % 2) {
                     ridValues.push_back(srid);
                 }
@@ -2038,7 +2035,7 @@ void LbmEntry::generateBitmapRIDs(
     for (uint i = 0; i < segBytes; i++) {
         seg --;
         bitmapByte = *(uint8_t *)seg;
-        for(byteLength = 8; byteLength > 0; byteLength --) {
+        for (byteLength = 8; byteLength > 0; byteLength--) {
             if (bitmapByte % 2) {
                 ridValues.push_back(srid);
             }

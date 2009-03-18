@@ -112,12 +112,12 @@ int TupleDescriptor::compareTuples(
             if (!datum2.pData) {
                 continue;
             }
-            return -(i+1);
+            return -(i + 1);
         } else if (!datum2.pData) {
             if (containsNullKey) {
                 *containsNullKey = true;
             }
-            return (i+1);
+            return (i + 1);
         }
         int c = (*this)[i].pTypeDescriptor->compareValues(
             datum1.pData,
@@ -125,9 +125,9 @@ int TupleDescriptor::compareTuples(
             datum2.pData,
             datum2.cbData);
         if (c > 0) {
-            return (i+1);
+            return (i + 1);
         } else if (c < 0) {
-            return -(i+1);
+            return -(i + 1);
         }
     }
     return 0;
@@ -149,9 +149,9 @@ int TupleDescriptor::compareTuplesKey(
             if (!datum2.pData) {
                 continue;
             }
-            return -(i+1);
+            return -(i + 1);
         } else if (!datum2.pData) {
-            return (i+1);
+            return (i + 1);
         }
         int c = (*this)[i].pTypeDescriptor->compareValues(
             datum1.pData,
@@ -159,9 +159,9 @@ int TupleDescriptor::compareTuplesKey(
             datum2.pData,
             datum2.cbData);
         if (c > 0) {
-            return (i+1);
+            return (i + 1);
         } else if (c < 0) {
-            return -(i+1);
+            return -(i + 1);
         }
     }
     return 0;

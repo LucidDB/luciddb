@@ -113,7 +113,7 @@ class SXMutexGuard : public boost::noncopyable
     bool m_locked;
 
 public:
-    explicit SXMutexGuard(SXMutex& mx, bool initially_locked=true)
+    explicit SXMutexGuard(SXMutex& mx, bool initially_locked = true)
         : rwLock(mx), m_locked(false)
     {
         if (initially_locked) {
@@ -160,3 +160,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
+// End SXMutex.h

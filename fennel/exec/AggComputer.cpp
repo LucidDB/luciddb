@@ -46,7 +46,7 @@ AggComputer *AggComputer::newAggComputer(
         assert(pAttrDesc);
         // TODO jvs 6-Oct-2005:  gotta use some of that template
         // metaprogramming mumbo jumbo to get rid of this
-        switch(pAttrDesc->pTypeDescriptor->getOrdinal()) {
+        switch (pAttrDesc->pTypeDescriptor->getOrdinal()) {
         case STANDARD_TYPE_INT_8:
             return new SumAggComputer<int8_t>();
         case STANDARD_TYPE_UINT_8:
@@ -260,7 +260,7 @@ void ExtremeAggComputer::updateAccumulator(
         return;
     } else if (aggFunction == AGG_FUNC_SINGLE_VALUE) {
         throw FennelExcn(
-            FennelResource::instance().scalarQueryReturnedMultipleRows() );
+            FennelResource::instance().scalarQueryReturnedMultipleRows());
     }
 
     // c = (input - accumulator)
@@ -315,7 +315,7 @@ void ExtremeAggComputer::updateAccumulator(
 {
     if (aggFunction == AGG_FUNC_SINGLE_VALUE) {
         throw FennelExcn(
-            FennelResource::instance().scalarQueryReturnedMultipleRows() );
+            FennelResource::instance().scalarQueryReturnedMultipleRows());
     }
 
     TupleDatum const &inputDatum = inputTuple[iInputAttr];

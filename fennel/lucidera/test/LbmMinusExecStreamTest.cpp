@@ -125,7 +125,7 @@ public:
         changeIndexes.reset(new uint[interval]);
         changeIndexes[0] = valueCounts[0];
         for (uint i = 1; i < interval; i++) {
-            changeIndexes[i] = changeIndexes[i-1] + valueCounts[i];
+            changeIndexes[i] = changeIndexes[i - 1] + valueCounts[i];
         }
         current = 0;
         lastRow = 0;

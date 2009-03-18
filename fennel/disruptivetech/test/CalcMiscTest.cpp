@@ -90,8 +90,7 @@ CalcMiscTest::testCalcStatusReg()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -144,8 +143,7 @@ CalcMiscTest::testCalcStatusRegZero()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -157,7 +155,7 @@ CalcMiscTest::testCalcStatusRegZero()
 
     TupleData const * const statusTuple = calc.getStatusRegister();
 
-    for(int i = 1; i <= 3; i++) {
+    for (int i = 1; i <= 3; i++) {
         calc.exec();
 
         BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
@@ -230,8 +228,7 @@ CalcMiscTest::testCalcRefInst()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -316,8 +313,7 @@ CalcMiscTest::testCalcReturn()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -364,8 +360,7 @@ CalcMiscTest::testCalcRaise()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -421,8 +416,7 @@ CalcMiscTest::testCalcContinueOnException()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }

@@ -94,7 +94,6 @@ ExecStreamResult LbmSegmentReader::advanceToByte(LbmByteNumber byteNum)
 {
     // read byte segments until find a suitable one
     while (byteSegOffset + byteSegLen <= byteNum) {
-
         // if current segment is exhausted, read another
         if (pSegDescStart >= pSegDescEnd) {
             ExecStreamResult rc = readSegment();

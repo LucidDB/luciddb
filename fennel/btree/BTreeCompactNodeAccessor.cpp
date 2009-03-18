@@ -40,7 +40,7 @@ void BTreeCompactNodeAccessor::onInit()
 PBuffer BTreeCompactNodeAccessor::allocateEntry(
     BTreeNode &node,uint iEntry,uint)
 {
-    assert(iEntry < node.nEntries+1);
+    assert(iEntry < node.nEntries + 1);
     assert(node.cbTotalFree >= cbEntry);
 
     // shift everything over to make room for the new entry
@@ -65,7 +65,7 @@ void BTreeCompactNodeAccessor::deallocateEntry(
     // page to memmove.  It should be unnecessary, since in that case the
     // number of bytes to be moved is 0, but paranoid memmove
     // implementations might complain.
-    if (iEntry != node.nEntries-1) {
+    if (iEntry != node.nEntries - 1) {
         // shift over everything after the entry to delete it
         PBuffer pBuffer = node.getDataForWrite() + iEntry*cbEntry;
         memmove(

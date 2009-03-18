@@ -83,7 +83,7 @@ void CheckpointThread::closeImpl()
 void CheckpointThread::requestCheckpoint(CheckpointType request)
 {
     StrictMutexGuard mutexGuard(mutex);
-    switch(request) {
+    switch (request) {
     case CHECKPOINT_FLUSH_ALL:
         checkpointType = request;
         break;

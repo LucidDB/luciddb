@@ -62,7 +62,7 @@ void SortedAggExecStream::prepare(SortedAggExecStreamParams const &params)
          pInvocation != params.aggInvocations.end();
          ++pInvocation)
     {
-        switch(pInvocation->aggFunction) {
+        switch (pInvocation->aggFunction) {
         case AGG_FUNC_COUNT:
             prevTupleDesc.push_back(countDesc);
             break;
@@ -106,14 +106,15 @@ AggComputer *SortedAggExecStream::newAggComputer(
 inline void SortedAggExecStream::clearAccumulator()
 {
     for (int i = 0; i < aggComputers.size(); ++i) {
-        aggComputers[i].clearAccumulator(prevTuple[i+groupByKeyCount]);
+        aggComputers[i].clearAccumulator(prevTuple[i + groupByKeyCount]);
     }
 }
 
 inline void SortedAggExecStream::updateAccumulator()
 {
     for (int i = 0; i < aggComputers.size(); ++i) {
-        aggComputers[i].updateAccumulator(prevTuple[i+groupByKeyCount], inputTuple);
+        aggComputers[i].updateAccumulator(prevTuple[i + groupByKeyCount],
+            inputTuple);
     }
 }
 
@@ -153,8 +154,8 @@ inline void SortedAggExecStream::computeOutput()
     }
 
     for (i = 0; i < aggComputers.size(); i ++) {
-        aggComputers[i].computeOutput(outputTuple[i+groupByKeyCount],
-            prevTuple[i+groupByKeyCount]);
+        aggComputers[i].computeOutput(outputTuple[i + groupByKeyCount],
+            prevTuple[i + groupByKeyCount]);
     }
 }
 
@@ -210,7 +211,6 @@ ExecStreamResult SortedAggExecStream::execute(ExecStreamQuantum const &quantum)
       not produced yet.
     */
     if (pInAccessor->getState() == EXECBUF_EOS) {
-
         if (!prevTupleValid) {
             state = STATE_DONE;
         }
@@ -236,8 +236,7 @@ ExecStreamResult SortedAggExecStream::execute(ExecStreamQuantum const &quantum)
         } else {
             return EXECRC_BUF_OVERFLOW;
         }
-    }
-    else if (state == STATE_PRODUCING) {
+    } else if (state == STATE_PRODUCING) {
         rc = produce();
         if (rc != EXECRC_YIELD) {
             return rc;

@@ -158,7 +158,7 @@ void ExecStreamScheduler::traceStreamBuffers(
             TRACE_FINER,
             "input buffer " << i << ":  "
             << ExecStreamBufState_names[bufAccessor.getState()]
-            << (bufAccessor.hasPendingEOS()? ", EOS pending" : "")
+            << (bufAccessor.hasPendingEOS() ? ", EOS pending" : "")
             << ",  consumption available = "
             << bufAccessor.getConsumptionAvailable());
         if (stream.isTracingLevel(inputTupleTraceLevel)) {
@@ -178,7 +178,7 @@ void ExecStreamScheduler::traceStreamBuffers(
             TRACE_FINER,
             "output buffer " << i << ":  "
             << ExecStreamBufState_names[bufAccessor.getState()]
-            << (bufAccessor.hasPendingEOS()? ", EOS pending" : "")
+            << (bufAccessor.hasPendingEOS() ? ", EOS pending" : "")
             << ",  consumption available = "
             << bufAccessor.getConsumptionAvailable()
             << ",  production available = "

@@ -50,9 +50,7 @@ ExecStreamResult LbmIntersectExecStream::execute(
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
-
         while (nMatches < nInputs) {
-
             // get the first segment from the input with at least a starting
             // rid of startRid
             LcsRid currRid;

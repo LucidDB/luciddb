@@ -114,7 +114,10 @@ class AutoBacktrace {
     static struct sigaction nextAction[BACKTRACE_SIG_MAX];
 #endif
 
-    AutoBacktrace() {}                  // hide constructor
+    // hide constructor
+    AutoBacktrace()
+    {
+    }
 
     static void installSignal(int signum);
 public:

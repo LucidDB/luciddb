@@ -50,7 +50,6 @@ CollectExecStreamTestSuite::CollectExecStreamTestSuite(bool addAllTests)
 
 void CollectExecStreamTestSuite::testCollectInts()
 {
-
     uint rows = 2;
     MockProducerExecStreamParams mockParams;
     mockParams.outputTupleDesc.push_back(descAttrInt64);
@@ -84,10 +83,11 @@ void CollectExecStreamTestSuite::testCollectInts()
     twoData[0].pData = (PConstBuffer) &two;
     TupleAccessor twoAccessor;
     twoAccessor.compute(descInt64);
-    assert((oneAccessor.getMaxByteCount() + twoAccessor.getMaxByteCount() ) <=
+    assert((oneAccessor.getMaxByteCount() + twoAccessor.getMaxByteCount()) <=
            sizeof(intArrayBuff));
-    twoAccessor.marshal(twoData,
-                        ((PBuffer)intArrayBuff)+oneAccessor.getMaxByteCount());
+    twoAccessor.marshal(
+        twoData,
+        ((PBuffer)intArrayBuff) + oneAccessor.getMaxByteCount());
 
     uint8_t varbinaryBuff[1000];
     TupleData binData(descVarbinary32);

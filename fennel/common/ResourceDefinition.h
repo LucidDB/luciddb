@@ -148,3 +148,5 @@ private:
 FENNEL_END_NAMESPACE
 
 #endif // not Fennel_ResourceDefinition_Included
+
+// End ResourceDefinition.h

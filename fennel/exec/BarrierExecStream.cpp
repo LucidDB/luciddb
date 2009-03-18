@@ -155,7 +155,6 @@ void BarrierExecStream::closeImpl()
 void BarrierExecStream::processInputTuple()
 {
     switch (returnMode) {
-
     case BARRIER_RET_FIRST_INPUT:
     case BARRIER_RET_ANY_INPUT:
         // copy input to output if first input

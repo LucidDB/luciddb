@@ -50,7 +50,7 @@ void CrcSegOutputStream::writeExtraHeaders(SegStreamNode &node)
     pCrc->onlineUuid = onlineUuid;
     pCrc->pageId = lastPageId;
     crcComputer.reset();
-    crcComputer.process_bytes(pCrc+1,node.cbData);
+    crcComputer.process_bytes(pCrc + 1,node.cbData);
     pCrc->checksum = crcComputer.checksum();
 }
 

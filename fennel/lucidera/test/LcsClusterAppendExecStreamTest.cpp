@@ -438,8 +438,9 @@ void LcsClusterAppendExecStreamTest::testScanMultiCol(
     scanParams.samplingMode = SAMPLING_OFF;
     struct LcsClusterScanDef clusterScanDef;
 
-    for (i = 0; i < nCols; i++)
+    for (i = 0; i < nCols; i++) {
         clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+    }
 
     clusterScanDef.pSegment = btreeDescriptor.segmentAccessor.pSegment;
     clusterScanDef.pCacheAccessor =
@@ -479,7 +480,7 @@ void LcsClusterAppendExecStreamTest::testCaseSetUp()
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     attrDesc_bitmap = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_CHAR),
-        true, pRandomSegment->getUsablePageSize()/8);
+        true, pRandomSegment->getUsablePageSize() / 8);
 
     savedRootPageId = NULL_PAGE_ID;
 }

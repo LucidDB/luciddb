@@ -44,7 +44,9 @@ struct MockConsumerExecStreamParams : public SingleInputExecStreamParams
     /** when not null, echo data to this stream */
     ostream* echoData;
 
-    MockConsumerExecStreamParams() :saveData(true), echoData(0) {}
+    MockConsumerExecStreamParams() : saveData(true), echoData(0)
+    {
+    }
 };
 
 /**
@@ -72,11 +74,19 @@ public:
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 
-    long getRowCount() const { return rowCount; }
+    long getRowCount() const
+    {
+        return rowCount;
+    }
+
     const vector<string>& getRowVector() {
         return const_cast<const vector<string>& >(rowStrings);
     }
-    bool getRecvEOS() const { return recvEOS; }
+
+    bool getRecvEOS() const
+    {
+        return recvEOS;
+    }
 };
 
 FENNEL_END_NAMESPACE

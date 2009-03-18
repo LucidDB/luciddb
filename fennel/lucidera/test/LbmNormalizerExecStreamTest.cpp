@@ -108,7 +108,7 @@ public:
         changeIndexes[0] = getValueCount(nRows, interval, 0);
         for (uint i = 1; i < interval; i++) {
             changeIndexes[i] =
-                changeIndexes[i-1] + getValueCount(nRows, interval, i);
+                changeIndexes[i - 1] + getValueCount(nRows, interval, i);
         }
         current = 0;
         lastRow = 0;

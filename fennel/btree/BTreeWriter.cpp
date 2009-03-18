@@ -98,7 +98,7 @@ uint BTreeWriter::insertTupleFromBuffer(
         // values are considered duplicates for DISTINCT but not for UNIQUE.
         // Should probably introduce new DUP_ options to make it explicit.
         if (duplicate) {
-            switch(distinctness) {
+            switch (distinctness) {
             case DUP_ALLOW:
                 break;
             case DUP_DISCARD:
@@ -146,7 +146,7 @@ bool BTreeWriter::attemptInsertWithoutSplit(
 {
     BTreeNode *pNode = &(targetPageLock.getNodeForWrite());
     BTreeNodeAccessor &nodeAccessor = getNodeAccessor(*pNode);
-    switch(nodeAccessor.calculateCapacity(*pNode,cbTuple)) {
+    switch (nodeAccessor.calculateCapacity(*pNode,cbTuple)) {
     case BTreeNodeAccessor::CAN_FIT:
         break;
     case BTreeNodeAccessor::CAN_FIT_WITH_COMPACTION:
@@ -628,7 +628,7 @@ void BTreeWriter::undoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
         deleteLogged(logStream);
         break;
@@ -644,7 +644,7 @@ void BTreeWriter::redoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
         insertLogged(logStream);
         break;

@@ -87,7 +87,7 @@ void LogicalRecoveryLog::recover(
             // logged?  If so, need to prevent it or detect it.
             pTxnInputStream = pInputStream;
         }
-        switch(txnMemento.event) {
+        switch (txnMemento.event) {
         case LogicalTxnEventMemento::EVENT_COMMIT:
             if (pTxnEntry == checkpointTxnMap.end()) {
                 redoTxn(txnMemento,NULL,pTxnInputStream);

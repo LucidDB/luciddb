@@ -102,8 +102,9 @@ void LcsMultiClusterAppendTest::testLoad()
     resetExecStreamTest();
 
     // project all columns
-    for (uint i = 0; i < nClusters * nCols; i++)
+    for (uint i = 0; i < nClusters * nCols; i++) {
         proj.push_back(i);
+    }
     scanCols(nRows, nCols, nClusters, proj);
 }
 
@@ -143,7 +144,6 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
 
     vector<ExecStreamEmbryo> lcsAppendEmbryos;
     for (uint i = 0; i < nClusters; i++) {
-
         LcsClusterAppendExecStreamParams lcsAppendParams;
         lcsAppendParams.scratchAccessor =
             pSegmentFactory->newScratchSegment(pCache, 10);
@@ -234,8 +234,9 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
     for (uint i = 0; i < nClusters; i++) {
         struct LcsClusterScanDef clusterScanDef;
 
-        for (uint j = 0; j < nCols; j++)
+        for (uint j = 0; j < nCols; j++) {
             clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+        }
 
         clusterScanDef.pSegment = bTreeClusters[i]->segmentAccessor.pSegment;
         clusterScanDef.pCacheAccessor =
@@ -303,13 +304,14 @@ void LcsMultiClusterAppendTest::testCaseSetUp()
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     attrDesc_bitmap = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
-        true, pRandomSegment->getUsablePageSize()/8);
+        true, pRandomSegment->getUsablePageSize() / 8);
 }
 
 void LcsMultiClusterAppendTest::testCaseTearDown()
 {
-    for (uint i = 0; i < bTreeClusters.size(); i++)
+    for (uint i = 0; i < bTreeClusters.size(); i++) {
         bTreeClusters[i]->segmentAccessor.reset();
+    }
     ExecStreamUnitTestBase::testCaseTearDown();
 }
 

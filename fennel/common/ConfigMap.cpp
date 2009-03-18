@@ -138,11 +138,11 @@ bool ConfigMap::getBoolParam(
         // boost only likes 1/0, so preprocess true/false
         if (strcasecmp(pPair->second.c_str(), "true") == 0) {
             return true;
-        }
-        else if (strcasecmp(pPair->second.c_str(), "false") == 0) {
+        } else if (strcasecmp(pPair->second.c_str(), "false") == 0) {
             return false;
+        } else {
+            return boost::lexical_cast<bool>(pPair->second);
         }
-        else return boost::lexical_cast<bool>(pPair->second);
     }
 }
 

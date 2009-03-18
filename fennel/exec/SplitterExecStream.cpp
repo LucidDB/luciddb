@@ -38,7 +38,7 @@ ExecStreamResult SplitterExecStream::execute(ExecStreamQuantum const &)
 {
     if (pLastConsumptionEnd) {
         while (iOutput < outAccessors.size()) {
-            switch(outAccessors[iOutput]->getState()) {
+            switch (outAccessors[iOutput]->getState()) {
             case EXECBUF_NONEMPTY:
             case EXECBUF_OVERFLOW:
                 return EXECRC_BUF_OVERFLOW;
@@ -63,7 +63,7 @@ ExecStreamResult SplitterExecStream::execute(ExecStreamQuantum const &)
         iOutput = 0;
     }
 
-    switch(pInAccessor->getState()) {
+    switch (pInAccessor->getState()) {
     case EXECBUF_OVERFLOW:
     case EXECBUF_NONEMPTY:
         if (!pLastConsumptionEnd) {

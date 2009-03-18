@@ -355,9 +355,9 @@ void ExternalSortExecStreamImpl::optimizeRunOrder()
     uint i = storedRuns.size() - 1;
     while ((i > 0)
            && (storedRuns[i]->getWrittenPageCount()
-               > storedRuns[i-1]->getWrittenPageCount()))
+               > storedRuns[i - 1]->getWrittenPageCount()))
     {
-        std::swap(storedRuns[i],storedRuns[i-1]);
+        std::swap(storedRuns[i],storedRuns[i - 1]);
         i--;
     }
 }

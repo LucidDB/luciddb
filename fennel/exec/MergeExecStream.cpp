@@ -66,7 +66,7 @@ void MergeExecStream::open(
 ExecStreamResult MergeExecStream::execute(
     ExecStreamQuantum const &)
 {
-    switch(pOutAccessor->getState()) {
+    switch (pOutAccessor->getState()) {
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:
         return EXECRC_BUF_OVERFLOW;
@@ -87,7 +87,7 @@ ExecStreamResult MergeExecStream::execute(
 
     int iInputStart = iInput;
     for (;;) {
-        switch(inAccessors[iInput]->getState()) {
+        switch (inAccessors[iInput]->getState()) {
         case EXECBUF_OVERFLOW:
         case EXECBUF_NONEMPTY:
             // Pass through current input buf to our downstream consumer.

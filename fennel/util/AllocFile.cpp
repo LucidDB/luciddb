@@ -62,8 +62,7 @@ main(int argc, char *argv[])
         } else {
             if (strncmp(&(argv[argIdx][2]), "append-pages=", 13) == 0) {
                 nPages = atoi(&(argv[argIdx][15]));
-            }
-            else if (strncmp(&(argv[argIdx][2]), "pagesize=", 9) == 0) {
+            } else if (strncmp(&(argv[argIdx][2]), "pagesize=", 9) == 0) {
                 pageSize = atoi(&(argv[argIdx][11]));
             } else {
                 printf("Invalid argument %s\n", argv[argIdx]);
@@ -96,7 +95,7 @@ main(int argc, char *argv[])
         printf("Failed to open file '%s'\n", fileName);
         exit(errno);
     }
-    if (flock(handle, LOCK_EX|LOCK_NB) < 0) {
+    if (flock(handle, LOCK_EX | LOCK_NB) < 0) {
         printf("Failed to acquire exclusive lock on file '%s'\n", fileName);
         close(handle);
         exit(errno);

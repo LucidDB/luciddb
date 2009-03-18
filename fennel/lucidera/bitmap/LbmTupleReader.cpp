@@ -26,7 +26,8 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 LbmTupleReader::~LbmTupleReader()
-{}
+{
+}
 
 void LbmStreamTupleReader::init(
     SharedExecStreamBufAccessor &pInAccessorInit,

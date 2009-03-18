@@ -112,7 +112,6 @@ void LcsClusterDump::dump(
 
     pBatch = (PLcsBatchDir) (pBlock + pHdr->oBatch);
     for (i = 0; i < pHdr->nBatch; i++) {
-
         // columns are stored in alternating batches.
         // Need to find out the offset to apply to column offsets.
         int col = i % nClusterCols;
@@ -142,7 +141,6 @@ void LcsClusterDump::dump(
         callTrace("recSize:          %5u", pBatch[i].recSize);
 
         if (pBatch[i].mode == LCS_COMPRESSED) {
-
             nBits = calcWidth(pBatch[i].nVal);
 
             // calculate the bit vector widthes, sum(w[i]) is nBits
@@ -158,19 +156,19 @@ void LcsClusterDump::dump(
             callTrace("----");
 
             for (j = 0; j < pBatch[i].nRow;) {
-
                 char buf[lnLen + 1];
                 int bufidx = 0;
 
-                buf[0]= 0;
+                buf[0] = 0;
                 count = min(uint(pBatch[i].nRow - j), MaxReadBatch);
                 // read rows j to j+count -1
                 readBitVecs(v, iV, w, p, j, count);
 
                 for (k = 0; k < count; k++, j++) {
                     if ((j % 8) == 0) {
-                        if (j > 0)
+                        if (j > 0) {
                             callTrace("%s", buf);
+                        }
                         sprintf(buf, "%5u: ", j);
                         bufidx = 7;
                     }
@@ -184,8 +182,9 @@ void LcsClusterDump::dump(
             callTrace("Batch Values");
             callTrace("------------");
             pO = (uint16_t *) (pBlock + pBatch[i].oVal);
-            for (j = 0; j < pBatch[i].nVal; j++)
+            for (j = 0; j < pBatch[i].nVal; j++) {
                 fprintVal(j, pBlock + pO[j] - deltaVal, col);
+            }
 
         } else if (pBatch[i].mode == LCS_FIXED) {
             // fixed size rows
@@ -201,8 +200,9 @@ void LcsClusterDump::dump(
             callTrace("Variable Size Rows");
             callTrace("------------------");
             pO = (uint16_t *) (pBlock + pBatch[i].oVal);
-            for (j = 0; j < pBatch[i].nRow; j++)
+            for (j = 0; j < pBatch[i].nRow; j++) {
                 fprintVal(j, pBlock + pO[j] - deltaVal, col);
+            }
         }
         callTrace("#############################################################");
     }
@@ -216,10 +216,12 @@ void LcsClusterDump::dump(
         callTrace("------------");
         if (lastVal[i] < szBlock) {
             pR = pBlock + lastVal[i];
-            for (j = nVal[i]; j > 0; j--)
+            for (j = nVal[i]; j > 0; j--) {
                 pR = fprintVal(j, pR, i);
-        } else
+            }
+        } else {
             callTrace("NONE.");
+        }
     }
 }
 
@@ -254,7 +256,7 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV, uint col)
     l = sprintf(st + lnValIdx, "%4u: ", sz);
     st[lnValIdx + l] = 0;
 
-    for(j = 0 ; j < sz; j++) {
+    for (j = 0 ; j < sz; j++) {
         if (j && ((j % nByte) == 0)) {
             callTrace("%s", st);
             memset(st, ' ', lnLen);

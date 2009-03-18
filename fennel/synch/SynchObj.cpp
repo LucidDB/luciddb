@@ -37,7 +37,7 @@ void convertTimeout(uint iMilliseconds,boost::xtime &atv)
         // around as a singleton.
         atv.sec += 36000;
     } else if (iMilliseconds) {
-        long sec = iMilliseconds/1000;
+        long sec = iMilliseconds / 1000;
         long nsec = (iMilliseconds%1000)*1000000;
         atv.sec += sec;
         atv.nsec += nsec;

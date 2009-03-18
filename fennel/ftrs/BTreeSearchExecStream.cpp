@@ -181,7 +181,6 @@ ExecStreamResult BTreeSearchExecStream::execute(
 
     // outer loop
     for (;;) {
-
         if (!innerSearchLoop()) {
             return EXECRC_BUF_UNDERFLOW;
         }
@@ -250,13 +249,13 @@ void BTreeSearchExecStream::readSearchKey()
         // If there are an odd number of parameters, determine whether the
         // next parameter corresponds to the lower or upper bound
         if ((nParams%2) && searchKeyParams[nParams/2].keyOffset == nParams/2) {
-            inputKeyData[nParams/2] =
+            inputKeyData[nParams / 2] =
                 pDynamicParamManager->getParam(
-                    searchKeyParams[nParams/2].dynamicParamId).getDatum();
+                    searchKeyParams[nParams / 2].dynamicParamId).getDatum();
             // The search key projection in the case of dynamic parameters
             // consists of only the portion of the search key that corresponds
             // to actual parameters supplied
-            searchKeyProj.push_back(nParams/2);
+            searchKeyProj.push_back(nParams / 2);
         }
 
         dynamicKeysRead = true;
@@ -286,7 +285,7 @@ void BTreeSearchExecStream::readDirectives()
 
 bool BTreeSearchExecStream::searchForKey()
 {
-    switch(lowerBoundDirective) {
+    switch (lowerBoundDirective) {
     case SEARCH_UNBOUNDED_LOWER:
         if (pSearchKey->size() <= 1) {
             pReader->searchFirst();
@@ -308,8 +307,7 @@ bool BTreeSearchExecStream::searchForKey()
     }
 
     bool match = true;
-    if (preFilterNulls && pSearchKey->containsNull(searchKeyProj))
-    {
+    if (preFilterNulls && pSearchKey->containsNull(searchKeyProj)) {
         // null never matches when preFilterNulls is true;
         // TODO:  so don't bother searching, but need a way
         // to fake pReader->isPositioned()
@@ -371,15 +369,16 @@ void BTreeSearchExecStream::readUpperBoundKey()
         // keys may have a different number of supplied parameters, we need
         // to recreate the projection.
         upperBoundKeyProj.clear();
-        if (!(nParams%2) || searchKeyParams[nParams/2].keyOffset == nParams/2+1)
+        if (!(nParams % 2)
+            || searchKeyParams[nParams / 2].keyOffset == nParams / 2 + 1)
         {
             upperBoundData[0] =
                 pDynamicParamManager->getParam(
-                    searchKeyParams[nParams/2].dynamicParamId).getDatum();
+                    searchKeyParams[nParams / 2].dynamicParamId).getDatum();
             upperBoundKeyProj.push_back(0);
         }
         uint keySize = upperBoundData.size();
-        for (uint i = nParams/2 + 1; i < nParams; i++) {
+        for (uint i = nParams / 2 + 1; i < nParams; i++) {
             upperBoundData[searchKeyParams[i].keyOffset - keySize] =
                 pDynamicParamManager->getParam(
                     searchKeyParams[i].dynamicParamId).getDatum();

@@ -52,8 +52,8 @@ public:
         : generator(generatorInit),
           rng(new BernoulliRng(prob)),
           nColumns(nColumnsInit),
-          iChildRow((uint)-1),
-          iLastRow((uint)-1)
+          iChildRow((uint) -1),
+          iLastRow((uint) -1)
     {
         rng->reseed(seed);
     }
@@ -65,7 +65,7 @@ public:
 
             iChildRow++;
             while (!rng->nextValue()) {
-                for(int i = 0; i < nColumns; i++) {
+                for (int i = 0; i < nColumns; i++) {
                     generator->generateValue(iChildRow, i);
                 }
                 iChildRow++;
@@ -97,9 +97,9 @@ public:
         float rate, uint nRows, uint nColumnsInit, uint nClumps)
         : generator(generatorInit),
           nColumns(nColumnsInit),
-          iChildRow((uint)-1),
-          iLastRow((uint)-1),
-          clumpPos((uint)-1)
+          iChildRow((uint) -1),
+          iLastRow((uint) -1),
+          clumpPos((uint) -1)
     {
         uint sampleSize = (uint)round((double)nRows * (double)rate);
         clumpSize = (uint)round((double)sampleSize / (double)nClumps);
@@ -127,9 +127,9 @@ public:
 
             if (clumpPos >= clumpSize) {
                 // Skip clumpDistance rows
-                for(uint i = 0; i < clumpDistance; i++) {
+                for (uint i = 0; i < clumpDistance; i++) {
 //                    std::cout << "skip " << iChildRow << std::endl;
-                    for(int j = 0; j < nColumns; j++) {
+                    for (int j = 0; j < nColumns; j++) {
                         generator->generateValue(iChildRow, j);
                     }
                     iChildRow++;

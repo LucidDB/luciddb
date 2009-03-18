@@ -152,7 +152,6 @@ void SimpleExecStreamGovernor::requestResources(ExecStreamGraph &graph)
     double totalSqrtDiffs = 0;
     bool allAccurate = true;
     for (uint i = 0; i < nStreams; i++) {
-
         ExecStreamResourceQuantity minQuantity, optQuantity;
         ExecStreamResourceSettingType optType;
         sortedStreams[i]->getResourceRequirements(

@@ -65,7 +65,7 @@ TestBase::TestBase()
         defaultTraceFileName += fennelHome;
         defaultTraceFileName += "/trace/";
     }
-    defaultTraceFileName += testName+"_trace.log";
+    defaultTraceFileName += testName + "_trace.log";
     std::string traceFileName =
         configMap.getStringParam(
             paramTraceFileName,
@@ -122,7 +122,7 @@ void TestBase::readParams(int argc,char **argv)
             } else if (arg == "-all") {
                 runAll = true;
             } else if (arg == "-t") {   // -t TEST
-                permAssert(i+1 < argc);
+                permAssert(i + 1 < argc);
                 runSingle = argv[++i];
             } else if (arg[1] == 't') { // allow -tTEST
                 runSingle = arg.substr(2);
@@ -132,7 +132,7 @@ void TestBase::readParams(int argc,char **argv)
             if ((0 < i) && (i < arg.size())) {
                 // an ad hoc parameter
                 std::string key = arg.substr(0,i);
-                std::string val = arg.substr(i+1);
+                std::string val = arg.substr(i + 1);
                 adhocMap.setStringParam(key,val);
             } else {
                 // a config file name
@@ -168,8 +168,9 @@ TestSuite *TestBase::releaseTestSuite()
 
     if (runSingle.size()) {
         test_unit *p =  defaultTests.findTest(runSingle);
-        if (!p)
+        if (!p) {
             p = extraTests.findTest(runSingle);
+        }
         if (!p) {
             std::cerr << "test " << runSingle << " not found\n";
             exit(2);
@@ -195,8 +196,9 @@ TestBase::TestCaseGroup::findTest(std::string name) const
     for (std::vector<Item>::const_iterator p = items.begin();
          p != items.end(); ++p)
     {
-        if (name == p->name)
+        if (name == p->name) {
             return p->tu;
+        }
     }
     return 0;
 }

@@ -288,4 +288,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End of LcsColumnReader.h
+// End LcsColumnReader.h

@@ -52,9 +52,9 @@ void SnapshotSegmentTestBase::openSegmentStorage(DeviceMode openMode)
     }
 
     pTempDevice =
-        openDevice("temp.dat", openMode, nDiskPages/50, tempDeviceId);
+        openDevice("temp.dat", openMode, nDiskPages / 50, tempDeviceId);
     SharedSegment pTempDeviceSegment =
-        createLinearDeviceSegment(tempDeviceId, nDiskPages/50);
+        createLinearDeviceSegment(tempDeviceId, nDiskPages / 50);
     pTempSegment =
         pSegmentFactory->newRandomAllocationSegment(
             pTempDeviceSegment,

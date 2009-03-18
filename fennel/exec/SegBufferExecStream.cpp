@@ -165,7 +165,7 @@ ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)
         }
     }
 
-    switch(pOutAccessor->getState()) {
+    switch (pOutAccessor->getState()) {
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:
         return EXECRC_BUF_OVERFLOW;

@@ -80,7 +80,7 @@ const set<string> ResourceBundle::getKeys() const
     map<string, string>::const_iterator iter = _messages.begin(),
         end = _messages.end();
 
-    while(iter != end) {
+    while (iter != end) {
         keys.insert((*iter).first);
         iter++;
     }
@@ -144,7 +144,7 @@ static string convertPropertyToBoost(string &message)
     char ch;
     char nextCh;
 
-    for(int i = 0, n = message.length(); i < n; i++) {
+    for (int i = 0, n = message.length(); i < n; i++) {
         ch = message[i];
         nextCh = (i + 1 < n) ? message[i + 1] : 0;
 
@@ -191,10 +191,10 @@ static string convertPropertyToBoost(string &message)
         i = argEndIndex;
 
         bool done = false;
-        while(!done && i < n) {
+        while (!done && i < n) {
             ch = message[i];
 
-            switch(ch) {
+            switch (ch) {
             default:
                 i++;
                 break;
@@ -285,7 +285,9 @@ void ResourceBundle::loadMessages()
 
         if (tryEnvVar) {
             const char *fennelHome = getenv("FENNEL_HOME");
-            if (fennelHome == NULL) return; // give up
+            if (fennelHome == NULL) {
+                return; // give up
+            }
 
             string path = string(fennelHome) + "/common/" + fileName;
             in.open(path.c_str(), ios::in);
@@ -296,7 +298,7 @@ void ResourceBundle::loadMessages()
     }
 
     string line, key, message;
-    while(in.good()) {
+    while (in.good()) {
         getline(in, line);
 
         if (line.length() == 0 || line[0] == '#') {

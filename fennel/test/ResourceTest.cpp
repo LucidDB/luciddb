@@ -71,8 +71,7 @@ public:
         std::string desc, boost::barrier &barrier, int count)
         : Thread(desc), barrier(barrier), count(count), completed(0)
     {
-        //
-        for(int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             std::stringstream ss;
             ss << "var_" << (i + 1);
             variants.push_back(ss.str());
@@ -93,7 +92,7 @@ public:
         try {
             barrier.wait();
 
-            for(int i = 0; i < count; i++) {
+            for (int i = 0; i < count; i++) {
                 std::string &variant = variants[i];
 
                 Locale locale("en", "US", variant);
@@ -102,7 +101,7 @@ public:
 
                 completed++;
             }
-        } catch(...) {
+        } catch (...) {
             completed = -1;
         }
     }

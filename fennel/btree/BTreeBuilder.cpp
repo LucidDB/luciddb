@@ -269,7 +269,7 @@ void BTreeBuilder::buildBalanced(
         if (i) {
             // Prepare the first page of a non-leaf level.
             // Calculate balancing for first child node.
-            BTreeBuildLevel &childLevel = getLevel(i-1);
+            BTreeBuildLevel &childLevel = getLevel(i - 1);
             childLevel.nEntriesPerNode = calculateChildEntriesPerNode(
                 level.nEntriesTotal,
                 childLevel.nEntriesTotal,

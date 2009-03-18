@@ -87,7 +87,7 @@ void ExternalSortRunAccessor::storeRun(
     ExternalSortRC rc;
     uint iTuple = 0;
     do {
-        for ( ; iTuple < fetchArray.nTuples; iTuple++) {
+        for (; iTuple < fetchArray.nTuples; iTuple++) {
             PBuffer pSrcBuf = fetchArray.ppTupleBuffers[iTuple];
             uint cbTuple = tupleAccessor.getBufferByteCount(pSrcBuf);
             PBuffer pTarget = pSegOutputStream->getWritePointer(cbTuple);

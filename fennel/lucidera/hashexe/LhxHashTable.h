@@ -469,7 +469,9 @@ class LhxHashBlockAccessor : public LhxHashNodeAccessor
     PBuffer endPtr;
 
 public:
-    LhxHashBlockAccessor() : LhxHashNodeAccessor() {};
+    LhxHashBlockAccessor() : LhxHashNodeAccessor()
+    {
+    }
 
     /**
      * Set the size of the block.
@@ -496,12 +498,18 @@ public:
     /**
      * @return the size of the block that a client can use.
      */
-    uint getUsableSize() { return blockUsableSize; }
+    uint getUsableSize()
+    {
+        return blockUsableSize;
+    }
 
     /**
      * @return the maximum number of slots per block.
      */
-    uint getSlotsPerBlock() { return numSlotsPerBlock; }
+    uint getSlotsPerBlock()
+    {
+        return numSlotsPerBlock;
+    }
 
     /**
      * Allocate a buffer from this block.
@@ -1068,7 +1076,7 @@ inline PBuffer LhxHashNodeAccessor::getNext()
 
 inline PBuffer LhxHashNodeAccessor::getNextLocation()
 {
-    return nodePtr+nextNodeOffset;
+    return nodePtr + nextNodeOffset;
 }
 
 inline void LhxHashNodeAccessor::setNext(PBuffer nextNode)
@@ -1184,8 +1192,8 @@ inline PBuffer LhxHashKeyAccessor::getFirstData()
 {
     PBuffer returnPtr;
     memcpy(
-        (PBuffer)&returnPtr,
-        (PBuffer)(getCurrent()+firstDataOffset),
+        (PBuffer) &returnPtr,
+        (PBuffer) (getCurrent() + firstDataOffset),
         sizeof(PBuffer));
     return returnPtr;
 }
@@ -1200,8 +1208,8 @@ inline PBuffer *LhxHashKeyAccessor::getNextSlot()
 {
     PBuffer *returnPtr;
     memcpy(
-        (PBuffer)&returnPtr,
-        (PBuffer)(getCurrent()+nextSlotOffset),
+        (PBuffer) &returnPtr,
+        (PBuffer) (getCurrent() + nextSlotOffset),
         sizeof(PBuffer *));
     return returnPtr;
 }
@@ -1261,9 +1269,15 @@ inline uint LhxHashTable::slotsNeeded(RecordNum cndKeys)
     }
 }
 
-inline uint LhxHashTable::getNumSlots() const { return numSlots; }
+inline uint LhxHashTable::getNumSlots() const
+{
+    return numSlots;
+}
 
-inline PBuffer *LhxHashTable::getFirstSlot() const { return firstSlot; }
+inline PBuffer *LhxHashTable::getFirstSlot() const
+{
+    return firstSlot;
+}
 
 inline PBuffer *LhxHashTable::getNextSlot(PBuffer *curSlot)
 {
@@ -1271,9 +1285,15 @@ inline PBuffer *LhxHashTable::getNextSlot(PBuffer *curSlot)
     return hashKeyAccessor.getNextSlot();
 }
 
-inline bool LhxHashTable::isHashGroupBy() const { return isGroupBy; }
+inline bool LhxHashTable::isHashGroupBy() const
+{
+    return isGroupBy;
+}
 
-inline LhxHashTable *LhxHashTableReader::getHashTable() {return hashTable;}
+inline LhxHashTable *LhxHashTableReader::getHashTable()
+{
+    return hashTable;
+}
 
 inline void LhxHashTableReader::bind(PBuffer key)
 {

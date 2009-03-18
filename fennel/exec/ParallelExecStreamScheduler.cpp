@@ -122,7 +122,7 @@ void ParallelExecStreamScheduler::start()
         ExecStreamId streamId = *vertices.first;
         if (!graphImpl.getStreamFromVertex(streamId)) {
             // initially inhibit producers until first call to readStream
-            alterNeighborInhibition(streamId, +1);
+            alterNeighborInhibition(streamId, + 1);
             ExecStreamGraphImpl::InEdgeIterPair inEdges =
                 boost::in_edges(streamId, graphRep);
             for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
@@ -369,7 +369,7 @@ void ParallelExecStreamScheduler::processCompletedTask(
 
 void ParallelExecStreamScheduler::signalSentinel(ExecStreamId sentinelId)
 {
-    alterNeighborInhibition(sentinelId, +1);
+    alterNeighborInhibition(sentinelId, + 1);
 
     StrictMutexGuard mutexGuard(mutex);
     streamStateMap[sentinelId].state = SS_RUNNING;
@@ -426,7 +426,7 @@ bool ParallelExecStreamScheduler::addToQueue(ExecStreamId streamId)
     if (pPendingExcn) {
         return false;
     }
-    switch(streamStateMap[streamId].state) {
+    switch (streamStateMap[streamId].state) {
     case SS_SLEEPING:
         {
             ExecStreamGraphImpl &graphImpl =
@@ -441,7 +441,7 @@ bool ParallelExecStreamScheduler::addToQueue(ExecStreamId streamId)
                 inhibitedQueue.push_back(streamId);
             } else {
                 streamStateMap[streamId].state = SS_RUNNING;
-                alterNeighborInhibition(streamId, +1);
+                alterNeighborInhibition(streamId, + 1);
                 ParallelExecTask task(*this, pStream.get());
                 threadPool.submitTask(task);
             }

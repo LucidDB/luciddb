@@ -165,7 +165,6 @@ ExecStreamResult BTreePrefetchSearchExecStream::execute(
     // Iterate over each input search key, locating and pre-fetching
     // leaf pages that contain matching keys.
     for (;;) {
-
         // Position within a pre-fetched leaf page.
         if (!innerSearchLoop()) {
             return EXECRC_BUF_UNDERFLOW;
@@ -192,7 +191,6 @@ bool BTreePrefetchSearchExecStream::innerSearchLoop()
     // If we're already positioned within a leaf page, then nothing further
     // needs to be done here.
     while (!pReader->isPositioned()) {
-
         // Make sure there's input available, in case we're going to
         // pre-fetch some pages.
         if (pInAccessor->getState() != EXECBUF_EOS &&

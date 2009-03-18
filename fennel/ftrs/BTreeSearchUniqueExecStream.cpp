@@ -51,7 +51,6 @@ ExecStreamResult BTreeSearchUniqueExecStream::execute(
 
     // outer loop
     for (;;) {
-
         if (!innerSearchLoop()) {
             return EXECRC_BUF_UNDERFLOW;
         }

@@ -40,7 +40,7 @@ PBuffer BTreeHeapNodeAccessor::allocateEntry(
     BTreeNode &node,uint iEntry,uint cbEntry)
 {
     uint cbEntryWithOverhead = getEntrySizeWithOverhead(cbEntry);
-    assert(iEntry < node.nEntries+1);
+    assert(iEntry < node.nEntries + 1);
     assert(node.cbCompactFree >= cbEntryWithOverhead);
 
     EntryOffset *pFirstEntryOffset = getEntryOffsetPointer(node,0);
@@ -75,7 +75,7 @@ void BTreeHeapNodeAccessor::deallocateEntry(
     uint cbEntry = tupleAccessor.getCurrentByteCount();
 
     // see comments in BTreeCompactNodeAccessor::deallocateEntry
-    if (iEntry != node.nEntries-1) {
+    if (iEntry != node.nEntries - 1) {
         // delete the entry from the offset array
         EntryOffset *pEntryOffset = getEntryOffsetPointer(node,iEntry);
         memmove(

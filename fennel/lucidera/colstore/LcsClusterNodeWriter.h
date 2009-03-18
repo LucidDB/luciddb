@@ -199,10 +199,11 @@ private:
         PBuffer pBlock, uint16_t f)
     {
         // if value not in back use
-        if (f < lastValOffset)
+        if (f < lastValOffset) {
             return pValBank + f - oValBank;
-        else
+        } else {
             return pBlock + f;
+        }
     }
 
     /**
@@ -484,8 +485,9 @@ public:
         uint col;
         int valueSizeNeeded;
 
-        for (valueSizeNeeded = 0, col = 0; col < nClusterCols; col++)
+        for (valueSizeNeeded = 0, col = 0; col < nClusterCols; col++) {
             valueSizeNeeded += batchDirs[col].recSize * LcsMaxLeftOver;
+        }
 
         return szLeft <= (minSzLeft + valueSizeNeeded);
     }
@@ -504,4 +506,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End LcsClusterNode.h
+// End LcsClusterNodeWriter.h

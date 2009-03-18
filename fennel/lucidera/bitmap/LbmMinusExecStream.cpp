@@ -109,7 +109,6 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
-
         // read a segment from the minuend if we've finished processing the
         // previous segment
         if (needToRead) {
@@ -126,7 +125,6 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         // case where there are no keys.  In the case where there are keys,
         // the bitmap determines whether we can skip the minus.
         if ((nFields == 0 && !subtrahendsDone) || !skipMinus) {
-
             if (advancePending) {
                 rc =
                     advanceSingleSubtrahend(
@@ -403,7 +401,6 @@ ExecStreamResult LbmMinusExecStream::minusSegments(
     LcsRid baseRid, PBuffer baseByteSeg, uint baseLen)
 {
     while (true) {
-
         // find the subtrahend with the minimum startrid and read its current
         // segment
         int minInput;
@@ -505,7 +502,7 @@ bool LbmMinusExecStream::produceTuple(TupleData bitmapTuple)
         }
         assert (prefixedBitmapTuple.size() == nFields + bitmapTuple.size());
         for (uint i = 0; i < 3; i++) {
-            prefixedBitmapTuple[nFields+i].copyFrom(bitmapTuple[i]);
+            prefixedBitmapTuple[nFields + i].copyFrom(bitmapTuple[i]);
         }
         return pOutAccessor->produceTuple(prefixedBitmapTuple);
     }

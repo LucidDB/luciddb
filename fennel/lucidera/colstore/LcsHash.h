@@ -552,7 +552,9 @@ private:
 
 public:
     explicit LcsHash();
-    ~LcsHash() {};
+    ~LcsHash()
+    {
+    }
 
     /**
      * Initializes the LcsHash object.
@@ -788,7 +790,7 @@ inline void LcsHashTable::resetHash()
 
 inline void LcsHashTable::resetBatch()
 {
-    for(int i=0; i < nextValueNode; i++) {
+    for (int i = 0; i < nextValueNode; i++) {
         (&(valueNodes[i].valueOrd))->clearValueInBatch();
     }
 }
@@ -820,7 +822,7 @@ inline void LcsHashTable::insertNewValueNode(uint key,  LcsHashValueNode *newNod
 
 inline void LcsHashTable::undoNewValueNode(uint key)
 {
-    entry[key] =(uint16_t)
+    entry[key] = (uint16_t)
         ((LcsHashValueNode*)(hashBlock + entry[key]))->next;
     nextValueNode--;
 }
@@ -829,20 +831,22 @@ inline LcsHashValueNode* LcsHashTable::getFirstValueNode(uint key)
 {
     uint16_t offset = entry[key];
 
-    if (offset)
+    if (offset) {
         return (LcsHashValueNode*) (hashBlock + offset);
-    else
+    } else {
         return NULL;
+    }
 }
 
 inline LcsHashValueNode* LcsHashTable::getNextValueNode(LcsHashValueNode *pValueNode)
 {
     uint16_t offset = pValueNode->next;
 
-    if (offset)
+    if (offset) {
         return (LcsHashValueNode*) (hashBlock + offset);
-    else
+    } else {
         return NULL;
+    }
 }
 
 inline bool LcsHashTable::isFull(uint leftOvers)
@@ -853,7 +857,7 @@ inline bool LcsHashTable::isFull(uint leftOvers)
     */
     return ((PBuffer)(&(valueNodes[nextValueNode])
             + (leftOvers + 1) * sizeof(LcsHashValueNode))
-        >= (PBuffer ) (hashBlock + hashBlockSize));
+        >= (PBuffer) (hashBlock + hashBlockSize));
 }
 
 

@@ -339,7 +339,7 @@ public:
         PBuffer pTupleBuf,uint iIndirectOffset)
     {
         return reinterpret_cast<StoredValueOffset *>(
-            pTupleBuf+iIndirectOffset);
+            pTupleBuf + iIndirectOffset);
     }
 };
 

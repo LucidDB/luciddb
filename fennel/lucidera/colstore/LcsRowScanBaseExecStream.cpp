@@ -64,7 +64,6 @@ void LcsRowScanBaseExecStream::prepare(
     allSpecial = (nonClusterCols.size() == newProj.size());
 
     for (uint i = 0; i < nClusters; i++) {
-
         SharedLcsClusterReader &pClu = pClusters[i];
 
         BTreeExecStreamParams const &bTreeParams = params.lcsClusterScanDefs[i];
@@ -184,7 +183,6 @@ bool LcsRowScanBaseExecStream::readColVals(
 {
     if (!allSpecial) {
         for (uint iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
-
             // Get value of each column and load it to the appropriate
             // tuple datum entry
             PBuffer curValue = pScan->clusterCols[iCluCol].getCurrentValue();

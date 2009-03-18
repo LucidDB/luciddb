@@ -31,7 +31,7 @@ RandomAllocationSegment::RandomAllocationSegment(
     SharedSegment delegateSegment)
     : RandomAllocationSegmentBase(delegateSegment)
 {
-    nPagesPerExtent = (getUsablePageSize()-sizeof(ExtentAllocationNode))
+    nPagesPerExtent = (getUsablePageSize() - sizeof(ExtentAllocationNode))
         / sizeof(PageEntry);
 
     // + 1 is for SegAllocNode itself

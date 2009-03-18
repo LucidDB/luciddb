@@ -74,7 +74,8 @@ class SegPageLock : public boost::noncopyable
         // we need to modify the page, we'll create a new version of the
         // page, which we'll exclusively lock.
         if (isWriteVersioned) {
-            if (origLockMode == LOCKMODE_X || origLockMode == LOCKMODE_X_NOWAIT)
+            if (origLockMode == LOCKMODE_X
+                || origLockMode == LOCKMODE_X_NOWAIT)
             {
                 return
                     (origLockMode == LOCKMODE_X) ?

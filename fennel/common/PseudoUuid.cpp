@@ -76,13 +76,13 @@ void PseudoUuid::generate()
 
     result = uuid_destroy(apiData);
     assert(result == UUID_RC_OK);
-#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
+#else
 
 #ifdef FENNEL_UUID_REAL
 
     uuid_generate(data);
 
-#else /* FENNEL_UUID_FAKE */
+#else
 
     memset(&data,0,sizeof(data));
 #ifdef __MINGW32__
@@ -143,7 +143,7 @@ string PseudoUuid::toString() const
     // for the same UUID.
     ostringstream ostr;
 
-    for(int i = 0; i < sizeof(data); i++) {
+    for (int i = 0; i < sizeof(data); i++) {
         if (i == 4 || i == 6 || i == 8 || i == 10) {
             ostr << "-";
         }
@@ -173,7 +173,7 @@ void PseudoUuid::parse(string uuid) throw (FennelExcn)
     int value;
     memset(hexchars, 0, sizeof(hexchars));
     istr >> noskipws;
-    for(int i = 0; i < sizeof(id); i++) {
+    for (int i = 0; i < sizeof(id); i++) {
         if (i == 4 || i == 6 || i == 8 || i == 10) {
             char ch;
             istr >> ch;
@@ -185,7 +185,7 @@ void PseudoUuid::parse(string uuid) throw (FennelExcn)
         istr >> hexchars[1];
         value = strtol(hexchars, &endptr, 16);
         // Make sure both characters were correctly converted
-        if (endptr != hexchars+2) {
+        if (endptr != hexchars + 2) {
             throw FennelExcn("Invalid UUID format: hex digits expected");
         }
         id[i] = (uint8_t) value;

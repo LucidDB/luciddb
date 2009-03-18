@@ -330,7 +330,7 @@ void LogicalTxnTest::testRollback(
     int nActions,
     bool checkpoint)
 {
-    int iCheckpoint = checkpoint ? nActions/2 : -1;
+    int iCheckpoint = checkpoint ? (nActions / 2) : -1;
     testTxn(nActions,iCheckpoint);
     if (checkpoint) {
         SharedLogicalRecoveryLog pRecoveryLog = createRecoveryLog();
@@ -340,7 +340,7 @@ void LogicalTxnTest::testRollback(
         assert(pRecoveryLog.unique());
     }
     if (nActions) {
-        expected.push_back(ExpectedRange(nActions-1,0));
+        expected.push_back(ExpectedRange(nActions - 1, 0));
     }
     rollbackFull();
 }
@@ -364,19 +364,19 @@ void LogicalTxnTest::commit()
 
 void LogicalTxnTest::testCommit(int nActions,bool checkpoint)
 {
-    int iCheckpoint = checkpoint ? nActions/2 : -1;
+    int iCheckpoint = checkpoint ? (nActions / 2) : -1;
     testTxn(nActions,iCheckpoint);
     commit();
 
     SharedLogicalRecoveryLog pRecoveryLog = createRecoveryLog();
     if (checkpoint) {
         if (nActions) {
-            expected.push_back(ExpectedRange(iCheckpoint+1,nActions-1));
+            expected.push_back(ExpectedRange(iCheckpoint + 1, nActions - 1));
         }
         pRecoveryLog->recover(intermediateCheckpointMemento);
     } else {
         if (nActions) {
-            expected.push_back(ExpectedRange(0,nActions-1));
+            expected.push_back(ExpectedRange(0, nActions - 1));
         }
         pRecoveryLog->recover(firstCheckpointMemento);
     }

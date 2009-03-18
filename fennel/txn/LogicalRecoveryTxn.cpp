@@ -50,7 +50,7 @@ void LogicalRecoveryTxn::redoActions(
         LogicalTxnActionHeader actionHeader;
         pTxnInputStream->readValue(actionHeader);
 
-        switch(actionHeader.actionType) {
+        switch (actionHeader.actionType) {
         case ACTION_TXN_DESCRIBE_PARTICIPANT:
             recoverParticipant(actionHeader.pParticipant);
             break;
@@ -120,7 +120,7 @@ void LogicalRecoveryTxn::undoActions(
         LogicalTxnActionHeader actionHeader;
         pTxnInputStream->readValue(actionHeader);
 
-        switch(actionHeader.actionType) {
+        switch (actionHeader.actionType) {
         case ACTION_TXN_DESCRIBE_PARTICIPANT:
             if (swizzleParticipant(actionHeader.pParticipant)) {
                 // ignore log data since the participant is already available

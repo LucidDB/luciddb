@@ -127,7 +127,7 @@ public:
             sortedToUnsortedMap[value] = i;
         }
         current = -1;
-        currentRow.reset(new uint[nKeys+1]);
+        currentRow.reset(new uint[nKeys + 1]);
     }
 
     virtual int64_t generateValue(uint iRow, uint iCol)

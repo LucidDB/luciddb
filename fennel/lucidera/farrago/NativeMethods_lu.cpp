@@ -73,7 +73,7 @@ class ExecStreamSubFactory_lu
         LcsRowScanBaseExecStreamParams &params)
     {
         SharedProxyLcsClusterScanDef pClusterScan = streamDef.getClusterScan();
-        for ( ; pClusterScan; ++pClusterScan) {
+        for (; pClusterScan; ++pClusterScan) {
             LcsClusterScanDef clusterScanParam;
             clusterScanParam.pCacheAccessor = params.pCacheAccessor;
             pExecStreamFactory->readBTreeStreamParams(clusterScanParam,
@@ -262,7 +262,7 @@ class ExecStreamSubFactory_lu
             streamDef.getOutputDesc());
         SharedProxySplicerIndexAccessorDef pIndexAccessorDef =
             streamDef.getIndexAccessor();
-        for ( ; pIndexAccessorDef; ++pIndexAccessorDef) {
+        for (; pIndexAccessorDef; ++pIndexAccessorDef) {
             BTreeExecStreamParams bTreeParams;
             pExecStreamFactory->readBTreeParams(
                 bTreeParams,

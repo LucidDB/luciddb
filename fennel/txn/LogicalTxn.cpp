@@ -130,7 +130,7 @@ void LogicalTxn::rollback(SavepointId const *pSvptId)
     if (pSvptId) {
         uint iSvpt = opaqueToInt(*pSvptId);
         assert(iSvpt < savepoints.size());
-        savepoints.resize(iSvpt+1);
+        savepoints.resize(iSvpt + 1);
         rollbackToSavepoint(savepoints[iSvpt]);
         return;
     }

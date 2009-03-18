@@ -236,7 +236,11 @@ struct LhxPartitionInfo
      */
     bool partitionMemory;
 
-    LhxPartitionInfo() {reader = NULL; hashTableReader = NULL;}
+    LhxPartitionInfo()
+    {
+        reader = NULL;
+        hashTableReader = NULL;
+    }
 
     // REVIEW jvs 25-Aug-2006:  Unless input parameter can be NULL,
     // make it a reference instead of a pointer.  Same is true elsewhere.
@@ -452,9 +456,9 @@ inline ExecStreamBufState LhxPartitionReader::getState() const
 {
     if (srcIsInputStream) {
         return streamBufAccessor->getState();
-   } else {
+    } else {
         return bufState;
-   }
+    }
 }
 
 inline SharedLhxPartition LhxPartitionReader::getSourcePartition() const

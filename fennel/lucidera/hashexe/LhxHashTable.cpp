@@ -274,7 +274,7 @@ void LhxHashTable::init(
     maxBufferSize = nodeBlockAccessor.getUsableSize();
 
     hashGen.init(partitionLevel);
-    hashGenSub.init(partitionLevel+1);
+    hashGenSub.init(partitionLevel + 1);
 
     uint i;
 
@@ -595,9 +595,9 @@ PBuffer *LhxHashTable::getSlot(uint slotNum)
     PBuffer *slot;
     uint slotsPerBlock = blockAccessor.getSlotsPerBlock();
 
-    blockAccessor.setCurrent(slotBlocks[slotNum/slotsPerBlock], true, false);
+    blockAccessor.setCurrent(slotBlocks[slotNum / slotsPerBlock], true, false);
 
-    slot = blockAccessor.getSlot(slotNum%slotsPerBlock);
+    slot = blockAccessor.getSlot(slotNum % slotsPerBlock);
 
     assert (slot);
 

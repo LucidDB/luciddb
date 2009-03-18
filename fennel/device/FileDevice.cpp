@@ -136,7 +136,7 @@ FileDevice::FileDevice(
         oss << "Failed to open file " << filename;
         throw SysCallExcn(oss.str());
     }
-    if (flock(handle, LOCK_SH|LOCK_NB) < 0) {
+    if (flock(handle, LOCK_SH | LOCK_NB) < 0) {
         throw SysCallExcn("File lock failed");
     }
     cbFile = ::lseek(handle,0,SEEK_END);
@@ -203,7 +203,7 @@ void FileDevice::setSizeInBytes(FileSize cbFileNew)
         throw SysCallExcn("Resize file failed:  SetEndOfFile");
     }
 #else
-    if(::ftruncate(handle,cbFileNew)){
+    if (::ftruncate(handle,cbFileNew)) {
         throw SysCallExcn("Resize file failed");
     }
 #endif

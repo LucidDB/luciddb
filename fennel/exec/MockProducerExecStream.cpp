@@ -62,7 +62,9 @@ void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
     nRowsMax = params.nRows;
     saveTuples = params.saveTuples;
     echoTuples = params.echoTuples;
-    if (saveTuples||echoTuples) assert(pGenerator);
+    if (saveTuples || echoTuples) {
+        assert(pGenerator);
+    }
 }
 
 void MockProducerExecStream::open(bool restart)
@@ -70,7 +72,10 @@ void MockProducerExecStream::open(bool restart)
     SingleOutputExecStream::open(restart);
     nRowsProduced = 0;
     savedTuples.clear();
-    if (saveTuples) savedTuples.reserve(nRowsMax); // assume it's not too big
+    if (saveTuples) {
+        // assume it's not too big
+        savedTuples.reserve(nRowsMax);
+    }
 }
 
 ExecStreamResult MockProducerExecStream::execute(
@@ -80,8 +85,9 @@ ExecStreamResult MockProducerExecStream::execute(
         TuplePrinter tuplePrinter;
         uint nTuples = 0;
         boost::scoped_array<int64_t> values(new int64_t[outputData.size()]);
-        for(int col=0;col<outputData.size();++col) {
-            outputData[col].pData = reinterpret_cast<PConstBuffer>(&(values.get()[col]));
+        for (int col = 0; col < outputData.size(); ++col) {
+            outputData[col].pData = reinterpret_cast<PConstBuffer>(
+                &(values.get()[col]));
         }
         while (nRowsProduced < nRowsMax) {
             if (pOutAccessor->getProductionAvailable() < cbTuple) {
@@ -95,7 +101,7 @@ ExecStreamResult MockProducerExecStream::execute(
                 }
             }
 
-            for (int col=0;col<outputData.size();++col) {
+            for (int col = 0; col < outputData.size(); ++col) {
                 values.get()[col] = pGenerator->generateValue(nRowsProduced, col);
             }
 
@@ -103,8 +109,11 @@ ExecStreamResult MockProducerExecStream::execute(
             assert(rc);
             ++nTuples;
             ++nRowsProduced;
-            if (echoTuples)
-                tuplePrinter.print(*echoTuples, pOutAccessor->getTupleDesc(), outputData);
+            if (echoTuples) {
+                tuplePrinter.print(
+                    *echoTuples,
+                    pOutAccessor->getTupleDesc(), outputData);
+            }
             if (saveTuples) {
                 std::ostringstream oss;
                 tuplePrinter.print(oss, pOutAccessor->getTupleDesc(), outputData);

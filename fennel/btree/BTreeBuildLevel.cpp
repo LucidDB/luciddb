@@ -165,7 +165,7 @@ BTreeNode *BTreeBuildLevel::allocateAndLinkNewNode()
     if (nEntriesPerNode) {
         // Recalculate balancing.
         nEntriesPerNode = builder.calculateChildEntriesPerNode(
-            builder.getLevel(iLevel+1).nEntriesTotal,
+            builder.getLevel(iLevel + 1).nEntriesTotal,
             nEntriesTotal,
             iNode);
     }

@@ -259,14 +259,14 @@ void LbmEntryTest::testRandom(
 {
     std::vector<LcsRid> ridValues;
     std::vector<uint> nRidsPerBitmap;
-    uint totalRids = nRows/nUniqueKeys;
+    uint totalRids = nRows / nUniqueKeys;
 
     assert(scratchBufferSize >= 8);
 
     // generate random rid values, ensuring that they are unique, then
     // sort them
     std::hash_set<uint64_t> ridsGenerated;
-    for (uint i = 0; i < totalRids; ) {
+    for (uint i = 0; i < totalRids;) {
         uint64_t rid = rand() % nRows;
         if (ridsGenerated.find(rid) == ridsGenerated.end()) {
             ridValues.push_back(LcsRid(rid));
@@ -289,7 +289,7 @@ void LbmEntryTest::testRandom(
     while (ridCount < totalRids) {
         // divide by 4 so we'll later merge roughly 2-4 bitmaps per
         // entry
-        uint nRids = rand() % (scratchBufferSize/4) + 1;
+        uint nRids = rand() % (scratchBufferSize / 4) + 1;
         if (nRids + ridCount < totalRids) {
             nRidsPerBitmap.push_back(nRids);
             ridCount += nRids;
@@ -340,8 +340,7 @@ void LbmEntryTest::testMergeEntry(
 
     uint totalRids = ridValues.size();
     uint nRidPos = 0;
-    for (uint i = 0; i < totalRids; ) {
-
+    for (uint i = 0; i < totalRids;) {
         newLbmEntry(entryList, ridValues[i], bufferLock);
         i++;
 
@@ -934,7 +933,6 @@ void LbmEntryTest::recurseCombos(
         if (curr < nEntries - 1) {
             recurseCombos(curr + 1, nEntries, eTypes);
         } else {
-
             // generate the "nEntries" bitmaps
             for (uint n = 0; n < nEntries; n++) {
                 generateBitmaps(
@@ -1516,7 +1514,7 @@ void LbmEntryTest::testMergeSingletonRandom(uint totalRids, uint ridRange)
     // generate random rid values, ensuring that they are unique
     LcsRid rid = LcsRid(rand() % ridRange);
     ridValues.push_back(rid);
-    for (uint i = 1; i < totalRids; ) {
+    for (uint i = 1; i < totalRids;) {
         rid = LcsRid(rand() % ridRange);
         uint j;
         for (j = 0; j < i; j++) {

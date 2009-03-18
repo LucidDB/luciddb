@@ -658,7 +658,7 @@ public:
      * @param [in] printRID true if want to print out the RIDs rather than
      * bitmaps
      */
-    static string toString(TupleData const &inputTuple, bool printRID=false);
+    static string toString(TupleData const &inputTuple, bool printRID = false);
 
     /**
      * Return the min and the max entry size, based on index tuple descriptor
@@ -731,8 +731,8 @@ public:
 
 inline bool LbmEntry::isSingleton(TupleData const &inputTuple)
 {
-    return (inputTuple[inputTuple.size()-2].isNull() &&
-        inputTuple[inputTuple.size()-1].isNull());
+    return (inputTuple[inputTuple.size() - 2].isNull() &&
+        inputTuple[inputTuple.size() - 1].isNull());
 }
 
 inline LcsRid LbmEntry::getStartRid(
@@ -749,8 +749,8 @@ inline bool LbmEntry::isSingleton() const
 
 inline bool LbmEntry::isSingleBitmap(TupleData const &inputTuple)
 {
-    return (inputTuple[inputTuple.size()-2].isNull() &&
-        !inputTuple[inputTuple.size()-1].isNull());
+    return (inputTuple[inputTuple.size() - 2].isNull() &&
+        !inputTuple[inputTuple.size() - 1].isNull());
 }
 
 

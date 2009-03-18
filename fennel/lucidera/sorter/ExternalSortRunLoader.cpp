@@ -51,7 +51,7 @@ ExternalSortRunLoader::ExternalSortRunLoader(ExternalSortInfo &sortInfoIn)
 
     // TODO:  utility methods for calculations below, and assert block
     // size is power of 2
-    uint nKeysPerPage = sortInfo.cbPage/sizeof(PBuffer);
+    uint nKeysPerPage = sortInfo.cbPage / sizeof(PBuffer);
     assert(nKeysPerPage > 1);
     nKeysPerPage >>= 1;
     indexToPageShift = 1;
@@ -264,7 +264,7 @@ inline void ExternalSortRunLoader::quickSortSwap(uint l,uint r)
 // TODO:  move this
 const uint step_factor = 7;
 
-PBuffer ExternalSortRunLoader::quickSortFindPivot( uint l, uint r )
+PBuffer ExternalSortRunLoader::quickSortFindPivot(uint l, uint r)
 {
     uint i, j, cnt, step;
     PBuffer vals[step_factor];
@@ -280,19 +280,19 @@ PBuffer ExternalSortRunLoader::quickSortFindPivot( uint l, uint r )
         j = cnt++;
         while (j > 0) {
             tupleAccessor.setCurrentTupleBuf(vals[j]);
-            tupleAccessor2.setCurrentTupleBuf(vals[j-1]);
+            tupleAccessor2.setCurrentTupleBuf(vals[j - 1]);
             keyAccessor.unmarshal(keyData);
             keyAccessor2.unmarshal(keyData2);
             if (sortInfo.compareKeys(keyData,keyData2) >= 0) {
                 break;
             }
-            std::swap(vals[j],vals[j-1]);
+            std::swap(vals[j],vals[j - 1]);
             j--;
         }
     }
     if (step == 1) {
         for (i = 0; i < cnt; ++i) {
-            getPointerArrayEntry(l+i) = vals[i];
+            getPointerArrayEntry(l + i) = vals[i];
         }
         return NULL;
     }
