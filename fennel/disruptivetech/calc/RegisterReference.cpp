@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -69,7 +69,7 @@ RegisterSetBinding::RegisterSetBinding(TupleData* base, const TupleData* shadow,
 
 }
 
-void 
+void
 RegisterReference::setCalc(Calculator* calcP) {
     mRegisterSetP = calcP->mRegisterSetBinding;
     mRegisterSetDescP = calcP->mRegisterSetDescriptor;
@@ -81,7 +81,7 @@ RegisterReference::setCalc(Calculator* calcP) {
     }
 }
 
-void 
+void
 RegisterReference::cachePointer() {
     if (mProp & (EPropCachePointer|EPropPtrReset)) {
         TupleDatum *bind = getBinding();
@@ -131,6 +131,6 @@ RegisterReference::toString() const
 
 
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/disruptivetech/calc/RegisterReference.cpp#8 $");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/disruptivetech/calc/RegisterReference.cpp#9 $");
 
 // End RegisterReference.cpp

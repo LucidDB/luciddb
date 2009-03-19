@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -64,7 +64,6 @@ void LcsRowScanBaseExecStream::prepare(
     allSpecial = (nonClusterCols.size() == newProj.size());
 
     for (uint i = 0; i < nClusters; i++) {
-
         SharedLcsClusterReader &pClu = pClusters[i];
 
         BTreeExecStreamParams const &bTreeParams = params.lcsClusterScanDefs[i];
@@ -104,11 +103,11 @@ void LcsRowScanBaseExecStream::prepare(
 
         // need to select at least one column from cluster, except in the
         // cases where we're only selecting special columns or when there
-        // are filter columns; in the former case, we'll just arbitrarily 
+        // are filter columns; in the former case, we'll just arbitrarily
         // read the first column, but not actually project it
         if (allSpecial) {
-           clusterProj.push_back(0); 
-        } 
+           clusterProj.push_back(0);
+        }
         pClu->initColumnReaders(
             params.lcsClusterScanDefs[i].clusterTupleDesc.size(),
             clusterProj);
@@ -158,7 +157,7 @@ void LcsRowScanBaseExecStream::getResourceRequirements(
     // - 1 for cluster page
     // - 1 for btree page
     minQuantity.nCachePages += (nClusters * 2);
-    
+
     optQuantity = minQuantity;
 }
 
@@ -184,16 +183,15 @@ bool LcsRowScanBaseExecStream::readColVals(
 {
     if (!allSpecial) {
         for (uint iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
-
             // Get value of each column and load it to the appropriate
-            // tuple datum entry 
+            // tuple datum entry
             PBuffer curValue = pScan->clusterCols[iCluCol].getCurrentValue();
             uint idx = projMap[colStart + iCluCol];
 
             attrAccessors[idx].loadValue(tupleData[idx], curValue);
             if (pScan->clusterCols[iCluCol].getFilters().hasResidualFilters) {
                 if (!pScan->clusterCols[iCluCol].applyFilters(projDescriptor,
-                    tupleData)) 
+                    tupleData))
                 {
                     return false;
                 }

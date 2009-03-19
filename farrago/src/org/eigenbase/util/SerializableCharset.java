@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
-// Portions Copyright (C) 2007-2007 John V. Sichi
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
+// Portions Copyright (C) 2007-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,10 @@
 */
 package org.eigenbase.util;
 
-import java.nio.charset.Charset;
 import java.io.*;
+
+import java.nio.charset.*;
+
 
 /**
  * Serializable wrapper around a {@link Charset}.
@@ -34,30 +36,39 @@ import java.io.*;
  *
  * <p>A SerializableCharset is immutable.
  *
- * @version $Id$
  * @author jhyde
+ * @version $Id$
  */
-public class SerializableCharset implements Serializable
+public class SerializableCharset
+    implements Serializable
 {
+    //~ Instance fields --------------------------------------------------------
+
     private Charset charset;
     private String charsetName;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a SerializableCharset. External users should call
-     * {@link #forCharset(Charset)}.
+     * Creates a SerializableCharset. External users should call {@link
+     * #forCharset(Charset)}.
      *
      * @param charset Character set; must not be null
      */
-    private SerializableCharset(Charset charset) {
+    private SerializableCharset(Charset charset)
+    {
         assert charset != null;
         this.charset = charset;
         this.charsetName = charset.name();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Per {@link Serializable}.
      */
-    private void writeObject(ObjectOutputStream out) throws IOException
+    private void writeObject(ObjectOutputStream out)
+        throws IOException
     {
         out.writeObject(charset.name());
     }
@@ -83,10 +94,11 @@ public class SerializableCharset implements Serializable
     }
 
     /**
-     * Returns a SerializableCharset wrapping the given Charset, or null
-     * if the <coded>charset</code> is null.
+     * Returns a SerializableCharset wrapping the given Charset, or null if the
+     * <coded>charset</code> is null.
      *
      * @param charset Character set to wrap, or null
+     *
      * @return Wrapped charset
      */
     public static SerializableCharset forCharset(Charset charset)

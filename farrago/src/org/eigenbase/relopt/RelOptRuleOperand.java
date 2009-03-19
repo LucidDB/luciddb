@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,6 +41,22 @@ import org.eigenbase.util.*;
  */
 public class RelOptRuleOperand
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Dummy type, containing a single value, for parameters to overloaded forms
+     * of the {@link org.eigenbase.relopt.RelOptRuleOperand} constructor
+     * signifying operands that will be matched by relational expressions with
+     * any number of children.
+     */
+    public enum Dummy
+    {
+        /**
+         * Signifies that operand can have any number of children.
+         */
+        ANY
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     private RelOptRuleOperand parent;
@@ -68,20 +84,23 @@ public class RelOptRuleOperand
      * in any order. This is useful when matching a relational expression which
      * can have a variable number of children. For example, the rule to
      * eliminate empty children of a Union would have operands
+     *
      * <blockquote>Operand(UnionRel, true, Operand(EmptyRel))</blockquote>
+     *
      * and given the relational expressions
+     *
      * <blockquote>UnionRel(FilterRel, EmptyRel, ProjectRel)</blockquote>
+     *
      * would fire the rule with arguments
+     *
      * <blockquote>{Union, Empty}</blockquote>
-     * It is up to the rule to deduce the other children, or indeed the
-     * position of the matched child.</p>
+     *
+     * It is up to the rule to deduce the other children, or indeed the position
+     * of the matched child.</p>
      *
      * @param clazz Class of relational expression to match (must not be null)
-     *
      * @param trait Trait to match, or null to match any trait
-     *
      * @param matchAnyChild Whether child operands can be matched in any order
-     *
      * @param children Child operands; or null, meaning match any number of
      * children
      */
@@ -89,7 +108,7 @@ public class RelOptRuleOperand
         Class<? extends RelNode> clazz,
         RelTrait trait,
         boolean matchAnyChild,
-        RelOptRuleOperand... children)
+        RelOptRuleOperand ... children)
     {
         assert (clazz != null);
         this.clazz = clazz;
@@ -104,32 +123,27 @@ public class RelOptRuleOperand
     }
 
     /**
-     * Creates an operand which matches a given trait and matches child
-     * operands in the order they appear.
+     * Creates an operand which matches a given trait and matches child operands
+     * in the order they appear.
      *
      * @param clazz Class of relational expression to match (must not be null)
-     *
      * @param trait Trait to match, or null to match any trait
-     *
      * @param children Child operands; must not be null
      */
     public RelOptRuleOperand(
         Class<? extends RelNode> clazz,
         RelTrait trait,
-        RelOptRuleOperand... children)
+        RelOptRuleOperand ... children)
     {
         this(clazz, trait, false, children);
         assert children != null;
     }
 
     /**
-     * Creates an operand that matches a given trait and any
-     * number of children.
+     * Creates an operand that matches a given trait and any number of children.
      *
      * @param clazz Class of relational expression to match (must not be null)
-     *
      * @param trait Trait to match, or null to match any trait
-     *
      * @param dummy Dummy argument to distinguish this constructor from other
      * overloaded forms
      */
@@ -138,7 +152,7 @@ public class RelOptRuleOperand
         RelTrait trait,
         Dummy dummy)
     {
-        this(clazz, trait, false, (RelOptRuleOperand[]) null);
+        this(clazz, trait, false, (RelOptRuleOperand []) null);
         Util.discard(dummy);
     }
 
@@ -149,12 +163,11 @@ public class RelOptRuleOperand
      * number of children.
      *
      * @param clazz Class of relational expression to match (must not be null)
-     *
      * @param children Child operands; must not be null
      */
     public RelOptRuleOperand(
         Class<? extends RelNode> clazz,
-        RelOptRuleOperand... children)
+        RelOptRuleOperand ... children)
     {
         this(clazz, null, false, children);
         assert children != null;
@@ -164,15 +177,13 @@ public class RelOptRuleOperand
      * Creates an operand that matches any number of children.
      *
      * @param clazz Class of relational expression to match (must not be null)
-     *
      * @param dummy Dummy argument to distinguish this constructor from other
      * overloaded forms
      */
-    public RelOptRuleOperand(
-        Class<? extends RelNode> clazz,
+    public RelOptRuleOperand(Class<? extends RelNode> clazz,
         Dummy dummy)
     {
-        this(clazz, null, false, (RelOptRuleOperand[]) null);
+        this(clazz, null, false, (RelOptRuleOperand []) null);
         Util.discard(dummy);
     }
 
@@ -275,19 +286,6 @@ public class RelOptRuleOperand
             return false;
         }
         return true;
-    }
-
-    /**
-     * Dummy type, containing a single value, for parameters to overloaded
-     * forms of the {@link org.eigenbase.relopt.RelOptRuleOperand} constructor
-     * signifying operands that will be matched by relational expressions with
-     * any number of children.
-     */
-    public enum Dummy {
-        /**
-         * Signifies that operand can have any number of children.
-         */
-        ANY
     }
 }
 

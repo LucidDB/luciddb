@@ -6,7 +6,7 @@ usage() {
   echo "checkPreamble.sh [options] file[...]"
   echo "Options:"
   echo " -eigenbase       Require Eigenbase copyright"
-  echo " -disruptivetech  Require Disruptive Tech copyright"
+  echo " -disruptivetech  Require SQLstream copyright"
   echo " -lucidera        Require LucidEra  copyright"
   echo " -fennel          Require Fennel description, 'Fennel is a library of"
   echo "                  data storage and processing components.'"
@@ -49,14 +49,14 @@ BEGIN {
     if (zone == "eigenbase") {
         expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] The Eigenbase Project";
         actuals[n]   = "// Copyright (C) year-year The Eigenbase Project";
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] Disruptive Tech";
-        actuals[n]   = "// Copyright (C) year-year Disruptive Tech";
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] SQLstream, Inc.";
+        actuals[n]   = "// Copyright (C) year-year SQLstream, Inc.";
         expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] LucidEra, Inc\\.";
         actuals[n]   = "// Copyright (C) year-year LucidEra, Inc.";
     }
     if (zone == "disruptivetech") {
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] Disruptive Tech";
-        actuals[n]   = "// Copyright (C) year-year Disruptive Tech";
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] SQLstream, Inc.";
+        actuals[n]   = "// Copyright (C) year-year SQLstream, Inc.";
         expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] The Eigenbase Project";
         actuals[n]   = "// Copyright (C) year-year The Eigenbase Project";
     }

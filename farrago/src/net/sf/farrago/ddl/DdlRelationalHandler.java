@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,6 +23,7 @@
 package net.sf.farrago.ddl;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -137,9 +138,10 @@ public class DdlRelationalHandler
 
         // check that columns are distinct
         List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
-        boolean[] includesColumn = new boolean[table.getFeature().size()];
+        boolean [] includesColumn = new boolean[table.getFeature().size()];
         for (CwmIndexedFeature column : indexedFeatures) {
-            int ordinal = ((FemAbstractAttribute)column.getFeature()).getOrdinal();
+            int ordinal =
+                ((FemAbstractAttribute) column.getFeature()).getOrdinal();
             if (includesColumn[ordinal]) {
                 throw res.ValidatorIndexedColumnsNotDistinct.ex(
                     repos.getLocalizedObjectName(index));
@@ -256,7 +258,7 @@ public class DdlRelationalHandler
                 // Implement constraints via system-owned indexes.
                 FemLocalIndex index =
                     createUniqueConstraintIndex(table, constraint);
-                if (primaryKey != null && constraint.equals(primaryKey)) {
+                if ((primaryKey != null) && constraint.equals(primaryKey)) {
                     generatedPrimaryKeyIndex = index;
                 }
 
@@ -299,6 +301,7 @@ public class DdlRelationalHandler
     public void validateDefinition(FemLocalView view)
     {
         FarragoSession session = validator.newReentrantSession();
+
         // Disable subquery reduction during validation of views because
         // errors should only be returned during the actual selection
         // from the view
@@ -356,9 +359,9 @@ public class DdlRelationalHandler
                         null,
                         false);
                 if (analyzedOriginalSql.canonicalString.equals(
-                    analyzedSql.canonicalString)
+                        analyzedSql.canonicalString)
                     && analyzedOriginalSql.resultType.equals(
-                    analyzedSql.resultType))
+                        analyzedSql.resultType))
                 {
                     sql = originalSql;
                     analyzedSql = analyzedOriginalSql;
@@ -513,17 +516,16 @@ public class DdlRelationalHandler
                 repos.getLocalizedObjectName(table));
         }
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLabel label)
     {
         if (!validator.getInvokingSession().getPersonality().supportsFeature(
-            EigenbaseResource.instance().PersonalitySupportsLabels))
+                EigenbaseResource.instance().PersonalitySupportsLabels))
         {
-            throw 
-                EigenbaseResource.instance().PersonalitySupportsLabels.ex();
+            throw EigenbaseResource.instance().PersonalitySupportsLabels.ex();
         }
-        
+
         // Detect circular label chains
         FemLabel parentLabel = label.getParentLabel();
         while (parentLabel != null) {
@@ -533,7 +535,7 @@ public class DdlRelationalHandler
             parentLabel = parentLabel.getParentLabel();
         }
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateDrop(FemLabel label)
     {
@@ -541,10 +543,9 @@ public class DdlRelationalHandler
         // be possible to have created a label in the first place; so this
         // check shouldn't be needed.  But just in case ...
         if (!validator.getInvokingSession().getPersonality().supportsFeature(
-            EigenbaseResource.instance().PersonalitySupportsLabels))
+                EigenbaseResource.instance().PersonalitySupportsLabels))
         {
-            throw 
-                EigenbaseResource.instance().PersonalitySupportsLabels.ex();
+            throw EigenbaseResource.instance().PersonalitySupportsLabels.ex();
         }
     }
 
@@ -565,7 +566,7 @@ public class DdlRelationalHandler
             indexExistingRows(table, index);
         }
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void executeCreation(FemLabel label)
     {
@@ -591,7 +592,7 @@ public class DdlRelationalHandler
         // should not allow the index to be accessed for any other
         // reason
         index.setInvalid(true);
-        
+
         if (index.isClustered()) {
             // Normally, it's not meaningful to create a clustered index
             // on existing rows.  However, this can arise during
@@ -601,7 +602,7 @@ public class DdlRelationalHandler
             // index.setInvalid(false) when done.
             return;
         }
-        
+
         FemDataServer dataServer = table.getServer();
         FarragoMedLocalDataServer medDataServer =
             (FarragoMedLocalDataServer) validator.getDataWrapperCache()
@@ -634,7 +635,7 @@ public class DdlRelationalHandler
             index,
             false);
     }
-    
+
     protected boolean isReplacingType(CwmModelElement obj)
     {
         return ((DdlValidator) medHandler.getValidator()).isReplacingType(obj);
@@ -689,7 +690,6 @@ public class DdlRelationalHandler
         {
             return o1.refMofId().compareTo(o2.refMofId());
         }
-
     }
 }
 

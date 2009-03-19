@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -112,14 +112,14 @@ class SegStreamTest : virtual public SegStorageTestBase
         BOOST_CHECK(!nChars);
         BOOST_CHECK(!pInputStream->getReadPointer(1));
     }
-    
+
 public:
     explicit SegStreamTest()
     {
         // Grow page-by-page since preallocation will result in garbage at end
         // of stream.
         nDiskPages = 0;
-        
+
         FENNEL_UNIT_TEST_CASE(SegStreamTest,testWriteSeg);
         FENNEL_UNIT_TEST_CASE(SegStreamTest,testReadSeg);
         FENNEL_UNIT_TEST_CASE(SegStreamTest,testMarkReset);
@@ -167,7 +167,7 @@ public:
         segmentAccessor.reset();
         closeStorage();
     }
-    
+
     void testWriteSpillAndRead()
     {
         openStorage(DeviceMode::createNew);
@@ -181,7 +181,7 @@ public:
         pInputStream.reset();
         closeStorage();
     }
-    
+
 };
 
 FENNEL_UNIT_TEST_SUITE(SegStreamTest);

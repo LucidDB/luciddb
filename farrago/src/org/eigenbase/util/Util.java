@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2002-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2008 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -119,7 +119,7 @@ public class Util
      */
     private static final Map<Class, Map<String, ? extends Enum>>
         mapClazzToMapNameToEnum =
-        new WeakHashMap<Class, Map<String, ? extends Enum>>();
+            new WeakHashMap<Class, Map<String, ? extends Enum>>();
 
     //~ Methods ----------------------------------------------------------------
 
@@ -885,6 +885,7 @@ public class Util
      * Returns the stack trace of a throwable. Called from native code.
      *
      * @param t Throwable
+     *
      * @return Stack trace
      */
     public static String getStackTrace(Throwable t)
@@ -1173,6 +1174,7 @@ public class Util
      * @param a Array of strings
      * @param length Number of entries to search
      * @param s String to seek
+     *
      * @return Whether array contains the name
      */
     public static boolean contains(
@@ -1370,37 +1372,43 @@ public class Util
      * Converts a Java timezone to POSIX format, so that the boost C++ library
      * can instantiate timezone objects.
      *
-     * <p><a href="http://www.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html">POSIX
+     * <p><a
+     * href="http://www.opengroup.org/onlinepubs/000095399/basedefs/xbd_chap08.html">POSIX
      * IEEE 1003.1</a> defines a format for timezone specifications.
      *
-     * <p>The boost C++ library can read these specifications and instantiate
-     * <a href="http://www.boost.org/doc/html/date_time/local_time.html#date_time.local_time.posix_time_zone">
+     * <p>The boost C++ library can read these specifications and instantiate <a
+     * href="http://www.boost.org/doc/html/date_time/local_time.html#date_time.local_time.posix_time_zone">
      * posix_time_zone</a> objects from them. The purpose of this method,
-     * therefore, is to allow the C++ code such as the fennel calculator to
-     * use the same notion of timezone as Java code.
+     * therefore, is to allow the C++ code such as the fennel calculator to use
+     * the same notion of timezone as Java code.
      *
      * <p>The format is as follows:
      *
-     * <blockquote>
-     * "std offset dst [offset],start[/time],end[/time]"
+     * <blockquote>"std offset dst [offset],start[/time],end[/time]"
      * </blockquote>
      *
-     * where:<ul>
+     * where:
+     *
+     * <ul>
      * <li>'std' specifies the abbrev of the time zone.
-     * <li>'offset' is the offset from UTC,
-     *     and takes the form <code>[+|-]hh[:mm[:ss]] {h=0-23, m/s=0-59}</code>
+     * <li>'offset' is the offset from UTC, and takes the form <code>
+     * [+|-]hh[:mm[:ss]] {h=0-23, m/s=0-59}</code>
      * <li>'dst' specifies the abbrev of the time zone during daylight savings
-     *     time
+     * time
      * <li>The second offset is how many hours changed during DST. Default=1
-     * <li>'start' & 'end' are the dates when DST goes into (and out of)
-     *     effect. They can each be one of three forms:<ol>
-     *     <li>Mm.w.d {month=1-12, week=1-5 (5 is always last), day=0-6}
-     *     <li>Jn {n=1-365 Feb29 is never counted}
-     *     <li>n {n=0-365 Feb29 is counted in leap years}
-     *     </ol>
+     * <li>'start' & 'end' are the dates when DST goes into (and out of) effect.
+     * They can each be one of three forms:
+     *
+     * <ol>
+     * <li>Mm.w.d {month=1-12, week=1-5 (5 is always last), day=0-6}
+     * <li>Jn {n=1-365 Feb29 is never counted}
+     * <li>n {n=0-365 Feb29 is counted in leap years}
+     * </ol>
      * <li>'time' has the same format as 'offset', and defaults to 02:00:00
      *
-     * <p>For example:<ul>
+     * <p>For example:
+     *
+     * <ul>
      * <li>"PST-8PDT01:00:00,M4.1.0/02:00:00,M10.1.0/02:00:00"; or more tersely
      * <li>"PST-8PDT,M4.1.0,M10.1.0"
      * </ul>
@@ -1408,18 +1416,19 @@ public class Util
      * <p>(Real format strings do not contain spaces; they are in the above
      * template only for readability.)
      *
-     * <p>Boost apparently diverges from the POSIX standard in how it treats
-     * the sign of timezone offsets. The POSIX standard states '<i>If
-     * preceded by a '-', the timezone shall be east of the Prime Meridian;
-     * otherwise, it shall be west</i>', yet boost requires the opposite.
-     * For instance, PST has offset '-8' above. This method generates timezone
-     * strings consistent with boost's expectations.
+     * <p>Boost apparently diverges from the POSIX standard in how it treats the
+     * sign of timezone offsets. The POSIX standard states '<i>If preceded by a
+     * '-', the timezone shall be east of the Prime Meridian; otherwise, it
+     * shall be west</i>', yet boost requires the opposite. For instance, PST
+     * has offset '-8' above. This method generates timezone strings consistent
+     * with boost's expectations.
      *
      * @param tz Timezone
      * @param verbose Whether to include fields which can be omitted because
-     *   they have their default values
+     * they have their default values
+     *
      * @return Timezone in POSIX format (offset sign reversed, per boost's
-     *   idiosyncracies)
+     * idiosyncracies)
      */
     public static String toPosix(TimeZone tz, boolean verbose)
     {
@@ -1431,29 +1440,31 @@ public class Util
             return buf.toString();
         }
         buf.append(tz.getDisplayName(true, TimeZone.SHORT));
-        if (verbose || dstSavings != 3600000) {
+        if (verbose || (dstSavings != 3600000)) {
             // POSIX allows us to omit DST offset if it is 1:00:00
             appendPosixTime(buf, dstSavings);
         }
-        String patternString = ".*," +
-            "startMode=([0-9]*)," +
-            "startMonth=([0-9]*)," +
-            "startDay=([-0-9]*)," +
-            "startDayOfWeek=([0-9]*)," +
-            "startTime=([0-9]*)," +
-            "startTimeMode=([0-9]*)," +
-            "endMode=([0-9]*)," +
-            "endMonth=([0-9]*)," +
-            "endDay=([-0-9]*)," +
-            "endDayOfWeek=([0-9]*)," +
-            "endTime=([0-9]*)," +
-            "endTimeMode=([0-9]*).*";
+        String patternString =
+            ".*,"
+            + "startMode=([0-9]*),"
+            + "startMonth=([0-9]*),"
+            + "startDay=([-0-9]*),"
+            + "startDayOfWeek=([0-9]*),"
+            + "startTime=([0-9]*),"
+            + "startTimeMode=([0-9]*),"
+            + "endMode=([0-9]*),"
+            + "endMonth=([0-9]*),"
+            + "endDay=([-0-9]*),"
+            + "endDayOfWeek=([0-9]*),"
+            + "endTime=([0-9]*),"
+            + "endTimeMode=([0-9]*).*";
         Pattern pattern = Pattern.compile(patternString);
         String tzString = tz.toString();
         Matcher matcher = pattern.matcher(tzString);
         if (!matcher.matches()) {
-            throw new AssertionError("tz.toString not of expected format: " +
-                tzString);
+            throw new AssertionError(
+                "tz.toString not of expected format: "
+                + tzString);
         }
         int j = 0;
         int startMode = Integer.valueOf(matcher.group(++j));
@@ -1469,11 +1480,27 @@ public class Util
         int endTime = Integer.valueOf(matcher.group(++j));
         int endTimeMode = Integer.valueOf(matcher.group(++j));
         appendPosixDaylightTransition(
-            tz, buf, startMode, startDay, startMonth, startDayOfWeek,
-            startTime, startTimeMode, verbose, false);
+            tz,
+            buf,
+            startMode,
+            startDay,
+            startMonth,
+            startDayOfWeek,
+            startTime,
+            startTimeMode,
+            verbose,
+            false);
         appendPosixDaylightTransition(
-            tz, buf, endMode, endDay, endMonth, endDayOfWeek,
-            endTime, endTimeMode, verbose, true);
+            tz,
+            buf,
+            endMode,
+            endDay,
+            endMonth,
+            endDayOfWeek,
+            endTime,
+            endTimeMode,
+            verbose,
+            true);
         return buf.toString();
     }
 
@@ -1511,6 +1538,7 @@ public class Util
             throw Util.needToImplement(0);
 
         case 3: // SimpleTimeZone.DOW_GE_DOM_MODE
+
             // If the day is 1, 8, 15, 22, we can translate this to case 2.
             switch (day) {
             case 1:
@@ -1564,13 +1592,12 @@ public class Util
             }
             break;
         }
-        if (verbose || time != 7200000) {
+        if (verbose || (time != 7200000)) {
             // POSIX allows us to omit the time if it is 2am (the default)
             buf.append('/');
             appendPosixTime(buf, time);
         }
     }
-
 
     /**
      * Given a time expressed in milliseconds, append the time formatted as
@@ -1887,6 +1914,7 @@ public class Util
      * enumeration here.
      *
      * @param value Enumeration value which was not expected
+     *
      * @return an error, to be thrown
      */
     public static <E extends Enum<E>> Error unexpected(E value)
@@ -1901,12 +1929,13 @@ public class Util
      * Creates a map of the values of an enumeration by name.
      *
      * @param clazz Enumeration class
+     *
      * @return map of values
      */
     public static <T extends Enum<T>> Map<String, T> enumConstants(
         Class<T> clazz)
     {
-        final T[] ts = clazz.getEnumConstants();
+        final T [] ts = clazz.getEnumConstants();
         if (ts == null) {
             // not an enum type
             return null;
@@ -1921,15 +1950,16 @@ public class Util
     /**
      * Returns the value of an enumeration with a particular name.
      *
-     * <p>Similar to {@link Enum#valueOf(Class, String)}, but returns
-     * {@code null} rather than throwing {@link IllegalArgumentException}.
+     * <p>Similar to {@link Enum#valueOf(Class, String)}, but returns {@code
+     * null} rather than throwing {@link IllegalArgumentException}.
      *
      * @param clazz Enum class
      * @param name Name of enum constant
      * @param <T> Enum class type
+     *
      * @return Enum constant or null
      */
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({ "unchecked" })
     public static synchronized <T extends Enum<T>> T enumVal(
         Class<T> clazz,
         String name)

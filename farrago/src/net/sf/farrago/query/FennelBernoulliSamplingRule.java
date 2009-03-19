@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,23 +19,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.query;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * FennelBernoulliSamplingRule converts a {@link SamplingRel} into a
- * {@link FennelBernoulliSamplingRel}, regardless of whether the original
- * SamplingRel specified Bernoulli or system sampling.  By default Farrago
- * doesn't not support system sampling.
+ * FennelBernoulliSamplingRule converts a {@link SamplingRel} into a {@link
+ * FennelBernoulliSamplingRel}, regardless of whether the original SamplingRel
+ * specified Bernoulli or system sampling. By default Farrago doesn't not
+ * support system sampling.
  *
  * @author Stephan Zuercher
  */
 public class FennelBernoulliSamplingRule
     extends RelOptRule
 {
+    //~ Constructors -----------------------------------------------------------
+
     public FennelBernoulliSamplingRule()
     {
         super(new RelOptRuleOperand(SamplingRel.class, ANY));
@@ -52,24 +54,25 @@ public class FennelBernoulliSamplingRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        SamplingRel origRel = (SamplingRel)call.rels[0];
-        
-        RelOptSamplingParameters origParams = 
-            origRel.getSamplingParameters();
-        
-        RelOptSamplingParameters params = 
+        SamplingRel origRel = (SamplingRel) call.rels[0];
+
+        RelOptSamplingParameters origParams = origRel.getSamplingParameters();
+
+        RelOptSamplingParameters params =
             new RelOptSamplingParameters(
                 true,
                 origParams.getSamplingPercentage(),
                 origParams.isRepeatable(),
                 origParams.getRepeatableSeed());
-        
+
         FennelBernoulliSamplingRel samplingRel =
             new FennelBernoulliSamplingRel(
                 origRel.getCluster(),
                 origRel.getChild(),
                 params);
-        
+
         call.transformTo(samplingRel);
     }
 }
+
+// End FennelBernoulliSamplingRule.java

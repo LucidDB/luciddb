@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2004-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,7 +21,7 @@
 */
 package org.eigenbase.sql.validate;
 
-import java.util.List;
+import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -48,6 +48,7 @@ public interface SqlValidatorCatalogReader
      * Finds a table with the given name, possibly qualified.
      *
      * @param names Name of table
+     *
      * @return named table, or null if not found
      */
     SqlValidatorTable getTable(String [] names);
@@ -61,6 +62,7 @@ public interface SqlValidatorCatalogReader
      * factory is context-independent.
      *
      * @param typeName Name of type
+     *
      * @return named type, or null if not found
      */
     RelDataType getNamedType(SqlIdentifier typeName);

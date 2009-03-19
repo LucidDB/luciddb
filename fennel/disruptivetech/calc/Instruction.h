@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,7 +19,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 // Instruction.h
-// Include this file if you intend to manipulate instructions directly, 
+// Include this file if you intend to manipulate instructions directly,
 // otherwise include Calculator.h
 //
 */
@@ -70,7 +70,7 @@ protected:
                         const char* shortName,
                         RegisterReference* result,
                         RegisterReference* op1,
-                        RegisterReference* op2) const 
+                        RegisterReference* op2) const
     {
         out = longName;
         out += ": ";
@@ -85,7 +85,7 @@ protected:
             out += " ) ";
         }
         out += " = ";
-    
+
         if (!op2 || !op2->isValid()) {  // if < 2 operands
             out += " ";
             out += shortName;
@@ -136,7 +136,7 @@ protected:
     registerInstance(StandardTypeDescriptorOrdinal type)
     {
         StringToCreateFn* instMap = InstructionFactory::getInstructionTable();
-        (*instMap)[INSTCLASS<TYPE1>::signature(type).compute()] = 
+        (*instMap)[INSTCLASS<TYPE1>::signature(type).compute()] =
             &INSTCLASS<TYPE1>::create;
     }
 
@@ -144,7 +144,7 @@ protected:
                typename TYPE2,
                template <typename, typename> class INSTCLASS >
     static void
-    registerInstance2(StandardTypeDescriptorOrdinal type1, 
+    registerInstance2(StandardTypeDescriptorOrdinal type1,
                       StandardTypeDescriptorOrdinal type2)
     {
         StringToCreateFn* instMap = InstructionFactory::getInstructionTable();
@@ -157,7 +157,7 @@ protected:
     registerInstance(StandardTypeDescriptorOrdinal type)
     {
         StringToCreateFn* instMap = InstructionFactory::getInstructionTable();
-        (*instMap)[INSTCLASS::signature(type).compute()] = 
+        (*instMap)[INSTCLASS::signature(type).compute()] =
             &INSTCLASS::create;
     }
 };

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -55,27 +55,27 @@ class Database
         public SynchMonitoredObject
 {
     DeviceId dataDeviceId;
-    
+
     SharedRandomAccessDevice pDataDevice;
 
     DeviceId tempDeviceId;
-    
+
     DeviceId shadowDeviceId;
-    
+
     DeviceId txnLogDeviceId;
 
     std::string dataDeviceName;
-    
+
     std::string tempDeviceName;
-    
+
     std::string shadowDeviceName;
-    
+
     std::string txnLogDeviceName;
-    
+
     SharedCache pCache;
-    
+
     SharedSegmentFactory pSegmentFactory;
-    
+
     SharedSegment pHeaderSegment;
 
     SharedSegment pDataSegment;
@@ -141,10 +141,10 @@ class Database
         DeviceMode openMode,
         SharedTraceTarget pTraceTarget,
         SharedPseudoUuidGenerator pUuidGenerator);
-    
+
     // implement ClosableObject
     virtual void closeImpl();
-    
+
 // ----------------------------------------------------------------------
 // internal helper methods
 // ----------------------------------------------------------------------
@@ -152,17 +152,17 @@ class Database
     void init();
 
     void createTxnLog(DeviceMode);
-    
+
     SharedSegment createTxnLogSegment(DeviceMode,PageId);
-    
+
     SharedSegment createShadowLog(DeviceMode);
 
     void createDataDevice(LinearDeviceSegmentParams &);
-    
+
     void createDataSegment(SharedSegment, LinearDeviceSegmentParams &);
 
     void createTempSegment();
-    
+
     void allocateHeader();
 
     void writeHeader();
@@ -174,7 +174,7 @@ class Database
     void deleteLogs();
 
     void openSegments();
-    
+
     void prepareForRecovery();
 
     void recoverPhysical(CheckpointType);
@@ -198,7 +198,7 @@ public:
     static ParamName paramInitSizeSuffix;
     static ParamName paramMaxSizeSuffix;
     static ParamName paramIncSizeSuffix;
-    
+
     static ParamVal valLogAllocLinear;
     static ParamVal valLogAllocCircular;
 
@@ -211,7 +211,7 @@ public:
         DeviceMode openMode,
         SharedTraceTarget pTraceTarget,
         SharedPseudoUuidGenerator pUuidGenerator = SharedPseudoUuidGenerator());
-    
+
     virtual ~Database();
 
     const ConfigMap& getConfigMap() const;
@@ -219,7 +219,7 @@ public:
     SharedCache getCache() const;
 
     SharedSegmentFactory getSegmentFactory() const;
-    
+
     SharedSegment getDataSegment() const;
 
     SharedSegment getTempSegment() const;
@@ -233,7 +233,7 @@ public:
 
     // implement StatsSource
     virtual void writeStats(StatsTarget &target);
-    
+
     SharedLogicalTxnLog getTxnLog() const;
 
     StoredTypeDescriptorFactory const &getTypeFactory() const;
@@ -269,7 +269,7 @@ public:
      * any active transactions, as well as active labels marking snapshots
      * in time.
      *
-     * @param oldestLabelCsn the csn of the oldest active label; set to 
+     * @param oldestLabelCsn the csn of the oldest active label; set to
      * NULL_TXN_ID if there are no active labels
      */
     void deallocateOldPages(TxnId oldestLabelCsn);
@@ -346,7 +346,7 @@ public:
      * Restores the data segment from a backup file.  The data pages in the
      * backup file correspond to pages with allocationCsn's in between a
      * lower and upper bound.  If the lower bound is set to NULL_TXN_ID,
-     * then that indicates that there is no lower bound; otherwise, the lower 
+     * then that indicates that there is no lower bound; otherwise, the lower
      * bound is exclusive.  There must always be an upper bound and it is
      * inclusive.
      *

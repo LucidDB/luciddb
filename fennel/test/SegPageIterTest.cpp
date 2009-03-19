@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,7 @@ public:
     {
         testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,0);
     }
-    
+
     void testBoundedIter()
     {
         testIter(
@@ -68,7 +68,7 @@ public:
         // throttles.
         testIter(FIRST_LINEAR_PAGE_ID,NULL_PAGE_ID,false,3);
     }
-    
+
     void testLowPrefetchRejects()
     {
         // Low pre-fetch reject rate.  This will allow the rate to throttle

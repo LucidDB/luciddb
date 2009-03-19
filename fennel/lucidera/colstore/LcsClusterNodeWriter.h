@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,7 @@ const int LcsMaxLeftOver = 7;
 const int LcsMaxSzLeftError = 4;
 
 enum ForceMode { none = 0, fixed = 1, variable = 2 };
-    
+
 /**
  * Constructs a cluster page, managing the amount of space currently in use
  * on the page and determining the offsets where different elements are to
@@ -65,17 +65,17 @@ private:
      * Cluster page header
      */
     PLcsClusterNode pHdr;
-    
+
     /**
      * Size of the cluster page header
      */
     uint hdrSize;
-    
+
     /**
      * Cluster page to be written
      */
     PBuffer pIndexBlock;
-    
+
     /**
      * Array of pointers to temporary blocks, 1 block for each column cluster
      */
@@ -198,11 +198,12 @@ private:
         uint16_t lastValOffset, PBuffer pValBank, uint16_t oValBank,
         PBuffer pBlock, uint16_t f)
     {
-        // if value not in back use 
-        if (f < lastValOffset)
+        // if value not in back use
+        if (f < lastValOffset) {
             return pValBank + f - oValBank;
-        else 
+        } else {
             return pBlock + f;
+        }
     }
 
     /**
@@ -210,13 +211,13 @@ private:
      *
      * @return number of rows currently on page
      */
-    RecordNum moveFromIndexToTemp(); 
+    RecordNum moveFromIndexToTemp();
 
     /**
      * Moves all cluster data from temporary storage to the actual
      * cluster page
      */
-    void moveFromTempToIndex(); 
+    void moveFromTempToIndex();
 
     /**
      * Allocates temporary arrays used during cluster writes
@@ -313,7 +314,7 @@ public:
      */
     void openAppend(
         uint *nValOffsets, uint16_t *lastValOffsets, RecordNum &nrows);
-    
+
     /**
      * Returns parameters describing the last batch for a given column
      *
@@ -326,7 +327,7 @@ public:
      * batch
      */
     void describeLastBatch(uint column, uint &dRow, uint &recSize);
-    
+
     /**
      * Returns the offset of the next value in a batch
      *
@@ -341,7 +342,7 @@ public:
      *
      * @param column column to be rolled back
      *
-     * @param pVal buffer where the rolled back values will be copied; 
+     * @param pVal buffer where the rolled back values will be copied;
      * the buffer is assumed to be fixedRec * (nRows % 8) in size, as
      * determined by the last call to describeLastBatch
      */
@@ -353,7 +354,7 @@ public:
      * @param column column being described
      */
     inline bool noCompressMode(uint column) const
-    { 
+    {
         return bForceMode[column] == fixed ||
                 bForceMode[column] == variable;
     };
@@ -368,7 +369,7 @@ public:
      * @return pointer to value
      */
     inline PBuffer getOffsetPtr(uint column, uint16_t offset)
-    { 
+    {
         return pBlock[column] + offset;
     };
 
@@ -480,14 +481,15 @@ public:
      * Returns true if there is no space left in the cluster page
      */
     bool isEndOfBlock()
-    { 
+    {
         uint col;
         int valueSizeNeeded;
-        
-        for (valueSizeNeeded = 0, col = 0; col < nClusterCols; col++)
-            valueSizeNeeded += batchDirs[col].recSize * LcsMaxLeftOver;
 
-        return szLeft <= (minSzLeft + valueSizeNeeded); 
+        for (valueSizeNeeded = 0, col = 0; col < nClusterCols; col++) {
+            valueSizeNeeded += batchDirs[col].recSize * LcsMaxLeftOver;
+        }
+
+        return szLeft <= (minSzLeft + valueSizeNeeded);
     }
 
     /**
@@ -504,4 +506,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End LcsClusterNode.h
+// End LcsClusterNodeWriter.h

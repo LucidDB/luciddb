@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,9 +22,10 @@
 */
 package org.eigenbase.reltype;
 
+import java.io.*;
+
 import org.eigenbase.sql.type.*;
 
-import java.io.Serializable;
 
 /**
  * RelRecordType represents a structured type having named fields.
@@ -89,35 +90,41 @@ public class RelRecordType
     }
 
     /**
-     * Per {@link Serializable} API, provides a replacement object to be
-     * written during serialization.
+     * Per {@link Serializable} API, provides a replacement object to be written
+     * during serialization.
      *
      * <p>This implementation converts this RelRecordType into a
-     * SerializableRelRecordType, whose <code>readResolve</code> method
-     * converts it back to a RelRecordType during deserialization.
+     * SerializableRelRecordType, whose <code>readResolve</code> method converts
+     * it back to a RelRecordType during deserialization.
      */
-    private Object writeReplace() {
+    private Object writeReplace()
+    {
         return new SerializableRelRecordType(fields);
     }
 
-    /**
-     * Skinny object which has the same information content as a
-     * {@link RelRecordType} but skips redundant stuff like digest and the
-     * immutable list.
-     */
-    private static class SerializableRelRecordType implements Serializable {
-        private RelDataTypeField[] fields;
+    //~ Inner Classes ----------------------------------------------------------
 
-        private SerializableRelRecordType(RelDataTypeField[] fields)
+    /**
+     * Skinny object which has the same information content as a {@link
+     * RelRecordType} but skips redundant stuff like digest and the immutable
+     * list.
+     */
+    private static class SerializableRelRecordType
+        implements Serializable
+    {
+        private RelDataTypeField [] fields;
+
+        private SerializableRelRecordType(RelDataTypeField [] fields)
         {
             this.fields = fields;
         }
 
         /**
-         * Per {@link Serializable} API.
-         * See {@link RelRecordType#writeReplace()}.
+         * Per {@link Serializable} API. See {@link
+         * RelRecordType#writeReplace()}.
          */
-        private Object readResolve() {
+        private Object readResolve()
+        {
             return new RelRecordType(fields);
         }
     }

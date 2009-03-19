@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,13 +28,13 @@ import java.util.List;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.query.FarragoPreparingStmt;
-import net.sf.farrago.query.FarragoRelUtil;
+import net.sf.farrago.query.*;
+
 import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
@@ -81,10 +81,10 @@ class MedMdrClassExtentRel
             connection);
         this.mdrClassExtent = mdrClassExtent;
 
-        FarragoPreparingStmt preparingStmt = 
+        FarragoPreparingStmt preparingStmt =
             FarragoRelUtil.getPreparingStmt(this);
-        
-        rowClass = 
+
+        rowClass =
             JmiObjUtil.getClassForRefClass(
                 preparingStmt.getRepos().getMdrRepos(),
                 mdrClassExtent.refClass);

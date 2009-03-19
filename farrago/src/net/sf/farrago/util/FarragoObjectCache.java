@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,11 +38,11 @@ import org.eigenbase.util.*;
  * <p>Key objects must implement hashCode/equals properly since
  * FarragoObjectCache is based on a HashMap internally.
  *
- * <p>See {@link net.sf.farrago.test.FarragoObjectCacheTest} for examples
- * of usage patterns.
+ * <p>See {@link net.sf.farrago.test.FarragoObjectCacheTest} for examples of
+ * usage patterns.
  *
- * <p>Note that {@link #closeAllocation} should only be called with
- * no entries pinned, no calls in progress, and no further calls planned.
+ * <p>Note that {@link #closeAllocation} should only be called with no entries
+ * pinned, no calls in progress, and no further calls planned.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -57,9 +57,9 @@ public class FarragoObjectCache
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * Map from cache key to EntryImpl. To avoid deadlock, synchronize
-     * on either map or entry but not both at once.  See code comments in
-     * tryPin for more info on this.
+     * Map from cache key to EntryImpl. To avoid deadlock, synchronize on either
+     * map or entry but not both at once. See code comments in tryPin for more
+     * info on this.
      */
     protected MultiMap<Object, FarragoCacheEntry> mapKeyToEntry;
     private long bytesMax;
@@ -104,26 +104,23 @@ public class FarragoObjectCache
      * entry must be unpinned, otherwise the entry can never be discarded from
      * the cache.
      *
-     *<p>
-     *
-     * Note that for a cache miss with exclusive=false, other callers
+     * <p>Note that for a cache miss with exclusive=false, other callers
      * requesting to pin the same key near-simultaneously will wait for the
-     * initialization of the new object to complete.  If it completes
-     * successfully, AND it is initialized as reusable, then the new object
-     * will be shared.  If it completes unsuccessfully, the first caller will
-     * receive the thrown exception, and subsequent callers will retry the
-     * attempt themselves.  If it completes successfully, but turns out to be
-     * non-reusable, then subsequent callers will give up on it and create
-     * their own private copies instead.
+     * initialization of the new object to complete. If it completes
+     * successfully, AND it is initialized as reusable, then the new object will
+     * be shared. If it completes unsuccessfully, the first caller will receive
+     * the thrown exception, and subsequent callers will retry the attempt
+     * themselves. If it completes successfully, but turns out to be
+     * non-reusable, then subsequent callers will give up on it and create their
+     * own private copies instead.
      *
      * @param key key of the entry to pin
      * @param factory CachedObjectFactory to call if an existing entry can't be
      * used (cache miss), in which case a new entry will be created and
      * initialized by calling the factory's initializeEntry method
-     * @param exclusive if true, only reuse unpinned entries; note that
-     * this flag is not remembered along with the entry, so callers
-     * must be consistent in setting this flag for objects in the same
-     * keyspace
+     * @param exclusive if true, only reuse unpinned entries; note that this
+     * flag is not remembered along with the entry, so callers must be
+     * consistent in setting this flag for objects in the same keyspace
      *
      * @return pinned entry
      */
@@ -185,7 +182,8 @@ public class FarragoObjectCache
                             // we don't allow locking of entries when a
                             // lock on the map is held.
                             factory.initializeEntry(key, entry);
-                            assert(entry.isInitialized());
+                            assert (entry.isInitialized());
+
                             // TODO jvs 10-Jun-2007:  assert that
                             // new value is not stale-on-arrival?  Maybe
                             // only when trace is on?
@@ -274,7 +272,7 @@ public class FarragoObjectCache
         // usage at all, even though we leave behind the dead entry (with
         // value=null) in the cache.  It's not large, and will get aged
         // out eventually.
-        assert(!unpinEntry);
+        assert (!unpinEntry);
 
         if (tracer.isLoggable(Level.FINE)) {
             long cacheSize = bytesUsed + entry.memoryUsage.get();
@@ -310,6 +308,7 @@ public class FarragoObjectCache
                     // NOTE jvs 15-Jun-2007:  We can't synchronize on
                     // entry here, so have to be careful in how we access it.
                     Object value = entry.value;
+
                     // REVIEW jvs 14-Jun-2007: If value is null, and pin-count
                     // is 0, perhaps we could be a good citizen and discard it
                     // as garbage in passing.
@@ -447,8 +446,8 @@ public class FarragoObjectCache
     }
 
     /**
-     * @return current number of bytes cached (regardless of whether
-     * they are pinned or not)
+     * @return current number of bytes cached (regardless of whether they are
+     * pinned or not)
      */
     public long getBytesCached()
     {
@@ -479,38 +478,35 @@ public class FarragoObjectCache
     }
 
     /**
-     * Just like unpin except that it takes only the key to the cache entry
-     * and doesn't call adjustMemoryUsage.  It is used just like unpin but
-     * it is a bit more forgiving and calls closeAllocation on the cache
-     * entry if it is truely unpinned.  It is currently used only by a specific
-     * extention to Farrago and not Farrago itself.
+     * Just like unpin except that it takes only the key to the cache entry and
+     * doesn't call adjustMemoryUsage. It is used just like unpin but it is a
+     * bit more forgiving and calls closeAllocation on the cache entry if it is
+     * truely unpinned. It is currently used only by a specific extention to
+     * Farrago and not Farrago itself.
      *
      * @param key the key to the pinned Entry
      */
     public void tryUnpin(String key)
     {
         synchronized (mapKeyToEntry) {
-
             List<FarragoCacheEntry> entryList = mapKeyToEntry.getMulti(key);
-            assert(entryList != null);
+            assert (entryList != null);
             tracer.fine("unpinning cache entries " + entryList);
 
             Iterator<FarragoCacheEntry> it = entryList.iterator();
 
             while (it.hasNext()) {
-
                 FarragoCacheEntry entry = it.next();
-                tracer.finest("unpinning cache entry " + entry +
-                              " with pin count " + entry.pinCount);
+                tracer.finest(
+                    "unpinning cache entry " + entry
+                    + " with pin count " + entry.pinCount);
 
                 if (1 >= entry.pinCount) {
-
-                    if (entry.getValue() instanceof FarragoAllocation)
-                        ((FarragoAllocation)entry.getValue()).
-                            closeAllocation();
-
+                    if (entry.getValue() instanceof FarragoAllocation) {
+                        ((FarragoAllocation) entry.getValue())
+                        .closeAllocation();
+                    }
                 } else {
-
                     entry.pinCount--;
                 }
             }
@@ -521,10 +517,8 @@ public class FarragoObjectCache
      * Discards any entries associated with a key. If the bound value of an
      * entry is a ClosableObject, it will be closed.
      *
-     *<p>
-     *
-     * REVIEW jvs 10-Jun-2007: This method is unsafe since the associated
-     * entries may still be pinned.  Code which is relying on it (such as
+     * <p>REVIEW jvs 10-Jun-2007: This method is unsafe since the associated
+     * entries may still be pinned. Code which is relying on it (such as
      * FarragoDataWrapperCache) should probably be changed to use either a
      * staleness test or a different key scheme.
      *
@@ -549,9 +543,8 @@ public class FarragoObjectCache
     }
 
     /**
-     * Discards all entries.  May only be called at a time when
-     * no entries are currently pinned (otherwise assertion failures
-     * may result).
+     * Discards all entries. May only be called at a time when no entries are
+     * currently pinned (otherwise assertion failures may result).
      */
     public void discardAll()
     {
@@ -613,8 +606,8 @@ public class FarragoObjectCache
          * @param key key of the object to be constructed
          * @param entry to initialize by calling its {@link
          * UninitializedEntry#initialize} method; failing to call initialize
-         * will lead to a subsequent assertion (unless an exception
-         * is thrown to indicate initialization failure)
+         * will lead to a subsequent assertion (unless an exception is thrown to
+         * indicate initialization failure)
          */
         public void initializeEntry(
             Object key,
@@ -623,9 +616,8 @@ public class FarragoObjectCache
         /**
          * Tests a cached object for staleness.
          *
-         * @return true if object is stale, meaning it must not
-         * be returned from a pin call, and should be discarded from
-         * the cache when detected
+         * @return true if object is stale, meaning it must not be returned from
+         * a pin call, and should be discarded from the cache when detected
          */
         public boolean isStale(Object value);
     }
@@ -643,10 +635,9 @@ public class FarragoObjectCache
          * from the cache
          * @param memoryUsage approximate total number of bytes of memory used
          * by entry (combination of key, value, and any sub-objects)
-         * @param isReusable whether the initialized entry is
-         * reusable; if false, the entry will be returned as private
-         * to the original caller of {@link #pin}, and no other callers will
-         * ever be able to pin it
+         * @param isReusable whether the initialized entry is reusable; if
+         * false, the entry will be returned as private to the original caller
+         * of {@link #pin}, and no other callers will ever be able to pin it
          */
         public void initialize(
             Object value,
@@ -657,8 +648,8 @@ public class FarragoObjectCache
     /**
      * Interface for a cache entry; same as Map.Entry except that there is no
      * requirement on equals/hashCode. This interface is implemented by
-     * FarragoObjectCache; callers are shielded from direct access to
-     * the entry representation.
+     * FarragoObjectCache; callers are shielded from direct access to the entry
+     * representation.
      *
      * <p>Entry extends FarragoAllocation; its closeAllocation implementation
      * calls {@link #unpin}.
@@ -672,8 +663,8 @@ public class FarragoObjectCache
         public Object getKey();
 
         /**
-         * @return the value cached by this entry
-         * (as set by {@link UninitializedEntry#initialize}).
+         * @return the value cached by this entry (as set by {@link
+         * UninitializedEntry#initialize}).
          */
         public Object getValue();
     }

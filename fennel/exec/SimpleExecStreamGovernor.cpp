@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -152,7 +152,6 @@ void SimpleExecStreamGovernor::requestResources(ExecStreamGraph &graph)
     double totalSqrtDiffs = 0;
     bool allAccurate = true;
     for (uint i = 0; i < nStreams; i++) {
-
         ExecStreamResourceQuantity minQuantity, optQuantity;
         ExecStreamResourceSettingType optType;
         sortedStreams[i]->getResourceRequirements(
@@ -247,7 +246,7 @@ void SimpleExecStreamGovernor::requestResources(ExecStreamGraph &graph)
             distributeCachePages(
                 sortedStreams, resourceReqts, sqrtDiffOptMin, totalSqrtDiffs,
                 allocationAmount - totalMin, false);
-        totalAssigned = assigned; 
+        totalAssigned = assigned;
         FENNEL_TRACE(TRACE_FINE,
             assigned <<
             " cache pages assigned based on an optimum request for " <<
@@ -356,7 +355,7 @@ void SimpleExecStreamGovernor::returnResources(ExecStreamGraph &graph)
 
     resourceMap.erase(&graph);
 }
-    
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End SimpleExecStreamGovernor.cpp

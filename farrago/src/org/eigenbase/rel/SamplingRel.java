@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,29 +19,37 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 
+
 /**
- * SamplingRel represents the TABLESAMPLE BERNOULLI or SYSTEM keyword applied
- * to a table, view or subquery. 
+ * SamplingRel represents the TABLESAMPLE BERNOULLI or SYSTEM keyword applied to
+ * a table, view or subquery.
  *
  * @author Stephan Zuercher
  */
 public class SamplingRel
     extends SingleRel
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final RelOptSamplingParameters params;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public SamplingRel(
-        RelOptCluster cluster, RelNode child, RelOptSamplingParameters params)
+        RelOptCluster cluster,
+        RelNode child,
+        RelOptSamplingParameters params)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE), child);
 
         this.params = params;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelNode clone()
     {
@@ -67,9 +75,9 @@ public class SamplingRel
             new Object[] {
                 params.isBernoulli() ? "bernoulli" : "system",
                 params.getSamplingPercentage(),
-                params.isRepeatable()
-                    ? params.getRepeatableSeed()
-                    : "-"
+                params.isRepeatable() ? params.getRepeatableSeed() : "-"
             });
     }
 }
+
+// End SamplingRel.java

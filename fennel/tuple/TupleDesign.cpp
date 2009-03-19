@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -292,7 +292,7 @@ it has been computed are:
 
 <ul>
 
-<li>marshal:  given a TupleData instance, gather its discontiguous data values 
+<li>marshal:  given a TupleData instance, gather its discontiguous data values
 into a contiguous buffer for storage.  The TupleData instance is not modified.
 
 <li>unmarshal: given a contiguous buffer previously written by a marshal() call
@@ -340,7 +340,7 @@ uint32_t readStoredMachineIpAddress(FILE *file)
 \endverbatim
 
 The diagram below shows the effect of the marshal and unmarshal operations.
-The gray boxes are internal length-indicator fields described later on: 
+The gray boxes are internal length-indicator fields described later on:
 
 <hr>
 \image html TupleAccess.gif
@@ -542,7 +542,7 @@ The TuplePrinter class provides a simple means of rendering tuple values
 as text.
 
  */
-struct TupleDesign 
+struct TupleDesign
 {
     // NOTE:  dummy class for doxygen
 };

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,12 +45,12 @@ public abstract class FarragoReentrantStmt
     private FarragoSessionStmtContext rootStmtContext;
 
     //~ Constructors -----------------------------------------------------------
-    
+
     public FarragoReentrantStmt(FarragoSessionStmtContext rootStmtContext)
     {
         this.rootStmtContext = rootStmtContext;
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     protected FarragoSessionPreparingStmt getPreparingStmt()
@@ -62,7 +62,7 @@ public abstract class FarragoReentrantStmt
     {
         return stmtContext;
     }
-    
+
     protected FarragoSessionStmtContext getRootStmtContext()
     {
         return rootStmtContext;
@@ -103,7 +103,7 @@ public abstract class FarragoReentrantStmt
             preparingStmt.preImplement();
             executeImpl();
             rollback = false;
-        } catch (Throwable ex) {            
+        } catch (Throwable ex) {
             throw FarragoResource.instance().SessionReentrantStmtFailed.ex(ex);
         } finally {
             if (rollback && !reposTxnContext.isReadTxnInProgress()) {

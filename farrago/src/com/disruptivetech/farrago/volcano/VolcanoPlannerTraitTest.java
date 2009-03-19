@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -167,7 +167,8 @@ public class VolcanoPlannerTraitTest
             planner.changeTraits(
                 noneRel,
                 new RelTraitSet(
-                    CallingConvention.ITERATOR, ALT_TRAIT2));
+                    CallingConvention.ITERATOR,
+                    ALT_TRAIT2));
 
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
@@ -248,8 +249,9 @@ public class VolcanoPlannerTraitTest
     private static class AltTraitDef
         extends RelTraitDef
     {
-        private MultiMap<RelTrait, Pair<RelTrait, ConverterRule>> conversionMap =
-            new MultiMap<RelTrait, Pair<RelTrait, ConverterRule>>();
+        private MultiMap<RelTrait, Pair<RelTrait, ConverterRule>>
+            conversionMap =
+                new MultiMap<RelTrait, Pair<RelTrait, ConverterRule>>();
 
         public Class getTraitClass()
         {
@@ -270,7 +272,8 @@ public class VolcanoPlannerTraitTest
             RelTrait fromTrait = rel.getTraits().getTrait(this);
 
             if (conversionMap.containsKey(fromTrait)) {
-                for (Pair<RelTrait, ConverterRule> traitAndRule
+                for (
+                    Pair<RelTrait, ConverterRule> traitAndRule
                     : conversionMap.getMulti(fromTrait))
                 {
                     RelTrait trait = traitAndRule.left;
@@ -297,7 +300,8 @@ public class VolcanoPlannerTraitTest
             RelTrait toTrait)
         {
             if (conversionMap.containsKey(fromTrait)) {
-                for (Pair<RelTrait, ConverterRule> traitAndRule
+                for (
+                    Pair<RelTrait, ConverterRule> traitAndRule
                     : conversionMap.getMulti(fromTrait))
                 {
                     if (traitAndRule.left == toTrait) {

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -59,7 +59,7 @@ FtrsTableWriter::FtrsTableWriter(FtrsTableWriterParams const &params)
     assert(pClusteredIndexWriter);
 
     pTupleData = &(pClusteredIndexWriter->tupleData);
-    
+
     if (!updateProj.empty()) {
         TupleDescriptor tupleDesc =
             pClusteredIndexWriter->pWriter->getTupleDescriptor();
@@ -70,7 +70,7 @@ FtrsTableWriter::FtrsTableWriter(FtrsTableWriterParams const &params)
         updateTupleData.compute(tupleDesc);
         pTupleData = &updateTupleData;
     }
-    
+
     nAttrs = pClusteredIndexWriter->tupleData.size();
 
     logBuf.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
@@ -97,9 +97,9 @@ FtrsTableIndexWriter &FtrsTableWriter::createIndexWriter(
         }
     } else {
         // TODO:  tuple format?
-        
+
         // this is the clustered index:  its tuple will drive the other indexes
-        TupleDescriptor const &clusteredTupleDesc = 
+        TupleDescriptor const &clusteredTupleDesc =
             indexWriter.pWriter->getTupleDescriptor();
         tupleAccessor.compute(clusteredTupleDesc);
         indexWriter.tupleData.compute(clusteredTupleDesc);
@@ -169,7 +169,7 @@ inline void FtrsTableWriter::modifySomeIndexes(
     IndexWriterVector::iterator &first,
     IndexWriterVector::iterator last)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
         for (; first != last; ++first) {
             insertIntoIndex(*first);
@@ -237,7 +237,7 @@ void FtrsTableWriter::executeUpdate(bool reverse)
         // for reverse, overlay new values instead
         copyNewValues();
     }
-    
+
     modifyAllIndexes(ACTION_DELETE);
 
     if (reverse) {
@@ -247,7 +247,7 @@ void FtrsTableWriter::executeUpdate(bool reverse)
         // overlay new values to be inserted
         copyNewValues();
     }
-    
+
     try {
         modifyAllIndexes(ACTION_INSERT);
     } catch (...) {
@@ -270,7 +270,7 @@ void FtrsTableWriter::executeUpdate(bool reverse)
 
 inline void FtrsTableWriter::executeTuple(LogicalActionType actionType)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
     case ACTION_DELETE:
         modifyAllIndexes(actionType);
@@ -287,7 +287,7 @@ inline void FtrsTableWriter::executeTuple(LogicalActionType actionType)
 }
 
 RecordNum FtrsTableWriter::execute(
-    ExecStreamQuantum const &quantum, 
+    ExecStreamQuantum const &quantum,
     ExecStreamBufAccessor &bufAccessor,
     LogicalActionType actionType,
     SXMutex &actionMutex)
@@ -322,7 +322,7 @@ RecordNum FtrsTableWriter::execute(
         bufAccessor.consumeTuple();
         ++nTuples;
     } while (nTuples < quantum.nTuplesMax);
-        
+
     return nTuples;
 }
 
@@ -364,7 +364,7 @@ void FtrsTableWriter::undoLogicalAction(
     LogicalActionType actionType,
     ByteInputStream &logStream)
 {
-    switch(actionType) {
+    switch (actionType) {
     case ACTION_INSERT:
         redoLogicalAction(ACTION_DELETE,logStream);
         break;

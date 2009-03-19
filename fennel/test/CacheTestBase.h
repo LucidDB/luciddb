@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -55,7 +55,7 @@ protected:
      * Parameters for cache initialization.
      */
     CacheParams cacheParams;
-    
+
     /**
      * Cache instance being tested.
      */
@@ -70,7 +70,7 @@ protected:
      * Size of cache in memory pages.
      */
     uint nMemPages;
-    
+
     /**
      * Size of device in disk pages.
      */
@@ -80,7 +80,7 @@ protected:
      * Disk page size.
      */
     uint cbPageFull;
-    
+
     /**
      * Fixed ID to assign to data device.
      */
@@ -88,7 +88,7 @@ protected:
 
 public:
     explicit CacheTestBase();
-    
+
     Cache &getCache();
 
     virtual SharedCache newCache();
@@ -96,7 +96,7 @@ public:
     SharedRandomAccessDevice openDevice(
         std::string devName,DeviceMode openMode,uint nDevicePages,
         DeviceId deviceId);
-    
+
     virtual void openStorage(DeviceMode openMode);
 
     virtual void closeStorage();

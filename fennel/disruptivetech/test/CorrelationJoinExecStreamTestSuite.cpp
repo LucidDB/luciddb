@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,7 +50,7 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
     paramsMockLeft.outputTupleDesc.push_back(descAttrInt64);
     paramsMockLeft.pGenerator.reset(new RampExecStreamGenerator);
     paramsMockLeft.nRows = 5000;
-    
+
     ExecStreamEmbryo leftStreamEmbryo;
     leftStreamEmbryo.init(new MockProducerExecStream(),paramsMockLeft);
     leftStreamEmbryo.getStream()->setName("LeftProducerExecStream");
@@ -58,23 +58,23 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
     DynamicParamId dynamicParamId(1);
     MockProducerExecStreamParams paramsMockRight(paramsMockLeft);
     paramsMockRight.pGenerator.reset(new DynamicParamExecStreamGenerator(
-                                            dynamicParamId, 
+                                            dynamicParamId,
                                             pGraph->getDynamicParamManager()));
     paramsMockRight.nRows = 10;
-    
+
     ExecStreamEmbryo rightStreamEmbryo;
     rightStreamEmbryo.init(new MockProducerExecStream(),paramsMockRight);
     rightStreamEmbryo.getStream()->setName("RightProducerExecStream");
 
     CorrelationJoinExecStreamParams paramsJoin;
-    
+
     Correlation correlation(dynamicParamId, 0);
     paramsJoin.correlations.push_back(correlation);
-   
+
     ExecStreamEmbryo joinStreamEmbryo;
     joinStreamEmbryo.init(new CorrelationJoinExecStream(),paramsJoin);
     joinStreamEmbryo.getStream()->setName("CorrelationJoinExecStream");
-    
+
     SharedExecStream pOutputStream = prepareConfluenceGraph(
         leftStreamEmbryo,
         rightStreamEmbryo,
@@ -82,7 +82,9 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
 
     StairCaseExecStreamGenerator rampExpectedGenerator(
         1, paramsMockRight.nRows);
-    verifyOutput(*pOutputStream, 
-                 paramsMockLeft.nRows * paramsMockRight.nRows, 
+    verifyOutput(*pOutputStream,
+                 paramsMockLeft.nRows * paramsMockRight.nRows,
                  rampExpectedGenerator);
 }
+
+// End CorrelationJoinExecStreamTestSuite.cpp

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -65,11 +65,11 @@ class CalcExtStringTest : virtual public TestBase, public TraceSource
     int cmpTupNull(TupleDatum const & tup);
     void printOutput(TupleData const & tup,
                      Calculator const & calc);
-    void refLocalOutput(ostringstream& pg, 
+    void refLocalOutput(ostringstream& pg,
                         int count);
     static const char* truncErr;
     static const char* substrErr;
-    
+
 public:
     explicit CalcExtStringTest()
         : TraceSource(shared_from_this(),"CalcExtStringTest")
@@ -94,7 +94,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringTrim);
 
     }
-     
+
     virtual ~CalcExtStringTest()
     {
     }
@@ -147,11 +147,11 @@ CalcExtStringTest::printOutput(TupleData const & tup,
 
 // copy-by-reference locals into identical output register
 void
-CalcExtStringTest::refLocalOutput(ostringstream& pg, 
+CalcExtStringTest::refLocalOutput(ostringstream& pg,
                                   int count)
 {
     int i;
-    
+
     for (i = 0; i < count; i++) {
         pg << "REF O" << i << ", L" << i << ";" << endl;
     }
@@ -173,7 +173,7 @@ CalcExtStringTest::testCalcExtStringCatA2()
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
     pg << "C vc,5, vc,2, vc,2, ";  // varchar data[0-2]
-    pg << "c,5, ";                 // char data[3] 
+    pg << "c,5, ";                 // char data[3]
     pg << "vc,5, c,5;" << endl;    // nulls[4-5]
     pg << "V 0x" << stringToHex("AB");
     pg << ", 0x" << stringToHex("CD");
@@ -197,7 +197,7 @@ CalcExtStringTest::testCalcExtStringCatA2()
     pg << "CALL 'strCatA2(L4, C0);" << endl;
 
     // char common case: can't test fixed common case w/o
-    // using strCatAF3 as well to have length set 
+    // using strCatAF3 as well to have length set
     // correctly. tested elsewhere
     // char null case
     pg << "CALL 'strCatA2(L3, C5);" << endl;
@@ -207,7 +207,7 @@ CalcExtStringTest::testCalcExtStringCatA2()
     refLocalOutput(pg, 6);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -290,7 +290,7 @@ CalcExtStringTest::testCalcExtStringCatA3()
     refLocalOutput(pg, 9);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -378,7 +378,7 @@ CalcExtStringTest::testCalcExtStringCmpA()
     refLocalOutput(pg, 13);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -463,7 +463,7 @@ CalcExtStringTest::testCalcExtStringCmpOct()
     refLocalOutput(pg, 13);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -536,7 +536,7 @@ CalcExtStringTest::testCalcExtStringLenBitA()
     refLocalOutput(pg, 6);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -601,7 +601,7 @@ CalcExtStringTest::testCalcExtStringLenCharA()
     refLocalOutput(pg, 10);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -666,7 +666,7 @@ CalcExtStringTest::testCalcExtStringLenOctA()
     refLocalOutput(pg, 6);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -708,7 +708,7 @@ CalcExtStringTest::testCalcExtStringOverlayA4()
 
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
-    pg << "C vc,5, vc,2, c,5, c,2, s4, "; // data[0-4] 
+    pg << "C vc,5, vc,2, c,5, c,2, s4, "; // data[0-4]
     pg << "s4, ";                         // negative[5]
     pg << "vc,5, c,5, s4;" << endl;       // nulls[6-8]
     pg << "V 0x" << stringToHex("ABCD");
@@ -742,7 +742,7 @@ CalcExtStringTest::testCalcExtStringOverlayA4()
     refLocalOutput(pg, 12);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -842,7 +842,7 @@ CalcExtStringTest::testCalcExtStringOverlayA5()
     refLocalOutput(pg, 16);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -902,7 +902,7 @@ CalcExtStringTest::testCalcExtStringPosA()
 {
     ostringstream pg(""), outloc("");
     int i;
-    
+
     for (i = 0; i <= 7; i++) {
         outloc << "s4, ";
     }
@@ -925,7 +925,7 @@ CalcExtStringTest::testCalcExtStringPosA()
     // varchar common
     pg << "CALL 'strPosA(L0, C1, C0);" << endl;
     pg << "CALL 'strPosA(L1, C2, C0);" << endl;
-    // varchar null 
+    // varchar null
     pg << "CALL 'strPosA(L2, C1, C6);" << endl;
     pg << "CALL 'strPosA(L3, C6, C0);" << endl;
     // char common
@@ -938,7 +938,7 @@ CalcExtStringTest::testCalcExtStringPosA()
     refLocalOutput(pg, 8);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -980,7 +980,7 @@ CalcExtStringTest::testCalcExtStringSubStringA3()
     pg << "L " << outloc.str();
     pg << "C vc,5, c,5, s4, ";      // data[0-2]
     pg << "vc,5, c,5, s4;" << endl; // nulls[3-5]
-    
+
     pg << "V 0x" << stringToHex("ABCD");
     pg << ", 0x" << stringToHex("GHIJ ");
     pg << ", 2,,,;" << endl;
@@ -1005,7 +1005,7 @@ CalcExtStringTest::testCalcExtStringSubStringA3()
     refLocalOutput(pg, 8);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -1090,7 +1090,7 @@ CalcExtStringTest::testCalcExtStringSubStringA4()
     refLocalOutput(pg, 14);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -1193,7 +1193,7 @@ CalcExtStringTest::testCalcExtStringToANull()
     // make output available
     refLocalOutput(pg, 15);
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -1253,13 +1253,13 @@ CalcExtStringTest::testCalcExtStringToLower()
     pg << "CALL 'strToLowerA(L2, C1);" << endl;
     // char null case
     pg << "CALL 'strToLowerA(L3, C3);" << endl;
-    // right truncation not possible in fixed width, as both 
+    // right truncation not possible in fixed width, as both
     // strings must be same length by definition.
     // make output available
     refLocalOutput(pg, 5);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -1324,13 +1324,13 @@ CalcExtStringTest::testCalcExtStringToUpper()
     pg << "CALL 'strToUpperA(L2, C1);" << endl;
     // char null case
     pg << "CALL 'strToUpperA(L3, C3);" << endl;
-    // right truncation not possible in fixed width, as both 
+    // right truncation not possible in fixed width, as both
     // strings must be same length by definition.
     // make output available
     refLocalOutput(pg, 5);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -1408,15 +1408,15 @@ CalcExtStringTest::testCalcExtStringTrim()
     pg << "CALL 'strTrimA(L10, C1, C7, C3, C2);" << endl; // trim right
     pg << "CALL 'strTrimA(L11, C1, C7, C3, C3);" << endl; // trim none
     // all char null cases
-    pg << "CALL 'strTrimA(L12, C5, C7, C2, C2);" << endl;    
+    pg << "CALL 'strTrimA(L12, C5, C7, C2, C2);" << endl;
     pg << "CALL 'strTrimA(L13, C1, C5, C2, C2);" << endl;
     pg << "CALL 'strTrimA(L14, C1, C7, C6, C2);" << endl;
     pg << "CALL 'strTrimA(L15, C1, C7, C2, C6);" << endl;
     // mixed varchar/char common cases
     pg << "CALL 'strTrimA(L16, C0, C7, C2, C2);" << endl; // trim both
-    pg << "CALL 'strTrimA(L17, C1, C7, C2, C2);" << endl; 
-    pg << "CALL 'strTrimA(L18, C0, C8, C2, C2);" << endl; 
-    pg << "CALL 'strTrimA(L19, C1, C8, C2, C2);" << endl; 
+    pg << "CALL 'strTrimA(L17, C1, C7, C2, C2);" << endl;
+    pg << "CALL 'strTrimA(L18, C0, C8, C2, C2);" << endl;
+    pg << "CALL 'strTrimA(L19, C1, C8, C2, C2);" << endl;
     // mixed varchar/char null cases
     pg << "CALL 'strTrimA(L20, C4, C7, C2, C2);" << endl; // vc,vcN,c
     pg << "CALL 'strTrimA(L21, C0, C5, C2, C2);" << endl; // vc,vc,cN
@@ -1442,7 +1442,7 @@ CalcExtStringTest::testCalcExtStringTrim()
     refLocalOutput(pg, 30);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -1517,3 +1517,4 @@ CalcExtStringTest::testCalcExtStringTrim()
 
 FENNEL_UNIT_TEST_SUITE(CalcExtStringTest);
 
+// End CalcExtStringTest.cpp

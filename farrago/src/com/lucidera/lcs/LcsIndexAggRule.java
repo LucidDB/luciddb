@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,6 +28,7 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * A rule for directly aggregating off of an unclustered index scan.
  *
@@ -43,7 +44,7 @@ public class LcsIndexAggRule
      * The singletons
      *
      * <p>TODO: handle CalcRel after sort order has been cleaned up
-     */   
+     */
     public final static LcsIndexAggRule instanceRowScan =
         new LcsIndexAggRule(
             new RelOptRuleOperand(
@@ -51,7 +52,7 @@ public class LcsIndexAggRule
                 new RelOptRuleOperand(
                     LcsRowScanRel.class)),
             "row scan");
-    
+
     public final static LcsIndexAggRule instanceNormalizer =
         new LcsIndexAggRule(
             new RelOptRuleOperand(
@@ -190,4 +191,4 @@ public class LcsIndexAggRule
     }
 }
 
-// End LcsIndexOnlyAccessRule.java
+// End LcsIndexAggRule.java

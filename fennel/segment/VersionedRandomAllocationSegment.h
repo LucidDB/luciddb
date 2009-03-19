@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -107,7 +107,7 @@ typedef ModifiedPageEntryMap::const_iterator ModifiedPageEntryMapIter;
 static const PageOwnerId UNCOMMITTED_PAGE_OWNER_ID = PageOwnerId(1);
 
 /**
- * Deallocation-deferred pages are indicated as such by setting the high 
+ * Deallocation-deferred pages are indicated as such by setting the high
  * order bit in the pageOwnerId in the page entry, and storing the id
  * of the txn that deallocated the page in the remaining bits.  This mask
  * is used to set and turn off the high order bit.
@@ -198,7 +198,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      *
      * @param origAllocNodePageId pageId of the node in the permanent segment
      *
-     * @param [out] allocNodeSegment the temp segment if the node has been 
+     * @param [out] allocNodeSegment the temp segment if the node has been
      * modified; otherwise, the segment itself
      *
      * @return the pageId of the node in the temp segment if the page has been
@@ -265,7 +265,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
         ExtentNum extentNum);
 
     /**
-     * Allocates a new VersionedExtentAllocationNode if it hasn't been 
+     * Allocates a new VersionedExtentAllocationNode if it hasn't been
      * allocated yet.  If extent nodes preceding the one that needs to be
      * allocated haven't been allocated either, those are allocated as well.
      *
@@ -361,7 +361,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
 
     /**
      * Sanity checks the unallocated page count in a SegmentAllocationNode
-     * against the pages marked as unallocated in the corresponding 
+     * against the pages marked as unallocated in the corresponding
      * VersionedExtentAllocationNode.
      *
      * @param pageId pageId corresponding to the allocation nodes to be
@@ -446,7 +446,7 @@ class VersionedRandomAllocationSegment : public RandomAllocationSegmentBase
      * @param [in, out] deallocatedPageSet set of pageIds deallocated
      */
     void deallocateSinglePage(
-        PageId pageId, 
+        PageId pageId,
         std::hash_set<PageId> &deallocatedPageSet);
 
     /**

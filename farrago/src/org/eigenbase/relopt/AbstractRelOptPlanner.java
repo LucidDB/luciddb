@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,11 +25,11 @@ import java.util.*;
 import java.util.logging.*;
 import java.util.regex.*;
 
-import org.eigenbase.util.*;
-import org.eigenbase.resource.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -86,8 +86,8 @@ public abstract class AbstractRelOptPlanner
     }
 
     /**
-     * Checks to see whether cancellation has been requested, and
-     * if so, throws an exception.
+     * Checks to see whether cancellation has been requested, and if so, throws
+     * an exception.
      */
     public void checkCancel()
     {
@@ -95,7 +95,7 @@ public abstract class AbstractRelOptPlanner
             throw EigenbaseResource.instance().PreparationAborted.ex();
         }
     }
-    
+
     /**
      * Registers a rule's description.
      *
@@ -263,13 +263,14 @@ public abstract class AbstractRelOptPlanner
      * Fires a rule, taking care of tracing and listener notification.
      *
      * @param ruleCall description of rule call
+     *
      * @pre ruleCall.getRule().matches(ruleCall)
      */
     protected void fireRule(
         RelOptRuleCall ruleCall)
     {
         checkCancel();
-        
+
         assert ruleCall.getRule().matches(ruleCall);
         if (isRuleExcluded(ruleCall.getRule())) {
             if (tracer.isLoggable(Level.FINE)) {

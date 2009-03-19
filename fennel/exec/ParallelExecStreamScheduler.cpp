@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2008-2008 The Eigenbase Project
-// Copyright (C) 2008-2008 Disruptive Tech
-// Copyright (C) 2008-2008 LucidEra, Inc.
+// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2008-2009 SQLstream, Inc.
+// Copyright (C) 2008-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -86,7 +86,7 @@ void ParallelExecStreamScheduler::addGraph(
     SharedExecStreamGraph pGraphInit)
 {
     assert(!pGraph);
-    
+
     ExecStreamScheduler::addGraph(pGraphInit);
     pGraph = pGraphInit;
 }
@@ -95,7 +95,7 @@ void ParallelExecStreamScheduler::removeGraph(
     SharedExecStreamGraph pGraphInit)
 {
     assert(pGraph == pGraphInit);
-    
+
     pGraph.reset();
     ExecStreamScheduler::removeGraph(pGraphInit);
 }
@@ -122,7 +122,7 @@ void ParallelExecStreamScheduler::start()
         ExecStreamId streamId = *vertices.first;
         if (!graphImpl.getStreamFromVertex(streamId)) {
             // initially inhibit producers until first call to readStream
-            alterNeighborInhibition(streamId, +1);
+            alterNeighborInhibition(streamId, + 1);
             ExecStreamGraphImpl::InEdgeIterPair inEdges =
                 boost::in_edges(streamId, graphRep);
             for (; inEdges.first != inEdges.second; ++(inEdges.first)) {
@@ -193,7 +193,7 @@ void ParallelExecStreamScheduler::stop()
     // doesn't invoke pScheduler->stop() until *after* the exception
     // has been completely handled and is no longer referenced.
     pPendingExcn.reset();
-    
+
     completedQueue.clear();
     inhibitedQueue.clear();
 }
@@ -261,7 +261,7 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
     FENNEL_TRACE(
         TRACE_FINE,
         "entering readStream " << stream.getName());
-    
+
     ExecStreamId current = stream.getStreamId();
     ExecStreamGraphImpl &graphImpl =
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
@@ -296,7 +296,7 @@ ExecStreamBufAccessor &ParallelExecStreamScheduler::readStream(
     if (pPendingExcn) {
         pPendingExcn->throwSelf();
     }
-    
+
     return bufAccessor;
 }
 
@@ -307,7 +307,7 @@ void ParallelExecStreamScheduler::processCompletedTask(
     ExecStreamGraphImpl &graphImpl =
         dynamic_cast<ExecStreamGraphImpl&>(*pGraph);
     ExecStreamGraphImpl::GraphRep const &graphRep = graphImpl.getGraphRep();
-    
+
     streamStateMap[current].state = SS_SLEEPING;
     alterNeighborInhibition(current, -1);
 
@@ -369,8 +369,8 @@ void ParallelExecStreamScheduler::processCompletedTask(
 
 void ParallelExecStreamScheduler::signalSentinel(ExecStreamId sentinelId)
 {
-    alterNeighborInhibition(sentinelId, +1);
-    
+    alterNeighborInhibition(sentinelId, + 1);
+
     StrictMutexGuard mutexGuard(mutex);
     streamStateMap[sentinelId].state = SS_RUNNING;
     sentinelCondition.notify_all();
@@ -401,7 +401,7 @@ void ParallelExecStreamScheduler::tryExecuteTask(ExecStream &stream)
     ExecStreamQuantum quantum;
     ExecStreamResult rc = executeStream(stream, quantum);
     ParallelExecResult result(stream.getStreamId(), rc);
-    
+
     StrictMutexGuard mutexGuard(mutex);
     completedQueue.push_back(result);
     condition.notify_one();
@@ -426,7 +426,7 @@ bool ParallelExecStreamScheduler::addToQueue(ExecStreamId streamId)
     if (pPendingExcn) {
         return false;
     }
-    switch(streamStateMap[streamId].state) {
+    switch (streamStateMap[streamId].state) {
     case SS_SLEEPING:
         {
             ExecStreamGraphImpl &graphImpl =
@@ -441,7 +441,7 @@ bool ParallelExecStreamScheduler::addToQueue(ExecStreamId streamId)
                 inhibitedQueue.push_back(streamId);
             } else {
                 streamStateMap[streamId].state = SS_RUNNING;
-                alterNeighborInhibition(streamId, +1);
+                alterNeighborInhibition(streamId, + 1);
                 ParallelExecTask task(*this, pStream.get());
                 threadPool.submitTask(task);
             }

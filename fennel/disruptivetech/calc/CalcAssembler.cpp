@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -91,7 +91,7 @@ int CalcAssembler::assemble()
         // Done assembling - let's check the maximum PC (used in Jump instruction)
         checkPC(mMaxPC, mMaxPCLoc);
     }
-    catch (CalcAssemblerException& ex) 
+    catch (CalcAssemblerException& ex)
     {
         if (!ex.mLocValid)
             ex.setLocation(getLexer().getLocation());
@@ -103,7 +103,7 @@ int CalcAssembler::assemble()
     catch (std::exception& ex) {
         throw CalcAssemblerException(ex.what(), getLexer().getLocation());
     }
-        
+
     return res;
 }
 
@@ -116,26 +116,26 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
 }
 
 void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                  TupleDatum& tupleDatum,  
+                                  TupleDatum& tupleDatum,
                                   TupleAttributeDescriptor& desc, /* Unused */
                                   double value)
 {
-    switch (type) 
+    switch (type)
     {
     case STANDARD_TYPE_REAL:
 
-        *(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<float>(value);
 
         // Check for underflow where the value becomes 0
         // NOTE: Underflows that causes precision loss but does not become 0
         //       are ignored for now.
-        if ((value != 0) && 
+        if ((value != 0) &&
             (*(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) == 0))
             throw InvalidValueException<double>("bad numeric cast: underflow", type, value);
         break;
     case STANDARD_TYPE_DOUBLE:
-        *(reinterpret_cast<double *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<double *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<double>(value);
         break;
     default:
@@ -145,26 +145,26 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
 }
 
 void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                  TupleDatum& tupleDatum, 
+                                  TupleDatum& tupleDatum,
                                   TupleAttributeDescriptor& desc, /* Unused */
                                   uint64_t value)
 {
-    switch (type) 
+    switch (type)
     {
     case STANDARD_TYPE_INT_8:
         *(reinterpret_cast<int8_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<int8_t>(value);
         break;
     case STANDARD_TYPE_UINT_8:
-        *(reinterpret_cast<uint8_t *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<uint8_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<uint8_t>(value);
         break;
     case STANDARD_TYPE_INT_16:
-        *(reinterpret_cast<int16_t *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<int16_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
                 numeric_cast<int16_t>(value);
         break;
     case STANDARD_TYPE_UINT_16:
-        *(reinterpret_cast<uint16_t *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<uint16_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<uint16_t>(value);
         break;
     case STANDARD_TYPE_INT_32:
@@ -172,7 +172,7 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
             numeric_cast<int32_t>(value);
         break;
     case STANDARD_TYPE_UINT_32:
-        *(reinterpret_cast<uint32_t *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<uint32_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<uint32_t>(value);
         break;
     case STANDARD_TYPE_INT_64:
@@ -184,7 +184,7 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
             numeric_cast<int64_t>(value);
         break;
     case STANDARD_TYPE_UINT_64:
-        *(reinterpret_cast<uint64_t *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<uint64_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<uint64_t>(value);
             break;
     case STANDARD_TYPE_BOOL:
@@ -207,22 +207,22 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
 }
 
 void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                  TupleDatum& tupleDatum, 
+                                  TupleDatum& tupleDatum,
                                   TupleAttributeDescriptor& desc, /* Unused */
                                   int64_t value)
 {
-    switch (type) 
+    switch (type)
     {
     case STANDARD_TYPE_INT_8:
-        *(reinterpret_cast<int8_t *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<int8_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<int8_t>(value);
         break;
     case STANDARD_TYPE_INT_16:
-        *(reinterpret_cast<int16_t *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<int16_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<int16_t>(value);
         break;
     case STANDARD_TYPE_INT_32:
-        *(reinterpret_cast<int32_t *>(const_cast<PBuffer>(tupleDatum.pData))) = 
+        *(reinterpret_cast<int32_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<int32_t>(value);
         break;
     case STANDARD_TYPE_INT_64:
@@ -235,18 +235,18 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
 }
 
 void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                  TupleDatum& tupleDatum, 
+                                  TupleDatum& tupleDatum,
                                   TupleAttributeDescriptor& desc,
                                   string str)
 {
     ostringstream errorStr;
     char* ptr = reinterpret_cast<char*>(const_cast<PBuffer>(tupleDatum.pData));
-    switch (type) 
+    switch (type)
     {
     case STANDARD_TYPE_CHAR:
     case STANDARD_TYPE_BINARY:
         // Fixed length storage
-        // For fixed length arrays, cbData should be the same as cbStorage 
+        // For fixed length arrays, cbData should be the same as cbStorage
         assert(tupleDatum.cbData == desc.cbStorage);
 
         // Fixed width arrays should be padded to be the specifed width
@@ -263,7 +263,7 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
         // Copy the string
         memcpy(ptr, str.data(), str.length());
         break;
-        
+
     case STANDARD_TYPE_VARCHAR:
     case STANDARD_TYPE_VARBINARY:
         // Variable length storage
@@ -283,7 +283,7 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
         memcpy(ptr, str.data(), str.length());
         tupleDatum.cbData = str.length();
         break;
-        
+
     default:
         throw InvalidValueException<string>("Cannot assign string", type, str);
     }
@@ -308,7 +308,7 @@ void CalcAssembler::selectRegisterSet(RegisterReference::ERegisterSet setIndex)
     mCurrentRegSet = setIndex;
 }
 
-StandardTypeDescriptorOrdinal CalcAssembler::getRegisterType(RegisterReference::ERegisterSet setIndex, 
+StandardTypeDescriptorOrdinal CalcAssembler::getRegisterType(RegisterReference::ERegisterSet setIndex,
                                                              TRegisterIndex regIndex)
 {
     RegisterReference* regRef = getRegister(setIndex, regIndex);
@@ -316,7 +316,7 @@ StandardTypeDescriptorOrdinal CalcAssembler::getRegisterType(RegisterReference::
     return regRef->type();
 }
 
-RegisterReference* CalcAssembler::getRegister(RegisterReference::ERegisterSet setIndex, 
+RegisterReference* CalcAssembler::getRegister(RegisterReference::ERegisterSet setIndex,
                                               TRegisterIndex regIndex)
 {
     assert(setIndex < RegisterReference::ELastSet);
@@ -400,9 +400,9 @@ RegisterReference* CalcAssembler::createRegisterReference(RegisterReference::ERe
     case STANDARD_TYPE_VARBINARY:
         regRef = new RegisterRef<int8_t*>(setIndex, regIndex, regType);
         break;
-    default: 
+    default:
         ostringstream errorStr("");
-        errorStr << "Error creating register reference for " 
+        errorStr << "Error creating register reference for "
                  << RegisterReference::toString(setIndex, regIndex) << ": ";
         errorStr << "Unsupported register type " << regType;
         throw CalcAssemblerException(errorStr.str());
@@ -452,10 +452,10 @@ TupleData* CalcAssembler::createTupleData(TupleDescriptor const& tupleDesc, Fixe
 
     /* Link memory - Who will delete this????? */
     tupleAccessor.setCurrentTupleBuf(*buf, false);
-  
+
     /* Create Tuple Data - to be deleted by the calculator */
     TupleData* pTupleData = new TupleData(tupleDesc);
-  
+
     /* Link Tuple Data with Tuple Accessor memory */
     tupleAccessor.unmarshal(*pTupleData);
     return pTupleData;
@@ -471,7 +471,7 @@ void CalcAssembler::allocateTuples()
         assert(mRegisterTupleData[reg] == NULL);
         assert(mBuffers[reg] == NULL);
 
-        if (reg == RegisterReference::ELiteral || 
+        if (reg == RegisterReference::ELiteral ||
             reg == RegisterReference::EStatus ||
             reg == RegisterReference::ELocal)
         {
@@ -479,7 +479,7 @@ void CalcAssembler::allocateTuples()
             mRegisterTupleData[reg] = createTupleData(mRegisterSetDescriptor[reg],
                                                       &mBuffers[reg]);
         }
-     
+
         /* Do not need to create input/output tuple data */
     }
 }

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,14 +25,15 @@ package org.eigenbase.rel.rules;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * PullUpAggregateAboveUnionRule implements the rule for pulling {@link
- * AggregateRel}s beneath a {@link UnionRel} so two {@link AggregateRel}s
- * that are used to remove duplicates can be combined into a single
- * {@link AggregateRel}.
- * 
- * <p>This rule only handles cases where the {@link UnionRel}s still have
- * only two inputs.
+ * AggregateRel}s beneath a {@link UnionRel} so two {@link AggregateRel}s that
+ * are used to remove duplicates can be combined into a single {@link
+ * AggregateRel}.
+ *
+ * <p>This rule only handles cases where the {@link UnionRel}s still have only
+ * two inputs.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -40,7 +41,6 @@ import org.eigenbase.relopt.*;
 public class PullUpAggregateAboveUnionRule
     extends RelOptRule
 {
-    
     //~ Constructors -----------------------------------------------------------
 
     public PullUpAggregateAboveUnionRule()
@@ -60,19 +60,21 @@ public class PullUpAggregateAboveUnionRule
     public void onMatch(RelOptRuleCall call)
     {
         UnionRel unionRel = (UnionRel) call.rels[1];
+
         // If distincts haven't been removed yet, defer invoking this rule
         if (unionRel.isDistinct()) {
             return;
-        }  
-        
+        }
+
         AggregateRel topAggRel = (AggregateRel) call.rels[0];
         AggregateRel bottomAggRel;
+
         // We want to apply this rule on the pattern where the AggregateRel
         // is the second input into the UnionRel first.  Hence, that's why the
         // rule pattern matches on generic RelNodes rather than explicit
         // UnionRels.  By doing so, and firing this rule in a bottom-up order,
         // it allows us to only specify a single pattern for this rule.
-        RelNode[] unionInputs = new RelNode[2];
+        RelNode [] unionInputs = new RelNode[2];
         if (call.rels[3] instanceof AggregateRel) {
             bottomAggRel = (AggregateRel) call.rels[3];
             unionInputs[0] = call.rels[2];
@@ -84,27 +86,27 @@ public class PullUpAggregateAboveUnionRule
         } else {
             return;
         }
-        
+
         // Only pull up aggregates if they are there just to remove distincts
-        if (!topAggRel.getAggCallList().isEmpty() ||
-            !bottomAggRel.getAggCallList().isEmpty())
+        if (!topAggRel.getAggCallList().isEmpty()
+            || !bottomAggRel.getAggCallList().isEmpty())
         {
             return;
         }
-        
+
         UnionRel newUnionRel =
             new UnionRel(
                 unionRel.getCluster(),
                 unionInputs,
-                true);    
-        
+                true);
+
         AggregateRel newAggRel =
             new AggregateRel(
                 topAggRel.getCluster(),
                 newUnionRel,
                 topAggRel.getGroupCount(),
                 topAggRel.getAggCallList());
-        
+
         call.transformTo(newAggRel);
     }
 }

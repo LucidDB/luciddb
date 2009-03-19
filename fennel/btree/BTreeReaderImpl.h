@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -56,17 +56,17 @@ inline bool BTreeReader::adjustRootLockMode(LockMode &lockMode)
         // We already got the correct lock mode.
         return true;
     }
-    
+
     // Oops, we got the wrong lock mode.  Next time we'll get it right.
     rootLockMode = leafLockMode;
     lockMode = leafLockMode;
-    
+
     // We can try an upgrade.  If it succeeds, great.  Otherwise, it will fail
     // immediately so we can do it the hard way.
     if (pageLock.tryUpgrade()) {
         return true;
     }
-    
+
     // Shucks, have to unlock and retry original operation.
     pageLock.unlock();
     return false;
@@ -99,7 +99,7 @@ inline bool BTreeReader::searchForKeyTemplate(
     ReadMode readMode)
 {
     pSearchKey = &key;
-    
+
     // At each level, we may have to search right due to splits.  To bound
     // this search, we record the parent's notion of the PageId for the
     // right sibling of the child page.  Lehman-Yao uses keys instead, but
@@ -115,7 +115,7 @@ inline bool BTreeReader::searchForKeyTemplate(
         } else {
             pageLock.lockPage(pageId,lockMode);
         }
-        
+
         BTreeNode const *pNode = &(pageLock.getNodeForRead());
 
         // TODO:  pull this out of loop
@@ -123,7 +123,7 @@ inline bool BTreeReader::searchForKeyTemplate(
             // Retry with correct lock mode
             continue;
         }
-        
+
         bool found;
         uint iKeyBound = binarySearch(*pNode,dupSeek,leastUpper,found);
         if (foundKeyAndMovedRight && !found) {
@@ -184,7 +184,7 @@ inline bool BTreeReader::searchForKeyTemplate(
                 continue;
             }
         }
-                
+
         if (iKeyBound == pNode->nEntries) {
             assert(!found || (dupSeek == DUP_SEEK_END));
             // What we're searching for is bigger than everything on
@@ -209,12 +209,12 @@ inline bool BTreeReader::searchForKeyTemplate(
             }
         }
 
-        switch(pNode->height) {
+        switch (pNode->height) {
         case 0:
             // at leaf level
             iTupleOnLowestLevel = iKeyBound;
             return found;
-            
+
         case 1:
             if (readMode == READ_NONLEAF_ONLY) {
                 iTupleOnLowestLevel = iKeyBound;
@@ -227,14 +227,14 @@ inline bool BTreeReader::searchForKeyTemplate(
 
         // leave a trail of breadcrumbs
         pageStack.push_back(pageId);
-        
+
         // we'll continue search on child
         pageId = getChildForCurrent();
         foundKeyAndMovedRight = false;
 
         // Record the successor child as a terminator for rightward
         // searches once we descend to the child level, unless we're doing
-        // a partial key search or a DUP_SEEK_END search.  In those 
+        // a partial key search or a DUP_SEEK_END search.  In those
         // exception cases, when the last key value in a parent does not
         // exist in the leaf, we have to continue reading to the right.
         // That condition occurs if the last key was deleted from the leaf.

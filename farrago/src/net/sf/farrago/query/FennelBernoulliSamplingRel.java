@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,7 +19,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.query;
 
 import net.sf.farrago.catalog.*;
@@ -29,32 +28,39 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * FennelBernoulliSamplingRel implements Bernoulli-style table sampling using
- * a generic Fennel XO.
+ * FennelBernoulliSamplingRel implements Bernoulli-style table sampling using a
+ * generic Fennel XO.
  *
  * @author Stephan Zuercher
  */
 public class FennelBernoulliSamplingRel
     extends FennelSingleRel
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final RelOptSamplingParameters samplingParams;
 
+    //~ Constructors -----------------------------------------------------------
+
     public FennelBernoulliSamplingRel(
-        RelOptCluster cluster, 
-        RelNode child, 
+        RelOptCluster cluster,
+        RelNode child,
         RelOptSamplingParameters samplingParams)
     {
         super(cluster, child);
-        
+
         this.samplingParams = samplingParams;
-        
-        assert(samplingParams.isBernoulli());
+
+        assert (samplingParams.isBernoulli());
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelNode clone()
     {
-        FennelBernoulliSamplingRel clone = 
+        FennelBernoulliSamplingRel clone =
             new FennelBernoulliSamplingRel(
                 getCluster(),
                 getChild().clone(),
@@ -69,11 +75,11 @@ public class FennelBernoulliSamplingRel
         pw.explain(
             this,
             new String[] { "child", "rate", "repeatableSeed" },
-            new Object[] { 
+            new Object[] {
                 samplingParams.getSamplingPercentage(),
                 samplingParams.isRepeatable()
-                    ? samplingParams.getRepeatableSeed()
-                    : "-"
+                ? samplingParams.getRepeatableSeed()
+                : "-"
             });
     }
 
@@ -81,24 +87,24 @@ public class FennelBernoulliSamplingRel
     public double getRows()
     {
         double rows = RelMetadataQuery.getRowCount(getChild());
-        
-        return rows * (double)samplingParams.getSamplingPercentage();
+
+        return rows * (double) samplingParams.getSamplingPercentage();
     }
 
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FarragoRepos repos = FennelRelUtil.getRepos(this);
-        FemBernoulliSamplingStreamDef streamDef = 
+        FemBernoulliSamplingStreamDef streamDef =
             repos.newFemBernoulliSamplingStreamDef();
-        
+
         FemExecutionStreamDef childInput =
             implementor.visitFennelChild((FennelRel) getChild(), 0);
-        
+
         implementor.addDataFlowFromProducerToConsumer(
             childInput,
             streamDef);
-        
+
         streamDef.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
                 repos,
@@ -107,8 +113,9 @@ public class FennelBernoulliSamplingRel
         streamDef.setSamplingRate(samplingParams.getSamplingPercentage());
         streamDef.setRepeatable(samplingParams.isRepeatable());
         streamDef.setRepeatableSeed(samplingParams.getRepeatableSeed());
-        
+
         return streamDef;
     }
-
 }
+
+// End FennelBernoulliSamplingRel.java

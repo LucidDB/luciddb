@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -100,13 +100,13 @@ public class TableFunctionReturnTypeInference
             List<String> columnNames = new ArrayList<String>();
             RelDataType cursorType = opBinding.getCursorOperand(paramOrdinal);
             if (cursorType == null) {
-                isRowOp = true;               
+                isRowOp = true;
                 String parentCursorName =
                     opBinding.getColumnListParamInfo(
                         paramOrdinal,
                         fieldName,
                         columnNames);
-                assert(parentCursorName != null);
+                assert (parentCursorName != null);
                 paramOrdinal = -1;
                 iCursor = 0;
                 for (int i = 0; i < paramNames.size(); ++i) {
@@ -120,7 +120,7 @@ public class TableFunctionReturnTypeInference
                     }
                 }
                 cursorType = opBinding.getCursorOperand(paramOrdinal);
-                assert(cursorType != null);
+                assert (cursorType != null);
             }
 
             // And expand. Function output is always nullable... except system
@@ -163,7 +163,7 @@ public class TableFunctionReturnTypeInference
             expandedOutputTypes,
             expandedFieldNames);
     }
-    
+
     private void addOutputColumn(
         List<String> expandedFieldNames,
         List<RelDataType> expandedOutputTypes,
@@ -190,7 +190,8 @@ public class TableFunctionReturnTypeInference
         if (opBinding instanceof SqlCallBinding) {
             SqlCallBinding sqlCallBinding = (SqlCallBinding) opBinding;
             if (sqlCallBinding.getValidator().isSystemField(
-                cursorField)) {
+                    cursorField))
+            {
                 nullable = false;
             }
         }
@@ -198,6 +199,7 @@ public class TableFunctionReturnTypeInference
             opBinding.getTypeFactory().createTypeWithNullability(
                 cursorField.getType(),
                 nullable);
+
         // Make sure there are no duplicates in the output column names
         for (String fieldName : expandedFieldNames) {
             if (fieldName.equals(cursorField.getName())) {

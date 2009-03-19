@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,7 @@ FENNEL_BEGIN_NAMESPACE
 // REVIEW jvs 25-Aug-2006:  This class comment is misplaced.  And
 // the other classes could use some comments to explain their purpose
 // (or else a reference to a doc with structure diagrams).
-    
+
 /**
  * Class implementing the hash table used in Hybrid Hash Join.
  * The hash table class also has the ability to aggregate in place.
@@ -54,7 +54,7 @@ FENNEL_BEGIN_NAMESPACE
 class LhxHashNodeAccessor
 {
     // REVIEW jvs 25-Aug-2006: These should be doxygen comments.
-    
+
     /*
      * Offset to the field storing the pointer to the next node.
      */
@@ -78,7 +78,7 @@ public:
     // uint can silently be converted into a LhxHasNodeAccessor, which is
     // almost certainly not what one would ever want.  Same comment
     // applies everywhere.
-    
+
     LhxHashNodeAccessor();
 
     /**
@@ -110,16 +110,16 @@ public:
     /**
      * @return buffer to the payload in this node
      */
-    PBuffer getBuffer(); 
+    PBuffer getBuffer();
 
     /**
      * @return the next node
-     */    
+     */
     PBuffer getNext();
 
     /**
      * @return the location which stores the next node pointer
-     */    
+     */
     PBuffer getNextLocation();
 
     /**
@@ -136,14 +136,14 @@ public:
      * @param [in] nextNode pointer to the next node
      */
     void setNext(PBuffer inputNode, PBuffer nextNode);
-    
+
     /**
      * @return number of bytes required to store the next node pointer
      */
     uint getNextFieldSize();
 
     // REVIEW jvs 25-Aug-2006: offset to the...what?
-    
+
     /**
      * @return offset to the . This is equivalent to the total space
      * used for the variable length payload.
@@ -160,12 +160,12 @@ class LhxHashDataAccessor : public LhxHashNodeAccessor
      * Shape of the data tuple stored.
      */
     TupleDescriptor dataDescriptor;
-    
+
     /*
      * Temporary tuple for holding the unmarshaled data.
      */
     TupleData dataTuple;
-    
+
     /*
      * Accessor for the data tuple stored.
      */
@@ -201,7 +201,7 @@ public:
     // buffer size and disk size?  I think buffer size accounts
     // for the in-memory overhead of the hash table pointers,
     // but it would be nice if that were spelled out here.
-    
+
     /**
      * Get actual buffer size required to store all the fields.
      *
@@ -271,12 +271,12 @@ class LhxHashKeyAccessor : public LhxHashNodeAccessor
      * Shape of the data tuple stored.
      */
     TupleDescriptor keyDescriptor;
-    
+
     /*
      * Temporary tuple for holding the unmarshaled data.
      */
     TupleData keyTuple;
-    
+
     /*
      * Accessor for the data tuple stored.
      */
@@ -286,7 +286,7 @@ class LhxHashKeyAccessor : public LhxHashNodeAccessor
      * Projection containing the key cols
      */
     TupleProjection keyColsProj;
-    
+
     TupleDescriptor keyColsDesc;
 
     /*
@@ -457,7 +457,7 @@ class LhxHashBlockAccessor : public LhxHashNodeAccessor
      * Maximum number of slots per block.
      */
     uint numSlotsPerBlock;
-    
+
     /**
      * Free space in the current block
      */
@@ -469,7 +469,9 @@ class LhxHashBlockAccessor : public LhxHashNodeAccessor
     PBuffer endPtr;
 
 public:
-    LhxHashBlockAccessor() : LhxHashNodeAccessor() {};
+    LhxHashBlockAccessor() : LhxHashNodeAccessor()
+    {
+    }
 
     /**
      * Set the size of the block.
@@ -496,13 +498,19 @@ public:
     /**
      * @return the size of the block that a client can use.
      */
-    uint getUsableSize() { return blockUsableSize; }
+    uint getUsableSize()
+    {
+        return blockUsableSize;
+    }
 
     /**
      * @return the maximum number of slots per block.
      */
-    uint getSlotsPerBlock() { return numSlotsPerBlock; }
-    
+    uint getSlotsPerBlock()
+    {
+        return numSlotsPerBlock;
+    }
+
     /**
      * Allocate a buffer from this block.
      *
@@ -542,7 +550,7 @@ class LhxHashTable
      * Size of the hash table, i.e. number of slots
      */
     uint numSlots;
-    
+
     /**
      * Array of page buffers which have been allocated as index buffers.  These
      * contain arrays of pointers to tuple data stored in separate data
@@ -574,7 +582,7 @@ class LhxHashTable
      * in. A new block is linked to the head of the list.
      */
     PBuffer firstBlock;
-    
+
     PBuffer currentBlock;
 
     /**
@@ -597,7 +605,7 @@ class LhxHashTable
      * current number of scratch buffers in use.
      */
     uint  currentBlockCount;
-    
+
     /**
      * special hash table properties: hash table filtered null keys.
      */
@@ -829,7 +837,7 @@ public:
         RecordNum cndKeys,
         uint usablePageSize,
         BlockNum numBlocks);
-    
+
     /**
      * Find key node based on key cols.
      *
@@ -894,7 +902,7 @@ class LhxHashTableReader
      * Underlying hash table to read from.
      */
     LhxHashTable *hashTable;
-    
+
     // REVIEW jvs 25-Aug-2006: Can't this be derived from hashTable->isGroupBy?
     /**
      * Marks if this hash table is built for aggregation. Aggregating hash
@@ -941,7 +949,7 @@ class LhxHashTableReader
     /**
      * Fields in the outputTuple that will hold keyCols and Aggs,
      * and data columns. output tuple should have the same shape as
-     * outputTupleDesc used in the init() method. 
+     * outputTupleDesc used in the init() method.
      */
     TupleProjection keyColsAndAggsProj;
     TupleProjection dataProj;
@@ -969,7 +977,7 @@ class LhxHashTableReader
      * @return false if there is no more data with the same key.
      */
     bool advanceData();
-    
+
     /**
      * Produce the curKey + curData into outputTuple.
      */
@@ -979,7 +987,7 @@ class LhxHashTableReader
      * Helper function for bindKey() and bindUnMatched().
      */
     inline void bind(PBuffer key);
-    
+
 public:
     /**
      * Initialize the hash table reader.
@@ -1042,12 +1050,12 @@ inline PBuffer LhxHashNodeAccessor::getBuffer()
 }
 
 inline void LhxHashNodeAccessor::setCurrent(PBuffer nodePtrInit)
-{ 
+{
     nodePtr = nodePtrInit;
 }
 
 inline void LhxHashNodeAccessor::reset()
-{ 
+{
     setCurrent(NULL);
 }
 
@@ -1068,7 +1076,7 @@ inline PBuffer LhxHashNodeAccessor::getNext()
 
 inline PBuffer LhxHashNodeAccessor::getNextLocation()
 {
-    return nodePtr+nextNodeOffset;
+    return nodePtr + nextNodeOffset;
 }
 
 inline void LhxHashNodeAccessor::setNext(PBuffer nextNode)
@@ -1082,7 +1090,7 @@ inline void LhxHashNodeAccessor::setNext(PBuffer inputNode, PBuffer nextNode)
 }
 
 inline uint LhxHashNodeAccessor::getNextFieldSize()
-{ 
+{
     return sizeof(PBuffer);
 }
 
@@ -1092,13 +1100,13 @@ inline uint LhxHashNodeAccessor::getBufferOffset()
 }
 
 inline void LhxHashDataAccessor::setCurrent(PBuffer nodePtrInit, bool valid)
-{ 
+{
     LhxHashNodeAccessor::setCurrent(nodePtrInit);
     dataAccessor.setCurrentTupleBuf(getBuffer(), valid);
 }
 
 inline uint LhxHashDataAccessor::getAvgStorageSize()
-{   
+{
     // compute the average based on the min and max
     // TODO - use stats to compute a more realistic average
     return
@@ -1114,7 +1122,7 @@ inline uint LhxHashDataAccessor::getStorageSize(TupleData const &inputTuple)
 
 inline uint LhxHashDataAccessor::getDiskStorageSize(
     TupleData const &inputTuple)
-{   
+{
     return dataAccessor.getByteCount(inputTuple);
 }
 
@@ -1164,7 +1172,7 @@ inline void LhxHashKeyAccessor::setCurrent(PBuffer nodePtrInit, bool valid)
 }
 
 inline uint LhxHashKeyAccessor::getAvgStorageSize()
-{   
+{
     return
         ((keyAccessor.getMaxByteCount() + keyAccessor.getMinByteCount()) / 2) +
         getBufferOffset();
@@ -1176,7 +1184,7 @@ inline uint LhxHashKeyAccessor::getStorageSize(TupleData const &inputTuple)
 }
 
 inline uint LhxHashKeyAccessor::getDiskStorageSize(TupleData const &inputTuple)
-{   
+{
     return keyAccessor.getByteCount(inputTuple);
 }
 
@@ -1184,8 +1192,8 @@ inline PBuffer LhxHashKeyAccessor::getFirstData()
 {
     PBuffer returnPtr;
     memcpy(
-        (PBuffer)&returnPtr,
-        (PBuffer)(getCurrent()+firstDataOffset),
+        (PBuffer) &returnPtr,
+        (PBuffer) (getCurrent() + firstDataOffset),
         sizeof(PBuffer));
     return returnPtr;
 }
@@ -1200,8 +1208,8 @@ inline PBuffer *LhxHashKeyAccessor::getNextSlot()
 {
     PBuffer *returnPtr;
     memcpy(
-        (PBuffer)&returnPtr,
-        (PBuffer)(getCurrent()+nextSlotOffset),
+        (PBuffer) &returnPtr,
+        (PBuffer) (getCurrent() + nextSlotOffset),
         sizeof(PBuffer *));
     return returnPtr;
 }
@@ -1261,9 +1269,15 @@ inline uint LhxHashTable::slotsNeeded(RecordNum cndKeys)
     }
 }
 
-inline uint LhxHashTable::getNumSlots() const { return numSlots; }
+inline uint LhxHashTable::getNumSlots() const
+{
+    return numSlots;
+}
 
-inline PBuffer *LhxHashTable::getFirstSlot() const { return firstSlot; }
+inline PBuffer *LhxHashTable::getFirstSlot() const
+{
+    return firstSlot;
+}
 
 inline PBuffer *LhxHashTable::getNextSlot(PBuffer *curSlot)
 {
@@ -1271,9 +1285,15 @@ inline PBuffer *LhxHashTable::getNextSlot(PBuffer *curSlot)
     return hashKeyAccessor.getNextSlot();
 }
 
-inline bool LhxHashTable::isHashGroupBy() const { return isGroupBy; }
+inline bool LhxHashTable::isHashGroupBy() const
+{
+    return isGroupBy;
+}
 
-inline LhxHashTable *LhxHashTableReader::getHashTable() {return hashTable;}
+inline LhxHashTable *LhxHashTableReader::getHashTable()
+{
+    return hashTable;
+}
 
 inline void LhxHashTableReader::bind(PBuffer key)
 {

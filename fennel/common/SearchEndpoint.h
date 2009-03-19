@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,22 +50,22 @@ enum SearchEndpoint
      * Defines the beginning of an interval which has an open bound below.
      */
     SEARCH_OPEN_LOWER = '(',
-    
+
     /**
      * Defines the beginning of an interval which has a closed bound below.
      */
     SEARCH_CLOSED_LOWER = '[',
-    
+
     /**
      * Defines the end of an interval which has an open bound above.
      */
     SEARCH_OPEN_UPPER = ')',
-    
+
     /**
      * Defines the end of an interval which has a closed bound above.
      */
     SEARCH_CLOSED_UPPER = ']',
-    
+
     /**
      * Defines the end of an interval which is unbounded above.  The associated
      * key value should be all null.

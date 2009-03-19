@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,23 +35,23 @@ class IntrusiveDListNode
 {
     IntrusiveDListNode *pPrev;
     IntrusiveDListNode *pNext;
-    
+
 public:
     explicit IntrusiveDListNode()
     {
         pPrev = pNext = NULL;
     }
-    
+
     IntrusiveDListNode *getNext() const
     {
         return pNext;
     }
-    
+
     IntrusiveDListNode *getPrev() const
     {
         return pPrev;
     }
-    
+
     void detach()
     {
         if (pNext) {
@@ -62,7 +62,7 @@ public:
         }
         pPrev = pNext = NULL;
     }
-    
+
     void insertBefore(IntrusiveDListNode &newNext)
     {
         pNext = &newNext;
@@ -72,7 +72,7 @@ public:
             pPrev->pNext = this;
         }
     }
-    
+
     void insertAfter(IntrusiveDListNode &newPrev)
     {
         pPrev = &newPrev;
@@ -92,47 +92,47 @@ class IntrusiveDListIter
 {
     T *curr;
 public:
-    
+
     explicit IntrusiveDListIter()
     {
         curr = NULL;
     }
-    
+
     explicit IntrusiveDListIter(T *currInit)
     {
         curr = currInit;
     }
-    
+
     void restart(T *currInit)
     {
         curr = currInit;
     }
-    
+
     void operator ++ ()
     {
         curr = static_cast<T *>(curr->getNext());
     }
-    
+
     void operator -- ()
     {
         curr = static_cast<T *>(curr->getPrev());
     }
-    
+
     T *operator -> () const
     {
         return curr;
     }
-    
+
     operator T * () const
     {
         return curr;
     }
-    
+
     T & operator * () const
     {
         return *curr;
     }
-    
+
     bool operator == (IntrusiveDListIter const &other) const
     {
         return curr == other.curr;
@@ -180,14 +180,14 @@ protected:
     virtual ReturnT *getReturnElement(ElementT *element) const = 0;
 
 public:
-    
+
     explicit IntrusiveTwoDListIter()
     {
         curr = NULL;
         next = NULL;
         processingNext = false;
     }
-    
+
     explicit IntrusiveTwoDListIter(ElementT *list1, ElementT *list2)
     {
         if (list1 == NULL) {
@@ -199,7 +199,7 @@ public:
             processingNext = false;
         }
     }
-    
+
     virtual ~IntrusiveTwoDListIter()
     {
     }
@@ -212,22 +212,22 @@ public:
             processingNext = true;
         }
     }
-    
+
     ReturnT *operator -> () const
     {
         return getReturnElement(curr);
     }
-    
+
     operator ReturnT * () const
     {
         return getReturnElement(curr);
     }
-    
+
     ReturnT & operator * () const
     {
         return *(getReturnElement(curr));
     }
-    
+
     bool operator == (IntrusiveTwoDListIter const &other) const
     {
         return curr == other.curr;

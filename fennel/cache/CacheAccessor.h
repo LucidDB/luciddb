@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,7 @@ class CacheAccessor : public boost::noncopyable
 {
 public:
     virtual ~CacheAccessor();
-    
+
     /**
      * Locks a page into memory with the specified concurrency mode.  When the
      * page contents are no longer needed, the caller must invoke the
@@ -84,7 +84,7 @@ public:
      *
      *</ul>
      *
-     * 
+     *
      * @param blockId the BlockId of the page to be locked
      *
      * @param lockMode the desired concurrency mode
@@ -109,7 +109,7 @@ public:
         bool readIfUnmapped = true,
         MappedPageListener *pMappedPageListener = NULL,
         TxnId txnId = IMPLICIT_TXN_ID) = 0;
-    
+
     /**
      * Releases lock held on page.
      *
@@ -134,7 +134,7 @@ public:
      * @param blockId the BlockId of the page to be discarded
      */
     virtual void discardPage(BlockId blockId) = 0;
-    
+
     /**
      * Hints that a page should be prefetched in preparation for a
      * future lock request.

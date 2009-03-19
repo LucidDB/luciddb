@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,7 @@
 package net.sf.farrago.query;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -98,21 +99,20 @@ public class FarragoRelMetadataProvider
     {
         return getStatistics(rel, repos);
     }
-  
+
     private static RelStatSource getStatistics(RelNode rel, FarragoRepos repos)
     {
         RelOptTable table = rel.getTable();
         if (table == null) {
             return null;
-        }      
-        return
-            getStatistics(
-                table,
-                repos,
-                FennelRelUtil.getPreparingStmt(rel).getSession().
-                    getSessionLabelCreationTimestamp());
+        }
+        return getStatistics(
+            table,
+            repos,
+            FennelRelUtil.getPreparingStmt(rel).getSession()
+                         .getSessionLabelCreationTimestamp());
     }
-    
+
     private static RelStatSource getStatistics(
         RelOptTable table,
         FarragoRepos repos,
@@ -151,12 +151,12 @@ public class FarragoRelMetadataProvider
     }
 
     /**
-     * Retrieves the row count of a Farrago expression or null, using
-     * statistics stored in the catalog
-     * 
+     * Retrieves the row count of a Farrago expression or null, using statistics
+     * stored in the catalog
+     *
      * @param rel the relational expression
      * @param repos repository
-     * 
+     *
      * @return the row count, or null if stats aren't available
      */
     public static Double getRowCountStat(RelNode rel, FarragoRepos repos)
@@ -168,14 +168,14 @@ public class FarragoRelMetadataProvider
         }
         return result;
     }
-    
+
     /**
-     * Retrieves the row count of a relational table using statistics stored
-     * in the catalog
-     * 
+     * Retrieves the row count of a relational table using statistics stored in
+     * the catalog
+     *
      * @param table the relational table
      * @param repos repository
-     * 
+     *
      * @return the row count, or null if stats aren't available
      */
     public static Double getRowCountStat(
@@ -184,16 +184,16 @@ public class FarragoRelMetadataProvider
     {
         return getRowCountStat(table, repos, null);
     }
-    
+
     /**
-     * Retrieves the row count of a relational table for a specific label,
-     * using statistics stored in the catalog.
-     * 
+     * Retrieves the row count of a relational table for a specific label, using
+     * statistics stored in the catalog.
+     *
      * @param table the relational table
      * @param repos repository
      * @param labelTimestamp creation timestamp of the label that determines
      * which stats to retrieve; null if there is no label setting
-     * 
+     *
      * @return the row count, or null if stats aren't available
      */
     public static Double getRowCountStat(
@@ -208,7 +208,7 @@ public class FarragoRelMetadataProvider
         }
         return result;
     }
-    
+
     /**
      * Retrieves the row count of a Farrago expression or null
      *

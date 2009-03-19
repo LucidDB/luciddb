@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,7 @@ import java.nio.*;
 
 import java.util.*;
 
-import org.eigenbase.rel.AggregateCall;
+import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -115,6 +115,7 @@ public class RexBuilder
      *
      * @param expr Expression yielding a record
      * @param fieldName Name of field in record
+     *
      * @return Expression accessing a given named field
      */
     public RexNode makeFieldAccess(
@@ -137,6 +138,7 @@ public class RexBuilder
      *
      * @param expr Expression yielding a record
      * @param i Ordinal of field
+     *
      * @return Expression accessing given field
      */
     public RexNode makeFieldAccess(
@@ -158,6 +160,7 @@ public class RexBuilder
      *
      * @param expr Expression yielding a record
      * @param field Field
+     *
      * @return Expression accessing given field
      */
     private RexNode makeFieldAccessInternal(
@@ -261,8 +264,7 @@ public class RexBuilder
     }
 
     /**
-     * Creates a reference to an aggregate call, checking for repeated
-     * calls.
+     * Creates a reference to an aggregate call, checking for repeated calls.
      */
     public RexNode addAggCall(
         AggregateCall aggCall,
@@ -308,34 +310,22 @@ public class RexBuilder
                 physical);
         final RexOver over = new RexOver(type, operator, exprs, window);
         RexNode result = over;
-//      This should be correct but need time to go over test results. Also
-//      want to look at combing with section below.
-//        if (nullWhenCountZero) {
-//            final RelDataType bigintType =
-//                getTypeFactory().createSqlType(
-//                    SqlTypeName.BIGINT);
-//            result =
-//                makeCall(
-//                    SqlStdOperatorTable.caseOperator,
-//                    makeCall(
-//                        SqlStdOperatorTable.greaterThanOperator,
-//                        new RexOver(
-//                            bigintType,
-//                            SqlStdOperatorTable.countOperator,
-//                            exprs,
-//                            window),
-//                        makeLiteral( // todo: read bound
-//                            new BigDecimal(0),
-//                            bigintType,
-//                            SqlTypeName.DECIMAL)),
-//                    over,
-//                    constantNull);
-//        }
+
+        // This should be correct but need time to go over test results.
+        // Also want to look at combing with section below. if
+        // (nullWhenCountZero) { final RelDataType bigintType =
+        // getTypeFactory().createSqlType( SqlTypeName.BIGINT); result =
+        // makeCall( SqlStdOperatorTable.caseOperator, makeCall(
+        // SqlStdOperatorTable.greaterThanOperator, new RexOver( bigintType,
+        // SqlStdOperatorTable.countOperator, exprs, window), makeLiteral( //
+        // todo: read bound new BigDecimal(0), bigintType,
+        // SqlTypeName.DECIMAL)), over, constantNull); }
         if (!allowPartial) {
             Util.permAssert(physical, "DISALLOW PARTIAL over RANGE");
             final RelDataType bigintType =
                 getTypeFactory().createSqlType(
                     SqlTypeName.BIGINT);
+            // todo: read bound
             result =
                 makeCall(
                     SqlStdOperatorTable.caseOperator,
@@ -346,7 +336,7 @@ public class RexBuilder
                             SqlStdOperatorTable.countOperator,
                             RexNode.EMPTY_ARRAY,
                             window),
-                        makeLiteral( // todo: read bound
+                        makeLiteral(
                             new BigDecimal(2),
                             bigintType,
                             SqlTypeName.DECIMAL)),
@@ -369,6 +359,7 @@ public class RexBuilder
      *
      * @param type Type of variable
      * @param name Name of variable
+     *
      * @return Correlation variable
      */
     public RexNode makeCorrel(
@@ -383,6 +374,7 @@ public class RexBuilder
      *
      * @param type Type to be instantiated
      * @param exprs Arguments to NEW operator
+     *
      * @return Expression invoking NEW operator
      */
     public RexNode makeNewInvocation(
@@ -400,6 +392,7 @@ public class RexBuilder
      *
      * @param type Type to cast to
      * @param exp Expression being cast
+     *
      * @return Call to CAST operator
      */
     public RexNode makeCast(
@@ -414,6 +407,7 @@ public class RexBuilder
      *
      * @param type Type to cast to
      * @param exp Expression being cast
+     *
      * @return Call to CAST operator
      */
     public RexNode makeAbstractCast(
@@ -514,6 +508,7 @@ public class RexBuilder
      *
      * @param type Type of field
      * @param i Ordinal of field
+     *
      * @return Reference to field
      */
     public RexNode makeInputRef(
@@ -546,13 +541,14 @@ public class RexBuilder
 
     /**
      * Internal method to create a call to a literal. Code outside this package
-     * should call one of the type-specific methods such as
-     * {@link #makeDateLiteral(Calendar)}, {@link #makeLiteral(boolean)},
-     * {@link #makeLiteral(String)}.
+     * should call one of the type-specific methods such as {@link
+     * #makeDateLiteral(Calendar)}, {@link #makeLiteral(boolean)}, {@link
+     * #makeLiteral(String)}.
      *
      * @param o Value of literal, must be appropriate for the type
      * @param type Type of literal
      * @param typeName SQL type of literal
+     *
      * @return Literal
      */
     protected RexLiteral makeLiteral(
@@ -683,10 +679,11 @@ public class RexBuilder
     }
 
     /**
-     * Creates a character string literal with type CHAR and default
-     * charset and collation.
+     * Creates a character string literal with type CHAR and default charset and
+     * collation.
      *
      * @param s String value
+     *
      * @return Character string literal
      */
     protected RexLiteral makePreciseStringLiteral(String s)
@@ -798,6 +795,7 @@ public class RexBuilder
      *
      * @param type Type of dynamic parameter
      * @param index Index of dynamic parameter
+     *
      * @return Expression referencing dynamic parameter
      */
     public RexDynamicParam makeDynamicParam(
@@ -831,11 +829,12 @@ public class RexBuilder
      * Creates a literal whose value is NULL, with a particular type.
      *
      * <p>The typing is necessary because RexNodes are strictly typed. For
-     * example, in the Rex world the <code>NULL</code> parameter to
-     * <code>SUBSTRING(NULL FROM 2 FOR 4)</code> must have a valid VARCHAR
-     * type so that the result type can be determined.
+     * example, in the Rex world the <code>NULL</code> parameter to <code>
+     * SUBSTRING(NULL FROM 2 FOR 4)</code> must have a valid VARCHAR type so
+     * that the result type can be determined.
      *
      * @param typeName Type to cast NULL to
+     *
      * @return NULL literal of given type
      */
     public RexNode makeNullLiteral(SqlTypeName typeName)
@@ -850,14 +849,15 @@ public class RexBuilder
     }
 
     /**
-     * Creates a copy of an expression, which may have been created using
-     * a different RexBuilder and/or {@link RelDataTypeFactory}, using
-     * this RexBuilder.
-     *
-     * @see RelDataTypeFactory#copyType(RelDataType)
+     * Creates a copy of an expression, which may have been created using a
+     * different RexBuilder and/or {@link RelDataTypeFactory}, using this
+     * RexBuilder.
      *
      * @param expr Expression
+     *
      * @return Copy of expression
+     *
+     * @see RelDataTypeFactory#copyType(RelDataType)
      */
     public RexNode copy(RexNode expr)
     {

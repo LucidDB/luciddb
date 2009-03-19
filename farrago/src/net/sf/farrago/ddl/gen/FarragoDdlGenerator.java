@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2005-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2008 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,9 +34,9 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import org.eigenbase.jmi.*;
 
 
 /**
@@ -48,10 +48,14 @@ import org.eigenbase.jmi.*;
 public class FarragoDdlGenerator
     extends DdlGenerator
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final List<String> NON_REPLACEABLE_TYPE_NAMES =
         Arrays.asList(
             "INDEX",
             "CLUSTERED INDEX");
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final JmiModelView modelView;
 
@@ -60,11 +64,10 @@ public class FarragoDdlGenerator
     /**
      * Creates a DDL generator.
      *
-     * <p>The <code>modelView</code> parameter can be null if you are
-     * generating DDL for a single object. A model view is required if calling
-     * {@link DdlGenerator#gatherElements} or
-     * {@link #getExportText(java.util.List, boolean)} with
-     * <code>sort=true</code>.
+     * <p>The <code>modelView</code> parameter can be null if you are generating
+     * DDL for a single object. A model view is required if calling {@link
+     * DdlGenerator#gatherElements} or {@link #getExportText(java.util.List,
+     * boolean)} with <code>sort=true</code>.
      *
      * @param modelView Model graph
      */
@@ -94,8 +97,7 @@ public class FarragoDdlGenerator
         return (Collection<T>) refClass.refAllOfType();
     }
 
-    public String getExportText(
-        List<CwmModelElement> exportList, boolean sort)
+    public String getExportText(List<CwmModelElement> exportList, boolean sort)
     {
         if (sort) {
             assert modelView != null;
@@ -133,6 +135,7 @@ public class FarragoDdlGenerator
                 list.add(element);
             }
         }
+
         // Include all dependencies. We don't want to generate DDL for them,
         // but they are necessary to ensure that views are created in the
         // right order, among other things.
@@ -141,6 +144,7 @@ public class FarragoDdlGenerator
         for (CwmDependency dependency : allOfClass(CwmDependency.class)) {
             list.add(dependency);
         }
+
         // Likewise operations.
         list.addAll(allOfClass(CwmOperation.class));
 
@@ -269,6 +273,7 @@ public class FarragoDdlGenerator
         name(sb, null, wrapper.getName());
         stmt.addStmt(sb.toString());
         sb.setLength(0);
+
         // "LIBRARY" clause is optional
         if (wrapper.getLibraryFile() != null) {
             sb.append(" LIBRARY ");
@@ -302,9 +307,9 @@ public class FarragoDdlGenerator
         final ProcedureType routineType = routine.getType();
         final CwmClassifier owner = routine.getSpecification().getOwner();
         boolean method =
-            routine.getSpecification() != null
-                && owner
-                instanceof FemUserDefinedType;
+            (routine.getSpecification() != null)
+            && (owner
+                instanceof FemUserDefinedType);
         if (method) {
             createHeader(sb, "SPECIFIC METHOD", stmt);
         } else if (routineType.equals(ProcedureTypeEnum.FUNCTION)) {
@@ -345,9 +350,9 @@ public class FarragoDdlGenerator
     {
         final ProcedureType routineType = routine.getType();
         boolean method =
-            routine.getSpecification() != null
-                && routine.getSpecification().getOwner()
-                instanceof FemUserDefinedType;
+            (routine.getSpecification() != null)
+            && (routine.getSpecification().getOwner()
+                instanceof FemUserDefinedType);
 
         sb.append("(");
         sb.append(NL);
@@ -355,7 +360,7 @@ public class FarragoDdlGenerator
         int paramCount = 0;
         for (CwmParameter parameter : routine.getParameter()) {
             if (parameter.getKind().equals(
-                ParameterDirectionKindEnum.PDK_RETURN))
+                    ParameterDirectionKindEnum.PDK_RETURN))
             {
                 assert !routineType.equals(ProcedureTypeEnum.PROCEDURE);
                 returns.add(parameter);
@@ -451,9 +456,14 @@ public class FarragoDdlGenerator
 
         sb.append(" ");
         appendType(
-            sb, parameter.getType(), parameter.getPrecision(),
-            parameter.getScale(), parameter.getLength(),
-            null, parameter.getDefaultValue(), qualifyType);
+            sb,
+            parameter.getType(),
+            parameter.getPrecision(),
+            parameter.getScale(),
+            parameter.getLength(),
+            null,
+            parameter.getDefaultValue(),
+            qualifyType);
     }
 
     private void appendType(
@@ -466,7 +476,7 @@ public class FarragoDdlGenerator
         CwmExpression defaultValue,
         boolean qualifyType)
     {
-        if (type instanceof FemSqlobjectType && qualifyType) {
+        if ((type instanceof FemSqlobjectType) && qualifyType) {
             // Workaround FRG-297; remove qualifyType parameter when fixed
             sb.append(type.getNamespace().getName());
             sb.append('.');
@@ -487,37 +497,45 @@ public class FarragoDdlGenerator
 
         if (nullable != null) {
             if (NullableTypeEnum.COLUMN_NO_NULLS.toString().equals(
-                nullable.toString())) {
+                    nullable.toString()))
+            {
                 sb.append(" NOT NULL");
             }
         }
     }
-    
+
     /**
      * Format the core elements of a column's type (type name, precision, scale,
      * length) into SQL format.
-     * 
+     *
      * @param col CwmColumn object we want type info for
+     *
      * @return String containing formatted type info
      */
     public static String formatTypeInfo(CwmColumn col)
     {
         StringBuilder sb = new StringBuilder();
-        formatTypeInfo(sb, col.getType(), col.getPrecision(), col.getScale(), col.getLength());
+        formatTypeInfo(
+            sb,
+            col.getType(),
+            col.getPrecision(),
+            col.getScale(),
+            col.getLength());
         return sb.toString();
     }
 
     /**
      * Format the core elements of a column's type (type name, precision, scale,
-     * length) into SQL format.<p>
-     * 
-     * Note that this was refactored out of {@link #appendType(StringBuilder, CwmClassifier, Integer, Integer, Integer, NullableType, CwmExpression, boolean)}
-     * to allow separate access.
-     * 
+     * length) into SQL format.
+     *
+     * <p>Note that this was refactored out of {@link #appendType(StringBuilder,
+     * CwmClassifier, Integer, Integer, Integer, NullableType, CwmExpression,
+     * boolean)} to allow separate access.
+     *
      * @param sb StringBuilder to hold the formatted type information
      * @param type CwmClassifier object representing the column type
      * @param precision Integer specifying the column's precision
-     * @param scale Integer specifying the column's scale 
+     * @param scale Integer specifying the column's scale
      * @param length Integer specifying the column's length
      */
     public static void formatTypeInfo(
@@ -528,7 +546,7 @@ public class FarragoDdlGenerator
         Integer length)
     {
         sb.append(type.getName());
-        
+
         SqlTypeName stn = getSqlTypeName(type);
         if ((precision != null) && stn.allowsPrec()) {
             sb.append("(").append(precision);
@@ -548,6 +566,7 @@ public class FarragoDdlGenerator
      *
      * @param b Condition
      * @param s Flag string
+     *
      * @return string containing s or not s
      */
     protected static String maybeNot(boolean b, String s)
@@ -575,7 +594,8 @@ public class FarragoDdlGenerator
     }
 
     private void addOperations(
-        StringBuilder sb, List<CwmOperation> operations)
+        StringBuilder sb,
+        List<CwmOperation> operations)
     {
         for (CwmOperation operation : operations) {
             sb.append(NL);
@@ -600,8 +620,14 @@ public class FarragoDdlGenerator
         sb.append(" AS ");
 
         appendType(
-            sb, type.getType(), type.getPrecision(), type.getScale(),
-            type.getLength(), null, null, true);
+            sb,
+            type.getType(),
+            type.getPrecision(),
+            type.getScale(),
+            type.getLength(),
+            null,
+            null,
+            true);
 
         sb.append(NL);
         sb.append(maybeNot(type.isFinal(), "FINAL"));
@@ -621,15 +647,17 @@ public class FarragoDdlGenerator
         name(sb, null, server.getName());
         stmt.addStmt(sb.toString());
         sb.setLength(0);
+
         // "TYPE" clause is optional
         final String type = server.getType();
-        if (type != null && !type.equals("UNKNOWN")) {
-	        sb.append(" TYPE ");
-	        sb.append(literal(type));
+        if ((type != null) && !type.equals("UNKNOWN")) {
+            sb.append(" TYPE ");
+            sb.append(literal(type));
         }
+
         // "VERSION" clause is optional
         final String version = server.getVersion();
-        if (version != null && !version.equals("UNKNOWN")) {
+        if ((version != null) && !version.equals("UNKNOWN")) {
             sb.append(" VERSION ");
             sb.append(literal(version));
         }
@@ -705,7 +733,8 @@ public class FarragoDdlGenerator
     {
         if (index.isClustered()
             || index.getName().startsWith("SYS$CONSTRAINT_INDEX$")
-            || index.getName().startsWith("SYS$DELETION_INDEX")) {
+            || index.getName().startsWith("SYS$DELETION_INDEX"))
+        {
             stmt.setTopLevel(false);
         }
         StringBuilder sb = new StringBuilder();
@@ -771,7 +800,7 @@ public class FarragoDdlGenerator
         List<String> imposedPrimaryKey)
     {
         // TODO jvs 8-Jul-2007:  UNIQUE constraints
-        
+
         boolean isLast = false;
         List<String> pk = imposedPrimaryKey;
 
@@ -811,8 +840,14 @@ public class FarragoDdlGenerator
                     isNullable = col.getIsNullable();
                 }
                 appendType(
-                    sb, col.getType(), col.getPrecision(), col.getScale(),
-                    col.getLength(), isNullable, e, true);
+                    sb,
+                    col.getType(),
+                    col.getPrecision(),
+                    col.getScale(),
+                    col.getLength(),
+                    isNullable,
+                    e,
+                    true);
 
                 // is this a stored column?
                 if (col instanceof FemElementWithStorageOptions) {
@@ -851,10 +886,10 @@ public class FarragoDdlGenerator
             return;
         }
 
-        List<FemStorageOption> sortedOptions = 
+        List<FemStorageOption> sortedOptions =
             new ArrayList<FemStorageOption>(options);
         Collections.sort(sortedOptions, new FemStorageOptionNameComparator());
-        
+
         if (indent == 1) {
             sb.append(NL);
         }
@@ -929,18 +964,20 @@ public class FarragoDdlGenerator
             stmt.addStmt(sb.toString());
         }
     }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     protected static class FemStorageOptionNameComparator
         implements Comparator<FemStorageOption>
     {
         public int compare(FemStorageOption o1, FemStorageOption o2)
         {
             int c = o1.getName().compareTo(o2.getName());
-            
+
             if (c != 0) {
                 return c;
             }
-            
+
             return o1.getValue().compareTo(o2.getValue());
         }
     }

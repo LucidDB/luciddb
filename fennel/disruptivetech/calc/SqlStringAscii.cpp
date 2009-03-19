@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -73,14 +73,14 @@ SqlStrCmp_Ascii_Fix(char const * const str1,
 
     char const * start = str1;
     char const * end = str1 + str1LenBytes;
-    
+
     if (end != start) {
         end--;
         while (end != start && *end == trimchar) end--;
         if (end != start || *end != trimchar) end++;
     }
     int str1TrimLenBytes = end - start;
-    
+
     start = str2;
     end = str2 + str2LenBytes;
 
@@ -90,7 +90,7 @@ SqlStrCmp_Ascii_Fix(char const * const str1,
         if (end != start || *end != trimchar) end++;
     }
     int str2TrimLenBytes = end - start;
-    
+
     if (str1TrimLenBytes > str2TrimLenBytes) {
         return 1;
     } else if (str1TrimLenBytes < str2TrimLenBytes) {
@@ -98,7 +98,7 @@ SqlStrCmp_Ascii_Fix(char const * const str1,
     }
 
     assert(str1TrimLenBytes == str2TrimLenBytes);
-    
+
     // comparison must be unsigned to work for > 128
     unsigned char const *s1 = reinterpret_cast<unsigned char const *>(str1);
     unsigned char const *s2 = reinterpret_cast<unsigned char const *>(str2);
@@ -128,7 +128,7 @@ SqlStrCmp_Ascii_Var(char const * const str1,
     }
 
     assert(str1LenBytes == str2LenBytes);
-    
+
     // comparison must be unsigned to work for > 128
     unsigned char const *s1 = reinterpret_cast<unsigned char const *>(str1);
     unsigned char const *s2 = reinterpret_cast<unsigned char const *>(str2);
@@ -183,13 +183,13 @@ SqlStrOverlay_Ascii(char* dest,
     if (lengthChar < 0 || startChar < 1) {
         // Overlay is defined in terms of substring. These conditions
         // would, I believe, generate a substring error. Also
-        // another "reference" sql database gets angry under these 
+        // another "reference" sql database gets angry under these
         // conditions. Therefore, per:
         // SQL99 Part 2 Section 6.18 General Rule 3.d generate a
-        // SQL99 Part 2 Section 22.1 22-011 "data exception substring error". 
+        // SQL99 Part 2 Section 22.1 22-011 "data exception substring error".
         throw "22011";
     }
-    
+
     int leftLenBytes = startChar - 1;         // 1-index to 0-index
     if (leftLenBytes > strLenBytes) leftLenBytes = strLenBytes;
 
@@ -200,7 +200,7 @@ SqlStrOverlay_Ascii(char* dest,
     assert(leftLenBytes >= 0);
     assert(rightLenBytes >= 0);
     assert(rightP >= str);
-    
+
     if (leftLenBytes + rightLenBytes + overLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
         throw "22001";
@@ -214,7 +214,7 @@ SqlStrOverlay_Ascii(char* dest,
     dp += overLenBytes;
     memcpy(dp, rightP, rightLenBytes);
     dp += rightLenBytes;
-    
+
     return dp - dest;
 }
 
@@ -225,7 +225,7 @@ SqlStrPos_Ascii(char const * const str,
                 int findLenBytes)
 {
     // SQL99 Part 2 Section 6.17 General Rule 2.a.
-    if (!findLenBytes) return 1;             
+    if (!findLenBytes) return 1;
     // SQL99 Part 2 Section 6.17 General Rule 2.c.
     if (findLenBytes > strLenBytes) return 0;
 
@@ -278,11 +278,11 @@ SqlStrSubStr_Ascii(char const ** dest,
 
     if (subStartChar > strLenBytes || e < 1) {
         return 0;
-    } 
+    }
 
     int s1 = 1;
     if (subStartChar > s1) s1 = subStartChar;
-        
+
     int e1 = strLenBytes + 1;
     if (e < e1) e1 = e;
 
@@ -294,11 +294,11 @@ SqlStrSubStr_Ascii(char const ** dest,
         throw "22001";
     }
     if (l1 < 0) {
-        // Expected behavior not clear. 
+        // Expected behavior not clear.
         // SQL99 Part 2 Section 22.1 22-011 "data exception substring error".
         throw "22011";
     }
-    
+
     // - 1 converts from 1-indexed to 0-indexed
     *dest = str + s1 - 1;
     return l1;
@@ -346,8 +346,8 @@ SqlStrToUpper_Ascii(char* dest,
     return srcLenBytes;
 }
 
-int 
-SqlStrTrim_Ascii(char* dest, 
+int
+SqlStrTrim_Ascii(char* dest,
                  int destStorageBytes,
                  char const * const str,
                  int strLenBytes,
@@ -358,7 +358,7 @@ SqlStrTrim_Ascii(char* dest,
     char const * start = str;
     char const * end = str + strLenBytes;
     int newLenBytes;
-    
+
     // If many pad characters are expected, consider using memrchr()
     if (trimLeft) {
         while (start != end && *start == trimchar) start++;
@@ -378,7 +378,7 @@ SqlStrTrim_Ascii(char* dest,
     return newLenBytes;
 }
 
-int 
+int
 SqlStrTrim_Ascii(char const ** result,
                  char const * const str,
                  int strLenBytes,
@@ -388,7 +388,7 @@ SqlStrTrim_Ascii(char const ** result,
 {
     char const * start = str;
     char const * end = str + strLenBytes;
-    
+
     // If many pad characters are expected, consider using memrchr()
     if (trimLeft) {
         while (start != end && *start == trimchar) start++;
@@ -398,7 +398,7 @@ SqlStrTrim_Ascii(char const ** result,
         while (end != start && *end == trimchar) end--;
         if (end != start || *end != trimchar) end++;
     }
-    
+
     *result = start;
     return end - start;
 }
@@ -406,3 +406,4 @@ SqlStrTrim_Ascii(char const ** result,
 
 FENNEL_END_NAMESPACE
 
+// End SqlStringAscii.cpp

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,7 +33,7 @@ void LhxAggExecStream::prepare(
     LhxAggExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
-    
+
     setHashInfo(params);
     setAggComputers(hashInfo, params.aggInvocations);
 
@@ -45,12 +45,12 @@ void LhxAggExecStream::prepare(
 
     buildInputIndex = hashInfo.inputDesc.size() - 1;
 
-    /* 
+    /*
      * number of block and slots required to perform the aggregation in memory,
      * using estimates from the optimizer.
      */
     hashTable.calculateSize(hashInfo, buildInputIndex, numBlocksHashTable);
-  
+
     TupleDescriptor outputDesc;
 
     outputDesc = hashInfo.inputDesc[buildInputIndex];
@@ -59,7 +59,7 @@ void LhxAggExecStream::prepare(
         assert (outputDesc == params.outputTupleDesc);
     }
 
-    outputTuple.compute(outputDesc);    
+    outputTuple.compute(outputDesc);
     pOutAccessor->setTupleShape(outputDesc);
 
     /*
@@ -75,8 +75,8 @@ void LhxAggExecStream::getResourceRequirements(
     ExecStreamResourceSettingType &optType)
 {
     ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
-    
-    uint minPages = 
+
+    uint minPages =
         LhxHashTable::LhxHashTableMinPages * LhxPlan::LhxChildPartCount
         + numMiscCacheBlocks;
     minQuantity.nCachePages += minPages;
@@ -120,7 +120,7 @@ void LhxAggExecStream::open(bool restart)
     // boost::ptr_vector<LhxPartition> rather than
     // std::vector<SharedLhxPartition> (unless shared pointers are really
     // required).
-    
+
     /*
      * Create the root plan.
      *
@@ -157,14 +157,12 @@ void LhxAggExecStream::open(bool restart)
 
 ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    while (true)
-    {
+    while (true) {
         // REVIEW jvs 25-Aug-2006:  Some compilers do better if you
         // put the most commonly used cases first in a switch.  Definitely
         // from a "follow-the-logic" standpoint, a testing-only state
         // like ForcePartitionBuild belongs last.
-        switch (aggState)
-        {
+        switch (aggState) {
             // REVIEW jvs 25-Aug-2006:  I'm not sure that repeating all
             // of this code between the ForcePartitionBuild and Build
             // states is worth it just to remove one test from the
@@ -316,7 +314,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                  * Link the newly created partitioned in the plan tree.
                  */
                 curPlan->createChildren(partInfo, false, false);
-                
+
                 FENNEL_TRACE(TRACE_FINE, curPlan->toString());
 
                 // REVIEW jvs 25-Aug-2006:  This comment makes it sound
@@ -350,12 +348,12 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
 
                 aggState =
                     (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
-                break;                
+                break;
             }
         case GetNextPlan:
             {
                 hashTable.releaseResources();
-                
+
                 checkAbort();
 
                 curPlan = curPlan->getNextLeaf();
@@ -376,7 +374,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                     buildReader.open(curPlan->getPartition(buildInputIndex),
                         hashInfo);
 
-                    aggState = 
+                    aggState =
                         (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
                 } else {
                     aggState = Done;
@@ -415,7 +413,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                     aggState = nextState;
                 } else {
                     numTuplesProduced = 0;
-                    return EXECRC_BUF_OVERFLOW;                    
+                    return EXECRC_BUF_OVERFLOW;
                 }
 
                 /*
@@ -438,7 +436,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
             }
         }
     }
-    
+
     /*
      * The state machine should never come here.
      */
@@ -459,7 +457,7 @@ void LhxAggExecStream::closeImpl()
 }
 
 void LhxAggExecStream::setAggComputers(
-    LhxHashInfo &hashInfo,    
+    LhxHashInfo &hashInfo,
     AggInvocationList const &aggInvocations)
 {
     /*
@@ -492,7 +490,7 @@ void LhxAggExecStream::setAggComputers(
          pInvocation != aggInvocations.end();
          ++pInvocation)
     {
-        switch(pInvocation->aggFunction) {
+        switch (pInvocation->aggFunction) {
         case AGG_FUNC_COUNT:
             partialAggFunction = AGG_FUNC_SUM;
             break;
@@ -576,7 +574,7 @@ void LhxAggExecStream::setHashInfo(
             isKeyColVarChar.push_back(HASH_TRIM_NONE);
         }
     }
-    hashInfo.keyProj.push_back(keyProj);    
+    hashInfo.keyProj.push_back(keyProj);
     hashInfo.isKeyColVarChar.push_back(isKeyColVarChar);
 
     /*
@@ -621,7 +619,7 @@ void LhxAggExecStream::setHashInfo(
          pInvocation != params.aggInvocations.end();
          ++pInvocation)
     {
-        switch(pInvocation->aggFunction) {
+        switch (pInvocation->aggFunction) {
         case AGG_FUNC_COUNT:
             keyDesc.push_back(countDesc);
             break;

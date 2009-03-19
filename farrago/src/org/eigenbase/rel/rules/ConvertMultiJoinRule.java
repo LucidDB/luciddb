@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Portions Copyright (C) 2006-2007 John V. Sichi
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Portions Copyright (C) 2006-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -134,7 +134,7 @@ public class ConvertMultiJoinRule
             origJoinRel.getCondition(),
             joinFieldRefCountsList,
             newJoinFieldRefCountsMap);
-        
+
         RexNode newPostJoinFilter =
             combinePostJoinFilters(origJoinRel, left, right);
 
@@ -408,7 +408,10 @@ public class ConvertMultiJoinRule
             MultiJoinRel multiJoin = (MultiJoinRel) right;
             rightFilter =
                 shiftRightFilter(
-                    joinRel, left, multiJoin, multiJoin.getJoinFilter());
+                    joinRel,
+                    left,
+                    multiJoin,
+                    multiJoin.getJoinFilter());
         }
 
         // AND the join condition if this isn't a left or right outer join;
@@ -447,17 +450,17 @@ public class ConvertMultiJoinRule
             && !((MultiJoinRel) input).isFullOuterJoin()
             && !nullGenerating);
     }
-    
+
     /**
-     * Shifts a filter originating from the right child of the JoinRel to
-     * the right, to reflect the filter now being applied on the resulting
+     * Shifts a filter originating from the right child of the JoinRel to the
+     * right, to reflect the filter now being applied on the resulting
      * MultiJoinRel.
-     * 
+     *
      * @param joinRel the original JoinRel
      * @param left the left child of the JoinRel
      * @param right the right child of the JoinRel
      * @param rightFilter the filter originating from the right child
-     * 
+     *
      * @return the adjusted right filter
      */
     private RexNode shiftRightFilter(
@@ -469,7 +472,7 @@ public class ConvertMultiJoinRule
         if (rightFilter == null) {
             return null;
         }
-        
+
         int nFieldsOnLeft = left.getRowType().getFields().length;
         int nFieldsOnRight = right.getRowType().getFields().length;
         int [] adjustments = new int[nFieldsOnRight];
@@ -538,7 +541,7 @@ public class ConvertMultiJoinRule
             refCounts[i - startField] += joinCondRefCounts[i];
         }
     }
-    
+
     /**
      * Combines the post-join filters from the left and right inputs (if they
      * are MultiJoinRels) into a single AND'd filter.
@@ -563,20 +566,19 @@ public class ConvertMultiJoinRule
                     (MultiJoinRel) right,
                     ((MultiJoinRel) right).getPostJoinFilter());
         }
-        
+
         RexNode leftPostJoinFilter = null;
         if (left instanceof MultiJoinRel) {
             leftPostJoinFilter = ((MultiJoinRel) left).getPostJoinFilter();
         }
-        
-        if (leftPostJoinFilter == null && rightPostJoinFilter == null) {
+
+        if ((leftPostJoinFilter == null) && (rightPostJoinFilter == null)) {
             return null;
         } else {
-            return
-                RelOptUtil.andJoinFilters(
-                    joinRel.getCluster().getRexBuilder(),
-                    leftPostJoinFilter,
-                    rightPostJoinFilter);
+            return RelOptUtil.andJoinFilters(
+                joinRel.getCluster().getRexBuilder(),
+                leftPostJoinFilter,
+                rightPostJoinFilter);
         }
     }
 

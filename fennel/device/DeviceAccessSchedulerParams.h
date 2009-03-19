@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ class ConfigMap;
  * DeviceAccessSchedulerParams defines parameters used to create a
  * DeviceAccessScheduler.
  */
-class DeviceAccessSchedulerParams 
+class DeviceAccessSchedulerParams
 {
 public:
     static ParamName paramSchedulerType;
@@ -44,7 +44,7 @@ public:
     static ParamVal valAioPollingScheduler;
     static ParamVal valAioSignalScheduler;
     static ParamVal valAioLinuxScheduler;
-    
+
     /**
      * Enumeration of available scheduler implementations
      */
@@ -60,7 +60,7 @@ public:
      * Type of scheduler to create.
      */
     SchedulerType schedulerType;
-    
+
     /**
      * True if using the default scheduler type, as opposed to the one that was
      * explicitly specified in the configuration file
@@ -79,7 +79,7 @@ public:
      * be able to handle; additional requests will be queued.
      */
     uint maxRequests;
-    
+
     /**
      * Defines a default set of scheduler parameters.
      */

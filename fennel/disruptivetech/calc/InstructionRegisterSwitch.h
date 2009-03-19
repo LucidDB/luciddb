@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,7 +19,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 // InstructionRegisterSwitch.h
-// Include this file if you intend to manipulate instructions directly, 
+// Include this file if you intend to manipulate instructions directly,
 // otherwise include Calculator.h
 //
 */
@@ -31,7 +31,7 @@
 // BoolAnd(RegisterRef<float>) which trips other compile-time
 // checks. (And is just generally a bad idea.
 
-// Do not prevent multiple includes of this file. 
+// Do not prevent multiple includes of this file.
 
 #ifdef Fennel_InstructionRegisterSwitch_NativeNotBool
 #define Fennel_InstructionRegisterSwitch_Integral 1

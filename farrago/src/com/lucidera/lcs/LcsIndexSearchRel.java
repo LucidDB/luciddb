@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -80,7 +80,7 @@ public class LcsIndexSearchRel
     final boolean isUniqueKey;
     final boolean isOuter;
     final boolean isVisibleInExplain;
-    
+
     public final Double indexSelectivity;
 
     final Integer [] inputKeyProj;
@@ -156,7 +156,7 @@ public class LcsIndexSearchRel
 
         this.startRidParamId = startRidParamId;
         this.rowLimitParamId = rowLimitParamId;
-        
+
         this.indexSelectivity = indexSelectivity;
     }
 
@@ -398,7 +398,7 @@ public class LcsIndexSearchRel
     {
         return isOuter;
     }
-    
+
     public boolean isVisibleInExplain()
     {
         return isVisibleInExplain;
@@ -434,16 +434,16 @@ public class LcsIndexSearchRel
         // two key format
         return inputKeyProj.length / 2;
     }
-    
+
     public LcsTable getLcsTable()
     {
         return lcsTable;
     }
-    
+
     public Double getIndexSelectivity()
     {
         return indexSelectivity;
     }
 }
 
-//End LcsIndexSearchRel.java
+// End LcsIndexSearchRel.java

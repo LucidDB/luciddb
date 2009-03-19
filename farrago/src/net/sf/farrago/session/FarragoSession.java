@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -68,14 +68,14 @@ public interface FarragoSession
      */
     public FarragoSessionStmtContext newStmtContext(
         FarragoSessionStmtParamDefFactory paramDefFactory);
-    
+
     /**
      * Creates a new statement context within this session.
      *
      * @param paramDefFactory a factory for FarragoSessionStmtParamDef instances
      * @param rootStmtContext the root statement context for an internally
-     * prepared statement; for an externally prepared statement, this will
-     * be null
+     * prepared statement; for an externally prepared statement, this will be
+     * null
      *
      * @return new statement context
      */
@@ -328,9 +328,8 @@ public interface FarragoSession
 
     /**
      * Sets the exclusion filter to use for planners created by this session.
-     * See {@link
-     * org.eigenbase.relopt.RelOptPlanner#setRuleDescExclusionFilter} for
-     * details.
+     * See {@link org.eigenbase.relopt.RelOptPlanner#setRuleDescExclusionFilter}
+     * for details.
      *
      * @param exclusionFilter pattern to match for exclusion; null to disable
      * filtering
@@ -348,33 +347,33 @@ public interface FarragoSession
      * @return warning queue
      */
     public FarragoWarningQueue getWarningQueue();
-    
+
     /**
      * Disables subquery reduction for the current session.
      */
     public void disableSubqueryReduction();
-    
+
     /**
      * Retrieves the commit sequence number associated with a session's label,
      * if it's set.
-     * 
+     *
      * @return the commit sequence number of a session's label; null if the
      * session does not have a label setting
      */
     public Long getSessionLabelCsn();
-    
+
     /**
-     * Retrieves the creation timestamp for the session's label setting, if
-     * a label setting is set.
-     * 
-     * @return the creation timestamp; null if the session does not have a
-     * label setting
+     * Retrieves the creation timestamp for the session's label setting, if a
+     * label setting is set.
+     *
+     * @return the creation timestamp; null if the session does not have a label
+     * setting
      */
     public Timestamp getSessionLabelCreationTimestamp();
 
     /**
-     * Flags this FarragoSession as being a loopback session. Loopback
-     * sessions do not block server shutdown.
+     * Flags this FarragoSession as being a loopback session. Loopback sessions
+     * do not block server shutdown.
      */
     public void setLoopback();
 
@@ -382,6 +381,7 @@ public interface FarragoSession
      * Tests whether this session is a loopback session.
      *
      * @return true if this is a loopback session, false otherwise
+     *
      * @see #setLoopback()
      */
     public boolean isLoopback();
@@ -390,8 +390,8 @@ public interface FarragoSession
      * Tests whether this is a reentrant session executing DML on behalf of
      * ALTER TABLE REBUILD.
      *
-     * @return true if this session is doing ALTER TABLE REBUILD,
-     * false otherwise
+     * @return true if this session is doing ALTER TABLE REBUILD, false
+     * otherwise
      */
     public boolean isReentrantAlterTableRebuild();
 
@@ -399,8 +399,8 @@ public interface FarragoSession
      * Tests whether this is a reentrant session executing DML on behalf of
      * ALTER TABLE ADD COLUMN.
      *
-     * @return true if this session is doing ALTER TABLE ADD COLUMN,
-     * false otherwise
+     * @return true if this session is doing ALTER TABLE ADD COLUMN, false
+     * otherwise
      */
     public boolean isReentrantAlterTableAddColumn();
 }

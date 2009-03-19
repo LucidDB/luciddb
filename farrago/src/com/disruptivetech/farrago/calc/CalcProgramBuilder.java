@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -1565,9 +1565,11 @@ public class CalcProgramBuilder
          * Returns the list of registers of a given type.
          *
          * @param registerSetType Type of register
+         *
          * @return list of registers of given type, never null
          */
-        public final List<CalcReg> getRegisterList(RegisterSetType registerSetType)
+        public final List<CalcReg> getRegisterList(
+            RegisterSetType registerSetType)
         {
             return sets.get(registerSetType.ordinal());
         }

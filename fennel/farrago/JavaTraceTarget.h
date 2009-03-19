@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * JavaTraceTarget implements TraceTarget by calling back into the 
+ * JavaTraceTarget implements TraceTarget by calling back into the
  * java.util.logging facility.  It also implements StatsTarget by
  * converting performance counter updates into trace events which
  * are published inside of Java.
@@ -48,17 +48,17 @@ class JavaTraceTarget : public TraceTarget, public StatsTarget
      * Method NativeTrace.trace.
      */
     jmethodID methTrace;
-    
+
     /**
      * Method NativeTrace.getSourceTraceLevel.
      */
     jmethodID methGetSourceTraceLevel;
-    
+
 public:
     explicit JavaTraceTarget();
 
     explicit JavaTraceTarget(
-        jobject javaTraceInit, jmethodID methTraceInit, 
+        jobject javaTraceInit, jmethodID methTraceInit,
         jmethodID methGetSourceTraceLevelInit);
 
     virtual ~JavaTraceTarget();
@@ -67,7 +67,7 @@ public:
     virtual void notifyTrace(
         std::string source,TraceLevel level,std::string message);
     virtual TraceLevel getSourceTraceLevel(std::string source);
-    
+
     // implement StatsTarget
     virtual void beginSnapshot();
     virtual void endSnapshot();

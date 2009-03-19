@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,13 +24,12 @@ package net.sf.farrago.syslib;
 
 import java.io.*;
 
+import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 
-import net.sf.farrago.resource.*;
 
 /**
- * FarragoBackupRestoreUtil contains utility methods used by backup and
- * restore.
+ * FarragoBackupRestoreUtil contains utility methods used by backup and restore.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -38,23 +37,26 @@ import net.sf.farrago.resource.*;
 
 public abstract class FarragoBackupRestoreUtil
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final String CATALOG_BACKUP_FILENAME = "FarragoCatalogDump";
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Validates the archive directory, expanding property names within the
      * name, as needed.
-     * 
+     *
      * @param directory the full pathname of the archive directory
      * @param isBackup true if this is a backup, as opposed to a restore
-     * 
+     *
      * @return the archive directory name with properties expanded
      */
     public static String validateArchiveDirectory(
         String directory,
         boolean isBackup)
     {
-        directory =
-            FarragoProperties.instance().expandProperties(directory);
+        directory = FarragoProperties.instance().expandProperties(directory);
         File fileDir = new File(directory);
         if (!fileDir.exists()) {
             throw FarragoResource.instance().InvalidDirectory.ex(directory);
@@ -68,14 +70,14 @@ public abstract class FarragoBackupRestoreUtil
         }
         return directory;
     }
-    
+
     /**
      * Translates a string representing a backup type (full, incremental, or
-     * differential) into a symbolic value.  Throws an exception if an invalid
+     * differential) into a symbolic value. Throws an exception if an invalid
      * type is passed in.
-     * 
+     *
      * @param backupType string value of the backup type
-     * 
+     *
      * @return the symbolic value of the backup type
      */
     public static FarragoBackupType getBackupType(String backupType)
@@ -90,15 +92,15 @@ public abstract class FarragoBackupRestoreUtil
             throw FarragoResource.instance().InvalidBackupType.ex(backupType);
         }
     }
-    
+
     /**
      * Verifies the existence or non-existence of files in the archive
      * directory.
-     * 
+     *
      * @param archiveDirectory the name of the archive directory
      * @param isCompressed whether the backup is compressed
-     * @param isBackup true if the files are going to be used for a backup,
-     * as opposed to a restore
+     * @param isBackup true if the files are going to be used for a backup, as
+     * opposed to a restore
      */
     public static void checkBackupFiles(
         String archiveDirectory,
@@ -109,16 +111,15 @@ public abstract class FarragoBackupRestoreUtil
         checkBackupFile(archiveDirectory, "backup.properties", isBackup);
         checkBackupFile(
             archiveDirectory,
-            isCompressed ?
-                CATALOG_BACKUP_FILENAME + ".gz" :
-                CATALOG_BACKUP_FILENAME,
+            isCompressed ? (CATALOG_BACKUP_FILENAME + ".gz")
+            : CATALOG_BACKUP_FILENAME,
             isBackup);
         checkBackupFile(
             archiveDirectory,
             isCompressed ? "FennelDataDump.dat.gz" : "FennelDataDump.dat",
             isBackup);
     }
-    
+
     private static void checkBackupFile(
         String archiveDirectory,
         String filename,
@@ -142,13 +143,13 @@ public abstract class FarragoBackupRestoreUtil
             }
         }
     }
-    
+
     /**
-     * Validates a string representing the compression mode of a backup.
-     * Throws an exception for an invalid mode.
-     * 
+     * Validates a string representing the compression mode of a backup. Throws
+     * an exception for an invalid mode.
+     *
      * @param compressionMode string value indicating the compression mode
-     * 
+     *
      * @return true if the string indicates compression
      */
     public static boolean isCompressed(String compressionMode)
@@ -162,16 +163,17 @@ public abstract class FarragoBackupRestoreUtil
                 compressionMode);
         }
     }
-    
+
     /**
      * Returns the catalog backup file name relative to the given archive
      * directory.
-     * 
+     *
      * @param archiveDir archive directory
      * @param isCompressed whether compression is enabled
      */
     public static File getCatalogBackupFile(
-        String archiveDir, boolean isCompressed)
+        String archiveDir,
+        boolean isCompressed)
     {
         String dumpName = CATALOG_BACKUP_FILENAME;
         if (isCompressed) {

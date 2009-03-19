@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,6 +41,10 @@ import org.eigenbase.sql.validate.*;
 public class MockCatalogReader
     implements SqlValidatorCatalogReader
 {
+    //~ Static fields/initializers ---------------------------------------------
+
+    protected static final String defaultSchema = "SALES";
+
     //~ Instance fields --------------------------------------------------------
 
     protected final RelDataTypeFactory typeFactory;
@@ -49,7 +53,6 @@ public class MockCatalogReader
     protected final Map<String, MockSchema> schemas =
         new HashMap<String, MockSchema>();
     private final RelDataType addressType;
-    protected static final String defaultSchema = "SALES";
 
     //~ Constructors -----------------------------------------------------------
 
@@ -195,23 +198,23 @@ public class MockCatalogReader
 
     public List<SqlMoniker> getAllSchemaObjectNames(List<String> names)
     {
+        List<SqlMoniker> result;
         switch (names.size()) {
-        case 0: {
+        case 0:
             // looking for schema names
-            List<SqlMoniker> result = new ArrayList<SqlMoniker>();
+            result = new ArrayList<SqlMoniker>();
             for (MockSchema schema : schemas.values()) {
                 result.add(
                     new SqlMonikerImpl(schema.name, SqlMonikerType.Schema));
             }
             return result;
-        }
-        case 1: {
+        case 1:
             // looking for table names in the given schema
             MockSchema schema = schemas.get(names.get(0));
             if (schema == null) {
                 return Collections.emptyList();
             }
-            List<SqlMoniker> result = new ArrayList<SqlMoniker>();
+            result = new ArrayList<SqlMoniker>();
             for (String tableName : schema.tableNames) {
                 result.add(
                     new SqlMonikerImpl(
@@ -219,7 +222,6 @@ public class MockCatalogReader
                         SqlMonikerType.Table));
             }
             return result;
-        }
         default:
             return Collections.emptyList();
         }

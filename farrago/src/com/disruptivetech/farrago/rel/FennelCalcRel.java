@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -90,8 +90,8 @@ public class FennelCalcRel
             "child's output type",
             child.getRowType(),
             true);
-        assert RelOptUtil.equal( // TODO: use stronger 'eq'
-
+        // TODO: use stronger 'eq'
+        assert RelOptUtil.equal(
             "program's output type",
             program.getOutputRowType(),
             "fennelCalcRel's output rowtype",

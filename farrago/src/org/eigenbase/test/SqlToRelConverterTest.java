@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -71,25 +71,29 @@ public class SqlToRelConverterTest
 
     public void testAliasList()
     {
-        check("select a + b from (\n" +
-            "  select deptno, 1 as one, name from dept\n" +
-            ") as d(a, b, c)\n" +
-            "where c like 'X%'",
+        check(
+            "select a + b from (\n"
+            + "  select deptno, 1 as one, name from dept\n"
+            + ") as d(a, b, c)\n"
+            + "where c like 'X%'",
             "${plan}");
     }
 
     public void testAliasList2()
     {
-        check("select * from (\n" +
-            "  select a, b, c from (values (1, 2, 3)) as t (c, b, a)\n" +
-            ") join dept on dept.deptno = c\n" +
-            "order by c + a",
+        check(
+            "select * from (\n"
+            + "  select a, b, c from (values (1, 2, 3)) as t (c, b, a)\n"
+            + ") join dept on dept.deptno = c\n"
+            + "order by c + a",
             "${plan}");
     }
 
     public void testJoinOn()
     {
-        check("SELECT * FROM emp JOIN dept on emp.deptno = dept.deptno", "${plan}");
+        check(
+            "SELECT * FROM emp JOIN dept on emp.deptno = dept.deptno",
+            "${plan}");
     }
 
     public void testJoinUsing()
@@ -99,9 +103,11 @@ public class SqlToRelConverterTest
 
     public void testJoinUsingCompound()
     {
-        check("SELECT * FROM emp LEFT JOIN (" +
-            "SELECT *, deptno * 5 as empno FROM dept) " +
-            "USING (deptno,empno)", "${plan}");
+        check(
+            "SELECT * FROM emp LEFT JOIN ("
+            + "SELECT *, deptno * 5 as empno FROM dept) "
+            + "USING (deptno,empno)",
+            "${plan}");
     }
 
     public void testJoinNatural()
@@ -112,22 +118,24 @@ public class SqlToRelConverterTest
 
     public void testJoinNaturalNoCommonColumn()
     {
-        check("SELECT * FROM emp NATURAL JOIN (SELECT deptno AS foo, name FROM dept) AS d",
+        check(
+            "SELECT * FROM emp NATURAL JOIN (SELECT deptno AS foo, name FROM dept) AS d",
             "${plan}");
     }
 
     public void testJoinNaturalMultipleCommonColumn()
     {
-        check("SELECT * FROM emp NATURAL JOIN (SELECT deptno, name AS ename FROM dept) AS d",
+        check(
+            "SELECT * FROM emp NATURAL JOIN (SELECT deptno, name AS ename FROM dept) AS d",
             "${plan}");
     }
 
     public void testJoinWithUnion()
     {
         check(
-            "select grade from " +
-            "(select empno from emp union select deptno from dept), " +
-            "salgrade",
+            "select grade from "
+            + "(select empno from emp union select deptno from dept), "
+            + "salgrade",
             "${plan}");
     }
 
@@ -140,7 +148,8 @@ public class SqlToRelConverterTest
     public void testGroupJustOneAgg()
     {
         // just one agg
-        check("select deptno, sum(sal) as sum_sal from emp group by deptno",
+        check(
+            "select deptno, sum(sal) as sum_sal from emp group by deptno",
             "${plan}");
     }
 
@@ -208,7 +217,8 @@ public class SqlToRelConverterTest
      */
     public void testSelectDistinctDup()
     {
-        check("select distinct sal + 5, deptno, sal + 5 from emp where deptno < 10",
+        check(
+            "select distinct sal + 5, deptno, sal + 5 from emp where deptno < 10",
             "${plan}");
     }
 
@@ -362,9 +372,9 @@ public class SqlToRelConverterTest
     public void testCountNoGroup()
     {
         check(
-            "select count(*), sum(sal)\n" +
-                "from emp\n" +
-                "where empno > 10",
+            "select count(*), sum(sal)\n"
+            + "from emp\n"
+            + "where empno > 10",
             "${plan}");
     }
 
@@ -404,7 +414,7 @@ public class SqlToRelConverterTest
             "select * from emp tablesample bernoulli(50) where empno > 5",
             "${plan}");
     }
-    
+
     public void testSampleBernoulliQuery()
     {
         check(
@@ -415,14 +425,14 @@ public class SqlToRelConverterTest
             + "where empno > 5",
             "${plan}");
     }
-    
+
     public void testSampleSystem()
     {
         check(
             "select * from emp tablesample system(50) where empno > 5",
             "${plan}");
     }
-    
+
     public void testSampleSystemQuery()
     {
         check(
@@ -433,7 +443,7 @@ public class SqlToRelConverterTest
             + "where empno > 5",
             "${plan}");
     }
-    
+
     public void testCollectionTableWithCursorParam()
     {
         check(

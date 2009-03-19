@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,17 +22,18 @@
 */
 package org.eigenbase.test;
 
-import java.nio.charset.Charset;
+import java.nio.charset.*;
+
 import java.util.regex.*;
 
 import junit.framework.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.SqlTypeFactoryImpl;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -137,8 +138,8 @@ public class SqlValidatorTestCase
     }
 
     /**
-     * Checks that a SQL query gives a particular error, or succeeds if
-     * {@code expected} is null.
+     * Checks that a SQL query gives a particular error, or succeeds if {@code
+     * expected} is null.
      */
     public final void checkFails(
         String sql,
@@ -255,8 +256,8 @@ public class SqlValidatorTestCase
     }
 
     /**
-     * Checks whether an exception matches the expected pattern. If
-     * <code>sap</code> contains an error location, checks this too.
+     * Checks whether an exception matches the expected pattern. If <code>
+     * sap</code> contains an error location, checks this too.
      *
      * @param ex Exception thrown
      * @param expectedMsgPattern Expected pattern
@@ -378,11 +379,11 @@ public class SqlValidatorTestCase
                     if (sap.pos != null) {
                         throw new AssertionFailedError(
                             "Expected error to have position,"
-                                + " but actual error did not: "
-                                + " actual pos [line " + actualLine
-                                + " col " + actualColumn
-                                + " thru line " + actualEndLine
-                                + " col " + actualEndColumn + "]");
+                            + " but actual error did not: "
+                            + " actual pos [line " + actualLine
+                            + " col " + actualColumn
+                            + " thru line " + actualEndLine
+                            + " col " + actualEndColumn + "]");
                     }
                     sqlWithCarets = sap.sql;
                 } else {
@@ -396,8 +397,8 @@ public class SqlValidatorTestCase
                     if (sap.pos == null) {
                         throw new AssertionFailedError(
                             "Actual error had a position, but expected error"
-                                + " did not. Add error position carets to sql:\n"
-                                + sqlWithCarets);
+                            + " did not. Add error position carets to sql:\n"
+                            + sqlWithCarets);
                     }
                 }
                 if ((actualMessage == null)
@@ -549,10 +550,11 @@ public class SqlValidatorTestCase
             String expected);
 
         /**
-         * Given a SQL query, returns the monotonicity of the first item
-         * in the SELECT clause.
+         * Given a SQL query, returns the monotonicity of the first item in the
+         * SELECT clause.
          *
          * @param sql SQL query
+         *
          * @return Monotonicity
          */
         SqlMonotonicity getMonotonicity(String sql);
@@ -774,7 +776,8 @@ public class SqlValidatorTestCase
         // SqlTester methods
 
         public void setFor(
-            SqlOperator operator, VmName... unimplementedVmNames)
+            SqlOperator operator,
+            VmName ... unimplementedVmNames)
         {
             // do nothing
         }
@@ -792,7 +795,7 @@ public class SqlValidatorTestCase
 
         public void checkWinAgg(
             String expr,
-            String[] inputValues,
+            String [] inputValues,
             String windowSpec,
             String type,
             Object result,
@@ -800,7 +803,9 @@ public class SqlValidatorTestCase
         {
             String query =
                 AbstractSqlTester.generateWinAggQuery(
-                    expr, windowSpec, inputValues);
+                    expr,
+                    windowSpec,
+                    inputValues);
             check(query, AbstractSqlTester.AnyTypeChecker, result, delta);
         }
 

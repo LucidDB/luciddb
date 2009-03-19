@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2008 The Eigenbase Project
-// Copyright (C) 2006-2008 Disruptive Tech
-// Copyright (C) 2006-2008 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,26 +21,30 @@
 */
 package net.sf.farrago.runtime;
 
-import java.lang.reflect.Proxy;
-import java.math.BigDecimal;
+import java.lang.reflect.*;
+
+import java.math.*;
+
 import java.sql.*;
+
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.Logger;
+import java.util.logging.*;
+
+import net.sf.farrago.jdbc.param.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.type.runtime.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
-import net.sf.farrago.jdbc.param.*;
-import net.sf.farrago.session.FarragoSessionRuntimeContext;
-import net.sf.farrago.trace.FarragoTrace;
-import net.sf.farrago.type.FarragoParameterMetaData;
-import net.sf.farrago.type.runtime.*;
+
 
 /**
- * FarragoJavaUdxIterator provides runtime support for a call to a Java UDX.
- *
- * It supports both the blocking interface {@link Iterator} and the non-blocking
+ * FarragoJavaUdxIterator provides runtime support for a call to a Java UDX. It
+ * supports both the blocking interface {@link Iterator} and the non-blocking
  * {@link TupleIter}.
  *
  * @author John V. Sichi
@@ -48,9 +52,11 @@ import net.sf.farrago.type.runtime.*;
  */
 public abstract class FarragoJavaUdxIterator
     extends ThreadIterator
-    implements RestartableIterator, TupleIter
+    implements RestartableIterator,
+        TupleIter
 {
     //~ Static fields/initializers ---------------------------------------------
+
     private static final int QUEUE_ARRAY_SIZE = 100;
     protected static final Logger tracer =
         FarragoTrace.getRuntimeContextTracer();
@@ -126,17 +132,6 @@ public abstract class FarragoJavaUdxIterator
         return super.hasNext();
     }
 
-    /**
-     * Called by generated code to add an input cursor's iterator so
-     * that it can be restarted as needed.
-     *
-     * @param inputIter input cursor's iterator
-     */
-    protected void addRestartableInput(TupleIter inputIter)
-    {
-        restartableInputs.add(inputIter);
-    }
-
     // override QueueIterator
     public boolean hasNext(long timeout)
         throws QueueIterator.TimeoutException
@@ -173,6 +168,17 @@ public abstract class FarragoJavaUdxIterator
                 throw new TupleIter.TimeoutException();
             }
         }
+    }
+
+    /**
+     * Called by generated code to add an input cursor's iterator so that it can
+     * be restarted as needed.
+     *
+     * @param inputIter input cursor's iterator
+     */
+    protected void addRestartableInput(TupleIter inputIter)
+    {
+        restartableInputs.add(inputIter);
     }
 
     // implement ThreadIterator
@@ -345,11 +351,11 @@ public abstract class FarragoJavaUdxIterator
         {
             int iField = parameterIndex - 1;
 
-            // Result types are always nullable, so we should get something which is
-            // both a NullableValue and an AssignableValue.
-            // However SqlDateTimeWithoutTZ is not a NullableValue, for some reason.
-            // Hack around this for the time being, as changing SqlDateTimeWithoutTZ
-            // seems to cause unmarshalling problems.
+            // Result types are always nullable, so we should get something
+            // which is both a NullableValue and an AssignableValue. However
+            // SqlDateTimeWithoutTZ is not a NullableValue, for some reason.
+            // Hack around this for the time being, as changing
+            // SqlDateTimeWithoutTZ seems to cause unmarshalling problems.
             Object fieldObj = getCurrentRow().getFieldValue(iField);
 
             if (fieldObj instanceof NullableValue) {

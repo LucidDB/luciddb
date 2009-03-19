@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -59,7 +59,7 @@ protected:
      * BTrees corresponding to the clusters
      */
     vector<boost::shared_ptr<BTreeDescriptor> > bTreeClusters;
-    
+
     /**
      * Saved root pageids of btrees corresponding to clusters; used to
      * append to existing table
@@ -115,7 +115,7 @@ protected:
     void initBTreeTupleDesc(TupleDescriptor &tupleDesc, uint nKeys);
 
     void testLoad(
-        uint nRows, uint nClusters, std::vector<int> &repeatSeqValues, 
+        uint nRows, uint nClusters, std::vector<int> &repeatSeqValues,
         bool newRoot, bool dumpEntries, string testName,
         bool dynamicRootPageId);
 
@@ -155,7 +155,7 @@ void LbmLoadBitmapTest::testLoadSmall(bool dynamicRootPageId)
 {
     // small load
     uint nRows = 50;
-    uint nClusters = 4; 
+    uint nClusters = 4;
     std::vector<int> repeatSeqValues;
 
     // first column will contain all unique values; the remaining columns
@@ -165,14 +165,14 @@ void LbmLoadBitmapTest::testLoadSmall(bool dynamicRootPageId)
     repeatSeqValues.push_back(9);
     repeatSeqValues.push_back(19);
     testLoad(
-        nRows, nClusters, repeatSeqValues, true, true, "testLoad50", 
+        nRows, nClusters, repeatSeqValues, true, true, "testLoad50",
         dynamicRootPageId);
 }
 
 void LbmLoadBitmapTest::testLoad5000()
 {
     uint nRows = 5000;
-    uint nClusters = 2; 
+    uint nClusters = 2;
     std::vector<int> repeatSeqValues;
 
     // test with a larger number of distinct values to force buffer flushing
@@ -186,7 +186,7 @@ void LbmLoadBitmapTest::testLoad10000()
 {
     // larger rowset to force bitmaps exceeding their buffer sizes
     uint nRows = 10000;
-    uint nClusters = 4; 
+    uint nClusters = 4;
     std::vector<int> repeatSeqValues;
 
     repeatSeqValues.push_back(nRows);
@@ -201,7 +201,7 @@ void LbmLoadBitmapTest::testAppend()
 {
     // parameters for test
     uint nRows = 60;
-    uint nClusters = 4; 
+    uint nClusters = 4;
     std::vector<int> repeatSeqValues1;
     std::vector<int> repeatSeqValues2;
 
@@ -240,7 +240,7 @@ void LbmLoadBitmapTest::testAppend()
  * Each column has a repeating sequence of values based on the value in the
  * repeatSeqValues vector.  E.g., a repeating sequence of n will have values:
  * (0, 1, 2, ..., n-1, 0, 1, 2, ..., n-1, 0, 1, 2, ...).
- *  
+ *
  * Bitmap indexes are then created on each column as well as a multi-key
  * index that is created on all columns.
  *
@@ -262,7 +262,7 @@ void LbmLoadBitmapTest::testLoad(
     entryDumps.clear();
 
     // 1. setup mock input stream
-    
+
     MockProducerExecStreamParams mockParams;
     for (uint i = 0; i < nClusters; i++) {
         mockParams.outputTupleDesc.push_back(attrDesc_int64);
@@ -293,10 +293,9 @@ void LbmLoadBitmapTest::testLoad(
     splitterStreamEmbryo.getStream()->setName("ClusterSplitterExecStream");
 
     // 3. setup loader streams
-    
+
     vector<ExecStreamEmbryo> lcsAppendEmbryos;
     for (uint i = 0; i < nClusters; i++) {
-    
         LcsClusterAppendExecStreamParams lcsAppendParams;
         boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
             boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());
@@ -328,8 +327,8 @@ void LbmLoadBitmapTest::testLoad(
         lcsAppendParams.rootPageId = pBTreeDesc->rootPageId =
             savedBTreeClusterRootIds[i];
 
-        // Now use the above initialized parameter 
-     
+        // Now use the above initialized parameter
+
         ExecStreamEmbryo lcsAppendStreamEmbryo;
         lcsAppendStreamEmbryo.init(
             new LcsClusterAppendExecStream(), lcsAppendParams);
@@ -340,7 +339,7 @@ void LbmLoadBitmapTest::testLoad(
     }
 
     // 4. setup barrier stream for cluster loads
-    
+
     BarrierExecStreamParams barrierParams;
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
@@ -363,13 +362,12 @@ void LbmLoadBitmapTest::testLoad(
 
     // create streams for bitmap generator, sort, and bitmap splicer,
     // 1 index on each column and then an index on all columns
-   
+
     std::vector<std::vector<ExecStreamEmbryo> > createBitmapStreamList;
     for (uint i = 0; i < nClusters + 1; i++) {
-
         if (i == 1 && nClusters == 1) {
             /*
-             * There's only one column. 
+             * There's only one column.
              * Do not bother to build the composite index.
              */
             break;
@@ -378,7 +376,7 @@ void LbmLoadBitmapTest::testLoad(
         std::vector<ExecStreamEmbryo> createBitmapStream;
 
         // 6. setup generator
-        
+
         LbmGeneratorExecStreamParams generatorParams;
         struct LcsClusterScanDef clusterScanDef;
         clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
@@ -422,9 +420,9 @@ void LbmLoadBitmapTest::testLoad(
             ostringstream traceName;
             traceName << testName << " Index " << i;
             boost::shared_ptr<LbmEntryDump> pEntryDump =
-                boost::shared_ptr<LbmEntryDump> 
+                boost::shared_ptr<LbmEntryDump>
                 (new LbmEntryDump(TRACE_INFO,
-                                  shared_from_this(), 
+                                  shared_from_this(),
                                   traceName.str()));
             entryDumps.push_back(pEntryDump);
         }
@@ -473,7 +471,7 @@ void LbmLoadBitmapTest::testLoad(
         createBitmapStream.push_back(generatorStreamEmbryo);
 
         // 7. setup sorter
-        
+
         ExternalSortExecStreamParams sortParams;
         initBTreeBitmapDesc(
             sortParams.outputTupleDesc, sortParams.keyProj, nKeys);
@@ -485,7 +483,7 @@ void LbmLoadBitmapTest::testLoad(
         sortParams.storeFinalRun = false;
         sortParams.estimatedNumRows = MAXU;
         sortParams.earlyClose = false;
-        
+
         ExecStreamEmbryo sortStreamEmbryo;
         sortStreamEmbryo.init(
             ExternalSortExecStream::newExternalSortExecStream(), sortParams);
@@ -583,7 +581,7 @@ void LbmLoadBitmapTest::initClusterScanDef(
 {
     clusterScanDef.pSegment =
         bTreeClusters[bTreeIndex]->segmentAccessor.pSegment;
-    clusterScanDef.pCacheAccessor = 
+    clusterScanDef.pCacheAccessor =
         bTreeClusters[bTreeIndex]->segmentAccessor.pCacheAccessor;
     clusterScanDef.tupleDesc = bTreeClusters[bTreeIndex]->tupleDescriptor;
     clusterScanDef.keyProj = bTreeClusters[bTreeIndex]->keyProjection;
@@ -617,7 +615,7 @@ void LbmLoadBitmapTest::initBTreeTupleDesc(
     uint varColSize;
 
     // The default page size is 4K.
-    varColSize = pRandomSegment->getUsablePageSize()/8;
+    varColSize = pRandomSegment->getUsablePageSize() / 8;
     // varColSize = 256;
 
     tupleDesc.push_back(
@@ -631,7 +629,7 @@ void LbmLoadBitmapTest::initBTreeTupleDesc(
 }
 
 void LbmLoadBitmapTest::testCaseSetUp()
-{    
+{
     ExecStreamUnitTestBase::testCaseSetUp();
 
     attrDesc_int64 = TupleAttributeDescriptor(

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,11 +28,14 @@ package org.eigenbase.runtime;
  * @author Marc Berkowitz
  * @version $Id$
  */
-public abstract class AbstractTupleIter implements TupleIter
+public abstract class AbstractTupleIter
+    implements TupleIter
 {
+    //~ Methods ----------------------------------------------------------------
+
     public boolean setTimeout(long timeout, boolean asUnderflow)
     {
-        return false;                   // by default, don't provide a timeout
+        return false; // by default, don't provide a timeout
     }
 
     public void restart()

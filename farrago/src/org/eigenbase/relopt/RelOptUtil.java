@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -606,8 +606,7 @@ public abstract class RelOptUtil
                         newProjFieldCount - 1,
                         Collections.singletonList(aggCall));
             } else {
-                final List<AggregateCall> aggCalls =
-                    Collections.emptyList();
+                final List<AggregateCall> aggCalls = Collections.emptyList();
                 ret =
                     new AggregateRel(
                         ret.getCluster(),
@@ -770,8 +769,7 @@ public abstract class RelOptUtil
     {
         // assert (rel.getRowType().getFieldCount() == 1);
         int aggCallCnt = rel.getRowType().getFieldCount();
-        List<AggregateCall> aggCalls =
-            new ArrayList<AggregateCall>();
+        List<AggregateCall> aggCalls = new ArrayList<AggregateCall>();
 
         for (int i = 0; i < aggCallCnt; i++) {
             RelDataType returnType =
@@ -906,7 +904,8 @@ public abstract class RelOptUtil
             return residualList.get(0);
         default:
             return RexUtil.andRexNodeList(
-                left.getCluster().getRexBuilder(), residualList);
+                left.getCluster().getRexBuilder(),
+                residualList);
         }
     }
 
@@ -926,9 +925,9 @@ public abstract class RelOptUtil
      * @param filterNulls The join key positions for which null values will not
      * match. null values only match for the "is not distinct from" condition.
      * @param rangeOp if null, only locate equi-joins; otherwise, locate a
-     * single non-equi join predicate and return its operator in this list;
-     * join keys associated with the non-equi join predicate are at the end
-     * of the key lists returned
+     * single non-equi join predicate and return its operator in this list; join
+     * keys associated with the non-equi join predicate are at the end of the
+     * key lists returned
      *
      * @return What's left
      */
@@ -1078,12 +1077,13 @@ public abstract class RelOptUtil
                 || ((filterNulls != null)
                     && (operator
                         == SqlStdOperatorTable.isNotDistinctFromOperator))
-                || (rangeOp != null && rangeOp.isEmpty() &&
-                    (operator == SqlStdOperatorTable.greaterThanOperator ||
-                     operator ==
-                         SqlStdOperatorTable.greaterThanOrEqualOperator ||
-                     operator == SqlStdOperatorTable.lessThanOperator ||
-                     operator == SqlStdOperatorTable.lessThanOrEqualOperator)))
+                || ((rangeOp != null) && rangeOp.isEmpty()
+                    && ((operator == SqlStdOperatorTable.greaterThanOperator)
+                        || (operator
+                            == SqlStdOperatorTable.greaterThanOrEqualOperator)
+                        || (operator == SqlStdOperatorTable.lessThanOperator)
+                        || (operator
+                            == SqlStdOperatorTable.lessThanOrEqualOperator))))
             {
                 final RexNode [] operands = call.getOperands();
                 RexNode op0 = operands[0];
@@ -1131,7 +1131,9 @@ public abstract class RelOptUtil
                         // perform casting
                         RelDataType targetKeyType =
                             typeFactory.leastRestrictive(
-                                new RelDataType[] { leftKeyType, rightKeyType });
+                                new RelDataType[] {
+                                    leftKeyType, rightKeyType
+                                });
 
                         if (leftKeyType != targetKeyType) {
                             leftKey =
@@ -1146,7 +1148,9 @@ public abstract class RelOptUtil
                 }
             }
 
-            if (rangeOp == null && ((leftKey == null) || (rightKey == null))) {
+            if ((rangeOp == null)
+                && ((leftKey == null) || (rightKey == null)))
+            {
                 // no equality join keys found yet:
                 // try tranforming the condition to
                 // equality "join" conditions, e.g.
@@ -1192,11 +1196,11 @@ public abstract class RelOptUtil
                 addJoinKey(
                     leftJoinKeys,
                     leftKey,
-                    (rangeOp != null && !rangeOp.isEmpty()));
+                    ((rangeOp != null) && !rangeOp.isEmpty()));
                 addJoinKey(
                     rightJoinKeys,
                     rightKey,
-                    (rangeOp != null && !rangeOp.isEmpty()));
+                    ((rangeOp != null) && !rangeOp.isEmpty()));
                 if ((filterNulls != null)
                     && (operator == SqlStdOperatorTable.equalsOperator))
                 {
@@ -1204,26 +1208,29 @@ public abstract class RelOptUtil
                     // add the position of the most recently inserted key
                     filterNulls.add(leftJoinKeys.size() - 1);
                 }
-                if (rangeOp != null &&
-                    operator != SqlStdOperatorTable.equalsOperator &&
-                    operator != SqlStdOperatorTable.isDistinctFromOperator)
+                if ((rangeOp != null)
+                    && (operator != SqlStdOperatorTable.equalsOperator)
+                    && (operator != SqlStdOperatorTable.isDistinctFromOperator))
                 {
                     if (reverse) {
-                        if (operator ==
-                            SqlStdOperatorTable.greaterThanOperator)
+                        if (operator
+                            == SqlStdOperatorTable.greaterThanOperator)
                         {
                             operator = SqlStdOperatorTable.lessThanOperator;
-                        } else if (operator ==
-                            SqlStdOperatorTable.greaterThanOrEqualOperator)
+                        } else if (
+                            operator
+                            == SqlStdOperatorTable.greaterThanOrEqualOperator)
                         {
                             operator =
                                 SqlStdOperatorTable.lessThanOrEqualOperator;
-                        } else if (operator ==
-                            SqlStdOperatorTable.lessThanOperator)
+                        } else if (
+                            operator
+                            == SqlStdOperatorTable.lessThanOperator)
                         {
                             operator = SqlStdOperatorTable.greaterThanOperator;
-                        } else if (operator ==
-                            SqlStdOperatorTable.lessThanOrEqualOperator)
+                        } else if (
+                            operator
+                            == SqlStdOperatorTable.lessThanOrEqualOperator)
                         {
                             operator =
                                 SqlStdOperatorTable.greaterThanOrEqualOperator;
@@ -1240,7 +1247,7 @@ public abstract class RelOptUtil
         // Add this condition to the list of non-equi-join conditions.
         nonEquiList.add(condition);
     }
-    
+
     private static void addJoinKey(
         List<RexNode> joinKeyList,
         RexNode key,
@@ -1439,7 +1446,7 @@ public abstract class RelOptUtil
      * @param leftJoinKeys expressions for LHS of join key
      * @param rightJoinKeys expressions for RHS of join key
      * @param systemColCount number of system columns, usually zero. These
-     *     columns are projected at the leading edge of the output row.
+     * columns are projected at the leading edge of the output row.
      * @param leftKeys on return this contains the join key positions from the
      * new project rel on the LHS.
      * @param rightKeys on return this contains the join key positions from the
@@ -1449,7 +1456,7 @@ public abstract class RelOptUtil
      * be responsible for adding projection on the new join output.
      */
     public static void projectJoinInputs(
-        RelNode[] inputRels,
+        RelNode [] inputRels,
         List<RexNode> leftJoinKeys,
         List<RexNode> rightJoinKeys,
         int systemColCount,
@@ -1551,14 +1558,14 @@ public abstract class RelOptUtil
         inputRels[0] = leftRel;
         inputRels[1] = rightRel;
     }
-    
+
     /**
      * Creates a projection on top of a join, if the desired projection is a
      * subset of the join columns
-     * 
+     *
      * @param outputProj desired projection; if null, return original join node
      * @param joinRel the join node
-     * 
+     *
      * @return projected join node or the original join if projection is
      * unnecessary
      */
@@ -1572,8 +1579,8 @@ public abstract class RelOptUtil
         // If no projection was passed in, or the number of desired projection
         // columns is the same as the number of columns returned from the
         // join, then no need to create a projection
-        if (newProjectOutputSize > 0 &&
-            newProjectOutputSize < joinOutputFields.length)
+        if ((newProjectOutputSize > 0)
+            && (newProjectOutputSize < joinOutputFields.length))
         {
             RexNode [] newProjectOutputFields =
                 new RexNode[newProjectOutputSize];
@@ -1601,7 +1608,7 @@ public abstract class RelOptUtil
 
             return projectOutputRel;
         }
-        
+
         return joinRel;
     }
 

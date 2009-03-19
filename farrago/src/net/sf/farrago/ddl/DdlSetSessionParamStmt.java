@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -72,13 +72,13 @@ public class DdlSetSessionParamStmt
     {
         FarragoSession session = ddlValidator.getInvokingSession();
         String valueString = paramValue.toValue();
-        
+
         session.getPersonality().validateSessionVariable(
             ddlValidator,
             session.getSessionVariables(),
             paramName,
             valueString);
-        
+
         // Retrieve the underlying label object
         if (paramName.equals(FarragoDefaultSessionPersonality.LABEL)) {
             // Labels can't be set inside UDR's because UDR's currently
@@ -105,7 +105,7 @@ public class DdlSetSessionParamStmt
     {
         visitor.visit(this);
     }
-    
+
     /**
      * @return the name of the parameter being set
      */
@@ -113,7 +113,7 @@ public class DdlSetSessionParamStmt
     {
         return paramName;
     }
-    
+
     /**
      * @return the value of the parameter if the label parameter is being set
      */
@@ -123,4 +123,4 @@ public class DdlSetSessionParamStmt
     }
 }
 
-// End DdlSetSystemParam.java
+// End DdlSetSessionParamStmt.java

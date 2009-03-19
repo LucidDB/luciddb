@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,6 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
 import org.eigenbase.util.*;
 
 
@@ -47,7 +46,8 @@ import org.eigenbase.util.*;
  * @author John V. Sichi, turned into an interface by Hunter Payne
  * @version $Id$
  */
-public interface FennelDbHandle extends FarragoAllocation
+public interface FennelDbHandle
+    extends FarragoAllocation
 {
     //~ Methods ----------------------------------------------------------------
 
@@ -72,8 +72,8 @@ public interface FennelDbHandle extends FarragoAllocation
         FemTupleDescriptor tupleDesc);
 
     /**
-     * Executes a FemCmd object. If the command produces a resultHandle,
-     * it will be set after successful execution.
+     * Executes a FemCmd object. If the command produces a resultHandle, it will
+     * be set after successful execution.
      *
      * @param cmd instance of FemCmd with all parameters set
      *
@@ -82,13 +82,13 @@ public interface FennelDbHandle extends FarragoAllocation
     public long executeCmd(FemCmd cmd);
 
     /**
-     * Executes a FemCmd object, associating an optional execution handle
-     * with the command. If the command produces a resultHandle,
-     * it will be set after successful execution.
+     * Executes a FemCmd object, associating an optional execution handle with
+     * the command. If the command produces a resultHandle, it will be set after
+     * successful execution.
      *
      * @param cmd instance of FemCmd with all parameters set
-     * @param execHandle the execution handle associated with the command;
-     * null if there is no associated execution handle
+     * @param execHandle the execution handle associated with the command; null
+     * if there is no associated execution handle
      *
      * @return return handle as primitive
      */

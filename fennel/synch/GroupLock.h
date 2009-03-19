@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,19 +39,19 @@ FENNEL_BEGIN_NAMESPACE
  * allow them to mix.  In this case, there are only two groups, but any number
  * of groups is supported, as long as they have unique integer identifiers.
  * Note that there are no provisions for preventing starvation, or whatever the
- * equally unpleasant equivalent is in this example. 
+ * equally unpleasant equivalent is in this example.
  */
 class GroupLock : public SynchMonitoredObject
 {
     uint nHolders;
     uint iHeldGroup;
-    
+
 public:
     explicit GroupLock();
     ~GroupLock();
-    
+
     bool waitFor(uint iGroup,uint iTimeout = ETERNITY);
-    
+
     /**
      * // TODO:  pass the group key to release as well,
      * and assert that it matches iHeldGroup

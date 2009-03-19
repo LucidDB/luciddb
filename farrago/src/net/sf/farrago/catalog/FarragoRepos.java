@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,6 +35,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
+
 import org.netbeans.api.mdr.*;
 
 
@@ -53,16 +54,16 @@ public interface FarragoRepos
     // TODO: SWZ: 2008-03-26: Transition all red-zone code to getEnkiMdrRepos()
     // then either remove getMdrRepos() or else change it's return type to
     // EnkiMDRepository and migrate everyone back.
-    
+
     /**
      * @return MDRepository storing this Farrago repository
      */
     public MDRepository getMdrRepos();
 
     /**
-     * Returns an EnkiMDRepository storing this Farrago repository.  This
-     * method returns the same instance of {@link #getMdrRepos()}.
-     * 
+     * Returns an EnkiMDRepository storing this Farrago repository. This method
+     * returns the same instance of {@link #getMdrRepos()}.
+     *
      * @return EnkiMDRepository storing this Farrago repository
      */
     public EnkiMDRepository getEnkiMdrRepos();
@@ -98,8 +99,8 @@ public interface FarragoRepos
     public FemFarragoConfig getCurrentConfig();
 
     /**
-     * @return the name of the default {@link java.nio.charset.Charset} for
-     * this repository
+     * @return the name of the default {@link java.nio.charset.Charset} for this
+     * repository
      */
     public String getDefaultCharsetName();
 
@@ -120,8 +121,8 @@ public interface FarragoRepos
      * Formats the fully-qualified localized name for an existing object,
      * including its type.
      *
-     * <p>Calling {@code getLocalizedObjectName(e)} is identical to
-     * calling {@code getLocalizedObjectName(e, e.refClass())}.</p>
+     * <p>Calling {@code getLocalizedObjectName(e)} is identical to calling
+     * {@code getLocalizedObjectName(e, e.refClass())}.</p>
      *
      * @param modelElement catalog object
      *
@@ -279,10 +280,10 @@ public interface FarragoRepos
 
     /**
      * Returns an instance of FarragoReposTxnContext for use in executing
-     * transactions against this repository without automatic repository 
-     * session management.  
-     * Equivalent to {@link #newTxnContext(boolean) newTxnContext(false)}.
-     * 
+     * transactions against this repository without automatic repository session
+     * management. Equivalent to {@link #newTxnContext(boolean)
+     * newTxnContext(false)}.
+     *
      * @return an instance of FarragoReposTxnContext for use in executing
      * transactions against this repository
      */
@@ -290,13 +291,14 @@ public interface FarragoRepos
 
     /**
      * Returns an instance of FarragoReposTxnContext for use in executing
-     * transactions against this repository.  If the manageReposSession
-     * parameter is true, the returned {@link FarragoReposTxnContext} is
-     * responsible for managing repository sessions.  Otherwise the caller
-     * is responsible for managing the repository session.
-     * 
-     * @param manageReposSession if true, the FarragoReposTxnContext manages
-     *                           the repository session
+     * transactions against this repository. If the manageReposSession parameter
+     * is true, the returned {@link FarragoReposTxnContext} is responsible for
+     * managing repository sessions. Otherwise the caller is responsible for
+     * managing the repository session.
+     *
+     * @param manageReposSession if true, the FarragoReposTxnContext manages the
+     * repository session
+     *
      * @return an instance of FarragoReposTxnContext for use in executing
      * transactions against this repository
      */
@@ -304,11 +306,11 @@ public interface FarragoRepos
 
     /**
      * Begins a session on the metadata repository.
-     * 
+     *
      * @see #newTxnContext(boolean)
      */
     public void beginReposSession();
-    
+
     /**
      * Begins a metadata transaction on the repository. In most cases, this
      * should be done by creating and manipulating an instance of {@link
@@ -327,11 +329,11 @@ public interface FarragoRepos
 
     /**
      * Ends a session on the metadata repository.
-     * 
+     *
      * @see #newTxnContext(boolean)
      */
     public void endReposSession();
-    
+
     /**
      * Returns the metadata factory for a particular plugin. In particular,
      * <code>getMetadataFactory("Fem")</code> returns this.

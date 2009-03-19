@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -161,12 +161,12 @@ public class LoptMultiJoin
      * removed from the query plan
      */
     Set<Integer> removableOuterJoinFactors;
-    
+
     /**
-     * Map consisting of all pairs of self-joins where the self-join can
-     * be removed because the join between the identical factors is an
-     * equality join on the same set of unique keys.  The map is keyed by
-     * either factor in the self join.
+     * Map consisting of all pairs of self-joins where the self-join can be
+     * removed because the join between the identical factors is an equality
+     * join on the same set of unique keys. The map is keyed by either factor in
+     * the self join.
      */
     Map<Integer, RemovableSelfJoin> removableSelfJoinPairs;
 
@@ -383,7 +383,7 @@ public class LoptMultiJoin
     {
         return joinFieldRefCountsMap.get(factIdx);
     }
-    
+
     /**
      * @param dimIdx the dimension factor for which information will be returned
      *
@@ -742,10 +742,10 @@ public class LoptMultiJoin
     {
         return removableOuterJoinFactors.contains(factIdx);
     }
-    
+
     /**
      * Adds to a map that keeps track of removable self-join pairs.
-     * 
+     *
      * @param factor1 one of the factors in the self-join
      * @param factor2 the second factor in the self-join
      */
@@ -753,11 +753,11 @@ public class LoptMultiJoin
     {
         int leftFactor;
         int rightFactor;
-        
+
         // Put the factor with more fields on the left so it will be
         // preserved after the self-join is removed.
-        if (getNumFieldsInJoinFactor(factor1) >
-            getNumFieldsInJoinFactor(factor2))
+        if (getNumFieldsInJoinFactor(factor1)
+            > getNumFieldsInJoinFactor(factor2))
         {
             leftFactor = factor1;
             rightFactor = factor2;
@@ -765,12 +765,12 @@ public class LoptMultiJoin
             leftFactor = factor2;
             rightFactor = factor1;
         }
-        
+
         // Compute a column mapping such that if a column from the right
         // factor is also referenced in the left factor, we will map the
         // right reference to the left to avoid redundant references.
         Map<Integer, Integer> columnMapping = new HashMap<Integer, Integer>();
-        
+
         // First, locate the originating column for all simple column
         // references in the left factor.
         RelNode left = getJoinFactor(leftFactor);
@@ -781,11 +781,11 @@ public class LoptMultiJoin
                 LoptMetadataProvider.getSimpleColumnOrigin(left, i);
             if (colOrigin != null) {
                 leftFactorColMapping.put(
-                    colOrigin.getOriginColumnOrdinal(), 
+                    colOrigin.getOriginColumnOrdinal(),
                     i);
             }
         }
-        
+
         // Then, see if the right factor references any of the same columns
         // by locating their originating columns.  If there are matches,
         // then we want to store the corresponding offset into the left
@@ -804,17 +804,17 @@ public class LoptMultiJoin
             }
             columnMapping.put(i, leftOffset);
         }
-        
+
         RemovableSelfJoin selfJoin =
             new RemovableSelfJoin(leftFactor, rightFactor, columnMapping);
-        
+
         removableSelfJoinPairs.put(leftFactor, selfJoin);
         removableSelfJoinPairs.put(rightFactor, selfJoin);
     }
-    
+
     /*
      * @param factIdx one of the factors in a self-join pair
-     * 
+     *
      * @return the other factor in a self-join pair if the factor passed in is
      * a factor in a removable self-join; otherwise, returns null
      */
@@ -829,10 +829,10 @@ public class LoptMultiJoin
             return selfJoin.getRightFactor();
         }
     }
-    
+
     /**
      * @param factIdx factor in a self-join
-     * 
+     *
      * @return true if the factor is the left factor in a self-join
      */
     public boolean isLeftFactorInRemovableSelfJoin(int factIdx)
@@ -843,10 +843,10 @@ public class LoptMultiJoin
         }
         return (selfJoin.getLeftFactor() == factIdx);
     }
-       
+
     /**
      * @param factIdx factor in a self-join
-     * 
+     *
      * @return true if the factor is the right factor in a self-join
      */
     public boolean isRightFactorInRemovableSelfJoin(int factIdx)
@@ -856,30 +856,31 @@ public class LoptMultiJoin
             return false;
         }
         return (selfJoin.getRightFactor() == factIdx);
-    }   
-    
+    }
+
     /**
      * Determines whether there is a mapping from a column in the right factor
-     * of a self-join to a column from the left factor.  Assumes that the
-     * right factor is a part of a self-join.
-     * 
+     * of a self-join to a column from the left factor. Assumes that the right
+     * factor is a part of a self-join.
+     *
      * @param rightFactor the index of the right factor
      * @param rightOffset the column offset of the right factor
-     * 
+     *
      * @return the offset of the corresponding column in the left factor, if
      * such a column mapping exists; otherwise, null is returned
      */
     public Integer getRightColumnMapping(int rightFactor, int rightOffset)
     {
         RemovableSelfJoin selfJoin = removableSelfJoinPairs.get(rightFactor);
-        assert(selfJoin.getRightFactor() == rightFactor);
+        assert (selfJoin.getRightFactor() == rightFactor);
         return selfJoin.getColumnMapping().get(rightOffset);
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * Utility class used to keep track of the factors in a removable
-     * self-join.  The right factor in the self-join is the one that will
-     * be removed.
+     * Utility class used to keep track of the factors in a removable self-join.
+     * The right factor in the self-join is the one that will be removed.
      */
     private class RemovableSelfJoin
     {
@@ -887,20 +888,20 @@ public class LoptMultiJoin
          * The left factor in a removable self-join
          */
         private int leftFactor;
-        
+
         /**
-         * The right factor in a removable self-join, namely the factor
-         * that will be removed
+         * The right factor in a removable self-join, namely the factor that
+         * will be removed
          */
         private int rightFactor;
-        
+
         /**
-         * A mapping that maps references to columns from the right factor
-         * to columns in the left factor, if the column is referenced in both
+         * A mapping that maps references to columns from the right factor to
+         * columns in the left factor, if the column is referenced in both
          * factors
          */
         private Map<Integer, Integer> columnMapping;
-        
+
         RemovableSelfJoin(
             int leftFactor,
             int rightFactor,
@@ -910,17 +911,17 @@ public class LoptMultiJoin
             this.rightFactor = rightFactor;
             this.columnMapping = columnMapping;
         }
-        
+
         public int getLeftFactor()
         {
             return leftFactor;
         }
-        
+
         public int getRightFactor()
         {
             return rightFactor;
         }
-        
+
         public Map<Integer, Integer> getColumnMapping()
         {
             return columnMapping;

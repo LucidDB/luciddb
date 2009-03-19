@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,7 +24,7 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 /**
-   
+
 <h3>Overview</h3>
 
 The Fennel execution stream scheduler is responsible for determining which
@@ -206,7 +206,7 @@ it exhausted the data from at least one of its inputs.  Note that this
 does not imply that no output was produced (and this is true for all
 result codes, including EXECRC_EOS).
 
-<li>EXECRC_BUF_OVERFLOW: the invoked stream ceased execution 
+<li>EXECRC_BUF_OVERFLOW: the invoked stream ceased execution
 because it exhausted the space in at least one of its output buffers.
 
 <li>EXECRC_EOS: the invoked stream ceased execution because it
@@ -235,16 +235,16 @@ synchronize fine-grained access to buffer state.
 
 <h3>Example Graph</h3>
 
-To help explain the abstractions described so far, the UML object diagram 
+To help explain the abstractions described so far, the UML object diagram
 below shows a simple query stream graph with associated scheduler and buffers:
 
 <hr>
 \image html SchedulerObjectDiagram.gif
 <hr>
 
-This graph corresponds to a simple query like 
-<code>SELECT name FROM emps WHERE age > 30</code>.  Note that although 
-four buffer instances are created, the two instances of 
+This graph corresponds to a simple query like
+<code>SELECT name FROM emps WHERE age > 30</code>.  Note that although
+four buffer instances are created, the two instances of
 ScratchBufferExecStream are the only streams that actually
 allocate any memory.  The BTreeScan writes into the memory allocated by
 adapter1 above it, which is also read by the calculator; the calculator
@@ -342,7 +342,7 @@ changes (setRunnable and setTimer).
 
 <h3>Example Exec</h3>
 
-Putting together the example graph shown earlier with the 
+Putting together the example graph shown earlier with the
 DfsTreeExecStreamScheduler algorithm, an example execution trace
 might read as follows for a table of five rows:
 
@@ -373,12 +373,12 @@ adapter1 returns EXECRC_BUF_OVERFLOW.
 <li>scheduler calls execute() on calc.  calc applies filter and calls
 consumeData() to consumes all rows from buf2, changing its state to
 EXECBUF_UNDERFLOW.
-calc writes three rows into buf3, calling produceData() to 
+calc writes three rows into buf3, calling produceData() to
 set its state to EXECBUF_NONEMPTY.  calc returns EXECRC_BUF_UNDERFLOW.
 
 <li>scheduler calls execute() on adapter2.  adapter2 calls
 provideBufferForConsumption() on buf4, passing it memory references from
-buf3 and changing its state to EXECBUF_OVERFLOW.  adapter2 returns 
+buf3 and changing its state to EXECBUF_OVERFLOW.  adapter2 returns
 EXECRC_BUF_OVERFLOW.
 
 <li>scheduler returns to caller with a reference to buf4.
@@ -414,7 +414,7 @@ Note that most real executions will be much more complicated due to
 joins and partial consumption of input.
 
  */
-struct SchedulerDesign 
+struct SchedulerDesign
 {
     // NOTE:  dummy class for doxygen
 };

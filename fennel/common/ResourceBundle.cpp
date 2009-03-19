@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -79,8 +79,8 @@ const set<string> ResourceBundle::getKeys() const
 
     map<string, string>::const_iterator iter = _messages.begin(),
         end = _messages.end();
-  
-    while(iter != end) {
+
+    while (iter != end) {
         keys.insert((*iter).first);
         iter++;
     }
@@ -114,8 +114,8 @@ const string &ResourceBundle::getMessage(const string &key) const
 
 bool ResourceBundle::hasMessage(const string &key) const
 {
-    return 
-        _messages.find(key) != _messages.end() 
+    return
+        _messages.find(key) != _messages.end()
         || (_parent && _parent->hasMessage(key));
 }
 
@@ -143,8 +143,8 @@ static string convertPropertyToBoost(string &message)
     bool quoted = false;
     char ch;
     char nextCh;
-  
-    for(int i = 0, n = message.length(); i < n; i++) {
+
+    for (int i = 0, n = message.length(); i < n; i++) {
         ch = message[i];
         nextCh = (i + 1 < n) ? message[i + 1] : 0;
 
@@ -191,11 +191,11 @@ static string convertPropertyToBoost(string &message)
         i = argEndIndex;
 
         bool done = false;
-        while(!done && i < n) {
+        while (!done && i < n) {
             ch = message[i];
-        
-            switch(ch) {
-            default: 
+
+            switch (ch) {
+            default:
                 i++;
                 break;
 
@@ -203,14 +203,14 @@ static string convertPropertyToBoost(string &message)
                 quotedPattern = !quotedPattern;
                 i++;
                 break;
-            
+
             case LEFT_BRACE:
                 if (!quotedPattern) {
                     bracketDepth++;
                 }
                 i++;
                 break;
-            
+
             case RIGHT_BRACE:
                 if (!quotedPattern) {
                     if (bracketDepth > 0) {
@@ -225,7 +225,7 @@ static string convertPropertyToBoost(string &message)
                 break;
             }
         }
-    
+
         if (i == n) {
             // couldn't find end of pattern -- give up
             return message;
@@ -285,8 +285,10 @@ void ResourceBundle::loadMessages()
 
         if (tryEnvVar) {
             const char *fennelHome = getenv("FENNEL_HOME");
-            if (fennelHome == NULL) return; // give up
-      
+            if (fennelHome == NULL) {
+                return; // give up
+            }
+
             string path = string(fennelHome) + "/common/" + fileName;
             in.open(path.c_str(), ios::in);
             if (!in.good()) {
@@ -296,7 +298,7 @@ void ResourceBundle::loadMessages()
     }
 
     string line, key, message;
-    while(in.good()) {
+    while (in.good()) {
         getline(in, line);
 
         if (line.length() == 0 || line[0] == '#') {
@@ -320,3 +322,5 @@ void ResourceBundle::loadMessages()
 }
 
 FENNEL_END_CPPFILE("$Id$");
+
+// End ResourceBundle.cpp

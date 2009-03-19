@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,12 +22,11 @@
 */
 package net.sf.farrago.util;
 
-import java.util.Properties;
-import java.util.logging.Logger;
+import java.util.*;
+import java.util.logging.*;
 
-import org.eigenbase.enki.mdr.EnkiMDRepository;
-import org.eigenbase.enki.mdr.MDRepositoryFactory;
-import org.eigenbase.enki.netbeans.MdrTraceUtil;
+import org.eigenbase.enki.mdr.*;
+import org.eigenbase.enki.netbeans.*;
 
 
 // NOTE:  This class gets compiled independently of everything else since
@@ -61,14 +60,14 @@ public abstract class MdrUtil
     {
         String classNameProp =
             "org.netbeans.mdr.storagemodel.StorageFactoryClassName";
-        
+
         if (storageFactoryClassName != null) {
             storageProps.put(classNameProp, storageFactoryClassName);
         }
-        
-        EnkiMDRepository repos = 
+
+        EnkiMDRepository repos =
             MDRepositoryFactory.newMDRepository(storageProps);
-        
+
         return repos;
     }
 

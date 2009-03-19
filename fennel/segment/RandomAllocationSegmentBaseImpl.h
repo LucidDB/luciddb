@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -68,7 +68,7 @@ struct SegmentAllocationNode : public StoredNode
     /**
      * Forward link to the next SegmentAllocationNode, or NULL_PAGE_ID
      * for the last one.  This is mostly redundant, since the PageId's
-     * of SegmentAllocationNodes can always be computed.  However, 
+     * of SegmentAllocationNodes can always be computed.  However,
      * it is not completely redundant since it marks the last node
      * (rather than inferring it from the underlying segment size,
      * which may be unreliable after recovery).
@@ -85,7 +85,7 @@ struct SegmentAllocationNode : public StoredNode
         assert(i < nExtents);
         return reinterpret_cast<ExtentEntry *>(this+1)[i];
     }
-    
+
     ExtentEntry const &getExtentEntry(uint i) const
     {
         assert(i < nExtents);
@@ -110,7 +110,7 @@ inline BlockNum RandomAllocationSegmentBase::makePageNum(
     ExtentNum extentNum,BlockNum iPageInExtent) const
 {
     // weird calculation to take into account interspersal of SegAllocNodes
-    uint nSegPages = extentNum/nExtentsPerSegAlloc + 1;
+    uint nSegPages = extentNum / nExtentsPerSegAlloc + 1;
     return iPageInExtent + extentNum*nPagesPerExtent + nSegPages;
 }
 
@@ -129,7 +129,7 @@ PageId RandomAllocationSegmentBase::allocateFromExtentTemplate(
     SharedSegment allocNodeSegment)
 {
     permAssert(ownerId != UNALLOCATED_PAGE_OWNER_ID);
-    
+
     SegmentAccessor segAccessor(allocNodeSegment, pCache);
     ExtentAllocLockT extentAllocLock(segAccessor);
     extentAllocLock.lockExclusive(getExtAllocPageIdForWrite(extentNum));
@@ -172,7 +172,7 @@ void RandomAllocationSegmentBase::formatExtentTemplate(
         PageEntryT &pageEntry = extentNode.getPageEntry(i);
         markPageEntryUnused(pageEntry);
     }
-    
+
     // mark the first entry representing the extent allocation node itself
     // as permanently allocated
     extentNode.getPageEntry(0).ownerId = ANON_PAGE_OWNER_ID;

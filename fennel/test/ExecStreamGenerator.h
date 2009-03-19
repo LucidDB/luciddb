@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -161,7 +161,7 @@ public:
     RandomColumnGenerator(int max) : rng(42), max(max)
         {}
 
-    int64_t next() 
+    int64_t next()
     {
         return rng(max);
     }
@@ -299,11 +299,11 @@ private:
  */
 class RampDuplicateExecStreamGenerator : public MockProducerExecStreamGenerator
 {
-    
+
 public:
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
-        return iRow/2;
+        return iRow / 2;
     }
 };
 
@@ -311,13 +311,13 @@ public:
 class ConstExecStreamGenerator : public MockProducerExecStreamGenerator
 {
     uint constVal;
-    
+
 public:
     ConstExecStreamGenerator (uint constValInit)
     {
         constVal = constValInit;
     }
-    
+
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
         return constVal;
@@ -351,7 +351,7 @@ public:
         curr = startInit - offset;
     }
 
-    int64_t next() 
+    int64_t next()
     {
         curr += offset;
         return curr;
@@ -376,7 +376,7 @@ public:
         constvalue = constInit;
     }
 
-    int64_t next() 
+    int64_t next()
     {
         return constvalue;
     }
@@ -400,7 +400,7 @@ public:
         curValue = startValue * numDups;
     }
 
-    int64_t next() 
+    int64_t next()
     {
         return (curValue++ / numDups);
     }
@@ -410,7 +410,7 @@ public:
  * A duplicating repeating column sequence generator.
  *
  * Generates column values in a repeating sequence.  Values are duplicated for
- * each sequence value, and repeat after nSequence values.  E.g., 
+ * each sequence value, and repeat after nSequence values.  E.g.,
  * 0, 0, 0, ..., 1, 1, 1, ... 2, 2, 2, ..., n-1, n-1, n-1, ..., 0, 0, 0, ...
  */
 class DupRepeatingSeqColumnGenerator : public ColumnGenerator<int64_t>
@@ -418,7 +418,7 @@ class DupRepeatingSeqColumnGenerator : public ColumnGenerator<int64_t>
     int numDups;
     int numSequence;
     int64_t curValue;
-    
+
 public:
     explicit DupRepeatingSeqColumnGenerator(int numSequenceInit,
         int numDupsInit)
@@ -429,8 +429,8 @@ public:
         numDups = numDupsInit;
         curValue = 0;
     }
-    
-    int64_t next() 
+
+    int64_t next()
     {
         return (curValue++ % (numDups * numSequence)) / numDups;
     }
@@ -454,8 +454,8 @@ public:
         nSequence = nSequenceInit;
         curValue = 0;
     }
-    
-    int64_t next() 
+
+    int64_t next()
     {
         return curValue++ % nSequence;
     }
@@ -464,7 +464,7 @@ public:
 /**
  * Mixed Duplicate column generator
  *
- * Generates a mixture of unique rows or duplicate rows of numDups 
+ * Generates a mixture of unique rows or duplicate rows of numDups
  * per value for a column, in sequence, starting at initValue:
  *
  *  0, 1, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 7, 8, ...
@@ -490,12 +490,11 @@ public:
         initialValue = nextValue = startValue;
     }
 
-    int64_t next() 
+    int64_t next()
     {
         int res;
 
-        if ((((nextValue-initialValue) / width) % 2)) {
- 
+        if ((((nextValue - initialValue) / width) % 2)) {
             res = nextValue + curValue++ / numDups;
             if (curValue == numDups) {
                 curValue = 0;
@@ -529,7 +528,7 @@ public:
         // empty
     }
 
-    int64_t next() 
+    int64_t next()
     {
         return s + h * (iRow++ / w);
     }

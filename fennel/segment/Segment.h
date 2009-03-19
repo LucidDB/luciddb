@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -94,7 +94,7 @@ protected:
 
     // implement ClosableObject
     virtual void closeImpl();
-    
+
 public:
 
     /**
@@ -107,13 +107,13 @@ public:
          * Random order.
          */
         RANDOM_ALLOCATION,
-        
+
         /**
          * Later calls always return greater PageIds, but not necessarily
          * consecutively.
          */
         ASCENDING_ALLOCATION,
-        
+
         /**
          * PageIds are returned in consecutive ascending order of BlockNum; the
          * DeviceId is always the same.
@@ -134,7 +134,7 @@ public:
      * are guaranteed to be unmapped before destruction.
      */
     virtual ~Segment();
-    
+
     /**
      * @return the Cache for this Segment
      */
@@ -191,7 +191,7 @@ public:
      * @param pTracingSegmentInit the tracing segment
      */
     void setTracingSegment(WeakSegment pTracingSegmentInit);
-    
+
     /**
      * Checkpoints this segment.
      *
@@ -211,7 +211,7 @@ public:
     virtual void delegatedCheckpoint(
         Segment &delegatingSegment,
         CheckpointType checkpointType);
-    
+
     /**
      * Determines the successor of a given PageId.  This is an optional
      * interface only supported by segments with some concept of page ordering.
@@ -221,7 +221,7 @@ public:
      * @return successor PageId
      */
     virtual PageId getPageSuccessor(PageId pageId) = 0;
-    
+
     /**
      * Sets the successor of a given PageId.  This is an optional interface only
      * supported by segments with some concept of modifiable ordering.
@@ -241,7 +241,7 @@ public:
      * Maps from a PageId in this segment to a BlockId.
      */
     virtual BlockId translatePageId(PageId) = 0;
-    
+
     /**
      * Maps from a BlockId to a PageId in this segment.
      */
@@ -268,7 +268,7 @@ public:
      * @return true if enough pages could be allocated; false if not
      */
     virtual bool ensureAllocatedSize(BlockNum nPages);
-    
+
     /**
      * Deallocates a range of pages allocated from this segment.  Some segment
      * implementations may impose restrictions on the range
@@ -302,7 +302,7 @@ public:
      * @return true iff the PageId is currently allocated in this segment
      */
     virtual bool isPageIdAllocated(PageId pageId) = 0;
-    
+
     /**
      * Determines whether a page can be updated in-place, and if so, prepares
      * the page for update.

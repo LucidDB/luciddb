@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,14 +46,14 @@ public:
     explicit
     BoolPointerInstruction(RegisterRef<bool>* result,
                            RegisterRef<PTR_TYPE>* op1,
-                           RegisterRef<PTR_TYPE>* op2, 
+                           RegisterRef<PTR_TYPE>* op2,
                            StandardTypeDescriptorOrdinal pointerType)
         : mResult(result),
           mOp1(op1),
           mOp2(op2),
           mPointerType(pointerType)
     { }
-    ~BoolPointerInstruction() { 
+    ~BoolPointerInstruction() {
         // If (0) to reduce performance impact of template type checking
         if (0) PointerInstruction_NotAPointerType<PTR_TYPE>();
     }
@@ -69,10 +69,10 @@ protected:
 template <typename PTR_TYPE>
 class BoolPointerEqual : public BoolPointerInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     BoolPointerEqual(RegisterRef<bool>* result,
-                     RegisterRef<PTR_TYPE>* op1, 
+                     RegisterRef<PTR_TYPE>* op1,
                      RegisterRef<PTR_TYPE>* op2,
                      StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
@@ -80,13 +80,13 @@ public:
     virtual
     ~BoolPointerEqual() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
 
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
             BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() == 
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() ==
                    BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
@@ -98,9 +98,9 @@ public:
     static const char * shortName() { return "EQ"; }
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), 
-                       BoolPointerInstruction<PTR_TYPE>::mResult, 
-                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+        describeHelper(out, values, longName(), shortName(),
+                       BoolPointerInstruction<PTR_TYPE>::mResult,
+                       BoolPointerInstruction<PTR_TYPE>::mOp1,
                        BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
@@ -126,10 +126,10 @@ public:
 template <typename PTR_TYPE>
 class BoolPointerNotEqual : public BoolPointerInstruction<PTR_TYPE>
 {
-public:  
+public:
     explicit
     BoolPointerNotEqual(RegisterRef<bool>* result,
-                        RegisterRef<PTR_TYPE>* op1, 
+                        RegisterRef<PTR_TYPE>* op1,
                         RegisterRef<PTR_TYPE>* op2,
                         StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
@@ -137,13 +137,13 @@ public:
     virtual
     ~BoolPointerNotEqual() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
             BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull
                 ();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() == 
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() ==
                    BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         } else {
@@ -156,8 +156,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult, 
-                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mResult,
+                       BoolPointerInstruction<PTR_TYPE>::mOp1,
                        BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
@@ -183,10 +183,10 @@ public:
 template <typename PTR_TYPE>
 class BoolPointerGreater : public BoolPointerInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     BoolPointerGreater(RegisterRef<bool>* result,
-                       RegisterRef<PTR_TYPE>* op1, 
+                       RegisterRef<PTR_TYPE>* op1,
                        RegisterRef<PTR_TYPE>* op2,
                        StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
@@ -194,12 +194,12 @@ public:
     virtual
     ~BoolPointerGreater() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
             BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() > 
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() >
                    BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
@@ -212,8 +212,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult, 
-                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mResult,
+                       BoolPointerInstruction<PTR_TYPE>::mOp1,
                        BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
@@ -239,10 +239,10 @@ public:
 template <typename PTR_TYPE>
 class BoolPointerGreaterEqual : public BoolPointerInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     BoolPointerGreaterEqual(RegisterRef<bool>* result,
-                            RegisterRef<PTR_TYPE>* op1, 
+                            RegisterRef<PTR_TYPE>* op1,
                             RegisterRef<PTR_TYPE>* op2,
                             StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
@@ -250,12 +250,12 @@ public:
     virtual
     ~BoolPointerGreaterEqual() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
             BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() >= 
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() >=
                    BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
@@ -268,8 +268,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult, 
-                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mResult,
+                       BoolPointerInstruction<PTR_TYPE>::mOp1,
                        BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
@@ -295,10 +295,10 @@ public:
 template <typename PTR_TYPE>
 class BoolPointerLess : public BoolPointerInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     BoolPointerLess(RegisterRef<bool>* result,
-                    RegisterRef<PTR_TYPE>* op1, 
+                    RegisterRef<PTR_TYPE>* op1,
                     RegisterRef<PTR_TYPE>* op2,
                     StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
@@ -306,12 +306,12 @@ public:
     virtual
     ~BoolPointerLess() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
             BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() < 
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() <
                    BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
@@ -323,8 +323,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult, 
-                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mResult,
+                       BoolPointerInstruction<PTR_TYPE>::mOp1,
                        BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
@@ -350,10 +350,10 @@ public:
 template <typename PTR_TYPE>
 class BoolPointerLessEqual : public BoolPointerInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     BoolPointerLessEqual(RegisterRef<bool>* result,
-                         RegisterRef<PTR_TYPE>* op1, 
+                         RegisterRef<PTR_TYPE>* op1,
                          RegisterRef<PTR_TYPE>* op2,
                          StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
@@ -361,12 +361,12 @@ public:
     virtual
     ~BoolPointerLessEqual() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
-        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
             BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
-        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() <= 
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() <=
                    BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
@@ -379,8 +379,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult, 
-                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mResult,
+                       BoolPointerInstruction<PTR_TYPE>::mOp1,
                        BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
@@ -406,17 +406,17 @@ public:
 template <typename PTR_TYPE>
 class BoolPointerIsNull : public BoolPointerInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     BoolPointerIsNull(RegisterRef<bool>* result,
-                      RegisterRef<PTR_TYPE>* op1, 
+                      RegisterRef<PTR_TYPE>* op1,
                       StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, pointerType)
     { }
     virtual
     ~BoolPointerIsNull() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
@@ -430,8 +430,8 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult, 
-                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mResult,
+                       BoolPointerInstruction<PTR_TYPE>::mOp1,
                        BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
@@ -456,17 +456,17 @@ public:
 template <typename PTR_TYPE>
 class BoolPointerIsNotNull : public BoolPointerInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     BoolPointerIsNotNull(RegisterRef<bool>* result,
-                         RegisterRef<PTR_TYPE>* op1, 
+                         RegisterRef<PTR_TYPE>* op1,
                          StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, pointerType)
     { }
     virtual
     ~BoolPointerIsNotNull() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
@@ -479,9 +479,9 @@ public:
     static const char * shortName() { return "ISNOTNULL"; }
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), 
-                       BoolPointerInstruction<PTR_TYPE>::mResult, 
-                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+        describeHelper(out, values, longName(), shortName(),
+                       BoolPointerInstruction<PTR_TYPE>::mResult,
+                       BoolPointerInstruction<PTR_TYPE>::mOp1,
                        BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 

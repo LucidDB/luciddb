@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -73,9 +73,9 @@ protected:
     virtual ~ThreadedTestBase();
 
     virtual void threadInit();
-    
+
     virtual void threadTerminate();
-    
+
     /**
      * Test implementation must be supplied by derived test class.
      *
@@ -84,23 +84,23 @@ protected:
      * @return true if test should run again
      */
     virtual bool testThreadedOp(int iOp) = 0;
-    
+
     /**
      * Executes specified test threads.
      */
     void runThreadedTestCase();
 };
 
-class ThreadedTestBaseTask 
+class ThreadedTestBaseTask
 {
     ThreadedTestBase &test;
     int iOp;
-    
+
 public:
     explicit ThreadedTestBaseTask(
         ThreadedTestBase &testCaseInit,
         int iOpInit);
-    
+
     void execute();
 };
 

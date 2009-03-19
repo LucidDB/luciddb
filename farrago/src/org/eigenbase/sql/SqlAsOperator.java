@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,7 +57,10 @@ public class SqlAsOperator
     //~ Methods ----------------------------------------------------------------
 
     public void unparse(
-        SqlWriter writer, SqlNode[] operands, int leftPrec, int rightPrec)
+        SqlWriter writer,
+        SqlNode [] operands,
+        int leftPrec,
+        int rightPrec)
     {
         assert operands.length >= 2;
         final SqlWriter.Frame frame =

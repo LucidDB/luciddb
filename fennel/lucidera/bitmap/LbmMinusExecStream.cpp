@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -109,7 +109,6 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
-
         // read a segment from the minuend if we've finished processing the
         // previous segment
         if (needToRead) {
@@ -126,7 +125,6 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         // case where there are no keys.  In the case where there are keys,
         // the bitmap determines whether we can skip the minus.
         if ((nFields == 0 && !subtrahendsDone) || !skipMinus) {
-           
             if (advancePending) {
                 rc =
                     advanceSingleSubtrahend(
@@ -202,7 +200,7 @@ ExecStreamResult LbmMinusExecStream::readMinuendInputAndFlush(
     }
 
     // If there are keys, then data is expected to come from an index. RIDs
-    // may be ordered for each key, but are not ordered for the entire stream. 
+    // may be ordered for each key, but are not ordered for the entire stream.
     // In fact, when minus keys are only a subset of an index's keys, then
     // RIDs may restart at any time.
     // (Ex: RIDs in index [K1, K2] are ordered for each pair [k1, k2].
@@ -211,7 +209,7 @@ ExecStreamResult LbmMinusExecStream::readMinuendInputAndFlush(
     // Due to the lack of ordering, we may need to restart subtrahends
     // whenever the minuend is out of order so all of the subtrahend data
     // can be minused from the next minuend input.  That is handled outside
-    // of this method because restarts don't always need to be done 
+    // of this method because restarts don't always need to be done
     // immediately after a new key is read.
     //
     // We also flush the segment writer's current tuple. If it cannot be
@@ -260,7 +258,7 @@ ExecStreamResult LbmMinusExecStream::readMinuendInput(
     // for segments
     assert(currLen <= bitmapBufSize);
 
-    return EXECRC_YIELD;    
+    return EXECRC_YIELD;
 }
 
 int LbmMinusExecStream::comparePrefixes()
@@ -269,7 +267,7 @@ int LbmMinusExecStream::comparePrefixes()
         (inAccessors[0]->getTupleDesc()).compareTuplesKey(
             prevTuple,
             bitmapSegTuples[0],
-            nFields);    
+            nFields);
     return ret;
 }
 
@@ -296,7 +294,7 @@ void LbmMinusExecStream::copyPrefix()
       resetBuffer restores the pointers to the associated buffer.
     */
     prevTuple.resetBuffer();
-    
+
     for (int i = 0; i < nFields; i ++) {
         prevTuple[i].memCopyFrom(bitmapSegTuples[0][i]);
     }
@@ -403,7 +401,6 @@ ExecStreamResult LbmMinusExecStream::minusSegments(
     LcsRid baseRid, PBuffer baseByteSeg, uint baseLen)
 {
     while (true) {
-
         // find the subtrahend with the minimum startrid and read its current
         // segment
         int minInput;
@@ -430,9 +427,9 @@ ExecStreamResult LbmMinusExecStream::minusSegments(
         // minuend's segment
         currLen = std::min(currLen, baseLen - offset);
 
-        // minus from the minuend -- note that segments are stored 
+        // minus from the minuend -- note that segments are stored
         // backwards
-        PBuffer out = pByteSegBuf + baseLen - 1 - offset; 
+        PBuffer out = pByteSegBuf + baseLen - 1 - offset;
         uint len = currLen;
         while (len--) {
             *out-- &= ~(*currByteSeg--);
@@ -505,7 +502,7 @@ bool LbmMinusExecStream::produceTuple(TupleData bitmapTuple)
         }
         assert (prefixedBitmapTuple.size() == nFields + bitmapTuple.size());
         for (uint i = 0; i < 3; i++) {
-            prefixedBitmapTuple[nFields+i].copyFrom(bitmapTuple[i]);
+            prefixedBitmapTuple[nFields + i].copyFrom(bitmapTuple[i]);
         }
         return pOutAccessor->produceTuple(prefixedBitmapTuple);
     }

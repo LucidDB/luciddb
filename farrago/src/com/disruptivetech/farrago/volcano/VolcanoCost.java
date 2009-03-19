@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -134,7 +134,7 @@ class VolcanoCost
                 && (this.dCpu == that.dCpu)
                 && (this.dIo == that.dIo));
     }
-    
+
     public boolean isEqWithEpsilon(RelOptCost other)
     {
         if (!(other instanceof VolcanoCost)) {
@@ -142,9 +142,9 @@ class VolcanoCost
         }
         VolcanoCost that = (VolcanoCost) other;
         return (this == that)
-            || (Math.abs(this.dRows - that.dRows) < RelOptUtil.EPSILON
-                && Math.abs(this.dCpu - that.dCpu) < RelOptUtil.EPSILON
-                && Math.abs(this.dIo - that.dIo) < RelOptUtil.EPSILON);
+            || ((Math.abs(this.dRows - that.dRows) < RelOptUtil.EPSILON)
+                && (Math.abs(this.dCpu - that.dCpu) < RelOptUtil.EPSILON)
+                && (Math.abs(this.dIo - that.dIo) < RelOptUtil.EPSILON));
     }
 
     public RelOptCost minus(RelOptCost other)
@@ -174,18 +174,27 @@ class VolcanoCost
         VolcanoCost that = (VolcanoCost) cost;
         double d = 1;
         double n = 0;
-        if (this.dRows != 0 && !Double.isInfinite(this.dRows)
-            && that.dRows != 0 && !Double.isInfinite(that.dRows)) {
+        if ((this.dRows != 0)
+            && !Double.isInfinite(this.dRows)
+            && (that.dRows != 0)
+            && !Double.isInfinite(that.dRows))
+        {
             d *= this.dRows / that.dRows;
             ++n;
         }
-        if (this.dCpu != 0 && !Double.isInfinite(this.dCpu)
-            && that.dCpu != 0 && !Double.isInfinite(that.dCpu)) {
+        if ((this.dCpu != 0)
+            && !Double.isInfinite(this.dCpu)
+            && (that.dCpu != 0)
+            && !Double.isInfinite(that.dCpu))
+        {
             d *= this.dCpu / that.dCpu;
             ++n;
         }
-        if (this.dIo != 0 && !Double.isInfinite(this.dIo)
-            && that.dIo != 0 && !Double.isInfinite(that.dIo)) {
+        if ((this.dIo != 0)
+            && !Double.isInfinite(this.dIo)
+            && (that.dIo != 0)
+            && !Double.isInfinite(that.dIo))
+        {
             d *= this.dIo / that.dIo;
             ++n;
         }

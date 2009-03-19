@@ -13,7 +13,7 @@
 <h1>Calculator Design Specification</h1>
 <hr>
 <p>John Kalucki, 2/22/2004</p>
-<p>Copyright (C) 2003-2005, Disruptive Tech, Inc.</p>
+<p>Copyright (C) 2003-2009, SQLstream, Inc.</p>
 <h1>Overview</h1>
 <p><b>Calculator</b> is a portable C++ component that executes small <b>programs</b> 
 very efficiently. Programs consist of a list of <b>instructions</b>, input data,
@@ -37,7 +37,7 @@ terminates. </p>
 </ol>
 <p>Calculator will be installed as a component of
 <a href="http://sourceforge.net/projects/fennel/">Fennel</a>. Coding standards, 
-build environment, etc. are to follow the Fennel project’s example. Calculator 
+build environment, etc. are to follow the Fennel projectÂ’s example. Calculator 
 will introduce no additional dependencies to Fennel.</p>
 <p>The primary goals of this Calculator design are Execution Performance and, as 
 a pair: Extensibility and Maintainability. Overall performance for the single 
@@ -89,12 +89,12 @@ Aggregation Functions)</p>
 warnings, overflow indicator bits, etc. in the output register set, but this 
 usage is discouraged. Storing such data here requires the XO to filter the tuple 
 before passing it on to the next XO.</p>
-<h3>3. Local: (“Intermediates”)</h3>
+<h3>3. Local: (Â“IntermediatesÂ”)</h3>
 <p>a. General purpose intermediate storage.</p>
 <p>b. Intermediate storage for integral types. (i.e. main memory)</p>
-<p>c. Pre-allocated “heap space” for scratch storage of strings and other Large 
+<p>c. Pre-allocated Â“heap spaceÂ” for scratch storage of strings and other Large 
 Objects.</p>
-<h3>4. Literals: (“Constants”)</h3>
+<h3>4. Literals: (Â“ConstantsÂ”)</h3>
 <p>a. When Calculator programs are executed repeatedly, static literals need not 
 be mixed with changing input tuples.</p>
 <p>b. Literal register set is allocated and set by the assembler, not by the XO.</p>
@@ -117,7 +117,7 @@ manipulate register sets: the assembler and subclasses of the Instruction class.
 By not clearing register sets, the output register set may also be used as input 
 as well as output for instructions.</p>
 <h2>Addressing Modes</h2>
-<p>Genuflecting to John Hennessy and Dave Patterson, Calculator’s addressing 
+<p>Genuflecting to John Hennessy and Dave Patterson, CalculatorÂ’s addressing 
 modes will be orthogonal:</p>
 <p>1. All operands of all instructions that reference memory can use all 
 addressing modes</p>
@@ -126,7 +126,7 @@ sensible programming conventions would discourage inappropriate use of sets.
 (e.g. writing to the input and literal register sets)</p>
 <p>3. All memory locations of a given type (and/or length, see Storage, below) 
 can be used interchangeably.</p>
-<p>4. No “special” registers.</p>
+<p>4. No Â“specialÂ” registers.</p>
 <p>5. All memory accesses will be typed. (Instructions will cast all accesses as 
 the desired type.)</p>
 <p>Efficiency is paramount! Operands in programs will be indexes into a given 
@@ -134,7 +134,7 @@ register set. For example: Output[4] or Input[0]. The <code>RegisterReference
 </code>class will provide an abstraction to allow various implementations of, 
 experiments with, and debug-level instrumentation of, all memory access.</p>
 <p>A consideration: <code>RegisterReference</code> may cache the abstract 
-register set reference “Local [4]” as a direct pointer to memory by setting the
+register set reference Â“Local [4]Â” as a direct pointer to memory by setting the
 <code>CachePointer</code> property. Tuning may indicate that this is valuable 
 when applied to register sets that do not change, such as the Literal set and 
 the Local set, but reference invalidation costs for sets that typically re-bound 
@@ -150,7 +150,7 @@ calculated as (Scale * Index) + Base. <b>TBD</b></p>
 <h2>Storage</h2>
 <p><b><u>Portability Invariant</u></b>: A given program and input should produce 
 (nearly) identical output on each and every supported hardware type. Calculator 
-must be independent of underlying hardware – with sole and notable exception of 
+must be independent of underlying hardware Â– with sole and notable exception of 
 rounding errors in floating point numbers. </p>
 <p>Native type support, storage, typedefs, etc. are provided by Fennel Tuples. 
 Fennel supports types beyond the native C++ types, such as VARCHAR, VARBINARY, 
@@ -180,7 +180,7 @@ always</u> Do The Right Thing.</p>
 <p>Mappings between SQL types and C++ native types is provided by the Fennel 
 Tuple code. (See
 <a href="http://farrago.sourceforge.net/api/net/sf/farrago/query/FennelRelUtil.html#convertSqlTypeNameToFennelType(org.eigenbase.sql.type.SqlTypeName)">
-documentation for SQL to Fennel type mapping</a>.) Some types, such as SQL’s
+documentation for SQL to Fennel type mapping</a>.) Some types, such as SQLÂ’s
 <code>DECIMAL(p,s)</code> and <code>TIMESTAMP(p)</code> types are not directly 
 supported by Calculator. The compiler should handle this type by generating 
 appropriate programs.</p>
@@ -274,7 +274,7 @@ fennel/calc/StandardTypeToString.cpp.</code></p>
 <p>Internationalization issues are expected to be transparent to Calculator. 
 Byte arrays are represented by pointers.</p>
 <h1>Isolation</h1>
-<p>It’s a Mad Mad Mad Mad World. Under normal running conditions, Calculator 
+<p>ItÂ’s a Mad Mad Mad Mad World. Under normal running conditions, Calculator 
 will make no attempt to isolate the C++ process from potentially ill side 
 effects of Calculator program execution. This responsibility is completely up to 
 the program compiler and the author of extended instructions.</p>
@@ -282,24 +282,24 @@ the program compiler and the author of extended instructions.</p>
 <ul type="disc">
 	<li>C++ memory corruption - Anywhere the address space, not just in register 
 	sets!</li>
-	<li>C++ stack corruption – Another example of memory corruption.</li>
-	<li>C++ program counter corruption – e.g. jump to hyperspace, segmentation 
+	<li>C++ stack corruption Â– Another example of memory corruption.</li>
+	<li>C++ program counter corruption Â– e.g. jump to hyperspace, segmentation 
 	fault, core dump.</li>
-	<li>VM program counter corruption – e.g. jump to hyperspace, segmentation 
+	<li>VM program counter corruption Â– e.g. jump to hyperspace, segmentation 
 	fault, core dump.</li>
-	<li>VM program non-termination. – i.e. Calculator.exec() does not return.</li>
-	<li>Resource leakage from external function calls – Typically memory 
+	<li>VM program non-termination. Â– i.e. Calculator.exec() does not return.</li>
+	<li>Resource leakage from external function calls Â– Typically memory 
 	leakage, but potentially file descriptors or any other resource that an 
 	external function call could abandon.</li>
-	<li>Unaligned memory access – e.g. bus error, core dump.</li>
+	<li>Unaligned memory access Â– e.g. bus error, core dump.</li>
 	<li>Security, Access control violations, etc.</li>
 </ul>
 <p>Some of these risks could be mitigated by only allowing a tightly controlled 
 list of external functions to be called. </p>
 <p>Risks handled:</p>
 <ul type="disc">
-	<li>Division by Zero – Generates a warning.</li>
-	<li>Modulus by Zero – Generates a warning.</li>
+	<li>Division by Zero Â– Generates a warning.</li>
+	<li>Modulus by Zero Â– Generates a warning.</li>
 	<li>Arithmetic Overflow: <b>TBD</b></li>
 	<li>Arithmetic Underflow: <b>TBD</b></li>
 </ul>
@@ -321,9 +321,9 @@ representation of a program. The program can be transmitted to a C++ process.
 </p>
 <p>4) Out-of-process C++ can also use method #3.</p>
 <h2>Flow Control</h2>
-<p>All jumps are to absolute instruction “addresses”. The effective address of 
+<p>All jumps are to absolute instruction Â“addressesÂ”. The effective address of 
 an instruction is determined solely by the order that it is inserted into 
-Calculator. The first instruction inserted is at address 0 – that is to say, 
+Calculator. The first instruction inserted is at address 0 Â– that is to say, 
 instruction addresses are 0-indexed</p>
 <p>Jump labels, instead of absolute jump addresses would make programs easier to 
 read and debug, but would add complexity to Calculator and perhaps to the 
@@ -364,7 +364,7 @@ property set. This property causes Calculator to reset the tuple pointer back to
 its original location before the next call to exec().</p>
 <p>Writing programs to test every location for IsNotNULL before each write could 
 be a real bear. Program writers are encouraged to make liberal use of Local 
-registers to avoid this problem. It’s possible that this representation of NULL 
+registers to avoid this problem. ItÂ’s possible that this representation of NULL 
 is simply not strong enough, and Tuples will have to be changed to reflect this 
 problem. TBD</p>
 <p>Effect on strings and external functions? <b>TBD</b></p>
@@ -374,7 +374,7 @@ compiler can decide if it wishes to perform <b>exception avoidance</b> by
 testing for common errors within the program, or let Calculator execute and 
 handle the issue.</p>
 <p>Warning and error codes codes are taken from Section 22.1 SQLSTATE of the 
-SQL99 specification. Arbitrarily, Calculator’s implementation-defined errors are 
+SQL99 specification. Arbitrarily, CalculatorÂ’s implementation-defined errors are 
 in the Class <b>5Z</b>. This choice should be rationalized. <b>TBD</b>.</p>
 <p>Warnings are the result of correctable problems. Program execution always 
 continues after warnings and side-effects are well defined. Warning messages are 
@@ -597,7 +597,7 @@ Format of this exception <b>TBD</b>.</p>
 		<p align="center">&nbsp;</td>
 	</tr>
 	<tr>
-		<td valign="top"><code>··NativeNative-Instruction</code></td>
+		<td valign="top"><code>·Â·NativeNative-Instruction</code></td>
 		<td valign="top"><code>NativeAdd</code></td>
 		<td width="74" valign="top"><code>ADD</code></td>
 		<td width="99" rowspan="4" valign="top"><code>result, operand, operand</code></td>
@@ -673,7 +673,7 @@ Format of this exception <b>TBD</b>.</p>
 		<p align="center">&nbsp;</td>
 	</tr>
 	<tr>
-		<td valign="top"><code>··IntegralNativeInstruction</code></td>
+		<td valign="top"><code>·Â·IntegralNativeInstruction</code></td>
 		<td valign="top"><code>IntegralNativeMod</code></td>
 		<td width="74" valign="top"><code>MOD</code></td>
 		<td width="99" valign="top"><code>result, operand1, operand2</code></td>
@@ -750,7 +750,7 @@ Format of this exception <b>TBD</b>.</p>
 		<p align="center">&nbsp;</td>
 	</tr>
 	<tr>
-		<td valign="top"><code>··BoolNative-</code><br>
+		<td valign="top"><code>·Â·BoolNative-</code><br>
 		<code>Instruction</code></td>
 		<td valign="top"><code>BoolNativeEqual</code></td>
 		<td width="74" valign="top"><code>EQ</code></td>
@@ -827,7 +827,7 @@ Format of this exception <b>TBD</b>.</p>
 		<p align="center">&nbsp;</td>
 	</tr>
 	<tr>
-		<td valign="top"><code>··PointerPointer-Instruction</code></td>
+		<td valign="top"><code>·Â·PointerPointer-Instruction</code></td>
 		<td valign="top"><code>PointerMove</code></td>
 		<td width="74" valign="top"><code>MOVE</code></td>
 		<td width="99" valign="top"><code>result, operand1</code></td>
@@ -879,7 +879,7 @@ Format of this exception <b>TBD</b>.</p>
 		<p align="center">&nbsp;</td>
 	</tr>
 	<tr>
-		<td valign="top"><code>··BoolPointer-Instruction</code></td>
+		<td valign="top"><code>·Â·BoolPointer-Instruction</code></td>
 		<td valign="top"><code>PointerEqual</code></td>
 		<td width="74" valign="top"><code>EQ</code></td>
 		<td width="99" rowspan="6" valign="top"><code>result, operand, operand</code></td>
@@ -1054,7 +1054,7 @@ Format of this exception <b>TBD</b>.</p>
 		<td width="74" valign="top"><code>EXT</code></td>
 		<td width="99" valign="top"><code>signature</code></td>
 		<td valign="top">Signature is a string: <br>
-		“Fname(type1,type2,type3)” </td>
+		Â“Fname(type1,type2,type3)Â” </td>
 		<td width="38">
 		<p align="center"><code>?</code></td>
 		<td width="38">
@@ -1088,7 +1088,7 @@ Format of this exception <b>TBD</b>.</p>
 	<li>Initializes literal values in Literal Register Set.</li>
 	<li>Verifies the format of serialized programs as they are parsed, including 
 	type checking.</li>
-	<li>Converts (“assembles”) serialized programs (string representation of 
+	<li>Converts (Â“assemblesÂ”) serialized programs (string representation of 
 	programs) into instruction objects.</li>
 </ul>
 <h2>Serialized Programs</h2>
@@ -1123,8 +1123,8 @@ simple format to represent instructions. Expediency is the goal for now. The
 implementation details of this parser are, at the moment, outside the scope of 
 this document. If the parser introduces an additional library dependency to 
 Fennel, it must be possible to compile Fennel without the parser. For example, 
-fennel/configure should take arguments, similar to <code>–with-boost–with-stlport</code>, 
-such as –with-ANTLR –with-XERCES, or the like, to enable serial program 
+fennel/configure should take arguments, similar to <code>Â–with-boostÂ–with-stlport</code>, 
+such as Â–with-ANTLR Â–with-XERCES, or the like, to enable serial program 
 representation and the associated third-party parsing library.</p>
 <h3>BNF (EBNF?) of Simple Serialized Format</h3>
 <p>&nbsp;</p>
@@ -1133,32 +1133,32 @@ should consume &lt; whitespace &gt;</p>
 <p>Note: Format is case-sensitive.</p>
 <p>&nbsp;</p>
 <blockquote>
-	<code>&lt; whitespace &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= “ “ | “\n” | “\r” | 
-	“\t”<br>
+	<code>&lt; whitespace &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= Â“ Â“ | Â“\nÂ” | Â“\rÂ” | 
+	Â“\tÂ”<br>
 	<br>
 	&lt; program &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &lt;preamble&gt; 
-	“T” &lt; program text &gt;<br>
+	Â“TÂ” &lt; program text &gt;<br>
 	<br>
 	&lt; preamble &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &lt; registerset def 
 	&gt; [ &lt;literal set def &gt; &lt; literal values &gt; ]<br>
 	<br>
 	&lt; registerset def &gt; ::= &lt; set name &gt; <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	[ “,” ( &lt; type size &gt; )+ ]<br>
+	[ Â“,Â” ( &lt; type size &gt; )+ ]<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; terminator &gt;<br>
-	&lt; set name &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= “O” | # Output<br>
+	&lt; set name &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= Â“OÂ” | # Output<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	“I” | # Input – Generally unused.<br>
+	Â“IÂ” | # Input Â– Generally unused.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	“S” | # Status<br>
+	Â“SÂ” | # Status<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;“L” | # Local <br>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Â“LÂ” | # Local <br>
 	<br>
 	&lt; type size &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= { &lt; fixedlengthtype &gt; 
 	} |<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	{ &lt; variablelengthtype &gt; “,” &lt; bytes &gt; }<br>
+	{ &lt; variablelengthtype &gt; Â“,Â” &lt; bytes &gt; }<br>
 	<br>
 	&lt; fixedlengthtype &gt; ::= &lt; integers &gt; |<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
@@ -1171,13 +1171,13 @@ should consume &lt; whitespace &gt;</p>
 	<br>
 	&lt; variablelengthtype &gt;:: = &lt; varchar &gt; | &lt; varbinary &gt;<br>
 	<br>
-	&lt; literal set def &gt; ::= “C”&nbsp;&nbsp; # Literal set, think Constant.<br>
+	&lt; literal set def &gt; ::= Â“CÂ”&nbsp;&nbsp; # Literal set, think Constant.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	[ “,” ( &lt; type size &gt; )+ ]<br>
+	[ Â“,Â” ( &lt; type size &gt; )+ ]<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; terminator &gt;<br>
 	<br>
-	&lt; literal values &gt;&nbsp; ::= “V”&nbsp;&nbsp;&nbsp; # Values<br>
+	&lt; literal values &gt;&nbsp; ::= Â“VÂ”&nbsp;&nbsp;&nbsp; # Values<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	( &lt; literal def&gt; ) *<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
@@ -1189,36 +1189,36 @@ should consume &lt; whitespace &gt;</p>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; bytearrayval &gt;<br>
 	<br>
-	&lt; integerval &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= [ “-“ ]<br>
+	&lt; integerval &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= [ Â“-Â“ ]<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	( [0-9] ) +<br>
 	<br>
-	&lt; realval &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= [ “-“ ]<br>
+	&lt; realval &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= [ Â“-Â“ ]<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	( [0-9] ) + <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
-	“.”<br>
+	Â“.Â”<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	( [0-9] ) + <br>
 	<br>
-	&lt; bytearrayval&gt;&nbsp;&nbsp;&nbsp;&nbsp; ::=&nbsp; # TBD See section “Binary 
-	Encoding”<br>
+	&lt; bytearrayval&gt;&nbsp;&nbsp;&nbsp;&nbsp; ::=&nbsp; # TBD See section Â“Binary 
+	EncodingÂ”<br>
 	<br>
 	&lt; program text &gt;&nbsp;&nbsp;&nbsp; ::= ( &lt; instruction &gt; ) +&nbsp;&nbsp; # a 
 	program has 1 or more instructions<br>
 	<br>
-	&lt; instruction &gt;&nbsp;&nbsp;&nbsp;&nbsp; ::=&nbsp; &lt; opcode &gt; “,”<br>
+	&lt; instruction &gt;&nbsp;&nbsp;&nbsp;&nbsp; ::=&nbsp; &lt; opcode &gt; Â“,Â”<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; operand list &gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; terminator &gt; <br>
 	<br>
-	&lt; operand list &gt;&nbsp;&nbsp;&nbsp; ::= { &lt; result &gt; “,” &lt; operand &gt; [ “,” &lt; 
+	&lt; operand list &gt;&nbsp;&nbsp;&nbsp; ::= { &lt; result &gt; Â“,Â” &lt; operand &gt; [ Â“,Â” &lt; 
 	operand &gt; ] } |<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	{ &lt; set size &gt; } <br>
 	<br>
-	&lt; terminator &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :: = “;”<br>
+	&lt; terminator &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :: = Â“;Â”<br>
 	<br>
 	&lt; result &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &lt; 
 	output address &gt; |<br>
@@ -1240,7 +1240,7 @@ should consume &lt; whitespace &gt;</p>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	/* &lt; SIB address &gt; */<br>
 	<br>
-	&lt; output address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= “O”<br>
+	&lt; output address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= Â“OÂ”<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; type &gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
@@ -1248,7 +1248,7 @@ should consume &lt; whitespace &gt;</p>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; output index &gt;<br>
 	<br>
-	&lt; input address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= “I” <br>
+	&lt; input address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= Â“IÂ” <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; type &gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
@@ -1256,7 +1256,7 @@ should consume &lt; whitespace &gt;</p>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; input index &gt; <br>
 	<br>
-	&lt; local address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= “L” <br>
+	&lt; local address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= Â“LÂ” <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; type &gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
@@ -1264,7 +1264,7 @@ should consume &lt; whitespace &gt;</p>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; memory index &gt;<br>
 	<br>
-	&lt; literal address &gt;&nbsp;&nbsp;&nbsp;&nbsp; ::= “C”<br>
+	&lt; literal address &gt;&nbsp;&nbsp;&nbsp;&nbsp; ::= Â“CÂ”<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; type &gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
@@ -1272,7 +1272,7 @@ should consume &lt; whitespace &gt;</p>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; literal index &gt;<br>
 	<br>
-	&lt; status address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= “S” <br>
+	&lt; status address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= Â“SÂ” <br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&lt; type &gt;<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
@@ -1280,10 +1280,10 @@ should consume &lt; whitespace &gt;</p>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; literal index &gt;<br>
 	<br>
-	&lt; instruction address &gt; ::= “@” &lt;instruction index &gt;<br>
+	&lt; instruction address &gt; ::= Â“@Â” &lt;instruction index &gt;<br>
 	<br>
-	/* &lt; SIB address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= “*” &lt; type &gt; &lt; scale &gt; 
-	“,” &lt; index &gt; “,” &lt; base &gt; */<br>
+	/* &lt; SIB address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= Â“*Â” &lt; type &gt; &lt; scale &gt; 
+	Â“,Â” &lt; index &gt; Â“,Â” &lt; base &gt; */<br>
 	<br>
 	&lt; type &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
 	::= &lt; assembly code type &gt; <br>
@@ -1304,17 +1304,17 @@ should consume &lt; whitespace &gt;</p>
 	&lt; status index &gt;<br>
 	<br>
 	&lt; output index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= 0 | 1 | ... | 
-	&lt;size of output register set – 1&gt;<br>
+	&lt;size of output register set Â– 1&gt;<br>
 	&lt; input index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= 0 | 1 | 
-	... | &lt;size of input register set – 1&gt;<br>
+	... | &lt;size of input register set Â– 1&gt;<br>
 	&lt; local index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= 0 | 1 | 
-	... | &lt;size of local register set – 1&gt;<br>
+	... | &lt;size of local register set Â– 1&gt;<br>
 	&lt; literal index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= 0 | 1 | ... | 
-	&lt;size of literal register set – 1&gt;<br>
+	&lt;size of literal register set Â– 1&gt;<br>
 	&lt; status index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= 0 | 1 | ... | 
-	&lt;size of status register set – 1&gt;<br>
+	&lt;size of status register set Â– 1&gt;<br>
 	<br>
-	&lt; instruction index &gt;&nbsp;&nbsp; ::= 0 | 1 | . . . | &lt;size of program – 1&gt;<br>
+	&lt; instruction index &gt;&nbsp;&nbsp; ::= 0 | 1 | . . . | &lt;size of program Â– 1&gt;<br>
 	</code>
 </blockquote>
 <p>Note: May want additional <code>&lt; literal def &gt;</code> definitions, for 
@@ -1503,10 +1503,10 @@ this way.</p>
 <p>Object : Base Class</p>
 <p>contains</p>
 <p>contains</p>
-<p>[…]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
+<p>[Â…]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
 <p>Member Function ()</p>
 <p>Member Function ()</p>
-<p>[…]</p>
+<p>[Â…]</p>
 <p>&nbsp;</p>
 <p><code>Calculator</code></p>
 <h5><code>Code</code></h5>
@@ -1660,7 +1660,7 @@ this way.</p>
 <h3>Aggregation &amp; Analytic Functions</h3>
 <p>SQL <b>Aggregate Functions </b>and <b>Analytic Functions</b> can be supported 
 by the program writer by appropriate manipulation of Output register sets. The 
-“aggregator buckets” (nee accumulators) would be modeled as Output sets that 
+Â“aggregator bucketsÂ” (nee accumulators) would be modeled as Output sets that 
 were passed to various Calculators. There is no requirement that Output sets be 
 cleared before use. Reading from Output registers is legal and encouraged. Note 
 that setting the <code>CachePointer</code> property for Output register sets is 
@@ -1668,9 +1668,9 @@ likely to be a very bad idea for this reason, and also for performance reasons.<
 <h3>Status Register Conventions</h3>
 <ul type="disc">
 	<li>Register [0] is a boolean that signals to a Filter XO if the row should 
-	be “filtered”, that is dropped, or “passed”, that is sent on to the next XO. 
+	be Â“filteredÂ”, that is dropped, or Â“passedÂ”, that is sent on to the next XO. 
 	IFF S[0] == TRUE -&gt; filter.</li>
-	<li>Register [1]: Add more definitions here…</li>
+	<li>Register [1]: Add more definitions hereÂ…</li>
 </ul>
 <h2>Pros &amp; Cons</h2>
 <p>Calculator setup is mid-weight, not light weight. Have to instantiate a 

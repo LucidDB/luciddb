@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -59,11 +59,11 @@ protected:
     uint bitmapColSize;
 
     vector<boost::shared_ptr<BTreeDescriptor> > bTreeClusters;
-    
+
     /**
      * Serially loads nClusters, each cluster containing nCols and nRows
      */
-    void loadClusters(uint nRows, uint nCols, uint nClusters, 
+    void loadClusters(uint nRows, uint nCols, uint nClusters,
         bool compressed);
 
     /**
@@ -81,7 +81,7 @@ protected:
     /**
      * Reads rows from clusters.  Assumes clusters have been loaded by
      * loadClusters/loadOneCluster.
-     * 
+     *
      * @param nRows total number of rows in the clusters
      *
      * @param nCols number of columns in each cluster
@@ -117,7 +117,7 @@ protected:
      * @param expectedNumRows expected number of rows in scan result;
      * normally should be the same as nRows unless skipping rows or
      * testing exception cases
-     *  
+     *
      * @param compressed testing compressed bitmap optimization
      */
     void testFilterCols(uint nRows, uint nCols, uint nClusters,
@@ -192,7 +192,7 @@ public:
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScans);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScanOnEmptyCluster);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScanPastEndOfCluster);
-        FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, 
+        FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest,
             testCompressedFiltering);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testBernoulliSampling);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testSystemSampling);
@@ -200,7 +200,7 @@ public:
 
     void testCaseSetUp();
     void testCaseTearDown();
-    
+
     void testScans();
     void testScanOnEmptyCluster();
     void testScanPastEndOfCluster();
@@ -229,7 +229,7 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     int colStart,
     BTreeDescriptor &bTreeDescriptor,
     bool compressed)
-{    
+{
     MockProducerExecStreamParams mockParams;
     for (uint i = 0; i < nCols; i++) {
         mockParams.outputTupleDesc.push_back(attrDesc_int64);
@@ -242,8 +242,8 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     for (uint i = 0; i < nCols; i++) {
         SharedInt64ColumnGenerator col =
             SharedInt64ColumnGenerator(
-            compressed ? 
-            (Int64ColumnGenerator*)new MixedDupColumnGenerator(NDUPS, 
+            compressed ?
+            (Int64ColumnGenerator*)new MixedDupColumnGenerator(NDUPS,
             i + colStart,500) : new SeqColumnGenerator(i + colStart));
         columnGenerators.push_back(col);
     }
@@ -259,7 +259,7 @@ void LcsRowScanExecStreamTest::loadOneCluster(
         pSegmentFactory->newScratchSegment(pCache, 10);
     lcsAppendParams.pCacheAccessor = pCache;
     lcsAppendParams.pSegment = pRandomSegment;
-    
+
     // initialize the btree parameter portion of lcsAppendParams
     // BTree tuple desc only has one column
     (lcsAppendParams.tupleDesc).push_back(attrDesc_int64);
@@ -276,30 +276,30 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     }
     lcsAppendParams.pRootMap = 0;
     lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
-    
+
     // setup temporary btree descriptor to get an empty page to start the btree
 
     bTreeDescriptor.segmentAccessor.pSegment = lcsAppendParams.pSegment;
     bTreeDescriptor.segmentAccessor.pCacheAccessor = pCache;
     bTreeDescriptor.tupleDescriptor = lcsAppendParams.tupleDesc;
     bTreeDescriptor.keyProjection = lcsAppendParams.keyProj;
-    bTreeDescriptor.rootPageId = NULL_PAGE_ID; 
+    bTreeDescriptor.rootPageId = NULL_PAGE_ID;
     lcsAppendParams.segmentId = bTreeDescriptor.segmentId;
     lcsAppendParams.pageOwnerId = bTreeDescriptor.pageOwnerId;
-    
+
     BTreeBuilder builder(bTreeDescriptor, pRandomSegment);
     builder.createEmptyRoot();
     lcsAppendParams.rootPageId = bTreeDescriptor.rootPageId =
         builder.getRootPageId();
 
-    // Now use the above initialized parameter 
-     
+    // Now use the above initialized parameter
+
     LcsClusterAppendExecStream *lcsStream = new LcsClusterAppendExecStream();
 
     ExecStreamEmbryo lcsAppendStreamEmbryo;
     lcsAppendStreamEmbryo.init(lcsStream, lcsAppendParams);
     lcsAppendStreamEmbryo.getStream()->setName("LcsClusterAppendExecStream");
-    
+
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, lcsAppendStreamEmbryo);
 
@@ -336,7 +336,7 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
     // bit (nRows/8) plus max number of segments (nRows/bitmapColSize)
     // times 8 bytes for each starting rid in the segment
     uint bufferSize = std::max(
-        16, (int) (nRows/8 + nRows/bitmapColSize * 8));
+        16, (int) (nRows / 8 + nRows / bitmapColSize * 8));
     pBuffer.reset(new FixedBuffer[bufferSize]);
     valuesParams.pTupleBuffer = pBuffer;
 
@@ -354,12 +354,13 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
 
     // setup parameters into scan
     //  nClusters cluster with nCols columns each
-    
+
     for (uint i = 0; i < nClusters; i++) {
         struct LcsClusterScanDef clusterScanDef;
 
-        for (uint j = 0; j < nCols; j++)
+        for (uint j = 0; j < nCols; j++) {
             clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+        }
 
         clusterScanDef.pSegment = bTreeClusters[i]->segmentAccessor.pSegment;
         clusterScanDef.pCacheAccessor =
@@ -384,9 +385,9 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
     SharedExecStream pOutputStream;
 
-    pOutputStream = 
+    pOutputStream =
         prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
-    
+
     // setup generators for result stream
 
     vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
@@ -417,7 +418,7 @@ int LcsRowScanExecStreamTest::generateBitmaps(
     bitmapTupleData[1].cbData = 0;
     bitmapTupleData[2].pData = NULL;
     bitmapTupleData[2].cbData = 0;
-        
+
     bitmapTupleAccessor.compute(bitmapTupleDesc);
 
     // setup an LbmEntry with the initial rid value
@@ -437,7 +438,7 @@ int LcsRowScanExecStreamTest::generateBitmaps(
     }
     // write out the last LbmEntry
     produceEntry(lbmEntry, bitmapTupleAccessor, pBuf, bufSize);
-    
+
     return bufSize;
 }
 
@@ -457,7 +458,7 @@ void LcsRowScanExecStreamTest::testScans()
     // 3. test projection
     // 4. test skipping of rows
     // 5. test full table scan
-    
+
     uint nRows = 50000;
     uint nCols = 12;
     uint nClusters = 3;
@@ -468,9 +469,11 @@ void LcsRowScanExecStreamTest::testScans()
     // there
 
     // scan all rows and columns
-    for (uint i = 0; i < nClusters; i++)
-        for (uint j = 0; j < nCols; j++)
+    for (uint i = 0; i < nClusters; i++) {
+        for (uint j = 0; j < nCols; j++) {
             proj.push_back(i * nCols + j);
+        }
+    }
     testScanCols(nRows, nCols, nClusters, proj, 1, nRows);
     resetExecStreamTest();
 
@@ -496,13 +499,13 @@ void LcsRowScanExecStreamTest::testScans()
 
     // read every 7 rows, same projection as above
     testScanCols(
-        nRows, nCols, nClusters, proj, 7, (int) ceil((double) nRows/7));
+        nRows, nCols, nClusters, proj, 7, (int) ceil((double) nRows / 7));
     resetExecStreamTest();
-    
+
 
     // read every 37 rows, same projection as above
     testScanCols(
-        nRows, nCols, nClusters, proj, 37, (int) ceil((double) nRows/37));
+        nRows, nCols, nClusters, proj, 37, (int) ceil((double) nRows / 37));
     resetExecStreamTest();
 
     // full table scan -- input stream is empty
@@ -519,7 +522,7 @@ void LcsRowScanExecStreamTest::testScans()
     testFilterCols(nRows, nCols, nClusters, proj, 1, 1000, false);
 
     resetExecStreamTest();
-    
+
     // scan all columns execept the 1st & 2nd of the 1st & 2nd cluster
     proj.resize(0);
     for (uint i = 0; i < nClusters; i++) {
@@ -535,13 +538,13 @@ void LcsRowScanExecStreamTest::testScans()
 
     // skip one cluster; also setup the input so every 7 rows are skipped
     proj.resize(0);
-    for (uint i = 0; i < nClusters-1; i++) {
+    for (uint i = 0; i < nClusters - 1; i++) {
         for (uint j = 0; j < nCols; j++) {
             proj.push_back(i * nCols + j);
         }
     }
     testFilterCols(
-        nRows, nCols, nClusters, proj, 7, 1000/7 + 1, false);
+        nRows, nCols, nClusters, proj, 7, 1000 / 7 + 1, false);
 }
 
 void LcsRowScanExecStreamTest::testCompressedFiltering()
@@ -551,7 +554,7 @@ void LcsRowScanExecStreamTest::testCompressedFiltering()
     // 3. test projection
     // 4. test skipping of rows
     // 5. test full table scan
-    
+
     uint nRows = 50000;
     uint nCols = 12;
     uint nClusters = 3;
@@ -571,7 +574,7 @@ void LcsRowScanExecStreamTest::testCompressedFiltering()
     testFilterCols(nRows, nCols, nClusters, proj, 1, 500*NDUPS+500, true);
 
     resetExecStreamTest();
-    
+
     // scan all columns execept the 1st & 2nd of the 1st & 2nd cluster
     proj.resize(0);
     for (uint i = 0; i < nClusters; i++) {
@@ -587,7 +590,7 @@ void LcsRowScanExecStreamTest::testCompressedFiltering()
 
     // skip one cluster
     proj.resize(0);
-    for (uint i = 0; i < nClusters-1; i++) {
+    for (uint i = 0; i < nClusters - 1; i++) {
         for (uint j = 0; j < nCols; j++) {
             proj.push_back(i * nCols + j);
         }
@@ -610,8 +613,8 @@ void LcsRowScanExecStreamTest::testScanOnEmptyCluster()
     bTreeDescriptor.tupleDescriptor.push_back(attrDesc_int64);
     bTreeDescriptor.tupleDescriptor.push_back(attrDesc_int64);
     bTreeDescriptor.keyProjection.push_back(0);
-    bTreeDescriptor.rootPageId = NULL_PAGE_ID; 
-    
+    bTreeDescriptor.rootPageId = NULL_PAGE_ID;
+
     BTreeBuilder builder(bTreeDescriptor, pRandomSegment);
     builder.createEmptyRoot();
     bTreeDescriptor.rootPageId = builder.getRootPageId();
@@ -620,7 +623,7 @@ void LcsRowScanExecStreamTest::testScanOnEmptyCluster()
     // return no rows
 
     TupleProjection proj;
-    
+
     proj.push_back(0);
     testScanCols(1, 1, 1, proj, 1, 0);
 }
@@ -760,7 +763,7 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     // bit (nRows/8) plus max number of segments (nRows/bitmapColSize)
     // times 8 bytes for each starting rid in the segment
     uint bufferSize = std::max(
-        16, (int) (nRows/8 + nRows/bitmapColSize * 8));
+        16, (int) (nRows / 8 + nRows / bitmapColSize * 8));
     pBuffer.reset(new FixedBuffer[bufferSize]);
     valuesParams.pTupleBuffer = pBuffer;
 
@@ -781,7 +784,7 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     // 2. 500 <= key1 - nCols < 2999 or  (key1 - nCols) == 2999
     // 3  key2 - 2*nCols > 1500
     //
-    // where key0 corresponds to column #0, 
+    // where key0 corresponds to column #0,
     // key1 corresponds to the column #nCols, and
     // key2 corresponds to column #(2*nCols)
 
@@ -825,10 +828,11 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     uint offset1 = 0;
 
     setSearchKey(
-        '[', ')', 500+nCols, 2999+nCols, inputBuf1, offset1, inputTupleAccessor,
+        '[', ')', 500 + nCols, 2999 + nCols, inputBuf1, offset1,
+        inputTupleAccessor,
         inputTupleData1);
     setSearchKey(
-        '[', ']', 2999+nCols, 2999+nCols, inputBuf1, offset1,
+        '[', ']', 2999 + nCols, 2999 + nCols, inputBuf1, offset1,
         inputTupleAccessor, inputTupleData1);
 
     TupleData inputTupleData2(inputTupleDesc);
@@ -866,8 +870,9 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     for (uint i = 0; i < nClusters; i++) {
         struct LcsClusterScanDef clusterScanDef;
 
-        for (uint j = 0; j < nCols; j++)
+        for (uint j = 0; j < nCols; j++) {
             clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+        }
 
         clusterScanDef.pSegment = bTreeClusters[i]->segmentAccessor.pSegment;
         clusterScanDef.pCacheAccessor =
@@ -911,10 +916,10 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     for (uint i = 0; i < proj.size(); i++) {
         SharedInt64ColumnGenerator col =
             SharedInt64ColumnGenerator(
-                compressed ? 
+                compressed ?
                     (Int64ColumnGenerator*) new MixedDupColumnGenerator(
-                        NDUPS, proj[i]+2000,500) :
-                    new SeqColumnGenerator(proj[i]+offset, skipRows));
+                        NDUPS, proj[i] + 2000,500) :
+                    new SeqColumnGenerator(proj[i] + offset, skipRows));
         columnGenerators.push_back(col);
     }
 
@@ -930,7 +935,7 @@ void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nRowsActual,
                                                   uint skipRows,
                                                   TableSamplingMode mode,
                                                   float rate, int seed,
-                                                  uint clumps, 
+                                                  uint clumps,
                                                   uint expectedNumRows)
 {
     // setup input rid stream
@@ -956,13 +961,13 @@ void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nRowsActual,
     // (nRowsInternal/bitmapColSize) times 8 bytes for each starting rid in the
     // segment
     uint bufferSize = std::max(
-        16, (int) (nRowsInternal/8 + nRowsInternal/bitmapColSize * 8));
+        16, (int) (nRowsInternal / 8 + nRowsInternal / bitmapColSize * 8));
     pBuffer.reset(new FixedBuffer[bufferSize]);
     valuesParams.pTupleBuffer = pBuffer;
 
     if (nRowsInternal > 0) {
         valuesParams.bufSize = generateBitmaps(
-            nRowsInternal, skipRows, valuesParams.outputTupleDesc, 
+            nRowsInternal, skipRows, valuesParams.outputTupleDesc,
             pBuffer.get());
         assert(valuesParams.bufSize <= bufferSize);
         scanParams.isFullScan = false;
@@ -975,12 +980,13 @@ void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nRowsActual,
 
     // setup parameters into scan
     //  nClusters cluster with nCols columns each
-    
+
     for (uint i = 0; i < nClusters; i++) {
         struct LcsClusterScanDef clusterScanDef;
 
-        for (uint j = 0; j < nCols; j++)
+        for (uint j = 0; j < nCols; j++) {
             clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+        }
 
         clusterScanDef.pSegment = bTreeClusters[i]->segmentAccessor.pSegment;
         clusterScanDef.pCacheAccessor =
@@ -1000,7 +1006,7 @@ void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nRowsActual,
         scanParams.outputTupleDesc.push_back(attrDesc_int64);
     }
 
-    
+
     // setup sampling
     scanParams.samplingMode = mode;
     scanParams.samplingRate = rate;
@@ -1014,9 +1020,9 @@ void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nRowsActual,
     scanStreamEmbryo.getStream()->setName("RowScanExecStream");
     SharedExecStream pOutputStream;
 
-    pOutputStream = 
+    pOutputStream =
         prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
-    
+
     // setup generators for result stream
 
     vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
@@ -1051,14 +1057,14 @@ void LcsRowScanExecStreamTest::testSampleScanCols(uint nRows, uint nRowsActual,
 }
 
 void LcsRowScanExecStreamTest::testCaseSetUp()
-{    
+{
     ExecStreamUnitTestBase::testCaseSetUp();
 
     attrDesc_char1 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
-    bitmapColSize = pRandomSegment->getUsablePageSize()/8;
+    bitmapColSize = pRandomSegment->getUsablePageSize() / 8;
     attrDesc_bitmap = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
         true, bitmapColSize);
@@ -1066,8 +1072,9 @@ void LcsRowScanExecStreamTest::testCaseSetUp()
 
 void LcsRowScanExecStreamTest::testCaseTearDown()
 {
-    for (uint i = 0; i < bTreeClusters.size(); i++)
+    for (uint i = 0; i < bTreeClusters.size(); i++) {
         bTreeClusters[i]->segmentAccessor.reset();
+    }
     ExecStreamUnitTestBase::testCaseTearDown();
 }
 

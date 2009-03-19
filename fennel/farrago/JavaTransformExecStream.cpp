@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2008 The Eigenbase Project
-// Copyright (C) 2006-2008 Disruptive Tech
-// Copyright (C) 2006-2008 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -179,7 +179,7 @@ ExecStreamResult JavaTransformExecStream::execute(
     // in the case where no outputs are defined?  There are no
     // unit tests demonstrating this pattern in Fennel, but
     // there should be.
-    
+
     int cb = pEnv->CallIntMethod(
         farragoTransform,
         JniUtil::methFarragoTransformExecute,

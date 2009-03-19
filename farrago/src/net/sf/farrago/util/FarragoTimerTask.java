@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,22 +24,26 @@ package net.sf.farrago.util;
 import java.util.*;
 import java.util.logging.*;
 
+
 /**
  * FarragoTimerTask refines {@link TimerTask} to guarantee safety based on the
  * way Farrago runs timers (see {@link FarragoTimerAllocation}).
  *
- *<p>
- *
- * TODO jvs 13-Aug-2007:  add a facility for subclasses to be able to
- * distinguish fatal exceptions from recoverable ones, so that
- * timers can be allowed to keep running after an exception.
+ * <p>TODO jvs 13-Aug-2007: add a facility for subclasses to be able to
+ * distinguish fatal exceptions from recoverable ones, so that timers can be
+ * allowed to keep running after an exception.
  *
  * @author John Sichi
  * @version $Id$
  */
-public abstract class FarragoTimerTask extends TimerTask
+public abstract class FarragoTimerTask
+    extends TimerTask
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final Logger tracer;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoTimerTask.
@@ -50,6 +54,8 @@ public abstract class FarragoTimerTask extends TimerTask
     {
         this.tracer = tracer;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement Runnable
     public final void run()

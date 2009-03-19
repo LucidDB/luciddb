@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -74,7 +74,7 @@ protected:
      * in the output projection
      */
     std::vector<uint> projMap;
-    
+
     /**
      * Number of clusters to be scanned
      */
@@ -117,7 +117,7 @@ protected:
      * Accessors used for loading actual column values.
      */
     std::vector<UnalignedAttributeAccessor> attrAccessors;
-    
+
     /**
      * Reads column values based on current position of cluster reader
      *

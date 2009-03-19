@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,8 +57,8 @@ public class FarragoCatalogInit
      * intentionally lower-case to match the SQL Server convention.
      */
     public static final String SA_USER_NAME = "sa";
-    
-    /** 
+
+    /**
      * Default jdbc connection timeout in milliseconds
      */
     public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 86400000;
@@ -124,7 +124,7 @@ public class FarragoCatalogInit
                 txn.commit();
             }
         }
-        
+
         tracer.info("Creation of system-owned catalog objects committed");
     }
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -52,7 +52,7 @@ LogicalTxn::LogicalTxn(
     // states, eliminating the overhead of a full-cache checkpoint when log is
     // committed.
     pOutputStream->setWriteLatency(WRITE_EAGER_ASYNC);
-    
+
     state = STATE_LOGGING_TXN;
     svpt.cbActionPrev = 0;
     svpt.cbLogged = 0;
@@ -130,7 +130,7 @@ void LogicalTxn::rollback(SavepointId const *pSvptId)
     if (pSvptId) {
         uint iSvpt = opaqueToInt(*pSvptId);
         assert(iSvpt < savepoints.size());
-        savepoints.resize(iSvpt+1);
+        savepoints.resize(iSvpt + 1);
         rollbackToSavepoint(savepoints[iSvpt]);
         return;
     }
@@ -141,7 +141,7 @@ void LogicalTxn::rollback(SavepointId const *pSvptId)
     // do this now so that participants don't try to write to log during
     // rollback
     forgetAllParticipants();
-    
+
     SharedSegment pLongLogSegment = pOutputStream->getSegment();
     SharedByteInputStream pInputStream =
         pOutputStream->getInputStream(SEEK_STREAM_END);
@@ -211,7 +211,7 @@ void LogicalTxn::rollbackToSavepoint(LogicalTxnSavepoint &oldSvpt)
         participants.begin(),
         participants.end(),
         boost::bind(&LogicalTxnParticipant::enableLogging,_1,false));
-    
+
     // TODO:  for short logs, could just reuse memory
 
     SharedByteInputStream pInputStream =

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -61,12 +61,12 @@ public:
     std::string format(const t0 &p0, const t1 &p1, const t2 &p2) const
     {
         boost::format fmt = prepareFormatter(3);
-      
+
         return boost::io::str(fmt % p0 % p1 % p2);
     }
 
     template<typename t0, typename t1, typename t2, typename t3>
-    std::string format(const t0 &p0, const t1 &p1, const t2 &p2, 
+    std::string format(const t0 &p0, const t1 &p1, const t2 &p2,
                        const t3 &p3) const
     {
         boost::format fmt = prepareFormatter(4);
@@ -148,3 +148,5 @@ private:
 FENNEL_END_NAMESPACE
 
 #endif // not Fennel_ResourceDefinition_Included
+
+// End ResourceDefinition.h

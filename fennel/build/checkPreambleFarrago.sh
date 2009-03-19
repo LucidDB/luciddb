@@ -20,10 +20,10 @@ farragoDir=$(dirname $0)/../../farrago
 # required depends upon the zone of the file:
 # * LucidEra: Files under farrago/src/com/lucidera must have
 #   Eigenbase and LucidEra copyright notices.
-# * Disruptive Tech: Files under farrago/src/com/disruptivetech must
-#   have Eigenbase and Disruptive Tech copyright notices.
+# * SQLstream: Files under farrago/src/com/disruptivetech must
+#   have Eigenbase and SQLstream copyright notices.
 # * Eigenbase: All other files must have Eigenbase, LucidEra and
-#   Disruptive Tech copyright notices.
+#   SQLstream copyright notices.
 
 # NOTE jvs 16-Nov-2005:  I removed $resgenDir/src from the find directory
 # list below for the reasons given above.

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,17 +45,17 @@ struct TupleDatum
 {
     TupleStorageByteLength cbData;
     PConstBuffer pData;
-  
+
     union
     {
         uint16_t data16;
         uint32_t data32;
         uint64_t data64;
     };
-    
+
     inline explicit TupleDatum();
     inline TupleDatum(TupleDatum const &other);
-    
+
     /*
      * Test if this TupleDatum represents NULL value.
      *
@@ -73,26 +73,26 @@ struct TupleDatum
      *
      * @note
      * See the note of copyFrom method.
-     * 
+     *
      * @param [in] other the source TupleDatum
      */
     inline TupleDatum &operator = (TupleDatum const &other);
 
     /**
      * Copies data from source(shallow copy).
-     * 
+     *
      * @note
      * pData is set to the source data buffer. If pData points to any buffer
      * before this call, it will no longer point to that buffer after this
      * function call.
-     * 
-     * @param [in] other the source TupleDatum 
+     *
+     * @param [in] other the source TupleDatum
      */
     inline void copyFrom(TupleDatum const &other);
 
     /**
      * Copies data into TupleDatum's private buffer(deep copy).
-     * 
+     *
      * @note
      * pData must point to allocated memory before calling this function. If
      * this TupleDatum is part of a TupleDataWithBuffer class,  pData will
@@ -105,7 +105,7 @@ struct TupleDatum
      * @par
      * Upon return, pData might no longer point to allocated memory if the
      * source has a null data pointer.
-     * 
+     *
      * @param [in] other the source TupleDatum
      */
     void memCopyFrom(TupleDatum const &other);

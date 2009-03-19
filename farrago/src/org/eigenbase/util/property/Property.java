@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This library is free software; you can redistribute it and/or modify it
 // under the terms of the GNU Lesser General Public License as published by the
@@ -261,12 +261,11 @@ public abstract class Property
         {
             // this is the object to add to list
             Object o =
-                (trigger.isPersistent())
-                    ? trigger
-                    : (Object) new WeakReference/*<Trigger>*/(trigger);
+                (trigger.isPersistent()) ? trigger
+                : (Object) new WeakReference /*<Trigger>*/(trigger);
 
             // Add a Trigger in the correct group of phases in the list
-            for (ListIterator/*<Object>*/ it = listIterator(); it.hasNext();) {
+            for (ListIterator /*<Object>*/ it = listIterator(); it.hasNext();) {
                 Trigger t = convert(it.next());
 
                 if (t == null) {
@@ -311,8 +310,7 @@ public abstract class Property
          *
          * <p/>In addition, removes any {@link WeakReference} that is empty.
          *
-         * <p>Synchronizes on {@code property} while modifying the trigger
-         * list.
+         * <p>Synchronizes on {@code property} while modifying the trigger list.
          *
          * @param property The property whose change caused this property to
          * fire
@@ -326,9 +324,9 @@ public abstract class Property
             // a clone) so that we can remove any WeakReference whose
             // content has become null. Synchronize, per the locking strategy,
             // while the copy is being made.
-            List/*<Trigger>*/ l = new ArrayList/*<Trigger>*/();
+            List /*<Trigger>*/ l = new ArrayList /*<Trigger>*/();
             synchronized (property) {
-                for (Iterator/*<Object>*/ it = iterator(); it.hasNext();) {
+                for (Iterator /*<Object>*/ it = iterator(); it.hasNext();) {
                     Trigger t = convert(it.next());
                     if (t == null) {
                         it.remove();

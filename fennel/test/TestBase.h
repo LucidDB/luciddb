@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,14 +47,14 @@ FENNEL_BEGIN_NAMESPACE
 class TestBase
     : public TraceTarget,
         public boost::enable_shared_from_this<TestBase>
-    
+
 {
 protected:
     /**
      * Boost test suite.
      */
     TestSuite *pTestSuite;
-    
+
     boost::shared_ptr<TestBase> pTestObj;
 
     /**
@@ -66,7 +66,7 @@ protected:
      * Protects traceStream.
      */
     StrictMutex traceMutex;
-    
+
     /**
      * Name of test.
      */
@@ -116,14 +116,14 @@ protected:
      * Collects a group of named test-case definitions.
      * Preserves the order; allows lookup by name.
      */
-    class TestCaseGroup 
+    class TestCaseGroup
     {
-        struct Item 
+        struct Item
         {
             std::string name;
             boost::unit_test::test_unit * tu;
             Item(std::string name, boost::unit_test::test_unit* tu)
-                :name(name), tu(tu) {}
+                : name(name), tu(tu) {}
         };
         /** the test cases, in order of definition */
         std::vector<Item> items;
@@ -144,7 +144,7 @@ public:
     static ParamName paramStatsFileName;
     static ParamName paramTraceStdout;
     static ParamName paramDegreeOfParallelism;
-    
+
     /**
      * Configuration parameters.  The reason this is static is so that no
      * constructor parameters (which burden virtual bases) are needed.
@@ -165,13 +165,13 @@ public:
      * method is invoked.  Default is no-op.
      */
     virtual void testCaseSetUp();
-    
+
     /**
      * Equivalent to JUnit TestCase.tearDown; this is called after each test
      * case method is invoked.  Default is no-op.
      */
     virtual void testCaseTearDown();
-    
+
     // implement TraceTarget
     virtual void notifyTrace(
         std::string source,TraceLevel level,std::string message);
@@ -191,7 +191,7 @@ public:
 private:
     std::string name;
     boost::shared_ptr<UserTestClass> pUserTestCase;
-    
+
 public:
     // Constructor
     TestWrapperTemplate(
@@ -271,10 +271,10 @@ do { \
     TestWrapper::FunctionType params [] = \
         { &UserTestClass::testMethodName }; \
     boost::unit_test::test_unit *tu = \
-        boost::unit_test::make_test_case<TestWrapper>( \
+        boost::unit_test::make_test_case<TestWrapper>(\
             &TestWrapper::runTest, \
             #testMethodName, \
-            boost::shared_ptr<TestWrapper>(new TestWrapper( \
+            boost::shared_ptr<TestWrapper>(new TestWrapper(\
                 #testMethodName, \
                 pDerivedTestObj)), \
             params, \

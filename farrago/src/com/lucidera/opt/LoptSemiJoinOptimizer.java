@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -427,9 +427,10 @@ public class LoptSemiJoinOptimizer
                 LoptMetadataProvider.getSimpleColumnOrigin(
                     factRel,
                     keyIter.next());
+
             // can't use the rid column as a semijoin key
-            if (colOrigin == null ||
-                LucidDbSpecialOperators.isLcsRidColumnId(
+            if ((colOrigin == null)
+                || LucidDbSpecialOperators.isLcsRidColumnId(
                     colOrigin.getOriginColumnOrdinal()))
             {
                 removeKey = true;
@@ -445,7 +446,7 @@ public class LoptSemiJoinOptimizer
                 } else {
                     // the tables must match because the column has
                     // a simple origin
-                    assert(table == theTable);
+                    assert (table == theTable);
                 }
             }
             if (!removeKey) {
@@ -668,7 +669,7 @@ public class LoptSemiJoinOptimizer
         if (selectivity > .5) {
             return 0;
         }
-        
+
         RelOptCost factCost = RelMetadataQuery.getCumulativeCost(factRel);
 
         // if not enough information, return a low score

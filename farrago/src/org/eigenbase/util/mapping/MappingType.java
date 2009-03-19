@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -67,15 +67,15 @@ public enum MappingType
     Function,
 
     /**
-     * An inverse surjection has a source for every target,
-     * and no source has more than one target.
+     * An inverse surjection has a source for every target, and no source has
+     * more than one target.
      */
     //                  4      1   <= 1 partial  1 Surjection
     InverseSurjection,
 
     /**
-     * A partial surjection has no more than one source for any target,
-     * and no more than one target for any source.
+     * A partial surjection has no more than one source for any target, and no
+     * more than one target for any source.
      */
     //                  5   <= 1   <= 1 partial  5 PartialSurjection
     PartialSurjection,
@@ -99,17 +99,19 @@ public enum MappingType
     Eleven,
 
     /**
-     * An inverse function has a source for every target,
-     * but a source might have 0, 1 or more targets.
+     * An inverse function has a source for every target, but a source might
+     * have 0, 1 or more targets.
      *
-     * <p>Obeys the constaints {@link MappingType#isMandatorySource()},
-     * {@link MappingType#isSingleSource()}.
+     * <p>Obeys the constaints {@link MappingType#isMandatorySource()}, {@link
+     * MappingType#isSingleSource()}.
      *
-     * <p>Similar types:<ul>
+     * <p>Similar types:
+     *
+     * <ul>
      * <li> {@link #InverseSurjection} is stronger (a source may not have
-     *      multiple targets);
-     * <li>{@link #InversePartialFunction} is weaker (a target
-     *     may have 0 or 1 sources).
+     * multiple targets);
+     * <li>{@link #InversePartialFunction} is weaker (a target may have 0 or 1
+     * sources).
      * </ul>
      */
     //                 12      1    any multi    3 Function

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -73,25 +73,24 @@ public class LcsAppendStreamDef
                 repos,
                 lcsTable.getCwmColumnSet());
     }
-    
+
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Initializes the clustered and unclustered indexes relevant to the
-     * stream that will be created.
+     * Initializes the clustered and unclustered indexes relevant to the stream
+     * that will be created.
      */
     protected void setupIndexes()
     {
         replaceColumns = false;
         indexGuide = lcsTable.getIndexGuide();
-       
+
         // Get the clustered and unclustered indexes associated with this table
         CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
-        clusteredIndexes =
-            FarragoCatalogUtil.getClusteredIndexes(repos, table);
+        clusteredIndexes = FarragoCatalogUtil.getClusteredIndexes(repos, table);
         unclusteredIndexes =
             FarragoCatalogUtil.getUnclusteredIndexes(repos, table);
-        
+
         if (appendRel.getInput(0).getRowType().getFieldCount()
             < indexGuide.getFlattenedRowType().getFieldCount())
         {
@@ -115,17 +114,18 @@ public class LcsAppendStreamDef
                     iter.remove();
                 }
             }
-            assert(clusteredIndexes.size() == 1);
+            assert (clusteredIndexes.size() == 1);
 
             // Create a new index guide which pretends that the
             // table only consists of the new clustered index.
-            indexGuide = new LcsIndexGuide(
-                lcsTable.getPreparingStmt().getFarragoTypeFactory(),
-                table,
-                clusteredIndexes);
+            indexGuide =
+                new LcsIndexGuide(
+                    lcsTable.getPreparingStmt().getFarragoTypeFactory(),
+                    table,
+                    clusteredIndexes);
         }
     }
-    
+
     /**
      * Creates the top half of an insert execution stream, i.e., the part that
      * appends the clustered indexes.
@@ -137,9 +137,9 @@ public class LcsAppendStreamDef
      */
     public FemBarrierStreamDef createClusterAppendStreams(
         FennelRelImplementor implementor)
-    {       
+    {
         setupIndexes();
-        
+
         // if the table has unclustered indexes, the output from the append
         // stream contains a startRid; so make sure to reflect that in the
         // output descriptors
@@ -153,7 +153,7 @@ public class LcsAppendStreamDef
         //
 
         List<FemLcsClusterAppendStreamDef> clusterAppendDefs =
-            new ArrayList<FemLcsClusterAppendStreamDef>();               
+            new ArrayList<FemLcsClusterAppendStreamDef>();
         createClusterAppends(implementor, clusterAppendDefs);
 
         //
@@ -179,7 +179,7 @@ public class LcsAppendStreamDef
         //                                  ...
         //                               -> clusterAppend ->
         //
-        
+
         //
         // Setup the SplitterStreamDef, unless there's only one
         // clusterAppend, in which case no splitter is needed.
@@ -206,12 +206,12 @@ public class LcsAppendStreamDef
 
         return barrier;
     }
-    
+
     protected FemSplitterStreamDef createSplitter()
     {
         return indexGuide.newSplitter(lcsTable.getRowType());
     }
-    
+
     protected void createClusterAppends(
         FennelRelImplementor implementor,
         List<FemLcsClusterAppendStreamDef> clusterAppendDefs)
@@ -227,7 +227,7 @@ public class LcsAppendStreamDef
                     alterTable));
         }
     }
-    
+
     /**
      * @return true if this append stream graph will have an index creation
      * substream
@@ -236,7 +236,7 @@ public class LcsAppendStreamDef
     {
         return hasIndexes;
     }
-    
+
     /**
      * Creates the bottom half of an insert execution stream, i.e., the part the
      * inserts into the unclustered indexes.
@@ -519,4 +519,4 @@ public class LcsAppendStreamDef
     }
 }
 
-// End LcsAppendStreamDef
+// End LcsAppendStreamDef.java

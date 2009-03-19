@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,7 @@ FENNEL_BEGIN_NAMESPACE
 // NOTE jvs 2-Jun-2007:  And it turns out that there were big problems
 // with boost::read_write_mutex, so it has been removed from the Boost
 // thread library, at least for now.
-    
+
 /**
  * An SXMutex implements a standard readers/writers exclusion scheme: any
  * number of shared-lock threads may hold the lock at one time, during which
@@ -85,16 +85,16 @@ public:
 
     explicit SXMutex();
     ~SXMutex();
-    
+
     bool waitFor(
         LockMode lockMode,uint iTimeout = ETERNITY,
         TxnId txnId = IMPLICIT_TXN_ID);
     void release(LockMode lockMode, TxnId txnId = IMPLICIT_TXN_ID);
     bool tryUpgrade(TxnId txnId = IMPLICIT_TXN_ID);
-    
+
     bool isLocked(LockMode lockdMode) const;
     void setSchedulingPolicy(SchedulingPolicy schedulingPolicy);
-    
+
 private:
     SchedulingPolicy schedulingPolicy;
     uint nShared,nExclusive,nExclusivePending;
@@ -111,16 +111,16 @@ class SXMutexGuard : public boost::noncopyable
 {
     SXMutex &rwLock;
     bool m_locked;
-    
+
 public:
-    explicit SXMutexGuard(SXMutex& mx, bool initially_locked=true)
+    explicit SXMutexGuard(SXMutex& mx, bool initially_locked = true)
         : rwLock(mx), m_locked(false)
     {
         if (initially_locked) {
             lock();
         }
     }
-    
+
     ~SXMutexGuard()
     {
         if (m_locked) {
@@ -134,7 +134,7 @@ public:
         rwLock.waitFor(lockMode);
         m_locked = true;
     }
-    
+
     void unlock()
     {
         assert(m_locked);
@@ -146,7 +146,7 @@ public:
     {
         return m_locked;
     }
-    
+
     operator const void*() const
     {
         return m_locked ? this : 0;
@@ -160,3 +160,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
+// End SXMutex.h

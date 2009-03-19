@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,7 @@ class ExecStreamScheduler;
  * A stream is always a node is a stream graph, but over its lifetime it
  * may be moved from one graph to another. Specifically, it may be
  * prepared in one graph (see ExecStreamGraphEmbro), executed in another,
- * and finally closed & deleted in a third graph. 
+ * and finally closed & deleted in a third graph.
  *
  * <p>
  *
@@ -61,7 +61,7 @@ class ExecStreamGraph
         public ClosableObject
 {
     friend class ExecStreamScheduler;
-    
+
 protected:
     /**
      * A Scheduler responsible for executing streams in this graph.
@@ -76,9 +76,9 @@ protected:
      * Manager that handles dynamic parameters for this graph
      */
     SharedDynamicParamManager pDynamicParamManager;
-        
+
     explicit ExecStreamGraph();
-    
+
 public:
     /**
      * Constructs a new ExecStreamGraph.
@@ -86,14 +86,14 @@ public:
      * @return new graph
      */
     static SharedExecStreamGraph newExecStreamGraph();
-    
+
     virtual ~ExecStreamGraph();
 
     /**
      * @return pointer to executing scheduler, or null if there is none.
      */
     inline ExecStreamScheduler *getScheduler() const;
-    
+
     /**
      * @return reference to the DynamicParamManager for this graph.
      */
@@ -235,7 +235,7 @@ public:
      */
     virtual SharedExecStream findStream(
         std::string name) = 0;
-    
+
     /**
      * Finds last stream known for name. May be original stream or an adapter.
      *
@@ -248,9 +248,9 @@ public:
     virtual SharedExecStream findLastStream(
         std::string name,
         uint iOutput) = 0;
-    
+
     /**
-     * Interposes an adapter stream. In the process, creates a dataflow 
+     * Interposes an adapter stream. In the process, creates a dataflow
      * from last stream associated with name to the adapter stream.
      *
      * @param name name of stream to adapt
@@ -297,7 +297,7 @@ public:
      */
     virtual uint getInputCount(
         ExecStreamId streamId) = 0;
-    
+
     /**
      * Determines number of explicit output flows produced by a stream.
      *
@@ -307,7 +307,7 @@ public:
      */
     virtual uint getOutputCount(
         ExecStreamId streamId) = 0;
-    
+
     /**
      * Accesses a stream's input.
      *
@@ -386,7 +386,7 @@ public:
      * @param dotStream ostream on which to write .dot representation
      */
     virtual void renderGraphviz(std::ostream &dotStream) = 0;
-    
+
     /**
      * @return true if graph has no cycles
      */

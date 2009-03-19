@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,15 +32,13 @@ import org.eigenbase.sql2rel.*;
 
 
 /**
- * ScalarSubqueryConverter converts subqueries to scalar constants by
- * evaulating them and passing back the resulting constant expression.
- * By doing so, this means that the statement containing the subquery can no
- * longer be cached.
- * 
- * <p> 
- * This class can also be used to convert EXISTS subqueries by replacing
- * the EXISTS with a boolean value indicating whether the subquery returns
- * zero (FALSE) or at least one (TRUE) row.
+ * ScalarSubqueryConverter converts subqueries to scalar constants by evaulating
+ * them and passing back the resulting constant expression. By doing so, this
+ * means that the statement containing the subquery can no longer be cached.
+ *
+ * <p>This class can also be used to convert EXISTS subqueries by replacing the
+ * EXISTS with a boolean value indicating whether the subquery returns zero
+ * (FALSE) or at least one (TRUE) row.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -48,19 +46,19 @@ import org.eigenbase.sql2rel.*;
 public class ScalarSubqueryConverter
     implements SubqueryConverter
 {
-    //~ Instance fields
-    
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoSessionPreparingStmt stmt;
-    
+
     //~ Constructors -----------------------------------------------------------
-    
+
     public ScalarSubqueryConverter(FarragoSessionPreparingStmt stmt)
     {
         this.stmt = stmt;
     }
-    
+
     //~ Methods ----------------------------------------------------------------
-    
+
     // implement SubqueryConverter
     public boolean canConvertSubquery()
     {

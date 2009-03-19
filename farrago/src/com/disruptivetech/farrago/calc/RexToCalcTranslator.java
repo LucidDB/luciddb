@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,10 +46,13 @@ import org.eigenbase.util.*;
 public class RexToCalcTranslator
     implements RexVisitor<CalcReg>
 {
+    //~ Instance fields --------------------------------------------------------
+
     // The following 3 fields comprise the program; they are reset each time a
     // new program is started.
     final CalcProgramBuilder builder = new CalcProgramBuilder();
-    private final Map<String,CalcReg> namedTempRegisters = new HashMap<String,CalcReg>();
+    private final Map<String, CalcReg> namedTempRegisters =
+        new HashMap<String, CalcReg>();
 
     protected final CalcRexImplementorTable implementorTable;
 
@@ -75,10 +78,10 @@ public class RexToCalcTranslator
     protected int labelOrdinal = 0;
 
     /**
-     * Ordered mapping from types (representing a family of types) to
-     * the corresponding calculator type. The ordering ensures determinacy.
+     * Ordered mapping from types (representing a family of types) to the
+     * corresponding calculator type. The ordering ensures determinacy.
      */
-    private final List<Pair<RelDataType,CalcProgramBuilder.OpType>> knownTypes;
+    private final List<Pair<RelDataType, CalcProgramBuilder.OpType>> knownTypes;
 
     /**
      * Aggregate operation (add, drop) currently being implemented.
@@ -130,108 +133,108 @@ public class RexToCalcTranslator
         knownTypes = createTypeMap(fac);
     }
 
-    private static List<Pair<RelDataType,CalcProgramBuilder.OpType>>
+    //~ Methods ----------------------------------------------------------------
+
+    private static List<Pair<RelDataType, CalcProgramBuilder.OpType>>
     createTypeMap(
         RelDataTypeFactory fac)
     {
         return Arrays.asList(
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.TINYINT),
                 CalcProgramBuilder.OpType.Int1),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.SMALLINT),
                 CalcProgramBuilder.OpType.Int2),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.INTEGER),
                 CalcProgramBuilder.OpType.Int4),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.BIGINT),
                 CalcProgramBuilder.OpType.Int8),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.DECIMAL),
                 CalcProgramBuilder.OpType.Int8),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.FLOAT),
                 CalcProgramBuilder.OpType.Double),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.DOUBLE),
                 CalcProgramBuilder.OpType.Double),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.REAL),
                 CalcProgramBuilder.OpType.Real),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.VARBINARY, 0),
                 CalcProgramBuilder.OpType.Varbinary),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.VARCHAR, 0),
                 CalcProgramBuilder.OpType.Varchar),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.BOOLEAN),
                 CalcProgramBuilder.OpType.Bool),
 
             // FIXME: not right for T/w TZ.
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.DATE),
                 CalcProgramBuilder.OpType.Int8),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.TIME),
                 CalcProgramBuilder.OpType.Int8),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.TIMESTAMP),
                 CalcProgramBuilder.OpType.Int8),
 
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createSqlType(SqlTypeName.SYMBOL),
                 CalcProgramBuilder.OpType.Int4),
 
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(Byte.class),
                 CalcProgramBuilder.OpType.Int1),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(byte.class),
                 CalcProgramBuilder.OpType.Int1),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(Short.class),
                 CalcProgramBuilder.OpType.Int2),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(short.class),
                 CalcProgramBuilder.OpType.Int2),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(Integer.class),
                 CalcProgramBuilder.OpType.Int4),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(int.class),
                 CalcProgramBuilder.OpType.Int4),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(Long.class),
                 CalcProgramBuilder.OpType.Int8),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(long.class),
                 CalcProgramBuilder.OpType.Int8),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(Double.class),
                 CalcProgramBuilder.OpType.Double),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(double.class),
                 CalcProgramBuilder.OpType.Double),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(Float.class),
                 CalcProgramBuilder.OpType.Real),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(float.class),
                 CalcProgramBuilder.OpType.Real),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(String.class),
                 CalcProgramBuilder.OpType.Varchar),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(Boolean.class),
                 CalcProgramBuilder.OpType.Bool),
-            new Pair<RelDataType,CalcProgramBuilder.OpType>(
+            new Pair<RelDataType, CalcProgramBuilder.OpType>(
                 fac.createJavaType(boolean.class),
                 CalcProgramBuilder.OpType.Bool));
     }
-
-    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the relational expression this program is being generated for.
@@ -324,7 +327,9 @@ public class RexToCalcTranslator
                 CalcProgramBuilder.OpType.Int8,
                 -1);
         }
-        for (Pair<RelDataType,CalcProgramBuilder.OpType> knownType : knownTypes) {
+        for (
+            Pair<RelDataType, CalcProgramBuilder.OpType> knownType : knownTypes)
+        {
             if (SqlTypeUtil.sameNamedType(relDataType, knownType.left)) {
                 calcType = knownType.right;
                 break;
@@ -406,31 +411,36 @@ public class RexToCalcTranslator
     }
 
     /**
-     * Return a local variable named "name". Create it using the
-     * specified type if it does not already exist.
-     * 
+     * Return a local variable named "name". Create it using the specified type
+     * if it does not already exist.
+     *
      * @param name name of variable
      * @param opType Type of variable to create
+     *
      * @return register named "name"
      */
-    protected CalcReg getTempRegister(String name, CalcProgramBuilder.OpType opType)
+    protected CalcReg getTempRegister(
+        String name,
+        CalcProgramBuilder.OpType opType)
     {
         CalcReg result = namedTempRegisters.get(name);
         if (result == null) {
-            result = builder.newLocal( opType, -1);
+            result = builder.newLocal(opType, -1);
             namedTempRegisters.put(name, result);
         }
         return result;
     }
-    
-    protected CalcReg getTempBoolRegister() {
+
+    protected CalcReg getTempBoolRegister()
+    {
         return getTempRegister("TempBool", CalcProgramBuilder.OpType.Bool);
     }
-    
-    protected CalcReg getTempInt4Register() {
+
+    protected CalcReg getTempInt4Register()
+    {
         return getTempRegister("TempInt4", CalcProgramBuilder.OpType.Int4);
     }
-    
+
     /**
      * Translates an array of project expressions and an optional filter
      * expression into a {@link CalcProgramBuilder} calculator program using a
@@ -484,11 +494,15 @@ public class RexToCalcTranslator
 
             // row didn't match
             CalcProgramBuilder.move.add(
-                builder, statusReg, builder.newBoolLiteral(true));
+                builder,
+                statusReg,
+                builder.newBoolLiteral(true));
             builder.addReturn();
             builder.addLabel(prepareOutput);
             CalcProgramBuilder.move.add(
-                builder, statusReg, builder.newBoolLiteral(false));
+                builder,
+                statusReg,
+                builder.newBoolLiteral(false));
         }
 
         // row matched. Now calculate all the outputs
@@ -589,8 +603,8 @@ public class RexToCalcTranslator
      *
      * @param program Program, containing pre-expressions, aggregate
      * expressions, post-expressions, and optionally a filter.
-     * @param aggOp Aggregate operation (Init, Add, InitAdd or Drop),
-     * must not be null.
+     * @param aggOp Aggregate operation (Init, Add, InitAdd or Drop), must not
+     * be null.
      */
     public String getAggProgram(
         RexProgram program,
@@ -696,17 +710,21 @@ public class RexToCalcTranslator
 
             // row didnt match
             CalcProgramBuilder.move.add(
-                builder, statusReg, builder.newBoolLiteral(true));
+                builder,
+                statusReg,
+                builder.newBoolLiteral(true));
             builder.addReturn();
             builder.addLabel(prepareOutput);
             CalcProgramBuilder.move.add(
-                builder, statusReg, builder.newBoolLiteral(false));
+                builder,
+                statusReg,
+                builder.newBoolLiteral(false));
         }
 
         // row matched. Now calculate all the outputs
         // The projectExprs are the overs for a given partition.
         for (RexLocalRef node : projectExprs) {
-            assert(getResult(node, false)==null) : "Common subexpressions should pushed into outer projection.";
+            assert (getResult(node, false) == null) : "Common subexpressions should pushed into outer projection.";
             implementNode(node);
         }
 
@@ -955,10 +973,14 @@ public class RexToCalcTranslator
 
             if (op.getKind().isA(SqlKind.And)) {
                 CalcProgramBuilder.move.add(
-                    builder, result, builder.newBoolLiteral(false));
+                    builder,
+                    result,
+                    builder.newBoolLiteral(false));
             } else {
                 CalcProgramBuilder.move.add(
-                    builder, result, builder.newBoolLiteral(true));
+                    builder,
+                    result,
+                    builder.newBoolLiteral(true));
             }
 
             setResult(call, result);
@@ -1490,7 +1512,7 @@ public class RexToCalcTranslator
                     throw new TranslationException();
                 }
             }
-            
+
             final SqlOperator op = call.getOperator();
             CalcRexImplementor implementor =
                 translator.implementorTable.get(op);

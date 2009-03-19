@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -74,8 +74,9 @@ bool LcsClusterReader::getFirstClusterPageForRead(
     bool found;
 
     found = bTreeReader->searchFirst();
-    if (!found)
+    if (!found) {
         return false;
+    }
 
     LcsClusterNode const &node = readClusterPage();
     pBlock = &node;
@@ -87,8 +88,9 @@ bool LcsClusterReader::getNextClusterPageForRead(PConstLcsClusterNode &pBlock)
     bool found;
 
     found = bTreeReader->searchNext();
-    if (!found)
+    if (!found) {
         return false;
+    }
 
     LcsClusterNode const &node = readClusterPage();
     pBlock = &node;
@@ -102,8 +104,9 @@ void LcsClusterReader::initColumnReaders(
     nClusterCols = nClusterColsInit;
     nColsToRead = clusterProj.size();
     clusterCols.reset(new LcsColumnReader[nColsToRead]);
-    for (uint i = 0; i < nColsToRead; i++)
+    for (uint i = 0; i < nColsToRead; i++) {
         clusterCols[i].init(this, clusterProj[i]);
+    }
 }
 
 void LcsClusterReader::open()
@@ -139,8 +142,9 @@ bool LcsClusterReader::position(LcsRid rid)
         // current block.
 
         found = positionInBlock(rid);
-        if (found)
+        if (found) {
             return true;
+        }
     } else {
         if (noPrefetch) {
             if (!bTreeReader->searchFirst()) {
@@ -164,11 +168,12 @@ bool LcsClusterReader::position(LcsRid rid)
             return false;
         }
     }
-    
+
     found = positionInBlock(rid);
     // page ends before "rid"; we must be off the last block
-    if (!found)
+    if (!found) {
         return false;
+    }
 
     return true;
 }
@@ -199,7 +204,7 @@ void LcsClusterReader::moveToBlock(PageId clusterPageId)
     pLHdr = &page;
     setUpBlock();
 }
-        
+
 bool LcsClusterReader::moveToBlockWithRid(LcsRid rid)
 {
     PageId clusterPageId;
@@ -290,7 +295,7 @@ void LcsClusterReader::setUpBlock()
 bool LcsClusterReader::advance(uint nRids)
 {
     uint newPos = nRangePos + nRids;
-    
+
     if (newPos < pRangeBatches->nRow) {
         nRangePos = newPos;
         return true;

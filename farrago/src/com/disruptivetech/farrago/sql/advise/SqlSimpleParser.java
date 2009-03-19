@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,7 @@ package com.disruptivetech.farrago.sql.advise;
 
 import java.util.*;
 
+
 /**
  * A simple parser that takes an incomplete and turn it into a syntactically
  * correct statement. It is used in the SQL editor user-interface.
@@ -32,7 +33,66 @@ import java.util.*;
  */
 public class SqlSimpleParser
 {
-    //~ Static fields/initializers ---------------------------------------------
+    //~ Enums ------------------------------------------------------------------
+
+    enum TokenType
+    {
+        // keywords
+        SELECT, FROM, JOIN, ON, USING, WHERE, GROUP, HAVING, ORDER, BY,
+
+        UNION, INTERSECT, EXCEPT,
+
+        /**
+         * left parenthesis
+         */
+        LPAREN {
+            public String sql()
+            {
+                return "(";
+            }
+        },
+
+        /**
+         * right parenthesis
+         */
+        RPAREN {
+            public String sql()
+            {
+                return ")";
+            }
+        },
+
+        /**
+         * identifier, or indeed any miscellaneous sequence of characters
+         */
+        ID,
+
+        /**
+         * double-quoted identifier, e.g. "FOO""BAR"
+         */
+        DQID,
+
+        /**
+         * single-quoted string literal, e.g. 'foobar'
+         */
+        SQID, COMMENT,
+        COMMA {
+            public String sql()
+            {
+                return ",";
+            }
+        },
+
+        /**
+         * A token created by reducing an entire subquery.
+         */
+        QUERY;
+
+        public String sql()
+        {
+            return name();
+        }
+    }
 
     //~ Instance fields --------------------------------------------------------
 
@@ -114,7 +174,8 @@ public class SqlSimpleParser
         return buf.toString();
     }
 
-    private void consumeQuery(ListIterator<Token> iter, List<Token> outList) {
+    private void consumeQuery(ListIterator<Token> iter, List<Token> outList)
+    {
         while (iter.hasNext()) {
             consumeSelect(iter, outList);
             if (iter.hasNext()) {
@@ -126,7 +187,7 @@ public class SqlSimpleParser
                     outList.add(token);
                     if (iter.hasNext()) {
                         token = iter.next();
-                        if (token.type == TokenType.ID
+                        if ((token.type == TokenType.ID)
                             && token.s.equalsIgnoreCase("ALL"))
                         {
                             outList.add(token);
@@ -146,14 +207,12 @@ public class SqlSimpleParser
         }
     }
 
-    private void consumeSelect(
-        ListIterator<Token> iter,
-        List<Token> outList)
+    private void consumeSelect(ListIterator<Token> iter, List<Token> outList)
     {
         boolean isQuery = false;
         int start = outList.size();
         List<Token> subqueryList = new ArrayList<Token>();
-        loop:
+loop:
         while (iter.hasNext()) {
             Token token = iter.next();
             subqueryList.add(token);
@@ -178,12 +237,13 @@ public class SqlSimpleParser
             default:
             }
         }
+
         // Fell off end of list. Pretend we saw the required right-paren.
         if (isQuery) {
             outList.subList(start, outList.size()).clear();
             outList.add(new Query(subqueryList));
-            if (outList.size() >= 2
-                && outList.get(outList.size() - 2).type == TokenType.LPAREN)
+            if ((outList.size() >= 2)
+                && (outList.get(outList.size() - 2).type == TokenType.LPAREN))
             {
                 outList.add(new Token(TokenType.RPAREN));
             }
@@ -195,27 +255,31 @@ public class SqlSimpleParser
 
     //~ Inner Classes ----------------------------------------------------------
 
-    public static class Tokenizer {
-        final String sql;
-        private final String hintToken;
-        private int pos;
-        int start = 0;
-
+    public static class Tokenizer
+    {
         private static final Map<String, TokenType> map =
             new HashMap<String, TokenType>();
+
         static {
             for (TokenType type : TokenType.values()) {
                 map.put(type.name(), type);
             }
         }
 
-        public Tokenizer(String sql, String hintToken) {
+        final String sql;
+        private final String hintToken;
+        private int pos;
+        int start = 0;
+
+        public Tokenizer(String sql, String hintToken)
+        {
             this.sql = sql;
             this.hintToken = hintToken;
             this.pos = 0;
         }
 
-        public Token nextToken() {
+        public Token nextToken()
+        {
             while (pos < sql.length()) {
                 char c = sql.charAt(pos);
                 final String match;
@@ -233,6 +297,7 @@ public class SqlSimpleParser
                     return new Token(TokenType.RPAREN);
 
                 case '"':
+
                     // Parse double-quoted identifier.
                     start = pos;
                     ++pos;
@@ -261,6 +326,7 @@ public class SqlSimpleParser
                     return new Token(TokenType.DQID, match);
 
                 case '\'':
+
                     // Parse single-quoted identifier.
                     start = pos;
                     ++pos;
@@ -286,6 +352,7 @@ public class SqlSimpleParser
                     return new Token(TokenType.SQID, match);
 
                 case '/':
+
                     // possible start of '/*' or '//' comment
                     if (pos < sql.length()) {
                         char c1 = sql.charAt(pos + 1);
@@ -316,7 +383,7 @@ public class SqlSimpleParser
                         // in identifiers.
                         int start = pos;
                         ++pos;
-                        loop:
+loop:
                         while (pos < sql.length()) {
                             c = sql.charAt(pos);
                             switch (c) {
@@ -382,9 +449,7 @@ public class SqlSimpleParser
 
         public String toString()
         {
-            return s == null
-                ? type.toString()
-                : (type + "(" + s + ")");
+            return (s == null) ? type.toString() : (type + "(" + s + ")");
         }
 
         public void unparse(StringBuilder buf)
@@ -397,16 +462,18 @@ public class SqlSimpleParser
         }
     }
 
-    public static class IdToken extends Token
+    public static class IdToken
+        extends Token
     {
         public IdToken(TokenType type, String s)
         {
             super(type, s);
-            assert type == TokenType.DQID || type == TokenType.ID;
+            assert (type == TokenType.DQID) || (type == TokenType.ID);
         }
     }
 
-    static class Query extends Token
+    static class Query
+        extends Token
     {
         private final List<Token> tokenList;
 
@@ -436,8 +503,7 @@ public class SqlSimpleParser
             for (Token token : list) {
                 if (token instanceof Query) {
                     Query query = (Query) token;
-                    if (query.contains(hintToken))
-                    {
+                    if (query.contains(hintToken)) {
                         list.clear();
                         list.add(query.simplify(hintToken));
                         break;
@@ -499,6 +565,7 @@ public class SqlSimpleParser
                     break;
                 case FROM:
                 case JOIN:
+
                     // See comments against ON/USING.
                     purgeSelect();
                     purgeFromExcept(hintToken);
@@ -508,6 +575,7 @@ public class SqlSimpleParser
                     break;
                 case ON:
                 case USING:
+
                     // We need to treat expressions in FROM and JOIN
                     // differently than ON and USING. Consider
                     //     FROM t1 JOIN t2 ON b1 JOIN t3 USING (c2)
@@ -533,6 +601,7 @@ public class SqlSimpleParser
                     purgeWhere();
                     break;
                 case QUERY:
+
                     // Indicates that the expression to be simplified is
                     // outside this subquery. Preserve a simplified SELECT
                     // clause.
@@ -548,7 +617,8 @@ public class SqlSimpleParser
                 switch (token.type) {
                 case QUERY: {
                     Query query = (Query) token;
-                    query.simplify(query == foundInSubquery ? hintToken : null);
+                    query.simplify(
+                        (query == foundInSubquery) ? hintToken : null);
                     break;
                 }
                 }
@@ -619,8 +689,9 @@ public class SqlSimpleParser
             int itemStart = 1;
             for (int i = 1; i < sublist.size(); i++) {
                 Token token = sublist.get(i);
-                if (i + 1 == sublist.size()
-                    || sublist.get(i + 1).type == TokenType.COMMA) {
+                if (((i + 1) == sublist.size())
+                    || (sublist.get(i + 1).type == TokenType.COMMA))
+                {
                     if (token.type == TokenType.ID) {
                         newSelectClause.add(new Token(TokenType.ID, "0"));
                         newSelectClause.add(new Token(TokenType.ID, "AS"));
@@ -630,7 +701,7 @@ public class SqlSimpleParser
                             sublist.subList(itemStart, i + 1));
                     }
                     itemStart = i + 2;
-                    if (i + 1 < sublist.size()) {
+                    if ((i + 1) < sublist.size()) {
                         newSelectClause.add(new Token(TokenType.COMMA));
                     }
                 }
@@ -667,9 +738,10 @@ public class SqlSimpleParser
                     }
                 }
             }
+
             // Don't simplify a FROM clause containing a JOIN: we lose help
             // with syntax.
-            if (found && joinCount == 0) {
+            if (found && (joinCount == 0)) {
                 if (itemEnd == -1) {
                     itemEnd = sublist.size();
                 }
@@ -718,20 +790,22 @@ public class SqlSimpleParser
         {
             int start = -1;
             int k = -1;
-            EnumSet<TokenType> clauses = EnumSet.of(
-                TokenType.SELECT,
-                TokenType.FROM,
-                TokenType.WHERE,
-                TokenType.GROUP,
-                TokenType.HAVING,
-                TokenType.ORDER);
+            EnumSet<TokenType> clauses =
+                EnumSet.of(
+                    TokenType.SELECT,
+                    TokenType.FROM,
+                    TokenType.WHERE,
+                    TokenType.GROUP,
+                    TokenType.HAVING,
+                    TokenType.ORDER);
             for (Token token : tokenList) {
                 ++k;
                 if (token.type == keyword) {
                     start = k;
-                } else if (start >= 0
-                    && clauses.contains(token.type)) {
-                   return tokenList.subList(start, k);
+                } else if ((start >= 0)
+                    && clauses.contains(token.type))
+                {
+                    return tokenList.subList(start, k);
                 }
             }
             if (start >= 0) {
@@ -757,76 +831,6 @@ public class SqlSimpleParser
                 }
             }
             return false;
-        }
-    }
-
-    enum TokenType {
-        // keywords
-        SELECT,
-        FROM,
-        JOIN,
-        ON,
-        USING,
-        WHERE,
-        GROUP,
-        HAVING,
-        ORDER,
-        BY,
-
-        UNION,
-        INTERSECT,
-        EXCEPT,
-
-        /**
-         * left parenthesis
-         */
-        LPAREN {
-            public String sql()
-            {
-                return "(";
-            }
-        },
-
-        /**
-         * right parenthesis
-         */
-        RPAREN {
-            public String sql()
-            {
-                return ")";
-            }
-        },
-
-        /**
-         * identifier, or indeed any miscellaneous sequence of characters
-         */
-        ID,
-
-        /**
-         * double-quoted identifier, e.g. "FOO""BAR"
-         */
-        DQID,
-
-        /**
-         * single-quoted string literal, e.g. 'foobar'
-         */
-        SQID,
-        COMMENT,
-        COMMA {
-            public String sql()
-            {
-                return ",";
-            }
-        },
-
-        /**
-         * A token created by reducing an entire subquery.
-         */
-        QUERY;
-
-        public String sql()
-        {
-            return name();
         }
     }
 }

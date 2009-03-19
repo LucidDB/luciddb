@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,18 +30,12 @@ package org.eigenbase.sql.validate;
  */
 public enum SqlMonotonicity
 {
-    StrictlyIncreasing,
-    Increasing,
-    StrictlyDecreasing,
-    Decreasing,
-    Constant,
+    StrictlyIncreasing, Increasing, StrictlyDecreasing, Decreasing, Constant,
     NotMonotonic;
 
     /**
-     * If this is a strict monotonicity
-     * (StrictlyIncreasing, StrictlyDecreasing)
-     * returns the non-strict equivalent
-     * (Increasing, Decreasing).
+     * If this is a strict monotonicity (StrictlyIncreasing, StrictlyDecreasing)
+     * returns the non-strict equivalent (Increasing, Decreasing).
      *
      * @return non-strict equivalent monotonicity
      */
@@ -80,8 +74,8 @@ public enum SqlMonotonicity
 
     /**
      * Whether values of this monotonicity are decreasing. That is, if a value
-     * at a given point in a sequence is X, no point later in the sequence
-     * will have a value greater than X.
+     * at a given point in a sequence is X, no point later in the sequence will
+     * have a value greater than X.
      *
      * @return whether values are decreasing
      */
@@ -97,8 +91,8 @@ public enum SqlMonotonicity
     }
 
     /**
-     * Returns whether values of this monotonicity may ever repeat:
-     * true for {@link #NotMonotonic} and {@link #Constant}, false otherwise.
+     * Returns whether values of this monotonicity may ever repeat: true for
+     * {@link #NotMonotonic} and {@link #Constant}, false otherwise.
      *
      * <p>If a column is known not to repeat, a sort on that column can make
      * progress before all of the input has been seen.

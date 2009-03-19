@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -116,8 +116,8 @@ class CalcExtWinAggFuncTest : virtual public TestBase, public TraceSource
     void testCalcExtMinMaxInt();
     void testCalcExtMinMaxDbl();
     void testCalcExtMinMaxStr();
-    
-    
+
+
     void initWindowedAggDataBlock(
         TupleDataWithBuffer* outTuple,
         StandardTypeDescriptorOrdinal dType);
@@ -125,7 +125,7 @@ class CalcExtWinAggFuncTest : virtual public TestBase, public TraceSource
     void printOutput(
         TupleData const & tup,
         Calculator const & calc);
-    
+
 public:
     explicit CalcExtWinAggFuncTest()
         : TraceSource(shared_from_this(),"CalcExtWinAggFuncTest")
@@ -137,7 +137,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtWinAggFuncTest, testCalcExtMinMaxStr);
 
     }
-     
+
     virtual ~CalcExtWinAggFuncTest()
     {
     }
@@ -157,7 +157,7 @@ CalcExtWinAggFuncTest::printOutput(
 }
 
 
-void 
+void
 CalcExtWinAggFuncTest::checkWarnings(Calculator& calc, string expected)
 {
     try {
@@ -165,7 +165,7 @@ CalcExtWinAggFuncTest::checkWarnings(Calculator& calc, string expected)
     } catch(...) {
         BOOST_FAIL("An exception was thrown while running program");
     }
-    
+
     int i = calc.warnings().find(expected);
 
     if (i < 0) {
@@ -176,7 +176,7 @@ CalcExtWinAggFuncTest::checkWarnings(Calculator& calc, string expected)
         msg += calc.warnings();
 
         BOOST_FAIL(msg);
-    }   
+    }
 }
 
 
@@ -208,7 +208,7 @@ CalcExtWinAggFuncTest::initWindowedAggDataBlock(
     // Allocate
     Calculator calc(0);
     calc.outputRegisterByReference(false);
-    
+
     // Assemble the script
     try {
         calc.assemble(pg.str().c_str());
@@ -217,13 +217,13 @@ CalcExtWinAggFuncTest::initWindowedAggDataBlock(
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
 
-    
+
     outTuple->computeAndAllocate(calc.getOutputRegisterDescriptor());
-    
+
     TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
 
     calc.bind(&inTuple, outTuple);
-    
+
     calc.exec();
     printOutput(*outTuple, calc);
 }
@@ -258,7 +258,7 @@ WinAggAddTest(
     // Allocate
     Calculator calc(0);
     calc.outputRegisterByReference(false);
-    
+
     // Assemble the script
     try {
         calc.assemble(pg.str().c_str());
@@ -266,22 +266,22 @@ WinAggAddTest(
     catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
-    
+
     TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
 
     for (int i=0; i < 10; i++) {
-        TupleDataWithBuffer *inTuple = 
+        TupleDataWithBuffer *inTuple =
             new TupleDataWithBuffer(calc.getInputRegisterDescriptor());
         testTuples.push_back(inTuple);
 
         calc.bind(inTuple, &outTuple);
-        
+
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
-        
+
         TupleDatum* pTD = &((*inTuple)[0]);
         pTD->pData = reinterpret_cast<PConstBuffer>(&testData[TEST_DATA_INDEX][i]);
-    
+
         calc.exec();
 
         (*check)(&outTuple,testData,i);
@@ -320,7 +320,7 @@ WinAggDropTest(
     // Allocate
     Calculator calc(0);
     calc.outputRegisterByReference(false);
-    
+
     // Assemble the script
     try {
         calc.assemble(pg.str().c_str());
@@ -339,12 +339,12 @@ WinAggDropTest(
         TupleDatum* pTD = &(*inTuple)[0];
 
         calc.bind(inTuple, &outTuple);
-        
+
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
-    
+
         pTD->pData = reinterpret_cast<PConstBuffer>(&testData[TEST_DATA_INDEX][i]);
-    
+
         calc.exec();
 
         (*check)(&outTuple, testData, i);
@@ -380,7 +380,7 @@ WinAggAddTestStr(
     // Allocate
     Calculator calc(0);
     calc.outputRegisterByReference(false);
-    
+
     // Assemble the script
     try {
         calc.assemble(pg.str().c_str());
@@ -388,7 +388,7 @@ WinAggAddTestStr(
     catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
-    
+
     TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
 
     for (int i=0; i < STR_SAMPLE_SIZE; i++) {
@@ -396,13 +396,13 @@ WinAggAddTestStr(
         testTuples.push_back(inTuple);
 
         calc.bind(inTuple, &outTuple);
-        
+
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
-        
+
         TupleDatum* pTD = &((*inTuple)[0]);
         pTD->pData = reinterpret_cast<PConstBuffer>(testData[TEST_DATA_INDEX][i]);
-    
+
         calc.exec();
 
         (*check)(&outTuple,testData,i);
@@ -438,7 +438,7 @@ WinAggDropTestStr(
     // Allocate
     Calculator calc(0);
     calc.outputRegisterByReference(false);
-    
+
     // Assemble the script
     try {
         calc.assemble(pg.str().c_str());
@@ -457,12 +457,12 @@ WinAggDropTestStr(
         TupleDatum* pTD = &(*inTuple)[0];
 
         calc.bind(inTuple, &outTuple);
-        
+
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
-    
+
         pTD->pData = reinterpret_cast<PConstBuffer>(testData[TEST_DATA_INDEX][i]);
-    
+
         calc.exec();
 
         (*check)(&outTuple, testData, i);
@@ -505,15 +505,15 @@ void checkAddDbl(
 {
     int64_t rowCount = *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData));
     BOOST_CHECK_EQUAL(index+1, rowCount);
-    
+
     double tdSum = testData[SUM_INDEX][index];
     double calcSum = *(reinterpret_cast<const double*>((*outTuple)[1].pData));
     BOOST_CHECK_CLOSE(tdSum, calcSum, 0.1);
-    
+
     double tdMin = testData[MIN_INDEX][index];
     double calcMin = *(reinterpret_cast<const double*>((*outTuple)[3].pData));
     BOOST_CHECK_EQUAL(tdMin, calcMin);
-    
+
     double tdMax = testData[MAX_INDEX][index];
     double calcMax = *(reinterpret_cast<const double*>((*outTuple)[4].pData));
     BOOST_CHECK_EQUAL(tdMax, calcMax);
@@ -547,7 +547,7 @@ void checkDropStr(
     char* testData[][STR_SAMPLE_SIZE],
     int index)
 {
-    
+
 }
 
 /// Helper function to compare a tuple with an expected string value.
@@ -559,7 +559,7 @@ void checkEqualStr(
     if (NULL != expected && NULL != rtnStr) {
         const char *rtnStrEnd = rtnStr + tuple.cbData;
         const char *expectedEnd = expected + strlen(expected);
-    
+
         BOOST_CHECK_EQUAL_COLLECTIONS(rtnStr, rtnStrEnd, expected, expectedEnd);
     } else {
         BOOST_CHECK(expected == rtnStr);
@@ -589,7 +589,7 @@ CalcExtWinAggFuncTest::testCalcExtMinMaxInt()
 {
     // Clear the vector that holds the TupleData for the simulated window.
     testTuples.clear();
-    
+
     // Test windowing integer type
     TupleDataWithBuffer intAggTuple;
     initWindowedAggDataBlock(&intAggTuple, STANDARD_TYPE_INT_64);
@@ -602,7 +602,7 @@ CalcExtWinAggFuncTest::testCalcExtMinMaxDbl()
 {
     // Clear the vector that holds the TupleData for the simulated window.
     testTuples.clear();
-    
+
     // windowing real type
     TupleDataWithBuffer dblAggTuple;
     initWindowedAggDataBlock(&dblAggTuple, STANDARD_TYPE_DOUBLE);
@@ -614,7 +614,7 @@ void
 CalcExtWinAggFuncTest::testCalcExtMinMaxStr()
 {
     testTuples.clear();
-    
+
     // Test VARCHAR
     TupleDataWithBuffer vcAggTuple;
     initWindowedAggDataBlock(&vcAggTuple, STANDARD_TYPE_VARCHAR);
@@ -626,3 +626,4 @@ CalcExtWinAggFuncTest::testCalcExtMinMaxStr()
 
 FENNEL_UNIT_TEST_SUITE(CalcExtWinAggFuncTest);
 
+// End CalcExtWinAggFuncTest.cpp

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -48,7 +48,7 @@ class BTreeReadersTest : virtual public SegStorageTestBase
         iValueMax = 1000000000
     };
 
-    struct LeafRecord 
+    struct LeafRecord
     {
         int32_t key;
         int32_t value;
@@ -56,7 +56,7 @@ class BTreeReadersTest : virtual public SegStorageTestBase
 
     BTreeDescriptor treeDescriptor;
     TupleDescriptor nonLeafDescriptor;
-    
+
     TupleAccessor leafTupleAccessor;
     TupleData keyData;
     TupleData leafTupleData;
@@ -69,29 +69,29 @@ class BTreeReadersTest : virtual public SegStorageTestBase
     int32_t readNonLeafKey();
     PageId readPageId();
     int32_t readLeafValue();
-    
+
     void testOneLevel()
     {
         testReaders(200);
     }
-    
+
     void testTwoLevels()
     {
         testReaders(20000);
     }
-    
+
     void testThreeLevels()
     {
         testReaders(200000);
     }
-    
+
     void testReaders(uint nRecords);
     void testScan(SharedByteInputStream, uint nRecords);
     void testSearch(SharedByteInputStream, uint nRecords);
 
     void marshalLeafRecord();
     void unmarshalLeafRecord(SharedByteInputStream pInputStream);
-    
+
 public:
     explicit BTreeReadersTest()
     {
@@ -160,7 +160,7 @@ void BTreeReadersTest::testReaders(uint nRecords)
 
     treeDescriptor.rootPageId = NULL_PAGE_ID;
     BTreeBuilder builder(treeDescriptor, pRandomSegment);
-    
+
     keyData.compute(builder.getKeyDescriptor());
     keyData[0].pData = reinterpret_cast<PConstBuffer>(&leafRecord.key);
 
@@ -221,7 +221,6 @@ void BTreeReadersTest::testSearch(
     BTreeNonLeafReader nonLeafReader(treeDescriptor);
     BTreeLeafReader leafReader(treeDescriptor);
     for (uint i = 0; i < nRecords; ++i) {
-
         // First search for the leaf pageId containing the desired key value
         // using the nonLeafReader, provided this is a multi-level tree.
         // If not, then directly search the leaf.
@@ -262,7 +261,7 @@ void BTreeReadersTest::testScan(
 {
     // Read records from both leaf and non-leaf pages starting from left
     // to right.
- 
+
     BTreeNonLeafReader nonLeafReader(treeDescriptor);
     BTreeLeafReader leafReader(treeDescriptor);
 
@@ -279,7 +278,6 @@ void BTreeReadersTest::testScan(
     }
 
     for (uint i = 0; i < nRecords;) {
-
         unmarshalLeafRecord(pInputStream);
         PageId leafPageId;
         if (rootOnly) {

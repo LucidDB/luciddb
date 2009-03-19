@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@ LinearDeviceSegmentParams::LinearDeviceSegmentParams()
 
 BlockNum LinearDeviceSegment::getAvailableDevicePages() const
 {
-    return pDevice->getSizeInBytes()/getFullPageSize() -
+    return pDevice->getSizeInBytes() / getFullPageSize() -
         CompoundId::getBlockNum(firstBlockId);
 }
 
@@ -111,11 +111,11 @@ PageId LinearDeviceSegment::allocatePageId(PageOwnerId)
     // nothing to do with PageOwnerId
 
     BlockNum newBlockNum = nPagesAllocated;
-    
+
     if (!ensureAllocatedSize(nPagesAllocated + 1)) {
         return NULL_PAGE_ID;
     }
-    
+
     return getLinearPageId(newBlockNum);
 }
 

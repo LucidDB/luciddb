@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -303,7 +303,7 @@ public class PushProjector
             nProject++;
         }
         nRightProject = projRefs.cardinality() - nProject;
-        
+
         if ((childRel instanceof JoinRelBase)
             || (childRel instanceof SetOpRel))
         {
@@ -321,14 +321,14 @@ public class PushProjector
                 }
             }
         }
-        
+
         // no need to push projections if all children fields are being
         // referenced and there are no special preserve expressions; note
         // that we need to do this check after we've handled the 0-column
         // project cases
         if (((projRefs.cardinality() == nChildFields)
-            && (childPreserveExprs.size() == 0)
-            && (rightPreserveExprs.size() == 0)))
+                && (childPreserveExprs.size() == 0)
+                && (rightPreserveExprs.size() == 0)))
         {
             return true;
         }

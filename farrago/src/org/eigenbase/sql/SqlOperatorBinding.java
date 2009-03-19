@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,11 +22,12 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
-import org.eigenbase.sql.validate.*;
-
 import java.util.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
  * <code>SqlOperatorBinding</code> represents the binding of an {@link
@@ -160,15 +161,15 @@ public abstract class SqlOperatorBinding
     {
         throw new UnsupportedOperationException();
     }
-    
+
     /**
      * Retrieves information about a column list parameter.
-     * 
+     *
      * @param ordinal ordinal position of the column list parameter
      * @param paramName name of the column list parameter
-     * @param columnList returns a list of the column names that are referenced in
-     * the column list parameter
-     * 
+     * @param columnList returns a list of the column names that are referenced
+     * in the column list parameter
+     *
      * @return the name of the parent cursor referenced by the column list
      * parameter if it is a column list parameter; otherwise, null is returned
      */

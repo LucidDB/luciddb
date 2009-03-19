@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -62,20 +62,20 @@ class FennelTempIdxSearchRel
      *
      * @param sourceRel underlying RelNode that will be used to populate the
      * temporary index to be searched
-     * @param indexKeys the projection from the sourceRel corresponding to
-     * the temporary index keys
-     * @param child input which produces the search directives and specifies
-     * the types of the search keys
-     * @param inputKeyProj the projection of input fields corresponding to
-     * the search keys
+     * @param indexKeys the projection from the sourceRel corresponding to the
+     * temporary index keys
+     * @param child input which produces the search directives and specifies the
+     * types of the search keys
+     * @param inputKeyProj the projection of input fields corresponding to the
+     * search keys
      * @param inputDirectiveProj the projection of input fields specifying the
      * search directives
-     * @param searchKeyParamIds dynamic parameter ids corresponding to
-     * the search keys
+     * @param searchKeyParamIds dynamic parameter ids corresponding to the
+     * search keys
      * @param keyOffsets offset within the search key that each dynamic
      * parameter corresponds to
-     * @param rootPageIdParamId dynamic parameter id that will be used to
-     * pass along the rootPageId of the temporary index to be searched
+     * @param rootPageIdParamId dynamic parameter id that will be used to pass
+     * along the rootPageId of the temporary index to be searched
      */
     public FennelTempIdxSearchRel(
         RelNode sourceRel,
@@ -190,6 +190,7 @@ class FennelTempIdxSearchRel
                 searchStream,
                 FennelDynamicParamId.StreamType.CONSUMER).intValue());
         searchStream.setRootPageId(-1);
+
         // Even though this stream reads data, it needs to be able to see
         // the data that was created by the same stream graph.
         searchStream.setReadOnlyCommittedData(false);

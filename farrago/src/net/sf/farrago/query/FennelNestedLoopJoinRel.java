@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2006 John V. Sichi
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,8 +35,8 @@ import org.eigenbase.util.*;
 
 
 /**
- * FennelNestedLoopJoinRel represents the Fennel implementation of a nested
- * loop join.
+ * FennelNestedLoopJoinRel represents the Fennel implementation of a nested loop
+ * join.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -44,23 +44,22 @@ import org.eigenbase.util.*;
 public class FennelNestedLoopJoinRel
     extends FennelMultipleRel
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private final JoinRelType joinType;
-    
+
     private final Integer [] leftJoinKeys;
-    
+
     private final FennelRelParamId [] joinKeyParamIds;
-    
+
     private final FennelRelParamId rootPageIdParamId;
-    
+
     private final double rowCount;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FennelNestedLoopJoinRel object.  
+     * Creates a new FennelNestedLoopJoinRel object.
      *
      * @param cluster RelOptCluster for this rel
      * @param inputs inputs into the nested loop join
@@ -69,10 +68,9 @@ public class FennelNestedLoopJoinRel
      * names
      * @param leftJoinKeys column offsets corresponding to join keys from LHS
      * input
-     * @param joinKeyParamIds dynamic parameters corresponding to LHS join
-     * keys
-     * @param rootPageIdParamId dynamic parameter corresponding to the root
-     * of the temp index
+     * @param joinKeyParamIds dynamic parameters corresponding to LHS join keys
+     * @param rootPageIdParamId dynamic parameter corresponding to the root of
+     * the temp index
      * @param rowCount rowCount returned from the join
      */
     public FennelNestedLoopJoinRel(
@@ -110,7 +108,7 @@ public class FennelNestedLoopJoinRel
             new FennelNestedLoopJoinRel(
                 getCluster(),
                 inputs.clone(),
-                joinType,               
+                joinType,
                 RelOptUtil.getFieldNameList(rowType),
                 leftJoinKeys.clone(),
                 joinKeyParamIds.clone(),
@@ -126,11 +124,11 @@ public class FennelNestedLoopJoinRel
         // TODO:  provide more realistic costing; currently using a formula
         // similar to LhxJoinRel but with a higher join selectivity
         double joinSelectivity = 0.2;
-        return
-            planner.makeCost(rowCount,
-                0,
-                rowCount * getRowType().getFieldList().size()
-                    * joinSelectivity);
+        return planner.makeCost(
+            rowCount,
+            0,
+            rowCount * getRowType().getFieldList().size()
+            * joinSelectivity);
     }
 
     // implement RelNode
@@ -141,10 +139,10 @@ public class FennelNestedLoopJoinRel
 
     // override RelNode
     public void explain(RelOptPlanWriter pw)
-    {   
+    {
         int nInputs = getInputs().length;
         String [] nameList = new String[nInputs + 3];
-        Object [] objects = new Object[3];     
+        Object [] objects = new Object[3];
         for (int i = 0; i < nInputs; i++) {
             nameList[i] = "child";
         }
@@ -156,7 +154,7 @@ public class FennelNestedLoopJoinRel
         objects[2] = Arrays.asList(joinKeyParamIds);
         pw.explain(this, nameList, objects);
     }
-    
+
     // implement RelNode
     protected RelDataType deriveRowType()
     {
@@ -184,14 +182,14 @@ public class FennelNestedLoopJoinRel
         }
         FennelDynamicParamId dynRootPageIdParamId =
             implementor.translateParamId(rootPageIdParamId);
-        
+
         RelNode [] inputs = getInputs();
         for (int i = 0; i < inputs.length; i++) {
             implementor.addDataFlowFromProducerToConsumer(
                 implementor.visitFennelChild((FennelRel) inputs[i], i),
                 streamDef);
         }
-        
+
         if (inputs.length == 3) {
             // Add an implicit dataflow from the stream that creates the
             // temporary index to the stream that searches the index.  This
@@ -205,19 +203,19 @@ public class FennelNestedLoopJoinRel
                 dynRootPageIdParamId.getProducerStream(),
                 dynRootPageIdParamId.getConsumerStream(),
                 true);
-        }     
-        
-        streamDef.setLeftOuter(joinType == JoinRelType.LEFT);        
-        
+        }
+
+        streamDef.setLeftOuter(joinType == JoinRelType.LEFT);
+
         streamDef.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
                 repos,
                 getCluster().getTypeFactory(),
                 this.getRowType()));
-        
+
         return streamDef;
     }
-    
+
     // implement RelNode
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
@@ -227,7 +225,7 @@ public class FennelNestedLoopJoinRel
             implementor.translateParamId(joinKeyParamIds[i]);
         }
         implementor.translateParamId(rootPageIdParamId);
-        
+
         return super.implementFennelChild(implementor);
     }
 }

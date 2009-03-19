@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@ FENNEL_BEGIN_NAMESPACE
  * preregistered with the external system. (For example, a Fennel long might
  * map to a decimal or datetime type.)
  */
-class ErrorSource 
+class ErrorSource
 {
     SharedErrorTarget pErrorTarget;
     std::string name;
@@ -75,7 +75,7 @@ protected:
 
 public:
     virtual ~ErrorSource();
-    
+
     /**
      * For use when initialization has to be deferred until after construction.
      *
@@ -86,7 +86,7 @@ public:
     virtual void initErrorSource(
         SharedErrorTarget pErrorTarget,
         const std::string &name);
-    
+
     /**
      * Posts an exception, such as a row exception.
      *
@@ -113,7 +113,7 @@ public:
     {
         return pErrorTarget.get() ? true : false;
     }
-    
+
     /**
      * @return the ErrorTarget for this source
      */
@@ -133,10 +133,10 @@ public:
 
     /**
      * Gets the name of this source. Useful to construct nested names for
-     * subcomponents that are also ErrorSources. 
+     * subcomponents that are also ErrorSources.
      * @return the name
      */
-    std::string getErrorSourceName() const 
+    std::string getErrorSourceName() const
     {
         return name;
     }
@@ -145,7 +145,7 @@ public:
      * Sets the name of this source. Useful to construct dynamic names for
      * fine-grained filtering.
      */
-    void setErrorSourceName(std::string const& n) 
+    void setErrorSourceName(std::string const& n)
     {
         name = n;
     }

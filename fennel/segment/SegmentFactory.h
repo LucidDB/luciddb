@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -51,7 +51,7 @@ class SegmentFactory
         public boost::enable_shared_from_this<SegmentFactory>
 {
     friend class TempSegDestructor;
-    
+
     static ParamName paramTraceSegments;
 
     /**
@@ -89,7 +89,7 @@ public:
     static SharedSegmentFactory newSegmentFactory(
         ConfigMap const &configMap,
         SharedTraceTarget pTraceTarget);
-    
+
     virtual ~SegmentFactory();
 
     /**
@@ -307,7 +307,7 @@ public:
         SharedCache pCache,
         DeviceMode deviceMode,
         std::string deviceFileName);
-    
+
     /**
      * Some implementations of the Segment interface extend the interface with
      * implementation-specific features.  dynamicCast provides access to a
@@ -351,7 +351,7 @@ public:
 
     /**
      * Casts a shared segment to a SnapshotRandomAllocationSegment, if the
-     * segment is in fact a SnapshotRandomAllocationSegment.  It may be 
+     * segment is in fact a SnapshotRandomAllocationSegment.  It may be
      * necessary to extract the SnapshotRandomAllocationSegment from a
      * DynamicDelegatingSegment.
      *
@@ -365,12 +365,12 @@ public:
 class TempSegDestructor : public ClosableObjectDestructor
 {
     SharedSegmentFactory pSegmentFactory;
-    
+
 public:
     explicit TempSegDestructor(SharedSegmentFactory);
     void operator()(Segment *pSegment);
 };
-    
+
 FENNEL_END_NAMESPACE
 
 #endif

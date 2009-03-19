@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@ FENNEL_BEGIN_NAMESPACE
 struct SegStreamNode : public StoredNode
 {
     static const MagicNumber MAGIC_NUMBER = 0x99f28198d53750a5LL;
-    
+
     uint cbData;
 };
 
@@ -70,7 +70,7 @@ typedef SegNodeLock<SegStreamNode> SegStreamLock;
 /**
  * Memento for a position within a SegStream.
  */
-struct SegStreamPosition 
+struct SegStreamPosition
 {
     /**
      * Physical position.
@@ -123,7 +123,7 @@ public:
     SharedSegment getSegment() const;
 
     /**
-     * @return segment accessor used by this stream 
+     * @return segment accessor used by this stream
      */
     SegmentAccessor const &getSegmentAccessor() const;
 };
@@ -135,14 +135,14 @@ public:
 class SegStreamMarker : public ByteStreamMarker
 {
     friend class SegInputStream;
-    
+
     /**
      * Position for random-access mark/reset.
      */
     SegStreamPosition segPos;
 
     explicit SegStreamMarker(SegStream const &segStream);
-    
+
     // implement ByteStreamMarker
     virtual FileSize getOffset() const;
 };

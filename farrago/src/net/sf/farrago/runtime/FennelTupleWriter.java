@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -52,9 +52,9 @@ public abstract class FennelTupleWriter
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Marshals one tuple if it can fit; otherwise, throws either
-     * {@link BufferOverflowException} or {@link IndexOutOfBoundsException}
-     * (depending on whether absolute or relative puts are used).
+     * Marshals one tuple if it can fit; otherwise, throws either {@link
+     * BufferOverflowException} or {@link IndexOutOfBoundsException} (depending
+     * on whether absolute or relative puts are used).
      *
      * @param sliceBuffer buffer to be filled with marshalled tuple data; on
      * entry, the buffer position is 0; on return, the buffer position should be

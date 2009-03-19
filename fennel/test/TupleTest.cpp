@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,7 +44,7 @@ class TupleTest : virtual public TestBase, public TraceSource
 
     TupleDescriptor tupleDesc;
     TupleAccessor tupleAccessor;
-    
+
     void writeMinData(TupleDatum &datum,uint typeOrdinal);
     void writeMaxData(TupleDatum &datum,uint typeOrdinal);
     void writeSampleData(TupleDatum &datum,uint typeOrdinal);
@@ -52,7 +52,7 @@ class TupleTest : virtual public TestBase, public TraceSource
     void checkData(TupleData const &tupleData1,TupleData const &tupleData2);
     void checkAlignment(
         TupleAttributeDescriptor const &desc, PConstBuffer pBuf);
-        
+
     void testStandardTypesNullable();
     void testStandardTypesNotNull();
     void testStandardTypesNetworkNullable();
@@ -74,7 +74,7 @@ class TupleTest : virtual public TestBase, public TraceSource
         std::string s = oss.str();
         FENNEL_TRACE(TRACE_FINE,s);
     }
-    
+
 public:
     explicit TupleTest()
         : TraceSource(shared_from_this(),"TupleTest")
@@ -90,7 +90,7 @@ public:
         // is set to 1.
         FENNEL_EXTRA_UNIT_TEST_CASE(TupleTest,testDebugAccess);
     }
-    
+
     virtual ~TupleTest()
     {
     }
@@ -149,10 +149,10 @@ void TupleTest::testStandardTypes(
     boost::scoped_array<FixedBuffer> pTupleBufFixed(
         new FixedBuffer[tupleAccessor.getMaxByteCount()]);
     tupleAccessorFixed.setCurrentTupleBuf(pTupleBufFixed.get(), false);
-    
+
     TupleData tupleDataFixed(tupleDesc);
     tupleAccessorFixed.unmarshal(tupleDataFixed);
-    
+
     TupleData::iterator pDatum = tupleDataFixed.begin();
     for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; ++i) {
         writeMinData(*pDatum,i);
@@ -172,7 +172,7 @@ void TupleTest::testStandardTypes(
     uint cbMaxData = testMarshal(tupleDataFixed);
     BOOST_CHECK(cbMaxData > cbMinData);
     BOOST_CHECK(cbMaxData <= tupleAccessor.getMaxByteCount());
-    
+
     pDatum = tupleDataFixed.begin();
     for (uint i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; ++i) {
         writeSampleData(*pDatum,i);
@@ -200,7 +200,7 @@ uint TupleTest::testMarshal(TupleData const &tupleDataFixed)
 {
     FENNEL_TRACE(TRACE_FINE,"reference tuple:");
     traceTuple(tupleDataFixed);
-    boost::scoped_array<FixedBuffer> pTupleBufVar( 
+    boost::scoped_array<FixedBuffer> pTupleBufVar(
         new FixedBuffer[tupleAccessor.getMaxByteCount()]);
 
     uint cbTuple = tupleAccessor.getByteCount(tupleDataFixed);
@@ -213,7 +213,7 @@ uint TupleTest::testMarshal(TupleData const &tupleDataFixed)
     traceTuple(tupleDataTogether);
     BOOST_CHECK_EQUAL(cbTuple,tupleAccessor.getByteCount(tupleDataTogether));
     checkData(tupleDataFixed,tupleDataTogether);
-    
+
     TupleData tupleDataIndividual(tupleDesc);
     for (uint i = 0; i < tupleDataIndividual.size(); ++i) {
         tupleAccessor.getAttributeAccessor(i).unmarshalValue(
@@ -255,7 +255,7 @@ void TupleTest::checkAlignment(
 {
     uint iAlign = desc.pTypeDescriptor->getAlignmentByteCount(
         desc.cbStorage);
-    switch(iAlign) {
+    switch (iAlign) {
     case 1:
         return;
     case 2:
@@ -273,7 +273,7 @@ void TupleTest::checkAlignment(
 void TupleTest::writeMinData(TupleDatum &datum,uint typeOrdinal)
 {
     PBuffer pData = const_cast<PBuffer>(datum.pData);
-    switch(typeOrdinal) {
+    switch (typeOrdinal) {
     case STANDARD_TYPE_BOOL:
         *(reinterpret_cast<bool *>(pData)) = false;
         break;
@@ -346,7 +346,7 @@ void TupleTest::writeMinData(TupleDatum &datum,uint typeOrdinal)
 void TupleTest::writeMaxData(TupleDatum &datum,uint typeOrdinal)
 {
     PBuffer pData = const_cast<PBuffer>(datum.pData);
-    switch(typeOrdinal) {
+    switch (typeOrdinal) {
     case STANDARD_TYPE_BOOL:
         *(reinterpret_cast<bool *>(pData)) = true;
         break;
@@ -416,11 +416,13 @@ void TupleTest::writeSampleData(TupleDatum &datum,uint typeOrdinal)
     /* Some sample data that's between min and max */
     std::subtractive_rng randomNumberGenerator(time(NULL));
     PBuffer pData = const_cast<PBuffer>(datum.pData);
-    switch(typeOrdinal) {
+    switch (typeOrdinal) {
     case STANDARD_TYPE_BOOL:
-        if (randomNumberGenerator(2))
+        if (randomNumberGenerator(2)) {
             *(reinterpret_cast<bool *>(pData)) = true;
-        else *(reinterpret_cast<bool *>(pData)) = false;
+        } else {
+            *(reinterpret_cast<bool *>(pData)) = false;
+        }
         break;
     case STANDARD_TYPE_INT_8:
         *(reinterpret_cast<int8_t *>(pData)) =  0x28;
@@ -493,7 +495,7 @@ void TupleTest::testDebugAccess()
     boost::scoped_array<FixedBuffer> buf(
         new FixedBuffer[tupleAccessor.getMaxByteCount()]);
     memset(buf.get(), 0, tupleAccessor.getMaxByteCount());
-    
+
     // This should cause an assertion failure when TupleAccessor.cpp's
     // DEBUG_TUPLE_ACCESS is set to 1.
     tupleAccessor.setCurrentTupleBuf(buf.get());
@@ -541,7 +543,7 @@ void TupleTest::testLoadStoreUnaligned()
 
     // test special case of empty string
     loadStore2ByteLenData(0);
-    
+
     // test null data
     loadStoreNullData(STANDARD_TYPE_INT_64, 8);
     loadStoreNullData(STANDARD_TYPE_INT_32, 4);
@@ -559,7 +561,7 @@ void TupleTest::testLoadStoreUnaligned()
     accessor_int16.storeValue(tupleDatum, storageBuf);
     uint len = accessor_int16.getStoredByteCount(storageBuf);
     BOOST_REQUIRE(len == 2);
-    
+
     FixedBuffer loadBuf[4];
     tupleDatum.cbData = 0xff;
     tupleDatum.pData = loadBuf;
@@ -599,7 +601,7 @@ void TupleTest::loadStore8ByteInts(int64_t initialValue, uint8_t nextByte)
     // to generate the different test values.  Do this 8 times.  For each
     // value, try the value, value - 1, value + 1, as well as the negative of
     // each of those three values.
-    
+
     int64_t intVal = initialValue;
     for (int i = 0; i < 8; i++) {
         intVal <<= 8;

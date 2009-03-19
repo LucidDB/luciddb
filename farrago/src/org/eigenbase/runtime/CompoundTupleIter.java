@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -76,7 +76,8 @@ public class CompoundTupleIter
 
     public boolean setTimeout(long timeout, boolean asUnderflow)
     {
-        // try to set a timeout on all underlings, but return false if any refused.
+        // try to set a timeout on all underlings, but return false if any
+        // refused.
         boolean result = true;
         for (int i = 0; i < iterators.length; i++) {
             result &= iterators[i].setTimeout(timeout, asUnderflow);
@@ -271,15 +272,21 @@ public class CompoundTupleIter
                         new BoxTupleIter(
                             makeCalcTupleIter(
                                 makeTupleIter(
-                                    new String[] { "400", "401", "402", "403" }))),
+                                    new String[] {
+                                        "400", "401", "402", "403"
+                                    }))),
                         new BoxTupleIter(
                             makeCalcTupleIter(
                                 makeTupleIter(
-                                    new String[] { "500", "501", "502", "503" }))),
+                                    new String[] {
+                                        "500", "501", "502", "503"
+                                    }))),
                         new BoxTupleIter(
                             makeCalcTupleIter(
                                 makeTupleIter(
-                                    new String[] { "600", "601", "602", "603" })))
+                                    new String[] {
+                                        "600", "601", "602", "603"
+                                    })))
                     });
             assertUnboxedEquals(
                 iterator,

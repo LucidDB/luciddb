@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -48,12 +48,10 @@ public class NativeTrace
 
     private static final int TRACE_PERFCOUNTER_UPDATE = 20000;
 
-    private static final String SEGMENT_LOGGER_PREFIX
-        = "net.sf.fennel.segment";
-    
-    private static final String XO_LOGGER_PREFIX
-        = "net.sf.fennel.xo";
-    
+    private static final String SEGMENT_LOGGER_PREFIX = "net.sf.fennel.segment";
+
+    private static final String XO_LOGGER_PREFIX = "net.sf.fennel.xo";
+
     //~ Instance fields --------------------------------------------------------
 
     private String loggerPrefix;
@@ -89,7 +87,8 @@ public class NativeTrace
     }
 
     private Logger getLogger(
-        String loggerSuffix, boolean stripLoggerIdentity)
+        String loggerSuffix,
+        boolean stripLoggerIdentity)
     {
         String loggerName = loggerPrefix + loggerSuffix;
         if (stripLoggerIdentity) {
@@ -123,7 +122,8 @@ public class NativeTrace
                         // look for the next dot (before bar)
                         int iDot =
                             loggerName.indexOf(
-                                '.', identityPrefix.length() + 1);
+                                '.',
+                                identityPrefix.length() + 1);
                         if (iDot > -1) {
                             loggerName = loggerName.substring(0, iDot);
                         }

@@ -1,6 +1,6 @@
 @rem Farrago transactional SQL DBMS
 @rem $Id$
-@rem Copyright (C) 2002-2004 Julian Hyde
+@rem Copyright (C) 2002-2009 Julian Hyde
 
 @set SRCROOT=%~dp0
 @set HOME_DRIVE=E

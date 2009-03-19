@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -429,27 +429,29 @@ public class SqlWindowOperator
                     EigenbaseResource.instance().RangeOrRowMustBeConstant.ex());
             }
 
-            // SQL03 7.10 rule 11b
-            // Physical ROWS must be a numeric constant.
-            // JR: actually it's SQL03 7.11 rule 11b "exact numeric with scale 0"
-            // means not only numeric constant but exact numeric integral constant.
-            // We also interpret the spec. to not allow negative values, but allow
-            // zero.
+            // SQL03 7.10 rule 11b Physical ROWS must be a numeric constant. JR:
+            // actually it's SQL03 7.11 rule 11b "exact numeric with scale 0"
+            // means not only numeric constant but exact numeric integral
+            // constant. We also interpret the spec. to not allow negative
+            // values, but allow zero.
             if (isRows) {
                 if (boundVal instanceof SqlNumericLiteral) {
-                    final SqlNumericLiteral boundLiteral = (SqlNumericLiteral)boundVal;
-                    if ((!boundLiteral.isExact()) ||
-                        (boundLiteral.getScale()!=0) ||
-                        (0>boundLiteral.longValue(true))) { // true==throw if not exact (we just tested that - right?)
-                    throw validator.newValidationError(
-                        boundVal,
-                        EigenbaseResource.instance().RowMustBeNonNegativeIntegral.ex());
+                    final SqlNumericLiteral boundLiteral =
+                        (SqlNumericLiteral) boundVal;
+                    if ((!boundLiteral.isExact())
+                        || (boundLiteral.getScale() != 0)
+                        || (0 > boundLiteral.longValue(true)))
+                    { // true==throw if not exact (we just tested that - right?)
+                        throw validator.newValidationError(
+                            boundVal,
+                            EigenbaseResource.instance()
+                            .RowMustBeNonNegativeIntegral.ex());
                     }
-                }
-                else {
+                } else {
                     throw validator.newValidationError(
                         boundVal,
-                        EigenbaseResource.instance().RowMustBeNonNegativeIntegral.ex());
+                        EigenbaseResource.instance()
+                        .RowMustBeNonNegativeIntegral.ex());
                 }
             }
 
@@ -567,7 +569,7 @@ public class SqlWindowOperator
             throw validator.newValidationError(
                 window,
                 EigenbaseResource.instance()
-                    .UnboundedFollowingWindowNotSupported.ex());
+                .UnboundedFollowingWindowNotSupported.ex());
         }
         if (offsetAndRange.range < 0) {
             throw validator.newValidationError(
@@ -708,9 +710,9 @@ public class SqlWindowOperator
     /**
      * Converts a pair of bounds into a (range, offset) pair.
      *
-     * <p>If the upper bound is unbounded, returns null, since that cannot
-     * be represented as a (range, offset) pair. (The offset would be
-     * +infinity, but what would the range be?)
+     * <p>If the upper bound is unbounded, returns null, since that cannot be
+     * represented as a (range, offset) pair. (The offset would be +infinity,
+     * but what would the range be?)
      *
      * @param lowerBound Lower bound
      * @param upperBound Upper bound
@@ -738,13 +740,14 @@ public class SqlWindowOperator
             offset = upper.signedVal();
             range = lower.signedVal() + upper.signedVal();
         }
+
         // if range is physical and crosses or touches zero (current row),
         // increase the size by one
         if (physical
             && (lower != null)
             && ((lower.sign != upper.sign)
-            || (lower.val == 0)
-            || (upper.val == 0)))
+                || (lower.val == 0)
+                || (upper.val == 0)))
         {
             ++range;
         }
@@ -752,29 +755,34 @@ public class SqlWindowOperator
     }
 
     /**
-     * Decodes a node, representing an upper or lower bound to a window, into
-     * a range offset. For example, '3 FOLLOWING' is 3, '3 PRECEDING' is -3,
-     * and 'UNBOUNDED PRECEDING' or 'UNBOUNDED FOLLOWING' is null.
+     * Decodes a node, representing an upper or lower bound to a window, into a
+     * range offset. For example, '3 FOLLOWING' is 3, '3 PRECEDING' is -3, and
+     * 'UNBOUNDED PRECEDING' or 'UNBOUNDED FOLLOWING' is null.
      *
      * @param node Node representing window bound
      * @param op Either {@link #precedingOperator} or {@link #followingOperator}
+     *
      * @return range
      */
     private static ValSign getRangeOffset(SqlNode node, SqlPostfixOperator op)
     {
-        assert op == precedingOperator
-            || op == followingOperator;
+        assert (op == precedingOperator)
+            || (op == followingOperator);
         if (node == null) {
             return new ValSign(0, 1);
         } else if (node instanceof SqlLiteral) {
             SqlLiteral literal = (SqlLiteral) node;
             if (literal.getValue() == Bound.CURRENT_ROW) {
                 return new ValSign(0, 1);
-            } else if (literal.getValue() == Bound.UNBOUNDED_FOLLOWING
-                && op == precedingOperator) {
+            } else if (
+                (literal.getValue() == Bound.UNBOUNDED_FOLLOWING)
+                && (op == precedingOperator))
+            {
                 return null;
-            } else if (literal.getValue() == Bound.UNBOUNDED_PRECEDING
-                && op == followingOperator) {
+            } else if (
+                (literal.getValue() == Bound.UNBOUNDED_PRECEDING)
+                && (op == followingOperator))
+            {
                 return null;
             } else {
                 throw Util.newInternal("unexpected literal " + literal);

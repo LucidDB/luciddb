@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,7 @@ struct InputData
     /**
      * Number of bytes in each bitmap segment
      */
-    uint bitmapSize; 
+    uint bitmapSize;
 
     /**
      * Initial rid value represented in the bitmap
@@ -64,7 +64,7 @@ struct BitmapInput
      * Buffers storing the bitmap segments
      */
     boost::shared_array<FixedBuffer> bufArray;
-    
+
     /**
      * Amount of space currently used in buffer
      */
@@ -91,7 +91,7 @@ typedef boost::shared_ptr<NumberStream> SharedNumberStream;
 class NumberStream
 {
 public:
-    virtual ~NumberStream() 
+    virtual ~NumberStream()
     {}
 
     // invalid/null value
@@ -127,7 +127,7 @@ public:
         next = first;
     }
 
-    NumberStream *clone() 
+    NumberStream *clone()
     {
         return new SkipNumberStream(first, last, skip);
     }
@@ -138,12 +138,12 @@ public:
         return ((upperBound - first) / skip) + 1;
     }
 
-    bool hasNext() 
+    bool hasNext()
     {
         return next <= last;
     }
 
-    uint getNext() 
+    uint getNext()
     {
         uint value = next;
         next += skip;
@@ -160,7 +160,7 @@ class UnionNumberStream : public NumberStream
     std::vector<uint> currentValues;
     uint prev, next;
 
-    bool findNext() 
+    bool findNext()
     {
         if (next != BIG_NUMBER) {
             return true;
@@ -189,16 +189,16 @@ public:
         next = BIG_NUMBER;
     }
 
-    virtual ~UnionNumberStream() 
+    virtual ~UnionNumberStream()
     {}
 
-    void addChild(SharedNumberStream pStream) 
+    void addChild(SharedNumberStream pStream)
     {
         children.push_back(pStream);
         currentValues.push_back(0);
     }
 
-    NumberStream *clone() 
+    NumberStream *clone()
     {
         UnionNumberStream *pStream = new UnionNumberStream();
         for (uint i = 0; i < children.size(); i++) {
@@ -217,7 +217,7 @@ public:
         return total;
     }
 
-    bool hasNext() 
+    bool hasNext()
     {
         return findNext();
     }
@@ -238,7 +238,7 @@ public:
 struct LbmNumberStreamInput
 {
     SharedNumberStream pStream;
-    uint bitmapSize; 
+    uint bitmapSize;
 };
 
 class NumberStreamExecStreamGenerator : public MockProducerExecStreamGenerator
@@ -278,7 +278,7 @@ protected:
      * Size of bitmap columns
      */
     uint bitmapColSize;
-    
+
     /**
      * Tuple descriptor, tupledata, and accessor for a bitmap segment:
      * (rid, segment descriptor, bitmap segments)
@@ -297,7 +297,7 @@ protected:
     boost::shared_array<FixedBuffer> keyBitmapBuf;
     uint keyBitmapBufSize;
 
-    inline static const std::string &getTraceName() 
+    inline static const std::string &getTraceName()
     {
         return traceName;
     }
@@ -322,12 +322,12 @@ protected:
     void initSorterExecStream(
         ExternalSortExecStreamParams &params,
         ExecStreamEmbryo &embryo,
-        TupleDescriptor const &outputDesc, 
+        TupleDescriptor const &outputDesc,
         uint nKeys = 1);
 
     void initNormalizerExecStream(
         LbmNormalizerExecStreamParams &params,
-        ExecStreamEmbryo &embryo, 
+        ExecStreamEmbryo &embryo,
         uint nKeys);
 
     /**

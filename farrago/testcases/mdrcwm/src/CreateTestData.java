@@ -33,7 +33,7 @@ public class CreateTestData
         dimension.setName("Store");
 
         schema.getDimension().add(dimension);
-        
+
         LevelBasedHierarchy hierarchy =
             pkg.getLevelBasedHierarchy().createLevelBasedHierarchy();
         hierarchy.setName("Default");

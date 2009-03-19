@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -382,7 +382,7 @@ public class JmiMemTest
         assertTrue(table.refIsInstanceOf(femLocalTableClass, false));
 
         FemCmdOpenDatabase cmdOpenDatabase = factory.newFemCmdOpenDatabase();
-        RefObject beginTxnClass = 
+        RefObject beginTxnClass =
             factory.getFennelPackage().getFemCmdBeginTxn().refMetaObject();
         assertFalse(cmdOpenDatabase.refIsInstanceOf(beginTxnClass, true));
         assertFalse(cmdOpenDatabase.refIsInstanceOf(beginTxnClass, false));
@@ -563,7 +563,7 @@ public class JmiMemTest
         {
             throw new UnsupportedOperationException();
         }
-        
+
         public void beginReposTxn(boolean writable)
         {
             throw new UnsupportedOperationException();
@@ -623,7 +623,7 @@ public class JmiMemTest
         {
             return newTxnContext(false);
         }
-        
+
         // implement FarragoRepos
         public FarragoReposTxnContext newTxnContext(boolean manageReposSession)
         {
@@ -669,4 +669,3 @@ public class JmiMemTest
 }
 
 // End JmiMemTest.java
-

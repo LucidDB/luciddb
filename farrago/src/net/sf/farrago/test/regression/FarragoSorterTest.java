@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -148,18 +148,18 @@ public class FarragoSorterTest
             // compute external count dynamically based on cache size
             FemFennelConfig fennelConfig =
                 repos.getCurrentConfig().getFennelConfig();
-    
+
             // first, compute number of bytes in cache
             long nBytes = fennelConfig.getCachePageSize();
             nBytes *= fennelConfig.getCachePagesInit();
-    
+
             // next, scale up to desired sort size
             nBytes *= EXTERNAL_SCALE_FACTOR;
-    
-            // finally, convert from bytes to records, assuming 16 bytes per record
+
+            // finally, convert from bytes to records, assuming 16 bytes per
+            // record
             externalCount = nBytes / 16;
-        }
-        finally {
+        } finally {
             txn.commit();
         }
     }

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -59,7 +59,9 @@ public class FennelPipeTupleIter
     // byteBuffer is the current buffer, and belongs exclusively to the reader
     // (this object)
 
-    /** buffers from the writer, not yet read */
+    /**
+     * buffers from the writer, not yet read
+     */
     private final ArrayQueue<ByteBuffer> moreBuffers;
 
     //~ Constructors -----------------------------------------------------------

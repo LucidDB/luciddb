@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,12 +34,13 @@ import net.sf.farrago.query.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-public class LcsReplaceStreamDef extends LcsAppendStreamDef
+public class LcsReplaceStreamDef
+    extends LcsAppendStreamDef
 {
     //~ Instance fields --------------------------------------------------------
 
     List<FemLocalIndex> updateClusters;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     public LcsReplaceStreamDef(
@@ -59,7 +60,7 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
     protected void setupIndexes()
     {
         replaceColumns = true;
-        
+
         // Setup an index guide that only includes the clusters being replaced
         clusteredIndexes = updateClusters;
         indexGuide =
@@ -67,7 +68,7 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
                 lcsTable.getPreparingStmt().getFarragoTypeFactory(),
                 lcsTable.getCwmColumnSet(),
                 clusteredIndexes);
-        
+
         // Determine the list of relevant unclustered indexes by finding the
         // set of coverage indexes for each clustered index
         unclusteredIndexes = new ArrayList<FemLocalIndex>();
@@ -76,7 +77,7 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
                 repos,
                 lcsTable.getCwmColumnSet());
         for (FemLocalIndex cluster : updateClusters) {
-            List<FemLocalIndex> coverageList = 
+            List<FemLocalIndex> coverageList =
                 LcsIndexGuide.getIndexCoverageSet(
                     repos,
                     cluster,
@@ -88,15 +89,15 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
                     unclusteredIndexes.add(index);
                 }
             }
-        }      
+        }
     }
-    
+
     protected FemSplitterStreamDef createSplitter()
     {
         LcsTableMergeRel mergeRel = (LcsTableMergeRel) appendRel;
         return indexGuide.newSplitter(mergeRel.getExpectedInputRowType(0));
     }
-    
+
     protected void createClusterAppends(
         FennelRelImplementor implementor,
         List<FemLcsClusterAppendStreamDef> clusterAppendDefs)
@@ -117,4 +118,4 @@ public class LcsReplaceStreamDef extends LcsAppendStreamDef
     }
 }
 
-// End LcsReplaceStreamDef
+// End LcsReplaceStreamDef.java

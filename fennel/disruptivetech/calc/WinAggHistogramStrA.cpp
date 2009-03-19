@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,7 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-char* 
+char*
 StringDesc::pointer() const
 {
     assert(StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType));
@@ -51,7 +51,7 @@ void WinAggHistogramStrA::addRow(RegisterRef<char*>* node)
         desc.pData = new FixedBuffer[desc.cbStorage];
         desc.memCopyFrom(*( node->getBinding()));
 //        printf("WinAggHistogramStrA::addRow cbStorage=%d cbData=%d String=%s\n", node->storage(),desc.cbData, desc.pData);
-        
+
         // Insert the value into the window
         (void) currentWindow.insert(desc);
 
@@ -66,14 +66,14 @@ void WinAggHistogramStrA::addRow(RegisterRef<char*>* node)
 void WinAggHistogramStrA::dropRow(RegisterRef<char*>* node)
 {
     if (!node->isNull()) {
-        // create a StringDesc from the node data to supply to the 
+        // create a StringDesc from the node data to supply to the
         // search routine
         StringDesc desc;
         desc.cbStorage = node->storage();
         desc.cbData = node->length();
         desc.mType = node->type();
         desc.pData = reinterpret_cast<PBuffer>(node->pointer());
-//        printf("WinAggHistogramStrA::dropRow cbStorage=%d cbData=%d String=%s", 
+//        printf("WinAggHistogramStrA::dropRow cbStorage=%d cbData=%d String=%s",
 //               node->storage(),desc.cbData, desc.pData);
 
         // Search the window for matching entries.  It may return more than one but
@@ -84,7 +84,7 @@ void WinAggHistogramStrA::dropRow(RegisterRef<char*>* node)
 
         assert(entries.first != entries.second);  // should at least be one
         assert(NULL != entries.first->pData);
-        
+
         if (entries.first != entries.second) {
 //            printf("  erasing entry cbStorage=%d cbData=%d String=%s\n", entries.first->cbStorage,entries.first->cbData, entries.first->pData);
             if (NULL != entries.first->pData) {
@@ -141,7 +141,7 @@ void WinAggHistogramStrA::getFirstValue(RegisterRef<char*>* node)
     if (queue.empty()) {
         node->toNull();
     } else {
-        setReturnReg( node,queue.front()); 
+        setReturnReg( node,queue.front());
     }
 }
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
  * that some of this information is only relevant in old page versions stored
  * in the log segment, but the footer size has to be reserved for logging.
  */
-struct VersionedPageFooter 
+struct VersionedPageFooter
 {
     /**
      * For an old version stored in the log, this is the PageId of the latest
@@ -126,7 +126,7 @@ void VersionedSegment::delegatedCheckpoint(
     if (checkpointType == CHECKPOINT_DISCARD) {
         logSegment->checkpoint(checkpointType);
     }
-    
+
     StrictMutexGuard mutexGuard(mutex);
     ++versionNumber;
     dataToLogMap.clear();
@@ -155,7 +155,7 @@ void VersionedSegment::deallocatePageRange(
     // TODO:  support real truncations?
     assert(startPageId == endPageId);
     assert(startPageId != NULL_PAGE_ID);
-    
+
     // TODO:  need to log copy of deallocated page
     DelegatingSegment::deallocatePageRange(startPageId,endPageId);
 }
@@ -170,10 +170,10 @@ void VersionedSegment::notifyPageDirty(CachePage &page,bool bDataValid)
         // abandoned but not discarded.
         return;
     }
-    
+
     VersionedPageFooter *pDataFooter = reinterpret_cast<VersionedPageFooter *>(
         getWritableFooter(page));
-    
+
     if (!bDataValid) {
         // newly allocated page
         pDataFooter->dataPageId = NULL_PAGE_ID;
@@ -182,7 +182,7 @@ void VersionedSegment::notifyPageDirty(CachePage &page,bool bDataValid)
         pDataFooter->checksum = 0;
         return;
     }
-    
+
     assert(pDataFooter->versionNumber <= versionNumber);
     if (pDataFooter->versionNumber == versionNumber) {
         // already logged this page
@@ -195,7 +195,7 @@ void VersionedSegment::notifyPageDirty(CachePage &page,bool bDataValid)
     PageId logPageId = logPageLock.allocatePage();
 
     // REVIEW:  what if there's other footer information to copy?
-    
+
     // TODO:  remember logPageId in version map
     PBuffer pLogPageBuffer = logPageLock.getPage().getWritableData();
     memcpy(
@@ -209,7 +209,7 @@ void VersionedSegment::notifyPageDirty(CachePage &page,bool bDataValid)
     PageId dataPageId = DelegatingSegment::translateBlockId(
         page.getBlockId());
     pLogFooter->dataPageId = dataPageId;
-    
+
     pLogFooter->checksum = computeChecksum(pLogPageBuffer);
 
     // record new version number for soon-to-be-modified data page
@@ -238,12 +238,12 @@ SegVersionNum VersionedSegment::computeChecksum(void const *pPageData)
 bool VersionedSegment::canFlushPage(CachePage &page)
 {
     // this implements the WAL constraint
-    
+
     PageId minLogPageId = pWALSegment->getMinDirtyPageId();
     if (minLogPageId == NULL_PAGE_ID) {
         return DelegatingSegment::canFlushPage(page);
     }
-    
+
     StrictMutexGuard mutexGuard(mutex);
     PageId dataPageId = DelegatingSegment::translateBlockId(
         page.getBlockId());
@@ -261,13 +261,12 @@ bool VersionedSegment::canFlushPage(CachePage &page)
 
 void VersionedSegment::prepareOnlineRecovery()
 {
-
     // For simplicity, force entire log out to disk first, but don't discard
     // it, since we're about to read it during recovery.
     logSegment->checkpoint(CHECKPOINT_FLUSH_ALL);
-    
+
     StrictMutexGuard mutexGuard(mutex);
-    
+
     dataToLogMap.clear();
     oldestLogPageId = NULL_PAGE_ID;
 }
@@ -302,9 +301,9 @@ void VersionedSegment::recover(
     // which pages have already been recovered and skip them if they are
     // encountered again.
     std::hash_set<PageId> recoveredPageSet;
-    
+
     // TODO:  use PageIters
-    
+
     // TODO:  what about when one shadow log stores pages for multiple
     // VersionedSegments?
     SegmentAccessor logSegmentAccessor(logSegment,pCache);
@@ -337,7 +336,7 @@ void VersionedSegment::recover(
             assert(pLogFooter->versionNumber > versionNumber);
             continue;
         }
-        
+
         SegPageLock dataPageLock(dataSegmentAccessor);
         dataPageLock.lockExclusive(pLogFooter->dataPageId);
         memcpy(
@@ -346,7 +345,7 @@ void VersionedSegment::recover(
             getFullPageSize());
         recoveredPageSet.insert(pLogFooter->dataPageId);
     }
-    
+
     inRecovery = false;
 }
 

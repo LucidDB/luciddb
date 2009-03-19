@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -84,7 +84,7 @@ ExecStreamResult LbmChopperExecStream::execute(
 {
     ridLimit = *reinterpret_cast<RecordNum const *>(
         pDynamicParamManager->getParam(ridLimitParamId).getDatum().pData);
-    
+
     uint nTuples = 0;
     ExecStreamResult status;
     while (nTuples < quantum.nTuplesMax) {
@@ -167,7 +167,7 @@ bool LbmChopperExecStream::writeSegment()
         if (opaqueToInt(endRid - currentSrid) > ridLimit) {
             return false;
         }
-    }        
+    }
 
     // try to add segment to writer
     PBuffer byteSeg = inputSegment.byteSeg - (inputSegment.len - 1);

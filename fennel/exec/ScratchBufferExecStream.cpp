@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -53,7 +53,7 @@ void ScratchBufferExecStream::open(bool restart)
 
     assert(pInAccessor);
     assert(pInAccessor->getProvision() == BUFPROV_CONSUMER);
-    
+
     assert(pOutAccessor);
     assert(pOutAccessor->getProvision() == BUFPROV_PRODUCER);
 
@@ -72,7 +72,7 @@ void ScratchBufferExecStream::open(bool restart)
 
 ExecStreamResult ScratchBufferExecStream::execute(ExecStreamQuantum const &)
 {
-    switch(pOutAccessor->getState()) {
+    switch (pOutAccessor->getState()) {
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:
         return EXECRC_BUF_OVERFLOW;
@@ -91,7 +91,7 @@ ExecStreamResult ScratchBufferExecStream::execute(ExecStreamQuantum const &)
         assert(pInAccessor->getState() == EXECBUF_EOS);
         return EXECRC_EOS;
     }
-    switch(pInAccessor->getState()) {
+    switch (pInAccessor->getState()) {
     case EXECBUF_OVERFLOW:
     case EXECBUF_NONEMPTY:
         if (!pLastConsumptionEnd) {

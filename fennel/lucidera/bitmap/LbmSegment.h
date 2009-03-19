@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,13 +42,13 @@ protected:
 
     /**
      * Increment forward from pSegDescStart.
-     */ 
+     */
     PBuffer pSegDescStart;
     PBuffer pSegDescEnd;
 
     /**
      * Decrement backward from pSegStart.
-     */ 
+     */
     PBuffer pSegStart;
     PBuffer pSegEnd;
 
@@ -75,7 +75,7 @@ protected:
      * If the length of zero bytes(a byte composed of 8 bits of 0s) is less
      * than 12, the length can be stored within the segment
      * descriptor. Otherwise, the segment descriptor gives the length of
-     * additional bytes(maximumn is 3 bytes) in which the length is stored. 
+     * additional bytes(maximumn is 3 bytes) in which the length is stored.
      */
     static const uint LbmZeroLengthCompact = 12;
 
@@ -84,7 +84,7 @@ protected:
     * is stored with an offset of LbmZeroLengthCompact.
     * LbmZeroLengthExtended = (uint)LbmZeroLengthMask - LbmZeroLengthCompact.
     */
-    static const uint LbmZeroLengthExtended = 
+    static const uint LbmZeroLengthExtended =
         (uint)LbmZeroLengthMask - LbmZeroLengthCompact;
 
     /**
@@ -106,7 +106,7 @@ protected:
     static uint byteArray2Value(PBuffer array, uint arraySize);
 
     /**
-     * Store value in a byte array. 
+     * Store value in a byte array.
      * The least significant bytes in the value is stored
      * at the first location in the array.
      *
@@ -146,14 +146,14 @@ protected:
     static void readSegDescAndAdvance(
         PBuffer &pSegDesc, uint &bmSegLen, uint &zeroBytes);
 
-    /** 
+    /**
      * Computes the length of the remaining segments in the current bitmap
      * segment, starting at the one specified by the input segment descriptor
      *
      * @param segDesc segment descriptor of the first segment that we want
      * to start computing the length from
      *
-     * @return number of bytes occupied by the remaining segments in the 
+     * @return number of bytes occupied by the remaining segments in the
      * current entry
      */
     uint computeSegLength(PBuffer segDesc);
@@ -257,7 +257,7 @@ inline bool LbmSegment::adjustSegLength(uint8_t &segDescByte, uint segLen)
         return false;
     }
     segDescByte &= ~LbmSegLengthMask;
-    segDescByte |= (uint8_t) ((segLen -1) << LbmHalfByteSize);
+    segDescByte |= (uint8_t) ((segLen - 1) << LbmHalfByteSize);
     return true;
 }
 

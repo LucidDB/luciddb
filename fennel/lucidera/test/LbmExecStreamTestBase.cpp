@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -67,8 +67,7 @@ void LbmExecStreamTestBase::generateBitmaps(
     }
 
     // add on the remaining rids
-    while (input.pStream->hasNext())
-    {
+    while (input.pStream->hasNext()) {
         rid = LcsRid(input.pStream->getNext());
         if (rid >= LcsRid(nRows)) {
             break;
@@ -89,12 +88,12 @@ void LbmExecStreamTestBase::generateBitmaps(
     }
     // write out the last LbmEntry
     produceEntry(lbmEntry, bitmapTupleAccessor, bmInput);
-    
+
     assert(bmInput.currBufSize <= bmInput.fullBufSize);
 }
 
 void LbmExecStreamTestBase::produceEntry(
-    LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, 
+    LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor,
     BitmapInput &bmInput)
 {
     TupleData bitmapTuple = lbmEntry.produceEntryTuple();
@@ -121,7 +120,7 @@ void LbmExecStreamTestBase::initValuesExecStream(
 void LbmExecStreamTestBase::initSorterExecStream(
     ExternalSortExecStreamParams &params,
     ExecStreamEmbryo &embryo,
-    TupleDescriptor const &outputDesc, 
+    TupleDescriptor const &outputDesc,
     uint nKeys)
 {
     params.outputTupleDesc = outputDesc;
@@ -144,7 +143,7 @@ void LbmExecStreamTestBase::initSorterExecStream(
 
 void LbmExecStreamTestBase::initNormalizerExecStream(
     LbmNormalizerExecStreamParams &params,
-    ExecStreamEmbryo &embryo, 
+    ExecStreamEmbryo &embryo,
     uint nKeys)
 {
     TupleProjection keyProj;
@@ -190,7 +189,7 @@ void LbmExecStreamTestBase::generateBitmaps(
     // write out the last LbmEntry
     produceEntry(
         lbmEntry, bitmapTupleAccessor, pBuf, bufSize, nBitmaps, includeKeys);
-    
+
     assert(bufSize <= fullBufSize);
 }
 
@@ -203,7 +202,7 @@ void LbmExecStreamTestBase::produceEntry(
         int nKeys = keyBitmapTupleData.size() - bitmapTuple.size();
         assert(nKeys > 0);
         for (uint i = 0; i < bitmapTupleData.size(); i++) {
-            keyBitmapTupleData[nKeys+i] = bitmapTuple[i];
+            keyBitmapTupleData[nKeys + i] = bitmapTuple[i];
         }
         keyBitmapTupleAccessor.marshal(keyBitmapTupleData, pBuf + bufSize);
         bufSize += keyBitmapTupleAccessor.getCurrentByteCount();
@@ -273,10 +272,10 @@ uint LbmExecStreamTestBase::getTupleInterval(
 }
 
 void LbmExecStreamTestBase::testCaseSetUp()
-{    
+{
     ExecStreamUnitTestBase::testCaseSetUp();
 
-    bitmapColSize = pRandomSegment->getUsablePageSize()/8;
+    bitmapColSize = pRandomSegment->getUsablePageSize() / 8;
     attrDesc_bitmap = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
         true, bitmapColSize);
@@ -293,7 +292,7 @@ void LbmExecStreamTestBase::testCaseSetUp()
     bitmapTupleData[1].cbData = 0;
     bitmapTupleData[2].pData = NULL;
     bitmapTupleData[2].cbData = 0;
-        
+
     bitmapTupleAccessor.compute(bitmapTupleDesc);
 }
 

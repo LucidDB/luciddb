@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,9 @@
 */
 package org.eigenbase.sql.fun;
 
+import java.math.*;
+
 import java.util.*;
-import java.math.BigDecimal;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
@@ -198,22 +199,23 @@ public class SqlSubstringFunction
         writer.endFunCall(frame);
     }
 
-
     public SqlMonotonicity getMonotonicity(
-        SqlCall call, SqlValidatorScope scope)
+        SqlCall call,
+        SqlValidatorScope scope)
     {
         // SUBSTRING(x FROM 0 FOR constant) has same monotonicity as x
         if (call.operands.length == 3) {
             final SqlMonotonicity mono0 =
                 call.operands[0].getMonotonicity(scope);
-            if (mono0 != SqlMonotonicity.NotMonotonic
-                && call.operands[1].getMonotonicity(scope)
-                == SqlMonotonicity.Constant
-                && call.operands[1] instanceof SqlLiteral
+            if ((mono0 != SqlMonotonicity.NotMonotonic)
+                && (call.operands[1].getMonotonicity(scope)
+                    == SqlMonotonicity.Constant)
+                && (call.operands[1] instanceof SqlLiteral)
                 && ((SqlLiteral) call.operands[1]).bigDecimalValue().equals(
-                BigDecimal.ZERO)
-                && call.operands[2].getMonotonicity(scope)
-                == SqlMonotonicity.Constant) {
+                    BigDecimal.ZERO)
+                && (call.operands[2].getMonotonicity(scope)
+                    == SqlMonotonicity.Constant))
+            {
                 return mono0.unstrict();
             }
         }

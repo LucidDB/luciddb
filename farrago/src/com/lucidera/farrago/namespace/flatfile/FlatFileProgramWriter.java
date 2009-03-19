@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -80,11 +80,13 @@ public class FlatFileProgramWriter
          * but does not include custom datetime conversions.
          */
         FENNEL,
+
         /**
          * Fennel incompatible program section. Includes custom datetime
          * conversions, but not ISO datetime conversions. May be empty.
          */
         JAVA_ONLY,
+
         /**
          * Includes the entire program
          */
@@ -207,9 +209,10 @@ public class FlatFileProgramWriter
             } else {
                 sourceTypes[i] = getTextType(targetType);
             }
-            sourceTypes[i] = FlatFileBCPFile.forceSingleByte(
-                typeFactory,
-                sourceTypes[i]);
+            sourceTypes[i] =
+                FlatFileBCPFile.forceSingleByte(
+                    typeFactory,
+                    sourceTypes[i]);
             sourceNames[i] = targetTypes[i].getName();
         }
         RelDataType inputRowType =

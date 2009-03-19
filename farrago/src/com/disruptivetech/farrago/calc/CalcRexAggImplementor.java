@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -68,9 +68,8 @@ public interface CalcRexAggImplementor
         RexToCalcTranslator translator);
 
     /**
-     * Generates instructions to initialize and add a new value to an aggregation.
-     *
-     * This could call implementInitialize followed by implementAdd
+     * Generates instructions to initialize and add a new value to an
+     * aggregation. This could call implementInitialize followed by implementAdd
      *
      * @param call The call to the aggregate function to be implemented
      * @param accumulatorRegister The accumulator register

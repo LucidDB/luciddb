@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,7 @@ package net.sf.farrago.catalog;
 import java.io.*;
 
 import java.net.*;
+
 import java.nio.charset.*;
 
 import java.util.*;
@@ -37,8 +38,8 @@ import net.sf.farrago.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.enki.mdr.EnkiMDRepository;
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.enki.mdr.*;
+import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.*;
@@ -53,10 +54,12 @@ import org.netbeans.api.xmi.*;
  */
 public abstract class FarragoReposUtil
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String FARRAGO_CATALOG_EXTENT = "FarragoCatalog";
     public static final String FARRAGO_METAMODEL_EXTENT = "FarragoMetamodel";
     public static final String FARRAGO_PACKAGE_NAME = "Farrago";
-    
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -98,12 +101,12 @@ public abstract class FarragoReposUtil
         URL inputUrl)
         throws Exception
     {
-        if (((EnkiMDRepository)mdrRepos).isExtentBuiltIn(
+        if (((EnkiMDRepository) mdrRepos).isExtentBuiltIn(
                 FARRAGO_METAMODEL_EXTENT))
         {
             return;
         }
-        
+
         XMIReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
         ImportRefResolver refResolver =
             new ImportRefResolver(
@@ -114,22 +117,22 @@ public abstract class FarragoReposUtil
         try {
             mdrRepos.beginTrans(true);
             rollback = true;
-            
-            InvalidXmlCharFilterInputStream filter = 
+
+            InvalidXmlCharFilterInputStream filter =
                 new InvalidXmlCharFilterInputStream(inputUrl.openStream());
-            
+
             xmiReader.read(
                 filter,
                 inputUrl.toString(),
                 mdrRepos.getExtent(FARRAGO_METAMODEL_EXTENT));
-            
+
             if (filter.getNumInvalidCharsFiltered() > 0) {
                 FarragoTrace.getReposTracer().warning(
-                    "Filtered " + filter.getNumInvalidCharsFiltered() + 
-                    " invalid characters from XMI at '" + 
-                    inputUrl.toString() + "'");
+                    "Filtered " + filter.getNumInvalidCharsFiltered()
+                    + " invalid characters from XMI at '"
+                    + inputUrl.toString() + "'");
             }
-            
+
             rollback = false;
             mdrRepos.endTrans();
         } finally {
@@ -144,7 +147,7 @@ public abstract class FarragoReposUtil
     {
         dumpRepository(new FarragoModelLoader());
     }
-    
+
     public static void dumpRepository(
         FarragoModelLoader modelLoader)
         throws Exception
@@ -166,7 +169,7 @@ public abstract class FarragoReposUtil
         try {
             FarragoPackage farragoPackage =
                 modelLoader.loadModel(FARRAGO_CATALOG_EXTENT, false);
-            
+
             modelLoader.getMdrRepos().beginTrans(false);
             try {
                 exportExtent(
@@ -182,7 +185,7 @@ public abstract class FarragoReposUtil
             } finally {
                 modelLoader.getMdrRepos().endTrans();
             }
-            
+
             deleteStorage(modelLoader, farragoPackage);
             success = true;
         } finally {
@@ -226,6 +229,7 @@ public abstract class FarragoReposUtil
         File metamodelDump = new File(catalogDir, "FarragoMetamodelDump.xmi");
         String catalogDumpName = "FarragoCatalogDump.xmi";
         File catalogDump = new File(catalogDir, catalogDumpName);
+
         // If FarragoCatalogDump.xmi doesn't exist, assume the dump is
         // compressed using gzip.
         boolean isCompressed = false;
@@ -246,7 +250,7 @@ public abstract class FarragoReposUtil
                 null,
                 null,
                 false);
-            
+
             // import catalog
             importExtent(
                 modelLoader.getMdrRepos(),
@@ -262,7 +266,7 @@ public abstract class FarragoReposUtil
             modelLoader.close();
         }
     }
-    
+
     public static void exportExtent(
         MDRepository mdrRepos,
         File file,
@@ -297,9 +301,8 @@ public abstract class FarragoReposUtil
         FarragoPackage farragoPackage)
         throws Exception
     {
-        EnkiMDRepository repos = 
-            (EnkiMDRepository)modelLoader.getMdrRepos();
-        
+        EnkiMDRepository repos = (EnkiMDRepository) modelLoader.getMdrRepos();
+
         repos.dropExtentStorage(farragoPackage);
     }
 
@@ -329,36 +332,36 @@ public abstract class FarragoReposUtil
                 }
                 extent = mdrRepos.createExtent(extentName, metaPackage);
             } else {
-                if (((EnkiMDRepository)mdrRepos).isExtentBuiltIn(extentName)) {
+                if (((EnkiMDRepository) mdrRepos).isExtentBuiltIn(extentName)) {
                     // Go ahead and rollback; we haven't changed anything.
                     return;
                 }
-                
+
                 extent = mdrRepos.createExtent(extentName);
             }
-            
-            XmiReader xmiReader = 
+
+            XmiReader xmiReader =
                 XMIReaderFactory.getDefault().createXMIReader();
-    
+
             InputStream in = new FileInputStream(file);
             if (isCompressed) {
                 in = new GZIPInputStream(in);
             }
-            InvalidXmlCharFilterInputStream filter = 
+            InvalidXmlCharFilterInputStream filter =
                 new InvalidXmlCharFilterInputStream(in);
-            
+
             xmiReader.read(
                 filter,
                 file.toURL().toString(),
                 extent);
-            
+
             if (filter.getNumInvalidCharsFiltered() > 0) {
                 FarragoTrace.getReposTracer().warning(
-                    "Filtered " + filter.getNumInvalidCharsFiltered() + 
-                    " invalid characters from XMI file '" + 
-                    file.getAbsolutePath() + "'");
+                    "Filtered " + filter.getNumInvalidCharsFiltered()
+                    + " invalid characters from XMI file '"
+                    + file.getAbsolutePath() + "'");
             }
-            
+
             rollback = false;
         } finally {
             mdrRepos.endTrans(rollback);
@@ -517,69 +520,84 @@ public abstract class FarragoReposUtil
             }
         }
     }
-    public static class InvalidXmlCharFilterInputStream extends InputStream
+
+    public static class InvalidXmlCharFilterInputStream
+        extends InputStream
     {
         // Various common byte order marks (BOMs) to detect -- normally
         // done by the XML parser, but we need to be able to decode characters
         // from the stream before they get that far.
-        private static final byte[] UTF16_BE_BOM = toBytes(new int[] { 
-            0xFE, 0xFF,  // <byte order mark>
-            0x00, 0x3C,  // <
-            0x00, 0x3F,  // ?
-            0x00, 0x78,  // x
-            0x00, 0x6D,  // m
-            0x00, 0x6C,  // l
-            0x00, 0x20,  // <space>
-        }); 
+        private static final byte [] UTF16_BE_BOM =
+            toBytes(
+                new int[] {
+                    0xFE, 0xFF, // <byte order mark>
+                    0x00, 0x3C, // <
+                    0x00, 0x3F, // ?
+                    0x00, 0x78, // x
+                    0x00, 0x6D, // m
+                    0x00, 0x6C, // l
+                    0x00, 0x20, // <space>
+                });
 
-        private static final byte[] UTF16_BE_SANS_BOM = toBytes(new int[] { 
-            0x00, 0x3C,  // <
-            0x00, 0x3F,  // ?
-            0x00, 0x78,  // x
-            0x00, 0x6D,  // m
-            0x00, 0x6C,  // l
-            0x00, 0x20,  // <space>
-        }); 
+        private static final byte [] UTF16_BE_SANS_BOM =
+            toBytes(
+                new int[] {
+                    0x00, 0x3C, // <
+                    0x00, 0x3F, // ?
+                    0x00, 0x78, // x
+                    0x00, 0x6D, // m
+                    0x00, 0x6C, // l
+                    0x00, 0x20, // <space>
+                });
 
-        private static final byte[] UTF16_LE_BOM = toBytes(new int[] { 
-            0xFF, 0xFE,  // <byte order mark>
-            0x3C, 0x00,  // <
-            0x3F, 0x00,  // ?
-            0x78, 0x00,  // x
-            0x6D, 0x00,  // m
-            0x6C, 0x00,  // l
-            0x20, 0x00,  // <space>
-        }); 
-        
-        private static final byte[] UTF16_LE_SANS_BOM = toBytes(new int[] { 
-            0x3C, 0x00,  // <
-            0x3F, 0x00,  // ?
-            0x78, 0x00,  // x
-            0x6D, 0x00,  // m
-            0x6C, 0x00,  // l
-            0x20, 0x00,  // <space>
-        }); 
-        
-        private static final byte[] UTF8_BOM = toBytes(new int[] {
-            0xEF, 0xBB, 0xBF, // byte order mark
-            0x3C,             // <
-            0x3F,             // ?
-            0x78,             // x
-            0x6D,             // m
-            0x6C,             // l
-            0x20,             // <space>            
-        });
-        
-        private static final byte[] OTHER_ASCII_LIKE = toBytes(new int[] {
-            0x3C,             // <
-            0x3F,             // ?
-            0x78,             // x
-            0x6D,             // m
-            0x6C,             // l
-            0x20,             // <space>            
-        });
+        private static final byte [] UTF16_LE_BOM =
+            toBytes(
+                new int[] {
+                    0xFF, 0xFE, // <byte order mark>
+                    0x3C, 0x00, // <
+                    0x3F, 0x00, // ?
+                    0x78, 0x00, // x
+                    0x6D, 0x00, // m
+                    0x6C, 0x00, // l
+                    0x20, 0x00, // <space>
+                });
+
+        private static final byte [] UTF16_LE_SANS_BOM =
+            toBytes(
+                new int[] {
+                    0x3C, 0x00, // <
+                    0x3F, 0x00, // ?
+                    0x78, 0x00, // x
+                    0x6D, 0x00, // m
+                    0x6C, 0x00, // l
+                    0x20, 0x00, // <space>
+                });
+
+        private static final byte [] UTF8_BOM =
+            toBytes(
+                new int[] {
+                    0xEF, 0xBB, 0xBF, // byte order mark
+                    0x3C, // <
+                    0x3F, // ?
+                    0x78, // x
+                    0x6D, // m
+                    0x6C, // l
+                    0x20, // <space>
+                });
+
+        private static final byte [] OTHER_ASCII_LIKE =
+            toBytes(
+                new int[] {
+                    0x3C, // <
+                    0x3F, // ?
+                    0x78, // x
+                    0x6D, // m
+                    0x6C, // l
+                    0x20, // <space>
+                });
 
         private static final Map<byte[], String> ALL_DECLS;
+
         static {
             HashMap<byte[], String> decls = new HashMap<byte[], String>();
             decls.put(UTF16_BE_BOM, "UTF-16BE");
@@ -590,19 +608,19 @@ public abstract class FarragoReposUtil
             decls.put(OTHER_ASCII_LIKE, "");
             ALL_DECLS = Collections.unmodifiableMap(decls);
         }
-        
+
         // Choose a reasonable upper limit for the maximum length of an XML
         // declaration, including encoding name.
         private static final int MAX_DECL_SIZE = 256;
-        
+
         private final InputStream in;
         private int numInvalidCharsFiltered;
         private ByteOutputStream outputBuffer;
         private Writer outputBufferWriter;
         private Reader reader;
-        private char[] inputBuffer;
-        
-        public InvalidXmlCharFilterInputStream(InputStream in) 
+        private char [] inputBuffer;
+
+        public InvalidXmlCharFilterInputStream(InputStream in)
             throws IOException
         {
             if (!in.markSupported()) {
@@ -616,24 +634,24 @@ public abstract class FarragoReposUtil
 
             // Assume maximum encoding overhead is 2 bytes per char.
             in.mark(2 * MAX_DECL_SIZE);
-            this.reader = 
+            this.reader =
                 new BufferedReader(new InputStreamReader(in, charset));
 
             Charset encodedCharset = getCharsetFromXmlDecl(reader);
-            if (encodedCharset != null && !charset.equals(encodedCharset)) {
+            if ((encodedCharset != null) && !charset.equals(encodedCharset)) {
                 boolean sameButNoEndianness = false;
                 String encodedName = encodedCharset.name();
                 String name = charset.name();
                 if (name.startsWith(encodedName)) {
                     String suffix = name.substring(encodedName.length());
-                    
-                    sameButNoEndianness = 
+
+                    sameButNoEndianness =
                         suffix.equals("LE") || suffix.equals("BE");
                 }
-                    
-                // Ignore the case where we properly detect, say UTF-16 LE, 
+
+                // Ignore the case where we properly detect, say UTF-16 LE,
                 // but the XML decl doesn't specify byte order.  The Java
-                // UTF-16 Charset implementation assumes network byte order 
+                // UTF-16 Charset implementation assumes network byte order
                 // (UTF-16 BE) which would cause problems.
                 if (!sameButNoEndianness) {
                     charset = encodedCharset;
@@ -641,80 +659,83 @@ public abstract class FarragoReposUtil
                     this.reader = new InputStreamReader(in, charset);
                 }
             }
-            
-            this.outputBufferWriter = 
+
+            this.outputBufferWriter =
                 new OutputStreamWriter(outputBuffer, charset);
-            
-            this.inputBuffer = 
-                new char[
-                     (int)Math.round(
-                         charset.newDecoder().averageCharsPerByte() * 4096.0)];
+
+            this.inputBuffer =
+                new char[(int) Math.round(
+                    charset.newDecoder().averageCharsPerByte() * 4096.0)];
         }
 
         /**
-         * Converts an int array to byte array.  Assumes all int values in the
+         * Converts an int array to byte array. Assumes all int values in the
          * array contain only 8 bits of data.
-         * 
+         *
          * @param data int array
+         *
          * @return byte array
          */
-        private static byte[] toBytes(int[] data)
+        private static byte [] toBytes(int [] data)
         {
-            byte[] bytes = new byte[data.length];
-            for(int i = 0; i < data.length; i++) {
-                bytes[i] = (byte)(data[i] & 0xFF);
+            byte [] bytes = new byte[data.length];
+            for (int i = 0; i < data.length; i++) {
+                bytes[i] = (byte) (data[i] & 0xFF);
             }
             return bytes;
         }
-        
+
         /**
-         * Compares two bytes arrays.  If the data array does not begin with
-         * exactly the bytes specified in the expected array, returns false.
-         * The data array may be longer than the expected array, but not 
-         * shorter.
-         * 
+         * Compares two bytes arrays. If the data array does not begin with
+         * exactly the bytes specified in the expected array, returns false. The
+         * data array may be longer than the expected array, but not shorter.
+         *
          * @param data data to test
          * @param expected expected value
+         *
          * @return true if data and expected match (see above)
          */
-        private static boolean matches(byte[] data, byte[] expected)
+        private static boolean matches(byte [] data, byte [] expected)
         {
             final int len = expected.length;
             if (len > data.length) {
                 return false;
             }
-            
-            for(int i = 0; i < len; i++) {
+
+            for (int i = 0; i < len; i++) {
                 if (data[i] != expected[i]) {
                     return false;
                 }
             }
-            
+
             return true;
         }
-            
+
         /**
          * Guesses the character set used by the input stream, storing
-         * characters in the buffer stream.  The first block of data in the
-         * input stream is compared against the XML declarations in
-         * {@link #ALL_DECLS} to find a characters set suitable for reading at
-         * least the XML declaration from the input stream.
-         * 
+         * characters in the buffer stream. The first block of data in the input
+         * stream is compared against the XML declarations in {@link #ALL_DECLS}
+         * to find a characters set suitable for reading at least the XML
+         * declaration from the input stream.
+         *
          * @param in input stream
          * @param bufferStream buffer stream for temporary storage
+         *
          * @return best-guess character set for the input stream
+         *
          * @throws IOException on I/O error, if the character set cannot be
-         *                     detected or instantiated
+         * detected or instantiated
          */
         private static Charset guessCharset(
-            InputStream in, ByteOutputStream bufferStream)
+            InputStream in,
+            ByteOutputStream bufferStream)
             throws IOException
         {
             in.mark(2 * MAX_DECL_SIZE);
-            
+
             int size = 0;
-            while(size < MAX_DECL_SIZE) {
-                int bytesRead = 
+            while (size < MAX_DECL_SIZE) {
+                int bytesRead =
                     in.read(bufferStream.array(), size, MAX_DECL_SIZE - size);
                 bufferStream.size(bufferStream.size() + bytesRead);
                 if (bytesRead < 0) {
@@ -724,15 +745,15 @@ public abstract class FarragoReposUtil
             }
             bufferStream.reset();
             in.reset();
-            
+
             String charsetName = null;
-            for(Map.Entry<byte[], String> entry: ALL_DECLS.entrySet()) {
+            for (Map.Entry<byte [], String> entry : ALL_DECLS.entrySet()) {
                 if (matches(bufferStream.array(), entry.getKey())) {
                     charsetName = entry.getValue();
                     break;
                 }
             }
-            
+
             if (charsetName == null) {
                 throw new IOException(
                     "Unsupported XML encoding (or not a valid XML file)");
@@ -742,21 +763,22 @@ public abstract class FarragoReposUtil
 
             return Charset.forName(charsetName);
         }
-        
+
         /**
          * Parses the XML declaration at the start of the Reader's input and
-         * returns the specified encoding, if any.  The given Reader must be
+         * returns the specified encoding, if any. The given Reader must be
          * configured with a character set encoding capable of reading the XML
          * declaration (which will only contain a limited set of characters).
-         * 
+         *
          * @param reader a Reader configured with a suitable character set
-         *               encoding
+         * encoding
+         *
          * @return the character set specified by the XML declaration, or null
-         *         if not found
-         * @throws IOException on I/O error or if the named character set
-         *                     cannot be instantiated
-         * @throws IndexOutOfBoundsException if the XML declaration is 
-         *                                   malformed
+         * if not found
+         *
+         * @throws IOException on I/O error or if the named character set cannot
+         * be instantiated
+         * @throws IndexOutOfBoundsException if the XML declaration is malformed
          */
         private static Charset getCharsetFromXmlDecl(Reader reader)
             throws IOException
@@ -767,109 +789,107 @@ public abstract class FarragoReposUtil
 
             try {
                 StringBuilder b = new StringBuilder();
-                
+
                 int n = 0;
-                while(n < max) {
+                while (n < max) {
                     int ch = reader.read();
-                    b.append((char)ch);
+                    b.append((char) ch);
                     n++;
-                    
-                    if (n > 2 && "?>".equals(b.substring(n - 2, n))) {
+
+                    if ((n > 2) && "?>".equals(b.substring(n - 2, n))) {
                         break;
                     }
                 }
-                
+
                 int encoding = b.indexOf("encoding");
                 if (encoding < 0) {
                     return null;
                 }
-    
+
                 try {
                     encoding += 8;
-                    while(Character.isWhitespace(b.charAt(encoding))) {
+                    while (Character.isWhitespace(b.charAt(encoding))) {
                         encoding++;
                     }
-                    
+
                     if (b.charAt(encoding) != '=') {
                         return null;
                     }
                     encoding++;
-                    
-                    while(Character.isWhitespace(b.charAt(encoding))) {
+
+                    while (Character.isWhitespace(b.charAt(encoding))) {
                         encoding++;
                     }
-                    
-                    char quote = b.charAt(encoding); 
-                    if (quote != '\'' && quote != '"') {
+
+                    char quote = b.charAt(encoding);
+                    if ((quote != '\'') && (quote != '"')) {
                         return null;
                     }
                     int encodingEnd = ++encoding;
-                    while(b.charAt(encodingEnd) != quote) {
+                    while (b.charAt(encodingEnd) != quote) {
                         encodingEnd++;
                     }
-                    
+
                     String charsetName = b.substring(encoding, encodingEnd);
                     if (charsetName.length() == 0) {
                         return null;
                     }
-                    
+
                     return Charset.forName(charsetName);
-                } catch(IndexOutOfBoundsException e) {
+                } catch (IndexOutOfBoundsException e) {
                     return null;
                 }
-            }
-            finally {
+            } finally {
                 reader.reset();
             }
         }
-        
-        @Override
-        public boolean markSupported()
+
+        @Override public boolean markSupported()
         {
             return false;
         }
 
-        @Override
-        public int available() throws IOException
+        @Override public int available()
+            throws IOException
         {
             return outputBuffer.remaining();
         }
 
-        @Override
-        public void close() throws IOException
+        @Override public void close()
+            throws IOException
         {
             outputBuffer.reset();
             in.close();
         }
 
-        @Override
-        public int read() throws IOException
+        @Override public int read()
+            throws IOException
         {
-            while(true) {
-                // If there are bytes in the output buffer (e.g. from a 
+            while (true) {
+                // If there are bytes in the output buffer (e.g. from a
                 // multi-byte encoding), return them.
                 if (outputBuffer.remaining() > 0) {
                     int result = outputBuffer.get();
                     return result & 0xFF;
                 }
-    
+
                 // Reset buffer, it's empty.
                 outputBuffer.reset();
-            
+
                 // Read the next character from the underlying Reader
                 int ch = reader.read();
                 if (ch == -1) {
                     return -1;
                 }
-                
+
                 if (check(ch)) {
-                    // Valid XML, encode it into the output buffer and restart 
+                    // Valid XML, encode it into the output buffer and restart
                     // the loop.
                     outputBufferWriter.write(ch);
                     outputBufferWriter.flush();
                     continue;
                 }
-                
+
                 // Invalid character
                 FarragoTrace.getMdrTracer().fine(
                     "Invalid XML character: " + Integer.toHexString(ch));
@@ -879,18 +899,18 @@ public abstract class FarragoReposUtil
 
         private boolean check(int ch)
         {
-            return ch >= 0x0020 && ch <= 0xD7FF ||
-                ch >= 0xE000 && ch <= 0xFFFD ||
-                ch == 0x0009 || 
-                ch == 0x000A ||
-                ch == 0x000D;
+            return ((ch >= 0x0020) && (ch <= 0xD7FF))
+                || ((ch >= 0xE000) && (ch <= 0xFFFD))
+                || (ch == 0x0009)
+                || (ch == 0x000A)
+                || (ch == 0x000D);
         }
 
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException
+        @Override public int read(byte [] b, int off, int len)
+            throws IOException
         {
-            while(true) {
-                // Enough bytes in the output buffer to satisfy the read 
+            while (true) {
+                // Enough bytes in the output buffer to satisfy the read
                 // request, so copy them into b and return.
                 if (outputBuffer.remaining() >= len) {
                     outputBuffer.get(b, off, len);
@@ -898,7 +918,7 @@ public abstract class FarragoReposUtil
                 } else {
                     // Compact the buffer, it might not be empty.
                     outputBuffer.compact();
-                    
+
                     // Read a block of characters.
                     int charsRead = reader.read(inputBuffer);
                     if (charsRead < 0) {
@@ -911,21 +931,21 @@ public abstract class FarragoReposUtil
                             return -1;
                         }
                     } else {
-                        for(int i = 0; i < charsRead; i++) {
+                        for (int i = 0; i < charsRead; i++) {
                             char ch = inputBuffer[i];
                             if (check(ch)) {
                                 // Valid character, encode it into the output
                                 // buffer.
-                                outputBufferWriter.write(((int)ch) & 0xFFFF);
+                                outputBufferWriter.write(((int) ch) & 0xFFFF);
                             } else {
                                 // Invalid character
                                 FarragoTrace.getMdrTracer().fine(
-                                    "Invalid XML character: " + 
-                                    Integer.toHexString(ch));
+                                    "Invalid XML character: "
+                                    + Integer.toHexString(ch));
                                 numInvalidCharsFiltered++;
                             }
                         }
-                        
+
                         // Flush the buffer to make sure all bytes reach the
                         // actual output buffer.
                         outputBufferWriter.flush();
@@ -934,77 +954,77 @@ public abstract class FarragoReposUtil
             }
         }
 
-        @Override
-        public long skip(long n) throws IOException
+        @Override public long skip(long n)
+            throws IOException
         {
             long skip = 0;
-            while(skip < n) {
+            while (skip < n) {
                 if (read() < 0) {
                     break;
                 }
                 skip++;
             }
-            
+
             return skip;
         }
-        
+
         public int getNumInvalidCharsFiltered()
         {
             return numInvalidCharsFiltered;
         }
-        
+
         /**
-         * ByteOutputStream extends ByteArrayOutputStream to provide 
-         * ByteBuffer-like operations such as compact, array and get. 
+         * ByteOutputStream extends ByteArrayOutputStream to provide
+         * ByteBuffer-like operations such as compact, array and get.
          */
-        private static class ByteOutputStream extends ByteArrayOutputStream
+        private static class ByteOutputStream
+            extends ByteArrayOutputStream
         {
             private int pos;
-            
+
             public ByteOutputStream(int initialBufferSize)
             {
                 super(initialBufferSize);
-                
+
                 this.pos = 0;
             }
-            
+
             public void size(int size)
             {
                 super.count = Math.min(size, super.buf.length);
             }
-            
-            public byte[] array()
+
+            public byte [] array()
             {
                 return super.buf;
             }
-            
+
             public byte get()
             {
                 return super.buf[pos++];
             }
-            
-            public void get(byte[] b, int off, int len)
+
+            public void get(byte [] b, int off, int len)
             {
                 if (len > remaining()) {
                     throw new IndexOutOfBoundsException();
                 }
-                
+
                 System.arraycopy(super.buf, pos, b, off, len);
                 pos += len;
             }
-            
+
             public int remaining()
             {
                 return size() - pos;
             }
-            
-            @Override
-            public void reset()
+
+            @Override public void reset()
             {
                 super.reset();
                 pos = 0;
             }
-            
+
             public void compact()
             {
                 int rem = remaining();

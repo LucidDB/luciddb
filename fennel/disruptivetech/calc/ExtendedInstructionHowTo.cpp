@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -130,9 +130,9 @@ RegisterReference is the generic type. RegisterRef is a templated
 subclass that provides accessor functions. This templating provides some
 type checking.
 </p>
-<p> 
+<p>
 Access native types, such as integers, floats, etc. through the
-member function RegisterRef::value. 
+member function RegisterRef::value.
 </p>
 <p>
 Set a value to NULL with RegisterRef::toNull, check if it is null
@@ -211,7 +211,7 @@ for example "22001".
 If the library chooses to throw an exception, the ExtendedInstruction
 should catch the string, set the result to NULL, and re-throw the
 string.  The ExtendedInstruction class will catch this string and
-re-throw it with the appropriate Calculator wrappers.  
+re-throw it with the appropriate Calculator wrappers.
 </p>
 <p>
 If there is an error condition not handled by the SQL99 spec, a
@@ -289,7 +289,7 @@ CALL 'strCatA2(O0, C0);</pre>
 
 */
 
-struct ExtendedInstructionHowTo 
+struct ExtendedInstructionHowTo
 {
         // NOTE:  dummy class for doxygen
 };

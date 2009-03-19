@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,13 +22,15 @@
 */
 package org.eigenbase.sql.type;
 
+import java.math.*;
+
 import java.sql.*;
-import java.math.BigDecimal;
+
 import java.util.*;
 
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.parser.SqlParserPos;
 
 
 /**
@@ -49,15 +51,17 @@ import org.eigenbase.sql.parser.SqlParserPos;
  */
 public enum SqlTypeName
 {
-    //~ Enumeration values -----------------------------------------------------
-
     BOOLEAN(PrecScale.NoNo, false, Types.BOOLEAN),
     TINYINT(PrecScale.NoNo, false, Types.TINYINT),
     SMALLINT(PrecScale.NoNo, false, Types.SMALLINT),
     INTEGER(PrecScale.NoNo, false, Types.INTEGER),
     BIGINT(PrecScale.NoNo, false, Types.BIGINT),
-    DECIMAL(PrecScale.NoNo | PrecScale.YesNo | PrecScale.YesYes, false, Types.DECIMAL),
-    FLOAT(PrecScale.NoNo, false, Types.FLOAT),
+    DECIMAL(
+        PrecScale.NoNo
+        | PrecScale.YesNo
+        | PrecScale.YesYes,
+        false,
+        Types.DECIMAL), FLOAT(PrecScale.NoNo, false, Types.FLOAT),
     REAL(PrecScale.NoNo, false, Types.REAL),
     DOUBLE(PrecScale.NoNo, false, Types.DOUBLE),
     DATE(PrecScale.NoNo, false, Types.DATE),
@@ -78,8 +82,6 @@ public enum SqlTypeName
     ROW(PrecScale.NoNo, false, Types.STRUCT),
     CURSOR(PrecScale.NoNo, false, Types.OTHER + 1),
     COLUMN_LIST(PrecScale.NoNo, false, Types.OTHER + 2);
-
-    //~ Static fields/initializers ---------------------------------------------
 
     public static final SqlTypeName [] EMPTY_ARRAY = new SqlTypeName[0];
 
@@ -119,7 +121,7 @@ public enum SqlTypeName
             DOUBLE, SYMBOL, INTERVAL_YEAR_MONTH, INTERVAL_DAY_TIME,
             FLOAT, MULTISET, DISTINCT, STRUCTURED, ROW, CURSOR, COLUMN_LIST
         };
-    
+
     public static final SqlTypeName [] booleanTypes = {
         BOOLEAN
     };
@@ -129,14 +131,14 @@ public enum SqlTypeName
     };
 
     public static final SqlTypeName [] intTypes =
-        {
-            TINYINT, SMALLINT, INTEGER, BIGINT
-        };
+    {
+        TINYINT, SMALLINT, INTEGER, BIGINT
+    };
 
     public static final SqlTypeName [] exactTypes =
         combine(
             intTypes,
-            new SqlTypeName[] {DECIMAL});
+            new SqlTypeName[] { DECIMAL });
 
     public static final SqlTypeName [] approxTypes = {
         FLOAT, REAL, DOUBLE
@@ -148,7 +150,7 @@ public enum SqlTypeName
     public static final SqlTypeName [] fractionalTypes =
         combine(
             approxTypes,
-            new SqlTypeName[] {DECIMAL});
+            new SqlTypeName[] { DECIMAL });
 
     public static final SqlTypeName [] charTypes = {
         CHAR, VARCHAR
@@ -158,14 +160,14 @@ public enum SqlTypeName
         combine(charTypes, binaryTypes);
 
     public static final SqlTypeName [] datetimeTypes =
-        {
-            DATE, TIME, TIMESTAMP
-        };
+    {
+        DATE, TIME, TIMESTAMP
+    };
 
     public static final SqlTypeName [] timeIntervalTypes =
-        {
-            INTERVAL_DAY_TIME, INTERVAL_YEAR_MONTH
-        };
+    {
+        INTERVAL_DAY_TIME, INTERVAL_YEAR_MONTH
+    };
 
     public static final SqlTypeName [] multisetTypes = {
         MULTISET
@@ -215,8 +217,6 @@ public enum SqlTypeName
         setNameForJdbcType(Types.STRUCT, STRUCTURED);
     }
 
-    //~ Instance fields --------------------------------------------------------
-
     /**
      * Bitwise-or of flags indicating allowable precision/scale combinations.
      */
@@ -229,16 +229,12 @@ public enum SqlTypeName
     private final boolean special;
     private final int jdbcOrdinal;
 
-    //~ Constructors -----------------------------------------------------------
-
     private SqlTypeName(int signatures, boolean special, int jdbcType)
     {
         this.signatures = signatures;
         this.special = special;
         this.jdbcOrdinal = jdbcType;
     }
-
-    //~ Methods ----------------------------------------------------------------
 
     /**
      * Looks up a type name from its name.
@@ -411,53 +407,81 @@ public enum SqlTypeName
     }
 
     /**
-     * Returns the limit of this datatype.
+     * Returns the limit of this datatype. For example,
      *
-     * For example,
      * <table border="1">
      * <tr>
      * <th>Datatype</th>
-     * <th>sign</th><th>limit</th><th>beyond</th><th>precision</th><th>scale</th>
+     * <th>sign</th>
+     * <th>limit</th>
+     * <th>beyond</th>
+     * <th>precision</th>
+     * <th>scale</th>
      * <th>Returns</th>
      * </tr>
      * <tr>
      * <td>Integer</th>
-     * <td>true</td><td>true</td><td>false</td><td>-1</td><td>-1</td>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>-1</td>
+     * <td>-1</td>
      * <td>2147483647 (2 ^ 31 -1 = MAXINT)</td>
      * </tr>
      * <tr>
      * <td>Integer</th>
-     * <td>true</td><td>true</td><td>true</td><td>-1</td><td>-1</td>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>-1</td>
+     * <td>-1</td>
      * <td>2147483648 (2 ^ 31 = MAXINT + 1)</td>
      * </tr>
      * <tr>
      * <td>Integer</th>
-     * <td>false</td><td>true</td><td>false</td><td>-1</td><td>-1</td>
+     * <td>false</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>-1</td>
+     * <td>-1</td>
      * <td>-2147483648 (-2 ^ 31 = MININT)</td>
      * </tr>
      * <tr>
      * <td>Boolean</th>
-     * <td>true</td><td>true</td><td>false</td><td>-1</td><td>-1</td>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>-1</td>
+     * <td>-1</td>
      * <td>TRUE</td>
      * </tr>
      * <tr>
      * <td>Varchar</th>
-     * <td>true</td><td>true</td><td>false</td><td>10</td><td>-1</td>
+     * <td>true</td>
+     * <td>true</td>
+     * <td>false</td>
+     * <td>10</td>
+     * <td>-1</td>
      * <td>'ZZZZZZZZZZ'</td>
      * </tr>
      * </table>
      *
      * @param sign If true, returns upper limit, otherwise lower limit
      * @param limit If true, returns value at or near to overflow; otherwise
-     *   value at or near to underflow
-     * @param beyond If true, returns the value just beyond the limit,
-     *   otherwise the value at the limit
+     * value at or near to underflow
+     * @param beyond If true, returns the value just beyond the limit, otherwise
+     * the value at the limit
      * @param precision Precision, or -1 if not applicable
      * @param scale Scale, or -1 if not applicable
+     *
      * @return Limit value
      */
     public Object getLimit(
-        boolean sign, Limit limit, boolean beyond, int precision, int scale)
+        boolean sign,
+        Limit limit,
+        boolean beyond,
+        int precision,
+        int scale)
     {
         assert allowsPrecScale(precision != -1, scale != -1) : this;
         if (limit == Limit.ZERO) {
@@ -558,7 +582,7 @@ public enum SqlTypeName
             if (!sign) {
                 return null; // this type does not have negative values
             }
-            byte[] bytes;
+            byte [] bytes;
             switch (limit) {
             case ZERO:
                 bytes = new byte[0];
@@ -569,7 +593,7 @@ public enum SqlTypeName
                     // smallest value.
                     return null;
                 }
-                bytes = new byte[] {0x00};
+                bytes = new byte[] { 0x00 };
                 break;
             case OVERFLOW:
                 bytes = new byte[precision + (beyond ? 1 : 0)];
@@ -584,6 +608,7 @@ public enum SqlTypeName
             calendar = Calendar.getInstance();
             switch (limit) {
             case ZERO:
+
                 // The epoch.
                 calendar.set(Calendar.YEAR, 1970);
                 calendar.set(Calendar.MONTH, 0);
@@ -601,6 +626,7 @@ public enum SqlTypeName
                     // like a valid date.
                     return null;
                 }
+
                 // "SQL:2003 6.1 <data type> Access Rules 6" says that year is
                 // between 1 and 9999, and days/months are the valid Gregorian
                 // calendar values for these years.
@@ -630,6 +656,7 @@ public enum SqlTypeName
             calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
             switch (limit) {
             case ZERO:
+
                 // The epoch.
                 calendar.set(Calendar.HOUR_OF_DAY, 0);
                 calendar.set(Calendar.MINUTE, 0);
@@ -643,10 +670,8 @@ public enum SqlTypeName
                 calendar.set(Calendar.MINUTE, 59);
                 calendar.set(Calendar.SECOND, 59);
                 int millis =
-                    precision >= 3 ? 999 :
-                    precision == 2 ? 990 :
-                    precision == 1 ? 900 :
-                    0;
+                    (precision >= 3) ? 999
+                    : ((precision == 2) ? 990 : ((precision == 1) ? 900 : 0));
                 calendar.set(Calendar.MILLISECOND, millis);
                 break;
             }
@@ -656,6 +681,7 @@ public enum SqlTypeName
             calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
             switch (limit) {
             case ZERO:
+
                 // The epoch.
                 calendar.set(Calendar.YEAR, 1970);
                 calendar.set(Calendar.MONTH, 0);
@@ -677,6 +703,7 @@ public enum SqlTypeName
                     // like a valid date.
                     return null;
                 }
+
                 // "SQL:2003 6.1 <data type> Access Rules 6" says that year is
                 // between 1 and 9999, and days/months are the valid Gregorian
                 // calendar values for these years.
@@ -688,10 +715,9 @@ public enum SqlTypeName
                     calendar.set(Calendar.MINUTE, 59);
                     calendar.set(Calendar.SECOND, 59);
                     int millis =
-                        precision >= 3 ? 999 :
-                        precision == 2 ? 990 :
-                        precision == 1 ? 900 :
-                        0;
+                        (precision >= 3) ? 999
+                        : ((precision == 2) ? 990
+                            : ((precision == 1) ? 900 : 0));
                     calendar.set(Calendar.MILLISECOND, millis);
                 } else {
                     calendar.set(Calendar.YEAR, 1);
@@ -712,8 +738,8 @@ public enum SqlTypeName
     }
 
     /**
-     * Returns the maximum precision (or length) allowed for this type,
-     * or -1 if precision/length are not applicable for this type.
+     * Returns the maximum precision (or length) allowed for this type, or -1 if
+     * precision/length are not applicable for this type.
      *
      * @return Maximum allowed precision
      */
@@ -740,9 +766,9 @@ public enum SqlTypeName
     }
 
     /**
-     * Returns the maximum scale (or fractional second precision
-     * in the case of intervals) allowed for this type,
-     * or -1 if precision/length are not applicable for this type.
+     * Returns the maximum scale (or fractional second precision in the case of
+     * intervals) allowed for this type, or -1 if precision/length are not
+     * applicable for this type.
      *
      * @return Maximum allowed scale
      */
@@ -760,8 +786,8 @@ public enum SqlTypeName
     }
 
     /**
-     * Returns the minimum precision (or length) allowed for this type,
-     * or -1 if precision/length are not applicable for this type.
+     * Returns the minimum precision (or length) allowed for this type, or -1 if
+     * precision/length are not applicable for this type.
      *
      * @return Minimum allowed precision
      */
@@ -785,9 +811,9 @@ public enum SqlTypeName
     }
 
     /**
-     * Returns the minimum scale (or fractional second precision
-     * in the case of intervals) allowed for this type,
-     * or -1 if precision/length are not applicable for this type.
+     * Returns the minimum scale (or fractional second precision in the case of
+     * intervals) allowed for this type, or -1 if precision/length are not
+     * applicable for this type.
      *
      * @return Minimum allowed scale
      */
@@ -803,10 +829,9 @@ public enum SqlTypeName
         }
     }
 
-    public enum Limit {
-        ZERO,
-        UNDERFLOW,
-        OVERFLOW
+    public enum Limit
+    {
+        ZERO, UNDERFLOW, OVERFLOW
     }
 
     private BigDecimal getNumericLimit(
@@ -818,6 +843,7 @@ public enum SqlTypeName
     {
         switch (limit) {
         case OVERFLOW:
+
             // 2-based schemes run from -2^(N-1) to 2^(N-1)-1 e.g. -128 to +127
             // 10-based schemas run from -(10^N-1) to 10^N-1 e.g. -99 to +99
             final BigDecimal bigRadix = BigDecimal.valueOf(radix);
@@ -825,7 +851,7 @@ public enum SqlTypeName
                 --exponent;
             }
             BigDecimal decimal = bigRadix.pow(exponent);
-            if (sign || radix != 2) {
+            if (sign || (radix != 2)) {
                 decimal = decimal.subtract(BigDecimal.ONE);
             }
             if (beyond) {
@@ -836,9 +862,8 @@ public enum SqlTypeName
             }
             return decimal;
         case UNDERFLOW:
-            return beyond ? null :
-                sign ? BigDecimal.ONE :
-                    BigDecimal.ONE.negate();
+            return beyond ? null
+                : (sign ? BigDecimal.ONE : BigDecimal.ONE.negate());
         case ZERO:
             return BigDecimal.ZERO;
         default:
@@ -862,7 +887,7 @@ public enum SqlTypeName
             return SqlLiteral.createCharString((String) o, pos);
         case VARBINARY:
         case BINARY:
-            return SqlLiteral.createBinaryString((byte[]) o, pos);
+            return SqlLiteral.createBinaryString((byte []) o, pos);
         case DATE:
             return SqlLiteral.createDate((Calendar) o, pos);
         case TIME:
@@ -883,13 +908,15 @@ public enum SqlTypeName
     }
 
     /**
-      * Flags indicating precision/scale combinations.
-      *
-      * <p>Note: for intervals:<ul>
-      * <li>precision = start (leading field) precision</li>
-      * <li>scale = fractional second precision</li>
-      * </ul>
-      */
+     * Flags indicating precision/scale combinations.
+     *
+     * <p>Note: for intervals:
+     *
+     * <ul>
+     * <li>precision = start (leading field) precision</li>
+     * <li>scale = fractional second precision</li>
+     * </ul>
+     */
     private interface PrecScale
     {
         int NoNo = 1;

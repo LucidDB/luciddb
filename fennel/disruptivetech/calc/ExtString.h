@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,16 +29,16 @@ FENNEL_BEGIN_NAMESPACE
 
 //! Strcat. Ascii. dest = dest || str.
 //!
-//! Sets cbData to length for char as well as varchar. 
+//! Sets cbData to length for char as well as varchar.
 //!
 //! May throw "22001"
 //!
 //! If calling with fixed: Must call StrCatA3() first to have
 //! length set correctly. Only then subsequent calls to strCatA2() are
 //! possible.  If concatenating multiple strings, strCatA2 will honor
-//! the intermediate length. 
+//! the intermediate length.
 //! After final call to strCatA2(), length should equal
-//! width, to maintain fixed width string length == width. 
+//! width, to maintain fixed width string length == width.
 //! Behavior may be undefined if, after Calculator exits, length != width.
 void
 strCatA2(RegisterRef<char*>* result,
@@ -50,7 +50,7 @@ strCatA2(RegisterRef<char*>* result,
 //
 //! Sets cbData to length for char as well as varchar.
 //! After final call to strCatA3(), length should equal
-//! width, to maintain fixed width string length == width. 
+//! width, to maintain fixed width string length == width.
 //! Behavior may be undefined if, after Calculator exits, length != width.
 //! If concatenating multiple strings, strCatA2 will honor
 //! the intermediate length set by strCatAF3()
@@ -63,7 +63,7 @@ strCatAF3(RegisterRef<char*>* result,
 //! Str1 and str2 may be any combination of VARCHAR and/or CHAR.
 //! Returns -1, 0, 1.
 void
-strCmpA(RegisterRef<int32_t>* result,   
+strCmpA(RegisterRef<int32_t>* result,
         RegisterRef<char*>* str1,
         RegisterRef<char*>* str2);
 
@@ -87,17 +87,17 @@ strCpyA(RegisterRef<char*>* result,
 
 //! StrLen in Bits. Ascii.
 void
-strLenBitA(RegisterRef<int32_t>* result,   
+strLenBitA(RegisterRef<int32_t>* result,
            RegisterRef<char*>* str);
 
 //! StrLen in Characters. Ascii.
 void
-strLenCharA(RegisterRef<int32_t>* result,   
+strLenCharA(RegisterRef<int32_t>* result,
             RegisterRef<char*>* str);
 
 //! StrLen in Octets. Ascii.
 void
-strLenOctA(RegisterRef<int32_t>* result,   
+strLenOctA(RegisterRef<int32_t>* result,
            RegisterRef<char*>* str);
 
 //! Overlay. Length unspecified -- to end. Ascii.
@@ -108,15 +108,15 @@ void
 strOverlayA4(RegisterRef<char*>* result,
              RegisterRef<char*>* str,
              RegisterRef<char*>* overlay,
-             RegisterRef<int32_t>* start);  
+             RegisterRef<int32_t>* start);
 
 //! Overlay. Length specified. Ascii.
 void
 strOverlayA5(RegisterRef<char*>* result,
              RegisterRef<char*>* str,
              RegisterRef<char*>* overlay,
-             RegisterRef<int32_t>* start,   
-             RegisterRef<int32_t>* len);    
+             RegisterRef<int32_t>* start,
+             RegisterRef<int32_t>* len);
 
 
 //! Position of find string in str string. Ascii.
@@ -171,7 +171,7 @@ strTrimA(RegisterRef<char*>* result,
          RegisterRef<int32_t>* trimRight);
 
 class ExtendedInstructionTable;
-        
+
 void
 ExtStringRegister(ExtendedInstructionTable* eit);
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Portions Copyright (C) 2006-2007 John V. Sichi
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Portions Copyright (C) 2006-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,6 +27,7 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * Collection of rules which remove sections of a query plan known never to
  * produce any rows.
@@ -41,10 +42,11 @@ public abstract class RemoveEmptyRule
     //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Singleton instance of rule which removes empty children of a
-     * {@link UnionRel}.
+     * Singleton instance of rule which removes empty children of a {@link
+     * UnionRel}.
      *
      * <p>Examples:
+     *
      * <ul>
      * <li>Union(Rel, Empty, Rel2) becomes Union(Rel, Rel2)
      * <li>Union(Rel, Empty, Empty) becomes Rel
@@ -60,8 +62,7 @@ public abstract class RemoveEmptyRule
                 new RelOptRuleOperand(
                     EmptyRel.class,
                     ANY)),
-            "Union")
-        {
+            "Union") {
             public void onMatch(RelOptRuleCall call)
             {
                 UnionRel union = (UnionRel) call.rels[0];
@@ -72,14 +73,14 @@ public abstract class RemoveEmptyRule
                         newChildRels.add(childRel);
                     }
                 }
-                assert newChildRels.size() < childRels.size()
-                    : "planner promised us at least one EmptyRel child";
+                assert newChildRels.size() < childRels.size() : "planner promised us at least one EmptyRel child";
                 RelNode newRel;
                 switch (newChildRels.size()) {
                 case 0:
-                    newRel = new EmptyRel(
-                        union.getCluster(),
-                        union.getRowType());
+                    newRel =
+                        new EmptyRel(
+                            union.getCluster(),
+                            union.getRowType());
                     break;
                 case 1:
                     newRel =
@@ -89,10 +90,12 @@ public abstract class RemoveEmptyRule
                             true);
                     break;
                 default:
-                    newRel = new UnionRel(
-                        union.getCluster(),
-                        newChildRels.toArray(new RelNode[newChildRels.size()]),
-                        !union.isDistinct());
+                    newRel =
+                        new UnionRel(
+                            union.getCluster(),
+                            newChildRels.toArray(
+                                new RelNode[newChildRels.size()]),
+                            !union.isDistinct());
                     break;
                 }
                 call.transformTo(newRel);
@@ -100,10 +103,11 @@ public abstract class RemoveEmptyRule
         };
 
     /**
-     * Singleton instance of rule which converts a {@link ProjectRel} to
-     * empty if its child is empty.
+     * Singleton instance of rule which converts a {@link ProjectRel} to empty
+     * if its child is empty.
      *
      * <p>Examples:
+     *
      * <ul>
      * <li>Project(Empty) becomes Empty
      * </ul>
@@ -113,10 +117,9 @@ public abstract class RemoveEmptyRule
             new RelOptRuleOperand(
                 ProjectRel.class,
                 (RelTrait) null,
-                    new RelOptRuleOperand(
-                        EmptyRel.class)),
-            "Project")
-        {
+                new RelOptRuleOperand(
+                    EmptyRel.class)),
+            "Project") {
             public void onMatch(RelOptRuleCall call)
             {
                 ProjectRel project = (ProjectRel) call.rels[0];
@@ -128,10 +131,11 @@ public abstract class RemoveEmptyRule
         };
 
     /**
-     * Singleton instance of rule which converts a {@link FilterRel} to
-     * empty if its child is empty.
+     * Singleton instance of rule which converts a {@link FilterRel} to empty if
+     * its child is empty.
      *
      * <p>Examples:
+     *
      * <ul>
      * <li>Filter(Empty) becomes Empty
      * </ul>
@@ -143,8 +147,7 @@ public abstract class RemoveEmptyRule
                 (RelTrait) null,
                 new RelOptRuleOperand(
                     EmptyRel.class)),
-            "Filter")
-        {
+            "Filter") {
             public void onMatch(RelOptRuleCall call)
             {
                 FilterRel filter = (FilterRel) call.rels[0];
@@ -168,9 +171,6 @@ public abstract class RemoveEmptyRule
         super(operand);
         this.description = "RemoveEmptyRule:" + desc;
     }
-
-    //~ Methods ----------------------------------------------------------------
-
 }
 
 // End RemoveEmptyRule.java

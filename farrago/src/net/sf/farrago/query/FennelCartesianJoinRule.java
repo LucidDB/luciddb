@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@
 */
 package net.sf.farrago.query;
 
-import java.util.Collections;
+import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -117,7 +117,7 @@ public class FennelCartesianJoinRule
         if (rightRel == null) {
             return;
         }
-        
+
         // see if it makes sense to buffer the existing RHS; if not, try
         // the LHS, swapping the join operands if it does make sense to buffer
         // the LHS; but only if the join isn't a left outer join (since we

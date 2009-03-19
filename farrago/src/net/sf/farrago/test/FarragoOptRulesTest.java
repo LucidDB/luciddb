@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -107,7 +107,7 @@ public class FarragoOptRulesTest
             "alter session implementation set jar"
             + " plannerviz.plannerviz_plugin");
     }
-    
+
     protected DiffRepository getDiffRepos()
     {
         return DiffRepository.lookup(FarragoOptRulesTest.class);
@@ -419,6 +419,7 @@ public class FarragoOptRulesTest
         programBuilder.addRuleInstance(MergeCalcRule.instance);
         programBuilder.addRuleInstance(
             FarragoReduceExpressionsRule.CALC_INSTANCE);
+
         // the hard part is done... a few more rule calls to clean up
         programBuilder.addRuleInstance(RemoveEmptyRule.UNION_INSTANCE);
         programBuilder.addRuleInstance(ProjectToCalcRule.instance);
@@ -431,16 +432,16 @@ public class FarragoOptRulesTest
         check(
             programBuilder.createProgram(),
             "select * from (\n"
-                + "  select upper(substring(x FROM 1 FOR 2) || substring(x FROM 3)) as u,\n"
-                + "      substring(x FROM 1 FOR 1) as s\n"
-                + "  from (\n"
-                + "    select 'table' as x from (values (true))\n"
-                + "    union\n"
-                + "    select 'view' from (values (true))\n"
-                + "    union\n"
-                + "    select 'foreign table' from (values (true))\n"
-                + "  )\n"
-                + ") where u = 'TABLE'");
+            + "  select upper(substring(x FROM 1 FOR 2) || substring(x FROM 3)) as u,\n"
+            + "      substring(x FROM 1 FOR 1) as s\n"
+            + "  from (\n"
+            + "    select 'table' as x from (values (true))\n"
+            + "    union\n"
+            + "    select 'view' from (values (true))\n"
+            + "    union\n"
+            + "    select 'foreign table' from (values (true))\n"
+            + "  )\n"
+            + ") where u = 'TABLE'");
     }
 
     public void testRemoveSemiJoin()
@@ -585,7 +586,8 @@ public class FarragoOptRulesTest
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(new MergeProjectRule());
-        programBuilder.addRuleInstance(FarragoReduceValuesRule.PROJECT_INSTANCE);
+        programBuilder.addRuleInstance(
+            FarragoReduceValuesRule.PROJECT_INSTANCE);
 
         // Plan should be same as for
         // select a, b as x from (values (11), (23)) as t(x)");
@@ -607,8 +609,8 @@ public class FarragoOptRulesTest
         // select * from (values (11, 1, 10), (23, 3, 20)) as t(x, b, a)");
         check(
             programBuilder.createProgram(),
-            "select a + b as x, b, a from (values (10, 1), (30, 7), (20, 3)) as t(a, b)" +
-                " where a - b < 21");
+            "select a + b as x, b, a from (values (10, 1), (30, 7), (20, 3)) as t(a, b)"
+            + " where a - b < 21");
     }
 
     public void testReduceValuesNull()
@@ -638,8 +640,8 @@ public class FarragoOptRulesTest
         // select * from (values (11, 1, 10), (23, 3, 20)) as t(x, b, a)");
         check(
             programBuilder.createProgram(),
-            "select a + b as x, b, a from (values (10, 1), (30, 7)) as t(a, b)" +
-                " where a - b < 0");
+            "select a + b as x, b, a from (values (10, 1), (30, 7)) as t(a, b)"
+            + " where a - b < 0");
     }
 
     public void testEmptyFilterProjectUnion()
@@ -658,14 +660,14 @@ public class FarragoOptRulesTest
         // select * from (values (30, 3)) as t(x, y)");
         check(
             programBuilder.createProgram(),
-            "select * from (\n" +
-                "select * from (values (10, 1), (30, 3)) as t (x, y)\n" +
-                "union all\n" +
-                "select * from (values (20, 2))\n" +
-                ")\n" +
-                "where x + y > 30");
+            "select * from (\n"
+            + "select * from (values (10, 1), (30, 3)) as t (x, y)\n"
+            + "union all\n"
+            + "select * from (values (20, 2))\n"
+            + ")\n"
+            + "where x + y > 30");
     }
-    
+
     public void testReduceCasts()
         throws Exception
     {
@@ -680,34 +682,36 @@ public class FarragoOptRulesTest
         // The resulting plan should have no cast expressions
         check(
             programBuilder.createProgram(),
-            "select cast(d.name as varchar(128)), cast(e.empno as integer) " +
-            "from sales.depts d inner join sales.emps e " +
-            "on cast(d.deptno as integer) = cast(e.deptno as integer) " +
-            "where cast(e.gender as char(1)) = 'M'");
+            "select cast(d.name as varchar(128)), cast(e.empno as integer) "
+            + "from sales.depts d inner join sales.emps e "
+            + "on cast(d.deptno as integer) = cast(e.deptno as integer) "
+            + "where cast(e.gender as char(1)) = 'M'");
     }
-    
+
     public void testReduceCastAndConsts()
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(
             FarragoReduceExpressionsRule.FILTER_INSTANCE);
-        
+
         // Make sure constant expressions inside the cast can be reduced
         // in addition to the casts.
         check(
             programBuilder.createProgram(),
-            "select * from sales.emps " +
-            "where cast((empno + (10/2)) as int) = 13");
+            "select * from sales.emps "
+            + "where cast((empno + (10/2)) as int) = 13");
     }
 
     public void testReduceCastsNullable()
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
+
         // Simulate the way INSERT will insert casts to the target types
         programBuilder.addRuleInstance(
             new CoerceInputsRule(TableModificationRel.class, false));
+
         // Convert projects to calcs, merge two calcs, and then
         // reduce redundant casts in merged calc.
         programBuilder.addRuleInstance(ProjectToCalcRule.instance);
@@ -716,8 +720,8 @@ public class FarragoOptRulesTest
             FarragoReduceExpressionsRule.CALC_INSTANCE);
         check(
             programBuilder.createProgram(),
-            "insert into sales.depts(name) " +
-            "select cast(gender as varchar(128)) from sales.emps");
+            "insert into sales.depts(name) "
+            + "select cast(gender as varchar(128)) from sales.emps");
     }
 }
 

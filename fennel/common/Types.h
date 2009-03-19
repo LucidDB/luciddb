@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -63,7 +63,7 @@ class SegNodeLock;
 struct IntrusiveListNode
 {
     IntrusiveListNode *pNext;
-    
+
 #ifdef DEBUG
     IntrusiveListNode()
     {
@@ -80,19 +80,36 @@ struct IntrusiveListNode
 
 class MaxU {
 public:
-    MaxU(){}    
+    MaxU()
+    {
+    }
+
     operator uint8_t() const
-    { return 0xFF; }
+    {
+        return 0xFF;
+    }
+
     operator uint16_t() const
-    { return 0xFFFF; }
+    {
+        return 0xFFFF;
+    }
+
     operator uint32_t() const
-    { return 0xFFFFFFFF; }
+    {
+        return 0xFFFFFFFF;
+    }
+
     operator uint64_t() const
-    { return 0xFFFFFFFFFFFFFFFFLL; }
+    {
+        return 0xFFFFFFFFFFFFFFFFLL;
+    }
+
     // TODO:  something better
 #ifdef __CYGWIN__
     operator uint() const
-    { return 0xFFFFFFFFFFFFFFFFLL; }
+    {
+        return 0xFFFFFFFFFFFFFFFFLL;
+    }
 #endif
 };
 
@@ -132,7 +149,7 @@ enum LockMode
      * Exclusive lock; fail immediately rather than waiting.
      */
     LOCKMODE_X_NOWAIT
-    
+
 // NOTE:  enumeration order is significant
 };
 
@@ -161,7 +178,7 @@ enum CheckpointType
      * Flush some dirty data (criteria for flush is context-specific).
      */
     CHECKPOINT_FLUSH_FUZZY
-    
+
 // NOTE:  enumeration order is significant
 };
 
@@ -192,7 +209,7 @@ enum DuplicateSeek
  * serving as typo-safe parameter names.
  */
 typedef char const * const ParamName;
-    
+
 /**
  * ParamName can be used to declare static string symbolic constants
  * serving as early-bound parameter values.
@@ -252,7 +269,7 @@ typedef int LogicalActionType;
 // Set of pageIds
 typedef std::set<PageId> PageSet;
 typedef PageSet::const_iterator PageSetConstIter;
-    
+
 /**
  * Sentinel value for an invalid PageId.
  */

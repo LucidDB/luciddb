@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -70,7 +70,7 @@ public:
     explicit
     IntegralNativeInstruction(RegisterRef<TMPLT>* result,
                               RegisterRef<TMPLT>* op1,
-                              RegisterRef<TMPLT>* op2, 
+                              RegisterRef<TMPLT>* op2,
                               StandardTypeDescriptorOrdinal nativeType)
         : NativeInstruction<TMPLT>(op1, op2, nativeType),
           mResult(result)
@@ -90,10 +90,10 @@ protected:
 template <typename TMPLT>
 class IntegralNativeMod : public IntegralNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     IntegralNativeMod(RegisterRef<TMPLT>* result,
-                      RegisterRef<TMPLT>* op1, 
+                      RegisterRef<TMPLT>* op1,
                       RegisterRef<TMPLT>* op2,
                       StandardTypeDescriptorOrdinal nativeType)
         : IntegralNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -104,7 +104,7 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // SQL99 Part 2 Section 6.17 General Rule 10
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
@@ -113,7 +113,7 @@ public:
             if (o2 == 0) {
                 IntegralNativeInstruction<TMPLT>::mResult->toNull();
                 // SQL99 22.1 SQLState dataexception class 22, division by zero subclass 012
-                throw CalcMessage("22012", pc - 1); 
+                throw CalcMessage("22012", pc - 1);
             }
             IntegralNativeInstruction<TMPLT>::mResult->
                 value(NativeInstruction<TMPLT>::mOp1->value() % o2);
@@ -125,8 +125,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       IntegralNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       IntegralNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -153,7 +153,7 @@ class IntegralNativeAnd : public IntegralNativeInstruction<TMPLT>
 public:
     explicit
     IntegralNativeAnd(RegisterRef<TMPLT>* result,
-                      RegisterRef<TMPLT>* op1, 
+                      RegisterRef<TMPLT>* op1,
                       RegisterRef<TMPLT>* op2,
                       StandardTypeDescriptorOrdinal nativeType)
         : IntegralNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -163,12 +163,12 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         // making up null semantics here
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             IntegralNativeInstruction<TMPLT>::mResult->
-                value(NativeInstruction<TMPLT>::mOp1->value() & 
+                value(NativeInstruction<TMPLT>::mOp1->value() &
                       NativeInstruction<TMPLT>::mOp2->value());
         }
         pc++;
@@ -179,8 +179,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       IntegralNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       IntegralNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -204,10 +204,10 @@ public:
 template <typename TMPLT>
 class IntegralNativeOr : public IntegralNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     IntegralNativeOr(RegisterRef<TMPLT>* result,
-                     RegisterRef<TMPLT>* op1, 
+                     RegisterRef<TMPLT>* op1,
                      RegisterRef<TMPLT>* op2,
                      StandardTypeDescriptorOrdinal nativeType)
         : IntegralNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -218,12 +218,12 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // making up null semantics here
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             IntegralNativeInstruction<TMPLT>::mResult->
-                value(NativeInstruction<TMPLT>::mOp1->value() | 
+                value(NativeInstruction<TMPLT>::mOp1->value() |
                       NativeInstruction<TMPLT>::mOp2->value());
         }
     }
@@ -233,8 +233,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       IntegralNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       IntegralNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -258,10 +258,10 @@ public:
 template <typename TMPLT>
 class IntegralNativeShiftLeft : public IntegralNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     IntegralNativeShiftLeft(RegisterRef<TMPLT>* result,
-                            RegisterRef<TMPLT>* op1, 
+                            RegisterRef<TMPLT>* op1,
                             RegisterRef<TMPLT>* op2,
                             StandardTypeDescriptorOrdinal nativeType)
         : IntegralNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -272,12 +272,12 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // making up null semantics here
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             IntegralNativeInstruction<TMPLT>::mResult->
-                value(NativeInstruction<TMPLT>::mOp1->value() << 
+                value(NativeInstruction<TMPLT>::mOp1->value() <<
                       NativeInstruction<TMPLT>::mOp2->value());
         }
     }
@@ -287,8 +287,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       IntegralNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       IntegralNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 
@@ -302,7 +302,7 @@ public:
     create(InstructionSignature const & sig)
     {
         assert(sig.size() == numArgs());
-        return new 
+        return new
             IntegralNativeShiftLeft(static_cast<RegisterRef<TMPLT>*> (sig[0]),
                                     static_cast<RegisterRef<TMPLT>*> (sig[1]),
                                     static_cast<RegisterRef<TMPLT>*> (sig[2]),
@@ -313,10 +313,10 @@ public:
 template <typename TMPLT>
 class IntegralNativeShiftRight : public IntegralNativeInstruction<TMPLT>
 {
-public: 
+public:
     explicit
     IntegralNativeShiftRight(RegisterRef<TMPLT>* result,
-                             RegisterRef<TMPLT>* op1, 
+                             RegisterRef<TMPLT>* op1,
                              RegisterRef<TMPLT>* op2,
                              StandardTypeDescriptorOrdinal nativeType)
         : IntegralNativeInstruction<TMPLT>(result, op1, op2, nativeType)
@@ -327,12 +327,12 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // making up null semantics here
-        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+        if (NativeInstruction<TMPLT>::mOp1->isNull() ||
             NativeInstruction<TMPLT>::mOp2->isNull()) {
             IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             IntegralNativeInstruction<TMPLT>::mResult->
-                value(NativeInstruction<TMPLT>::mOp1->value() >> 
+                value(NativeInstruction<TMPLT>::mOp1->value() >>
                       NativeInstruction<TMPLT>::mOp2->value());
         }
     }
@@ -342,8 +342,8 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       IntegralNativeInstruction<TMPLT>::mResult, 
-                       NativeInstruction<TMPLT>::mOp1, 
+                       IntegralNativeInstruction<TMPLT>::mResult,
+                       NativeInstruction<TMPLT>::mOp1,
                        NativeInstruction<TMPLT>::mOp2);
     }
 

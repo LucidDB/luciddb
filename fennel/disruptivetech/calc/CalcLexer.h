@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,7 @@ using namespace fennel;
  * CalcTokenValue.
  */
 
-/* NOTE: Objects with constructor/desctructor/copy not 
+/* NOTE: Objects with constructor/desctructor/copy not
  * allowed in union. */
 typedef union
 {
@@ -61,15 +61,15 @@ typedef union
 
 /**
  * CalcTokenValue is the data type of the sematic values of the tokens.
- * It is used as the YYLTYPE in bison.  Data types that can be part 
+ * It is used as the YYLTYPE in bison.  Data types that can be part
  * of a union are defined inside CalcTokenUnion to save space.
  *
- * We use struct instead of the normal union so that we can store 
+ * We use struct instead of the normal union so that we can store
  * all objects on the stack and don't need to worry about memory allocation.
  */
 typedef struct
 {
-    //! Union of possible data types 
+    //! Union of possible data types
     CalcTokenUnion u;
     //! String representing the OPCODE of the instruction
     //! This is not part of the union because strings cannot be part of a union.
@@ -92,7 +92,7 @@ class CalcLexer : public CalcYYFlexLexer
       //! Constructs a new Calculator Lexer object
       CalcLexer(): CalcYYFlexLexer(), yycolno(1), yylineno(1), yypos(0) {}
 
-      //! The lexical analzyer function.  It scans the input stream, 
+      //! The lexical analzyer function.  It scans the input stream,
       //! consuming tokens, until a rule's action returns a value
       int yylex();
 

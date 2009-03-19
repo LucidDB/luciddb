@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,9 +50,7 @@ ExecStreamResult LbmIntersectExecStream::execute(
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
-
         while (nMatches < nInputs) {
-
             // get the first segment from the input with at least a starting
             // rid of startRid
             LcsRid currRid;
@@ -120,7 +118,7 @@ bool LbmIntersectExecStream::intersectSegments(uint len)
             permAssert(addRid == currRid);
         }
         // byte segments are stored in reverse order, so currByteSeg points
-        // to the end of the buffer whereas pByteSegBuf points to the 
+        // to the end of the buffer whereas pByteSegBuf points to the
         // beginning but needs to be filled in backwards
         for (int j = 0; j < len; j++) {
             pByteSegBuf[len - j - 1] &= currByteSeg[-j];

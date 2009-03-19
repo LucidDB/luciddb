@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,7 @@
 // REVIEW: SWZ: 9/23/2006: It's possible to HAVE_LIBUUID but not either version
 // of uuid.h.  Should probably detect and use a #error (or something) here.
 
-#else /* !HAVE_LIBUUID */
+#else
 
 #define FENNEL_UUID_FAKE
 
@@ -60,7 +60,7 @@ class PseudoUuid
 public:
 #ifdef FENNEL_UUID_REAL_NEW
     static const int UUID_LENGTH = UUID_LEN_BIN;
-#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
+#else
     static const int UUID_LENGTH = 16;
 #endif
 
@@ -68,8 +68,8 @@ protected:
 #ifdef FENNEL_UUID_REAL
     uuid_t data;
 
-#else /* FENNEL_UUID_FAKE || FENNEL_UUID_REAL_NEW */
-    /* 
+#else
+    /*
      * For FENNEL_UUID_REAL_NEW, uuid_t is not longer a concrete type.
      * To keep PseudoUuid simple, we use the new API to copy UUIDs into
      * our own array.
@@ -105,7 +105,7 @@ public:
     int hashCode() const;
 
     bool operator == (PseudoUuid const &) const;
-    
+
     bool operator != (PseudoUuid const &other) const
     {
         return !(*this == other);
@@ -114,9 +114,9 @@ public:
     uint8_t getByte(int) const;
 
     const uint8_t *getBytes() const;
-    
+
     /**
-     * Converts  an  input UUID string of the form 
+     * Converts  an  input UUID string of the form
      * 1b4e28ba-2fa1-11d2-883f-b9a761bde3fb
      * into the internal representation.
      *

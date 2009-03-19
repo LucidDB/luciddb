@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2005-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2008 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,8 +24,8 @@ package net.sf.farrago.fennel;
 
 import java.sql.*;
 
+import java.util.*;
 import java.util.logging.*;
-import java.util.ArrayList;
 
 import net.sf.farrago.*;
 import net.sf.farrago.fem.fennel.*;
@@ -89,16 +89,21 @@ public class FennelStreamGraph
 
     /**
      * Find the inputs of a specified stream in the graph.
+     *
      * @param streamName names a stream
+     *
      * @return a list of the names of the inputs, in input-edge order.
      */
-    public String[] getInputStreams(String streamName)
+    public String [] getInputStreams(String streamName)
     {
-        // REVIEW mberkowitz 12-Oct-2008. For simplicity, not using FennelStreamHandle here.
+        // REVIEW mberkowitz 12-Oct-2008. For simplicity, not using
+        // FennelStreamHandle here.
         traceGraphHandle("get inputs of a stream");
         ArrayList<String> inputList = new ArrayList<String>();
         FennelStorage.tupleStreamGraphGetInputStreams(
-            streamGraphHandle, streamName, inputList);
+            streamGraphHandle,
+            streamName,
+            inputList);
         if (tracer.isLoggable(Level.FINER)) {
             StringBuilder msg = new StringBuilder("The inputs of string ");
             msg.append(streamName).append(" are: ( ");

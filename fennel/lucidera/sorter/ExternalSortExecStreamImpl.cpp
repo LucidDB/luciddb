@@ -1,20 +1,20 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -76,7 +76,7 @@ void ExternalSortExecStreamImpl::prepare(
     storeFinalRun = params.storeFinalRun;
     estimatedNumRows = params.estimatedNumRows;
     earlyClose = params.earlyClose;
-    
+
     switch (params.distinctness) {
     case DUP_ALLOW:
         break;
@@ -170,7 +170,7 @@ void ExternalSortExecStreamImpl::open(bool restart)
     // subtract off one page per run for I/O buffering
     assert(sortInfo.nSortMemPagesPerRun > 0);
     sortInfo.nSortMemPagesPerRun--;
-    
+
     // need at least two non-I/O pages per run: one for keys and one for data
     assert(sortInfo.nSortMemPagesPerRun > 1);
 
@@ -178,13 +178,13 @@ void ExternalSortExecStreamImpl::open(bool restart)
     for (uint i = 0; i < nParallel; ++i) {
         runLoaders[i].reset(new ExternalSortRunLoader(sortInfo));
     }
-    
+
     pOutputWriter.reset(new ExternalSortOutput(sortInfo));
 
     for (uint i = 0; i < nParallel; ++i) {
         runLoaders[i]->startRun();
     }
-    
+
     // default to local sort as output obj
     pOutputWriter->setSubStream(*(runLoaders[0]));
 
@@ -273,11 +273,11 @@ void ExternalSortExecStreamImpl::storeRun(ExternalSortSubStream &subStream)
     FENNEL_TRACE(
         TRACE_FINE,
         "storing run " << storedRuns.size());
-                    
+
     boost::scoped_ptr<ExternalSortRunAccessor> pRunAccessor;
     pRunAccessor.reset(new ExternalSortRunAccessor(sortInfo));
     pRunAccessor->storeRun(subStream);
-    
+
     StrictMutexGuard mutexGuard(storedRunMutex);
     storedRuns.push_back(pRunAccessor->getStoredRun());
 }
@@ -317,7 +317,7 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
                 TRACE_FINE,
                 "merging from run " << iFirstRun
                 << " with run count = " << nRunsToMerge);
-            
+
             pMerger->startMerge(
                 storedRuns.begin() + iFirstRun, nRunsToMerge);
             if ((iFirstRun > 0) || storeFinalRun) {
@@ -334,7 +334,7 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
             FENNEL_TRACE(
                 TRACE_FINE,
                 "fetching from final run");
-            
+
             pFinalRunAccessor->initRead();
             pFinalRunAccessor->startRead(storedRuns[0]);
             pMerger->releaseResources();
@@ -344,7 +344,7 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
                 TRACE_FINE,
                 "fetching from final merge with run count = "
                 << storedRuns.size());
-            
+
             pOutputWriter->setSubStream(*pMerger);
         }
     }
@@ -355,9 +355,9 @@ void ExternalSortExecStreamImpl::optimizeRunOrder()
     uint i = storedRuns.size() - 1;
     while ((i > 0)
            && (storedRuns[i]->getWrittenPageCount()
-               > storedRuns[i-1]->getWrittenPageCount()))
+               > storedRuns[i - 1]->getWrittenPageCount()))
     {
-        std::swap(storedRuns[i],storedRuns[i-1]);
+        std::swap(storedRuns[i],storedRuns[i - 1]);
         i--;
     }
 }
@@ -404,7 +404,7 @@ void ExternalSortExecStreamImpl::computeFirstResultParallel()
         }
     } catch (...) {
         // REVEW jvs 19-June-2004:  signal a request to expedite cleanup?
-        
+
         // wait for all tasks to clean up
         threadPool.stop();
         throw;

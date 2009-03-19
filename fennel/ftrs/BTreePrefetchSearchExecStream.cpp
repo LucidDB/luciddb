@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -165,7 +165,6 @@ ExecStreamResult BTreePrefetchSearchExecStream::execute(
     // Iterate over each input search key, locating and pre-fetching
     // leaf pages that contain matching keys.
     for (;;) {
-
         // Position within a pre-fetched leaf page.
         if (!innerSearchLoop()) {
             return EXECRC_BUF_UNDERFLOW;
@@ -192,7 +191,6 @@ bool BTreePrefetchSearchExecStream::innerSearchLoop()
     // If we're already positioned within a leaf page, then nothing further
     // needs to be done here.
     while (!pReader->isPositioned()) {
-
         // Make sure there's input available, in case we're going to
         // pre-fetch some pages.
         if (pInAccessor->getState() != EXECBUF_EOS &&
@@ -423,7 +421,7 @@ bool BTreePrefetchSearchExecStream::testNonLeafInterval()
         // will be the last matching key.
         if (pfLowerBoundData.size() > 1) {
             nodeAccessor.unmarshalKey(readerKeyData);
-            int c = 
+            int c =
                 inputKeyDesc.compareTuplesKey(
                     pfLowerBoundData,
                     readerKeyData,

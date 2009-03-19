@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -104,7 +104,7 @@ public class FarragoDefaultSessionPersonality
     public static final String VALIDATE_DDL_ON_PREPARE_DEFAULT = "false";
 
     /**
-     * Whether non-correlated subqueries should be converted to constants 
+     * Whether non-correlated subqueries should be converted to constants
      */
     public static final String REDUCE_NON_CORRELATED_SUBQUERIES =
         "reduceNonCorrelatedSubqueries";
@@ -112,21 +112,18 @@ public class FarragoDefaultSessionPersonality
         REDUCE_NON_CORRELATED_SUBQUERIES_FARRAGO_DEFAULT = "false";
 
     /**
-     * Degree of parallelism to use for parallel executor; a value of
-     * 1 (the default) causes the default non-parallel executor
-     * to be used.
+     * Degree of parallelism to use for parallel executor; a value of 1 (the
+     * default) causes the default non-parallel executor to be used.
      */
-    public static final String DEGREE_OF_PARALLELISM =
-        "degreeOfParallelism";
-    public static final String
-        DEGREE_OF_PARALLELISM_DEFAULT = "1";
+    public static final String DEGREE_OF_PARALLELISM = "degreeOfParallelism";
+    public static final String DEGREE_OF_PARALLELISM_DEFAULT = "1";
 
     /**
      * The label for the current session
      */
     public static final String LABEL = "label";
     public static final String LABEL_DEFAULT = null;
-    
+
     //~ Instance fields --------------------------------------------------------
 
     protected final FarragoDatabase database;
@@ -197,7 +194,7 @@ public class FarragoDefaultSessionPersonality
     {
         return false;
     }
-    
+
     // implement FarragoSessionPersonality
     public SqlOperatorTable getSqlOperatorTable(
         FarragoSessionPreparingStmt preparingStmt)
@@ -237,12 +234,12 @@ public class FarragoDefaultSessionPersonality
 
     // implement FarragoSessionPersonality
     public FarragoSessionPreparingStmt newPreparingStmt(
-        FarragoSessionStmtContext stmtContext,       
+        FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator)
     {
         return newPreparingStmt(stmtContext, stmtContext, stmtValidator);
     }
-    
+
     // implement FarragoSessionPersonality
     public FarragoSessionPreparingStmt newPreparingStmt(
         FarragoSessionStmtContext stmtContext,
@@ -368,7 +365,7 @@ public class FarragoDefaultSessionPersonality
                 "Element",
                 null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
-        
+
         // Drop the corresponding label aliases if the cascade option
         // was specified
         ddlValidator.defineDropRule(
@@ -477,7 +474,7 @@ public class FarragoDefaultSessionPersonality
         String value)
     {
         String validatedValue =
-            paramValidator.validate(ddlValidator, name, value);     
+            paramValidator.validate(ddlValidator, name, value);
         variables.set(name, validatedValue);
     }
 
@@ -545,22 +542,23 @@ public class FarragoDefaultSessionPersonality
         }
 
         // Farrago doesn't automatically update row counts
-        if (feature == EigenbaseResource.instance().PersonalityManagesRowCount) {
+        if (feature
+            == EigenbaseResource.instance().PersonalityManagesRowCount)
+        {
             return false;
         }
-        
+
         // Farrago doesn't support snapshots
-        if (feature ==
-            EigenbaseResource.instance().PersonalitySupportsSnapshots)
+        if (feature
+            == EigenbaseResource.instance().PersonalitySupportsSnapshots)
         {
             return false;
         }
-        
-        if (feature == EigenbaseResource.instance().PersonalitySupportsLabels)
-        {
+
+        if (feature == EigenbaseResource.instance().PersonalitySupportsLabels) {
             return false;
         }
-        
+
         // By default, support everything except the above.
         return true;
     }
@@ -570,7 +568,7 @@ public class FarragoDefaultSessionPersonality
     {
         return true;
     }
-    
+
     // implement FarragoSessionPersonality
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
@@ -734,26 +732,26 @@ public class FarragoDefaultSessionPersonality
                     ddlValidator.getRepos().getLocalizedObjectName(name));
             }
             ParamDesc paramDesc = params.get(name);
-            if (!paramDesc.nullability && value == null) {
+            if (!paramDesc.nullability && (value == null)) {
                 throw FarragoResource.instance().ValidatorSysParamTypeMismatch
                 .ex(
                     value,
                     ddlValidator.getRepos().getLocalizedObjectName(name));
             } else if (value == null) {
                 return null;
-            };
-            
+            }
+
             // If this is the label variable, make sure snapshots are enabled.
             if (name.equals(FarragoDefaultSessionPersonality.LABEL)) {
                 if (!supportsFeature(
-                    EigenbaseResource.instance().PersonalitySupportsSnapshots))
+                        EigenbaseResource.instance()
+                        .PersonalitySupportsSnapshots))
                 {
-                    throw 
-                        EigenbaseResource.instance().
-                            PersonalitySupportsSnapshots.ex();
+                    throw EigenbaseResource.instance()
+                    .PersonalitySupportsSnapshots.ex();
                 }
             }
-            
+
             Object o;
             switch (paramDesc.type) {
             case BOOLEAN_TYPE:

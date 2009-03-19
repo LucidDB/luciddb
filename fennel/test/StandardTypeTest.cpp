@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,7 @@ class StandardTypeTest : virtual public TestBase, public TraceSource
     void testStandardTypeIsFixedLenArray();
     void testStandardTypeIsTextArray();
     void testStandardTypeIsBinaryArray();
-    
+
 public:
     explicit StandardTypeTest()
         : TraceSource(shared_from_this(),"StandardTypeTest")
@@ -63,7 +63,7 @@ public:
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsTextArray);
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsBinaryArray);
     }
-    
+
     virtual ~StandardTypeTest()
     {
     }
@@ -79,7 +79,7 @@ void StandardTypeTest::testStandardTypeToString()
     BOOST_REQUIRE(STANDARD_TYPE_MIN < STANDARD_TYPE_END);
     BOOST_REQUIRE(STANDARD_TYPE_MIN <= STANDARD_TYPE_INT_8);
     BOOST_REQUIRE(STANDARD_TYPE_END > STANDARD_TYPE_VARBINARY);
-    
+
     for (i = STANDARD_TYPE_MIN; i < STANDARD_TYPE_END; i++) {
         v = StandardTypeDescriptorOrdinal(i);
         str = StandardTypeDescriptor::toString(v);
@@ -338,6 +338,4 @@ void StandardTypeTest::testStandardTypeIsBinaryArray()
 
 FENNEL_UNIT_TEST_SUITE(StandardTypeTest);
 
-// End TestTuple.cpp
-
-    
+// End StandardTypeTest.cpp

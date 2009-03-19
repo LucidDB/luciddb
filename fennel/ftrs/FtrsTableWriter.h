@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,7 @@ struct FtrsTableIndexWriterParams : public BTreeInsertExecStreamParams
 /**
  * FtrsTableWriterParams defines parameters for instantiating a FtrsTableWriter.
  */
-struct FtrsTableWriterParams : public ConduitExecStreamParams 
+struct FtrsTableWriterParams : public ConduitExecStreamParams
 {
     /**
      * Parameters for individual indexes making up table.
@@ -61,7 +61,7 @@ struct FtrsTableWriterParams : public ConduitExecStreamParams
     TupleProjection updateProj;
 };
 
-struct FtrsTableIndexWriter 
+struct FtrsTableIndexWriter
 {
     SharedBTreeWriter pWriter;
     Distinctness distinctness;
@@ -107,7 +107,7 @@ class FtrsTableWriter : public LogicalTxnParticipant
     inline void copyNewValues();
     inline void copyOldValues();
     inline bool searchForIndexKey(FtrsTableIndexWriter &);
-    
+
     explicit FtrsTableWriter(FtrsTableWriterParams const &params);
     PageOwnerId getTableId();
 
@@ -116,22 +116,22 @@ public:
      * LogicalActionType for inserting a table tuple.
      */
     static const LogicalActionType ACTION_INSERT;
-    
+
     /**
      * LogicalActionType for deleting a table tuple.
      */
     static const LogicalActionType ACTION_DELETE;
-    
+
     /**
      * LogicalActionType for updating a table tuple.
      */
     static const LogicalActionType ACTION_UPDATE;
-    
+
     /**
      * LogicalActionType for reversing the update of a table tuple.
      */
     static const LogicalActionType ACTION_REVERSE_UPDATE;
-    
+
     /**
      * Reads all tuples from a buffer and uses them as input to perform the
      * requested action on the target table.

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2008-2008 The Eigenbase Project
-// Copyright (C) 2008-2008 Disruptive Tech
-// Copyright (C) 2008-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2008-2009 SQLstream, Inc.
+// Copyright (C) 2008-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,18 +26,21 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.session.*;
 
+
 /**
  * DdlDropLabelStmt extends DdlDropStmt to remove obsolete label statistics.
- * Repository design constraints related to upgrade prevent the statistics 
- * from being associated with the label itself.  They are instead associated
- * implicitly via time stamps.  Therefore, drop rules are insufficient to 
- * trigger the necessary deletions.  Avoid this pattern whenever possible!
- * 
+ * Repository design constraints related to upgrade prevent the statistics from
+ * being associated with the label itself. They are instead associated
+ * implicitly via time stamps. Therefore, drop rules are insufficient to trigger
+ * the necessary deletions. Avoid this pattern whenever possible!
+ *
  * @author Stephan Zuercher
  */
 public class DdlDropLabelStmt
     extends DdlDropStmt
 {
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Constructs a new DdlDropLabelStmt.
      *
@@ -51,19 +54,25 @@ public class DdlDropLabelStmt
         super(droppedElement, restrict);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // override DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         FarragoRepos repos = ddlValidator.getRepos();
-        boolean usePreviewRefDelete = 
+        boolean usePreviewRefDelete =
             repos.getEnkiMdrRepos().supportsPreviewRefDelete();
 
         // Remove stats associated with the label being dropped.  Note that
         // this needs to be done before the label is deleted from the
         // catalog.
         FarragoCatalogUtil.removeObsoleteStatistics(
-            (FemLabel)getModelElement(), repos, usePreviewRefDelete);
-        
+            (FemLabel) getModelElement(),
+            repos,
+            usePreviewRefDelete);
+
         super.preValidate(ddlValidator);
     }
 }
+
+// End DdlDropLabelStmt.java

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,7 @@ public:
         /** Parser read up to maximum length of field */
         MAX_LENGTH
     };
-    
+
     /**
      * Delimiter type encountered during parsing
      */
@@ -101,14 +101,14 @@ public:
          */
         TOO_FEW_COLUMNS,
         /**
-         * Row had too many columns, or column values were too long,  
+         * Row had too many columns, or column values were too long,
          */
         TOO_MANY_COLUMNS
     };
 
     explicit FlatFileRowParseResult();
     void reset();
-    
+
     /**
      * Reports errors encountered during row parsing
      */
@@ -123,12 +123,12 @@ public:
      * Sizes of column values
      */
     std::vector<uint> sizes;
-    
+
     /**
      * Sizes of stripped column values
      */
     std::vector<uint> strippedSizes;
-    
+
     /**
      * Reference to the current row.
      */
@@ -148,7 +148,7 @@ public:
     /**
      * Gets the number of fields read
      */
-    uint getReadCount() 
+    uint getReadCount()
     {
         return offsets.size();
     }
@@ -203,7 +203,7 @@ public:
 
     /**
      * Sets a column value in the row result
-     */ 
+     */
     void setColumn(uint iColumn, uint offset, uint size)
     {
         offsets[iColumn] = offset;
@@ -213,7 +213,7 @@ public:
     /**
      * Nullifies a column value in the row result
      */
-    void setNull(uint iColumn) 
+    void setNull(uint iColumn)
     {
         setColumn(iColumn, 0, 0);
     }
@@ -250,7 +250,7 @@ public:
  * There are two main types of scans. An unbounded scan and a bounded
  * scan. By default, the scan is bounded.
  */
-class FlatFileRowDescriptor : public std::vector<FlatFileColumnDescriptor> 
+class FlatFileRowDescriptor : public std::vector<FlatFileColumnDescriptor>
 {
     bool bounded;
     bool lenient;
@@ -268,7 +268,7 @@ public:
      * the default farrago maximum length.
      */
     static const int MAX_COLUMN_LENGTH = 65535;
-    
+
     /**
      * Construct a new row descriptor
      */
@@ -279,7 +279,7 @@ public:
      * columns, and unbounded column sizes
      */
     void setUnbounded();
-    
+
     /**
      * Whether to run regular scan mode, bounded by column descriptions,
      * or to run in an unbounded scan mode
@@ -408,9 +408,9 @@ class FlatFileParser
     const char *scanRowEnd(
         const char *buffer,
         int size,
-        bool rowDelim, 
+        bool rowDelim,
         FlatFileRowParseResult &result);
-    
+
     /**
      * Scan through buffer to find a row delimiter, or non row delimiter
      * character.
@@ -457,7 +457,7 @@ public:
         const char quote,
         const char escape,
         bool doTrim = false);
-    
+
     /**
      * Scans through buffer until the end of a row is reached, and locates
      * columns within the row. The main options are a "bounded", "lenient",
@@ -487,7 +487,7 @@ public:
      * @param[out] result result of parsing row
      */
     void scanRow(
-        const char *buffer, 
+        const char *buffer,
         int size,
         const FlatFileRowDescriptor &columns,
         FlatFileRowParseResult &result);
@@ -509,7 +509,7 @@ public:
     void scanColumn(
         const char *buffer,
         uint size,
-        uint maxLength, 
+        uint maxLength,
         FlatFileColumnParseResult &result);
 
 
@@ -522,9 +522,9 @@ public:
     void scanFixedColumn(
         const char *buffer,
         uint size,
-        uint maxLength, 
+        uint maxLength,
         FlatFileColumnParseResult &result);
-    
+
     /**
      * Remove quoting and escape characters from a row result, saving the
      * results into the row result.
@@ -539,7 +539,7 @@ public:
 
     /**
      * Removes quoting and escape characters from a column value. If untrimmed
-     * is set, then the value will be trimmed first. Otherwise, quoted values 
+     * is set, then the value will be trimmed first. Otherwise, quoted values
      * are expected to begin and end with a quote.
      *
      * <p>

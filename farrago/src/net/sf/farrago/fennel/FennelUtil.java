@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,14 @@
 */
 package net.sf.farrago.fennel;
 
+import java.nio.charset.*;
+
 import net.sf.farrago.fennel.tuple.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
-import java.nio.charset.*;
 
 /**
  * Static utility methods related to Fennel storage. Historically, these methods
@@ -155,9 +156,9 @@ public abstract class FennelUtil
      * </tr>
      * <tr>
      * <td>{@link SqlTypeName#VARCHAR}(precision)</td>
-     * <td>{@link FennelStandardTypeDescriptor#VARCHAR VARCHAR}
-     * or {@link FennelStandardTypeDescriptor#VARCHAR UNICODE_VARCHAR}
-     * depending on character set</td>
+     * <td>{@link FennelStandardTypeDescriptor#VARCHAR VARCHAR} or {@link
+     * FennelStandardTypeDescriptor#VARCHAR UNICODE_VARCHAR} depending on
+     * character set</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>
@@ -190,9 +191,8 @@ public abstract class FennelUtil
      * </tr>
      * <tr>
      * <td>{@link SqlTypeName#CHAR}(precision)</td>
-     * <td>{@link FennelStandardTypeDescriptor#CHAR CHAR}
-     * or {@link FennelStandardTypeDescriptor#CHAR CHAR}
-     * depending on character set</td>
+     * <td>{@link FennelStandardTypeDescriptor#CHAR CHAR} or {@link
+     * FennelStandardTypeDescriptor#CHAR CHAR} depending on character set</td>
      * <td>&nbsp;</td>
      * </tr>
      * <tr>

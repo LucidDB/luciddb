@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,9 +33,11 @@ import org.eigenbase.enki.mdr.*;
 import org.eigenbase.enki.util.*;
 import org.eigenbase.util.*;
 
+import org.jgrapht.graph.*;
+
 import org.netbeans.api.mdr.*;
 import org.netbeans.api.xmi.*;
-import org.jgrapht.graph.*;
+
 
 /**
  * Static JMI utilities.
@@ -48,8 +50,8 @@ public abstract class JmiObjUtil
     //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Default maximum repository string length.  Must match the value used
-     * at the time the repository was generated.
+     * Default maximum repository string length. Must match the value used at
+     * the time the repository was generated.
      */
     private static final int DEFAULT_MAX_STRING_LENGTH = 128;
 
@@ -358,15 +360,14 @@ public abstract class JmiObjUtil
         // implementations may use different suffixes, hence we allow
         // any string following the delimiter.
         String className = proxyClass.getName();
-        
+
         int delimPos = className.lastIndexOf(delimiter);
-        assert(delimPos > 0); // Must be found and not at start of string
+        assert (delimPos > 0); // Must be found and not at start of string
 
         className = className.substring(0, delimPos);
 
-        return
-            Class.forName(className, true, proxyClass.getClassLoader())
-            	.asSubclass(resultClass);
+        return Class.forName(className, true, proxyClass.getClassLoader())
+            .asSubclass(resultClass);
     }
 
     /**
@@ -390,8 +391,8 @@ public abstract class JmiObjUtil
 
     /**
      * Gets the MofId for a given 64-bit object ID for a JMI object. Generates
-     * the MofId from the long without validating whether the associated
-     * object exists.
+     * the MofId from the long without validating whether the associated object
+     * exists.
      *
      * @param objectId JMI object id (as from {@link #getObjectId(RefObject)})
      *
@@ -406,6 +407,7 @@ public abstract class JmiObjUtil
      * Returns the type name of an object. For example, "FemLocalView".
      *
      * @param refObject Object
+     *
      * @return type name
      */
     public static String getTypeName(RefObject refObject)
@@ -417,6 +419,7 @@ public abstract class JmiObjUtil
      * Returns the name of a class.
      *
      * @param refClass Class
+     *
      * @return Name of class
      */
     public static String toString(RefClass refClass)
@@ -430,13 +433,14 @@ public abstract class JmiObjUtil
      * <p>Useful for debugging. Typical result:
      *
      * <blockquote>FemDataWrapper(creationTimestamp='2007-09-02 16:57:22.252',
-     * description='null', foreign='true', language='JAVA',
-     * libraryFile='class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper',
+     * description='null', foreign='true', language='JAVA', libraryFile='class
+     * net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper',
      * lineageId='1dacd3af-9181-47fd-94f3-64fb3a0506a4',
      * modificationTimestamp='2007-09-02 17:21:08.846', name='SYS_MDR',
      * visibility='vk_public')</code></blockquote>
      *
      * @param refObject Object
+     *
      * @return Description of object
      */
     public static String toString(RefObject refObject)
@@ -449,10 +453,8 @@ public abstract class JmiObjUtil
             if (++i > 0) {
                 buf.append(", ");
             }
-            buf.append(entry.getKey())
-                .append("='")
-                .append(entry.getValue())
-                .append("'");
+            buf.append(entry.getKey()).append("='").append(entry.getValue())
+            .append("'");
         }
         buf.append(')');
         return buf.toString();
@@ -556,14 +558,14 @@ public abstract class JmiObjUtil
      * been generated
      */
     public static Class<? extends RefObject> getClassForRefClass(
-        MDRepository repos, 
+        MDRepository repos,
         RefClass refClass)
     {
         // NOTE jvs 8-Aug-2006:  default to MDR's classloader, otherwise
         // we get visibility problems with generated MDR classes in
         // some contexts
         return getClassForRefClass(
-            ((EnkiMDRepository)repos).getDefaultClassLoader(),
+            ((EnkiMDRepository) repos).getDefaultClassLoader(),
             refClass,
             false);
     }
@@ -571,8 +573,7 @@ public abstract class JmiObjUtil
     /**
      * @deprecated use {@link #getClassForRefClass(MDRepository, RefClass)}
      */
-    @Deprecated
-    public static Class<? extends RefObject> getClassForRefClass(
+    @Deprecated public static Class<? extends RefObject> getClassForRefClass(
         RefClass refClass)
     {
         // NOTE jvs 8-Aug-2006:  default to MDR's classloader, otherwise
@@ -583,6 +584,7 @@ public abstract class JmiObjUtil
             refClass,
             false);
     }
+
     /**
      * Finds the Java class generated for a particular RefClass.
      *
@@ -604,14 +606,14 @@ public abstract class JmiObjUtil
 
         // Look up the Java interface generated for the class being queried.
         String className = TagUtil.getInterfaceFullName(refClass);
-        
+
         try {
             Class<?> cls =
                 Class.forName(
                     className,
                     true,
                     classLoader);
-            
+
             return cls.asSubclass(RefObject.class);
         } catch (ClassNotFoundException ex) {
             // This is possible when we're querying an external repository
@@ -710,11 +712,11 @@ public abstract class JmiObjUtil
             obj.refSetValue(attr, val);
         }
     }
-    
+
     /**
      * Limits the result of {@link #getFeatures(RefClass, Class, boolean)} to
      * the first feature with the given name.
-     * 
+     *
      * @param refClass class of interest
      * @param filterClass only objects which are instances of this Class will be
      * returned; so, for example, pass Attribute.class if you want only
@@ -724,45 +726,45 @@ public abstract class JmiObjUtil
      * included; otherwise, they will be filtered out
      *
      * @return the first feature matching the given parameters or null if none
-     *         are found
+     * are found
      */
     public static <T extends StructuralFeature> T getNamedFeature(
-        RefClass refClass, 
-        Class<T> filterClass, 
-        String featureName, 
+        RefClass refClass,
+        Class<T> filterClass,
+        String featureName,
         boolean includeMultiValued)
     {
-        for (T t: getFeatures(refClass, filterClass, false)) {
+        for (T t : getFeatures(refClass, filterClass, false)) {
             if (t.getName().equals(featureName)) {
                 return t;
             }
         }
-        
+
         return null;
     }
-    
+
     public static int getMaxLength(RefClass refClass, Attribute attr)
     {
-       Classifier cls = (Classifier)refClass.refMetaObject();
-        
+        Classifier cls = (Classifier) refClass.refMetaObject();
+
         if (!attr.isChangeable()) {
             return Integer.MAX_VALUE;
         }
-        
+
         Classifier type = attr.getType();
         if (type instanceof javax.jmi.model.AliasType) {
-            type = ((javax.jmi.model.AliasType)type).getType();
+            type = ((javax.jmi.model.AliasType) type).getType();
         }
         if (!type.getName().equals("String")) {
             return Integer.MAX_VALUE;
         }
-        
-        int maxLength = 
+
+        int maxLength =
             TagUtil.findMaxLengthTag(cls, attr, DEFAULT_MAX_STRING_LENGTH);
- 
+
         return maxLength;
     }
-    
+
     /**
      * Tests an attribute value to see if it is blank.
      *
@@ -803,7 +805,8 @@ public abstract class JmiObjUtil
         for (DefaultEdge edge : graph.edgeSet()) {
             JmiDependencyVertex sourceVertex = graph.getEdgeSource(edge);
             JmiDependencyVertex targetVertex = graph.getEdgeTarget(edge);
-            pw.println("\t"
+            pw.println(
+                "\t"
                 + vertexIds.get(sourceVertex)
                 + " : "
                 + vertexIds.get(targetVertex));
@@ -813,8 +816,8 @@ public abstract class JmiObjUtil
     /**
      * Prints a model view to a given writer.
      *
-     * @param view  Model view
-     * @param pw    Writer
+     * @param view Model view
+     * @param pw Writer
      */
     public static void dumpGraph(
         JmiModelView view,
@@ -835,7 +838,8 @@ public abstract class JmiObjUtil
         for (DefaultEdge edge : graph.edgeSet()) {
             JmiClassVertex sourceVertex = graph.getEdgeSource(edge);
             JmiClassVertex targetVertex = graph.getEdgeTarget(edge);
-            pw.println("\t"
+            pw.println(
+                "\t"
                 + vertexIds.get(sourceVertex)
                 + " - "
                 + vertexIds.get(targetVertex)
@@ -843,13 +847,15 @@ public abstract class JmiObjUtil
         }
     }
 
+    //~ Inner Interfaces -------------------------------------------------------
+
     /**
      * Generates a name for a JMI element.
      *
      * <p>This is an interface because the name often depends upon the details
      * the metamodel, and different applications call for different levels of
-     * verbosity. Typically people choose to identify an object by its type
-     * and its path to the root element, for example
+     * verbosity. Typically people choose to identify an object by its type and
+     * its path to the root element, for example
      * "LocalTable(MYCATALOG.MYSCHEMA.MYTABLE)".
      */
     public interface Namer
@@ -858,6 +864,7 @@ public abstract class JmiObjUtil
          * Returns a string to which identifies a given element to an end-user.
          *
          * @param o Element
+         *
          * @return Descriptor
          */
         String getName(RefObject o);

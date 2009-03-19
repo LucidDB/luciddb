@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -73,11 +73,11 @@ public class DdlGrantRoleStmt
         // model change!
 
         for (SqlIdentifier granteeId : granteeList) {
-            // REVIEW: SWZ: 2008-07-29: getAuthIdByName most certainly does
-            // not create an AuthId if it does not exist.  An optimization
-            // here would be to modify newRoleGrant to accept AuthId instances
-            // instead of re-doing the lookup for granteeId for each role in
-            // the roleList.
+            // REVIEW: SWZ: 2008-07-29: getAuthIdByName most certainly does not
+            // create an AuthId if it does not exist.  An optimization here
+            // would be to modify newRoleGrant to accept AuthId instances
+            // instead of re-doing the lookup for granteeId for each role in the
+            // roleList.
 
             // Find the repository element id for the grantee,  create one if
             // it does not exist

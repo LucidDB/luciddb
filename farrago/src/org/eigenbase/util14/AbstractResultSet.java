@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,14 +22,14 @@
 */
 package org.eigenbase.util14;
 
+import java.io.*;
+
 import java.math.*;
 
-import java.io.*;
 import java.sql.*;
+import java.sql.Date;
 
 import java.util.*;
-
-import java.sql.Date;
 
 import org.eigenbase.jdbc4.*;
 
@@ -43,7 +43,8 @@ import org.eigenbase.jdbc4.*;
  * @version $Id$
  * @since Jan 8, 2006
  */
-abstract public class AbstractResultSet extends Unwrappable
+abstract public class AbstractResultSet
+    extends Unwrappable
     implements ResultSet
 {
     //~ Static fields/initializers ---------------------------------------------
@@ -2013,7 +2014,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateBinaryStream(
-        int columnIndex, InputStream inputStream)
+        int columnIndex,
+        InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateBinaryStream");
@@ -2021,7 +2023,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateBinaryStream(
-        String columnName, InputStream inputStream)
+        String columnName,
+        InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateBinaryStream");
@@ -2029,7 +2032,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateBinaryStream(
-        int columnIndex, InputStream inputStream, long len)
+        int columnIndex,
+        InputStream inputStream,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateBinaryStream");
@@ -2037,7 +2042,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateBinaryStream(
-        String columnName, InputStream inputStream, long len)
+        String columnName,
+        InputStream inputStream,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateBinaryStream");
@@ -2045,7 +2052,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateBlob(
-        int columnIndex, InputStream inputStream)
+        int columnIndex,
+        InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateBlob");
@@ -2053,7 +2061,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateBlob(
-        String columnName, InputStream inputStream)
+        String columnName,
+        InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateBlob");
@@ -2061,7 +2070,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateBlob(
-        int columnIndex, InputStream inputStream, long len)
+        int columnIndex,
+        InputStream inputStream,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateBlob");
@@ -2069,7 +2080,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateBlob(
-        String columnName, InputStream inputStream, long len)
+        String columnName,
+        InputStream inputStream,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateBlob");
@@ -2077,7 +2090,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateAsciiStream(
-        int columnIndex, InputStream inputStream)
+        int columnIndex,
+        InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateAsciiStream");
@@ -2085,7 +2099,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateAsciiStream(
-        String columnName, InputStream inputStream, long len)
+        String columnName,
+        InputStream inputStream,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateAsciiStream");
@@ -2093,7 +2109,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateAsciiStream(
-        int columnIndex, InputStream inputStream, long len)
+        int columnIndex,
+        InputStream inputStream,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateAsciiStream");
@@ -2101,7 +2119,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateAsciiStream(
-        String columnName, InputStream inputStream)
+        String columnName,
+        InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateAsciiStream");
@@ -2109,7 +2128,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNClob(
-        int columnIndex, Reader reader)
+        int columnIndex,
+        Reader reader)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNClob");
@@ -2117,7 +2137,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNClob(
-        String columnName, Reader reader)
+        String columnName,
+        Reader reader)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNClob");
@@ -2125,7 +2146,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNClob(
-        int columnIndex, NClob nclob)
+        int columnIndex,
+        NClob nclob)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNClob");
@@ -2133,7 +2155,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNClob(
-        String columnName, NClob nclob)
+        String columnName,
+        NClob nclob)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNClob");
@@ -2141,7 +2164,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNClob(
-        int columnIndex, Reader reader, long len)
+        int columnIndex,
+        Reader reader,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNClob");
@@ -2149,7 +2174,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNClob(
-        String columnName, Reader reader, long len)
+        String columnName,
+        Reader reader,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNClob");
@@ -2157,7 +2184,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateCharacterStream(
-        int columnIndex, Reader reader)
+        int columnIndex,
+        Reader reader)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateCharacterStream");
@@ -2165,7 +2193,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateCharacterStream(
-        String columnName, Reader reader)
+        String columnName,
+        Reader reader)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateCharacterStream");
@@ -2173,7 +2202,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateCharacterStream(
-        int columnIndex, Reader reader, long len)
+        int columnIndex,
+        Reader reader,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateCharacterStream");
@@ -2181,7 +2212,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateCharacterStream(
-        String columnName, Reader reader, long len)
+        String columnName,
+        Reader reader,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateCharacterStream");
@@ -2189,7 +2222,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateClob(
-        int columnIndex, Reader reader)
+        int columnIndex,
+        Reader reader)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateClob");
@@ -2197,7 +2231,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateClob(
-        String columnName, Reader reader)
+        String columnName,
+        Reader reader)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateClob");
@@ -2205,7 +2240,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateClob(
-        int columnIndex, Reader reader, long len)
+        int columnIndex,
+        Reader reader,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateClob");
@@ -2213,7 +2250,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateClob(
-        String columnName, Reader reader, long len)
+        String columnName,
+        Reader reader,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateClob");
@@ -2221,7 +2260,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateSQLXML(
-        int columnIndex, SQLXML sqlxml)
+        int columnIndex,
+        SQLXML sqlxml)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateSQLXML");
@@ -2229,7 +2269,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateSQLXML(
-        String columnName, SQLXML sqlxml)
+        String columnName,
+        SQLXML sqlxml)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateSQLXML");
@@ -2237,7 +2278,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNCharacterStream(
-        int columnIndex, Reader reader)
+        int columnIndex,
+        Reader reader)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNCharacterStream");
@@ -2245,7 +2287,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNCharacterStream(
-        String columnName, Reader reader)
+        String columnName,
+        Reader reader)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNCharacterStream");
@@ -2253,7 +2296,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNCharacterStream(
-        int columnIndex, Reader reader, long len)
+        int columnIndex,
+        Reader reader,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNCharacterStream");
@@ -2261,7 +2306,9 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNCharacterStream(
-        String columnName, Reader reader, long len)
+        String columnName,
+        Reader reader,
+        long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNCharacterStream");
@@ -2269,7 +2316,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNString(
-        int columnIndex, String s)
+        int columnIndex,
+        String s)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNString");
@@ -2277,7 +2325,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateNString(
-        String columnName, String s)
+        String columnName,
+        String s)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateNString");
@@ -2285,7 +2334,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateRowId(
-        int columnIndex, RowId rowId)
+        int columnIndex,
+        RowId rowId)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateRowId");
@@ -2293,7 +2343,8 @@ abstract public class AbstractResultSet extends Unwrappable
 
     // implement ResultSet
     public void updateRowId(
-        String columnName, RowId rowId)
+        String columnName,
+        RowId rowId)
         throws SQLException
     {
         throw new UnsupportedOperationException("updateRowId");
@@ -2312,63 +2363,63 @@ abstract public class AbstractResultSet extends Unwrappable
     {
         throw new UnsupportedOperationException("getNCharacterStream");
     }
-    
+
     // implement ResultSet
     public String getNString(String columnName)
         throws SQLException
     {
         throw new UnsupportedOperationException("getNString");
     }
-    
+
     // implement ResultSet
     public String getNString(int columnIndex)
         throws SQLException
     {
         throw new UnsupportedOperationException("getNString");
     }
-    
+
     // implement ResultSet
     public SQLXML getSQLXML(String columnName)
         throws SQLException
     {
         throw new UnsupportedOperationException("getSQLXML");
     }
-    
+
     // implement ResultSet
     public SQLXML getSQLXML(int columnIndex)
         throws SQLException
     {
         throw new UnsupportedOperationException("getSQLXML");
     }
-    
+
     // implement ResultSet
     public NClob getNClob(String columnName)
         throws SQLException
     {
         throw new UnsupportedOperationException("getNClob");
     }
-    
+
     // implement ResultSet
     public NClob getNClob(int columnIndex)
         throws SQLException
     {
         throw new UnsupportedOperationException("getNClob");
     }
-    
+
     // implement ResultSet
     public RowId getRowId(String columnName)
         throws SQLException
     {
         throw new UnsupportedOperationException("getRowId");
     }
-    
+
     // implement ResultSet
     public RowId getRowId(int columnIndex)
         throws SQLException
     {
         throw new UnsupportedOperationException("getRowId");
     }
-    
+
     // implement ResultSet
     public boolean isClosed()
         throws SQLException

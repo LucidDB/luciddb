@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -345,7 +345,7 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            if (number instanceof Float || number instanceof Double) {
+            if ((number instanceof Float) || (number instanceof Double)) {
                 value = (byte) NumberUtil.round(number.doubleValue());
             } else {
                 value = number.byteValue();
@@ -421,7 +421,7 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            if (number instanceof Float || number instanceof Double) {
+            if ((number instanceof Float) || (number instanceof Double)) {
                 value = (int) NumberUtil.round(number.doubleValue());
             } else {
                 value = number.intValue();
@@ -449,7 +449,7 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            if (number instanceof Float || number instanceof Double) {
+            if ((number instanceof Float) || (number instanceof Double)) {
                 value = (long) NumberUtil.round(number.doubleValue());
             } else {
                 value = number.longValue();
@@ -503,7 +503,7 @@ public abstract class NullablePrimitive
         // implement NullablePrimitive
         protected void setNumber(Number number)
         {
-            if (number instanceof Float || number instanceof Double) {
+            if ((number instanceof Float) || (number instanceof Double)) {
                 value = (short) NumberUtil.round(number.doubleValue());
             } else {
                 value = number.shortValue();

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,7 +50,7 @@ class CalcExtContextTest : virtual public TestBase, public TraceSource
 
     void printOutput(TupleData const & tup,
                      Calculator const & calc);
-    
+
 public:
     explicit CalcExtContextTest()
         : TraceSource(shared_from_this(),"CalcExtContextTest")
@@ -59,7 +59,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtContextTest, testCalcExtContext);
         FENNEL_UNIT_TEST_CASE(CalcExtContextTest, testCalcExtContextPost);
     }
-     
+
     virtual ~CalcExtContextTest()
     {
     }
@@ -86,7 +86,7 @@ public:
         mCount++;
         BOOST_MESSAGE(mCount);
     }
-    ~EICtx() 
+    ~EICtx()
     {
         mCount--;
         BOOST_MESSAGE(mCount);
@@ -226,7 +226,7 @@ CalcExtContextTest::setupExtendedTestInstructions()
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst5"));
     BOOST_CHECK_EQUAL(inst->getParameterTypes().size(), 5);
-    
+
 }
 
 
@@ -261,9 +261,9 @@ CalcExtContextTest::testCalcExtContext()
     pg << "REF O5, L5;" << endl;
 
     //    BOOST_MESSAGE(pg.str());
-    
+
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -286,7 +286,7 @@ CalcExtContextTest::testCalcExtContext()
                             (const_cast<PBuffer>((outTuple[i]).pData))),
                           true);
     }
-    
+
 
     // call program again, should get different output
     calc.exec();
@@ -296,7 +296,7 @@ CalcExtContextTest::testCalcExtContext()
                             (const_cast<PBuffer>((outTuple[i]).pData))),
                           false);
     }
-    
+
     // call program again, should get same output
     calc.exec();
 
@@ -305,7 +305,7 @@ CalcExtContextTest::testCalcExtContext()
                             (const_cast<PBuffer>((outTuple[i]).pData))),
                           false);
     }
-    
+
 
 #if 0
     tuplePrinter.print(cout, calc.getOutputRegisterDescriptor(), outTuple);
@@ -324,3 +324,4 @@ CalcExtContextTest::testCalcExtContextPost()
 
 FENNEL_UNIT_TEST_SUITE(CalcExtContextTest);
 
+// End CalcExtContextTest.cpp

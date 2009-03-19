@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,32 +21,29 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.trace.FarragoTrace;
+import java.util.*;
+import java.util.logging.*;
+
+import net.sf.farrago.trace.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
-import java.util.*;
-import java.util.logging.Logger;
 
 /**
- * Planner rule which folds projections and filters into an underlying
- * {@link ValuesRel}. Returns an {@link EmptyRel} if all rows are filtered
- * away.
+ * Planner rule which folds projections and filters into an underlying {@link
+ * ValuesRel}. Returns an {@link EmptyRel} if all rows are filtered away.
  *
- * <p>For example, <blockquote><code>
+ * <p>For example,
  *
- * select a - b from (values (1, 2), (3, 5), (7, 11)) as t (a, b)
- * where a + b > 4
+ * <blockquote><code>select a - b from (values (1, 2), (3, 5), (7, 11)) as t (a,
+ * b) where a + b > 4</code></blockquote>
+ * becomes
  *
- * </code></blockquote>becomes<blockquote><code>
- *
- * select x from (values (-2), (-4))
- *
- * </code></blockquote>
+ * <blockquote><code>select x from (values (-2), (-4))</code></blockquote>
  *
  * @author jhyde
  * @version $Id$
@@ -68,8 +65,7 @@ public abstract class FarragoReduceValuesRule
                 FilterRel.class,
                 new RelOptRuleOperand(
                     ValuesRel.class)),
-            "FilterRel")
-        {
+            "FilterRel") {
             public void onMatch(RelOptRuleCall call)
             {
                 apply(
@@ -90,8 +86,7 @@ public abstract class FarragoReduceValuesRule
                 ProjectRel.class,
                 new RelOptRuleOperand(
                     ValuesRel.class)),
-            "ProjectRel")
-        {
+            "ProjectRel") {
             public void onMatch(RelOptRuleCall call)
             {
                 apply(
@@ -114,8 +109,7 @@ public abstract class FarragoReduceValuesRule
                     FilterRel.class,
                     new RelOptRuleOperand(
                         ValuesRel.class))),
-            "ProjectRel+FilterRel")
-        {
+            "ProjectRel+FilterRel") {
             public void onMatch(RelOptRuleCall call)
             {
                 apply(
@@ -157,15 +151,11 @@ public abstract class FarragoReduceValuesRule
         ValuesRel values)
     {
         assert values != null;
-        assert filter != null || project != null;
+        assert (filter != null) || (project != null);
         final RexNode conditionExpr =
-            filter == null
-                ? null
-                : filter.getCondition();
-        final RexNode[] projectExprs =
-            project == null
-                ? null
-                : project.getProjectExps();
+            (filter == null) ? null : filter.getCondition();
+        final RexNode [] projectExprs =
+            (project == null) ? null : project.getProjectExps();
         RexBuilder rexBuilder = values.getCluster().getRexBuilder();
 
         // Find reducible expressions.
@@ -185,7 +175,7 @@ public abstract class FarragoReduceValuesRule
                     if (RexLiteral.isNullLiteral(e)) {
                         e = rexBuilder.makeAbstractCast(
                             project.getRowType().getFieldList().get(k)
-                                .getType(),
+                                   .getType(),
                             e);
                     }
                     reducibleExps.add(e);
@@ -193,15 +183,16 @@ public abstract class FarragoReduceValuesRule
             }
         }
         int fieldsPerRow =
-            (conditionExpr == null ? 0 : 1)
-                + (projectExprs == null ? 0 : projectExprs.length);
+            ((conditionExpr == null) ? 0 : 1)
+            + ((projectExprs == null) ? 0 : projectExprs.length);
         assert fieldsPerRow > 0;
         assert reducibleExps.size()
-            == values.getTuples().size() * fieldsPerRow;
+            == (values.getTuples().size() * fieldsPerRow);
 
         // Compute the values they reduce to.
         FarragoReduceExpressionsRule.reduceExpressions(
-            values, reducibleExps);
+            values,
+            reducibleExps);
 
         int changeCount = 0;
         final List<List<RexLiteral>> tupleList =
@@ -210,7 +201,7 @@ public abstract class FarragoReduceValuesRule
             int i = 0;
             RexNode reducedValue;
             if (conditionExpr != null) {
-                reducedValue = reducibleExps.get(row * fieldsPerRow + i);
+                reducedValue = reducibleExps.get((row * fieldsPerRow) + i);
                 ++i;
                 if (!reducedValue.isAlwaysTrue()) {
                     ++changeCount;
@@ -222,7 +213,7 @@ public abstract class FarragoReduceValuesRule
             if (projectExprs != null) {
                 ++changeCount;
                 for (; i < fieldsPerRow; ++i) {
-                    reducedValue = reducibleExps.get(row * fieldsPerRow + i);
+                    reducedValue = reducibleExps.get((row * fieldsPerRow) + i);
                     if (reducedValue instanceof RexLiteral) {
                         valuesList.add((RexLiteral) reducedValue);
                     } else if (RexUtil.isNullLiteral(reducedValue, true)) {
@@ -246,16 +237,19 @@ public abstract class FarragoReduceValuesRule
             }
             final RelNode newRel;
             if (tupleList.isEmpty()) {
-                newRel = new EmptyRel(
-                    values.getCluster(),
-                    rowType);
+                newRel =
+                    new EmptyRel(
+                        values.getCluster(),
+                        rowType);
             } else {
-                newRel = new ValuesRel(
-                    values.getCluster(),
-                    rowType,
-                    tupleList);
+                newRel =
+                    new ValuesRel(
+                        values.getCluster(),
+                        rowType,
+                        tupleList);
             }
             call.transformTo(newRel);
+
             // New plan is absolutely better than old plan.
             call.getPlanner().setImportance(filter, 0.0);
         } else {
@@ -265,7 +259,10 @@ public abstract class FarragoReduceValuesRule
         }
     }
 
-    private static class MyRexShuttle extends RexShuttle
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class MyRexShuttle
+        extends RexShuttle
     {
         private List<RexLiteral> literalList;
 

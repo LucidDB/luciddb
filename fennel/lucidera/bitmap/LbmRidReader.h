@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -67,7 +67,7 @@ protected:
      * True if need to move to the next bit
      */
     bool moveNext;
-    
+
     /**
      * Next rid value that should be read
      */
@@ -117,7 +117,7 @@ public:
 /**
  * LbmRidReader provides an interface for reading RIDs from an input stream
  */
-class LbmRidReader: public LbmRidReaderBase
+class LbmRidReader : public LbmRidReaderBase
 {
 public:
     /**
@@ -276,7 +276,7 @@ public:
     ~LbmDeletionIndexReader();
 
     /**
-     * Initializes reader to search for RIDs stored in a btree 
+     * Initializes reader to search for RIDs stored in a btree
      * specified BTreeReader
      *
      * @param btreeReader input btree reader
@@ -314,8 +314,7 @@ public:
 inline bool LbmIterableRidReader::searchForNextRid()
 {
     ExecStreamResult rc = readRidAndAdvance(bufferedRid);
-    switch (rc)
-    {
+    switch (rc) {
     case EXECRC_YIELD:
         buffered = true;
         break;

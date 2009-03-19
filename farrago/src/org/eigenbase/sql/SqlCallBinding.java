@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,14 @@
 */
 package org.eigenbase.sql;
 
+import java.util.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * <code>SqlCallBinding</code> implements {@link SqlOperatorBinding} by
@@ -154,7 +155,7 @@ public class SqlCallBinding
         final SqlNode query = cursorCall.operands[0];
         return validator.deriveType(scope, query);
     }
-    
+
     // implement SqlOperatorBinding
     public String getColumnListParamInfo(
         int ordinal,
@@ -165,7 +166,7 @@ public class SqlCallBinding
         if (!SqlUtil.isCallTo(operand, SqlStdOperatorTable.rowConstructor)) {
             return null;
         }
-        SqlNode[] operands = ((SqlCall) operand).getOperands();
+        SqlNode [] operands = ((SqlCall) operand).getOperands();
         for (int i = 0; i < operands.length; i++) {
             SqlIdentifier id = (SqlIdentifier) operands[i];
             columnList.add(id.getSimple());

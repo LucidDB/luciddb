@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -117,7 +117,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToApprox);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastApproxToString);
     }
-     
+
     virtual ~CalcExtCastTest()
     {
     }
@@ -131,7 +131,7 @@ const char * CalcExtCastTest::outOfRangeErr = "22003";
 string CalcExtCastTest::minInt64String()
 {
     ostringstream os("");
-    os << dec << numeric_limits<int64_t>::min(); 
+    os << dec << numeric_limits<int64_t>::min();
     return os.str();
 }
 
@@ -139,12 +139,12 @@ string CalcExtCastTest::minInt64String()
 string CalcExtCastTest::maxInt64String()
 {
     ostringstream os("");
-    os << dec << numeric_limits<int64_t>::max(); 
+    os << dec << numeric_limits<int64_t>::max();
     return os.str();
 }
 
 // right-pads a string to desired size
-string 
+string
 CalcExtCastTest::rpad(string s, int size, char pad)
 {
     int n = size - s.size();
@@ -229,11 +229,11 @@ CalcExtCastTest::printOutput(TupleData const & tup,
 
 // copy-by-reference locals into identical output register
 void
-CalcExtCastTest::refLocalOutput(ostringstream& pg, 
+CalcExtCastTest::refLocalOutput(ostringstream& pg,
                                   int count)
 {
     int i;
-    
+
     for (i = 0; i < count; i++) {
         pg << "REF O" << i << ", L" << i << ";" << endl;
     }
@@ -264,7 +264,7 @@ CalcExtCastTest::testCalcExtCastStringToChar()
 
     // vc(8), length5 -> c(5)
     pg << "CALL 'castA(L1, C1);" << endl;
-    
+
     // c(3) -> c(5)
     pg << "CALL 'castA(L2, C2);" << endl;
 
@@ -287,7 +287,7 @@ CalcExtCastTest::testCalcExtCastStringToChar()
     refLocalOutput(pg, 8);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -365,7 +365,7 @@ CalcExtCastTest::testCalcExtCastStringToVarChar()
 
     // vc(8), length5 -> vc(5)
     pg << "CALL 'castA(L1, C1);" << endl;
-    
+
     // c(3) -> vc(5)
     pg << "CALL 'castA(L2, C2);" << endl;
 
@@ -388,7 +388,7 @@ CalcExtCastTest::testCalcExtCastStringToVarChar()
     refLocalOutput(pg, 8);
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -445,7 +445,7 @@ CalcExtCastTest::testCalcExtCastStringToVarChar()
 void
 CalcExtCastTest::testCalcExtCastBooleanToChar()
 {
-    // int8 test values: (null, true, false), 
+    // int8 test values: (null, true, false),
     // cast to CHAR(3) and CHAR(4) and CHAR(5)
     ostringstream pg(""), outloc("");
     outloc <<  "c,3, c,3, c,3, c,4, c,4, c,4, c,5, c,5, c,5;" << endl;
@@ -513,7 +513,7 @@ CalcExtCastTest::testCalcExtCastBooleanToChar()
 void
 CalcExtCastTest::testCalcExtCastBooleanToVarChar()
 {
-    // int8 test values: (null, true, false), 
+    // int8 test values: (null, true, false),
     // cast to VARCHAR(3) and VARCHAR(4) and VARCHAR(5)
     ostringstream pg(""), outloc("");
     outloc <<  "vc,3, vc,3, vc,3, vc,4, vc,4, vc,4, vc,5, vc,5, vc,5;" << endl;
@@ -1021,8 +1021,8 @@ CalcExtCastTest::testCalcExtCastDecimalToStringTruncates()
 
     // cast to VARCHAR(3) and CHAR(3)
     ostringstream pg(""), outloc("");
-    outloc <<  "vc,3, vc,3, vc,3, c,3, c,3, c,3, " 
-           <<  "vc,3, vc,3, vc,3, c,3, c,3, c,3, " 
+    outloc <<  "vc,3, vc,3, vc,3, c,3, c,3, c,3, "
+           <<  "vc,3, vc,3, vc,3, c,3, c,3, c,3, "
            <<  "vc,3, vc,3, vc,3, c,3, c,3, c,3;" << endl;
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
@@ -1164,13 +1164,13 @@ void CalcExtCastTest::testCalcExtCastCharToBoolean()
     pg << "L " << outloc.str();
     pg << "C c,4, c,4, c,8, c,5, c,9, c,7, c,11, c,13;" << endl;
     pg << "V "                  // a null
-       << ", 0x" << stringToHex("tRUe") 
+       << ", 0x" << stringToHex("tRUe")
        << ", 0x" << stringToHex("  true  ")
        << ", 0x" << stringToHex("faLSe")
        << ", 0x" << stringToHex("  FALSE  ")
        << ", 0x" << stringToHex("UnknowN")
        << ", 0x" << stringToHex("  UnknowN  ")
-       << ", 0x" << stringToHex("  Invalid    ") 
+       << ", 0x" << stringToHex("  Invalid    ")
        << ";" << endl;
     pg << "T;" << endl;
     for (int i = 0; i < 8; i++)
@@ -1227,13 +1227,13 @@ void CalcExtCastTest::testCalcExtCastVarCharToBoolean()
     pg << "L " << outloc.str();
     pg << "C vc,4, vc,8, vc,8, vc,9, vc,9, vc,7, vc,11, vc,13;" << endl;
     pg << "V "                  // a null
-       << ", 0x" << stringToHex("tRUe") 
+       << ", 0x" << stringToHex("tRUe")
        << ", 0x" << stringToHex("  true  ")
        << ", 0x" << stringToHex("faLSe")
        << ", 0x" << stringToHex("  FALSE  ")
        << ", 0x" << stringToHex("UnknowN")
        << ", 0x" << stringToHex("  UnknowN  ")
-       << ", 0x" << stringToHex("  Invalid    ") 
+       << ", 0x" << stringToHex("  Invalid    ")
        << ";" << endl;
     pg << "T;" << endl;
     for (int i = 0; i < 8; i++)
@@ -1390,20 +1390,20 @@ void CalcExtCastTest::testCalcExtCastVarCharToDecimal()
     // decimal(5, 0)
     // decimal(5, -2)
     ostringstream pg(""), outloc("");
-    outloc << "s8, s8, s8, s8, s8, s8, s8, s8, s8, " 
-           << "s8, s8, s8, s8, s8, s8, s8, s8, s8, " 
-           << "s8, s8, s8, s8, s8, s8, s8, s8, s8;" 
+    outloc << "s8, s8, s8, s8, s8, s8, s8, s8, s8, "
+           << "s8, s8, s8, s8, s8, s8, s8, s8, s8, "
+           << "s8, s8, s8, s8, s8, s8, s8, s8, s8;"
            << endl;
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
-    pg << "C vc,1, vc,5, vc,9, vc,6, vc,7, vc,10, vc,10, vc,10, vc,10, " 
+    pg << "C vc,1, vc,5, vc,9, vc,6, vc,7, vc,10, vc,10, vc,10, vc,10, "
        << "  s4, s4, s4, s4;" << endl;
     pg << "V "                  // a null
-       << ", 0x" << stringToHex("99.99") 
+       << ", 0x" << stringToHex("99.99")
        << ", 0x" << stringToHex("-105.0e-3")
        << ", 0x" << stringToHex("950.00")
        << ", 0x" << stringToHex("234.446")
-       << ", 0x" << stringToHex("99.99     ") 
+       << ", 0x" << stringToHex("99.99     ")
        << ", 0x" << stringToHex("-105.0e-3 ")
        << ", 0x" << stringToHex("950.00    ")
        << ", 0x" << stringToHex("234.446   ")
@@ -1480,16 +1480,16 @@ void CalcExtCastTest::testCalcExtCastCharToDecimal()
     // decimal(5, 0)
     // decimal(5, -2)
     ostringstream pg(""), outloc("");
-    outloc << "s8, s8, s8, s8, s8, s8, s8, s8, s8, " 
-           << "s8, s8, s8, s8, s8, s8, s8, s8, s8, " 
-           << "s8, s8, s8, s8, s8, s8, s8, s8, s8;" 
+    outloc << "s8, s8, s8, s8, s8, s8, s8, s8, s8, "
+           << "s8, s8, s8, s8, s8, s8, s8, s8, s8, "
+           << "s8, s8, s8, s8, s8, s8, s8, s8, s8;"
            << endl;
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
-    pg << "C c,1, c,5, c,7, c,4, c,20, c,10, c,10, c,10, c,32, " 
+    pg << "C c,1, c,5, c,7, c,4, c,20, c,10, c,10, c,10, c,32, "
        << "  s4, s4, s4, s4;" << endl;
     pg << "V "                  // a null
-       << ", 0x" << stringToHex(".8987") 
+       << ", 0x" << stringToHex(".8987")
        << ", 0x" << stringToHex("-0005.2")
        << ", 0x" << stringToHex("+980")
        << ", 0x" << stringToHex("0.000000000000355e14")
@@ -1578,7 +1578,7 @@ void CalcExtCastTest::testCalcExtCastStringToExactFails()
     pg << "CALL 'castA(L2, C0);" << endl;
     pg << "CALL 'castA(L3, C1);" << endl;
     refLocalOutput(pg, 4);      // make output available
-    
+
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
@@ -1614,11 +1614,11 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalFails()
     pg << "L " << outloc.str();
     pg << "C vc,3, vc,9, vc,14, vc,7, c,3, c,9, c,14, c,7, "
        << "  s4, s4;" << endl;
-    pg << "V 0x" << stringToHex("12c") 
+    pg << "V 0x" << stringToHex("12c")
        << ", 0x" << stringToHex("34.54.243")
        << ", 0x" << stringToHex("342.342e453.23")
        << ", 0x" << stringToHex("234e 23")
-       << ", 0x" << stringToHex("12c") 
+       << ", 0x" << stringToHex("12c")
        << ", 0x" << stringToHex("34.54.243")
        << ", 0x" << stringToHex("342.342e453.23")
        << ", 0x" << stringToHex("234e 23")
@@ -1629,7 +1629,7 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalFails()
         pg << "CALL 'castA(L"<<i<<",C"<<i<<",C8, C9);"<< endl;
 
     refLocalOutput(pg, 8);      // make output available
-    
+
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
@@ -1681,8 +1681,8 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalMinMax()
        << ", 0x" << stringToHex(maxInt64String())
        << ", 0x" << stringToHex("9223372036854775808")
        << ", 0x" << stringToHex("9223372036854775807.12345")
-       << ", 0x" << stringToHex("9223372036854775807.9") 
-       << ", 0x" << stringToHex("-9223372036854775809") 
+       << ", 0x" << stringToHex("9223372036854775807.9")
+       << ", 0x" << stringToHex("-9223372036854775809")
        << ", 0x" << stringToHex("-9223372036854775807.9")
        << ", 0x" << stringToHex("-9223372036854775808.9")
        << ", 0x" << stringToHex("9323415432153452535")
@@ -1698,7 +1698,7 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalMinMax()
         pg << "CALL 'castA(L"<<(i+11)<<",C"<<i<<",C13, C14);"<< endl;
 
     refLocalOutput(pg, 22);      // make output available
-    
+
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
@@ -1829,7 +1829,7 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalRange()
        << ", 0x" << stringToHex("999.991")
        << ", 0x" << stringToHex("9.99999e2")
        << ", 0x" << stringToHex("9.9999e2")
-       << ", 0x" << stringToHex("99999999990000000000e-20") 
+       << ", 0x" << stringToHex("99999999990000000000e-20")
        << ", 5, 2;" << endl;
     pg << "T;" << endl;
 
@@ -1837,7 +1837,7 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalRange()
         pg << "CALL 'castA(L"<<i<<",C"<<i<<",C6, C7);"<< endl;
 
     refLocalOutput(pg, 6);      // make output available
-    
+
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
@@ -1996,7 +1996,7 @@ void CalcExtCastTest::testCalcExtCastApproxToString()
     printOutput(outTuple, calc);
 
     deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
-    
+
     int i = 0;
     // first the varchars
     // TODO: fix these strings when calc/SqlString produces terser results.
@@ -2018,3 +2018,4 @@ void CalcExtCastTest::testCalcExtCastApproxToString()
 
 FENNEL_UNIT_TEST_SUITE(CalcExtCastTest);
 
+// End CalcExtCastTest.cpp

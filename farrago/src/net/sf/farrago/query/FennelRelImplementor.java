@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,14 +43,13 @@ public interface FennelRelImplementor
     extends RelImplementor
 {
     //~ Methods ----------------------------------------------------------------
-    
+
     /**
      * Converts a relational expression into a plan by calling its {@link
      * FennelRel#toStreamDef} method.
      *
      * @param rel the relational expression
-     * @param ordinal input position of the relational expression for its
-     * parent
+     * @param ordinal input position of the relational expression for its parent
      */
     public FemExecutionStreamDef visitFennelChild(FennelRel rel, int ordinal);
 
@@ -133,9 +132,8 @@ public interface FennelRelImplementor
      * based on the current scope.
      *
      * @param relParamId reserved ID to be translated
-     * @param streamDef the stream that either produces or consumes the
-     * dynamic parameter; or null if we don't need to keep track of that
-     * information
+     * @param streamDef the stream that either produces or consumes the dynamic
+     * parameter; or null if we don't need to keep track of that information
      * @param streamType whether the streamDef produces or consumes the dynamic
      * parameter
      *

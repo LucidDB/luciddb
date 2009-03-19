@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,7 @@
 package net.sf.farrago.ddl;
 
 import java.sql.*;
+
 import java.util.*;
 
 import javax.jmi.reflect.*;
@@ -44,20 +45,22 @@ import org.eigenbase.sql.SqlWriter.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.pretty.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
-import org.eigenbase.trace.*;
+
 
 /**
  * DdlAnalyzeStmt is a Farrago statement for computing the statistics of a
  * relational expression and storing them in repository.
  *
  * <p>The following data are collected:
+ *
  * <ul>
- *   <li>The number of rows in the table
- *   <li>The number of pages in each associated index
- *   <li>A histogram of each column specified
- *   <li>The number of distinct values for the column.
+ * <li>The number of rows in the table
+ * <li>The number of pages in each associated index
+ * <li>A histogram of each column specified
+ * <li>The number of distinct values for the column.
  * </ul>
  *
  * This implementation issues recursive SQL.
@@ -73,7 +76,7 @@ public class DdlAnalyzeStmt
 
     private final static int DEFAULT_HISTOGRAM_BAR_COUNT = 100;
 
-    private final static int MAX_HISTOGRAM_BAR_COUNT = 
+    private final static int MAX_HISTOGRAM_BAR_COUNT =
         DEFAULT_HISTOGRAM_BAR_COUNT + (DEFAULT_HISTOGRAM_BAR_COUNT / 10);
 
     private final static long MIN_SAMPLE_SIZE = 5000L;
@@ -81,6 +84,7 @@ public class DdlAnalyzeStmt
     public static final String REPEATABLE_SEED = "test.estimateStatsSeed";
 
     //~ Instance fields --------------------------------------------------------
+
     EigenbaseTimingTracer timingTracer;
 
     // ddl fields
@@ -90,7 +94,7 @@ public class DdlAnalyzeStmt
     private boolean computeRowCount;
     private SqlNumericLiteral samplePercent;
     private Integer sampleRepeatableSeed;
-    
+
     // execution fields
     private FemAbstractColumnSet femTable;
     private Long femTableRowCount;
@@ -104,20 +108,20 @@ public class DdlAnalyzeStmt
     private FarragoRepos repos;
     private long statsRowCount;
     private LinkedHashMap<ColumnDetail, Histogram> histograms;
+
     /**
      * BitSet of column ordinal values that are part of a unique or primary key
      * constraint, but only for those constraints that contain a single column.
-     * Implies cardinality = row count.  Used for estimation only.
+     * Implies cardinality = row count. Used for estimation only.
      */
     private BitSet singleUniqueCols;
 
     /**
      * BitSet of column ordinal values for unique/primary key constrained
-     * columns where the column is nullable.  Implies cardinality = (row count
-     * - number of null values).  Used for estimation only.
+     * columns where the column is nullable. Implies cardinality = (row count -
+     * number of null values). Used for estimation only.
      */
     private BitSet singleUniqueColsNullable;
-        
 
     //~ Constructors -----------------------------------------------------------
 
@@ -175,21 +179,22 @@ public class DdlAnalyzeStmt
         // Cast abstract catalog objects to required types
         List<FemAbstractColumn> femColumnList = checkCatalogTypes();
 
-        Long[] rowCountStats = new Long[2];
+        Long [] rowCountStats = new Long[2];
         FarragoCatalogUtil.getRowCounts(
-            femTable, 
-            null, 
+            femTable,
+            null,
             rowCountStats);
-        
+
         femTableRowCount = rowCountStats[0];
         femTableDeletedRowCount = 0;
+
         // Computing row count implies running a query to calculate row count
         // and then later storing the value in the catalog.  If we don't
         // compute, we don't update the catalog row count.
         computeRowCount = true;
-        if (estimate && 
-            personalityManagesRowCount(ddlValidator) && 
-            femTableRowCount != null)
+        if (estimate
+            && personalityManagesRowCount(ddlValidator)
+            && (femTableRowCount != null))
         {
             // Don't compute row counts during estimate if the personality
             // maintains the catalog's row count
@@ -203,38 +208,38 @@ public class DdlAnalyzeStmt
 
         columnDetails = new ArrayList<ColumnDetail>();
         columnMap = new HashMap<FemAbstractColumn, ColumnDetail>();
-        for(FemAbstractColumn column: femColumnList) {
-            ColumnDetail detail = 
+        for (FemAbstractColumn column : femColumnList) {
+            ColumnDetail detail =
                 new ColumnDetail(
                     column,
                     FarragoCatalogUtil.getQualifiedName(column));
             columnDetails.add(detail);
             columnMap.put(column, detail);
         }
-            
+
         if (estimate) {
             singleUniqueCols = new BitSet();
             singleUniqueColsNullable = new BitSet();
 
             FemPrimaryKeyConstraint primaryKey =
                 FarragoCatalogUtil.getPrimaryKey(table);
-            if (primaryKey != null && primaryKey.getFeature().size() == 1) {
-                FemAbstractColumn col = 
-                    (FemAbstractColumn)primaryKey.getFeature().get(0);
+            if ((primaryKey != null) && (primaryKey.getFeature().size() == 1)) {
+                FemAbstractColumn col =
+                    (FemAbstractColumn) primaryKey.getFeature().get(0);
                 singleUniqueCols.set(col.getOrdinal());
             }
-            
-            List<FemUniqueKeyConstraint> uniqueKeys = 
+
+            List<FemUniqueKeyConstraint> uniqueKeys =
                 FarragoCatalogUtil.getUniqueKeyConstraints(table);
-            for(FemUniqueKeyConstraint uniqueKey: uniqueKeys) {
+            for (FemUniqueKeyConstraint uniqueKey : uniqueKeys) {
                 if (uniqueKey.getFeature().size() != 1) {
                     continue;
                 }
-                
-                FemAbstractColumn col = 
-                    (FemAbstractColumn)uniqueKey.getFeature().get(0);
+
+                FemAbstractColumn col =
+                    (FemAbstractColumn) uniqueKey.getFeature().get(0);
                 singleUniqueCols.set(col.getOrdinal());
-                
+
                 if (col.getIsNullable() == NullableTypeEnum.COLUMN_NULLABLE) {
                     singleUniqueColsNullable.set(col.getOrdinal());
                 }
@@ -245,37 +250,36 @@ public class DdlAnalyzeStmt
         prepareIndexDetails();
     }
 
-
     // implement DdlMultipleTransactionStmt
     public void executeUnlocked(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
         try {
-            // Obtain or compute row counts 
+            // Obtain or compute row counts
             long rowCount = getRowCount();
 
             timingTracer.traceTime("analyze: end rowcount");
-        
+
             if (estimate) {
                 setSampleRepeatableSeed(ddlValidator);
-                
+
                 if (samplePercent == null) {
                     // Choose a reasonable sampling rate.
                     chooseSamplePercentage(rowCount);
                 }
-            
+
                 // 100% sampling means switch to calculated stats (but keep
                 // using the catalog's row count if available).  The single
                 // exception is rowCount == 0: assume the table stays empty.
-                if (samplePercent.bigDecimalValue().doubleValue() >= 100.0 &&
-                    rowCount > 0L)
+                if ((samplePercent.bigDecimalValue().doubleValue() >= 100.0)
+                    && (rowCount > 0L))
                 {
                     estimate = false;
                     samplePercent = null;
                 }
             }
-        
+
             histograms = new LinkedHashMap<ColumnDetail, Histogram>();
             if (estimate) {
                 if (rowCount == 0) {
@@ -285,14 +289,14 @@ public class DdlAnalyzeStmt
                 }
             } else {
                 // Compute column histograms
-                for (ColumnDetail column: columnDetails) {
+                for (ColumnDetail column : columnDetails) {
                     computeColumnStats(histograms, column, rowCount);
-                    
+
                     timingTracer.traceTime(
                         "analyze: end column " + column.toString());
                 }
             }
-            
+
             // Compute index page counts and optionally compute distinct value
             // counts.
             executeAnalyzeIndexes(
@@ -300,15 +304,13 @@ public class DdlAnalyzeStmt
                 rowCount,
                 femTableDeletedRowCount,
                 histograms);
-            
+
             statsRowCount = rowCount;
 
             timingTracer.traceTime("analyze: end index page counts");
-        }
-        catch(EigenbaseException ex) {
+        } catch (EigenbaseException ex) {
             throw ex;
-        }
-        catch(Throwable ex) {
+        } catch (Throwable ex) {
             throw FarragoResource.instance().ValidatorAnalyzeFailed.ex(ex);
         }
     }
@@ -318,7 +320,7 @@ public class DdlAnalyzeStmt
     {
         return true;
     }
-    
+
     // implement DdlMultipleTransactionStmt
     public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
@@ -330,20 +332,20 @@ public class DdlAnalyzeStmt
         if (!success) {
             return;
         }
-        
+
         // Make sure we reload these objects from the repository.
-        for(IndexDetail indexDetail: indexDetails) {
+        for (IndexDetail indexDetail : indexDetails) {
             indexDetail.reset();
         }
-        for(ColumnDetail columnDetail: columnDetails) {
+        for (ColumnDetail columnDetail : columnDetails) {
             columnDetail.reset();
         }
-        
+
         // Update stats computed during executeUnlocked
         updateStats(
             repos,
             statsRowCount,
-            computeRowCount, 
+            computeRowCount,
             histograms.values(),
             indexDetails);
 
@@ -352,9 +354,10 @@ public class DdlAnalyzeStmt
 
     /**
      * Verifies that statistics can be estimated for the given table.
-     * 
-     * @return list of {@link FemAbstractColumn} instances if the table can
-     *         be analyzed
+     *
+     * @return list of {@link FemAbstractColumn} instances if the table can be
+     * analyzed
+     *
      * @throws RuntimeException if analyze is not support for the table
      */
     private List<FemAbstractColumn> checkCatalogTypes()
@@ -372,7 +375,7 @@ public class DdlAnalyzeStmt
         }
         return femColumnList;
     }
-    
+
     /**
      * Returns true if the personality maintains an accurate row count and
      * deleted row count in {@link FemAbstractColumnSet}.
@@ -380,26 +383,26 @@ public class DdlAnalyzeStmt
     private boolean personalityManagesRowCount(
         FarragoSessionDdlValidator ddlValidator)
     {
-        EigenbaseResource featureResource = 
-            EigenbaseResource.instance();
-        
-        FarragoSessionPersonality personality = 
+        EigenbaseResource featureResource = EigenbaseResource.instance();
+
+        FarragoSessionPersonality personality =
             ddlValidator.getInvokingSession().getPersonality();
-        
-        return 
-            personality.supportsFeature(
-                featureResource.PersonalityManagesRowCount);
+
+        return personality.supportsFeature(
+            featureResource.PersonalityManagesRowCount);
     }
-    
+
     /**
-     * Retrieve the table's row count.  Queries the table if 
-     * {@link #computeRowCount} is true, otherwise uses the value stored in
-     * {@link #femTable}.
+     * Retrieve the table's row count. Queries the table if {@link
+     * #computeRowCount} is true, otherwise uses the value stored in {@link
+     * #femTable}.
      *
      * @return table's row count
+     *
      * @throws SQLException if there's an error querying the table
      */
-    private long getRowCount() throws SQLException
+    private long getRowCount()
+        throws SQLException
     {
         long rowCount;
         if (computeRowCount) {
@@ -412,11 +415,13 @@ public class DdlAnalyzeStmt
 
     /**
      * Executes a query against the table to compute the row count.
-     * 
+     *
      * @return table's row count
+     *
      * @throws SQLException if there's an error querying the table
      */
-    private long computeRowCount() throws SQLException
+    private long computeRowCount()
+        throws SQLException
     {
         String sql = getRowCountQuery();
         stmtContext.prepare(sql, true);
@@ -444,8 +449,8 @@ public class DdlAnalyzeStmt
     }
 
     /**
-     * Validate that the {@link RelDataType} of the current 
-     * {@link #stmtContext} matches a table row count query.
+     * Validate that the {@link RelDataType} of the current {@link #stmtContext}
+     * matches a table row count query.
      */
     private void checkRowCountQuery()
     {
@@ -458,13 +463,13 @@ public class DdlAnalyzeStmt
 
     /**
      * Looks up the current {@link FarragoSessionVariables session variables}
-     * and sets {@link #sampleRepeatableSeed} to the repeatable seed value
-     * that <b>may</b> be stored there for testing purposes.
+     * and sets {@link #sampleRepeatableSeed} to the repeatable seed value that
+     * <b>may</b> be stored there for testing purposes.
      */
     private void setSampleRepeatableSeed(
         FarragoSessionDdlValidator ddlValidator)
     {
-        // For testing, it's useful to get repeatable results from 
+        // For testing, it's useful to get repeatable results from
         // sampling.  Check to see if a special session variable is
         // set, and if so use it's value as the repeatable seed when
         // generating TABLESAMPLE clauses.
@@ -475,7 +480,7 @@ public class DdlAnalyzeStmt
             if (seedString != null) {
                 try {
                     sampleRepeatableSeed = Integer.parseInt(seedString);
-                } catch(NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     sampleRepeatableSeed = seedString.hashCode();
                 }
             }
@@ -483,8 +488,8 @@ public class DdlAnalyzeStmt
     }
 
     /**
-     * Choose an appropriate sampling percentage for a table with the given
-     * row count.  Sets {@link #samplePercent}.
+     * Choose an appropriate sampling percentage for a table with the given row
+     * count. Sets {@link #samplePercent}.
      */
     private void chooseSamplePercentage(long rowCount)
     {
@@ -492,26 +497,27 @@ public class DdlAnalyzeStmt
         if (rowCount <= MIN_SAMPLE_SIZE) {
             rate = "100";
         } else {
-            double ratio = (double)MIN_SAMPLE_SIZE / (double)rowCount;
-            int percent = (int)Math.round(ratio * 100.0);
+            double ratio = (double) MIN_SAMPLE_SIZE / (double) rowCount;
+            int percent = (int) Math.round(ratio * 100.0);
             percent = Math.max(percent, 1);
             rate = String.valueOf(percent);
         }
-        
-        samplePercent = 
+
+        samplePercent =
             SqlNumericLiteral.createExactNumeric(rate, new SqlParserPos(0, 0));
     }
 
     /**
      * Iterate over the given {@link FemAbstractColumn} instances and compute
-     * histograms and cardinality from sampled data.  Passes information
-     * about a column gleaned from its constraints to the single-column
-     * estimation method.
-     * 
+     * histograms and cardinality from sampled data. Passes information about a
+     * column gleaned from its constraints to the single-column estimation
+     * method.
+     *
      * @param columnDetails collection of columns to analyze
      * @param rowCount row count of the table
      * @param histograms a map of columns to histograms with predictable
-     *                   iteration order
+     * iteration order
+     *
      * @throws SQLException if a sampling query fails
      */
     private void estimateStats(
@@ -521,14 +527,14 @@ public class DdlAnalyzeStmt
         throws SQLException
     {
         // Estimate column histograms
-        for (ColumnDetail column: columnDetails) {
+        for (ColumnDetail column : columnDetails) {
             int ordinal = column.ordinal;
             boolean isUnique = singleUniqueCols.get(ordinal);
             boolean isUniqueNullable = singleUniqueColsNullable.get(ordinal);
 
             estimateColumnStats(
-                histograms, 
-                column, 
+                histograms,
+                column,
                 rowCount,
                 isUnique,
                 isUniqueNullable);
@@ -537,19 +543,20 @@ public class DdlAnalyzeStmt
                 "analyze: end column " + column.toString());
         }
     }
-    
+
     /**
-     * Build sampled histogram and estimate cardinality for the given column
-     * by querying it.
-     * 
+     * Build sampled histogram and estimate cardinality for the given column by
+     * querying it.
+     *
      * @param histograms map in which to store generated Histogram
      * @param column the column to generate a histogram for
      * @param tableRowCount number of rows in the table
      * @param isUnique if true, the column has a uniqueness constraint that
-     *                 applies to it only (e.g. single-column primary key or
-     *                 single-column unique constraint)
+     * applies to it only (e.g. single-column primary key or single-column
+     * unique constraint)
      * @param isUniqueNullable if true, the column allows nulls (ignored if
-     *                         isUnique is false)
+     * isUnique is false)
+     *
      * @throws SQLException if there's an error executing the sampling query
      */
     private void estimateColumnStats(
@@ -560,8 +567,8 @@ public class DdlAnalyzeStmt
         boolean isUniqueNullable)
         throws SQLException
     {
-        assert(estimate);
-        
+        assert (estimate);
+
         String sql = getColumnDistributionQuery(column.identifier);
         stmtContext.prepare(sql, true);
         checkColumnDistributionQuery();
@@ -573,9 +580,9 @@ public class DdlAnalyzeStmt
 
         Histogram columnHistogram =
             buildEstimatedHistogram(
-                column, 
+                column,
                 tableRowCount,
-                resultSet, 
+                resultSet,
                 isUnique,
                 isUniqueNullable);
         histograms.put(column, columnHistogram);
@@ -583,42 +590,44 @@ public class DdlAnalyzeStmt
     }
 
     /**
-     * Iterate over the sample given in the result set and generate a 
-     * histogram for the column.
-     * 
+     * Iterate over the sample given in the result set and generate a histogram
+     * for the column.
+     *
      * @param column the column to generate a histogram for
      * @param tableRowCount number of rows in the table
      * @param resultSet containing column samples aggregated by value
      * @param isUnique if true, the column has a uniqueness constraint that
-     *                 applies to it only (e.g. single-column primary key or
-     *                 single-column unique constraint)
+     * applies to it only (e.g. single-column primary key or single-column
+     * unique constraint)
      * @param isUniqueNullable if true, the column allows nulls (ignored if
-     *                         isUnique is false)
+     * isUnique is false)
+     *
      * @return the column's sampled Histogram
+     *
      * @throws SQLException if there's an error reading the sample
      */
     private Histogram buildEstimatedHistogram(
         ColumnDetail column,
         long tableRowCount,
-        ResultSet resultSet, 
-        boolean isUnique, 
+        ResultSet resultSet,
+        boolean isUnique,
         boolean isUniqueNullable)
         throws SQLException
     {
-        assert(estimate);
-        
-        FarragoCardinalityEstimator estimator = 
+        assert (estimate);
+
+        FarragoCardinalityEstimator estimator =
             new FarragoCardinalityEstimator(tableRowCount, isUnique);
 
         double sampleRate =
             samplePercent.bigDecimalValue().movePointLeft(2).doubleValue();
 
-        long sampleSizeEstimate = 
-            Math.round(sampleRate * (double)tableRowCount);
-            
+        long sampleSizeEstimate =
+            Math.round(sampleRate * (double) tableRowCount);
+
         long rowsPerBar = computeRowsPerHistogramBar(sampleSizeEstimate);
 
-        List<ColumnHistogramBar> bars = 
+        List<ColumnHistogramBar> bars =
             buildBars(resultSet, rowsPerBar, estimator);
 
         timingTracer.traceTime("analyze: -- end build bars");
@@ -628,7 +637,7 @@ public class DdlAnalyzeStmt
         // Manipulate rowsLastBar to make sense.  Since we guessed at how
         // many rows were in the sample to begin with, we may have been off
         // resulting in bars.size() != DEFAULT_HISTOGRAM_BAR_COUNT.
-        long rowsLastBar; 
+        long rowsLastBar;
         if (bars.size() > 1) {
             rowsLastBar = sampleRowCount - ((bars.size() - 1) * rowsPerBar);
         } else if (bars.size() == 1) {
@@ -650,12 +659,12 @@ public class DdlAnalyzeStmt
                 // Nulls are not allowed, so all values are distinct
                 distinctValues = tableRowCount;
                 distinctValuesEstimated = false;
-            }                
+            }
         } else {
             distinctValues = estimator.estimate();
             distinctValuesEstimated = true;
         }
-        
+
         timingTracer.traceTime("analyze: -- end estimate cardinality");
 
         return new Histogram(
@@ -668,39 +677,39 @@ public class DdlAnalyzeStmt
             sampleRowCount,
             bars);
     }
-    
+
     /**
      * Iterate over the given {@link FemAbstractColumn} instances and generate
      * histograms for an empty table.
-     * 
+     *
      * @param columnDetails a list of columns
      * @param histograms a map of columns to histograms with predictable
-     *                   iteration order
+     * iteration order
      */
     private void estimateEmptyTableStats(
         List<ColumnDetail> columnDetails,
         LinkedHashMap<ColumnDetail, Histogram> histograms)
     {
-        for (ColumnDetail column: columnDetails) {
+        for (ColumnDetail column : columnDetails) {
             List<ColumnHistogramBar> bars = Collections.emptyList();
 
             // Set rowsPerBar and rowsLastBar to 1 to mimic the behavior
             // of computed stats against an empty table.
-            Histogram columnHistogram = 
+            Histogram columnHistogram =
                 new Histogram(column, 0L, false, bars.size(), 1, 1, 0L, bars);
-            
+
             histograms.put(column, columnHistogram);
-        }        
+        }
     }
-    
 
     /**
-     * Build a complete histogram and calculate cardinality for the given 
-     * column by querying it.
-     * 
+     * Build a complete histogram and calculate cardinality for the given column
+     * by querying it.
+     *
      * @param histograms map in which to store generated Histogram
      * @param column the column to generate a histogram for
      * @param tableRowCount number of rows in the table
+     *
      * @throws SQLException if there's an error executing the query
      */
     private void computeColumnStats(
@@ -709,8 +718,8 @@ public class DdlAnalyzeStmt
         long tableRowCount)
         throws SQLException
     {
-        assert(!estimate);
-        
+        assert (!estimate);
+
         String sql = getColumnDistributionQuery(column.identifier);
         stmtContext.prepare(sql, true);
         checkColumnDistributionQuery();
@@ -726,13 +735,15 @@ public class DdlAnalyzeStmt
     }
 
     /**
-     * Iterate over the given result set and generate a histogram for the 
+     * Iterate over the given result set and generate a histogram for the
      * column.
-     * 
+     *
      * @param column the column to generate a histogram for
      * @param tableRowCount number of rows in the table
      * @param resultSet containing column data aggregated by value
+     *
      * @return the column's Histogram
+     *
      * @throws SQLException if there's an error reading the sample
      */
     private Histogram buildHistogram(
@@ -741,10 +752,10 @@ public class DdlAnalyzeStmt
         ResultSet resultSet)
         throws SQLException
     {
-        assert(!estimate);
-        
+        assert (!estimate);
+
         long rowsPerBar = computeRowsPerHistogramBar(tableRowCount);
-        long rowsLastBar = 
+        long rowsLastBar =
             computeRowsLastHistogramBar(tableRowCount, rowsPerBar);
 
         List<ColumnHistogramBar> bars = buildBars(resultSet, rowsPerBar, null);
@@ -755,7 +766,7 @@ public class DdlAnalyzeStmt
         for (ColumnHistogramBar bar : bars) {
             distinctValues += bar.valueCount;
         }
-        
+
         timingTracer.traceTime("analyze: -- end compute cardinality");
 
         return new Histogram(
@@ -770,31 +781,31 @@ public class DdlAnalyzeStmt
     }
 
     /**
-     * Generate a query to generate a columns distribution.  If the
-     * {@link #estimate} flag is set, the query uses the TABLESAMPLE keyword
-     * to sample the column's data.
+     * Generate a query to generate a columns distribution. If the {@link
+     * #estimate} flag is set, the query uses the TABLESAMPLE keyword to sample
+     * the column's data.
      */
     private String getColumnDistributionQuery(SqlIdentifier columnName)
     {
         writer.reset();
-        
+
         final Frame selectFrame = writer.startList(FrameTypeEnum.Select);
         writer.sep("select");
-        
-        final Frame selectListFrame = 
+
+        final Frame selectListFrame =
             writer.startList(FrameTypeEnum.SelectList);
         columnName.unparse(writer, 0, 0);
         writer.sep(",");
-        
+
         final Frame countFuncFrame = writer.startFunCall("count");
         writer.print("*");
         writer.endFunCall(countFuncFrame);
         writer.endList(selectListFrame);
-        
+
         writer.sep("from");
         final Frame fromFrame = writer.startList(FrameTypeEnum.FromList);
         tableName.unparse(writer, 0, 0);
-        
+
         if (estimate) {
             // Use system sampling for performance.  Farrago will revert to
             // Bernoulli sampling if system sampling is not available for
@@ -802,36 +813,34 @@ public class DdlAnalyzeStmt
             Frame frame = writer.startFunCall("tablesample system");
             samplePercent.unparse(writer, 0, 0);
             writer.endFunCall(frame);
-            
+
             if (sampleRepeatableSeed != null) {
                 frame = writer.startFunCall("repeatable");
                 writer.literal(sampleRepeatableSeed.toString());
                 writer.endFunCall(frame);
             }
         }
-        
+
         writer.endList(fromFrame);
 
         writer.sep("group by");
         final Frame groupByFrame = writer.startList(FrameTypeEnum.GroupByList);
         columnName.unparse(writer, 0, 0);
         writer.endList(groupByFrame);
-        
+
         writer.sep("order by");
         final Frame orderByFrame = writer.startList(FrameTypeEnum.OrderByList);
         columnName.unparse(writer, 0, 0);
         writer.endList(orderByFrame);
         writer.endList(selectFrame);
-        
+
         String sql = writer.toString();
         return sql;
     }
 
-    
     /**
-     * Validate that the {@link RelDataType} of the current 
-     * {@link #stmtContext} matches what's expected from a column distribution
-     * query.
+     * Validate that the {@link RelDataType} of the current {@link #stmtContext}
+     * matches what's expected from a column distribution query.
      */
     private void checkColumnDistributionQuery()
     {
@@ -843,40 +852,40 @@ public class DdlAnalyzeStmt
     }
 
     /**
-     * Compute the number of rows per histogram bar based on the 
-     * {@link #DEFAULT_HISTOGRAM_BAR_COUNT}.
-     * 
-     * @param rowCount number of rows from the table that will be represented 
-     *                 by the histogram 
+     * Compute the number of rows per histogram bar based on the {@link
+     * #DEFAULT_HISTOGRAM_BAR_COUNT}.
+     *
+     * @param rowCount number of rows from the table that will be represented by
+     * the histogram
      */
     private long computeRowsPerHistogramBar(final long rowCount)
     {
         if (rowCount <= DEFAULT_HISTOGRAM_BAR_COUNT) {
             return 1;
         }
-        
+
         long rowsPerBar = rowCount / DEFAULT_HISTOGRAM_BAR_COUNT;
         if ((rowCount % DEFAULT_HISTOGRAM_BAR_COUNT) != 0) {
             rowsPerBar++;
         }
-        
+
         return rowsPerBar;
     }
 
     /**
-     * Compute the number of rows in the last histogram bar based on the 
-     * {@link #DEFAULT_HISTOGRAM_BAR_COUNT}.
-     * 
-     * @param rowCount number of rows from the table that will be represented 
-     *                 by the histogram 
-     * @param rowsPerBar the result of 
-     *                   {@link #computeRowsPerHistogramBar(long)}
+     * Compute the number of rows in the last histogram bar based on the {@link
+     * #DEFAULT_HISTOGRAM_BAR_COUNT}.
+     *
+     * @param rowCount number of rows from the table that will be represented by
+     * the histogram
+     * @param rowsPerBar the result of {@link #computeRowsPerHistogramBar(long)}
      */
     private long computeRowsLastHistogramBar(
-        final long rowCount, final long rowsPerBar)
+        final long rowCount,
+        final long rowsPerBar)
     {
         if (rowCount <= DEFAULT_HISTOGRAM_BAR_COUNT) {
-            assert(rowsPerBar == 1);
+            assert (rowsPerBar == 1);
             return 1;
         }
 
@@ -890,16 +899,18 @@ public class DdlAnalyzeStmt
 
         return rowsLastBar;
     }
-    
+
     /**
-     * Given a result set from a column distribution query, compute the 
-     * bars in the Histogram.
-     * 
+     * Given a result set from a column distribution query, compute the bars in
+     * the Histogram.
+     *
      * @param resultSet column distribution query result set
      * @param rowsPerBar the number of rows per bar
      * @param estimator an estimator to populate with data from the result set;
-     *                  may be null 
+     * may be null
+     *
      * @return a list of {@link ColumnHistogramBar} instances
+     *
      * @throws SQLException if there's an error reading the result set
      */
     private List<ColumnHistogramBar> buildBars(
@@ -930,7 +941,7 @@ public class DdlAnalyzeStmt
             if (estimator != null) {
                 estimator.addSampleClass(nextRows, nextValue == null);
             }
-            
+
             if (newBar) {
                 barStartValue = nextValue;
                 barValueCount = 0;
@@ -970,15 +981,15 @@ public class DdlAnalyzeStmt
     }
 
     /**
-     * Convert the {@link ColumnHistogramBar} instances in the given
-     * {@link Histogram} into {@link FemColumnHistogramBar} instances.
+     * Convert the {@link ColumnHistogramBar} instances in the given {@link
+     * Histogram} into {@link FemColumnHistogramBar} instances.
      */
     private void buildFemBars(
         Histogram histogram,
         List<FemColumnHistogramBar> femBars)
     {
         // If possible, try to reuse the original histogram
-        FemColumnHistogram origHistogram = 
+        FemColumnHistogram origHistogram =
             FarragoCatalogUtil.getHistogramForUpdate(
                 repos,
                 histogram.column.getColumn(),
@@ -1013,24 +1024,24 @@ public class DdlAnalyzeStmt
     {
         Collection<FemLocalIndex> tableIndexes =
             FarragoCatalogUtil.getTableIndexes(repos, table);
-        
+
         HashSet<FemLocalIndex> computedStatsSet = null;
         if (estimate) {
             // Map columns to the index that will be used for distinct
             // value counting, preferring single-column indexes to
             // multi-column indexes.
-            HashMap<FemAbstractColumn, FemLocalIndex> countMap = 
+            HashMap<FemAbstractColumn, FemLocalIndex> countMap =
                 new HashMap<FemAbstractColumn, FemLocalIndex>();
-            
-            for (FemLocalIndex index: tableIndexes) {
+
+            for (FemLocalIndex index : tableIndexes) {
                 if (!index.isClustered()) {
-                    List<CwmIndexedFeature> indexedColumns = 
+                    List<CwmIndexedFeature> indexedColumns =
                         index.getIndexedFeature();
                     if (indexedColumns.isEmpty()) {
                         continue;
                     }
-                    FemAbstractColumn column = 
-                        (FemAbstractColumn)indexedColumns.get(0).getFeature();
+                    FemAbstractColumn column =
+                        (FemAbstractColumn) indexedColumns.get(0).getFeature();
 
                     ColumnDetail columnDetail = columnMap.get(column);
                     if (columnDetail == null) {
@@ -1038,27 +1049,28 @@ public class DdlAnalyzeStmt
                         continue;
                     }
 
-                    if (singleUniqueCols.get(columnDetail.ordinal) &&
-                        !singleUniqueColsNullable.get(columnDetail.ordinal))
+                    if (singleUniqueCols.get(columnDetail.ordinal)
+                        && !singleUniqueColsNullable.get(
+                            columnDetail.ordinal))
                     {
                         // The constraint tells us the table row count is the
                         // distinct value count.  No reason to use the index.
                         continue;
                     }
-                    
-                    if (indexedColumns.size() == 1 ||
-                        !countMap.containsKey(column))
+
+                    if ((indexedColumns.size() == 1)
+                        || !countMap.containsKey(column))
                     {
                         countMap.put(column, index);
                     }
                 }
             }
-            
-            computedStatsSet  = new HashSet<FemLocalIndex>(countMap.values());
+
+            computedStatsSet = new HashSet<FemLocalIndex>(countMap.values());
         }
 
         indexDetails = new ArrayList<IndexDetail>();
-        for (FemLocalIndex index: tableIndexes) {
+        for (FemLocalIndex index : tableIndexes) {
             // Default is to estimate index page counts when statistics are
             // estimated.  For some indexes we override this behavior and
             // compute statistics in order to retrieve the number of distinct
@@ -1067,9 +1079,10 @@ public class DdlAnalyzeStmt
             ColumnDetail columnDetail = null;
             if (estimateThisIndex && computedStatsSet.contains(index)) {
                 estimateThisIndex = false;
-                
-                FemAbstractColumn column = 
-                    (FemAbstractColumn)index.getIndexedFeature().get(0).getFeature();
+
+                FemAbstractColumn column =
+                    (FemAbstractColumn) index.getIndexedFeature().get(0)
+                    .getFeature();
                 columnDetail = columnMap.get(column);
             }
 
@@ -1078,17 +1091,16 @@ public class DdlAnalyzeStmt
         }
     }
 
-
     /**
      * Analyzes the table's indexes. If estimated statistics are in use, the
-     * index statistics are normally estimated as well.  An exception is made
-     * when the index can provide a more accurate cardinality for a given
-     * column than the estimation algorithm.
+     * index statistics are normally estimated as well. An exception is made
+     * when the index can provide a more accurate cardinality for a given column
+     * than the estimation algorithm.
      *
      * @param ddlValidator used to execute index statistics gathering
      * @param rowCount table's row count
-     * @param deletedRowCount number of deleted rows in the table store 
-     *                        (usually zero outside LucidDb)
+     * @param deletedRowCount number of deleted rows in the table store (usually
+     * zero outside LucidDb)
      * @param histograms previously gathered column histograms
      */
     private void executeAnalyzeIndexes(
@@ -1097,22 +1109,22 @@ public class DdlAnalyzeStmt
         long deletedRowCount,
         LinkedHashMap<ColumnDetail, Histogram> histograms)
     {
-        for(IndexDetail index: indexDetails) {
+        for (IndexDetail index : indexDetails) {
             FarragoMedLocalIndexStats indexStats =
                 ddlValidator.getIndexMap().computeIndexStats(
                     ddlValidator.getDataWrapperCache(),
                     index.getIndex(),
                     index.estimate);
-            
+
             index.indexStats = indexStats;
-            
+
             if (estimate && !index.estimate) {
-                // Index stats were computed for this index so we could get
-                // a more accurate distint value count.
+                // Index stats were computed for this index so we could get a
+                // more accurate distint value count.
 
                 long indexDistinctValues = indexStats.getUniqueKeyCount();
-                assert(indexDistinctValues >= 0);
-                
+                assert (indexDistinctValues >= 0);
+
                 Histogram histogram = histograms.get(index.column);
 
                 // Get the unique key count and place it in the histogram if
@@ -1124,26 +1136,27 @@ public class DdlAnalyzeStmt
                     // Estimate distinct values in undeleted rows by computing
                     // the number of distinct values per row and applying that
                     // to just the undeleted row count.
-                    double rate = 
-                        (double)indexDistinctValues / 
-                        (double)(deletedRowCount + rowCount);
+                    double rate =
+                        (double) indexDistinctValues
+                        / (double) (deletedRowCount + rowCount);
                     if (rate > 1.0) {
-                        // REVIEW: SWZ 2-OCT-2007: One (or both) of the row 
+                        // REVIEW: SWZ 2-OCT-2007: One (or both) of the row
                         // counts is incorrect.  For now clamp the rate to 1.0,
                         // but perhaps we should consider emitting some type
                         // of warning.
                         rate = 1.0;
                     }
 
-                    long estDistinctValues = 
-                        Math.round(rate * (double)rowCount);
-                    
+                    long estDistinctValues =
+                        Math.round(rate * (double) rowCount);
+
                     // If distinct values is 0 we must have seen zero rows
                     // in the sample.  Otherwise, if the estimate from the
                     // index is much larger than the estimate from the sample,
                     // use the index-based estimate.
-                    if (histogram.distinctValues > 0 &&
-                        (estDistinctValues / histogram.distinctValues) >= 10.0)
+                    if ((histogram.distinctValues > 0)
+                        && ((estDistinctValues / histogram.distinctValues)
+                            >= 10.0))
                     {
                         histogram.distinctValues = estDistinctValues;
                         histogram.distinctValuesEstimated = true;
@@ -1152,7 +1165,6 @@ public class DdlAnalyzeStmt
             }
         }
     }
-
 
     /**
      * Updates catalog records with new statistical data, all within a single
@@ -1171,11 +1183,15 @@ public class DdlAnalyzeStmt
         Collection<Histogram> histograms,
         List<IndexDetail> indexDetails)
     {
-        final float rate = 
+        final float rate =
             estimate ? samplePercent.bigDecimalValue().floatValue() : 100.0f;
-        
+
         FarragoCatalogUtil.updateRowCount(
-            femTable, rowCount, updateRowCount, true, repos);
+            femTable,
+            rowCount,
+            updateRowCount,
+            true,
+            repos);
 
         for (Histogram histogram : histograms) {
             List<FemColumnHistogramBar> femBars =
@@ -1193,8 +1209,8 @@ public class DdlAnalyzeStmt
                 histogram.rowsLastBar,
                 femBars);
         }
-        
-        for(IndexDetail indexDetail: indexDetails) {
+
+        for (IndexDetail indexDetail : indexDetails) {
             FarragoCatalogUtil.updatePageCount(
                 indexDetail.getIndex(),
                 indexDetail.indexStats.getPageCount(),
@@ -1266,7 +1282,8 @@ public class DdlAnalyzeStmt
         private final int ordinal;
 
         private ColumnDetail(
-            FemAbstractColumn column, SqlIdentifier identifier)
+            FemAbstractColumn column,
+            SqlIdentifier identifier)
         {
             this.column = column;
             this.columnType = column.refClass();
@@ -1278,7 +1295,7 @@ public class DdlAnalyzeStmt
 
         public boolean equals(Object other)
         {
-            ColumnDetail that = (ColumnDetail)other;
+            ColumnDetail that = (ColumnDetail) other;
 
             return this.identifier.toString().equals(
                 that.identifier.toString());
@@ -1293,20 +1310,21 @@ public class DdlAnalyzeStmt
         {
             return identifier.toString();
         }
-        
+
         public void reset()
         {
             column = null;
         }
-        
+
         public FemAbstractColumn getColumn()
         {
             if (column == null) {
                 column =
-                    (FemAbstractColumn)repos.getEnkiMdrRepos().getByMofId(
-                        columnMofId, columnType);
+                    (FemAbstractColumn) repos.getEnkiMdrRepos().getByMofId(
+                        columnMofId,
+                        columnType);
             }
-            
+
             return column;
         }
     }
@@ -1335,20 +1353,21 @@ public class DdlAnalyzeStmt
             this.estimate = estimate;
             this.column = column;
         }
-        
+
         public void reset()
         {
             this.index = null;
         }
-        
+
         public FemLocalIndex getIndex()
         {
             if (index == null) {
-                index = 
-                    (FemLocalIndex)repos.getEnkiMdrRepos().getByMofId(
-                        indexMofId, repos.getMedPackage().getFemLocalIndex());
+                index =
+                    (FemLocalIndex) repos.getEnkiMdrRepos().getByMofId(
+                        indexMofId,
+                        repos.getMedPackage().getFemLocalIndex());
             }
-            
+
             return index;
         }
     }

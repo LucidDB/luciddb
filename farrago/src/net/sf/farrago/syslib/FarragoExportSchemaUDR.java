@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -1474,9 +1474,9 @@ public abstract class FarragoExportSchemaUDR
         stmt.close();
 
         if (tableNames == null) {
-            // For a successful single-query export, delete when done
-            // to reduce clutter.
-            
+            // For a successful single-query export, delete when done to reduce
+            // clutter.
+
             // REVIEW jvs 17-Jun-2008:  but we don't even check that
             // it was successful!
 
@@ -1514,12 +1514,11 @@ public abstract class FarragoExportSchemaUDR
             pathWithoutExtension,
             withBcp,
             deleteFailedFiles,
-            null, // fieldDelimiter
-            null, // fileExtension
-            null, // dateFormat
-            null, // timeFormat
-            null // timestampFormat
-            );
+            null,
+            null,
+            null,
+            null,
+            null);
     }
 
     /**
@@ -1561,12 +1560,11 @@ public abstract class FarragoExportSchemaUDR
             withBcp,
             true,
             deleteFailedFiles,
-            null, // fieldDelimiter
-            null, // fileExtension
-            null, // dateFormat
-            null, // timeFormat
-            null // timestampFormat
-            );
+            null,
+            null,
+            null,
+            null,
+            null);
     }
 
     /**

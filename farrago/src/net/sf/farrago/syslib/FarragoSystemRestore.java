@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,23 +23,24 @@
 package net.sf.farrago.syslib;
 
 import java.io.*;
+
 import java.nio.channels.*;
 
 import java.util.*;
 import java.util.logging.*;
 import java.util.zip.*;
 
-import org.eigenbase.trace.*;
-
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
-import net.sf.farrago.fennel.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 
-import net.sf.farrago.resource.*;
+import org.eigenbase.trace.*;
+
 
 /**
  * FarragoSystemRestore implements restore of the Farrago catalog and Fennel
@@ -50,12 +51,14 @@ import net.sf.farrago.resource.*;
  */
 public class FarragoSystemRestore
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final Logger tracer = FarragoTrace.getSyslibTracer();
-    
+
     //~ Instance fields --------------------------------------------------------
-    
+
     private String archiveDirectory;
-    
+
     Long dbDatSize = null;
     FarragoBackupType backupType = null;
     Long lowerBoundCsn = null;
@@ -63,7 +66,7 @@ public class FarragoSystemRestore
     Boolean isCompressed = null;
 
     private EigenbaseTimingTracer timingTracer;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     public FarragoSystemRestore(String archiveDirectory)
@@ -80,13 +83,13 @@ public class FarragoSystemRestore
         throws Exception
     {
         timingTracer = new EigenbaseTimingTracer(tracer, "restore: begin");
-        
+
         FarragoSession session = FarragoUdrRuntime.getSession();
         FarragoRepos repos = session.getRepos();
-        FarragoReposTxnContext reposTxnContext = 
+        FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(repos, true);
         FennelExecutionHandle execHandle = null;
-        
+
         try {
             execHandle = new FennelExecutionHandle();
             FarragoUdrRuntime.setExecutionHandle(execHandle);
@@ -99,42 +102,43 @@ public class FarragoSystemRestore
             if (activeSessions.size() > 1) {
                 throw FarragoResource.instance().NeedExclusiveAccess.ex();
             }
-        
+
             // Validate input
             archiveDirectory =
                 FarragoBackupRestoreUtil.validateArchiveDirectory(
                     archiveDirectory,
                     false);
-            readPropertyFile();           
+            readPropertyFile();
             FarragoBackupRestoreUtil.checkBackupFiles(
                 archiveDirectory,
                 isCompressed,
                 false);
-        
+
             timingTracer.traceTime("restore: checkBackupFiles");
-            
+
             // Get information on the backups that have completed
             List<FarragoCatalogUtil.BackupData> backupData;
             try {
                 reposTxnContext.beginReadTxn();
-                backupData = FarragoCatalogUtil.getCurrentBackupData(repos); 
+                backupData = FarragoCatalogUtil.getCurrentBackupData(repos);
                 reposTxnContext.commit();
             } finally {
                 reposTxnContext.rollback();
             }
-            
+
             // If we're restoring an incremental or differential backup,
             // then a full backup needs to have been executed
-            if (backupData.size() == 0 && backupType != FarragoBackupType.FULL)
+            if ((backupData.size() == 0)
+                && (backupType != FarragoBackupType.FULL))
             {
                 throw FarragoResource.instance().NoFullBackup.ex();
             }
-           
+
             FennelDbHandle fennelDbHandle = db.getFennelDbHandle();
             FarragoRepos systemRepos = db.getSystemRepos();
-        
+
             timingTracer.traceTime("restore: getCurrentBackupData");
-            
+
             // Restore the data pages first so we can also verify if the backup
             // file is the correct one.
             FemCmdRestoreFromBackup cmd =
@@ -152,7 +156,7 @@ public class FarragoSystemRestore
             } else {
                 cmd.setCompressionProgram("");
             }
-            
+
             if (backupType != FarragoBackupType.FULL) {
                 // Add 1 to account for the checkpoint at the end of the
                 // prior restore
@@ -163,14 +167,15 @@ public class FarragoSystemRestore
             fennelDbHandle.executeCmd(cmd, execHandle);
 
             timingTracer.traceTime("restore: femCmdRestoreFromBackup");
-            
-            File importFile = 
+
+            File importFile =
                 FarragoBackupRestoreUtil.getCatalogBackupFile(
-                    archiveDirectory, isCompressed);
+                    archiveDirectory,
+                    isCompressed);
 
             // Restore the catalog backup and request shutdown.
             InputStream importStream = new FileInputStream(importFile);
-            
+
             reposTxnContext.beginWriteTxn();
             try {
                 if (isCompressed) {
@@ -182,16 +187,16 @@ public class FarragoSystemRestore
                     FarragoReposUtil.FARRAGO_METAMODEL_EXTENT,
                     FarragoReposUtil.FARRAGO_PACKAGE_NAME,
                     importStream);
-                
+
                 reposTxnContext.commit();
             } finally {
                 reposTxnContext.rollback();
-                
+
                 importStream.close();
-                
+
                 timingTracer.traceTime("restore: restoreExtent");
             }
-            
+
             ((FarragoDbSession) session).setShutdownRequest(true);
         } finally {
             FarragoUdrRuntime.setExecutionHandle(null);
@@ -200,16 +205,17 @@ public class FarragoSystemRestore
             }
             reposTxnContext.endExclusiveAccess();
         }
-        
+
         timingTracer.traceTime("restore: finished");
     }
-    
+
     private void readPropertyFile()
         throws Exception
     {
         BufferedReader reader =
-            new BufferedReader(new FileReader(
-                new File(archiveDirectory, "backup.properties")));
+            new BufferedReader(
+                new FileReader(
+                    new File(archiveDirectory, "backup.properties")));
         try {
             String property = reader.readLine();
             while (property != null) {
@@ -220,29 +226,29 @@ public class FarragoSystemRestore
                     backupType =
                         FarragoBackupRestoreUtil.getBackupType(parts[1]);
                 } else if (parts[0].equals("compression.mode")) {
-                    isCompressed = 
+                    isCompressed =
                         FarragoBackupRestoreUtil.isCompressed(parts[1]);
                 } else if (parts[0].equals("lower.bound.csn")) {
                     lowerBoundCsn = new Long(parts[1]);
                 } else if (parts[0].equals("upper.bound.csn")) {
                     upperBoundCsn = new Long(parts[1]);
                 } else {
-                    throw FarragoResource.instance().
-                        InvalidBackupPropertySetting.ex(parts[0]);
+                    throw FarragoResource.instance()
+                    .InvalidBackupPropertySetting.ex(parts[0]);
                 }
                 property = reader.readLine();
             }
         } finally {
             reader.close();
         }
-        
+
         checkMissingProperty("db.dat.size", dbDatSize);
         checkMissingProperty("backup.type", backupType);
         checkMissingProperty("lower.bound.csn", lowerBoundCsn);
         checkMissingProperty("upper.bound.csn", upperBoundCsn);
         checkMissingProperty("compression.mode", isCompressed);
     }
-    
+
     private void checkMissingProperty(String name, Object val)
     {
         if (val == null) {

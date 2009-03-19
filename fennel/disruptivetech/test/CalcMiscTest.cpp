@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,7 @@ class CalcMiscTest : virtual public TestBase, public TraceSource
     void testCalcReturn();
     void testCalcRaise();
     void testCalcContinueOnException();
-    
+
 public:
     explicit CalcMiscTest()
         : TraceSource(shared_from_this(),"CalcMiscTest")
@@ -61,7 +61,7 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcRaise);
         FENNEL_UNIT_TEST_CASE(CalcMiscTest, testCalcContinueOnException);
     }
-    
+
     virtual ~CalcMiscTest()
     {
     }
@@ -87,11 +87,10 @@ CalcMiscTest::testCalcStatusReg()
     // BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -119,7 +118,7 @@ CalcMiscTest::testCalcStatusReg()
     BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
                         (const_cast<PBuffer>((*statusTuple)[2].pData))),
                       6);
-    
+
 }
 
 void
@@ -141,11 +140,10 @@ CalcMiscTest::testCalcStatusRegZero()
     // BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -157,7 +155,7 @@ CalcMiscTest::testCalcStatusRegZero()
 
     TupleData const * const statusTuple = calc.getStatusRegister();
 
-    for(int i = 1; i <= 3; i++) {
+    for (int i = 1; i <= 3; i++) {
         calc.exec();
 
         BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
@@ -227,11 +225,10 @@ CalcMiscTest::testCalcRefInst()
     //    BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -253,7 +250,7 @@ CalcMiscTest::testCalcRefInst()
                 break;
             case 'L':
             case 'C':
-                // no trivial way to verify that pointers 
+                // no trivial way to verify that pointers
                 // are identical w/o breaking object encapsulation
                 // of calculator. instead, see if data matches up.
                 // should be sufficent.
@@ -279,7 +276,7 @@ CalcMiscTest::testCalcRefInst()
                                               (outTuple[outReg].pData),
                                               "11",
                                               2));
-                    
+
                 } else if (regFrom == 12) {
                     // char string
                     BOOST_CHECK_EQUAL(0,
@@ -313,11 +310,10 @@ CalcMiscTest::testCalcReturn()
     // BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -361,11 +357,10 @@ CalcMiscTest::testCalcRaise()
     //    BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -418,11 +413,10 @@ CalcMiscTest::testCalcContinueOnException()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -480,3 +474,4 @@ CalcMiscTest::testCalcContinueOnException()
 
 FENNEL_UNIT_TEST_SUITE(CalcMiscTest);
 
+// End CalcMiscTest.cpp

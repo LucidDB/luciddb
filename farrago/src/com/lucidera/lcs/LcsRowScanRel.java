@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ import org.eigenbase.relopt.*;
  * LcsRowScanRel is the relational expression corresponding to a scan on a
  * column store table.
  *
- * @author Zelaine Fong 
+ * @author Zelaine Fong
  * @version $Id$
  */
 public class LcsRowScanRel
@@ -65,8 +65,14 @@ public class LcsRowScanRel
         double inputSelectivity)
     {
         super(
-            cluster, children, lcsTable, clusteredIndexes, connection, 
-            projectedColumns, isFullScan, resCols, 
+            cluster,
+            children,
+            lcsTable,
+            clusteredIndexes,
+            connection,
+            projectedColumns,
+            isFullScan,
+            resCols,
             inputSelectivity);
     }
 

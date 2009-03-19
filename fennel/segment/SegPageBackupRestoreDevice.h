@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -97,7 +97,7 @@ public:
      */
     void setBufferSize(uint bufferSize);
 
-    /** 
+    /**
      * @return the counter that determines the order in which pages are
      * written to the backup file
      */
@@ -122,7 +122,7 @@ public:
 /**
  * Device used to backup and restore pages from a data segment.
  */
-class SegPageBackupRestoreDevice 
+class SegPageBackupRestoreDevice
     : public boost::noncopyable,
         public ClosableObject,
         public boost::enable_shared_from_this<SegPageBackupRestoreDevice>
@@ -288,7 +288,7 @@ class SegPageBackupRestoreDevice
     /**
      * Puts the scratch page that is no longer being used back into the
      * free scratch page queue, increments counters tracking which page needs
-     * to be written next to the backup file, and notifies any threads 
+     * to be written next to the backup file, and notifies any threads
      * waiting for a free scratch page.
      *
      * @param scratchPage scratch page that's now free

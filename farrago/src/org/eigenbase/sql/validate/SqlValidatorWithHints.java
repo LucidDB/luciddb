@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2004-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,7 +21,7 @@
 */
 package org.eigenbase.sql.validate;
 
-import java.util.List;
+import java.util.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -47,7 +47,6 @@ public interface SqlValidatorWithHints
      * after {@link #validate(org.eigenbase.sql.SqlNode)}.
      *
      * @param topNode top of expression tree in which to lookup completion hints
-     *
      * @param pos indicates the position in the sql statement we want to get
      * completion hints for. For example, "select a.ename, b.deptno from
      * sales.emp a join sales.dept b "on a.deptno=b.deptno where empno=1";

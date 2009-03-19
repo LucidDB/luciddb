@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * change before execution terminates, or change before a Calculator
  * XO can read the message.
  */
-class CalcMessage 
+class CalcMessage
 {
 public:
     /**
@@ -40,7 +40,7 @@ public:
      * strA can be either null terminated or simply 5 characters long.
      */
     explicit
-    CalcMessage(const char* strA, TProgramCounter pcA) 
+    CalcMessage(const char* strA, TProgramCounter pcA)
         : pc(pcA)
     {
         memcpy(str, strA, 5);

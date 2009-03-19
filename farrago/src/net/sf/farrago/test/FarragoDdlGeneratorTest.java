@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2005-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2008 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,9 @@
 */
 package net.sf.farrago.test;
 
-import java.util.*;
 import java.io.*;
+
+import java.util.*;
 
 import junit.framework.*;
 
@@ -76,8 +77,8 @@ public class FarragoDdlGeneratorTest
     /* (non-Javadoc)
      * @see net.sf.farrago.test.FarragoTestCase#setUp()
      */
-    @Override
-    protected void setUp() throws Exception
+    @Override protected void setUp()
+        throws Exception
     {
         runCleanup();
         super.setUp();
@@ -86,15 +87,17 @@ public class FarragoDdlGeneratorTest
     public void testExportSales()
     {
         String output = exportSchema("SALES", true);
-        
-        // REVIEW: SWZ: 2008-10-07: Output varies based on repository 
+
+        // REVIEW: SWZ: 2008-10-07: Output varies based on repository
         // configuration.  Handle the variance by repository type.  When
         // all repositories switch to Enki/Hibernate we can remove the
         // else case and conditional.
         MdrProvider providerType = repos.getEnkiMdrRepos().getProviderType();
         if (providerType == MdrProvider.ENKI_HIBERNATE) {
             getDiffRepos().assertEquals(
-                "output-hibernate", "${output-hibernate}", output);
+                "output-hibernate",
+                "${output-hibernate}",
+                output);
         } else {
             getDiffRepos().assertEquals("output", "${output}", output);
         }
@@ -106,36 +109,36 @@ public class FarragoDdlGeneratorTest
     {
         repos.beginReposSession();
         repos.beginReposTxn(false);
-        
+
         try {
             DdlGenerator ddlGen = newDdlGenerator();
             List<CwmModelElement> list = new ArrayList<CwmModelElement>();
             ddlGen.gatherElements(
-                list, schemaName, includeNonSchemaElements,
+                list,
+                schemaName,
+                includeNonSchemaElements,
                 repos.getSelfAsCatalog());
             return ddlGen.getExportText(list, true);
-        }
-        finally {
+        } finally {
             repos.endReposTxn(false);
             repos.endReposSession();
         }
     }
 
     /**
-     * Test DDL generation for objects that don't have all the optional
-     * clauses.
+     * Test DDL generation for objects that don't have all the optional clauses.
      */
     public void testDdlGeneration()
     {
         StringBuilder output = new StringBuilder();
-        
+
         // Create a DDL Generator for this test
         DdlGenerator ddlGenerator = newDdlGenerator();
-        
-        FarragoReposTxnContext reposTxnContext = 
+
+        FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(repos, true);
         reposTxnContext.beginWriteTxn();
-        
+
         try {
             // Set up objects that do not include optional items
             FemDataWrapper wrapper = repos.newFemDataWrapper();
@@ -144,7 +147,7 @@ public class FarragoDdlGeneratorTest
             FemDataServer server = repos.newFemDataServer();
             server.setName("TESTSERVER");
             server.setWrapper(wrapper);
-            
+
             // Generate DDL for minimal objects
             GeneratedDdlStmt stmt = new GeneratedDdlStmt();
             ddlGenerator.generateCreate(wrapper, stmt);
@@ -153,62 +156,62 @@ public class FarragoDdlGeneratorTest
             ddlGenerator.generateCreate(server, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-            
+
             // add an optional element
             wrapper.setLibraryFile("net.sf.farrago.TestWrapper");
             ddlGenerator.generateCreate(wrapper, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-            
+
             server.setType("TESTTYPE");
             ddlGenerator.generateCreate(server, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-            
+
             server.setVersion("TESTVERSION");
             ddlGenerator.generateCreate(server, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-    
+
             // now drop 'em
             ddlGenerator.generateDrop(server, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-            
+
             ddlGenerator.generateDrop(wrapper, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-        }
-        finally {
+        } finally {
             reposTxnContext.rollback();
         }
-        
+
         getDiffRepos().assertEquals("output", "${output}", output.toString());
     }
-    
-    public void testCascade() throws Exception
+
+    public void testCascade()
+        throws Exception
     {
         final String SCHEMA_NAME = "CASCADE_TEST";
         final String TABLE_NAME = "FOO";
         final String COLUMN_NAME = "A";
         final String VIEW_NAME = "BAR";
         StringBuilder output = new StringBuilder();
-        
-        FarragoReposTxnContext reposTxnContext = 
+
+        FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(repos, true);
         reposTxnContext.beginWriteTxn();
-        
+
         final File tempFile = File.createTempFile("cascade", ".sql");
         try {
             // Create a DDL Generator for this test
             DdlGenerator ddlGenerator = newDdlGenerator();
-            
+
             // create a SCHEMA
             FemLocalSchema schema = repos.newFemLocalSchema();
             schema.setName(SCHEMA_NAME);
             schema.setVisibility(VisibilityKindEnum.VK_PUBLIC);
             schema.setNamespace(repos.getCatalog("LOCALDB"));
-            
+
             // create a simple TABLE
             FemLocalTable table = repos.newFemLocalTable();
             table.setName(TABLE_NAME);
@@ -218,7 +221,7 @@ public class FarragoDdlGeneratorTest
             FemStoredColumn column = repos.newFemStoredColumn();
             column.setName(COLUMN_NAME);
             table.getFeature().add(column);
-            
+
             // create a VIEW off the TABLE
             FemLocalView view = repos.newFemLocalView();
             view.setName(VIEW_NAME);
@@ -227,65 +230,66 @@ public class FarragoDdlGeneratorTest
             CwmQueryExpression query = repos.newCwmQueryExpression();
             query.setBody("SELECT * FROM " + TABLE_NAME);
             view.setQueryExpression(query);
-            
+
             // drop the SCHEMA (with CASCADE)
             GeneratedDdlStmt stmt = new GeneratedDdlStmt();
             ddlGenerator.setDropCascade(true);
             ddlGenerator.generateDrop(schema, stmt);
             appendStatementText(output, stmt);
+
             // save the statement for cleanup use
             final FileWriter fw = new FileWriter(tempFile);
             fw.write(output.toString() + ";" + TestUtil.NL);
             fw.close();
             stmt.clear();
-            
+
             // drop the SCHEMA (without CASCADE)
             ddlGenerator.setDropCascade(false);
             ddlGenerator.generateDrop(schema, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-            
+
             // drop the table (with CASCADE)
             ddlGenerator.setDropCascade(true);
             ddlGenerator.generateDrop(table, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-            
+
             // drop the table (without CASCADE)
             ddlGenerator.setDropCascade(false);
             ddlGenerator.generateDrop(table, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-            
+
             // drop the view (with CASCADE)
             ddlGenerator.setDropCascade(true);
             ddlGenerator.generateDrop(view, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-            
+
             // drop the view (without CASCADE)
             ddlGenerator.setDropCascade(false);
             ddlGenerator.generateDrop(view, stmt);
             appendStatementText(output, stmt);
             stmt.clear();
-        }
-        finally {
+        } finally {
             reposTxnContext.rollback();
         }
 
         getDiffRepos().assertEquals("output", "${output}", output.toString());
-        
+
         // clean up afterward
         runSqlLineTest(tempFile.getAbsolutePath(), false);
+
         // If successful, delete temp file and log
         tempFile.delete();
         new File(tempFile.getAbsolutePath().replace(".sql", ".log")).delete();
-
     }
 
     /**
      * Appends all the statements in a {@link GeneratedDdlStmt} object to the
      * end of a string.
+     *
      * @param sb StringBuilder object to hold the text
      * @param stmt GeneratedDdlStmt object we want the text for
      */
@@ -297,14 +301,15 @@ public class FarragoDdlGeneratorTest
         sb.append("\n\n");
     }
 
-    public void _testCustomSchema() throws Exception
+    public void _testCustomSchema()
+        throws Exception
     {
         // Run the script to create the objects.
         runSqlLineTest("unitsql/ddl/ddlgen.sql");
 
         // Export the schema and compare with expected output.
         String output = exportSchema("DDLGEN", true);
-        final String guidRegex = 
+        final String guidRegex =
             "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
         String outputMasked = output.replaceAll(guidRegex, "{guid}");
         getDiffRepos().assertEquals("output", "${output}", outputMasked);

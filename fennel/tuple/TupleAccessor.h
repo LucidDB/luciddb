@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -63,7 +63,7 @@ class TupleAccessor : public boost::noncopyable
      * order.
      */
     std::vector<uint> marshalOrder;
-    
+
     /**
      * @see getMaxByteCount()
      */
@@ -78,7 +78,7 @@ class TupleAccessor : public boost::noncopyable
      * Precomputed size of bit field array (in bits).
      */
     uint nBitFields;
-    
+
     /**
      * Precomputed byte offset for bit array.
      */
@@ -108,7 +108,7 @@ class TupleAccessor : public boost::noncopyable
      * present.
      */
     bool bAlignedVar;
-    
+
     /**
      * @see getCurrentTupleBuf()
      */
@@ -190,7 +190,7 @@ public:
     {
         return iBitFieldOffset;
     }
-    
+
     /**
      * Accesses the buffer storing the current tuple image.
      *
@@ -283,7 +283,7 @@ public:
     {
         return *(ppAttributeAccessors[iAttribute]);
     }
-    
+
     /**
      * Marshals a tuple's values into a buffer.
      *
@@ -301,9 +301,9 @@ public:
     {
         return ppAttributeAccessors.size();
     }
-    
+
     // TODO:  private
-    
+
     /**
      * @return the array of bit fields for the current tuple image
      */
@@ -325,7 +325,7 @@ public:
             const_cast<PBuffer>(pTupleBuf),
             iIndirectOffset);
     }
-    
+
     /**
      * Resolves an indirect offset into a pointer to the data offset.
      *
@@ -339,7 +339,7 @@ public:
         PBuffer pTupleBuf,uint iIndirectOffset)
     {
         return reinterpret_cast<StoredValueOffset *>(
-            pTupleBuf+iIndirectOffset);
+            pTupleBuf + iIndirectOffset);
     }
 };
 

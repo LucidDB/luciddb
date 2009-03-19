@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -170,7 +170,7 @@ public class RelMdUtil
 
         Double factPop = RelMetadataQuery.getPopulationSize(factRel, factKeys);
         if (factPop == null) {
-            // use the dimension population if the fact population is 
+            // use the dimension population if the fact population is
             // unavailable; since we're filtering the fact table, that's
             // the population we ideally want to use
             factPop = RelMetadataQuery.getPopulationSize(dimRel, dimKeys);
@@ -299,12 +299,11 @@ public class RelMdUtil
     /**
      * Returns the number of distinct values provided numSelected are selected
      * where there are domainSize distinct values.
-     * 
-     * <p>
-     * Note that in the case where domainSize == numSelected, it's not true
-     * that the return value should be domainSize.  If you pick 100 random
-     * values between 1 and 100, you'll most likely end up with fewer than
-     * 100 distinct values, because you'll pick some values more than once. 
+     *
+     * <p>Note that in the case where domainSize == numSelected, it's not true
+     * that the return value should be domainSize. If you pick 100 random values
+     * between 1 and 100, you'll most likely end up with fewer than 100 distinct
+     * values, because you'll pick some values more than once.
      *
      * @param domainSize number of distinct values in the domain
      * @param numSelected number selected from the domain
@@ -318,7 +317,7 @@ public class RelMdUtil
         if ((domainSize == null) || (numSelected == null)) {
             return null;
         }
-   
+
         // Cap the input sizes at MAX_VALUE to ensure that the calculations
         // using these values return meaningful values
         double dSize = capInfinity(domainSize);
@@ -341,9 +340,7 @@ public class RelMdUtil
         //  = e ^ (-k/n)
         // 6. Flipping it from number skipped to number visited, we get:
         double res =
-            (dSize > 0)
-            ? ((1.0 - Math.exp(-1 * numSel / dSize)) * dSize)
-            : 0;
+            (dSize > 0) ? ((1.0 - Math.exp(-1 * numSel / dSize)) * dSize) : 0;
 
         // fix the boundary cases
         if (res > dSize) {
@@ -360,12 +357,12 @@ public class RelMdUtil
 
         return res;
     }
-    
+
     /**
      * Caps a double value at Double.MAX_VALUE if it's currently infinity
-     * 
+     *
      * @param d the Double object
-     * 
+     *
      * @return the double value if it's not infinity; else Double.MAX_VALUE
      */
     public static double capInfinity(Double d)
@@ -585,8 +582,7 @@ public class RelMdUtil
             } else {
                 // aggregate column -- set a bit for each argument being
                 // aggregated
-                AggregateCall agg =
-                    aggCalls.get(bit - aggRel.getGroupCount());
+                AggregateCall agg = aggCalls.get(bit - aggRel.getGroupCount());
                 for (Integer arg : agg.getArgList()) {
                     childKey.set(arg);
                 }

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,7 @@ PBuffer BTreeHeapNodeAccessor::allocateEntry(
     BTreeNode &node,uint iEntry,uint cbEntry)
 {
     uint cbEntryWithOverhead = getEntrySizeWithOverhead(cbEntry);
-    assert(iEntry < node.nEntries+1);
+    assert(iEntry < node.nEntries + 1);
     assert(node.cbCompactFree >= cbEntryWithOverhead);
 
     EntryOffset *pFirstEntryOffset = getEntryOffsetPointer(node,0);
@@ -64,7 +64,7 @@ PBuffer BTreeHeapNodeAccessor::allocateEntry(
     node.nEntries++;
     node.cbTotalFree -= cbEntryWithOverhead;
     node.cbCompactFree -= cbEntryWithOverhead;
-        
+
     return pAllocation;
 }
 
@@ -73,9 +73,9 @@ void BTreeHeapNodeAccessor::deallocateEntry(
 {
     tupleAccessor.setCurrentTupleBuf(getEntryForReadInline(node,iEntry));
     uint cbEntry = tupleAccessor.getCurrentByteCount();
-    
+
     // see comments in BTreeCompactNodeAccessor::deallocateEntry
-    if (iEntry != node.nEntries-1) {
+    if (iEntry != node.nEntries - 1) {
         // delete the entry from the offset array
         EntryOffset *pEntryOffset = getEntryOffsetPointer(node,iEntry);
         memmove(
@@ -118,6 +118,6 @@ uint BTreeHeapNodeAccessor::getEntryByteCount(uint cb)
     return getEntrySizeWithOverhead(cb);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/btree/BTreeHeapNodeAccessor.cpp#5 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End BTreeHeapNodeAccessor.cpp

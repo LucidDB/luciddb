@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -33,14 +33,14 @@ FENNEL_BEGIN_NAMESPACE
  * LinearDeviceSegmentParams defines initialization parameters for
  * LinearDeviceSegment.
  */
-struct LinearDeviceSegmentParams 
+struct LinearDeviceSegmentParams
 {
     /**
      * BlockId of the first page in the segment; the
      * owning device must already be registered with the cache.
      */
     BlockId firstBlockId;
-    
+
     /**
      * Minimum number of pages in segment.  If the device isn't big enough, it
      * is automatically extended when the segment is created.
@@ -89,20 +89,20 @@ class LinearDeviceSegment : public Segment
     SharedRandomAccessDevice pDevice;
     BlockId firstBlockId;
     BlockNum nPagesMax,nPagesAllocated,nPagesIncrement,nPagesExtended;
-    
+
     explicit LinearDeviceSegment(
         SharedCache cache,
         LinearDeviceSegmentParams const &);
-    
+
     BlockNum getAvailableDevicePages() const;
-    
+
 public:
     virtual ~LinearDeviceSegment();
 
     DeviceId getDeviceId() const;
-    
+
     // implementation of Segment interface
-    
+
     virtual BlockId translatePageId(PageId);
     virtual PageId translateBlockId(BlockId);
     virtual PageId allocatePageId(PageOwnerId ownerId);

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -192,7 +192,7 @@ public class LhxJoinRel
         // NOTE jvs 7-Jan-2008: In LucidDB, LoptMetadataProvider takes care of
         // overriding this with a better implementation, but in vanilla
         // Farrago, this default implementation is used.
-        
+
         double product =
             RelMetadataQuery.getRowCount(getLeft())
             * RelMetadataQuery.getRowCount(getRight())

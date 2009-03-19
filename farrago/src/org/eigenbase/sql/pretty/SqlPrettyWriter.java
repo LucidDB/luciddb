@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -118,7 +118,9 @@ public class SqlPrettyWriter
     //~ Static fields/initializers ---------------------------------------------
 
     protected static final EigenbaseLogger logger =
-        new EigenbaseLogger(Logger.getLogger("org.eigenbase.sql.pretty.SqlPrettyWriter"));
+        new EigenbaseLogger(
+            Logger.getLogger("org.eigenbase.sql.pretty.SqlPrettyWriter"));
+
     /**
      * Bean holding the default property values.
      */
@@ -215,12 +217,12 @@ public class SqlPrettyWriter
     {
         this.subqueryStyle = subqueryStyle;
     }
-    
+
     public void setWindowNewline(boolean windowNewline)
     {
         this.windowNewline = windowNewline;
     }
-    
+
     public void setWindowDeclListNewline(boolean windowDeclListNewline)
     {
         this.windowDeclListNewline = windowDeclListNewline;
@@ -272,7 +274,7 @@ public class SqlPrettyWriter
     {
         return keywordsLowerCase;
     }
-    
+
     public int getLineLength()
     {
         return lineLength;
@@ -744,8 +746,7 @@ public class SqlPrettyWriter
                                 setNeedWhitespace(false);
                             }
                             keyword(sep);
-                            nextWhitespace =
-                                (newlineAfter) ? NL : " ";
+                            nextWhitespace = (newlineAfter) ? NL : " ";
                         }
                         ++itemCount;
                     }
@@ -902,8 +903,7 @@ public class SqlPrettyWriter
 
     private void maybeWhitespace(String s)
     {
-        if (tooLong(s) || (needWhitespace && needWhitespaceBefore(s)))
-        {
+        if (tooLong(s) || (needWhitespace && needWhitespaceBefore(s))) {
             whiteSpace();
         }
     }
@@ -937,13 +937,16 @@ public class SqlPrettyWriter
             setNeedWhitespace(false);
         }
     }
-    
+
     protected boolean tooLong(String s)
     {
-        boolean result = ((lineLength > 0) 
-            && (charCount > currentIndent)
-            && ((charCount + s.length()) >= lineLength));
-        if (result) nextWhitespace = NL;
+        boolean result =
+            ((lineLength > 0)
+                && (charCount > currentIndent)
+                && ((charCount + s.length()) >= lineLength));
+        if (result) {
+            nextWhitespace = NL;
+        }
         logger.finest("Token is '" + s + "'; result is " + result);
         return result;
     }
@@ -974,7 +977,7 @@ public class SqlPrettyWriter
         if (isQuoteAllIdentifiers()
             || dialect.identifierNeedsToBeQuoted(name))
         {
-             qName = dialect.quoteIdentifier(name);
+            qName = dialect.quoteIdentifier(name);
         }
         maybeWhitespace(qName);
         pw.print(qName);
@@ -1031,7 +1034,7 @@ public class SqlPrettyWriter
     {
         this.needWhitespace = needWhitespace;
     }
-    
+
     public void setLineLength(int lineLength)
     {
         this.lineLength = lineLength;

@@ -2,10 +2,10 @@
 <!--
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -406,6 +406,12 @@ ${farrago.test.jvmargs}
       </fileset>
       <fileset dir="${farrago.parser.ddl.dir}/impl" includes="*.java,*.jj"/>
       <fileset dir="${farrago.parser.sql.dir}/impl" includes="*.java,*.jj"/>
+      <fileset 
+        dir="${farrago.src.dir}/examples/rng/src/net/sf/farrago/rng/parserimpl" 
+        includes="*.java,*.jj"/>
+      <fileset 
+        dir="${farrago.src.dir}/examples/rng/src/net/sf/farrago/rng/resource" 
+        includes="*.java"/>
       <fileset dir="${lurql.parser.dir}" includes="*.java"/>
     </delete>
   </target>
@@ -1456,8 +1462,9 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
         </fileset>
       </classpath>
     </taskdef>
-    <jalopy backup="false" convention="${farrago.src.dir}/jalopy.xml"
-      classpathref="farrago.jalopy.classpath" history="NONE" force="true">
+    <jalopy backup="false" convention="${farrago.src.dir}/jalopy.xml" 
+      threads="2" classpathref="farrago.jalopy.classpath" history="NONE" 
+      force="true">
       <fileset dir="${farrago.src.dir}">
         <include name="**/*.java"/>
         <exclude name="org/eigenbase/inventory/**/*.java"/>

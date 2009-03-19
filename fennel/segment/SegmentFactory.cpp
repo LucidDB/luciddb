@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -61,7 +61,7 @@ SegmentFactory::SegmentFactory(
     firstTempDeviceId = DeviceId(512);
     tempDeviceIdBitset.resize(512);
 }
-    
+
 SegmentFactory::~SegmentFactory()
 {
 }
@@ -89,7 +89,7 @@ SharedSegment SegmentFactory::newRandomAllocationSegment(
     bool bFormat,
     bool deferInit)
 {
-    RandomAllocationSegment *pRandomSegment = 
+    RandomAllocationSegment *pRandomSegment =
         new RandomAllocationSegment(delegateSegment);
     SharedSegment pSegment(pRandomSegment,ClosableObjectDestructor());
     SharedSegment tracingSegment =
@@ -111,7 +111,7 @@ SharedSegment SegmentFactory::newVersionedRandomAllocationSegment(
     bool bFormat,
     bool deferInit)
 {
-    VersionedRandomAllocationSegment *pVersionedRandomSegment = 
+    VersionedRandomAllocationSegment *pVersionedRandomSegment =
         new VersionedRandomAllocationSegment(delegateSegment, pTempSegment);
     SharedSegment pSegment(pVersionedRandomSegment, ClosableObjectDestructor());
     SharedSegment tracingSegment =
@@ -334,7 +334,7 @@ SnapshotRandomAllocationSegment *SegmentFactory::getSnapshotSegment(
         SegmentFactory::dynamicCast<SnapshotRandomAllocationSegment *>(
             pSegment);
     if (pSnapshotSegment == NULL) {
-        DynamicDelegatingSegment *pDynamicSegment = 
+        DynamicDelegatingSegment *pDynamicSegment =
             SegmentFactory::dynamicCast<DynamicDelegatingSegment *>(
                 pSegment);
         if (pDynamicSegment != NULL) {

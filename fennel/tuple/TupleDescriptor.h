@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,7 @@ struct TupleAttributeDescriptor
     TupleStorageByteLength cbStorage;
 
     explicit TupleAttributeDescriptor();
-    
+
     explicit TupleAttributeDescriptor(
         StoredTypeDescriptor const &typeDescriptor,
         bool isNullable = false,
@@ -64,7 +64,7 @@ class TupleProjection : public std::vector<uint>
 public:
     void writePersistent(
         ByteOutputStream &) const;
-    
+
     void readPersistent(
         ByteInputStream &);
 
@@ -101,7 +101,7 @@ public:
     int compareTuples(
         TupleData const &tuple1,
         TupleData const &tuple2) const;
-    
+
     int compareTuples(
         TupleData const &tuple1, TupleProjection const &proj1,
         TupleData const &tuple2, TupleProjection const &proj2,
@@ -109,7 +109,7 @@ public:
 
     void writePersistent(
         ByteOutputStream &) const;
-    
+
     void readPersistent(
         ByteInputStream &,
         StoredTypeDescriptorFactory const &);

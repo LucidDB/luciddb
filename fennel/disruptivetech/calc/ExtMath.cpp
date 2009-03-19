@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,7 +37,7 @@ mathLn(RegisterRef<double>* result,
     assert(StandardTypeDescriptor::isApprox(x->type()));
 
     if (x->isNull()) {
-        result->toNull();        
+        result->toNull();
     } else if (x->value() <= 0.0) {
         result->toNull();
         // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
@@ -54,7 +54,7 @@ mathLn(RegisterRef<double>* result,
     assert(StandardTypeDescriptor::isExact(x->type()));
 
     if (x->isNull()) {
-        result->toNull();        
+        result->toNull();
     } else if (x->value() <= 0) {
         result->toNull();
         // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
@@ -66,12 +66,12 @@ mathLn(RegisterRef<double>* result,
 
 void
 mathLog10(RegisterRef<double>* result,
-	  RegisterRef<double>* x)
+      RegisterRef<double>* x)
 {
     assert(StandardTypeDescriptor::isApprox(x->type()));
 
     if (x->isNull()) {
-        result->toNull();        
+        result->toNull();
     } else if (x->value() <= 0.0) {
         result->toNull();
         // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
@@ -83,12 +83,12 @@ mathLog10(RegisterRef<double>* result,
 
 void
 mathLog10(RegisterRef<double>* result,
-	  RegisterRef<long long>* x)
+      RegisterRef<long long>* x)
 {
     assert(StandardTypeDescriptor::isExact(x->type()));
 
     if (x->isNull()) {
-        result->toNull();        
+        result->toNull();
     } else if (x->value() <= 0) {
         result->toNull();
         // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
@@ -100,12 +100,12 @@ mathLog10(RegisterRef<double>* result,
 
 void
 mathAbs(RegisterRef<double>* result,
-	RegisterRef<double>* x)
+    RegisterRef<double>* x)
 {
     assert(StandardTypeDescriptor::isApprox(x->type()));
 
     if (x->isNull()) {
-        result->toNull();        
+        result->toNull();
     } else {
         result->value(fabs(x->value()));
     }
@@ -118,7 +118,7 @@ mathAbs(RegisterRef<long long>* result,
     assert(x->type() == STANDARD_TYPE_INT_64);
 
     if (x->isNull()) {
-        result->toNull();        
+        result->toNull();
     } else {
         // Due to various include problems with gcc, it's easy to get
         // abs doubly defined. Just arbitrarily using std::abs to
@@ -129,30 +129,30 @@ mathAbs(RegisterRef<long long>* result,
 
 void
 mathPow(RegisterRef<double>* result,
-	RegisterRef<double>* x,
-	RegisterRef<double>* y)
+    RegisterRef<double>* x,
+    RegisterRef<double>* y)
 {
     assert(StandardTypeDescriptor::isApprox(x->type()));
     assert(StandardTypeDescriptor::isApprox(y->type()));
 
     if (x->isNull() || y->isNull()) {
-        result->toNull();        
+        result->toNull();
     } else {
         double r = pow(x->value(), y->value());
-	if ( (x->value() == 0.0 && y->value() < 0.0) || 
-	     (x->value() <  0.0 && isnan(r))
-           ) {
-	    //we should get here when x^y have 
-	    //x=0 AND y < 0 OR
-	    //x<0 AND y is an non integer. If this is the case then the result is NaN
-	    
-	    result->toNull();
-        // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
-	    throw "22023";
+        if ( (x->value() == 0.0 && y->value() < 0.0) ||
+            (x->value() <  0.0 && isnan(r))
+            ) {
+            //we should get here when x^y have
+            //x=0 AND y < 0 OR
+            //x<0 AND y is an non integer. If this is the case then the result is NaN
 
-	} else {
+            result->toNull();
+            // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
+            throw "22023";
+
+        } else {
             result->value(r);
-	}
+        }
     }
 }
 
@@ -160,7 +160,7 @@ void
 ExtMathRegister(ExtendedInstructionTable* eit)
 {
     assert(eit != NULL);
-    
+
     vector<StandardTypeDescriptorOrdinal> params_2D;
     params_2D.push_back(STANDARD_TYPE_DOUBLE);
     params_2D.push_back(STANDARD_TYPE_DOUBLE);
@@ -178,7 +178,7 @@ ExtMathRegister(ExtendedInstructionTable* eit)
     params_DID.push_back(STANDARD_TYPE_DOUBLE);
     params_DID.push_back(STANDARD_TYPE_INT_64);
     params_DID.push_back(STANDARD_TYPE_DOUBLE);
-    
+
     vector<StandardTypeDescriptorOrdinal> params_DDI;
     params_DDI.push_back(STANDARD_TYPE_DOUBLE);
     params_DDI.push_back(STANDARD_TYPE_DOUBLE);
@@ -210,11 +210,11 @@ ExtMathRegister(ExtendedInstructionTable* eit)
     eit->add("LOG10", params_DI,
              (ExtendedInstruction2<double, long long>*) NULL,
              &mathLog10);
-    
+
     eit->add("ABS", params_2D,
              (ExtendedInstruction2<double, double>*) NULL,
              &mathAbs);
-    
+
     eit->add("ABS", params_2I,
              (ExtendedInstruction2<long long, long long>*) NULL,
              &mathAbs);
@@ -228,4 +228,4 @@ ExtMathRegister(ExtendedInstructionTable* eit)
 
 FENNEL_END_NAMESPACE
 
-        
+// End ExtMath.cpp

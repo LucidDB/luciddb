@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -103,7 +103,7 @@ public class FarragoTupleIterResultSet
 
     /**
      * Signals that all aspects of opening this ResultSet have completed
-     * successfully.  After this method is called, the ResultSet must
+     * successfully. After this method is called, the ResultSet must
      * (eventually) be closed or else resources may be leaked.
      */
     public void setOpened()
@@ -114,7 +114,7 @@ public class FarragoTupleIterResultSet
             runtimeContext.detachMdrSession();
         }
     }
-    
+
     // implement ResultSet
     public boolean next()
         throws SQLException
@@ -163,7 +163,7 @@ public class FarragoTupleIterResultSet
                     runtimeContext.detachMdrSession();
                     detachMdrSession = false;
                 }
-                
+
                 // Inform context that we're done with cursor processing until
                 // next fetch call.
                 try {

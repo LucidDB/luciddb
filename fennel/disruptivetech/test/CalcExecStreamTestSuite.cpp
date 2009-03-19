@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ CalcExecStreamTestSuite::CalcExecStreamTestSuite(bool addAllTests)
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_UINT_64));
     uint64Desc = attrDesc;
-        
+
     if (addAllTests) {
         FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testConstantOneForOne);
         FENNEL_UNIT_TEST_CASE(CalcExecStreamTestSuite,testEmptyInput);
@@ -60,7 +60,7 @@ void CalcExecStreamTestSuite::testConstantOneForOneImpl(uint nRowsInput)
 
     TupleDescriptor tupleDesc;
     tupleDesc.push_back(uint64Desc);
-    
+
     testConstant(program, tupleDesc, tupleDesc, sizeof(uint64_t), nRowsInput);
 }
 
@@ -91,10 +91,10 @@ void CalcExecStreamTestSuite::testConstantTwoForOne()
     TupleDescriptor outputDesc;
     outputDesc.push_back(uint64Desc);
     outputDesc.push_back(uint64Desc);
-    
+
     TupleDescriptor inputDesc;
     inputDesc.push_back(uint64Desc);
-    
+
     testConstant(program, inputDesc, outputDesc, 2*sizeof(uint64_t));
 }
 
@@ -115,11 +115,11 @@ void CalcExecStreamTestSuite::testConstantOneForTwo()
 
     TupleDescriptor outputDesc;
     outputDesc.push_back(uint64Desc);
-    
+
     TupleDescriptor inputDesc;
     inputDesc.push_back(uint64Desc);
     inputDesc.push_back(uint64Desc);
-    
+
     testConstant(program, inputDesc, outputDesc, sizeof(uint64_t));
 }
 
@@ -138,7 +138,7 @@ void CalcExecStreamTestSuite::testTupleOverflow()
 
     TupleDescriptor inputDesc;
     inputDesc.push_back(uint64Desc);
-    
+
     TupleDescriptor outputDesc;
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor charDesc(
@@ -191,3 +191,5 @@ void CalcExecStreamTestSuite::testConstant(
         expectedTuple,
         mockParams.nRows);
 }
+
+// End CalcExecStreamTestSuite.cpp

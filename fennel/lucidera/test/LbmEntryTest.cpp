@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -259,14 +259,14 @@ void LbmEntryTest::testRandom(
 {
     std::vector<LcsRid> ridValues;
     std::vector<uint> nRidsPerBitmap;
-    uint totalRids = nRows/nUniqueKeys;
+    uint totalRids = nRows / nUniqueKeys;
 
     assert(scratchBufferSize >= 8);
 
     // generate random rid values, ensuring that they are unique, then
     // sort them
     std::hash_set<uint64_t> ridsGenerated;
-    for (uint i = 0; i < totalRids; ) {
+    for (uint i = 0; i < totalRids;) {
         uint64_t rid = rand() % nRows;
         if (ridsGenerated.find(rid) == ridsGenerated.end()) {
             ridValues.push_back(LcsRid(rid));
@@ -289,7 +289,7 @@ void LbmEntryTest::testRandom(
     while (ridCount < totalRids) {
         // divide by 4 so we'll later merge roughly 2-4 bitmaps per
         // entry
-        uint nRids = rand() % (scratchBufferSize/4) + 1;
+        uint nRids = rand() % (scratchBufferSize / 4) + 1;
         if (nRids + ridCount < totalRids) {
             nRidsPerBitmap.push_back(nRids);
             ridCount += nRids;
@@ -340,8 +340,7 @@ void LbmEntryTest::testMergeEntry(
 
     uint totalRids = ridValues.size();
     uint nRidPos = 0;
-    for (uint i = 0; i < totalRids; ) {
-
+    for (uint i = 0; i < totalRids;) {
         newLbmEntry(entryList, ridValues[i], bufferLock);
         i++;
 
@@ -526,7 +525,7 @@ void LbmEntryTest::testldb35()
     SharedLbmEntryInfo pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
 
     // first entry -- single bitmap with rid 98601
-    
+
     pListElement->pBuf = allocateBuf(bufferLock);
     pListElement->entry.init(
         pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
@@ -684,7 +683,7 @@ void LbmEntryTest::testler5920()
     SharedLbmEntryInfo pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
 
     // first entry -- full bitmap
-    
+
     pListElement->pBuf = allocateBuf(bufferLock);
     pListElement->entry.init(
         pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
@@ -809,7 +808,7 @@ void LbmEntryTest::testZeroBytes()
     SharedLbmEntryInfo pListElement = SharedLbmEntryInfo(new LbmEntryInfo());
 
     // 1st entry -- start with rid 1
-    
+
     pListElement->pBuf = allocateBuf(bufferLock);
     pListElement->entry.init(
         pListElement->pBuf, NULL, LbmEntry::getScratchBufferSize(bitmapColSize),
@@ -915,7 +914,7 @@ void LbmEntryTest::testCombos()
 {
     uint nEntries = 5;
     std::vector<uint> eTypes;
-    
+
     for (uint i = 0; i < nEntries; i++) {
         eTypes.push_back(0);
     }
@@ -934,7 +933,6 @@ void LbmEntryTest::recurseCombos(
         if (curr < nEntries - 1) {
             recurseCombos(curr + 1, nEntries, eTypes);
         } else {
-
             // generate the "nEntries" bitmaps
             for (uint n = 0; n < nEntries; n++) {
                 generateBitmaps(
@@ -1094,7 +1092,7 @@ void LbmEntryTest::testMergeSingleton(
             lbmEntry.setEntryTuple(entryTuple);
             splitOccurred = true;
         }
-    } 
+    }
 
     // compare the rids in the last entry
     if (ridPos < totalRids) {
@@ -1385,7 +1383,7 @@ void LbmEntryTest::testMergeSingletonZeros1()
     ridValues.push_back(LcsRid(114));
     ridValues.push_back(LcsRid(123));
 
-    // singleton rid replaces a trailing zero byte, which results in the 
+    // singleton rid replaces a trailing zero byte, which results in the
     // number of trailing zero bytes decreasing by 1
     ridValues.push_back(LcsRid(47));
     testMergeSingleton(24, ridValues, 1, false);
@@ -1400,7 +1398,7 @@ void LbmEntryTest::testMergeSingletonZeros2()
     ridValues.push_back(LcsRid(524296));
     ridValues.push_back(LcsRid(524305));
 
-    // singleton rid replaces a trailing zero byte, which results in the 
+    // singleton rid replaces a trailing zero byte, which results in the
     // number of trailing zero bytes decreasing by 1; new byte is adjacent
     // to first
     ridValues.push_back(LcsRid(13));
@@ -1416,7 +1414,7 @@ void LbmEntryTest::testMergeSingletonZeros3()
     ridValues.push_back(LcsRid(114));
     ridValues.push_back(LcsRid(123));
 
-    // singleton rid replaces a trailing zero byte, which results in the 
+    // singleton rid replaces a trailing zero byte, which results in the
     // number of trailing zero bytes decreasing by 1 but addition of new
     // segment requires a split of the current entry
     ridValues.push_back(LcsRid(60));
@@ -1516,7 +1514,7 @@ void LbmEntryTest::testMergeSingletonRandom(uint totalRids, uint ridRange)
     // generate random rid values, ensuring that they are unique
     LcsRid rid = LcsRid(rand() % ridRange);
     ridValues.push_back(rid);
-    for (uint i = 1; i < totalRids; ) {
+    for (uint i = 1; i < totalRids;) {
         rid = LcsRid(rand() % ridRange);
         uint j;
         for (j = 0; j < i; j++) {

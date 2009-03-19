@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -49,8 +49,8 @@ void LogicalRecoveryTxn::redoActions(
     while (pTxnInputStream->getOffset() < (cbStart + cbRedo)) {
         LogicalTxnActionHeader actionHeader;
         pTxnInputStream->readValue(actionHeader);
-        
-        switch(actionHeader.actionType) {
+
+        switch (actionHeader.actionType) {
         case ACTION_TXN_DESCRIBE_PARTICIPANT:
             recoverParticipant(actionHeader.pParticipant);
             break;
@@ -106,7 +106,7 @@ void LogicalRecoveryTxn::undoActions(
     FileSize minActionOffset)
 {
     assert(isMAXU(nActionsMax) || !minActionOffset);
-    
+
     uint nActions = 0;
     uint cbActionExpected = svptEnd.cbActionPrev;
     uint seekDist = 0;
@@ -119,8 +119,8 @@ void LogicalRecoveryTxn::undoActions(
         }
         LogicalTxnActionHeader actionHeader;
         pTxnInputStream->readValue(actionHeader);
-        
-        switch(actionHeader.actionType) {
+
+        switch (actionHeader.actionType) {
         case ACTION_TXN_DESCRIBE_PARTICIPANT:
             if (swizzleParticipant(actionHeader.pParticipant)) {
                 // ignore log data since the participant is already available

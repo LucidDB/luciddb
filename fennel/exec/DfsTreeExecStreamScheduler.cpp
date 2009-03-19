@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -37,7 +37,7 @@ DfsTreeExecStreamScheduler::DfsTreeExecStreamScheduler(
       ExecStreamScheduler(pTraceTargetInit, nameInit)
 {
 }
-    
+
 DfsTreeExecStreamScheduler::~DfsTreeExecStreamScheduler()
 {
 }
@@ -45,7 +45,7 @@ DfsTreeExecStreamScheduler::~DfsTreeExecStreamScheduler()
 void DfsTreeExecStreamScheduler::addGraph(SharedExecStreamGraph pGraphInit)
 {
     assert(!pGraph);
-    
+
     ExecStreamScheduler::addGraph(pGraphInit);
     pGraph = pGraphInit;
 }
@@ -53,7 +53,7 @@ void DfsTreeExecStreamScheduler::addGraph(SharedExecStreamGraph pGraphInit)
 void DfsTreeExecStreamScheduler::removeGraph(SharedExecStreamGraph pGraphInit)
 {
     assert(pGraph == pGraphInit);
-    
+
     pGraph.reset();
     ExecStreamScheduler::removeGraph(pGraphInit);
 }
@@ -65,7 +65,7 @@ void DfsTreeExecStreamScheduler::start()
     // TODO jvs 2-Jan-2006:  rename this class now that it's no longer
     // restricted to trees; come up with something more generic in case
     // DFS becomes irrelevant also.
-    
+
     // note: we no longer check that graph is a tree (or forest of trees)
     // since it is now possible to have multiple consumers from a single
     // producer
@@ -81,7 +81,7 @@ void DfsTreeExecStreamScheduler::setRunnable(ExecStream &, bool)
 void DfsTreeExecStreamScheduler::abort(ExecStreamGraph &)
 {
     FENNEL_TRACE(TRACE_FINE,"abort requested");
-    
+
     aborted = true;
 }
 
@@ -96,7 +96,7 @@ void DfsTreeExecStreamScheduler::checkAbort() const
 void DfsTreeExecStreamScheduler::stop()
 {
     FENNEL_TRACE(TRACE_FINE,"stop");
-    
+
     // nothing to do
     aborted = false;
 }
@@ -107,7 +107,7 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
     FENNEL_TRACE(
         TRACE_FINE,
         "entering readStream " << stream.getName());
-    
+
     ExecStreamId current = stream.getStreamId();
     ExecStreamQuantum quantum;
 
@@ -149,13 +149,13 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
 
         ExecStreamGraphImpl::Edge edge;
 
-        switch(rc) {
+        switch (rc) {
         case EXECRC_EOS:
             // find a consumer that is not in EOS state
             if (!findNextConsumer(graphImpl, graphRep, stream, edge, current,
                                   EXECBUF_EOS)) {
                 return graphImpl.getBufAccessorFromEdge(edge);
-            } 
+            }
             // if all were in eos, just use the last consumer
             break;
         case EXECRC_BUF_OVERFLOW:
@@ -189,7 +189,6 @@ bool DfsTreeExecStreamScheduler::findNextConsumer(
     ExecStreamGraphImpl::OutEdgeIterPair outEdges =
         boost::out_edges(current,graphRep);
     for (; outEdges.first != outEdges.second; ++(outEdges.first)) {
-
         edge = *(outEdges.first);
         current = boost::target(edge,graphRep);
         if (boost::out_degree(current,graphRep) == 0) {

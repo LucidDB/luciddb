@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,7 @@ import java.nio.*;
 
 import java.util.*;
 
-import javax.jmi.reflect.RefBaseObject;
+import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.catalog.*;
@@ -39,6 +39,7 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.session.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
@@ -48,7 +49,6 @@ import org.eigenbase.sarg.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import org.eigenbase.jmi.JmiObjUtil;
 
 
 /**
@@ -299,17 +299,17 @@ public abstract class FennelRelUtil
 
     /**
      * @param rel the relational expression
-     * 
+     *
      * @return the preparing stmt that a relational expression belongs to
      */
     public static FarragoPreparingStmt getPreparingStmt(RelNode rel)
     {
         return getPreparingStmt(rel.getCluster());
     }
-    
+
     /**
      * @param cluster the cluster
-     * 
+     *
      * @return the preparing stmt a cluster belongs to
      */
     public static FarragoPreparingStmt getPreparingStmt(RelOptCluster cluster)
@@ -522,11 +522,10 @@ public abstract class FennelRelUtil
             return inputs.get(0);
         }
 
-        return
-            new UnionRel(
-                cluster,
-                inputs.toArray(new RelNode[inputs.size()]),
-                true);
+        return new UnionRel(
+            cluster,
+            inputs.toArray(new RelNode[inputs.size()]),
+            true);
     }
 
     /**
@@ -672,11 +671,10 @@ public abstract class FennelRelUtil
         }
 
         // Generate code to cast the keys to the index column type.
-        return
-            RelOptUtil.createCastRel(
-                keyRel,
-                keyRowType,
-                false);
+        return RelOptUtil.createCastRel(
+            keyRel,
+            keyRowType,
+            false);
     }
 
     /**
@@ -738,6 +736,7 @@ public abstract class FennelRelUtil
      * Returns the fennel implementor for a given relational expression.
      *
      * @param rel Relational expression
+     *
      * @return Fennel implementor
      */
     public static FennelRelImplementor getRelImplementor(RelNode rel)
@@ -835,21 +834,19 @@ public abstract class FennelRelUtil
         }
 
         byte [] tupleBytes = byteStream.toByteArray();
-        return
-            RhBase64.encodeBytes(
-                tupleBytes,
-                RhBase64.DONT_BREAK_LINES);
+        return RhBase64.encodeBytes(
+            tupleBytes,
+            RhBase64.DONT_BREAK_LINES);
     }
 
     /**
-     * Extracts from a sargable predicate represented by a SargBinding list
-     * the column ordinals and operands in the individual sub-expressions,
-     * provided all but one of the filters is a equality predicate.  The one
-     * non-equality predicate must be a single range predicate.
+     * Extracts from a sargable predicate represented by a SargBinding list the
+     * column ordinals and operands in the individual sub-expressions, provided
+     * all but one of the filters is a equality predicate. The one non-equality
+     * predicate must be a single range predicate.
      *
      * @param sargBindingList filter represented as a SargBinding list
-     * @param filterCols returns the list of filter columns in the
-     * expression
+     * @param filterCols returns the list of filter columns in the expression
      * @param filterOperands returns the list of expressions that the filter
      * columns are compared to
      * @param op returns COMP_EQ if the predicates are all equality; otherwise,
@@ -869,19 +866,18 @@ public abstract class FennelRelUtil
         RexNode rangeOperand = null;
 
         for (SargBinding sargBinding : sargBindingList) {
-
             SargIntervalSequence sargSeq = sargBinding.getExpr().evaluate();
 
             if (sargSeq.isPoint()) {
                 filterCols.add(sargBinding.getInputRef());
                 List<SargInterval> sargIntervalList = sargSeq.getList();
-                assert(sargIntervalList.size() == 1);
+                assert (sargIntervalList.size() == 1);
                 SargInterval sargInterval = sargIntervalList.get(0);
                 SargEndpoint lowerBound = sargInterval.getLowerBound();
                 filterOperands.add(lowerBound.getCoordinate());
-
             } else {
-                assert(rangeRef == null);
+                assert (rangeRef == null);
+
                 // if we have a range predicate, just keep track of it for now,
                 // since it needs to be put at the end of our lists
                 List<SargInterval> sargIntervalList = sargSeq.getList();
@@ -891,6 +887,7 @@ public abstract class FennelRelUtil
                 SargInterval sargInterval = sargIntervalList.get(0);
                 SargEndpoint lowerBound = sargInterval.getLowerBound();
                 SargEndpoint upperBound = sargInterval.getUpperBound();
+
                 // check the upper bound first to avoid the null in the
                 // lower bound
                 if (upperBound.isFinite()) {
@@ -1021,6 +1018,7 @@ public abstract class FennelRelUtil
      * Finds the definition of the aggregate function used by a given call.
      *
      * @param call Call
+     *
      * @return Definition of aggregate function
      *
      * @throws IllegalArgumentException if aggregate is not one of the builtins

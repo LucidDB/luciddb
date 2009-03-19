@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,11 +25,12 @@ import java.net.*;
 
 import java.util.*;
 import java.util.jar.*;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 import net.sf.farrago.resource.*;
+import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.trace.FarragoTrace;
+
 
 /**
  * FarragoPluginClassLoader allows plugin jars to be added to the ClassLoader
@@ -41,9 +42,9 @@ import net.sf.farrago.trace.FarragoTrace;
 public class FarragoPluginClassLoader
     extends URLClassLoader
 {
-    private static final Logger tracer =
-        FarragoTrace.getRuntimeContextTracer();
     //~ Static fields/initializers ---------------------------------------------
+
+    private static final Logger tracer = FarragoTrace.getRuntimeContextTracer();
 
     /**
      * Prefix used to indicate that a wrapper library is loaded directly from a
@@ -134,7 +135,8 @@ public class FarragoPluginClassLoader
                     manifest.getMainAttributes().getValue(jarAttributeName);
                 if (className == null) {
                     throw FarragoResource.instance().PluginManifestMissing.ex(
-                        libraryName, jarAttributeName);
+                        libraryName,
+                        jarAttributeName);
                 }
                 return loadClassFromJarUrl(
                     "file:" + libraryName,
@@ -147,14 +149,12 @@ public class FarragoPluginClassLoader
         }
     }
 
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
-
+    protected Class<?> findClass(String name)
+        throws ClassNotFoundException
+    {
         try {
-
             return super.findClass(name);
-
         } catch (ClassNotFoundException cnfe) {
-
             return getParent().loadClass(name);
         }
     }

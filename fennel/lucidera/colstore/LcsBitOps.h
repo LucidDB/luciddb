@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,9 +57,10 @@ inline uint calcWidth(uint n)
 
     // find out how many bits are needed to represent n
     w = 0;
-    if (n > 0)
+    if (n > 0) {
         n--;
-    while(n) {
+    }
+    while (n) {
         w++;
         n >>= 1;
     }
@@ -67,13 +68,20 @@ inline uint calcWidth(uint n)
     // round up the width to a value which can be
     // represented by two bit vectors (where each vector
     // has length 1, 2, 4, 8, or 16
-    switch (w) {    
-    case  7: w = 8; break;
-    case 11: w = 12; break;
+    switch (w) {
+    case  7:
+        w = 8;
+        break;
+    case 11:
+        w = 12;
+        break;
     case 13:
     case 14:
-    case 15: w = 16; break;
-    default: break;
+    case 15:
+        w = 16;
+        break;
+    default:
+        break;
     }
 
     return w;
@@ -99,10 +107,14 @@ inline uint bitVecWidth(uint l, WidthVec w)
     WidthVec t;
     int i,j;
 
-    for (po2 = 1, iW = 0; l ; l >>= 1, po2 *= 2) 
-        if (l & 0x1) t[iW++] = po2;
+    for (po2 = 1, iW = 0; l ; l >>= 1, po2 *= 2) {
+        if (l & 0x1) {
+            t[iW++] = po2;
+        }
+    }
 
-    for (i = iW-1, j = 0; i >= 0 ; w[j++] = t[i--]);
+    for (i = iW - 1, j = 0; i >= 0 ; w[j++] = t[i--]) {
+    }
     return iW;
 }
 
@@ -121,13 +133,12 @@ inline uint bitVecWidth(uint l, WidthVec w)
  * @param pVec vector storage
  */
 inline uint bitVecPtr(
-    uint iCount, uint iW, WidthVec w, PtrVec p, uint8_t *pVec) 
-{   
+    uint iCount, uint iW, WidthVec w, PtrVec p, uint8_t *pVec)
+{
     uint i;
     uint8_t *t;
 
-    for (i = 0, t = pVec ; i < iW ; i++)
-    {
+    for (i = 0, t = pVec ; i < iW ; i++) {
         p[i] = t;
         t += ((w[i] * iCount + 7) / 8);
     }
@@ -149,8 +160,9 @@ inline uint sizeofBitVec(uint nRow, uint iW, WidthVec w)
     uint t;
     uint i;
 
-    for (i = 0, t = 0; i < iW; i++)
+    for (i = 0, t = 0; i < iW; i++) {
         t += ((w[i] * nRow + 7) / 8);
+    }
     return t;
 }
 
@@ -180,7 +192,7 @@ inline void readBitVecs(
     memset(v, 0, sizeof(uint16_t) * count);
 
     // read bit arrays
-    for (i = 0, b = 0; i < iV; i++) {   
+    for (i = 0, b = 0; i < iV; i++) {
         // w[i] contains the width of the bit vector
         // read append each vector bits into v[i], b is the bit position
         // of the next append
@@ -190,23 +202,27 @@ inline void readBitVecs(
             break;
 
         case 8:
-            for (j = 0; j < count; j++) 
+            for (j = 0; j < count; j++) {
                 v[j] = (p[i] + pos)[j];
+            }
             break;
-    
+
         case 4:
-            for (j = 0, k = pos*4;  j < count; j++, k += 4)
-                readBits(p[i][k/8], 4, k % 8, &v[j], b);
+            for (j = 0, k = pos*4;  j < count; j++, k += 4) {
+                readBits(p[i][k / 8], 4, k % 8, &v[j], b);
+            }
             break;
 
         case 2:
-            for (j = 0, k = pos*2; j < count; j++, k += 2)
-                readBits(p[i][k/8], 2, k % 8, &v[j], b);
+            for (j = 0, k = pos*2; j < count; j++, k += 2) {
+                readBits(p[i][k / 8], 2, k % 8, &v[j], b);
+            }
             break;
 
         case 1:
-            for (j = 0, k = pos; j < count; j++, k++)
-                readBits(p[i][k/8], 1, k % 8, &v[j], b);
+            for (j = 0, k = pos; j < count; j++, k++) {
+                readBits(p[i][k / 8], 1, k % 8, &v[j], b);
+            }
             break;
 
         default:
@@ -307,7 +323,7 @@ inline void readBitVec1(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    readBits(p[0][pos/8], 1, pos % 8, v, 0);
+    readBits(p[0][pos / 8], 1, pos % 8, v, 0);
 }
 
 /**
@@ -352,7 +368,7 @@ inline void readBitVec10(uint16_t *v, const PtrVec p, uint pos)
 inline void readBitVec9(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
-    readBits(p[1][pos/8], 1, pos % 8, v, 8);
+    readBits(p[1][pos / 8], 1, pos % 8, v, 8);
 }
 
 /**
@@ -385,8 +401,8 @@ inline void readBitVec5(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    readBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
-    readBits(p[1][pos/8], 1, pos % 8, v, 4);
+    readBits(p[0][pos / 2], 4, (pos * 4) % 8, v, 0);
+    readBits(p[1][pos / 8], 1, pos % 8, v, 4);
 }
 
 /**
@@ -402,8 +418,8 @@ inline void readBitVec3(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    readBits(p[0][pos/4], 2, (pos*2) % 8, v, 0);
-    readBits(p[1][pos/8], 1, pos % 8, v, 2);
+    readBits(p[0][pos / 4], 2, (pos * 2) % 8, v, 0);
+    readBits(p[1][pos / 8], 1, pos % 8, v, 2);
 }
 
 FENNEL_END_NAMESPACE

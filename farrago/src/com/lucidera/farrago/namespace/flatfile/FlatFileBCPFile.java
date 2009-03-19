@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,6 +21,7 @@
 package com.lucidera.farrago.namespace.flatfile;
 
 import java.io.*;
+
 import java.nio.charset.*;
 
 import java.util.*;
@@ -30,8 +31,8 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -520,6 +521,7 @@ class FlatFileBCPFile
         if (typeFactory.getDefaultCharset().equals(singleByteCharset)) {
             return type;
         }
+
         // For character data, flat file reader can currently only
         // deal with ISO-8859-1
         type =

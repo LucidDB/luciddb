@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,13 +36,13 @@ using namespace fennel;
 class ResourceTest : virtual public TestBase
 {
 public:
-    
+
     explicit ResourceTest()
     {
         FENNEL_UNIT_TEST_CASE(ResourceTest, testEnUsLocale);
         FENNEL_UNIT_TEST_CASE(ResourceTest, testConcurrency);
     }
-    
+
     void testEnUsLocale();
     void testConcurrency();
 };
@@ -71,8 +71,7 @@ public:
         std::string desc, boost::barrier &barrier, int count)
         : Thread(desc), barrier(barrier), count(count), completed(0)
     {
-        // 
-        for(int i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             std::stringstream ss;
             ss << "var_" << (i + 1);
             variants.push_back(ss.str());
@@ -93,7 +92,7 @@ public:
         try {
             barrier.wait();
 
-            for(int i = 0; i < count; i++) {
+            for (int i = 0; i < count; i++) {
                 std::string &variant = variants[i];
 
                 Locale locale("en", "US", variant);
@@ -102,7 +101,7 @@ public:
 
                 completed++;
             }
-        } catch(...) {
+        } catch (...) {
             completed = -1;
         }
     }

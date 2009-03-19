@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,7 +36,7 @@ void LhxJoinExecStream::prepare(
 
     ConfluenceExecStream::prepare(params);
 
-    setJoinType(params);    
+    setJoinType(params);
     setHashInfo(params);
 
     uint numInputs = inAccessors.size();
@@ -44,18 +44,18 @@ void LhxJoinExecStream::prepare(
     inputTuple.reset(new TupleData[2]);
     inputTupleSize.reset(new uint[2]);
 
-    for (int inputIndex = 0; inputIndex < numInputs; inputIndex ++ ) {
+    for (int inputIndex = 0; inputIndex < numInputs; inputIndex++) {
         inputTuple[inputIndex].compute(
             inAccessors[inputIndex]->getTupleDesc());
         inputTupleSize[inputIndex] = inputTuple[inputIndex].size();
     }
-    
+
     /*
      * Force partitioning level. Only set in tests.
      */
     forcePartitionLevel = params.forcePartitionLevel;
     enableSubPartStat = params.enableSubPartStat;
-    
+
     /*
      * NOTE: currently anti joins that need to remove duplicates can not
      * switch join sides(join then
@@ -69,7 +69,7 @@ void LhxJoinExecStream::prepare(
      * identical probe tuple will see the tuple as a "match" and will not
      * return the tuple(hence satisfy the anti join semantics).
      * This scheme also works when the hash table overflows. Tuples in the
-     * hash table, including the probe tuples inserted, will be partitioned 
+     * hash table, including the probe tuples inserted, will be partitioned
      * as child partitions of the build input.
      * The remaining probe input, together with all the matched tuples from the
      * hash table, will be partitioned to disk as the children of the probe
@@ -97,7 +97,7 @@ void LhxJoinExecStream::prepare(
 
     enableSwing = params.enableSwing && (!(antiJoin && setopDistinct));
 
-    /* 
+    /*
      * Calculate the number of blocks required to perform the join, as given by
      * the optimizer, completely in memory.
      */
@@ -112,12 +112,12 @@ void LhxJoinExecStream::prepare(
         outputDesc = params.outputTupleDesc;
     }
 
-    outputTuple.compute(outputDesc);    
+    outputTuple.compute(outputDesc);
 
     assert (outputTuple.size() == (inputTupleSize[0] + inputTupleSize[1]) ||
         outputTuple.size() == inputTupleSize[0]||
         outputTuple.size() == inputTupleSize[1]);
-            
+
     pOutAccessor->setTupleShape(outputDesc);
 
     /*
@@ -191,7 +191,7 @@ void LhxJoinExecStream::open(bool restart)
     vector<uint> filteredRows;
     filteredRows.push_back(0);
     filteredRows.push_back(0);
-    
+
     /*
      * No input join filter for root plan.
      */
@@ -210,7 +210,7 @@ void LhxJoinExecStream::open(bool restart)
     hashTable.init(curPlan->getPartitionLevel(), hashInfo,
         curPlan->getBuildInput());
     hashTableReader.init(&hashTable, hashInfo, curPlan->getBuildInput());
-    
+
     bool status = hashTable.allocateResources();
     assert (status);
 
@@ -222,10 +222,8 @@ void LhxJoinExecStream::open(bool restart)
 
 ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 {
-    while (true)
-    {
-        switch (joinState)
-        {
+    while (true) {
+        switch (joinState) {
         case ForcePartitionBuild:
             {
                 TupleData &buildTuple = inputTuple[curPlan->getBuildInput()];
@@ -378,7 +376,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     enableSwing);
 
                 FENNEL_TRACE(TRACE_FINE, curPlan->toString());
-                
+
                 /*
                  * now recursice down the plan tree to get the first leaf plan.
                  */
@@ -396,17 +394,17 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 assert (status);
                 buildReader.open(curPlan->getBuildPartition(), hashInfo);
 
-                joinState = 
+                joinState =
                     (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
                 nextState.clear();
-                break;                
+                break;
             }
         case GetNextPlan:
             {
                 hashTable.releaseResources();
-                
+
                 checkAbort();
-                
+
                 curPlan = curPlan->getNextLeaf();
 
                 if (curPlan) {
@@ -515,10 +513,10 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     if (!filterNullProbe ||
                         !probeTuple.containsNull(filterNullProbeKeyProj)) {
                         keyBuf =
-                            hashTable.findKey(probeTuple, probeKeyProj, 
+                            hashTable.findKey(probeTuple, probeKeyProj,
                                 removeDuplicateProbe);
                     }
-        
+
                     if (keyBuf) {
                         if (returnBuildInner(curPlan)) {
                             /*
@@ -529,7 +527,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * Join types that return matching tuples from the
                              * build input: RightSemi(when matched for the
                              * first time)
-                             * 
+                             *
                              * Set the output tuple to include only the probe
                              * input and get all the matching tuples from the
                              * build side. For RightSemi, the probeFieldLength
@@ -623,7 +621,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     for (uint i = 0; i < buildFieldLength; i ++) {
                         outputTuple[i + buildFieldOffset].copyFrom(buildTuple[i]);
                     }
-                    
+
                     joinState = ProducePending;
                     /*
                      * Come back to this state after producing the output tuple
@@ -650,7 +648,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     }
                 } else {
                     numTuplesProduced = 0;
-                    return EXECRC_BUF_OVERFLOW;                    
+                    return EXECRC_BUF_OVERFLOW;
                 }
 
                 /*
@@ -673,7 +671,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
             }
         }
     }
-    
+
     /*
      * The state machine should never come here.
      */
@@ -712,7 +710,7 @@ void LhxJoinExecStream::setJoinType(
      *     T         F          T          F       Inner Join
      *     T         F          T          T       Right Outer
      *     T         T          T          F       Left Outer
-     *     T         T          T          T       Full Outer       
+     *     T         T          T          T       Full Outer
      * Note join types in () are not visiible in optimizer plan.
      */
 
@@ -737,7 +735,7 @@ void LhxJoinExecStream::setJoinType(
     setopAll      = !params.setopDistinct &&  params.setopAll;
 
     assert (!setopAll && (regularJoin || setopDistinct));
-    
+
     /*
      * Anit joins with duplicate removal needs to use hash table to remove
      * duplicated non-matching tuples. Hence the anti side needs to be the
@@ -753,7 +751,7 @@ void LhxJoinExecStream::setHashInfo(
     LhxJoinExecStreamParams const &params)
 {
     uint numInputs = inAccessors.size();
-    for (int inputIndex = 0; inputIndex < numInputs; inputIndex ++ ) {
+    for (int inputIndex = 0; inputIndex < numInputs; inputIndex++) {
         hashInfo.streamBufAccessor.push_back(inAccessors[inputIndex]);
         hashInfo.inputDesc.push_back(
             inAccessors[inputIndex]->getTupleDesc());
@@ -829,8 +827,7 @@ void LhxJoinExecStream::setHashInfo(
     hashInfo.externalSegmentAccessor.pCacheAccessor = params.pCacheAccessor;
     hashInfo.externalSegmentAccessor.pSegment = params.pTempSegment;
 
-    for (int inputIndex = 0; inputIndex < numInputs; inputIndex ++ ) {
-
+    for (int inputIndex = 0; inputIndex < numInputs; inputIndex++) {
         TupleProjection &keyProj  = hashInfo.keyProj[inputIndex];
         TupleDescriptor &inputDesc  = hashInfo.inputDesc[inputIndex];
 
@@ -858,7 +855,7 @@ void LhxJoinExecStream::setHashInfo(
         /*
          * Need to construct a covering set of keys; for example:
          * keyProj (3,4,2,3) should have a covering set of (3,4,2);
-         */    
+         */
         for (int i = 0; i < inputDesc.size(); i ++) {
             /*
              * Okay a dumb for loop to search for key columns.

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ class VersionedSegmentTest : virtual public SegmentTestBase
     SharedRandomAccessDevice pLogDevice;
     PageId firstLogPageId;
     PseudoUuid onlineUuid;
-    
+
 public:
     virtual void openSegmentStorage(DeviceMode openMode)
     {
@@ -58,7 +58,7 @@ public:
             versionNumber);
         pLinearSegment = pVersionedSegment;
     }
-    
+
     virtual void closeStorage()
     {
         closeLinearSegment();
@@ -95,10 +95,10 @@ public:
         closeStorage();
         firstLogPageId = NULL_PAGE_ID;
     }
-    
+
     virtual void fillPage(CachePage &page,uint x)
     {
-        SegmentTestBase::fillPage(page,x+versionNumber);
+        SegmentTestBase::fillPage(page,x + versionNumber);
     }
 
     virtual void testCheckpoint()
@@ -119,7 +119,7 @@ public:
         assert(pVersionedSegment);
         SegVersionNum pageVersion = pVersionedSegment->getPageVersion(page);
         assert(pageVersion <= versionNumber);
-        SegmentTestBase::verifyPage(page,x+pageVersion);
+        SegmentTestBase::verifyPage(page,x + pageVersion);
     }
 };
 

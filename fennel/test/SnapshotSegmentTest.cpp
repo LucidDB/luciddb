@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,7 @@ public:
         FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testUncommittedReads);
         FENNEL_UNIT_TEST_CASE(SnapshotSegmentTest, testDeallocateOld);
     }
-  
+
     void testSnapshotReads()
     {
         // Create and initialize a VersionedRandomAllocationSegment using
@@ -92,7 +92,7 @@ public:
         // Make sure new pages have been allocated before we roll them back
         assert(
             pVersionedRandomSegment->getAllocatedSizeInPages() ==
-            nDiskPages + nDiskPages/5 + ((nDiskPages % 5) ? 1 : 0));
+            nDiskPages + nDiskPages / 5 + ((nDiskPages % 5) ? 1 : 0));
         commit = false;
         closeStorage();
         commit = true;
@@ -200,11 +200,11 @@ public:
         testSkipWrite(7);
         closeStorage();
 
-        uint totalPages = 
+        uint totalPages =
             nDiskPages +
-            nDiskPages/3 + ((nDiskPages % 3) ? 1 : 0) +
-            nDiskPages/5 + ((nDiskPages % 5) ? 1 : 0) +
-            nDiskPages/7 + ((nDiskPages % 7) ? 1 : 0);
+            nDiskPages / 3 + ((nDiskPages % 3) ? 1 : 0) +
+            nDiskPages / 5 + ((nDiskPages % 5) ? 1 : 0) +
+            nDiskPages / 7 + ((nDiskPages % 7) ? 1 : 0);
 
         // Deallocate pages -- set the oldestActiveTxnId at TxnId(3).  No
         // pages should be deallocated.
@@ -243,13 +243,13 @@ public:
         // Save cache stats before deallocation.
         CacheStats statsBefore;
         pCache->collectStats(statsBefore);
-        
+
         for (int i = opaqueToInt(firstPageId);
             i < 100 + opaqueToInt(firstPageId); i++)
         {
             pSnapshotRandomSegment->deallocatePageRange(PageId(i), PageId(i));
         }
-        
+
         // Get cache stats after deallocation and compare.
         CacheStats statsAfter;
         pCache->collectStats(statsAfter);
@@ -257,7 +257,7 @@ public:
         // Count of unused pages should not go up since deallocation is
         // deferred.
         BOOST_CHECK(statsAfter.nMemPagesUnused <= statsBefore.nMemPagesUnused);
-        
+
         closeStorage();
 
         // Deallocate old pages, but set the oldestActiveTxnId to TxnId(0) so

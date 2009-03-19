@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -296,7 +296,7 @@ public abstract class FennelWindowRule
         // Partitioning expressions must be evaluated before rows enter the XO.
         // If windows partition on expressions defined in inCalc, don't try to
         // merge the expressions into the WinAgg XO: make inCalc its own XO.
-        if (inCalc != null
+        if ((inCalc != null)
             && isPartitioningOnCalcField(inCalc, windowList))
         {
             createRels(call, outCalc, winAggRel, null, inCalc);
@@ -461,11 +461,12 @@ public abstract class FennelWindowRule
     }
 
     /**
-     * Returns whether any of the partitions in <code>windowList</code> uses
-     * a field calculated in <code>inCalc</code>.
+     * Returns whether any of the partitions in <code>windowList</code> uses a
+     * field calculated in <code>inCalc</code>.
      *
      * @param inCalc Calculator relational expression
      * @param windowList List of windows
+     *
      * @return Whether any partition has a calculated field
      */
     private boolean isPartitioningOnCalcField(
@@ -494,7 +495,8 @@ public abstract class FennelWindowRule
         final RexWindow aggWindow = over.getWindow();
 
         // Look up or create a window.
-        Integer [] orderKeys = getProjectOrdinals(programBuilder, aggWindow.orderKeys);
+        Integer [] orderKeys =
+            getProjectOrdinals(programBuilder, aggWindow.orderKeys);
         FennelWindowRel.Window fennelWindow =
             lookupWindow(
                 windowList,
@@ -527,11 +529,12 @@ public abstract class FennelWindowRule
      *
      * @param programBuilder Program builder
      * @param exprs List of expressions
+     *
      * @return List of ordinals where expressions are projected
      */
-    private Integer[] getProjectOrdinals(
+    private Integer [] getProjectOrdinals(
         RexProgramBuilder programBuilder,
-        RexNode[] exprs)
+        RexNode [] exprs)
     {
         Integer [] newKeys = new Integer[exprs.length];
         for (int i = 0; i < newKeys.length; i++) {

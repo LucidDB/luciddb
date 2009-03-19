@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -105,7 +105,7 @@ struct hash< fennel::OpaqueInteger<T,Dummy> >
         return hash<T>()(fennel::opaqueToInt(key));
     }
 };
- 
+
 } // namespace std
 
 // Memory management
@@ -168,7 +168,7 @@ inline void deleteAndNullifyArray(T *&p)
 /**
  * A bitmask which selects the unaligned bits of a memory address or size.
  */
-#define ARCH_ALIGN_MASK (ARCH_ALIGN_BYTES-1)
+#define ARCH_ALIGN_MASK (ARCH_ALIGN_BYTES - 1)
 
 /**
  * Align a size DOWN to the next alignment multiple.
@@ -287,8 +287,8 @@ do { \
 
 // REVIEW: JK 1/19/2006: Replace with cpu_to_be64(x) ?
 // Network to Host conversion for 64 bit quantities
-#define ntohll(x) ( ( (uint64_t) ntohl ((uint32_t)( x )) << 32 ) |  \
-                    ntohl ((uint32_t)(x >> 32))) 
+#define ntohll(x) (((uint64_t) ntohl((uint32_t) (x)) << 32)\
+                    | ntohl((uint32_t) (x >> 32)))
 
 #define htonll(x) ntohll(x)
 

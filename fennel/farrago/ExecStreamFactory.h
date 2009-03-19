@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,7 +50,7 @@ class SingleOutputExecStreamParams;
 class SortedAggExecStreamParams;
 
 /**
- * ExecStreamFactory builds an ExecStreamEmbryo from the  
+ * ExecStreamFactory builds an ExecStreamEmbryo from the
  * Java representation of a stream definition.
  *
  * NOTE: this class is not thread-safe
@@ -88,7 +88,7 @@ protected:
      * Embryo for graph being built.
      */
     ExecStreamGraphEmbryo *pGraphEmbryo;
-    
+
     /**
      * Subfactories for extending factory behavior.
      */
@@ -100,7 +100,7 @@ protected:
      */
     virtual void invokeVisit(
         ProxyExecutionStreamDef &);
-    
+
     // Per-stream overrides for FemVisitor; add new stream types here
     virtual void visit(ProxyBarrierStreamDef &);
     virtual void visit(ProxyBufferingTupleStreamDef &);
@@ -163,7 +163,7 @@ public:
         ProxyExecutionStreamDef &);
 
     // helpers for subfactories
-    
+
     /** makes a TupleDescriptor from its proxy definition */
     void readTupleDescriptor(
         TupleDescriptor& desc, const SharedProxyTupleDescriptor def);
@@ -181,11 +181,11 @@ public:
     void createPrivateScratchSegment(ExecStreamParams &params);
 
     void createQuotaAccessors(ExecStreamParams &params);
-    
+
     void readExecStreamParams(
         ExecStreamParams &,
         ProxyExecutionStreamDef &);
-    
+
     void readTupleStreamParams(
         SingleOutputExecStreamParams &,
         ProxyTupleStreamDef &);
@@ -196,7 +196,7 @@ public:
 
     void readBTreeStreamParams(
         BTreeExecStreamParams &,
-        ProxyIndexAccessorDef &);    
+        ProxyIndexAccessorDef &);
 
     void readBTreeParams(
         BTreeParams &,
@@ -217,7 +217,7 @@ class ExecStreamSubFactory : public boost::noncopyable
 {
 public:
     virtual ~ExecStreamSubFactory();
-    
+
     /**
      * Reads the Java representation of an ExecStream.
      *

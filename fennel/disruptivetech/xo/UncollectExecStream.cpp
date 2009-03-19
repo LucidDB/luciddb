@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,12 +35,12 @@ void UncollectExecStream::prepare(UncollectExecStreamParams const &params)
 
     FENNEL_TRACE(
         TRACE_FINER,
-        "uncollect xo input TupleDescriptor = " 
+        "uncollect xo input TupleDescriptor = "
         << pInAccessor->getTupleDesc());
 
     FENNEL_TRACE(
         TRACE_FINER,
-        "uncollect xo output TupleDescriptor = " 
+        "uncollect xo output TupleDescriptor = "
         << pOutAccessor->getTupleDesc());
 
     StandardTypeDescriptorOrdinal ordinal =
@@ -54,7 +54,7 @@ void UncollectExecStream::prepare(UncollectExecStreamParams const &params)
 }
 
 
-void UncollectExecStream::open(bool restart) 
+void UncollectExecStream::open(bool restart)
 {
     ConduitExecStream::open(restart);
     bytesWritten = 0;
@@ -66,7 +66,7 @@ ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
     if (EXECRC_YIELD != rc) {
         return rc;
     }
-        
+
     if (!pInAccessor->demandData()) {
         return EXECRC_BUF_UNDERFLOW;
     }
@@ -75,13 +75,13 @@ ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
 
 #if 0
     std::cout<<"input tuple descriptor" << pInAccessor->getTupleDesc()<<std::endl;
-    std::cout << "input tuple = "; 
+    std::cout << "input tuple = ";
     TupleDescriptor statusDesc = pInAccessor->getTupleDesc();
     TuplePrinter tuplePrinter;
     tuplePrinter.print(std::cout, statusDesc, inputTupleData);
     std::cout << std::endl;
 #endif
-    
+
     TupleAccessor& outTa = pOutAccessor->getScratchTupleAccessor();
     while (bytesWritten < inputTupleData[0].cbData) {
         // write one item in the input array to the output buffer

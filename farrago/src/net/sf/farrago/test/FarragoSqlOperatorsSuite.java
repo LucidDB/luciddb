@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -118,15 +118,16 @@ public class FarragoSqlOperatorsSuite
             this.farragoTest = farragoTest;
         }
 
-        public void setFor(SqlOperator operator, VmName... unimplementedVmNames)
+        public void setFor(
+            SqlOperator operator,
+            VmName ... unimplementedVmNames)
         {
             super.setFor(operator, unimplementedVmNames);
             if (operator != null) {
                 final boolean expanded =
                     contains(unimplementedVmNames, "EXPAND");
-                vmCanImplement =
-                    expanded
-                        || vm.canImplement(operator);
+                vmCanImplement = expanded
+                    || vm.canImplement(operator);
                 if (vm.getName().equals("AUTO")) {
                     // ignore
                 } else if (operator instanceof SqlJdbcFunctionCall) {
@@ -134,28 +135,26 @@ public class FarragoSqlOperatorsSuite
                     // expansion, but sometimes they expand to something that
                     // is only available in Java.
                 } else if (contains(unimplementedVmNames, vm.getName())) {
-                    assert !vmCanImplement
-                        : "VM " + vm.getName() +
-                        " implements operator " + operator +
-                        " but VM is in the exclusion list " +
-                        Arrays.asList(unimplementedVmNames);
+                    assert !vmCanImplement : "VM " + vm.getName()
+                        + " implements operator " + operator
+                        + " but VM is in the exclusion list "
+                        + Arrays.asList(unimplementedVmNames);
                 } else {
-                    assert vmCanImplement
-                        : "VM " + vm.getName() +
-                        " cannot implement operator " + operator +
-                        " but VM is not in the exclusion list " +
-                        Arrays.asList(unimplementedVmNames);
+                    assert vmCanImplement : "VM " + vm.getName()
+                        + " cannot implement operator " + operator
+                        + " but VM is not in the exclusion list "
+                        + Arrays.asList(unimplementedVmNames);
                 }
-                assert !(vm.canImplement(operator) &&
-                    expanded)
-                    : "VM " + vm.getName() + " claims to implement an " +
-                    "operator (" + operator +
-                    ") that is implemented by expansion";
+                assert !(vm.canImplement(operator)
+                    && expanded) : "VM " + vm.getName()
+                    + " claims to implement an "
+                    + "operator (" + operator
+                    + ") that is implemented by expansion";
             }
         }
 
         private static boolean contains(
-            VmName[] vmNames,
+            VmName [] vmNames,
             String vm)
         {
             for (VmName vmName : vmNames) {
@@ -394,7 +393,7 @@ public class FarragoSqlOperatorsSuite
             Assert.assertEquals(type, columnType);
         }
 
-        @SuppressWarnings({"ThrowableInstanceNeverThrown"})
+        @SuppressWarnings({ "ThrowableInstanceNeverThrown" })
         private static RuntimeException wrap(Exception e)
         {
             final RuntimeException rte = new RuntimeException(e);

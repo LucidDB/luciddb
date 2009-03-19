@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,6 +25,7 @@ package org.eigenbase.rel.rules;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * CombineUnionsRule implements the rule for combining two non-distinct {@link
  * UnionRel}s into a single {@link UnionRel}.
@@ -34,7 +35,7 @@ import org.eigenbase.relopt.*;
  */
 public class CombineUnionsRule
     extends RelOptRule
-{   
+{
     //~ Constructors -----------------------------------------------------------
 
     public CombineUnionsRule()
@@ -53,6 +54,7 @@ public class CombineUnionsRule
     {
         UnionRel topUnionRel = (UnionRel) call.rels[0];
         UnionRel bottomUnionRel;
+
         // We want to combine the UnionRel that's in the second input first.
         // Hence, that's why the rule pattern matches on generic RelNodes
         // rather than explicit UnionRels.  By doing so, and firing this rule
@@ -65,19 +67,20 @@ public class CombineUnionsRule
         } else {
             return;
         }
+
         // If distincts haven't been removed yet, defer invoking this rule
         if (topUnionRel.isDistinct() || bottomUnionRel.isDistinct()) {
             return;
         }
-        
+
         // Combine the inputs from the bottom union with the other inputs from
         // the top union
         int nBottomUnionInputs = bottomUnionRel.getInputs().length;
         int nTopUnionInputs = topUnionRel.getInputs().length;
-        RelNode[] unionInputs =
+        RelNode [] unionInputs =
             new RelNode[nBottomUnionInputs + nTopUnionInputs - 1];
         if (call.rels[2] instanceof UnionRel) {
-            assert(nTopUnionInputs == 2);
+            assert (nTopUnionInputs == 2);
             unionInputs[0] = topUnionRel.getInput(0);
             System.arraycopy(
                 bottomUnionRel.getInputs(),
@@ -104,7 +107,7 @@ public class CombineUnionsRule
                 topUnionRel.getCluster(),
                 unionInputs,
                 true);
-        
+
         call.transformTo(newUnionRel);
     }
 }

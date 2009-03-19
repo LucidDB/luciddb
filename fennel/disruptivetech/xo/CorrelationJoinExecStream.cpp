@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,16 +34,16 @@ void CorrelationJoinExecStream::prepare(
     CorrelationJoinExecStreamParams const &params)
 {
     assert(inAccessors.size() == 2);
-    
+
     pLeftBufAccessor = inAccessors[0];
     assert(pLeftBufAccessor);
-    
+
     pRightBufAccessor = inAccessors[1];
     assert(pRightBufAccessor);
-    
+
     TupleDescriptor const &leftDesc = pLeftBufAccessor->getTupleDesc();
     TupleDescriptor const &rightDesc = pRightBufAccessor->getTupleDesc();
-    
+
     TupleDescriptor outputDesc;
     outputDesc.insert(outputDesc.end(),leftDesc.begin(),leftDesc.end());
     outputDesc.insert(outputDesc.end(),rightDesc.begin(),rightDesc.end());
@@ -51,12 +51,12 @@ void CorrelationJoinExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     nLeftAttributes = leftDesc.size();
-    correlations.assign(params.correlations.begin(), 
+    correlations.assign(params.correlations.begin(),
                         params.correlations.end());
-    //correlations.resize(correlations.size()); 
+    //correlations.resize(correlations.size());
     //assert(correlations.size() > 0);
     assert(correlations.size() <= nLeftAttributes);
-    
+
     ConfluenceExecStream::prepare(params);
 }
 
@@ -67,7 +67,7 @@ void CorrelationJoinExecStream::open(bool restart)
     if (!restart) {
         leftRowCount = 0;
         for (std::vector<Correlation>::iterator it = correlations.begin();
-             it != correlations.end(); ++it) 
+             it != correlations.end(); ++it)
         {
             pDynamicParamManager->createParam(
                 it->dynamicParamId,
@@ -76,10 +76,10 @@ void CorrelationJoinExecStream::open(bool restart)
             // Make right-hand child and its descendants (upstream XOs)
             // non-runnable. We don't want them to execute until we have
             // read a row from the left and called open(restart=true).
-            const std::vector<ExecStreamId> &readerStreamIds = 
+            const std::vector<ExecStreamId> &readerStreamIds =
                 pGraph->getDynamicParamReaders(it->dynamicParamId);
-            for (std::vector<ExecStreamId>::const_iterator it2 = 
-                     readerStreamIds.begin(); 
+            for (std::vector<ExecStreamId>::const_iterator it2 =
+                     readerStreamIds.begin();
                  it2 != readerStreamIds.end(); ++it2)
             {
                 pGraph->getScheduler()->setRunnable(
@@ -103,7 +103,7 @@ ExecStreamResult CorrelationJoinExecStream::execute(
 {
     // Note: implementation similar to CartesianJoinExecStream.
     uint nTuplesProduced = 0;
-    
+
     for (;;) {
         if (!pLeftBufAccessor->isTupleConsumptionPending()) {
             if (pLeftBufAccessor->getState() == EXECBUF_EOS) {
@@ -127,16 +127,16 @@ ExecStreamResult CorrelationJoinExecStream::execute(
             // make runnable
             if (++leftRowCount == 1) {
                 for (std::vector<Correlation>::iterator it = correlations.begin();
-                     it != correlations.end(); ++it) 
+                     it != correlations.end(); ++it)
                 {
                     // Make the right-hand descendant that uses the
                     // variable runnable. Note that we made it
                     // non-runnable in open so that it didn't read an
                     // uninitialized variable.
-                    const std::vector<ExecStreamId> &readerStreamIds = 
+                    const std::vector<ExecStreamId> &readerStreamIds =
                         pGraph->getDynamicParamReaders(it->dynamicParamId);
-                    for (std::vector<ExecStreamId>::const_iterator it2 = 
-                             readerStreamIds.begin(); 
+                    for (std::vector<ExecStreamId>::const_iterator it2 =
+                             readerStreamIds.begin();
                          it2 != readerStreamIds.end(); ++it2)
                     {
                         pGraph->getScheduler()->setRunnable(
@@ -145,7 +145,7 @@ ExecStreamResult CorrelationJoinExecStream::execute(
                 }
             }
         }
-        for (;;) { 
+        for (;;) {
             if (!pRightBufAccessor->isTupleConsumptionPending()) {
                 if (pRightBufAccessor->getState() == EXECBUF_EOS) {
                     pLeftBufAccessor->consumeTuple();
@@ -164,9 +164,9 @@ ExecStreamResult CorrelationJoinExecStream::execute(
             } else {
                 return EXECRC_BUF_OVERFLOW;
             }
-            
+
             pRightBufAccessor->consumeTuple();
-            
+
             if (nTuplesProduced >= quantum.nTuplesMax) {
                 return EXECRC_QUANTUM_EXPIRED;
             }

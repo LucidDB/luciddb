@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -49,7 +49,7 @@ class Backtrace
     void** addrbuf;                     // [bufsize]
 
 #ifndef __MINGW32__
-    struct LibraryInfo 
+    struct LibraryInfo
     {
         ElfW(Addr) baseAddress;
         char const *pImageName;
@@ -114,8 +114,11 @@ class AutoBacktrace {
     static struct sigaction nextAction[BACKTRACE_SIG_MAX];
 #endif
 
-    AutoBacktrace() {}                  // hide constructor
-    
+    // hide constructor
+    AutoBacktrace()
+    {
+    }
+
     static void installSignal(int signum);
 public:
     /**
@@ -140,7 +143,7 @@ public:
      * @param outStream receives backtrace if signal is handled
      */
     static void setOutputStream(std::ostream &outStream);
-    
+
     /**
      * Unsets a target stream for backtrace.
      */
@@ -158,7 +161,7 @@ public:
 };
 
 FENNEL_END_NAMESPACE
-    
+
 #endif
-    
+
 // End Backtrace.h

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Portions Copyright (C) 2006-2007 John V. Sichi
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Portions Copyright (C) 2006-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -108,8 +108,7 @@ public final class RemoveDistinctAggregateRule
 
         // Aggregate the original relation, including any non-distinct aggs.
 
-        List<AggregateCall> newAggCallList =
-            new ArrayList<AggregateCall>();
+        List<AggregateCall> newAggCallList = new ArrayList<AggregateCall>();
         int i = -1;
         for (AggregateCall aggCall : aggregate.aggCalls) {
             ++i;
@@ -202,8 +201,8 @@ public final class RemoveDistinctAggregateRule
      * @param aggregate Original aggregate
      * @param left Child relational expression (either the original aggregate,
      * the output from the previous call to this method, or null in the case
-     * where we're converting the first distinct aggregate in a query with
-     * no non-distinct aggregates)
+     * where we're converting the first distinct aggregate in a query with no
+     * non-distinct aggregates)
      * @param argList Arguments to the distinct aggregate function
      * @param refs Array of expressions which will be the projected by the
      * result of this rule. Those relating to this arg list will be modified
@@ -225,53 +224,31 @@ public final class RemoveDistinctAggregateRule
             leftFields = left.getRowType().getFields();
         }
 
-        // AggregateRel(
-        //   child,
-        //   {COUNT(DISTINCT 1), SUM(DISTINCT 1), SUM(2)})
+        // AggregateRel( child, {COUNT(DISTINCT 1), SUM(DISTINCT 1), SUM(2)})
         //
         // becomes
         //
-        // AggregateRel(
-        //   JoinRel(
-        //     child,
-        //     AggregateRel(
-        //       child,
-        //       < all columns >
-        //       {})
-        //     INNER,
-        //     <f2 = f5>))
+        // AggregateRel( JoinRel( child, AggregateRel( child, < all columns > {})
+        // INNER, <f2 = f5>))
         //
-        // E.g.
-        //   SELECT deptno, SUM(DISTINCT sal), COUNT(DISTINCT gender), MAX(age)
-        //   FROM Emps
-        //   GROUP BY deptno
+        // E.g. SELECT deptno, SUM(DISTINCT sal), COUNT(DISTINCT gender), MAX(age)
+        // FROM Emps GROUP BY deptno
         //
         // becomes
         //
-        //   SELECT e.deptno, adsal.sum_sal, adgender.count_gender, e.max_age
-        //   FROM (select deptno, MAX(age) as max_age FROM Emps GROUP BY deptno)
-        //     AS e
-        //   JOIN ( 
-        //     SELECT deptno, COUNT(gender) AS count_gender
-        //     FROM (
-        //       SELECT DISTINCT deptno, gender
-        //       FROM Emps) AS dgender
-        //     GROUP BY deptno) AS adgender
-        //   ON e.deptno = adgender.deptno
-        //   JOIN (
-        //     SELECT deptno, SUM(sal) AS sum_sal
-        //     FROM (
-        //       SELECT DISTINCT deptno, sal
-        //       FROM Emps) AS dsal
-        //     GROUP BY deptno) AS adsal
-        //   ON e.deptno = adsal.deptno
-        //   GROUP BY e.deptno
+        // SELECT e.deptno, adsal.sum_sal, adgender.count_gender, e.max_age FROM
+        // (select deptno, MAX(age) as max_age FROM Emps GROUP BY deptno) AS e
+        // JOIN ( SELECT deptno, COUNT(gender) AS count_gender FROM ( SELECT
+        // DISTINCT deptno, gender FROM Emps) AS dgender GROUP BY deptno) AS
+        // adgender ON e.deptno = adgender.deptno JOIN ( SELECT deptno, SUM(sal)
+        // AS sum_sal FROM ( SELECT DISTINCT deptno, sal FROM Emps) AS dsal
+        // GROUP BY deptno) AS adsal ON e.deptno = adsal.deptno GROUP BY
+        // e.deptno
         //
-        // Note that if a query contains no non-distinct aggregates, then the
-        // very first join/group by is omitted.  In the example
-        // above, if MAX(age) is removed, then the subselect of "e" is not
-        // needed, and instead the two other group by's are joined to one
-        // another.
+        // Note that if a query contains no non-distinct aggregates, then the very
+        // first join/group by is omitted.  In the example above, if MAX(age) is
+        // removed, then the subselect of "e" is not needed, and instead the two
+        // other group by's are joined to one another.
 
         // Project the columns of the GROUP BY plus the arguments
         // to the agg function.
@@ -285,13 +262,13 @@ public final class RemoveDistinctAggregateRule
         //   "COUNT(DISTINCT e.sal)"
         // becomes
         //   "COUNT(distinct_e.sal)".
-        List<AggregateCall> aggCallList =
-            new ArrayList<AggregateCall>();
+        List<AggregateCall> aggCallList = new ArrayList<AggregateCall>();
         final List<AggregateCall> aggCalls = aggregate.getAggCallList();
 
         int i = groupCount - 1;
         for (AggregateCall aggCall : aggCalls) {
             ++i;
+
             // Ignore agg calls which are not distinct or have the wrong set
             // arguments. If we're rewriting aggs whose args are {sal}, we will
             // rewrite COUNT(DISTINCT sal) and SUM(DISTINCT sal) but ignore
@@ -343,7 +320,7 @@ public final class RemoveDistinctAggregateRule
         if (left == null) {
             return distinctAgg;
         }
-        
+
         // Create the join condition. It is of the form
         //  'left.f0 = right.f0 and left.f1 = right.f1 and ...'
         // where {f0, f1, ...} are the GROUP BY fields.

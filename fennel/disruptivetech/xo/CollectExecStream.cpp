@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,12 +34,12 @@ void CollectExecStream::prepare(CollectExecStreamParams const &params)
     ConduitExecStream::prepare(params);
     FENNEL_TRACE(
         TRACE_FINER,
-        "collect xo input TupleDescriptor = " 
+        "collect xo input TupleDescriptor = "
         << pInAccessor->getTupleDesc());
 
     FENNEL_TRACE(
         TRACE_FINER,
-        "collect xo output TupleDescriptor = " 
+        "collect xo output TupleDescriptor = "
         << pOutAccessor->getTupleDesc());
 
     StandardTypeDescriptorOrdinal ordinal =
@@ -49,11 +49,11 @@ void CollectExecStream::prepare(CollectExecStreamParams const &params)
     assert(1 == pOutAccessor->getTupleDesc().size());
 }
 
-void CollectExecStream::open(bool restart) 
+void CollectExecStream::open(bool restart)
 {
     ConduitExecStream::open(restart);
-    outputTupleData.compute(pOutAccessor->getTupleDesc());    
-    inputTupleData.compute(pInAccessor->getTupleDesc());    
+    outputTupleData.compute(pOutAccessor->getTupleDesc());
+    inputTupleData.compute(pInAccessor->getTupleDesc());
 
     uint cbOutMaxsize = pOutAccessor->getConsumptionTupleAccessor().getMaxByteCount();
     pOutputBuffer.reset(new FixedBuffer[cbOutMaxsize]);
@@ -74,23 +74,23 @@ ExecStreamResult CollectExecStream::execute(ExecStreamQuantum const &quantum)
         outputTupleData[0].cbData = bytesWritten;
         if (!pOutAccessor->produceTuple(outputTupleData)) {
             return EXECRC_BUF_OVERFLOW;
-        } 
+        }
         alreadyWrittenToOutput = true;
-    } 
+    }
 
     ExecStreamResult rc = precheckConduitBuffers();
     if (EXECRC_YIELD != rc) {
         return rc;
     }
-        
+
     for (uint nTuples = 0; nTuples < quantum.nTuplesMax; ++nTuples) {
         assert(!pInAccessor->isTupleConsumptionPending());
         if (!pInAccessor->demandData()) {
             return EXECRC_BUF_UNDERFLOW;
         }
-  
+
         pInAccessor->unmarshalTuple(inputTupleData);
-          
+
 #if 0
     TupleDescriptor statusDesc = pInAccessor->getTupleDesc();
     TuplePrinter tuplePrinter;
@@ -99,8 +99,8 @@ ExecStreamResult CollectExecStream::execute(ExecStreamQuantum const &quantum)
 #endif
 
         // write one input tuple to the staging output buffer
-        memcpy(pOutputBuffer.get() + bytesWritten, 
-               pInAccessor->getConsumptionStart(), 
+        memcpy(pOutputBuffer.get() + bytesWritten,
+               pInAccessor->getConsumptionStart(),
                pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount());
         bytesWritten += pInAccessor->getConsumptionTupleAccessor().getCurrentByteCount();
         pInAccessor->consumeTuple();

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,14 +43,13 @@ CollectExecStreamTestSuite::CollectExecStreamTestSuite(bool addAllTests)
 
     descAttrInt64 = TupleAttributeDescriptor(stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     descInt64.push_back(descAttrInt64);
-    
+
     descAttrVarbinary32 = TupleAttributeDescriptor(stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),true,32);
     descVarbinary32.push_back(descAttrVarbinary32);
 }
 
 void CollectExecStreamTestSuite::testCollectInts()
 {
-
     uint rows = 2;
     MockProducerExecStreamParams mockParams;
     mockParams.outputTupleDesc.push_back(descAttrInt64);
@@ -66,7 +65,7 @@ void CollectExecStreamTestSuite::testCollectInts()
 
     ExecStreamEmbryo collectStreamEmbryo;
     collectStreamEmbryo.init(new CollectExecStream(), collectParams);
-    collectStreamEmbryo.getStream()->setName("CollectExecStream"); 
+    collectStreamEmbryo.getStream()->setName("CollectExecStream");
 
 
     // setup the expected result
@@ -81,13 +80,14 @@ void CollectExecStreamTestSuite::testCollectInts()
 
     uint64_t two = 2;
     TupleData twoData(descInt64);
-    twoData[0].pData = (PConstBuffer) &two; 
+    twoData[0].pData = (PConstBuffer) &two;
     TupleAccessor twoAccessor;
     twoAccessor.compute(descInt64);
-    assert((oneAccessor.getMaxByteCount() + twoAccessor.getMaxByteCount() ) <= 
+    assert((oneAccessor.getMaxByteCount() + twoAccessor.getMaxByteCount()) <=
            sizeof(intArrayBuff));
-    twoAccessor.marshal(twoData, 
-                        ((PBuffer)intArrayBuff)+oneAccessor.getMaxByteCount());
+    twoAccessor.marshal(
+        twoData,
+        ((PBuffer)intArrayBuff) + oneAccessor.getMaxByteCount());
 
     uint8_t varbinaryBuff[1000];
     TupleData binData(descVarbinary32);
@@ -131,11 +131,11 @@ void CollectExecStreamTestSuite::testCollectUncollect()
 
     ExecStreamEmbryo collectStreamEmbryo;
     collectStreamEmbryo.init(new CollectExecStream(), collectParams);
-    collectStreamEmbryo.getStream()->setName("CollectExecStream"); 
+    collectStreamEmbryo.getStream()->setName("CollectExecStream");
 
     ExecStreamEmbryo uncollectStreamEmbryo;
     uncollectStreamEmbryo.init(new UncollectExecStream(), uncollectParams);
-    uncollectStreamEmbryo.getStream()->setName("UncollectExecStream"); 
+    uncollectStreamEmbryo.getStream()->setName("UncollectExecStream");
 
 
     std::vector<ExecStreamEmbryo> transforms;
@@ -184,19 +184,19 @@ void CollectExecStreamTestSuite::testCollectCollectUncollectUncollect() {
 
     ExecStreamEmbryo collectStreamEmbryo1;
     collectStreamEmbryo1.init(new CollectExecStream(), collectParams1);
-    collectStreamEmbryo1.getStream()->setName("CollectExecStream1"); 
+    collectStreamEmbryo1.getStream()->setName("CollectExecStream1");
 
     ExecStreamEmbryo collectStreamEmbryo2;
     collectStreamEmbryo2.init(new CollectExecStream(), collectParams2);
-    collectStreamEmbryo2.getStream()->setName("CollectExecStream2"); 
+    collectStreamEmbryo2.getStream()->setName("CollectExecStream2");
 
     ExecStreamEmbryo uncollectStreamEmbryo1;
     uncollectStreamEmbryo1.init(new UncollectExecStream(), uncollectParams1);
-    uncollectStreamEmbryo1.getStream()->setName("UncollectExecStream1"); 
+    uncollectStreamEmbryo1.getStream()->setName("UncollectExecStream1");
 
     ExecStreamEmbryo uncollectStreamEmbryo2;
     uncollectStreamEmbryo2.init(new UncollectExecStream(), uncollectParams2);
-    uncollectStreamEmbryo2.getStream()->setName("UncollectExecStream2"); 
+    uncollectStreamEmbryo2.getStream()->setName("UncollectExecStream2");
 
     std::vector<ExecStreamEmbryo> transforms;
     transforms.push_back(collectStreamEmbryo1);
@@ -210,3 +210,5 @@ void CollectExecStreamTestSuite::testCollectCollectUncollectUncollect() {
 
     verifyOutput(*pOutputStream, rows, rampExpectedGenerator);
 }
+
+// End CollectExecStreamTestSuite.cpp

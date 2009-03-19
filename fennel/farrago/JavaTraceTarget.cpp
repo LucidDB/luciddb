@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,12 +36,12 @@ JavaTraceTarget::JavaTraceTarget()
     jclass classNativeTrace = pEnv->FindClass(
         "net/sf/farrago/util/NativeTrace");
 
-    jmethodID methInstance = 
+    jmethodID methInstance =
         pEnv->GetStaticMethodID(
             classNativeTrace, "instance",
             "()Lnet/sf/farrago/util/NativeTrace;");
 
-    jobject javaTraceInit = 
+    jobject javaTraceInit =
         pEnv->CallStaticObjectMethod(classNativeTrace, methInstance);
 
     JniUtil::incrementHandleCount(JAVATRACETARGET_TYPE_STR, this);
@@ -58,8 +58,8 @@ JavaTraceTarget::JavaTraceTarget()
         "(Ljava/lang/String;)I");
 }
 
-JavaTraceTarget::JavaTraceTarget(        
-    jobject javaTraceInit, jmethodID methTraceInit, 
+JavaTraceTarget::JavaTraceTarget(
+    jobject javaTraceInit, jmethodID methTraceInit,
     jmethodID methGetSourceTraceLevelInit)
 {
     JniEnvAutoRef pEnv;
@@ -91,7 +91,7 @@ void JavaTraceTarget::notifyTrace(
 
     // NOTE jvs 21-Aug-2007:  use ref reapers here since this
     // may be called over and over before control returns to Java
-    
+
     jstring javaSource = pEnv->NewStringUTF(source.c_str());
     JniLocalRefReaper javaSourceReaper(pEnv, javaSource);
     jstring javaMessage = pEnv->NewStringUTF(message.c_str());

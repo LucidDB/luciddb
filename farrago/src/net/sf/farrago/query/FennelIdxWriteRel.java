@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -58,8 +58,8 @@ class FennelIdxWriteRel
      * @param child input the provides the records to be written to the index
      * @param discardDuplicates whether duplicates should be discard during
      * inserts
-     * @param monotonicInserts whether the records to be written are provided
-     * in increasing key order and therefore can be written to the index in
+     * @param monotonicInserts whether the records to be written are provided in
+     * increasing key order and therefore can be written to the index in
      * monotonic mode
      * @param rootPageIdParamId dynamic parameter id corresponding to the
      * temporary index that will be written
@@ -100,7 +100,7 @@ class FennelIdxWriteRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dInputRows =  RelMetadataQuery.getRowCount(getChild());
+        double dInputRows = RelMetadataQuery.getRowCount(getChild());
 
         // CPU cost is proportional to number of columns projected
         // I/O cost is proportional to pages of index scanned

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -95,8 +95,8 @@ public class LoptJoinTree
 
     /**
      * Associates the factor ids with a jointree given the factors corresponding
-     * to the left and right subtrees of the join.  Also indicates whether
-     * the join is a removable self-join.
+     * to the left and right subtrees of the join. Also indicates whether the
+     * join is a removable self-join.
      *
      * @param joinTree RelNodes corresponding to the join tree
      * @param leftFactorTree tree of the factor ids for left subtree
@@ -146,7 +146,7 @@ public class LoptJoinTree
     {
         factorTree.getTreeOrder(treeOrder);
     }
-    
+
     public boolean isRemovableSelfJoin()
     {
         return removableSelfJoin;
@@ -155,9 +155,8 @@ public class LoptJoinTree
     //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Simple binary tree class that stores an id in the leaf nodes and
-     * keeps track of the parent LoptJoinTree object associated with the
-     * binary tree.
+     * Simple binary tree class that stores an id in the leaf nodes and keeps
+     * track of the parent LoptJoinTree object associated with the binary tree.
      */
     protected class BinaryTree
     {
@@ -193,18 +192,18 @@ public class LoptJoinTree
         {
             return right;
         }
-        
+
         public LoptJoinTree getParent()
         {
             return parent;
         }
-        
+
         /**
          * @return the id associated with a leaf node in a binary tree
          */
         public int getId()
         {
-            assert(left == null && right == null);
+            assert ((left == null) && (right == null));
             return id;
         }
 

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,8 +25,8 @@ package org.eigenbase.util;
 import java.nio.*;
 import java.nio.charset.*;
 
-import org.eigenbase.sql.*;
 import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
 
 
 /**
@@ -59,8 +59,8 @@ public class NlsString
      * @throws IllegalCharsetNameException If the given charset name is illegal
      * @throws UnsupportedCharsetException If no support for the named charset
      * is available in this instance of the Java virtual machine
-     * @throws RuntimeException If the given value cannot be
-     * represented in the given charset
+     * @throws RuntimeException If the given value cannot be represented in the
+     * given charset
      *
      * @pre theString != null
      */
@@ -81,12 +81,14 @@ public class NlsString
             }
             this.charset = Charset.forName(javaCharsetName);
             CharsetEncoder encoder = charset.newEncoder();
+
             // dry run to see if encoding hits any problems
             try {
                 encoder.encode(CharBuffer.wrap(value));
             } catch (CharacterCodingException ex) {
                 throw EigenbaseResource.instance().CharsetEncoding.ex(
-                    value, javaCharsetName);
+                    value,
+                    javaCharsetName);
             }
         } else {
             this.charsetName = null;

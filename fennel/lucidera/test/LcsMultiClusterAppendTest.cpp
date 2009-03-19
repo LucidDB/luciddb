@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,12 +54,12 @@ protected:
     TupleAttributeDescriptor attrDesc_bitmap;
 
     vector<boost::shared_ptr<BTreeDescriptor> > bTreeClusters;
-    
+
     /**
      * Loads nClusters clusters, each cluster containing nCols columns and
      * nRows rows.
      *
-     * Column values are generated using a duplicate column generator, 
+     * Column values are generated using a duplicate column generator,
      * where the number duplicate values in a column is equal to the column
      * number, assuming 1-based column numbers.  I.e.,
      *  column1 - 0, 1, 2, ...
@@ -102,8 +102,9 @@ void LcsMultiClusterAppendTest::testLoad()
     resetExecStreamTest();
 
     // project all columns
-    for (uint i = 0; i < nClusters * nCols; i++)
+    for (uint i = 0; i < nClusters * nCols; i++) {
         proj.push_back(i);
+    }
     scanCols(nRows, nCols, nClusters, proj);
 }
 
@@ -111,7 +112,7 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
                                              uint nClusters)
 {
     // setup input stream
-    
+
     MockProducerExecStreamParams mockParams;
     for (uint i = 0; i < nCols * nClusters; i++) {
         mockParams.outputTupleDesc.push_back(attrDesc_int64);
@@ -140,16 +141,15 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
     splitterStreamEmbryo.getStream()->setName("SplitterExecStream");
 
     // setup loader streams
-    
+
     vector<ExecStreamEmbryo> lcsAppendEmbryos;
     for (uint i = 0; i < nClusters; i++) {
-    
         LcsClusterAppendExecStreamParams lcsAppendParams;
         lcsAppendParams.scratchAccessor =
             pSegmentFactory->newScratchSegment(pCache, 10);
         lcsAppendParams.pCacheAccessor = pCache;
         lcsAppendParams.pSegment = pRandomSegment;
-    
+
         // initialize the btree parameter portion of lcsAppendParams
         // BTree tuple desc only has one column
         (lcsAppendParams.tupleDesc).push_back(attrDesc_int64);
@@ -166,7 +166,7 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
         }
         lcsAppendParams.pRootMap = 0;
         lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
-    
+
         // setup temporary btree descriptor to get an empty page to start
         // the btree
 
@@ -177,17 +177,17 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
         pBTreeDesc->segmentAccessor.pCacheAccessor = pCache;
         pBTreeDesc->tupleDescriptor = lcsAppendParams.tupleDesc;
         pBTreeDesc->keyProjection = lcsAppendParams.keyProj;
-        pBTreeDesc->rootPageId = NULL_PAGE_ID; 
+        pBTreeDesc->rootPageId = NULL_PAGE_ID;
         lcsAppendParams.pageOwnerId = pBTreeDesc->pageOwnerId;
         lcsAppendParams.segmentId = pBTreeDesc->segmentId;
-    
+
         BTreeBuilder builder(*pBTreeDesc, pRandomSegment);
         builder.createEmptyRoot();
         lcsAppendParams.rootPageId = pBTreeDesc->rootPageId =
             builder.getRootPageId();
 
-        // Now use the above initialized parameter 
-     
+        // Now use the above initialized parameter
+
         LcsClusterAppendExecStream *lcsStream =
             new LcsClusterAppendExecStream();
 
@@ -200,7 +200,7 @@ void LcsMultiClusterAppendTest::loadClusters(uint nRows, uint nCols,
     }
 
     // setup barrier stream
-    
+
     BarrierExecStreamParams barrierParams;
     barrierParams.outputTupleDesc.push_back(attrDesc_int64);
     barrierParams.returnMode = BARRIER_RET_ANY_INPUT;
@@ -226,7 +226,7 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
 {
     // setup parameters into scan
     //  nClusters cluster with nCols columns each
-    
+
     LcsRowScanExecStreamParams scanParams;
     scanParams.hasExtraFilter = false;
     scanParams.isFullScan = true;
@@ -234,8 +234,9 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
     for (uint i = 0; i < nClusters; i++) {
         struct LcsClusterScanDef clusterScanDef;
 
-        for (uint j = 0; j < nCols; j++)
+        for (uint j = 0; j < nCols; j++) {
             clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+        }
 
         clusterScanDef.pSegment = bTreeClusters[i]->segmentAccessor.pSegment;
         clusterScanDef.pCacheAccessor =
@@ -296,20 +297,21 @@ void LcsMultiClusterAppendTest::scanCols(uint nRows, uint nCols,
 }
 
 void LcsMultiClusterAppendTest::testCaseSetUp()
-{    
+{
     ExecStreamUnitTestBase::testCaseSetUp();
 
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     attrDesc_bitmap = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
-        true, pRandomSegment->getUsablePageSize()/8);
+        true, pRandomSegment->getUsablePageSize() / 8);
 }
 
 void LcsMultiClusterAppendTest::testCaseTearDown()
 {
-    for (uint i = 0; i < bTreeClusters.size(); i++)
+    for (uint i = 0; i < bTreeClusters.size(); i++) {
         bTreeClusters[i]->segmentAccessor.reset();
+    }
     ExecStreamUnitTestBase::testCaseTearDown();
 }
 

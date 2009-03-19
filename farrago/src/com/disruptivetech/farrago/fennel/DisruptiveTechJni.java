@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,7 +24,7 @@ import org.eigenbase.util.*;
 
 
 /**
- * JNI interface for Disruptive Tech extensions to Fennel which are used by
+ * JNI interface for SQLstream, Inc. extensions to Fennel which are used by
  * Farrago.
  *
  * @author John V. Sichi

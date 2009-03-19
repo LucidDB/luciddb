@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -87,7 +87,7 @@ void LogicalRecoveryLog::recover(
             // logged?  If so, need to prevent it or detect it.
             pTxnInputStream = pInputStream;
         }
-        switch(txnMemento.event) {
+        switch (txnMemento.event) {
         case LogicalTxnEventMemento::EVENT_COMMIT:
             if (pTxnEntry == checkpointTxnMap.end()) {
                 redoTxn(txnMemento,NULL,pTxnInputStream);

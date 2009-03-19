@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,7 +27,7 @@ FENNEL_BEGIN_NAMESPACE
 
 class TupleDatum;
 class TupleAttributeDescriptor;
-    
+
 /**
  * UnalignedAttributeAccessor is similar to AttributeAccessor, except
  * that it provides a by-value access model intended for storing
@@ -121,7 +121,7 @@ class UnalignedAttributeAccessor
 
 public:
     explicit UnalignedAttributeAccessor();
-    
+
     /**
      * Creates an accessor for the given attribute descriptor.
      *
@@ -145,7 +145,7 @@ public:
     /**
      * Stores a value by itself, including length information, encoding it
      * into the buffer passed in.
-     * 
+     *
      * @par
      * The caller needs to allocate a buffer of sufficient size. To do this,
      * use the getMaxByteCount() method.
@@ -156,7 +156,7 @@ public:
     void storeValue(
         TupleDatum const &datum,
         PBuffer pDataWithLen) const;
-    
+
     /**
      * Loads a value from a buffer containing data encoded via
      * storeValue.

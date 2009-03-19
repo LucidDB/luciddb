@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -52,7 +52,7 @@ FlatFileRowDescriptor::FlatFileRowDescriptor() :
     bounded = true;
 }
 
-void FlatFileRowDescriptor::setUnbounded() 
+void FlatFileRowDescriptor::setUnbounded()
 {
     bounded = false;
 }
@@ -91,8 +91,8 @@ FlatFileParser::FlatFileParser(
 }
 
 void FlatFileParser::scanRow(
-    const char *buffer, 
-    int size, 
+    const char *buffer,
+    int size,
     const FlatFileRowDescriptor &columns,
     FlatFileRowParseResult &result)
 {
@@ -170,14 +170,16 @@ void FlatFileParser::scanRow(
             result.addColumn(offset, columnResult.size);
         }
         offset = columnResult.next - row;
-        if (done) break;
+        if (done) {
+            break;
+        }
     }
     result.current = const_cast<char *>(row);
     result.next = const_cast<char *>(
         scanRowEnd(
             columnResult.next,
-            buffer+size-columnResult.next,
-            rowDelim, 
+            buffer + size - columnResult.next,
+            rowDelim,
             result));
 }
 
@@ -201,7 +203,7 @@ const char *FlatFileParser::scanRowEnd(
     // if a row delimiter was not encountered while scanning the row,
     // search for the next row delimiter character
     if (!rowDelim) {
-        read = scanRowDelim(read, end-read, true);
+        read = scanRowDelim(read, end - read, true);
         if (read == end) {
             return read;
         }
@@ -209,14 +211,14 @@ const char *FlatFileParser::scanRowEnd(
     result.nRowDelimsRead++;
 
     // search for the first non- row delimiter character
-    read = scanRowDelim(read, end-read, false);
+    read = scanRowDelim(read, end - read, false);
     return read;
 }
 
 const char *FlatFileParser::scanRowDelim(
-    const char *buffer, 
-    int size, 
-    bool search) 
+    const char *buffer,
+    int size,
+    bool search)
 {
     const char *read = buffer;
     const char *end = buffer + size;
@@ -239,7 +241,7 @@ bool FlatFileParser::isRowDelim(char c)
 void FlatFileParser::scanColumn(
     const char *buffer,
     uint size,
-    uint maxLength, 
+    uint maxLength,
     FlatFileColumnParseResult &result)
 {
     if (fixed) {
@@ -304,7 +306,7 @@ void FlatFileParser::scanColumn(
             read++;
         }
     }
-    
+
     uint resultSize = read - buffer;
     result.setResult(type, const_cast<char *>(buffer), resultSize);
 }
@@ -312,7 +314,7 @@ void FlatFileParser::scanColumn(
 void FlatFileParser::scanFixedColumn(
     const char *buffer,
     uint size,
-    uint maxLength, 
+    uint maxLength,
     FlatFileColumnParseResult &result)
 {
     assert(buffer != NULL);
@@ -367,7 +369,7 @@ void FlatFileParser::stripQuoting(
 }
 
 uint FlatFileParser::stripQuoting(
-    char *buffer, uint sizeIn, bool untrimmed) 
+    char *buffer, uint sizeIn, bool untrimmed)
 {
     assert(buffer != NULL);
     if (sizeIn == 0) {
@@ -405,7 +407,7 @@ uint FlatFileParser::stripQuoting(
             *write++ = *read++;
         }
     }
-    return write-buffer;
+    return write - buffer;
 }
 
 uint FlatFileParser::trim(char *buffer, uint size)
@@ -429,7 +431,7 @@ uint FlatFileParser::trim(char *buffer, uint size)
     while (read < end) {
         *write++ = *read++;
     }
-    return write-buffer;
+    return write - buffer;
 }
 
 FENNEL_END_CPPFILE("$Id$");

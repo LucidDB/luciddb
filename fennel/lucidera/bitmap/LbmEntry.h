@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -82,7 +82,7 @@ class LbmEntry : public LbmSegment
      * size(current key) + size(LcsRid) + size(segDesc) + size(seg).
      * For a LbmEntry in construction, it will be the current storage size.
      * For a LbmEntry from an existing tuple, it will be the storage size of
-     * the tuple. 
+     * the tuple.
      */
     uint currentEntrySize;
 
@@ -104,12 +104,12 @@ class LbmEntry : public LbmSegment
 
     /**
      * Increment forward from pSegDescStart.
-     */ 
+     */
     PBuffer currSegDescByte;
 
     /**
      * Decrement backward from pBitmapSegStart.
-     */ 
+     */
     PBuffer currSegByte;
     uint currSegLength;
 
@@ -124,7 +124,7 @@ class LbmEntry : public LbmSegment
     /**
      * Test if a tuple contains a single bitmap.
      *
-     * @return true if the tuple contains a single bitmap. 
+     * @return true if the tuple contains a single bitmap.
      */
     inline bool isSingleBitmap() const;
 
@@ -161,7 +161,7 @@ class LbmEntry : public LbmSegment
      * segment descriptor byte).
      */
     bool setRIDNewSegment(LcsRid rid);
-    
+
     /**
      * reset segment related member fields.
      */
@@ -193,7 +193,7 @@ class LbmEntry : public LbmSegment
      * @param rid the new rid to be inserted into the next segment(or the next
      * LbmEntry if there is not enough space).
      *
-     * @return if the LbmEntry can encode the zero bits following the last 
+     * @return if the LbmEntry can encode the zero bits following the last
      * segment and the rid to be inserted.
      */
     bool closeCurrentSegment(LcsRid rid);
@@ -255,11 +255,11 @@ class LbmEntry : public LbmSegment
      *
      * @param [in] reservedSpace amount of space in reserve
      * @param [in] bitmapLength bitmap segment length to add descriptors for.
-     * 
+     *
      * @return true if the new descriptors can fit.
      */
     bool addSegDesc(uint reservedSpace, uint bitmapLength);
-    
+
     /**
      * Morph a singleton entry into a compressed bitmap entry.
      */
@@ -441,7 +441,7 @@ class LbmEntry : public LbmSegment
      * Determines the amount of space required to merge an input tuple
      *
      * @param [in] inputTuple the input tuple
-     * 
+     *
      * @return the amount of space required for the merge
      */
     uint getMergeSpaceRequired(TupleData const &inputTuple);
@@ -465,7 +465,7 @@ class LbmEntry : public LbmSegment
      *
      * @param inputTuple tuple in which a LbmEntry is stored.
      *
-     * @return true if the tuple contains a single bitmap. 
+     * @return true if the tuple contains a single bitmap.
      */
     inline static bool isSingleBitmap(TupleData const &inputTuple);
 
@@ -510,7 +510,7 @@ class LbmEntry : public LbmSegment
     /**
      * Print a single bitmap segment as RIDs.
      */
-    static string dumpBitmapRID(PBuffer seg, uint segBytes, 
+    static string dumpBitmapRID(PBuffer seg, uint segBytes,
                                 string prefix, LcsRid srid);
 
     /**
@@ -578,14 +578,14 @@ public:
      *
      */
     bool setRID(LcsRid rid);
-    
+
     /**
      * @return -1 if this.entryTuple <  inputEntry.entryTuple,
      *          0 if this.entryTuple == inputEntry.entryTuple,
      *          1 if this.entryTuple > inputEntry.entryTuple.
-     * 
+     *
      */
-    int compareEntry(TupleData const &inputTuple, 
+    int compareEntry(TupleData const &inputTuple,
         TupleDescriptor const &tupleDesc) const;
 
     /**
@@ -595,7 +595,7 @@ public:
      *
      * @param [in, out] inputTuple the input tuple
      *
-     * @return false if merged entry can not fit into the maximum entry size.  
+     * @return false if merged entry can not fit into the maximum entry size.
      *
      */
     bool mergeEntry(TupleData &inputTuple);
@@ -640,9 +640,9 @@ public:
     /**
      * Determines if a specified rid is within the range of the current
      * bitmap entry being constructed.
-     * 
+     *
      * @param rid the rid
-     * 
+     *
      * @return true if within current rid range
      */
     bool inRange(LcsRid rid);
@@ -658,7 +658,7 @@ public:
      * @param [in] printRID true if want to print out the RIDs rather than
      * bitmaps
      */
-    static string toString(TupleData const &inputTuple, bool printRID=false);
+    static string toString(TupleData const &inputTuple, bool printRID = false);
 
     /**
      * Return the min and the max entry size, based on index tuple descriptor
@@ -682,7 +682,7 @@ public:
      */
     static void generateRIDs(
         TupleData const &inputTuple, vector<LcsRid> &ridValues);
-    
+
     /**
      * Returns the ideal scratch buffer size to provide when initializing
      * an instance of LbmEntry. Providing a buffer of the appropriate size
@@ -707,7 +707,7 @@ public:
      *
      * @param inputTuple tuple in which a LbmEntry is stored.
      *
-     * @return true if the tuple is a singleton. 
+     * @return true if the tuple is a singleton.
      */
     inline static bool isSingleton(TupleData const &inputTuple);
 
@@ -731,8 +731,8 @@ public:
 
 inline bool LbmEntry::isSingleton(TupleData const &inputTuple)
 {
-    return (inputTuple[inputTuple.size()-2].isNull() &&
-        inputTuple[inputTuple.size()-1].isNull());
+    return (inputTuple[inputTuple.size() - 2].isNull() &&
+        inputTuple[inputTuple.size() - 1].isNull());
 }
 
 inline LcsRid LbmEntry::getStartRid(
@@ -749,8 +749,8 @@ inline bool LbmEntry::isSingleton() const
 
 inline bool LbmEntry::isSingleBitmap(TupleData const &inputTuple)
 {
-    return (inputTuple[inputTuple.size()-2].isNull() &&
-        !inputTuple[inputTuple.size()-1].isNull());
+    return (inputTuple[inputTuple.size() - 2].isNull() &&
+        !inputTuple[inputTuple.size() - 1].isNull());
 }
 
 

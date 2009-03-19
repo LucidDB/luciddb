@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -159,28 +159,21 @@ public abstract class AbstractRelNode
      * relational expression. The other relational expression must be the same
      * type as this.
      *
-     * <p>The typical use of this method is in the implementation of a
-     * {@link #clone()} method:
+     * <p>The typical use of this method is in the implementation of a {@link
+     * #clone()} method:
      *
-     * <blockquote><code>
-     * class MyRel {
-     *     public MyRel clone() {
-     *         return new MyRel(
-     *             getCluster(),
-     *             getChild().clone(),
-     *             fieldX.clone(),
-     *             fieldY.clone())
-     *         .inheritTraitsFrom(this);
-     *     }
-     * }</code></blockquote>
+     * <blockquote><code>class MyRel { public MyRel clone() { return new MyRel(
+     * getCluster(), getChild().clone(), fieldX.clone(), fieldY.clone())
+     * .inheritTraitsFrom(this); } }</code></blockquote>
      *
-     * <p>To enable calls to be chained in this way, this method returns
-     * <code>this</code> as a convenience.
+     * <p>To enable calls to be chained in this way, this method returns <code>
+     * this</code> as a convenience.
      *
      * @param rel Relational expression whose traits to copy
+     *
      * @return This relational expression
      */
-    @SuppressWarnings({"unchecked"})
+    @SuppressWarnings({ "unchecked" })
     public <T extends AbstractRelNode> T inheritTraitsFrom(T rel)
     {
         traits = rel.cloneTraits();

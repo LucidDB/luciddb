@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -52,9 +52,11 @@ import org.eigenbase.util14.*;
  * @since May 5, 2004
  */
 public abstract class SqlDateTimeWithoutTZ
-    implements AssignableValue, SpecialDataValue
+    implements AssignableValue,
+        SpecialDataValue
 {
-    // REVIEW mb 28-Nov-08 Why not implement NullableValue, since its methods are defined below?
+    // REVIEW mb 28-Nov-08 Why not implement NullableValue, since its methods
+    // are defined below?
 
     //~ Static fields/initializers ---------------------------------------------
 

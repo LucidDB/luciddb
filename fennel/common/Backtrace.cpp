@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,8 +43,8 @@ Backtrace::~Backtrace()
     }
 }
 
-Backtrace::Backtrace(size_t maxdepth) 
-    :ownbuf(true), bufsize(maxdepth + 1)
+Backtrace::Backtrace(size_t maxdepth)
+    : ownbuf(true), bufsize(maxdepth + 1)
 {
 #ifndef __MINGW32__
     addrbuf = new void * [bufsize];
@@ -53,7 +53,7 @@ Backtrace::Backtrace(size_t maxdepth)
 }
 
 Backtrace::Backtrace(size_t bufsize, void** buffer)
-    :ownbuf(false), bufsize(bufsize)
+    : ownbuf(false), bufsize(bufsize)
 {
 #ifndef __MINGW32__
     addrbuf = buffer;
@@ -69,7 +69,7 @@ void Backtrace::print(int fd) const
 #ifndef __MINGW32__
     // skip 1st stack frame (the Backtrace constructor)
     if (depth > 1) {
-        backtrace_symbols_fd(addrbuf+1, depth-1, fd);
+        backtrace_symbols_fd(addrbuf + 1, depth - 1, fd);
     }
 #endif
 }
@@ -101,7 +101,7 @@ ostream& Backtrace::print(ostream& os) const
         for (int i = 1; i < depth; i++) {
             // Attempt to demangle C++ function names.
             // Input is of the form "imagename(mangledname+offset) [0xaddr]"
-            
+
             char *pSymbol = syms[i];
             char *pLeftParen = strchr(pSymbol, '(');
             char *pPlus = strchr(pSymbol, '+');
@@ -114,7 +114,7 @@ ostream& Backtrace::print(ostream& os) const
             if (pLeftParen && (pLeftParen[1] != '_')) {
                 pLeftParen = NULL;
             }
-            
+
             if (!pLeftParen || !pPlus || (pLeftParen > pPlus)
                 || !pLeftBracket || !pRightBracket
                 || (pLeftBracket > pRightBracket)
@@ -133,7 +133,7 @@ ostream& Backtrace::print(ostream& os) const
             libInfo.baseAddress = 0;
             libInfo.pImageName = pSymbol;
             dl_iterate_phdr(lookupLibraryBase, &libInfo);
-            
+
             // dump everything up to lparen
             os << pSymbol << '(';
 
@@ -248,7 +248,7 @@ void AutoBacktrace::install(bool includeSegFault)
     if (includeSegFault) {
         installSignal(SIGSEGV);
     }
-    
+
     installSignal(SIGBUS);
 #endif
 }

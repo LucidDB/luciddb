@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -53,7 +53,7 @@ class SegPageIter
      * up
      */
     uint prefetchThrottleRate;
-    
+
     /**
      * Current slot in the prefetchQueue that needs to be populated
      */
@@ -80,7 +80,7 @@ protected:
      * Accessor for the Segment containing the pages to be visited.
      */
     SegmentAccessor segmentAccessor;
-    
+
     /**
      * PageId at which to stop iteration.
      */
@@ -125,7 +125,7 @@ protected:
      * @param pageId the id of the page to be pre-fetched
      */
     void prefetchPage(PageId pageId);
-    
+
 public:
     /**
      * Constructor:  iterator starts out singular.

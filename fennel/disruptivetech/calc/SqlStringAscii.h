@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,10 +31,10 @@ FENNEL_BEGIN_NAMESPACE
 //!
 //! If either string is variable width, the result is variable
 //! width: per SQL99 Part 2 Section 6.27 Syntax Rule 3.a.i.
-//! If both strings are fixed width, the result is fixed width, 
+//! If both strings are fixed width, the result is fixed width,
 //! per item ii.
 //!
-//! Note that CHAR('1  ') || CHAR('2 ') = CHAR('1  2 ') and 
+//! Note that CHAR('1  ') || CHAR('2 ') = CHAR('1  2 ') and
 //! not CHAR('12   ').
 //!
 //! When called repeatedly to cat multiple strings together (e.g. A || B || C),
@@ -62,15 +62,15 @@ SqlStrCat_Ascii(char* dest,
 //!
 //! This is an optimization for creating a concatenated string from
 //! two other strings, eliminating a separate string copy. The
-//! assumption is that this is the common case with concatenation. 
+//! assumption is that this is the common case with concatenation.
 //! Subsequent concatenations may occur with other form.
 //!
 //! If either string is variable width, the result is variable
 //! width: per SQL99 Part 2 Section 6.27 Syntax Rule 3.a.i.
-//! If both strings are fixed width, the result is fixed width, 
+//! If both strings are fixed width, the result is fixed width,
 //! item ii.
 //!
-//! Note: CHAR('1  ') || CHAR('2 ') is CHAR('1  2 ') and 
+//! Note: CHAR('1  ') || CHAR('2 ') is CHAR('1  2 ') and
 //! is not CHAR('12   ').
 //!
 //! When used with CHARs, ignore the return value, and set
@@ -154,11 +154,11 @@ SqlStrPos_Ascii(char const * const str,
                 char const * const find,
                 int findLenBytes);
 
-//! Substring by reference. Ascii. Returns VARCHAR. Accepts CHAR/VARCHAR. 
+//! Substring by reference. Ascii. Returns VARCHAR. Accepts CHAR/VARCHAR.
 //! Sets dest to start of of substring. Returns length of substring.
-//! 
+//!
 //! Note that subStart is 1-indexed, as per SQL99 spec.
-//! All substring parameters are handled as signed, as spec implies that they 
+//! All substring parameters are handled as signed, as spec implies that they
 //! could be negative. Some combinations of subStart and subLenBytes may throw an
 //! exception.
 //! Results in a VARCHAR.
@@ -191,7 +191,7 @@ SqlStrToUpper_Ascii(char* dest,
 //!
 //! See SQL99 Part 2 Section 6.18 General Rule 8.
 //! Results in a VARCHAR.
-int 
+int
 SqlStrTrim_Ascii(char* dest,
                  int destStorageBytes,
                  char const * const str,
@@ -208,7 +208,7 @@ SqlStrTrim_Ascii(char* dest,
 //! substring as this is irrelevant. If a program depends on the size
 //! of result not changing, and this instruction enforcing that
 //! invariant -- probably a bad practice anyway -- trouble could result.
-int 
+int
 SqlStrTrim_Ascii(char const ** result,
                  char const * const str,
                  int strLenBytes,

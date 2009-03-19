@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -66,7 +66,7 @@ void PseudoUuid::generate()
     assert(result == UUID_RC_OK);
 
     size_t len = UUID_LENGTH;
-    result = 
+    result =
         uuid_export(
             apiData,
             UUID_FMT_BIN,
@@ -76,13 +76,13 @@ void PseudoUuid::generate()
 
     result = uuid_destroy(apiData);
     assert(result == UUID_RC_OK);
-#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
+#else
 
 #ifdef FENNEL_UUID_REAL
-    
+
     uuid_generate(data);
 
-#else /* FENNEL_UUID_FAKE */
+#else
 
     memset(&data,0,sizeof(data));
 #ifdef __MINGW32__
@@ -93,7 +93,7 @@ void PseudoUuid::generate()
     assert(sizeof(x) <= sizeof(data));
     memcpy(&data,&x,sizeof(x));
 #endif
-    
+
 #endif
 
 #endif
@@ -120,7 +120,7 @@ uint8_t PseudoUuid::getByte(int index) const
 
 const uint8_t *PseudoUuid::getBytes() const
 {
-#ifdef FENNEL_UUID_REAL    
+#ifdef FENNEL_UUID_REAL
     return reinterpret_cast<const uint8_t *>(&data);
 #else
     return data;
@@ -138,42 +138,42 @@ int PseudoUuid::hashCode() const
 
 string PseudoUuid::toString() const
 {
-    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on 
+    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on
     // the library's version).  Those two methods produce different output
     // for the same UUID.
     ostringstream ostr;
-    
-    for(int i = 0; i < sizeof(data); i++) {
+
+    for (int i = 0; i < sizeof(data); i++) {
         if (i == 4 || i == 6 || i == 8 || i == 10) {
             ostr << "-";
         }
-        
+
         ostr << hex << setw(2) << setfill('0') << (int) (data[i] & 0xFF);
     }
-    
+
     return ostr.str();
 }
 
 void PseudoUuid::parse(string uuid) throw (FennelExcn)
 {
-    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on 
+    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on
     // the library's version).  Those two methods produce different output
     // for the same UUID
     uint8_t id[UUID_LENGTH];
     if (uuid.length() != 36) {
         ostringstream errstr;
-        errstr << "Invalid UUID format: length " << uuid.length() 
+        errstr << "Invalid UUID format: length " << uuid.length()
                << ", expected 36";
         throw FennelExcn(errstr.str());
     }
-    
+
     istringstream istr(uuid);
     char hexchars[3];
     char *endptr;
     int value;
     memset(hexchars, 0, sizeof(hexchars));
     istr >> noskipws;
-    for(int i = 0; i < sizeof(id); i++) {
+    for (int i = 0; i < sizeof(id); i++) {
         if (i == 4 || i == 6 || i == 8 || i == 10) {
             char ch;
             istr >> ch;
@@ -185,7 +185,7 @@ void PseudoUuid::parse(string uuid) throw (FennelExcn)
         istr >> hexchars[1];
         value = strtol(hexchars, &endptr, 16);
         // Make sure both characters were correctly converted
-        if (endptr != hexchars+2) {
+        if (endptr != hexchars + 2) {
             throw FennelExcn("Invalid UUID format: hex digits expected");
         }
         id[i] = (uint8_t) value;

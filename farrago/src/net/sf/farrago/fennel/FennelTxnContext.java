@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -92,16 +92,16 @@ public class FennelTxnContext
         readOnly = true;
         getTxnHandleLong();
     }
-    
+
     /**
      * Starts a transaction with a commit sequence number so the transaction
      * will read data based on a specific snapshot time.
-     * 
+     *
      * @param csn the commit sequence number
      */
     public void initiateTxnWithCsn(long csn)
     {
-        assert(!isTxnInProgress());
+        assert (!isTxnInProgress());
         FemCmdBeginTxnWithCsn cmd = metadataFactory.newFemCmdBeginTxnWithCsn();
         cmd.setDbHandle(fennelDbHandle.getFemDbHandle(metadataFactory));
         FemCsnHandle csnHandle = metadataFactory.newFemCsnHandle();
@@ -110,7 +110,7 @@ public class FennelTxnContext
         fennelDbHandle.executeCmd(cmd);
         hTxn = cmd.getResultHandle().getLongHandle();
     }
-    
+
     /**
      * Gets the handle to the current txn. If no txn is in progress, starts one
      * and returns the new handle.
@@ -154,18 +154,18 @@ public class FennelTxnContext
     /**
      * Retrieves the commit sequence number associated with the current
      * transaction
-     * 
+     *
      * @return the commit sequence number of the current transaction
      */
     public long getTxnCsn()
     {
-        assert(isTxnInProgress());
+        assert (isTxnInProgress());
         FemCmdGetTxnCsn cmd = metadataFactory.newFemCmdGetTxnCsn();
         cmd.setTxnHandle(getTxnHandle());
         fennelDbHandle.executeCmd(cmd);
         return cmd.getResultHandle().getLongHandle();
     }
-    
+
     /**
      * Commits the current txn, if any.
      */

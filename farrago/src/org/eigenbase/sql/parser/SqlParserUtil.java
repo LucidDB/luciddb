@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -86,8 +86,8 @@ public final class SqlParserUtil
 
     /**
      * Converts the contents of an sql quoted string literal into the
-     * corresponding Java string representation (removing leading and
-     * trailing quotes and unescaping internal doubled quotes).
+     * corresponding Java string representation (removing leading and trailing
+     * quotes and unescaping internal doubled quotes).
      */
     public static String parseString(String s)
     {
@@ -783,8 +783,8 @@ outer:
     }
 
     /**
-     * Checks a UESCAPE string for validity, and returns the escape
-     * character if no exception is thrown.
+     * Checks a UESCAPE string for validity, and returns the escape character if
+     * no exception is thrown.
      *
      * @param s UESCAPE string to check
      *
@@ -796,9 +796,12 @@ outer:
             throw EigenbaseResource.instance().UnicodeEscapeCharLength.ex(s);
         }
         char c = s.charAt(0);
-        if (Character.isDigit(c) || Character.isWhitespace(c)
-            || (c == '+') || (c == '"') || ((c >= 'a' && c <= 'f'))
-            || ((c >= 'A' && c <= 'F')))
+        if (Character.isDigit(c)
+            || Character.isWhitespace(c)
+            || (c == '+')
+            || (c == '"')
+            || ((c >= 'a') && (c <= 'f'))
+            || ((c >= 'A') && (c <= 'F')))
         {
             throw EigenbaseResource.instance().UnicodeEscapeCharIllegal.ex(s);
         }

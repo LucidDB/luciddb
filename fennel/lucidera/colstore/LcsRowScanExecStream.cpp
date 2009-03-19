@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 int32_t LcsRowScanExecStreamParams::defaultSystemSamplingClumps = 10;
 
 LcsRowScanExecStream::LcsRowScanExecStream()
-: 
+:
     LcsRowScanBaseExecStream(),
     ridRunIter(&ridRuns)
 {
@@ -87,8 +87,7 @@ void LcsRowScanExecStream::prepareResidualFilters(
                  */
                 for (uint k = 0; k < projMap.size(); k++) {
                     if (projMap[k] == valueCols[j]) {
-       
-                        clusterPos = k - realClusterStart - 
+                        clusterPos = k - realClusterStart -
                             nonClusterCols.size();
 
                         LcsResidualColumnFilters &filter =
@@ -99,9 +98,9 @@ void LcsRowScanExecStream::prepareResidualFilters(
                         filters[j] = &filter;
 
                         filter.hasResidualFilters = true;
-  
+
                         filter.readerKeyProj.push_back(valueCols[j]);
-                        filter.inputKeyDesc.projectFrom(projDescriptor, 
+                        filter.inputKeyDesc.projectFrom(projDescriptor,
                             filter.readerKeyProj);
                         filter.attrAccessor.compute(
                             filter.inputKeyDesc[0]);
@@ -110,7 +109,7 @@ void LcsRowScanExecStream::prepareResidualFilters(
                         filter.upperBoundProj.push_back(3);
                         filter.readerKeyData.computeAndAllocate(
                             filter.inputKeyDesc);
-                        
+
                         break;
                     }
                 }
@@ -132,7 +131,7 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
 
     // Set up rid bitmap input stream
     ridTupleData.compute(inAccessors[0]->getTupleDesc());
-    
+
     // validate input stream parameters
     TupleDescriptor inputDesc = inAccessors[0]->getTupleDesc();
     assert(inputDesc.size() == 3);
@@ -149,8 +148,8 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
         nFilters = 0;
     }
 
-    /* 
-     * projDescriptor now also includes filter columns 
+    /*
+     * projDescriptor now also includes filter columns
      */
     for (uint i = 0; i < params.outputProj.size(); i++) {
         outputProj.push_back(i);
@@ -159,9 +158,9 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
     pOutAccessor->setTupleShape(pOutAccessor->getTupleDesc());
     outputTupleData.computeAndAllocate(projDescriptor);
 
-    /* 
-     * build the real output accessor 
-     * it will be used to unmarshal data into the 
+    /*
+     * build the real output accessor
+     * it will be used to unmarshal data into the
      * real output row: projOutputTuple.
      */
     projOutputTupleData.compute(pOutAccessor->getTupleDesc());
@@ -189,7 +188,7 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
 
             samplingClumps = params.samplingClumps;
             assert(samplingClumps > 0);
-            
+
             isSamplingRepeatable = false;
         }
     }
@@ -259,13 +258,13 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
      * initialize the filters local data
      */
     for (; iFilterToInitialize < nFilters; iFilterToInitialize++) {
-        SharedExecStreamBufAccessor &pInAccessor = 
+        SharedExecStreamBufAccessor &pInAccessor =
             inAccessors[iFilterToInitialize + 1];
-        TupleAccessor &inputAccessor = 
+        TupleAccessor &inputAccessor =
             pInAccessor->getConsumptionTupleAccessor();
-        
+
         if (pInAccessor->getState() != EXECBUF_EOS) {
-            PLcsResidualColumnFilters filter = filters[iFilterToInitialize]; 
+            PLcsResidualColumnFilters filter = filters[iFilterToInitialize];
 
             while (pInAccessor->demandData()) {
                 SharedLcsResidualFilter filterData(new LcsResidualFilter);
@@ -278,8 +277,8 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
                 filterData->boundData.compute(pInAccessor->getTupleDesc());
                 filterData->boundBuf.reset(
                     new FixedBuffer[inputAccessor.getCurrentByteCount()]);
-    
-                memcpy(filterData->boundBuf.get(),  
+
+                memcpy(filterData->boundBuf.get(),
                     pInAccessor->getConsumptionStart(),
                     inputAccessor.getCurrentByteCount());
 
@@ -293,7 +292,7 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
                 inputAccessor.setCurrentTupleBuf(filterData->boundBuf.get());
                 inputAccessor.unmarshal(filterData->boundData);
                 inputAccessor.setCurrentTupleBuf(tmpBuf);
-      
+
                 /*
                  * record directives.
                  */
@@ -301,12 +300,12 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
                     SearchEndpoint(*filterData->boundData[0].pData);
                 filterData->upperBoundDirective =
                     SearchEndpoint(*filterData->boundData[2].pData);
-      
+
                 filter->filterData.push_back(filterData);
 
                 pInAccessor->consumeTuple();
             }
-  
+
             if (pInAccessor->getState() != EXECBUF_EOS) {
                 return false;
             }
@@ -339,10 +338,10 @@ void LcsRowScanExecStream::initializeSystemSampling()
     numClumps = samplingClumps;
 
     // Compute clump size and distance
-    int64_t sampleSize = 
+    int64_t sampleSize =
         static_cast<uint64_t>(
             round(
-                static_cast<double>(rowCount) * 
+                static_cast<double>(rowCount) *
                 static_cast<double>(samplingRate)));
     if (sampleSize < numClumps) {
         // Read at least as many rows as there are clumps, even if sample rate
@@ -359,7 +358,7 @@ void LcsRowScanExecStream::initializeSystemSampling()
 
     FENNEL_TRACE(TRACE_FINE, "sampleSize = " << sampleSize);
 
-    clumpSize = 
+    clumpSize =
         static_cast<uint64_t>(
             round(
                 static_cast<double>(sampleSize) /
@@ -371,7 +370,7 @@ void LcsRowScanExecStream::initializeSystemSampling()
 
     if (numClumps > 1) {
         // Arrange for the last clump to end at the end of the table.
-        clumpDistance = 
+        clumpDistance =
             static_cast<uint64_t>(
                 round(
                     static_cast<double>(rowCount - sampleSize) /
@@ -379,7 +378,7 @@ void LcsRowScanExecStream::initializeSystemSampling()
 
         // Rounding can cause us to push the final clump past the end of the
         // table.  Avoid this when possible.
-        uint64_t rowsRequired = 
+        uint64_t rowsRequired =
             (clumpSize + clumpDistance) * (numClumps - 1) + clumpSize;
         if (rowsRequired > rowCount && clumpDistance > 0) {
             clumpDistance--;
@@ -387,7 +386,7 @@ void LcsRowScanExecStream::initializeSystemSampling()
     } else {
         // The entire sample will come from the beginning of the table.
         clumpDistance = (rowCount - sampleSize);
-    }        
+    }
 
     FENNEL_TRACE(TRACE_FINE, "clumpDistance = " << clumpDistance);
 }
@@ -400,12 +399,10 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
-
         uint iClu;
         bool passedFilter;
 
         while (!producePending) {
-
             // No need to fill the rid run buffer each time through the loop
             if (!ridRunsBuilt && ridRuns.nFreeSpace() > 100) {
                 ExecStreamResult rc = fillRidRunBuffer();
@@ -442,7 +439,6 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 
             // Then go through each cluster, forming rows and checking ranges
             for (iClu = 0, passedFilter = true; iClu <  nClusters; iClu++) {
-
                 SharedLcsClusterReader &pScan = pClusters[iClu];
 
                 // Resync the cluster reader to the current rid position
@@ -454,7 +450,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                 if (!pScan->isPositioned() || rid >= pScan->getRangeEndRid()) {
                     bool rc = pScan->position(rid);
 
-                    // rid not found, so just consume the rid and 
+                    // rid not found, so just consume the rid and
                     // continue
                     if (rc == false)
                         break;
@@ -494,7 +490,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
             }
             producePending = true;
         }
-            
+
         // produce tuple
         projOutputTupleData.projectFrom(outputTupleData, outputProj);
         if (tupleFound) {
@@ -503,7 +499,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
             }
         }
         producePending = false;
-        
+
         if (isFullScan) {
             // if tuple not found, reached end of table
             if (!tupleFound) {
@@ -617,7 +613,7 @@ ExecStreamResult LcsRowScanExecStream::fillRidRunBuffer()
                     if (++numClumpsBuilt == numClumps) {
                         ridRunsBuilt = true;
                     }
-                } else  {
+                } else {
                     // We only have enough rids for a partial clump
                     clumpPos += nRows;
                 }
@@ -658,7 +654,6 @@ ExecStreamResult LcsRowScanExecStream::fillRidRunBuffer()
         if (isFullScan) {
             inputRid += nRows;
         }
-
     } while (ridRuns.spaceAvailable() && !ridRunsBuilt);
 
     // Write out the last run
@@ -684,7 +679,7 @@ void LcsRowScanExecStream::closeImpl()
 void LcsRowScanExecStream::buildOutputProj(TupleProjection &outputProj,
                             LcsRowScanBaseExecStreamParams const &params)
 {
-    LcsRowScanExecStreamParams const &rowScanParams = 
+    LcsRowScanExecStreamParams const &rowScanParams =
         dynamic_cast<const LcsRowScanExecStreamParams&>(params);
 
     /*
@@ -696,13 +691,13 @@ void LcsRowScanExecStream::buildOutputProj(TupleProjection &outputProj,
     for (uint i = 0; i < rowScanParams.residualFilterCols.size(); i++) {
         uint j;
         for (j = 0; j < rowScanParams.outputProj.size(); j++) {
-            if (rowScanParams.outputProj[j] == 
+            if (rowScanParams.outputProj[j] ==
                 rowScanParams.residualFilterCols[i])
             {
                 break;
             }
         }
-    
+
         if (j >= rowScanParams.outputProj.size()) {
             outputProj.push_back(rowScanParams.residualFilterCols[i]);
         }

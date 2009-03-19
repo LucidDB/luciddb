@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Portions Copyright (C) 2006-2007 John V. Sichi
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Portions Copyright (C) 2006-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -62,9 +62,9 @@ public abstract class Bug
     public static final boolean Dt239Fixed = false;
 
     /**
-     * Window Rank functions are supported through the validator but
-     * not implenmented by calculator.  Disable tests and modified
-     * SqlRankFunction to return "Unknown Function".
+     * Window Rank functions are supported through the validator but not
+     * implenmented by calculator. Disable tests and modified SqlRankFunction to
+     * return "Unknown Function".
      */
     public static final boolean Dt561Fixed = false;
 
@@ -75,8 +75,7 @@ public abstract class Bug
     // angel
 
     /**
-     * Whether dtbug1446 "Window Rank Functions not fully implemented"
-     * is fixed.
+     * Whether dtbug1446 "Window Rank Functions not fully implemented" is fixed.
      */
     public static final boolean Dt1446Fixed = false;
 
@@ -89,9 +88,9 @@ public abstract class Bug
     public static final boolean Fnl3Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FNL-77">issue
-     * FNL-77: Fennel calc returns CURRENT_TIMESTAMP in UTC, should be local
-     * time</a> is fixed.
+     * Whether <a href="http://issues.eigenbase.org/browse/FNL-77">issue FNL-77:
+     * Fennel calc returns CURRENT_TIMESTAMP in UTC, should be local time</a> is
+     * fixed.
      */
     public static final boolean Fnl77Fixed = false;
 
@@ -103,14 +102,12 @@ public abstract class Bug
     public static final boolean Frg327Fixed = false;
 
     /**
-     * Whether dtbug1684 "CURRENT_DATE not implemented in fennel calc"
-     * is fixed.
+     * Whether dtbug1684 "CURRENT_DATE not implemented in fennel calc" is fixed.
      */
     public static final boolean Dt1684Fixed = false;
 
     /**
-     * Whether dtbug1684 "Integration issues"
-     * is fixed.
+     * Whether dtbug1684 "Integration issues" is fixed.
      */
     public static final boolean Dt1847Fixed = false;
 
@@ -209,8 +206,6 @@ public abstract class Bug
 
     // jack
 
-
-
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-216">issue
      * FRG-216: Java calc 'expression splitting' causes serious problems</a> is
@@ -227,25 +222,21 @@ public abstract class Bug
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-282">issue
-     * FRG-282: Support precision in TIME and TIMESTAMP data types</a> is
-     * fixed.
+     * FRG-282: Support precision in TIME and TIMESTAMP data types</a> is fixed.
      */
     public static final boolean Frg282Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-283">issue
-     * FRG-283: Calc cannot cast VARBINARY values</a> is
-     * fixed.
+     * FRG-283: Calc cannot cast VARBINARY values</a> is fixed.
      */
     public static final boolean Frg283Fixed = false;
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-296">issue
-     * FRG-296: SUBSTRING(string FROM regexp FOR regexp)</a> is
-     * fixed.
+     * FRG-296: SUBSTRING(string FROM regexp FOR regexp)</a> is fixed.
      */
     public static final boolean Frg296Fixed = false;
-
 }
 
 // End Bug.java

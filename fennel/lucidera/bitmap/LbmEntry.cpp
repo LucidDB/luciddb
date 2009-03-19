@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -110,7 +110,6 @@ void LbmEntry::setEntryTuple(TupleData const &indexTuple)
     currentEntrySize = 0;
 
     for (int i = 0; i < entryTuple.size(); i ++) {
-        
         if (i != segmentField) {
             entryTuple[i].pData = scratchBuffer + currentEntrySize;
         } else {
@@ -118,10 +117,10 @@ void LbmEntry::setEntryTuple(TupleData const &indexTuple)
              * Move the segments to the end of the buffer. Segments grow
              * backward in memory.
              */
-            entryTuple[i].pData = scratchBuffer + scratchBufferSize 
+            entryTuple[i].pData = scratchBuffer + scratchBufferSize
                                   - indexTuple[i].cbData;
         }
-        
+
         entryTuple[i].memCopyFrom(indexTuple[i]);
 
         if (entryTuple[i].isNull()) {
@@ -159,7 +158,7 @@ void LbmEntry::setEntryTuple(TupleData const &indexTuple)
 
     startRID = *((LcsRid *)entryTuple[RIDField].pData);
 
-    if (isSingleton(indexTuple)){
+    if (isSingleton(indexTuple)) {
         /*
          * Case 1, or 2
          */
@@ -196,7 +195,7 @@ void LbmEntry::setEntryTuple(TupleData const &indexTuple)
 
         pSegStart = scratchBuffer + scratchBufferSize;
         pSegEnd = pSegStart - segLength;
-        
+
         resetSegment();
     }
 }
@@ -209,7 +208,7 @@ bool LbmEntry::setRIDNewSegment(LcsRid rid)
     }
 
     setRIDCurrentSegByte(rid);
-    return true;    
+    return true;
 }
 
 
@@ -266,7 +265,7 @@ bool LbmEntry::openNewSegment(LcsRid rid)
     if (currentEntrySize + 2 > scratchBufferUsableSize) {
         return false;
     }
-    
+
     if (pSegStart - pSegEnd == bitmapSegSize) {
         return false;
     }
@@ -305,7 +304,7 @@ void LbmEntry::openLastSegment()
 
     // backtrack to exclude the extended zero length bytes
     currentEntrySize -= getZeroLengthByteCount(*currSegDescByte);
-    
+
     pSegDescEnd = currSegDescByte + 1;
 
     // write the segment length back, and erase the previously stored extended
@@ -315,7 +314,7 @@ void LbmEntry::openLastSegment()
     // still point to the same last segment byte
     currSegByte = pSegEnd;
 
-    currSegByteStartRID = 
+    currSegByteStartRID =
         startRID + rowCount - lastZeroRIDs - LbmOneByteSize;
 }
 
@@ -342,12 +341,12 @@ bool LbmEntry::closeCurrentSegment(LcsRid rid)
     assert(currSegLength >= 1 && currSegLength <= LbmMaxSegSize);
 
     setSegLength(*currSegDescByte, currSegLength);
-    
+
     /*
      * Count of zero bits in bytes. Each byte represents 8 RIDs.
      */
-    ridDistance = 
-        opaqueToInt(roundToByteBoundary(rid) - currSegByteStartRID) 
+    ridDistance =
+        opaqueToInt(roundToByteBoundary(rid) - currSegByteStartRID)
         / LbmOneByteSize - 1;
 
     if (ridDistance <= 0) {
@@ -370,7 +369,7 @@ bool LbmEntry::closeCurrentSegment(LcsRid rid)
              * construct a new LbmEntry with rid, and very likely there's a
              * gap between the last RID encoded by the current LbmEntry and
              * the startRID of this new LbmEntry. This means that RIDs
-             * might not be densely encoded in an ordered sequence of 
+             * might not be densely encoded in an ordered sequence of
              * LbmEntries.
              */
             resetSegment();
@@ -396,13 +395,13 @@ bool LbmEntry::setZeroLength(
     } else {
         lengthBytes = value2ByteArray(
             nZeroBytes, pLenDesc + 1, LbmZeroLengthExtended);
-        
+
         if (lengthBytes) {
             /*
              * Caller needs to ensure that the buffer has enough space to
              * encode the zero bytes.
              */
-            *(pLenDesc) |= 
+            *(pLenDesc) |=
                 (uint8_t) ((lengthBytes + LbmZeroLengthCompact) &
                     LbmZeroLengthMask);
         } else {
@@ -432,20 +431,20 @@ uint LbmEntry::getCompressedRowCount(
     uint lastLengthDesc = 0;
     uint lastLengthDescBytes, lastZeroBytes;
     uint rowCount = 0;
-    
+
     while (p1 < pDescEnd) {
         /*
          * Count the RIDs in bitmaps.
          */
         rowCount += getSegLength(*p1) * LbmOneByteSize;
-        
+
         /*
          * Count the RIDs in Descriptors.
          */
         lastSegDescByte = p1;
         lastLengthDesc = *p1 & LbmZeroLengthMask;
         p1 ++;
-        
+
         if (lastLengthDesc <= LbmZeroLengthCompact) {
             lastZeroBytes = lastLengthDesc;
         } else {
@@ -453,11 +452,11 @@ uint LbmEntry::getCompressedRowCount(
             /*
              * Translate number of bytes into number of RIDs(bits).
              */
-            lastZeroBytes = 
+            lastZeroBytes =
                 byteArray2Value(p1, lastLengthDescBytes);
             p1 += lastLengthDescBytes;
         }
-        
+
         lastZeroRIDs = lastZeroBytes * LbmOneByteSize;
         rowCount += lastZeroRIDs;
     }
@@ -478,8 +477,8 @@ uint LbmEntry::getRowCount(
         lastSegDescByte = NULL;
         lastZeroRIDs = 0;
     } else {
-        rowCount = 
-            getCompressedRowCount(pSegDescStart, pSegDescEnd, 
+        rowCount =
+            getCompressedRowCount(pSegDescStart, pSegDescEnd,
                 lastSegDescByte, lastZeroRIDs);
     }
     return rowCount;
@@ -496,28 +495,28 @@ uint LbmEntry::getRowCount(TupleData const &inputTuple)
         /*
          * A single bitmap
          */
-        rowCount = 
+        rowCount =
             inputTuple[inputTuple.size() - 1].cbData * LbmOneByteSize;
     } else {
         PBuffer lastSegDescByte = NULL;
         uint lastZeroRIDs = 0;
         PBuffer pDescStart = (PBuffer)inputTuple[inputTuple.size() - 2].pData;
-        PBuffer pDescEnd   = 
+        PBuffer pDescEnd   =
             (PBuffer)(inputTuple[inputTuple.size() - 2].pData +
                       inputTuple[inputTuple.size() - 2].cbData);
-        rowCount = 
-            getCompressedRowCount(pDescStart, pDescEnd, 
+        rowCount =
+            getCompressedRowCount(pDescStart, pDescEnd,
                 lastSegDescByte, lastZeroRIDs);
     }
     return rowCount;
 }
 
 
-bool LbmEntry::singleton2Bitmap() 
+bool LbmEntry::singleton2Bitmap()
 {
     if (setRIDNewSegment(startRID)) {
         startRID = roundToByteBoundary(startRID);
-        entryTuple[entryTuple.size()-2].pData = pSegDescStart;
+        entryTuple[entryTuple.size() - 2].pData = pSegDescStart;
         return true;
     } else {
         return false;
@@ -533,9 +532,8 @@ bool LbmEntry::setRID(LcsRid rid)
      * First prepare the current LbmEntry for insert.
      */
     if (isSingleton()) {
-        
         /*
-         * If adding RID to a singleton LbmEntry, change the singleton to 
+         * If adding RID to a singleton LbmEntry, change the singleton to
          * bitmap entry
          */
         if (!singleton2Bitmap()) {
@@ -578,7 +576,7 @@ bool LbmEntry::setRID(LcsRid rid)
          */
         uint distance = opaqueToInt(rid - currSegByteStartRID);
 
-        assert(distance>=0);
+        assert(distance >= 0);
 
         if (distance < LbmOneByteSize) {
             /*
@@ -596,11 +594,12 @@ bool LbmEntry::setRID(LcsRid rid)
              */
             if (closeCurrentSegment(rid)) {
                 /*
-                 * Then figure out if there's space left to begin a new 
+                 * Then figure out if there's space left to begin a new
                  * segment and segment descriptor
                  */
-                if (!setRIDNewSegment(rid))
+                if (!setRIDNewSegment(rid)) {
                     return false;
+                }
             } else {
                 /*
                  * No room for descriptor in the same LbmEntry, tell caller to
@@ -619,14 +618,14 @@ int LbmEntry::compareEntry(
     TupleDescriptor const &tupleDesc) const
 {
     return tupleDesc.compareTuplesKey(entryTuple,
-                                      inputTuple, 
-                                      entryTuple.size()-3);
+                                      inputTuple,
+                                      entryTuple.size() - 3);
 }
 
 
 bool LbmEntry::addSegDesc(uint reservedSpace, uint bitmapLength)
 {
-    uint leftOverSpace = 
+    uint leftOverSpace =
         scratchBufferUsableSize - currentEntrySize - reservedSpace;
 
     uint segDescCount = bitmapLength / LbmMaxSegSize;
@@ -669,12 +668,12 @@ uint LbmEntry::getMergeSpaceRequired(TupleData const &inputTuple)
      * "inputSegDescLength" is replaced with the following
      * expression, the calculation is incorrect.
      */
-    
-    uint inputSegDescLength = 
-        inputTuple[inputTuple.size() - 2].pData ? 
+
+    uint inputSegDescLength =
+        inputTuple[inputTuple.size() - 2].pData ?
         inputTuple[inputTuple.size() - 2].cbData : 0;
-    uint inputSegLength = 
-        inputTuple[inputTuple.size() - 1].pData ? 
+    uint inputSegLength =
+        inputTuple[inputTuple.size() - 1].pData ?
         inputTuple[inputTuple.size() - 1].cbData : 0;
 
     if (isSingleton(inputTuple)) {
@@ -682,7 +681,7 @@ uint LbmEntry::getMergeSpaceRequired(TupleData const &inputTuple)
         mergeSpaceRequired = 2;
     } else if (isSingleBitmap(inputTuple)) {
         // single bitmap
-        uint segDescCount = (inputSegLength /LbmMaxSegSize) + 1;
+        uint segDescCount = (inputSegLength / LbmMaxSegSize) + 1;
         mergeSpaceRequired = segDescCount + inputSegLength;
     } else {
         // compressed bitmap
@@ -717,7 +716,7 @@ bool LbmEntry::growEntry(LcsRid rid, uint reserveSpace)
             return false;
         }
     }
-    
+
     if (!isSegmentOpen()) {
         openLastSegment();
     }
@@ -756,7 +755,7 @@ bool LbmEntry::growEntry(LcsRid rid, uint reserveSpace)
 bool LbmEntry::adjustEntry(TupleData &inputTuple)
 {
     LcsRid &inputStartRID = *((LcsRid*)inputTuple[inputTuple.size() - 3].pData);
-    
+
     /*
      * It is possible for both the input and the current entry to be singletons
      * if we're doing random mergeEntry's
@@ -798,11 +797,11 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
         return true;
     } else {
         currSegByte = pSegEnd;
-        uint8_t inputFirstSegByte = 
+        uint8_t inputFirstSegByte =
             *(uint8_t *)(inputTuple[inputTuple.size() - 1].pData +
                 inputTuple[inputTuple.size() - 1].cbData - 1);
         *currSegByte |= inputFirstSegByte;
-            
+
         /*
          * Everything in the current entry remains the same, since only the
          * last byte is modified. Need to update the fields in inputTuple
@@ -823,7 +822,7 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
          * (end of the) segment storage portion does not change.
          */
         inputTuple[inputTuple.size() -1].cbData --;
-        
+
         /*
          * Then,
          * modify the segment descriptor for the first segment.
@@ -838,10 +837,10 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
          * the current entry).
          */
         uint numRIDsMoved = LbmOneByteSize;
-        
+
         if (pFirstDesc) {
             uint8_t firstSegLength  = ((*pFirstDesc) >> LbmHalfByteSize) + 1;
-            
+
             if (firstSegLength >= 2) {
                 /*
                  * Still need the first segment desscriptor.
@@ -863,22 +862,22 @@ bool LbmEntry::adjustEntry(TupleData &inputTuple)
                  */
                 uint firstZeroLength = (*pFirstDesc) & LbmZeroLengthMask;
                 pFirstDesc ++;
-                
+
                 inputTuple[inputTuple.size() - 2].cbData --;
-                
+
                 if (firstZeroLength > LbmZeroLengthCompact) {
-                    uint firstZeroLengthBytes = 
+                    uint firstZeroLengthBytes =
                         firstZeroLength - LbmZeroLengthCompact;
                     /*
                      * Translate number of bytes into number of RIDs(bits).
                      */
-                    firstZeroLength = 
+                    firstZeroLength =
                         byteArray2Value(pFirstDesc, firstZeroLengthBytes);
                     /*
                      * Number of bytes used to store length of zeros.
                      */
                     pFirstDesc += firstZeroLengthBytes;
-                    inputTuple[inputTuple.size() - 2].cbData -= 
+                    inputTuple[inputTuple.size() - 2].cbData -=
                         firstZeroLengthBytes;
                 }
                 inputTuple[inputTuple.size() - 2].pData = pFirstDesc;
@@ -963,7 +962,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
     /*
      * If the new inputTuple is a singleton, use the setRID interface.
      */
-    if (isSingleton(inputTuple)) { 
+    if (isSingleton(inputTuple)) {
         bool rc = setRID(inputStartRID);
         validateEntrySize();
         return rc;
@@ -973,11 +972,11 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
      * Now merge the two pieces of bitmaps together, provided the resulting
      * bitmap doesn't exceed the segment field size.
      */
-    uint inputSegDescLength = 
-        inputTuple[inputTuple.size() - 2].pData ? 
+    uint inputSegDescLength =
+        inputTuple[inputTuple.size() - 2].pData ?
         inputTuple[inputTuple.size() - 2].cbData : 0;
-    uint inputSegLength = 
-        inputTuple[inputTuple.size() - 1].pData ? 
+    uint inputSegLength =
+        inputTuple[inputTuple.size() - 1].pData ?
         inputTuple[inputTuple.size() - 1].cbData : 0;
     if (pSegStart - pSegEnd + inputSegLength > bitmapSegSize) {
         return false;
@@ -1000,7 +999,7 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
             return false;
         }
     }
-    
+
     /*
      * segment grows backwards.
      */
@@ -1023,7 +1022,6 @@ bool LbmEntry::spliceSingleton(TupleData &inputTuple)
     // special case where the current entry is the minimum entry and we are
     // trying to splice a rid in front of it
     if (inputStartRID < startRID) {
-
         // reverse the roles of current and input and merge the original
         // current into the original input; first copy the current to the
         // temporary merge buffer
@@ -1131,7 +1129,7 @@ bool LbmEntry::addNewSegment(
     PBuffer nextSegDesc, PBuffer prevSeg, uint prevSegBytes, uint prevZeroBytes)
 {
     assert(isSingleton(inputTuple));
-    
+
     // close the current segment before we create the new segment so we start
     // off from a clean state
     if (isSegmentOpen()) {
@@ -1177,7 +1175,7 @@ bool LbmEntry::addNewMiddleSegment(
         LbmOneByteSize;
     uint rightZeroBytes = prevZeroBytes - leftZeroBytes - 1;
     uint spaceRequired = 2;
-    int spaceNeededBefore = computeSpaceForZeroBytes(prevZeroBytes); 
+    int spaceNeededBefore = computeSpaceForZeroBytes(prevZeroBytes);
     int spaceNeededAfter = computeSpaceForZeroBytes(leftZeroBytes) +
         computeSpaceForZeroBytes(rightZeroBytes);
     spaceRequired += (spaceNeededAfter - spaceNeededBefore);
@@ -1239,7 +1237,7 @@ bool LbmEntry::addNewAdjacentSegment(
     // are inserting the new segment in between, and the combined length
     // of the two segments doesn't exceed the maximum
     uint spaceRequired = 1;
-    int spaceNeededBefore = computeSpaceForZeroBytes(prevZeroBytes); 
+    int spaceNeededBefore = computeSpaceForZeroBytes(prevZeroBytes);
     int spaceNeededAfter = computeSpaceForZeroBytes(prevZeroBytes - 1);
     assert(spaceNeededAfter <= spaceNeededBefore);
     spaceRequired += (spaceNeededAfter - spaceNeededBefore);
@@ -1479,8 +1477,9 @@ TupleData const &LbmEntry::produceEntryTuple()
     /*
      * If singleton, just return the tuple.
      */
-    if (isSingleton())
+    if (isSingleton()) {
         return entryTuple;
+    }
 
     /*
      * Set up all the data pointers in entryTuple.
@@ -1489,7 +1488,7 @@ TupleData const &LbmEntry::produceEntryTuple()
     if (isSegmentOpen()) {
         closeCurrentSegment();
     }
-    
+
     /*
      * RID field
      */
@@ -1513,7 +1512,7 @@ TupleData const &LbmEntry::produceEntryTuple()
      * If all segments are contiguous, they can be stored at one big bitmap
      * segment without any descriptors.
      */
-    
+
     if ((pSegDescStart == pSegDescEnd) || (pSegDescStart == NULL)) {
         /*
          * There is no segment descriptor, which means the entry must have a
@@ -1533,7 +1532,7 @@ TupleData const &LbmEntry::produceEntryTuple()
             rowCount <= maxSegSize * 8)
         {
             /*
-             * All the RIDs are in the bitmap segments. There is no "gap" 
+             * All the RIDs are in the bitmap segments. There is no "gap"
              * between segments. Do not need to store the segment descriptors
              * since there is only one big bitmap segment inthis entry.
              *
@@ -1564,7 +1563,7 @@ string LbmEntry::printDatum(
     PConstBuffer ptr = tupleDatum.pData;
     uint size = tupleDatum.cbData;
 
-    if (ptr) {        
+    if (ptr) {
         if (reverseByteOrder) {
             PConstBuffer tmpPtr = ptr + size;
             while (size > 0) {
@@ -1588,7 +1587,7 @@ string LbmEntry::printByte(uint8_t byte)
 {
     ostringstream byteStr;
     uint byteLength = 8;
-    
+
     while (byteLength > 0) {
         byteStr << byte % 2 << " ";
         byte = byte >> 1;
@@ -1662,7 +1661,7 @@ string LbmEntry::dumpSegRID(
         for (i = 0; i < segBytes; i++) {
             seg --;
             bitmapByte = *(uint8_t *)seg;
-            for(byteLength = 8; byteLength > 0; byteLength --) {
+            for (byteLength = 8; byteLength > 0; byteLength--) {
                 if (bitmapByte % 2) {
                     entryTrace << prefix << opaqueToInt(srid) << "]\n";
                 }
@@ -1694,7 +1693,7 @@ string LbmEntry::dumpBitmap(PBuffer seg, uint segBytes)
             entryLine << " ";
         }
     }
-    entryLine << "\n";        
+    entryLine << "\n";
     return entryLine.str();
 }
 
@@ -1715,7 +1714,7 @@ string LbmEntry::dumpBitmapRID(
     for (uint i = 0; i < segBytes; i++) {
         seg --;
         bitmapByte = *(uint8_t *)seg;
-        for(byteLength = 8; byteLength > 0; byteLength --) {
+        for (byteLength = 8; byteLength > 0; byteLength--) {
             if (bitmapByte % 2) {
                 entryTrace << prefix << opaqueToInt(srid) << "]\n";
             }
@@ -1742,29 +1741,28 @@ string LbmEntry::toBitmapString(TupleData const&inputTuple)
     LcsRid inputStartRID = *((LcsRid *)inputTuple[tupleSize - 3].pData);
 
     tupleTrace << "Key [";
-    
+
     for (uint i = 0; i < tupleSize - 3 ; i ++) {
         tupleTrace << printDatum(inputTuple[i], true);
         if (i < tupleSize - 4) {
             tupleTrace << "|";
         }
     }
-    
-    tupleTrace << "] startRID [" 
+
+    tupleTrace << "] startRID ["
                << opaqueToInt(inputStartRID)
                << "] ";
 
     if (isSingleton(inputTuple)) {
         tupleTrace <<"Singleton";
-    }
-    else {
+    } else {
         PBuffer segDesc = (PBuffer)inputTuple[tupleSize - 2].pData;
         /*
          * segments are stored backward.
          */
         PBuffer seg     = (PBuffer)inputTuple[tupleSize - 1].pData
                            + inputTuple[tupleSize - 1].cbData;
-        
+
         if (segDesc) {
             tupleTrace << "Compressed Bitmap: SegDesc "
                        << inputTuple[tupleSize - 2].cbData
@@ -1788,7 +1786,7 @@ string LbmEntry::toBitmapString(TupleData const&inputTuple)
             tupleTrace << dumpBitmap(seg, inputTuple[tupleSize - 1].cbData);
         }
     }
-    
+
     tupleTrace << "\n";
 
     return tupleTrace.str();
@@ -1808,11 +1806,11 @@ string LbmEntry::toRIDString(TupleData const &inputTuple)
             keyTrace << "|";
         }
     }
-    
+
     keyTrace << "] ";
 
-    tupleTrace << keyTrace.str() 
-               << "startRID [" 
+    tupleTrace << keyTrace.str()
+               << "startRID ["
                << opaqueToInt(inputStartRID)
                << "] ";
 
@@ -1826,7 +1824,7 @@ string LbmEntry::toRIDString(TupleData const &inputTuple)
          */
         PBuffer seg     = (PBuffer)inputTuple[tupleSize - 1].pData
                            + inputTuple[tupleSize - 1].cbData;
-        
+
         tupleTrace << "\n";
 
         if (segDesc) {
@@ -1846,13 +1844,13 @@ string LbmEntry::toRIDString(TupleData const &inputTuple)
              * An entry with a single bitmap segement.
              */
             tupleTrace <<
-                dumpBitmapRID(seg, 
+                dumpBitmapRID(seg,
                               inputTuple[tupleSize - 1].cbData,
                               keyTrace.str(),
                               inputStartRID);
         }
     }
-    
+
     return tupleTrace.str();
 }
 
@@ -1862,28 +1860,27 @@ string LbmEntry::toString()
     uint tupleSize = entryTuple.size();
 
     tupleTrace << "Key [";
-    
+
     for (uint i = 0; i < tupleSize - 3 ; i ++) {
         tupleTrace << printDatum(entryTuple[i], true);
         if (i < tupleSize - 4) {
             tupleTrace << "|";
         }
     }
-    
-    tupleTrace << "] RID [" 
+
+    tupleTrace << "] RID ["
                << opaqueToInt(*(LcsRid *)entryTuple[tupleSize - 3].pData)
                << "] ";
 
     if (isSingleton()) {
         tupleTrace <<"Singleton";
-    }
-    else {
+    } else {
         PBuffer pSegDesc = pSegDescStart;
         /*
          * segments are stored backward.
          */
         PBuffer pSeg     = pSegStart;
-        
+
         if (pSegDesc) {
             tupleTrace << "Compressed Bitmap: SegDesc "
                        << pSegDescEnd - pSegDescStart
@@ -1905,7 +1902,7 @@ string LbmEntry::toString()
             tupleTrace << dumpBitmap(pSeg, pSegStart - pSegEnd);
         }
     }
-    
+
     tupleTrace << "\n";
 
     return tupleTrace.str();
@@ -1916,11 +1913,11 @@ void LbmEntry::getSizeBounds(
     uint &minEntrySize, uint &maxEntrySize)
 {
     uint tupleSize = indexTupleDesc.size();
-    TupleStorageByteLength segDescFieldMaxLength = 
+    TupleStorageByteLength segDescFieldMaxLength =
         indexTupleDesc[tupleSize - 2].cbStorage;
-    TupleStorageByteLength segFieldMaxLength = 
+    TupleStorageByteLength segFieldMaxLength =
         indexTupleDesc[tupleSize - 1].cbStorage;
-    
+
     // The length of the last two variable size fields are set to be the
     // maximum of the combined size, so that the buffer can fit the most number
     // of bytes for both fields. For exmaple, if the combined size should be
@@ -1933,27 +1930,27 @@ void LbmEntry::getSizeBounds(
     // then sizeof(keys) + size(RID), plus 2 bytes to encode at least one
     // segment(=1) and one segment desc byte(=1) with extended length
     // descriptor bytes(=3)
-    minEntrySize = 
+    minEntrySize =
         indexTupleDesc.getMaxByteCount()
-        - segDescFieldMaxLength 
-        - segFieldMaxLength 
+        - segDescFieldMaxLength
+        - segFieldMaxLength
         + 5;
     // Cap the size of the entry by the pageSize
     if (minEntrySize > pageSize) {
         minEntrySize = pageSize;
     }
-    
+
     // the sum total of the two bitmap columns needs to be less than the
     // max size of a single column. The maximum size taken by the bitmap index
     // tuple(in unmarshal format) is then sizeof(keys) + size(RID) + sizeof(one
     // variable length column).
-    maxEntrySize = 
+    maxEntrySize =
         indexTupleDesc.getMaxByteCount()
         - segDescFieldMaxLength;
 
     // Adjust max size based on page size. Try to fit a least minEntryPerPage
     // in a page.
-    uint maxEntrySizeForPage = pageSize/LbmMinEntryPerPage;
+    uint maxEntrySizeForPage = pageSize / LbmMinEntryPerPage;
 
     if (maxEntrySizeForPage < minEntrySize) {
         maxEntrySize = minEntrySize;
@@ -2013,7 +2010,7 @@ void LbmEntry::generateSegRIDs(
         for (i = 0; i < segBytes; i++) {
             seg --;
             bitmapByte = *(uint8_t *)seg;
-            for(byteLength = 8; byteLength > 0; byteLength --) {
+            for (byteLength = 8; byteLength > 0; byteLength--) {
                 if (bitmapByte % 2) {
                     ridValues.push_back(srid);
                 }
@@ -2038,7 +2035,7 @@ void LbmEntry::generateBitmapRIDs(
     for (uint i = 0; i < segBytes; i++) {
         seg --;
         bitmapByte = *(uint8_t *)seg;
-        for(byteLength = 8; byteLength > 0; byteLength --) {
+        for (byteLength = 8; byteLength > 0; byteLength--) {
             if (bitmapByte % 2) {
                 ridValues.push_back(srid);
             }
@@ -2048,7 +2045,7 @@ void LbmEntry::generateBitmapRIDs(
     }
 }
 
-uint LbmEntry::getScratchBufferSize(uint bitmapColSize) 
+uint LbmEntry::getScratchBufferSize(uint bitmapColSize)
 {
     // size of scratch buffer should be the max size of one of
     // the bitmap columns plus space for the rid plus space for an
@@ -2062,7 +2059,7 @@ uint LbmEntry::getMaxBitmapSize(uint bitmapColSize)
     // is packed with as many LbmMaxSegSize segments as possible. There could
     // be a non-max length segment at the end.
     uint descriptorBytesPerSegment = 1;
-    uint maxNumSegments = 
+    uint maxNumSegments =
         (bitmapColSize / (LbmMaxSegSize + descriptorBytesPerSegment))
         + ((bitmapColSize % (LbmMaxSegSize + descriptorBytesPerSegment)) == 0 ? 0 : 1);
     return (bitmapColSize - maxNumSegments * descriptorBytesPerSegment);
@@ -2122,7 +2119,7 @@ bool LbmEntry::containsRid(LcsRid rid)
 int LbmEntry::segmentContainsRid(
     LcsRid rid,
     LcsRid startRid,
-    PBuffer pSeg,   
+    PBuffer pSeg,
     uint nSegBytes)
 {
     if (rid >= startRid && rid < startRid + (nSegBytes * LbmOneByteSize)) {
@@ -2157,7 +2154,7 @@ void LbmEntry::validateEntrySize()
     for (uint i = 0; i < keyData.size(); i++) {
         keyData[i] = entryTuple[i];
     }
-    
+
     std::ostringstream oss;
     TuplePrinter tuplePrinter;
     tuplePrinter.print(oss, keyDesc, keyData);

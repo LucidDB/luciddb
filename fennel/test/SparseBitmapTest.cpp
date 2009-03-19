@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2008-2008 The Eigenbase Project
-// Copyright (C) 2008-2008 Disruptive Tech
-// Copyright (C) 2008-2008 LucidEra, Inc.
+// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2008-2009 SQLstream, Inc.
+// Copyright (C) 2008-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -118,7 +118,7 @@ struct SparseBitmapLeaf : public fennel::StoredNode
     {
         return reinterpret_cast<fennel::PConstBuffer>(this + 1);
     }
-    
+
     /**
      * @return read/write reference to bytes containing bit array on
      * this page
@@ -179,7 +179,7 @@ class SparseBitmap
     fennel::PageId searchDirectory(
         SparseBitmapDirLock &dirLock,
         SparseBitmapOffset iLeafStartOffset);
-    
+
 public:
     /**
      * Creates a new empty sparse bitmap (or loads an existing one).
@@ -270,7 +270,7 @@ fennel::PageId SparseBitmap::searchDirectory(
     SparseBitmapOffset iLeafStartOffset)
 {
     SparseBitmapDirectory const &dir = dirLock.getNodeForRead();
-    
+
     SparseBitmapDirEntry const *pFirst = dir.getEntriesForRead();
     SparseBitmapDirEntry const *pLast = pFirst + dir.nEntries;
     SparseBitmapDirEntry const *pFound =
@@ -411,12 +411,12 @@ class SparseBitmapTest : virtual public TestBase
     SharedSegmentFactory pSegmentFactory;
     SharedSegment pSegment;
     SegmentAccessor segmentAccessor;
-    
+
     static const DeviceId BITMAP_DEVICE_ID;
-        
+
     void openStorage(DeviceMode deviceMode);
     void closeStorage();
-    
+
 public:
     explicit SparseBitmapTest()
     {
@@ -427,7 +427,7 @@ public:
     }
 
     virtual void testCaseTearDown();
-    
+
     void testBasic();
     void testSpread();
     void testSizes();
@@ -504,7 +504,7 @@ void SparseBitmapTest::testBasic()
     // Create a new bitmap and set a single bit at offset 0
     PageId dirPageId;
     openStorage(DeviceMode::createNew);
-    
+
     {
         SparseBitmap bitmap(segmentAccessor);
         dirPageId = bitmap.getDirPageId();
@@ -518,7 +518,7 @@ void SparseBitmapTest::testBasic()
     // Now close and re-open storage
     closeStorage();
     openStorage(DeviceMode::load);
-    
+
     {
         // Verify that we can still read the bit back
         SparseBitmap bitmap(segmentAccessor, dirPageId);
@@ -530,7 +530,7 @@ void SparseBitmapTest::testBasic()
 void SparseBitmapTest::testSpread()
 {
     // Similar to testBasic, but use a bunch of predefined bit offsets
-    
+
     std::vector<SparseBitmapOffset> filledOffsets;
     filledOffsets.push_back(5);
     filledOffsets.push_back(6);
@@ -540,17 +540,17 @@ void SparseBitmapTest::testSpread()
     filledOffsets.push_back(50001);
     filledOffsets.push_back(50004);
     filledOffsets.push_back(55000);
-    
+
     std::vector<SparseBitmapOffset> emptyOffsets;
     emptyOffsets.push_back(0);
     emptyOffsets.push_back(7);
     emptyOffsets.push_back(1000);
     emptyOffsets.push_back(50003);
     emptyOffsets.push_back(1000000);
-    
+
     PageId dirPageId;
     openStorage(DeviceMode::createNew);
-    
+
     {
         SparseBitmap bitmap(segmentAccessor);
         dirPageId = bitmap.getDirPageId();
@@ -558,11 +558,11 @@ void SparseBitmapTest::testSpread()
             bitmap.setBit(filledOffsets[i], 1);
         }
     }
-    
+
     closeStorage();
 
     openStorage(DeviceMode::load);
-    
+
     {
         SparseBitmap bitmap(segmentAccessor, dirPageId);
         for (int i = 0; i < filledOffsets.size(); ++i) {

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -49,11 +49,11 @@ class LbmEntryDump : public TraceSource
      * which dumps are generated.
      */
     TraceLevel traceLevel;
-    
+
 public:
     explicit LbmEntryDump(TraceLevel traceLevelInit,
         SharedTraceTarget pTraceTarget, string name);
-    uint dump(BTreeDescriptor const &treeDescriptor, bool printRID=false);
+    uint dump(BTreeDescriptor const &treeDescriptor, bool printRID = false);
 };
 
 FENNEL_END_NAMESPACE
