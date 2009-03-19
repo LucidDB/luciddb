@@ -13,7 +13,7 @@ done | sort | uniq
 echo "*** Line counts for green zone"
 wc -l `find . \( -name '*.cpp' -o -name '*.h' -o -name '*.ypp' -o -name '*.lpp' \) -a ! -path '*disruptivetech*' -a ! -path '*lucidera*'`
 
-echo "*** Line counts for Disruptive Tech yellow zone"
+echo "*** Line counts for SQLstream yellow zone"
 wc -l `find disruptivetech -name '*.cpp' -o -name '*.h'`
 
 echo "*** Line counts for LucidEra yellow zone"

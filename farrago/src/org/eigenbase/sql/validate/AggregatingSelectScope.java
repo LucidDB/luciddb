@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2004-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -76,13 +76,15 @@ public class AggregatingSelectScope
         }
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Returns the expressions that are in the GROUP BY clause (or the
-     * SELECT DISTINCT clause, if distinct) and that can therefore be
-     * referenced without being wrapped in aggregate functions.
+     * Returns the expressions that are in the GROUP BY clause (or the SELECT
+     * DISTINCT clause, if distinct) and that can therefore be referenced
+     * without being wrapped in aggregate functions.
      *
-     * <p>The expressions are fully-qualified, and any "*" in select clauses
-     * are expanded.
+     * <p>The expressions are fully-qualified, and any "*" in select clauses are
+     * expanded.
      *
      * @return list of grouping expressions
      */
@@ -92,16 +94,17 @@ public class AggregatingSelectScope
             // Cannot compute this in the constructor: select list has not been
             // expanded yet.
             assert select.isDistinct();
-            
+
             // Remove the AS operator so the expressions are consistent with
             // OrderExpressionExpander.
             List<SqlNode> groupExprs = new ArrayList<SqlNode>();
-            for (SqlNode selectItem :
-                ((SelectScope) parent).getExpandedSelectList())
+            for (
+                SqlNode selectItem
+                : ((SelectScope) parent).getExpandedSelectList())
             {
                 if (SqlUtil.isCallTo(
-                    selectItem,
-                    SqlStdOperatorTable.asOperator))
+                        selectItem,
+                        SqlStdOperatorTable.asOperator))
                 {
                     groupExprs.add(((SqlCall) selectItem).getOperands()[0]);
                 } else {
@@ -115,8 +118,6 @@ public class AggregatingSelectScope
             return Collections.emptyList();
         }
     }
-
-    //~ Methods ----------------------------------------------------------------
 
     public SqlNode getNode()
     {

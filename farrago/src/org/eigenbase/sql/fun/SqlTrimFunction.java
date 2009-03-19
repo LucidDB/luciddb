@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -130,13 +130,13 @@ public class SqlTrimFunction
         // Be defensive, in case the parser instantiates a call using say
         // "TRIM"('a').
         if (operands.length != 3) {
-            operands = new SqlNode[] {
-                operands.length > 0 ? operands[0] : null,
-                operands.length > 1 ? operands[1] : null,
-                operands.length > 2
-                    ? operands[2]
+            operands =
+                new SqlNode[] {
+                    (operands.length > 0) ? operands[0] : null,
+                    (operands.length > 1) ? operands[1] : null,
+                    (operands.length > 2) ? operands[2]
                     : SqlLiteral.createNull(SqlParserPos.ZERO)
-            };
+                };
         }
         if (null == operands[0]) {
             operands[0] = SqlLiteral.createSymbol(Flag.BOTH, pos);
@@ -167,10 +167,7 @@ public class SqlTrimFunction
             }
         }
 
-        SqlNode [] ops = {
-            call.operands[1],
-            call.operands[2]
-        };
+        SqlNode [] ops = { call.operands[1], call.operands[2] };
 
         return SqlTypeUtil.isCharTypeComparable(
             callBinding,

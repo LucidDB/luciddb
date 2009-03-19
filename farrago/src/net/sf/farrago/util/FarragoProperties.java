@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -127,22 +127,23 @@ public class FarragoProperties
 
     /**
      * The integer property "net.sf.farrago.ddl.DdlReloadTableStmt.sleep"
-     * specifies (if set) the number of milliseconds that ALTER TABLE
-     * should sleep after taking locks and before executing.  This
-     * is a trap intended solely for test instrumentation.
+     * specifies (if set) the number of milliseconds that ALTER TABLE should
+     * sleep after taking locks and before executing. This is a trap intended
+     * solely for test instrumentation.
      */
     public final IntegerProperty testTableReloadSleep =
         new IntegerProperty(
-            this, "net.sf.farrago.ddl.DdlReloadTableStmt.sleep");
+            this,
+            "net.sf.farrago.ddl.DdlReloadTableStmt.sleep");
 
     /**
-     * The boolean property "net.sf.farrago.ddl.DdlReloadTableStmt.crash"
-     * causes ALTER TABLE to fail in a mode which simultates
-     * a database crash.
+     * The boolean property "net.sf.farrago.ddl.DdlReloadTableStmt.crash" causes
+     * ALTER TABLE to fail in a mode which simultates a database crash.
      */
     public final BooleanProperty testTableReloadCrash =
         new BooleanProperty(
-            this, "net.sf.farrago.ddl.DdlReloadTableStmt.crash",
+            this,
+            "net.sf.farrago.ddl.DdlReloadTableStmt.crash",
             false);
 
     //~ Constructors -----------------------------------------------------------

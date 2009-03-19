@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -109,7 +109,7 @@ void BTreeBuildLevel::indexLastChild()
 
     uint cbTuple = nodeAccessor.tupleAccessor.getByteCount(
         nodeAccessor.tupleData);
-    
+
     BTreeNode *pNode = &(pageLock.getNodeForWrite());
     if (isNodeFull(*pNode,cbTuple)) {
         indexLastKey(false);
@@ -118,7 +118,7 @@ void BTreeBuildLevel::indexLastChild()
         // FIXME: should override fillfactor here, or provide a proper error
         // msg; same thing somewhere else
         assert(!isNodeFull(*pNode,cbTuple));
-        
+
         // indexLastKey used tupleData, so have to rebind it
         builder.getLevel(iLevel - 1).unmarshalLastKey();
     }
@@ -156,17 +156,17 @@ BTreeNode *BTreeBuildLevel::allocateAndLinkNewNode()
         prevNode,
         prevPageId,
         pageId);
-    
+
     // Let the cache know we're not planning to revisit the page we just
     // finished.
     builder.getCacheAccessor()->nicePage(prevPageLock.getPage());
-    
+
     ++iNode;
     if (nEntriesPerNode) {
         // Recalculate balancing.
         nEntriesPerNode = builder.calculateChildEntriesPerNode(
-            builder.getLevel(iLevel+1).nEntriesTotal, 
-            nEntriesTotal, 
+            builder.getLevel(iLevel + 1).nEntriesTotal,
+            nEntriesTotal,
             iNode);
     }
     return &node;

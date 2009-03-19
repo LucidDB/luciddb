@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -138,7 +138,7 @@ PLcsClusterNode LcsClusterNodeWriter::allocateClusterPage(LcsRid firstRid)
     if (clusterLock.isLocked()) {
         // Remember the predecessor so that we can chain it below.
         prevPageId = clusterLock.getPageId();
-        
+
         // Kick off an asynchronous write on the page we've just finished
         // so that when it comes time to checkpoint or victimize,
         // maybe it will be on disk already.
@@ -169,7 +169,7 @@ void LcsClusterNodeWriter::init(
 
     // initialize lastVal, firstVal, and nVal fields in the header
     // to point to the appropriate positions in the indexBlock
-    
+
     setHdrOffsets(pHdr);
 
     minSzLeft = nClusterCols * (LcsMaxLeftOver * sizeof(uint16_t) +
@@ -244,7 +244,7 @@ void LcsClusterNodeWriter::openAppend(
         nextWidthChange[i] = 1;
 
         oValBank[i] = 0;
-        batchCount[i] = pHdr->nBatch/nClusterCols;
+        batchCount[i] = pHdr->nBatch / nClusterCols;
     }
 }
 
@@ -417,7 +417,7 @@ bool LcsClusterNodeWriter::addValue(uint column, PBuffer pVal, uint16_t *oVal)
     uint16_t lastValOffset;
     int oldSzLeft = szLeft;
     uint szVal = attrAccessors[column].getStoredByteCount(pVal);
-    
+
     // if we are in forced fixed compression mode,
     // see if the maximum record size in this batch has increased.
     // if so, adjust the szLeft based on the idea that each previous element
@@ -474,10 +474,11 @@ bool LcsClusterNodeWriter::addValue(uint column, PBuffer pVal, uint16_t *oVal)
     // Save the value being inserted.  If we are building the
     // block in fixed mode then save the value into pValBank
     // rather than saving it into the block
-    if (fixed == bForceMode[column])
+    if (fixed == bForceMode[column]) {
         memcpy(pValBank[column] + lastValOffset, pVal, szVal);
-    else
+    } else {
         memcpy(pBlock[column] + lastValOffset, pVal, szVal);
+    }
 
     // return the block offset of the new value;
     *oVal = lastValOffset;
@@ -496,7 +497,7 @@ void LcsClusterNodeWriter::undoValue(
     // so we still need to call undoValue
     uint szVal =
         (pVal) ? attrAccessors[column].getStoredByteCount(pVal) : 0;
-  
+
     // add back size subtracted for offset
     szLeft += (sizeof(uint16_t) + szVal) ;
     assert(szLeft >= 0);
@@ -507,9 +508,9 @@ void LcsClusterNodeWriter::undoValue(
         batchDirs[column].nVal--;
 
         //reset nextWidthChange
-        if (batchDirs[column].nVal == 0)
+        if (batchDirs[column].nVal == 0) {
             nextWidthChange[column] = 1;
-        else {
+        } else {
             // calculate the next nBits value, and the count of values
             // for the next chane
             nBits[column] = calcWidth(batchDirs[column].nVal);
@@ -577,33 +578,36 @@ void LcsClusterNodeWriter::putCompressedBatch(
     memset(pBit, 0, nByte);
 
     for (j = 0, b = 0; j < iV ; j++) {
-        switch(w[j])
-        {
+        switch (w[j]) {
         case 16:
             memcpy(p[j], pRows, batchDirs[column].nRow * sizeof(uint16_t));
             break;
 
         case 8:
-            for (i = 0; i < batchDirs[column].nRow ; i++)
+            for (i = 0; i < batchDirs[column].nRow ; i++) {
                 (p[j])[i] = (uint8_t)((uint16_t *) pRows)[i];
+            }
             break;
 
         case 4:
-            for (i = 0; i < batchDirs[column].nRow ; i++)
-                setBits(p[j] + i/2 , 4, (i % 2) * 4,
-                        (uint16_t)(((uint16_t *) pRows)[i] >> b));
+            for (i = 0; i < batchDirs[column].nRow ; i++) {
+                setBits(p[j] + i / 2 , 4, (i % 2) * 4,
+                    (uint16_t)(((uint16_t *) pRows)[i] >> b));
+            }
             break;
 
         case 2:
-            for (i = 0; i < batchDirs[column].nRow ; i++)
-                setBits(p[j] + i/4 , 2, (i % 4) * 2,
-                        (uint16_t)(((uint16_t *) pRows)[i] >> b));
+            for (i = 0; i < batchDirs[column].nRow ; i++) {
+                setBits(p[j] + i / 4 , 2, (i % 4) * 2,
+                    (uint16_t)(((uint16_t *) pRows)[i] >> b));
+            }
             break;
 
         case 1:
-            for (i = 0; i < batchDirs[column].nRow ; i++)
-                setBits(p[j] + i/8 , 1, (i % 8),
-                        (uint16_t)(((uint16_t *)pRows)[i] >> b));
+            for (i = 0; i < batchDirs[column].nRow ; i++) {
+                setBits(p[j] + i / 8 , 1, (i % 8),
+                    (uint16_t)(((uint16_t *)pRows)[i] >> b));
+            }
             break;
 
         default:
@@ -661,7 +665,6 @@ void LcsClusterNodeWriter::putFixedVarBatch(
         // copied to pBuf
         memcpy(pVal, pRows, batchRows * sizeof(uint16_t));
     } else {
-
         // it's a fixed record batch
         assert(batchDirs[column].mode == LCS_FIXED);
 
@@ -726,7 +729,7 @@ void LcsClusterNodeWriter::putFixedVarBatch(
 
     // reset the batch state.  set batch back to compressed mode
     // unless the flag has been set that next
-    switch(bForceMode[column]) {
+    switch (bForceMode[column]) {
     case none:
         batchDirs[column].mode = LCS_COMPRESSED;
         break;
@@ -848,8 +851,9 @@ void LcsClusterNodeWriter::pickCompressionMode(
                 assert(szVariable >= szFixed);
                 szLeft += (szVariable - szFixed);
                 assert(szLeft >= 0);
-            } else
+            } else {
                 valBankStart[column] = lastVal[column];
+            }
 
             // Reclaim the space at the bottom of the block that
             // used to hold the values
@@ -863,7 +867,6 @@ void LcsClusterNodeWriter::pickCompressionMode(
             nByte = batchRows * batchDirs[column].recSize;
 
         } else {
-
             // batch will be stored in variable mode
 
             batchDirs[column].mode = LCS_VARIABLE;
@@ -876,7 +879,6 @@ void LcsClusterNodeWriter::pickCompressionMode(
             bForceMode[column] = variable;
         }
     } else {
-
         // batch will be stored in compressed mode
         // values will be put at the start of the new batch
 
@@ -927,10 +929,11 @@ void LcsClusterNodeWriter::pickCompressionMode(
 // back to the index block)
 void myCopy(void* pDest, void* pSrc, uint sz)
 {
-    if (pDest == pSrc)
+    if (pDest == pSrc) {
         return;
-    else
+    } else {
         memcpy(pDest, pSrc, sz);
+    }
 }
 
 RecordNum LcsClusterNodeWriter::moveFromIndexToTemp()
@@ -943,7 +946,7 @@ RecordNum LcsClusterNodeWriter::moveFromIndexToTemp()
     uint b;
 
     batchDirOffset.reset(new uint16_t[pHdr->nBatch]);
-    
+
     // First move the values
     //
     // copy values from index for all columns starting with the
@@ -1010,8 +1013,7 @@ RecordNum LcsClusterNodeWriter::moveFromIndexToTemp()
 
                 // step past offsets
                 loc = (uint16_t) (loc + sizeOffsets);
-            } else  {
-
+            } else {
                 // fixed mode batch
                 uint sizeFixed;
 
@@ -1068,13 +1070,13 @@ void LcsClusterNodeWriter::moveFromTempToIndex()
 
     // Copy values from temporary blocks for all columns starting with the
     // 1st column in cluster.
-    
+
     for (offset = (uint16_t) szBlock, column = 0; column < nClusterCols;
         column++)
     {
         sz = szBlock - lastVal[column];
         myCopy(
-            pIndexBlock +(offset-sz), pBlock[column] + lastVal[column], sz);
+            pIndexBlock + (offset - sz), pBlock[column] + lastVal[column], sz);
 
         //  set delta value to subtract from offsets to get relative offset
         delta[column] = (uint16_t)(szBlock - offset);
@@ -1082,7 +1084,7 @@ void LcsClusterNodeWriter::moveFromTempToIndex()
         // adjust firstVal and lastVal in the leaf block header to appropriate
         // offsets in index block (currently base on offsets in temporary block)
         firstVal[column] = offset;
-        offset = (uint16_t) (offset-sz);
+        offset = (uint16_t) (offset - sz);
         lastVal[column] = offset;
     }
 
@@ -1094,7 +1096,7 @@ void LcsClusterNodeWriter::moveFromTempToIndex()
 
             pBatch = (PLcsBatchDir)(pBlock[column] + batchOffset[column]);
 
-            if(pBatch[b].mode == LCS_COMPRESSED) {
+            if (pBatch[b].mode == LCS_COMPRESSED) {
                 uint8_t     *pBit;
                 WidthVec    w;      // bitVec m_width vector
                 PtrVec      p;      // bitVec offsets
@@ -1138,7 +1140,6 @@ void LcsClusterNodeWriter::moveFromTempToIndex()
                 // step past offsets
                 loc = (uint16_t) (loc + sizeOffsets);
             } else {
-
                 // Fixed mode
                 uint sizeFixed;
 
@@ -1182,11 +1183,11 @@ void LcsClusterNodeWriter::moveFromTempToIndex()
 void LcsClusterNodeWriter::allocArrays()
 {
     // allocate arrays only if they have not been allocated already
-    if (!arraysAllocated) {        
+    if (!arraysAllocated) {
         arraysAllocated = true;
 
         batchDirs.reset(new LcsBatchDir[nClusterCols]);
-        
+
         pValBank.reset(new PBuffer[nClusterCols]);
 
         // allocate larger buffers for the individual pages in the value bank
@@ -1208,11 +1209,11 @@ void LcsClusterNodeWriter::allocArrays()
         valBankStart.reset(new uint16_t[nClusterCols]);
 
         forceModeCount.reset(new uint[nClusterCols]);
-        
+
         bForceMode.reset(new ForceMode[nClusterCols]);
 
         oValBank.reset(new uint16_t[nClusterCols]);
-    
+
         batchOffset.reset(new uint16_t[nClusterCols]);
 
         batchCount.reset(new uint[nClusterCols]);

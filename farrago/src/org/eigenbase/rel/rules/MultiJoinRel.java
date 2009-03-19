@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -100,7 +100,7 @@ public final class MultiJoinRel
         this.joinFieldRefCountsMap = joinFieldRefCountsMap;
         this.postJoinFilter = postJoinFilter;
     }
-    
+
     /*
      * @deprecated
      */
@@ -126,7 +126,7 @@ public final class MultiJoinRel
             projFields,
             joinFieldRefCountsMap,
             null);
-    }    
+    }
 
     //~ Methods ----------------------------------------------------------------
 
@@ -196,15 +196,15 @@ public final class MultiJoinRel
         // Note that we don't need to include the join field reference counts
         // in the digest because that field does not change for a given set
         // of inputs
-        Object[] objects = new Object[nExtraTerms - 1];
+        Object [] objects = new Object[nExtraTerms - 1];
         objects[0] = isFullOuterJoin;
         objects[1] = joinTypeNames;
         objects[2] = outerJoinConds;
         objects[3] = projFieldObjects;
         if (postJoinFilter != null) {
             objects[4] = postJoinFilter;
-        }   
-        
+        }
+
         pw.explain(this, terms, objects);
     }
 
@@ -288,7 +288,7 @@ public final class MultiJoinRel
     {
         return cloneJoinFieldRefCountsMap();
     }
-    
+
     /**
      * @return post-join filter associated with this MultiJoinRel
      */

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -90,7 +90,8 @@ public class LcsIndexSemiJoinRule
         //         LcsRowScanRel.class,
         //         new RelOptRuleOperand(
         //             LcsIndexMergeRel.class,
-        //                 new RelOptRuleOperand(LcsIndexSearchRel.class, ANY))))
+        //                 new RelOptRuleOperand(LcsIndexSearchRel.class,
+        // ANY))))
 
         super(rule);
         description = "LcsIndexSemiJoinRule: " + id;
@@ -244,7 +245,7 @@ public class LcsIndexSemiJoinRule
 
         Double rowScanInputSelectivity =
             RelMdUtil.computeSemiJoinSelectivity(semiJoin);
-        
+
         RelNode [] inputRels =
             addNewIndexAccessRel(
                 call,

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,7 +44,7 @@ using namespace fennel;
  * is derived from SnapshotSegmentTestBase, which allows the underlying segment
  * it uses for storage to be versioned.
  */
-class LcsClusterReplaceExecStreamTest : 
+class LcsClusterReplaceExecStreamTest :
     public ExecStreamUnitTestBase, public SnapshotSegmentTestBase
 {
     StandardTypeDescriptorFactory stdTypeFactory;
@@ -53,11 +53,11 @@ class LcsClusterReplaceExecStreamTest :
 
     PageId savedRootPageId;
     BTreeDescriptor btreeDescriptor;
-    
+
     /**
      * Loads a cluster with the values specified by the mock producer stream
      * generator input parameter, using a LcsClusterAppendExecStream.
-     * 
+     *
      * @param nCols number of columns in the cluster
      * @param nRows number of rows to load
      * @param pInputGenerator the generator that produces the data to be loaded
@@ -197,7 +197,7 @@ void LcsClusterReplaceExecStreamTest::testSingleColRepeatingSequence(
 {
     // Original cluster contains the values inputSeqStart, inputSeqStart+2, ...
     // Replace every other rid starting at rid replSeqStart with values
-    // replaceSeqStart, replaceSeqStart+2, ..., 
+    // replaceSeqStart, replaceSeqStart+2, ...,
     // The replace cluster should have the sequence expectedSeqStart,
     // expectedSeqStart+1, ...
 
@@ -252,7 +252,7 @@ void LcsClusterReplaceExecStreamTest::testReplaceAllRows()
     colGenerator =
         SharedInt64ColumnGenerator(new SeqColumnGenerator(0, 1));
     columnGenerators.push_back(colGenerator);
-    SharedMockProducerExecStreamGenerator pReplClusterInputGenerator = 
+    SharedMockProducerExecStreamGenerator pReplClusterInputGenerator =
         SharedMockProducerExecStreamGenerator(
             new CompositeExecStreamGenerator(columnGenerators));
 
@@ -425,7 +425,7 @@ void LcsClusterReplaceExecStreamTest::loadCluster(
     uint nCols,
     uint nRows,
     SharedMockProducerExecStreamGenerator pInputGenerator)
-{    
+{
     MockProducerExecStreamParams mockParams;
     for (uint i = 0; i < nCols; i++) {
         mockParams.outputTupleDesc.push_back(attrDesc_int64);
@@ -458,7 +458,7 @@ void LcsClusterReplaceExecStreamTest::loadCluster(
         new LcsClusterAppendExecStream(),
         lcsAppendParams);
     lcsAppendStreamEmbryo.getStream()->setName("LcsClusterAppendExecStream");
-    
+
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, lcsAppendStreamEmbryo);
 
@@ -485,7 +485,7 @@ void LcsClusterReplaceExecStreamTest::initClusterAppendParams(
     lcsAppendParams.pCacheAccessor = pCache;
     lcsAppendParams.pSegment = pRandomSegment;
     lcsAppendParams.rootPageIdParamId = DynamicParamId(0);
-    
+
     for (uint i = 0; i < nCols; i++) {
         lcsAppendParams.inputProj.push_back(i);
     }
@@ -519,7 +519,7 @@ void LcsClusterReplaceExecStreamTest::verifyCluster(
 {
     // setup parameters into scan
     //  single cluster with only one column, project that single column
-    
+
     LcsRowScanExecStreamParams scanParams;
     scanParams.hasExtraFilter = false;
     scanParams.isFullScan = true;
@@ -548,17 +548,17 @@ void LcsClusterReplaceExecStreamTest::verifyCluster(
     ValuesExecStreamParams valuesParams;
     ExecStreamEmbryo valuesStreamEmbryo;
     boost::shared_array<FixedBuffer> pBuffer;
-         
+
     valuesParams.outputTupleDesc.push_back(attrDesc_int64);
     valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
     valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
-                  
+
     uint bufferSize = 16;
     pBuffer.reset(new FixedBuffer[bufferSize]);
     valuesParams.pTupleBuffer = pBuffer;
     valuesParams.bufSize = 0;
     valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
-    valuesStreamEmbryo.getStream()->setName("ValuesExecStream"); 
+    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
 
     ExecStreamEmbryo scanStreamEmbryo;
     scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
@@ -566,7 +566,7 @@ void LcsClusterReplaceExecStreamTest::verifyCluster(
 
     SharedExecStream pOutputStream =
         prepareTransformGraph(valuesStreamEmbryo, scanStreamEmbryo);
-    
+
     verifyOutput(*pOutputStream, nRows, resultGenerator);
 }
 
@@ -602,7 +602,7 @@ void LcsClusterReplaceExecStreamTest::replaceCluster(
         new LcsClusterReplaceExecStream(),
         lcsReplaceParams);
     lcsReplaceStreamEmbryo.getStream()->setName("LcsClusterReplaceExecStream");
-    
+
     SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo, lcsReplaceStreamEmbryo);
 
@@ -620,15 +620,15 @@ void LcsClusterReplaceExecStreamTest::replaceCluster(
 }
 
 void LcsClusterReplaceExecStreamTest::testCaseSetUp()
-{    
+{
     ExecStreamUnitTestBase::testCaseSetUp();
     SnapshotSegmentTestBase::testCaseSetUp();
-    
+
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     attrDesc_bitmap = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_CHAR),
-        true, pRandomSegment->getUsablePageSize()/8);
+        true, pRandomSegment->getUsablePageSize() / 8);
 
     savedRootPageId = NULL_PAGE_ID;
 }

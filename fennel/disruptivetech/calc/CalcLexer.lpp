@@ -17,11 +17,11 @@
  *            NOTE: Because we are generating C++ scanner, this option
  *                  is pretty much useless.  Keep this option mainly for
  *                  consistency with the prefix used for bison.
- * outfile  - Specifies the name of the output file to use. 
+ * outfile  - Specifies the name of the output file to use.
  *            NOTE: Use "lex.yy.c" since that what automake expects the
  *                  output file to be, automake will use lex.yy.c to generate
  *                  the final output file "CalcLexer.cpp"
- * yyclass  - Specifies the name of the C++ class to generate 
+ * yyclass  - Specifies the name of the C++ class to generate
  *
  * NOTE: Do not use the yylineno option to keep track of line numbers
  *       since that causes a compiler warning about yy_flex_realloc being
@@ -96,17 +96,17 @@ NAME        [a-zA-Z_][a-zA-Z_0-9]*
 <comment>"*"+[^*/\n]*  /* eat up '*'s not followed by '/'s */
 
 
-"0x"{HEX}* { 
-                yylval.v_string = hex2string(yytext+2, yyleng-2); 
-                return STRING; 
+"0x"{HEX}* {
+                yylval.v_string = hex2string(yytext+2, yyleng-2);
+                return STRING;
            }
 
 "'"         BEGIN(expect_name);
-   
-<expect_name>{NAME}      { 
+
+<expect_name>{NAME}      {
                 yylval.v_string = yytext;
                 BEGIN(INITIAL);
-                return NAME; 
+                return NAME;
             }
 
 <expect_name>. BEGIN(INITIAL);
@@ -179,8 +179,8 @@ NAME        [a-zA-Z_][a-zA-Z_0-9]*
 %%
 
 void CalcLexer::updateLocation()
-{   
-    /* 
+{
+    /*
      * This function does not handle tokens that span multiple lines.
      */
     yyloc.first_line   = yylineno;
@@ -194,8 +194,8 @@ void CalcLexer::updateLocation()
 }
 
 void CalcLexer::LexerError(const char* msg)
-{     
-    throw CalcAssemblerException(msg, getLocation()); 
+{
+    throw CalcAssemblerException(msg, getLocation());
 }
 
 int CalcLexer::hex(char ch)
@@ -203,12 +203,12 @@ int CalcLexer::hex(char ch)
   if ((ch >= 'a') && (ch <= 'f')) return (ch-'a'+10);
   else if ((ch >= '0') && (ch <= '9')) return (ch-'0');
   else if ((ch >= 'A') && (ch <= 'F')) return (ch-'A'+10);
-  else throw CalcAssemblerException("Invalid hex character", getLocation());  
+  else throw CalcAssemblerException("Invalid hex character", getLocation());
 }
 
 /* convert the hex array pointed to by buf into binary string */
 string CalcLexer::hex2string(const char *buf, uint buflen)
-{   
+{
     int i, count;
     unsigned char ch;
 

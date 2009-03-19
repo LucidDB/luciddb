@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,17 +24,22 @@ package org.eigenbase.util;
 
 import java.util.*;
 
+
 /**
  * Pair of objects.
-*
-* @author jhyde
-* @version $Id$
-* @since Oct 17, 2007
-*/
+ *
+ * @author jhyde
+ * @version $Id$
+ * @since Oct 17, 2007
+ */
 public class Pair<T1, T2>
 {
+    //~ Instance fields --------------------------------------------------------
+
     public final T1 left;
     public final T2 right;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a Pair.
@@ -47,6 +52,8 @@ public class Pair<T1, T2>
         this.left = left;
         this.right = right;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public boolean equals(Object obj)
     {
@@ -64,16 +71,18 @@ public class Pair<T1, T2>
     /**
      * Converts a collection of Pairs into a Map.
      *
-     * <p>This is an obvious thing to
-     * do because Pair is similar in structure to {@link java.util.Map.Entry}.
+     * <p>This is an obvious thing to do because Pair is similar in structure to
+     * {@link java.util.Map.Entry}.
      *
      * <p>The map contains a copy of the collection of Pairs; if you change the
      * collection, the map does not change.
      *
      * @param pairs Collection of Pair objects
+     *
      * @return map with the same contents as the collection
      */
-    public static <K, V> Map<K, V> toMap(Collection<Pair<K, V>> pairs) {
+    public static <K, V> Map<K, V> toMap(Collection<Pair<K, V>> pairs)
+    {
         HashMap<K, V> map = new HashMap<K, V>();
         for (Pair<K, V> pair : pairs) {
             map.put(pair.left, pair.right);

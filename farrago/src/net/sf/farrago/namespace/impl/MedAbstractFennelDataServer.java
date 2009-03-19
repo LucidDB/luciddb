@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,13 +25,13 @@ import java.sql.*;
 
 import java.util.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
-
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
+
+import org.eigenbase.jmi.*;
 
 
 /**
@@ -149,10 +149,9 @@ public abstract class MedAbstractFennelDataServer
             cmd.setIncludeTuples(getIncludeTuples(index));
             getFennelDbHandle().executeCmd(cmd);
             long pageCount = cmd.getResultPageCount();
-            long uniqueKeyCount = 
-                cmd.getResultUniqueKeyCount() == null 
-                    ? -1
-                    : cmd.getResultUniqueKeyCount().longValue();
+            long uniqueKeyCount =
+                (cmd.getResultUniqueKeyCount() == null) ? -1
+                : cmd.getResultUniqueKeyCount().longValue();
             if (implicitTxn) {
                 txnContext.commit();
             }

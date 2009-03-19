@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2005-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2008 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -124,10 +124,10 @@ class FarragoExecutableJavaStmt
 
             // NOTE jvs 1-May-2004: This sequence is subtle.  We can't open all
             // Fennel tuple streams yet, since some may take Java streams as
-            // input, and the Java streams are created by stmtMethod.invoke below
-            // (which calls the generated execute stmtMethod to obtain an iterator).
-            // This means that the generated execute must NOT try to prefetch
-            // any data, since the Fennel streams aren't open yet. In
+            // input, and the Java streams are created by stmtMethod.invoke
+            // below (which calls the generated execute stmtMethod to obtain an
+            // iterator). This means that the generated execute must NOT try to
+            // prefetch any data, since the Fennel streams aren't open yet. In
             // particular, Java iterator implementations must not do prefetch in
             // the constructor (always wait for hasNext/next).
             TupleIter iter =

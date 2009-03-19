@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,7 @@ void LbmSegmentWriter::reset()
     firstWrite = true;
 }
 
-bool LbmSegmentWriter::isEmpty() 
+bool LbmSegmentWriter::isEmpty()
 {
     return firstWrite;
 }
@@ -84,7 +84,7 @@ bool LbmSegmentWriter::addSegment(
         // write out the first set of segments up to the first intermediate
         // zero, if there is one; otherwise, we just end up writing out
         // all of the segments passed in
-        
+
         bitmapTuple[0].pData = (PConstBuffer) &startRid;
         // if the length can't be encoded in a segment descriptor, then
         // we have to treat this bitmap as a single bitmap
@@ -129,6 +129,6 @@ TupleData const &LbmSegmentWriter::produceSegmentTuple()
     return segmentEntry.produceEntryTuple();
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/bitmap/LbmSegmentWriter.cpp#6 $");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/bitmap/LbmSegmentWriter.cpp#7 $");
 
 // End LbmSegmentWriter.cpp

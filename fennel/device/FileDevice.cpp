@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,13 +42,13 @@ FileDevice::FileDevice(
 {
     filename = filenameInit;
     mode = openMode;
-    
+
 #ifdef __MINGW32__
 
     DWORD fdwCreate = mode.create ? CREATE_ALWAYS : OPEN_EXISTING;
 
     DWORD fdwFlags = FILE_FLAG_OVERLAPPED;
-    
+
     DWORD fdwAccess = GENERIC_READ;
     if (!mode.readOnly) {
         fdwAccess |= GENERIC_WRITE;
@@ -71,7 +71,7 @@ FileDevice::FileDevice(
     // log file for read while it was still open for write by the original
     // txn.  Should probably fix the tests instead, in case allowing sharing
     // could hinder performance.
-    
+
     handle = reinterpret_cast<int>(
         CreateFile(
             filename.c_str(),
@@ -104,7 +104,7 @@ FileDevice::FileDevice(
     }
 
 #else
-    
+
     int access = O_LARGEFILE;
     int permission = S_IRUSR;
     if (mode.readOnly) {
@@ -129,14 +129,14 @@ FileDevice::FileDevice(
         // O_DIRECT is set from AioLinuxScheduler, because it is required
         // for libaio.
     }
-    
+
     handle = ::open(filename.c_str(), access, permission);
     if (!isOpen()) {
         std::ostringstream oss;
         oss << "Failed to open file " << filename;
         throw SysCallExcn(oss.str());
     }
-    if (flock(handle, LOCK_SH|LOCK_NB) < 0) {
+    if (flock(handle, LOCK_SH | LOCK_NB) < 0) {
         throw SysCallExcn("File lock failed");
     }
     cbFile = ::lseek(handle,0,SEEK_END);
@@ -150,7 +150,7 @@ FileDevice::FileDevice(
         }
         cbFile = initialSize;
     }
-    
+
 #endif
 }
 
@@ -203,7 +203,7 @@ void FileDevice::setSizeInBytes(FileSize cbFileNew)
         throw SysCallExcn("Resize file failed:  SetEndOfFile");
     }
 #else
-    if(::ftruncate(handle,cbFileNew)){
+    if (::ftruncate(handle,cbFileNew)) {
         throw SysCallExcn("Resize file failed");
     }
 #endif
@@ -220,7 +220,7 @@ void FileDevice::transfer(RandomAccessRequest const &request)
     largeInt.QuadPart = request.cbOffset;
     binding.Offset = largeInt.LowPart;
     binding.OffsetHigh = largeInt.HighPart;
-    
+
     DWORD dwActual = 0;
     BOOL bCompleted;
     if (request.type == RandomAccessRequest::READ) {

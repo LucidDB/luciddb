@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2003-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2008 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,20 +38,20 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.plugin.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.plugin.FarragoPluginClassLoader;
 
+import org.eigenbase.enki.mdr.*;
+import org.eigenbase.jmi.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
-import org.eigenbase.enki.mdr.*;
-import org.eigenbase.jmi.JmiObjUtil;
 
 
 /**
@@ -120,7 +120,7 @@ public class FarragoRuntimeContext
     protected long stmtId;
 
     private NativeRuntimeContext nativeContext;
-    
+
     private EnkiMDSession detachedSession;
 
     //~ Constructors -----------------------------------------------------------
@@ -167,8 +167,8 @@ public class FarragoRuntimeContext
                 classLoader,
                 params.repos,
                 params.fennelTxnContext.getFennelDbHandle(),
-                session != null ? new FarragoSessionDataSource(session) :
-                null);
+                (session != null) ? new FarragoSessionDataSource(session)
+                : null);
         streamOwner = new StreamOwner();
     }
 
@@ -225,11 +225,11 @@ public class FarragoRuntimeContext
                     ((FarragoObjectCache.Entry) allocation).getValue();
                 if (cachedObj == streamGraph) {
                     // REVIEW jvs 1-Sep-2008: This is really gross.  We're
-                    // between a rock (FRG-251) and a hard place (FRG-331).
-                    // This (FRG-338) is the temporary resolution, but we really
-                    // need to straighten out the UDX thread lifecycle once and
-                    // for all.
-                    assert(!streamGraphClosed);
+                    // between a rock (FRG-251) and a hard place (FRG-331). This
+                    // (FRG-338) is the temporary resolution, but we really need
+                    // to straighten out the UDX thread lifecycle once and for
+                    // all.
+                    assert (!streamGraphClosed);
                     streamGraphClosed = true;
                     closeStreamGraph();
                 }
@@ -246,14 +246,14 @@ public class FarragoRuntimeContext
         if (detachedSession != null) {
             EnkiMDRepository mdrepos = getRepos().getEnkiMdrRepos();
             EnkiMDSession callerSession = mdrepos.detachSession();
-            
+
             reattachMdrSession();
             getRepos().endReposSession();
-            
+
             if (callerSession != null) {
                 mdrepos.reattachSession(callerSession);
             }
-        }        
+        }
     }
 
     private void closeStreamGraph()
@@ -281,7 +281,7 @@ public class FarragoRuntimeContext
             super.addAllocation(allocation);
         }
     }
-    
+
     // override CompoundClosableAllocation
     public boolean forgetAllocation(ClosableAllocation allocation)
     {
@@ -289,7 +289,7 @@ public class FarragoRuntimeContext
             return super.forgetAllocation(allocation);
         }
     }
-    
+
     // override CompoundClosableAllocation
     public boolean hasAllocations()
     {
@@ -297,7 +297,7 @@ public class FarragoRuntimeContext
             return !allocations.isEmpty();
         }
     }
-    
+
     // implement RelOptConnection
     public Object contentsAsArray(
         String qualifier,
@@ -326,13 +326,13 @@ public class FarragoRuntimeContext
         try {
             FemDataServer femServer =
                 (FemDataServer) mdrRepos.getByMofId(serverMofId);
-            
+
             server = dataWrapperCache.loadServerFromCatalog(femServer);
         } finally {
             mdrRepos.endTrans();
             mdrRepos.endSession();
         }
-    
+
         try {
             Object obj = server.getRuntimeSupport(param);
             if (obj instanceof FarragoAllocation) {
@@ -444,8 +444,7 @@ public class FarragoRuntimeContext
         // for CURRENT_SCHEMA when no schema has been set is
         // implementation-defined, so we use empty string since NULL
         // values aren't supported for context variables.
-        return sessionVariables.schemaName == null
-            ? ""
+        return (sessionVariables.schemaName == null) ? ""
             : sessionVariables.schemaName;
     }
 
@@ -562,9 +561,9 @@ public class FarragoRuntimeContext
     }
 
     /**
-     * Associates a FarragoTransform instance with its class name, so that it can be
-     * retrieved by a native method later. Binds the stream to a specific owner (that
-     * will eventually close it).
+     * Associates a FarragoTransform instance with its class name, so that it
+     * can be retrieved by a native method later. Binds the stream to a specific
+     * owner (that will eventually close it).
      */
     public void registerFarragoTransform(String key, FarragoTransform xform)
     {
@@ -695,11 +694,13 @@ public class FarragoRuntimeContext
         txn.beginReadTxn();
         try {
             FennelStreamHandle streamHandle = getStreamHandle(streamName, true);
-            final FennelTupleIter iter = new FennelTupleIter(
-                tupleReader,
-                streamGraph,
-                streamHandle,
-                repos.getCurrentConfig().getFennelConfig().getCachePageSize());
+            final FennelTupleIter iter =
+                new FennelTupleIter(
+                    tupleReader,
+                    streamGraph,
+                    streamHandle,
+                    repos.getCurrentConfig().getFennelConfig()
+                         .getCachePageSize());
             registerJavaStream(streamId, iter);
             return iter;
         } finally {
@@ -709,14 +710,14 @@ public class FarragoRuntimeContext
 
     /**
      * Creates a FennelTupleIter for executing a plan represented as XML. This
-     * iterator is used during execution in Fennel's JavaTransformExecStream from code
-     * generated by FennelToIteratorConverter.
+     * iterator is used during execution in Fennel's JavaTransformExecStream
+     * from code generated by FennelToIteratorConverter.
      *
      * <p>Note: The semantics of streamName and streamId differ from {@link
-     * #newFennelTupleIter(FennelTupleReader, String, int, Object)}.
-     * The iter is not registered as the java peer of the fennel stream; the
-     * registered peer of the stream is instead the specially generated
-     * FarragoTransform. (See {@link net.sf.farrago.query.FarragoTransformDef#init}.)
+     * #newFennelTupleIter(FennelTupleReader, String, int, Object)}. The iter is
+     * not registered as the java peer of the fennel stream; the registered peer
+     * of the stream is instead the specially generated FarragoTransform. (See
+     * {@link net.sf.farrago.query.FarragoTransformDef#init}.)
      *
      * @param tupleReader object providing FennelTupleReader implementation
      * @param streamName name of the JavaExecTransformStream we're reading on
@@ -940,7 +941,7 @@ public class FarragoRuntimeContext
         if (streamGraphToAbort != null) {
             streamGraphToAbort.abort();
         }
-        
+
         // Synchronize so the execution handle doesn't get reset while
         // we're checking for its existence
         synchronized (this) {
@@ -958,7 +959,7 @@ public class FarragoRuntimeContext
             throw FarragoResource.instance().ExecutionAborted.ex();
         }
     }
-    
+
     // implement FarragoSessionRuntimeContext
     public void setExecutionHandle(FennelExecutionHandle execHandle)
     {
@@ -966,7 +967,7 @@ public class FarragoRuntimeContext
             this.execHandle = execHandle;
         }
     }
-    
+
     // implement FarragoSessionRuntimeContext
     public void setCursorState(boolean active)
     {
@@ -1082,9 +1083,7 @@ public class FarragoRuntimeContext
     public Class statementClassForName(String statementClassName)
     {
         try {
-
             if (null == statementClassLoader) {
-
                 return Class.forName(
                     statementClassName,
                     true,
@@ -1092,9 +1091,7 @@ public class FarragoRuntimeContext
             }
 
             return statementClassLoader.loadClass(statementClassName);
-
         } catch (ClassNotFoundException e) {
-
             tracer.log(
                 Level.SEVERE,
                 "Could not load statement class: " + statementClassName,
@@ -1286,7 +1283,7 @@ public class FarragoRuntimeContext
             byteBuffer,
             index);
     }
-    
+
     /**
      * @return true if a UDR is currently being executed
      */
@@ -1299,7 +1296,7 @@ public class FarragoRuntimeContext
             return true;
         }
     }
-    
+
     public void detachMdrSession()
     {
         Util.permAssert(
@@ -1308,7 +1305,7 @@ public class FarragoRuntimeContext
 
         detachedSession = getRepos().getEnkiMdrRepos().detachSession();
     }
-    
+
     public void reattachMdrSession()
     {
         getRepos().getEnkiMdrRepos().reattachSession(detachedSession);

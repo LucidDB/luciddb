@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -88,17 +88,27 @@ bool Locale::operator!=(const Locale &rhs) const {
 bool Locale::operator<(const Locale &rhs) const
 {
     int langCmp = this->getLanguage().compare(rhs.getLanguage());
-    if (langCmp < 0) return true;
-    if (langCmp > 0) return false;
-    
+    if (langCmp < 0) {
+        return true;
+    }
+    if (langCmp > 0) {
+        return false;
+    }
+
     // same language, check country
     int countryCmp = this->getCountry().compare(rhs.getCountry());
-    if (countryCmp < 0) return true;
-    if (countryCmp > 0) return false;
-    
+    if (countryCmp < 0) {
+        return true;
+    }
+    if (countryCmp > 0) {
+        return false;
+    }
+
     // same country, check variant
     int variantCmp = this->getVariant().compare(rhs.getVariant());
-    if (variantCmp < 0) return true;
+    if (variantCmp < 0) {
+        return true;
+    }
     return false;
 }
 
@@ -119,9 +129,11 @@ const string &Locale::getVariant() const
 
 string Locale::getDisplayName() const
 {
-    if (_lang.empty()) return DEFAULT_LOCALE_DISPLAY;
+    if (_lang.empty()) {
+        return DEFAULT_LOCALE_DISPLAY;
+    }
 
-    return 
+    return
         _lang
         + (_country.empty() ? "" : (string("_") + _country))
         + (_variant.empty() ? "" : (string("_") + _variant));
@@ -164,3 +176,4 @@ ostream &operator<<(ostream &str, const Locale &loc)
 
 FENNEL_END_CPPFILE("$Id$");
 
+// End Locale.cpp

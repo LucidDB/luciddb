@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
  * Row error severity levels. Keep this consistent with
  * net.sf.farrago.NativeRuntimeContext
  */
-enum ErrorLevel 
+enum ErrorLevel
 {
     ROW_ERROR = 1000,
     ROW_WARNING = 500
@@ -43,7 +43,7 @@ enum ErrorLevel
  * Typically, many or all ErrorSouce instances post errors to the same
  * ErrorTarget.
  */
-class ErrorTarget 
+class ErrorTarget
 {
 public:
 
@@ -62,9 +62,9 @@ public:
      *
      * @param capacity the size of the error buffer
      *
-     * @param index position of the column whose processing caused the 
-     *   exception to occur. -1 indicates that no column was culpable. 
-     *   0 indicates that a filter condition was being processed. Otherwise 
+     * @param index position of the column whose processing caused the
+     *   exception to occur. -1 indicates that no column was culpable.
+     *   0 indicates that a filter condition was being processed. Otherwise
      *   this parameter should be a 1-indexed column position.
      */
     virtual void notifyError(

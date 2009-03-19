@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -130,11 +130,11 @@ public abstract class MedAbstractFennelTableModRel
 
         return needBuffer;
     }
-    
+
     /*
      * Determines if an input needs to be buffered, taking into account
      * whether snapshot support is available.
-     * 
+     *
      * @param input the input
      */
     public boolean inputNeedBuffer(RelNode input)
@@ -143,22 +143,23 @@ public abstract class MedAbstractFennelTableModRel
         // the input, even if it's the same as the target table.  The
         // streams corresponding to the input just need to be set up so that
         // they only read committed data.
-        if (FennelRelUtil.getPreparingStmt(input).getSession().
-            getPersonality().supportsFeature(
-                EigenbaseResource.instance().PersonalitySupportsSnapshots))
+        if (FennelRelUtil.getPreparingStmt(input).getSession().getPersonality()
+                         .supportsFeature(
+                             EigenbaseResource.instance()
+                             .PersonalitySupportsSnapshots))
         {
             return false;
-        } 
-        
+        }
+
         // Deletes and merges always need buffering because they read the
         // table being operated on
         Operation op = getOperation();
-        if (op == TableModificationRel.Operation.DELETE ||
-            op == TableModificationRel.Operation.MERGE)
+        if ((op == TableModificationRel.Operation.DELETE)
+            || (op == TableModificationRel.Operation.MERGE))
         {
             return true;
         }
-        
+
         // All other cases depend on whether the source is the same as the
         // target.
         return inputNeedBuffer();
@@ -231,4 +232,4 @@ public abstract class MedAbstractFennelTableModRel
     }
 }
 
-//End MedAbstractFennelTableModRel.java
+// End MedAbstractFennelTableModRel.java

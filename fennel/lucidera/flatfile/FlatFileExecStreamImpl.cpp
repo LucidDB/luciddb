@@ -1,20 +1,20 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,7 +36,7 @@ FlatFileExecStream *FlatFileExecStream::newFlatFileExecStream()
 }
 
 // NOTE: keep this consistent with the Farrago java file
-//   com.lucidera.farrago.namespace.flatfile.FlatFileFennelRel.java 
+//   com.lucidera.farrago.namespace.flatfile.FlatFileFennelRel.java
 const uint FlatFileExecStreamImpl::MAX_ROW_ERROR_TEXT_WIDTH = 4000;
 
 void FlatFileExecStreamImpl::prepare(
@@ -50,9 +50,9 @@ void FlatFileExecStreamImpl::prepare(
     trim = params.trim;
     mapped = params.mapped;
     columnNames = params.columnNames;
-    
+
     dataTuple.compute(pOutAccessor->getTupleDesc());
-    
+
     scratchAccessor = params.scratchAccessor;
     bufferLock.accessSegment(scratchAccessor);
 
@@ -102,7 +102,7 @@ void FlatFileExecStreamImpl::open(bool restart)
 
     if (header) {
         FlatFileRowDescriptor headerDesc;
-        for (uint i=0; i < rowDesc.size(); i++) {
+        for (uint i = 0; i < rowDesc.size(); i++) {
             headerDesc.push_back(
                 FlatFileColumnDescriptor(
                     FLAT_FILE_MAX_COLUMN_NAME_LEN));
@@ -161,7 +161,7 @@ void FlatFileExecStreamImpl::open(bool restart)
                     FennelResource::instance().flatfileNoMappedColumns(
                         std::string(" "),
                         std::string(" ")));
-            }            
+            }
             rowDesc.setMap(columnMap);
         }
     }
@@ -184,7 +184,7 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
     }
 
     // read up to the number of (good or bad) tuples specified by quantum
-    for (uint nTuples=0; nTuples < quantum.nTuplesMax;) {
+    for (uint nTuples = 0; nTuples < quantum.nTuplesMax;) {
         // ready the next row for output
         while (!isRowPending) {
             // check quantum, since this loop doesn't break until a good
@@ -202,7 +202,7 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
             pParser->scanRow(
                 pBuffer->getReadPtr(),pBuffer->getSize(),rowDesc,lastResult);
             nTuples++;
-            
+
             switch (lastResult.status) {
             case FlatFileRowParseResult::INCOMPLETE_COLUMN:
                 if (pBuffer->isFull()) {
@@ -255,7 +255,7 @@ FlatFileRowDescriptor FlatFileExecStreamImpl::readTupleDescriptor(
 {
     StandardTypeDescriptorFactory typeFactory;
     FlatFileRowDescriptor rowDesc;
-    for (uint i=0; i < tupleDesc.size(); i++) {
+    for (uint i = 0; i < tupleDesc.size(); i++) {
         TupleAttributeDescriptor attr = tupleDesc[i];
         StandardTypeDescriptorOrdinal ordinal =
             StandardTypeDescriptorOrdinal(
@@ -338,9 +338,9 @@ void FlatFileExecStreamImpl::describeStream(TupleData &tupleData)
 {
     if (fieldSizes.size() == 0) {
         throw FennelExcn(
-            FennelResource::instance().flatfileDescribeFailed(dataFilePath) );
+            FennelResource::instance().flatfileDescribeFailed(dataFilePath));
     }
-    
+
     std::ostringstream oss;
     for (int i = 0; i < fieldSizes.size(); i++) {
         oss << fieldSizes[i];
@@ -348,7 +348,7 @@ void FlatFileExecStreamImpl::describeStream(TupleData &tupleData)
             oss << " ";
         }
     }
-    // NOTE: this newly created string is saved as part of the stream 
+    // NOTE: this newly created string is saved as part of the stream
     // to avoid being popped off the stack
     describeResult = oss.str();
     const char *value = describeResult.c_str();
@@ -362,7 +362,7 @@ void FlatFileExecStreamImpl::describeStream(TupleData &tupleData)
 
 void FlatFileExecStreamImpl::logError(const FlatFileRowParseResult &result)
 {
-    switch (result.status) {   
+    switch (result.status) {
     case FlatFileRowParseResult::INCOMPLETE_COLUMN:
         reason = FennelResource::instance().incompleteColumn();
         break;
@@ -407,7 +407,7 @@ void FlatFileExecStreamImpl::logError(
         errorTuple.compute(errorDesc);
     }
 
-    uint length = result.next-result.current;
+    uint length = result.next - result.current;
     length = std::min(length, MAX_ROW_ERROR_TEXT_WIDTH);
     errorTuple[0].pData = (PConstBuffer) result.current;
     errorTuple[0].cbData = length;

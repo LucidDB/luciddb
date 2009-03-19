@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -75,7 +75,7 @@ void LbmBitOpExecStream::open(bool restart)
     if (!outputBuf) {
         // allocate output buffer; the output buffer size is based on the size
         // required for building a LbmEntry
-        uint bitmapColSize = pOutAccessor->getTupleDesc()[nKeys+1].cbStorage;
+        uint bitmapColSize = pOutAccessor->getTupleDesc()[nKeys + 1].cbStorage;
         uint outputBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
         outputBuf.reset(new FixedBuffer[outputBufSize]);
 
@@ -88,7 +88,7 @@ void LbmBitOpExecStream::open(bool restart)
         // allocate a temporary buffer for the bit operation; the temporary
         // buffer should not be larger than what a LbmEntry supports
         bitmapBufSize = LbmEntry::getMaxBitmapSize(bitmapColSize);
-        byteSegBuf.reset(new FixedBuffer[bitmapBufSize]); 
+        byteSegBuf.reset(new FixedBuffer[bitmapBufSize]);
         pByteSegBuf = byteSegBuf.get();
 
     } else {
@@ -171,7 +171,6 @@ bool LbmBitOpExecStream::flush()
 bool LbmBitOpExecStream::addSegments()
 {
     while (addLen > 0) {
-
         if (segmentWriter.addSegment(addRid, addByteSeg, addLen)) {
             break;
         }

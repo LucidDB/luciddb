@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,6 +23,7 @@ package com.lucidera.lcs;
 import com.lucidera.farrago.*;
 
 import java.math.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -38,7 +39,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -82,7 +83,7 @@ public class LcsIndexGuide
     private int numFlattenedCols;
 
     private int numUnFlattenedCols;
-    
+
     private Map<FemLocalIndex, Integer> clusterToRootPageIdParamIdMap;
 
     //~ Constructors -----------------------------------------------------------
@@ -116,7 +117,7 @@ public class LcsIndexGuide
         numFlattenedCols = flattenedRowType.getFieldList().size();
 
         this.clusteredIndexes = clusteredIndexes;
-        
+
         clusterToRootPageIdParamIdMap = new HashMap<FemLocalIndex, Integer>();
 
         createClusterMap(clusteredIndexes);
@@ -168,18 +169,18 @@ public class LcsIndexGuide
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Determines the list of indexes from a candidate index list those
-     * indexes that contain at least one column matching the columns of
-     * a specified index.
-     * 
+     * Determines the list of indexes from a candidate index list those indexes
+     * that contain at least one column matching the columns of a specified
+     * index.
+     *
      * @param repos repository
      * @param index the specified index
      * @param candidateIndexes candidate indexes
      * @param singleMatch if true, find only the first candidate index that
-     * covers each column in the specified index; otherwise, find all
-     * candidate indexes that cover each column
+     * covers each column in the specified index; otherwise, find all candidate
+     * indexes that cover each column
      * @param requireNonEmpty if true, the return list must be non-empty
-     * 
+     *
      * @return the list of indexes from the candidate list covering the
      * specified index
      */
@@ -757,18 +758,18 @@ public class LcsIndexGuide
 
     /**
      * Creates a cluster append stream for a specific clustered index.
-     * 
+     *
      * @param rel the RelNode that the cluster belongs to
      * @param clusterIndex the clustered index
-     * @param hasIndexes if true, indexes will also be inserted into as part
-     * of execution of this cluster append
-     * @param rootPageIdParamId the dynamic parameter id of the root page of
-     * the cluster; only set > 0 if this is a cluster replace
-     * @param clusterPos only used if this is a cluster replace, in which
-     * case, it corresponds to the position of this cluster from the
-     * list of clusters that will be replaced
+     * @param hasIndexes if true, indexes will also be inserted into as part of
+     * execution of this cluster append
+     * @param rootPageIdParamId the dynamic parameter id of the root page of the
+     * cluster; only set > 0 if this is a cluster replace
+     * @param clusterPos only used if this is a cluster replace, in which case,
+     * it corresponds to the position of this cluster from the list of clusters
+     * that will be replaced
      * @param alterTable whether we are doing ALTER TABLE ADD COLUMN
-     * 
+     *
      * @return the constructed cluster append stream
      */
     FemLcsClusterAppendStreamDef newClusterAppend(
@@ -807,6 +808,7 @@ public class LcsIndexGuide
             clusterColProj = new Integer[2];
             clusterColProj[0] = 0;
             clusterColProj[1] = clusterPos;
+
             // Keep track of the dynamic parameter for later use
             clusterToRootPageIdParamIdMap.put(clusterIndex, rootPageIdParamId);
         } else {
@@ -818,8 +820,9 @@ public class LcsIndexGuide
             // index.
             //
             int i = 0;
-            for (CwmIndexedFeature indexedFeature
-                     : clusterIndex.getIndexedFeature())
+            for (
+                CwmIndexedFeature indexedFeature
+                : clusterIndex.getIndexedFeature())
             {
                 FemAbstractColumn column =
                     (FemAbstractColumn) indexedFeature.getFeature();
@@ -926,7 +929,7 @@ public class LcsIndexGuide
         //
         // Setup cluster scans. The generator scans are based on the new
         // clusters being written.
-        //        
+        //
         defineScanStream(generator, rel, true);
 
         //
@@ -1218,7 +1221,7 @@ public class LcsIndexGuide
         if (!write) {
             failIfIndexInvalid(index);
         }
-        
+
         indexAccessor.setIndexId(indexId);
 
         FemTupleDescriptor indexTupleDesc;
@@ -1261,12 +1264,11 @@ public class LcsIndexGuide
             Integer rootPageIdParamId =
                 clusterToRootPageIdParamIdMap.get(index);
             defineClusterScan(
-                index, 
+                index,
                 rel,
                 clusterScan,
                 write,
-                (rootPageIdParamId == null) ?
-                    0 : rootPageIdParamId.intValue());
+                (rootPageIdParamId == null) ? 0 : rootPageIdParamId.intValue());
             scanStream.getClusterScan().add(clusterScan);
         }
     }
@@ -1310,10 +1312,11 @@ public class LcsIndexGuide
         if (!write) {
             failIfIndexInvalid(index);
         }
-        
+
         if (!FarragoCatalogUtil.isIndexTemporary(index)) {
             clusterScan.setRootPageId(
                 stmt.getIndexMap().getIndexRoot(index, write));
+
             // If we're writing to the cluster, then we want to be able
             // to read that data.
             clusterScan.setReadOnlyCommittedData(!write);

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -61,7 +61,7 @@ private:
     uint8_t *magicTable;
 
     // REVIEW jvs 25-Aug-2006: hashValues below are actually inout, right?
-    
+
     /**
      * Compute hash value from value stored in a buffer.
      *
@@ -105,7 +105,7 @@ public:
      *
      * @return the hash value
      */
-    uint hash(TupleData const &inputTuple, 
+    uint hash(TupleData const &inputTuple,
         TupleProjection const &keyProjection,
         vector<LhxHashTrim> const &isKeyColVarChar);
 

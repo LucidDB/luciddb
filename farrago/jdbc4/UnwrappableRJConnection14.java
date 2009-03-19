@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2008-2008 The Eigenbase Project
-// Copyright (C) 2008-2008 Disruptive Tech
-// Copyright (C) 2008-2008 LucidEra, Inc.
+// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2008-2009 SQLstream, Inc.
+// Copyright (C) 2008-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,7 @@ public abstract class UnwrappableRJConnection extends RJConnection
     {
         super(rmiconn);
     }
-    
+
     protected UnwrappableRJConnection(
         RJDriverInterface drv,
         String url,

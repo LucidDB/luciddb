@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,7 +50,7 @@ public class FarragoDbSessionPrivilegeChecker
     private final Map<List<FemAuthId>, Set<FemAuthId>> authMap;
 
     private FemRole publicRole;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     public FarragoDbSessionPrivilegeChecker(FarragoSession session)
@@ -88,7 +88,6 @@ public class FarragoDbSessionPrivilegeChecker
                 inheritRoles(role, authSet);
             }
 
-            
             authSet.add(getPublicRole());
         }
 
@@ -107,15 +106,15 @@ public class FarragoDbSessionPrivilegeChecker
     private FemRole getPublicRole()
     {
         if (publicRole == null) {
-            publicRole = 
+            publicRole =
                 FarragoCatalogUtil.getRoleByName(
                     session.getRepos(),
                     FarragoCatalogInit.PUBLIC_ROLE_NAME);
         }
-        
+
         return publicRole;
     }
-    
+
     // implement FarragoSessionPrivilegeChecker
     public void checkAccess()
     {

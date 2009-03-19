@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,7 +41,7 @@ ExternalSortMerger::ExternalSortMerger(ExternalSortInfo &sortInfoIn)
 
     keyAccessor.bind(tupleAccessor,sortInfo.keyProj);
     keyAccessor2.bind(tupleAccessor2,sortInfo.keyProj);
-    
+
     nMergeMemPages = sortInfo.nSortMemPages + 1;
 
     ppRunAccessors.reset(new SharedExternalSortRunAccessor[nMergeMemPages]);
@@ -157,7 +157,7 @@ void ExternalSortMerger::heapify(uint i)
             highest = r;
         }
     }
-    
+
     if (highest != i) {
         heapExchange(highest,i);
         heapify(highest);
@@ -198,7 +198,7 @@ ExternalSortRC ExternalSortMerger::checkFetch()
 ExternalSortRC ExternalSortMerger::fetch(uint nTuplesRequested)
 {
     sortInfo.stream.checkAbort();
-    
+
     if (nTuplesRequested > EXTSORT_FETCH_ARRAY_SIZE) {
         nTuplesRequested = EXTSORT_FETCH_ARRAY_SIZE;
     }

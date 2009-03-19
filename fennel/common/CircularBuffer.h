@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -228,7 +228,7 @@ public:
  * Iterator over a circular buffer.  The iterator starts at the 0th position
  * in the underlying circular buffer and always increases, even as positions
  * in the underlying circular buffer are recycled.
- * 
+ *
  * <p>
  * Incrementing this iterator has not affect on the contents of the underlying
  * buffer.
@@ -248,13 +248,13 @@ class CircularBufferIter
     uint currPos;
 
 public:
-    
+
     explicit CircularBufferIter(CircularBuffer<T> *pCircularBufferInit)
     {
         pCircularBuffer = pCircularBufferInit;
         reset();
     }
-    
+
     /**
      * Resets the iterator to the initial starting position
      */
@@ -271,7 +271,7 @@ public:
         assert(!pCircularBuffer->empty());
         currPos++;
     }
-    
+
     /**
      * @return reference to the entry at the current iterator position
      */
@@ -290,7 +290,7 @@ public:
      */
     bool end()
     {
-        return 
+        return
             (pCircularBuffer->empty() ||
                 currPos > pCircularBuffer->getLastPos());
     }

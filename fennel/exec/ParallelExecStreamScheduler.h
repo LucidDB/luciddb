@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2008-2008 The Eigenbase Project
-// Copyright (C) 2008-2008 Disruptive Tech
-// Copyright (C) 2008-2008 LucidEra, Inc.
+// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2008-2009 SQLstream, Inc.
+// Copyright (C) 2008-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,7 @@
 #include <boost/scoped_ptr.hpp>
 
 FENNEL_BEGIN_NAMESPACE
-    
+
 class ExecStreamGraphImpl;
 class ParallelExecStreamScheduler;
 class ThreadTracker;
@@ -43,11 +43,11 @@ class ThreadTracker;
  * ParallelExecTask represents a task submitted
  * to ParallelExecStreamScheduler's thread pool.
  */
-class ParallelExecTask 
+class ParallelExecTask
 {
     ParallelExecStreamScheduler &scheduler;
     ExecStream *pStream;
-    
+
 public:
     explicit ParallelExecTask(
         ParallelExecStreamScheduler &scheduler,
@@ -57,7 +57,7 @@ public:
     {
         return pStream->getStreamId();
     }
-    
+
     void execute();
 };
 
@@ -65,16 +65,16 @@ public:
  * ParallelExecResult represents the result of a task submitted
  * to ParallelExecStreamScheduler's thread pool.
  */
-class ParallelExecResult 
+class ParallelExecResult
 {
     ExecStreamId streamId;
     ExecStreamResult rc;
-    
+
 public:
     explicit ParallelExecResult(
         ExecStreamId streamId,
         ExecStreamResult rc);
-    
+
     inline ExecStreamId getStreamId() const
     {
         return streamId;
@@ -116,13 +116,13 @@ class ParallelExecStreamScheduler
         MGR_STOPPING,
         MGR_STOPPED
     };
-    
+
     typedef std::hash_map<ExecStreamId, StreamStateMapEntry>
         StreamStateMap;
     typedef std::deque<ExecStreamId> InhibitedQueue;
 
     friend class ParallelExecTask;
-    
+
     SharedExecStreamGraph pGraph;
 
     ThreadPool<ParallelExecTask> threadPool;
@@ -171,7 +171,7 @@ public:
         std::string name,
         ThreadTracker &threadTracker,
         uint degreeOfParallelism);
-    
+
     virtual ~ParallelExecStreamScheduler();
 
     // implement the ExecStreamScheduler interface

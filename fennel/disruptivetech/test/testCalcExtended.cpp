@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2004-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2004-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -106,29 +106,29 @@ void convertStringToExactNumber(RegisterRef<int>* regOut,
                                 RegisterRef<char *>* regIn)
 {
 #if 0
-    // TODO: Wrap this code in 
+    // TODO: Wrap this code in
     uint srcL = regIn->getS();
-    // TODO: Change the following proof-of-concept code into 
+    // TODO: Change the following proof-of-concept code into
     // TODO: something real.
-    char *nullTermStr = new char [srcL+1];
-    nullTermStr[srcL+1] = 0;
+    char *nullTermStr = new char[srcL + 1];
+    nullTermStr[srcL + 1] = 0;
     memcpy(nullTermStr, regIn->pointer(), srcL);
     regOut->value(strtol(nullTermStr, 0, 10));
     delete [] nullTermStr;
 #endif
 #if 0
-    
+
 TODO: Nope this is a disaster JR 6/07 (valueToString() returns "Unimpl");
     const char *pString = regIn->valueToString().c_str();
-    assert( pString );
-    int iValue = atoi( pString );
-    regOut->value( iValue );
+    assert(pString);
+    int iValue = atoi(pString);
+    regOut->value(iValue);
 #endif
 
     // Try original pointer casting code updated to new class interface
     // This code is the same as above
     uint srcL = regIn->stringLength();
-    char *nullTermStr = new char [srcL+1];
+    char *nullTermStr = new char[srcL + 1];
     nullTermStr[srcL] = 0;
     memcpy(nullTermStr, regIn->pointer(), srcL);
     regOut->value(strtol(nullTermStr, 0, 10));
@@ -136,21 +136,21 @@ TODO: Nope this is a disaster JR 6/07 (valueToString() returns "Unimpl");
 }
 
 #if 0
-TODO: JR 6/07 removing this 
+TODO: JR 6/07 removing this
 void convertExactNumberToString(RegisterRef<char *>* regOut,
                                 RegisterRef<int>* regIn)
 {
 #if 1
-    // TODO: Change the following proof-of-concept code into 
+    // TODO: Change the following proof-of-concept code into
     // TODO: something real.
     char *nullTermStr = new char[256];
     sprintf(nullTermStr, "%d", regIn->value());
-    
+
     uint dstL = regOut->storage();
     uint newL = strlen(nullTermStr);
 
     printf("dstL = %d  newL = %d\n", dstL, newL);
-    
+
     if (newL > dstL) {
         // TODO: Must check right space padding to see what, if anything valid is
         // TODO: truncated before going all wild and throwing exception
@@ -162,7 +162,7 @@ void convertExactNumberToString(RegisterRef<char *>* regOut,
         printf("ConvertExactNumberToString\n");
         assert(newL <= dstL);
     }
-    
+
     regOut->putS(newL);
     memcpy(regOut->pointer(), nullTermStr, newL);
     delete [] nullTermStr;
@@ -171,8 +171,8 @@ void convertExactNumberToString(RegisterRef<char *>* regOut,
 TODO: JR 6/07 ... valueToStringis not implemented yet ...
 // re-enabled the above ...
     const char *pString = regIn->valueToString().c_str();
-    assert( pString );
-    regOut->value( const_cast<char*>(pString) );
+    assert(pString);
+    regOut->value( const_cast<char*>(pString));
 #endif
 }
 #endif
@@ -190,7 +190,7 @@ void convertFloatToString(RegisterRef<char *>* regOut,
 }
 
 void convertStringToDouble(RegisterRef<double>* regOut,
-                           RegisterRef<char *>* regIn)     
+                           RegisterRef<char *>* regIn)
 {
     //*regOut = strtod(*regIn, (char **)NULL);
 }
@@ -346,8 +346,8 @@ public:
         }
     }
     template <typename T>
-    void setOutput(int index, 
-                   T *valP, 
+    void setOutput(int index,
+                   T *valP,
                    TupleStorageByteLength cbData,
                    TupleStorageByteLength cbStorage)
     {
@@ -377,7 +377,7 @@ public:
         tuplePrinter.print(cout, _tupleDescOutput, _tupleDataOutput);
         cout << endl;
     }
-    void bind() 
+    void bind()
     {
         Calculator::bind(RegisterReference::ELiteral,
                          &_tupleDataLiteral,
@@ -395,7 +395,7 @@ public:
                          &_tupleDataStatus,
                          _tupleDescStatus);
     }
-    
+
     template <typename T>
     void getOutput(int i,
                    T &val)
@@ -407,7 +407,6 @@ public:
                     T &val)
     {
         val = (reinterpret_cast<T>(const_cast<PBuffer>(_tupleDataOutput[i].pData)));
-        
     }
 };
 // ----------------------------------------------------------------------
@@ -473,7 +472,7 @@ void testConvertDoubleToFloat(double val, float expected)
     float f;
     c.getOutput(0, f);
     cout << f << endl;
-    assert( fabs(expected - f) < 0.0001 );
+    assert(fabs(expected - f) < 0.0001);
 };
 
 void testConvertFloatToDouble(float val, double expected)
@@ -519,7 +518,7 @@ void testConvertFloatToDouble(float val, double expected)
     double d;
     c.getOutput(0, d);
     cout << d << endl;
-    assert( fabs(expected - d) < 0.0001 );
+    assert(fabs(expected - d) < 0.0001);
 };
 
 
@@ -682,7 +681,7 @@ void testConvertDecimal(const char * const str, int val, int exp, int expected)
     int i;
     c.getOutput(0, i);
     //cout << i << endl;
-    assert( abs(expected - i)<0.00001 );
+    assert(abs(expected - i)<0.00001);
 };
 
 void testConvertStringToExactNumber(const char *str, int expected)
@@ -794,13 +793,17 @@ void testConvertExactNumberToString(int num, char *expected)
 }
 #endif
 void testStringToApproximateNumber(char *str, float expected)
-{}
+{
+}
 void testApproximateNumberToString(float expected, char *str)
-{}
+{
+}
 void testStringToDate(char *str, long long expected)
-{}
+{
+}
 void testDateToString(long long d, char *expected)
-{}
+{
+}
 
 // ----------------------------------------------------------------------
 // test cases
@@ -838,3 +841,5 @@ boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
 {
     return NULL;
 }
+
+// End testCalcExtended.cpp

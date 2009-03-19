@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -70,7 +70,7 @@ public:
     explicit
     NativeInstruction(StandardTypeDescriptorOrdinal nativeType)
         : mOp1(),
-          mOp2(), 
+          mOp2(),
           mNativeType(nativeType)
     {
         assert(StandardTypeDescriptor::isNative(nativeType));
@@ -79,14 +79,14 @@ public:
     NativeInstruction(RegisterRef<TMPLT>* op1,
                       StandardTypeDescriptorOrdinal nativeType)
         : mOp1(op1),
-          mOp2(), 
+          mOp2(),
           mNativeType(nativeType)
     {
         assert(StandardTypeDescriptor::isNative(nativeType));
     }
     explicit
     NativeInstruction(RegisterRef<TMPLT>* op1,
-                      RegisterRef<TMPLT>* op2, 
+                      RegisterRef<TMPLT>* op2,
                       StandardTypeDescriptorOrdinal nativeType)
         : mOp1(op1),
           mOp2(op2),

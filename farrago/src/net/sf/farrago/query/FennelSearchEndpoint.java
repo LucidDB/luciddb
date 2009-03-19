@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ import java.math.*;
 public enum FennelSearchEndpoint
 {
     /**
-     * Defines the beginning of an interval which is unbounded below.  The
+     * Defines the beginning of an interval which is unbounded below. The
      * associated key value should be all null.
      */
     SEARCH_UNBOUNDED_LOWER('-'),
@@ -61,7 +61,7 @@ public enum FennelSearchEndpoint
     SEARCH_CLOSED_UPPER(']'),
 
     /**
-     * Defines the end of an interval which is unbounded above.  The associated
+     * Defines the end of an interval which is unbounded above. The associated
      * key value should be all null.
      */
     SEARCH_UNBOUNDED_UPPER('+');

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,7 +57,7 @@ public:
      * @param msgInit a description of the failure from the program's point of
      * view; SysCallExcn will append additional information from the OS
      *
-     * @param errCodeInit OS error code used to generate additional 
+     * @param errCodeInit OS error code used to generate additional
      * information
      */
     explicit SysCallExcn(std::string msgInit, int errCodeInit);

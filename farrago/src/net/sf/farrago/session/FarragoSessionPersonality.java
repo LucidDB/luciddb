@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,8 +36,8 @@ import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.resource.*;
 import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
@@ -101,13 +101,11 @@ public interface FarragoSessionPersonality
         FarragoSessionStmtValidator stmtValidator);
 
     /**
-     * Tests whether this session personality implements
-     * ALTER TABLE ADD COLUMN in an incremental fashion
-     * (only adding on the new column as opposed to reformatting
-     * existing rows).  For example, a column store
-     * can just create a new vertical partition; a smart row
-     * store may be able to transform old tuple formats
-     * during queries by filling in default values on the fly.
+     * Tests whether this session personality implements ALTER TABLE ADD COLUMN
+     * in an incremental fashion (only adding on the new column as opposed to
+     * reformatting existing rows). For example, a column store can just create
+     * a new vertical partition; a smart row store may be able to transform old
+     * tuple formats during queries by filling in default values on the fly.
      *
      * @return true iff the incremental optimization is implemented
      */
@@ -122,7 +120,7 @@ public interface FarragoSessionPersonality
      */
     public FarragoSessionParser newParser(
         FarragoSession session);
-    
+
     /**
      * Creates a new preparing statement tied to this session and its underlying
      * database. Used to construct and implement an internal query plan.
@@ -137,7 +135,7 @@ public interface FarragoSessionPersonality
         FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtContext rootStmtContext,
         FarragoSessionStmtValidator stmtValidator);
-    
+
     /**
      * Creates a new preparing statement tied to this session and its underlying
      * database. Used to construct and implement an internal query plan.
@@ -319,8 +317,8 @@ public interface FarragoSessionPersonality
 
     /**
      * Tests whether this personality wants original SQL to be preserved for
-     * dependent objects where possible during the revalidation
-     * triggered by CREATE OR REPLACE.
+     * dependent objects where possible during the revalidation triggered by
+     * CREATE OR REPLACE.
      *
      * @return true iff an attempt should be made to preserve original SQL
      */

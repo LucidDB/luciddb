@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,8 +32,8 @@ import org.eigenbase.util.*;
  * <code>VolcanoRuleCall</code> implements the {@link RelOptRuleCall} interface
  * for VolcanoPlanner.
  *
- * @version $Id$
  * @author jhyde
+ * @version $Id$
  */
 public class VolcanoRuleCall
     extends RelOptRuleCall
@@ -62,7 +62,9 @@ public class VolcanoRuleCall
         RelNode [] rels)
     {
         super(
-            planner, operand, rels,
+            planner,
+            operand,
+            rels,
             Collections.<RelNode, List<RelNode>>emptyMap());
         this.volcanoPlanner = planner;
     }
@@ -266,6 +268,7 @@ public class VolcanoRuleCall
      * Recursively matches operands above a given solve order.
      *
      * @param solve Solver order of operand
+     *
      * @pre solve &gt; 0
      * @pre solve &lt;= rule.operands.length
      */

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -51,7 +51,7 @@ class CalcExtMathTest : virtual public TestBase, public TraceSource
 
     void printOutput(TupleData const & tup,
                      Calculator const & calc);
-    
+
     string mProgramPower;
 public:
     explicit CalcExtMathTest()
@@ -74,12 +74,12 @@ public:
         pg << "C %s, %s;" << endl;
         pg << "V %s, %s;" << endl;
         pg << "T;" << endl;
-        pg << "CALL 'POW(L0, C0, C1);" << endl;	
+        pg << "CALL 'POW(L0, C0, C1);" << endl;
         pg << "REF O0, L0;" << endl;
 
         mProgramPower = pg.str();
     }
-     
+
     virtual ~CalcExtMathTest()
     {
     }
@@ -98,7 +98,7 @@ CalcExtMathTest::printOutput(TupleData const & tup,
 }
 
 
-void 
+void
 CalcExtMathTest::checkWarnings(Calculator& calc, string expected)
 {
     try {
@@ -106,7 +106,7 @@ CalcExtMathTest::checkWarnings(Calculator& calc, string expected)
     } catch(...) {
         BOOST_FAIL("An exception was thrown while running program");
     }
-    
+
     int i = calc.warnings().find(expected);
 
     if ( i < 0) {
@@ -115,16 +115,16 @@ CalcExtMathTest::checkWarnings(Calculator& calc, string expected)
         msg += expected;
         msg += "\nActual:  ";
         msg += calc.warnings();
-	
+
         BOOST_FAIL(msg);
-    }   
+    }
 }
 
 void
 CalcExtMathTest::testCalcExtMathLogarithms()
 {
     ostringstream pg("");
-    
+
     pg << "O d, d;" << endl;
     pg << "L d, d;" << endl;
     pg << "C d, d;" << endl;
@@ -136,7 +136,7 @@ CalcExtMathTest::testCalcExtMathLogarithms()
     pg << "REF O1, L1;" << endl;
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -157,18 +157,18 @@ CalcExtMathTest::testCalcExtMathLogarithms()
     }
 
 }
-    
+
 
 void
 CalcExtMathTest::testCalcExtMathLogarithmsFails()
 {
     char buff[1024];
-    const char* pg = 
-        "O d;\n" 
-        "L d;\n" 
-        "C %s;\n" 
+    const char* pg =
+        "O d;\n"
+        "L d;\n"
+        "C %s;\n"
         "V %s;\n"
-        "T;\n" 
+        "T;\n"
         "CALL '%s(L0, C0);\n"
         "REF O0, L0;\n";
 
@@ -202,7 +202,7 @@ void
 CalcExtMathTest::testCalcExtMathAbs()
 {
     ostringstream pg("");
-    
+
     pg << "O d, d, d, s8, s8, s8;" << endl;
     pg << "L d, d, d, s8, s8, s8;" << endl;
     pg << "C d, d, d, s8, s8, s8;" << endl;
@@ -226,7 +226,7 @@ CalcExtMathTest::testCalcExtMathAbs()
     //BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -247,7 +247,7 @@ CalcExtMathTest::testCalcExtMathAbs()
     BOOST_CHECK(fabs(*(reinterpret_cast<double*>
                        (const_cast<PBuffer>(outTuple[0].pData))) -
                      0) < epsilon);
-    
+
     BOOST_CHECK(fabs(*(reinterpret_cast<double*>
                        (const_cast<PBuffer>(outTuple[1].pData))) -
                      1234567890123.0) < epsilon);
@@ -255,7 +255,7 @@ CalcExtMathTest::testCalcExtMathAbs()
     BOOST_CHECK(fabs(*(reinterpret_cast<double*>
                        (const_cast<PBuffer>(outTuple[2].pData))) -
                      1234567890123.0) < epsilon);
-    
+
     BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t*>
                         (const_cast<PBuffer>(outTuple[3].pData))),0);
 
@@ -275,8 +275,8 @@ CalcExtMathTest::testCalcExtMathPow()
 
     const char* tests[][4] = {
         {"d","d","2.0","2.2"}
-        ,{"d","d","2.0","-2.2"} 
-        ,{"d","d","-2.0","2.0"} 
+        ,{"d","d","2.0","-2.2"}
+        ,{"d","d","-2.0","2.0"}
     };
 
     double results[] = { 4.5947934, 0.21763764, 4};
@@ -314,16 +314,16 @@ CalcExtMathTest::testCalcExtMathPowFails()
 
     const char* tests[][4] = {
         {"d","d","0.0","-1.0"}
-        ,{"d","d","-2.0","2.2"} 
-        ,{"d","d","-2.0","-2.2"} 
+        ,{"d","d","-2.0","2.2"}
+        ,{"d","d","-2.0","-2.2"}
     };
-    
+
     int n = sizeof(tests) / sizeof(tests[0]);
     for( int i=0; i<n; i++ ) {
         Calculator calc(0);
         sprintf(buff, mProgramPower.c_str(),
                 tests[i][0], tests[i][1], tests[i][2], tests[i][3]);
-	
+
         try {
             calc.assemble(buff);
         } catch (FennelExcn& ex) {
@@ -344,3 +344,4 @@ CalcExtMathTest::testCalcExtMathPowFails()
 
 FENNEL_UNIT_TEST_SUITE(CalcExtMathTest);
 
+// End CalcExtMathTest.cpp

@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,12 +50,12 @@ public:
 
     // C'tor for exactly one type
     explicit
-    RegDesc(StandardTypeDescriptorOrdinal typeArg) : 
+    RegDesc(StandardTypeDescriptorOrdinal typeArg) :
         type(typeArg),
         group(REGDESC_NONE)
     {
     }
-   
+
     // C'tor for a group of types
     explicit
     RegDesc(Groups groupArg) :
@@ -63,7 +63,7 @@ public:
         group(groupArg)
     {
     }
-    
+
     bool
     match(StandardTypeDescriptorOrdinal m);
 
@@ -103,7 +103,7 @@ public:
     {
         return name;
     }
-    
+
 private:
     string name;
     vector<RegDesc> registerdesc;

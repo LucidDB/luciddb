@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -93,7 +93,7 @@ ExecStreamEmbryo const &ExecStreamFactory::visitStream(
     ProxyExecutionStreamDef &streamDef)
 {
     bool created = false;
-    
+
     // first give sub-factories a shot
     std::vector<SharedExecStreamSubFactory>::iterator ppSubFactory;
     for (ppSubFactory = subFactories.begin();
@@ -143,7 +143,7 @@ void ExecStreamFactory::readBarrierDynamicParams(
     ProxyBarrierStreamDef &streamDef)
 {
     SharedProxyDynamicParameter dynamicParam = streamDef.getDynamicParameter();
-    for ( ; dynamicParam; ++dynamicParam) {
+    for (; dynamicParam; ++dynamicParam) {
         DynamicParamId p = (DynamicParamId) dynamicParam->getParameterId();
         params.parameterIds.push_back(p);
     }
@@ -345,7 +345,7 @@ void ExecStreamFactory::visit(ProxyValuesStreamDef &streamDef)
     streamDef.pEnv->GetByteArrayRegion(
         jbytes, 0, params.bufSize,
         reinterpret_cast<jbyte *>(params.pTupleBuffer.get()));
-    
+
     embryo.init(new ValuesExecStream(), params);
 }
 
@@ -382,7 +382,7 @@ void ExecStreamFactory::visit(ProxyReshapeStreamDef &streamDef)
         params.outputProj, streamDef.getOutputProjection());
 
     SharedProxyReshapeParameter dynamicParam = streamDef.getReshapeParameter();
-    for ( ; dynamicParam; ++dynamicParam) {
+    for (; dynamicParam; ++dynamicParam) {
         int offset = dynamicParam->getCompareOffset();
         ReshapeParameter reshapeParam(
             DynamicParamId(dynamicParam->getDynamicParamId()),
@@ -401,7 +401,7 @@ void ExecStreamFactory::visit(ProxyNestedLoopJoinStreamDef &streamDef)
     params.leftOuter = streamDef.isLeftOuter();
 
     SharedProxyCorrelation dynamicParam = streamDef.getLeftJoinKey();
-    for ( ; dynamicParam; ++dynamicParam) {
+    for (; dynamicParam; ++dynamicParam) {
         NestedLoopJoinKey joinKey(
             DynamicParamId(dynamicParam->getId()),
             dynamicParam->getOffset());
@@ -452,7 +452,7 @@ void ExecStreamFactory::createPrivateScratchSegment(ExecStreamParams &params)
 {
     // Make sure global scratch segment was already set up.
     assert(params.pCacheAccessor);
-    
+
     params.scratchAccessor =
         pDatabase->getSegmentFactory()->newScratchSegment(
             pDatabase->getCache());
@@ -481,7 +481,7 @@ void ExecStreamFactory::readTableWriterStreamParams(
     params.pTableWriterFactory = pTableWriterFactory;
     params.tableId = ANON_PAGE_OWNER_ID;
     params.pActionMutex = &(pDatabase->getCheckpointThread()->getActionMutex());
-    
+
     SharedProxyIndexWriterDef pIndexWriterDef = streamDef.getIndexWriter();
     for (; pIndexWriterDef; ++pIndexWriterDef) {
         FtrsTableIndexWriterParams indexParams;
@@ -613,7 +613,7 @@ void ExecStreamFactory::readBTreeSearchStreamParams(
     }
 
     SharedProxyCorrelation dynamicParam = streamDef.getSearchKeyParameter();
-    for ( ; dynamicParam; ++dynamicParam) {
+    for (; dynamicParam; ++dynamicParam) {
         BTreeSearchKeyParameter searchKeyParam(
             DynamicParamId(dynamicParam->getId()),
             dynamicParam->getOffset());

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,10 +22,10 @@
 */
 package net.sf.farrago.ddl;
 
+import java.nio.charset.*;
+
 import java.util.*;
 import java.util.logging.*;
-
-import java.nio.charset.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
@@ -37,7 +37,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -54,7 +54,8 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class DdlHandler implements ReflectiveVisitor
+public abstract class DdlHandler
+    implements ReflectiveVisitor
 {
     //~ Static fields/initializers ---------------------------------------------
 

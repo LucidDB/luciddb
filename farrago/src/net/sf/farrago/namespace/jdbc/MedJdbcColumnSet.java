@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,6 +28,7 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.namespace.impl.*;
 
 import org.apache.commons.dbcp.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -146,14 +147,14 @@ class MedJdbcColumnSet
         Connection loopbackConnection = directory.server.getConnection();
         if (!(loopbackConnection instanceof FarragoJdbcEngineConnection)) {
             Connection conn = loopbackConnection;
-            while(conn != null && conn instanceof DelegatingConnection) {
-                conn = ((DelegatingConnection)conn).getDelegate();
+            while ((conn != null) && (conn instanceof DelegatingConnection)) {
+                conn = ((DelegatingConnection) conn).getDelegate();
             }
             if (!(conn instanceof FarragoJdbcEngineConnection)) {
                 return null;
             }
         }
-        
+
         String catalogName = directory.server.catalogName;
         if (catalogName == null) {
             // No catalog name specified, so try to query the connection for

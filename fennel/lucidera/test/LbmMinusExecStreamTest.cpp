@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -125,12 +125,12 @@ public:
         changeIndexes.reset(new uint[interval]);
         changeIndexes[0] = valueCounts[0];
         for (uint i = 1; i < interval; i++) {
-            changeIndexes[i] = changeIndexes[i-1] + valueCounts[i];
+            changeIndexes[i] = changeIndexes[i - 1] + valueCounts[i];
         }
         current = 0;
         lastRow = 0;
     }
-    
+
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
         // must be generated in order
@@ -165,7 +165,7 @@ public:
         return changeIndexes[interval - 1];
     }
 };
-    
+
 void LbmMinusExecStreamTest::test2Inputs()
 {
     uint nInputs = 2;
@@ -245,7 +245,7 @@ void LbmMinusExecStreamTest::testLargeOutput()
     input.skipRows = 1;
     inputData.push_back(input);
 
-    // bitmap input 2 -- every 16 bits set, starting at 1 
+    // bitmap input 2 -- every 16 bits set, starting at 1
     input.bitmapSize = 1;
     input.startRid = LcsRid(1);
     input.skipRows = 16;
@@ -299,37 +299,37 @@ void LbmMinusExecStreamTest::testLargeOutput()
     input.skipRows = 16;
     inputData.push_back(input);
 
-    // bitmap input 11 -- every 16 bits set, starting at 10 
+    // bitmap input 11 -- every 16 bits set, starting at 10
     input.bitmapSize = 1;
     input.startRid = LcsRid(10);
     input.skipRows = 16;
     inputData.push_back(input);
 
-    // bitmap input 12 -- every 16 bits set, starting at 11 
+    // bitmap input 12 -- every 16 bits set, starting at 11
     input.bitmapSize = 1;
     input.startRid = LcsRid(11);
     input.skipRows = 16;
     inputData.push_back(input);
 
-    // bitmap input 13 -- every 16 bits set, starting at 12 
+    // bitmap input 13 -- every 16 bits set, starting at 12
     input.bitmapSize = 1;
     input.startRid = LcsRid(12);
     input.skipRows = 16;
     inputData.push_back(input);
 
-    // bitmap input 14 -- every 16 bits set, starting at 13 
+    // bitmap input 14 -- every 16 bits set, starting at 13
     input.bitmapSize = 1;
     input.startRid = LcsRid(13);
     input.skipRows = 16;
     inputData.push_back(input);
 
-    // bitmap input 15 -- every 16 bits set, starting at 14 
+    // bitmap input 15 -- every 16 bits set, starting at 14
     input.bitmapSize = 1;
     input.startRid = LcsRid(14);
     input.skipRows = 16;
     inputData.push_back(input);
 
-    // bitmap input 16 -- every 16 bits set, starting at 15 
+    // bitmap input 16 -- every 16 bits set, starting at 15
     input.bitmapSize = 1;
     input.startRid = LcsRid(15);
     input.skipRows = 16;
@@ -592,14 +592,14 @@ void LbmMinusExecStreamTest::testRestartingMinus(
         verifier(nRows, repeatSeqValues, subtrahendInterval);
     verifyOutput(
         *pOutputStream,
-        verifier.getRowCount(), 
+        verifier.getRowCount(),
         verifier);
 }
 
 void LbmMinusExecStreamTest::newMinusStream(
     LbmMinusExecStreamParams &params,
     ExecStreamEmbryo &embryo,
-    TupleDescriptor const &outputDesc) 
+    TupleDescriptor const &outputDesc)
 {
     params.rowLimitParamId = DynamicParamId(1);
     params.startRidParamId = DynamicParamId(2);

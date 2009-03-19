@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -59,7 +59,7 @@ class CalcInstFactoryTest : virtual public TestBase, public TraceSource
     static char const * const pointerArray;
     static char const * const nativeIntegral;
     static char const * const nativeIntegralValues;
-    
+
 public:
     explicit CalcInstFactoryTest()
         : TraceSource(shared_from_this(),"CalcInstFactoryTest")
@@ -77,25 +77,25 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcInstFactoryTest, testPointerPointer);
         FENNEL_UNIT_TEST_CASE(CalcInstFactoryTest, testReturn);
     }
-    
+
     virtual ~CalcInstFactoryTest()
     {
     }
 };
 
 char const * const
-CalcInstFactoryTest::all = 
+CalcInstFactoryTest::all =
 "s1, u1, s2, u2, s4, u4, s8, u8, bo, r, d, c, vc, b, vb";
-// 0   1   2   3   4   5   6   7   8   9  10 11 12  13 14 
+// 0   1   2   3   4   5   6   7   8   9  10 11 12  13 14
 
 char const * const
 CalcInstFactoryTest::nativeNotBool =
 "s1, u1, s2, u2, s4, u4, s8, u8, r, d";
-// 0   1   2   3   4   5   6   7   8  9 
+// 0   1   2   3   4   5   6   7   8  9
 char const * const
 CalcInstFactoryTest::nativeNotBoolValues =
 "1, 2, 3, 4, 5, 6, 7, 8, 9.0, 10.0";
-// 0  1  2  3  4  5  6  7  8    9 
+// 0  1  2  3  4  5  6  7  8    9
 
 char const * const
 CalcInstFactoryTest::pointerArray =
@@ -135,8 +135,7 @@ CalcInstFactoryTest::testBool()
         { "ISNULL", "2" },
         { "ISNOTNULL", "2" },
         { "TONULL", "1" },
-        { "", "" }
-    };
+        { "", "" }};
 
     pg << "O bo;" << endl;
     pg << "C bo,bo;" << endl;
@@ -159,11 +158,10 @@ CalcInstFactoryTest::testBool()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -185,8 +183,7 @@ CalcInstFactoryTest::testBoolNative()
        { "LE", "3" },
        { "ISNULL", "2" },
        { "ISNOTNULL", "2" },
-       { "", "" }
-    };
+       { "", "" }};
 
     pg << "O " << nativeNotBool << ", bo;" << endl;
     pg << "C " << nativeNotBool << ";" << endl;
@@ -211,11 +208,10 @@ CalcInstFactoryTest::testBoolNative()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -234,8 +230,7 @@ CalcInstFactoryTest::testIntegralNative()
         { "OR", "3" },
         { "SHFL", "3" },
         { "SHFR", "3" },
-        { "", "" }
-    };
+        { "", "" }};
 
     pg << "O " << nativeIntegral << ";" << endl;
     pg << "C " << nativeIntegral << ";" << endl;
@@ -260,11 +255,10 @@ CalcInstFactoryTest::testIntegralNative()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -280,8 +274,7 @@ CalcInstFactoryTest::testIntegralPointer()
     const char* integralpointer[][2] = {
        { "GETS", "2", },
        { "GETMS" , "2", },
-       { "", "" }
-    };
+       { "", "" }};
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
@@ -307,11 +300,10 @@ CalcInstFactoryTest::testIntegralPointer()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -326,8 +318,7 @@ CalcInstFactoryTest::testPointerIntegral()
 
     const char* pointerintegral[][2] = {
        { "PUTS", "2", },
-       { "", "" }
-    };
+       { "", "" }};
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
@@ -347,11 +338,10 @@ CalcInstFactoryTest::testPointerIntegral()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -373,8 +363,7 @@ CalcInstFactoryTest::testBoolPointer()
        { "LE", "3", },
        { "ISNULL", "2", },
        { "ISNOTNULL", "2", },
-       { "", "" }
-    };
+       { "", "" }};
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
@@ -400,11 +389,10 @@ CalcInstFactoryTest::testBoolPointer()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -423,8 +411,7 @@ CalcInstFactoryTest::testJump()
         { "JMPF", "1" },
         { "JMPN", "1" },
         { "JMPNN", "1" },
-        { "", "" }
-    };
+        { "", "" }};
 
     pg << "O bo;" << endl;
     pg << "C bo,bo;" << endl;
@@ -446,8 +433,7 @@ CalcInstFactoryTest::testJump()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -469,8 +455,7 @@ CalcInstFactoryTest::testNativeNative()
        { "MOVE", "2" },
        { "REF", "2" },
        { "TONULL", "1" },
-       { "", "" }
-    };
+       { "", "" }};
 
     pg << "O " << nativeNotBool << ";" << endl;
     pg << "C " << nativeNotBool << ";" << endl;
@@ -495,11 +480,10 @@ CalcInstFactoryTest::testNativeNative()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -518,8 +502,7 @@ CalcInstFactoryTest::testPointerPointer()
        { "MOVE", "2", "0" },
        { "REF", "2", "0" },
        { "TONULL", "1", "0" },
-       { "", "" }
-    };
+       { "", "" }};
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
@@ -545,11 +528,10 @@ CalcInstFactoryTest::testPointerPointer()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -571,11 +553,10 @@ CalcInstFactoryTest::testReturn()
     BOOST_MESSAGE(pg.str());
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -585,3 +566,4 @@ CalcInstFactoryTest::testReturn()
 
 FENNEL_UNIT_TEST_SUITE(CalcInstFactoryTest);
 
+// End CalcInstFactoryTest.cpp

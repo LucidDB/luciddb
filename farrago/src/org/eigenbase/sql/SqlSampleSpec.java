@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,32 +57,37 @@ public abstract class SqlSampleSpec
 
     /**
      * Creates a table sample without repeatability.
-     * 
-     * @param isBernoulli true if Bernoulli style sampling is to be used;
-     *                    false for implementation specific sampling
+     *
+     * @param isBernoulli true if Bernoulli style sampling is to be used; false
+     * for implementation specific sampling
      * @param samplePercentage likelihood of a row appearing in the sample
      */
     public static SqlSampleSpec createTableSample(
-        boolean isBernoulli, float samplePercentage)
+        boolean isBernoulli,
+        float samplePercentage)
     {
         return new SqlTableSampleSpec(isBernoulli, samplePercentage);
     }
-    
+
     /**
      * Creates a table sample with repeatability.
-     * 
-     * @param isBernoulli true if Bernoulli style sampling is to be used;
-     *                    false for implementation specific sampling
+     *
+     * @param isBernoulli true if Bernoulli style sampling is to be used; false
+     * for implementation specific sampling
      * @param samplePercentage likelihood of a row appearing in the sample
      * @param repeatableSeed seed value used to reproduce the same sample
      */
     public static SqlSampleSpec createTableSample(
-        boolean isBernoulli, float samplePercentage, int repeatableSeed)
+        boolean isBernoulli,
+        float samplePercentage,
+        int repeatableSeed)
     {
         return new SqlTableSampleSpec(
-            isBernoulli, samplePercentage, repeatableSeed);
+            isBernoulli,
+            samplePercentage,
+            repeatableSeed);
     }
-    
+
     //~ Inner Classes ----------------------------------------------------------
 
     public static class SqlSubstitutionSampleSpec
@@ -107,14 +112,15 @@ public abstract class SqlSampleSpec
                 + ")";
         }
     }
-    
-    public static class SqlTableSampleSpec extends SqlSampleSpec
+
+    public static class SqlTableSampleSpec
+        extends SqlSampleSpec
     {
         private final boolean isBernoulli;
         private final float samplePercentage;
         private final boolean isRepeatable;
         private final int repeatableSeed;
-        
+
         private SqlTableSampleSpec(boolean isBernoulli, float samplePercentage)
         {
             this.isBernoulli = isBernoulli;
@@ -122,36 +128,45 @@ public abstract class SqlSampleSpec
             this.isRepeatable = false;
             this.repeatableSeed = 0;
         }
-        
-        private SqlTableSampleSpec(boolean isBernoulli, float samplePercentage, int repeatableSeed)
+
+        private SqlTableSampleSpec(
+            boolean isBernoulli,
+            float samplePercentage,
+            int repeatableSeed)
         {
             this.isBernoulli = isBernoulli;
             this.samplePercentage = samplePercentage;
             this.isRepeatable = true;
             this.repeatableSeed = repeatableSeed;
         }
-        
-        /** Indicates Bernoulli vs. System sampling. */
+
+        /**
+         * Indicates Bernoulli vs. System sampling.
+         */
         public boolean isBernoulli()
         {
             return isBernoulli;
         }
 
-        /** 
-         * Returns sampling percentage.  Range is 0.0 to 1.0, exclusive
+        /**
+         * Returns sampling percentage. Range is 0.0 to 1.0, exclusive
          */
         public float getSamplePercentage()
         {
             return samplePercentage;
         }
 
-        /** Indicates whether repeatable seed should be used. */
+        /**
+         * Indicates whether repeatable seed should be used.
+         */
         public boolean isRepeatable()
         {
             return isRepeatable;
         }
 
-        /** Seed to produce repeatable samples. */
+        /**
+         * Seed to produce repeatable samples.
+         */
         public int getRepeatableSeed()
         {
             return repeatableSeed;
@@ -164,7 +179,7 @@ public abstract class SqlSampleSpec
             b.append('(');
             b.append(samplePercentage * 100.0);
             b.append(')');
-            
+
             if (isRepeatable) {
                 b.append(" REPEATABLE(");
                 b.append(repeatableSeed);

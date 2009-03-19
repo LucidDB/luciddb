@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -82,20 +82,20 @@ public class LcsIndexAccessRule
         //             LcsIndexMergeRel.class,
         //             new RelOptRuleOperand(LcsIndexSearchRel.class, ANY))))
 
-        // TODO: SWZ 11-Sep-2007: This rule is not fired for 
-        // LcsSamplingRowScanRel.  It could be used without modification for 
+        // TODO: SWZ 11-Sep-2007: This rule is not fired for
+        // LcsSamplingRowScanRel.  It could be used without modification for
         // that RelNode type if either of the following is true:
         // 1. Sampling mode is BERNOULLI sampling
-        // 2. Sampling mode is SYSTEM and no indexes will be applied (e.g., 
+        // 2. Sampling mode is SYSTEM and no indexes will be applied (e.g.,
         //    only residual filters)
         // (Making this change would require changing the rule operands to
         // take LcsRowScanRelBase and constructing the correct replacement
-        // subclass in considerIndex.)  Note that for system sampling, we 
-        // could go further and only apply residual filters even when indexes 
-        // are normally called for.  Not sure if the portion of the filter 
-        // that would have generated an index scan should become a residual 
+        // subclass in considerIndex.)  Note that for system sampling, we
+        // could go further and only apply residual filters even when indexes
+        // are normally called for.  Not sure if the portion of the filter
+        // that would have generated an index scan should become a residual
         // filter or not.
-        
+
         super(rule);
         description = "LcsIndexAccessRule: " + id;
     }
@@ -659,4 +659,4 @@ public class LcsIndexAccessRule
     }
 }
 
-//End LcsIndexAccessRule.java
+// End LcsIndexAccessRule.java

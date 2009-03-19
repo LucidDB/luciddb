@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -69,7 +69,7 @@ inline void UnalignedAttributeAccessor::compressInt64(
     // are handled as if they were negative here, but
     // the consumer of the TupleDatum won't be aware of that,
     // and the sign-extension in uncompress will be a no-op).
-    
+
     assert(datum.cbData == 8);
     int64_t intVal = *reinterpret_cast<int64_t const *> (datum.pData);
     uint len;
@@ -147,9 +147,9 @@ void UnalignedAttributeAccessor::storeValue(
     PBuffer pDataWithLen) const
 {
     assert(isInitialized());
-    
+
     PBuffer tmpDataPtr = pDataWithLen;
-      
+
     if (!datum.pData) {
         /*
          * NULL is stored as a special one-byte length: 0x00
@@ -161,7 +161,7 @@ void UnalignedAttributeAccessor::storeValue(
          * This storage format can only encode values shorter than 0x7fff bytes.
          */
         assert(datum.cbData <= TWO_BYTE_MAX_LENGTH);
-      
+
         if (isCompressedInt64) {
             // strip off leading zeros from 8-byte ints
             compressInt64(datum, tmpDataPtr);
@@ -255,7 +255,7 @@ TupleStorageByteLength UnalignedAttributeAccessor::getStoredByteCount(
 TupleStorageByteLength UnalignedAttributeAccessor::getMaxByteCount() const
 {
     assert(isInitialized());
-    
+
     if (omitLengthIndicator) {
         return cbStorage;
     } else {

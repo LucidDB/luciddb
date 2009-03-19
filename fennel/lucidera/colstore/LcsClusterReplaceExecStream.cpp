@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -98,7 +98,7 @@ void LcsClusterReplaceExecStream::getResourceRequirements(
     // original cluster values -- one for the rid to pageId btree and another
     // for the actual cluster page.
     minQuantity.nCachePages += 2;
-    
+
     optQuantity = minQuantity;
 }
 
@@ -118,9 +118,8 @@ void LcsClusterReplaceExecStream::open(bool restart)
 
     // Determine how many rows are in the original cluster
     origNumRows = pOrigClusterReader->getNumRows();
-    
+
     if (!restart) {
-       
         // Save the root pageId in a dynamic parameter so it can be read
         // downstream, if a parameter is specified
         if (opaqueToInt(newClusterRootParamId) > 0) {

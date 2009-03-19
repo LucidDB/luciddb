@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -48,17 +48,17 @@ protected:
         STATE_STOPPING,
         STATE_STOPPED
     };
-    
+
     std::vector<PooledThread *> threads;
     State state;
     LocalCondition stoppingCondition;
     ThreadTracker *pThreadTracker;
-    
+
     explicit ThreadPoolBase();
     virtual ~ThreadPoolBase();
     virtual bool isQueueEmpty() = 0;
     virtual void runOneTask(StrictMutexGuard &) = 0;
-    
+
 public:
     /**
      * Starts the given number of threads in the pool.
@@ -66,14 +66,14 @@ public:
      * @param nThreads number of threads to start
      */
     void start(uint nThreads);
-    
+
     /**
      * Shuts down the pool, waiting for any pending tasks to complete.
      * The start/stop calls should never be invoked from more than one thread
      * simultaneously.
      */
     void stop();
-    
+
     /**
      * Sets a tracker to use for created threads.
      *
@@ -100,7 +100,7 @@ class ThreadPool : public ThreadPoolBase
     {
         return queue.empty();
     }
-    
+
     virtual void runOneTask(StrictMutexGuard &guard)
     {
         Task task = queue.front();
@@ -109,7 +109,7 @@ class ThreadPool : public ThreadPoolBase
         task.execute();
         guard.lock();
     }
-    
+
 public:
     /**
      * Constructor.

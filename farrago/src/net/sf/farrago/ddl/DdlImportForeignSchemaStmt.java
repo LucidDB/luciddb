@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -181,6 +181,7 @@ public class DdlImportForeignSchemaStmt
         if (roster == null) {
             return null;
         }
+
         // keep roster as a sorted set so can report any missing
         // entries in a deterministic order (esp. for unit tests)
         Set<String> set = new TreeSet<String>();

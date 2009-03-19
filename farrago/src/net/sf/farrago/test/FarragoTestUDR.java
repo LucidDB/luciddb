@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,10 +30,10 @@ import java.sql.*;
 
 import java.util.*;
 
+import net.sf.farrago.db.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.syslib.*;
-import net.sf.farrago.db.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
@@ -114,19 +114,19 @@ public abstract class FarragoTestUDR
 
     public static String itoa(int i)
     {
-        if (i < 0 || i > 0xFFFF) {
+        if ((i < 0) || (i > 0xFFFF)) {
             throw new IllegalArgumentException(
                 "Cannot convert '" + i + "' to a Java char");
         }
-        return new String(new char[] { (char)i }, 0, 1);
+        return new String(new char[] { (char) i }, 0, 1);
     }
 
     public static String itoaWithNulForErr(int i)
     {
-        if (i < 0 || i > 0xFFFF) {
+        if ((i < 0) || (i > 0xFFFF)) {
             return null;
         }
-        return new String(new char[] { (char)i }, 0, 1);
+        return new String(new char[] { (char) i }, 0, 1);
     }
 
     public static void setSystemProperty(String name, String value)
@@ -196,8 +196,9 @@ public abstract class FarragoTestUDR
     public static void generateUnicodeTestCsv(String charsetName)
         throws Exception
     {
-        File dir = new File(
-            FarragoProperties.instance().homeDir.get());
+        File dir =
+            new File(
+                FarragoProperties.instance().homeDir.get());
         dir = new File(dir, "testgen");
         dir = new File(dir, "unicodeCsv");
         dir.mkdirs();
@@ -307,8 +308,8 @@ public abstract class FarragoTestUDR
         }
         final FarragoSession session = FarragoUdrRuntime.getSession();
         Timer timer = new Timer(true);
-        TimerTask task = new TimerTask() 
-            {
+        TimerTask task =
+            new TimerTask() {
                 public void run()
                 {
                     session.cancel();
@@ -446,8 +447,9 @@ public abstract class FarragoTestUDR
     {
         int nInput = inputSet.getMetaData().getColumnCount();
         int nOutput = resultInserter.getParameterMetaData().getParameterCount();
-        assert (nOutput == (nInput + 1))
-            : describeInputOutput(inputSet, resultInserter);
+        assert (nOutput == (nInput + 1)) : describeInputOutput(
+            inputSet,
+            resultInserter);
 
         // NOTE jvs 6-Aug-2006: This is just an example.  It's a terrible
         // digest; don't use it for anything real!
@@ -467,20 +469,21 @@ public abstract class FarragoTestUDR
     }
 
     protected static String describeInputOutput(
-        ResultSet inputSet, PreparedStatement resultInserter)
+        ResultSet inputSet,
+        PreparedStatement resultInserter)
         throws SQLException
     {
         StringBuffer buf = new StringBuffer();
         final ResultSetMetaData resultSetMetaData = inputSet.getMetaData();
         for (int i = 0; i < resultSetMetaData.getColumnCount(); i++) {
-            buf.append(" in#").append(i + 1).append("=")
-                .append(resultSetMetaData.getColumnName(i + 1));
+            buf.append(" in#").append(i + 1).append("=").append(
+                resultSetMetaData.getColumnName(i + 1));
         }
         final ParameterMetaData parameterMetaData =
             resultInserter.getParameterMetaData();
         for (int i = 0; i < parameterMetaData.getParameterCount(); i++) {
-            buf.append(" out#").append(i + 1).append("=")
-                .append(parameterMetaData.getParameterClassName(i + 1));
+            buf.append(" out#").append(i + 1).append("=").append(
+                parameterMetaData.getParameterClassName(i + 1));
         }
         return buf.toString();
     }
@@ -540,6 +543,7 @@ public abstract class FarragoTestUDR
                     }
                 }
             }
+
             // swap prev/curr row buffers
             tmp = prevRow;
             prevRow = currRow;
@@ -587,7 +591,7 @@ public abstract class FarragoTestUDR
     }
 
     public static void setSessionVariable(String name, String value)
-    throws SQLException
+        throws SQLException
     {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
@@ -604,14 +608,14 @@ public abstract class FarragoTestUDR
         FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
         db.simulateCatalogRecovery();
     }
-    
+
     /**
-     * Sets a label within a UDR.  This currently results in an exception.
-     * 
+     * Sets a label within a UDR. This currently results in an exception.
+     *
      * @param labelName name of the label or null
      */
     public static void setLabel(String labelName)
-    throws Exception
+        throws Exception
     {
         Connection conn =
             DriverManager.getConnection("jdbc:default:connection");
@@ -624,16 +628,16 @@ public abstract class FarragoTestUDR
         }
         stmt.executeUpdate("alter session set \"label\" = " + labelName);
     }
-    
+
     /**
      * Returns some subset of the input columns as specified by the columns
      * parameter.
-     * 
+     *
      * @param inputSet the input rows
      * @param columns the list of column names that determine which columns from
      * the input to return, as well as the order of the columns
      * @param resultInserter used to return the resulting output
-     * 
+     *
      * @throws SQLException
      */
     public static void returnInput(
@@ -644,19 +648,19 @@ public abstract class FarragoTestUDR
     {
         ResultSetMetaData metaData = inputSet.getMetaData();
         int nInputCols = metaData.getColumnCount();
-        
-        // First map the source of all the columns that need to be passed back in
-        // the result.
+
+        // First map the source of all the columns that need to be passed back
+        // in the result.
         List<Integer> returnColumns = new ArrayList<Integer>();
         buildColumnMap(columns, nInputCols, metaData, returnColumns);
-        
+
         // Then, for each row, retrieve those column values.
         while (inputSet.next()) {
             addOutputColumn(returnColumns, inputSet, resultInserter, 0);
             resultInserter.executeUpdate();
         }
     }
-    
+
     private static void buildColumnMap(
         List<String> columns,
         int nInputCols,
@@ -672,9 +676,9 @@ public abstract class FarragoTestUDR
                 }
             }
         }
-        assert(returnColumns.size() == columns.size());
+        assert (returnColumns.size() == columns.size());
     }
-    
+
     private static void addOutputColumn(
         List<Integer> returnColumns,
         ResultSet inputSet,
@@ -684,21 +688,22 @@ public abstract class FarragoTestUDR
     {
         for (int i = 0; i < returnColumns.size(); i++) {
             Object obj = inputSet.getObject(returnColumns.get(i));
-            resultInserter.setObject(offset + i+1, obj);
+            resultInserter.setObject(offset + i + 1, obj);
         }
     }
-    
+
     /**
-     * Returns subsets of columns from two inputs.  Both inputs must have the
-     * same number of rows, as the subsets of columns will be concatenated side by
-     * side into the result rows.  Note that this UDX is NOT doing a join between
-     * the two inputs.
-     * 
+     * Returns subsets of columns from two inputs. Both inputs must have the
+     * same number of rows, as the subsets of columns will be concatenated side
+     * by side into the result rows. Note that this UDX is NOT doing a join
+     * between the two inputs.
+     *
      * @param inputSet1 first set of input rows
      * @param inputSet2 second set of input rows
      * @param columns1 subset of column names from the first input
      * @param columns2 subset of column names from the second input
      * @param resultInserter used to return the resulting output
+     *
      * @throws SQLException
      */
     public static void returnTwoInputs(
@@ -713,25 +718,28 @@ public abstract class FarragoTestUDR
         int nInputCols1 = metaData1.getColumnCount();
         ResultSetMetaData metaData2 = inputSet2.getMetaData();
         int nInputCols2 = metaData2.getColumnCount();
-        
+
         List<Integer> returnColumns1 = new ArrayList<Integer>();
         buildColumnMap(columns1, nInputCols1, metaData1, returnColumns1);
         List<Integer> returnColumns2 = new ArrayList<Integer>();
         buildColumnMap(columns2, nInputCols2, metaData2, returnColumns2);
-        
+
         do {
             if (!inputSet1.next()) {
-                assert(!inputSet2.next());
+                assert (!inputSet2.next());
                 break;
             } else if (!inputSet2.next()) {
-                assert(false);
+                assert (false);
             }
             addOutputColumn(returnColumns1, inputSet1, resultInserter, 0);
             addOutputColumn(
-                returnColumns2, inputSet2, resultInserter, returnColumns1.size());
+                returnColumns2,
+                inputSet2,
+                resultInserter,
+                returnColumns1.size());
             resultInserter.executeUpdate();
         } while (true);
-    }     
+    }
 }
 
 // End FarragoTestUDR.java

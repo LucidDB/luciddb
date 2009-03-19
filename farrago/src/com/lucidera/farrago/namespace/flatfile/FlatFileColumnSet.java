@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -110,10 +110,10 @@ class FlatFileColumnSet
     // implement RelOptTable
     public double getRowCount()
     {
-    	if (numRows < 0) {
+        if (numRows < 0) {
             return super.getRowCount();
-    	}
-    	return numRows;
+        }
+        return numRows;
     }
 
     // implement RelOptTable

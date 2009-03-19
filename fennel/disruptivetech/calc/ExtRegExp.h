@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,7 @@ FENNEL_BEGIN_NAMESPACE
 //! Pass a zero length string into escape if not defined
 //! Passing a null into escape will result in null, per SQL99.
 void
-strLikeEscapeA(RegisterRef<bool>* result,   
+strLikeEscapeA(RegisterRef<bool>* result,
                RegisterRef<char*>* matchValue,
                RegisterRef<char*>* pattern,
                RegisterRef<char*>* escape);
@@ -39,7 +39,7 @@ strLikeEscapeA(RegisterRef<bool>* result,
 //! StrLike. Ascii. Reuses pattern.
 //! ESCAPE clause not defined.
 void
-strLikeA(RegisterRef<bool>* result,   
+strLikeA(RegisterRef<bool>* result,
          RegisterRef<char*>* matchValue,
          RegisterRef<char*>* pattern);
 
@@ -47,7 +47,7 @@ strLikeA(RegisterRef<bool>* result,
 //! Pass a zero length string into escape if not defined
 //! Passing a null into escape will result in null, per SQL99 & SQL2003
 void
-strSimilarEscapeA(RegisterRef<bool>* result,   
+strSimilarEscapeA(RegisterRef<bool>* result,
                   RegisterRef<char*>* matchValue,
                   RegisterRef<char*>* pattern,
                   RegisterRef<char*>* escape);
@@ -55,12 +55,12 @@ strSimilarEscapeA(RegisterRef<bool>* result,
 //! StrSimilar. Ascii. Reuses pattern.
 //! ESCAPE clause not defined.
 void
-strSimilarA(RegisterRef<bool>* result,   
+strSimilarA(RegisterRef<bool>* result,
             RegisterRef<char*>* matchValue,
             RegisterRef<char*>* pattern);
 
 class ExtendedInstructionTable;
-        
+
 void
 ExtRegExpRegister(ExtendedInstructionTable* eit);
 

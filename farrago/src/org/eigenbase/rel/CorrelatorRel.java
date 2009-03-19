@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -53,13 +53,13 @@ public final class CorrelatorRel
     /**
      * Creates a CorrelatorRel.
      *
-     * @param cluster       cluster this relational expression belongs to
-     * @param left          left input relational expression
-     * @param right         right input relational expression
-     * @param joinCond      join condition
-     * @param correlations  set of expressions to set as variables each time a
-     *                      row arrives from the left input
-     * @param joinType      join type
+     * @param cluster cluster this relational expression belongs to
+     * @param left left input relational expression
+     * @param right right input relational expression
+     * @param joinCond join condition
+     * @param correlations set of expressions to set as variables each time a
+     * row arrives from the left input
+     * @param joinType join type
      */
     public CorrelatorRel(
         RelOptCluster cluster,
@@ -85,12 +85,12 @@ public final class CorrelatorRel
     /**
      * Creates a CorrelatorRel with no join condition.
      *
-     * @param cluster       cluster this relational expression belongs to
-     * @param left          left input relational expression
-     * @param right         right input relational expression
-     * @param correlations  set of expressions to set as variables each time a
-     *                      row arrives from the left input
-     * @param joinType      join type
+     * @param cluster cluster this relational expression belongs to
+     * @param left left input relational expression
+     * @param right right input relational expression
+     * @param correlations set of expressions to set as variables each time a
+     * row arrives from the left input
+     * @param joinType join type
      */
     public CorrelatorRel(
         RelOptCluster cluster,
@@ -167,8 +167,8 @@ public final class CorrelatorRel
         /**
          * Creates a correlation.
          *
-         * @param id       Identifier
-         * @param offset   Offset
+         * @param id Identifier
+         * @param offset Offset
          */
         public Correlation(int id, int offset)
         {

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ inline BTreeNodeAccessor &BTreeAccessBase::getLeafNodeAccessor(
     assert(!node.height);
     return *pLeafNodeAccessor;
 }
-    
+
 inline BTreeNodeAccessor &BTreeAccessBase::getNonLeafNodeAccessor(
     BTreeNode const &node)
 {
@@ -60,7 +60,7 @@ inline PageId BTreeAccessBase::getChildForCurrent()
         pNonLeafNodeAccessor->tupleAccessor,childDatum);
     return *reinterpret_cast<PageId const *>(childDatum.pData);
 }
-    
+
 inline PageId BTreeAccessBase::getChild(BTreeNode const &node,uint iChild)
 {
     getNonLeafNodeAccessor(node).accessTuple(node,iChild);

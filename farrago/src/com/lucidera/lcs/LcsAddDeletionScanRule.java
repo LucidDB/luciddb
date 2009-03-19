@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,13 +20,14 @@
 */
 package com.lucidera.lcs;
 
+import java.util.*;
+
+import net.sf.farrago.query.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
-import net.sf.farrago.query.*;
-
-import java.util.*;
 
 /**
  * A rule for modifying the input into a row scan to include a scan of the
@@ -45,7 +46,7 @@ public class LcsAddDeletionScanRule
             new RelOptRuleOperand(
                 LcsRowScanRelBase.class),
             "no inputs");
-    
+
     public final static LcsAddDeletionScanRule instanceMinusInput =
         new LcsAddDeletionScanRule(
             new RelOptRuleOperand(
@@ -55,14 +56,14 @@ public class LcsAddDeletionScanRule
                     new RelOptRuleOperand(RelNode.class, ANY),
                     new RelOptRuleOperand(LcsIndexSearchRel.class, ANY))),
             "minus input");
-    
+
     public final static LcsAddDeletionScanRule instanceAnyInput =
         new LcsAddDeletionScanRule(
             new RelOptRuleOperand(
                 LcsRowScanRelBase.class,
                 new RelOptRuleOperand(RelNode.class, ANY)),
-            "any input"); 
-    
+            "any input");
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -83,16 +84,16 @@ public class LcsAddDeletionScanRule
     {
         FarragoPreparingStmt stmt =
             FennelRelUtil.getPreparingStmt(call.rels[0]);
+
         // For ALTER TABLE ADD COLUMN, we want to include deleted rows in the
         // new column.
-        boolean alterTable =
-            stmt.getSession().isReentrantAlterTableAddColumn();
-        
+        boolean alterTable = stmt.getSession().isReentrantAlterTableAddColumn();
+
         // Determine if this rule has already been fired
         if (alreadyCalled(call, alterTable)) {
             return;
         }
-        
+
         // Modify the input to the scan to either scan the deletion index
         // (in the case of a full table scan) or to minus off the deletion
         // index (in the case of an index scan)
@@ -113,11 +114,12 @@ public class LcsAddDeletionScanRule
                 // Feed the row scan an empty set input instead of
                 // the deletion index, so it will scan all rows,
                 // both deleted and non-deleted.
-                newInputs[0] = new FennelValuesRel(
-                    origRowScan.getCluster(),
-                    delIndexScan.getRowType(),
-                    new ArrayList<List<RexLiteral>>(),
-                    true);
+                newInputs[0] =
+                    new FennelValuesRel(
+                        origRowScan.getCluster(),
+                        delIndexScan.getRowType(),
+                        new ArrayList<List<RexLiteral>>(),
+                        true);
             } else {
                 newInputs[0] = delIndexScan;
             }
@@ -166,19 +168,17 @@ public class LcsAddDeletionScanRule
 
         call.transformTo(newRowScan);
     }
-        
+
     /**
      * Determines if the deletion scan is already included in the row scan
-     * input, or if this particular instance of the rule shouldn't be fired
-     * in favor of another more specific rule instance.  The first is done by
-     * examining the first input into the row scan and seeing if there's a
-     * minus of a search of the deletion index or a search of the deletion
-     * index.
-     * 
-     * @param call rule call
+     * input, or if this particular instance of the rule shouldn't be fired in
+     * favor of another more specific rule instance. The first is done by
+     * examining the first input into the row scan and seeing if there's a minus
+     * of a search of the deletion index or a search of the deletion index.
      *
+     * @param call rule call
      * @param alterTable whether we are preparing ALTER TABLE ADD COLUMN
-     * 
+     *
      * @return true if this should be fired
      */
     private boolean alreadyCalled(RelOptRuleCall call, boolean alterTable)
@@ -206,7 +206,7 @@ public class LcsAddDeletionScanRule
             relNode = call.rels[1];
         }
         if (alterTable) {
-            assert(relNode instanceof FennelValuesRel);
+            assert (relNode instanceof FennelValuesRel);
             return true;
         }
         if (relNode instanceof LcsIndexSearchRel) {

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -58,14 +58,14 @@ protected:
      * Dummy stack implementation used when we don't care about keeping track
      * of PageId's on the way down.
      */
-    class NullPageStack 
+    class NullPageStack
     {
     public:
         void push_back(PageId)
         {
         }
     };
-    
+
     inline void accessLeafTuple();
 
     /**
@@ -108,7 +108,7 @@ protected:
      * TupleData used as a temp variable for comparisons while searching.
      */
     TupleData comparisonKeyData;
-    
+
     /**
      * Key being sought.  NULL except while search in progress.
      */
@@ -118,7 +118,7 @@ protected:
      * TupleData for key used in searches.
      */
     TupleData searchKeyData;
-    
+
     /**
      * Searches a node for the current search key.
      *
@@ -204,7 +204,7 @@ protected:
         TupleData const &key, DuplicateSeek dupSeek, bool leastUpper,
         PageStack &pageStack, PageId startPageId, LockMode initialLockMode,
         ReadMode readMode);
-    
+
     /**
      * @see searchForKeyTemplate()
      */
@@ -311,7 +311,7 @@ public:
         TupleData const &key,
         DuplicateSeek dupSeek,
         bool leastUpper = true);
-    
+
     /**
      * Searches for the next tuple.  Can be used after either searchFirst
      * or searchForKey, but illegal when isSingular().

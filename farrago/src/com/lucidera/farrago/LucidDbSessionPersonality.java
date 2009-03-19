@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -89,11 +89,10 @@ public class LucidDbSessionPersonality
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * If true, this session's underlying default personality is LucidDb,
-     * as opposed to one that was switched from some other personality to
-     * LucidDb.  Note that this will still be true if the underlying
-     * personality is LucidDb, but a variation of the default LucidDb
-     * personality is used.
+     * If true, this session's underlying default personality is LucidDb, as
+     * opposed to one that was switched from some other personality to LucidDb.
+     * Note that this will still be true if the underlying personality is
+     * LucidDb, but a variation of the default LucidDb personality is used.
      */
     private boolean defaultLucidDb;
 
@@ -154,7 +153,7 @@ public class LucidDbSessionPersonality
     {
         return defaultLucidDb;
     }
-    
+
     // implement FarragoSessionPersonality
     public String getDefaultLocalDataServerName(
         FarragoSessionStmtValidator stmtValidator)
@@ -167,7 +166,7 @@ public class LucidDbSessionPersonality
     {
         return true;
     }
-    
+
     // implement FarragoSessionPersonality
     public SqlOperatorTable getSqlOperatorTable(
         FarragoSessionPreparingStmt preparingStmt)
@@ -196,19 +195,19 @@ public class LucidDbSessionPersonality
         if (feature == featureResource.PersonalityManagesRowCount) {
             return true;
         }
-        
+
         // LucidDB only supports snapshots if this is a real LucidDB instance
-        if (feature == featureResource.PersonalitySupportsSnapshots &&
-            defaultLucidDb)
+        if ((feature == featureResource.PersonalitySupportsSnapshots)
+            && defaultLucidDb)
         {
             return true;
         }
-        
+
         // LucidDB supports labels
         if (feature == featureResource.PersonalitySupportsLabels) {
             return true;
         }
-        
+
         return super.supportsFeature(feature);
     }
 
@@ -219,7 +218,7 @@ public class LucidDbSessionPersonality
         // during CREATE OR REPLACE, so skip it.
         return false;
     }
-    
+
     // implement FarragoSessionPersonality
     public FarragoSessionPlanner newPlanner(
         FarragoSessionPreparingStmt stmt,
@@ -243,8 +242,7 @@ public class LucidDbSessionPersonality
 
         Collection<RelOptRule> medPluginRules = new LinkedHashSet<RelOptRule>();
 
-        boolean alterTable = 
-            stmt.getSession().isReentrantAlterTableAddColumn();
+        boolean alterTable = stmt.getSession().isReentrantAlterTableAddColumn();
 
         HepProgram program =
             createHepProgram(
@@ -271,7 +269,7 @@ public class LucidDbSessionPersonality
 
         planner.addRule(new CoerceInputsRule(LcsTableMergeRel.class, false));
 
-        planner.removeRule(SwapJoinRule.instance);       
+        planner.removeRule(SwapJoinRule.instance);
         return planner;
     }
 
@@ -289,9 +287,9 @@ public class LucidDbSessionPersonality
         // TODO:  loosen up once we make sure OptimizeJoinRule does
         // as well or better than the hand-coding.
         builder.addRuleByDescription("MedMdrJoinRule");
-        
+
         // Convert SamplingRel/LcsRowScanRel into LcsSamplingRowScanRel
-        // early since sampling isn't compatible with index scans.  This 
+        // early since sampling isn't compatible with index scans.  This
         // could come later, but MUST come before FennelBernoulliSamplingRule
         // or else we lose system sampling.
         builder.addRuleInstance(new LcsSamplingRowScanRule());
@@ -299,13 +297,13 @@ public class LucidDbSessionPersonality
         // Eliminate AGG(DISTINCT x) now, because this transformation
         // may introduce new joins which need to be optimized further on.
         builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
-        
+
         // Need to fire delete and merge rules before any projection rules
         // since they modify the projection.  Also need to fire these
         // before the join conditions are pulled out of the joins.
         builder.addRuleInstance(new LcsTableDeleteRule());
         builder.addRuleInstance(new LcsTableMergeRule());
-        
+
         // Likewise for ALTER TABLE ADD COLUMN.
         if (alterTable) {
             builder.addRuleClass(CoerceInputsRule.class);
@@ -322,7 +320,7 @@ public class LucidDbSessionPersonality
         // with cast elimination, and may not always have the expected benefit.
         // If it gets re-enabled, it needs a corresponding companion to deal
         // with MERGE.
-        
+
         // Convert ProjectRels underneath an insert into RenameRels before
         // applying any merge projection rules.  Otherwise, we end up losing
         // column information used in error reporting during inserts.
@@ -411,7 +409,7 @@ public class LucidDbSessionPersonality
         // further below after MultiJoinRel's have been converted back to
         // JoinRel's.
         builder.addRuleClass(FarragoReduceExpressionsRule.class);
-        
+
         // Push projection information in the remaining projections that sit
         // on top of MultiJoinRels into the MultiJoinRels.  These aren't
         // handled by PullUpProjectsOnTopOfMultiJoinRule because these
@@ -429,7 +427,7 @@ public class LucidDbSessionPersonality
 
         // Eliminate redundant SELECT DISTINCT.
         builder.addRuleInstance(new RemoveDistinctRule());
-        
+
         // If there are multiple unions in a query, combine the aggregations
         // that remove duplicates (in the case of distinct unions)
         // into a single aggregation.  Also combine all unions into a
@@ -440,13 +438,13 @@ public class LucidDbSessionPersonality
         // of aggregates.  Lastly, both of these rules already fire on the
         // rightmost inputs first, and by applying these rules bottom-up, we're
         // effectively converting bottom-up from right to left.  By doing so,
-        // that minimizes the patterns that the rules need to deal with. 
+        // that minimizes the patterns that the rules need to deal with.
         subprogramBuilder = new HepProgramBuilder();
         subprogramBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
         subprogramBuilder.addRuleInstance(new PullUpAggregateAboveUnionRule());
         subprogramBuilder.addRuleInstance(new CombineUnionsRule());
         builder.addSubprogram(subprogramBuilder.createProgram());
-        
+
         // Optimize join order; this will spit back out all 2-way joins and
         // semijoins.  Note that the match order is bottom-up, so we
         // can optimize lower-level joins before their ancestors.  That allows
@@ -454,7 +452,7 @@ public class LucidDbSessionPersonality
         builder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
         builder.addRuleInstance(new LoptOptimizeJoinRule());
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
-        
+
         // Now that we've converted MultiJoinRel's back to JoinRel's, reduce
         // expressions in join conditions.
         builder.addRuleClass(FarragoReduceExpressionsRule.class);
@@ -472,7 +470,7 @@ public class LucidDbSessionPersonality
         // Do this after pushing semijoins, in case those interfere with
         // filter pushdowns.
         applyPushDownFilterRules(builder);
-        
+
         // Convert semijoins to physical index access.
         // Do this immediately after LopOptimizeJoinRule and the PushSemiJoin
         // rules.
@@ -495,14 +493,14 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(
             LoptModifyRemovableSelfJoinRule.instanceRowScanOnRight);
         builder.addGroupEnd();
-        
+
         // Remove self-joins that are removable.
         builder.addRuleInstance(new LoptRemoveSelfJoinRule());
-        
+
         // Push down any filters that were added as a result of removing
         // self-joins
         applyPushDownFilterRules(builder);
-        
+
         // Convert filters to bitmap index searches and boolean operators.
         // Do this after LcsIndexSemiJoinRule
         builder.addRuleClass(LcsIndexAccessRule.class);
@@ -556,7 +554,7 @@ public class LucidDbSessionPersonality
 
         // Use hash join to implement set op: Except(minus).
         builder.addRuleInstance(new LhxMinusRule());
-        
+
         // Use nested loop join if hash join can't be used
         if (fennelEnabled) {
             builder.addRuleInstance(new FennelNestedLoopJoinRule());
@@ -581,7 +579,7 @@ public class LucidDbSessionPersonality
             builder.addRuleInstance(LcsIndexAggRule.instanceRowScan);
             builder.addRuleInstance(LcsIndexAggRule.instanceNormalizer);
         }
-             
+
         // Add deletion index scans as input into row scans.  This set of
         // rules need to be applied only after *ALL* inputs into the row
         // scan have been finalized.
@@ -593,7 +591,7 @@ public class LucidDbSessionPersonality
         // Apply aggregation rules before the calc rules below so we can
         // call metadata queries on logical RelNodes.
         builder.addRuleInstance(new LhxAggRule());
-        
+
         // Handle rid expressions being projected from EmptyRel's
         builder.addRuleInstance(new LcsRemoveRidExprRule());
 
@@ -639,7 +637,7 @@ public class LucidDbSessionPersonality
 
             // Requires CoerceInputsRule.
             builder.addRuleInstance(FennelUnionRule.instance);
-            
+
             // Convert any left over SamplingRels.
             builder.addRuleInstance(new FennelBernoulliSamplingRule());
         } else {
@@ -881,7 +879,7 @@ public class LucidDbSessionPersonality
             // just ignores the DML return value.
             return 0;
         }
-        
+
         FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         FarragoRepos repos = session.getRepos();
         long affectedRowCount = 0;
@@ -907,13 +905,13 @@ public class LucidDbSessionPersonality
                 // with the result of the reentrant INSERT.
                 resetRowCounts(columnSet);
             }
-            
-            Long[] rowCountStats = new Long[2];
+
+            Long [] rowCountStats = new Long[2];
             Timestamp labelTimestamp =
                 session.getSessionLabelCreationTimestamp();
             FarragoCatalogUtil.getRowCounts(
-                columnSet, 
-                labelTimestamp, 
+                columnSet,
+                labelTimestamp,
                 rowCountStats);
             long currRowCount = rowCountStats[0];
             long currDeletedRowCount = rowCountStats[1];
@@ -933,6 +931,7 @@ public class LucidDbSessionPersonality
                 }
             } else if (tableModOp == TableModificationRel.Operation.MERGE) {
                 insertedRowCount = rowCounts.get(0);
+
                 // in the case of a replace columns merge where no unique
                 // indexes are affected, only an insert row count is returned
                 if (numRowCounts > 1) {
@@ -950,10 +949,10 @@ public class LucidDbSessionPersonality
             } else {
                 assert (false);
             }
-            
+
             // all kinds of DML can have rejected rows (yes, including DELETE)
             rejectedRowCount =
-                ((LucidDbRuntimeContext)runningContext).getTotalErrorCount();
+                ((LucidDbRuntimeContext) runningContext).getTotalErrorCount();
 
             // update the rowcounts based on the operation
             if (tableModOp == TableModificationRel.Operation.INSERT) {
@@ -974,9 +973,9 @@ public class LucidDbSessionPersonality
             } else {
                 assert (false);
             }
-            
+
             session.getSessionVariables().setInteger(
-                LAST_ROWS_REJECTED, 
+                LAST_ROWS_REJECTED,
                 rejectedRowCount);
 
             // update the catalog; don't let the rowcount go below zero; it
@@ -1012,9 +1011,10 @@ public class LucidDbSessionPersonality
         FarragoReposTxnContext txn = database.getSystemRepos().newTxnContext();
         txn.beginReadTxn();
         try {
-            // REVIEW jvs 22-Mar-2007:  We override FarragoDefaultSessionPersonality
-            // here to prevent dependency on DisruptiveTechJni unless explicitly
-            // requested via calc system parameter.
+            // REVIEW jvs 22-Mar-2007:  We override
+            // FarragoDefaultSessionPersonality here to prevent dependency on
+            // DisruptiveTechJni unless explicitly requested via calc system
+            // parameter.
             final CalcVirtualMachine calcVM =
                 database.getSystemRepos().getCurrentConfig()
                 .getCalcVirtualMachine();
@@ -1023,8 +1023,7 @@ public class LucidDbSessionPersonality
             } else {
                 super.registerStreamFactories(hStreamGraph);
             }
-        }
-        finally {
+        } finally {
             txn.commit();
         }
     }

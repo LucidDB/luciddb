@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -58,7 +58,7 @@ class VersionedSegment : public DelegatingSegment
 
     // TODO:  use a 64-bit crc instead
     boost::crc_32_type crcComputer;
-    
+
     PageMap dataToLogMap;
 
     explicit VersionedSegment(
@@ -66,9 +66,9 @@ class VersionedSegment : public DelegatingSegment
         SharedSegment logSegment,
         PseudoUuid const &onlineUuid,
         SegVersionNum versionNumber);
-    
+
     uint64_t computeChecksum(void const *pPageData);
-    
+
 public:
     virtual ~VersionedSegment();
 
@@ -115,13 +115,13 @@ public:
      * after a crash
      */
     PageId getRecoveryPageId() const;
-    
+
     /**
      * @return the PageId of the oldest log page still needed for recovery
      * while online
      */
     PageId getOnlineRecoveryPageId() const;
-    
+
     /**
      * Gets the version number of a locked page.
      *
@@ -135,7 +135,7 @@ public:
      * @return the current version number for this segment
      */
     SegVersionNum getVersionNumber() const;
-    
+
     /**
      * @return the WAL segment
      */
@@ -150,7 +150,7 @@ public:
      * call
      */
     void deallocateCheckpointedLog(CheckpointType checkpointType);
-    
+
     // implement the Segment interface
     virtual void deallocatePageRange(PageId startPageId,PageId endPageId);
     virtual void delegatedCheckpoint(

@@ -2,9 +2,9 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2009-2009 The Eigenbase Project
-// Copyright (C) 2009-2009 Disruptive Tech
+// Copyright (C) 2009-2009 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,7 +54,7 @@ class MedMqlDataServer
     public static final String PROP_URL = "URL";
 
     public static final String PROP_METAWEB_TYPE = "METAWEB_TYPE";
-    
+
     public static final String PROP_UDX_SPECIFIC_NAME = "UDX_SPECIFIC_NAME";
 
     public static final String DEFAULT_URL
@@ -107,7 +107,7 @@ class MedMqlDataServer
     {
         String udxSpecificName = getProperties().getProperty(
             PROP_UDX_SPECIFIC_NAME, DEFAULT_UDX_SPECIFIC_NAME);
-        
+
         requireProperty(tableProps, PROP_METAWEB_TYPE);
         String metawebType = tableProps.getProperty(PROP_METAWEB_TYPE);
         return new MedMqlColumnSet(

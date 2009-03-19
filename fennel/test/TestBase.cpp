@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -55,7 +55,7 @@ TestBase::TestBase()
     testName = configMap.getStringParam(paramTestSuiteName);
     traceLevel = static_cast<TraceLevel>(
         configMap.getIntParam(paramTraceLevel,TRACE_CONFIG));
-    std::string traceStdoutParam = 
+    std::string traceStdoutParam =
         configMap.getStringParam(paramTraceStdout,"");
     traceStdout = ((traceStdoutParam.length() == 0) ? false : true);
 
@@ -65,7 +65,7 @@ TestBase::TestBase()
         defaultTraceFileName += fennelHome;
         defaultTraceFileName += "/trace/";
     }
-    defaultTraceFileName += testName+"_trace.log";
+    defaultTraceFileName += testName + "_trace.log";
     std::string traceFileName =
         configMap.getStringParam(
             paramTraceFileName,
@@ -122,7 +122,7 @@ void TestBase::readParams(int argc,char **argv)
             } else if (arg == "-all") {
                 runAll = true;
             } else if (arg == "-t") {   // -t TEST
-                permAssert(i+1 < argc);
+                permAssert(i + 1 < argc);
                 runSingle = argv[++i];
             } else if (arg[1] == 't') { // allow -tTEST
                 runSingle = arg.substr(2);
@@ -132,7 +132,7 @@ void TestBase::readParams(int argc,char **argv)
             if ((0 < i) && (i < arg.size())) {
                 // an ad hoc parameter
                 std::string key = arg.substr(0,i);
-                std::string val = arg.substr(i+1);
+                std::string val = arg.substr(i + 1);
                 adhocMap.setStringParam(key,val);
             } else {
                 // a config file name
@@ -150,7 +150,7 @@ void TestBase::readParams(int argc,char **argv)
         std::string dictFileName = "dictWords";
         configMap.setStringParam(paramDictionaryFileName,dictFileName);
     }
-    
+
     if (verbose) {
         configMap.dumpParams(std::cout);
     }
@@ -168,8 +168,9 @@ TestSuite *TestBase::releaseTestSuite()
 
     if (runSingle.size()) {
         test_unit *p =  defaultTests.findTest(runSingle);
-        if (!p)
+        if (!p) {
             p = extraTests.findTest(runSingle);
+        }
         if (!p) {
             std::cerr << "test " << runSingle << " not found\n";
             exit(2);
@@ -189,14 +190,15 @@ void TestBase::TestCaseGroup::addTest(std::string name, test_unit *tu)
     items.push_back(Item(name, tu));
 }
 
-test_unit* 
+test_unit*
 TestBase::TestCaseGroup::findTest(std::string name) const
 {
     for (std::vector<Item>::const_iterator p = items.begin();
          p != items.end(); ++p)
     {
-        if (name == p->name)
+        if (name == p->name) {
             return p->tu;
+        }
     }
     return 0;
 }
@@ -235,7 +237,7 @@ void TestBase::afterTestCase(std::string testCaseName)
 void TestBase::testCaseSetUp()
 {
 }
-    
+
 void TestBase::testCaseTearDown()
 {
 }

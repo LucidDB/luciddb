@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2005-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2008 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,8 @@
 package net.sf.farrago.fennel;
 
 import java.sql.*;
-import java.util.List;
+
+import java.util.*;
 
 import net.sf.farrago.fem.fennel.*;
 
@@ -105,8 +106,8 @@ public class FennelStorage
      *
      * @param cmd Java representation of object
      * @param execHandle optional execution handle associated with the command
-     * that's used to pass execution state from Farrago to Fennel; set to 0
-     * if there is no handle
+     * that's used to pass execution state from Farrago to Fennel; set to 0 if
+     * there is no handle
      *
      * @return output object handle if any
      */
@@ -115,16 +116,16 @@ public class FennelStorage
 
     /**
      * Find the input of a given stream node in a stream graph.
+     *
      * @param hStreamGraph handle to stream graph
      * @param node stream name
-     * @param inputs The names of the input streams are added to this
-     * list, in graph edge order.
+     * @param inputs The names of the input streams are added to this list, in
+     * graph edge order.
      */
     static native void tupleStreamGraphGetInputStreams(
         long hStreamGraph,
         String node,
         List<String> inputs);
-
 
     /**
      * Opens a stream graph.
@@ -193,26 +194,26 @@ public class FennelStorage
         long hStreamGraph,
         int action)
         throws SQLException;
-    
+
     /**
      * Allocates a new object in Fennel that Farrago will use to communicate
-     * execution state information from Farrago to Fennel.  Access to that
-     * object will be through a handle.
-     * 
+     * execution state information from Farrago to Fennel. Access to that object
+     * will be through a handle.
+     *
      * @return the handle that will be used to access the Fennel object
      */
     static native long newExecutionHandle();
-    
+
     /**
      * Deletes the Fennel object corresponding to an execution handle.
      *
      * @param execHandle the execution handle
      */
     static native void deleteExecutionHandle(long execHandle);
-    
+
     /**
      * Cancels execution of a statement associated with an execution handle.
-     * 
+     *
      * @param execHandle the execution handle
      */
     public static native void cancelExecution(long execHandle);

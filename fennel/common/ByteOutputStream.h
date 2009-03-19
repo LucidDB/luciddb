@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,18 +38,18 @@ class ByteOutputStream : virtual public ByteStream
      * Next position to write in output buffer.
      */
     PBuffer pNextByte;
-    
+
     /**
      * Number of writable bytes remaining in output buffer.
      */
     uint cbWritable;
-    
+
 protected:
     /**
      * Current write latency mode.
      */
     WriteLatency writeLatency;
-    
+
     explicit ByteOutputStream();
 
     /**
@@ -70,7 +70,7 @@ protected:
      * @param cbBuffer number of bytes in buffer
      */
     void setBuffer(PBuffer pBuffer,uint cbBuffer);
-    
+
     /**
      * @return number of bytes remaining to be written in current buffer
      */
@@ -125,7 +125,7 @@ public:
      * @param writeLatency new WriteLatency setting
      */
     virtual void setWriteLatency(WriteLatency writeLatency);
-    
+
     /**
      * Writes a fixed-size type to the stream.
      *

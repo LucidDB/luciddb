@@ -33,7 +33,9 @@ class FennelResource : ResourceBundle
     explicit FennelResource(Locale locale);
 
     public:
-    virtual ~FennelResource() { }
+    virtual ~FennelResource()
+    {
+    }
 
     static const FennelResource &instance();
     static const FennelResource &instance(const Locale &locale);
@@ -265,3 +267,5 @@ class FennelResource : ResourceBundle
 } // end namespace fennel
 
 #endif // Fennel_FennelResource_Included
+
+// End FennelResource.h

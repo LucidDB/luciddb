@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,23 +40,25 @@ import org.eigenbase.resource.*;
  */
 public class ConversionUtil
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String NATIVE_UTF16_CHARSET_NAME =
-        (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN)
-        ? "UTF-16BE" : "UTF-16LE";
+        (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN) ? "UTF-16BE"
+        : "UTF-16LE";
 
     /**
      * A constant string which can be used wherever a Java string containing
-     * Unicode characters is needed in a test.  It spells 'anthropos' in Greek.
+     * Unicode characters is needed in a test. It spells 'anthropos' in Greek.
      */
     public static final String TEST_UNICODE_STRING =
         "\u03B1\u03BD\u03B8\u03C1\u03C9\u03C0\u03BF\u03C2";
 
     /**
      * A constant string which can be used wherever a SQL literal containing
-     * Unicode escape characters is needed in a test.  It spells 'anthropos' in
-     * Greek.  The escape character is the SQL default (backslash); note
-     * that the backslash-doubling here is for Java only, so by the time
-     * the SQL parser gets it, there is only one backslash.
+     * Unicode escape characters is needed in a test. It spells 'anthropos' in
+     * Greek. The escape character is the SQL default (backslash); note that the
+     * backslash-doubling here is for Java only, so by the time the SQL parser
+     * gets it, there is only one backslash.
      */
     public static final String TEST_UNICODE_SQL_ESCAPED_LITERAL =
         "\\03B1\\03BD\\03B8\\03C1\\03C9\\03C0\\03BF\\03C2";

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -62,8 +62,7 @@ main(int argc, char *argv[])
         } else {
             if (strncmp(&(argv[argIdx][2]), "append-pages=", 13) == 0) {
                 nPages = atoi(&(argv[argIdx][15]));
-            }
-            else if (strncmp(&(argv[argIdx][2]), "pagesize=", 9) == 0) {
+            } else if (strncmp(&(argv[argIdx][2]), "pagesize=", 9) == 0) {
                 pageSize = atoi(&(argv[argIdx][11]));
             } else {
                 printf("Invalid argument %s\n", argv[argIdx]);
@@ -93,10 +92,10 @@ main(int argc, char *argv[])
 
     int handle = open(fileName, access, permission);
     if (handle < 0) {
-        printf("Failed to open file '%s'\n", fileName); 
+        printf("Failed to open file '%s'\n", fileName);
         exit(errno);
     }
-    if (flock(handle, LOCK_EX|LOCK_NB) < 0) {
+    if (flock(handle, LOCK_EX | LOCK_NB) < 0) {
         printf("Failed to acquire exclusive lock on file '%s'\n", fileName);
         close(handle);
         exit(errno);

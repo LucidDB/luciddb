@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -80,7 +80,7 @@ abstract public class FennelTupleResultSet
     {
         this.desc = desc;
         this.metaData = metaData;
-        this.tupleAlignment = tupleAlignment ;
+        this.tupleAlignment = tupleAlignment;
         this.tupleAlignmentMask = tupleAlignment - 1;
     }
 
@@ -88,7 +88,7 @@ abstract public class FennelTupleResultSet
         FennelTupleDescriptor desc,
         ResultSetMetaData metaData)
     {
-        this(desc,metaData,FennelTupleAccessor.TUPLE_ALIGN_JVM);
+        this(desc, metaData, FennelTupleAccessor.TUPLE_ALIGN_JVM);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -249,8 +249,7 @@ abstract public class FennelTupleResultSet
         case Types.VARCHAR:
         case Types.LONGVARCHAR:
             String charsetName =
-                d.isUnicode()
-                ? ConversionUtil.NATIVE_UTF16_CHARSET_NAME
+                d.isUnicode() ? ConversionUtil.NATIVE_UTF16_CHARSET_NAME
                 : "ISO-8859-1";
             try {
                 return new String(

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,6 +24,8 @@ package net.sf.farrago.ddl;
 
 import java.util.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
@@ -32,7 +34,6 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.session.*;
 
-import javax.jmi.reflect.*;
 
 /**
  * DdlTruncateStmt represents a DDL TRUNCATE statement of any kind.
@@ -92,7 +93,7 @@ public class DdlTruncateStmt
         FarragoSession session)
     {
         FarragoSessionIndexMap baseIndexMap = ddlValidator.getIndexMap();
-        FarragoDataWrapperCache wrapperCache = 
+        FarragoDataWrapperCache wrapperCache =
             ddlValidator.getDataWrapperCache();
         for (String indexMofId : indexMofIds) {
             baseIndexMap.dropIndexStorage(wrapperCache, indexMofId, true);
@@ -104,7 +105,7 @@ public class DdlTruncateStmt
     {
         return true;
     }
-    
+
     // implement DdlMultipleTransactionStmt
     public void completeAfterExecuteUnlocked(
         FarragoSessionDdlValidator ddlValidator,
@@ -117,8 +118,9 @@ public class DdlTruncateStmt
             // shouldn't reset the rowcounts.
             return;
         }
-        FemAbstractColumnSet table = (FemAbstractColumnSet)
-            session.getRepos().getEnkiMdrRepos().getByMofId(
+        FemAbstractColumnSet table =
+            (FemAbstractColumnSet) session.getRepos().getEnkiMdrRepos()
+            .getByMofId(
                 tableMofId,
                 tableClass);
         session.getPersonality().resetRowCounts(table);

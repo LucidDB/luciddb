@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,7 @@ import net.sf.farrago.query.*;
 
 import openjava.ptree.Literal;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
@@ -290,9 +290,10 @@ class FtrsIndexScanRel
             // an unclustered index scan, so if somehow we ever
             // ended up choosing one of those for ALTER TABLE
             // ADD COLUMN, I think we'd be in trouble.
-            indexGuide = new FtrsIndexGuide(
-                stmt.getFarragoTypeFactory(),
-                oldTable);
+            indexGuide =
+                new FtrsIndexGuide(
+                    stmt.getFarragoTypeFactory(),
+                    oldTable);
         }
         scanStream.setTupleDesc(
             indexGuide.getCoverageTupleDescriptor(index));

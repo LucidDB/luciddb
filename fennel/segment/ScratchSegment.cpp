@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -89,9 +89,9 @@ BlockNum ScratchSegment::getNumPagesExtended()
 PageId ScratchSegment::allocatePageId(PageOwnerId)
 {
     StrictMutexGuard mutexGuard(mutex);
-    
+
     // nothing to do with PageOwnerId
-    
+
     if (getAllocatedSizeInPages() >= nPagesMax) {
         return NULL_PAGE_ID;
     }
@@ -106,7 +106,7 @@ void ScratchSegment::deallocatePageRange(PageId startPageId,PageId endPageId)
 {
     assert(startPageId == NULL_PAGE_ID);
     assert(endPageId == NULL_PAGE_ID);
-    
+
     StrictMutexGuard mutexGuard(mutex);
     clearPages();
 }
@@ -139,7 +139,7 @@ CachePage *ScratchSegment::lockPage(
     TxnId txnId)
 {
     StrictMutexGuard mutexGuard(mutex);
-    
+
     assert(CompoundId::getDeviceId(blockId) == Cache::NULL_DEVICE_ID);
     BlockNum blockNum = CompoundId::getBlockNum(blockId);
     assert(blockNum < pages.size());

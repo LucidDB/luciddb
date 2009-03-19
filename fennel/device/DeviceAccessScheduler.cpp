@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -70,11 +70,10 @@ DeviceAccessScheduler *
 DeviceAccessScheduler::newScheduler(
     DeviceAccessSchedulerParams const &params)
 {
-    switch(params.schedulerType) {
-        
+    switch (params.schedulerType) {
     case DeviceAccessSchedulerParams::THREAD_POOL_SCHEDULER:
         return new ThreadPoolScheduler(params);
-        
+
 #ifdef __MINGW32__
     case DeviceAccessSchedulerParams::IO_COMPLETION_PORT_SCHEDULER:
         return new IoCompletionPortScheduler(params);
@@ -98,14 +97,14 @@ DeviceAccessScheduler::newScheduler(
             }
         }
 #endif
-        
+
 #ifdef USE_AIO_H
     case DeviceAccessSchedulerParams::AIO_POLLING_SCHEDULER:
         return new AioPollingScheduler(params);
     case DeviceAccessSchedulerParams::AIO_SIGNAL_SCHEDULER:
         return new AioSignalScheduler(params);
 #endif
-        
+
     default:
         // fall through to use ThreadPoolScheduler as a fallback
         break;
@@ -125,14 +124,14 @@ RandomAccessRequestBinding::RandomAccessRequestBinding()
     if (!hEvent) {
         throw new SysCallExcn("CreateEvent failed");
     }
-#endif    
+#endif
 }
 
 RandomAccessRequestBinding::~RandomAccessRequestBinding()
 {
 #ifdef __MINGW32__
     CloseHandle(hEvent);
-#endif    
+#endif
 }
 
 void RandomAccessRequest::execute()

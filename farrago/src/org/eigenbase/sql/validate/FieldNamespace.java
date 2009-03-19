@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,21 +21,25 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlNode;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
  * Implementation of {@link SqlValidatorNamespace} for a field of a record.
  *
- * <p>A field is not a very interesting namespace - except if the field has
- * a record or multiset type - but this class exists to make fields behave
+ * <p>A field is not a very interesting namespace - except if the field has a
+ * record or multiset type - but this class exists to make fields behave
  * similarly to other records for purposes of name resolution.
  *
- * @version $Id$
  * @author jhyde
+ * @version $Id$
  */
-class FieldNamespace extends AbstractNamespace
+class FieldNamespace
+    extends AbstractNamespace
 {
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a FieldNamespace.
      *
@@ -50,6 +54,8 @@ class FieldNamespace extends AbstractNamespace
         assert dataType != null;
         this.rowType = dataType;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void setRowType(RelDataType rowType)
     {

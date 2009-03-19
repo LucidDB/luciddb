@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -60,16 +60,16 @@ public class FarragoVjdbcServerTest
         return new FarragoVjdbcClientDriver();
     }
 
-
-    public void testExceptionContents() throws Throwable
+    public void testExceptionContents()
+        throws Throwable
     {
         // JDF 02/06/08 This override is due to a limititation imposed by Vjdbc.
         // FarragoSqlException inherits SQLException.  Vjdbc will only pass
-        // generic SQLExceptions.  If it is an exception that extends SQLException a new
-        // SQLException is allocated and populated from the original exception.
-        // See vjdbc.util.SqlExceptionHelper.wrap().  Bascially this is a bad method 
-        // name since either it returns the original exception or creates a whole
-        // new one and discards the old.
+        // generic SQLExceptions.  If it is an exception that extends
+        // SQLException a new SQLException is allocated and populated from the
+        // original exception. See vjdbc.util.SqlExceptionHelper.wrap().
+        // Bascially this is a bad method name since either it returns the
+        // original exception or creates a whole new one and discards the old.
     }
 }
 

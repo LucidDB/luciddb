@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -81,13 +81,13 @@ void ExternalSortRunAccessor::storeRun(
         SegOutputStream::newSegOutputStream(
             sortInfo.externalSegmentAccessor);
     pStoredRun->beginWrite(pSegOutputStream);
-    
+
     ExternalSortFetchArray &fetchArray = pObjLoad.bindFetchArray();
 
     ExternalSortRC rc;
     uint iTuple = 0;
     do {
-        for ( ; iTuple < fetchArray.nTuples; iTuple++) {
+        for (; iTuple < fetchArray.nTuples; iTuple++) {
             PBuffer pSrcBuf = fetchArray.ppTupleBuffers[iTuple];
             uint cbTuple = tupleAccessor.getBufferByteCount(pSrcBuf);
             PBuffer pTarget = pSegOutputStream->getWritePointer(cbTuple);
@@ -112,7 +112,7 @@ ExternalSortFetchArray &ExternalSortRunAccessor::bindFetchArray()
 ExternalSortRC ExternalSortRunAccessor::fetch(uint nTuplesRequested)
 {
     sortInfo.stream.checkAbort();
-    
+
     if (nTuplesRequested > EXTSORT_FETCH_ARRAY_SIZE) {
         nTuplesRequested = EXTSORT_FETCH_ARRAY_SIZE;
     }

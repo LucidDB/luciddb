@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 //! castA. Ascii. Char & Varchar
-//! 
+//!
 //! Casts an exact numeric to an Ascii string.
 //!
 //! May throw "22001" data exception - string data, right truncation
@@ -37,7 +37,7 @@ castExactToStrA(RegisterRef<char*>* result,
                 RegisterRef<int64_t>* src);
 
 //! castA. Ascii. Char & Varchar
-//! 
+//!
 //! Casts an exact numeric with precision and scale to an Ascii string.
 //!
 //! May throw "22001" data exception - string data, right truncation
@@ -48,7 +48,7 @@ castExactToStrA(RegisterRef<char*>* result,
                 RegisterRef<int32_t>* scale);
 
 //! castA. Ascii. Char & Varchar
-//! 
+//!
 //! Casts an approximate numeric to an Ascii string.
 //!
 //! May throw "22001" data exception - string data, right truncation
@@ -57,7 +57,7 @@ castApproxToStrA(RegisterRef<char*>* result,
                  RegisterRef<double>* src);
 
 //! castA. Ascii. Char & Varchar
-//! 
+//!
 //! Casts a string to an exact numeric.
 //!
 //! May throw "22018" data exception - invalid character value for cast
@@ -66,7 +66,7 @@ castStrtoExactA(RegisterRef<int64_t>* result,
                 RegisterRef<char*>* src);
 
 //! castA. Ascii. Char & Varchar
-//! 
+//!
 //! Casts a string to an exact numeric with precision and scale.
 //!
 //! May throw "22018" data exception - invalid character value for cast
@@ -78,7 +78,7 @@ castStrToExactA(RegisterRef<int64_t>* result,
                 RegisterRef<int32_t>* scale);
 
 //! castA. Ascii. Char & Varchar
-//! 
+//!
 //! Casts a string to an approximate numeric.
 //!
 //! May throw "22018" data exception - invalid character value for cast
@@ -87,7 +87,7 @@ castStrToApproxA(RegisterRef<double>* result,
                  RegisterRef<char*>* src);
 
 //! castA. Ascii. Char & Varchar
-//! 
+//!
 //! Casts a boolean to an Ascii string.
 //!
 //! May throw "22018" data exception - invalid character value for cast
@@ -97,7 +97,7 @@ castBooleanToStrA(RegisterRef<char*>* result,
 
 
 //! castA. Ascii. Char & Varchar
-//! 
+//!
 //! Casts a string to an boolean.
 //!
 //! May throw "22018" data exception - invalid character value for cast
@@ -125,7 +125,7 @@ castStrToCharA(RegisterRef<char*>* result,
 
 
 class ExtendedInstructionTable;
-        
+
 void
 ExtCastRegister(ExtendedInstructionTable* eit);
 

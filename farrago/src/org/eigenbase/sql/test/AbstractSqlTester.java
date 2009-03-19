@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -67,7 +67,7 @@ public abstract class AbstractSqlTester
 
     //~ Methods ----------------------------------------------------------------
 
-    public void setFor(SqlOperator operator, VmName... unimplementedVmNames)
+    public void setFor(SqlOperator operator, VmName ... unimplementedVmNames)
     {
         if ((operator != null) && (this.operator != null)) {
             throw new AssertionFailedError("isFor() called twice");
@@ -87,7 +87,7 @@ public abstract class AbstractSqlTester
 
     public void checkWinAgg(
         String expr,
-        String[] inputValues,
+        String [] inputValues,
         String windowSpec,
         String type,
         Object result,
@@ -105,6 +105,7 @@ public abstract class AbstractSqlTester
      * (include precision/scale but no charset or collation)
      *
      * @param sqlType Type
+     *
      * @return String representation of type
      */
     public static String getTypeString(RelDataType sqlType)
@@ -144,11 +145,13 @@ public abstract class AbstractSqlTester
     }
 
     public static String generateWinAggQuery(
-        String expr, String windowSpec, String[] inputValues)
+        String expr,
+        String windowSpec,
+        String [] inputValues)
     {
         StringBuilder buf = new StringBuilder();
         buf.append("SELECT ").append(expr).append(" OVER (").append(windowSpec)
-            .append(") FROM (");
+        .append(") FROM (");
         for (int i = 0; i < inputValues.length; i++) {
             if (i > 0) {
                 buf.append(" UNION ALL ");
@@ -168,6 +171,7 @@ public abstract class AbstractSqlTester
      * override.
      *
      * @param expression Expression
+     *
      * @return Query that returns expression
      */
     protected String buildQuery(String expression)
@@ -176,7 +180,8 @@ public abstract class AbstractSqlTester
     }
 
     public void checkType(
-        String expression, String type)
+        String expression,
+        String type)
     {
         checkColumnType(buildQuery(expression), type);
     }

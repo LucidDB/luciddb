@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,6 +41,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.enki.mdr.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
+
 
 /**
  * Implementation of {@link FarragoRepos} using a MDR repository.
@@ -83,9 +84,9 @@ public abstract class FarragoReposImpl
     private final ReentrantReadWriteLock sxLock = new ReentrantReadWriteLock();
 
     private ThreadLocal<ReposCache> cache;
-    
+
     private Boolean exclusiveAccess;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -98,13 +99,13 @@ public abstract class FarragoReposImpl
     {
         owner.addAllocation(this);
         sequenceMap = new HashMap<String, FarragoSequenceAccessor>();
-        cache = new ThreadLocal<ReposCache>() {
-            @Override
-            protected ReposCache initialValue()
-            {
-                return new ReposCache();
-            }
-        };
+        cache =
+            new ThreadLocal<ReposCache>() {
+                @Override protected ReposCache initialValue()
+                {
+                    return new ReposCache();
+                }
+            };
         exclusiveAccess = false;
     }
 
@@ -297,24 +298,27 @@ public abstract class FarragoReposImpl
     // implement FarragoRepos
     public CwmCatalog getCatalog(String catalogName)
     {
-        Map<String, Pair<RefClass, String>> catalogCache = 
+        Map<String, Pair<RefClass, String>> catalogCache =
             cache.get().catalogCache;
         Pair<RefClass, String> catalogDesc = catalogCache.get(catalogName);
 
         CwmCatalog catalog;
         if (catalogDesc != null) {
-            catalog = 
-                (CwmCatalog)getEnkiMdrRepos().getByMofId(
-                    catalogDesc.right, catalogDesc.left);
+            catalog =
+                (CwmCatalog) getEnkiMdrRepos().getByMofId(
+                    catalogDesc.right,
+                    catalogDesc.left);
         } else {
-            catalog = FarragoCatalogUtil.getModelElementByName(
-                allOfType(CwmCatalog.class),
-                catalogName);
-            
+            catalog =
+                FarragoCatalogUtil.getModelElementByName(
+                    allOfType(CwmCatalog.class),
+                    catalogName);
+
             if (catalog != null) {
-                catalogDesc = 
+                catalogDesc =
                     new Pair<RefClass, String>(
-                        catalog.refClass(), catalog.refMofId());
+                        catalog.refClass(),
+                        catalog.refMofId());
                 catalogCache.put(catalogName, catalogDesc);
             }
         }
@@ -574,7 +578,7 @@ public abstract class FarragoReposImpl
     {
         return new FarragoReposTxnContext(this, manageReposSession);
     }
-    
+
     /**
      * Places either a shared or exclusive lock on the repository. Multiple
      * shared locks are allowed from different threads when no thread holds an
@@ -582,8 +586,8 @@ public abstract class FarragoReposImpl
      * preventing shared locks from other threads. If a conflicting lock is
      * requested, that requester will wait until the requested lock is
      * available. Locks are reentrant: a thread can take the same lock more than
-     * once, but must make a matching number of calls to {@link #unlockRepos}
-     * in order to release the lock. Upgrade and downgrade are not supported.
+     * once, but must make a matching number of calls to {@link #unlockRepos} in
+     * order to release the lock. Upgrade and downgrade are not supported.
      *
      * <p>This lock is independent of MDR transaction state (i.e. it can be held
      * even when no MDR transaction is in progress; an MDR transaction can be
@@ -596,7 +600,7 @@ public abstract class FarragoReposImpl
      */
     public void lockRepos(int lockLevel)
     {
-        synchronized(exclusiveAccess) {
+        synchronized (exclusiveAccess) {
             if (exclusiveAccess.booleanValue()) {
                 throw FarragoResource.instance().NeedExclusiveAccess.ex();
             }
@@ -626,15 +630,14 @@ public abstract class FarragoReposImpl
             assert (false);
         }
     }
-    
-    
+
     // TODO: SWZ: 2008-03-27: implement on platform side and remove
     // implement FarragoRepos (for red-zone components ignorant of Enki)
     public EnkiMDRepository getEnkiMdrRepos()
     {
-        return (EnkiMDRepository)getMdrRepos();
+        return (EnkiMDRepository) getMdrRepos();
     }
-    
+
     // TODO: SWZ: 2008-03-27: implement on platform side and call this
     public void beginReposSession()
     {
@@ -646,50 +649,52 @@ public abstract class FarragoReposImpl
     {
         cache.get().endSession();
     }
-    
+
     /**
-     * Puts the repository in exclusive access mode.  When in this mode,
+     * Puts the repository in exclusive access mode. When in this mode,
      * subsequent attempts to lock the repository will return an exception
-     * immediately rather than wait for a required repository lock to
-     * become available.
+     * immediately rather than wait for a required repository lock to become
+     * available.
      */
     public void beginExclusiveAccess()
     {
-        synchronized(exclusiveAccess) {
+        synchronized (exclusiveAccess) {
             if (exclusiveAccess.booleanValue()) {
                 throw FarragoResource.instance().NeedExclusiveAccess.ex();
             }
             exclusiveAccess = true;
         }
     }
-    
+
     /**
      * Ends exclusive access mode for the repository.
      */
     public void endExclusiveAccess()
     {
-        synchronized(exclusiveAccess) {
+        synchronized (exclusiveAccess) {
             exclusiveAccess = false;
         }
     }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     private static class ReposCache
     {
         protected int sessionDepth;
         protected Map<String, Pair<RefClass, String>> catalogCache;
-        
+
         private ReposCache()
         {
             this.sessionDepth = 0;
         }
-        
+
         private void beginSession()
         {
             if (sessionDepth++ == 0) {
-                catalogCache = new HashMap<String, Pair<RefClass,String>>();
+                catalogCache = new HashMap<String, Pair<RefClass, String>>();
             }
         }
-        
+
         protected void endSession()
         {
             if (--sessionDepth == 0) {

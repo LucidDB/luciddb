@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -25,8 +25,9 @@ import de.simplicit.vjdbc.server.config.*;
 import de.simplicit.vjdbc.server.rmi.*;
 import de.simplicit.vjdbc.util.*;
 
-import java.rmi.*;
 import java.io.*;
+
+import java.rmi.*;
 
 import java.sql.*;
 
@@ -101,10 +102,12 @@ public class FarragoVjdbcServer
         vjdbcConfig = VJdbcConfiguration.singleton();
         if (connectionTimeoutMillis == -1) {
             // -1 means never timeout, so set OCCT checking period to 0
-            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                FarragoCatalogInit.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
             vjdbcConfig.getOcctConfiguration().setCheckingPeriodInMillis(0);
         } else {
-            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(connectionTimeoutMillis);
+            vjdbcConfig.getOcctConfiguration().setTimeoutInMillis(
+                connectionTimeoutMillis);
         }
 
         RmiConfiguration rmiConfig = new RmiConfiguration();

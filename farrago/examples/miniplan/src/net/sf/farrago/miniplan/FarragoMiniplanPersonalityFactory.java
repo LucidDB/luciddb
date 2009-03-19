@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2008-2008 The Eigenbase Project
-// Copyright (C) 2008-2008 Disruptive Tech
-// Copyright (C) 2008-2008 LucidEra, Inc.
+// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2008-2009 SQLstream, Inc.
+// Copyright (C) 2008-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -83,7 +83,7 @@ public class FarragoMiniplanPersonalityFactory
         Collection<RelOptRule> medPluginRules)
     {
         HepProgramBuilder builder = new HepProgramBuilder();
-        
+
         builder.addGroupBegin();
         builder.addRuleInstance(RemoveTrivialProjectRule.instance);
         builder.addRuleInstance(new PushProjectPastSetOpRule());
@@ -91,15 +91,15 @@ public class FarragoMiniplanPersonalityFactory
         builder.addGroupEnd();
 
         builder.addRuleInstance(PushAggThroughUnionAllRule.instance);
-        
+
         builder.addRuleCollection(medPluginRules);
-        
+
         builder.addRuleInstance(RemoveTrivialProjectRule.instance);
         builder.addRuleInstance(new LhxAggRule());
 
         builder.addRuleInstance(new FennelReshapeRule());
         builder.addRuleInstance(FennelUnionRule.instance);
-        
+
         builder.addConverters(true);
 
         return builder.createProgram();
@@ -111,7 +111,7 @@ public class FarragoMiniplanPersonalityFactory
         extends FarragoDefaultSessionPersonality
     {
         private static final String MINIPLAN_VOLCANO = "volcano";
-        
+
         protected FarragoMiniplanSessionPersonality(FarragoDbSession session)
         {
             super(session);
@@ -125,7 +125,7 @@ public class FarragoMiniplanPersonalityFactory
             super.loadDefaultSessionVariables(variables);
             variables.setDefault(MINIPLAN_VOLCANO, "false");
         }
-        
+
         // implement FarragoSessionPersonality
         public FarragoSessionPlanner newPlanner(
             FarragoSessionPreparingStmt stmt,
@@ -134,7 +134,7 @@ public class FarragoMiniplanPersonalityFactory
             boolean useVolcano =
                 stmt.getSession().getSessionVariables().getBoolean(
                     MINIPLAN_VOLCANO);
-            
+
             if (useVolcano) {
                 FarragoVolcanoMiniplanner planner =
                     new FarragoVolcanoMiniplanner(stmt);

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -153,21 +153,22 @@ public class BytePointer
     }
 
     /**
-     * @return the charset used for this pointer's encoding, or
-     * BINARY if no character data is encoded
+     * @return the charset used for this pointer's encoding, or BINARY if no
+     * character data is encoded
      */
     protected String getCharsetName()
     {
         return "BINARY";
     }
-    
+
     // implement AssignableValue
     public void assignFrom(Object obj)
     {
         // TODO jvs 28-Jan-2009:  optimized charset comparison?
         if (obj == null) {
             setNull(true);
-        } else if ((obj instanceof BytePointer)
+        } else if (
+            (obj instanceof BytePointer)
             && (getCharsetName().equals(((BytePointer) obj).getCharsetName())))
         {
             BytePointer other = (BytePointer) obj;
@@ -193,8 +194,8 @@ public class BytePointer
     /**
      * Pads or truncates this value according to the given precision.
      *
-     * @param precision desired precision, in characters for
-     * character data, or bytes for binary data
+     * @param precision desired precision, in characters for character data, or
+     * bytes for binary data
      * @param needPad true if short values should be padded
      * @param padByte byte to pad with
      */
@@ -356,7 +357,7 @@ public class BytePointer
      * only works for ISO-8859-1.  For non-singlebyte encodings, a subclass
      * needs to override these functions.
      */
-    
+
     public int length()
     {
         return available();
@@ -366,7 +367,7 @@ public class BytePointer
     {
         buf[pos + index] = (byte) c;
     }
-    
+
     public char charAt(int index)
     {
         return (char) buf[pos + index];
@@ -493,7 +494,7 @@ public class BytePointer
     {
         return positionImpl(bp1, 1);
     }
-    
+
     protected int positionImpl(BytePointer bp1, int bytesPerChar)
     {
         if (bp1.getByteCount() == 0) {

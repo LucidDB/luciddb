@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -58,7 +58,7 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
 
     // REVIEW jvs 25-Aug-2006: See my comments on LhxAggExecStreamParams
     // regarding these fields (w.r.t. comment cross-refs).
-    
+
     /**
      * Initial stats provided by the optimizer for resource allocation.
      * cndKeys: key cardinality of the initial built input chosen by the
@@ -101,7 +101,7 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
      * Join keys from the right input.
      */
     TupleProjection rightKeyProj;
-  
+
     /**
      * Join keys from the right input.
      */
@@ -139,9 +139,9 @@ class LhxJoinExecStream : public ConfluenceExecStream
 {
     // REVIEW jvs 26-Aug-2006:  Fennel convention for enum names is
     // all uppercase with underscores
-    
+
     enum LhxDefaultJoinInputIndex {
-        DefaultProbeInputIndex=0, DefaultBuildInputIndex=1
+        DefaultProbeInputIndex = 0, DefaultBuildInputIndex = 1
     };
 
     enum LhxJoinState {
@@ -149,7 +149,7 @@ class LhxJoinExecStream : public ConfluenceExecStream
         ProduceBuild, ProducePending,
         Partition, CreateChildPlan, GetNextPlan, Done
     };
-    
+
     /**
      * Input tuple.
      */
@@ -274,37 +274,37 @@ class LhxJoinExecStream : public ConfluenceExecStream
      * Plan returns matched tuples from the probe side.
      * If curPlan is NULL, uses the default probe side where inputIndex == 0.
      */
-    inline bool returnProbeInner(LhxPlan *curPlan=NULL);
+    inline bool returnProbeInner(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns matched tuples from the build side.
      */
-    inline bool returnBuildInner(LhxPlan *curPlan=NULL);
+    inline bool returnBuildInner(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns non-matched tuples from the probe side.
      */
-    inline bool returnProbeOuter(LhxPlan *curPlan=NULL);
+    inline bool returnProbeOuter(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns non-matched tuples from the build side.
      */
-    inline bool returnBuildOuter(LhxPlan *curPlan=NULL);
+    inline bool returnBuildOuter(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns matched tuples from both join sides.
      */
-    inline bool returnInner(LhxPlan *curPlan=NULL);
+    inline bool returnInner(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns tuples, matched or non-matched, from the probe side.
      */
-    inline bool returnProbe(LhxPlan *curPlan=NULL);
+    inline bool returnProbe(LhxPlan *curPlan = NULL);
 
     /*
      * Plan returns tuples, matched or non-matched, from the build side.
      */
-    inline bool returnBuild(LhxPlan *curPlan=NULL);
+    inline bool returnBuild(LhxPlan *curPlan = NULL);
 
 public:
     /*
@@ -345,7 +345,7 @@ inline bool LhxJoinExecStream::returnProbeOuter(LhxPlan *curPlan)
 
 inline bool LhxJoinExecStream::returnBuildOuter(LhxPlan *curPlan)
 {
-    uint buildInput = (curPlan == NULL)? 1 : curPlan->getBuildInput();
+    uint buildInput = (curPlan == NULL) ? 1 : curPlan->getBuildInput();
     return joinType->test(buildInput * 2 + 1);
 }
 

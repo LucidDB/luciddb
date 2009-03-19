@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -52,6 +52,7 @@ public abstract class JmiMemFactory
 
     private static final Map<String, MethodId> methodMap =
         new HashMap<String, MethodId>();
+
     static {
         for (int i = 0; i < MethodId.values().length; i++) {
             MethodId methodId = MethodId.values()[i];
@@ -66,95 +67,147 @@ public abstract class JmiMemFactory
      */
     private static enum MethodId
     {
-        /** Method {@link Object#toString()}. */
+        /**
+         * Method {@link Object#toString()}.
+         */
         toString,
 
-        /** Method {@link Object#hashCode()}. */
+        /**
+         * Method {@link Object#hashCode()}.
+         */
         hashCode,
 
-        /** Method {@link Object#equals(Object)}. */
+        /**
+         * Method {@link Object#equals(Object)}.
+         */
         equals,
 
-        /** Method {@link Comparable#compareTo(Object)}. */
+        /**
+         * Method {@link Comparable#compareTo(Object)}.
+         */
         compareTo,
 
-        /** Method {@link RefBaseObject#refMofId()}. */
+        /**
+         * Method {@link RefBaseObject#refMofId()}.
+         */
         refMofId,
 
-        /** Method {@link Element#impl()}. */
+        /**
+         * Method {@link Element#impl()}.
+         */
         impl,
 
-        /** Method {@link RefObject#refClass()}. */
+        /**
+         * Method {@link RefObject#refClass()}.
+         */
         refClass,
 
-        /** Method {@link RefPackage#refAllPackages()}. */
+        /**
+         * Method {@link RefPackage#refAllPackages()}.
+         */
         refImmediateComposite,
 
-        /** Method {@link RefObject#refImmediateComposite()}. */
+        /**
+         * Method {@link RefObject#refImmediateComposite()}.
+         */
         refOutermostPackage,
 
-        /** Method {@link RefObject#refOutermostPackage()}. */
+        /**
+         * Method {@link RefObject#refOutermostPackage()}.
+         */
         refImmediatePackage,
 
-        /** Method {@link RefObject#refImmediatePackage()}. */
+        /**
+         * Method {@link RefObject#refImmediatePackage()}.
+         */
         refAllPackages,
 
-        /** Method {@link RefPackage#refAllClasses()}. */
+        /**
+         * Method {@link RefPackage#refAllClasses()}.
+         */
         refAllClasses,
 
-        /** Method {@link RefPackage#refAllAssociations()}. */
+        /**
+         * Method {@link RefPackage#refAllAssociations()}.
+         */
         refAllAssociations,
 
-        /** Method {@link RefBaseObject#refMetaObject()}. */
+        /**
+         * Method {@link RefBaseObject#refMetaObject()}.
+         */
         refMetaObject,
 
-        /** Methods {@link RefClass#refGetEnum(RefObject, String)},
-         * {@link RefClass#refGetEnum(String, String)},
-         * {@link RefPackage#refGetEnum(RefObject, String)} and
-         * {@link RefPackage#refGetEnum(String, String)}. */
+        /**
+         * Methods {@link RefClass#refGetEnum(RefObject, String)}, {@link
+         * RefClass#refGetEnum(String, String)}, {@link
+         * RefPackage#refGetEnum(RefObject, String)} and {@link
+         * RefPackage#refGetEnum(String, String)}.
+         */
         refGetEnum,
 
-        /** Methods {@link RefFeatured#refGetValue(RefObject)} and
-         * {@link RefFeatured#refGetValue(String)}. */
+        /**
+         * Methods {@link RefFeatured#refGetValue(RefObject)} and {@link
+         * RefFeatured#refGetValue(String)}.
+         */
         refGetValue,
 
-        /** Methods {@link RefFeatured#refSetValue(RefObject, Object)} and
-         * {@link RefFeatured#refSetValue(String, Object)}. */
+        /**
+         * Methods {@link RefFeatured#refSetValue(RefObject, Object)} and {@link
+         * RefFeatured#refSetValue(String, Object)}.
+         */
         refSetValue,
 
-        /** Methods {@link RefPackage#refPackage(RefObject)} and
-         * {@link RefPackage#refPackage(String)}. */
+        /**
+         * Methods {@link RefPackage#refPackage(RefObject)} and {@link
+         * RefPackage#refPackage(String)}.
+         */
         refPackage,
 
-        /** Methods {@link RefPackage#refAssociation(RefObject)} and
-         * {@link RefPackage#refAssociation(String)}. */
+        /**
+         * Methods {@link RefPackage#refAssociation(RefObject)} and {@link
+         * RefPackage#refAssociation(String)}.
+         */
         refAssociation,
 
-        /** Method {@link RefPackage#refDelete()}. */
+        /**
+         * Method {@link RefPackage#refDelete()}.
+         */
         refDelete,
 
-        /** Method {@link RefAssociation#refAllLinks()}. */
+        /**
+         * Method {@link RefAssociation#refAllLinks()}.
+         */
         refAllLinks,
 
-        /** Methods {@link RefAssociation#refQuery(RefObject, RefObject)} and
-         * {@link RefAssociation#refQuery(String, RefObject)}. */
+        /**
+         * Methods {@link RefAssociation#refQuery(RefObject, RefObject)} and
+         * {@link RefAssociation#refQuery(String, RefObject)}.
+         */
         refQuery,
 
-        /** Method
-         * {@link RefAssociation#refLinkExists(RefObject, RefObject)}. */
+        /**
+         * Method {@link RefAssociation#refLinkExists(RefObject, RefObject)}.
+         */
         refLinkExists,
 
-        /** Method {@link RefAssociation#refAddLink(RefObject, RefObject)}. */
+        /**
+         * Method {@link RefAssociation#refAddLink(RefObject, RefObject)}.
+         */
         refAddLink,
 
-        /** Method
-         * {@link RefAssociation#refRemoveLink(RefObject, RefObject)}. */
+        /**
+         * Method {@link RefAssociation#refRemoveLink(RefObject, RefObject)}.
+         */
         refRemoveLink,
 
-        /** Method {@link RefClass#refCreateInstance(List)}. */
+        /**
+         * Method {@link RefClass#refCreateInstance(List)}.
+         */
         refCreateInstance,
 
-        /** Method {@link RefObject#refIsInstanceOf(RefObject, boolean)}. */
+        /**
+         * Method {@link RefObject#refIsInstanceOf(RefObject, boolean)}.
+         */
         refIsInstanceOf;
     }
 
@@ -869,10 +922,8 @@ public abstract class JmiMemFactory
                 Collection c = (Collection) obj;
                 return c.contains(rr.referencedEnd);
             } else {
-                return 
-                    obj != null
-                        ? obj.equals(rr.referencedEnd)
-                        : rr.referencedEnd == null;
+                return (obj != null) ? obj.equals(rr.referencedEnd)
+                    : (rr.referencedEnd == null);
             }
         }
 
@@ -1012,8 +1063,8 @@ public abstract class JmiMemFactory
             RefObject refObject,
             boolean considerSubTypes)
         {
-            MofClass thisMofClass = (MofClass)
-                classMap.get(clazz).refMetaObject();
+            MofClass thisMofClass =
+                (MofClass) classMap.get(clazz).refMetaObject();
 
             return isInstanceOf(thisMofClass, refObject, considerSubTypes);
         }

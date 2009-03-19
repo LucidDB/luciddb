@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -93,7 +93,6 @@ void SegPageEntryIter<EntryT>::prefetchPages(PageId prevPageId, bool oneIter)
     // Continue retrieving pageIds while we have available space in
     // the prefetch queue
     while (nFreePageSlots != 0 || oneIter) {
-
         // But make sure we have space in the entryQueue
         if (!entryQueue.spaceAvailable()) {
             break;
@@ -134,7 +133,7 @@ void SegPageEntryIter<EntryT>::operator ++ ()
     assert(currPageId != endPageId);
 
     entryQueue.pop_front();
-    
+
     // If the queue is empty, we have to try and pre-fetch some more entries.
     // Worst case, we'll hit the ending page.  The queueSize == 1 case needs
     // special handling because:

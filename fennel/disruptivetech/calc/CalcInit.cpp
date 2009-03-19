@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,7 @@ FENNEL_BEGIN_NAMESPACE
 
 CalcInit* CalcInit::_instance = NULL;
 
-CalcInit* 
+CalcInit*
 CalcInit::instance()
 {
     // Warning: Not thread safe
@@ -47,7 +47,7 @@ CalcInit::instance()
     ExtCastRegister(InstructionFactory::getExtendedInstructionTable());
     ExtDynamicVariableRegister(InstructionFactory::getExtendedInstructionTable());
     ExtWinAggFuncRegister(InstructionFactory::getExtendedInstructionTable());
-    
+
     // Add new init calls here
 
     return _instance;
@@ -55,3 +55,5 @@ CalcInit::instance()
 
 
 FENNEL_END_NAMESPACE
+
+// End CalcInit.cpp

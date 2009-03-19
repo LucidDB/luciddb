@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@
 #include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
-    
+
 /**
  * AioLinuxScheduler implements DeviceAccessScheduler via Linux-specific
  * kernel-mode libaio calls.
@@ -126,7 +126,7 @@ public:
     virtual void registerDevice(SharedRandomAccessDevice pDevice);
     virtual bool schedule(RandomAccessRequest &request);
     virtual void stop();
-    
+
 // ----------------------------------------------------------------------
 // Implementation of Thread interface (q.v.)
 // ----------------------------------------------------------------------
@@ -136,7 +136,7 @@ public:
 FENNEL_END_NAMESPACE
 
 #endif
-    
+
 #endif
 
 // End AioLinuxScheduler.h

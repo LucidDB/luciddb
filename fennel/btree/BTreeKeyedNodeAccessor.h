@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,17 +47,17 @@ public:
         NodeAccessor::tupleAccessor.setCurrentTupleBuf(
             NodeAccessor::getEntryForReadInline(node,iEntry));
     }
-    
+
     virtual void accessTuple(BTreeNode const &node,uint iEntry)
     {
         return accessTupleInline(node,iEntry);
     }
-    
+
     virtual void unmarshalKey(TupleData &keyData)
     {
         pKeyAccessor->unmarshal(keyData);
     }
-    
+
     virtual uint binarySearch(
         BTreeNode const &node,
         TupleDescriptor const &keyDescriptor,
@@ -80,7 +80,7 @@ public:
                 searchKey,scratchKey);
             if (j == 0) {
                 found = true;
-                switch(dupSeek) {
+                switch (dupSeek) {
                 case DUP_SEEK_ANY:
                     return probe;
                 case DUP_SEEK_BEGIN:
@@ -106,7 +106,7 @@ public:
         if (((base != probe) && (base < node.nEntries)) ||
             ((node.nEntries == 1) && (node.height != 0)))
         {
-            // one entry: +infinity            
+            // one entry: +infinity
             accessTupleInline(node,base);
         }
         return base;
@@ -119,8 +119,9 @@ public:
         TupleData &scratchKey)
     {
         int nKeys = NodeAccessor::getKeyCount(node);
-        if (nKeys == 0)
+        if (nKeys == 0) {
             return -1;
+        }
         accessTupleInline(node, 0);
         pKeyAccessor->unmarshal(scratchKey);
         int compareResult = keyDescriptor.compareTuples(searchKey, scratchKey);

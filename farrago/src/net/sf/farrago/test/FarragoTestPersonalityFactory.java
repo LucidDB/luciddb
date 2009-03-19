@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -29,8 +29,8 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.rules.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.sql.*;
 
 
@@ -71,7 +71,7 @@ public class FarragoTestPersonalityFactory
         {
             chain.addProvider(new FarragoTestRelMetadataProvider());
         }
-        
+
         // implement FarragoSessionPersonality
         public FarragoSessionPlanner newPlanner(
             FarragoSessionPreparingStmt stmt,
@@ -82,8 +82,7 @@ public class FarragoTestPersonalityFactory
             if ("BAD_VOLCANO".equals(
                     stmt.getSession().getSessionVariables().schemaName))
             {
-                FarragoDefaultPlanner planner =
-                    new FarragoDefaultPlanner(stmt);
+                FarragoDefaultPlanner planner = new FarragoDefaultPlanner(stmt);
                 if (init) {
                     planner.init();
                     planner.addRule(
@@ -105,15 +104,16 @@ public class FarragoTestPersonalityFactory
                 "isVisibleInExplain",
                 Collections.singletonList((Class) SqlExplainLevel.class));
         }
-        
+
         public Double getRowCount(AggregateRelBase rel)
         {
             // Lie and say aggregates always returns a million rows.
             return 1000000.0;
         }
-        
+
         public Boolean isVisibleInExplain(
-            FennelToIteratorConverter rel, SqlExplainLevel level)
+            FennelToIteratorConverter rel,
+            SqlExplainLevel level)
         {
             // Hide instances of FennelToIteratorConverter from EXPLAIN PLAN
             // unless WITH ALL ATTRIBUTES is specified.

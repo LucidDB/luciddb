@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -62,7 +62,7 @@ class RandomAccessRequestBinding : public IntrusiveListNode
 public:
     explicit RandomAccessRequestBinding();
     virtual ~RandomAccessRequestBinding();
-    
+
     /**
      * @return memory address where transfer should start.
      */
@@ -73,7 +73,7 @@ public:
      * transfer.
      */
     virtual uint getBufferSize() const = 0;
-    
+
     /**
      * Receives notification when a transfer completes.
      *
@@ -90,10 +90,14 @@ public:
  * RandomAccessRequestBinding memory locations need not be contiguous
  * (scatter/gather).
  */
-class RandomAccessRequest 
+class RandomAccessRequest
 {
 public:
-    enum Type { READ, WRITE};
+    enum Type {
+        READ,
+        WRITE
+    };
+
     typedef IntrusiveList<RandomAccessRequestBinding> BindingList;
     typedef IntrusiveListIter<RandomAccessRequestBinding> BindingListIter;
     typedef IntrusiveListMutator<RandomAccessRequestBinding>

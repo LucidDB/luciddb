@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,7 @@ class SegInputStream : public SegStream, public ByteInputStream
 {
 protected:
     SegPageIter pageIter;
-    
+
     /**
      * PageId of current page.
      */
@@ -58,9 +58,9 @@ protected:
 
     explicit SegInputStream(
         SegmentAccessor const &,PageId,uint cbExtraHeader = 0);
-    
+
     virtual void lockBuffer();
-    
+
 public:
     /**
      * Creates a new SegInputStream, positioned
@@ -68,7 +68,7 @@ public:
      *
      * @param segmentAccessor accessor for the segment containing the stream
      * data
-     * 
+     *
      * @param beginPageId the first page of stream data; if the default
      * FIRST_LINEAR_PAGE_ID is passed, the segment must support
      * LINEAR_ALLOCATION, and the stream starts at the first page of the
@@ -117,7 +117,7 @@ public:
 
     // override ByteInputStream
     virtual SharedByteStreamMarker newMarker();
-    
+
     // override ByteInputStream
     virtual void mark(ByteStreamMarker &marker);
 

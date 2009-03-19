@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -37,13 +37,13 @@ FENNEL_BEGIN_NAMESPACE
 class ThreadPoolScheduler : public DeviceAccessScheduler
 {
     ThreadPool<RandomAccessRequest> pool;
-    
+
 public:
     /**
      * Constructor.
      */
     explicit ThreadPoolScheduler(DeviceAccessSchedulerParams const &);
-    
+
     /**
      * Destructor:  stop must already have been called.
      */

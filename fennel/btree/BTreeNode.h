@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -43,7 +43,7 @@ struct BTreeNode : public StoredNode
      * knew what was on a page, we wouldn't need to prefetch it!).
      */
     PageId rightSibling;
-    
+
     /**
      * Number of entries stored on this node.
      */
@@ -68,7 +68,7 @@ struct BTreeNode : public StoredNode
     // NOTE:  interpretation of the data is dependent on the node's height in
     // the tree and the way in which the tree is defined.
     // See BTreeNodeAccessor.
-    
+
     /**
      * @return writable start of data after header
      */
@@ -76,7 +76,7 @@ struct BTreeNode : public StoredNode
     {
         return reinterpret_cast<PBuffer>(this + 1);
     }
-    
+
     /**
      * @return read-only start of data after header
      */

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //ompareProj
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,9 +22,9 @@
 */
 package net.sf.farrago.query;
 
-import java.util.*;
-
 import java.nio.charset.*;
+
+import java.util.*;
 
 import net.sf.farrago.fem.fennel.*;
 
@@ -103,17 +103,17 @@ public class FennelReshapeRule
 
             List<CompOperatorEnum> op = new ArrayList<CompOperatorEnum>();
             if (!isConditionSimple(
-                calcRel,
-                filterExprs,
-                filterList,
-                filterLiterals,
-                op))
+                    calcRel,
+                    filterExprs,
+                    filterList,
+                    filterLiterals,
+                    op))
             {
                 return;
             }
 
             compOp = op.get(0);
-            filterOrdinals = filterList.toArray(new Integer[filterList.size()]);         
+            filterOrdinals = filterList.toArray(new Integer[filterList.size()]);
         }
 
         RelNode fennelInput =
@@ -136,8 +136,8 @@ public class FennelReshapeRule
                 compOp,
                 filterOrdinals,
                 filterLiterals,
-                new FennelRelParamId [] {},
-                new Integer [] {},
+                new FennelRelParamId[] {},
+                new Integer[] {},
                 null);
 
         call.transformTo(reshapeRel);
@@ -234,7 +234,7 @@ public class FennelReshapeRule
                 return false;
             }
         }
-        
+
         return ((origType == castType)
             || ((origTypeName == SqlTypeName.CHAR)
                 && (castTypeName == SqlTypeName.VARCHAR))
@@ -287,10 +287,10 @@ public class FennelReshapeRule
         List<RexInputRef> filterCols = new ArrayList<RexInputRef>();
         List<RexNode> filterOperands = new ArrayList<RexNode>();
         if (FennelRelUtil.extractSimplePredicates(
-            sargBindingList,
-            filterCols,
-            filterOperands,
-            op))
+                sargBindingList,
+                filterCols,
+                filterOperands,
+                op))
         {
             for (RexInputRef filterCol : filterCols) {
                 filterList.add(filterCol.getIndex());

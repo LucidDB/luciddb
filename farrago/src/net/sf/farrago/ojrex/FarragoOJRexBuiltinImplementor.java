@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2005-2007 Xiaoyang
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2005-2009 Xiaoyang
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,31 +45,16 @@ import org.eigenbase.util.*;
 public class FarragoOJRexBuiltinImplementor
     extends FarragoOJRexImplementor
 {
+    //~ Enums ------------------------------------------------------------------
 
     /**
      * Enumeration of SQL operators that can be implemented in OJ.
      */
-    public enum Function {
-        FLOOR,
-        CEIL,
-        ABS,
-        POWER,
-        LN,
-        LOG10,
-        SUBSTRING,
-        OVERLAY,
-        MOD,
-        EXP,
-        CONCAT,
-        TRIM,
-        POSITION,
-        CHAR_LENGTH,
-        CHARACTER_LENGTH,
-        UPPER,
-        LOWER,
-        INITCAP,
-        CONVERT,
-        TRANSLATE,
+    public enum Function
+    {
+        FLOOR, CEIL, ABS, POWER, LN, LOG10, SUBSTRING, OVERLAY, MOD, EXP,
+        CONCAT, TRIM, POSITION, CHAR_LENGTH, CHARACTER_LENGTH, UPPER, LOWER,
+        INITCAP, CONVERT, TRANSLATE,
     }
 
     //~ Instance fields --------------------------------------------------------

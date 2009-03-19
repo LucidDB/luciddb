@@ -1,21 +1,21 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,11 +24,11 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 /**
-   
+
 <h3>Overview</h3>
 
 This document describes the components making up the ExecStream library,
-which is Fennel's infrastructure for execution of queries and 
+which is Fennel's infrastructure for execution of queries and
 data manipulation.  The focus is on theory; for practice, see
 ExecStreamHowTo.
 
@@ -38,7 +38,7 @@ Fennel queries are physically implemented as dataflow graphs, where
 each graph vertex is a specialized execution processor called an
 ExecStream (sometimes also referred to as an execution object or XO).
 A related collection of streams is manipulated as a unit called an
-ExecStreamGraph.  
+ExecStreamGraph.
 
 <p>
 
@@ -85,7 +85,7 @@ the query.
 
 NOTE: the <code>DiskBuffer</code> stream implies additional dataflow
 to and from disk, but this external flow is not managed or understood
-by the ExecStreamGraph.  It is entirely encapsulated by the 
+by the ExecStreamGraph.  It is entirely encapsulated by the
 <code>DiskBuffer</code> stream.  Likewise, the <code>BTreeScan</code>
 streams imply dataflow from disk.
 
@@ -166,7 +166,7 @@ required throughout the tree.
 <p>
 
 Below is the same graph from the earlier example, but this time
-embellished with extra buffers and buffer accessors: 
+embellished with extra buffers and buffer accessors:
 
 <hr>
 
@@ -190,10 +190,10 @@ The <code>Calc</code> stream reads them from that same
 There are no <code>MemBuffer</code> streams adjacent to the
 <code>DiskBuffer</code> stream.  The reason is that the
 <code>DiskBuffer</code> stream is capable of allocating pages directly
-from the cache for I/O purposes.  It can provide these pages to the 
+from the cache for I/O purposes.  It can provide these pages to the
 <code>BTreeScan</code> for writing, and to the
 <code>CartesianJoin</code> for reading.  This way, two extra copies
-are avoided.  Each stream is responsible for declaring its buffer 
+are avoided.  Each stream is responsible for declaring its buffer
 provisioning requirements so that each dataflow can be optimized
 automatically.
 
@@ -225,7 +225,7 @@ and then dataflow edges are added.  As dataflow is defined, extra
 adapter streams are inserted automatically as needed.
 
 <li>Once the graph is fully defined, it can be prepared.  This
-involves 
+involves
 
 <ol>
 <li>performing a topological sort by dataflow dependencies
@@ -270,7 +270,7 @@ deleted.
 For details on how ExecStreams are executed, please see the SchedulerDesign.
 
  */
-struct ExecStreamDesign 
+struct ExecStreamDesign
 {
     // NOTE:  dummy class for doxygen
 };

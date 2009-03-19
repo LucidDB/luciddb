@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,8 +24,8 @@ import java.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -43,6 +43,8 @@ import org.eigenbase.util.*;
 public class SqlAdvisorValidator
     extends SqlValidatorImpl
 {
+    //~ Instance fields --------------------------------------------------------
+
     private final Set<SqlValidatorNamespace> activeNamespaces =
         new HashSet<SqlValidatorNamespace>();
 
@@ -54,10 +56,10 @@ public class SqlAdvisorValidator
     /**
      * Creates a SqlAdvisor validator.
      *
-     * @param opTab          Operator table
-     * @param catalogReader  Catalog reader
-     * @param typeFactory    Type factory
-     * @param conformance     Compatibility mode
+     * @param opTab Operator table
+     * @param catalogReader Catalog reader
+     * @param typeFactory Type factory
+     * @param conformance Compatibility mode
      *
      * @pre opTab != null
      * @pre // node is a "query expression" (per SQL standard)
@@ -76,8 +78,7 @@ public class SqlAdvisorValidator
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Registers the identifier and its scope into a map keyed by
-     * ParserPostion.
+     * Registers the identifier and its scope into a map keyed by ParserPostion.
      */
     public void validateIdentifier(SqlIdentifier id, SqlValidatorScope scope)
     {
@@ -95,9 +96,8 @@ public class SqlAdvisorValidator
             final SqlParserPos subPos = id.getComponentParserPosition(i);
             final List<String> nameList = Arrays.asList(id.names);
             SqlIdentifier subId =
-                i == id.names.length - 1
-                    ? id
-                    : new SqlIdentifier(
+                (i == (id.names.length - 1)) ? id
+                : new SqlIdentifier(
                     nameList.subList(0, i + 1).toArray(new String[i]),
                     subPos);
             idPositions.put(

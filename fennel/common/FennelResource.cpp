@@ -80,7 +80,8 @@ FennelResource::FennelResource(Locale locale)
       _flatfileNoHeader(this, "flatfileNoHeader"),
       _flatfileMappedRequiresLenient(this, "flatfileMappedRequiresLenient"),
       _flatfileNoMappedColumns(this, "flatfileNoMappedColumns")
-{ }
+{
+}
 
 string FennelResource::sysCallFailed(const std::string &p0) const
 {
@@ -228,3 +229,5 @@ string FennelResource::flatfileNoMappedColumns(const std::string &p0, const std:
 }
 
 } // end namespace fennel
+
+// End FennelResource.cpp

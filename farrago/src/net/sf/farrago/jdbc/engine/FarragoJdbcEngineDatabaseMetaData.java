@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,10 +32,9 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.release.*;
 import net.sf.farrago.session.*;
 
+import org.eigenbase.jdbc4.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-
-import org.eigenbase.jdbc4.*;
 
 
 /**
@@ -45,7 +44,8 @@ import org.eigenbase.jdbc4.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
+public class FarragoJdbcEngineDatabaseMetaData
+    extends Unwrappable
     implements DatabaseMetaData
 {
     //~ Instance fields --------------------------------------------------------
@@ -1153,6 +1153,7 @@ public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
         QueryBuilder queryBuilder =
             createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.imported_keys_view");
+
         // For now, ignore all parameters because we always return
         // empty set.
         queryBuilder.addOrderBy(
@@ -1170,6 +1171,7 @@ public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
         QueryBuilder queryBuilder =
             createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.exported_keys_view");
+
         // For now, ignore all parameters because we always return
         // empty set.
         queryBuilder.addOrderBy(
@@ -1190,6 +1192,7 @@ public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
         QueryBuilder queryBuilder =
             createQueryBuilder(
                 "select * from sys_boot.jdbc_metadata.cross_reference_view");
+
         // For now, ignore all parameters because we always return
         // empty set.
         queryBuilder.addOrderBy(
@@ -1473,7 +1476,9 @@ public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
 
     // implement DatabaseMetaData
     public ResultSet getFunctions(
-        String catalog, String schemaPattern, String functionNamePattern)
+        String catalog,
+        String schemaPattern,
+        String functionNamePattern)
         throws SQLException
     {
         throw new UnsupportedOperationException("getFunctions");
@@ -1481,13 +1486,15 @@ public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
 
     // implement DatabaseMetaData
     public ResultSet getFunctionColumns(
-        String catalog, String schemaPattern, String functionNamePattern,
+        String catalog,
+        String schemaPattern,
+        String functionNamePattern,
         String columnNamePattern)
         throws SQLException
     {
         throw new UnsupportedOperationException("getFunctionColumns");
     }
-    
+
     // implement DatabaseMetaData
     public ResultSet getClientInfoProperties()
         throws SQLException
@@ -1510,7 +1517,7 @@ public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
         throw new UnsupportedOperationException(
             "supportsStoredFunctionsUsingCallSyntax");
     }
-    
+
     // implement DatabaseMetaData
     public ResultSet getSchemas(String catalog, String schemaPattern)
         throws SQLException
@@ -1525,11 +1532,11 @@ public class FarragoJdbcEngineDatabaseMetaData extends Unwrappable
         throw new UnsupportedOperationException("getRowIdLifetime");
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     //
     // end JDBC 4 methods
     //
-
-    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Helper class for building up queries used by metadata calls.

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -49,7 +49,7 @@ void ConfigMap::readParams(std::istream &paramStream)
         paramVals[name] = value;
     }
 }
-    
+
 void ConfigMap::dumpParams(std::ostream &dumpStream) const
 {
     for (StringMapConstIter pPair = paramVals.begin();
@@ -138,11 +138,11 @@ bool ConfigMap::getBoolParam(
         // boost only likes 1/0, so preprocess true/false
         if (strcasecmp(pPair->second.c_str(), "true") == 0) {
             return true;
-        }
-        else if (strcasecmp(pPair->second.c_str(), "false") == 0) {
+        } else if (strcasecmp(pPair->second.c_str(), "false") == 0) {
             return false;
+        } else {
+            return boost::lexical_cast<bool>(pPair->second);
         }
-        else return boost::lexical_cast<bool>(pPair->second);
     }
 }
 

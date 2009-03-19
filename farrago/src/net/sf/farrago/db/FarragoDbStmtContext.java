@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -83,7 +83,7 @@ public class FarragoDbStmtContext
     {
         this(session, paramDefFactory, ddlLockManager, null);
     }
-    
+
     /**
      * Creates a new FarragoDbStmtContext object.
      *
@@ -231,8 +231,8 @@ public class FarragoDbStmtContext
             // whether the statements inside are DML, since they
             // will do their own autocommits).
             startAutocommitTxn(!isDml);
-            if (rootStmtContext != null &&
-                rootStmtContext.needToSaveFirstTxnCsn())
+            if ((rootStmtContext != null)
+                && rootStmtContext.needToSaveFirstTxnCsn())
             {
                 rootStmtContext.saveFirstTxnCsn(
                     session.getFennelTxnContext().getTxnCsn());
@@ -259,6 +259,7 @@ public class FarragoDbStmtContext
             params.resultSetTypeMap = executableStmt.getResultSetTypeMap();
             params.iterCalcTypeMap = executableStmt.getIterCalcTypeMap();
             params.dynamicParamValues = dynamicParamValues;
+
             // REVIEW zfong 3/21/08 - Should this time be set to a non-zero
             // value even if this isn't an internal statement?  Currently,
             // it is, and therefore, it means that the current time is always
@@ -308,7 +309,7 @@ public class FarragoDbStmtContext
                 if (resultSet == null) {
                     session.getRepos().endReposSession();
                 }
-            }         
+            }
         }
         if (isDml) {
             success = false;
@@ -349,10 +350,10 @@ public class FarragoDbStmtContext
                 session.getRepos().endReposSession();
             }
         }
-        
+
         if (session.shutdownRequested()) {
             session.closeAllocation();
-            FarragoDatabase db =((FarragoDbSession) session).getDatabase();
+            FarragoDatabase db = ((FarragoDbSession) session).getDatabase();
             db.shutdown();
             session.setShutdownRequest(false);
         }
@@ -384,11 +385,10 @@ public class FarragoDbStmtContext
     private void cancel(boolean wait)
     {
         tracer.info("cancel");
-        
+
         // First, see if there are any child contexts that need to be
         // canceled
-        for (FarragoSessionStmtContext childStmtContext : childrenStmtContexts)
-        {
+        for (FarragoSessionStmtContext childStmtContext : childrenStmtContexts) {
             childStmtContext.cancel();
         }
 
@@ -396,7 +396,7 @@ public class FarragoDbStmtContext
         // a runtime context yet.  We'll check this once the
         // runtime context gets created (FRG-349).
         cancelFlag.requestCancel();
-        
+
         FarragoSessionRuntimeContext contextToCancel = runningContext;
         if (contextToCancel == null) {
             return;
@@ -455,6 +455,7 @@ public class FarragoDbStmtContext
                 allocations.closeAllocation();
                 allocations = null;
             }
+
             // reset the csn now that we've unprepared the root stmt context
             if (rootStmtContext == null) {
                 snapshotCsn = null;
@@ -480,7 +481,7 @@ public class FarragoDbStmtContext
      * @return rowcount affected by the DML operation
      */
     private long updateRowCounts(
-        List<Long> rowCounts, 
+        List<Long> rowCounts,
         FarragoSessionRuntimeContext runningContext)
     {
         TableModificationRel.Operation tableModOp =

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -260,6 +260,7 @@ public abstract class SqlOperator
      *
      * @param pos Parser position
      * @param operands List of arguments
+     *
      * @return call to this operator
      */
     public final SqlCall createCall(
@@ -274,15 +275,18 @@ public abstract class SqlOperator
      * {@link SqlNodeList}.
      *
      * <p>The position of the resulting call inferred from the SqlNodeList.
-     * 
+     *
      * @param nodeList List of arguments
+     *
      * @return call to this operator
      */
     public final SqlCall createCall(
         SqlNodeList nodeList)
     {
         return createCall(
-            null, nodeList.getParserPosition(), nodeList.toArray());
+            null,
+            nodeList.getParserPosition(),
+            nodeList.toArray());
     }
 
     /**
@@ -772,4 +776,4 @@ public abstract class SqlOperator
     }
 }
 
-//End SqlOperator.java
+// End SqlOperator.java

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@ class CollectExecStreamTestSuite : public ExecStreamUnitTestBase
     TupleDescriptor descVarbinary32;
 
 public:
-    explicit CollectExecStreamTestSuite(bool addAllTests = true); 
+    explicit CollectExecStreamTestSuite(bool addAllTests = true);
 
     /**
      * Tests an stream input ints gets collected into an continues array
@@ -47,16 +47,16 @@ public:
     void testCollectInts();
 
     /**
-     * Tests an stream going through a cascade of the collect and 
+     * Tests an stream going through a cascade of the collect and
      * the uncollect xos, expecting the same result back
      */
     void testCollectUncollect();
 
     /**
-     * Tests an stream going through a cascade of two collect and 
+     * Tests an stream going through a cascade of two collect and
      * two uncollect xos, expecting the same result back
      */
-    void testCollectCollectUncollectUncollect(); 
+    void testCollectCollectUncollectUncollect();
 
 
 };

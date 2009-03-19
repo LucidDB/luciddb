@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -447,11 +447,10 @@ public class RelDecorrelator
         }
 
         // now it's time to rewrite AggregateRel
-        List<AggregateCall> newAggCalls =
-            new ArrayList<AggregateCall>();
+        List<AggregateCall> newAggCalls = new ArrayList<AggregateCall>();
         List<AggregateCall> oldAggCalls = rel.getAggCallList();
 
-       // AggregateRel.Call oldAggCall;
+        // AggregateRel.Call oldAggCall;
         int oldChildOutputFieldCount = oldChildRel.getRowType().getFieldCount();
         int newChildOutputFieldCount =
             newProjectRel.getRowType().getFieldCount();
@@ -1421,9 +1420,11 @@ public class RelDecorrelator
     private class DecorrelateRelVisitor
         extends RelVisitor
     {
-        private final ReflectiveVisitDispatcher<RelDecorrelator,RelNode>
+        private final ReflectiveVisitDispatcher<RelDecorrelator, RelNode>
             dispatcher =
-            ReflectUtil.createDispatcher(RelDecorrelator.class, RelNode.class);
+                ReflectUtil.createDispatcher(
+                    RelDecorrelator.class,
+                    RelNode.class);
 
         // implement RelVisitor
         public void visit(RelNode p, int ordinal, RelNode parent)
@@ -1512,7 +1513,7 @@ public class RelDecorrelator
         {
             RexInputRef newInputRef = getNewForOldInputRef(inputRef);
             return newInputRef;
-        }           
+        }
     }
 
     private class RemoveCorrelationRexShuttle
@@ -1523,7 +1524,7 @@ public class RelDecorrelator
         boolean projectPulledAboveLeftCorrelator;
         RexInputRef nullIndicator;
         Set<Integer> isCount;
-        
+
         public RemoveCorrelationRexShuttle(
             RexBuilder rexBuilder,
             boolean projectPulledAboveLeftCorrelator)
@@ -1538,7 +1539,8 @@ public class RelDecorrelator
             boolean projectPulledAboveLeftCorrelator,
             RexInputRef nullIndicator)
         {
-            this(rexBuilder,
+            this(
+                rexBuilder,
                 projectPulledAboveLeftCorrelator,
                 nullIndicator,
                 null);
@@ -1684,8 +1686,10 @@ public class RelDecorrelator
         {
             // Use nullIndicator to decide whether to project null.
             // Do nothing if the literal is null.
-            if (!RexUtil.isNull(literal) &&
-                projectPulledAboveLeftCorrelator && (nullIndicator != null)) {
+            if (!RexUtil.isNull(literal)
+                && projectPulledAboveLeftCorrelator
+                && (nullIndicator != null))
+            {
                 return createCaseExpression(
                     nullIndicator,
                     rexBuilder.constantNull(),
@@ -1697,12 +1701,12 @@ public class RelDecorrelator
         public RexNode visitCall(final RexCall call)
         {
             RexNode newCall;
-            
+
             boolean [] update = { false };
             RexNode [] clonedOperands = visitArray(call.operands, update);
             if (update[0]) {
                 SqlOperator operator = call.getOperator();
-                
+
                 boolean isSpecialCast = false;
                 if (operator instanceof SqlFunction) {
                     SqlFunction function = (SqlFunction) operator;
@@ -1712,30 +1716,34 @@ public class RelDecorrelator
                         }
                     }
                 }
-                
+
                 if (!isSpecialCast) {
-                    // TODO: ideally this only needs to be called if the result type
-                    // will also change. However, since that requires suport from
-                    // type inference rules to tell whether a rule decides return
-                    // type based on input types, for now all operators will be
-                    // recreated with new type if any operand changed, unless
-                    // the operator has "built-in" type.                 
+                    // TODO: ideally this only needs to be called if the result
+                    // type will also change. However, since that requires
+                    // suport from type inference rules to tell whether a rule
+                    // decides return type based on input types, for now all
+                    // operators will be recreated with new type if any operand
+                    // changed, unless the operator has "built-in" type.
                     newCall = rexBuilder.makeCall(operator, clonedOperands);
                 } else {
-                    // Use the current return type when creating a new call,
-                    // for operators with return type built into the operator
+                    // Use the current return type when creating a new call, for
+                    // operators with return type built into the operator
                     // definition, and with no type inference rules, such as
                     // cast function with less than 2 operands.
 
                     // TODO: Comments in RexShuttle.visitCall() mention other
                     // types in this catagory. Need to resolve those together
                     // and preferrably in the base class RexShuttle.
-                    newCall = rexBuilder.makeCall(call.getType(), operator, clonedOperands);                    
+                    newCall =
+                        rexBuilder.makeCall(
+                            call.getType(),
+                            operator,
+                            clonedOperands);
                 }
             } else {
                 newCall = call;
             }
-            
+
             if (projectPulledAboveLeftCorrelator && (nullIndicator != null)) {
                 return createCaseExpression(
                     nullIndicator,
@@ -1749,11 +1757,8 @@ public class RelDecorrelator
     /**
      * Rule to remove single_value rel. For cases like
      *
-     * <blockquote>
-     * AggRel single_value
-     *   proj/filter/agg/ join on unique LHS key
-     *     AggRel single group
-     * </blockquote>
+     * <blockquote>AggRel single_value proj/filter/agg/ join on unique LHS key
+     * AggRel single group</blockquote>
      */
     private final class RemoveSingleAggregateRule
         extends RelOptRule
@@ -2107,8 +2112,8 @@ public class RelDecorrelator
             int k = -1;
             for (AggregateCall aggCall : aggCalls) {
                 ++k;
-                if (aggCall.getAggregation() instanceof SqlCountAggFunction
-                    && aggCall.getArgList().size() == 0)
+                if ((aggCall.getAggregation() instanceof SqlCountAggFunction)
+                    && (aggCall.getArgList().size() == 0))
                 {
                     isCountStar.add(k);
                 }
@@ -2158,8 +2163,7 @@ public class RelDecorrelator
                     new ArrayList<RexInputRef>();
                 for (RexNode joinKey : tmpCorrelatedJoinKeys) {
                     assert joinKey instanceof RexFieldAccess;
-                    correlatedJoinKeys.add(
-                        (RexFieldAccess) joinKey);
+                    correlatedJoinKeys.add((RexFieldAccess) joinKey);
                     RexNode correlatedInputRef =
                         removeCorrelationExpr(
                             joinKey,
@@ -2383,8 +2387,7 @@ public class RelDecorrelator
 
             int groupbyCount = leftInputFieldCount;
 
-            List<AggregateCall> newAggCalls =
-                new ArrayList<AggregateCall>();
+            List<AggregateCall> newAggCalls = new ArrayList<AggregateCall>();
             k = -1;
             for (AggregateCall aggCall : aggCalls) {
                 ++k;
@@ -2455,7 +2458,7 @@ public class RelDecorrelator
 
     // REVIEW jvs 29-Oct-2007:  Shouldn't it also be incorporating
     // the flavor attribute into the description?
-    
+
     private final class AdjustProjectForCountAggregateRule
         extends RelOptRule
     {
@@ -2465,13 +2468,13 @@ public class RelDecorrelator
         {
             super(
                 flavor
-                    ? new RelOptRuleOperand(
+                ? new RelOptRuleOperand(
                     CorrelatorRel.class,
                     new RelOptRuleOperand(RelNode.class, ANY),
                     new RelOptRuleOperand(
                         ProjectRel.class,
                         new RelOptRuleOperand(AggregateRel.class, ANY)))
-                    : new RelOptRuleOperand(
+                : new RelOptRuleOperand(
                     CorrelatorRel.class,
                     new RelOptRuleOperand(RelNode.class, ANY),
                     new RelOptRuleOperand(AggregateRel.class, ANY)));
@@ -2489,10 +2492,13 @@ public class RelDecorrelator
                 aggRel = (AggregateRel) call.rels[3];
             } else {
                 aggRel = (AggregateRel) call.rels[2];
+
                 // Create identity projection
                 List<RexNode> exprList = new ArrayList<RexNode>();
                 List<String> fieldNameList = new ArrayList<String>();
-                for (RelDataTypeField field : aggRel.getRowType().getFieldList()) {
+                for (
+                    RelDataTypeField field : aggRel.getRowType().getFieldList())
+                {
                     exprList.add(
                         new RexInputRef(exprList.size(), field.getType()));
                     fieldNameList.add(field.getName());
@@ -2535,7 +2541,7 @@ public class RelDecorrelator
             //     AggregateRel (groupby (0), agg0(), agg1()...)
 
             // check aggOutputProj projects only one expression
-            RexNode[] aggOutputProjExprs = aggOutputProjRel.getProjectExps();
+            RexNode [] aggOutputProjExprs = aggOutputProjRel.getProjectExps();
             if (aggOutputProjExprs.length != 1) {
                 return;
             }

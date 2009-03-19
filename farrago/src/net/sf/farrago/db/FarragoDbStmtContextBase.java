@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,11 +30,11 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -92,33 +92,31 @@ public abstract class FarragoDbStmtContextBase
     private FarragoDdlLockManager ddlLockManager;
 
     private FarragoSessionExecutingStmtInfo info = null;
-    
+
     private final long stmtCurrentTime;
     protected final FarragoSessionStmtContext rootStmtContext;
-    
+
     /**
-     * The children statement contexts associated with a root statement
-     * context.
+     * The children statement contexts associated with a root statement context.
      */
     protected List<FarragoSessionStmtContext> childrenStmtContexts;
-    
+
     /**
      * If non-null, the commit sequence number to be used for all transactions
-     * associated with a root context as well as children contexts
-     * associated with that root context.  Only used if the personality
-     * supports snapshots.
+     * associated with a root context as well as children contexts associated
+     * with that root context. Only used if the personality supports snapshots.
      */
     protected Long snapshotCsn;
-    
+
     /**
-     * Indicates whether the csn associated with the first txn initiated
-     * from a root context or one of its children contexts needs to be saved.
-     * Only used if the personality supports snapshots.
+     * Indicates whether the csn associated with the first txn initiated from a
+     * root context or one of its children contexts needs to be saved. Only used
+     * if the personality supports snapshots.
      */
     protected boolean saveFirstCsn;
 
     protected final CancelFlag cancelFlag;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -135,7 +133,7 @@ public abstract class FarragoDbStmtContextBase
     {
         this(session, paramDefFactory, ddlLockManager, null);
     }
-    
+
     /**
      * Creates a new FarragoDbStmtContextBase object.
      *
@@ -143,8 +141,8 @@ public abstract class FarragoDbStmtContextBase
      * @param paramDefFactory dynamic parameter definition factory
      * @param ddlLockManager ddl object lock manager
      * @param rootStmtContext the root statement context for an internally
-     * prepared statement; for an externally prepared statement, this will
-     * be null
+     * prepared statement; for an externally prepared statement, this will be
+     * null
      */
     protected FarragoDbStmtContextBase(
         FarragoDbSession session,
@@ -155,17 +153,17 @@ public abstract class FarragoDbStmtContextBase
         this.session = session;
         this.paramDefFactory = paramDefFactory;
         this.ddlLockManager = ddlLockManager;
-        this.rootStmtContext = rootStmtContext;       
+        this.rootStmtContext = rootStmtContext;
         this.snapshotCsn = null;
         this.saveFirstCsn = false;
+
         // For the root context, set the current time that will be used
         // throughout the statement.  For non-root contexts, inherit the
         // time from the root context.  Also, keep track of all of the
         // children contexts associated with a root context.
-        this.childrenStmtContexts =
-            new ArrayList<FarragoSessionStmtContext>();
+        this.childrenStmtContexts = new ArrayList<FarragoSessionStmtContext>();
         if (rootStmtContext == null) {
-            this.stmtCurrentTime = System.currentTimeMillis();           
+            this.stmtCurrentTime = System.currentTimeMillis();
         } else {
             this.stmtCurrentTime = rootStmtContext.getStmtCurrentTime();
             rootStmtContext.addChildStmtContext(this);
@@ -259,50 +257,51 @@ public abstract class FarragoDbStmtContextBase
     {
         return sql;
     }
-    
+
     // implement FarragoSessionStmtContext
     public long getStmtCurrentTime()
     {
         return stmtCurrentTime;
     }
-    
+
     // implement FarragoSessionStmtContext
     public void setSaveFirstTxnCsn()
     {
-        assert(rootStmtContext == null);
+        assert (rootStmtContext == null);
         if (session.getPersonality().supportsFeature(
-            EigenbaseResource.instance().PersonalitySupportsSnapshots))
+                EigenbaseResource.instance().PersonalitySupportsSnapshots))
         {
             saveFirstCsn = true;
         }
     }
-    
+
     // implement FarragoSessionStmtContext
     public boolean needToSaveFirstTxnCsn()
     {
-        assert(rootStmtContext == null);
+        assert (rootStmtContext == null);
         return saveFirstCsn;
     }
-    
+
     // implement FarragoSessionStmtContext
     public void saveFirstTxnCsn(long csn)
     {
-        assert(rootStmtContext == null);
+        assert (rootStmtContext == null);
+
         // Only the very first csn needs to be saved; so if one is already
         // set, don't overwrite it.  Also, only do this if the personality
         // supports snapshots.
-        if (snapshotCsn == null &&
-            session.getPersonality().supportsFeature(
+        if ((snapshotCsn == null)
+            && session.getPersonality().supportsFeature(
                 EigenbaseResource.instance().PersonalitySupportsSnapshots))
         {
             snapshotCsn = new Long(csn);
         }
     }
-    
+
     // implement FarragoSessionStmtContext
     public void addChildStmtContext(FarragoSessionStmtContext childStmtContext)
     {
-        assert(rootStmtContext == null);
+        assert (rootStmtContext == null);
         childrenStmtContexts.add(childStmtContext);
     }
 

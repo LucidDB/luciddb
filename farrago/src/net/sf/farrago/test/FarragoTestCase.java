@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -42,12 +42,12 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.release.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.release.FarragoReleaseProperties;
 
-import org.eigenbase.jmi.JmiObjUtil;
+import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
@@ -68,7 +68,9 @@ import sqlline.SqlLine;
  * <p>It is also possible to have additional logfiles, for tests which generate
  * output to files. FarragoTestCase scans the input .sql file for lines of the
  * form
+ *
  * <blockquote><code>##COMPARE &lt;file&gt;.log</code></blockquote>
+ *
  * and for each such command, it compares file.log with file.ref.
  *
  * @author John V. Sichi
@@ -241,7 +243,7 @@ public abstract class FarragoTestCase
             if (endSession) {
                 getSession().getRepos().endReposSession();
             }
-            
+
             // NOTE:  bypass staticTearDown
             cleanup.tearDownImpl();
         }
@@ -564,7 +566,7 @@ public abstract class FarragoTestCase
         // distinguish connections during debugging
         sb.append(";sessionName=FarragoTestCase:");
         sb.append(++connCounter);
-        
+
         return sb.toString();
     }
 
@@ -575,14 +577,15 @@ public abstract class FarragoTestCase
     }
 
     protected void runSqlLineTest(
-        String sqlFile, boolean shouldDiff)
+        String sqlFile,
+        boolean shouldDiff)
         throws Exception
     {
         tracer.finer("runSqlLineTest: Starting " + sqlFile);
         FarragoAbstractJdbcDriver driver = newJdbcEngineDriver();
         String uri = getJdbcUri(driver);
-        assert (sqlFile.endsWith(".sql")) :
-            "\"" + sqlFile + "\" does not end with .sql";
+        assert (sqlFile.endsWith(".sql")) : "\"" + sqlFile
+            + "\" does not end with .sql";
         File sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));
         String driverName = driver.getClass().getName();
@@ -639,8 +642,8 @@ public abstract class FarragoTestCase
                         sqlFileContents.substring("##COMPARE ".length(), n);
                     if (!logFile.endsWith(".log")) {
                         throw new AssertionError(
-                            "Filename argument to '##COMPARE' must end " +
-                                "in '.log': " + logFile);
+                            "Filename argument to '##COMPARE' must end "
+                            + "in '.log': " + logFile);
                     }
                     String refFile =
                         logFile.substring(
@@ -877,14 +880,14 @@ public abstract class FarragoTestCase
 
         /**
          * Decides where a label should be preserved because it's a global
-         * fixture or because it's a label alias.  Label aliases are
-         * preserved (temporarily) because they will be dropped, as needed,
-         * by the cascaded drop of the parent label.  Extension project test
-         * case can override this method to bless additional labels or use
-         * attributes other than the name to make the determination.
-         * 
+         * fixture or because it's a label alias. Label aliases are preserved
+         * (temporarily) because they will be dropped, as needed, by the
+         * cascaded drop of the parent label. Extension project test case can
+         * override this method to bless additional labels or use attributes
+         * other than the name to make the determination.
+         *
          * @param label label to check
-         * 
+         *
          * @return true iff label should be preseved as fixture
          */
         protected boolean isBlessedLabel(FemLabel label)
@@ -894,13 +897,13 @@ public abstract class FarragoTestCase
             }
             return isBlessedLabel(label.getName());
         }
-        
+
         protected boolean isBlessedLabel(String name)
         {
             tracer.finer("checking name: " + name);
             return false;
         }
-        
+
         /**
          * Decides whether authId should be preserved as a global fixture.
          * Extension project test case can override this method to bless
@@ -924,8 +927,8 @@ public abstract class FarragoTestCase
                 || name.equals(FarragoCatalogInit.SA_USER_NAME);
         }
 
-
-        protected void dropSchemas() throws Exception
+        protected void dropSchemas()
+            throws Exception
         {
             List<String> list = new ArrayList<String>();
 
@@ -951,15 +954,14 @@ public abstract class FarragoTestCase
                 }
             } else if (connection != null) {
                 ResultSet schemas = connection.getMetaData().getSchemas();
-                while(schemas.next()) {
+                while (schemas.next()) {
                     // ignore schemas not in the default catalog
                     String catalog = schemas.getString(2);
                     if (catalog.startsWith("SYS_")) {
                         continue;
                     }
                     String name = schemas.getString(1);
-                    if (!isBlessedSchema(name))
-                    {
+                    if (!isBlessedSchema(name)) {
                         list.add(name);
                     }
                 }
@@ -967,7 +969,8 @@ public abstract class FarragoTestCase
 
             tracer.finer("Schema name list has " + list.size() + " entries");
             for (String name : list) {
-                String dropStmt = "drop schema "
+                String dropStmt =
+                    "drop schema "
                     + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
                     + " cascade";
                 tracer.finer(dropStmt);
@@ -993,7 +996,9 @@ public abstract class FarragoTestCase
                     list.add(wrapper.getName());
                 }
             } else if (stmt != null) {
-                if (stmt.execute("select \"name\",\"foreign\" from sys_fem.med.\"DataWrapper\"")) {
+                if (stmt.execute(
+                        "select \"name\",\"foreign\" from sys_fem.med.\"DataWrapper\""))
+                {
                     ResultSet rset = stmt.getResultSet();
                     while (rset.next()) {
                         String name = rset.getString(1);
@@ -1001,18 +1006,21 @@ public abstract class FarragoTestCase
                             continue;
                         }
                         String foreignFlag = rset.getString(2);
-                        list.add(foreignFlag.equals("true") ? "foreign" : "local");
+                        list.add(
+                            foreignFlag.equals("true") ? "foreign" : "local");
                         list.add(name);
                     }
                 }
             }
 
-            tracer.finer("Datawrapper name list has " + list.size() + " entries");
+            tracer.finer(
+                "Datawrapper name list has " + list.size() + " entries");
             Iterator<String> iter = list.iterator();
             while (iter.hasNext()) {
                 String wrapperType = iter.next();
                 String name = iter.next();
-                String sql = "drop " + wrapperType + " data wrapper "
+                String sql =
+                    "drop " + wrapperType + " data wrapper "
                     + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
                     + " cascade";
                 tracer.finer(sql);
@@ -1041,7 +1049,9 @@ public abstract class FarragoTestCase
                     list.add(server.getName());
                 }
             } else if (stmt != null) {
-                if (stmt.execute("select \"name\" from sys_fem.med.\"DataServer\"")) {
+                if (stmt.execute(
+                        "select \"name\" from sys_fem.med.\"DataServer\""))
+                {
                     ResultSet rset = stmt.getResultSet();
                     while (rset.next()) {
                         String name = rset.getString(1);
@@ -1053,24 +1063,26 @@ public abstract class FarragoTestCase
                 }
             }
 
-            tracer.finer("Dataserver name list has " + list.size() + " entries");
+            tracer.finer(
+                "Dataserver name list has " + list.size() + " entries");
             for (String name : list) {
-                String sql =  "drop server "
+                String sql =
+                    "drop server "
                     + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
                     + " cascade";
                 tracer.finer(sql);
                 getStmt().execute(sql);
             }
         }
-        
-        private void dropLabels() throws Exception
+
+        private void dropLabels()
+            throws Exception
         {
             tracer.fine("Dropping Labels.");
             List<String> list = new ArrayList<String>();
             final FarragoRepos repos = getRepos();
             if (repos != null) {
-                for (
-                    FemLabel label
+                for (FemLabel label
                     : repos.allOfClass(FemLabel.class))
                 {
                     if (isBlessedLabel(label)) {
@@ -1082,8 +1094,8 @@ public abstract class FarragoTestCase
                 // Ignore label aliases, as they'll get dropped by the
                 // cascaded drop of the base labels.
                 if (stmt.execute(
-                    "select \"name\" from sys_fem.med.\"Label\" " +
-                    "where \"ParentLabel\" is null"))
+                        "select \"name\" from sys_fem.med.\"Label\" "
+                        + "where \"ParentLabel\" is null"))
                 {
                     ResultSet rset = stmt.getResultSet();
                     while (rset.next()) {
@@ -1098,9 +1110,10 @@ public abstract class FarragoTestCase
 
             tracer.finer("Label name list has " + list.size() + " entries");
             for (String name : list) {
-                String sql =  "drop label "
-                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name) +
-                    " cascade";
+                String sql =
+                    "drop label "
+                    + SqlUtil.eigenbaseDialect.quoteIdentifier(name)
+                    + " cascade";
                 tracer.finer(sql);
                 getStmt().execute(sql);
             }
@@ -1124,7 +1137,9 @@ public abstract class FarragoTestCase
                             authId.getName()));
                 }
             } else if (stmt != null) {
-                if (stmt.execute("select \"name\",\"mofClassName\" from sys_fem.\"Security\".\"AuthId\"")) {
+                if (stmt.execute(
+                        "select \"name\",\"mofClassName\" from sys_fem.\"Security\".\"AuthId\""))
+                {
                     ResultSet rset = stmt.getResultSet();
                     while (rset.next()) {
                         String name = rset.getString(1);

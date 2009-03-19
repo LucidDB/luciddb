@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -65,13 +65,13 @@ public class CppEnumGen
      * based on the subset of non-inherited public static final data members
      * contained by enumClass and having exact type enumSymbolType. Enumeration
      * order (and hence implied ordinals) is on the current locale's collation
-     * order for the enum field names.  This ordering may not hold in the
-     * future, so no C++ code should be written which depends on the current
+     * order for the enum field names. This ordering may not hold in the future,
+     * so no C++ code should be written which depends on the current
      * deterministic ordering.
      *
-     * <p>TODO: Support integer ordinals.  Also, we'd prefer to preserve
-     * the original metamodel ordering in order to relax the ordering
-     * condition above.     
+     * <p>TODO: Support integer ordinals. Also, we'd prefer to preserve the
+     * original metamodel ordering in order to relax the ordering condition
+     * above.
      *
      * @param enumName name to give C++ enum
      * @param enumClass Java class to be interpreted as an enumeration; this

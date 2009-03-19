@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -75,7 +75,7 @@ void BackupRestorePage::notifyTransferCompletion(bool bSuccess)
     StrictMutexGuard mutexGuard(sharedPtr->getMutex());
 
     if (isRead) {
-        sharedPtr->notifyReadTransferCompletion(*this, bSuccess);   
+        sharedPtr->notifyReadTransferCompletion(*this, bSuccess);
     } else {
         sharedPtr->notifyWriteTransferCompletion(*this, bSuccess);
     }
@@ -150,7 +150,7 @@ void SegPageBackupRestoreDevice::init()
             cmd << compressionProgram.c_str() << " -dc "
                 << backupFilePathname.c_str();
         } else {
-            cmd << compressionProgram.c_str() << " > " 
+            cmd << compressionProgram.c_str() << " > "
                 << backupFilePathname.c_str();
         }
         backupFile = popen(cmd.str().c_str(), mode);
@@ -278,7 +278,7 @@ BackupRestorePage *SegPageBackupRestoreDevice::getFreeScratchPage()
             freeScratchPageQueue.pop_back();
             return freePage;
         }
-    
+
         // If no page is available, wait for one to become available (with
         // timeout just in case)
         boost::xtime atv;

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2008-2008 The Eigenbase Project
-// Copyright (C) 2008-2008 Disruptive Tech
-// Copyright (C) 2008-2008 LucidEra, Inc.
+// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2008-2009 SQLstream, Inc.
+// Copyright (C) 2008-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,25 +23,31 @@ package org.eigenbase.sql.validate;
 
 import java.util.*;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.reltype.*;
-import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+
 
 /**
  * Namespace for an <code>AS t(c1, c2, ...)</code> clause.
  *
  * <p>A namespace is necessary only if there is a column list, in order to
- * re-map column names; a <code>relation AS t</code> clause just uses the
- * same namespace as <code>relation</code>.
+ * re-map column names; a <code>relation AS t</code> clause just uses the same
+ * namespace as <code>relation</code>.
  *
  * @author jhyde
  * @version $Id$
  * @since October 9, 2008
  */
-public class AliasNamespace extends AbstractNamespace
+public class AliasNamespace
+    extends AbstractNamespace
 {
+    //~ Instance fields --------------------------------------------------------
+
     protected final SqlCall call;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an AliasNamespace.
@@ -60,13 +66,14 @@ public class AliasNamespace extends AbstractNamespace
         assert call.getOperator() == SqlStdOperatorTable.asOperator;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     protected RelDataType validateImpl()
     {
         final List<String> nameList = new ArrayList<String>();
         final SqlValidatorNamespace childNs =
             validator.getNamespace(call.getOperands()[0]);
-        final RelDataType rowType =
-            childNs.getRowTypeSansSystemColumns();
+        final RelDataType rowType = childNs.getRowTypeSansSystemColumns();
         for (int i = 2; i < call.getOperands().length; ++i) {
             final SqlNode operand = call.getOperands()[i];
             String name = ((SqlIdentifier) operand).getSimple();
@@ -91,6 +98,7 @@ public class AliasNamespace extends AbstractNamespace
                 buf.append("'");
             }
             buf.append(")");
+
             // Position error at first name in list.
             throw validator.newValidationError(
                 call.getOperands()[2],
@@ -104,7 +112,8 @@ public class AliasNamespace extends AbstractNamespace
             typeList.add(field.getType());
         }
         return validator.getTypeFactory().createStructType(
-            typeList, nameList);
+            typeList,
+            nameList);
     }
 
     public SqlNode getNode()
@@ -123,8 +132,9 @@ public class AliasNamespace extends AbstractNamespace
             }
             ++i;
         }
-        throw new AssertionError("unknown field '" + name +
-            "' in rowtype " + underlyingRowType);
+        throw new AssertionError(
+            "unknown field '" + name
+            + "' in rowtype " + underlyingRowType);
     }
 }
 

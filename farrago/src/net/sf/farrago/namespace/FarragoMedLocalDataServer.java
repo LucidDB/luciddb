@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -111,8 +111,8 @@ public interface FarragoMedLocalDataServer
      *
      * @param index definition of the index to verify
      * @param rootPageId root PageId of index
-     * @param estimate whether to estimate statistics for a quicker result
-     *                 (and at the cost of no unique key count)
+     * @param estimate whether to estimate statistics for a quicker result (and
+     * at the cost of no unique key count)
      * @param txnContext Fennel txn context
      *
      * @return index statistics for the specified index
@@ -157,8 +157,8 @@ public interface FarragoMedLocalDataServer
         throws SQLException;
 
     /**
-     * Checks whether ALTER TABLE ADD COLUMN is implemented for
-     * tables stored by this local data server.
+     * Checks whether ALTER TABLE ADD COLUMN is implemented for tables stored by
+     * this local data server.
      *
      * @return whether ALTER TABLE ADD COLUMN can be executed
      */

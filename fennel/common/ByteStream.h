@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,7 @@ protected:
      * Byte position in stream.
      */
     FileSize cbOffset;
-    
+
     explicit ByteStream();
 public:
 
@@ -62,17 +62,19 @@ class ByteStreamMarker
      * Marked stream.
      */
     ByteStream const &stream;
-    
+
 protected:
     explicit ByteStreamMarker(ByteStream const &stream);
-    virtual ~ByteStreamMarker() {};
+    virtual ~ByteStreamMarker()
+    {
+    }
 
 public:
     /**
      * @return marked stream
      */
     ByteStream const &getStream() const;
-    
+
     /**
      * @return byte offset of marked position within stream
      */
@@ -86,15 +88,17 @@ public:
 class SequentialByteStreamMarker : public ByteStreamMarker
 {
     friend class ByteInputStream;
-    
+
     /**
      * Byte position in stream.
      */
     FileSize cbOffset;
 
 public:
-    virtual ~SequentialByteStreamMarker() {};
-    
+    virtual ~SequentialByteStreamMarker()
+    {
+    }
+
 protected:
     explicit SequentialByteStreamMarker(ByteStream const &stream);
 

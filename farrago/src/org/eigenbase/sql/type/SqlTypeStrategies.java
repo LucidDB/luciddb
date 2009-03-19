@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,6 @@ import java.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.*;
 
 
@@ -185,7 +184,7 @@ public abstract class SqlTypeStrategies
                     if (throwOnFailure) {
                         throw callBinding.newError(
                             EigenbaseResource.instance()
-                                .ArgumentMustBePositiveInteger.ex(
+                            .ArgumentMustBePositiveInteger.ex(
                                 callBinding.getOperator().getName()));
                     }
                     return false;
@@ -322,16 +321,15 @@ public abstract class SqlTypeStrategies
             SqlTypeFamily.DATETIME_INTERVAL,
             SqlTypeFamily.DATETIME);
 
+    // TODO: datetime+interval checking missing
+    // TODO: interval+datetime checking missing
     public static final SqlSingleOperandTypeChecker otcPlusOperator =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.Composition.OR,
             otcNumericX2,
             otcIntervalSameX2,
             otcDatetimeInterval,
-            otcIntervalDatetime
-            // TODO: datetime+interval checking missing
-            // TODO: interval+datetime checking missing
-            );
+            otcIntervalDatetime);
 
     /**
      * Type checking strategy for the "*" operator
@@ -997,8 +995,7 @@ public abstract class SqlTypeStrategies
                         throw opBinding.newError(
                             EigenbaseResource.instance().TypeNotComparable.ex(
                                 opBinding.getOperandType(0).getFullTypeString(),
-                                opBinding.getOperandType(1).getFullTypeString())
-                            );
+                                opBinding.getOperandType(1).getFullTypeString()));
                     }
 
                     pickedCollation =
@@ -1248,6 +1245,7 @@ public abstract class SqlTypeStrategies
                         break;
                     }
                 }
+
                 // REVIEW jvs 11-Nov-2008:  We can't assert this
                 // because SqlAdvisorValidator produces
                 // unknown types for incomplete expressions.

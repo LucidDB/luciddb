@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2008-2008 The Eigenbase Project
-// Copyright (C) 2008-2008 Disruptive Tech
-// Copyright (C) 2008-2008 LucidEra, Inc.
+// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2008-2009 SQLstream, Inc.
+// Copyright (C) 2008-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,24 +21,23 @@
 */
 package org.eigenbase.rel.rules;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.util.Util;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.*;
+
 
 /**
- * Rule which converts a {@link JoinRel} into a {@link CorrelatorRel},
- * which can then be implemented using nested loops.
+ * Rule which converts a {@link JoinRel} into a {@link CorrelatorRel}, which can
+ * then be implemented using nested loops.
  *
  * <p>For example,
  *
- * <blockquote><code>select * from emp join dept on
- * emp.deptno = dept.deptno</code></blockquote>
+ * <blockquote><code>select * from emp join dept on emp.deptno =
+ * dept.deptno</code></blockquote>
  *
  * becomes a CorrelatorRel which restarts TableAccessRel("DEPT") for each row
  * read from TableAccessRel("EMP").</p>
@@ -46,11 +45,11 @@ import java.util.List;
  * <p>This rule is not applicable if for certain types of outer join. For
  * example,
  *
- * <blockquote><code>select * from emp right join dept on
- * emp.deptno = dept.deptno</code></blockquote>
+ * <blockquote><code>select * from emp right join dept on emp.deptno =
+ * dept.deptno</code></blockquote>
  *
- * would require emitting a NULL emp row if a certain department contained
- * no employees, and CorrelatorRel cannot do that.</p>
+ * would require emitting a NULL emp row if a certain department contained no
+ * employees, and CorrelatorRel cannot do that.</p>
  *
  * @author jhyde
  * @version $Id$
@@ -58,7 +57,6 @@ import java.util.List;
 public class NestedLoopsJoinRule
     extends RelOptRule
 {
-
     //~ Static fields/initializers ---------------------------------------------
 
     public static final NestedLoopsJoinRule INSTANCE =
@@ -106,7 +104,7 @@ public class NestedLoopsJoinRule
             RelOptUtil.splitJoinCondition(
                 left,
                 right,
-            join.getCondition(),
+                join.getCondition(),
                 leftKeys,
                 rightKeys);
         assert leftKeys.size() == rightKeys.size();
@@ -121,11 +119,13 @@ public class NestedLoopsJoinRule
                 Integer rightKey = rightKeys.get(k++);
                 final String dyn_inIdStr = cluster.getQuery().createCorrel();
                 final int dyn_inId = RelOptQuery.getCorrelOrdinal(dyn_inIdStr);
+
                 // Create correlation to say 'each row, set variable #id
                 // to the value of column #leftKey'.
                 correlationList.add(
                     new CorrelatorRel.Correlation(
-                        dyn_inId, leftKey));
+                        dyn_inId,
+                        leftKey));
                 condition =
                     RelOptUtil.andJoinFilters(
                         rexBuilder,

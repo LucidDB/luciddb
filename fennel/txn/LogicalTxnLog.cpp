@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -54,7 +54,7 @@ LogicalTxnLog::LogicalTxnLog(
             SharedQuotaCacheAccessor(),
             logSegmentAccessor.pCacheAccessor,
             2));
-    
+
     // TODO: Support an option to skip CRC's for optimized non-durable logging.
     // Also support a paranoid option for recording CRC's for long logs.
     pOutputStream = CrcSegOutputStream::newCrcSegOutputStream(
@@ -63,7 +63,7 @@ LogicalTxnLog::LogicalTxnLog(
     // NOTE:  We only write one page at a time to the main log, and we always
     // need to wait after each page.  So request synchronous writes.
     pOutputStream->setWriteLatency(WRITE_EAGER_SYNC);
-    
+
     pOutputStream->getSegPos(lastCheckpointMemento.logPosition);
     lastCheckpointMemento.nUncommittedTxns = 0;
     nCommittedBeforeLastCheckpoint = 0;
@@ -194,7 +194,7 @@ void LogicalTxnLog::commitTxnWithGroup(StrictMutexGuard &mutexGuard)
 
         if (timeout) {
             // timeout:  we're in charge of flushing
-            
+
             // NOTE:  Since we're using synchronous writes, there's no need to
             // checkpoint (assuming the underlying device has been correctly
             // initialized to write through).
@@ -278,7 +278,7 @@ void LogicalTxnLog::deallocateCheckpointedLog(
                 NULL_PAGE_ID,lastObsoletePageId);
         }
     }
-    
+
     if (checkpointType == CHECKPOINT_FLUSH_FUZZY) {
         committedLongLogSegments.erase(
             committedLongLogSegments.begin(),

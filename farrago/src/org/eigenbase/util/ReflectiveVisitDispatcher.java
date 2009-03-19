@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2008-2008 The Eigenbase Project
-// Copyright (C) 2008-2008 Disruptive Tech
-// Copyright (C) 2008-2008 LucidEra, Inc.
+// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2008-2009 SQLstream, Inc.
+// Copyright (C) 2008-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,23 +22,27 @@
 package org.eigenbase.util;
 
 import java.lang.reflect.*;
+
 import java.util.*;
 
+
 /**
- * Interface for looking up methods relating to reflective visitation.
- * One possible implementation would cache the results.
+ * Interface for looking up methods relating to reflective visitation. One
+ * possible implementation would cache the results.
  *
- * <p>Type parameter 'R' is the base class of visitoR class;
- * type parameter 'E' is the base class of visiteE class.
+ * <p>Type parameter 'R' is the base class of visitoR class; type parameter 'E'
+ * is the base class of visiteE class.
  *
- * <p>TODO: obsolete {@link ReflectUtil#lookupVisitMethod}, and
- * use caching in implementing that method.
+ * <p>TODO: obsolete {@link ReflectUtil#lookupVisitMethod}, and use caching in
+ * implementing that method.
  *
  * @author Julian Hyde
  * @version $Id$
  */
 public interface ReflectiveVisitDispatcher<R extends ReflectiveVisitor, E>
 {
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Looks up a visit method taking additional parameters beyond the
      * overloaded visitee type.
@@ -73,10 +77,10 @@ public interface ReflectiveVisitDispatcher<R extends ReflectiveVisitor, E>
         String visitMethodName);
 
     /**
-     * Implements the {@link Glossary#VisitorPattern} via reflection. The
-     * basic technique is taken from <a
-     * href="http://www.javaworld.com/javaworld/javatips/jw-javatip98.html">
-     * a Javaworld article</a>. For an example of how to use it, see {@link
+     * Implements the {@link Glossary#VisitorPattern} via reflection. The basic
+     * technique is taken from <a
+     * href="http://www.javaworld.com/javaworld/javatips/jw-javatip98.html">a
+     * Javaworld article</a>. For an example of how to use it, see {@link
      * ReflectVisitorTest}. Visit method lookup follows the same rules as if
      * compile-time resolution for VisitorClass.visit(VisiteeClass) were
      * performed. An ambiguous match due to multiple interface inheritance

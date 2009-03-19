@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2002-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2008 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,8 +30,8 @@ import org.eigenbase.util.*;
 
 
 /**
- * Test case for {@link QueueIterator} and its subclasses {@link ThreadIterator} and
- * {@link TimeoutQueueIterator}.
+ * Test case for {@link QueueIterator} and its subclasses {@link ThreadIterator}
+ * and {@link TimeoutQueueIterator}.
  */
 public class QueueIteratorTest
     extends TestCase
@@ -74,8 +74,10 @@ public class QueueIteratorTest
     public void testTimeoutIterator()
     {
         startTime = System.currentTimeMillis();
+
         // writer
         TickIterator tickIter = new TickIterator(queueValues, false, startTime);
+
         // reader
         TestingTimeoutQueueIterator ttqi =
             new TestingTimeoutQueueIterator(tickIter);
@@ -87,18 +89,20 @@ public class QueueIteratorTest
     public void testThreadIterator()
     {
         startTime = System.currentTimeMillis();
+
         // reader and writer
         ThreadIterator threadIter =
             new ThreadIterator() {
                 // paced data source
                 TickIterator tickIter =
                     new TickIterator(queueValues, false, startTime);
-                protected void doWork() {
+
+                protected void doWork()
+                {
                     while (tickIter.hasNext()) {
                         put(tickIter.next());
                     }
                 }
-
             };
 
         threadIter.start();
@@ -285,7 +289,6 @@ public class QueueIteratorTest
             return queueIterator;
         }
     }
-
 
     /**
      * Iterator which returns an element from an array on a regular basis.

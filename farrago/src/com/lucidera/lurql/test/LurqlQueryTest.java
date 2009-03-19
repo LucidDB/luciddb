@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -95,18 +95,18 @@ public class LurqlQueryTest
         try {
             // mask out source control Id
             addDiffMask("\\$Id.*\\$");
-    
+
             modelView = loadModelView("MOF");
-    
+
             assert (getName().endsWith(".lurql"));
             File fileSansExt =
                 new File(getName().substring(0, getName().length() - 6));
             OutputStream outputStream = openTestLogOutputStream(fileSansExt);
-    
+
             FileReader reader = new FileReader(getName());
             Writer writer = new OutputStreamWriter(outputStream);
             PrintWriter pw = new PrintWriter(writer);
-    
+
             LineNumberReader lineReader = new LineNumberReader(reader);
             StringBuffer sb = null;
             String action = null;
@@ -144,14 +144,13 @@ public class LurqlQueryTest
                     }
                 }
             }
-    
+
             pw.close();
             reader.close();
             writer.close();
-    
+
             diffTestLog();
-        }
-        finally {
+        } finally {
             txn.commit();
         }
     }

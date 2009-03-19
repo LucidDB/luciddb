@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,7 +57,9 @@ enum ExternalSortRC
 class ExternalSortSubStream
 {
 public:
-    virtual ~ExternalSortSubStream() {};
+    virtual ~ExternalSortSubStream()
+    {
+    }
 
     /**
      * Binds the fetch array which will be used implicitly by
@@ -113,4 +115,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End ExternalSubStream.h
+// End ExternalSortSubStream.h

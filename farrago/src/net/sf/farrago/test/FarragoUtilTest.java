@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2007-2007 The Eigenbase Project
-// Copyright (C) 2007-2007 Disruptive Tech
-// Copyright (C) 2007-2007 LucidEra, Inc.
+// Copyright (C) 2007-2009 The Eigenbase Project
+// Copyright (C) 2007-2009 SQLstream, Inc.
+// Copyright (C) 2007-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,14 @@
 */
 package net.sf.farrago.test;
 
-import junit.framework.*;
-
 import java.util.*;
+
+import junit.framework.*;
 
 import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
+
 
 /**
  * Tests components in package {@link net.sf.farrago.util}.
@@ -35,8 +36,11 @@ import org.eigenbase.util.*;
  * @author John Sichi
  * @version $Id$
  */
-public class FarragoUtilTest extends TestCase
+public class FarragoUtilTest
+    extends TestCase
 {
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new FarragoUtilTest object.
      */
@@ -44,6 +48,8 @@ public class FarragoUtilTest extends TestCase
     {
         super(testName);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Tests {@link FarragoTimerAllocation}.
@@ -68,7 +74,10 @@ public class FarragoUtilTest extends TestCase
         }
     }
 
-    private class TimerTestTask extends TimerTask
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class TimerTestTask
+        extends TimerTask
     {
         public void run()
         {

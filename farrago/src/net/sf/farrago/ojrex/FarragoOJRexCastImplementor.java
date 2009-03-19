@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -728,15 +728,14 @@ public class FarragoOJRexCastImplementor
                 // Note: this check for overflow should only be required
                 // when the string conversion does not perform a check.
                 checkOverflow();
-            }
-
-            // Casting from string to boolean relies on the runtime type.
-            // Note: string is trimmed by conversion method.
-            else if (
+            } else if (
                 (lhsType.getSqlTypeName() == SqlTypeName.BOOLEAN)
                 && SqlTypeUtil.inCharOrBinaryFamilies(rhsType)
                 && !SqlTypeUtil.isLob(rhsType))
             {
+                // Casting from string to boolean relies on the runtime type.
+                // Note: string is trimmed by conversion method.
+
                 //TODO: toString will cause too much garbage collection.
                 Expression str =
                     new MethodCall(
@@ -750,10 +749,8 @@ public class FarragoOJRexCastImplementor
                             NullablePrimitive.NullableBoolean.class),
                         "convertString",
                         new ExpressionList(str));
-            }
-
-            // In general, check for overflow
-            else {
+            } else {
+                // In general, check for overflow
                 checkOverflow();
             }
 

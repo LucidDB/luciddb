@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -79,7 +79,7 @@ PageId BTreeVerifier::verifyNode(
     // for optimized build, we don't check node magic numbers implicitly,
     // so do it explicitly here
     permAssert(node.magicNumber == BTreeNode::MAGIC_NUMBER);
-    
+
     if (isMAXU(expectedHeight)) {
         stats.nLevels = node.height + 1;
     } else {
@@ -95,7 +95,7 @@ PageId BTreeVerifier::verifyNode(
             returnPageId = node.rightSibling;
         }
     }
-    
+
     BTreeNodeAccessor &nodeAccessor = getNodeAccessor(node);
 
     // TODO:  delegate to nodeAccessor for checking node integrity
@@ -117,7 +117,7 @@ PageId BTreeVerifier::verifyNode(
                 }
                 permAssert(c <= 0);
                 // TODO:  for unique, assert(c == 0)
-                
+
                 if (countUniqueKeys && c == -1) {
                     // Only count differences in the first column of the key.
                     stats.nUniqueKeys++;
@@ -157,7 +157,7 @@ void BTreeVerifier::verifyChildren(BTreeNode const &node)
     for (uint i = 0; i < node.nEntries; ++i) {
         PageId nextChildPageId;
         if (i + 1 < node.nEntries) {
-            nextChildPageId = getChild(node,i+1);
+            nextChildPageId = getChild(node,i + 1);
         } else {
             nextChildPageId = getFirstChild(node.rightSibling);
         }

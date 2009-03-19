@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,11 +50,11 @@ class LogicalTxn
     enum State
     {
         STATE_LOGGING_TXN,
-        
+
         STATE_LOGGING_ACTION,
 
         STATE_ROLLING_BACK,
-        
+
         STATE_ROLLED_BACK,
 
         STATE_COMMITTED
@@ -106,7 +106,7 @@ class LogicalTxn
      * Collection of LogicalTxnParticipants which have joined this txn.
      */
     std::vector<SharedLogicalTxnParticipant> participants;
-    
+
     explicit LogicalTxn(
         TxnId txnId,
         SharedLogicalTxnLog pLog,
@@ -122,7 +122,7 @@ class LogicalTxn
         LogicalActionType actionType);
 
 public:
-    
+
     virtual ~LogicalTxn();
 
     /**
@@ -133,7 +133,7 @@ public:
      * for the duration of the txn
      */
     void addParticipant(SharedLogicalTxnParticipant pParticipant);
-    
+
     /**
      * Begins an action description log entry.  After this, the
      * participant must write the action description to the txn's output
@@ -170,7 +170,7 @@ public:
      * @param svptId savepoint to commit
      */
     void commitSavepoint(SavepointId svptId);
-    
+
     /**
      * Aborts the transaction.
      *

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,9 @@
 */
 package org.eigenbase.sql;
 
+import java.math.*;
+
 import java.nio.charset.*;
-import java.math.BigDecimal;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
@@ -91,11 +92,13 @@ public class SqlBinaryOperator
      * Returns whether this operator should be surrounded by space when
      * unparsed.
      *
-     * <p>Returns true for most operators but false for the '.'
-     * operator; consider
+     * <p>Returns true for most operators but false for the '.' operator;
+     * consider
      *
-     * <blockquote><pre>x.y + 5 * 6</pre></blockquote>
-     *  
+     * <blockquote>
+     * <pre>x.y + 5 * 6</pre>
+     * </blockquote>
+     *
      * @return whether this operator should be surrounded by space
      */
     boolean needsSpace()
@@ -195,7 +198,6 @@ public class SqlBinaryOperator
         return type;
     }
 
-
     public SqlMonotonicity getMonotonicity(
         SqlCall call,
         SqlValidatorScope scope)
@@ -203,23 +205,25 @@ public class SqlBinaryOperator
         if (getName().equals("/")) {
             final SqlNode operand0 = call.getOperands()[0];
             final SqlNode operand1 = call.getOperands()[1];
-            final SqlMonotonicity mono0 =
-                operand0.getMonotonicity(scope);
-            final SqlMonotonicity mono1 =
-                operand1.getMonotonicity(scope);
+            final SqlMonotonicity mono0 = operand0.getMonotonicity(scope);
+            final SqlMonotonicity mono1 = operand1.getMonotonicity(scope);
             if (mono1 == SqlMonotonicity.Constant) {
                 if (operand1 instanceof SqlLiteral) {
                     SqlLiteral literal = (SqlLiteral) operand1;
-                    switch (literal.bigDecimalValue().compareTo(
-                        BigDecimal.ZERO))
+                    switch (
+                        literal.bigDecimalValue().compareTo(
+                            BigDecimal.ZERO))
                     {
                     case -1:
+
                         // mono / -ve constant --> reverse mono, unstrict
                         return mono0.reverse().unstrict();
                     case 0:
+
                         // mono / zero --> constant (infinity!)
                         return SqlMonotonicity.Constant;
                     default:
+
                         // mono / +ve constant * mono1 --> mono, unstrict
                         return mono0.unstrict();
                     }

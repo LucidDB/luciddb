@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -56,10 +56,10 @@ protected:
 template<typename RESULT_T, typename SOURCE_T>
 class CastCast : public CastInstruction<RESULT_T, SOURCE_T>
 {
-public: 
+public:
     explicit
     CastCast(RegisterRef<RESULT_T>* result,
-             RegisterRef<SOURCE_T>* op1, 
+             RegisterRef<SOURCE_T>* op1,
              StandardTypeDescriptorOrdinal resultType,
              StandardTypeDescriptorOrdinal sourceType)
         : CastInstruction<RESULT_T, SOURCE_T>(result, op1, resultType, sourceType)
@@ -75,7 +75,7 @@ public:
             CastInstruction<RESULT_T, SOURCE_T>::mResult->toNull();
         } else {
             // TODO: Update Boost library to fix the following
-            // TODO: problem: 
+            // TODO: problem:
             // TODO: See lists.boost.org/MailArchives/boost/msg63700.php
             // TODO: for details. In short, exceptions are thrown
             // TODO: for cases where data is lost and the target is
@@ -138,9 +138,9 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         RegisterRef<char> dummy;
-        describeHelper(out, values, longName(), shortName(), 
-                       CastInstruction<RESULT_T, SOURCE_T>::mResult, 
-                       CastInstruction<RESULT_T, SOURCE_T>::mOp1, 
+        describeHelper(out, values, longName(), shortName(),
+                       CastInstruction<RESULT_T, SOURCE_T>::mResult,
+                       CastInstruction<RESULT_T, SOURCE_T>::mOp1,
                        CastInstruction<RESULT_T, SOURCE_T>::mOp2);
     }
 

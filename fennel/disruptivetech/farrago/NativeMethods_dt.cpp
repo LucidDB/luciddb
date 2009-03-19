@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -53,7 +53,7 @@ class ExecStreamSubFactory_dt
             params);
     }
 
-    virtual void visit(ProxyCorrelationJoinStreamDef &streamDef) 
+    virtual void visit(ProxyCorrelationJoinStreamDef &streamDef)
     {
         CorrelationJoinExecStreamParams params;
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
@@ -67,14 +67,14 @@ class ExecStreamSubFactory_dt
         pEmbryo->init(new CorrelationJoinExecStream(), params);
     }
 
-    virtual void visit(ProxyCollectTupleStreamDef &streamDef) 
+    virtual void visit(ProxyCollectTupleStreamDef &streamDef)
     {
         CollectExecStreamParams params;
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         pEmbryo->init(new CollectExecStream(), params);
     }
 
-    virtual void visit(ProxyUncollectTupleStreamDef &streamDef) 
+    virtual void visit(ProxyUncollectTupleStreamDef &streamDef)
     {
         UncollectExecStreamParams params;
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
@@ -98,18 +98,18 @@ class ExecStreamSubFactory_dt
         pExecStreamFactory = &factory;
         pEmbryo = &embryo;
         created = true;
-        
+
         // dispatch based on polymorphic stream type
         FemVisitor::visitTbl.accept(*this, streamDef);
-        
+
         return created;
     }
 };
 
 #ifdef __MINGW32__
 extern "C" JNIEXPORT BOOL APIENTRY DllMain(
-    HANDLE hModule, 
-    DWORD  ul_reason_for_call, 
+    HANDLE hModule,
+    DWORD  ul_reason_for_call,
     LPVOID lpReserved)
 {
     return TRUE;

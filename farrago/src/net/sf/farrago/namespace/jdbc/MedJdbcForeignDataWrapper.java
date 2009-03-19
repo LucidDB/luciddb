@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,7 +30,8 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
-import org.eigenbase.util.Util;
+
+import org.eigenbase.util.*;
 
 
 /**
@@ -143,16 +144,17 @@ public class MedJdbcForeignDataWrapper
             try {
                 server = newServer("faux-mofid", chainedProps);
                 if (server instanceof MedJdbcDataServer) {
-                    MedJdbcDataServer mjds = (MedJdbcDataServer)server;
+                    MedJdbcDataServer mjds = (MedJdbcDataServer) server;
                     String term = mjds.getDatabaseMetaData().getSchemaTerm();
                     if (mjds.useSchemaNameAsForeignQualifier
-                    || term == null
-                    || term.length() == 0) {
+                        || (term == null)
+                        || (term.length() == 0))
+                    {
                         // add optional SCHEMA_NAME property
-                        String[] list = null;
+                        String [] list = null;
                         if (mjds.supportsMetaData) {
                             // collect names for list of choices
-                            list = 
+                            list =
                                 getArtificialSchemas(
                                     mjds.getDatabaseMetaData());
                         }
@@ -218,7 +220,7 @@ public class MedJdbcForeignDataWrapper
     }
 
     // gets database names for use as SCHEMA_NAME values
-    private String[] getArtificialSchemas(DatabaseMetaData meta)
+    private String [] getArtificialSchemas(DatabaseMetaData meta)
         throws SQLException
     {
         // REVIEW hersker 2005-05-31:
@@ -244,7 +246,7 @@ public class MedJdbcForeignDataWrapper
             return null;
         }
 
-        String[] schemas = new String[list.size()];
+        String [] schemas = new String[list.size()];
         list.toArray(schemas);
         Arrays.sort(schemas);
         return schemas;

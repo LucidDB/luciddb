@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -28,7 +28,7 @@ using namespace std;
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-static uint8_t LhxHashGeneratorMagicTable[256] = 
+static uint8_t LhxHashGeneratorMagicTable[256] =
 {
     1,    87,   49,   12,   176,  178,  102,  166,  121,  193,  6,    84,
     249,  230,  44,   163,  14,   197,  213,  181,  161,  85,   218,  80,
@@ -64,7 +64,7 @@ void LhxHashGenerator::init(uint levelInit)
     if (levelInit > 63) {
         ostringstream errMsg;
         errMsg << " Hash recursion level can not be deeper than 63";
-        throw FennelExcn(errMsg.str());      
+        throw FennelExcn(errMsg.str());
     }
 
     level = levelInit;
@@ -72,10 +72,10 @@ void LhxHashGenerator::init(uint levelInit)
 
     uint base = level * 4;
     hashValueSeed
-        = (uint8_t(base    ) << 24)
+        = (uint8_t(base) << 24)
         | (uint8_t(base + 1) << 16)
-        | (uint8_t(base + 2) << 8 )
-        | (uint8_t(base + 3)      );
+        | (uint8_t(base + 2) << 8)
+        | (uint8_t(base + 3));
 }
 
 // REVIEW jvs 25-Aug-2006: Awww, the fancy bit-twiddling from Broadbase is
@@ -110,7 +110,6 @@ void LhxHashGenerator::hashOneColumn(
     TupleDatum const &inputCol,
     LhxHashTrim isVarChar)
 {
-
     uint trimmedLength = inputCol.cbData;
     PConstBuffer pData = inputCol.pData;
 
@@ -138,7 +137,7 @@ void LhxHashGenerator::hashOneColumn(
     // REVIEW jvs 25-Aug-2006:  Since the call below uses
     // sizeof(TupleStorageByteLength), shouldn't trimmedLength
     // be declared to match?
-    
+
     /*
      * First hash the length
      * However, ignore length field if pData is NULL.
@@ -171,8 +170,7 @@ uint LhxHashGenerator::hash(
      */
     uint hashValue = hashValueSeed;
 
-    for (int i = 0; i < keyLength; i ++)
-    {
+    for (int i = 0; i < keyLength; i++) {
         TupleDatum const &col = inputTuple[keyProjection[i]];
         hashOneColumn(hashValue, col, isKeyColVarChar[i]);
     }

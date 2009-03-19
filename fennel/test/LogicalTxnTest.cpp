@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,7 +44,7 @@ class LogicalTxnTest
 {
     static const int participantDescription;
     static const LogicalActionType ACTION_TEST;
-    
+
     SharedLogicalTxnLog pTxnLog;
     LogicalTxnLogCheckpointMemento firstCheckpointMemento;
     LogicalTxnLogCheckpointMemento intermediateCheckpointMemento;
@@ -67,7 +67,7 @@ public:
 
         // TODO jvs 26-Oct-2007:  need multi-threading tests,
         // e.g. for FNL-68
-        
+
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testTxnIdSequence);
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackEmpty);
         FENNEL_UNIT_TEST_CASE(LogicalTxnTest,testRollbackShort);
@@ -92,7 +92,7 @@ public:
 
     void testTxn(int nActions,int iCheckpoint = -1,int iSvpt = -1);
     void testActions(int nActions,int iFirst);
-    
+
     void testRollback(
         int nActions,
         bool checkpoint = false);
@@ -100,7 +100,7 @@ public:
     void testRollbackEmpty();
     void testRollbackShort();
     void testRollbackLong();
-    
+
     void testRollbackSavepointNoGap();
     void testRollbackSavepointGap();
     void testRollbackSavepoint(bool gap);
@@ -240,7 +240,7 @@ void LogicalTxnTest::testRollbackSavepoint(bool gap)
         testActions(40,200);
         expected.push_back(ExpectedRange(239,200));
     }
-        
+
     // roll everything back
     expected.push_back(ExpectedRange(50,0));
     rollbackFull();
@@ -271,7 +271,7 @@ void LogicalTxnTest::testCheckpointCommitSavepoint()
 
     // log 40 new actions (200 through 239)
     testActions(40,200);
-    
+
     commit();
     SharedLogicalRecoveryLog pRecoveryLog = createRecoveryLog();
 
@@ -330,7 +330,7 @@ void LogicalTxnTest::testRollback(
     int nActions,
     bool checkpoint)
 {
-    int iCheckpoint = checkpoint ? nActions/2 : -1;
+    int iCheckpoint = checkpoint ? (nActions / 2) : -1;
     testTxn(nActions,iCheckpoint);
     if (checkpoint) {
         SharedLogicalRecoveryLog pRecoveryLog = createRecoveryLog();
@@ -340,7 +340,7 @@ void LogicalTxnTest::testRollback(
         assert(pRecoveryLog.unique());
     }
     if (nActions) {
-        expected.push_back(ExpectedRange(nActions-1,0));
+        expected.push_back(ExpectedRange(nActions - 1, 0));
     }
     rollbackFull();
 }
@@ -364,19 +364,19 @@ void LogicalTxnTest::commit()
 
 void LogicalTxnTest::testCommit(int nActions,bool checkpoint)
 {
-    int iCheckpoint = checkpoint ? nActions/2 : -1;
+    int iCheckpoint = checkpoint ? (nActions / 2) : -1;
     testTxn(nActions,iCheckpoint);
     commit();
 
     SharedLogicalRecoveryLog pRecoveryLog = createRecoveryLog();
     if (checkpoint) {
         if (nActions) {
-            expected.push_back(ExpectedRange(iCheckpoint+1,nActions-1));
+            expected.push_back(ExpectedRange(iCheckpoint + 1, nActions - 1));
         }
         pRecoveryLog->recover(intermediateCheckpointMemento);
     } else {
         if (nActions) {
-            expected.push_back(ExpectedRange(0,nActions-1));
+            expected.push_back(ExpectedRange(0, nActions - 1));
         }
         pRecoveryLog->recover(firstCheckpointMemento);
     }

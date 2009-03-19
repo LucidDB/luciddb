@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -50,24 +50,24 @@ private:
     uint16_t    valOrd;
 
 public:
-    
+
     LcsHashValOrd() {}
     ~LcsHashValOrd() {}
-    
+
     inline explicit LcsHashValOrd(LcsHashValOrd const &other);
-    
+
     /**
      * Copy assignment. Used to cast an uint16_t to LcsHashValOrd.
      */
     inline LcsHashValOrd& operator=(uint16_t valOrdInit);
-  
+
     /**
      * Gets fields in LcsHashValOrd struct.
      * The highest bit in the value ordinal indicates whether or not value is
      * part of current batch.
      */
     inline uint16_t getValOrd();
-    
+
     /**
      * Sets fields in LcsHashValOrd struct.
      * The highest bit in the value ordinal indicates whether or not value is
@@ -79,12 +79,12 @@ public:
      * Checks if this value node is part of the current batch.
      */
     inline bool isValueInBatch();
-        
+
     /**
      * Marks that this value node is part of the current batch.
      */
     inline void setValueInBatch();
-    
+
     /**
      * Marks that this value node is not part of the current batch.
      */
@@ -182,7 +182,7 @@ public:
      * @param [in] hashBlockSizeInit size of the buffer
      */
     void init(PBuffer hashBlockInit, uint hashBlockSizeInit);
-    
+
     /**
      * Resets the hash table to prepare for encoding the next page.
      */
@@ -229,16 +229,16 @@ public:
      * @param [in] key hash key to locate
      *
      * @return pointer to the first value node
-     */ 
+     */
     inline LcsHashValueNode* getFirstValueNode(uint key);
-    
+
     /**
      * Returns the next value node following a value node
      *
      * @param [in] pValueNode pointer to the current LcsHashValueNode
      *
      * @return pointer to the next value node
-     */ 
+     */
     inline LcsHashValueNode* getNextValueNode(LcsHashValueNode *pValueNode);
 
     /**
@@ -342,7 +342,7 @@ private:
 
     /**
      * Two tuple instances to store the values being compared
-     */     
+     */
     TupleDataWithBuffer      colTuple1;
     TupleDataWithBuffer      colTuple2;
 
@@ -350,7 +350,7 @@ private:
      * Tuple descriptor for the tuples being compared.
      */
     TupleDescriptor          colTupleDesc;
-  
+
     UnalignedAttributeAccessor attrAccessor;
 
 public:
@@ -444,7 +444,7 @@ public:
 class LcsHash
 {
 private:
-    
+
     /**
      * column for which this LcsHash structure is built.
      */
@@ -481,12 +481,12 @@ private:
      * The column being compared against.
      */
     TupleDataWithBuffer   searchTuple;
-    
+
     /**
      * Scratch memory to store the current column value being compressed.
      */
     boost::scoped_array<FixedBuffer> colTupleBuffer;
-    
+
     /**
      * Number of unique values in the current batch.
      * The type of this field should be the same as that of LcsHashValOrd.
@@ -533,7 +533,7 @@ private:
      * @return hash key
      */
     uint computeKey(PBuffer dataWithLen);
-  
+
     /**
      * Search for ordinal using hash key and column data value.
      *
@@ -549,10 +549,12 @@ private:
      */
     bool search(uint key, PBuffer dataWithLen,
         LcsHashValOrd *valOrd, LcsHashValueNode **v);
-    
+
 public:
     explicit LcsHash();
-    ~LcsHash() {};
+    ~LcsHash()
+    {
+    }
 
     /**
      * Initializes the LcsHash object.
@@ -570,10 +572,10 @@ public:
     void init(
         PBuffer hashBlockInit,
         SharedLcsClusterNodeWriter clusterBlockWriterInit,
-        TupleDescriptor const &colTupleDescInit,            
+        TupleDescriptor const &colTupleDescInit,
         uint columnIdInit,
         uint blockSizeInit);
-  
+
     /**
      * Inserts a single column tuple into the hash table. It also causes the
      * column value to be inserted into the cluster block if needed.
@@ -588,7 +590,7 @@ public:
         TupleDatum &colTupleDatum,
         LcsHashValOrd *valOrd,
         bool *undoInsert);
-    
+
     /**
      * Inserts a data buffer of a column into the hash table. It also causes
      * the column value to be inserted into the cluster block if needed.
@@ -612,14 +614,14 @@ public:
      * @param [in] colTupleDatum column tuple just inserted
      */
     void undoInsert(TupleDatum &colTupleDatum);
-    
+
     /**
      * Undoes the previous insert of a column data buffer.
      *
      * @param [in] dataWithLen data buffer to column tuple just inserted
      */
     void undoInsert(PBuffer dataWithLen);
-    
+
 
     /**
      * Prepares a fixed or variable batch to be written to the cluster block.
@@ -630,7 +632,7 @@ public:
      * @param [in] numRows number of values in a batch
      */
     void prepareFixedOrVariableBatch(uint8_t *rowArray, uint numRows);
-    
+
     /**
      * Prepares a compressed batch to be written to the cluster block.
      *
@@ -650,13 +652,13 @@ public:
         uint     numRows,
         uint16_t *numVals,
         uint16_t *offsetIndexVector);
-    
+
     /**
      * Clears the fixed values from batch to indicate the offset is not longer
      * useful because the key storage can be relocated between batches.
      */
     void clearFixedEntries();
-    
+
     /**
      * Prepares LcsHash object for a new batch.
      *
@@ -665,14 +667,14 @@ public:
      * nodes.
      */
     void startNewBatch(uint leftOvers);
-    
+
     /**
      * Sets up hash with values from an existing cluster block. This is called
      * when appending to an existing block.
      *
      * @param [in] numVals number of values for this column
      *
-     * @param [in] lastValOff offset of the last value stored for this column 
+     * @param [in] lastValOff offset of the last value stored for this column
      *
      */
     void restore(uint numVals, uint16_t lastValOff);
@@ -736,14 +738,14 @@ inline void LcsHashValOrd::setValueInBatch()
 inline void LcsHashValOrd::clearValueInBatch()
 {
     valOrd &= ~(1<<15);
-}   
+}
 
 
 /*****************************************************
   Definitions of inline methods for class LcsUndoType
  *****************************************************/
 
-inline LcsUndoType::LcsUndoType() 
+inline LcsUndoType::LcsUndoType()
 {
     reset();
 }
@@ -757,7 +759,7 @@ inline void LcsUndoType::set(
     what = whatInit;
     key = keyInit;
     origMaxValueSize = origMaxValueSizeInit;;
-    vPtr = vPtrInit;    
+    vPtr = vPtrInit;
 }
 
 inline void LcsUndoType::reset()
@@ -765,7 +767,7 @@ inline void LcsUndoType::reset()
     what = NOTHING;
     key = 0;
     origMaxValueSize = 0;
-    vPtr = 0;    
+    vPtr = 0;
 }
 
 
@@ -773,7 +775,7 @@ inline void LcsUndoType::reset()
   Definitions of inline methods for class LcsHashTable
  ******************************************************/
 
-inline LcsHashTable::LcsHashTable()    
+inline LcsHashTable::LcsHashTable()
 {
     hashBlock = NULL;
     hashTableSize = 0;
@@ -788,7 +790,7 @@ inline void LcsHashTable::resetHash()
 
 inline void LcsHashTable::resetBatch()
 {
-    for(int i=0; i < nextValueNode; i++) {
+    for (int i = 0; i < nextValueNode; i++) {
         (&(valueNodes[i].valueOrd))->clearValueInBatch();
     }
 }
@@ -806,21 +808,21 @@ inline LcsHashValueNode* LcsHashTable::getNewValueNode()
 inline void LcsHashTable::insertNewValueNode(uint key,  LcsHashValueNode *newNode)
 {
     newNode->next = (uint16_t)entry[key];
-    
+
     /*
       Insert at the beginning.
     */
     entry[key] = (uint16_t)((uint8_t*)newNode - hashBlock);
-    
+
     /*
       Bump up the value for the next node to give out.
     */
-    nextValueNode++;        
+    nextValueNode++;
 }
 
 inline void LcsHashTable::undoNewValueNode(uint key)
 {
-    entry[key] =(uint16_t) 
+    entry[key] = (uint16_t)
         ((LcsHashValueNode*)(hashBlock + entry[key]))->next;
     nextValueNode--;
 }
@@ -828,21 +830,23 @@ inline void LcsHashTable::undoNewValueNode(uint key)
 inline LcsHashValueNode* LcsHashTable::getFirstValueNode(uint key)
 {
     uint16_t offset = entry[key];
-    
-    if (offset)
+
+    if (offset) {
         return (LcsHashValueNode*) (hashBlock + offset);
-    else
+    } else {
         return NULL;
+    }
 }
 
 inline LcsHashValueNode* LcsHashTable::getNextValueNode(LcsHashValueNode *pValueNode)
 {
     uint16_t offset = pValueNode->next;
-    
-    if (offset) 
+
+    if (offset) {
         return (LcsHashValueNode*) (hashBlock + offset);
-    else
+    } else {
         return NULL;
+    }
 }
 
 inline bool LcsHashTable::isFull(uint leftOvers)
@@ -853,8 +857,8 @@ inline bool LcsHashTable::isFull(uint leftOvers)
     */
     return ((PBuffer)(&(valueNodes[nextValueNode])
             + (leftOvers + 1) * sizeof(LcsHashValueNode))
-        >= (PBuffer ) (hashBlock + hashBlockSize));
-}    
+        >= (PBuffer) (hashBlock + hashBlockSize));
+}
 
 
 /****************************************************
@@ -886,7 +890,7 @@ inline uint LcsHash::getMaxValueSize()
 inline bool LcsHash::isHashFull(uint leftOvers)
 {
     return hash.isFull(leftOvers);
-}   
+}
 
 FENNEL_END_NAMESPACE
 

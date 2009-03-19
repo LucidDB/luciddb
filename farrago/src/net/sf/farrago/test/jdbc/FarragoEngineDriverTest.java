@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -345,14 +345,16 @@ public class FarragoEngineDriverTest
             conn = driver.connect(driverURI, props);
             fail("connection should fail with syntax error");
         } catch (SQLException e) {
-            assertTrue("got " + e.getClass().getName()
+            assertTrue(
+                "got " + e.getClass().getName()
                 + " but expected FarragoSqlException,",
                 e instanceof FarragoJdbcUtil.FarragoSqlException);
             FarragoJdbcUtil.FarragoSqlException fse =
-                (FarragoJdbcUtil.FarragoSqlException)e;
+                (FarragoJdbcUtil.FarragoSqlException) e;
             Throwable orig = fse.getOriginalThrowable();
             assertNotNull("null original throwable", orig);
-            assertTrue("got " + orig.getClass().getName()
+            assertTrue(
+                "got " + orig.getClass().getName()
                 + " but expected SqlParseException,",
                 orig instanceof SqlParseException);
         }
@@ -367,10 +369,10 @@ public class FarragoEngineDriverTest
         Properties props = newProperties();
         props.setProperty("label", "foo");
         try {
-            driver.connect(driverURI, props);     
+            driver.connect(driverURI, props);
             fail(
-                "connection should fail because snapshots aren't supported " +
-                "in Farrago");
+                "connection should fail because snapshots aren't supported "
+                + "in Farrago");
         } catch (Exception ex) {
             FarragoJdbcTest.assertExceptionMatches(
                 ex,
@@ -380,7 +382,6 @@ public class FarragoEngineDriverTest
 
     /**
      * For background on this test, please see
-     *
      * http://n2.nabble.com/SqlParseException.getCause%28%29-td1616492.html
      */
     public void testExcnStack()
@@ -393,7 +394,7 @@ public class FarragoEngineDriverTest
         // ALTER TABLE ADD c INT UNIQUE, please find another excn cause
         // to keep this test coverage.
         String sql = "alter table sales.depts add dcode int unique";
-        
+
         // For the engine driver, we should get full exception stacks,
         // because they don't have to go over the wire.
         try {
@@ -402,7 +403,7 @@ public class FarragoEngineDriverTest
             assertNotNull(ex.getOriginalThrowable().getCause());
         }
     }
-    
+
     /**
      * creates test connection properties.
      */

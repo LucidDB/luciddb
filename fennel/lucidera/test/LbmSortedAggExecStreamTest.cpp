@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,7 +57,7 @@ protected:
      */
     void testSortedAgg(
         uint nRows,
-        uint nKeys, 
+        uint nKeys,
         std::vector<int> const &repeatSeqValues);
 
 public:
@@ -127,7 +127,7 @@ public:
             sortedToUnsortedMap[value] = i;
         }
         current = -1;
-        currentRow.reset(new uint[nKeys+1]);
+        currentRow.reset(new uint[nKeys + 1]);
     }
 
     virtual int64_t generateValue(uint iRow, uint iCol)
@@ -169,7 +169,7 @@ void LbmSortedAggExecStreamTest::testScanPartKey()
 
 void LbmSortedAggExecStreamTest::testSortedAgg(
     uint nRows,
-    uint nKeys, 
+    uint nKeys,
     std::vector<int> const &repeatSeqValues)
 {
     initKeyBitmap(nRows, repeatSeqValues);

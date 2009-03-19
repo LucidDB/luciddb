@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2005-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2005-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -140,7 +140,7 @@ public class FarragoPlanVisualizer
         addStateButton(menuBar, "RUN", STATE_RUNNING);
         addStateButton(menuBar, "FLY", STATE_FLYING);
         addZoomButton(menuBar, "ZOOMIN", 1.5);
-        addZoomButton(menuBar, "ZOOMOUT", 1.0/1.5);
+        addZoomButton(menuBar, "ZOOMOUT", 1.0 / 1.5);
 
         frame = new JFrame();
         frame.setJMenuBar(menuBar);
@@ -591,9 +591,9 @@ public class FarragoPlanVisualizer
 
     private void waitForInput()
     {
-        synchronized(stepVar) {
+        synchronized (stepVar) {
             try {
-                switch(state) {
+                switch (state) {
                 case STATE_CRAWLING:
                 case STATE_STEPPING:
                     stepVar.wait();

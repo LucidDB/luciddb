@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -59,9 +59,9 @@ public class SargEndpoint
     protected final RelDataType dataType;
 
     /**
-     * Coordinate for this endpoint, constrained to be either
-     * {@link RexLiteral}, {@link RexInputRef}, {@link RexDynamicParam}, or
-     * null to represent infinity (positive or negative infinity is implied by
+     * Coordinate for this endpoint, constrained to be either {@link
+     * RexLiteral}, {@link RexInputRef}, {@link RexDynamicParam}, or null to
+     * represent infinity (positive or negative infinity is implied by
      * boundType).
      */
     protected RexNode coordinate;
@@ -138,8 +138,8 @@ public class SargEndpoint
     {
         // validate the input
         assert (coordinate != null);
-        if (!(coordinate instanceof RexDynamicParam) &&
-            !(coordinate instanceof RexInputRef))
+        if (!(coordinate instanceof RexDynamicParam)
+            && !(coordinate instanceof RexInputRef))
         {
             assert (coordinate instanceof RexLiteral);
             RexLiteral literal = (RexLiteral) coordinate;
@@ -447,10 +447,13 @@ public class SargEndpoint
                 // one is a dynamic param but the other isn't
                 return false;
             }
-        } else if ((coordinate instanceof RexInputRef)
-            || (other.coordinate instanceof RexInputRef)) {
+        } else if (
+            (coordinate instanceof RexInputRef)
+            || (other.coordinate instanceof RexInputRef))
+        {
             if ((coordinate instanceof RexInputRef)
-                && (other.coordinate instanceof RexInputRef)) {
+                && (other.coordinate instanceof RexInputRef))
+            {
                 // make sure it's the same RexInputRef
                 RexInputRef r1 = (RexInputRef) coordinate;
                 RexInputRef r2 = (RexInputRef) other.coordinate;

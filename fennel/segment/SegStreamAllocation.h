@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,7 +26,7 @@
 #include "fennel/common/ClosableObject.h"
 
 FENNEL_BEGIN_NAMESPACE
-    
+
 /**
  * SegStreamAllocation is a helper for managing the allocation state
  * of storage created by SegOutputStream when it is used as temp
@@ -55,21 +55,21 @@ class SegStreamAllocation : public ClosableObject
      * while in state WRITING.
      */
     BlockNum nPagesWritten;
-    
+
     /**
      * Non-singular iff in state WRITING.
      */
     SharedSegOutputStream pSegOutputStream;
-    
+
     /**
      * Non-singular iff in state READING.
      */
     SharedSegInputStream pSegInputStream;
-    
+
 protected:
     // implement ClosableObject
     virtual void closeImpl();
-    
+
 public:
     /**
      * Creates a shared pointer to a new SegStreamAllocation, initially in the
@@ -87,7 +87,7 @@ public:
      * newSegStreamAllocation() instead.
      */
     explicit SegStreamAllocation();
-    
+
     /**
      * Changes state from UNALLOCATED to WRITING.
      *

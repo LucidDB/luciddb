@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,6 +32,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.enki.mdr.*;
+
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.persistence.jdbcimpl.*;
 
@@ -124,7 +125,7 @@ public class FarragoModelLoader
         }
         mdrRepos =
             MdrUtil.loadRepository(storageFactoryClassName, storageProps);
-        
+
         mdrRepos.beginSession();
         openMdrReposSession = true;
     }
@@ -159,7 +160,7 @@ public class FarragoModelLoader
 
     private void setUserReposProperties()
     {
-        // REVIEW: SWZ: 2008-02-12: This will fail badly if used with 
+        // REVIEW: SWZ: 2008-02-12: This will fail badly if used with
         // Enki+Hibernate.
         storageFactoryClassName = JdbcStorageFactory.class.getName();
         setStorageProperty(JdbcStorageFactory.STORAGE_URL, "jdbc:farrago:");

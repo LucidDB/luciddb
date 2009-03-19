@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,17 +31,17 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * This class encapsulates a single byte segment, as opposed to
  * a tuple which contains a set of them
- */    
+ */
 class LbmByteSegment
 {
 public:
     static const uint bitsInByte[];
-    
+
     LbmByteNumber byteNum;
     PBuffer byteSeg;
     uint len;
 
-    inline void reset() 
+    inline void reset()
     {
         byteNum = (LbmByteNumber) 0;
         byteSeg = NULL;
@@ -87,13 +87,13 @@ public:
      *
      * This function assumes bytes are reverse order.
      */
-    void advanceToByteNum(LbmByteNumber newStartByteNum) 
+    void advanceToByteNum(LbmByteNumber newStartByteNum)
     {
         // ignore null values
         if (isNull()) {
             return;
         }
-        
+
         // check if the segment will have valid data after truncation
         if (getEnd() <= newStartByteNum) {
             reset();
@@ -114,7 +114,7 @@ public:
      */
     uint countBits()
     {
-        return countBits(byteSeg-len+1, len);
+        return countBits(byteSeg - len + 1, len);
     }
 
     /**
@@ -132,7 +132,7 @@ public:
     /**
      * Counts the number of bits in an array
      */
-    static uint countBits(PConstBuffer pBuf, uint len) 
+    static uint countBits(PConstBuffer pBuf, uint len)
     {
         uint total = 0;
         for (uint i = 0; i < len; i++) {
@@ -146,7 +146,9 @@ public:
         for (uint i = 0; i < 256; i++) {
             uint slowBits = 0;
             for (uint j = 0; j < 8; j++) {
-                if (i & (1 << j)) slowBits++;
+                if (i & (1 << j)) {
+                    slowBits++;
+                }
             }
             assert (slowBits == bitsInByte[i]);
         }
@@ -157,7 +159,7 @@ public:
      *
      * This function assumes bytes are in order.
      */
-    void print(std::ostream &output) 
+    void print(std::ostream &output)
     {
         output << std::dec << opaqueToInt(byteNum) << ".";
         output << std::dec << len << " (";

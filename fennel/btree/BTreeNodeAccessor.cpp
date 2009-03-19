@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -110,8 +110,8 @@ void BTreeNodeAccessor::splitNode(
     assert(node.nEntries > 1);
     newNode.height = node.height; // split should be of the same height
 
-    // if monotonic, for leaf page,  
-    // don't actually split the page; leave the left 
+    // if monotonic, for leaf page,
+    // don't actually split the page; leave the left
     // page as is and force all inserts to go into the new page
     // on the right
     // for internal node,
@@ -122,7 +122,7 @@ void BTreeNodeAccessor::splitNode(
 
     // Calculate the balance point in bytes
     uint cbNeeded = getEntryByteCount(cbNewTuple);
-    uint cbBalance = cbNeeded; 
+    uint cbBalance = cbNeeded;
     if (!monotonic) {
         cbBalance = (node.cbTotalFree + newNode.cbTotalFree - cbNeeded) / 2;
         cbBalance = std::max(cbNeeded,cbBalance);

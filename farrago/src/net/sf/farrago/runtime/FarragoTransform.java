@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2005-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,11 +26,10 @@ import java.nio.*;
 
 /**
  * A piece of generated code must implement this interface if it is to be
- * callable from a Fennel JavaTransformExecStream wrapper.
- *
- * See {@link net.sf.farrago.query.FarragoTransformDef}, which manages the
- * construction of a FarragoTransform during statement preparation, in
- * {@link net.sf.farrago.query.FarragoPreparingStmt}.
+ * callable from a Fennel JavaTransformExecStream wrapper. See {@link
+ * net.sf.farrago.query.FarragoTransformDef}, which manages the construction of
+ * a FarragoTransform during statement preparation, in {@link
+ * net.sf.farrago.query.FarragoPreparingStmt}.
  *
  * @author Julian Hyde, Stephan Zuercher
  * @version $Id$
@@ -40,10 +39,9 @@ public interface FarragoTransform
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Binds all inputs and initializes the transform.
-     *
-     * This method is typically generated. It is called by
-     * {@link net.sf.farrago.query.FarragoExecutableJavaStmt#execute}.
+     * Binds all inputs and initializes the transform. This method is typically
+     * generated. It is called by {@link
+     * net.sf.farrago.query.FarragoExecutableJavaStmt#execute}.
      *
      * @param connection the FarragoRuntimeContext of the query that contains
      * this transform.
@@ -84,8 +82,9 @@ public interface FarragoTransform
 
     /**
      * InputBinding binds a JavaTransformExecStream input's streamId to the
-     * ordinal assigned to that input by the stream graph. The InputBinding objects
-     * are created by {@link net.sf.farrago.query.FarragoTransformDef#init}.
+     * ordinal assigned to that input by the stream graph. The InputBinding
+     * objects are created by {@link
+     * net.sf.farrago.query.FarragoTransformDef#init}.
      */
     public static class InputBinding
     {

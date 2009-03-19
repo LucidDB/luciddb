@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,11 +21,11 @@
 */
 package org.eigenbase.sql.fun;
 
+import java.math.*;
+
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
-
-import java.math.BigDecimal;
 
 
 /**
@@ -70,8 +70,8 @@ public class SqlMonotonicBinaryOperator
         final SqlMonotonicity mono1 = scope.getMonotonicity(call.operands[1]);
 
         // constant <op> constant --> constant
-        if (mono1 == SqlMonotonicity.Constant
-            && mono0 == SqlMonotonicity.Constant)
+        if ((mono1 == SqlMonotonicity.Constant)
+            && (mono0 == SqlMonotonicity.Constant))
         {
             return SqlMonotonicity.Constant;
         }
@@ -81,21 +81,26 @@ public class SqlMonotonicBinaryOperator
             // mono0 + constant --> mono0
             // mono0 - constant --> mono0
             if (getName().equals("-")
-                || getName().equals("+")) {
+                || getName().equals("+"))
+            {
                 return mono0;
             }
             assert getName().equals("*");
             if (call.operands[1] instanceof SqlLiteral) {
                 SqlLiteral literal = (SqlLiteral) call.operands[1];
                 switch (literal.bigDecimalValue().compareTo(
-                    BigDecimal.ZERO)) {
+                        BigDecimal.ZERO))
+                {
                 case -1:
+
                     // mono0 * negative constant --> reverse mono0
                     return mono0.reverse();
                 case 0:
+
                     // mono0 * 0 --> constant (zero)
                     return SqlMonotonicity.Constant;
                 default:
+
                     // mono0 * positiove constant --> mono0
                     return mono0;
                 }
@@ -117,14 +122,18 @@ public class SqlMonotonicBinaryOperator
             if (call.operands[0] instanceof SqlLiteral) {
                 SqlLiteral literal = (SqlLiteral) call.operands[0];
                 switch (literal.bigDecimalValue().compareTo(
-                    BigDecimal.ZERO)) {
+                        BigDecimal.ZERO))
+                {
                 case -1:
+
                     // negative constant * mono1 --> reverse mono1
                     return mono1.reverse();
                 case 0:
+
                     // 0 * mono1 --> constant (zero)
                     return SqlMonotonicity.Constant;
                 default:
+
                     // positive constant * mono1 --> mono1
                     return mono1;
                 }
@@ -134,9 +143,15 @@ public class SqlMonotonicBinaryOperator
         // strictly asc + strictly asc --> strictly asc
         // asc + asc --> asc
         // asc + desc --> not monotonic
-        assertMonotonicity("2 * orderid + 3 * orderid", SqlMonotonicity.StrictlyIncreasing);
-        assertMonotonicity("2 * orderid + (-3 * orderid)", SqlMonotonicity.NotMonotonic);
-        assertMonotonicity("2 * orderid + 3 * orderid", SqlMonotonicity.StrictlyIncreasing);
+        assertMonotonicity(
+            "2 * orderid + 3 * orderid",
+            SqlMonotonicity.StrictlyIncreasing);
+        assertMonotonicity(
+            "2 * orderid + (-3 * orderid)",
+            SqlMonotonicity.NotMonotonic);
+        assertMonotonicity(
+            "2 * orderid + 3 * orderid",
+            SqlMonotonicity.StrictlyIncreasing);
 
         if (getName().equals("+")) {
             if (mono0 == mono1) {
@@ -163,14 +178,13 @@ public class SqlMonotonicBinaryOperator
         return super.getMonotonicity(call, scope);
     }
 
-
     private void assertMonotonicity(
-        String s, SqlMonotonicity monotonicity)
+        String s,
+        SqlMonotonicity monotonicity)
     {
-        //To change body of created methods use File | Settings | File Templates.
+        //To change body of created methods use File | Settings | File
+        //Templates.
     }
-
-
 }
 
 // End SqlMonotonicBinaryOperator.java

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,6 +23,7 @@
 package net.sf.farrago.util;
 
 import java.util.concurrent.atomic.*;
+
 
 /**
  * FarragoCacheEntry implements the interfaces for a cache entry.
@@ -56,6 +57,7 @@ public class FarragoCacheEntry
     public FarragoCacheEntry(FarragoObjectCache parentCache)
     {
         this.parentCache = parentCache;
+
         // assume reusable; but really, assertions below should guarantee that
         // this is never even accessed until after initialize overwrites it
         isReusable = true;
@@ -75,14 +77,14 @@ public class FarragoCacheEntry
     // implement Entry
     public Object getValue()
     {
-        assert(isInitialized);
+        assert (isInitialized);
         return value;
     }
 
     // implement Entry
     public boolean isReusable()
     {
-        assert(isInitialized);
+        assert (isInitialized);
         return isReusable;
     }
 
@@ -105,7 +107,7 @@ public class FarragoCacheEntry
     // implement FarragoAllocation
     public void closeAllocation()
     {
-        assert(isInitialized);
+        assert (isInitialized);
         parentCache.unpin(this);
     }
 

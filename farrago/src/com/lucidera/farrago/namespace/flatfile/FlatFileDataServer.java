@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -154,13 +154,14 @@ class FlatFileDataServer
         try {
             if (schemaType == FlatFileParams.SchemaType.QUERY) {
                 String [] foreignName =
-                    {
-                        this.getProperties().getProperty("NAME"),
-                        FlatFileParams.SchemaType.QUERY.getSchemaName(),
-                        filename
-                    };
+                {
+                    this.getProperties().getProperty("NAME"),
+                    FlatFileParams.SchemaType.QUERY.getSchemaName(),
+                    filename
+                };
                 if (params.getNumRowsScan() > 0) {
                     long avgRowSize = sampleAndCreateBcp(foreignName, null);
+
                     // Estimated number of rows == file length / avg row length
                     if (avgRowSize > 0) {
                         numRows = dataFile.length() / avgRowSize;
@@ -288,9 +289,10 @@ class FlatFileDataServer
                         size.intValue());
                 RelDataType nullableType =
                     typeFactory.createTypeWithNullability(type, true);
-                nullableType = FlatFileBCPFile.forceSingleByte(
-                    typeFactory,
-                    nullableType);
+                nullableType =
+                    FlatFileBCPFile.forceSingleByte(
+                        typeFactory,
+                        nullableType);
                 fieldTypes.add(nullableType);
                 fieldNames.add("COL" + i++);
             }
@@ -416,6 +418,7 @@ class FlatFileDataServer
                             sumRows += col.length();
                         }
                     }
+
                     // add one per column for delimiter size
                     sumRows += cols.length;
 
@@ -430,8 +433,8 @@ class FlatFileDataServer
                 }
                 if (bcpFile != null) {
                     if (!bcpFile.write(cols, params)) {
-                        throw FarragoResource.instance().FileWriteFailed.
-                            ex(bcpFile.fileName);
+                        throw FarragoResource.instance().FileWriteFailed.ex(
+                            bcpFile.fileName);
                     }
                 }
                 return sumRows / numRowsScan;

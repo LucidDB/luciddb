@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2004-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -59,13 +59,13 @@ import org.eigenbase.util.*;
  * description of a data source used in a query.
  *
  * <p>There are different kinds of namespace for different parts of the query.
- * for example {@link IdentifierNamespace} for table names,
- * {@link SelectNamespace} for SELECT queries, {@link SetopNamespace} for
- * UNION, EXCEPT and INTERSECT. A validator is allowed to wrap namespaces in
- * other objects which implement {@link SqlValidatorNamespace}, so don't try
- * to cast your namespace or use <code>instanceof</code>; use
- * {@link SqlValidatorNamespace#unwrap(Class)} and
- * {@link SqlValidatorNamespace#isWrapperFor(Class)} instead.</p>
+ * for example {@link IdentifierNamespace} for table names, {@link
+ * SelectNamespace} for SELECT queries, {@link SetopNamespace} for UNION, EXCEPT
+ * and INTERSECT. A validator is allowed to wrap namespaces in other objects
+ * which implement {@link SqlValidatorNamespace}, so don't try to cast your
+ * namespace or use <code>instanceof</code>; use {@link
+ * SqlValidatorNamespace#unwrap(Class)} and {@link
+ * SqlValidatorNamespace#isWrapperFor(Class)} instead.</p>
  *
  * <p>The validator builds the map by making a quick scan over the query when
  * the root {@link SqlNode} is first provided. Thereafter, it supplies the
@@ -82,8 +82,6 @@ import org.eigenbase.util.*;
  */
 public interface SqlValidator
 {
-    //~ Enums ------------------------------------------------------------------
-
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -140,16 +138,18 @@ public interface SqlValidator
      * Checks that a query is valid.
      *
      * <p>Valid queries include:
+     *
      * <ul>
      * <li><code>SELECT</code> statement,
-     * <li>set operation (<code>UNION</code>, <code>INTERSECT</code>,
-     *     <code>EXCEPT</code>)
+     * <li>set operation (<code>UNION</code>, <code>INTERSECT</code>, <code>
+     * EXCEPT</code>)
      * <li>identifier (e.g. representing use of a table in a FROM clause)
      * <li>query aliased with the <code>AS</code> operator
      * </ul>
      *
      * @param node Query node
      * @param scope Scope in which the query occurs
+     *
      * @throws RuntimeException if the query is not valid
      */
     void validateQuery(SqlNode node, SqlValidatorScope scope);
@@ -244,15 +244,12 @@ public interface SqlValidator
      * an {@link SqlIdentifier identifier} referencing a window, or an {@link
      * SqlWindow inline window specification}.
      *
-     *
      * @param windowOrId SqlNode that can be either SqlWindow with all the
      * components of a window spec or a SqlIdentifier with the name of a window
      * spec.
-     *
      * @param scope Naming scope
-     *
-     * @param call is the SqlNode if a function call if the window is
-     * attached to one.
+     * @param call is the SqlNode if a function call if the window is attached
+     * to one.
      */
     void validateWindow(
         SqlNode windowOrId,
@@ -270,12 +267,12 @@ public interface SqlValidator
         SqlValidatorScope scope);
 
     /**
-      * Validates parameters for aggregate function.
-      *
-      * @param aggFunction function containing COLUMN_LIST parameter
-      * @param scope Syntactic scope
-      */
-     void validateAggregateParams(SqlCall aggFunction, SqlValidatorScope scope);
+     * Validates parameters for aggregate function.
+     *
+     * @param aggFunction function containing COLUMN_LIST parameter
+     * @param scope Syntactic scope
+     */
+    void validateAggregateParams(SqlCall aggFunction, SqlValidatorScope scope);
 
     /**
      * Validates a COLUMN_LIST parameter
@@ -329,6 +326,7 @@ public interface SqlValidator
      * as <code>SUM(x) OVER w</code>, don't count.)
      *
      * @param select SELECT statement
+     *
      * @return whether SELECT statement is an aggregation
      */
     boolean isAggregate(SqlSelect select);
@@ -337,6 +335,7 @@ public interface SqlValidator
      * Returns whether a select list expression is an aggregate function.
      *
      * @param selectNode Expression in SELECT clause
+     *
      * @return whether expression is an aggregate function
      */
     boolean isAggregate(SqlNode selectNode);
@@ -372,6 +371,7 @@ public interface SqlValidator
      * namespace.
      *
      * @param node Parse tree node
+     *
      * @return namespace of node
      */
     SqlValidatorNamespace getNamespace(SqlNode node);
@@ -398,6 +398,7 @@ public interface SqlValidator
      * @param selectList Select clause to be expanded
      * @param query Query
      * @param includeSystemVars Whether to include system variables
+     *
      * @return expanded select clause
      */
     SqlNodeList expandStar(
@@ -411,6 +412,7 @@ public interface SqlValidator
      * clause, and the enclosing scope.
      *
      * @param select Query
+     *
      * @return naming scope of WHERE clause
      */
     SqlValidatorScope getWhereScope(SqlSelect select);
@@ -482,6 +484,7 @@ public interface SqlValidator
      * </ul>
      *
      * @param select SELECT statement
+     *
      * @return naming scope for SELECT statement
      */
     SqlValidatorScope getSelectScope(SqlSelect select);
@@ -492,6 +495,7 @@ public interface SqlValidator
      * AggregatingScope} is stripped away.
      *
      * @param select SELECT statement
+     *
      * @return naming scope for SELECT statement, sans any aggregating scope
      */
     SelectScope getRawSelectScope(SqlSelect select);
@@ -501,6 +505,7 @@ public interface SqlValidator
      * query.
      *
      * @param select SELECT statement
+     *
      * @return naming scope for FROM clause
      */
     SqlValidatorScope getFromScope(SqlSelect select);
@@ -523,6 +528,7 @@ public interface SqlValidator
      * of a query.
      *
      * @param select SELECT statement
+     *
      * @return naming scope for GROUP BY clause
      */
     SqlValidatorScope getGroupScope(SqlSelect select);
@@ -532,6 +538,7 @@ public interface SqlValidator
      * a query.
      *
      * @param select SELECT statement
+     *
      * @return naming scope for HAVING clause
      */
     SqlValidatorScope getHavingScope(SqlSelect select);
@@ -543,6 +550,7 @@ public interface SqlValidator
      * BY clause may be used.
      *
      * @param select SELECT statement
+     *
      * @return naming scope for ORDER BY clause
      */
     SqlValidatorScope getOrderScope(SqlSelect select);
@@ -568,13 +576,13 @@ public interface SqlValidator
     /**
      * Retrieves the name of the parent cursor referenced by a column list
      * parameter.
-     * 
+     *
      * @param columnListParamName name of the column list parameter
-     * 
+     *
      * @return name of the parent cursor
      */
     String getParentCursor(String columnListParamName);
-    
+
     /**
      * Enables or disables expansion of identifiers other than column
      * references.
@@ -676,19 +684,22 @@ public interface SqlValidator
      * <p>In the default implementation, always returns {@code false}.
      *
      * @param field Field
+     *
      * @return whether field is a system field
      */
     boolean isSystemField(RelDataTypeField field);
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * @deprecated This class is for backwards-compatibility with
-     * the previous incarnation of SqlConformance.
+     * @deprecated This class is for backwards-compatibility with the previous
+     * incarnation of SqlConformance.
      */
     public static class Compatible
     {
         /**
-         * @deprecated This symbol is for backwards-compatibility with
-         * the previous incarnation of SqlConformance.
+         * @deprecated This symbol is for backwards-compatibility with the
+         * previous incarnation of SqlConformance.
          */
         public static final SqlConformance Default = SqlConformance.Default;
     }

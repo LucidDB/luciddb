@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,6 +45,16 @@ import org.eigenbase.sql.*;
  */
 public interface SqlTester
 {
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Name of a virtual machine that can potentially implement an operator.
+     */
+    public enum VmName
+    {
+        FENNEL, JAVA, EXPAND
+    }
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -187,9 +197,8 @@ public interface SqlTester
         String type);
 
     /**
-     * Checks that a query returns one column of an expected type. For
-     * example, <code>checkType("VALUES (1 + 2)", "INTEGER NOT
-     * NULL")</code>.
+     * Checks that a query returns one column of an expected type. For example,
+     * <code>checkType("VALUES (1 + 2)", "INTEGER NOT NULL")</code>.
      *
      * @param sql Query expression
      * @param type Type string
@@ -231,7 +240,7 @@ public interface SqlTester
      */
     void setFor(
         SqlOperator operator,
-        VmName... unimplementedVmNames);
+        VmName ... unimplementedVmNames);
 
     /**
      * Checks that an aggregate expression returns the expected result.
@@ -266,7 +275,7 @@ public interface SqlTester
      */
     void checkWinAgg(
         String expr,
-        String[] inputValues,
+        String [] inputValues,
         String windowSpec,
         String type,
         Object result,
@@ -291,16 +300,6 @@ public interface SqlTester
     interface TypeChecker
     {
         void checkType(RelDataType type);
-    }
-
-    /**
-     * Name of a virtual machine that can potentially implement an operator.
-     */
-    public enum VmName
-    {
-        FENNEL,
-        JAVA,
-        EXPAND
     }
 }
 

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -172,9 +172,10 @@ public class FlatFileFennelRel
                 SqlTypeName.VARCHAR,
                 MAX_ROW_ERROR_TEXT_WIDTH);
         errorText = typeFactory.createTypeWithNullability(errorText, true);
-        errorText = FlatFileBCPFile.forceSingleByte(
-            typeFactory,
-            errorText);
+        errorText =
+            FlatFileBCPFile.forceSingleByte(
+                typeFactory,
+                errorText);
         RelDataType errorType =
             typeFactory.createStructType(
                 new RelDataType[] { errorText },

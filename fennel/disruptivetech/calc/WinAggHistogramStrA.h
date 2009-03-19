@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -68,7 +68,7 @@ struct StringDesc : public TupleDatum
         copyFrom(other);
         return *this;
     }
-    
+
 
     void copyFrom(StringDesc const &other)
     {
@@ -91,7 +91,7 @@ public:
           nullRows(0),
           queue()
     {}
-                       
+
     ~WinAggHistogramStrA()
     {}
 
@@ -120,7 +120,7 @@ public:
     //! Input - New value to be added to the tree
     //
     void addRow(RegisterRef<char*>* node);
-    
+
     //! dropRow - Removes a value from the tree and updates
     //! the running sum.
     //!

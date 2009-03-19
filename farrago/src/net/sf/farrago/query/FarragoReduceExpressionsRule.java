@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,11 +38,12 @@ import org.eigenbase.util.*;
 /**
  * Collection of planner rules that apply various simplifying transformations on
  * RexNode trees. Currently, there are two transformations:
+ *
  * <ul>
  * <li>Constant reduction, which evaluates constant subtrees, replacing them
  * with a corresponding RexLiteral
- * <li>Removal of redundant casts, which occurs when the argument into the
- * cast is the same as the type of the resulting cast expression
+ * <li>Removal of redundant casts, which occurs when the argument into the cast
+ * is the same as the type of the resulting cast expression
  * </ul>
  *
  * @author John V. Sichi
@@ -54,21 +55,20 @@ public abstract class FarragoReduceExpressionsRule
     //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Regular expression which matches the description of all instances of
-     * this rule and {@link net.sf.farrago.query.FarragoReduceValuesRule} also.
-     * Use it to prevent the planner from invoking these rules.
+     * Regular expression which matches the description of all instances of this
+     * rule and {@link net.sf.farrago.query.FarragoReduceValuesRule} also. Use
+     * it to prevent the planner from invoking these rules.
      */
     public static final Pattern EXCLUSION_PATTERN =
         Pattern.compile("FarragoReduce(Expressions|Values)Rule.*");
 
     /**
-     * Singleton rule which reduces constants inside a {@link FilterRel}.
-     * If the condition is a constant, the filter is removed (if TRUE)
-     * or replaced with {@link EmptyRel} (if FALSE or NULL).
+     * Singleton rule which reduces constants inside a {@link FilterRel}. If the
+     * condition is a constant, the filter is removed (if TRUE) or replaced with
+     * {@link EmptyRel} (if FALSE or NULL).
      */
     public static final FarragoReduceExpressionsRule FILTER_INSTANCE =
-        new FarragoReduceExpressionsRule(FilterRel.class)
-        {
+        new FarragoReduceExpressionsRule(FilterRel.class) {
             public void onMatch(RelOptRuleCall call)
             {
                 FilterRel filter = (FilterRel) call.rels[0];
@@ -92,7 +92,8 @@ public abstract class FarragoReduceExpressionsRule
                 if (newConditionExp.isAlwaysTrue()) {
                     call.transformTo(
                         filter.getChild());
-                } else if (newConditionExp instanceof RexLiteral
+                } else if (
+                    (newConditionExp instanceof RexLiteral)
                     || RexUtil.isNullLiteral(newConditionExp, true))
                 {
                     call.transformTo(
@@ -107,14 +108,14 @@ public abstract class FarragoReduceExpressionsRule
                 } else {
                     return;
                 }
+
                 // New plan is absolutely better than old plan.
                 call.getPlanner().setImportance(filter, 0.0);
             }
         };
 
     public static final FarragoReduceExpressionsRule PROJECT_INSTANCE =
-        new FarragoReduceExpressionsRule(ProjectRel.class)
-        {
+        new FarragoReduceExpressionsRule(ProjectRel.class) {
             public void onMatch(RelOptRuleCall call)
             {
                 ProjectRel project = (ProjectRel) call.rels[0];
@@ -130,6 +131,7 @@ public abstract class FarragoReduceExpressionsRule
                             project.getRowType(),
                             ProjectRel.Flags.Boxed,
                             Collections.<RelCollation>emptyList()));
+
                     // New plan is absolutely better than old plan.
                     call.getPlanner().setImportance(project, 0.0);
                 }
@@ -137,8 +139,7 @@ public abstract class FarragoReduceExpressionsRule
         };
 
     public static final FarragoReduceExpressionsRule JOIN_INSTANCE =
-        new FarragoReduceExpressionsRule(JoinRel.class)
-        {
+        new FarragoReduceExpressionsRule(JoinRel.class) {
             public void onMatch(RelOptRuleCall call)
             {
                 JoinRel join = (JoinRel) call.rels[0];
@@ -154,6 +155,7 @@ public abstract class FarragoReduceExpressionsRule
                             expList.get(0),
                             join.getJoinType(),
                             join.getVariablesStopped()));
+
                     // New plan is absolutely better than old plan.
                     call.getPlanner().setImportance(join, 0.0);
                 }
@@ -161,8 +163,7 @@ public abstract class FarragoReduceExpressionsRule
         };
 
     public static final FarragoReduceExpressionsRule CALC_INSTANCE =
-        new FarragoReduceExpressionsRule(CalcRel.class)
-        {
+        new FarragoReduceExpressionsRule(CalcRel.class) {
             public void onMatch(RelOptRuleCall call)
             {
                 CalcRel calc = (CalcRel) call.getRels()[0];
@@ -173,12 +174,13 @@ public abstract class FarragoReduceExpressionsRule
                 // expanded.
                 final List<RexNode> expandedExprList =
                     new ArrayList<RexNode>(exprList.size());
-                final RexShuttle shuttle = new RexShuttle() {
-                    public RexNode visitLocalRef(RexLocalRef localRef)
-                    {
-                        return expandedExprList.get(localRef.getIndex());
-                    }
-                };
+                final RexShuttle shuttle =
+                    new RexShuttle() {
+                        public RexNode visitLocalRef(RexLocalRef localRef)
+                        {
+                            return expandedExprList.get(localRef.getIndex());
+                        }
+                    };
                 for (RexNode expr : exprList) {
                     expandedExprList.add(expr.accept(shuttle));
                 }
@@ -205,7 +207,8 @@ public abstract class FarragoReduceExpressionsRule
                             expandedExprList.get(conditionIndex);
                         if (newConditionExp.isAlwaysTrue()) {
                             // condition is always TRUE - drop it
-                        } else if (newConditionExp instanceof RexLiteral
+                        } else if (
+                            (newConditionExp instanceof RexLiteral)
                             || RexUtil.isNullLiteral(newConditionExp, true))
                         {
                             // condition is always NULL or FALSE - replace calc
@@ -224,8 +227,8 @@ public abstract class FarragoReduceExpressionsRule
                         final int index = projectExpr.getIndex();
                         builder.addProject(
                             list.get(index),
-                            program.getOutputRowType().getFieldList()
-                                .get(k++).getName());
+                            program.getOutputRowType().getFieldList().get(k++)
+                                   .getName());
                     }
                     builder.eliminateUnused();
                     call.transformTo(
@@ -236,6 +239,7 @@ public abstract class FarragoReduceExpressionsRule
                             calc.getRowType(),
                             builder.getProgram(),
                             calc.getCollationList()));
+
                     // New plan is absolutely better than old plan.
                     call.getPlanner().setImportance(calc, 0.0);
                 }
@@ -267,6 +271,7 @@ public abstract class FarragoReduceExpressionsRule
      *
      * @param rel Relational expression
      * @param expList List of expressions, modified in place
+     *
      * @return whether reduction found something to change, and succeeded
      */
     static boolean reduceExpressions(
@@ -280,7 +285,7 @@ public abstract class FarragoReduceExpressionsRule
             (FarragoSessionPlanner) rel.getCluster().getPlanner();
         FarragoSessionPreparingStmt preparingStmt = planner.getPreparingStmt();
         List<RexNode> constExps = new ArrayList<RexNode>();
-        List<Boolean> addCasts = new ArrayList<Boolean>();        
+        List<Boolean> addCasts = new ArrayList<Boolean>();
         List<RexNode> removableCasts = new ArrayList<RexNode>();
         findReducibleExps(
             preparingStmt,
@@ -312,11 +317,11 @@ public abstract class FarragoReduceExpressionsRule
                     noCasts);
             replacer.apply(expList);
         }
-        
+
         if (constExps.isEmpty()) {
             return true;
         }
-        
+
         // Compute the values they reduce to.
         List<RexNode> reducedValues = new ArrayList<RexNode>();
         ReentrantValuesStmt reentrantStmt =
@@ -363,9 +368,9 @@ public abstract class FarragoReduceExpressionsRule
     }
 
     /**
-     * Locates expressions that can be reduced to literals or converted
-     * to expressions with redundant casts removed.
-     * 
+     * Locates expressions that can be reduced to literals or converted to
+     * expressions with redundant casts removed.
+     *
      * @param preparingStmt the statement containing the expressions
      * @param exps list of candidate expressions to be examined for reduction
      * @param constExps returns the list of expressions that can be constant
@@ -373,12 +378,12 @@ public abstract class FarragoReduceExpressionsRule
      * @param addCasts indicator for each expression that can be constant
      * reduced, whether a cast of the resulting reduced expression is
      * potentially necessary
-     * @param removableCasts returns the list of cast expressions where the
-     * cast can be removed
+     * @param removableCasts returns the list of cast expressions where the cast
+     * can be removed
      */
     private static void findReducibleExps(
         FarragoSessionPreparingStmt preparingStmt,
-        List<RexNode> exps,       
+        List<RexNode> exps,
         List<RexNode> constExps,
         List<Boolean> addCasts,
         List<RexNode> removableCasts)
@@ -392,7 +397,7 @@ public abstract class FarragoReduceExpressionsRule
         for (RexNode exp : exps) {
             gardener.analyze(exp);
         }
-        assert(constExps.size() == addCasts.size());
+        assert (constExps.size() == addCasts.size());
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -484,8 +489,8 @@ public abstract class FarragoReduceExpressionsRule
     }
 
     /**
-     * Helper class used to locate expressions that either can be reduced
-     * to literals or contain redundant casts.
+     * Helper class used to locate expressions that either can be reduced to
+     * literals or contain redundant casts.
      */
     private static class ReducibleExprLocator
         extends RexVisitorImpl<Void>
@@ -500,11 +505,11 @@ public abstract class FarragoReduceExpressionsRule
         private final List<Constancy> stack;
 
         private final List<RexNode> constExprs;
-        
+
         private final List<Boolean> addCasts;
-        
+
         private final List<RexNode> removableCasts;
-        
+
         private final List<SqlOperator> parentCallTypeStack;
 
         ReducibleExprLocator(
@@ -531,13 +536,13 @@ public abstract class FarragoReduceExpressionsRule
 
             // Deal with top of stack
             assert (stack.size() == 1);
-            assert(parentCallTypeStack.isEmpty());
+            assert (parentCallTypeStack.isEmpty());
             Constancy rootConstancy = stack.get(0);
             if (rootConstancy == Constancy.REDUCIBLE_CONSTANT) {
                 // The entire subtree was constant, so add it to the result.
                 addResult(exp);
             }
-            stack.clear();           
+            stack.clear();
         }
 
         private Void pushVariable()
@@ -558,12 +563,12 @@ public abstract class FarragoReduceExpressionsRule
                 }
             }
             constExprs.add(exp);
-            
+
             // In the case where the expression corresponds to a UDR argument,
             // we need to preserve casts.  Note that this only applies to
             // the topmost argument, not expressions nested within the UDR
             // call.
-            // 
+            //
             // REVIEW zfong 6/13/08 - Are there other expressions where we
             // also need to preserve casts?
             if (parentCallTypeStack.isEmpty()) {
@@ -571,7 +576,7 @@ public abstract class FarragoReduceExpressionsRule
             } else {
                 addCasts.add(
                     parentCallTypeStack.get(parentCallTypeStack.size() - 1)
-                        instanceof FarragoUserDefinedRoutine);
+                    instanceof FarragoUserDefinedRoutine);
             }
         }
 
@@ -608,7 +613,7 @@ public abstract class FarragoReduceExpressionsRule
         private void analyzeCall(RexCall call, Constancy callConstancy)
         {
             parentCallTypeStack.add(call.getOperator());
-            
+
             // visit operands, pushing their states onto stack
             super.visitCall(call);
 
@@ -636,8 +641,8 @@ public abstract class FarragoReduceExpressionsRule
 
             // Row operator itself can't be reduced to a literal, but if
             // the operands are constants, we still want to reduce those
-            if (callConstancy == Constancy.REDUCIBLE_CONSTANT &&
-                call.getOperator() instanceof SqlRowOperator)
+            if ((callConstancy == Constancy.REDUCIBLE_CONSTANT)
+                && (call.getOperator() instanceof SqlRowOperator))
             {
                 callConstancy = Constancy.NON_CONSTANT;
             }
@@ -652,6 +657,7 @@ public abstract class FarragoReduceExpressionsRule
                         addResult(call.getOperands()[iOperand]);
                     }
                 }
+
                 // if this cast expression can't be reduced to a literal,
                 // then see if we can remove the cast
                 if (call.getOperator() == SqlStdOperatorTable.castFunc) {
@@ -661,7 +667,7 @@ public abstract class FarragoReduceExpressionsRule
 
             // pop operands off of the stack
             operandStack.clear();
-            
+
             // pop this parent call operator off the stack
             parentCallTypeStack.remove(parentCallTypeStack.size() - 1);
 
@@ -671,7 +677,7 @@ public abstract class FarragoReduceExpressionsRule
 
         private void reduceCasts(RexCall outerCast)
         {
-            RexNode[] operands = outerCast.getOperands();
+            RexNode [] operands = outerCast.getOperands();
             if (operands.length != 1) {
                 return;
             }
@@ -681,6 +687,7 @@ public abstract class FarragoReduceExpressionsRule
                 removableCasts.add(outerCast);
                 return;
             }
+
             // See if the reduction
             // CAST((CAST x AS type) AS type NOT NULL)
             // -> CAST(x AS type NOT NULL)
@@ -700,10 +707,12 @@ public abstract class FarragoReduceExpressionsRule
                 preparingStmt.getFarragoTypeFactory();
             RelDataType outerTypeNullable =
                 typeFactory.createTypeWithNullability(
-                    outerCastType, true);
+                    outerCastType,
+                    true);
             RelDataType innerTypeNullable =
                 typeFactory.createTypeWithNullability(
-                    operandType, true);
+                    operandType,
+                    true);
             if (outerTypeNullable != innerTypeNullable) {
                 return;
             }
@@ -711,7 +720,7 @@ public abstract class FarragoReduceExpressionsRule
                 removableCasts.add(innerCast);
             }
         }
-        
+
         public Void visitDynamicParam(RexDynamicParam dynamicParam)
         {
             return pushVariable();

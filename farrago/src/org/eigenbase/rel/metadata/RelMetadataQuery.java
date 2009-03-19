@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,8 +26,8 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.stat.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.stat.*;
 
 
 /**
@@ -314,11 +314,10 @@ public abstract class RelMetadataQuery
     }
 
     /**
-     * Determines whether a relational expression should be visible
-     * in EXPLAIN PLAN output at a particular level of detail.
+     * Determines whether a relational expression should be visible in EXPLAIN
+     * PLAN output at a particular level of detail.
      *
      * @param rel the relational expression
-     *
      * @param explainLevel level of detail
      *
      * @return true for visible, false for invisible
@@ -373,7 +372,7 @@ public abstract class RelMetadataQuery
         if (result.isInfinite()) {
             result = Double.MAX_VALUE;
         }
-        assert(assertNonNegative(result));
+        assert (assertNonNegative(result));
         if (result < 1.0) {
             result = 1.0;
         }

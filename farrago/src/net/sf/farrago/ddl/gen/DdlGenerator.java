@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2005-2008 Disruptive Tech
-// Copyright (C) 2005-2008 LucidEra, Inc.
-// Portions Copyright (C) 2003-2008 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,37 +22,38 @@
 */
 package net.sf.farrago.ddl.gen;
 
+import java.io.*;
+
 import java.lang.reflect.*;
 
 import java.util.*;
-import java.io.*;
 
-import javax.jmi.reflect.*;
 import javax.jmi.model.*;
+import javax.jmi.reflect.*;
 
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import org.eigenbase.jmi.*;
 
 
 /**
  * Base class for DDL generators which use the visitor pattern to generate DDL
  * given a catalog object.
  *
- * <p>Escape rules:<ol>
+ * <p>Escape rules:
  *
- * <li>In a SET SCHEMA command, apostrophes
- *     (') and quotes (") enclose the schema name, like this: '"Foo"'. In this
- *     context, apostrophes and quotes must be escaped.</li>
- *
- * <li>CREATE and DROP commands
- *     use quotes (") to enclose the object name. Only quotes are escaped.</li>
+ * <ol>
+ * <li>In a SET SCHEMA command, apostrophes (') and quotes (") enclose the
+ * schema name, like this: '"Foo"'. In this context, apostrophes and quotes must
+ * be escaped.</li>
+ * <li>CREATE and DROP commands use quotes (") to enclose the object name. Only
+ * quotes are escaped.</li>
  * </ol>
  *
  * @author Jason Ouellette
@@ -68,25 +69,28 @@ public abstract class DdlGenerator
     protected static final String NL = System.getProperty("line.separator");
     protected static final String SEP = ";" + NL + NL;
 
+    private static final List<Class> ADDITIONAL_PARAMETER_TYPES =
+        Collections.singletonList((Class) GeneratedDdlStmt.class);
+
+    //~ Instance fields --------------------------------------------------------
+
     private boolean schemaQualified;
     protected boolean dropCascade;
     protected String previousSetSchema;
 
     private final ReflectiveVisitDispatcher<DdlGenerator, CwmModelElement>
         visitDispatcher =
-        ReflectUtil.createDispatcher(
-            DdlGenerator.class, CwmModelElement.class);
-
-    private static final List<Class> ADDITIONAL_PARAMETER_TYPES =
-        Collections.singletonList((Class) GeneratedDdlStmt.class);
+            ReflectUtil.createDispatcher(
+                DdlGenerator.class,
+                CwmModelElement.class);
 
     //~ Methods ----------------------------------------------------------------
 
     protected abstract JmiModelView getModelView();
 
     /**
-     * Sets whether object names should be qualified with a schema name, if
-     * they have one. Default is false.
+     * Sets whether object names should be qualified with a schema name, if they
+     * have one. Default is false.
      *
      * @param schemaQualified whether to qualify object names with schema name
      */
@@ -98,7 +102,7 @@ public abstract class DdlGenerator
     /**
      * Sets whether DROP statements should include a CASCADE directive at the
      * end. Default is false, so you must explicitly request CASCADE.
-     * 
+     *
      * @param dropCascade whether to append CASCADE to DROP statements
      */
     public void setDropCascade(boolean dropCascade)
@@ -107,10 +111,10 @@ public abstract class DdlGenerator
     }
 
     /**
-     * Appends a 'SET SCHEMA' command to <code>stmt</code> if
-     * <code>schemaName</code> is not null. If <code>evenIfUnchanged</code>
-     * is true, does so even if the schema is the same as the previous
-     * call to this method.
+     * Appends a 'SET SCHEMA' command to <code>stmt</code> if <code>
+     * schemaName</code> is not null. If <code>evenIfUnchanged</code> is true,
+     * does so even if the schema is the same as the previous call to this
+     * method.
      *
      * @param stmt Statement to append to
      * @param schemaName Name of schema
@@ -123,10 +127,10 @@ public abstract class DdlGenerator
         String schemaName,
         boolean evenIfUnchanged)
     {
-        if (schemaName != null
+        if ((schemaName != null)
             && (evenIfUnchanged
-            || previousSetSchema == null
-            || !previousSetSchema.equals(schemaName)))
+                || (previousSetSchema == null)
+                || !previousSetSchema.equals(schemaName)))
         {
             StringBuilder sb = new StringBuilder();
             sb.append("SET SCHEMA ");
@@ -138,7 +142,7 @@ public abstract class DdlGenerator
             return false;
         }
     }
-    
+
     public void generateCreate(CwmModelElement e, GeneratedDdlStmt stmt)
     {
         generate("create", e, stmt);
@@ -234,10 +238,10 @@ public abstract class DdlGenerator
      *
      * @param exportList List of elements to export
      * @param sort Whether to sort list in dependency order
+     *
      * @return DDL script
      */
-    public String getExportText(
-        List<CwmModelElement> exportList, boolean sort)
+    public String getExportText(List<CwmModelElement> exportList, boolean sort)
     {
         StringBuilder outBuf = new StringBuilder();
         GeneratedDdlStmt stmt = new GeneratedDdlStmt();
@@ -255,7 +259,8 @@ public abstract class DdlGenerator
             // Mapping rules as per farrago/examples/dmv/schemaDependencies.xml
             JmiDependencyMappedTransform transform =
                 new JmiDependencyMappedTransform(
-                    modelView, false);
+                    modelView,
+                    false);
             transform.setTieBreaker(new MyComparator());
 
             transform.setAllByAggregation(
@@ -295,8 +300,7 @@ public abstract class DdlGenerator
                 JmiAssocMapping.COPY);
 
             JmiDependencyGraph dependencyGraph =
-                new JmiDependencyGraph(
-                    (Collection) exportList,
+                new JmiDependencyGraph((Collection) exportList,
                     transform);
 
             if (debug) {
@@ -310,8 +314,7 @@ public abstract class DdlGenerator
                 new JmiDependencyIterator(dependencyGraph);
             while (vertexIter.hasNext()) {
                 JmiDependencyVertex vertex = vertexIter.next();
-                exportList.addAll(
-                    (Collection) vertex.getElementSet());
+                exportList.addAll((Collection) vertex.getElementSet());
             }
         }
         for (CwmModelElement elem : exportList) {
@@ -341,6 +344,7 @@ public abstract class DdlGenerator
      *
      * @param className Association name
      * @param modelGraph Model graph
+     *
      * @return Class, never null
      */
     private RefClass lookupClass(
@@ -360,14 +364,14 @@ public abstract class DdlGenerator
      *
      * @param assocName Association name
      * @param modelGraph Model graph
+     *
      * @return Association, never null
      */
     private RefAssociation lookupAssoc(
         String assocName,
         JmiModelGraph modelGraph)
     {
-        JmiAssocEdge edge =
-            modelGraph.getEdgeForAssocName(assocName);
+        JmiAssocEdge edge = modelGraph.getEdgeForAssocName(assocName);
         if (edge == null) {
             throw new IllegalArgumentException(
                 "unknown association " + assocName);
@@ -380,6 +384,7 @@ public abstract class DdlGenerator
      * operation.
      *
      * @param typeName Name of object type, e.g. "CLUSTERED INDEX"
+     *
      * @return whether type supports REPLACE
      */
     protected abstract boolean typeSupportsReplace(String typeName);
@@ -388,11 +393,11 @@ public abstract class DdlGenerator
      * Gathers a list of elements in a schema, optionally including elements
      * which don't belong to any schema.
      *
-     * @param list                     List to populate
-     * @param schemaName               Name of schema
+     * @param list List to populate
+     * @param schemaName Name of schema
      * @param includeNonSchemaElements Whether to include elements which do not
-     *                                 belong to a schema
-     * @param catalog                  Catalog
+     * belong to a schema
+     * @param catalog Catalog
      */
     public abstract void gatherElements(
         List<CwmModelElement> list,
@@ -404,10 +409,8 @@ public abstract class DdlGenerator
      * Outputs the name of an object, optionally qualified by a schema name.
      *
      * @param sb StringBuilder to write to
-     *
-     * @param schema Schema object belongs to, or null if object does not
-     * belong to a schema
-     *
+     * @param schema Schema object belongs to, or null if object does not belong
+     * to a schema
      * @param objectName Name of object
      */
     protected void name(
@@ -415,22 +418,24 @@ public abstract class DdlGenerator
         CwmNamespace schema,
         String objectName)
     {
-        if (schemaQualified && schema != null) {
+        if (schemaQualified && (schema != null)) {
             sb.append(quote(schema.getName()));
             sb.append('.');
         }
         sb.append(quote(objectName));
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Implementation of {@link org.eigenbase.jmi.JmiObjUtil.Namer} which
      * generates names for objects based on their position in the CWM
      * catalog-schema-object hierarchy.
      *
-     * <p>For example, a table's name might be
-     * "CATALOG.SALES.EMP (LocalTable)".
+     * <p>For example, a table's name might be "CATALOG.SALES.EMP (LocalTable)".
      */
-    private static class NamerImpl implements JmiObjUtil.Namer
+    private static class NamerImpl
+        implements JmiObjUtil.Namer
     {
         public String getName(RefObject o)
         {
@@ -459,21 +464,27 @@ public abstract class DdlGenerator
     }
 
     /**
-     * Comparator for schema elements to ensure that export file occurs in
-     * an intuitive order.
+     * Comparator for schema elements to ensure that export file occurs in an
+     * intuitive order.
      */
-    private static class MyComparator implements Comparator<RefBaseObject>
+    private static class MyComparator
+        implements Comparator<RefBaseObject>
     {
         // Priority order of classes.
-        private final Class[] classes = {
+        private final Class [] classes =
+        {
             // data wrappers first
             FemDataWrapper.class,
+
             // data server before schema
             FemDataServer.class,
+
             // next functions and procedures
             CwmProcedure.class,
+
             // schema after non-schema objects
             CwmSchema.class,
+
             // index before a view on the same table
             FemLocalIndex.class,
             CwmTable.class,
@@ -487,22 +498,24 @@ public abstract class DdlGenerator
             if (c != 0) {
                 return c;
             }
+
             // Next, for objects of the same type, sort by package
             // and name. B.C sorts before B.D but after A.D.
-            if (o1 instanceof CwmModelElement
-                && o2 instanceof CwmModelElement)
+            if ((o1 instanceof CwmModelElement)
+                && (o2 instanceof CwmModelElement))
             {
                 return compareModelElements(
                     (CwmModelElement) o1,
                     (CwmModelElement) o2);
             }
+
             // Lastly compare by MofId.
             return o1.refMofId().compareTo(o2.refMofId());
         }
 
         /**
-         * Compares objects by their class. An object sorts earlier
-         * if its class is higher in the pecking order.
+         * Compares objects by their class. An object sorts earlier if its class
+         * is higher in the pecking order.
          */
         private int compareClass(Object o1, Object o2)
         {
@@ -518,8 +531,8 @@ public abstract class DdlGenerator
         }
 
         /**
-         * Returns the ordinal of an object's class in the pecking
-         * order, or {@link Integer#MAX_VALUE} if not found.
+         * Returns the ordinal of an object's class in the pecking order, or
+         * {@link Integer#MAX_VALUE} if not found.
          */
         private int findClass(Object o)
         {
@@ -532,8 +545,8 @@ public abstract class DdlGenerator
         }
 
         /**
-         * Compares two model elements of the same type by their
-         * position in the hierarchy.
+         * Compares two model elements of the same type by their position in the
+         * hierarchy.
          */
         private int compareModelElements(
             CwmModelElement me1,

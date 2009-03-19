@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -91,7 +91,7 @@ void *VMAllocator::allocate(int *pErrorCode)
     // alignment for O_DIRECT file access.
     cbActualAlloc += 2*getpagesize();
 #endif
-    
+
     void *v = ::mmap(
         NULL,cbActualAlloc,
         PROT_READ | PROT_WRITE,MAP_PRIVATE | MAP_ANONYMOUS,-1,0);
@@ -101,7 +101,7 @@ void *VMAllocator::allocate(int *pErrorCode)
         }
         return NULL;
     }
-    
+
 #ifndef NDEBUG
     PBuffer p = static_cast<PBuffer>(v);
     memset(p, 0xFE, getpagesize());
@@ -125,7 +125,7 @@ void *VMAllocator::allocate(int *pErrorCode)
         return NULL;
     }
 #endif
-    
+
     if (bLockPages) {
         if (::mlock(v,cbAlloc)) {
             if (pErrorCode != NULL) {
@@ -159,7 +159,7 @@ int VMAllocator::deallocate(void *p, int *pErrorCode)
             return -1;
         }
     }
-    
+
     uint cbActualAlloc = cbAlloc;
 #ifndef NDEBUG
     PBuffer p2 = static_cast<PBuffer>(p);

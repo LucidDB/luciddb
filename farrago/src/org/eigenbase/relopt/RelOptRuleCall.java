@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,8 @@
 */
 package org.eigenbase.relopt;
 
-import java.util.logging.*;
 import java.util.*;
+import java.util.logging.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.trace.*;
@@ -55,13 +55,13 @@ public abstract class RelOptRuleCall
      * @param planner Planner
      * @param operand Root operand
      * @param rels Array of relational expressions which matched each operand
-     * @param nodeChildren For each node which matched with
-     *        <code>matchAnyChildren</code>=true, a list of the node's children
+     * @param nodeChildren For each node which matched with <code>
+     * matchAnyChildren</code>=true, a list of the node's children
      */
     protected RelOptRuleCall(
         RelOptPlanner planner,
         RelOptRuleOperand operand,
-        RelNode[] rels,
+        RelNode [] rels,
         Map<RelNode, List<RelNode>> nodeChildren)
     {
         this.planner = planner;
@@ -105,20 +105,21 @@ public abstract class RelOptRuleCall
     }
 
     /**
-     * Returns the children of a given relational expression node matched in
-     * a rule.
+     * Returns the children of a given relational expression node matched in a
+     * rule.
      *
-     * <p>If the operand which caused the match has
-     * {@link RelOptRuleOperand#matchAnyChildren}=false, the children will have
-     * their own operands and therefore be easily available in the array
-     * returned by the {@link #getRels} method, so this method returns null.
+     * <p>If the operand which caused the match has {@link
+     * RelOptRuleOperand#matchAnyChildren}=false, the children will have their
+     * own operands and therefore be easily available in the array returned by
+     * the {@link #getRels} method, so this method returns null.
      *
      * <p>This method is for {@link RelOptRuleOperand#matchAnyChildren}=true,
      * which is generally used when a node can have a variable number of
-     * children, and hence where the matched children are not retrievable by
-     * any other means.
+     * children, and hence where the matched children are not retrievable by any
+     * other means.
      *
      * @param rel Relational expression
+     *
      * @return Children of relational expression
      */
     public List<RelNode> getChildRels(RelNode rel)

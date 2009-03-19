@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -48,8 +48,8 @@ SharedExecStreamGraph ExecStreamGraph::newExecStreamGraph()
 }
 
 ExecStreamGraph::ExecStreamGraph()
-    :pScheduler(NULL),
-     pDynamicParamManager(new DynamicParamManager())
+    : pScheduler(NULL),
+      pDynamicParamManager(new DynamicParamManager())
 {
 }
 
@@ -136,7 +136,7 @@ int ExecStreamGraphImpl::getStreamCount()
     return boost::num_vertices(graphRep) - freeVertices.size();
 }
 
-ExecStreamGraphImpl::Vertex 
+ExecStreamGraphImpl::Vertex
 ExecStreamGraphImpl::addVertex(SharedExecStream pStream)
 {
     Vertex v = newVertex();
@@ -190,7 +190,7 @@ void ExecStreamGraphImpl::removeFromStreamOutMap(SharedExecStream p)
         EdgeMap::iterator startNameRange =
             streamOutMap.find(std::make_pair(name, 0));
         EdgeMap::iterator endNameRange =
-            streamOutMap.find(std::make_pair(name, outCt-1));
+            streamOutMap.find(std::make_pair(name, outCt - 1));
         streamOutMap.erase(startNameRange, endNameRange);
     }
 }
@@ -285,7 +285,7 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
     permAssert(isPrepared && src.isPrepared);
     permAssert(isOpen == src.isOpen);
 
-    // map a source vertex ID to the ID of the copied target vertex 
+    // map a source vertex ID to the ID of the copied target vertex
     std::map<Vertex, Vertex> vmap;
 
     // copy the nodes (with attached streams)
@@ -328,7 +328,7 @@ void ExecStreamGraphImpl::mergeFrom(
     permAssert(isPrepared && src.isPrepared);
     permAssert(isOpen == src.isOpen);
 
-    // map a source vertex ID to the ID of the copied target vertex 
+    // map a source vertex ID to the ID of the copied target vertex
     std::map<Vertex, Vertex> vmap;
 
     // Copy the nodes (with attached streams)

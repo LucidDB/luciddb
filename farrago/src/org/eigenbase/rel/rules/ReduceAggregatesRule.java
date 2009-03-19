@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -47,7 +47,8 @@ public class ReduceAggregatesRule
      * The singleton.
      */
     public static final ReduceAggregatesRule instance =
-        new ReduceAggregatesRule(new RelOptRuleOperand(AggregateRel.class, ANY));
+        new ReduceAggregatesRule(
+            new RelOptRuleOperand(AggregateRel.class, ANY));
 
     //~ Constructors -----------------------------------------------------------
 
@@ -56,7 +57,7 @@ public class ReduceAggregatesRule
         super(operand);
     }
 
-     //~ Methods ----------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall ruleCall)
     {
@@ -79,7 +80,6 @@ public class ReduceAggregatesRule
         RelOptRuleCall ruleCall,
         AggregateRelBase oldAggRel)
     {
-
         RelDataTypeFactory typeFactory =
             oldAggRel.getCluster().getTypeFactory();
         RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
@@ -87,12 +87,12 @@ public class ReduceAggregatesRule
         List<AggregateCall> oldCalls = oldAggRel.getAggCallList();
         int nGroups = oldAggRel.getGroupCount();
 
-        List<AggregateCall> newCalls =
-            new ArrayList<AggregateCall>();
+        List<AggregateCall> newCalls = new ArrayList<AggregateCall>();
         Map<AggregateCall, RexNode> aggCallMapping =
             new HashMap<AggregateCall, RexNode>();
 
         List<RexNode> projList = new ArrayList<RexNode>();
+
         // pass through group key
         for (int i = 0; i < nGroups; ++i) {
             projList.add(
@@ -105,7 +105,7 @@ public class ReduceAggregatesRule
         SqlAggFunction countAgg = SqlStdOperatorTable.countOperator;
         RelDataType countType = countAgg.getReturnType(typeFactory);
         for (AggregateCall oldCall : oldCalls) {
-            if (oldCall.getAggregation()  instanceof SqlAvgAggFunction) {
+            if (oldCall.getAggregation() instanceof SqlAvgAggFunction) {
                 // replace original AVG with SUM/COUNT
                 int iAvgInput = oldCall.getArgList().get(0);
                 RelDataType avgInputType =
@@ -125,12 +125,12 @@ public class ReduceAggregatesRule
                         sumType,
                         null);
                 AggregateCall countCall =
-                new AggregateCall(
-                    countAgg,
-                    oldCall.isDistinct(),
-                    oldCall.getArgList(),
-                    countType,
-                    null);
+                    new AggregateCall(
+                        countAgg,
+                        oldCall.isDistinct(),
+                        oldCall.getArgList(),
+                        countType,
+                        null);
 
                 // NOTE:  these references are with respect to the output
                 // of newAggRel
@@ -146,7 +146,7 @@ public class ReduceAggregatesRule
                         nGroups,
                         newCalls,
                         aggCallMapping);
-               projList.add(
+                projList.add(
                     rexBuilder.makeCast(
                         oldCall.getType(),
                         rexBuilder.makeCall(
@@ -162,12 +162,12 @@ public class ReduceAggregatesRule
                         newCalls,
                         aggCallMapping));
             }
-       }
+        }
 
         AggregateRelBase newAggRel =
             newAggregateRel(
                 oldAggRel,
-               newCalls);
+                newCalls);
 
         List<String> fieldNames = new ArrayList<String>();
         for (RelDataTypeField field : oldAggRel.getRowType().getFieldList()) {
@@ -183,28 +183,29 @@ public class ReduceAggregatesRule
     }
 
     /**
-     * Do a shallow clone of oldAggRel and update aggCalls. Could be
-     * refactored into AggregateRelBase and subclasses - but it's only needed
-     * for some subclasses.
+     * Do a shallow clone of oldAggRel and update aggCalls. Could be refactored
+     * into AggregateRelBase and subclasses - but it's only needed for some
+     * subclasses.
      *
      * @param oldAggRel AggregateRel to clone.
      * @param newCalls New list of AggregateCalls
+     *
      * @return shallow clone with new list of AggregateCalls.
      */
     protected AggregateRelBase newAggregateRel(
-      AggregateRelBase oldAggRel,
-     List<AggregateCall> newCalls)
+        AggregateRelBase oldAggRel,
+        List<AggregateCall> newCalls)
     {
         return new AggregateRel(
-                oldAggRel.getCluster(),
-                oldAggRel.getChild(),
-                oldAggRel.getGroupCount(),
-                newCalls);
+            oldAggRel.getCluster(),
+            oldAggRel.getChild(),
+            oldAggRel.getGroupCount(),
+            newCalls);
     }
 
     private RelDataType getField(RelNode relNode, int i)
     {
-        final RelDataTypeField inputField =  relNode.getRowType().getFields()[i];
+        final RelDataTypeField inputField = relNode.getRowType().getFields()[i];
         return inputField.getType();
     }
 }

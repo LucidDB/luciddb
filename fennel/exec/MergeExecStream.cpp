@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -66,7 +66,7 @@ void MergeExecStream::open(
 ExecStreamResult MergeExecStream::execute(
     ExecStreamQuantum const &)
 {
-    switch(pOutAccessor->getState()) {
+    switch (pOutAccessor->getState()) {
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:
         return EXECRC_BUF_OVERFLOW;
@@ -87,7 +87,7 @@ ExecStreamResult MergeExecStream::execute(
 
     int iInputStart = iInput;
     for (;;) {
-        switch(inAccessors[iInput]->getState()) {
+        switch (inAccessors[iInput]->getState()) {
         case EXECBUF_OVERFLOW:
         case EXECBUF_NONEMPTY:
             // Pass through current input buf to our downstream consumer.

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,6 +23,7 @@ package net.sf.farrago.fennel;
 
 import net.sf.farrago.fem.fennel.*;
 
+
 /**
  * FennelDynamicParamId is an opaque type for the 32-bit integers used to
  * uniquely identify dynamic parameters within a {@link FennelStreamGraph}.
@@ -39,23 +40,23 @@ import net.sf.farrago.fem.fennel.*;
  */
 public class FennelDynamicParamId
 {
+    //~ Enums ------------------------------------------------------------------
+
     /**
-     * Indicates whether a stream that accesses a dynamic parameter produces
-     * or consumes the dynamic parameter
+     * Indicates whether a stream that accesses a dynamic parameter produces or
+     * consumes the dynamic parameter
      */
     public enum StreamType
     {
-        PRODUCER,
-        CONSUMER,
-        UNKNOWN
+        PRODUCER, CONSUMER, UNKNOWN
     }
-    
+
     //~ Instance fields --------------------------------------------------------
 
     private final int id;
-    
+
     private FemExecutionStreamDef producerStream;
-    
+
     private FemExecutionStreamDef consumerStream;
 
     //~ Constructors -----------------------------------------------------------
@@ -64,7 +65,7 @@ public class FennelDynamicParamId
     {
         this(id, null, StreamType.UNKNOWN);
     }
-    
+
     public FennelDynamicParamId(
         int id,
         FemExecutionStreamDef streamDef,
@@ -92,11 +93,11 @@ public class FennelDynamicParamId
     {
         return id;
     }
-    
+
     /**
-     * Associates a stream with the dynamic parameter.  The stream either
+     * Associates a stream with the dynamic parameter. The stream either
      * produces or consumes the dynamic parameter.
-     * 
+     *
      * @param streamDef the stream
      * @param streamType whether the stream produces or consumes the parameter
      */
@@ -105,31 +106,31 @@ public class FennelDynamicParamId
         StreamType streamType)
     {
         if (streamType == StreamType.PRODUCER) {
-            assert(producerStream == null);
+            assert (producerStream == null);
             producerStream = streamDef;
         } else if (streamType == StreamType.CONSUMER) {
-            assert(consumerStream == null);
+            assert (consumerStream == null);
             consumerStream = streamDef;
         } else {
-            assert(streamDef == null && streamType == StreamType.UNKNOWN);
+            assert ((streamDef == null) && (streamType == StreamType.UNKNOWN));
         }
     }
-    
+
     /**
      * @return the stream that produces this dynamic parameter
      */
     public FemExecutionStreamDef getProducerStream()
     {
-        assert(consumerStream != null);
+        assert (consumerStream != null);
         return producerStream;
     }
-    
+
     /**
      * @return the stream that consumes this dynamic parameter
      */
     public FemExecutionStreamDef getConsumerStream()
     {
-        assert(producerStream != null);
+        assert (producerStream != null);
         return consumerStream;
     }
 

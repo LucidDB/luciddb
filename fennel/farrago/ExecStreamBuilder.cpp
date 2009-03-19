@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 ExecStreamBuilder::ExecStreamBuilder(
     ExecStreamGraphEmbryo &graphEmbryoInit,
     ExecStreamFactory &streamFactoryInit)
-    : graphEmbryo(graphEmbryoInit), 
+    : graphEmbryo(graphEmbryoInit),
       streamFactory(streamFactoryInit)
 {
 }
@@ -57,9 +57,9 @@ void ExecStreamBuilder::buildStreamGraph(
     pStreamDef = cmd.getStreamDefs();
     for (; pStreamDef; ++pStreamDef) {
         buildStreamInputs(*pStreamDef);
-        
+
         if (!getExplicitOutputCount(*pStreamDef) && assumeOutputFromSinks) {
-            // Streams with no consumer are read directly by clients.  They 
+            // Streams with no consumer are read directly by clients.  They
             // are expected to support producer provisioned results.
             std::string name = pStreamDef->getName();
             SharedExecStream pAdaptedStream =
@@ -68,7 +68,7 @@ void ExecStreamBuilder::buildStreamGraph(
                 pAdaptedStream->getStreamId());
         }
     }
-    
+
     // PASS 3: add output dataflows in the cases where a stream has multiple
     // outputs
     pStreamDef = cmd.getStreamDefs();
@@ -91,7 +91,7 @@ void ExecStreamBuilder::buildStream(
     for (; pParamUse; ++pParamUse) {
         DynamicParamId dynamicParamId(pParamUse->getDynamicParamId());
         if (pParamUse->isRead()) {
-            if (false) 
+            if (false)
                 std::cout << "stream " << embryo.getStream()->getStreamId()
                           << " reads param " << dynamicParamId << std::endl;
             graphEmbryo.getGraph().declareDynamicParamReader(
@@ -102,7 +102,7 @@ void ExecStreamBuilder::buildStream(
                 std::cout << "stream " << embryo.getStream()->getStreamId()
                           << " writes param " << dynamicParamId << std::endl;
             graphEmbryo.getGraph().declareDynamicParamWriter(
-                embryo.getStream()->getStreamId(), 
+                embryo.getStream()->getStreamId(),
                 dynamicParamId);
         }
     }
@@ -117,7 +117,7 @@ void ExecStreamBuilder::buildStreamInputs(
         SharedProxyExecutionStreamDef pInput = pInputFlow->getProducer();
         // If the source input has multiple outputs, defer adding that flow
         // till later so we can add those flows in the order in which they
-        // appear in the output flow list.  
+        // appear in the output flow list.
         //
         // NOTE zfong 12/4/06 - By deferring adding the input flows in the
         // scenario described above, this means we don't handle the case where

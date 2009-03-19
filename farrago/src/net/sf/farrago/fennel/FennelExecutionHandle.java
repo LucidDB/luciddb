@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,8 +24,8 @@ package net.sf.farrago.fennel;
 
 /**
  * FennelExecutionHandle provides a handle for passing execution state from
- * Farrago to Fennel.  The object containing the execution state is allocated
- * in Fennel and then accessed from Farrago via the handle.
+ * Farrago to Fennel. The object containing the execution state is allocated in
+ * Fennel and then accessed from Farrago via the handle.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -35,8 +35,8 @@ public class FennelExecutionHandle
     //~ Instance fields --------------------------------------------------------
 
     /**
-     * The execution handle used in Farrago to access the Fennel object.  Set
-     * to 0 if the handle is invalid.
+     * The execution handle used in Farrago to access the Fennel object. Set to
+     * 0 if the handle is invalid.
      */
     private long execHandle;
 
@@ -59,7 +59,7 @@ public class FennelExecutionHandle
     {
         return execHandle;
     }
-    
+
     /**
      * Deallocates the Fennel object corresponding to the handle.
      */
@@ -70,7 +70,7 @@ public class FennelExecutionHandle
             execHandle = 0;
         }
     }
-    
+
     /**
      * Cancels execution of the statement corresponding to this handle.
      */
@@ -82,4 +82,4 @@ public class FennelExecutionHandle
     }
 }
 
-// End FennelExecHandle.java
+// End FennelExecutionHandle.java

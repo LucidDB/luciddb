@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -117,14 +117,14 @@ bool AioLinuxScheduler::submitRequests(
         // hard error
         throw SysCallExcn("io_submit failed");
     }
-    
+
     // keep track of the number successfully submitted
     // (can't use += because nRequestsOutstanding is
     // an AtomicCounter)
     for (int i = 0; i < rc; ++i) {
         ++nRequestsOutstanding;
     }
-    
+
     if (rc == n) {
         // we're done
         return true;
@@ -169,7 +169,7 @@ bool AioLinuxScheduler::retryDeferredRequests()
         deferredQueue.pop_front();
         // release mutex now to avoid potential deadlocks
         deferredQueueGuard.unlock();
-        
+
         bool success = submitRequests(bindingList);
         if (!success) {
             // at least one failed
@@ -182,7 +182,7 @@ void AioLinuxScheduler::stop()
 {
     assert(isStarted());
     quit = true;
-    
+
     Thread::join();
 }
 
@@ -204,9 +204,9 @@ void AioLinuxScheduler::run()
             ts.tv_sec = 0;
             ts.tv_nsec = 1000000;
         }
-        
+
         long rc = io_getevents(context, 1, 1, &event, &ts);
-        
+
         // NOTE jvs 20-Jan-2008:  Docs don't mention the possibility of
         // spurious interrupts, but they can occur, at least while
         // debugging with gdb, so treat them as timeout.

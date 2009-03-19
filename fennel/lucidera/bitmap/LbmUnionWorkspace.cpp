@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -99,8 +99,7 @@ const LbmByteSegment &LbmUnionWorkspace::getSegment()
     // if production limit is past end of current data, then it can all
     // be written out due to the gap in data
     LbmByteNumberPrimitive productionLimit = opaqueToInt(productionLimitByte);
-    if ( (!limited) || (productionLimit > mergeArea.getEnd()) )
-    {
+    if (!limited || (productionLimit > mergeArea.getEnd())) {
         startLimit = readLimit = mergeArea.getEnd();
     } else {
         readLimit = productionLimit;
@@ -125,7 +124,7 @@ const LbmByteSegment &LbmUnionWorkspace::getSegment()
 
     // find length of segment (only use the contiguous part)
     uint len = 0;
-    while(i < readLimit && mergeArea.getByte(i) != 0) {
+    while (i < readLimit && mergeArea.getByte(i) != 0) {
         i++;
         len++;
         if (len == maxSegmentSize) {

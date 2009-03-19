@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,7 +32,7 @@ using namespace fennel;
 using namespace std;
 
 // returns a hex-coded string
-string 
+string
 stringToHex(char const * const buf)
 {
     assert(buf != NULL);
@@ -60,4 +60,4 @@ stringToHex(char const * const buf, uint buflen)
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End StringToHex
+// End StringToHex.cpp

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -64,29 +64,30 @@ public class FarragoReposTxnContext
     private State state;
     private int lockLevel;
     private final boolean manageReposSession;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new inactive transaction context with manual repository
-     * session management.
+     * Creates a new inactive transaction context with manual repository session
+     * management.
      *
      * @param repos the repos against which transactions are to be performed
      */
     public FarragoReposTxnContext(FarragoRepos repos)
     {
-        this(repos, false);       
+        this(repos, false);
     }
 
     /**
      * Creates a new inactive transaction context.
      *
      * @param repos the repos against which transactions are to be performed
-     * @param manageRepoSession if true, a repository session is wrapped
-     *                          around each transaction
+     * @param manageRepoSession if true, a repository session is wrapped around
+     * each transaction
      */
     public FarragoReposTxnContext(
-        FarragoRepos repos, boolean manageRepoSession)
+        FarragoRepos repos,
+        boolean manageRepoSession)
     {
         this.repos = repos;
         state = State.NO_TXN;
@@ -118,11 +119,11 @@ public class FarragoReposTxnContext
     public void beginReadTxn()
     {
         assert (!isTxnInProgress());
-        
+
         if (manageReposSession) {
             repos.beginReposSession();
         }
-        
+
         repos.beginReposTxn(false);
         state = State.READ_TXN;
     }
@@ -163,7 +164,7 @@ public class FarragoReposTxnContext
 
         state = State.NO_TXN;
         repos.endReposTxn(false);
-        
+
         if (manageReposSession) {
             repos.endReposSession();
         }
@@ -206,6 +207,7 @@ public class FarragoReposTxnContext
         // factory method interface on FarragoRepos.
 
         ((FarragoReposImpl) repos).lockRepos(level);
+
         // Don't set lockLevel until we've successfully acquired the lock
         lockLevel = level;
 
@@ -225,20 +227,20 @@ public class FarragoReposTxnContext
         if (lockLevel != 0) {
             ((FarragoReposImpl) repos).unlockRepos(lockLevel);
             lockLevel = 0;
-        }    
+        }
     }
-    
+
     /**
-     * Puts the repository in exclusive access mode.  When in this mode,
+     * Puts the repository in exclusive access mode. When in this mode,
      * subsequent attempts to lock the repository will return an exception
-     * immediately rather than wait for a required repository lock to
-     * become available.
+     * immediately rather than wait for a required repository lock to become
+     * available.
      */
     public void beginExclusiveAccess()
     {
         ((FarragoReposImpl) repos).beginExclusiveAccess();
     }
-    
+
     /**
      * Ends exclusive access mode for the repository.
      */

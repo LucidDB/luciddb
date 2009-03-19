@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,8 @@
 */
 package org.eigenbase.reltype;
 
-import java.io.Serializable;
+import java.io.*;
+
 
 /**
  * Default implementation of {@link RelDataTypeField}.
@@ -31,7 +32,8 @@ import java.io.Serializable;
  * @version $Id$
  */
 public class RelDataTypeFieldImpl
-    implements RelDataTypeField, Serializable
+    implements RelDataTypeField,
+        Serializable
 {
     //~ Instance fields --------------------------------------------------------
 

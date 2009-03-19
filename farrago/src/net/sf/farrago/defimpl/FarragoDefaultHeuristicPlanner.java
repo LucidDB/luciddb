@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,6 +22,7 @@
 package net.sf.farrago.defimpl;
 
 import com.disruptivetech.farrago.rel.*;
+
 import com.lucidera.opt.*;
 
 import java.util.*;
@@ -213,7 +214,7 @@ public class FarragoDefaultHeuristicPlanner
 
         // Use hash semi join if possible.
         builder.addRuleInstance(new LhxSemiJoinRule());
-        
+
         // Use hash join where possible. Make sure this rule is called before
         // any physical conversions have been done
         builder.addRuleInstance(new LhxJoinRule());
@@ -223,7 +224,7 @@ public class FarragoDefaultHeuristicPlanner
 
         // Use hash join to implement set op: Except(minus).
         builder.addRuleInstance(new LhxMinusRule());
-        
+
         // Use nested loop join if hash join can't be used
         if (fennelEnabled) {
             builder.addRuleInstance(new FennelNestedLoopJoinRule());
@@ -270,7 +271,7 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleInstance(new UnionToDistinctRule());
         builder.addRuleInstance(new UnionEliminatorRule());
         builder.addRuleInstance(new RemoveDistinctRule());
-        
+
         // First, try to use ReshapeRel for calcs before firing the other
         // physical calc conversion rules.  Fire this rule before
         // ReduceDecimalsRule so we avoid decimal reinterprets that can
@@ -284,7 +285,7 @@ public class FarragoDefaultHeuristicPlanner
 
         // NOTE jvs 8-Jan-2008:  FennelDistinctSortRule is now
         // redundant with LhxAggRule above.
-        
+
         // Implement DISTINCT via tree-sort instead of letting it
         // be handled via normal sort plus agg.
         builder.addRuleInstance(new FennelDistinctSortRule());
@@ -300,6 +301,7 @@ public class FarragoDefaultHeuristicPlanner
             builder.addRuleInstance(new FennelSortRule());
             builder.addRuleInstance(new FennelRenameRule());
             builder.addRuleInstance(new FennelCartesianJoinRule());
+
             // NOTE jvs 8-Jan-2008:  FennelAggRule is now redundant with
             // LhxAggRule above.
             builder.addRuleInstance(new FennelAggRule());

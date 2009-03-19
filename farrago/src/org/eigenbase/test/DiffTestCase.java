@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -24,15 +24,14 @@ package org.eigenbase.test;
 
 import java.io.*;
 
-import java.util.regex.*;
 import java.util.*;
+import java.util.regex.*;
 
 import junit.framework.*;
 
-import org.incava.util.diff.Diff;
-import org.incava.util.diff.Difference;
-
 import org.eigenbase.util.*;
+
+import org.incava.util.diff.*;
 
 
 /**
@@ -215,8 +214,8 @@ public abstract class DiffTestCase
     /**
      * Compares a log file with its reference log.
      *
-     * <p>Usually, the log file and the reference log are in the same
-     * directory, one ending with '.log' and the other with '.ref'.
+     * <p>Usually, the log file and the reference log are in the same directory,
+     * one ending with '.log' and the other with '.ref'.
      *
      * <p>If the files are identical, removes logFile.
      *
@@ -241,16 +240,16 @@ public abstract class DiffTestCase
             }
 
             // NOTE: Use of diff.mask is deprecated, use diff_mask.
-            String diffMask = System.getProperty("diff.mask",null);
+            String diffMask = System.getProperty("diff.mask", null);
             if (diffMask != null) {
                 addDiffMask(diffMask);
             }
 
-            diffMask = System.getProperty("diff_mask",null);
+            diffMask = System.getProperty("diff_mask", null);
             if (diffMask != null) {
                 addDiffMask(diffMask);
             }
- 
+
             logReader = new FileReader(logFile);
             refReader = new FileReader(refFile);
             LineNumberReader logLineReader = new LineNumberReader(logReader);
@@ -405,14 +404,17 @@ public abstract class DiffTestCase
 
         // Junit test launched from IntelliJ 6.0
         if (lastStackTraceElement.getClassName().equals(
-            "com.intellij.rt.execution.junit.JUnitStarter") &&
-            lastStackTraceElement.getMethodName().equals("main")) {
+                "com.intellij.rt.execution.junit.JUnitStarter")
+            && lastStackTraceElement.getMethodName().equals("main"))
+        {
             return true;
         }
+
         // Application launched from IntelliJ 6.0
         if (lastStackTraceElement.getClassName().equals(
-            "com.intellij.rt.execution.application.AppMain") &&
-            lastStackTraceElement.getMethodName().equals("main")) {
+                "com.intellij.rt.execution.application.AppMain")
+            && lastStackTraceElement.getMethodName().equals("main"))
+        {
             return true;
         }
         return false;
@@ -440,7 +442,7 @@ public abstract class DiffTestCase
         int offset = 0;
         for (Difference d : differences) {
             final int as = d.getAddedStart() + 1;
-            final int ae = d.getAddedEnd()  + 1;
+            final int ae = d.getAddedEnd() + 1;
             final int ds = d.getDeletedStart() + 1;
             final int de = d.getDeletedEnd() + 1;
             if (ae == 0) {
@@ -450,50 +452,47 @@ public abstract class DiffTestCase
                     // a deletion: "<ds>,<de>d<as>"
                     sw.append(String.valueOf(ds));
                     if (de > ds) {
-                        sw.append(",")
-                            .append(String.valueOf(de));
+                        sw.append(",").append(String.valueOf(de));
                     }
-                    sw.append("d")
-                        .append(String.valueOf(as - 1))
-                        .append(TestUtil.NL);
+                    sw.append("d").append(String.valueOf(as - 1)).append(
+                        TestUtil.NL);
                     for (int i = ds - 1; i < de; ++i) {
-                        sw.append("< ").append(lines1.get(i)).append(TestUtil.NL);
+                        sw.append("< ").append(lines1.get(i)).append(
+                            TestUtil.NL);
                     }
                 }
             } else {
                 if (de == 0) {
                     // an addition: "<ds>a<as,ae>"
-                    sw.append(String.valueOf(ds - 1))
-                        .append("a")
-                        .append(String.valueOf(as));
+                    sw.append(String.valueOf(ds - 1)).append("a").append(
+                        String.valueOf(as));
                     if (ae > as) {
-                        sw.append(",")
-                            .append(String.valueOf(ae));
+                        sw.append(",").append(String.valueOf(ae));
                     }
                     sw.append(TestUtil.NL);
                     for (int i = as - 1; i < ae; ++i) {
-                        sw.append("> ").append(lines2.get(i)).append(TestUtil.NL);
+                        sw.append("> ").append(lines2.get(i)).append(
+                            TestUtil.NL);
                     }
                 } else {
                     // a change: "<ds>,<de>c<as>,<ae>
                     sw.append(String.valueOf(ds));
                     if (de > ds) {
-                        sw.append(",")
-                            .append(String.valueOf(de));
+                        sw.append(",").append(String.valueOf(de));
                     }
-                    sw.append("c")
-                        .append(String.valueOf(as));
+                    sw.append("c").append(String.valueOf(as));
                     if (ae > as) {
-                        sw.append(",")
-                            .append(String.valueOf(ae));
+                        sw.append(",").append(String.valueOf(ae));
                     }
                     sw.append(TestUtil.NL);
                     for (int i = ds - 1; i < de; ++i) {
-                        sw.append("< ").append(lines1.get(i)).append(TestUtil.NL);
+                        sw.append("< ").append(lines1.get(i)).append(
+                            TestUtil.NL);
                     }
                     sw.append("---").append(TestUtil.NL);
                     for (int i = as - 1; i < ae; ++i) {
-                        sw.append("> ").append(lines2.get(i)).append(TestUtil.NL);
+                        sw.append("> ").append(lines2.get(i)).append(
+                            TestUtil.NL);
                     }
                     offset = offset + (ae - as) - (de - ds);
                 }
@@ -506,6 +505,7 @@ public abstract class DiffTestCase
      * Returns a list of the lines in a given file.
      *
      * @param file File
+     *
      * @return List of lines
      */
     private static List<String> fileLines(File file)
@@ -528,6 +528,7 @@ public abstract class DiffTestCase
      * Returns the contents of a file as a string.
      *
      * @param file File
+     *
      * @return Contents of the file
      */
     protected static String fileContents(File file)

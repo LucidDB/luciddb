@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -26,12 +26,13 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.*;
+
 
 /**
- * FennelEmptyRule provides an implementation for
- * {@link org.eigenbase.rel.EmptyRel} in terms of
- * {@link net.sf.farrago.query.FennelValuesRel}.
+ * FennelEmptyRule provides an implementation for {@link
+ * org.eigenbase.rel.EmptyRel} in terms of {@link
+ * net.sf.farrago.query.FennelValuesRel}.
  *
  * @author jhyde
  * @version $Id$
@@ -39,6 +40,8 @@ import org.eigenbase.rex.RexLiteral;
 public class FennelEmptyRule
     extends ConverterRule
 {
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * Singleton instance of this rule.
      */

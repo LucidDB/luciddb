@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -45,7 +45,7 @@ struct LcsClusterAppendExecStreamParams :
 
 /**
  * Given a stream of tuples corresponding to the column values in a cluster,
- * loads the cluster pages 
+ * loads the cluster pages
  */
 class LcsClusterAppendExecStream :
     public BTreeExecStream, public ConduitExecStream
@@ -69,7 +69,7 @@ protected:
     TupleData clusterColsTupleData;
 
     /**
-     * Tuple descriptors for the columns that are part of this cluster 
+     * Tuple descriptors for the columns that are part of this cluster
      */
     TupleDescriptor clusterColsTupleDesc;
 
@@ -104,7 +104,7 @@ protected:
     TupleData outputTuple;
 
     /**
-     * A reference to the output accessor 
+     * A reference to the output accessor
      * contained in SingleOutputExecStream::pOutAccessor
      */
     TupleAccessor* outputTupleAccessor;
@@ -133,7 +133,7 @@ protected:
      * Array of temporary blocks for row array
      */
     boost::scoped_array<PBuffer> rowBlock;
-    
+
     /**
      * Maximum number of values that can be stored in m_rowBlock
      */
@@ -143,7 +143,7 @@ protected:
      * Array of temporary blocks for hash table
      */
     boost::scoped_array<PBuffer> hashBlock;
-    
+
     /**
      * Array of temporary blocks used by ClusterNodeWriter
      */
@@ -212,7 +212,7 @@ protected:
      * Allocate memory for arrays
      */
     void allocArrays();
-    
+
     /**
      * Initializes the load.  This method should only be called when the
      * input stream has data available to read.
@@ -223,7 +223,7 @@ protected:
      * Populates row and hash arrays from existing index block
      */
     void loadExistingBlock();
-    
+
     /**
      * Prepare to write a fresh block
      */

@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2009-2009 The Eigenbase Project
-// Copyright (C) 2009-2009 Disruptive Tech
+// Copyright (C) 2009-2009 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -66,7 +66,7 @@ public class MedMqlForeignDataWrapper
     }
 
     // TODO jvs 6-Jan-2008:  implement getServerPropertyInfo
-    
+
     // implement FarragoMedDataWrapper
     public FarragoMedDataServer newServer(
         String serverMofId,

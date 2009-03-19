@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,7 @@ public class RelTraitSet
      *
      * @param traits Traits
      */
-    public RelTraitSet(RelTrait... traits)
+    public RelTraitSet(RelTrait ... traits)
     {
         this.traits = new RelTrait[traits.length];
 
@@ -165,6 +165,7 @@ public class RelTraitSet
      * <p>After canonization, t1.equals(t2) if and only if t1 == t2.
      *
      * @param trait Trait
+     *
      * @return Trait in canonical form
      */
     private RelTrait canonize(RelTrait trait)
@@ -227,11 +228,11 @@ public class RelTraitSet
         return true;
     }
 
-
     /**
      * Returns whether this trait set contains a given trait.
      *
      * @param trait Sought trait
+     *
      * @return Whether set contains given trait
      */
     public boolean contains(RelTrait trait)
@@ -256,8 +257,9 @@ public class RelTraitSet
             if (i > 0) {
                 s.append('.');
             }
-            if (trait == null
-                && traits.length == 1) {
+            if ((trait == null)
+                && (traits.length == 1))
+            {
                 // Special format for a list containing a single null trait;
                 // otherwise its string appears as "null", which is the same
                 // as if the whole trait set were null, and so confusing.
@@ -278,6 +280,7 @@ public class RelTraitSet
      * Finds the index of a trait of a given type in this set.
      *
      * @param traitDef Sought trait definition
+     *
      * @return index of trait, or -1 if not found
      */
     private int findIndex(RelTraitDef traitDef)

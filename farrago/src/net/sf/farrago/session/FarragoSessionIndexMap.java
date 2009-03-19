@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -90,26 +90,23 @@ public interface FarragoSessionIndexMap
         CwmTable table);
 
     /**
-     * For ALTER TABLE ADD COLUMN or REBUILD, retrieves
-     * the target table.
+     * For ALTER TABLE ADD COLUMN or REBUILD, retrieves the target table.
      *
-     * @return target table, or null if not executing
-     * ALTER TABLE ADD COLUMN or REBUILD
+     * @return target table, or null if not executing ALTER TABLE ADD COLUMN or
+     * REBUILD
      */
     public CwmTable getReloadTable();
 
     /**
      * For ALTER TABLE ADD COLUMN, retrieves the old table structure
-     * corresponding to the table being modified.
-     * Be warned that the old table structure is not a complete
-     * copy; it consists of only the column definitions and their
-     * datatypes (without default values).  Additional
-     * logical constructs such as constraints are not present
-     * on the returned object, nor are physical constructs
-     * such as indexes.
+     * corresponding to the table being modified. Be warned that the old table
+     * structure is not a complete copy; it consists of only the column
+     * definitions and their datatypes (without default values). Additional
+     * logical constructs such as constraints are not present on the returned
+     * object, nor are physical constructs such as indexes.
      *
-     * @return copy of old table, or null if not executing
-     * ALTER TABLE ADD COLUMN
+     * @return copy of old table, or null if not executing ALTER TABLE ADD
+     * COLUMN
      */
     public CwmTable getOldTableStructure();
 
@@ -151,12 +148,11 @@ public interface FarragoSessionIndexMap
         boolean truncate);
 
     /**
-     * Drops an index by MOFID and removes its root from this map.
-     * This method is used in contexts (e.g. TRUNCATE) where
-     * it is undesirable to hold a catalog lock across the entire
-     * operation.  (Really, this should be the case for
-     * all callers, so eventually we should deprecate the
-     * version which takes a direct index reference.)
+     * Drops an index by MOFID and removes its root from this map. This method
+     * is used in contexts (e.g. TRUNCATE) where it is undesirable to hold a
+     * catalog lock across the entire operation. (Really, this should be the
+     * case for all callers, so eventually we should deprecate the version which
+     * takes a direct index reference.)
      *
      * @param wrapperCache cache for looking up data wrappers
      * @param indexMofId MOFID of the index to drop

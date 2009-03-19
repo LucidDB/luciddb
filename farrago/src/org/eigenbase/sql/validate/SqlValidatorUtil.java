@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2004-2007 The Eigenbase Project
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2004-2009 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -338,11 +338,12 @@ public class SqlValidatorUtil
     }
 
     /**
-     * Derives the list of column names suitable for NATURAL JOIN. These are
-     * the columns that occur exactly once on each side of the join.
+     * Derives the list of column names suitable for NATURAL JOIN. These are the
+     * columns that occur exactly once on each side of the join.
      *
      * @param leftRowType Row type of left input to the join
      * @param rightRowType Row type of right input to the join
+     *
      * @return List of columns that occur once on each side
      */
     public static List<String> deriveNaturalJoinColumnList(
@@ -350,20 +351,19 @@ public class SqlValidatorUtil
         RelDataType rightRowType)
     {
         List<String> naturalColumnNames = new ArrayList<String>();
-        final String[] leftNames =
-            SqlTypeUtil.getFieldNames(leftRowType);
-        final String[] rightNames =
-            SqlTypeUtil.getFieldNames(rightRowType);
+        final String [] leftNames = SqlTypeUtil.getFieldNames(leftRowType);
+        final String [] rightNames = SqlTypeUtil.getFieldNames(rightRowType);
         for (String name : leftNames) {
-            if (countOccurrences(name, leftNames) == 1
-                && countOccurrences(name, rightNames) == 1) {
+            if ((countOccurrences(name, leftNames) == 1)
+                && (countOccurrences(name, rightNames) == 1))
+            {
                 naturalColumnNames.add(name);
             }
         }
         return naturalColumnNames;
     }
 
-    static int countOccurrences(String name, String[] names)
+    static int countOccurrences(String name, String [] names)
     {
         int count = 0;
         for (String s : names) {

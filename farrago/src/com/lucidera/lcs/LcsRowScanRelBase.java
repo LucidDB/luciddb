@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -32,20 +32,20 @@ import net.sf.farrago.query.*;
 
 import openjava.ptree.Literal;
 
-import org.eigenbase.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /*
- * LcsRowScanRelBase is a base class for a relational expression corresponding 
+ * LcsRowScanRelBase is a base class for a relational expression corresponding
  * to a scan on a column store table.
  *
- * @author Zelaine Fong 
+ * @author Zelaine Fong
  * @version $Id$
  */
 public abstract class LcsRowScanRelBase
@@ -112,7 +112,7 @@ public abstract class LcsRowScanRelBase
         boolean isFullScan,
         Integer [] resCols,
         double inputSelectivity)
-    {      
+    {
         super(cluster, children);
         this.lcsTable = lcsTable;
         this.clusteredIndexes = clusteredIndexes;
@@ -128,7 +128,7 @@ public abstract class LcsRowScanRelBase
     }
 
     //~ Methods ----------------------------------------------------------------
-    
+
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
@@ -166,7 +166,7 @@ public abstract class LcsRowScanRelBase
                                                 .isSpecialColumnId(i))
                         {
                             return LucidDbOperatorTable.ldbInstance()
-                                                       .getSpecialOpName(i);
+                                .getSpecialOpName(i);
                         } else {
                             return fields[i].getName();
                         }
@@ -198,24 +198,23 @@ public abstract class LcsRowScanRelBase
     {
         explain(pw, null, null);
     }
-    
+
     /**
-     * Explains this {@link LcsRowScanRelBase}, appending the additional
-     * terms and values from a subclass.
-     * 
+     * Explains this {@link LcsRowScanRelBase}, appending the additional terms
+     * and values from a subclass.
+     *
      * @param pw RelOptPrintWriter, as in {@link #explain(RelOptPlanWriter)}
      * @param subclassTerms additional terms from a subclass
      * @param subclassValues additional values from a subclass
      */
     protected void explain(
-        RelOptPlanWriter pw, 
-        String[] subclassTerms, 
-        Object[] subclassValues)
+        RelOptPlanWriter pw,
+        String [] subclassTerms,
+        Object [] subclassValues)
     {
-        assert(
-            (subclassTerms == null && subclassValues == null) ||
-            (subclassTerms.length == subclassValues.length));
-        
+        assert (((subclassTerms == null) && (subclassValues == null))
+            || (subclassTerms.length == subclassValues.length));
+
         Object projection;
 
         if (projectedColumns == null) {
@@ -270,7 +269,8 @@ public abstract class LcsRowScanRelBase
         }
         int nSubclassTerms = (subclassTerms != null) ? subclassTerms.length : 0;
         Object [] objects = new Object[3 + nExtraTerms + nSubclassTerms];
-        String [] nameList = new String[inputs.length + 3 + nExtraTerms + nSubclassTerms];
+        String [] nameList =
+            new String[inputs.length + 3 + nExtraTerms + nSubclassTerms];
         for (int i = 0; i < inputs.length; i++) {
             nameList[i] = "child";
         }
@@ -292,11 +292,10 @@ public abstract class LcsRowScanRelBase
             ++iExtraTerm;
         }
         if (subclassTerms != null) {
-            for(int i = 0; i < subclassTerms.length; i++) {
-                nameList[inputs.length + 3 + nExtraTerms + i]
-                    = subclassTerms[i];
-                objects[3 + nExtraTerms + i]
-                    = subclassValues[i];
+            for (int i = 0; i < subclassTerms.length; i++) {
+                nameList[inputs.length + 3 + nExtraTerms + i] =
+                    subclassTerms[i];
+                objects[3 + nExtraTerms + i] = subclassValues[i];
             }
         }
         pw.explain(
@@ -318,27 +317,27 @@ public abstract class LcsRowScanRelBase
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoPreparingStmt stmt =
-            FennelRelUtil.getPreparingStmt(this);
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
         if (stmt.getSession().isReentrantAlterTableAddColumn()) {
             // This assert will fail if we are doing ALTER TABLE ADD COLUMN
             // but somehow we ended up subtracting off deleted rows.
             Util.permAssert(
-                (inputs.length == 1) && (inputs[0] instanceof FennelValuesRel),
+                (inputs.length == 1)
+                && (inputs[0] instanceof FennelValuesRel),
                 "ALTER TABLE ADD COLUMN should preserve deleted rows");
         } else {
             // This assert will fail if the LucidDbSessionPersonality was not
             // used and therefore LcsAddDeletionScanRule wasn't fired.
             Util.permAssert(
-                inputs.length > 0 &&
-                (inputs[0] instanceof LcsIndexSearchRel ||
-                    inputs[0] instanceof LcsIndexMinusRel),
-                "Column store row scans are only available in the LucidDb" +
-                " personality");
+                (inputs.length > 0)
+                && ((inputs[0] instanceof LcsIndexSearchRel)
+                    || (inputs[0] instanceof LcsIndexMinusRel)),
+                "Column store row scans are only available in the LucidDb"
+                + " personality");
         }
         return createScanStream(implementor);
     }
-    
+
     protected FemLcsRowScanStreamDef createScanStream(
         FennelRelImplementor implementor)
     {
@@ -347,7 +346,7 @@ public abstract class LcsRowScanRelBase
 
         // Sampling is disabled by default.
         scanStream.setSamplingMode(TableSamplingModeEnum.SAMPLING_OFF);
-        
+
         for (int i = 0; i < inputs.length; i++) {
             FemExecutionStreamDef inputStream =
                 implementor.visitFennelChild((FennelRel) inputs[i], i);
@@ -494,7 +493,7 @@ public abstract class LcsRowScanRelBase
         }
         return RelFieldCollation.emptyCollationArray;
     }
-    
+
     public double getInputSelectivity()
     {
         return inputSelectivity;
@@ -509,12 +508,12 @@ public abstract class LcsRowScanRelBase
     {
         return clusteredIndexes;
     }
-    
+
     public Integer [] getProjectedColumns()
     {
         return projectedColumns;
     }
-    
+
     public boolean isFullScan()
     {
         return isFullScan;

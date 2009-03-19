@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,7 @@ class CalcExtDateTimeTest : virtual public TestBase, public TraceSource
     void checkWarnings(Calculator& calc, string expected);
     void printOutput(TupleData const & tup,
                      Calculator const & calc);
-    
+
 public:
     explicit CalcExtDateTimeTest()
         : TraceSource(shared_from_this(),"CalcExtDateTimeTest")
@@ -97,7 +97,7 @@ CalcExtDateTimeTest::testCalcExtConvertDateToString()
     pg << "REF O0, L0;" << endl;
 
     Calculator calc(0);
-    
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -119,7 +119,7 @@ void
 CalcExtDateTimeTest::testCalcExtLocalTime()
 {
     ostringstream pg("");
-    
+
     pg << "O s8;" << endl;
     pg << "I s4;" << endl;
     pg << "L s8;" << endl;
@@ -129,7 +129,7 @@ CalcExtDateTimeTest::testCalcExtLocalTime()
     pg << "CALL 'LocalTime2(L0, C2) /* 0: LOCALTIME($t1) */;" << endl;
     pg << "REF O0, L0 /* 1: */;" << endl;
     //    pg << "RETURN /* 2: */;|" << endl;
-    
+
     Calculator calc(0);
 
     try {
@@ -144,15 +144,15 @@ CalcExtDateTimeTest::testCalcExtLocalTime()
 
     calc.bind(&inTuple, &outTuple);
     calc.exec();
-    printOutput(outTuple, calc);    
-    
+    printOutput(outTuple, calc);
+
 }
 
 void
 CalcExtDateTimeTest::testCalcExtLocalTimestamp()
 {
     ostringstream pg("");
-    
+
     pg << "O s8;" << endl;
     pg << "I s4;" << endl;
     pg << "L s8;" << endl;
@@ -162,7 +162,7 @@ CalcExtDateTimeTest::testCalcExtLocalTimestamp()
     pg << "CALL 'LocalTimestamp2(L0, C2) /* 0: LOCALTIMESTAMP($t1) */;" << endl;
     pg << "REF O0, L0 /* 1: */;" << endl;
     //    pg << "RETURN /* 2: */;|" << endl;
-    
+
     Calculator calc(0);
 
     try {
@@ -177,9 +177,10 @@ CalcExtDateTimeTest::testCalcExtLocalTimestamp()
 
     calc.bind(&inTuple, &outTuple);
     calc.exec();
-    printOutput(outTuple, calc);    
-    
+    printOutput(outTuple, calc);
+
 }
 
 FENNEL_UNIT_TEST_SUITE(CalcExtDateTimeTest);
 
+// End CalcExtDateTimeTest.cpp

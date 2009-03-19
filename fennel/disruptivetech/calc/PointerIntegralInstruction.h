@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,7 +38,7 @@ public:
           mOp1(op1),
           mPointerType(pointerType)
     { }
-    ~PointerIntegralInstruction() { 
+    ~PointerIntegralInstruction() {
         // If (0) to reduce performance impact of template type checking
         if (0) PointerInstruction_NotAPointerType<PTR_TYPE>();
     }
@@ -54,17 +54,17 @@ protected:
 template <typename PTR_TYPE>
 class PointerPutSize : public PointerIntegralInstruction<PTR_TYPE>
 {
-public: 
+public:
     explicit
     PointerPutSize(RegisterRef<PTR_TYPE>* result,
-                   RegisterRef<PointerSizeT>* op1, 
+                   RegisterRef<PointerSizeT>* op1,
                    StandardTypeDescriptorOrdinal pointerType)
         : PointerIntegralInstruction<PTR_TYPE>(result, op1, pointerType)
     { }
     virtual
     ~PointerPutSize() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         pc++;
 
         if (PointerIntegralInstruction<PTR_TYPE>::mOp1->isNull()) {
@@ -73,7 +73,7 @@ public:
         } else {
             // get value, put size
             PointerIntegralInstruction<PTR_TYPE>::mResult->length
-               (PointerIntegralInstruction<PTR_TYPE>::mOp1->value()); 
+               (PointerIntegralInstruction<PTR_TYPE>::mOp1->value());
         }
     }
 
@@ -83,7 +83,7 @@ public:
     void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
         describeHelper(out, values, longName(), shortName(),
-                       PointerIntegralInstruction<PTR_TYPE>::mResult, 
+                       PointerIntegralInstruction<PTR_TYPE>::mResult,
                        PointerIntegralInstruction<PTR_TYPE>::mOp1, &mOp2);
     }
 

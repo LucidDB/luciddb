@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -65,7 +65,7 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
     // briefly taking a StrictMutex under the covers.  Alternatively,
     // we could keep this class unchanged and then arrange for each
     // thread to get its own instance (maintaining its own private cache).
-    
+
     /**
      * Mutex that ensures only a single thread is modifying modPageEntriesMap.
      * It also ensures that the map is in sync with the allocations and
@@ -158,7 +158,7 @@ class SnapshotRandomAllocationSegment : public DelegatingSegment
 
     /**
      * Determines whether a snapshot page corresponds to a newly allocated one.
-     *          
+     *
      * @param pageId pageId of the page in question
      *
      * @return true if the page is newly allocated; false otherwise

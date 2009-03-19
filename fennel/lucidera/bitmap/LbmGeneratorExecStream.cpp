@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -64,7 +64,7 @@ void LbmGeneratorExecStream::prepare(LbmGeneratorExecStreamParams const &params)
     // determine min and max size of bitmap entries
 
     LbmEntry::getSizeBounds(
-        bitmapTupleDesc, 
+        bitmapTupleDesc,
         treeDescriptor.segmentAccessor.pSegment->getUsablePageSize(),
         minBitmapSize,
         maxBitmapSize);
@@ -146,7 +146,7 @@ ExecStreamResult LbmGeneratorExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     // read the start rid and num of rows to load
-    
+
     if (inAccessors[0]->getState() == EXECBUF_EOS) {
         if (doneReading) {
             pOutAccessor->markEOS();
@@ -171,7 +171,7 @@ ExecStreamResult LbmGeneratorExecStream::execute(
             numRowsToLoad =
                 *reinterpret_cast<RecordNum const *> (inputTuple[0].pData);
             ridRun.nRids = numRowsToLoad;
-            startRid = 
+            startRid =
                 *reinterpret_cast<LcsRid const *> (inputTuple[1].pData);
         }
         currRid = startRid;
@@ -196,7 +196,6 @@ ExecStreamResult LbmGeneratorExecStream::execute(
 
         // position to the starting rid
         for (uint iClu = 0; iClu < nClusters; iClu++) {
-
             SharedLcsClusterReader &pScan = pClusters[iClu];
             if (!pScan->position(startRid)) {
                 // empty table
@@ -213,7 +212,7 @@ ExecStreamResult LbmGeneratorExecStream::execute(
     }
 
     // take care of any pending flushes first
-    
+
     switch (producePending) {
     case LBM_ENTRYFLUSH_PENDING:
         // outputTuple already contains the pending tuple to be flushed
@@ -298,11 +297,9 @@ ExecStreamResult LbmGeneratorExecStream::generateMultiKeyBitmaps(
             // row contained nulls
             bitmapTuple.resetBuffer();
             for (uint iClu = 0; iClu < nClusters; iClu++) {
-
                 SharedLcsClusterReader &pScan = pClusters[iClu];
 
                 if (currRid >= pScan->getRangeEndRid()) {
-
                     // move to the next batch if this particular cluster
                     // reader has reached the end of its batch
                     if (!pScan->nextRange()) {
@@ -400,7 +397,7 @@ bool LbmGeneratorExecStream::generateBitmaps()
             // reset buffer before loading new value, in case previous
             // row had nulls
             bitmapTuple.resetBuffer();
-            
+
             attrAccessors[0].loadValue(bitmapTuple[0], curValue);
             initRidAndBitmap(bitmapTuple, &currRid);
         }
@@ -465,8 +462,9 @@ bool LbmGeneratorExecStream::generateSingletons()
         // advance to the next rid; if at the end of the batch,
         // return to caller; else, continue reading from current
         // batch
-        if (!advanceReader(pScan))
+        if (!advanceReader(pScan)) {
             return true;
+        }
     } while (true);
 }
 
@@ -474,7 +472,7 @@ bool LbmGeneratorExecStream::advanceReader(SharedLcsClusterReader &pScan)
 {
     if (!pScan->advance(1)) {
         return false;
-    } 
+    }
     syncColumns(pScan);
     return true;
 }
@@ -564,8 +562,8 @@ void LbmGeneratorExecStream::initRidAndBitmap(
     TupleData &bitmapTuple, LcsRid* pCurrRid)
 {
     bitmapTuple[nIdxKeys].pData = (PConstBuffer) pCurrRid;
-    bitmapTuple[nIdxKeys+1].pData = NULL;
-    bitmapTuple[nIdxKeys+2].pData = NULL;
+    bitmapTuple[nIdxKeys + 1].pData = NULL;
+    bitmapTuple[nIdxKeys + 2].pData = NULL;
 }
 
 bool LbmGeneratorExecStream::addRidToBitmap(
@@ -588,7 +586,6 @@ bool LbmGeneratorExecStream::addRidToBitmap(
             bitmapTable[keycode].pBitmap->setEntryTuple(initBitmap);
         }
     } else {
-
         if (!bitmapTable[keycode].bufferPtr) {
             // no assigned buffer yet; get a buffer by flushing
             // out an existing entry
@@ -614,7 +611,7 @@ PBuffer LbmGeneratorExecStream::flushBuffer(LcsRid addRid)
     // cycle through the entries in round robin order in determining which
     // to flush
     //
-    // NOTE zfong 6-Jan-2006: We may want to change this to a more 
+    // NOTE zfong 6-Jan-2006: We may want to change this to a more
     // sophisticated scheme where we flush on a LRU basis
     PBuffer retPtr;
     uint nAttempts = 0;

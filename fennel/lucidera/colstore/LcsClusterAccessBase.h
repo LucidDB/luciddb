@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -44,9 +44,9 @@ protected:
      * Accessor for segment storing both btree and cluster pages.
      */
     SegmentAccessor segmentAccessor;
-   
+
     /**
-     * Buffer lock for the actual cluster node pages.  Shares the same 
+     * Buffer lock for the actual cluster node pages.  Shares the same
      * segment as the btree corresponding to the cluster.
      */
     ClusterPageLock clusterLock;
@@ -95,7 +95,7 @@ protected:
      * Returns RID from btree tuple
      */
     LcsRid readRid();
-    
+
     /**
      * Returns cluster pageid from btree tuple
      */

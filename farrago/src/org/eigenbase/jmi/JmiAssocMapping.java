@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -41,21 +41,21 @@ public enum JmiAssocMapping
     COPY,
 
     /**
-     * The association edge should be preserved in the transformed graph,
-     * but its direction should be reversed.
+     * The association edge should be preserved in the transformed graph, but
+     * its direction should be reversed.
      */
     REVERSAL,
 
     /**
-     * The two ends of the association should be contracted into
-     * one vertex in the transformed graph.
+     * The two ends of the association should be contracted into one vertex in
+     * the transformed graph.
      */
     CONTRACTION,
 
     /**
-     * The association edge should be interpreted as a hierarchical structure
-     * to be superimposed on the graph, with the source as parent and the
-     * target as child.
+     * The association edge should be interpreted as a hierarchical structure to
+     * be superimposed on the graph, with the source as parent and the target as
+     * child.
      */
     HIERARCHY
 }

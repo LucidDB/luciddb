@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -96,7 +96,7 @@ class LbmSplicerExecStream : public DiffluenceExecStream
      * Parameter id of dynamic parameter containing final insert row count
      */
     DynamicParamId insertRowCountParamId;
-    
+
     /**
      * If true, create a new index that the splicer will be writing
      */
@@ -149,7 +149,7 @@ class LbmSplicerExecStream : public DiffluenceExecStream
      * because upstream ExecStream's may insert into the index being updated.
      * An example of early update is when the deletion phase of a merge
      * statement appends the deletion index. The same index may be later
-     * is appended for merge violations. 
+     * is appended for merge violations.
      */
     bool emptyTableUnknown;
 
@@ -448,7 +448,7 @@ class LbmSplicerExecStream : public DiffluenceExecStream
     bool uniqueRequired(const TupleData &tuple);
 
     /**
-     * Counts the number of rows in the index with a particular key value, 
+     * Counts the number of rows in the index with a particular key value,
      * prior to modification. This count factors in the deletion index.
      *
      * @param tuple tupledata containing the key value to search the index for

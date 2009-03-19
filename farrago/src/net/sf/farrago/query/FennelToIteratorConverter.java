@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -86,7 +86,8 @@ import org.eigenbase.util.*;
  */
 public class FennelToIteratorConverter
     extends ConverterRelImpl
-    implements JavaRel, ConverterRel
+    implements JavaRel,
+        ConverterRel
 {
     //~ Static fields/initializers ---------------------------------------------
 
@@ -137,7 +138,7 @@ public class FennelToIteratorConverter
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    @SuppressWarnings({"CloneDoesntCallSuperClone"})
+    @SuppressWarnings({ "CloneDoesntCallSuperClone" })
     public FennelToIteratorConverter clone()
     {
         FennelToIteratorConverter clone =

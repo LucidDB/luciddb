@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -137,7 +137,7 @@ strLenBitA(RegisterRef<int32_t>* result,
         result->value(SqlStrLenBit(str->stringLength()));
     }
 }
-    
+
 void
 strLenCharA(RegisterRef<int32_t>* result,
             RegisterRef<char*>* str)
@@ -390,7 +390,7 @@ void
 ExtStringRegister(ExtendedInstructionTable* eit)
 {
     assert(eit != NULL);
-    
+
     vector<StandardTypeDescriptorOrdinal> params_2F;
     params_2F.push_back(STANDARD_TYPE_CHAR);
     params_2F.push_back(STANDARD_TYPE_CHAR);
@@ -598,7 +598,7 @@ ExtStringRegister(ExtendedInstructionTable* eit)
     eit->add("strSubStringA3", params_1V_1F_1N,
              (ExtendedInstruction3<char*, char*, int32_t>*) NULL,
              &strSubStringA3);
-    
+
     eit->add("strSubStringA3", params_2V_1N,
              (ExtendedInstruction3<char*, char*, int32_t>*) NULL,
              &strSubStringA3);
@@ -618,11 +618,11 @@ ExtStringRegister(ExtendedInstructionTable* eit)
     eit->add("strSubStringA4", params_1V_1F_2N,
              (ExtendedInstruction4<char*, char*, int32_t, int32_t>*) NULL,
              &strSubStringA4);
-    
+
     eit->add("strSubStringA4", params_2V_2N,
              (ExtendedInstruction4<char*, char*, int32_t, int32_t>*) NULL,
              &strSubStringA4);
-    
+
 
     eit->add("strToLowerA", params_2F,
              (ExtendedInstruction2<char*, char*>*) NULL,
@@ -678,4 +678,4 @@ ExtStringRegister(ExtendedInstructionTable* eit)
 
 FENNEL_END_NAMESPACE
 
-        
+// End ExtString.cpp

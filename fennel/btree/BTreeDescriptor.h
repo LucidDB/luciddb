@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -38,12 +38,12 @@ struct BTreeDescriptor
      * Accessor for segment storing BTree.
      */
     SegmentAccessor segmentAccessor;
-    
+
     /**
      * Descriptor for leaf tuples.
      */
     TupleDescriptor tupleDescriptor;
-    
+
     /**
      * Projection from tupleDescriptor to key.
      */
@@ -53,7 +53,7 @@ struct BTreeDescriptor
      * PageOwnerId used to mark pages.  Defaults to ANON_PAGE_OWNER_ID.
      */
     PageOwnerId pageOwnerId;
-    
+
     /**
      * PageId of the root node, which never changes.  Set to NULL_PAGE_ID for a
      * new tree.

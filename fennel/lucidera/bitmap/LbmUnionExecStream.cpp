@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,7 +31,7 @@ void LbmUnionExecStream::prepare(LbmUnionExecStreamParams const &params)
 {
     ConfluenceExecStream::prepare(params);
     maxRid = params.maxRid;
-    
+
     // set dynanmic parameter ids
     ridLimitParamId = params.ridLimitParamId;
     assert(opaqueToInt(ridLimitParamId) > 0);
@@ -96,7 +96,7 @@ void LbmUnionExecStream::open(bool restart)
         reverseArea = writerBuf + writerBufSize;
         reverseAreaSize =
             scratchAccessor.pSegment->getUsablePageSize() - writerBufSize;
-        
+
         // allocate byte buffer for merging segments
         boost::shared_array<PBuffer> ppBuffers(new PBuffer[nWorkspacePages]);
         assert(ppBuffers != NULL);
@@ -190,7 +190,7 @@ void LbmUnionExecStream::closeImpl()
     }
 }
 
-uint LbmUnionExecStream::computeOptWorkspacePages(LcsRid maxRid) 
+uint LbmUnionExecStream::computeOptWorkspacePages(LcsRid maxRid)
 {
     // TODO: come up with a better estimate once we have statistics
     return 2;

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2003-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2003-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -31,6 +31,7 @@ import javax.jmi.reflect.*;
 
 import junit.framework.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -38,7 +39,6 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.catalog.*;
 
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
@@ -165,7 +165,7 @@ public class FarragoQueryTest
         String lurql = FarragoInternalQuery.instance().TestQuery.str();
 
         checkLurqlTableSchema(lurql, "DEPTS", "SALES");
-        checkLurqlTableSchema(lurql, "CATALOGS_VIEW", "JDBC_METADATA");            
+        checkLurqlTableSchema(lurql, "CATALOGS_VIEW", "JDBC_METADATA");
     }
 
     /**
@@ -253,11 +253,10 @@ public class FarragoQueryTest
             assertEquals(
                 schemaName,
                 ((CwmSchema) obj).getName());
-        }
-        finally {
+        } finally {
             repos.endReposTxn(false);
             repos.endReposSession();
-        }            
+        }
     }
 
     /**
@@ -313,8 +312,7 @@ public class FarragoQueryTest
                 }
             }
             return false;
-        }
-        finally {
+        } finally {
             repos.endReposTxn(false);
             repos.endReposSession();
         }
@@ -566,33 +564,32 @@ public class FarragoQueryTest
             FarragoSessionTxnEnd.COMMIT,
             listener.events.get(3));
     }
-    
+
     /**
-     * Tests that ResultSet.getObject(int) implementation in farrago returns
-     *  a distinct object for a ZonelessDateTime type column in each new row.
-     *  
+     * Tests that ResultSet.getObject(int) implementation in farrago returns a
+     * distinct object for a ZonelessDateTime type column in each new row.
+     *
      * @throws Exception
      */
     public void testDateTimeOverLocalJdbc()
         throws Exception
     {
         String createStmt =
-            "create table sales.datetable" +
-            "(keycol int not null primary key, datecol date)";
-        
+            "create table sales.datetable"
+            + "(keycol int not null primary key, datecol date)";
+
         String dropStmt = " drop table sales.datetable";
-        
+
         String insertStmt1 =
             "insert into sales.datetable values(0, DATE '2007-07-07')";
-        
+
         String insertStmt2 =
             "insert into sales.datetable values(1, DATE '2007-07-08')";
-        
+
         String selectStmt1 =
             "select * from (values cast('2007-06-22' as date), cast('2007-06-23' as date))";
 
-        String selectStmt2 =
-            "select t.datecol from sales.datetable as t";
+        String selectStmt2 = "select t.datecol from sales.datetable as t";
 
         String selectStmt3 =
             "select t.datecol from sales.datetable as t where 1 = 1";
@@ -602,7 +599,7 @@ public class FarragoQueryTest
         stmt.executeUpdate(insertStmt2);
 
         Object obj1, obj2;
-        
+
         try {
             // FarragoTupleIterResultSet with a CompoundTupleIter fetching
             // from input iterators returning onw row each.
@@ -630,7 +627,7 @@ public class FarragoQueryTest
             resultSet.next();
             obj2 = resultSet.getObject(1);
             assertFalse(obj1 == obj2);
-            resultSet.close();        
+            resultSet.close();
         } finally {
             resultSet.close();
             stmt.executeUpdate(dropStmt);
@@ -641,9 +638,9 @@ public class FarragoQueryTest
         throws Exception
     {
         String schemaName = "SALES";
-        
+
         String refMofId = getSchemaMofId(schemaName, null);
-        
+
         String actualDescription = fetchLobText(refMofId, "description");
         assertNull(actualDescription);
     }
@@ -654,12 +651,12 @@ public class FarragoQueryTest
         // Create a schema with an empty string as its description.
         stmt.execute(
             "CREATE SCHEMA EMPTY_DESC DESCRIPTION ''");
-        
+
         StringBuilder descriptionOut = new StringBuilder();
         String refMofId = getSchemaMofId("EMPTY_DESC", descriptionOut);
-        
+
         assertEquals("", descriptionOut.toString());
-        
+
         String actualDescription = fetchLobText(refMofId, "description");
         assertEquals("", actualDescription);
 
@@ -670,9 +667,9 @@ public class FarragoQueryTest
         throws Exception
     {
         String schemaName = "SALES";
-        
+
         String refMofId = getSchemaMofId(schemaName, null);
-        
+
         String actualSchemaName = fetchLobText(refMofId, "name");
         assertEquals("SALES", actualSchemaName);
     }
@@ -688,7 +685,7 @@ public class FarragoQueryTest
         // Create a schema with this string as its description.
         stmt.execute(
             "CREATE SCHEMA LONG_DESC DESCRIPTION '" + description + "'");
-        
+
         StringBuilder descriptionBuf = new StringBuilder();
         String refMofId = getSchemaMofId("LONG_DESC", descriptionBuf);
         Assert.assertEquals(description, descriptionBuf.toString());
@@ -700,7 +697,8 @@ public class FarragoQueryTest
     }
 
     private String getSchemaMofId(
-        String schemaName, StringBuilder descriptionOut)
+        String schemaName,
+        StringBuilder descriptionOut)
     {
         String refMofId;
         repos.beginReposSession();
@@ -711,19 +709,18 @@ public class FarragoQueryTest
                 (FemLocalSchema) FarragoCatalogUtil.getModelElementByName(
                     catalog.getOwnedElement(),
                     schemaName);
-    
+
             if (descriptionOut != null) {
                 descriptionOut.setLength(0);
                 descriptionOut.append(schema.getDescription());
             }
-            
+
             refMofId = schema.refMofId();
-        }
-        finally {
+        } finally {
             repos.endReposTxn(false);
             repos.endReposSession();
         }
-        
+
         return refMofId;
     }
 
@@ -761,8 +758,9 @@ public class FarragoQueryTest
         // LER-7367 (leaks from loggers for native Segments and ExecStreams);
         // note that if you have xo tracing enabled, this test will fail
         // (see FRG-309)
-        resultSet = stmt.executeQuery(
-            "select * from (values(0)) order by 1");
+        resultSet =
+            stmt.executeQuery(
+                "select * from (values(0)) order by 1");
         resultSet.next();
         resultSet.close();
         Enumeration<String> e = LogManager.getLogManager().getLoggerNames();
@@ -771,6 +769,7 @@ public class FarragoQueryTest
             if (!s.startsWith("net.sf.fennel.xo")) {
                 continue;
             }
+
             // The # character is part of the per-object logger, which
             // is not supposed to exist, so we expect to not see it.
             assertEquals(-1, s.indexOf('#'));

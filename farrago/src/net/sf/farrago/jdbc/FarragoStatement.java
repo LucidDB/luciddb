@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,6 +35,8 @@ import java.sql.*;
 public interface FarragoStatement
     extends java.sql.Statement
 {
+    //~ Instance fields --------------------------------------------------------
+
     final String ERRMSG_NOT_A_QUERY = "Not a query:  ";
     final String ERRMSG_IS_A_QUERY = "Can't executeUpdate a query:  ";
     final String ERRMSG_REQ_NON_NEG = "Requires non-negative argument: ";

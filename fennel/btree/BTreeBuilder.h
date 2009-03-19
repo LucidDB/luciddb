@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -53,7 +53,7 @@ class BTreeBuilder : public BTreeAccessBase
     friend class FixedBuildLevel;
     friend class VariableBuildLevel;
     friend class DynamicBuildLevel;
-    
+
     std::vector<SharedBTreeBuildLevel> levels;
 
     SharedSegment pTempSegment;
@@ -61,7 +61,7 @@ class BTreeBuilder : public BTreeAccessBase
 // ----------------------------------------------------------------------
 // internal helper methods
 // ----------------------------------------------------------------------
-    
+
     static uint calculateChildEntriesPerNode(
         RecordNum parentLevelTotalEntries,
         RecordNum childLevelTotalEntries,
@@ -69,7 +69,7 @@ class BTreeBuilder : public BTreeAccessBase
 
     static uint calculateNodesOnLevel(
         uint nChildEntries,uint nEntriesPerChildNode);
-    
+
     uint getRootHeight()
     {
         return levels.size() - 1;

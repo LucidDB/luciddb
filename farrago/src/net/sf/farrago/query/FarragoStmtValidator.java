@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,8 +34,8 @@ import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
@@ -87,9 +87,9 @@ public class FarragoStmtValidator
 
     private FemUser currentUser;
     private FemRole currentRole;
-    
+
     private Map<String, CwmSqldataType> sqldataTypeCache;
-    
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -128,15 +128,14 @@ public class FarragoStmtValidator
         this.warningQueue = new FarragoWarningQueue();
 
         if (session != null) {
-
             parser = session.getPersonality().newParser(session);
 
             // clone session variables so that any context changes we make
             // during validation are transient
             sessionVariables = session.getSessionVariables().cloneVariables();
             typeFactory =
-                (FarragoTypeFactory)session.getPersonality().
-                newTypeFactory(repos);
+                (FarragoTypeFactory) session.getPersonality().newTypeFactory(
+                    repos);
             dataWrapperCache =
                 new FarragoDataWrapperCache(
                     this,
@@ -147,9 +146,7 @@ public class FarragoStmtValidator
                     new FarragoSessionDataSource(session));
             privilegeChecker = session.newPrivilegeChecker();
             sqldataTypeCache = new HashMap<String, CwmSqldataType>();
-
         } else {
-
             typeFactory = null;
             sessionVariables = null;
             dataWrapperCache = null;
@@ -251,22 +248,22 @@ public class FarragoStmtValidator
         String action)
     {
         if (currentUser == null) {
-            currentUser = 
+            currentUser =
                 FarragoCatalogUtil.getUserByName(
                     getRepos(),
                     sessionVariables.currentUserName);
         }
-        
+
         // Load the current role, but only if the role name has been set.
-        if (currentRole == null && 
-            sessionVariables.currentRoleName.length() > 0)
+        if ((currentRole == null)
+            && (sessionVariables.currentRoleName.length() > 0))
         {
             currentRole =
                 FarragoCatalogUtil.getRoleByName(
                     getRepos(),
                     sessionVariables.currentRoleName);
         }
-        
+
         privilegeChecker.requestAccess(
             obj,
             currentUser,
@@ -357,6 +354,7 @@ public class FarragoStmtValidator
      *
      * @param collection Collection
      * @param type Type of object to return
+     *
      * @return list of object names
      */
     private List<SqlMoniker> getAllObjectNamesByType(
@@ -622,12 +620,12 @@ public class FarragoStmtValidator
         }
 
         type = findSqldataTypeImpl(typeName);
-        
+
         sqldataTypeCache.put(fullName, type);
-        
+
         return type;
     }
-    
+
     private CwmSqldataType findSqldataTypeImpl(SqlIdentifier typeName)
     {
         if (!typeName.isSimple()) {
@@ -1004,11 +1002,11 @@ public class FarragoStmtValidator
             throw Util.needToImplement(type);
         }
     }
-    
+
     public void closeAllocation()
     {
         super.closeAllocation();
-        
+
         currentUser = null;
         currentRole = null;
         sqldataTypeCache.clear();

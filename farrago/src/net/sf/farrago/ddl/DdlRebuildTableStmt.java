@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,15 +27,16 @@ import net.sf.farrago.cwm.relational.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.pretty.*;
 
+
 /**
  * DdlRebuildTableStmt represents an ALTER TABLE ... REBUILD statement. The
  * statement compacts data stored in a table's indexes by removing deleted
  * entries.
- * 
+ *
  * <p>Note: Although DdlRebuildTableStmt is an ALTER statement, it does not
- * extend {@link DdlAlterStmt}.  This avoids the complexity of having
- * subclasses of DdlAlterStmt which may or may not also be implementations of
- * {@link DdlMultipleTransactionStmt}.
+ * extend {@link DdlAlterStmt}. This avoids the complexity of having subclasses
+ * of DdlAlterStmt which may or may not also be implementations of {@link
+ * DdlMultipleTransactionStmt}.
  *
  * @author John Pham
  * @version $Id$
@@ -43,6 +44,8 @@ import org.eigenbase.sql.pretty.*;
 public class DdlRebuildTableStmt
     extends DdlReloadTableStmt
 {
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Constructs a DdlRebuildTableStmt.
      */
@@ -50,7 +53,9 @@ public class DdlRebuildTableStmt
     {
         super(table);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Generates the query: "insert into T select * from T"
      */

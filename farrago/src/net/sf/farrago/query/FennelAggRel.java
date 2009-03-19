@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,14 +21,13 @@
 */
 package net.sf.farrago.query;
 
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-
-import java.util.List;
-import java.util.Arrays;
 
 
 /**
@@ -113,7 +112,6 @@ public class FennelAggRel
 
         return aggStream;
     }
-
 }
 
 // End FennelAggRel.java

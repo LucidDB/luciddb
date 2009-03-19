@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -35,7 +35,7 @@ castExactToStrA(RegisterRef<char*>* result,
         result->toNull();
         result->length(0);
     } else {
- 
+
         result->length(SqlStrCastFromExact<1,1>
                        (result->pointer(),
                         result->storage(),
@@ -201,7 +201,7 @@ castStrToVarCharA(RegisterRef<char*>* result,
 {
     assert(StandardTypeDescriptor::isArray(result->type()));
     assert(StandardTypeDescriptor::isArray(src->type()));
-    
+
     if (src->isNull()) {
         result->toNull();
         result->length(0);
@@ -227,7 +227,7 @@ castStrToCharA(RegisterRef<char*>* result,
 {
     assert(StandardTypeDescriptor::isArray(result->type()));
     assert(StandardTypeDescriptor::isArray(src->type()));
-    
+
     if (src->isNull()) {
         result->toNull();
         result->length(0);
@@ -243,7 +243,7 @@ castStrToCharA(RegisterRef<char*>* result,
             // TODO: throw 22001 as a warning
 //            throw "22001";
         }
-    }   
+    }
 }
 
 
@@ -255,7 +255,7 @@ castStrToVarBinaryA(RegisterRef<char*>* result,
 {
     assert(StandardTypeDescriptor::isArray(result->type()));
     assert(StandardTypeDescriptor::isArray(src->type()));
-    
+
     if (src->isNull()) {
         result->toNull();
         result->length(0);
@@ -282,7 +282,7 @@ castStrToBinaryA(RegisterRef<char*>* result,
 {
     assert(StandardTypeDescriptor::isArray(result->type()));
     assert(StandardTypeDescriptor::isArray(src->type()));
-    
+
     if (src->isNull()) {
         result->toNull();
         result->length(0);
@@ -299,7 +299,7 @@ castStrToBinaryA(RegisterRef<char*>* result,
             // TODO: throw 22001 as a warning
 //            throw "22001";
         }
-    }   
+    }
 }
 
 
@@ -515,4 +515,4 @@ ExtCastRegister(ExtendedInstructionTable* eit)
 
 FENNEL_END_NAMESPACE
 
-        
+// End ExtCast.cpp

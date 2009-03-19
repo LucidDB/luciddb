@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,8 +27,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-import net.sf.farrago.catalog.FarragoReposTxnContext;
-import net.sf.farrago.fennel.FennelStreamHandle;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
@@ -119,19 +119,19 @@ class FarragoExecutableFennelStmt
                 new FennelOnlyTupleReader(tupleDesc, tupleData);
             FennelStreamHandle streamHandle;
             int cachePageSize;
-            
-            FarragoReposTxnContext txn = 
+
+            FarragoReposTxnContext txn =
                 runtimeContext.getRepos().newTxnContext(true);
             txn.beginReadTxn();
             try {
                 streamHandle = runtimeContext.getStreamHandle(streamName, true);
-                cachePageSize = runtimeContext.getRepos().getCurrentConfig()
-                              .getFennelConfig().getCachePageSize();
-            } 
-            finally {
+                cachePageSize =
+                    runtimeContext.getRepos().getCurrentConfig()
+                    .getFennelConfig().getCachePageSize();
+            } finally {
                 txn.commit();
             }
-            
+
             TupleIter tupleIter =
                 new FennelTupleIter(
                     tupleReader,
@@ -149,9 +149,9 @@ class FarragoExecutableFennelStmt
             runtimeContext.openStreams();
 
             runtimeContext = null;
-            
+
             resultSet.setOpened();
-            
+
             return resultSet;
         } catch (UnsupportedOperationException e) {
             throw Util.newInternal(e);

@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Portions Copyright (C) 2004-2007 John V. Sichi
+// Copyright (C) 2004-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Portions Copyright (C) 2004-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -56,9 +56,9 @@ class ExecStreamSubFactory_lu
 {
     ExecStreamFactory *pExecStreamFactory;
     ExecStreamEmbryo *pEmbryo;
-    
+
     bool created;
-    
+
     char readCharParam(const std::string &val)
     {
         assert(val.size() <= 1);
@@ -73,7 +73,7 @@ class ExecStreamSubFactory_lu
         LcsRowScanBaseExecStreamParams &params)
     {
         SharedProxyLcsClusterScanDef pClusterScan = streamDef.getClusterScan();
-        for ( ; pClusterScan; ++pClusterScan) {
+        for (; pClusterScan; ++pClusterScan) {
             LcsClusterScanDef clusterScanParam;
             clusterScanParam.pCacheAccessor = params.pCacheAccessor;
             pExecStreamFactory->readBTreeStreamParams(clusterScanParam,
@@ -86,11 +86,11 @@ class ExecStreamSubFactory_lu
     }
 
     void readColumnList(
-        ProxyFlatFileTupleStreamDef &streamDef, 
+        ProxyFlatFileTupleStreamDef &streamDef,
         std::vector<std::string> &names)
     {
         SharedProxyColumnName pColumnName = streamDef.getColumn();
-        
+
         for (; pColumnName; ++pColumnName) {
             names.push_back(pColumnName->getName());
         }
@@ -106,14 +106,14 @@ class ExecStreamSubFactory_lu
         }
 
         SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
-        
+
         ExternalSortExecStreamParams params;
 
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
-        
+
         // ExternalSortStream requires a private ScratchSegment.
         pExecStreamFactory->createPrivateScratchSegment(params);
-        
+
         params.distinctness = streamDef.getDistinctness();
         params.pTempSegment = pDatabase->getTempSegment();
         params.storeFinalRun = false;
@@ -155,7 +155,7 @@ class ExecStreamSubFactory_lu
         params.trim = streamDef.isTrim();
         params.mapped = streamDef.isMapped();
         readColumnList(streamDef, params.columnNames);
-        
+
         params.numRowsScan = streamDef.getNumRowsScan();
         params.calcProgram = streamDef.getCalcProgram();
         if (params.numRowsScan > 0 && params.calcProgram.size() > 0) {
@@ -196,7 +196,7 @@ class ExecStreamSubFactory_lu
     {
         pExecStreamFactory->readTupleStreamParams(params, streamDef);
         pExecStreamFactory->readBTreeStreamParams(params, streamDef);
-        
+
         // LcsClusterAppendExecStream requires a private ScratchSegment.
         pExecStreamFactory->createPrivateScratchSegment(params);
 
@@ -221,7 +221,7 @@ class ExecStreamSubFactory_lu
         params.samplingRate = streamDef.getSamplingRate();
         params.samplingIsRepeatable = streamDef.isSamplingRepeatable();
         params.samplingRepeatableSeed = streamDef.getSamplingRepeatableSeed();
-        params.samplingClumps = 
+        params.samplingClumps =
             LcsRowScanExecStreamParams::defaultSystemSamplingClumps;
         params.samplingRowCount = streamDef.getSamplingRowCount();
 
@@ -262,7 +262,7 @@ class ExecStreamSubFactory_lu
             streamDef.getOutputDesc());
         SharedProxySplicerIndexAccessorDef pIndexAccessorDef =
             streamDef.getIndexAccessor();
-        for ( ; pIndexAccessorDef; ++pIndexAccessorDef) {
+        for (; pIndexAccessorDef; ++pIndexAccessorDef) {
             BTreeExecStreamParams bTreeParams;
             pExecStreamFactory->readBTreeParams(
                 bTreeParams,
@@ -317,7 +317,7 @@ class ExecStreamSubFactory_lu
         // LbmUnionExecStream requires a private ScratchSegment.
         pExecStreamFactory->createPrivateScratchSegment(params);
 
-        params.startRidParamId = 
+        params.startRidParamId =
             pExecStreamFactory->readDynamicParamId(
                 streamDef.getConsumerSridParamId());
 
@@ -363,7 +363,7 @@ class ExecStreamSubFactory_lu
             pExecStreamFactory->readDynamicParamId(
                 streamDef.getStartRidParamId());
     }
-    
+
     // implement FemVisitor
     virtual void visit(ProxyLhxJoinStreamDef &streamDef)
     {
@@ -390,7 +390,7 @@ class ExecStreamSubFactory_lu
         params.leftInner     = streamDef.isLeftInner();
         params.leftOuter     = streamDef.isLeftOuter();
         params.rightInner    = streamDef.isRightInner();
-        params.rightOuter    = streamDef.isRightOuter();        
+        params.rightOuter    = streamDef.isRightOuter();
         params.setopDistinct = streamDef.isSetopDistinct();
         params.setopAll      = streamDef.isSetopAll();
 
@@ -495,18 +495,18 @@ class ExecStreamSubFactory_lu
         pExecStreamFactory = &factory;
         pEmbryo = &embryo;
         created = true;
-        
+
         // dispatch based on polymorphic stream type
         FemVisitor::visitTbl.accept(*this, streamDef);
-        
+
         return created;
     }
 };
 
 #ifdef __MINGW32__
 extern "C" JNIEXPORT BOOL APIENTRY DllMain(
-    HANDLE hModule, 
-    DWORD  ul_reason_for_call, 
+    HANDLE hModule,
+    DWORD  ul_reason_for_call,
     LPVOID lpReserved)
 {
     return TRUE;

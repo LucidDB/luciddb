@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -166,12 +166,12 @@ void TupleAccessor::compute(
             pNewAccessor->iValueBit = nBitFields;
             nBitFields++;
         } else {
-            assert((cbMin%iAlign) == 0);
+            assert((cbMin % iAlign) == 0);
             bool bArray =
                 StandardTypeDescriptor::isArray(
                     StandardTypeDescriptorOrdinal(
                         attr.pTypeDescriptor->getOrdinal()));
-            switch(iAlign) {
+            switch (iAlign) {
             case 2:
                 if (bNullable) {
                     if ((format == TUPLE_FORMAT_NETWORK) && !bArray) {
@@ -231,7 +231,7 @@ void TupleAccessor::compute(
                 }
                 break;
             }
-            switch(iAlign) {
+            switch (iAlign) {
             case 1:
                 unalignedFixed.push_back(iAttr);
                 break;
@@ -322,7 +322,7 @@ void TupleAccessor::compute(
     initFixedAccessors(tuple,aligned8);
     initFixedAccessors(tuple,aligned4);
     initFixedAccessors(tuple,aligned2);
-    
+
     if (pFirstVariableAccessor) {
         iFirstVarEndIndirectOffset = cbMaxStorage;
     } else {
@@ -334,13 +334,13 @@ void TupleAccessor::compute(
             cbMaxStorage;
         cbMaxStorage += sizeof(StoredValueOffset);
     }
-    
+
     if (pFirstVariableAccessor) {
         iLastVarEndIndirectOffset = cbMaxStorage - sizeof(StoredValueOffset);
     } else {
         iLastVarEndIndirectOffset = MAXU;
     }
-    
+
     initFixedAccessors(tuple,unalignedFixed);
 
     if (nBitFields) {
@@ -489,7 +489,7 @@ void TupleAccessor::resetCurrentTupleBuf()
 void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
 {
     uint n = std::min(tuple.size() - iFirstDatum,ppAttributeAccessors.size());
-    
+
     if ((format == TUPLE_FORMAT_NETWORK) || bAlignedVar) {
         // for TUPLE_FORMAT_NETWORK, unmarshal attributes individually
         for (uint i = 0; i < n; ++i) {
@@ -501,7 +501,7 @@ void TupleAccessor::unmarshal(TupleData &tuple,uint iFirstDatum) const
 
     // for other formats, we can go a little faster by avoiding per-attribute
     // call overhead
-    
+
     uint iNextVarOffset = iFirstVarOffset;
     StoredValueOffset const *pNextVarEndOffset =
         referenceIndirectOffset(iFirstVarEndIndirectOffset);
@@ -543,9 +543,9 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
 #if DEBUG_TUPLE_ACCESS
     *reinterpret_cast<MagicNumber *>(pTupleBufDest) = TUPLE_MAGIC_NUMBER;
 #endif
-    
+
     pTupleBuf = pTupleBufDest;
-            
+
     uint iNextVarOffset = iFirstVarOffset;
     StoredValueOffset *pNextVarEndOffset =
         referenceIndirectOffset(pTupleBufDest,iFirstVarEndIndirectOffset);
@@ -572,7 +572,7 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
                 }
                 assert(value.cbData <= accessor.cbStorage);
                 accessor.marshalValueData(
-                    pTupleBufDest+iOffset,
+                    pTupleBufDest + iOffset,
                     value);
             } else {
                 bitFields[accessor.iValueBit] =
@@ -585,7 +585,7 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
             assert(!isMAXU(accessor.iNullBit));
         }
         if (!isMAXU(accessor.iEndIndirectOffset)) {
-            assert(pNextVarEndOffset == 
+            assert(pNextVarEndOffset ==
                 referenceIndirectOffset(accessor.iEndIndirectOffset));
             if (value.pData) {
                 iNextVarOffset += value.cbData;

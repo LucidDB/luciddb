@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,18 +20,18 @@
 */
 package com.disruptivetech.farrago.test;
 
-import java.util.*;
-import java.util.logging.Logger;
-
 import com.disruptivetech.farrago.sql.advise.*;
 
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserUtil;
-import org.eigenbase.sql.type.SqlTypeFactoryImpl;
+import java.util.*;
+import java.util.logging.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.test.*;
-import org.eigenbase.util.TestUtil;
+import org.eigenbase.util.*;
 
 
 /**
@@ -45,185 +45,199 @@ import org.eigenbase.util.TestUtil;
 public class SqlAdvisorTest
     extends SqlValidatorTestCase
 {
-    //~ Instance fields --------------------------------------------------------
+    //~ Static fields/initializers ---------------------------------------------
 
-    public final Logger logger = Logger.getLogger(getClass().getName());
+    private static final List<String> STAR_KEYWORD =
+        Arrays.asList(
+            "Keyword(*)");
 
-    private static final List<String> STAR_KEYWORD = Arrays.asList(
-        "Keyword(*)");
+    protected static final List<String> FROM_KEYWORDS =
+        Arrays.asList(
+            "Keyword(()",
+            "Keyword(LATERAL)",
+            "Keyword(TABLE)",
+            "Keyword(UNNEST)");
 
-    protected static final List<String> FROM_KEYWORDS = Arrays.asList(
-        "Keyword(()",
-        "Keyword(LATERAL)",
-        "Keyword(TABLE)",
-        "Keyword(UNNEST)");
+    protected static final List<String> AGG_KEYWORDS =
+        Arrays.asList(
+            "Keyword(SELECT)",
+            "Keyword(TABLE)",
+            "Keyword(VALUES)",
+            "Keyword())",
+            "Keyword(*)",
+            "Keyword(ALL)",
+            "Keyword(DISTINCT)");
 
-    protected static final List<String> AGG_KEYWORDS = Arrays.asList(
-        "Keyword(SELECT)",
-        "Keyword(TABLE)",
-        "Keyword(VALUES)",
-        "Keyword())",
-        "Keyword(*)",
-        "Keyword(ALL)",
-        "Keyword(DISTINCT)");
+    protected static final List<String> SALES_TABLES =
+        Arrays.asList(
+            "Table(EMP)",
+            "Table(EMP_ADDRESS)",
+            "Table(DEPT)",
+            "Table(BONUS)",
+            "Table(SALGRADE)");
 
-    protected static final List<String> SALES_TABLES = Arrays.asList(
-        "Table(EMP)",
-        "Table(EMP_ADDRESS)",
-        "Table(DEPT)",
-        "Table(BONUS)",
-        "Table(SALGRADE)");
+    private static final List<String> SCHEMAS =
+        Arrays.asList(
+            "Schema(SALES)",
+            "Schema(CUSTOMER)");
 
-    private static final List<String> SCHEMAS = Arrays.asList(
-        "Schema(SALES)",
-        "Schema(CUSTOMER)");
+    private static final List<String> AB_TABLES =
+        Arrays.asList(
+            "Table(A)",
+            "Table(B)");
 
-    private static final List<String> AB_TABLES = Arrays.asList(
-        "Table(A)",
-        "Table(B)");
+    private static final List<String> EMP_TABLE =
+        Arrays.asList(
+            "Table(EMP)");
 
-    private static final List<String> EMP_TABLE = Arrays.asList(
-        "Table(EMP)");
+    protected static final List<String> EXPR_KEYWORDS =
+        Arrays.asList(
+            "Keyword(()",
+            "Keyword(+)",
+            "Keyword(-)",
+            "Keyword(?)",
+            "Keyword(ABS)",
+            "Keyword(AVG)",
+            "Keyword(CARDINALITY)",
+            "Keyword(CASE)",
+            "Keyword(CAST)",
+            "Keyword(CEIL)",
+            "Keyword(CEILING)",
+            "Keyword(CHARACTER_LENGTH)",
+            "Keyword(CHAR_LENGTH)",
+            "Keyword(COALESCE)",
+            "Keyword(COLLECT)",
+            "Keyword(CONVERT)",
+            "Keyword(COUNT)",
+            "Keyword(CUME_DIST)",
+            "Keyword(CURRENT_CATALOG)",
+            "Keyword(CURRENT_DATE)",
+            "Keyword(CURRENT_DEFAULT_TRANSFORM_GROUP)",
+            "Keyword(CURRENT_PATH)",
+            "Keyword(CURRENT_ROLE)",
+            "Keyword(CURRENT_SCHEMA)",
+            "Keyword(CURRENT_TIME)",
+            "Keyword(CURRENT_TIMESTAMP)",
+            "Keyword(CURRENT_USER)",
+            "Keyword(CURSOR)",
+            "Keyword(DATE)",
+            "Keyword(DENSE_RANK)",
+            "Keyword(ELEMENT)",
+            "Keyword(EXISTS)",
+            "Keyword(EXP)",
+            "Keyword(EXTRACT)",
+            "Keyword(FALSE)",
+            "Keyword(FIRST_VALUE)",
+            "Keyword(FLOOR)",
+            "Keyword(FUSION)",
+            "Keyword(INTERVAL)",
+            "Keyword(LAST_VALUE)",
+            "Keyword(LN)",
+            "Keyword(LOCALTIME)",
+            "Keyword(LOCALTIMESTAMP)",
+            "Keyword(LOWER)",
+            "Keyword(MAX)",
+            "Keyword(MIN)",
+            "Keyword(MOD)",
+            "Keyword(MULTISET)",
+            "Keyword(NEW)",
+            "Keyword(NOT)",
+            "Keyword(NULL)",
+            "Keyword(NULLIF)",
+            "Keyword(OCTET_LENGTH)",
+            "Keyword(OVERLAY)",
+            "Keyword(PERCENT_RANK)",
+            "Keyword(POSITION)",
+            "Keyword(POWER)",
+            "Keyword(RANK)",
+            "Keyword(ROW)",
+            "Keyword(ROW_NUMBER)",
+            "Keyword(SESSION_USER)",
+            "Keyword(SPECIFIC)",
+            "Keyword(SQRT)",
+            "Keyword(SUBSTRING)",
+            "Keyword(SUM)",
+            "Keyword(SYSTEM_USER)",
+            "Keyword(TIME)",
+            "Keyword(TIMESTAMP)",
+            "Keyword(TRANSLATE)",
+            "Keyword(TRIM)",
+            "Keyword(TRUE)",
+            "Keyword(UNKNOWN)",
+            "Keyword(UPPER)",
+            "Keyword(USER)");
 
-    protected static final List<String> EXPR_KEYWORDS = Arrays.asList(
-        "Keyword(()",
-        "Keyword(+)",
-        "Keyword(-)",
-        "Keyword(?)",
-        "Keyword(ABS)",
-        "Keyword(AVG)",
-        "Keyword(CARDINALITY)",
-        "Keyword(CASE)",
-        "Keyword(CAST)",
-        "Keyword(CEIL)",
-        "Keyword(CEILING)",
-        "Keyword(CHARACTER_LENGTH)",
-        "Keyword(CHAR_LENGTH)",
-        "Keyword(COALESCE)",
-        "Keyword(COLLECT)",
-        "Keyword(CONVERT)",
-        "Keyword(COUNT)",
-        "Keyword(CUME_DIST)",
-        "Keyword(CURRENT_CATALOG)",
-        "Keyword(CURRENT_DATE)",
-        "Keyword(CURRENT_DEFAULT_TRANSFORM_GROUP)",
-        "Keyword(CURRENT_PATH)",
-        "Keyword(CURRENT_ROLE)",
-        "Keyword(CURRENT_SCHEMA)",
-        "Keyword(CURRENT_TIME)",
-        "Keyword(CURRENT_TIMESTAMP)",
-        "Keyword(CURRENT_USER)",
-        "Keyword(CURSOR)",
-        "Keyword(DATE)",
-        "Keyword(DENSE_RANK)",
-        "Keyword(ELEMENT)",
-        "Keyword(EXISTS)",
-        "Keyword(EXP)",
-        "Keyword(EXTRACT)",
-        "Keyword(FALSE)",
-        "Keyword(FIRST_VALUE)",
-        "Keyword(FLOOR)",
-        "Keyword(FUSION)",
-        "Keyword(INTERVAL)",
-        "Keyword(LAST_VALUE)",
-        "Keyword(LN)",
-        "Keyword(LOCALTIME)",
-        "Keyword(LOCALTIMESTAMP)",
-        "Keyword(LOWER)",
-        "Keyword(MAX)",
-        "Keyword(MIN)",
-        "Keyword(MOD)",
-        "Keyword(MULTISET)",
-        "Keyword(NEW)",
-        "Keyword(NOT)",
-        "Keyword(NULL)",
-        "Keyword(NULLIF)",
-        "Keyword(OCTET_LENGTH)",
-        "Keyword(OVERLAY)",
-        "Keyword(PERCENT_RANK)",
-        "Keyword(POSITION)",
-        "Keyword(POWER)",
-        "Keyword(RANK)",
-        "Keyword(ROW)",
-        "Keyword(ROW_NUMBER)",
-        "Keyword(SESSION_USER)",
-        "Keyword(SPECIFIC)",
-        "Keyword(SQRT)",
-        "Keyword(SUBSTRING)",
-        "Keyword(SUM)",
-        "Keyword(SYSTEM_USER)",
-        "Keyword(TIME)",
-        "Keyword(TIMESTAMP)",
-        "Keyword(TRANSLATE)",
-        "Keyword(TRIM)",
-        "Keyword(TRUE)",
-        "Keyword(UNKNOWN)",
-        "Keyword(UPPER)",
-        "Keyword(USER)");
+    protected static final List<String> SELECT_KEYWORDS =
+        Arrays.asList(
+            "Keyword(ALL)",
+            "Keyword(DISTINCT)",
+            "Keyword(*)");
 
-    protected static final List<String> SELECT_KEYWORDS = Arrays.asList(
-        "Keyword(ALL)",
-        "Keyword(DISTINCT)",
-        "Keyword(*)");
+    private static final List<String> ORDER_KEYWORDS =
+        Arrays.asList(
+            "Keyword(,)",
+            "Keyword(ASC)",
+            "Keyword(DESC)");
 
-    private static final List<String> ORDER_KEYWORDS = Arrays.asList(
-        "Keyword(,)",
-        "Keyword(ASC)",
-        "Keyword(DESC)");
+    private static final List<String> EMP_COLUMNS =
+        Arrays.asList(
+            "Column(EMPNO)",
+            "Column(ENAME)",
+            "Column(JOB)",
+            "Column(MGR)",
+            "Column(HIREDATE)",
+            "Column(SAL)",
+            "Column(COMM)",
+            "Column(DEPTNO)",
+            "Column(SLACKER)");
 
-    private static final List<String> EMP_COLUMNS = Arrays.asList(
-        "Column(EMPNO)",
-        "Column(ENAME)",
-        "Column(JOB)",
-        "Column(MGR)",
-        "Column(HIREDATE)",
-        "Column(SAL)",
-        "Column(COMM)",
-        "Column(DEPTNO)",
-        "Column(SLACKER)");
+    private static final List<String> DEPT_COLUMNS =
+        Arrays.asList(
+            "Column(DEPTNO)",
+            "Column(NAME)");
 
-    private static final List<String> DEPT_COLUMNS = Arrays.asList(
-        "Column(DEPTNO)",
-        "Column(NAME)");
+    protected static final List<String> PREDICATE_KEYWORDS =
+        Arrays.asList(
+            "Keyword(()",
+            "Keyword(*)",
+            "Keyword(+)",
+            "Keyword(-)",
+            "Keyword(.)",
+            "Keyword(/)",
+            "Keyword(<)",
+            "Keyword(<=)",
+            "Keyword(<>)",
+            "Keyword(=)",
+            "Keyword(>)",
+            "Keyword(>=)",
+            "Keyword(AND)",
+            "Keyword(BETWEEN)",
+            "Keyword(IN)",
+            "Keyword(IS)",
+            "Keyword(LIKE)",
+            "Keyword(MEMBER)",
+            "Keyword(MULTISET)",
+            "Keyword(NOT)",
+            "Keyword(OR)",
+            "Keyword(SIMILAR)",
+            "Keyword(SUBMULTISET)",
+            "Keyword(||)");
 
-    protected static final List<String> PREDICATE_KEYWORDS = Arrays.asList(
-        "Keyword(()",
-        "Keyword(*)",
-        "Keyword(+)",
-        "Keyword(-)",
-        "Keyword(.)",
-        "Keyword(/)",
-        "Keyword(<)",
-        "Keyword(<=)",
-        "Keyword(<>)",
-        "Keyword(=)",
-        "Keyword(>)",
-        "Keyword(>=)",
-        "Keyword(AND)",
-        "Keyword(BETWEEN)",
-        "Keyword(IN)",
-        "Keyword(IS)",
-        "Keyword(LIKE)",
-        "Keyword(MEMBER)",
-        "Keyword(MULTISET)",
-        "Keyword(NOT)",
-        "Keyword(OR)",
-        "Keyword(SIMILAR)",
-        "Keyword(SUBMULTISET)",
-        "Keyword(||)");
+    private static final List<String> WHERE_KEYWORDS =
+        Arrays.asList(
+            "Keyword(EXCEPT)",
+            "Keyword(GROUP)",
+            "Keyword(HAVING)",
+            "Keyword(INTERSECT)",
+            "Keyword(ORDER)",
+            "Keyword(UNION)",
+            "Keyword(WINDOW)");
 
-    private static final List<String> WHERE_KEYWORDS = Arrays.asList(
-        "Keyword(EXCEPT)",
-        "Keyword(GROUP)",
-        "Keyword(HAVING)",
-        "Keyword(INTERSECT)",
-        "Keyword(ORDER)",
-        "Keyword(UNION)",
-        "Keyword(WINDOW)");
-
-    private static final List<String> A_TABLE = Arrays.asList(
-        "Table(A)");
-    protected static final List<String> JOIN_KEYWORDS = Arrays.asList(
+    private static final List<String> A_TABLE =
+        Arrays.asList(
+            "Table(A)");
+    protected static final List<String> JOIN_KEYWORDS =
+        Arrays.asList(
             "Keyword(UNION)",
             "Keyword(FULL)",
             "Keyword(ORDER)",
@@ -246,12 +260,18 @@ public class SqlAdvisorTest
             "Keyword(INTERSECT)",
             "Keyword(WHERE)");
 
+    //~ Instance fields --------------------------------------------------------
+
+    public final Logger logger = Logger.getLogger(getClass().getName());
+
     //~ Constructors -----------------------------------------------------------
 
     public SqlAdvisorTest(String name)
     {
         super(name);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected List<String> getFromKeywords()
     {
@@ -296,7 +316,8 @@ public class SqlAdvisorTest
 
     protected void assertHint(
         String sql,
-        List<String>... expectedLists) throws Exception
+        List<String> ... expectedLists)
+        throws Exception
     {
         List<String> expectedList = plus(expectedLists);
         Collections.sort(expectedList);
@@ -353,7 +374,7 @@ public class SqlAdvisorTest
 
     protected void assertComplete(
         String sql,
-        List<String>... expectedResults)
+        List<String> ... expectedResults)
     {
         List<String> expectedList = plus(expectedResults);
         Collections.sort(expectedList);
@@ -381,7 +402,7 @@ public class SqlAdvisorTest
         SqlAdvisor advisor = ((Tester) tester).createAdvisor(validator);
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
-        final String[] replaced = {null};
+        final String [] replaced = { null };
         List<SqlMoniker> results =
             advisor.getCompletionHints(sap.sql, sap.cursor, replaced);
         assertNotNull(replaced[0]);
@@ -396,7 +417,7 @@ public class SqlAdvisorTest
 
     protected void assertEquals(
         String [] actualResults,
-        List<String>... expectedResults)
+        List<String> ... expectedResults)
         throws Exception
     {
         List<String> expectedList = plus(expectedResults);
@@ -429,6 +450,7 @@ public class SqlAdvisorTest
      * Converts a list to a string, one item per line.
      *
      * @param list List
+     *
      * @return String with one item of the list per line
      */
     private static <T> String toString(List<T> list)
@@ -449,9 +471,10 @@ public class SqlAdvisorTest
      * Concatenates several lists of the same type into a single list.
      *
      * @param lists Lists to concatenate
+     *
      * @return Sum list
      */
-    protected static <T> List<T> plus(List<T>... lists)
+    protected static <T> List<T> plus(List<T> ... lists)
     {
         final List<T> result = new ArrayList<T>();
         for (List<T> list : lists) {
@@ -459,8 +482,6 @@ public class SqlAdvisorTest
         }
         return result;
     }
-
-    //~ Tests =----------------------------------------------------------------
 
     public void testFrom()
         throws Exception
@@ -595,8 +616,10 @@ public class SqlAdvisorTest
         // unqualified columns
         assertComplete(
             "select a.empno, a.deptno from sales.emp a "
-                + "where ^",
-            A_TABLE, EMP_COLUMNS, EXPR_KEYWORDS);
+            + "where ^",
+            A_TABLE,
+            EMP_COLUMNS,
+            EXPR_KEYWORDS);
     }
 
     public void testWhereList()
@@ -641,13 +664,17 @@ public class SqlAdvisorTest
         assertHint(sql, getSelectKeywords(), EXPR_KEYWORDS, AB_TABLES);
 
         sql = "select ^ from (values (1))";
-        assertComplete(sql,
-            getSelectKeywords(), EXPR_KEYWORDS,
+        assertComplete(
+            sql,
+            getSelectKeywords(),
+            EXPR_KEYWORDS,
             Arrays.asList("Table(EXPR$0)", "Column(EXPR$0)"));
 
         sql = "select ^ from (values (1)) as t(c)";
-        assertComplete(sql,
-            getSelectKeywords(), EXPR_KEYWORDS,
+        assertComplete(
+            sql,
+            getSelectKeywords(),
+            EXPR_KEYWORDS,
             Arrays.asList("Table(T)", "Column(C)"));
 
         sql = "select ^, b.dummy from sales.emp a join sales.dept b ";
@@ -670,8 +697,10 @@ public class SqlAdvisorTest
         sql = "select ^emp.dummy from sales.emp";
         assertHint(
             sql,
-            getSelectKeywords(), EXPR_KEYWORDS,
-            EMP_COLUMNS, Arrays.asList("Table(EMP)"));
+            getSelectKeywords(),
+            EXPR_KEYWORDS,
+            EMP_COLUMNS,
+            Arrays.asList("Table(EMP)"));
 
         sql = "select emp.^ from sales.emp";
         assertComplete(sql, EMP_COLUMNS, STAR_KEYWORD);
@@ -688,10 +717,11 @@ public class SqlAdvisorTest
         sql = "select emp.empno from sales.emp where empno=1 order by ^";
         assertComplete(sql, EXPR_KEYWORDS, EMP_COLUMNS, EMP_TABLE);
 
-        sql = "select emp.empno\n" +
-            "from sales.emp as e(\n" +
-            "  mpno,name,ob,gr,iredate,al,omm,eptno,lacker)\n" +
-            "where e.mpno=1 order by ^";
+        sql =
+            "select emp.empno\n"
+            + "from sales.emp as e(\n"
+            + "  mpno,name,ob,gr,iredate,al,omm,eptno,lacker)\n"
+            + "where e.mpno=1 order by ^";
         assertComplete(
             sql,
             EXPR_KEYWORDS,
@@ -708,7 +738,8 @@ public class SqlAdvisorTest
             Arrays.asList(
                 "Table(E)"));
 
-        sql = "select emp.empno from sales.emp where empno=1 order by empno ^, deptno";
+        sql =
+            "select emp.empno from sales.emp where empno=1 order by empno ^, deptno";
         assertComplete(sql, PREDICATE_KEYWORDS, ORDER_KEYWORDS);
     }
 
@@ -716,11 +747,13 @@ public class SqlAdvisorTest
         throws Exception
     {
         String sql;
-        final List<String> xyColumns = Arrays.asList(
-            "Column(X)",
-            "Column(Y)");
-        final List<String> tTable = Arrays.asList(
-            "Table(T)");
+        final List<String> xyColumns =
+            Arrays.asList(
+                "Column(X)",
+                "Column(Y)");
+        final List<String> tTable =
+            Arrays.asList(
+                "Table(T)");
 
         sql =
             "select ^t.dummy from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
@@ -760,7 +793,8 @@ public class SqlAdvisorTest
         assertComplete(sql, getSalesTables());
     }
 
-    public void testSubQueryInWhere() {
+    public void testSubQueryInWhere()
+    {
         String sql;
 
         // Aliases from enclosing subqueries are inherited: hence A from
@@ -769,89 +803,98 @@ public class SqlAdvisorTest
         // be used unqualified in the inner scope) but the raw
         // columns from emp are not (because they would need to be qualified
         // with A).
-        sql = "select * from sales.emp a where deptno in (" +
-            "select * from sales.dept b where ^)";
+        sql =
+            "select * from sales.emp a where deptno in ("
+            + "select * from sales.dept b where ^)";
         String simplifiedSql =
-            "SELECT * FROM sales.emp a WHERE deptno in (" +
-                " SELECT * FROM sales.dept b WHERE _suggest_ )";
+            "SELECT * FROM sales.emp a WHERE deptno in ("
+            + " SELECT * FROM sales.dept b WHERE _suggest_ )";
         assertSimplify(sql, simplifiedSql);
         assertComplete(
             sql,
-            AB_TABLES, DEPT_COLUMNS, EXPR_KEYWORDS);
+            AB_TABLES,
+            DEPT_COLUMNS,
+            EXPR_KEYWORDS);
     }
 
     public void testSimpleParserTokenizer()
     {
-        String sql = "select" +
-            " 12" +
-            " " +
-            "*" +
-            " 1.23e45" +
-            " " +
-            "(" +
-            "\"an id\"" +
-            "," +
-            " " +
-            "\"an id with \"\"quotes' inside\"" +
-            "," +
-            " " +
-            "/* a comment, with 'quotes', over\nmultiple lines\nand select keyword */" +
-            "\n " +
-            "(" +
-            " " +
-            "a" +
-            " " +
-            "different" +
-            " " +
-            "// comment\n\r" +
-            "//and a comment /* containing comment */ and then some more\r" +
-            ")" +
-            " " +
-            "from" +
-            " " +
-            "t" +
-            ")" +
-            ")" +
-            "/* a comment after close paren */" +
-            " " +
-            "(" +
-            "'quoted'" +
-            " " +
-            "'string with ''single and \"double\"\" quote'" +
-            ")";
-        String expected = "SELECT\n" +
-            "ID(12)\n" +
-            "ID(*)\n" +
-            "ID(1.23e45)\n" +
-            "LPAREN\n" +
-            "DQID(\"an id\")\n" +
-            "COMMA\n" +
-            "DQID(\"an id with \"\"quotes' inside\")\n" +
-            "COMMA\n" +
-            "COMMENT\n" +
-            "LPAREN\n" +
-            "ID(a)\n" +
-            "ID(different)\n" +
-            "COMMENT\n" +
-            "COMMENT\n" +
-            "RPAREN\n" +
-            "FROM\n" +
-            "ID(t)\n" +
-            "RPAREN\n" +
-            "RPAREN\n" +
-            "COMMENT\n" +
-            "LPAREN\n" +
-            "SQID('quoted')\n" +
-            "SQID('string with ''single and \"double\"\" quote')\n" +
-            "RPAREN\n";
+        String sql =
+            "select"
+            + " 12"
+            + " "
+            + "*"
+            + " 1.23e45"
+            + " "
+            + "("
+            + "\"an id\""
+            + ","
+            + " "
+            + "\"an id with \"\"quotes' inside\""
+            + ","
+            + " "
+            + "/* a comment, with 'quotes', over\nmultiple lines\nand select keyword */"
+            + "\n "
+            + "("
+            + " "
+            + "a"
+            + " "
+            + "different"
+            + " "
+            + "// comment\n\r"
+            + "//and a comment /* containing comment */ and then some more\r"
+            + ")"
+            + " "
+            + "from"
+            + " "
+            + "t"
+            + ")"
+            + ")"
+            + "/* a comment after close paren */"
+            + " "
+            + "("
+            + "'quoted'"
+            + " "
+            + "'string with ''single and \"double\"\" quote'"
+            + ")";
+        String expected =
+            "SELECT\n"
+            + "ID(12)\n"
+            + "ID(*)\n"
+            + "ID(1.23e45)\n"
+            + "LPAREN\n"
+            + "DQID(\"an id\")\n"
+            + "COMMA\n"
+            + "DQID(\"an id with \"\"quotes' inside\")\n"
+            + "COMMA\n"
+            + "COMMENT\n"
+            + "LPAREN\n"
+            + "ID(a)\n"
+            + "ID(different)\n"
+            + "COMMENT\n"
+            + "COMMENT\n"
+            + "RPAREN\n"
+            + "FROM\n"
+            + "ID(t)\n"
+            + "RPAREN\n"
+            + "RPAREN\n"
+            + "COMMENT\n"
+            + "LPAREN\n"
+            + "SQID('quoted')\n"
+            + "SQID('string with ''single and \"double\"\" quote')\n"
+            + "RPAREN\n";
         assertTokenizesTo(sql, expected);
 
         // Tokenizer should be lenient if input ends mid-token
         assertTokenizesTo("select /* unfinished comment", "SELECT\nCOMMENT\n");
         assertTokenizesTo("select // unfinished comment", "SELECT\nCOMMENT\n");
-        assertTokenizesTo("'starts with string'", "SQID('starts with string')\n");
+        assertTokenizesTo(
+            "'starts with string'",
+            "SQID('starts with string')\n");
         assertTokenizesTo("'unfinished string", "SQID('unfinished string)\n");
-        assertTokenizesTo("\"unfinished double-quoted id", "DQID(\"unfinished double-quoted id)\n");
+        assertTokenizesTo(
+            "\"unfinished double-quoted id",
+            "DQID(\"unfinished double-quoted id)\n");
         assertTokenizesTo("123", "ID(123)\n");
     }
 
@@ -902,7 +945,8 @@ public class SqlAdvisorTest
         assertSimplify(sql, expected);
 
         // join
-        sql = "select a.empno, b.deptno from dummy a join sales.^ where empno=1";
+        sql =
+            "select a.empno, b.deptno from dummy a join sales.^ where empno=1";
         expected = "SELECT * FROM dummy a JOIN sales. _suggest_";
         assertSimplify(sql, expected);
 
@@ -918,8 +962,7 @@ public class SqlAdvisorTest
         sql =
             "select a.empno, b.deptno from sales.emp a, sales.dept b "
             + "where ^";
-        expected =
-            "SELECT * FROM sales.emp a , sales.dept b WHERE _suggest_";
+        expected = "SELECT * FROM sales.emp a , sales.dept b WHERE _suggest_";
         assertSimplify(sql, expected);
 
         // order by
@@ -953,7 +996,8 @@ public class SqlAdvisorTest
         assertSimplify(sql, expected);
 
         sql = "select t.^ from (select 1 as x, 2 as y from sales)";
-        expected = "SELECT t. _suggest_ FROM ( SELECT 0 AS x , 0 AS y FROM sales )";
+        expected =
+            "SELECT t. _suggest_ FROM ( SELECT 0 AS x , 0 AS y FROM sales )";
         assertSimplify(sql, expected);
 
         // subquery in where; note that:
@@ -961,8 +1005,10 @@ public class SqlAdvisorTest
         // 2. keeps SELECT clause of subquery in FROM clause;
         // 3. removes GROUP BY clause of subquery in FROM clause;
         // 4. removes SELECT clause of outer query.
-        sql = "select x + y + 32 from (select 1 as x, 2 as y from sales group by invalid stuff) as t where x in (select deptno from emp where foo + t.^ < 10)";
-        expected = "SELECT * FROM ( SELECT 0 AS x , 0 AS y FROM sales ) as t WHERE x in ( SELECT * FROM emp WHERE foo + t. _suggest_ < 10 )";
+        sql =
+            "select x + y + 32 from (select 1 as x, 2 as y from sales group by invalid stuff) as t where x in (select deptno from emp where foo + t.^ < 10)";
+        expected =
+            "SELECT * FROM ( SELECT 0 AS x , 0 AS y FROM sales ) as t WHERE x in ( SELECT * FROM emp WHERE foo + t. _suggest_ < 10 )";
         assertSimplify(sql, expected);
 
         // if hint is in FROM, can remove other members of FROM clause
@@ -975,30 +1021,37 @@ public class SqlAdvisorTest
         expected = "SELECT * FROM sales.emp a WHERE _suggest_";
         assertSimplify(sql, expected);
 
-        sql = "select count(1) from sales.emp a where substring(a.^ FROM 3 for 6) = '1234'";
-        expected = "SELECT * FROM sales.emp a WHERE substring ( a. _suggest_ FROM 3 for 6 ) = '1234'";
+        sql =
+            "select count(1) from sales.emp a where substring(a.^ FROM 3 for 6) = '1234'";
+        expected =
+            "SELECT * FROM sales.emp a WHERE substring ( a. _suggest_ FROM 3 for 6 ) = '1234'";
         assertSimplify(sql, expected);
 
         // missing ')' following subquery
-        sql = "select * from sales.emp a where deptno in (" +
-            "select * from sales.dept b where ^";
-        expected = "SELECT * FROM sales.emp a WHERE deptno in (" +
-            " SELECT * FROM sales.dept b WHERE _suggest_ )";
+        sql =
+            "select * from sales.emp a where deptno in ("
+            + "select * from sales.dept b where ^";
+        expected =
+            "SELECT * FROM sales.emp a WHERE deptno in ("
+            + " SELECT * FROM sales.dept b WHERE _suggest_ )";
         assertSimplify(sql, expected);
 
         // keyword embedded in single and double quoted string should be
         // ignored
-        sql = "select 'a cat from a king' as foobar, 1 / 2 \"where\" from t group by t.^ order by 123";
+        sql =
+            "select 'a cat from a king' as foobar, 1 / 2 \"where\" from t group by t.^ order by 123";
         expected = "SELECT * FROM t GROUP BY t. _suggest_";
         assertSimplify(sql, expected);
 
         // skip comments
-        sql = "select /* here is from */ 'cat' as foobar, 1 as x from t group by t.^ order by 123";
+        sql =
+            "select /* here is from */ 'cat' as foobar, 1 as x from t group by t.^ order by 123";
         expected = "SELECT * FROM t GROUP BY t. _suggest_";
         assertSimplify(sql, expected);
 
         // skip comments
-        sql = "select // here is from clause\n 'cat' as foobar, 1 as x from t group by t.^ order by 123";
+        sql =
+            "select // here is from clause\n 'cat' as foobar, 1 as x from t group by t.^ order by 123";
         expected = "SELECT * FROM t GROUP BY t. _suggest_";
         assertSimplify(sql, expected);
     }
@@ -1027,13 +1080,14 @@ public class SqlAdvisorTest
     public void testPartialIdentifier()
     {
         String sql = "select * from emp where e^ and emp.deptno = 10";
-        final String expected = "Column(EMPNO)\n" +
-            "Column(ENAME)\n" +
-            "Keyword(ELEMENT)\n" +
-            "Keyword(EXISTS)\n" +
-            "Keyword(EXP)\n" +
-            "Keyword(EXTRACT)\n" +
-            "Table(EMP)\n";
+        final String expected =
+            "Column(EMPNO)\n"
+            + "Column(ENAME)\n"
+            + "Keyword(ELEMENT)\n"
+            + "Keyword(EXISTS)\n"
+            + "Keyword(EXP)\n"
+            + "Keyword(EXTRACT)\n"
+            + "Table(EMP)\n";
         assertComplete(sql, expected, "e");
 
         // cursor in middle of word and at end
@@ -1042,8 +1096,8 @@ public class SqlAdvisorTest
 
         // longer completion
         sql = "select * from emp where em^";
-        final String EMPNO_EMP = "Column(EMPNO)\n" +
-            "Table(EMP)\n";
+        final String EMPNO_EMP = "Column(EMPNO)\n"
+            + "Table(EMP)\n";
         assertComplete(sql, EMPNO_EMP, null);
 
         // word after punctuation
@@ -1073,11 +1127,17 @@ public class SqlAdvisorTest
         assertComplete(sql, EMP_COLUMNS, STAR_KEYWORD);
     }
 
-    public void testInsert() throws Exception
+    public void testInsert()
+        throws Exception
     {
         String sql;
         sql = "insert into emp(empno, mgr) select ^ from dept a";
-        assertComplete(sql, getSelectKeywords(), EXPR_KEYWORDS, A_TABLE, DEPT_COLUMNS);
+        assertComplete(
+            sql,
+            getSelectKeywords(),
+            EXPR_KEYWORDS,
+            A_TABLE,
+            DEPT_COLUMNS);
 
         sql = "insert into emp(empno, mgr) values (123, 3 + ^)";
         assertComplete(sql, EXPR_KEYWORDS);
@@ -1089,17 +1149,21 @@ public class SqlAdvisorTest
         assertComplete(sql, "", null);
     }
 
-    public void testUnion() throws Exception
+    public void testUnion()
+        throws Exception
     {
         // we simplify set ops such as UNION by removing other queries -
         // thereby avoiding validation errors due to mismatched select lists
-        String sql = "select 1 from emp union select 2 from dept a where ^ and deptno < 5";
-        String simplified = "SELECT * FROM dept a WHERE _suggest_ and deptno < 5";
+        String sql =
+            "select 1 from emp union select 2 from dept a where ^ and deptno < 5";
+        String simplified =
+            "SELECT * FROM dept a WHERE _suggest_ and deptno < 5";
         assertSimplify(sql, simplified);
         assertComplete(sql, EXPR_KEYWORDS, A_TABLE, DEPT_COLUMNS);
 
         // UNION ALL
-        sql = "select 1 from emp union all select 2 from dept a where ^ and deptno < 5";
+        sql =
+            "select 1 from emp union all select 2 from dept a where ^ and deptno < 5";
         assertSimplify(sql, simplified);
 
         // hint is in first query
@@ -1108,11 +1172,15 @@ public class SqlAdvisorTest
         assertSimplify(sql, simplified);
     }
 
-    //~ Inner Classes ----------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
-    public interface Tester extends SqlValidatorTest.Tester {
+    public interface Tester
+        extends SqlValidatorTest.Tester
+    {
         SqlAdvisor createAdvisor(SqlValidatorWithHints validator);
     }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     public class AdvisorTestImpl
         extends TesterImpl
@@ -1141,4 +1209,4 @@ public class SqlAdvisorTest
     }
 }
 
-// End SqlValidatorTest.java
+// End SqlAdvisorTest.java

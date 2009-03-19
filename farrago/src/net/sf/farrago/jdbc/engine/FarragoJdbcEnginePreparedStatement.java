@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -36,6 +36,7 @@ import java.util.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.jdbc4.*;
+
 
 /**
  * FarragoJdbcEnginePreparedStatement is an abstract base for Farrago
@@ -542,84 +543,84 @@ public abstract class FarragoJdbcEnginePreparedStatement
     {
         throw new UnsupportedOperationException("setNClob");
     }
-    
+
     // implement PreparedStatement
     public void setNClob(int i, NClob nclob)
         throws SQLException
     {
         throw new UnsupportedOperationException("setNClob");
     }
-    
+
     // implement PreparedStatement
     public void setNClob(int i, Reader reader, long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("setNClob");
     }
-    
+
     // implement PreparedStatement
     public void setBlob(int i, InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("setBlob");
     }
-    
+
     // implement PreparedStatement
     public void setBlob(int i, InputStream inputStream, long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("setBlob");
     }
-    
+
     // implement PreparedStatement
     public void setBinaryStream(int i, InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("setBinaryStream");
     }
-    
+
     // implement PreparedStatement
     public void setBinaryStream(int i, InputStream inputStream, long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("setBinaryStream");
     }
-    
+
     // implement PreparedStatement
     public void setAsciiStream(int i, InputStream inputStream)
         throws SQLException
     {
         throw new UnsupportedOperationException("setAsciiStream");
     }
-    
+
     // implement PreparedStatement
     public void setAsciiStream(int i, InputStream inputStream, long len)
         throws SQLException
     {
         throw new UnsupportedOperationException("setAsciiStream");
     }
-    
+
     // implement PreparedStatement
     public void setSQLXML(int i, SQLXML sqlxml)
         throws SQLException
     {
         throw new UnsupportedOperationException("setSQLXML");
     }
-    
+
     // implement PreparedStatement
     public void setNString(int i, String nstring)
         throws SQLException
     {
         throw new UnsupportedOperationException("setNString");
     }
-    
+
     // implement PreparedStatement
     public void setRowId(int i, RowId rowid)
         throws SQLException
     {
         throw new UnsupportedOperationException("setRowId");
     }
-    
+
     //
     // end JDBC 4 methods
     //

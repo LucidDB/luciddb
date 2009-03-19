@@ -2,7 +2,7 @@
 // $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2009-2009 The Eigenbase Project
-// Copyright (C) 2009-2009 Disruptive Tech
+// Copyright (C) 2009-2009 SQLstream, Inc.
 // Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -158,7 +158,7 @@ class MedMqlPushDownRule extends RelOptRule
             RelDataTypeField[] projFields = bottomProj.getRowType().getFields();
             fieldNames = new String[projFields.length];
             RexNode[] nodes = bottomProj.getChildExps();
-            for (int i=0; i<nodes.length; i++) {
+            for (int i = 0; i < nodes.length; i++) {
                 if (nodes[i] instanceof RexInputRef) {
                     int x = ((RexInputRef)nodes[i]).getIndex();
                     fieldNames[i] = allOrigFieldNames[x];
@@ -318,7 +318,7 @@ class MedMqlPushDownRule extends RelOptRule
         Map<String, String> fieldBindings)
     {
         MedMqlColumnSet columnSet = tableRel.getMedMqlColumnSet();
-        
+
         RexBuilder rexBuilder = tableRel.getCluster().getRexBuilder();
 
         // FIXME jvs 7-Jan-2008: escape quotes in field names; use a proper
@@ -341,7 +341,7 @@ class MedMqlPushDownRule extends RelOptRule
         sbMql.append("}]");
         sbMql.append("}");
         String mql = sbMql.toString();
-        
+
         StringBuilder sbRowType = new StringBuilder();
         boolean first = true;
         for (RelDataTypeField field : rowType.getFields()) {
@@ -353,11 +353,11 @@ class MedMqlPushDownRule extends RelOptRule
             sbRowType.append(field.getName());
         }
         String rowTypeString = sbRowType.toString();
-        
+
         RexNode urlArg = rexBuilder.makeLiteral(columnSet.server.getUrl());
         RexNode mqlArg = rexBuilder.makeLiteral(mql);
         RexNode rowTypeArg = rexBuilder.makeLiteral(rowTypeString);
-        
+
         RelNode rel = FarragoJavaUdxRel.newUdxRel(
             columnSet.getPreparingStmt(),
             rowType,
@@ -367,19 +367,19 @@ class MedMqlPushDownRule extends RelOptRule
             RelNode.emptyArray);
         return rel;
     }
-    
+
     private void transformToFarragoUdxRel(
         RelOptRuleCall call,
         MedMqlTableRel tableRel,
         FilterRel filter, ProjectRel topProj, ProjectRel bottomProj)
     {
         MedMqlColumnSet columnSet = tableRel.getMedMqlColumnSet();
-        
+
         RelNode rel = createFarragoUdxRel(
             tableRel,
             tableRel.getRowType(),
             createFieldBindings(tableRel));
-        
+
         if (bottomProj != null) {
             rel = new ProjectRel(
                 bottomProj.getCluster(),

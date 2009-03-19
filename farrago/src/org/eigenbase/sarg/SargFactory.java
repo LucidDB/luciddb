@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2006-2007 The Eigenbase Project
-// Copyright (C) 2006-2007 Disruptive Tech
-// Copyright (C) 2006-2007 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
+// Copyright (C) 2006-2009 SQLstream, Inc.
+// Copyright (C) 2006-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -121,35 +121,36 @@ public class SargFactory
     }
 
     /**
-     * @param simpleMode if true, the analyzer restricts the types of
-     * predicates it allows; the following are disallowed - conjuntions on the
-     * same RexInputRef, more than one range predicate, and all disjunctions
-     * 
+     * @param simpleMode if true, the analyzer restricts the types of predicates
+     * it allows; the following are disallowed - conjuntions on the same
+     * RexInputRef, more than one range predicate, and all disjunctions
+     *
      * @return new analyzer for rex expressions
      */
     public SargRexAnalyzer newRexAnalyzer(boolean simpleMode)
     {
         return new SargRexAnalyzer(this, simpleMode);
     }
-    
+
     /**
-     * @param lowerRexInputIdx if >= 0, treat RexInputRefs whose index is
-     * within the range [lowerRexInputIdx, upperRexInputIdx) as coordinates in
+     * @param lowerRexInputIdx if >= 0, treat RexInputRefs whose index is within
+     * the range [lowerRexInputIdx, upperRexInputIdx) as coordinates in
      * expressions
-     * 
-     * @param upperRexInputIdx if >= 0, treat RexInputRefs whose index is
-     * within the range [lowerRexInputIdx, upperRexInputIdx) as coordinates in
+     * @param upperRexInputIdx if >= 0, treat RexInputRefs whose index is within
+     * the range [lowerRexInputIdx, upperRexInputIdx) as coordinates in
      * expressions
-     * 
+     *
      * @return new analyzer for rex expressions
      */
     public SargRexAnalyzer newRexAnalyzer(
         int lowerRexInputIdx,
         int upperRexInputIdx)
     {
-        return
-            new SargRexAnalyzer(
-                this, true, lowerRexInputIdx, upperRexInputIdx);
+        return new SargRexAnalyzer(
+            this,
+            true,
+            lowerRexInputIdx,
+            upperRexInputIdx);
     }
 
     /**

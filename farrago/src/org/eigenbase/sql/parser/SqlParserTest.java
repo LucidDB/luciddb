@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -1265,17 +1265,18 @@ public class SqlParserTest
             "select * from (select * from t order by x, y) where a = b",
             TestUtil.fold(
                 "SELECT *\n"
-                    + "FROM (SELECT *\n"
-                    + "FROM `T`\n"
-                    + "ORDER BY `X`, `Y`)\n"
-                    + "WHERE (`A` = `B`)"));
+                + "FROM (SELECT *\n"
+                + "FROM `T`\n"
+                + "ORDER BY `X`, `Y`)\n"
+                + "WHERE (`A` = `B`)"));
     }
 
     public void testOrderIllegalInExpression()
     {
         check(
             "select (select 1 from foo order by x,y) from t where a = b",
-            TestUtil.fold("SELECT (SELECT 1\n"
+            TestUtil.fold(
+                "SELECT (SELECT 1\n"
                 + "FROM `FOO`\n"
                 + "ORDER BY `X`, `Y`)\n"
                 + "FROM `T`\n"
@@ -1586,7 +1587,8 @@ public class SqlParserTest
 
     public void testSelectList4()
     {
-        checkFails("select ^from^ emp",
+        checkFails(
+            "select ^from^ emp",
             "(?s).*Encountered \"from\" at line .*");
     }
 
@@ -2017,11 +2019,12 @@ public class SqlParserTest
 
     public void testStringLiteralChain()
     {
-        final String fooBar = TestUtil.fold(
-            new String[] {
-                "'foo'",
-                "'bar'"
-            });
+        final String fooBar =
+            TestUtil.fold(
+                new String[] {
+                    "'foo'",
+                    "'bar'"
+                });
         final String fooBarBaz =
             TestUtil.fold(
                 new String[] {
@@ -2091,7 +2094,8 @@ public class SqlParserTest
     public void testCaseExpressionFails()
     {
         // Missing 'END'
-        checkFails("select case col1 when 1 then 'one' ^from^ t",
+        checkFails(
+            "select case col1 when 1 then 'one' ^from^ t",
             "(?s).*from.*");
 
         // Wrong 'WHEN'
@@ -2313,7 +2317,8 @@ public class SqlParserTest
         checkExp("sum(sal) over (w)", "(SUM(`SAL`) OVER (`W`))");
 
         // Only 1 window reference allowed
-        checkExpFails("sum(sal) over (w ^w1^ partition by deptno)",
+        checkExpFails(
+            "sum(sal) over (w ^w1^ partition by deptno)",
             "(?s)Encountered \"w1\" at.*");
     }
 
@@ -2455,33 +2460,43 @@ public class SqlParserTest
 
     public void testAsAliases()
     {
-        check("select x from t as t1 (a, b) where foo",
-            TestUtil.fold("SELECT `X`\n"
+        check(
+            "select x from t as t1 (a, b) where foo",
+            TestUtil.fold(
+                "SELECT `X`\n"
                 + "FROM `T` AS `T1` (`A`, `B`)\n"
                 + "WHERE `FOO`"));
 
-        check("select x from (values (1, 2), (3, 4)) as t1 (\"a\", b) where \"a\" > b",
-            TestUtil.fold("SELECT `X`\n"
+        check(
+            "select x from (values (1, 2), (3, 4)) as t1 (\"a\", b) where \"a\" > b",
+            TestUtil.fold(
+                "SELECT `X`\n"
                 + "FROM (VALUES (ROW(1, 2)), (ROW(3, 4))) AS `T1` (`a`, `B`)\n"
                 + "WHERE (`a` > `B`)"));
 
         // must have at least one column
-        checkFails("select x from (values (1, 2), (3, 4)) as t1 (^)",
-            TestUtil.fold("(?s).*Was expecting one of:\n" +
-                "    <IDENTIFIER> ...\n" +
-                "    <QUOTED_IDENTIFIER>.*"));
+        checkFails(
+            "select x from (values (1, 2), (3, 4)) as t1 (^)",
+            TestUtil.fold(
+                "(?s).*Was expecting one of:\n"
+                + "    <IDENTIFIER> ...\n"
+                + "    <QUOTED_IDENTIFIER>.*"));
 
         // cannot have expressions
-        checkFails("select x from t as t1 (x ^+^ y)",
-            TestUtil.fold("(?s).*Was expecting one of:\n" +
-                "    \"\\)\" \\.\\.\\.\n" +
-                "    \",\" \\.\\.\\..*"));
+        checkFails(
+            "select x from t as t1 (x ^+^ y)",
+            TestUtil.fold(
+                "(?s).*Was expecting one of:\n"
+                + "    \"\\)\" \\.\\.\\.\n"
+                + "    \",\" \\.\\.\\..*"));
 
         // cannot have compound identifiers
-        checkFails("select x from t as t1 (x^.^y)",
-            TestUtil.fold("(?s).*Was expecting one of:\n" +
-                "    \"\\)\" \\.\\.\\.\n" +
-                "    \",\" \\.\\.\\..*"));
+        checkFails(
+            "select x from t as t1 (x^.^y)",
+            TestUtil.fold(
+                "(?s).*Was expecting one of:\n"
+                + "    \"\\)\" \\.\\.\\.\n"
+                + "    \",\" \\.\\.\\..*"));
     }
 
     public void testOver()
@@ -4801,23 +4816,27 @@ public class SqlParserTest
     public void testUnparseableIntervalQualifiers()
     {
         // No qualifier
-        checkExpFails("interval '1^'^",
-            TestUtil.fold("Encountered \"<EOF>\" at line 1, column 12\\.\n" +
-                "Was expecting one of:\n" +
-                "    \"DAY\" \\.\\.\\.\n" +
-                "    \"HOUR\" \\.\\.\\.\n" +
-                "    \"MINUTE\" \\.\\.\\.\n" +
-                "    \"MONTH\" \\.\\.\\.\n" +
-                "    \"SECOND\" \\.\\.\\.\n" +
-                "    \"YEAR\" \\.\\.\\.\n" +
-                "    "));
+        checkExpFails(
+            "interval '1^'^",
+            TestUtil.fold(
+                "Encountered \"<EOF>\" at line 1, column 12\\.\n"
+                + "Was expecting one of:\n"
+                + "    \"DAY\" \\.\\.\\.\n"
+                + "    \"HOUR\" \\.\\.\\.\n"
+                + "    \"MINUTE\" \\.\\.\\.\n"
+                + "    \"MONTH\" \\.\\.\\.\n"
+                + "    \"SECOND\" \\.\\.\\.\n"
+                + "    \"YEAR\" \\.\\.\\.\n"
+                + "    "));
 
         // illegal qualfiers, no precision in either field
-        checkExpFails("interval '1' year ^to^ year",
-            TestUtil.fold("(?s)Encountered \"to year\" at line 1, column 19.\n" +
-                "Was expecting one of:\n" +
-                "    <EOF> \n" +
-                "    \"AND\" \\.\\.\\..*"));
+        checkExpFails(
+            "interval '1' year ^to^ year",
+            TestUtil.fold(
+                "(?s)Encountered \"to year\" at line 1, column 19.\n"
+                + "Was expecting one of:\n"
+                + "    <EOF> \n"
+                + "    \"AND\" \\.\\.\\..*"));
         checkExpFails("interval '1-2' year ^to^ day", ANY);
         checkExpFails("interval '1-2' year ^to^ hour", ANY);
         checkExpFails("interval '1-2' year ^to^ minute", ANY);
@@ -5301,7 +5320,7 @@ public class SqlParserTest
     {
         StringBuilder ident128Builder = new StringBuilder();
         for (int i = 0; i < 128; i++) {
-            ident128Builder.append((char)('a' + (i % 26)));
+            ident128Builder.append((char) ('a' + (i % 26)));
         }
         String ident128 = ident128Builder.toString();
         String ident128Upper = ident128.toUpperCase(Locale.US);
@@ -5313,14 +5332,16 @@ public class SqlParserTest
             "SELECT *" + NL + "FROM `" + ident128Upper + "`");
         checkFails(
             "select * from ^" + ident129 + "^",
-            "Length of identifier '" + ident129Upper + "' must be less than or equal to 128 characters");
+            "Length of identifier '" + ident129Upper
+            + "' must be less than or equal to 128 characters");
 
         check(
             "select " + ident128 + " from mytable",
             "SELECT `" + ident128Upper + "`" + NL + "FROM `MYTABLE`");
         checkFails(
             "select ^" + ident129 + "^ from mytable",
-            "Length of identifier '" + ident129Upper + "' must be less than or equal to 128 characters");
+            "Length of identifier '" + ident129Upper
+            + "' must be less than or equal to 128 characters");
     }
 
     /**
@@ -5350,16 +5371,20 @@ public class SqlParserTest
         // contains Unicode characters (not SQL Unicode escape sequences).  The
         // escaping here is Java-only, so by the time it gets to the SQL
         // parser, the literal already contains Unicode characters.
-        String in1 = "values _UTF16'"
+        String in1 =
+            "values _UTF16'"
             + ConversionUtil.TEST_UNICODE_STRING + "'";
-        String out1 = "(VALUES (ROW(_UTF16'"
+        String out1 =
+            "(VALUES (ROW(_UTF16'"
             + ConversionUtil.TEST_UNICODE_STRING + "')))";
         check(in1, out1);
 
         // Without the U& prefix, escapes are left unprocessed
-        String in2 = "values '"
+        String in2 =
+            "values '"
             + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL + "'";
-        String out2 = "(VALUES (ROW('"
+        String out2 =
+            "(VALUES (ROW('"
             + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL + "')))";
         check(in2, out2);
 
@@ -5370,19 +5395,22 @@ public class SqlParserTest
             "values U&'"
             + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL
             + "' UESCAPE '!'";
-        String out3 = "(VALUES (ROW(_UTF16'"
+        String out3 =
+            "(VALUES (ROW(_UTF16'"
             + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL + "')))";
         check(in3, out3);
     }
 
     public void testUnicodeEscapedLiteral()
     {
-        // Note that here we are constructing a SQL statement which 
+        // Note that here we are constructing a SQL statement which
         // contains SQL-escaped Unicode characters to be handled
         // by the SQL parser.
-        String in = "values U&'"
+        String in =
+            "values U&'"
             + ConversionUtil.TEST_UNICODE_SQL_ESCAPED_LITERAL + "'";
-        String out = "(VALUES (ROW(_UTF16'"
+        String out =
+            "(VALUES (ROW(_UTF16'"
             + ConversionUtil.TEST_UNICODE_STRING + "')))";
         check(in, out);
 

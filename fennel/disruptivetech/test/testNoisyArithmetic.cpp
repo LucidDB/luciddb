@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -72,25 +72,24 @@ static struct TOp {
     const char *pName;
     int iOpCode;
     int iArity;
-} g_Ops[] = 
+} g_Ops[] =
 {
 { "add", OP_ADD, 2 },
 { "sub", OP_SUB, 2 },
 { "mul", OP_MUL, 2 },
 { "div", OP_DIV, 2 },
 { "neg", OP_NEG, 1 },
-{ 0, 0 }
-};
+{ 0, 0 }};
 static struct TType {
     const char *pName;
     int iCode;
     const char *pScanfFormat;
     const char *pPrintfFormat;
-} g_Types[] = 
+} g_Types[] =
 {
 { "char", T_C, "%hhi", "%hhd" },
 { "signed char", T_SC, "%hhi", "%hhd" },
-{ "unsigned char", T_UC, "%hhu", "%hhu" },        /* TODO, doesn't allow unsigned hex, octals */
+{ "unsigned char", T_UC, "%hhu", "%hhu" },
 { "short", T_S, "%hi", "%hd"  },
 { "unsigned short", T_US, "%hu", "%hu" },
 { "int", T_I32, "%i", "%d"  },
@@ -100,8 +99,7 @@ static struct TType {
 { "float", T_F, "%e", "%e" },
 { "double", T_D, "%le", "%le" },
 { "long double", T_LD, "%lle", "%lle" },
-{ 0, 0 }
-};
+{ 0, 0 }};
 enum { SHORT_MSG_LENGTH=7, LONG_MSG_LENGTH/*hack*/=512, FIXED_ARGS=3 };
 union TSuper {
     char c;
@@ -151,23 +149,23 @@ bool DoOp_0( int iOpCode, int iExType, const char *pExpected,
         case OP_ADD:
         *tResult = Noisy<TMPL>::add( pc, *tOp0, *tOp1, 0 );
             break;
-            
+
         case OP_SUB:
             *tResult = Noisy<TMPL>::sub( pc, *tOp0, *tOp1, 0 );
             break;
-            
+
         case OP_MUL:
             *tResult = Noisy<TMPL>::mul( pc, *tOp0, *tOp1, 0 );
             break;
-            
+
         case OP_DIV:
             *tResult = Noisy<TMPL>::div( pc, *tOp0, *tOp1, 0 );
             break;
-            
+
         case OP_NEG:
             *tResult = Noisy<TMPL>::neg( pc, *tOp0, 0 );
             break;
-            
+
         default:
             assert( 0 /* op not implemented */ );
         }
@@ -403,7 +401,7 @@ static bool ProcessALine( int iLine, const char *pFile, char *pLine, size_t tLen
     iArgCount--;
     if ( iArgCount<2 ) return true; /* comment or empty line */
     if ( iArgCount==MAX_ARGS ) {
-        fprintf( stderr, "Too many arguments (max=%d) at %s line %d\n", 
+        fprintf( stderr, "Too many arguments (max=%d) at %s line %d\n",
             MAX_ARGS-1, pFile, iLine );
         return false;
         }
@@ -432,7 +430,7 @@ int InputFromStream( const char *pFilename )
     else {
         pFilename = "(stdin)";
         }
-    
+
 
     /* --- */
     szBuf[BUF_SIZE] = '\0';
@@ -498,7 +496,7 @@ return 0;   /* this test is causing a seg. fault, and its not valuable as part o
         /* read from file */
         return InputFromStream( ppArgv[1] );
         }
-    
+
     /* else */
     /* read generated C++ from this file */
     int iLine = 1;
@@ -518,3 +516,5 @@ boost::unit_test_framework::test_suite *init_unit_test_suite(int,char **)
 {
     return NULL;
 }
+
+// End testNoisyArithmetic.cpp

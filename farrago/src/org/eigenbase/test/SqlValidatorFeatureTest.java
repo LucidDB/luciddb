@@ -1,9 +1,9 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,13 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.resgen.ResourceDefinition;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.SqlOperatorTable;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeFactoryImpl;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -116,7 +116,7 @@ public class SqlValidatorFeatureTest
             "select name from ^dept tablesample substitute('sample_dept')^",
             EigenbaseResource.instance().SQLFeatureExt_T613_Substitution);
     }
-    
+
     private void checkFeature(String sql, ResourceDefinition feature)
     {
         // Test once with feature enabled:  should pass

@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -60,7 +60,7 @@ SharedFtrsTableWriter FtrsTableWriterFactory::newTableWriter(
     pool.push_back(pNewWriter);
     return pNewWriter;
 }
-    
+
 SharedLogicalTxnParticipant FtrsTableWriterFactory::loadParticipant(
     LogicalTxnClassId classId,
     ByteInputStream &logStream)
@@ -114,6 +114,6 @@ LogicalTxnClassId FtrsTableWriterFactory::getParticipantClassId()
     return LogicalTxnClassId(0xaa6576b8efadbcdcLL);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/ftrs/FtrsTableWriterFactory.cpp#3 $");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/ftrs/FtrsTableWriterFactory.cpp#4 $");
 
 // End FtrsTableWriterFactory.cpp

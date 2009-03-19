@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 1999-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 1999-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,7 @@ protected:
      * Owning BTreeBuilder.
      */
     BTreeBuilder &builder;
-    
+
     /**
      * BTreeNodeAccessor to use for accessing nodes in this level.
      */
@@ -102,7 +102,7 @@ protected:
     void processInput(ByteInputStream &sortedInputStream);
 
     void unmarshalLastKey();
-    
+
     BTreeNode *allocateAndLinkNewNode();
 
     BTreeNode &allocatePage();
@@ -110,14 +110,14 @@ protected:
     explicit BTreeBuildLevel(
         BTreeBuilder &builderInit,
         BTreeNodeAccessor &nodeAccessorInit);
-        
+
     virtual bool isNodeFull(BTreeNode const &node,uint cbTuple);
 
     virtual void indexLastKey(bool finalize) = 0;
 
 public:
     virtual ~BTreeBuildLevel();
-    
+
     void indexLastChild();
 };
 
@@ -137,15 +137,15 @@ class FixedBuildLevel : public BTreeBuildLevel
 class VariableBuildLevel : public BTreeBuildLevel
 {
     friend class BTreeBuilder;
-    
+
     SharedSegOutputStream pParentKeyStream;
-    
+
     explicit VariableBuildLevel(
         BTreeBuilder &builderInit,
         BTreeNodeAccessor &nodeAccessorInit);
-    
+
     SharedSegInputStream getParentKeyStream();
-    
+
     // implement the BTreeBuildLevel interface
     virtual void indexLastKey(bool finalize);
 
@@ -156,11 +156,11 @@ public:
 class DynamicBuildLevel : public BTreeBuildLevel
 {
     friend class BTreeBuilder;
-    
+
     explicit DynamicBuildLevel(
         BTreeBuilder &builderInit,
         BTreeNodeAccessor &nodeAccessorInit);
-    
+
     // implement the BTreeBuildLevel interface
     virtual void indexLastKey(bool finalize);
 };

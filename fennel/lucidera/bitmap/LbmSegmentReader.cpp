@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,9 +39,9 @@ void LbmSegmentReader::init(
     boost::dynamic_bitset<> *pBitmapInit)
 {
     LbmSegmentReaderBase::init(
-        pInAccessorInit, 
-        bitmapSegTuple, 
-        setBitmapInit, 
+        pInAccessorInit,
+        bitmapSegTuple,
+        setBitmapInit,
         pBitmapInit);
     initCommon();
 }
@@ -61,7 +61,7 @@ void LbmSegmentReader::init(
 {
     LbmSegmentReaderBase::init(
         pTupleReaderInit,
-        bitmapSegTuple, 
+        bitmapSegTuple,
         setBitmapInit,
         pBitmapInit);
     initCommon();
@@ -94,7 +94,6 @@ ExecStreamResult LbmSegmentReader::advanceToByte(LbmByteNumber byteNum)
 {
     // read byte segments until find a suitable one
     while (byteSegOffset + byteSegLen <= byteNum) {
-
         // if current segment is exhausted, read another
         if (pSegDescStart >= pSegDescEnd) {
             ExecStreamResult rc = readSegment();
@@ -117,7 +116,7 @@ ExecStreamResult LbmSegmentReader::advanceToByte(LbmByteNumber byteNum)
         pSegStart -= delta;
         byteSegOffset += delta;
     }
-    
+
     return EXECRC_YIELD;
 }
 

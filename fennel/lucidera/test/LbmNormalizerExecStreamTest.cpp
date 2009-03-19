@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -57,7 +57,7 @@ protected:
      */
     void testNormalizer(
         uint nRows,
-        uint nKeys, 
+        uint nKeys,
         std::vector<int> const &repeatSeqValues);
 
 public:
@@ -108,7 +108,7 @@ public:
         changeIndexes[0] = getValueCount(nRows, interval, 0);
         for (uint i = 1; i < interval; i++) {
             changeIndexes[i] =
-                changeIndexes[i-1] + getValueCount(nRows, interval, i);
+                changeIndexes[i - 1] + getValueCount(nRows, interval, i);
         }
         current = 0;
         lastRow = 0;
@@ -166,7 +166,7 @@ void LbmNormalizerExecStreamTest::testCloseRepeats()
 
 void LbmNormalizerExecStreamTest::testNormalizer(
     uint nRows,
-    uint nKeys, 
+    uint nKeys,
     std::vector<int> const &repeatSeqValues)
 {
     initKeyBitmap(nRows, repeatSeqValues);

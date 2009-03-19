@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
-// Copyright (C) 2005-2007 The Eigenbase Project
+// Copyright (C) 2004-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@ public:
     virtual
     ~ReturnInstruction() { }
 
-    virtual void exec(TProgramCounter& pc) const { 
+    virtual void exec(TProgramCounter& pc) const {
         // Force pc past end of program
         pc = TPROGRAMCOUNTERMAX;
     }
@@ -65,10 +65,10 @@ public:
 };
 
 //! Add a warning/exception to the message queue.
-//! 
+//!
 //! Code is expected to be a valid SQL99 error code, eg, 22011, or a
 //! valid extension thereof. When code is NULL, an exception is not
-//! raised- becomes a no-op. Note: instruction does not 
+//! raised- becomes a no-op. Note: instruction does not
 //! terminate execution.
 class RaiseInstruction : public Instruction
 {
@@ -81,7 +81,7 @@ public:
     ~RaiseInstruction() { }
 
     virtual void exec(TProgramCounter& pc) const {
-        pc++; 
+        pc++;
         if (!mCode->isNull()) {
             throw CalcMessage(mCode->pointer(), pc - 1);
         }
@@ -104,7 +104,7 @@ public:
     create(InstructionSignature const & sig)
     {
         assert(sig.size() == numArgs());
-        return new 
+        return new
             RaiseInstruction(static_cast<RegisterRef<char*>*> (sig[0]));
     }
 private:

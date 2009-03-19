@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2002-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -277,6 +277,47 @@ public abstract class SqlAbstractParserImpl
         sql92ReservedWordSet = Collections.unmodifiableSet(set);
     }
 
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Type-safe enum for context of acceptable expressions.
+     */
+    protected enum ExprContext
+    {
+        /**
+         * Accept any kind of expression in this context.
+         */
+        ACCEPT_ALL,
+
+        /**
+         * Accept any kind of expression in this context, with the exception of
+         * CURSOR constructors.
+         */
+        ACCEPT_NONCURSOR,
+
+        /**
+         * Accept only query expressions in this context.
+         */
+        ACCEPT_QUERY,
+
+        /**
+         * Accept only non-query expressions in this context.
+         */
+        ACCEPT_NONQUERY,
+
+        /**
+         * Accept only parenthesized queries or non-query expressions in this
+         * context.
+         */
+        ACCEPT_SUBQUERY,
+
+        /**
+         * Accept only CURSOR constructors, parenthesized queries, or non-query
+         * expressions in this context.
+         */
+        ACCEPT_CURSOR;
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -306,6 +347,7 @@ public abstract class SqlAbstractParserImpl
      * @param funcType Type of function
      * @param functionQualifier Qualifier
      * @param operands Operands to call
+     *
      * @return Call
      */
     protected SqlCall createCall(
@@ -436,45 +478,6 @@ public abstract class SqlAbstractParserImpl
     }
 
     //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Type-safe enum for context of acceptable expressions.
-     */
-    protected enum ExprContext
-    {
-        /**
-         * Accept any kind of expression in this context.
-         */
-        ACCEPT_ALL,
-
-        /**
-         * Accept any kind of expression in this context, with the exception of
-         * CURSOR constructors.
-         */
-        ACCEPT_NONCURSOR,
-
-        /**
-         * Accept only query expressions in this context.
-         */
-        ACCEPT_QUERY,
-
-        /**
-         * Accept only non-query expressions in this context.
-         */
-        ACCEPT_NONQUERY,
-
-        /**
-         * Accept only parenthesized queries or non-query expressions in this
-         * context.
-         */
-        ACCEPT_SUBQUERY,
-
-        /**
-         * Accept only CURSOR constructors, parenthesized queries, or non-query
-         * expressions in this context.
-         */
-        ACCEPT_CURSOR;
-    }
 
     /**
      * Default implementation of the {@link Metadata} interface.

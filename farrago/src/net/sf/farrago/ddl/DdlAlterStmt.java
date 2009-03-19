@@ -1,10 +1,10 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
-// Copyright (C) 2005-2007 LucidEra, Inc.
-// Portions Copyright (C) 2003-2007 John V. Sichi
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 SQLstream, Inc.
+// Copyright (C) 2005-2009 LucidEra, Inc.
+// Portions Copyright (C) 2003-2009 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -30,9 +30,8 @@ import net.sf.farrago.session.*;
 
 
 /**
- * DdlAlterStmt represents some but not all DDL ALTER statements.
- * For others, see {@link DdlAlterTableStructureStmt},
- * {@link DdlRebuildTableStmt}, and 
+ * DdlAlterStmt represents some but not all DDL ALTER statements. For others,
+ * see {@link DdlAlterTableStructureStmt}, {@link DdlRebuildTableStmt}, and
  * {@link DdlSetSystemParamStmt}.
  *
  * @author Stephan Zuercher
@@ -66,7 +65,7 @@ public abstract class DdlAlterStmt
         super(alterElement);
     }
 
-    // REVIEW: SWZ: 2008-02-26: Eliminate this constructor if no red-zone 
+    // REVIEW: SWZ: 2008-02-26: Eliminate this constructor if no red-zone
     // subclasses require it.
     /**
      * @deprecated
