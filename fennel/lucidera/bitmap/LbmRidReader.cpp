@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2006-2007 LucidEra, Inc.
-// Copyright (C) 2006-2007 The Eigenbase Project
+// Copyright (C) 2006-2009 LucidEra, Inc.
+// Copyright (C) 2006-2009 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -280,6 +280,6 @@ bool LbmDeletionIndexReader::searchForRid(LcsRid rid)
     return (btreeRid == rid);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmRidReader.cpp#9 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/bitmap/LbmRidReader.cpp#10 $");
 
 // End LbmRidReader.cpp
