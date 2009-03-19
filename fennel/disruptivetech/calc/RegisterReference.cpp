@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2007 Disruptive Tech
+// Copyright (C) 2004-2007 SQLstream, Inc.
 // Copyright (C) 2005-2007 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -131,6 +131,6 @@ RegisterReference::toString() const
 
 
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/disruptivetech/calc/RegisterReference.cpp#9 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/disruptivetech/calc/RegisterReference.cpp#10 $");
 
 // End RegisterReference.cpp

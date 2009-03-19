@@ -2,7 +2,7 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2008 The Eigenbase Project
-// Copyright (C) 2002-2008 Disruptive Tech
+// Copyright (C) 2002-2008 SQLstream, Inc.
 // Copyright (C) 2005-2008 LucidEra, Inc.
 // Portions Copyright (C) 2003-2008 John V. Sichi
 //

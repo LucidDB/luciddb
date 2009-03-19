@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2007 The Eigenbase Project
-// Copyright (C) 2005-2007 Disruptive Tech
+// Copyright (C) 2005-2007 SQLstream, Inc.
 // Copyright (C) 2005-2007 LucidEra, Inc.
 // Portions Copyright (C) 1999-2007 John V. Sichi
 //
@@ -126,6 +126,6 @@ PageId LinearViewSegment::updatePage(PageId pageId, bool needsTranslation)
     return DelegatingSegment::updatePage(underlyingPageId, needsTranslation);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/segment/LinearViewSegment.cpp#7 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/segment/LinearViewSegment.cpp#8 $");
 
 // End LinearViewSegment.cpp
