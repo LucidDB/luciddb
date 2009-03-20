@@ -1005,29 +1005,6 @@ public class LucidDbSessionPersonality
         FarragoCatalogUtil.resetRowCounts(table, database.getUserRepos());
     }
 
-    // implement FarragoStreamFactoryProvider
-    public void registerStreamFactories(long hStreamGraph)
-    {
-        FarragoReposTxnContext txn = database.getSystemRepos().newTxnContext();
-        txn.beginReadTxn();
-        try {
-            // REVIEW jvs 22-Mar-2007:  We override
-            // FarragoDefaultSessionPersonality here to prevent dependency on
-            // DisruptiveTechJni unless explicitly requested via calc system
-            // parameter.
-            final CalcVirtualMachine calcVM =
-                database.getSystemRepos().getCurrentConfig()
-                .getCalcVirtualMachine();
-            if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
-                LucidEraJni.registerStreamFactory(hStreamGraph);
-            } else {
-                super.registerStreamFactories(hStreamGraph);
-            }
-        } finally {
-            txn.commit();
-        }
-    }
-
     //  implement FarragoSessionPersonality
     public void updateIndexRoot(
         FemLocalIndex index,

@@ -30,6 +30,8 @@ LocalConditionTest \
 TupleTest \
 StandardTypeTest \
 SparseBitmapTest \
+CollectExecStreamTest \
+CorrelationJoinExecStreamTest \
 RandomAllocationSegmentTest \
 ExecStreamTest \
 ParallelExecStreamSchedulerTest \
@@ -108,6 +110,13 @@ ExecStreamGovernorTest_SOURCES=ExecStreamGovernorTest.cpp
 PseudoUuidTest_SOURCES=PseudoUuidTest.cpp
 
 RandomAllocationSegmentTest_SOURCES=RandomAllocationSegmentTest.cpp
+
+CollectExecStreamTest_SOURCES=CollectExecStreamTest.cpp \
+	CollectExecStreamTestSuite.cpp
+
+CorrelationJoinExecStreamTest_SOURCES=CorrelationJoinExecStreamTest.cpp \
+	CorrelationJoinExecStreamTestSuite.cpp
+
 
 if !STATIC_TEST_LIBRARY
 libfenneltestdyn_la_LIBADD=libfenneltest.la

@@ -45,6 +45,10 @@
 #include "fennel/exec/ReshapeExecStream.h"
 #include "fennel/exec/NestedLoopJoinExecStream.h"
 #include "fennel/exec/BernoulliSamplingExecStream.h"
+#include "fennel/calculator/CalcExecStream.h"
+#include "fennel/exec/CollectExecStream.h"
+#include "fennel/exec/UncollectExecStream.h"
+#include "fennel/exec/CorrelationJoinExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -423,6 +427,44 @@ void ExecStreamFactory::visit(ProxyBernoulliSamplingStreamDef &streamDef)
     embryo.init(new BernoulliSamplingExecStream(), params);
 }
 
+void ExecStreamFactory::visit(ProxyCalcTupleStreamDef &streamDef)
+{
+    CalcExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    params.program = streamDef.getProgram();
+    params.isFilter = streamDef.isFilter();
+    embryo.init(
+        new CalcExecStream(),
+        params);
+}
+
+void ExecStreamFactory::visit(ProxyCorrelationJoinStreamDef &streamDef)
+{
+    CorrelationJoinExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    SharedProxyCorrelation pCorrelation = streamDef.getCorrelations();
+    for ( /* empty */; pCorrelation; ++pCorrelation) {
+        Correlation correlation(
+            DynamicParamId(pCorrelation->getId()),
+            pCorrelation->getOffset());
+        params.correlations.push_back(correlation);
+    }
+    embryo.init(new CorrelationJoinExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyCollectTupleStreamDef &streamDef)
+{
+    CollectExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    embryo.init(new CollectExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyUncollectTupleStreamDef &streamDef)
+{
+    UncollectExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    embryo.init(new UncollectExecStream(), params);
+}
 
 void ExecStreamFactory::readExecStreamParams(
     ExecStreamParams &params,
@@ -438,7 +480,6 @@ void ExecStreamFactory::readTupleDescriptor(
     assert(def);
     CmdInterpreter::readTupleDescriptor(desc, *def, pDatabase->getTypeFactory());
 }
-
 
 void ExecStreamFactory::readTupleStreamParams(
     SingleOutputExecStreamParams &params,

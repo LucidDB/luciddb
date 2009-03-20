@@ -1,7 +1,7 @@
 include $(top_srcdir)/am_include.mk
 
 SUBDIRS=common synch device cache segment txn tuple exec btree \
-db ftrs util libfennel test @farrago_subdir@ disruptivetech lucidera build
+db ftrs calculator util libfennel test calctest @farrago_subdir@ lucidera build
 
 EXTRA_DIST=am_include.mk moodss web test/verboseTest test/dictWords \
 INSTALL.mingw trace/README initBuild.sh build/buildBoostLibs.sh \

@@ -312,14 +312,8 @@ AC_CONFIG_FILES([fennelenv.sh build/defineVariables.sh \
 Makefile common/Makefile synch/Makefile \
 device/Makefile cache/Makefile segment/Makefile \
 txn/Makefile tuple/Makefile exec/Makefile btree/Makefile \
-db/Makefile ftrs/Makefile util/Makefile \
-libfennel/Makefile test/Makefile farrago/Makefile \
-disruptivetech/Makefile \
-disruptivetech/calc/Makefile \
-disruptivetech/xo/Makefile \
-disruptivetech/libfennel_dt/Makefile \
-disruptivetech/test/Makefile \
-disruptivetech/farrago/Makefile \
+db/Makefile ftrs/Makefile calculator/Makefile util/Makefile \
+libfennel/Makefile test/Makefile calctest/Makefile farrago/Makefile \
 lucidera/Makefile \
 lucidera/hashexe/Makefile \
 lucidera/bitmap/Makefile \

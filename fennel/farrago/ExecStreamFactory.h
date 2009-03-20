@@ -122,6 +122,10 @@ protected:
     virtual void visit(ProxyReshapeStreamDef &);
     virtual void visit(ProxyNestedLoopJoinStreamDef &);
     virtual void visit(ProxyBernoulliSamplingStreamDef &);
+    virtual void visit(ProxyCalcTupleStreamDef &streamDef);
+    virtual void visit(ProxyCorrelationJoinStreamDef &streamDef);
+    virtual void visit(ProxyCollectTupleStreamDef &streamDef);
+    virtual void visit(ProxyUncollectTupleStreamDef &streamDef);
 
     // helpers for above visitors
 

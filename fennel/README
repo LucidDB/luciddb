@@ -71,7 +71,4 @@ test:  unit tests
 
 farrago:  JNI integration for the companion Farrago project
 
-disruptivetech:  components contributed by SQLstream, Inc.
-
 lucidera:  components contributed by LucidEra, Inc.
-

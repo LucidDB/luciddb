@@ -22,7 +22,6 @@
 package net.sf.farrago.defimpl;
 
 import com.disruptivetech.farrago.calc.*;
-import com.disruptivetech.farrago.fennel.*;
 
 import com.lucidera.farrago.fennel.*;
 import com.lucidera.lurql.*;
@@ -174,7 +173,6 @@ public class FarragoDefaultSessionPersonality
     // implement FarragoStreamFactoryProvider
     public void registerStreamFactories(long hStreamGraph)
     {
-        DisruptiveTechJni.registerStreamFactory(hStreamGraph);
         LucidEraJni.registerStreamFactory(hStreamGraph);
     }
 
