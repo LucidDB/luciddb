@@ -67,8 +67,16 @@ db:  database implementation (top-level container)
 ftrs:  Fennel Transactional Row Store, a table storage implementation built on
 top of the btree library
 
+calculator:  SQL expression program evaluator
+
+sorter:  external mergesort implementation
+
+flatfile:  flatfile reader
+
+hashexe:  hash join/aggregation
+
 test:  unit tests
 
 farrago:  JNI integration for the companion Farrago project
 
-lucidera:  components contributed by LucidEra, Inc.
+lucidera:  column store and bitmap indexes contributed by LucidEra, Inc.

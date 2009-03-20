@@ -314,12 +314,12 @@ device/Makefile cache/Makefile segment/Makefile \
 txn/Makefile tuple/Makefile exec/Makefile btree/Makefile \
 db/Makefile ftrs/Makefile calculator/Makefile util/Makefile \
 libfennel/Makefile test/Makefile calctest/Makefile farrago/Makefile \
+hashexe/Makefile \
+flatfile/Makefile \
+sorter/Makefile \
 lucidera/Makefile \
-lucidera/hashexe/Makefile \
 lucidera/bitmap/Makefile \
 lucidera/colstore/Makefile \
-lucidera/flatfile/Makefile \
-lucidera/sorter/Makefile \
 lucidera/libfennel_lu/Makefile \
 lucidera/test/Makefile \
 lucidera/farrago/Makefile \

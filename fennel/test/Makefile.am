@@ -32,6 +32,8 @@ StandardTypeTest \
 SparseBitmapTest \
 CollectExecStreamTest \
 CorrelationJoinExecStreamTest \
+ExternalSortExecStreamTest \
+FlatFileExecStreamTest \
 RandomAllocationSegmentTest \
 ExecStreamTest \
 ParallelExecStreamSchedulerTest \
@@ -42,6 +44,9 @@ SegPageIterTest \
 SegPageEntryIterTest \
 RandomAccessFileDeviceTest \
 CacheTest \
+LhxHashTableTest \
+LhxJoinExecStreamTest \
+LhxAggExecStreamTest \
 LinearDeviceSegmentTest \
 LinearViewSegmentTest \
 BackupRestoreTest \
@@ -56,6 +61,16 @@ PseudoUuidTest
 
 TESTS = $(noinst_PROGRAMS)
 $(noinst_PROGRAMS): $(lib_LTLIBRARIES)
+
+ExternalSortExecStreamTest_SOURCES=ExternalSortExecStreamTest.cpp
+
+FlatFileExecStreamTest_SOURCES=FlatFileExecStreamTest.cpp
+
+LhxHashTableTest_SOURCES=LhxHashTableTest.cpp
+
+LhxJoinExecStreamTest_SOURCES=LhxJoinExecStreamTest.cpp
+
+LhxAggExecStreamTest_SOURCES=LhxAggExecStreamTest.cpp
 
 TestOptionsTest_SOURCES=TestOptionsTest.cpp
 
@@ -128,6 +143,9 @@ endif
 
 LDADD = -L$(top_builddir)/test -l$(TEST_LIB) \
     -L$(top_builddir)/libfennel \
+	-lfennel_hashexe \
+	-lfennel_flatfile \
+	-lfennel_sorter \
 	-lfennel_ftrs \
 	-lfennel_db \
 	-lfennel_btree \

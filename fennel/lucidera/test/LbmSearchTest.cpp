@@ -23,7 +23,7 @@
 #include "fennel/common/FemEnums.h"
 #include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
-#include "fennel/lucidera/sorter/ExternalSortExecStream.h"
+#include "fennel/sorter/ExternalSortExecStream.h"
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSearchExecStream.h"

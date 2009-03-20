@@ -23,6 +23,9 @@ NativeMethods.cpp
 
 libfarrago_la_LIBADD = \
 	-L$(top_builddir)/libfennel \
+	-lfennel_hashexe \
+	-lfennel_sorter \
+	-lfennel_flatfile \
 	-lfennel_calculator \
 	-lfennel_ftrs \
 	-lfennel_db \

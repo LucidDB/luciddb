@@ -79,7 +79,6 @@ SqlStringAsciiTest_SOURCES=SqlStringBuffer.cpp SqlStringAsciiTest.cpp
 LDADD = \
 	-L$(top_builddir)/test \
 	-L$(top_builddir)/libfennel \
-	-L$(top_builddir)/disruptivetech/libfennel_dt \
 	-l$(TEST_LIB) \
 	-lfennel_calculator \
 	-lfennel_ftrs \

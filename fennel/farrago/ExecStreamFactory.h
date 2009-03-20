@@ -126,6 +126,9 @@ protected:
     virtual void visit(ProxyCorrelationJoinStreamDef &streamDef);
     virtual void visit(ProxyCollectTupleStreamDef &streamDef);
     virtual void visit(ProxyUncollectTupleStreamDef &streamDef);
+    virtual void visit(ProxyFlatFileTupleStreamDef &streamDef);
+    virtual void visit(ProxyLhxJoinStreamDef &streamDef);
+    virtual void visit(ProxyLhxAggStreamDef &streamDef);
 
     // helpers for above visitors
 
@@ -144,6 +147,14 @@ protected:
     void readBarrierDynamicParams(
         BarrierExecStreamParams &,
         ProxyBarrierStreamDef &);
+
+    void readColumnList(
+        ProxyFlatFileTupleStreamDef &streamDef,
+        std::vector<std::string> &names);
+
+    void implementSortWithBTree(ProxySortingStreamDef &streamDef);
+
+    char readCharParam(const std::string &val);
 
 public:
     explicit ExecStreamFactory(

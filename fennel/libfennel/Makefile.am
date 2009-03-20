@@ -15,7 +15,10 @@ libfennel_exec.la \
 libfennel_btree.la \
 libfennel_db.la \
 libfennel_ftrs.la \
-libfennel_calculator.la
+libfennel_calculator.la \
+libfennel_flatfile.la \
+libfennel_sorter.la \
+libfennel_hashexe.la
 
 DEVICE_DEPS = libfennel_common.la
 
@@ -38,6 +41,12 @@ DB_DEPS = libfennel_btree.la $(BTREE_DEPS)
 FTRS_DEPS = libfennel_btree.la libfennel_exec.la $(BTREE_DEPS)
 
 CALCULATOR_DEPS = $(EXEC_DEPS)
+
+FLATFILE_DEPS = $(EXEC_DEPS)
+
+SORTER_DEPS = $(EXEC_DEPS)
+
+HASHEXE_DEPS = $(EXEC_DEPS)
 
 TEST_DEPS = libfennel_btree.la libfennel_exec.la $(BTREE_DEPS)
 
@@ -99,6 +108,18 @@ libfennel_ftrs_la_LIBADD=\
 libfennel_calculator_la_SOURCES=
 libfennel_calculator_la_LIBADD=\
 	$(top_builddir)/calculator/libcalculator.la $(CALC_DEPS)
+
+libfennel_flatfile_la_SOURCES=
+libfennel_flatfile_la_LIBADD=\
+	$(top_builddir)/flatfile/libflatfile.la $(FLATFILE_DEPS)
+
+libfennel_sorter_la_SOURCES=
+libfennel_sorter_la_LIBADD=\
+	$(top_builddir)/sorter/libsorter.la $(SORTER_DEPS)
+
+libfennel_hashexe_la_SOURCES=
+libfennel_hashexe_la_LIBADD=\
+	$(top_builddir)/hashexe/libhashexe.la $(HASHEXE_DEPS)
 
 # Make sure that dependencies are strictly satisfied by failing on
 # undefined references.

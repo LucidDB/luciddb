@@ -8,8 +8,6 @@ endif
 
 # NOTE:  tests are ordered roughly from fastest to slowest
 noinst_PROGRAMS= \
-ExternalSortExecStreamTest \
-FlatFileExecStreamTest \
 LcsClusterAppendExecStreamTest \
 LcsMultiClusterAppendTest \
 LcsClusterReplaceExecStreamTest \
@@ -20,18 +18,13 @@ LbmLoadBitmapTest \
 LbmSearchTest \
 LbmIntersectExecStreamTest \
 LbmUnionExecStreamTest \
-LhxHashTableTest \
-LhxJoinExecStreamTest \
 LbmMinusExecStreamTest \
-LhxAggExecStreamTest \
 LbmNormalizerExecStreamTest \
 LbmSortedAggExecStreamTest \
 LbmReaderTest
 
 TESTS = $(noinst_PROGRAMS)
 
-ExternalSortExecStreamTest_SOURCES=ExternalSortExecStreamTest.cpp
-FlatFileExecStreamTest_SOURCES=FlatFileExecStreamTest.cpp
 LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
 LcsMultiClusterAppendTest_SOURCES=LcsMultiClusterAppendTest.cpp
 LcsClusterReplaceExecStreamTest_SOURCES=LcsClusterReplaceExecStreamTest.cpp
@@ -42,10 +35,7 @@ LbmLoadBitmapTest_SOURCES=LbmLoadBitmapTest.cpp
 LbmSearchTest_SOURCES=LbmExecStreamTestBase.cpp LbmSearchTest.cpp
 LbmIntersectExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmIntersectExecStreamTest.cpp 
 LbmUnionExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmUnionExecStreamTest.cpp
-LhxHashTableTest_SOURCES=LhxHashTableTest.cpp
-LhxJoinExecStreamTest_SOURCES=LhxJoinExecStreamTest.cpp
 LbmMinusExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmMinusExecStreamTest.cpp
-LhxAggExecStreamTest_SOURCES=LhxAggExecStreamTest.cpp
 LbmNormalizerExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmNormalizerExecStreamTest.cpp
 LbmSortedAggExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmSortedAggExecStreamTest.cpp
 LbmReaderTest_SOURCES=LbmExecStreamTestBase.cpp LbmReaderTest.cpp
@@ -57,10 +47,8 @@ LDADD = \
 	-L$(top_builddir)/libfennel \
 	-L$(top_builddir)/lucidera/libfennel_lu \
 	-l$(TEST_LIB) \
-	-lfennel_lu_hashexe \
 	-lfennel_lu_colstore \
-	-lfennel_lu_flatfile \
-	-lfennel_lu_sorter \
+	-lfennel_sorter \
 	-lfennel_ftrs \
 	-lfennel_db \
 	-lfennel_btree \
