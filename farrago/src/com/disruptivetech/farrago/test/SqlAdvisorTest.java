@@ -20,7 +20,7 @@
 */
 package com.disruptivetech.farrago.test;
 
-import com.disruptivetech.farrago.sql.advise.*;
+import org.eigenbase.sql.advise.*;
 
 import java.util.*;
 import java.util.logging.*;

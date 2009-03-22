@@ -1,8 +1,9 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2002-2009 SQLstream, Inc.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,7 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.disruptivetech.farrago.volcano;
+package org.eigenbase.relopt.volcano;
 
 import java.util.*;
 import java.util.logging.*;
@@ -168,8 +169,8 @@ class RelSet
 
     /**
      * Adds an expression <code>rel</code> to this set, without creating a
-     * {@link com.disruptivetech.farrago.volcano.RelSubset}. (Called only from
-     * {@link com.disruptivetech.farrago.volcano.RelSubset#add}.
+     * {@link org.eigenbase.relopt.volcano.RelSubset}. (Called only from
+     * {@link org.eigenbase.relopt.volcano.RelSubset#add}.
      */
     void addInternal(RelNode rel)
     {

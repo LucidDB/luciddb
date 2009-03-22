@@ -23,7 +23,7 @@
 package net.sf.farrago.defimpl;
 
 import net.sf.farrago.fennel.rel.*;
-import com.disruptivetech.farrago.volcano.*;
+import org.eigenbase.relopt.volcano.*;
 
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.query.*;

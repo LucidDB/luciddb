@@ -177,7 +177,7 @@ public class RelOptPlanWriter
 
     /**
      * Special form used by {@link
-     * com.disruptivetech.farrago.volcano.RelSubset}.
+     * org.eigenbase.relopt.volcano.RelSubset}.
      */
     public void explainSubset(
         String s,

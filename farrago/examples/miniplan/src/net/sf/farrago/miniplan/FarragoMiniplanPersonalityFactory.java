@@ -22,7 +22,7 @@
 package net.sf.farrago.miniplan;
 
 import net.sf.farrago.fennel.rel.*;
-import com.disruptivetech.farrago.volcano.*;
+import org.eigenbase.relopt.volcano.*;
 import com.lucidera.opt.*;
 
 import net.sf.farrago.fem.config.*;

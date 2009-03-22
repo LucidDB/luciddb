@@ -46,7 +46,7 @@ import java.util.*;
 import java.util.logging.*;
 
 // TODO jvs 18-Feb-2005:  avoid these two dependencies
-import com.disruptivetech.farrago.volcano.*;
+import org.eigenbase.relopt.volcano.*;
 import org.eigenbase.relopt.hep.*;
 
 import net.sf.farrago.trace.*;
