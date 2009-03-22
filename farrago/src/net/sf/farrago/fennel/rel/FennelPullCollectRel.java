@@ -1,8 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2009 SQLstream, Inc.
 // Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,7 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.disruptivetech.farrago.rel;
+package net.sf.farrago.fennel.rel;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
@@ -27,44 +28,57 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
- * FennelPullUncollectRel is the relational expression corresponding to an
- * UNNEST (Uncollect) implemented inside of Fennel.
+ * FennelPullCollectRel is the relational expression corresponding to a collect
+ * implemented inside of Fennel.
  *
  * <p>Rules:
  *
  * <ul>
- * <li>{@link FennelUncollectRule} creates this from a rex call which has the
- * operator {@link
- * org.eigenbase.sql.fun.SqlStdOperatorTable#unnestOperator}</li>
+ * <li>{@link FennelCollectRule} creates this from a {@link CollectRel}.</li>
  * </ul>
  * </p>
  *
  * @author Wael Chatila
  * @version $Id$
- * @since Dec 12, 2004
+ * @since Dec 11, 2004
  */
-public class FennelPullUncollectRel
+public class FennelPullCollectRel
     extends FennelSingleRel
 {
+    //~ Instance fields --------------------------------------------------------
+
+    final String fieldName;
+
     //~ Constructors -----------------------------------------------------------
 
-    public FennelPullUncollectRel(RelOptCluster cluster, RelNode child)
+    /**
+     * Creates a FennelPullCollectRel.
+     *
+     * @param cluster Cluster
+     * @param child Child relational expression
+     * @param fieldName Name of the sole output field
+     */
+    public FennelPullCollectRel(
+        RelOptCluster cluster,
+        RelNode child,
+        String fieldName)
     {
         super(
             cluster,
             new RelTraitSet(FENNEL_EXEC_CONVENTION),
             child);
-        assert deriveRowType() != null : "invalid child rowtype";
+        this.fieldName = fieldName;
     }
 
     //~ Methods ----------------------------------------------------------------
 
     protected RelDataType deriveRowType()
     {
-        return UncollectRel.deriveUncollectRowType(getChild());
+        return CollectRel.deriveCollectRowType(this, fieldName);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -75,26 +89,36 @@ public class FennelPullUncollectRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         final FarragoRepos repos = FennelRelUtil.getRepos(this);
-        FemUncollectTupleStreamDef uncollectStream =
-            repos.newFemUncollectTupleStreamDef();
+        FemCollectTupleStreamDef collectStreamDef =
+            repos.newFemCollectTupleStreamDef();
 
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild(), 0),
-            uncollectStream);
+            collectStreamDef);
 
-        return uncollectStream;
+        // The column containing the packaged multiset is always VARCHAR(4096)
+        // NOT NULL. Even an empty multiset is not represented as NULL.
+        FemTupleDescriptor outTupleDesc = repos.newFemTupleDescriptor();
+        RelDataType type =
+            getCluster().getTypeFactory().createSqlType(
+                SqlTypeName.VARBINARY,
+                4096);
+        FennelRelUtil.addTupleAttrDescriptor(repos, outTupleDesc, type);
+        collectStreamDef.setOutputDesc(outTupleDesc);
+        return collectStreamDef;
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
-    public FennelPullUncollectRel clone()
+    public FennelPullCollectRel clone()
     {
-        FennelPullUncollectRel clone =
-            new FennelPullUncollectRel(
+        FennelPullCollectRel clone =
+            new FennelPullCollectRel(
                 getCluster(),
-                getChild().clone());
+                getChild().clone(),
+                fieldName);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 }
 
-// End FennelPullUncollectRel.java
+// End FennelPullCollectRel.java

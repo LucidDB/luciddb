@@ -21,7 +21,7 @@
 package com.disruptivetech.farrago.test;
 
 import net.sf.farrago.fennel.calc.*;
-import com.disruptivetech.farrago.rel.*;
+import net.sf.farrago.fennel.rel.*;
 
 import java.util.*;
 

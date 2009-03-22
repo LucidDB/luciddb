@@ -34,8 +34,8 @@ import org.eigenbase.rex.*;
  *
  * <ul>
  * <li>Created by {@link
- * com.disruptivetech.farrago.rel.WindowedAggSplitterRule}.
- * <li>Triggers {@link com.disruptivetech.farrago.rel.FennelWindowRule}.
+ * net.sf.farrago.fennel.rel.WindowedAggSplitterRule}.
+ * <li>Triggers {@link net.sf.farrago.fennel.rel.FennelWindowRule}.
  */
 public final class WindowedAggregateRel
     extends SingleRel

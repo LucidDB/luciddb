@@ -21,7 +21,7 @@
 */
 package net.sf.farrago.defimpl;
 
-import com.disruptivetech.farrago.rel.*;
+import net.sf.farrago.fennel.rel.*;
 
 import com.lucidera.opt.*;
 

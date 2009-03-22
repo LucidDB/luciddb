@@ -21,7 +21,7 @@
 */
 package net.sf.farrago.test;
 
-import com.disruptivetech.farrago.rel.*;
+import net.sf.farrago.fennel.rel.*;
 
 import java.util.logging.*;
 

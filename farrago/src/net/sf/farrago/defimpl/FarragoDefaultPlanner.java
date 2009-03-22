@@ -22,7 +22,7 @@
 */
 package net.sf.farrago.defimpl;
 
-import com.disruptivetech.farrago.rel.*;
+import net.sf.farrago.fennel.rel.*;
 import com.disruptivetech.farrago.volcano.*;
 
 import net.sf.farrago.fem.config.*;

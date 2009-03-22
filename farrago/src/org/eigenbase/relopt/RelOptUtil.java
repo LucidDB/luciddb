@@ -448,7 +448,7 @@ public abstract class RelOptUtil
      * statements. See {@link
      * org.eigenbase.sql2rel.SqlToRelConverter#convertExists} Note: this
      * implementation of createExistsPlan is only called from
-     * com.disruptivetech.farrago.rel The last two arguments do not apply to
+     * net.sf.farrago.fennel.rel. The last two arguments do not apply to
      * those invocations and can be removed from the method.
      *
      * <p>
