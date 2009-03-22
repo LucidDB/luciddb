@@ -63,7 +63,9 @@
     <pattern name="namespace" class="net.sf.farrago.namespace.*" />
     <pattern name="namespace.util" class="net.sf.farrago.namespace.util.*" />
     <pattern name="fennel" class="net.sf.farrago.fennel.*" />
+    <pattern name="fennel.calc" class="net.sf.farrago.fennel.calc.*" />
     <pattern name="fennel.tuple" class="net.sf.farrago.fennel.tuple.*" />
+    <pattern name="fennel.rel" class="net.sf.farrago.fennel.rel.*" />
     <pattern name="session" class="net.sf.farrago.session.*" />
     <pattern name="session.mock" class="net.sf.farrago.session.mock.*" />
     <pattern name="runtime" class="net.sf.farrago.runtime.*" />
@@ -86,9 +88,7 @@
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
     <pattern name="namespace.ftrs" class="net.sf.farrago.namespace.ftrs.*" />
 
-    <pattern name="dt.calc" class="com.disruptivetech.farrago.calc.*" />
     <pattern name="dt.volcano" class="com.disruptivetech.farrago.volcano.*" />
-    <pattern name="dt.rel" class="com.disruptivetech.farrago.rel.*" />
     <pattern name="dt.fennel" class="com.disruptivetech.farrago.fennel.*" />
     <pattern name="dt.sql.advise" class="com.disruptivetech.farrago.sql.advise.*" />
 
@@ -136,6 +136,8 @@
       <include pattern="namespace"/>
       <include pattern="namespace.util"/>
       <include pattern="fennel"/>
+      <include pattern="fennel.calc" />
+      <include pattern="fennel.rel" />
       <include pattern="fennel.tuple" />
       <include pattern="session"/>
       <include pattern="session.mock"/>
@@ -158,9 +160,7 @@
       <include pattern="namespace.mock"/>
       <include pattern="namespace.jdbc"/>
       <include pattern="namespace.ftrs"/>
-      <include pattern="dt.calc"/>
       <include pattern="dt.volcano"/>
-      <include pattern="dt.rel"/>
       <include pattern="dt.fennel"/>
       <include pattern="dt.sql.advise"/>
       <include pattern="lu.jdbc"/>
@@ -809,20 +809,20 @@
       </deny>
     </access-rule>
 
-    <pattern name="dt.calc.deps">
+    <pattern name="fennel.calc.deps">
       <include pattern="resource.deps" />
-      <include pattern="dt.calc" />
+      <include pattern="fennel.calc" />
       <include pattern="fennel.tuple" />
       <include pattern="session" />
     </pattern>
 
     <access-rule>
-      <message>dt.calc dependency violation</message>
+      <message>fennel.calc dependency violation</message>
       <deny>
-        <from pattern="dt.calc" />
+        <from pattern="fennel.calc" />
         <to pattern="farrago" />
         <allow>
-          <to pattern="dt.calc.deps" />
+          <to pattern="fennel.calc.deps" />
         </allow>
       </deny>
     </access-rule>
@@ -843,19 +843,19 @@
       </deny>
     </access-rule>
 
-    <pattern name="dt.rel.deps">
+    <pattern name="fennel.rel.deps">
       <include pattern="query.deps" />
-      <include pattern="dt.calc.deps" />
-      <include pattern="dt.rel" />
+      <include pattern="fennel.calc.deps" />
+      <include pattern="fennel.rel" />
     </pattern>
 
     <access-rule>
-      <message>dt.rel dependency violation</message>
+      <message>fennel.rel dependency violation</message>
       <deny>
-        <from pattern="dt.rel" />
+        <from pattern="fennel.rel" />
         <to pattern="farrago" />
         <allow>
-          <to pattern="dt.rel.deps" />
+          <to pattern="fennel.rel.deps" />
         </allow>
       </deny>
     </access-rule>
@@ -1028,9 +1028,9 @@
 
     <pattern name="defimpl.deps">
       <include pattern="db.deps" />
-      <include pattern="dt.calc.deps" />
+      <include pattern="fennel.calc.deps" />
       <include pattern="dt.volcano.deps" />
-      <include pattern="dt.rel.deps" />
+      <include pattern="fennel.rel.deps" />
       <include pattern="dt.fennel.deps" />
       <include pattern="lu.fennel.deps" />
       <include pattern="lu.lurql.deps" />
@@ -1116,9 +1116,9 @@
 
     <pattern name="dt.test.deps">
       <include pattern="test.deps" />
-      <include pattern="dt.calc.deps" />
+      <include pattern="fennel.calc.deps" />
       <include pattern="dt.volcano.deps" />
-      <include pattern="dt.rel.deps" />
+      <include pattern="fennel.rel.deps" />
       <include pattern="dt.sql.advise.deps" />
       <include pattern="dt.test" />
       <include pattern="defimpl.deps" />
