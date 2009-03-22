@@ -1,8 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2002-2009 SQLstream, Inc.
 // Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,7 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.disruptivetech.farrago.test;
+package net.sf.farrago.test;
 
 import net.sf.farrago.fennel.calc.*;
 
@@ -38,7 +39,6 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.test.*;
 import net.sf.farrago.util.*;
 
 import openjava.ptree.*;
@@ -62,17 +62,17 @@ import org.eigenbase.sql.type.*;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoAutoCalcRuleTest
+public class FarragoAutoCalcRulesTest
     extends FarragoTestCase
 {
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FarragoAutoCalcRuleTest object.
+     * Creates a new FarragoAutoCalcRulesTest object.
      *
      * @param testName .
      */
-    public FarragoAutoCalcRuleTest(String testName)
+    public FarragoAutoCalcRulesTest(String testName)
         throws Exception
     {
         super(testName);
@@ -83,7 +83,7 @@ public class FarragoAutoCalcRuleTest
     // implement TestCase
     public static Test suite()
     {
-        return wrappedSuite(new TestSuite(FarragoAutoCalcRuleTest.class));
+        return wrappedSuite(new TestSuite(FarragoAutoCalcRulesTest.class));
     }
 
     public static Test wrappedSuite(TestSuite suite)
@@ -448,4 +448,4 @@ public class FarragoAutoCalcRuleTest
     }
 }
 
-// End FarragoAutoCalcRuleTest.java
+// End FarragoAutoCalcRulesTest.java

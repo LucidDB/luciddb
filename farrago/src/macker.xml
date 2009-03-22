@@ -88,8 +88,6 @@
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
     <pattern name="namespace.ftrs" class="net.sf.farrago.namespace.ftrs.*" />
 
-    <pattern name="dt.fennel" class="com.disruptivetech.farrago.fennel.*" />
-
     <pattern name="lu.jdbc" class="com.lucidera.jdbc.*"/>
     <pattern name="lu.lcs" class="com.lucidera.lcs.*"/>
     <pattern name="lu.lurql" class="com.lucidera.lurql.*"/>
@@ -158,7 +156,6 @@
       <include pattern="namespace.mock"/>
       <include pattern="namespace.jdbc"/>
       <include pattern="namespace.ftrs"/>
-      <include pattern="dt.fennel"/>
       <include pattern="lu.jdbc"/>
       <include pattern="lu.lcs"/>
       <include pattern="lu.lurql"/>
@@ -840,21 +837,6 @@
       </deny>
     </access-rule>
 
-    <pattern name="dt.fennel.deps">
-      <include pattern="dt.fennel" />
-    </pattern>
-
-    <access-rule>
-      <message>dt.fennel dependency violation</message>
-      <deny>
-        <from pattern="dt.fennel" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="dt.fennel.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-    
     <pattern name="lu.fennel.deps">
       <include pattern="lu.fennel" />
     </pattern>
@@ -994,7 +976,6 @@
       <include pattern="db.deps" />
       <include pattern="fennel.calc.deps" />
       <include pattern="fennel.rel.deps" />
-      <include pattern="dt.fennel.deps" />
       <include pattern="lu.fennel.deps" />
       <include pattern="lu.lurql.deps" />
       <include pattern="lu.opt.deps" />
