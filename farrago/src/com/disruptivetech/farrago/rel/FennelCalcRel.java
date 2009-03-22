@@ -20,7 +20,7 @@
 */
 package com.disruptivetech.farrago.rel;
 
-import com.disruptivetech.farrago.calc.*;
+import net.sf.farrago.fennel.calc.*;
 
 import java.util.*;
 

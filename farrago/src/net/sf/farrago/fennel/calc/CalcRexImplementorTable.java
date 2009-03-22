@@ -1,8 +1,9 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2008-2009 SQLstream, Inc.
-// Copyright (C) 2008-2009 The Eigenbase Project
+// Copyright (C) 2005-2009 The Eigenbase Project
+// Copyright (C) 2002-2009 SQLstream, Inc.
+// Copyright (C) 2009-2009 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,39 +19,33 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.disruptivetech.farrago.calc;
+package net.sf.farrago.fennel.calc;
+
+import org.eigenbase.sql.*;
+
 
 /**
- * Enumeration of aggregate operations to be performed on aggregation buckets
- * for windowed or streaming aggregation.
+ * Contains, for each operator, an implementor which can convert a call to that
+ * operator into a set of calculator instructions.
  *
- * @author Jack Hahn
+ * @author jhyde
  * @version $Id$
- * @since Feb 5, 2004
+ * @since June 2nd, 2004
  */
-public enum AggOp
+public interface CalcRexImplementorTable
 {
-    None,
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Initialize bucket to zero or null values
+     * Retrieves the implementor of an operator, or null if there is no
+     * implementor registered.
      */
-    Init,
+    CalcRexImplementor get(SqlOperator op);
 
     /**
-     * Update bucket in response to new row.
+     * Retrieves the implementor of an aggregate function.
      */
-    Add,
-
-    /**
-     * Update bucket in response to row leaving window.
-     */
-    Drop,
-
-    /**
-     * Initialize bucket and update for new row.
-     */
-    InitAdd
+    CalcRexAggImplementor getAgg(SqlAggFunction op);
 }
 
-// End AggOp.java
+// End CalcRexImplementorTable.java

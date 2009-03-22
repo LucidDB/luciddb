@@ -20,7 +20,7 @@
 */
 package com.disruptivetech.farrago.test;
 
-import com.disruptivetech.farrago.calc.*;
+import net.sf.farrago.fennel.calc.*;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

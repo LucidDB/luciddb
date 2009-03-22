@@ -21,7 +21,7 @@
 */
 package net.sf.farrago.defimpl;
 
-import com.disruptivetech.farrago.calc.*;
+import net.sf.farrago.fennel.calc.*;
 
 import com.lucidera.farrago.fennel.*;
 import com.lucidera.lurql.*;
