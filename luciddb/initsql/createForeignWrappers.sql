@@ -27,7 +27,7 @@ options(
 
 -- create flat file wrapper with browse_connect
 create or replace foreign data wrapper "FLAT FILE"
-library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+library 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
 language java
 options(
   browse_connect_description 'Flat File Connection'

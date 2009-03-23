@@ -88,5 +88,5 @@ language java;
 
 -- create wrapper for access to flatfile data
 create or replace foreign data wrapper sys_file_wrapper
-library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+library 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
 language java;

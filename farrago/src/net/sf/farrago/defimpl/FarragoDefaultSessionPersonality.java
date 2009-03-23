@@ -24,7 +24,7 @@ package net.sf.farrago.defimpl;
 import net.sf.farrago.fennel.calc.*;
 
 import com.lucidera.farrago.fennel.*;
-import com.lucidera.lurql.*;
+import org.eigenbase.lurql.*;
 
 import java.io.*;
 

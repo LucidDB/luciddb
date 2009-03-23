@@ -87,12 +87,11 @@
     <pattern name="namespace.mock" class="net.sf.farrago.namespace.mock.*" />
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
     <pattern name="namespace.ftrs" class="net.sf.farrago.namespace.ftrs.*" />
+    <pattern name="namespace.flatfile" class="net.sf.farrago.namespace.flatfile.*" />
 
     <pattern name="lu.jdbc" class="com.lucidera.jdbc.*"/>
     <pattern name="lu.lcs" class="com.lucidera.lcs.*"/>
     <pattern name="lu.lurql" class="com.lucidera.lurql.*"/>
-    <pattern name="lu.lurql.parser" class="com.lucidera.lurql.parser.*"/>
-    <pattern name="lu.lurql.test" class="com.lucidera.lurql.test.*"/>
 
     <pattern name="lu.farrago" class="com.lucidera.farrago.*"/>
     <pattern name="lu.fennel" class="com.lucidera.farrago.fennel.*" />
@@ -156,11 +155,10 @@
       <include pattern="namespace.mock"/>
       <include pattern="namespace.jdbc"/>
       <include pattern="namespace.ftrs"/>
+      <include pattern="namespace.flatfile"/>
       <include pattern="lu.jdbc"/>
       <include pattern="lu.lcs"/>
       <include pattern="lu.lurql"/>
-      <include pattern="lu.lurql.parser"/>
-      <include pattern="lu.lurql.test"/>
       <include pattern="lu.farrago"/>
       <include pattern="lu.fennel"/>
       <include pattern="lu.namespace.flatfile"/>
@@ -770,6 +768,22 @@
       </deny>
     </access-rule>
 
+    <pattern name="namespace.flatfile.deps">
+      <include pattern="namespace.impl.deps" />
+      <include pattern="namespace.flatfile" />
+    </pattern>
+
+    <access-rule>
+      <message>namespace.flatfile dependency violation</message>
+      <deny>
+        <from pattern="namespace.flatfile" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace.flatfile.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="namespace.mdr.deps">
       <include pattern="namespace.impl.deps" />
       <include pattern="namespace.mdr" />
@@ -891,7 +905,6 @@
 
     <pattern name="lu.lurql.deps">
       <include pattern="lu.lurql" />
-      <include pattern="lu.lurql.parser" />
       <include pattern="util" />
     </pattern>
 
@@ -906,23 +919,8 @@
       </deny>
     </access-rule>
 
-    <pattern name="lu.lurql.parser.deps">
-      <include pattern="lu.lurql.deps" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.lurql.parser dependency violation</message>
-      <deny>
-        <from pattern="lu.lurql.parser" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.lurql.parser.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
     <pattern name="lu.namespace.flatfile.deps">
-      <include pattern="namespace.impl.deps" />
+      <include pattern="namespace.flatfile.deps" />
       <include pattern="lu.namespace.flatfile" />
     </pattern>
 
@@ -939,7 +937,8 @@
 
     <pattern name="lu.opt.deps">
       <include pattern="lu.lcs.deps" />
-      <include pattern="lu.namespace.flatfile.deps" />
+      <include pattern="namespace.flatfile.deps" />
+      <include pattern="fennel.rel.deps" />
       <include pattern="lu.opt" />
     </pattern>
 
@@ -977,7 +976,6 @@
       <include pattern="fennel.calc.deps" />
       <include pattern="fennel.rel.deps" />
       <include pattern="lu.fennel.deps" />
-      <include pattern="lu.lurql.deps" />
       <include pattern="lu.opt.deps" />
       <include pattern="defimpl" />
     </pattern>
@@ -1002,8 +1000,8 @@
       <include pattern="lu.jdbc" />
       <include pattern="lu.type" />
       <include pattern="lu.fennel.deps" />
-      <include pattern="lu.lurql.deps" />
       <include pattern="server" />
+      <include pattern="fennel.rel.deps" />
       <include pattern="db.deps" />
       <include pattern="defimpl" />
     </pattern>
@@ -1090,23 +1088,6 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="lu.test.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="lu.lurql.test.deps">
-      <include pattern="lu.lurql.deps" />
-      <include pattern="lu.lurql.test" />
-      <include pattern="test.deps" />
-    </pattern>
-
-    <access-rule>
-      <message>lu.lurql.test dependency violation</message>
-      <deny>
-        <from pattern="lu.lurql.test" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="lu.lurql.test.deps" />
         </allow>
       </deny>
     </access-rule>

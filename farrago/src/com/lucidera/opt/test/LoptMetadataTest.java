@@ -30,6 +30,7 @@ import java.util.*;
 import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;

@@ -38,7 +38,7 @@ farrago/src/net/sf/farrago/resource/FarragoResource_en_US.java
 farrago/src/net/sf/farrago/resource/FarragoInternalQuery.java
 farrago/src/net/sf/farrago/resource/FarragoInternalQuery_en_US.java
 farrago/src/net/sf/farrago/test/FarragoSqlTestWrapper.java
-farrago/src/com/lucidera/lurql/parser/
+farrago/src/org/eigenbase/lurql/parser/
 farrago/src/org/eigenbase/resource/EigenbaseResource.java
 farrago/src/org/eigenbase/resource/EigenbaseResource_en_US.java
 farrago/src/org/eigenbase/sql/parser/impl/

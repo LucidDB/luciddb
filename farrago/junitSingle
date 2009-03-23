@@ -164,7 +164,7 @@ chooseTarget
             fileset=fileset.concurrentsql
             nullfilesets="-Dfileset.unitsql='' -Dfileset.regressionsql='' -Dfileset.unitlurql=''"
         elif [ ${test:0-6} == ".lurql" ]; then
-            junit_class=com.lucidera.lurql.test.LurqlQueryTest
+            junit_class=net.sf.farrago.test.LurqlQueryTest
             fileset=fileset.unitlurql
             nullfilesets="-Dfileset.unitsql='' -Dfileset.regressionsql='' -Dfileset.concurrentsql=''"
         fi

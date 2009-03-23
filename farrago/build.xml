@@ -81,7 +81,7 @@ ${farrago.test.jvmargs}
 
   <!-- directory containing definition of LURQL parser -->
   <property name="lurql.parser.dir"
-    location="${farrago.src.dir}/com/lucidera/lurql/parser"/>
+    location="${farrago.src.dir}/org/eigenbase/lurql/parser"/>
 
   <!-- The version of ANT we require. -->
   <property name="required.ant.version" value="1.7.0"/>
@@ -307,7 +307,7 @@ ${farrago.test.jvmargs}
 
   <!-- compile only packages needed by Saffron -->
   <target name="compile.saffron.deps" 
-    depends="mungeJdbc, generateResources,sqlParser">
+    depends="mungeJdbc, generateResources,sqlParser,lurqlParser">
     <farrago.javaCompileClient
       srcdir="${farrago.src.dir}"
       destdir="${farrago.classes.dir}"
@@ -413,6 +413,9 @@ ${farrago.test.jvmargs}
         dir="${farrago.src.dir}/examples/rng/src/net/sf/farrago/rng/resource" 
         includes="*.java"/>
       <fileset dir="${lurql.parser.dir}" includes="*.java"/>
+      <!-- TODO jvs 22-Mar-2009:  get rid of this in a few months -->
+      <fileset dir="${Farrago.src.dir}/com/lucidera/lurql/parser" 
+        includes="*.java"/>
     </delete>
   </target>
 
@@ -1125,7 +1128,7 @@ ${farrago.test.jvmargs}
       <junitargs>
         <sysproperty key="net.sf.farrago.fileset.unitsql"
           value="${fileset.unitsql}"/>
-        <sysproperty key="com.lucidera.fileset.unitlurql"
+        <sysproperty key="org.eigenbase.fileset.unitlurql"
           value="${fileset.unitlurql}"/>
       </junitargs>
     </farrago.runTests>
@@ -1306,7 +1309,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       classname="junit.textui.TestRunner">
       <jvmargs>
         <arg value="-Dnet.sf.farrago.fileset.unitsql=${fileset.unitsql}"/>
-        <arg value="-Dcom.lucidera.fileset.unitlurql=${fileset.unitlurql}"/>
+        <arg value="-Dorg.eigenbase.fileset.unitlurql=${fileset.unitlurql}"/>
         <arg line="&FarragoSqlLineProps;"/>
       </jvmargs>
       <programargs>
@@ -1950,7 +1953,7 @@ Oracle tests were requested via oracle.test, but Oracle is not available.
       <junitargs>
         <sysproperty key="net.sf.farrago.fileset.unitsql"
           value="${fileset.unitsql}"/>
-        <sysproperty key="com.lucidera.fileset.unitlurql"
+        <sysproperty key="org.eigenbase.fileset.unitlurql"
           value="${fileset.unitlurql}"/>
         <sysproperty key="net.sf.farrago.fileset.regressionsql"
           value="${fileset.regressionsql}"/>
