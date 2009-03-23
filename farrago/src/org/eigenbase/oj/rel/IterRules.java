@@ -95,7 +95,8 @@ public abstract class IterRules
     /**
      * Refinement of {@link UnionToIteratorRule} which only applies to a {@link
      * UnionRel} all of whose input rows are the same type as its output row.
-     * Luckily, a {@link CoerceInputsRule} will have made that happen.
+     * Luckily, a {@link org.eigenbase.rel.rules.CoerceInputsRule} will have
+     * made that happen.
      */
     public static class HomogeneousUnionToIteratorRule
         extends UnionToIteratorRule

@@ -24,6 +24,7 @@ package net.sf.farrago.namespace.ftrs;
 
 import java.util.*;
 
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.util.*;
 

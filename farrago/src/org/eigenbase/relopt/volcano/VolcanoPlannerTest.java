@@ -29,6 +29,7 @@ import openjava.mop.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;

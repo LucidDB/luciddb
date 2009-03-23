@@ -22,6 +22,7 @@
 package org.eigenbase.test;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.hep.*;
 
 

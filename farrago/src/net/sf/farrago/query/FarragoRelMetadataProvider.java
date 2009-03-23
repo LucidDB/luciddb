@@ -28,6 +28,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.rel.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;

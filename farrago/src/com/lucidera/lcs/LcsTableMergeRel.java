@@ -26,6 +26,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 

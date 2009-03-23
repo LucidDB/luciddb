@@ -523,9 +523,12 @@
       </deny>
     </access-rule>
 
+    <!-- TODO:  break circular dependency with fennel.rel -->
+
     <pattern name="query.deps">
       <include pattern="dynamic.deps" />
       <include pattern="ojrex.deps" />
+      <include pattern="fennel.rel" />
       <include pattern="fennel.tuple" />
       <include pattern="namespace.impl" />
       <include pattern="query" />
