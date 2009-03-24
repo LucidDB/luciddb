@@ -44,8 +44,14 @@ import org.eigenbase.util.*;
 class FtrsRemoveRedundantSortRule
     extends RelOptRule
 {
+    public static final FtrsRemoveRedundantSortRule instance =
+        new FtrsRemoveRedundantSortRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FtrsRemoveRedundantSortRule()
     {
         super(

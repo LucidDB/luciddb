@@ -38,8 +38,14 @@ import org.eigenbase.relopt.*;
 public class FennelCollectRule
     extends RelOptRule
 {
+    public static final FennelCollectRule instance =
+        new FennelCollectRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FennelCollectRule()
     {
         super(

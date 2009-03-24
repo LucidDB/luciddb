@@ -36,10 +36,13 @@ import org.eigenbase.relopt.*;
 public class FennelInsertRenameRule
     extends FennelRenameRule
 {
+    public static final FennelInsertRenameRule instance =
+        new FennelInsertRenameRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FennelInsertRenameRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FennelInsertRenameRule()
     {

@@ -38,8 +38,14 @@ import org.eigenbase.relopt.*;
 public class FennelValuesRule
     extends ConverterRule
 {
+    public static final FennelValuesRule instance =
+        new FennelValuesRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FennelValuesRule()
     {
         super(

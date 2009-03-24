@@ -293,7 +293,7 @@ public class LucidDbSessionPersonality
         // early since sampling isn't compatible with index scans.  This
         // could come later, but MUST come before FennelBernoulliSamplingRule
         // or else we lose system sampling.
-        builder.addRuleInstance(new LcsSamplingRowScanRule());
+        builder.addRuleInstance(LcsSamplingRowScanRule.instance);
 
         // Eliminate AGG(DISTINCT x) now, because this transformation
         // may introduce new joins which need to be optimized further on.
@@ -302,8 +302,8 @@ public class LucidDbSessionPersonality
         // Need to fire delete and merge rules before any projection rules
         // since they modify the projection.  Also need to fire these
         // before the join conditions are pulled out of the joins.
-        builder.addRuleInstance(new LcsTableDeleteRule());
-        builder.addRuleInstance(new LcsTableMergeRule());
+        builder.addRuleInstance(LcsTableDeleteRule.instance);
+        builder.addRuleInstance(LcsTableMergeRule.instance);
 
         // Likewise for ALTER TABLE ADD COLUMN.
         if (alterTable) {
@@ -326,7 +326,7 @@ public class LucidDbSessionPersonality
         // applying any merge projection rules.  Otherwise, we end up losing
         // column information used in error reporting during inserts.
         if (false) {
-            builder.addRuleInstance(new FennelInsertRenameRule());
+            builder.addRuleInstance(FennelInsertRenameRule.instance);
         }
 
         // Execute rules that are needed to do proper join optimization: 1) Push
@@ -357,7 +357,7 @@ public class LucidDbSessionPersonality
             PullUpProjectsAboveJoinRule.instanceRightProjectChild);
 
         // push filter past project to move the project up in the tree
-        builder.addRuleInstance(new PushFilterPastProjectRule());
+        builder.addRuleInstance(PushFilterPastProjectRule.instance);
 
         // merge any projects we pull up
         builder.addRuleInstance(new MergeProjectRule(true));
@@ -389,8 +389,8 @@ public class LucidDbSessionPersonality
         HepProgramBuilder subprogramBuilder = new HepProgramBuilder();
         subprogramBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
         subprogramBuilder.addMatchLimit(1);
-        subprogramBuilder.addRuleInstance(new ConvertMultiJoinRule());
-        subprogramBuilder.addRuleInstance(new PushFilterIntoMultiJoinRule());
+        subprogramBuilder.addRuleInstance(ConvertMultiJoinRule.instance);
+        subprogramBuilder.addRuleInstance(PushFilterIntoMultiJoinRule.instance);
         subprogramBuilder.addRuleInstance(
             PullUpProjectsOnTopOfMultiJoinRule.instanceTwoProjectChildren);
         subprogramBuilder.addRuleInstance(
@@ -415,7 +415,7 @@ public class LucidDbSessionPersonality
         // on top of MultiJoinRels into the MultiJoinRels.  These aren't
         // handled by PullUpProjectsOnTopOfMultiJoinRule because these
         // projects are not beneath joins.
-        builder.addRuleInstance(new PushProjectIntoMultiJoinRule());
+        builder.addRuleInstance(PushProjectIntoMultiJoinRule.instance);
 
         // Eliminate UNION DISTINCT and trivial UNION.
         // Need to do this before optimizing the join order because the
@@ -423,11 +423,11 @@ public class LucidDbSessionPersonality
         // non-distinct UNION.  We also might as well apply the rules to
         // remove unnecessary unions and distincts so the row counts are
         // more accurate.
-        builder.addRuleInstance(new UnionToDistinctRule());
-        builder.addRuleInstance(new UnionEliminatorRule());
+        builder.addRuleInstance(UnionToDistinctRule.instance);
+        builder.addRuleInstance(UnionEliminatorRule.instance);
 
         // Eliminate redundant SELECT DISTINCT.
-        builder.addRuleInstance(new RemoveDistinctRule());
+        builder.addRuleInstance(RemoveDistinctRule.instance);
 
         // If there are multiple unions in a query, combine the aggregations
         // that remove duplicates (in the case of distinct unions)
@@ -442,8 +442,9 @@ public class LucidDbSessionPersonality
         // that minimizes the patterns that the rules need to deal with.
         subprogramBuilder = new HepProgramBuilder();
         subprogramBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        subprogramBuilder.addRuleInstance(new PullUpAggregateAboveUnionRule());
-        subprogramBuilder.addRuleInstance(new CombineUnionsRule());
+        subprogramBuilder.addRuleInstance(
+            PullUpAggregateAboveUnionRule.instance);
+        subprogramBuilder.addRuleInstance(CombineUnionsRule.instance);
         builder.addSubprogram(subprogramBuilder.createProgram());
 
         // Optimize join order; this will spit back out all 2-way joins and
@@ -451,7 +452,7 @@ public class LucidDbSessionPersonality
         // can optimize lower-level joins before their ancestors.  That allows
         // ancestors to have better cost info to work with (well, eventually).
         builder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        builder.addRuleInstance(new LoptOptimizeJoinRule());
+        builder.addRuleInstance(LoptOptimizeJoinRule.instance);
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
 
         // Now that we've converted MultiJoinRel's back to JoinRel's, reduce
@@ -461,9 +462,9 @@ public class LucidDbSessionPersonality
         // Push semijoins down to tables.  (The join part is a NOP for now,
         // but once we start taking more kinds of join factors, it won't be.)
         builder.addGroupBegin();
-        builder.addRuleInstance(new PushSemiJoinPastFilterRule());
-        builder.addRuleInstance(new PushSemiJoinPastProjectRule());
-        builder.addRuleInstance(new PushSemiJoinPastJoinRule());
+        builder.addRuleInstance(PushSemiJoinPastFilterRule.instance);
+        builder.addRuleInstance(PushSemiJoinPastProjectRule.instance);
+        builder.addRuleInstance(PushSemiJoinPastJoinRule.instance);
         builder.addGroupEnd();
 
         // Do another round of filtering pushing, in the event that
@@ -496,7 +497,7 @@ public class LucidDbSessionPersonality
         builder.addGroupEnd();
 
         // Remove self-joins that are removable.
-        builder.addRuleInstance(new LoptRemoveSelfJoinRule());
+        builder.addRuleInstance(LoptRemoveSelfJoinRule.instance);
 
         // Push down any filters that were added as a result of removing
         // self-joins
@@ -514,7 +515,7 @@ public class LucidDbSessionPersonality
         // we instead use hash semijoins to process the semijoin rather than
         // removing the semijoin, which could result in an incorrect query
         // result.
-        builder.addRuleInstance(new RemoveSemiJoinRule());
+        builder.addRuleInstance(RemoveSemiJoinRule.instance);
 
         // Now that we've finished join ordering optimization, have converted
         // filters where possible, and have converted semijoins, push projects
@@ -523,7 +524,7 @@ public class LucidDbSessionPersonality
 
         // Apply physical projection to row scans, eliminating access
         // to clustered indexes we don't need.
-        builder.addRuleInstance(new LcsTableProjectionRule());
+        builder.addRuleInstance(LcsTableProjectionRule.instance);
 
         // Consider index only access.  Multiple rules are required
         // for various patterns.  Apply these rules after we've pushed down
@@ -545,20 +546,20 @@ public class LucidDbSessionPersonality
         builder.addRuleCollection(medPluginRules);
 
         // Use hash semi join if possible.
-        builder.addRuleInstance(new LhxSemiJoinRule());
+        builder.addRuleInstance(LhxSemiJoinRule.instance);
 
         // Use hash join wherever possible.
-        builder.addRuleInstance(new LhxJoinRule());
+        builder.addRuleInstance(LhxJoinRule.instance);
 
         // Use hash join to implement set op: Intersect.
-        builder.addRuleInstance(new LhxIntersectRule());
+        builder.addRuleInstance(LhxIntersectRule.instance);
 
         // Use hash join to implement set op: Except(minus).
-        builder.addRuleInstance(new LhxMinusRule());
+        builder.addRuleInstance(LhxMinusRule.instance);
 
         // Use nested loop join if hash join can't be used
         if (fennelEnabled) {
-            builder.addRuleInstance(new FennelNestedLoopJoinRule());
+            builder.addRuleInstance(FennelNestedLoopJoinRule.instance);
         }
 
         // Extract join conditions again so that FennelCartesianJoinRule can do
@@ -591,15 +592,15 @@ public class LucidDbSessionPersonality
         // Prefer hash aggregation over the standard Fennel aggregation.
         // Apply aggregation rules before the calc rules below so we can
         // call metadata queries on logical RelNodes.
-        builder.addRuleInstance(new LhxAggRule());
+        builder.addRuleInstance(LhxAggRule.instance);
 
         // Handle rid expressions being projected from EmptyRel's
-        builder.addRuleInstance(new LcsRemoveRidExprRule());
+        builder.addRuleInstance(LcsRemoveRidExprRule.instance);
 
         // Handle trivial renames now so that they don't get
         // implemented as calculators.
         if (fennelEnabled) {
-            builder.addRuleInstance(new FennelRenameRule());
+            builder.addRuleInstance(FennelRenameRule.instance);
         }
 
         // Convert remaining filters and projects to logical calculators,
@@ -615,11 +616,11 @@ public class LucidDbSessionPersonality
         // ReduceDecimalsRule so we avoid decimal reinterprets that can
         // be handled by Reshape
         if (fennelEnabled) {
-            builder.addRuleInstance(new FennelReshapeRule());
+            builder.addRuleInstance(FennelReshapeRule.instance);
         }
 
         // Replace the DECIMAL datatype with primitive ints.
-        builder.addRuleInstance(new ReduceDecimalsRule());
+        builder.addRuleInstance(ReduceDecimalsRule.instance);
 
         // The rest of these are all physical implementation rules
         // which are safe to apply simultaneously.
@@ -629,21 +630,21 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(FarragoJavaUdxRule.instance);
 
         if (fennelEnabled) {
-            builder.addRuleInstance(new FennelSortRule());
-            builder.addRuleInstance(new FennelRenameRule());
-            builder.addRuleInstance(new FennelCartesianJoinRule());
-            builder.addRuleInstance(new FennelAggRule());
-            builder.addRuleInstance(new FennelValuesRule());
-            builder.addRuleInstance(FennelEmptyRule.INSTANCE);
+            builder.addRuleInstance(FennelSortRule.instance);
+            builder.addRuleInstance(FennelRenameRule.instance);
+            builder.addRuleInstance(FennelCartesianJoinRule.instance);
+            builder.addRuleInstance(FennelAggRule.instance);
+            builder.addRuleInstance(FennelValuesRule.instance);
+            builder.addRuleInstance(FennelEmptyRule.instance);
 
             // Requires CoerceInputsRule.
             builder.addRuleInstance(FennelUnionRule.instance);
 
             // Convert any left over SamplingRels.
-            builder.addRuleInstance(new FennelBernoulliSamplingRule());
+            builder.addRuleInstance(FennelBernoulliSamplingRule.instance);
         } else {
             builder.addRuleInstance(
-                new IterRules.HomogeneousUnionToIteratorRule());
+                IterRules.HomogeneousUnionToIteratorRule.instance);
         }
 
         // If FennelCartesianJoinRule swapped its join inputs and added a
@@ -655,11 +656,11 @@ public class LucidDbSessionPersonality
             // use Fennel for calculating expressions
             assert (fennelEnabled);
             builder.addRuleByDescription("FennelCalcRule");
-            builder.addRuleInstance(new FennelOneRowRule());
+            builder.addRuleInstance(FennelOneRowRule.instance);
         } else if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
             // use Java code generation for calculating expressions
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
-            builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
+            builder.addRuleInstance(IterRules.OneRowToIteratorRule.instance);
         }
 
         // Finish main physical implementation group.
@@ -676,7 +677,7 @@ public class LucidDbSessionPersonality
             builder.addRuleByDescription("FarragoAutoCalcRule");
 
             // Convert expressions, giving preference to Java
-            builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
+            builder.addRuleInstance(IterRules.OneRowToIteratorRule.instance);
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
             builder.addRuleByDescription("FennelCalcRule");
         }
@@ -708,8 +709,8 @@ public class LucidDbSessionPersonality
     private void applyPushDownFilterRules(HepProgramBuilder builder)
     {
         builder.addGroupBegin();
-        builder.addRuleInstance(new PushFilterPastSetOpRule());
-        builder.addRuleInstance(new PushFilterPastProjectRule());
+        builder.addRuleInstance(PushFilterPastSetOpRule.instance);
+        builder.addRuleInstance(PushFilterPastProjectRule.instance);
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(
@@ -722,7 +723,7 @@ public class LucidDbSessionPersonality
                 "without filter above join"));
 
         // merge filters
-        builder.addRuleInstance(new MergeFilterRule());
+        builder.addRuleInstance(MergeFilterRule.instance);
         builder.addGroupEnd();
     }
 

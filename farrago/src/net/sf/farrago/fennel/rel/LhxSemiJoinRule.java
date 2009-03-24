@@ -42,8 +42,14 @@ import org.eigenbase.rex.*;
 public class LhxSemiJoinRule
     extends RelOptRule
 {
+    public static final LhxSemiJoinRule instance =
+        new LhxSemiJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public LhxSemiJoinRule()
     {
         super(

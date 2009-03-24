@@ -57,10 +57,13 @@ import org.eigenbase.sql.type.*;
 class FtrsScanToSearchRule
     extends RelOptRule
 {
+    public static final FtrsScanToSearchRule instance =
+        new FtrsScanToSearchRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsScanToSearchRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FtrsScanToSearchRule()
     {

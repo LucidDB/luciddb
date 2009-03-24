@@ -38,8 +38,14 @@ import org.eigenbase.relopt.*;
 public class FennelBernoulliSamplingRule
     extends RelOptRule
 {
+    public static final FennelBernoulliSamplingRule instance =
+        new FennelBernoulliSamplingRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FennelBernoulliSamplingRule()
     {
         super(new RelOptRuleOperand(SamplingRel.class, ANY));

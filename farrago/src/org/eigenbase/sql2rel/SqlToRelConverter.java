@@ -1775,7 +1775,9 @@ public class SqlToRelConverter
             final String [] fieldNames = { validator.deriveAlias(call, 0) };
             final RelNode childRel =
                 CalcRel.createProject(
-                    (null != bb.root) ? bb.root : new OneRowRel(cluster),
+                    (null != bb.root)
+                    ? bb.root
+                    : new OneRowRel(cluster),
                     exprs,
                     fieldNames,
                     true);
@@ -3283,7 +3285,9 @@ public class SqlToRelConverter
                 fieldNames[j] = validator.deriveAlias(node, j);
             }
             RelNode in =
-                (null == tmpBb.root) ? new OneRowRel(cluster) : tmpBb.root;
+                (null == tmpBb.root)
+                ? new OneRowRel(cluster)
+                : tmpBb.root;
             unionRels.add(
                 CalcRel.createProject(
                     in,

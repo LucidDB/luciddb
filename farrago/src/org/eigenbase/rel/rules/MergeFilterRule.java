@@ -36,8 +36,13 @@ import org.eigenbase.rex.*;
 public class MergeFilterRule
     extends RelOptRule
 {
+    public static final MergeFilterRule instance = new MergeFilterRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance instead}
+     */
     public MergeFilterRule()
     {
         super(

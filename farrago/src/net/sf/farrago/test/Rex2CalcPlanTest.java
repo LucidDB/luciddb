@@ -562,7 +562,7 @@ public class Rex2CalcPlanTest
             RexProgram program = programBuilder.getProgram();
 
             // rewrite decimals
-            ReduceDecimalsRule rule = new ReduceDecimalsRule();
+            ReduceDecimalsRule rule = ReduceDecimalsRule.instance;
             RexShuttle shuttle = rule.new DecimalShuttle(rexBuilder);
             RexProgramBuilder updater =
                 RexProgramBuilder.create(

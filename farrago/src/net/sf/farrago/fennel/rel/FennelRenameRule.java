@@ -38,10 +38,12 @@ import org.eigenbase.relopt.*;
 public class FennelRenameRule
     extends RelOptRule
 {
+    public static final FennelRenameRule instance = new FennelRenameRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FennelRenameRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FennelRenameRule()
     {

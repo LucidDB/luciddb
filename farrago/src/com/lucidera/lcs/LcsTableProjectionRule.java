@@ -45,13 +45,13 @@ import org.eigenbase.sql.*;
 public class LcsTableProjectionRule
     extends MedAbstractFennelProjectionRule
 {
-    //  ~ Constructors
-    // ----------------------------------------------------------
+    public static final LcsTableProjectionRule instance =
+        new LcsTableProjectionRule();
 
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LcsTableProjectionRule object.
+     * @deprecated use {@link #instance} instead
      */
     public LcsTableProjectionRule()
     {

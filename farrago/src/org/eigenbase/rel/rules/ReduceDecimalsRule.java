@@ -57,10 +57,12 @@ import org.eigenbase.util.*;
 public class ReduceDecimalsRule
     extends RelOptRule
 {
+    public static final ReduceDecimalsRule instance = new ReduceDecimalsRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Constructs the rule.
+     * @deprecated use {@link #instance} instead
      */
     public ReduceDecimalsRule()
     {

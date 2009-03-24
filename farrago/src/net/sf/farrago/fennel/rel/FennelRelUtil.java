@@ -656,7 +656,7 @@ public abstract class FennelRelUtil
         }
 
         // Generate a one-row relation producing the key to search for.
-        OneRowRel oneRowRel = new OneRowRel(cluster);
+        RelNode oneRowRel = new OneRowRel(cluster);
         RelNode keyRel =
             CalcRel.createProject(
                 oneRowRel,

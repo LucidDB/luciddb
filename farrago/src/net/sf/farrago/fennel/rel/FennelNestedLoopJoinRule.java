@@ -54,8 +54,14 @@ import org.eigenbase.sql.type.*;
 public class FennelNestedLoopJoinRule
     extends RelOptRule
 {
+    public static final FennelNestedLoopJoinRule instance =
+        new FennelNestedLoopJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FennelNestedLoopJoinRule()
     {
         super(

@@ -116,6 +116,12 @@ public class AbstractConverter
     public static class ExpandConversionRule
         extends RelOptRule
     {
+        public static final ExpandConversionRule instance =
+            new ExpandConversionRule();
+
+        /**
+         * @deprecated use {@link #instance} instead
+         */
         public ExpandConversionRule()
         {
             super(

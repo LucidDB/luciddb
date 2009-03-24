@@ -69,8 +69,14 @@ public class LcsTableMergeRule
      */
     private static final double ROW_UPDATE_THRESHOLD = .4;
 
+    public static final LcsTableMergeRule instance =
+        new LcsTableMergeRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public LcsTableMergeRule()
     {
         super(

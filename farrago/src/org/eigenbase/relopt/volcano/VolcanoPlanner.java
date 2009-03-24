@@ -707,11 +707,10 @@ SUBSET_LOOP:
 
     public void registerAbstractRelationalRules()
     {
-        //
-        addRule(new AbstractConverter.ExpandConversionRule());
-        addRule(new SwapJoinRule());
-        addRule(new RemoveDistinctRule());
-        addRule(new UnionToDistinctRule());
+        addRule(AbstractConverter.ExpandConversionRule.instance);
+        addRule(SwapJoinRule.instance);
+        addRule(RemoveDistinctRule.instance);
+        addRule(UnionToDistinctRule.instance);
         addRule(RemoveTrivialProjectRule.instance);
         addRule(RemoveTrivialCalcRule.instance);
 

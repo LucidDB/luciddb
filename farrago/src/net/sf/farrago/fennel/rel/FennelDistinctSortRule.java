@@ -45,10 +45,13 @@ import org.eigenbase.util.*;
 public class FennelDistinctSortRule
     extends RelOptRule
 {
+    public static final FennelDistinctSortRule instance =
+        new FennelDistinctSortRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FennelDistinctSortRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FennelDistinctSortRule()
     {

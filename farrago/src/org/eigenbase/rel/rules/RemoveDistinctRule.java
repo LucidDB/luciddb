@@ -33,8 +33,14 @@ import org.eigenbase.relopt.*;
 public class RemoveDistinctRule
     extends RelOptRule
 {
+    public static final RemoveDistinctRule instance =
+        new RemoveDistinctRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public RemoveDistinctRule()
     {
         // REVIEW jvs 14-Mar-2006: We have to explicitly mention the child here

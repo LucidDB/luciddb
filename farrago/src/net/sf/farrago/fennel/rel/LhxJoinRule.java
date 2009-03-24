@@ -41,8 +41,14 @@ import org.eigenbase.rex.*;
 public class LhxJoinRule
     extends RelOptRule
 {
+    public static final LhxJoinRule instance =
+        new LhxJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public LhxJoinRule()
     {
         super(new RelOptRuleOperand(JoinRel.class, ANY));
@@ -207,4 +213,5 @@ public class LhxJoinRule
         call.transformTo(rel);
     }
 }
+
 // End LhxJoinRule.java

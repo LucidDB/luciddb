@@ -45,10 +45,13 @@ import org.eigenbase.sql.*;
 class FtrsTableProjectionRule
     extends MedAbstractFennelProjectionRule
 {
+    public static final FtrsTableProjectionRule instance =
+        new FtrsTableProjectionRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsTableProjectionRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FtrsTableProjectionRule()
     {

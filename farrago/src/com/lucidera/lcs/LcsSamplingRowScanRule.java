@@ -36,8 +36,14 @@ import org.eigenbase.util.*;
 public class LcsSamplingRowScanRule
     extends RelOptRule
 {
+    public static final LcsSamplingRowScanRule instance =
+        new LcsSamplingRowScanRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link LcsSamplingRowScanRule} instead
+     */
     public LcsSamplingRowScanRule()
     {
         super(

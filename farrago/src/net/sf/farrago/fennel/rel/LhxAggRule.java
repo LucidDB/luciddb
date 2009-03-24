@@ -40,10 +40,12 @@ import org.eigenbase.relopt.*;
 public class LhxAggRule
     extends RelOptRule
 {
+    public static final LhxAggRule instance = new LhxAggRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LhxAggRule object.
+     * @deprecated use {@link #instance} instead
      */
     public LhxAggRule()
     {

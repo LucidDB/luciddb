@@ -40,8 +40,14 @@ import org.eigenbase.relopt.*;
 public class FennelCorrelatorRule
     extends RelOptRule
 {
+    public static final FennelCorrelatorRule instance =
+        new FennelCorrelatorRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FennelCorrelatorRule()
     {
         super(

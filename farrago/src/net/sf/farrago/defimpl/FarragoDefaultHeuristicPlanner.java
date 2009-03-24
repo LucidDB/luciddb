@@ -160,8 +160,8 @@ public class FarragoDefaultHeuristicPlanner
 
         // Push filters.
         builder.addGroupBegin();
-        builder.addRuleInstance(new PushFilterPastSetOpRule());
-        builder.addRuleInstance(new PushFilterPastProjectRule());
+        builder.addRuleInstance(PushFilterPastSetOpRule.instance);
+        builder.addRuleInstance(PushFilterPastProjectRule.instance);
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(
@@ -172,7 +172,7 @@ public class FarragoDefaultHeuristicPlanner
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(JoinRel.class, RelOptRule.ANY),
                 "without filter above join"));
-        builder.addRuleInstance(new MergeFilterRule());
+        builder.addRuleInstance(MergeFilterRule.instance);
         builder.addGroupEnd();
 
         // This rule will also get run as part of medPluginRules, but
@@ -190,18 +190,18 @@ public class FarragoDefaultHeuristicPlanner
         // index joins don't like projections underneath the join.
         builder.addGroupBegin();
         builder.addRuleInstance(RemoveTrivialProjectRule.instance);
-        builder.addRuleInstance(new PushProjectPastSetOpRule());
-        builder.addRuleInstance(new PushProjectPastJoinRule());
-        builder.addRuleInstance(new PushProjectPastFilterRule());
-        builder.addRuleInstance(new MergeProjectRule());
+        builder.addRuleInstance(PushProjectPastSetOpRule.instance);
+        builder.addRuleInstance(PushProjectPastJoinRule.instance);
+        builder.addRuleInstance(PushProjectPastFilterRule.instance);
+        builder.addRuleInstance(MergeProjectRule.instance);
         builder.addGroupEnd();
 
         // Eliminate UNION DISTINCT and trivial UNION.
-        builder.addRuleInstance(new UnionToDistinctRule());
-        builder.addRuleInstance(new UnionEliminatorRule());
+        builder.addRuleInstance(UnionToDistinctRule.instance);
+        builder.addRuleInstance(UnionEliminatorRule.instance);
 
         // Eliminate redundant SELECT DISTINCT.
-        builder.addRuleInstance(new RemoveDistinctRule());
+        builder.addRuleInstance(RemoveDistinctRule.instance);
 
         // We're getting close to physical implementation.  First, insert
         // type coercions for expressions which require it.
@@ -213,21 +213,21 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleInstance(RemoveTrivialProjectRule.instance);
 
         // Use hash semi join if possible.
-        builder.addRuleInstance(new LhxSemiJoinRule());
+        builder.addRuleInstance(LhxSemiJoinRule.instance);
 
         // Use hash join where possible. Make sure this rule is called before
         // any physical conversions have been done
-        builder.addRuleInstance(new LhxJoinRule());
+        builder.addRuleInstance(LhxJoinRule.instance);
 
         // Use hash join to implement set op: Intersect.
-        builder.addRuleInstance(new LhxIntersectRule());
+        builder.addRuleInstance(LhxIntersectRule.instance);
 
         // Use hash join to implement set op: Except(minus).
-        builder.addRuleInstance(new LhxMinusRule());
+        builder.addRuleInstance(LhxMinusRule.instance);
 
         // Use nested loop join if hash join can't be used
         if (fennelEnabled) {
-            builder.addRuleInstance(new FennelNestedLoopJoinRule());
+            builder.addRuleInstance(FennelNestedLoopJoinRule.instance);
         }
 
         // Extract join conditions again so that FennelCartesianJoinRule can do
@@ -245,12 +245,12 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleInstance(ReduceAggregatesRule.instance);
 
         // Prefer hash aggregation over the standard Fennel aggregation.
-        builder.addRuleInstance(new LhxAggRule());
+        builder.addRuleInstance(LhxAggRule.instance);
 
         // Handle trivial renames now so that they don't get
         // implemented as calculators.
         if (fennelEnabled) {
-            builder.addRuleInstance(new FennelRenameRule());
+            builder.addRuleInstance(FennelRenameRule.instance);
         }
 
         // Convert remaining filters and projects to logical calculators,
@@ -262,33 +262,33 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleInstance(ProjectToCalcRule.instance);
         builder.addRuleInstance(MergeCalcRule.instance);
         builder.addRuleInstance(WindowedAggSplitterRule.instance);
-        builder.addRuleInstance(new FarragoMultisetSplitterRule());
+        builder.addRuleInstance(FarragoMultisetSplitterRule.instance);
         builder.addGroupEnd();
 
         // These rules handle expressions which can be introduced by multiset
         // rewrite, which is why they repeat earlier ones.
         builder.addRuleClass(CoerceInputsRule.class);
-        builder.addRuleInstance(new UnionToDistinctRule());
-        builder.addRuleInstance(new UnionEliminatorRule());
-        builder.addRuleInstance(new RemoveDistinctRule());
+        builder.addRuleInstance(UnionToDistinctRule.instance);
+        builder.addRuleInstance(UnionEliminatorRule.instance);
+        builder.addRuleInstance(RemoveDistinctRule.instance);
 
         // First, try to use ReshapeRel for calcs before firing the other
         // physical calc conversion rules.  Fire this rule before
         // ReduceDecimalsRule so we avoid decimal reinterprets that can
         // be handled by Reshape
         if (fennelEnabled) {
-            builder.addRuleInstance(new FennelReshapeRule());
+            builder.addRuleInstance(FennelReshapeRule.instance);
         }
 
         // Replace the DECIMAL datatype with primitive ints.
-        builder.addRuleInstance(new ReduceDecimalsRule());
+        builder.addRuleInstance(ReduceDecimalsRule.instance);
 
         // NOTE jvs 8-Jan-2008:  FennelDistinctSortRule is now
         // redundant with LhxAggRule above.
 
         // Implement DISTINCT via tree-sort instead of letting it
         // be handled via normal sort plus agg.
-        builder.addRuleInstance(new FennelDistinctSortRule());
+        builder.addRuleInstance(FennelDistinctSortRule.instance);
 
         // The rest of these are all physical implementation rules
         // which are safe to apply simultaneously.
@@ -298,29 +298,29 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleInstance(FarragoJavaUdxRule.instance);
 
         if (fennelEnabled) {
-            builder.addRuleInstance(new FennelSortRule());
-            builder.addRuleInstance(new FennelRenameRule());
-            builder.addRuleInstance(new FennelCartesianJoinRule());
+            builder.addRuleInstance(FennelSortRule.instance);
+            builder.addRuleInstance(FennelRenameRule.instance);
+            builder.addRuleInstance(FennelCartesianJoinRule.instance);
 
             // NOTE jvs 8-Jan-2008:  FennelAggRule is now redundant with
             // LhxAggRule above.
-            builder.addRuleInstance(new FennelAggRule());
-            builder.addRuleInstance(new FennelCollectRule());
-            builder.addRuleInstance(new FennelUncollectRule());
-            builder.addRuleInstance(new FennelCorrelatorRule());
-            builder.addRuleInstance(new FennelValuesRule());
-            builder.addRuleInstance(FennelEmptyRule.INSTANCE);
-            builder.addRuleInstance(new FennelBernoulliSamplingRule());
+            builder.addRuleInstance(FennelAggRule.instance);
+            builder.addRuleInstance(FennelCollectRule.instance);
+            builder.addRuleInstance(FennelUncollectRule.instance);
+            builder.addRuleInstance(FennelCorrelatorRule.instance);
+            builder.addRuleInstance(FennelValuesRule.instance);
+            builder.addRuleInstance(FennelEmptyRule.instance);
+            builder.addRuleInstance(FennelBernoulliSamplingRule.instance);
         } else {
             builder.addRuleInstance(
-                new IterRules.HomogeneousUnionToIteratorRule());
+                IterRules.HomogeneousUnionToIteratorRule.instance);
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
             assert (fennelEnabled);
             builder.addRuleInstance(FennelCalcRule.instance);
-            builder.addRuleInstance(new FennelOneRowRule());
+            builder.addRuleInstance(FennelOneRowRule.instance);
 
             // NOTE jvs 3-May-2006:  See corresponding REVIEW comment in
             // FarragoDefaultPlanner about why this goes here.
@@ -328,9 +328,9 @@ public class FarragoDefaultHeuristicPlanner
         } else if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
             // use Java code generation for calculating expressions
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
-            builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
+            builder.addRuleInstance(IterRules.OneRowToIteratorRule.instance);
             builder.addRuleInstance(
-                new IterRules.HomogeneousUnionToIteratorRule());
+                IterRules.HomogeneousUnionToIteratorRule.instance);
         }
 
         // Finish main physical implementation group.
@@ -347,7 +347,7 @@ public class FarragoDefaultHeuristicPlanner
             builder.addRuleInstance(FarragoAutoCalcRule.instance);
 
             // Convert expressions, giving preference to Java
-            builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
+            builder.addRuleInstance(IterRules.OneRowToIteratorRule.instance);
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
             builder.addRuleInstance(FennelCalcRule.instance);
 

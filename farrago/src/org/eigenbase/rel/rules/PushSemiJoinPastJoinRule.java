@@ -44,8 +44,14 @@ import org.eigenbase.rex.*;
 public class PushSemiJoinPastJoinRule
     extends RelOptRule
 {
+    public static final PushSemiJoinPastJoinRule instance =
+        new PushSemiJoinPastJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PushSemiJoinPastJoinRule()
     {
         super(

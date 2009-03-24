@@ -41,6 +41,9 @@ import org.eigenbase.sql.*;
 public class PushProjectPastSetOpRule
     extends RelOptRule
 {
+    public static final PushProjectPastSetOpRule instance =
+        new PushProjectPastSetOpRule();
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -50,8 +53,9 @@ public class PushProjectPastSetOpRule
 
     //~ Constructors -----------------------------------------------------------
 
-    //  ~ Constructors ---------------------------------------------------------
-
+    /**
+     * @deprecated use {@link #instance}
+     */
     public PushProjectPastSetOpRule()
     {
         super(

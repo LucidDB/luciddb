@@ -46,8 +46,14 @@ import org.eigenbase.rex.*;
 public class FennelOneRowRule
     extends ConverterRule
 {
+    public static final FennelOneRowRule instance =
+        new FennelOneRowRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FennelOneRowRule()
     {
         super(

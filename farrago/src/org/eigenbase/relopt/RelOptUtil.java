@@ -24,6 +24,8 @@ package org.eigenbase.relopt;
 
 import java.io.*;
 
+import java.math.*;
+
 import java.util.*;
 
 import openjava.ptree.Expression;
@@ -1619,6 +1621,7 @@ public abstract class RelOptUtil
         JoinRel.register(planner);
         CorrelatorRel.register(planner);
         OneRowRel.register(planner);
+        ValuesRel.register(planner);
         ProjectRel.register(planner);
         TableAccessRel.register(planner);
         UnionRel.register(planner);
@@ -1638,9 +1641,9 @@ public abstract class RelOptUtil
         planner.addRule(MergeProjectOntoCalcRule.instance);
 
         planner.addRule(MergeCalcRule.instance);
-        planner.addRule(RemoveEmptyRule.UNION_INSTANCE);
-        planner.addRule(RemoveEmptyRule.PROJECT_INSTANCE);
-        planner.addRule(RemoveEmptyRule.FILTER_INSTANCE);
+        planner.addRule(RemoveEmptyRule.unionInstance);
+        planner.addRule(RemoveEmptyRule.projectInstance);
+        planner.addRule(RemoveEmptyRule.filterInstance);
     }
 
     /**

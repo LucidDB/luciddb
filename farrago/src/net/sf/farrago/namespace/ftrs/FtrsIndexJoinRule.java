@@ -51,8 +51,14 @@ import org.eigenbase.util.*;
 class FtrsIndexJoinRule
     extends RelOptRule
 {
+    public static final FtrsIndexJoinRule instance =
+        new FtrsIndexJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FtrsIndexJoinRule()
     {
         super(

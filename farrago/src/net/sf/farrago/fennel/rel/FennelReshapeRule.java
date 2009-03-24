@@ -58,10 +58,13 @@ import org.eigenbase.sql.type.*;
 public class FennelReshapeRule
     extends RelOptRule
 {
+    public static final FennelReshapeRule instance =
+        new FennelReshapeRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FennelReshapeRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FennelReshapeRule()
     {

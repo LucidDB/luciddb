@@ -101,6 +101,12 @@ public abstract class IterRules
     public static class HomogeneousUnionToIteratorRule
         extends UnionToIteratorRule
     {
+        public static final HomogeneousUnionToIteratorRule instance =
+            new HomogeneousUnionToIteratorRule();
+
+        /**
+         * @deprecated use {@link #instance} instead
+         */
         public HomogeneousUnionToIteratorRule()
         {
             this("HomogeneousUnionToIteratorRule");
@@ -124,6 +130,12 @@ public abstract class IterRules
     public static class OneRowToIteratorRule
         extends ConverterRule
     {
+        public static final OneRowToIteratorRule instance =
+            new OneRowToIteratorRule();
+
+        /**
+         * @deprecated use {@link #instance} instead
+         */
         public OneRowToIteratorRule()
         {
             super(

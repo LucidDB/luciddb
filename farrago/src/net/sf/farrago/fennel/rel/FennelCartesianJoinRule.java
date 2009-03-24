@@ -42,8 +42,14 @@ import org.eigenbase.rex.*;
 public class FennelCartesianJoinRule
     extends RelOptRule
 {
+    public static final FennelCartesianJoinRule instance =
+        new FennelCartesianJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FennelCartesianJoinRule()
     {
         super(

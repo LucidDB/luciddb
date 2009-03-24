@@ -100,7 +100,7 @@ public class HepPlannerTest
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchOrder(HepMatchOrder.TOP_DOWN);
         programBuilder.addMatchLimit(1);
-        programBuilder.addRuleInstance(new UnionToDistinctRule());
+        programBuilder.addRuleInstance(UnionToDistinctRule.instance);
 
         checkPlanning(
             programBuilder.createProgram(),
@@ -115,7 +115,7 @@ public class HepPlannerTest
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchLimit(1);
         programBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
-        programBuilder.addRuleInstance(new UnionToDistinctRule());
+        programBuilder.addRuleInstance(UnionToDistinctRule.instance);
 
         checkPlanning(
             programBuilder.createProgram(),
@@ -129,7 +129,7 @@ public class HepPlannerTest
 
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchLimit(HepProgram.MATCH_UNTIL_FIXPOINT);
-        programBuilder.addRuleInstance(new UnionToDistinctRule());
+        programBuilder.addRuleInstance(UnionToDistinctRule.instance);
 
         checkPlanning(
             programBuilder.createProgram(),

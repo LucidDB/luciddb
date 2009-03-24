@@ -34,8 +34,14 @@ import org.eigenbase.relopt.*;
 public class UnionToDistinctRule
     extends RelOptRule
 {
+    public static final UnionToDistinctRule instance =
+        new UnionToDistinctRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public UnionToDistinctRule()
     {
         super(new RelOptRuleOperand(UnionRel.class, ANY));

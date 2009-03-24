@@ -39,8 +39,14 @@ import org.eigenbase.rex.*;
 public class PushFilterPastJoinRule
     extends RelOptRule
 {
+    public static final PushFilterPastJoinRule instance =
+        new PushFilterPastJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PushFilterPastJoinRule()
     {
         super(

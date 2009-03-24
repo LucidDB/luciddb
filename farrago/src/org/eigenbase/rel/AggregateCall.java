@@ -160,6 +160,7 @@ public class AggregateCall
             if (++i > 0) {
                 buf.append(", ");
             }
+            buf.append("$");
             buf.append(arg);
         }
         buf.append(")");

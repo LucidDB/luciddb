@@ -40,10 +40,13 @@ import org.eigenbase.relopt.*;
 public class LhxIntersectRule
     extends RelOptRule
 {
+    public static final LhxIntersectRule instance =
+        new LhxIntersectRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LhxIntersectRule object.
+     * @deprecated use {@link #instance} instead
      */
     public LhxIntersectRule()
     {

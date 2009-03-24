@@ -40,10 +40,12 @@ import org.eigenbase.relopt.*;
 public class LhxMinusRule
     extends RelOptRule
 {
+    public static final LhxMinusRule instance = new LhxMinusRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LhxMinusRule object.
+     * @deprecated use {@link #instance} instead
      */
     public LhxMinusRule()
     {

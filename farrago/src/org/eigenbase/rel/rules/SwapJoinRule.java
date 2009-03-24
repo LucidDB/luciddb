@@ -51,6 +51,9 @@ public class SwapJoinRule
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public SwapJoinRule()
     {
         super(

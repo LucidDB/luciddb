@@ -38,8 +38,14 @@ import org.eigenbase.relopt.*;
 public class UnionEliminatorRule
     extends RelOptRule
 {
+    public static final UnionEliminatorRule instance =
+        new UnionEliminatorRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public UnionEliminatorRule()
     {
         super(

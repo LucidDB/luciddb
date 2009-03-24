@@ -37,10 +37,12 @@ import org.eigenbase.relopt.*;
 public class FennelSortRule
     extends RelOptRule
 {
+    public static final FennelSortRule instance = new FennelSortRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FennelSortRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FennelSortRule()
     {

@@ -68,10 +68,13 @@ import org.eigenbase.util.*;
 public class FarragoMultisetSplitterRule
     extends RelOptRule
 {
+    public static final FarragoMultisetSplitterRule instance =
+        new FarragoMultisetSplitterRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FarragoMultisetSplitter object.
+     * @deprecated use {@link #instance} instead
      */
     public FarragoMultisetSplitterRule()
     {

@@ -41,8 +41,14 @@ import org.eigenbase.relopt.*;
 public class PullUpAggregateAboveUnionRule
     extends RelOptRule
 {
+    public static final PullUpAggregateAboveUnionRule instance =
+        new PullUpAggregateAboveUnionRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PullUpAggregateAboveUnionRule()
     {
         super(

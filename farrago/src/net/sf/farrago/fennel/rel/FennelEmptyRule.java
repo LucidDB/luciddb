@@ -47,7 +47,12 @@ public class FennelEmptyRule
     /**
      * Singleton instance of this rule.
      */
-    public static final FennelEmptyRule INSTANCE = new FennelEmptyRule();
+    public static final FennelEmptyRule instance = new FennelEmptyRule();
+
+    /**
+     * @deprecated use {@link #instance} instead
+     */
+    public static final FennelEmptyRule INSTANCE = instance;
 
     //~ Constructors -----------------------------------------------------------
 

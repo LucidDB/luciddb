@@ -39,8 +39,14 @@ import org.eigenbase.relopt.*;
 public class AddRedundantSemiJoinRule
     extends RelOptRule
 {
+    public static final AddRedundantSemiJoinRule instance =
+        new AddRedundantSemiJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public AddRedundantSemiJoinRule()
     {
         super(

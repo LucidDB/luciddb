@@ -37,10 +37,13 @@ import org.eigenbase.relopt.*;
 public class FennelAggRule
     extends RelOptRule
 {
+    public static final FennelAggRule instance =
+        new FennelAggRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FennelAggRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FennelAggRule()
     {
