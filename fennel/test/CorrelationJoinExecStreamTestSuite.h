@@ -42,3 +42,5 @@ public:
 };
 
 #endif
+
+// End CorrelationJoinExecStreamTestSuite.h
