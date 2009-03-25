@@ -107,7 +107,7 @@ libfennel_ftrs_la_LIBADD=\
 
 libfennel_calculator_la_SOURCES=
 libfennel_calculator_la_LIBADD=\
-	$(top_builddir)/calculator/libcalculator.la $(CALC_DEPS)
+	$(top_builddir)/calculator/libcalculator.la $(CALCULATOR_DEPS)
 
 libfennel_flatfile_la_SOURCES=
 libfennel_flatfile_la_LIBADD=\
