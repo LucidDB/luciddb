@@ -1,17 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Delegating build script used by Cruise Control to build saffron. -->
 <project name="build-saffron" default="build">
-	<property environment="env"/>
-
-	<!-- perforce properties -->
-	<property file="${open_propfile}"/>
-	<property name="p4.client" value="${env.USER}.${env.HOSTNAME}"/>
-
-
-	<!-- regular vs. integration build locations -->
+    <!-- regular vs. integration build locations 
 	<property name="default.build.home" location="."/>
 	<property name="integration.build.home" location="./build"/>
+    -->
 
+    <taskdef resource="net/sf/antcontrib/antlib.xml" />
+	<property environment="env"/>
+
+    <osfamily property="osfamily"/>
+
+    <condition property="notWindows">
+        <not><os family="windows"/></not>
+    </condition>
+
+    <if>
+        <equals arg1="${osfamily}" arg2="unix"/>
+        <then>
+            <property name="bash.exe" location="/bin/bash"/>
+        </then>
+        <else>
+            <property name="bash.exe" location="c:/cygwin/bin/bash.exe"/>
+        </else>
+    </if>
 
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Saffron project" unless="no-sync">
@@ -39,7 +51,7 @@
 	<!-- continuous intregration targets -->
 	<target name="integration-build-and-test"
 	        depends="integration-test"
-	        description="Build and test the Saffron project and its dependencies in a clean tree"/>
+            description="Build and test the Saffron project and its dependencies in a clean tree"/>
 
 	<target name="integration-test" depends="integration-build">
 		<antcall target="do-test">
@@ -66,10 +78,11 @@
 		<mkdir dir="${integration.build.home}/saffron"/>
 
 		<!-- ant's copy task doesn't preserve permissions -->
-		<echo message="Copying ./saffron to ${integration.build.home}/"/>
+        <echo message="Copying ./saffron and ./fennel to ${integration.build.home}/"/>
 		<exec dir="${default.build.home}" executable="cp" failonerror="true">
-			<arg value="-pr"/>
+			<arg value="-fr"/>
 			<arg value="./saffron/"/>
+			<arg value="./fennel/"/>
 			<arg value="${integration.build.home}/"/>
 		</exec>
 	</target>
@@ -94,16 +107,33 @@
 	<target name="do-test">
 		<property name="build.home" location="${default.build.home}"/>
 		<property name="build.type" value="normal.build"/>
+
+        <!--
 		<ant dir="${build.home}/saffron" target="test" inheritAll="false">
 			<property name="${build.type}" value="yes"/>
 		</ant>
+        -->
+
+        <echo>
+            key="EIGEN_HOME" path="${open.build.home}
+            exec dir="${build.home}/saffron" executable="${bash.exe}" failonerror="true"
+        </echo>
+
+        <!-- system env EIGEN_HOME is required -->
+        <exec dir="${build.home}/saffron" executable="${bash.exe}" failonerror="true">
+		    <arg value="-x"/>
+            <arg value="${open.build.home}/thirdparty/ant/bin/ant"/>
+            <arg value="-D${build.type}=yes"/>
+            <arg value="test"/>
+
+            <env key="EIGEN_HOME" path="${open.build.home}"/>
+		</exec>
 	</target>
 
 	<target name="do-build">
 		<property name="build.home" location="${default.build.home}"/>
 		<!-- in Farrago, build only components needed by Saffron -->
-		<ant dir="${build.home}/farrago" target="compile.saffron.deps" 
-             inheritAll="false"/>
+		<ant dir="${build.home}/farrago" target="compile.saffron.deps"/>
 		<ant dir="${build.home}/saffron" inheritAll="false"/>
 	</target>
 

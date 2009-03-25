@@ -160,6 +160,6 @@ InstructionSignature::registersToTypes()
 
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/calculator/InstructionSignature.cpp#1 $");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/calculator/InstructionSignature.cpp#1 $");
 
 // End InstructionSignature.cpp
