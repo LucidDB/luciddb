@@ -40,13 +40,13 @@ DB_DEPS = libfennel_btree.la $(BTREE_DEPS)
 
 FTRS_DEPS = libfennel_btree.la libfennel_exec.la $(BTREE_DEPS)
 
-CALCULATOR_DEPS = $(EXEC_DEPS)
+CALCULATOR_DEPS = libfennel_exec.la $(EXEC_DEPS)
 
-FLATFILE_DEPS = $(EXEC_DEPS)
+FLATFILE_DEPS = $(CALCULATOR_DEPS)
 
-SORTER_DEPS = $(EXEC_DEPS)
+SORTER_DEPS = $(CALCULATOR_DEPS)
 
-HASHEXE_DEPS = $(EXEC_DEPS)
+HASHEXE_DEPS = $(CALCULATOR_DEPS)
 
 TEST_DEPS = libfennel_btree.la libfennel_exec.la $(BTREE_DEPS)
 
