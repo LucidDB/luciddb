@@ -100,7 +100,6 @@ ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
             return EXECRC_BUF_OVERFLOW;
         }
         bytesWritten += outTa.getCurrentByteCount();
-
     }
 
     assert(pInAccessor->isTupleConsumptionPending());

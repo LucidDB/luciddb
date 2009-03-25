@@ -447,7 +447,7 @@ void ExecStreamFactory::visit(ProxyCorrelationJoinStreamDef &streamDef)
     CorrelationJoinExecStreamParams params;
     readTupleStreamParams(params, streamDef);
     SharedProxyCorrelation pCorrelation = streamDef.getCorrelations();
-    for ( /* empty */; pCorrelation; ++pCorrelation) {
+    for (; pCorrelation; ++pCorrelation) {
         Correlation correlation(
             DynamicParamId(pCorrelation->getId()),
             pCorrelation->getOffset());

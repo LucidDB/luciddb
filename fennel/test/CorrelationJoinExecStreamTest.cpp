@@ -28,4 +28,4 @@ using namespace fennel;
 // instantiate the test suite as a stand-alone program
 FENNEL_UNIT_TEST_SUITE(CorrelationJoinExecStreamTestSuite);
 
-// End CorrelationJoinExecStreamTestSuite.cpp
+// End CorrelationJoinExecStreamTest.cpp
