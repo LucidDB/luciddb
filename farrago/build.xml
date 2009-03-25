@@ -414,7 +414,7 @@ ${farrago.test.jvmargs}
         includes="*.java"/>
       <fileset dir="${lurql.parser.dir}" includes="*.java"/>
       <!-- TODO jvs 22-Mar-2009:  get rid of this in a few months -->
-      <fileset dir="${Farrago.src.dir}/com/lucidera/lurql/parser" 
+      <fileset dir="${farrago.src.dir}/com/lucidera/lurql/parser" 
         includes="*.java"/>
     </delete>
   </target>
