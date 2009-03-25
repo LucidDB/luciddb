@@ -24,6 +24,7 @@ package net.sf.farrago.namespace.ftrs;
 
 import java.util.*;
 
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.util.*;
 
@@ -43,8 +44,14 @@ import org.eigenbase.util.*;
 class FtrsRemoveRedundantSortRule
     extends RelOptRule
 {
+    public static final FtrsRemoveRedundantSortRule instance =
+        new FtrsRemoveRedundantSortRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public FtrsRemoveRedundantSortRule()
     {
         super(

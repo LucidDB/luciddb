@@ -31,6 +31,7 @@ import java.util.List;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;

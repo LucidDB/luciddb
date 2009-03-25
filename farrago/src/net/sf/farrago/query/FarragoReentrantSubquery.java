@@ -24,6 +24,7 @@ package net.sf.farrago.query;
 import java.util.*;
 
 import net.sf.farrago.session.*;
+import net.sf.farrago.fennel.rel.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;

@@ -38,8 +38,14 @@ import org.eigenbase.relopt.*;
 public class RemoveSemiJoinRule
     extends RelOptRule
 {
+    public static final RemoveSemiJoinRule instance =
+        new RemoveSemiJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public RemoveSemiJoinRule()
     {
         super(new RelOptRuleOperand(SemiJoinRel.class, ANY));

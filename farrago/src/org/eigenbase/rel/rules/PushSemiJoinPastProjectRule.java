@@ -43,8 +43,14 @@ import org.eigenbase.rex.*;
 public class PushSemiJoinPastProjectRule
     extends RelOptRule
 {
+    public static final PushSemiJoinPastProjectRule instance =
+        new PushSemiJoinPastProjectRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PushSemiJoinPastProjectRule()
     {
         super(

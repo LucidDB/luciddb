@@ -39,6 +39,9 @@ import org.eigenbase.rex.*;
 public class MergeProjectRule
     extends RelOptRule
 {
+    public static final MergeProjectRule instance =
+        new MergeProjectRule();
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -55,6 +58,9 @@ public class MergeProjectRule
         description = "MergeProjectRule: force mode";
     }
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public MergeProjectRule()
     {
         super(

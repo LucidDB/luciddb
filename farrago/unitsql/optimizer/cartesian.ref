@@ -231,7 +231,7 @@
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
+'        FennelAggRel(groupCount=[0], EXPR$0=[MIN($0)])'
 '          LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 > 
 > -- should still use buffering, swapping the join operands
@@ -244,7 +244,7 @@
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
+'        FennelAggRel(groupCount=[0], EXPR$0=[MIN($0)])'
 '          LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 > explain plan for
 > select d.*, e.name
@@ -256,7 +256,7 @@
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSEMPS$NAME]])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelAggRel(groupCount=[0], EXPR$0=[MIN(0)])'
+'          FennelAggRel(groupCount=[0], EXPR$0=[MIN($0)])'
 '            LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEPTS$DEPTNO]])'
 > 
 > !quit

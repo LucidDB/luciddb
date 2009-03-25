@@ -53,7 +53,7 @@ public abstract class RemoveEmptyRule
      * <li>Union(Empty, Empty) becomes Empty
      * </ul>
      */
-    public static final RemoveEmptyRule UNION_INSTANCE =
+    public static final RemoveEmptyRule unionInstance =
         new RemoveEmptyRule(
             new RelOptRuleOperand(
                 UnionRel.class,
@@ -103,6 +103,11 @@ public abstract class RemoveEmptyRule
         };
 
     /**
+     * @deprecated use  {@link #unionInstance} instead
+     */
+    public static final RemoveEmptyRule UNION_INSTANCE = unionInstance;
+
+    /**
      * Singleton instance of rule which converts a {@link ProjectRel} to empty
      * if its child is empty.
      *
@@ -112,7 +117,7 @@ public abstract class RemoveEmptyRule
      * <li>Project(Empty) becomes Empty
      * </ul>
      */
-    public static final RemoveEmptyRule PROJECT_INSTANCE =
+    public static final RemoveEmptyRule projectInstance =
         new RemoveEmptyRule(
             new RelOptRuleOperand(
                 ProjectRel.class,
@@ -131,6 +136,11 @@ public abstract class RemoveEmptyRule
         };
 
     /**
+     * @deprecated use {@link #projectInstance} instead
+     */
+    public static final RemoveEmptyRule PROJECT_INSTANCE = projectInstance;
+
+    /**
      * Singleton instance of rule which converts a {@link FilterRel} to empty if
      * its child is empty.
      *
@@ -140,7 +150,7 @@ public abstract class RemoveEmptyRule
      * <li>Filter(Empty) becomes Empty
      * </ul>
      */
-    public static final RemoveEmptyRule FILTER_INSTANCE =
+    public static final RemoveEmptyRule filterInstance =
         new RemoveEmptyRule(
             new RelOptRuleOperand(
                 FilterRel.class,
@@ -157,6 +167,11 @@ public abstract class RemoveEmptyRule
                         filter.getRowType()));
             }
         };
+
+    /**
+     * @deprecated use {@link #filterInstance} instead
+     */
+    public static final RemoveEmptyRule FILTER_INSTANCE = filterInstance;
 
     //~ Constructors -----------------------------------------------------------
 

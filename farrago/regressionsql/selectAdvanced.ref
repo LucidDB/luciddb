@@ -348,12 +348,12 @@ Messages:
 > (select count(distinct deptno) as c from sales.emps);
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[SUM(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[SUM($0)])'
 '    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL C) NOT NULL])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$DEPTS], preserveOrder=[false])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'
-'          FennelAggRel(groupCount=[0], C=[COUNT(0)])'
+'          FennelAggRel(groupCount=[0], C=[COUNT($0)])'
 '            LhxAggRel(groupCount=[1])'
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 > 

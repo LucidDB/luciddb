@@ -40,6 +40,9 @@ import org.eigenbase.sql.*;
 public class PushProjectPastFilterRule
     extends RelOptRule
 {
+    public static final PushProjectPastFilterRule instance =
+        new PushProjectPastFilterRule();
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -49,8 +52,9 @@ public class PushProjectPastFilterRule
 
     //~ Constructors -----------------------------------------------------------
 
-    // ~ Constructors ----------------------------------------------------------
-
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PushProjectPastFilterRule()
     {
         super(

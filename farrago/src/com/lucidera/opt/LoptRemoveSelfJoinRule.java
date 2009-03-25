@@ -48,8 +48,14 @@ import org.eigenbase.sql.fun.*;
 public class LoptRemoveSelfJoinRule
     extends RelOptRule
 {
+    public static final LoptRemoveSelfJoinRule instance =
+        new LoptRemoveSelfJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public LoptRemoveSelfJoinRule()
     {
         super(

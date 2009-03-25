@@ -32,7 +32,7 @@ package net.sf.farrago.query;
  * docs</a> for why this logical ID is needed in addition to
  * FennelDynamicParamId, which is the physical ID. A 64-bit integer is used
  * since a large number of these may be generated and then discarded during
- * query planning. (I hate to think about the impliciations of a planner that
+ * query planning. (I hate to think about the implications of a planner that
  * would actually exhaust 32 bits, but still, one just can't be too safe.)
  *
  * @author John V. Sichi

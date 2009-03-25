@@ -22,6 +22,7 @@ package com.lucidera.opt;
 
 import com.lucidera.lcs.*;
 
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.oj.rel.*;

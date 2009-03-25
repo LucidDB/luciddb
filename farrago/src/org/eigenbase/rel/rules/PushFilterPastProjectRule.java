@@ -37,8 +37,14 @@ import org.eigenbase.rex.*;
 public class PushFilterPastProjectRule
     extends RelOptRule
 {
+    public static final PushFilterPastProjectRule instance =
+        new PushFilterPastProjectRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PushFilterPastProjectRule()
     {
         super(

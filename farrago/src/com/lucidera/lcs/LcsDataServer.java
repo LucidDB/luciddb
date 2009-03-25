@@ -86,9 +86,9 @@ class LcsDataServer
         // NOTE jvs 26-Oct-2005:  planner rules specific to
         // column-store go here
         planner.addRule(new LcsTableAppendRule());
-        planner.addRule(new LcsTableDeleteRule());
-        planner.addRule(new LcsTableProjectionRule());
-        planner.addRule(new LcsIndexBuilderRule());
+        planner.addRule(LcsTableDeleteRule.instance);
+        planner.addRule(LcsTableProjectionRule.instance);
+        planner.addRule(LcsIndexBuilderRule.instance);
 
         // multiple sub-rules need to be specified for this rule
         // because we need to distinguish the cases where there are
@@ -308,7 +308,7 @@ class LcsDataServer
         // To construct bitmap indexes, we pass initiation parameters
         // to the generators as a row of data.
         //
-        OneRowRel oneRowRel = new OneRowRel(cluster);
+        RelNode oneRowRel = new OneRowRel(cluster);
         RexNode [] inputValues =
             indexGuide.getUnclusteredInputs(cluster.getRexBuilder());
         RelDataType rowType = indexGuide.getUnclusteredInputType();

@@ -189,8 +189,6 @@ if $dist_fennel; then
     cd $FENNEL_DIR
     cp -d libfennel/.libs/$SO_PATTERN $LIB_DIR/fennel
     cp -d farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d disruptivetech/libfennel_dt/.libs/$SO_PATTERN $LIB_DIR/fennel
-    cp -d disruptivetech/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
     cp -d lucidera/libfennel_lu/.libs/$SO_PATTERN $LIB_DIR/fennel
     cp -d lucidera/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
 

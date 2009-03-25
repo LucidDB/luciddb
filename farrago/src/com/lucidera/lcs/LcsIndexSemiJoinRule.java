@@ -23,6 +23,7 @@ package com.lucidera.lcs;
 import java.util.*;
 
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 

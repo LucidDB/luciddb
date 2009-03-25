@@ -40,8 +40,14 @@ import org.eigenbase.sql.type.*;
 public class LcsTableDeleteRule
     extends RelOptRule
 {
+    public static final LcsTableDeleteRule instance =
+        new LcsTableDeleteRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public LcsTableDeleteRule()
     {
         super(

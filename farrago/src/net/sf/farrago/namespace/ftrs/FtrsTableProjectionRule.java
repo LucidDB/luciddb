@@ -27,6 +27,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
@@ -44,10 +45,13 @@ import org.eigenbase.sql.*;
 class FtrsTableProjectionRule
     extends MedAbstractFennelProjectionRule
 {
+    public static final FtrsTableProjectionRule instance =
+        new FtrsTableProjectionRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsTableProjectionRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FtrsTableProjectionRule()
     {

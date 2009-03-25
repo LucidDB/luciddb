@@ -22,7 +22,7 @@
 */
 package net.sf.farrago.trace;
 
-import com.disruptivetech.farrago.calc.*;
+import net.sf.farrago.fennel.calc.*;
 
 import java.util.logging.*;
 
@@ -256,7 +256,7 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The "com.disruptivetech.farrago.calc.CalcProgramBuilder" tracer prints
+     * The "net.sf.farrago.fennel.calc.CalcProgramBuilder" tracer prints
      * the generated program at level {@link java.util.logging.Level#FINE} or
      * higher.
      */

@@ -20,109 +20,25 @@
 */
 package com.lucidera.lurql;
 
-import com.lucidera.lurql.parser.*;
-
-import java.io.*;
-
-import java.sql.*;
-
-import java.util.*;
-
-import javax.jmi.reflect.*;
-
-import org.eigenbase.jmi.*;
-
 import org.netbeans.api.mdr.*;
 
-
 /**
- * LurqlQueryProcessor implements the {@link JmiQueryProcessor} interface for
- * LURQL with the following implementation-specific behavior:
- *
- * <ul>
- * <li>parameters are not yet supported
- * <li>multiple threads may execute the same prepared query concurrently
- * <li>the repository must be MDR
- * </ul>
+ * This package is obsolete and scheduled for deletion.
  *
  * @author John V. Sichi
  * @version $Id$
+ *
+ * @deprecated use org.eigenbase.lurql.LurqlQueryProcessor instead
  */
 public class LurqlQueryProcessor
-    implements JmiQueryProcessor
+    extends org.eigenbase.lurql.LurqlQueryProcessor
 {
-    //~ Instance fields --------------------------------------------------------
-
-    private final MDRepository repos;
-
-    //~ Constructors -----------------------------------------------------------
-
     /**
      * Constructs a new LurqlQueryProcessor.
      */
     public LurqlQueryProcessor(MDRepository repos)
     {
-        this.repos = repos;
-    }
-
-    //~ Methods ----------------------------------------------------------------
-
-    // implement JmiQueryProcessor
-    public JmiPreparedQuery prepare(JmiModelView modelView, String queryText)
-        throws JmiQueryException
-    {
-        LurqlParser parser = new LurqlParser(new StringReader(queryText));
-        LurqlQuery query;
-        try {
-            query = parser.LurqlQuery();
-        } catch (Throwable ex) {
-            throw new JmiQueryException("LURQL parse failed", ex);
-        }
-        LurqlPlan plan =
-            new LurqlPlan(
-                modelView,
-                query);
-        return new PreparedQuery(plan);
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    private class PreparedQuery
-        implements JmiPreparedQuery
-    {
-        private final LurqlPlan plan;
-
-        PreparedQuery(LurqlPlan plan)
-        {
-            this.plan = plan;
-        }
-
-        // implement JmiPreparedQuery
-        public Map<String, ?> describeParameters()
-        {
-            return plan.getParamMap();
-        }
-
-        // implement JmiPreparedQuery
-        public String explainPlan()
-        {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            plan.explain(pw);
-            pw.close();
-            return sw.toString();
-        }
-
-        // implement JmiPreparedQuery
-        public Collection<RefObject> execute(
-            Connection connection,
-            Map<String, ?> args)
-            throws JmiQueryException
-        {
-            LurqlReflectiveExecutor executor =
-                new LurqlReflectiveExecutor(repos, plan, connection, args);
-            return executor.execute();
-        }
+        super(repos);
     }
 }
 

@@ -19,8 +19,6 @@
 
 package net.sf.saffron.oj;
 
-import com.disruptivetech.farrago.volcano.*;
-
 import net.sf.saffron.core.ImplementableTable;
 import net.sf.saffron.oj.convert.*;
 import net.sf.saffron.oj.rel.*;
@@ -32,6 +30,7 @@ import org.eigenbase.rel.convert.FactoryConverterRule;
 import org.eigenbase.rel.jdbc.JdbcQuery;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.volcano.*;
 import org.eigenbase.reltype.RelDataType;
 
 /**

@@ -35,7 +35,7 @@ import org.eigenbase.relopt.*;
  *
  * <ul>
  * <li>{@link org.eigenbase.rel.rules.PullConstantsThroughAggregatesRule}
- * <li>{@link RemoveDistinctAggregateRule}
+ * <li>{@link org.eigenbase.rel.rules.RemoveDistinctAggregateRule}
  * <li>{@link org.eigenbase.rel.rules.ReduceAggregatesRule}.
  *
  * @author jhyde

@@ -35,7 +35,7 @@ import org.eigenbase.rex.*;
  *
  * @author Julian Hyde
  * @version $Id$
- * @see org.eigenbase.rel.RemoveTrivialProjectRule
+ * @see org.eigenbase.rel.rules.RemoveTrivialProjectRule
  */
 public class RemoveTrivialCalcRule
     extends RelOptRule

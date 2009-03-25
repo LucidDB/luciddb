@@ -24,6 +24,7 @@ package net.sf.farrago.namespace.mock;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 
 import openjava.ptree.*;

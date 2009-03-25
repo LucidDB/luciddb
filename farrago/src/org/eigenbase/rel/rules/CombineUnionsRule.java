@@ -36,8 +36,14 @@ import org.eigenbase.relopt.*;
 public class CombineUnionsRule
     extends RelOptRule
 {
+    public static final CombineUnionsRule instance =
+        new CombineUnionsRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public CombineUnionsRule()
     {
         super(

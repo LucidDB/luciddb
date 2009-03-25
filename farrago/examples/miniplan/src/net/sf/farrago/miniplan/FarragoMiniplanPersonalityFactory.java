@@ -21,8 +21,8 @@
 */
 package net.sf.farrago.miniplan;
 
-import com.disruptivetech.farrago.rel.*;
-import com.disruptivetech.farrago.volcano.*;
+import net.sf.farrago.fennel.rel.*;
+import org.eigenbase.relopt.volcano.*;
 import com.lucidera.opt.*;
 
 import net.sf.farrago.fem.config.*;
@@ -69,11 +69,11 @@ public class FarragoMiniplanPersonalityFactory
 
     private static void addMiniplannerRules(FarragoSessionPlanner planner)
     {
-        planner.addRule(new PushProjectPastSetOpRule());
-        planner.addRule(new LhxAggRule());
+        planner.addRule(PushProjectPastSetOpRule.instance);
+        planner.addRule(LhxAggRule.instance);
         planner.addRule(RemoveTrivialProjectRule.instance);
         planner.addRule(FennelUnionRule.instance);
-        planner.addRule(new FennelReshapeRule());
+        planner.addRule(FennelReshapeRule.instance);
         planner.addRule(PushAggThroughUnionAllRule.instance);
         FennelToIteratorConverter.register(planner);
         IteratorToFennelConverter.register(planner);
@@ -86,8 +86,8 @@ public class FarragoMiniplanPersonalityFactory
 
         builder.addGroupBegin();
         builder.addRuleInstance(RemoveTrivialProjectRule.instance);
-        builder.addRuleInstance(new PushProjectPastSetOpRule());
-        builder.addRuleInstance(new MergeProjectRule());
+        builder.addRuleInstance(PushProjectPastSetOpRule.instance);
+        builder.addRuleInstance(MergeProjectRule.instance);
         builder.addGroupEnd();
 
         builder.addRuleInstance(PushAggThroughUnionAllRule.instance);
@@ -95,9 +95,9 @@ public class FarragoMiniplanPersonalityFactory
         builder.addRuleCollection(medPluginRules);
 
         builder.addRuleInstance(RemoveTrivialProjectRule.instance);
-        builder.addRuleInstance(new LhxAggRule());
+        builder.addRuleInstance(LhxAggRule.instance);
 
-        builder.addRuleInstance(new FennelReshapeRule());
+        builder.addRuleInstance(FennelReshapeRule.instance);
         builder.addRuleInstance(FennelUnionRule.instance);
 
         builder.addConverters(true);

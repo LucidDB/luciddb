@@ -136,7 +136,7 @@ abstract operators:
 <li>{@link org.eigenbase.rel.UnionRel}
 <li>{@link org.eigenbase.rel.IntersectRel}
 <li>{@link org.eigenbase.rel.MinusRel}
-<li>{@link org.eigenbase.rel.OneRowRel}
+<li>{@link org.eigenbase.rel.ValuesRel}
 </ul>
 
 The <code>EXPLAIN PLAN</code> statement can be used to see the
@@ -186,10 +186,10 @@ the expression is relative to the containing RelNode).
 Query optimization transforms the abstract relational algebra
 expression described above into an equivalent expression consisting
 only of operators for which physical implementations are available.
-For an overview of the process, see {@link com.disruptivetech.farrago.volcano the
+For an overview of the process, see {@link org.eigenbase.relopt.volcano the
 Volcano optimizer docs}.  To tailor the optimization process for our
 requirements, {@link net.sf.farrago.defimpl.FarragoDefaultPlanner} subclasses
-{@link com.disruptivetech.farrago.volcano.VolcanoPlanner} to define Farrago-specific
+{@link org.eigenbase.relopt.volcano.VolcanoPlanner} to define Farrago-specific
 rules, relational expressions, and calling conventions.
 
 <p>

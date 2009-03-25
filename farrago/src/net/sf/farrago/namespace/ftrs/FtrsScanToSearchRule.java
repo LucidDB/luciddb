@@ -29,6 +29,7 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 
@@ -56,10 +57,13 @@ import org.eigenbase.sql.type.*;
 class FtrsScanToSearchRule
     extends RelOptRule
 {
+    public static final FtrsScanToSearchRule instance =
+        new FtrsScanToSearchRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsScanToSearchRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FtrsScanToSearchRule()
     {

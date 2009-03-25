@@ -28,7 +28,7 @@
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/lucidera/bitmap/LbmEntry.h"
 #include "fennel/lucidera/bitmap/LbmNormalizerExecStream.h"
-#include "fennel/lucidera/sorter/ExternalSortExecStream.h"
+#include "fennel/sorter/ExternalSortExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 

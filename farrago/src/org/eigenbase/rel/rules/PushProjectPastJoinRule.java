@@ -42,6 +42,9 @@ import org.eigenbase.sql.*;
 public class PushProjectPastJoinRule
     extends RelOptRule
 {
+    public static final PushProjectPastJoinRule instance =
+        new PushProjectPastJoinRule();
+
     //~ Instance fields --------------------------------------------------------
 
     /**
@@ -51,8 +54,9 @@ public class PushProjectPastJoinRule
 
     //~ Constructors -----------------------------------------------------------
 
-    //  ~ Constructors ---------------------------------------------------------
-
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PushProjectPastJoinRule()
     {
         super(

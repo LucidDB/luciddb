@@ -36,8 +36,14 @@ import org.eigenbase.relopt.*;
 public class PushFilterIntoMultiJoinRule
     extends RelOptRule
 {
+    public static final PushFilterIntoMultiJoinRule instance =
+        new PushFilterIntoMultiJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PushFilterIntoMultiJoinRule()
     {
         super(

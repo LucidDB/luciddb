@@ -22,8 +22,8 @@
 */
 package net.sf.farrago.defimpl;
 
-import com.disruptivetech.farrago.rel.*;
-import com.disruptivetech.farrago.volcano.*;
+import net.sf.farrago.fennel.rel.*;
+import org.eigenbase.relopt.volcano.*;
 
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.query.*;
@@ -76,7 +76,7 @@ public class FarragoDefaultPlanner
         // conversion rules we need
         RelOptUtil.registerAbstractRels(this);
 
-        addRule(new AbstractConverter.ExpandConversionRule());
+        addRule(AbstractConverter.ExpandConversionRule.instance);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -108,11 +108,11 @@ public class FarragoDefaultPlanner
             planner,
             fennelEnabled,
             calcVM);
-        planner.addRule(new FarragoMultisetSplitterRule());
+        planner.addRule(FarragoMultisetSplitterRule.instance);
         if (fennelEnabled) {
-            planner.addRule(new FennelCollectRule());
-            planner.addRule(new FennelUncollectRule());
-            planner.addRule(new FennelCorrelatorRule());
+            planner.addRule(FennelCollectRule.instance);
+            planner.addRule(FennelUncollectRule.instance);
+            planner.addRule(FennelCorrelatorRule.instance);
         }
     }
 

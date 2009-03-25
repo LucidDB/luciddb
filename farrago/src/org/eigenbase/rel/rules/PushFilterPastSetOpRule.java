@@ -38,8 +38,14 @@ import org.eigenbase.rex.*;
 public class PushFilterPastSetOpRule
     extends RelOptRule
 {
+    public static final PushFilterPastSetOpRule instance =
+        new PushFilterPastSetOpRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PushFilterPastSetOpRule()
     {
         super(

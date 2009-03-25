@@ -21,11 +21,10 @@
 */
 package net.sf.farrago.defimpl;
 
-import com.disruptivetech.farrago.calc.*;
-import com.disruptivetech.farrago.fennel.*;
+import net.sf.farrago.fennel.calc.*;
 
 import com.lucidera.farrago.fennel.*;
-import com.lucidera.lurql.*;
+import org.eigenbase.lurql.*;
 
 import java.io.*;
 
@@ -174,7 +173,6 @@ public class FarragoDefaultSessionPersonality
     // implement FarragoStreamFactoryProvider
     public void registerStreamFactories(long hStreamGraph)
     {
-        DisruptiveTechJni.registerStreamFactory(hStreamGraph);
         LucidEraJni.registerStreamFactory(hStreamGraph);
     }
 

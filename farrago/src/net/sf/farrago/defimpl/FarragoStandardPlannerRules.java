@@ -22,6 +22,7 @@
 package net.sf.farrago.defimpl;
 
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 
@@ -53,11 +54,11 @@ public class FarragoStandardPlannerRules
         boolean fennelEnabled,
         CalcVirtualMachine calcVM)
     {
-        planner.addRule(new RemoveDistinctRule());
+        planner.addRule(RemoveDistinctRule.instance);
         planner.addRule(RemoveDistinctAggregateRule.instance);
         planner.addRule(ExtractJoinFilterRule.instance);
-        planner.addRule(new UnionToDistinctRule());
-        planner.addRule(new UnionEliminatorRule());
+        planner.addRule(UnionToDistinctRule.instance);
+        planner.addRule(UnionEliminatorRule.instance);
 
         // for set operations, we coerce names to match so that
         // Java implementations can pass row objects through without
@@ -69,23 +70,23 @@ public class FarragoStandardPlannerRules
         // for DML, name coercion isn't helpful
         planner.addRule(
             new CoerceInputsRule(TableModificationRel.class, false));
-        planner.addRule(new SwapJoinRule());
+        planner.addRule(SwapJoinRule.instance);
         planner.addRule(RemoveTrivialProjectRule.instance);
         planner.addRule(RemoveTrivialCalcRule.instance);
         planner.addRule(FarragoJavaUdxRule.instance);
 
-        planner.addRule(new IterRules.HomogeneousUnionToIteratorRule());
-        planner.addRule(new IterRules.OneRowToIteratorRule());
+        planner.addRule(IterRules.HomogeneousUnionToIteratorRule.instance);
+        planner.addRule(IterRules.OneRowToIteratorRule.instance);
 
-        planner.addRule(new ReduceDecimalsRule());
+        planner.addRule(ReduceDecimalsRule.instance);
 
-        planner.addRule(FarragoReduceExpressionsRule.FILTER_INSTANCE);
-        planner.addRule(FarragoReduceExpressionsRule.PROJECT_INSTANCE);
-        planner.addRule(FarragoReduceExpressionsRule.JOIN_INSTANCE);
-        planner.addRule(FarragoReduceExpressionsRule.CALC_INSTANCE);
-        planner.addRule(FarragoReduceValuesRule.FILTER_INSTANCE);
-        planner.addRule(FarragoReduceValuesRule.PROJECT_INSTANCE);
-        planner.addRule(FarragoReduceValuesRule.PROJECT_FILTER_INSTANCE);
+        planner.addRule(FarragoReduceExpressionsRule.filterInstance);
+        planner.addRule(FarragoReduceExpressionsRule.projectInstance);
+        planner.addRule(FarragoReduceExpressionsRule.joinInstance);
+        planner.addRule(FarragoReduceExpressionsRule.calcInstance);
+        planner.addRule(FarragoReduceValuesRule.filterInstance);
+        planner.addRule(FarragoReduceValuesRule.projectInstance);
+        planner.addRule(FarragoReduceValuesRule.projectFilterInstance);
 
         planner.addRule(ReduceAggregatesRule.instance);
 
@@ -93,25 +94,25 @@ public class FarragoStandardPlannerRules
         // added because together with PushProjectPastJoinRule, it causes
         // Volcano to go into an infinite loop
 
-        planner.addRule(new PushFilterPastJoinRule());
-        planner.addRule(new PushFilterPastSetOpRule());
-        planner.addRule(new MergeFilterRule());
-        planner.addRule(new PushFilterPastProjectRule());
-        planner.addRule(new PushProjectPastFilterRule());
-        planner.addRule(new PushProjectPastJoinRule());
-        planner.addRule(new PushProjectPastSetOpRule());
-        planner.addRule(new MergeProjectRule());
+        planner.addRule(PushFilterPastJoinRule.instance);
+        planner.addRule(PushFilterPastSetOpRule.instance);
+        planner.addRule(MergeFilterRule.instance);
+        planner.addRule(PushFilterPastProjectRule.instance);
+        planner.addRule(PushProjectPastFilterRule.instance);
+        planner.addRule(PushProjectPastJoinRule.instance);
+        planner.addRule(PushProjectPastSetOpRule.instance);
+        planner.addRule(MergeProjectRule.instance);
 
         if (fennelEnabled) {
-            planner.addRule(new FennelSortRule());
-            planner.addRule(new FennelDistinctSortRule());
-            planner.addRule(new FennelRenameRule());
-            planner.addRule(new FennelCartesianJoinRule());
-            planner.addRule(new FennelOneRowRule());
-            planner.addRule(new FennelValuesRule());
-            planner.addRule(FennelEmptyRule.INSTANCE);
-            planner.addRule(new FennelAggRule());
-            planner.addRule(new FennelReshapeRule());
+            planner.addRule(FennelSortRule.instance);
+            planner.addRule(FennelDistinctSortRule.instance);
+            planner.addRule(FennelRenameRule.instance);
+            planner.addRule(FennelCartesianJoinRule.instance);
+            planner.addRule(FennelOneRowRule.instance);
+            planner.addRule(FennelValuesRule.instance);
+            planner.addRule(FennelEmptyRule.instance);
+            planner.addRule(FennelAggRule.instance);
+            planner.addRule(FennelReshapeRule.instance);
         }
 
         // Add the rule to introduce FennelCalcRel's only if the fennel

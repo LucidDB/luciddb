@@ -29,6 +29,7 @@ import java.util.logging.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.runtime.*;

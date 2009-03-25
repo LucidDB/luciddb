@@ -29,6 +29,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
@@ -417,6 +418,9 @@ public class LoptMetadataProvider
         }
         return (3 * relRowCount) + childRowCount + childCost.getRows();
     }
+
+    // TODO jvs 22-Mar-2009:  move these to FarragoRelMetadataProvider now
+    // that the corresponding rels have moved?
 
     public Double getDistinctRowCount(
         LhxJoinRel rel,

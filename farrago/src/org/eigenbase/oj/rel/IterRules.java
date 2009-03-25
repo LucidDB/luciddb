@@ -95,11 +95,18 @@ public abstract class IterRules
     /**
      * Refinement of {@link UnionToIteratorRule} which only applies to a {@link
      * UnionRel} all of whose input rows are the same type as its output row.
-     * Luckily, a {@link CoerceInputsRule} will have made that happen.
+     * Luckily, a {@link org.eigenbase.rel.rules.CoerceInputsRule} will have
+     * made that happen.
      */
     public static class HomogeneousUnionToIteratorRule
         extends UnionToIteratorRule
     {
+        public static final HomogeneousUnionToIteratorRule instance =
+            new HomogeneousUnionToIteratorRule();
+
+        /**
+         * @deprecated use {@link #instance} instead
+         */
         public HomogeneousUnionToIteratorRule()
         {
             this("HomogeneousUnionToIteratorRule");
@@ -123,6 +130,12 @@ public abstract class IterRules
     public static class OneRowToIteratorRule
         extends ConverterRule
     {
+        public static final OneRowToIteratorRule instance =
+            new OneRowToIteratorRule();
+
+        /**
+         * @deprecated use {@link #instance} instead
+         */
         public OneRowToIteratorRule()
         {
             super(

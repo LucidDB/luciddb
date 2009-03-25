@@ -422,7 +422,7 @@ select * from flatfiledir_server.bcp."example2" order by 3;
 
 -- test: browse connect functionality
 create foreign data wrapper local_file_wrapper
-library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+library 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
 language java
 options (
   browse_connect_description 'My Flat Files Wrapper'
