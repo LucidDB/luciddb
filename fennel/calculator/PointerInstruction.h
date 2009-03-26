@@ -61,17 +61,20 @@ class PointerInstruction : public Instruction
 {
 public:
     explicit
-    PointerInstruction() { }
-    ~PointerInstruction() { }
+    PointerInstruction() {}
+    ~PointerInstruction() {}
 
 protected:
     static vector<StandardTypeDescriptorOrdinal>
-    regDesc(uint sizetArgs1,
-            uint ptrArgs,
-            StandardTypeDescriptorOrdinal type,
-            uint operandArgs2) {
-        vector<StandardTypeDescriptorOrdinal>v(sizetArgs1,
-                                               POINTERSIZET_STANDARD_TYPE);
+    regDesc(
+        uint sizetArgs1,
+        uint ptrArgs,
+        StandardTypeDescriptorOrdinal type,
+        uint operandArgs2)
+    {
+        vector<StandardTypeDescriptorOrdinal>v(
+            sizetArgs1,
+            POINTERSIZET_STANDARD_TYPE);
         uint i;
         for (i = 0; i < ptrArgs; i++) {
             v.push_back(type);
@@ -96,19 +99,19 @@ protected:
 // long long.
 //
 template <class T> class PointerInstruction_NotAPointerType;
-template <> class PointerInstruction_NotAPointerType<char *> {} ;
-template <> class PointerInstruction_NotAPointerType<short *> {} ;
-template <> class PointerInstruction_NotAPointerType<int *> {} ;
-template <> class PointerInstruction_NotAPointerType<long *> {} ;
-template <> class PointerInstruction_NotAPointerType<long long *> {} ;
-template <> class PointerInstruction_NotAPointerType<unsigned char *> {} ;
-template <> class PointerInstruction_NotAPointerType<unsigned short *> {} ;
-template <> class PointerInstruction_NotAPointerType<unsigned int *> {} ;
-template <> class PointerInstruction_NotAPointerType<unsigned long *> {} ;
-template <> class PointerInstruction_NotAPointerType<unsigned long long *> {} ;
-template <> class PointerInstruction_NotAPointerType<signed char *> {} ;
-template <> class PointerInstruction_NotAPointerType<float *> {} ;
-template <> class PointerInstruction_NotAPointerType<double *> {} ;
+template <> class PointerInstruction_NotAPointerType<char *> {};
+template <> class PointerInstruction_NotAPointerType<short *> {};
+template <> class PointerInstruction_NotAPointerType<int *> {};
+template <> class PointerInstruction_NotAPointerType<long *> {};
+template <> class PointerInstruction_NotAPointerType<long long *> {};
+template <> class PointerInstruction_NotAPointerType<unsigned char *> {};
+template <> class PointerInstruction_NotAPointerType<unsigned short *> {};
+template <> class PointerInstruction_NotAPointerType<unsigned int *> {};
+template <> class PointerInstruction_NotAPointerType<unsigned long *> {};
+template <> class PointerInstruction_NotAPointerType<unsigned long long *> {};
+template <> class PointerInstruction_NotAPointerType<signed char *> {};
+template <> class PointerInstruction_NotAPointerType<float *> {};
+template <> class PointerInstruction_NotAPointerType<double *> {};
 
 FENNEL_END_NAMESPACE
 

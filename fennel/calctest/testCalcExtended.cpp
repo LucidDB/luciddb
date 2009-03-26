@@ -61,32 +61,37 @@ fail(const char *str, int line) {
 // ----------------------------------------------------------------------
 // conversion functions
 // ----------------------------------------------------------------------
-void convertDoubleToFloat(RegisterRef<float>* regOut,
-                          RegisterRef<double>* regIn)
+void convertDoubleToFloat(
+    RegisterRef<float>* regOut,
+    RegisterRef<double>* regIn)
 {
     regOut->value((float)regIn->value());
 }
-void convertFloatToDouble(RegisterRef<double>* regOut,
-                          RegisterRef<float>* regIn)
+void convertFloatToDouble(
+    RegisterRef<double>* regOut,
+    RegisterRef<float>* regIn)
 {
     regOut->value((double)regIn->value());
 }
-void convertFloatToInt(RegisterRef<int>* regOut,
-                       RegisterRef<float>* regIn)
+void convertFloatToInt(
+    RegisterRef<int>* regOut,
+    RegisterRef<float>* regIn)
 {
     regOut->value((int)regIn->value());
 }
-void convertIntToFloat(RegisterRef<float>* regOut,
-                       RegisterRef<int>* regIn)
+void convertIntToFloat(
+    RegisterRef<float>* regOut,
+    RegisterRef<int>* regIn)
 {
     regOut->value((float)regIn->value());
 }
 /**
  * Assigns "input" * 10 ^ "exponent" to "result".
  */
-void convertDecimal(RegisterRef<int32_t>* resultReg,
-                    RegisterRef<int32_t>* inputReg,
-                    RegisterRef<int32_t>* exponentReg)
+void convertDecimal(
+    RegisterRef<int32_t>* resultReg,
+    RegisterRef<int32_t>* inputReg,
+    RegisterRef<int32_t>* exponentReg)
 {
     int32_t in = inputReg->value();
     int32_t exp = exponentReg->value();
@@ -103,8 +108,9 @@ void convertDecimal(RegisterRef<int32_t>* resultReg,
     resultReg->value(result);
 }
 
-void convertStringToExactNumber(RegisterRef<int>* regOut,
-                                RegisterRef<char *>* regIn)
+void convertStringToExactNumber(
+    RegisterRef<int>* regOut,
+    RegisterRef<char *>* regIn)
 {
 #if 0
     // TODO: Wrap this code in
@@ -119,7 +125,7 @@ void convertStringToExactNumber(RegisterRef<int>* regOut,
 #endif
 #if 0
 
-TODO: Nope this is a disaster JR 6/07 (valueToString() returns "Unimpl");
+    // TODO: Nope this is a disaster JR 6/07 (valueToString() returns "Unimpl");
     const char *pString = regIn->valueToString().c_str();
     assert(pString);
     int iValue = atoi(pString);
@@ -137,9 +143,10 @@ TODO: Nope this is a disaster JR 6/07 (valueToString() returns "Unimpl");
 }
 
 #if 0
-TODO: JR 6/07 removing this
-void convertExactNumberToString(RegisterRef<char *>* regOut,
-                                RegisterRef<int>* regIn)
+// TODO: JR 6/07 removing this
+void convertExactNumberToString(
+    RegisterRef<char *>* regOut,
+    RegisterRef<int>* regIn)
 {
 #if 1
     // TODO: Change the following proof-of-concept code into
@@ -153,8 +160,9 @@ void convertExactNumberToString(RegisterRef<char *>* regOut,
     printf("dstL = %d  newL = %d\n", dstL, newL);
 
     if (newL > dstL) {
-        // TODO: Must check right space padding to see what, if anything valid is
-        // TODO: truncated before going all wild and throwing exception
+        // TODO: Must check right space padding to see what, if
+        // anything valid is truncated before going all wild and
+        // throwing exception
         assert(0);        // TODO: Must have a valid pc here!
         // SQL99 Part 2 Section 22.1 22-001 "string data, right truncation"
         memcpy(regOut->pointer(), nullTermStr, dstL);
@@ -169,35 +177,39 @@ void convertExactNumberToString(RegisterRef<char *>* regOut,
     delete [] nullTermStr;
 #endif
 #if 0
-TODO: JR 6/07 ... valueToStringis not implemented yet ...
+// TODO: JR 6/07 ... valueToStringis not implemented yet ...
 // re-enabled the above ...
     const char *pString = regIn->valueToString().c_str();
     assert(pString);
-    regOut->value( const_cast<char*>(pString));
+    regOut->value(const_cast<char*>(pString));
 #endif
 }
 #endif
 
-void convertStringToFloat(RegisterRef<float>* regOut,
-                          RegisterRef<char *>* regIn)
+void convertStringToFloat(
+    RegisterRef<float>* regOut,
+    RegisterRef<char *>* regIn)
 {
     //*regOut = strtof(*regIn, (char **)NULL);
 }
 
-void convertFloatToString(RegisterRef<char *>* regOut,
-                          RegisterRef<float>* regIn)
+void convertFloatToString(
+    RegisterRef<char *>* regOut,
+    RegisterRef<float>* regIn)
 {
     //*str = itoa ((int) *approx);
 }
 
-void convertStringToDouble(RegisterRef<double>* regOut,
-                           RegisterRef<char *>* regIn)
+void convertStringToDouble(
+    RegisterRef<double>* regOut,
+    RegisterRef<char *>* regIn)
 {
     //*regOut = strtod(*regIn, (char **)NULL);
 }
 
-void convertDoubleToString(RegisterRef<char *>* regOut,
-                           RegisterRef<double>* regIn)
+void convertDoubleToString(
+    RegisterRef<char *>* regOut,
+    RegisterRef<double>* regIn)
 {}
 
 
@@ -235,62 +247,76 @@ class TestCalculator : public Calculator {
     TupleData _tupleDataStatus;
 public:
     TestCalculator(
-                   DynamicParamManager *pdpm,
-                   bool isNullable,
-                   ExtendedInstructionDef *instrDef) : Calculator(pdpm,0,0,0,0,0,0),
-                                                       _isNullable(isNullable),
-                                                       _instrDef(instrDef),
-                                                       _pTupleBufLiteral(NULL),
-                                                       _pTupleBufInput(NULL),
-                                                       _pTupleBufOutput(NULL),
-                                                       _pTupleBufLocal(NULL),
-                                                       _pTupleBufStatus(NULL),
-                                                       _tupleDataLiteral(),
-                                                       _tupleDataInput(),
-                                                       _tupleDataOutput(),
-                                                       _tupleDataLocal(),
-                                                       _tupleDataStatus()
+        DynamicParamManager *pdpm,
+        bool isNullable,
+        ExtendedInstructionDef *instrDef)
+        : Calculator(pdpm, 0, 0, 0, 0, 0, 0),
+          _isNullable(isNullable),
+          _instrDef(instrDef),
+          _pTupleBufLiteral(NULL),
+          _pTupleBufInput(NULL),
+          _pTupleBufOutput(NULL),
+          _pTupleBufLocal(NULL),
+          _pTupleBufStatus(NULL),
+          _tupleDataLiteral(),
+          _tupleDataInput(),
+          _tupleDataOutput(),
+          _tupleDataLocal(),
+          _tupleDataStatus()
     {
         setUp();
     }
+
     void setUp() {
         const vector<StandardTypeDescriptorOrdinal> parameterTypes =
             _instrDef->getParameterTypes();
         // assume first parameter is out, rest are in
         StandardTypeDescriptorFactory typeFactory;
         for (uint i = 0; i < parameterTypes.size(); i++) {
-            StoredTypeDescriptor const &typeDesc = typeFactory.newDataType(parameterTypes[i]);
+            StoredTypeDescriptor const &typeDesc =
+                typeFactory.newDataType(parameterTypes[i]);
             if (i == 0) {
                 // 0th parameter is "OUT"
-                _tupleDescOutput.push_back(TupleAttributeDescriptor(typeDesc, _isNullable));
+                _tupleDescOutput.push_back(
+                    TupleAttributeDescriptor(typeDesc, _isNullable));
             } else if (i > 0) {
                 // other parameters are "IN"
-                _tupleDescInput.push_back(TupleAttributeDescriptor(typeDesc, _isNullable));
+                _tupleDescInput.push_back(
+                    TupleAttributeDescriptor(typeDesc, _isNullable));
             }
         }
         // Create a tuple accessor from the description
         //
-        // Note: Must use a NOT_NULL_AND_FIXED accessor when creating a tuple out of the
-        // air like this, otherwise unmarshal() does not know what to do. If you need a
-        // STANDARD type tuple that supports nulls, it has to be built as a copy.
-        _tupleAccessorLiteral.compute(_tupleDescLiteral, TUPLE_FORMAT_ALL_FIXED);
+        // Note: Must use a NOT_NULL_AND_FIXED accessor when creating
+        // a tuple out of the air like this, otherwise unmarshal()
+        // does not know what to do. If you need a STANDARD type tuple
+        // that supports nulls, it has to be built as a copy.
+        _tupleAccessorLiteral.compute(
+            _tupleDescLiteral, TUPLE_FORMAT_ALL_FIXED);
         _tupleAccessorInput.compute(_tupleDescInput, TUPLE_FORMAT_ALL_FIXED);
         _tupleAccessorOutput.compute(_tupleDescOutput, TUPLE_FORMAT_ALL_FIXED);
         _tupleAccessorLocal.compute(_tupleDescLocal, TUPLE_FORMAT_ALL_FIXED);
         _tupleAccessorStatus.compute(_tupleDescStatus, TUPLE_FORMAT_ALL_FIXED);
         // Allocate memory for the tuple
-        _pTupleBufLiteral.reset(new FixedBuffer[_tupleAccessorLiteral.getMaxByteCount()]);
-        _pTupleBufInput.reset(new FixedBuffer[_tupleAccessorInput.getMaxByteCount()]);
-        _pTupleBufOutput.reset(new FixedBuffer[_tupleAccessorOutput.getMaxByteCount()]);
-        _pTupleBufLocal.reset(new FixedBuffer[_tupleAccessorLocal.getMaxByteCount()]);
-        _pTupleBufStatus.reset(new FixedBuffer[_tupleAccessorStatus.getMaxByteCount()]);
+        _pTupleBufLiteral.reset(
+            new FixedBuffer[_tupleAccessorLiteral.getMaxByteCount()]);
+        _pTupleBufInput.reset(
+            new FixedBuffer[_tupleAccessorInput.getMaxByteCount()]);
+        _pTupleBufOutput.reset(
+            new FixedBuffer[_tupleAccessorOutput.getMaxByteCount()]);
+        _pTupleBufLocal.reset(
+            new FixedBuffer[_tupleAccessorLocal.getMaxByteCount()]);
+        _pTupleBufStatus.reset(
+            new FixedBuffer[_tupleAccessorStatus.getMaxByteCount()]);
         // Link memory to accessor
-        _tupleAccessorLiteral.setCurrentTupleBuf(_pTupleBufLiteral.get(), false);
+        _tupleAccessorLiteral.setCurrentTupleBuf(
+            _pTupleBufLiteral.get(), false);
         _tupleAccessorInput.setCurrentTupleBuf(_pTupleBufInput.get(), false);
         _tupleAccessorOutput.setCurrentTupleBuf(_pTupleBufOutput.get(), false);
         _tupleAccessorLocal.setCurrentTupleBuf(_pTupleBufLocal.get(), false);
         _tupleAccessorStatus.setCurrentTupleBuf(_pTupleBufStatus.get(), false);
-        // Create a vector of TupleDatum objects based on the description we built
+        // Create a vector of TupleDatum objects based on the
+        // description we built
         _tupleDataLiteral.compute(_tupleDescLiteral);
         _tupleDataInput.compute(_tupleDescInput);
         _tupleDataOutput.compute(_tupleDescOutput);
@@ -303,10 +329,12 @@ public:
         _tupleAccessorOutput.unmarshal(_tupleDataOutput);
         _tupleAccessorLocal.unmarshal(_tupleDataLocal);
     }
+
     template <typename T>
     void setInput(int index, T *valP)
     {
-        //reinterpret_cast<T *>(const_cast<PBuffer>(_tupleDataInput[index].pData)) = valP;
+        // reinterpret_cast<T *>(const_cast<PBuffer>(
+        //     _tupleDataInput[index].pData)) = valP;
         _tupleDataInput[index].pData = reinterpret_cast<const uint8_t *>(valP);
         if (true) {
             // Print out the nullable tuple
@@ -327,7 +355,8 @@ public:
     template <typename T>
     void setInput(int index, T *valP, TupleStorageByteLength length)
     {
-        //reinterpret_cast<T *>(const_cast<PBuffer>(_tupleDataInput[index].pData)) = valP;
+        // reinterpret_cast<T *>(const_cast<PBuffer>(
+        //     _tupleDataInput[index].pData)) = valP;
         _tupleDataInput[index].pData = reinterpret_cast<const uint8_t *>(valP);
         _tupleDataInput[index].cbData = length;
         if (true) {
@@ -346,13 +375,16 @@ public:
             cout << endl;
         }
     }
+
     template <typename T>
-    void setOutput(int index,
-                   T *valP,
-                   TupleStorageByteLength cbData,
-                   TupleStorageByteLength cbStorage)
+    void setOutput(
+        int index,
+        T *valP,
+        TupleStorageByteLength cbData,
+        TupleStorageByteLength cbStorage)
     {
-        //reinterpret_cast<T *>(const_cast<PBuffer>(_tupleDataOutput[index].pData)) = valP;
+        // reinterpret_cast<T *>(const_cast<PBuffer>(
+        //     _tupleDataOutput[index].pData)) = valP;
         _tupleDataOutput[index].pData = reinterpret_cast<const uint8_t *>(valP);
         _tupleDataOutput[index].cbData = cbData;
         _tupleDescOutput[index].cbStorage = cbStorage;
@@ -380,34 +412,44 @@ public:
     }
     void bind()
     {
-        Calculator::bind(RegisterReference::ELiteral,
-                         &_tupleDataLiteral,
-                         _tupleDescLiteral);
-        Calculator::bind(RegisterReference::EInput,
-                         &_tupleDataInput,
-                         _tupleDescInput);
-        Calculator::bind(RegisterReference::EOutput,
-                         &_tupleDataOutput,
-                         _tupleDescOutput);
-        Calculator::bind(RegisterReference::ELocal,
-                         &_tupleDataLocal,
-                         _tupleDescLocal);
-        Calculator::bind(RegisterReference::EStatus,
-                         &_tupleDataStatus,
-                         _tupleDescStatus);
+        Calculator::bind(
+            RegisterReference::ELiteral,
+            &_tupleDataLiteral,
+            _tupleDescLiteral);
+        Calculator::bind(
+            RegisterReference::EInput,
+            &_tupleDataInput,
+            _tupleDescInput);
+        Calculator::bind(
+            RegisterReference::EOutput,
+            &_tupleDataOutput,
+            _tupleDescOutput);
+        Calculator::bind(
+            RegisterReference::ELocal,
+            &_tupleDataLocal,
+            _tupleDescLocal);
+        Calculator::bind(
+            RegisterReference::EStatus,
+            &_tupleDataStatus,
+            _tupleDescStatus);
     }
 
     template <typename T>
-    void getOutput(int i,
-                   T &val)
+    void getOutput(
+        int i,
+        T &val)
     {
-        val = *(reinterpret_cast<T *>(const_cast<PBuffer>(_tupleDataOutput[i].pData)));
+        val = *(reinterpret_cast<T *>(const_cast<PBuffer>(
+            _tupleDataOutput[i].pData)));
     }
+
     template <typename T>
-    void getOutputP(int i,
-                    T &val)
+    void getOutputP(
+        int i,
+        T &val)
     {
-        val = (reinterpret_cast<T>(const_cast<PBuffer>(_tupleDataOutput[i].pData)));
+        val = (reinterpret_cast<T>(const_cast<PBuffer>(
+            _tupleDataOutput[i].pData)));
     }
 };
 // ----------------------------------------------------------------------
@@ -437,10 +479,10 @@ void testConvertDoubleToFloat(double val, float expected)
     parameterTypes[0] = STANDARD_TYPE_REAL;
     parameterTypes[1] = STANDARD_TYPE_DOUBLE;
     table.add(
-              "convert",
-              parameterTypes,
-              (ExtendedInstruction2<float,double>*) NULL,
-              &convertDoubleToFloat);
+        "convert",
+        parameterTypes,
+        (ExtendedInstruction2<float,double>*) NULL,
+        &convertDoubleToFloat);
     // lookup a function
     ExtendedInstructionDef *pDef = table["convert(r,d)"];
     assert(pDef != NULL);
@@ -455,10 +497,12 @@ void testConvertDoubleToFloat(double val, float expected)
     c.setInput(0, &val);
     // setup registers
     vector<RegisterReference *> regRefs(2);
-    regRefs[0] = new RegisterRef<float>(RegisterReference::EOutput, 0,
-                                        STANDARD_TYPE_REAL);
-    regRefs[1] = new RegisterRef<double>(RegisterReference::EInput, 0,
-                                         STANDARD_TYPE_DOUBLE);
+    regRefs[0] = new RegisterRef<float>(
+        RegisterReference::EOutput, 0,
+        STANDARD_TYPE_REAL);
+    regRefs[1] = new RegisterRef<double>(
+        RegisterReference::EInput, 0,
+        STANDARD_TYPE_DOUBLE);
     c.appendRegRef(regRefs[0]);
     c.appendRegRef(regRefs[1]);
     c.bind();
@@ -486,10 +530,10 @@ void testConvertFloatToDouble(float val, double expected)
     parameterTypes[0] = STANDARD_TYPE_DOUBLE;
     parameterTypes[1] = STANDARD_TYPE_REAL;
     table.add(
-              "convert",
-              parameterTypes,
-              (ExtendedInstruction2<double, float>*) NULL,
-              &convertFloatToDouble);
+        "convert",
+        parameterTypes,
+        (ExtendedInstruction2<double, float>*) NULL,
+        &convertFloatToDouble);
     // lookup a function
     ExtendedInstructionDef *pDef = table["convert(d,r)"];
     assert(pDef != NULL);
@@ -501,10 +545,12 @@ void testConvertFloatToDouble(float val, double expected)
     c.setInput(0, &val);
     // setup registers
     vector<RegisterReference *> regRefs(2);
-    regRefs[0] = new RegisterRef<double>(RegisterReference::EOutput, 0,
-                                         STANDARD_TYPE_DOUBLE);
-    regRefs[1] = new RegisterRef<float>(RegisterReference::EInput, 0,
-                                        STANDARD_TYPE_REAL);
+    regRefs[0] = new RegisterRef<double>(
+        RegisterReference::EOutput, 0,
+        STANDARD_TYPE_DOUBLE);
+    regRefs[1] = new RegisterRef<float>(
+        RegisterReference::EInput, 0,
+        STANDARD_TYPE_REAL);
     c.appendRegRef(regRefs[0]);
     c.appendRegRef(regRefs[1]);
     c.bind();
@@ -533,10 +579,10 @@ void testConvertFloatToIntTypes(const char * const str, float val, int expected)
     parameterTypes[0] = StandardTypeDescriptor::fromString(str);
     parameterTypes[1] = STANDARD_TYPE_REAL;
     table.add(
-              "convert",
-              parameterTypes,
-              (ExtendedInstruction2<int, float>*) NULL,
-              &convertFloatToInt);
+        "convert",
+        parameterTypes,
+        (ExtendedInstruction2<int, float>*) NULL,
+        &convertFloatToInt);
     // lookup a function
     string s("convert(");
     s += str;
@@ -555,10 +601,12 @@ void testConvertFloatToIntTypes(const char * const str, float val, int expected)
     c.setInput(0, &val);
     // setup registers
     vector<RegisterReference *> regRefs(2);
-    regRefs[0] = new RegisterRef<int>(RegisterReference::EOutput, 0,
-                                      STANDARD_TYPE_INT_32);
-    regRefs[1] = new RegisterRef<float>(RegisterReference::EInput, 0,
-                                        STANDARD_TYPE_REAL);
+    regRefs[0] = new RegisterRef<int>(
+        RegisterReference::EOutput, 0,
+        STANDARD_TYPE_INT_32);
+    regRefs[1] = new RegisterRef<float>(
+        RegisterReference::EInput, 0,
+        STANDARD_TYPE_REAL);
     c.appendRegRef(regRefs[0]);
     c.appendRegRef(regRefs[1]);
     c.bind();
@@ -586,10 +634,10 @@ void testConvertIntTypesToFloat(const char * const str, int val, float expected)
     parameterTypes[0] = STANDARD_TYPE_REAL;
     parameterTypes[1] = StandardTypeDescriptor::fromString(str);
     table.add(
-              "convert",
-              parameterTypes,
-              (ExtendedInstruction2<float, int>*) NULL,
-              &convertIntToFloat);
+        "convert",
+        parameterTypes,
+        (ExtendedInstruction2<float, int>*) NULL,
+        &convertIntToFloat);
     // lookup a function
     string s("convert(r,");
     s += str;
@@ -605,10 +653,12 @@ void testConvertIntTypesToFloat(const char * const str, int val, float expected)
     c.setInput(0, &val);
     // setup registers
     vector<RegisterReference *> regRefs(2);
-    regRefs[0] = new RegisterRef<float>(RegisterReference::EOutput, 0,
-                                        STANDARD_TYPE_REAL);
-    regRefs[1] = new RegisterRef<int>(RegisterReference::EInput, 0,
-                                      STANDARD_TYPE_INT_32);
+    regRefs[0] = new RegisterRef<float>(
+        RegisterReference::EOutput, 0,
+        STANDARD_TYPE_REAL);
+    regRefs[1] = new RegisterRef<int>(
+        RegisterReference::EInput, 0,
+        STANDARD_TYPE_INT_32);
     c.appendRegRef(regRefs[0]);
     c.appendRegRef(regRefs[1]);
     c.bind();
@@ -637,10 +687,10 @@ void testConvertDecimal(const char * const str, int val, int exp, int expected)
     parameterTypes[1] = StandardTypeDescriptor::fromString(str);
     parameterTypes[2] = STANDARD_TYPE_INT_8;
     table.add(
-              "convert",
-              parameterTypes,
-              (ExtendedInstruction3<int, int, int>*) NULL,
-              &convertDecimal);
+        "convert",
+        parameterTypes,
+        (ExtendedInstruction3<int, int, int>*) NULL,
+        &convertDecimal);
     // lookup a function
     string s("convert(");
     s += str;
@@ -661,12 +711,15 @@ void testConvertDecimal(const char * const str, int val, int exp, int expected)
     c.setInput(1, &exp);
     // setup registers
     vector<RegisterReference *> regRefs(3);
-    regRefs[0] = new RegisterRef<int>(RegisterReference::EOutput, 0,
-                                      STANDARD_TYPE_INT_32);
-    regRefs[1] = new RegisterRef<int>(RegisterReference::EInput, 0,
-                                      STANDARD_TYPE_INT_32);
-    regRefs[2] = new RegisterRef<int>(RegisterReference::EInput, 1,
-                                      STANDARD_TYPE_INT_32);
+    regRefs[0] = new RegisterRef<int>(
+        RegisterReference::EOutput, 0,
+        STANDARD_TYPE_INT_32);
+    regRefs[1] = new RegisterRef<int>(
+        RegisterReference::EInput, 0,
+        STANDARD_TYPE_INT_32);
+    regRefs[2] = new RegisterRef<int>(
+        RegisterReference::EInput, 1,
+        STANDARD_TYPE_INT_32);
     c.appendRegRef(regRefs[0]);
     c.appendRegRef(regRefs[1]);
     c.appendRegRef(regRefs[2]);
@@ -695,10 +748,11 @@ void testConvertStringToExactNumber(const char *str, int expected)
     parameterTypes[0] = STANDARD_TYPE_INT_32;
     parameterTypes[1] = STANDARD_TYPE_VARCHAR;
 
-    table.add("convert",
-              parameterTypes,
-              (ExtendedInstruction2<int32_t, char *>*) NULL,
-              &convertStringToExactNumber);
+    table.add(
+        "convert",
+        parameterTypes,
+        (ExtendedInstruction2<int32_t, char *>*) NULL,
+        &convertStringToExactNumber);
 
     // lookup a function
     ExtendedInstructionDef *pDef = table["convert(s4,vc)"];
@@ -713,10 +767,12 @@ void testConvertStringToExactNumber(const char *str, int expected)
 
     // setup registers
     vector<RegisterReference *> regRefs(2);
-    regRefs[0] = new RegisterRef<int32_t>(RegisterReference::EOutput, 0,
-                                          STANDARD_TYPE_INT_32);
-    regRefs[1] = new RegisterRef<char *>(RegisterReference::EInput, 0,
-                                         STANDARD_TYPE_VARCHAR);
+    regRefs[0] = new RegisterRef<int32_t>(
+        RegisterReference::EOutput, 0,
+        STANDARD_TYPE_INT_32);
+    regRefs[1] = new RegisterRef<char *>(
+        RegisterReference::EInput, 0,
+        STANDARD_TYPE_VARCHAR);
     c.appendRegRef(regRefs[0]);
     c.appendRegRef(regRefs[1]);
     c.bind();
@@ -736,7 +792,7 @@ void testConvertStringToExactNumber(const char *str, int expected)
 }
 
 #if 0
-TODO .... JR 6/07 removing this
+// TODO .... JR 6/07 removing this
 void testConvertExactNumberToString(int num, char *expected)
 {
     printTestHeader("testConvertExactNumberToString()");
@@ -747,10 +803,11 @@ void testConvertExactNumberToString(int num, char *expected)
     parameterTypes[0] = STANDARD_TYPE_VARCHAR;
     parameterTypes[1] = STANDARD_TYPE_INT_32;
 
-    table.add("convert",
-              parameterTypes,
-              (ExtendedInstruction2<char *, int32_t>*) NULL,
-              &convertExactNumberToString);
+    table.add(
+        "convert",
+        parameterTypes,
+        (ExtendedInstruction2<char *, int32_t>*) NULL,
+        &convertExactNumberToString);
 
     // lookup a function
     ExtendedInstructionDef *pDef = table["convert(vc,s4)"];
@@ -769,10 +826,12 @@ void testConvertExactNumberToString(int num, char *expected)
 
     // setup registers
     vector<RegisterReference *> regRefs(2);
-    regRefs[0] = new RegisterRef<int32_t>(RegisterReference::EOutput, 0,
-                                          STANDARD_TYPE_VARCHAR);
-    regRefs[1] = new RegisterRef<char *>(RegisterReference::EInput, 0,
-                                         STANDARD_TYPE_INT_32);
+    regRefs[0] = new RegisterRef<int32_t>(
+        RegisterReference::EOutput, 0,
+        STANDARD_TYPE_VARCHAR);
+    regRefs[1] = new RegisterRef<char *>(
+        RegisterReference::EInput, 0,
+        STANDARD_TYPE_INT_32);
     c.appendRegRef(regRefs[0]);
     c.appendRegRef(regRefs[1]);
     c.bind();

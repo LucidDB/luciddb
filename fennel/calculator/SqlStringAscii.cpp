@@ -30,11 +30,12 @@
 FENNEL_BEGIN_NAMESPACE
 
 int
-SqlStrCat_Ascii(char* dest,
-                int destStorageBytes,
-                int destLenBytes,
-                char const * const str,
-                int strLenBytes)
+SqlStrCat_Ascii(
+    char* dest,
+    int destStorageBytes,
+    int destLenBytes,
+    char const * const str,
+    int strLenBytes)
 {
     if (destLenBytes + strLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
@@ -47,12 +48,13 @@ SqlStrCat_Ascii(char* dest,
 
 
 int
-SqlStrCat_Ascii(char* dest,
-                int destStorageBytes,
-                char const * const str1,
-                int str1LenBytes,
-                char const * const str2,
-                int str2LenBytes)
+SqlStrCat_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes)
 {
     if (str1LenBytes + str2LenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
@@ -60,25 +62,29 @@ SqlStrCat_Ascii(char* dest,
     }
 
     memcpy(dest, str1, str1LenBytes);
-    memcpy(dest+str1LenBytes, str2, str2LenBytes);
+    memcpy(dest + str1LenBytes, str2, str2LenBytes);
     return str1LenBytes + str2LenBytes;
 }
 
 int
-SqlStrCmp_Ascii_Fix(char const * const str1,
-                    int str1LenBytes,
-                    char const * const str2,
-                    int str2LenBytes,
-                    char trimchar)
+SqlStrCmp_Ascii_Fix(
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes,
+    char trimchar)
 {
-
     char const * start = str1;
     char const * end = str1 + str1LenBytes;
 
     if (end != start) {
         end--;
-        while (end != start && *end == trimchar) end--;
-        if (end != start || *end != trimchar) end++;
+        while (end != start && *end == trimchar) {
+            end--;
+        }
+        if (end != start || *end != trimchar) {
+            end++;
+        }
     }
     int str1TrimLenBytes = end - start;
 
@@ -87,8 +93,12 @@ SqlStrCmp_Ascii_Fix(char const * const str1,
 
     if (end != start) {
         end--;
-        while (end != start && *end == trimchar) end--;
-        if (end != start || *end != trimchar) end++;
+        while (end != start && *end == trimchar) {
+            end--;
+        }
+        if (end != start || *end != trimchar) {
+            end++;
+        }
     }
     int str2TrimLenBytes = end - start;
 
@@ -107,7 +117,7 @@ SqlStrCmp_Ascii_Fix(char const * const str1,
 
     while (len-- > 0) {
         if (*s1 != *s2) {
-            return ( (*s1 > *s2) ? 1 : -1 );
+            return (*s1 > *s2) ? 1 : -1;
         }
         s1++;
         s2++;
@@ -116,10 +126,11 @@ SqlStrCmp_Ascii_Fix(char const * const str1,
 }
 
 int
-SqlStrCmp_Ascii_Var(char const * const str1,
-                    int str1LenBytes,
-                    char const * const str2,
-                    int str2LenBytes)
+SqlStrCmp_Ascii_Var(
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes)
 {
     // consider strcoll for I18N
     if (str1LenBytes > str2LenBytes) {
@@ -137,7 +148,7 @@ SqlStrCmp_Ascii_Var(char const * const str1,
 
     while (len-- > 0) {
         if (*s1 != *s2) {
-            return ( (*s1 > *s2) ? 1 : -1 );
+            return (*s1 > *s2) ? 1 : -1;
         }
         s1++;
         s2++;
@@ -147,40 +158,45 @@ SqlStrCmp_Ascii_Var(char const * const str1,
 
 
 int
-SqlStrLenBit_Ascii(char const * const str,
-                   int strLenBytes)
+SqlStrLenBit_Ascii(
+    char const * const str,
+    int strLenBytes)
 {
     return 8 * strLenBytes;
 }
 
 int
-SqlStrLenChar_Ascii(char const * const str,
-                    int strLenBytes)
+SqlStrLenChar_Ascii(
+    char const * const str,
+    int strLenBytes)
 {
     return strLenBytes;
 }
 
 int
-SqlStrLenOct_Ascii(char const * const str,
-                   int strLenBytes)
+SqlStrLenOct_Ascii(
+    char const * const str,
+    int strLenBytes)
 {
     return strLenBytes;
 }
 
 
 int
-SqlStrOverlay_Ascii(char* dest,
-                    int destStorageBytes,
-                    char const * const str,
-                    int strLenBytes,
-                    char const * const over,
-                    int overLenBytes,
-                    int startChar,
-                    int lengthChar,
-                    int lenSpecified)
+SqlStrOverlay_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    char const * const over,
+    int overLenBytes,
+    int startChar,
+    int lengthChar,
+    int lenSpecified)
 {
-    if (!lenSpecified) lengthChar = overLenBytes;
-
+    if (!lenSpecified) {
+        lengthChar = overLenBytes;
+    }
     if (lengthChar < 0 || startChar < 1) {
         // Overlay is defined in terms of substring. These conditions
         // would, I believe, generate a substring error. Also
@@ -192,12 +208,14 @@ SqlStrOverlay_Ascii(char* dest,
     }
 
     int leftLenBytes = startChar - 1;         // 1-index to 0-index
-    if (leftLenBytes > strLenBytes) leftLenBytes = strLenBytes;
-
+    if (leftLenBytes > strLenBytes) {
+        leftLenBytes = strLenBytes;
+    }
     char const *rightP = str + leftLenBytes + lengthChar;
     int rightLenBytes = strLenBytes - (leftLenBytes + lengthChar);
-    if (rightLenBytes < 0) rightLenBytes = 0;
-
+    if (rightLenBytes < 0) {
+        rightLenBytes = 0;
+    }
     assert(leftLenBytes >= 0);
     assert(rightLenBytes >= 0);
     assert(rightP >= str);
@@ -220,16 +238,20 @@ SqlStrOverlay_Ascii(char* dest,
 }
 
 int
-SqlStrPos_Ascii(char const * const str,
-                int strLenBytes,
-                char const * const find,
-                int findLenBytes)
+SqlStrPos_Ascii(
+    char const * const str,
+    int strLenBytes,
+    char const * const find,
+    int findLenBytes)
 {
     // SQL99 Part 2 Section 6.17 General Rule 2.a.
-    if (!findLenBytes) return 1;
+    if (!findLenBytes) {
+        return 1;
+    }
     // SQL99 Part 2 Section 6.17 General Rule 2.c.
-    if (findLenBytes > strLenBytes) return 0;
-
+    if (findLenBytes > strLenBytes) {
+        return 0;
+    }
     assert(findLenBytes > 0);
     assert(strLenBytes > 0);
     assert(strLenBytes - findLenBytes >= 0);
@@ -237,7 +259,7 @@ SqlStrPos_Ascii(char const * const str,
     register char const * s = str;
     char const * end = 1 + s + (strLenBytes - findLenBytes);
 
-    while(s < end) {
+    while (s < end) {
         // search for first char of find
         s = reinterpret_cast<char const *>(memchr(s, *find, end - s));
         if (!s) {
@@ -255,20 +277,23 @@ SqlStrPos_Ascii(char const * const str,
 
 
 int
-SqlStrSubStr_Ascii(char const ** dest,
-                   int destStorageBytes,
-                   char const * const str,
-                   int strLenBytes,
-                   int subStartChar,
-                   int subLengthChar,
-                   int subLenSpecified)
+SqlStrSubStr_Ascii(
+    char const ** dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    int subStartChar,
+    int subLengthChar,
+    int subLenSpecified)
 {
     int e;
     if (subLenSpecified) {
         e = subStartChar + subLengthChar;
     } else {
         e = strLenBytes + 1;
-        if (subStartChar > e) e = subStartChar;
+        if (subStartChar > e) {
+            e = subStartChar;
+        }
     }
 
     if (e < subStartChar) {
@@ -282,11 +307,14 @@ SqlStrSubStr_Ascii(char const ** dest,
     }
 
     int s1 = 1;
-    if (subStartChar > s1) s1 = subStartChar;
+    if (subStartChar > s1) {
+        s1 = subStartChar;
+    }
 
     int e1 = strLenBytes + 1;
-    if (e < e1) e1 = e;
-
+    if (e < e1) {
+        e1 = e;
+    }
     int l1 = e1 - s1;
 
 
@@ -306,10 +334,11 @@ SqlStrSubStr_Ascii(char const ** dest,
 }
 
 int
-SqlStrToLower_Ascii(char* dest,
-                    int destStorageBytes,
-                    char const * src,
-                    int srcLenBytes)
+SqlStrToLower_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * src,
+    int srcLenBytes)
 {
     register char const * s = src;
     register char* d = dest;
@@ -327,10 +356,11 @@ SqlStrToLower_Ascii(char* dest,
 }
 
 int
-SqlStrToUpper_Ascii(char* dest,
-                    int destStorageBytes,
-                    char const * src,
-                    int srcLenBytes)
+SqlStrToUpper_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * src,
+    int srcLenBytes)
 {
     register char const * s = src;
     register char* d = dest;
@@ -348,13 +378,14 @@ SqlStrToUpper_Ascii(char* dest,
 }
 
 int
-SqlStrTrim_Ascii(char* dest,
-                 int destStorageBytes,
-                 char const * const str,
-                 int strLenBytes,
-                 int trimLeft,
-                 int trimRight,
-                 char trimchar)
+SqlStrTrim_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    int trimLeft,
+    int trimRight,
+    char trimchar)
 {
     char const * start = str;
     char const * end = str + strLenBytes;
@@ -362,12 +393,18 @@ SqlStrTrim_Ascii(char* dest,
 
     // If many pad characters are expected, consider using memrchr()
     if (trimLeft) {
-        while (start != end && *start == trimchar) start++;
+        while (start != end && *start == trimchar) {
+            start++;
+        }
     }
     if (trimRight && end != start) {
         end--;
-        while (end != start && *end == trimchar) end--;
-        if (end != start || *end != trimchar) end++;
+        while (end != start && *end == trimchar) {
+            end--;
+        }
+        if (end != start || *end != trimchar) {
+            end++;
+        }
     }
     newLenBytes = end - start;
 
@@ -380,24 +417,31 @@ SqlStrTrim_Ascii(char* dest,
 }
 
 int
-SqlStrTrim_Ascii(char const ** result,
-                 char const * const str,
-                 int strLenBytes,
-                 int trimLeft,
-                 int trimRight,
-                 char trimchar)
+SqlStrTrim_Ascii(
+    char const ** result,
+    char const * const str,
+    int strLenBytes,
+    int trimLeft,
+    int trimRight,
+    char trimchar)
 {
     char const * start = str;
     char const * end = str + strLenBytes;
 
     // If many pad characters are expected, consider using memrchr()
     if (trimLeft) {
-        while (start != end && *start == trimchar) start++;
+        while (start != end && *start == trimchar) {
+            start++;
+        }
     }
     if (trimRight && end != start) {
         end--;
-        while (end != start && *end == trimchar) end--;
-        if (end != start || *end != trimchar) end++;
+        while (end != start && *end == trimchar) {
+            end--;
+        }
+        if (end != start || *end != trimchar) {
+            end++;
+        }
     }
 
     *result = start;

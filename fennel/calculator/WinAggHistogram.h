@@ -101,12 +101,13 @@ public:
     //
     void dropRow(RegisterRef<STDTYPE>* node)
     {
-
         if (!node->isNull()) {
             assert(0 != currentWindow.size());
             STDTYPE* pData = node->refer();
 
-            pair<typename WinAggData::iterator, typename WinAggData::iterator> entries =
+            pair<
+                typename WinAggData::iterator,
+                typename WinAggData::iterator> entries =
                 currentWindow.equal_range(*pData);
 
             assert(entries.first != entries.second);
@@ -213,8 +214,11 @@ private:
     // window. Maybe break histogram into a base class only min/max support,
     // and a derived class with sum. The sum type will be an extra template
     // parameter.
-    STDTYPE currentSum;         // holds the running sum over the window.  Updated
-                                // as entries are added/removed
+
+    /// Holds the running sum over the window.  Updated
+    /// as entries are added/removed
+    STDTYPE currentSum;
+
     /// FIFO queue of values, to enable FIRST_VALUE/LAST_VALUE support.
     WinAggQueue queue;
 };

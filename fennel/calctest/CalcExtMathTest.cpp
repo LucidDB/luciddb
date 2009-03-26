@@ -50,8 +50,9 @@ class CalcExtMathTest : virtual public TestBase, public TraceSource
     void testCalcExtMathPowFails();
     void testCalcExtMathAbs();
 
-    void printOutput(TupleData const & tup,
-                     Calculator const & calc);
+    void printOutput(
+        TupleData const & tup,
+        Calculator const & calc);
 
     string mProgramPower;
 public:
@@ -88,8 +89,9 @@ public:
 
 // for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
 void
-CalcExtMathTest::printOutput(TupleData const & tup,
-                             Calculator const & calc)
+CalcExtMathTest::printOutput(
+    TupleData const & tup,
+    Calculator const & calc)
 {
 #if 0
     TuplePrinter tuplePrinter;
@@ -104,14 +106,14 @@ CalcExtMathTest::checkWarnings(Calculator& calc, string expected)
 {
     try {
         calc.exec();
-    } catch(...) {
+    } catch (...) {
         BOOST_FAIL("An exception was thrown while running program");
     }
 
     int i = calc.warnings().find(expected);
 
-    if ( i < 0) {
-        string msg ="Unexpected or no warning found\n";
+    if (i < 0) {
+        string msg = "Unexpected or no warning found\n";
         msg += "Expected: ";
         msg += expected;
         msg += "\nActual:  ";
@@ -140,8 +142,7 @@ CalcExtMathTest::testCalcExtMathLogarithms()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
 
@@ -152,11 +153,13 @@ CalcExtMathTest::testCalcExtMathLogarithms()
     calc.exec();
     printOutput(outTuple, calc);
 
-    for(int i=0;i<2;i++) {
-        BOOST_CHECK(fabs(*(reinterpret_cast<double*>
-                           (const_cast<PBuffer>(outTuple[i].pData)))-1.0)<0.0001);
+    for (int i = 0; i < 2; i++) {
+        BOOST_CHECK(
+            fabs(
+                *(reinterpret_cast<double*>
+                  (const_cast<PBuffer>(outTuple[i].pData))) - 1.0)
+            < 0.0001);
     }
-
 }
 
 
@@ -174,12 +177,18 @@ CalcExtMathTest::testCalcExtMathLogarithmsFails()
         "REF O0, L0;\n";
 
     const char* tests[][3] = {
-        {"LN","s8","0"},{"LN","d","0.0"},{"LN","s8","-1"},{"LN","d","-1.0"},
-        {"LOG10","s8","0"},{"LOG10","d","0.0"},{"LOG10","s8","-1"},{"LOG10","d","-1.0"}
+        { "LN", "s8", "0" },
+        { "LN", "d", "0.0" },
+        { "LN", "s8", "-1" },
+        { "LN", "d", "-1.0" },
+        { "LOG10", "s8", "0" },
+        { "LOG10", "d", "0.0" },
+        { "LOG10", "s8", "-1" },
+        { "LOG10", "d", "-1.0" },
     };
 
     int n = sizeof(tests) / sizeof(tests[0]);
-    for( int i=0; i<n; i++ ) {
+    for (int i = 0; i < n; i++) {
         Calculator calc(0);
         sprintf(buff, pg, tests[i][1], tests[i][2], tests[i][0]);
         try {
@@ -193,7 +202,7 @@ CalcExtMathTest::testCalcExtMathLogarithmsFails()
 
         calc.bind(&inTuple, &outTuple);
         checkWarnings(calc,"22023");
-        if ( !outTuple.containsNull() ) {
+        if (!outTuple.containsNull()) {
             BOOST_FAIL("Result should be NULL");
         }
     }
@@ -230,8 +239,7 @@ CalcExtMathTest::testCalcExtMathAbs()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage() << pg.str());
     }
 
@@ -245,27 +253,39 @@ CalcExtMathTest::testCalcExtMathAbs()
 
     double epsilon = 0.000001;
 
-    BOOST_CHECK(fabs(*(reinterpret_cast<double*>
-                       (const_cast<PBuffer>(outTuple[0].pData))) -
-                     0) < epsilon);
+    BOOST_CHECK(
+        fabs(
+            *(reinterpret_cast<double*>
+              (const_cast<PBuffer>(outTuple[0].pData))) -
+            0)
+        < epsilon);
 
-    BOOST_CHECK(fabs(*(reinterpret_cast<double*>
-                       (const_cast<PBuffer>(outTuple[1].pData))) -
-                     1234567890123.0) < epsilon);
+    BOOST_CHECK(
+        fabs(
+            *(reinterpret_cast<double*>
+              (const_cast<PBuffer>(outTuple[1].pData))) -
+            1234567890123.0)
+        < epsilon);
 
-    BOOST_CHECK(fabs(*(reinterpret_cast<double*>
-                       (const_cast<PBuffer>(outTuple[2].pData))) -
-                     1234567890123.0) < epsilon);
+    BOOST_CHECK(
+        fabs(
+            *(reinterpret_cast<double*>
+              (const_cast<PBuffer>(outTuple[2].pData))) -
+            1234567890123.0)
+        < epsilon);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t*>
-                        (const_cast<PBuffer>(outTuple[3].pData))),0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint64_t*>
+          (const_cast<PBuffer>(outTuple[3].pData))),0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t*>
-                        (const_cast<PBuffer>(outTuple[4].pData))),
-                      9223372036854775807LL);
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t*>
-                        (const_cast<PBuffer>(outTuple[5].pData))),
-                      9223372036854775807LL);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint64_t*>(
+            const_cast<PBuffer>(outTuple[4].pData))),
+        9223372036854775807LL);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint64_t*>(
+            const_cast<PBuffer>(outTuple[5].pData))),
+        9223372036854775807LL);
 }
 
 void
@@ -275,24 +295,25 @@ CalcExtMathTest::testCalcExtMathPow()
 
 
     const char* tests[][4] = {
-        {"d","d","2.0","2.2"}
-        ,{"d","d","2.0","-2.2"}
-        ,{"d","d","-2.0","2.0"}
+        { "d", "d", "2.0", "2.2" },
+        { "d", "d", "2.0", "-2.2" },
+        { "d", "d", "-2.0", "2.0" },
     };
 
     double results[] = { 4.5947934, 0.21763764, 4};
     int n = sizeof(results) / sizeof(results[0]);
-    assert( n == ( sizeof(tests) / sizeof(tests[0]) ));
-    for( int i=0; i<n; i++) {
-        sprintf(buff, mProgramPower.c_str(),
-                tests[i][0], tests[i][1], tests[i][2], tests[i][3]);
+    assert(n == (sizeof(tests) / sizeof(tests[0])));
+    for (int i = 0; i < n; i++) {
+        sprintf(
+            buff, mProgramPower.c_str(),
+            tests[i][0], tests[i][1], tests[i][2], tests[i][3]);
 
         Calculator calc(0);
         try {
             calc.assemble(buff);
-        }
-        catch (FennelExcn& ex) {
-            BOOST_FAIL("Assemble exception " << ex.getMessage() << ex.what() << buff);
+        } catch (FennelExcn& ex) {
+            BOOST_FAIL(
+                "Assemble exception " << ex.getMessage() << ex.what() << buff);
         }
 
         TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
@@ -302,10 +323,12 @@ CalcExtMathTest::testCalcExtMathPow()
         calc.exec();
         printOutput(outTuple, calc);
 
-        BOOST_CHECK(fabs(*(reinterpret_cast<double*>
-                           (const_cast<PBuffer>(outTuple[0].pData)))-results[i])<0.00001);
+        BOOST_CHECK(
+            fabs(
+                *(reinterpret_cast<double*>(
+                    const_cast<PBuffer>(outTuple[0].pData))) - results[i])
+            < 0.00001);
     }
-
 }
 
 void
@@ -314,16 +337,17 @@ CalcExtMathTest::testCalcExtMathPowFails()
     char buff[1024];
 
     const char* tests[][4] = {
-        {"d","d","0.0","-1.0"}
-        ,{"d","d","-2.0","2.2"}
-        ,{"d","d","-2.0","-2.2"}
+        { "d", "d", "0.0", "-1.0" },
+        { "d", "d", "-2.0", "2.2" },
+        { "d", "d", "-2.0", "-2.2" },
     };
 
     int n = sizeof(tests) / sizeof(tests[0]);
-    for( int i=0; i<n; i++ ) {
+    for (int i = 0; i < n; i++) {
         Calculator calc(0);
-        sprintf(buff, mProgramPower.c_str(),
-                tests[i][0], tests[i][1], tests[i][2], tests[i][3]);
+        sprintf(
+            buff, mProgramPower.c_str(),
+            tests[i][0], tests[i][1], tests[i][2], tests[i][3]);
 
         try {
             calc.assemble(buff);
@@ -336,7 +360,7 @@ CalcExtMathTest::testCalcExtMathPowFails()
 
         calc.bind(&inTuple, &outTuple);
         checkWarnings(calc,"22023");
-        if ( !outTuple.containsNull() ) {
+        if (!outTuple.containsNull()) {
             BOOST_FAIL("Result should be NULL");
         }
     }

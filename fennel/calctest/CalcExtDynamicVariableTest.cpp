@@ -52,7 +52,8 @@ public:
     {
         srand(time(NULL));
         CalcInit::instance();
-        FENNEL_UNIT_TEST_CASE(CalcExtDynamicVariableTest, testCalcExtDynamicVariable);
+        FENNEL_UNIT_TEST_CASE(
+            CalcExtDynamicVariableTest, testCalcExtDynamicVariable);
     }
 
     virtual ~CalcExtDynamicVariableTest()
@@ -62,8 +63,9 @@ public:
 
 // for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
 void
-CalcExtDynamicVariableTest::printOutput(TupleData const & tup,
-                                        Calculator const & calc)
+CalcExtDynamicVariableTest::printOutput(
+    TupleData const & tup,
+    Calculator const & calc)
 {
     if (true) {
         TuplePrinter tuplePrinter;
@@ -76,7 +78,10 @@ void
 CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
 {
     ostringstream pg("");
-    const char* typesArray[] = {"s4", "u4", "s8", "u8", "s1", "u1", "s2","u2", "bo", "r", "d", "c,4", "vc,4", "b,4"};
+    const char* typesArray[] = {
+        "s4", "u4", "s8", "u8", "s1", "u1", "s2",
+        "u2", "bo", "r", "d", "c,4", "vc,4", "b,4"
+    };
     const uint N = sizeof(typesArray) / sizeof(typesArray[0]);
     string types;
     for (int i = 0; i < N; i++) {
@@ -204,17 +209,41 @@ CalcExtDynamicVariableTest::testCalcExtDynamicVariable()
     calc.exec();
 
     //    printOutput(outTuple, calc);
-    BOOST_CHECK(*(reinterpret_cast<int32_t*>(const_cast<PBuffer>(outTuple[0].pData)))==-321);
-    BOOST_CHECK(*(reinterpret_cast<uint32_t*>(const_cast<PBuffer>(outTuple[1].pData)))==622);
-    BOOST_CHECK(*(reinterpret_cast<int64_t*>(const_cast<PBuffer>(outTuple[2].pData)))==-1);
-    BOOST_CHECK(*(reinterpret_cast<uint64_t*>(const_cast<PBuffer>(outTuple[3].pData)))==0x8000000000000000ULL);
-    BOOST_CHECK(*(reinterpret_cast<int8_t*>(const_cast<PBuffer>(outTuple[4].pData)))==-1);
-    BOOST_CHECK(*(reinterpret_cast<uint8_t*>(const_cast<PBuffer>(outTuple[5].pData)))==128);
-    BOOST_CHECK(*(reinterpret_cast<int16_t*>(const_cast<PBuffer>(outTuple[6].pData)))==-1);
-    BOOST_CHECK(*(reinterpret_cast<uint16_t*>(const_cast<PBuffer>(outTuple[7].pData)))==32768);
-    BOOST_CHECK(*(reinterpret_cast<bool*>(const_cast<PBuffer>(outTuple[8].pData)))==true);
-    BOOST_CHECK(*(reinterpret_cast<float*>(const_cast<PBuffer>(outTuple[9].pData)))-3.14<0.0001);
-    BOOST_CHECK(*(reinterpret_cast<double*>(const_cast<PBuffer>(outTuple[10].pData)))-3.14e300<0.0001);
+    BOOST_CHECK(
+        *(reinterpret_cast<int32_t*>(const_cast<PBuffer>(outTuple[0].pData)))
+        == -321);
+    BOOST_CHECK(
+        *(reinterpret_cast<uint32_t*>(const_cast<PBuffer>(outTuple[1].pData)))
+        == 622);
+    BOOST_CHECK(
+        *(reinterpret_cast<int64_t*>(const_cast<PBuffer>(outTuple[2].pData)))
+        == -1);
+    BOOST_CHECK(
+        *(reinterpret_cast<uint64_t*>(const_cast<PBuffer>(outTuple[3].pData)))
+        == 0x8000000000000000ULL);
+    BOOST_CHECK(
+        *(reinterpret_cast<int8_t*>(const_cast<PBuffer>(outTuple[4].pData)))
+        == -1);
+    BOOST_CHECK(
+        *(reinterpret_cast<uint8_t*>(const_cast<PBuffer>(outTuple[5].pData)))
+        == 128);
+    BOOST_CHECK(
+        *(reinterpret_cast<int16_t*>(const_cast<PBuffer>(outTuple[6].pData)))
+        == -1);
+    BOOST_CHECK(
+        *(reinterpret_cast<uint16_t*>(const_cast<PBuffer>(outTuple[7].pData)))
+        == 32768);
+    BOOST_CHECK(
+        *(reinterpret_cast<bool*>(const_cast<PBuffer>(outTuple[8].pData)))
+        == true);
+    BOOST_CHECK(
+        *(reinterpret_cast<float*>(const_cast<PBuffer>(outTuple[9].pData)))
+        - 3.14
+        < 0.0001);
+    BOOST_CHECK(
+        *(reinterpret_cast<double*>(const_cast<PBuffer>(outTuple[10].pData)))
+        - 3.14e300
+        < 0.0001);
 
     BOOST_CHECK(!memcmp("abc",outTuple[11].pData,3));
     BOOST_CHECK(!memcmp("def",outTuple[12].pData,3));

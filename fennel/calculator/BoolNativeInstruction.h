@@ -36,22 +36,24 @@ class BoolNativeInstruction : public NativeInstruction<TMPLT>
 {
 public:
     explicit
-    BoolNativeInstruction(RegisterRef<bool>* result,
-                          RegisterRef<TMPLT>* op1,
-                          StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeInstruction(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        StandardTypeDescriptorOrdinal nativeType)
         : NativeInstruction<TMPLT>(op1, nativeType),
           mResult(result)
-    { }
+    {}
     explicit
-    BoolNativeInstruction(RegisterRef<bool>* result,
-                          RegisterRef<TMPLT>* op1,
-                          RegisterRef<TMPLT>* op2,
-                          StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeInstruction(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        RegisterRef<TMPLT>* op2,
+        StandardTypeDescriptorOrdinal nativeType)
         : NativeInstruction<TMPLT>(op1, op2, nativeType),
           mResult(result)
-    { }
+    {}
     virtual
-    ~BoolNativeInstruction() { }
+    ~BoolNativeInstruction() {}
 
 protected:
     RegisterRef<bool>* mResult;
@@ -62,14 +64,15 @@ class BoolNativeEqual : public BoolNativeInstruction<TMPLT>
 {
 public:
     explicit
-    BoolNativeEqual(RegisterRef<bool>* result,
-                    RegisterRef<TMPLT>* op1,
-                    RegisterRef<TMPLT>* op2,
-                    StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        RegisterRef<TMPLT>* op2,
+        StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
-    { }
+    {}
     virtual
-    ~BoolNativeEqual() { }
+    ~BoolNativeEqual() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -84,14 +87,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolNativeEqual"; }
-    static const char * shortName() { return "EQ"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolNativeEqual";
+    }
+
+    static const char * shortName()
+    {
+        return "EQ";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult,
-                       NativeInstruction<TMPLT>::mOp1,
-                       NativeInstruction<TMPLT>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolNativeInstruction<TMPLT>::mResult,
+            NativeInstruction<TMPLT>::mOp1,
+            NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -106,10 +122,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolNativeEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                            static_cast<RegisterRef<TMPLT>*> (sig[1]),
-                            static_cast<RegisterRef<TMPLT>*> (sig[2]),
-                            (sig[1])->type());
+            BoolNativeEqual(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -118,14 +135,15 @@ class BoolNativeNotEqual : public BoolNativeInstruction<TMPLT>
 {
 public:
     explicit
-    BoolNativeNotEqual(RegisterRef<bool>* result,
-                       RegisterRef<TMPLT>* op1,
-                       RegisterRef<TMPLT>* op2,
-                       StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeNotEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        RegisterRef<TMPLT>* op2,
+        StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
-    { }
+    {}
     virtual
-    ~BoolNativeNotEqual() { }
+    ~BoolNativeNotEqual() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -140,14 +158,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolNativeNotEqual"; }
-    static const char * shortName() { return "NE"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolNativeNotEqual";
+    }
+
+    static const char * shortName()
+    {
+        return "NE";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult,
-                       NativeInstruction<TMPLT>::mOp1,
-                       NativeInstruction<TMPLT>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolNativeInstruction<TMPLT>::mResult,
+            NativeInstruction<TMPLT>::mOp1,
+            NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -162,10 +193,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolNativeNotEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                               static_cast<RegisterRef<TMPLT>*> (sig[1]),
-                               static_cast<RegisterRef<TMPLT>*> (sig[2]),
-                               (sig[1])->type());
+            BoolNativeNotEqual(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -174,14 +206,15 @@ class BoolNativeGreater : public BoolNativeInstruction<TMPLT>
 {
 public:
     explicit
-    BoolNativeGreater(RegisterRef<bool>* result,
-                      RegisterRef<TMPLT>* op1,
-                      RegisterRef<TMPLT>* op2,
-                      StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeGreater(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        RegisterRef<TMPLT>* op2,
+        StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
-    { }
+    {}
     virtual
-    ~BoolNativeGreater() { }
+    ~BoolNativeGreater() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -196,14 +229,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolNativeGreater"; }
-    static const char * shortName() { return "GT"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolNativeGreater";
+    }
+
+    static const char * shortName()
+    {
+        return "GT";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult,
-                       NativeInstruction<TMPLT>::mOp1,
-                       NativeInstruction<TMPLT>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolNativeInstruction<TMPLT>::mResult,
+            NativeInstruction<TMPLT>::mOp1,
+            NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -218,10 +264,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolNativeGreater(static_cast<RegisterRef<bool>*> (sig[0]),
-                              static_cast<RegisterRef<TMPLT>*> (sig[1]),
-                              static_cast<RegisterRef<TMPLT>*> (sig[2]),
-                              (sig[1])->type());
+            BoolNativeGreater(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -230,14 +277,15 @@ class BoolNativeGreaterEqual : public BoolNativeInstruction<TMPLT>
 {
 public:
     explicit
-    BoolNativeGreaterEqual(RegisterRef<bool>* result,
-                           RegisterRef<TMPLT>* op1,
-                           RegisterRef<TMPLT>* op2,
-                           StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeGreaterEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        RegisterRef<TMPLT>* op2,
+        StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
-    { }
+    {}
     virtual
-    ~BoolNativeGreaterEqual() { }
+    ~BoolNativeGreaterEqual() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -252,14 +300,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolNativeGreaterEqual"; }
-    static const char * shortName() { return "GE"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolNativeGreaterEqual";
+    }
+
+    static const char * shortName()
+    {
+        return "GE";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult,
-                       NativeInstruction<TMPLT>::mOp1,
-                       NativeInstruction<TMPLT>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolNativeInstruction<TMPLT>::mResult,
+            NativeInstruction<TMPLT>::mOp1,
+            NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -274,10 +335,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolNativeGreaterEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                                   static_cast<RegisterRef<TMPLT>*> (sig[1]),
-                                   static_cast<RegisterRef<TMPLT>*> (sig[2]),
-                                   (sig[1])->type());
+            BoolNativeGreaterEqual(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -286,14 +348,15 @@ class BoolNativeLess : public BoolNativeInstruction<TMPLT>
 {
 public:
     explicit
-    BoolNativeLess(RegisterRef<bool>* result,
-                   RegisterRef<TMPLT>* op1,
-                   RegisterRef<TMPLT>* op2,
-                   StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeLess(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        RegisterRef<TMPLT>* op2,
+        StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
-    { }
+    {}
     virtual
-    ~BoolNativeLess() { }
+    ~BoolNativeLess() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -307,14 +370,28 @@ public:
             BoolNativeInstruction<TMPLT>::mResult->value(false);
         }
     }
-    static const char * longName() { return "BoolNativeLess"; }
-    static const char * shortName() { return "LT"; }
-    static int numArgs() { return 3; }
+
+    static const char * longName()
+    {
+        return "BoolNativeLess";
+    }
+
+    static const char * shortName()
+    {
+        return "LT";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult,
-                       NativeInstruction<TMPLT>::mOp1,
-                       NativeInstruction<TMPLT>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolNativeInstruction<TMPLT>::mResult,
+            NativeInstruction<TMPLT>::mOp1,
+            NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -329,10 +406,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolNativeLess(static_cast<RegisterRef<bool>*> (sig[0]),
-                           static_cast<RegisterRef<TMPLT>*> (sig[1]),
-                           static_cast<RegisterRef<TMPLT>*> (sig[2]),
-                           (sig[1])->type());
+            BoolNativeLess(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -341,14 +419,15 @@ class BoolNativeLessEqual : public BoolNativeInstruction<TMPLT>
 {
 public:
     explicit
-    BoolNativeLessEqual(RegisterRef<bool>* result,
-                        RegisterRef<TMPLT>* op1,
-                        RegisterRef<TMPLT>* op2,
-                        StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeLessEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        RegisterRef<TMPLT>* op2,
+        StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, op2, nativeType)
-    { }
+    {}
     virtual
-    ~BoolNativeLessEqual() { }
+    ~BoolNativeLessEqual() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -363,14 +442,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolNativeLessEqual"; }
-    static const char * shortName() { return "LE"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolNativeLessEqual";
+    }
+
+    static const char * shortName()
+    {
+        return "LE";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult,
-                       NativeInstruction<TMPLT>::mOp1,
-                       NativeInstruction<TMPLT>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolNativeInstruction<TMPLT>::mResult,
+            NativeInstruction<TMPLT>::mOp1,
+            NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -385,10 +477,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolNativeLessEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                                static_cast<RegisterRef<TMPLT>*> (sig[1]),
-                                static_cast<RegisterRef<TMPLT>*> (sig[2]),
-                                (sig[1])->type());
+            BoolNativeLessEqual(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                static_cast<RegisterRef<TMPLT>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -397,13 +490,14 @@ class BoolNativeIsNull : public BoolNativeInstruction<TMPLT>
 {
 public:
     explicit
-    BoolNativeIsNull(RegisterRef<bool>* result,
-                     RegisterRef<TMPLT>* op1,
-                     StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeIsNull(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, nativeType)
-    { }
+    {}
     virtual
-    ~BoolNativeIsNull() { }
+    ~BoolNativeIsNull() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -414,14 +508,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolNativeIsNull"; }
-    static const char * shortName() { return "ISNULL"; }
-    static int numArgs() { return 2; }
+    static const char * longName()
+    {
+        return "BoolNativeIsNull";
+    }
+
+    static const char * shortName()
+    {
+        return "ISNULL";
+    }
+
+    static int numArgs()
+    {
+        return 2;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult,
-                       NativeInstruction<TMPLT>::mOp1,
-                       NativeInstruction<TMPLT>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolNativeInstruction<TMPLT>::mResult,
+            NativeInstruction<TMPLT>::mOp1,
+            NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -435,9 +542,10 @@ public:
     create(InstructionSignature const & sig)
     {
         assert(sig.size() == numArgs());
-        return new BoolNativeIsNull(static_cast<RegisterRef<bool>*> (sig[0]),
-                                    static_cast<RegisterRef<TMPLT>*> (sig[1]),
-                                    (sig[1])->type());
+        return new BoolNativeIsNull(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<TMPLT>*> (sig[1]),
+            (sig[1])->type());
     }
 };
 
@@ -446,13 +554,14 @@ class BoolNativeIsNotNull : public BoolNativeInstruction<TMPLT>
 {
 public:
     explicit
-    BoolNativeIsNotNull(RegisterRef<bool>* result,
-                        RegisterRef<TMPLT>* op1,
-                        StandardTypeDescriptorOrdinal nativeType)
+    BoolNativeIsNotNull(
+        RegisterRef<bool>* result,
+        RegisterRef<TMPLT>* op1,
+        StandardTypeDescriptorOrdinal nativeType)
         : BoolNativeInstruction<TMPLT>(result, op1, nativeType)
-    { }
+    {}
     virtual
-    ~BoolNativeIsNotNull() { }
+    ~BoolNativeIsNotNull() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -463,14 +572,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolNativeIsNotNull"; }
-    static const char * shortName() { return "ISNOTNULL"; }
-    static int numArgs() { return 2; }
+    static const char * longName()
+    {
+        return "BoolNativeIsNotNull";
+    }
+
+    static const char * shortName()
+    {
+        return "ISNOTNULL";
+    }
+
+    static int numArgs()
+    {
+        return 2;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolNativeInstruction<TMPLT>::mResult,
-                       NativeInstruction<TMPLT>::mOp1,
-                       NativeInstruction<TMPLT>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolNativeInstruction<TMPLT>::mResult,
+            NativeInstruction<TMPLT>::mOp1,
+            NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -485,9 +607,10 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolNativeIsNotNull(static_cast<RegisterRef<bool>*> (sig[0]),
-                                static_cast<RegisterRef<TMPLT>*> (sig[1]),
-                                (sig[1])->type());
+            BoolNativeIsNotNull(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<TMPLT>*> (sig[1]),
+                (sig[1])->type());
     }
 };
 
@@ -502,7 +625,7 @@ class BoolNativeInstructionRegister : InstructionRegister {
             StandardTypeDescriptorOrdinal type = t[i];
             // Type <char> below is a placeholder and is ignored.
             InstructionSignature sig = INSTCLASS2<char>::signature(type);
-            switch(type) {
+            switch (type) {
 #define Fennel_InstructionRegisterSwitch_NativeNotBool 1
 #include "fennel/calculator/InstructionRegisterSwitch.h"
             default:

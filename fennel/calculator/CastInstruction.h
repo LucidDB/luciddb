@@ -37,16 +37,18 @@ class CastInstruction : public Instruction
 {
 public:
     explicit
-    CastInstruction(RegisterRef<RESULT_T>* result,
-                    RegisterRef<SOURCE_T>* op,
-                    StandardTypeDescriptorOrdinal resultType,
-                    StandardTypeDescriptorOrdinal sourceType)
+    CastInstruction(
+        RegisterRef<RESULT_T>* result,
+        RegisterRef<SOURCE_T>* op,
+        StandardTypeDescriptorOrdinal resultType,
+        StandardTypeDescriptorOrdinal sourceType)
         : mResult(result),
           mOp1(op),
           mOp2(NULL)
-    { }
+    {}
+
     virtual
-    ~CastInstruction() { }
+    ~CastInstruction() {}
 
 protected:
     RegisterRef<RESULT_T>* mResult;
@@ -59,14 +61,17 @@ class CastCast : public CastInstruction<RESULT_T, SOURCE_T>
 {
 public:
     explicit
-    CastCast(RegisterRef<RESULT_T>* result,
-             RegisterRef<SOURCE_T>* op1,
-             StandardTypeDescriptorOrdinal resultType,
-             StandardTypeDescriptorOrdinal sourceType)
-        : CastInstruction<RESULT_T, SOURCE_T>(result, op1, resultType, sourceType)
-    { }
+    CastCast(
+        RegisterRef<RESULT_T>* result,
+        RegisterRef<SOURCE_T>* op1,
+        StandardTypeDescriptorOrdinal resultType,
+        StandardTypeDescriptorOrdinal sourceType)
+        : CastInstruction<RESULT_T, SOURCE_T>(
+            result, op1, resultType, sourceType)
+    {}
+
     virtual
-    ~CastCast() { }
+    ~CastCast() {}
 
     virtual void exec(TProgramCounter& pc) const {
         // See SQL99 Part 2 Section 6.22 for specification of CAST() operator
@@ -121,11 +126,10 @@ public:
             // HACK: End. (Phew.)
 
             try {
-                CastInstruction<RESULT_T, SOURCE_T>::mResult->value
-                   (boost::numeric_cast<RESULT_T>
-                      (CastInstruction<RESULT_T, SOURCE_T>::mOp1->value()));
-            }
-            catch (boost::bad_numeric_cast) {
+                CastInstruction<RESULT_T, SOURCE_T>::mResult->value(
+                    boost::numeric_cast<RESULT_T>(
+                        CastInstruction<RESULT_T, SOURCE_T>::mOp1->value()));
+            } catch (boost::bad_numeric_cast) {
                 // class contains no useful information about what went wrong
                 // SQL99 Part 2 Section 6.2 General Rule 6.a.ii, 7.a.ii
                 // 22003 - Data Exception -- Numeric Value Out of Range
@@ -134,20 +138,35 @@ public:
         }
     }
 
-    static const char* longName() { return "NativeCast"; }
-    static const char* shortName() { return "CAST"; }
-    static int numArgs() { return 2; }
+    static const char* longName()
+    {
+        return "NativeCast";
+    }
+
+    static const char* shortName()
+    {
+        return "CAST";
+    }
+
+    static int numArgs()
+    {
+        return 2;
+    }
+
     void describe(string& out, bool values) const {
         RegisterRef<char> dummy;
-        describeHelper(out, values, longName(), shortName(),
-                       CastInstruction<RESULT_T, SOURCE_T>::mResult,
-                       CastInstruction<RESULT_T, SOURCE_T>::mOp1,
-                       CastInstruction<RESULT_T, SOURCE_T>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            CastInstruction<RESULT_T, SOURCE_T>::mResult,
+            CastInstruction<RESULT_T, SOURCE_T>::mOp1,
+            CastInstruction<RESULT_T, SOURCE_T>::mOp2);
     }
 
     static InstructionSignature
-    signature(StandardTypeDescriptorOrdinal type1,
-              StandardTypeDescriptorOrdinal type2) {
+    signature(
+        StandardTypeDescriptorOrdinal type1,
+        StandardTypeDescriptorOrdinal type2)
+    {
         vector<StandardTypeDescriptorOrdinal>v;
         v.push_back(type1);
         v.push_back(type2);
@@ -158,10 +177,11 @@ public:
     create(InstructionSignature const & sig)
     {
         assert(sig.size() == numArgs());
-        return new CastCast(static_cast<RegisterRef<RESULT_T>*> (sig[0]),
-                            static_cast<RegisterRef<SOURCE_T>*> (sig[1]),
-                            (sig[0])->type(),
-                            (sig[1])->type());
+        return new CastCast(
+            static_cast<RegisterRef<RESULT_T>*> (sig[0]),
+            static_cast<RegisterRef<SOURCE_T>*> (sig[1]),
+            (sig[0])->type(),
+            (sig[1])->type());
     }
 };
 
@@ -172,8 +192,10 @@ class CastInstructionRegister : InstructionRegister {
     // TODO: Refactor registerTypes to class InstructionRegister
     template < template <typename, typename > class INSTCLASS2 >
     static void
-    registerTypes(vector<StandardTypeDescriptorOrdinal> const & t1,
-                  vector<StandardTypeDescriptorOrdinal> const & t2) {
+    registerTypes(
+        vector<StandardTypeDescriptorOrdinal> const & t1,
+        vector<StandardTypeDescriptorOrdinal> const & t2)
+    {
         for (uint i = 0; i < t1.size(); i++) {
             for (uint j = 0; j < t2.size(); j++) {
                 StandardTypeDescriptorOrdinal type1 = t1[i];
@@ -191,7 +213,6 @@ class CastInstructionRegister : InstructionRegister {
 public:
     static void
     registerInstructions() {
-
         vector<StandardTypeDescriptorOrdinal> t;
         t = InstructionSignature::typeVector
             (StandardTypeDescriptor::isNativeNotBool);

@@ -30,35 +30,42 @@ FENNEL_BEGIN_NAMESPACE
 
 //! mathLn. Calculates the natural logarithm
 void
-mathLn(RegisterRef<double> *result,
-       RegisterRef<double> *x);
+mathLn(
+    RegisterRef<double> *result,
+    RegisterRef<double> *x);
 
 void
-mathLn(RegisterRef<double> *result,
-       RegisterRef<long long> *x);
+mathLn(
+    RegisterRef<double> *result,
+    RegisterRef<long long> *x);
 
 //! mathLog10. Calculates the base-ten logarithm
 void
-mathLog10(RegisterRef<double> *result,
-	  RegisterRef<double> *x);
+mathLog10(
+    RegisterRef<double> *result,
+    RegisterRef<double> *x);
 
 //! mathAbs. Returns the absolute value.
 void
-mathAbs(RegisterRef<double>* result,
-	RegisterRef<double>* x);
+mathAbs(
+    RegisterRef<double>* result,
+    RegisterRef<double>* x);
 
 //! mathAbs. Returns the absolute value.
 void
-mathAbs(RegisterRef<long long>* result,
-	RegisterRef<long long>* x);
+mathAbs(
+    RegisterRef<long long>* result,
+    RegisterRef<long long>* x);
 
 //! mathPow. Calculates x^y.
 //!
-//! Throws an error and sets the result to null if x<0 and y is not an integer value
+//! Throws an error and sets the result to null if x<0 and y is not an integer
+//! value
 void
-mathPow(RegisterRef<double>* result,
-	RegisterRef<double>* x,
-	RegisterRef<double>* y);
+mathPow(
+    RegisterRef<double>* result,
+    RegisterRef<double>* x,
+    RegisterRef<double>* y);
 
 
 class ExtendedInstructionTable;

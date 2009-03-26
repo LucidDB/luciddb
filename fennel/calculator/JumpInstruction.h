@@ -34,20 +34,27 @@ class JumpInstruction : public Instruction
 {
 public:
     explicit
-    JumpInstruction(TProgramCounter pc): mJumpTo(pc), mOp() { }
+    JumpInstruction(TProgramCounter pc) : mJumpTo(pc), mOp() {}
+
     explicit
-    JumpInstruction(TProgramCounter pc, RegisterRef<bool>* op): mJumpTo(pc), mOp(op) { }
+    JumpInstruction(
+        TProgramCounter pc,
+        RegisterRef<bool>* op)
+        : mJumpTo(pc), mOp(op)
+    {}
+
     virtual
-    ~JumpInstruction() { }
+    ~JumpInstruction() {}
 
 protected:
     TProgramCounter mJumpTo;
     RegisterRef<bool>* mOp;     // may be unused
 
-    virtual void describeHelper(string &out,
-                                bool values,
-                                const char* longName,
-                                const char* shortName) const;
+    virtual void describeHelper(
+        string &out,
+        bool values,
+        const char* longName,
+        const char* shortName) const;
 };
 
 class Jump : public JumpInstruction
@@ -56,9 +63,10 @@ public:
     explicit
     Jump(TProgramCounter pc)
         : JumpInstruction(pc)
-    { }
+    {}
+
     virtual
-    ~Jump() { }
+    ~Jump() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc = mJumpTo;
@@ -89,9 +97,10 @@ public:
     explicit
     JumpTrue(TProgramCounter pc, RegisterRef<bool>* op)
         : JumpInstruction (pc, op)
-    { }
+    {}
+
     virtual
-    ~JumpTrue() { }
+    ~JumpTrue() {}
 
     virtual void exec(TProgramCounter& pc) const {
         if (!mOp->isNull() && mOp->value() == true) {
@@ -116,8 +125,9 @@ public:
     create(InstructionSignature const & sig)
     {
         assert(sig.size() == numArgs());
-        return new JumpTrue(sig.getPc(),
-                            static_cast<RegisterRef<bool>*> (sig[0]));
+        return new JumpTrue(
+            sig.getPc(),
+            static_cast<RegisterRef<bool>*> (sig[0]));
     }
 };
 
@@ -127,9 +137,10 @@ public:
     explicit
     JumpFalse(TProgramCounter pc, RegisterRef<bool>* op)
         : JumpInstruction (pc, op)
-    { }
+    {}
+
     virtual
-    ~JumpFalse() { }
+    ~JumpFalse() {}
 
     virtual void exec(TProgramCounter& pc) const {
         if (!mOp->isNull() && mOp->value() == false) {
@@ -137,7 +148,6 @@ public:
         } else {
             pc++;
         }
-
     }
 
     static const char * longName();
@@ -149,15 +159,15 @@ public:
     signature(StandardTypeDescriptorOrdinal type) {
         vector<StandardTypeDescriptorOrdinal>v(numArgs(), type);
         return InstructionSignature(shortName(), 0, v);
-
     }
 
     static Instruction*
     create(InstructionSignature const & sig)
     {
         assert(sig.size() == numArgs());
-        return new JumpFalse(sig.getPc(),
-                            static_cast<RegisterRef<bool>*> (sig[0]));
+        return new JumpFalse(
+            sig.getPc(),
+            static_cast<RegisterRef<bool>*> (sig[0]));
     }
 
 };
@@ -168,9 +178,10 @@ public:
     explicit
     JumpNull(TProgramCounter pc, RegisterRef<bool>* op)
         : JumpInstruction (pc, op)
-    { }
+    {}
+
     virtual
-    ~JumpNull() { }
+    ~JumpNull() {}
 
     virtual void exec(TProgramCounter& pc) const {
         if (mOp->isNull()) {
@@ -178,7 +189,6 @@ public:
         } else {
             pc++;
         }
-
     }
 
     static const char * longName();
@@ -196,8 +206,9 @@ public:
     create(InstructionSignature const & sig)
     {
         assert(sig.size() == numArgs());
-        return new JumpNull(sig.getPc(),
-                            static_cast<RegisterRef<bool>*> (sig[0]));
+        return new JumpNull(
+            sig.getPc(),
+            static_cast<RegisterRef<bool>*> (sig[0]));
     }
 
 };
@@ -208,9 +219,10 @@ public:
     explicit
     JumpNotNull(TProgramCounter pc, RegisterRef<bool>* op)
         : JumpInstruction (pc, op)
-    { }
+    {}
+
     virtual
-    ~JumpNotNull() { }
+    ~JumpNotNull() {}
 
     virtual void exec(TProgramCounter& pc) const {
         if (!mOp->isNull()) {
@@ -235,8 +247,9 @@ public:
     create(InstructionSignature const & sig)
     {
         assert(sig.size() == numArgs());
-        return new JumpNotNull(sig.getPc(),
-                            static_cast<RegisterRef<bool>*> (sig[0]));
+        return new JumpNotNull(
+            sig.getPc(),
+            static_cast<RegisterRef<bool>*> (sig[0]));
     }
 
 };
@@ -251,7 +264,7 @@ class JumpInstructionRegister : InstructionRegister {
         for (uint i = 0; i < t.size(); i++) {
             StandardTypeDescriptorOrdinal type = t[i];
             InstructionSignature sig = INSTCLASS2::signature(type);
-            switch(type) {
+            switch (type) {
 #define Fennel_InstructionRegisterSwitch_Bool 1
 #include "fennel/calculator/InstructionRegisterSwitch.h"
             default:
@@ -263,7 +276,6 @@ class JumpInstructionRegister : InstructionRegister {
 public:
     static void
     registerInstructions() {
-
         vector<StandardTypeDescriptorOrdinal> t;
         t.push_back(STANDARD_TYPE_BOOL);
 

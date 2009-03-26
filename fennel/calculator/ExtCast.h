@@ -34,8 +34,9 @@ FENNEL_BEGIN_NAMESPACE
 //!
 //! May throw "22001" data exception - string data, right truncation
 void
-castExactToStrA(RegisterRef<char*>* result,
-                RegisterRef<int64_t>* src);
+castExactToStrA(
+    RegisterRef<char*>* result,
+    RegisterRef<int64_t>* src);
 
 //! castA. Ascii. Char & Varchar
 //!
@@ -43,10 +44,11 @@ castExactToStrA(RegisterRef<char*>* result,
 //!
 //! May throw "22001" data exception - string data, right truncation
 void
-castExactToStrA(RegisterRef<char*>* result,
-                RegisterRef<int64_t>* src,
-                RegisterRef<int32_t>* precision,
-                RegisterRef<int32_t>* scale);
+castExactToStrA(
+    RegisterRef<char*>* result,
+    RegisterRef<int64_t>* src,
+    RegisterRef<int32_t>* precision,
+    RegisterRef<int32_t>* scale);
 
 //! castA. Ascii. Char & Varchar
 //!
@@ -54,8 +56,9 @@ castExactToStrA(RegisterRef<char*>* result,
 //!
 //! May throw "22001" data exception - string data, right truncation
 void
-castApproxToStrA(RegisterRef<char*>* result,
-                 RegisterRef<double>* src);
+castApproxToStrA(
+    RegisterRef<char*>* result,
+    RegisterRef<double>* src);
 
 //! castA. Ascii. Char & Varchar
 //!
@@ -63,8 +66,9 @@ castApproxToStrA(RegisterRef<char*>* result,
 //!
 //! May throw "22018" data exception - invalid character value for cast
 void
-castStrtoExactA(RegisterRef<int64_t>* result,
-                RegisterRef<char*>* src);
+castStrtoExactA(
+    RegisterRef<int64_t>* result,
+    RegisterRef<char*>* src);
 
 //! castA. Ascii. Char & Varchar
 //!
@@ -73,10 +77,11 @@ castStrtoExactA(RegisterRef<int64_t>* result,
 //! May throw "22018" data exception - invalid character value for cast
 //! May throw "22003" data exception - numeric value out of range
 void
-castStrToExactA(RegisterRef<int64_t>* result,
-                RegisterRef<char*>* src,
-                RegisterRef<int32_t>* precision,
-                RegisterRef<int32_t>* scale);
+castStrToExactA(
+    RegisterRef<int64_t>* result,
+    RegisterRef<char*>* src,
+    RegisterRef<int32_t>* precision,
+    RegisterRef<int32_t>* scale);
 
 //! castA. Ascii. Char & Varchar
 //!
@@ -84,8 +89,9 @@ castStrToExactA(RegisterRef<int64_t>* result,
 //!
 //! May throw "22018" data exception - invalid character value for cast
 void
-castStrToApproxA(RegisterRef<double>* result,
-                 RegisterRef<char*>* src);
+castStrToApproxA(
+    RegisterRef<double>* result,
+    RegisterRef<char*>* src);
 
 //! castA. Ascii. Char & Varchar
 //!
@@ -93,8 +99,9 @@ castStrToApproxA(RegisterRef<double>* result,
 //!
 //! May throw "22018" data exception - invalid character value for cast
 void
-castBooleanToStrA(RegisterRef<char*>* result,
-                  RegisterRef<int64_t>* src);
+castBooleanToStrA(
+    RegisterRef<char*>* result,
+    RegisterRef<int64_t>* src);
 
 
 //! castA. Ascii. Char & Varchar
@@ -103,8 +110,9 @@ castBooleanToStrA(RegisterRef<char*>* result,
 //!
 //! May throw "22018" data exception - invalid character value for cast
 void
-castStrtoBooleanA(RegisterRef<bool>* result,
-                  RegisterRef<char*>* src);
+castStrtoBooleanA(
+    RegisterRef<bool>* result,
+    RegisterRef<char*>* src);
 
 //! castA. Ascii. String to Varchar
 //!
@@ -112,8 +120,9 @@ castStrtoBooleanA(RegisterRef<bool>* result,
 //!
 //! May throw "22001" string data, right truncation
 void
-castStrToVarCharA(RegisterRef<char*>* result,
-                  RegisterRef<char*>* src);
+castStrToVarCharA(
+    RegisterRef<char*>* result,
+    RegisterRef<char*>* src);
 
 //! castA. Ascii. String to Char
 //!
@@ -121,8 +130,9 @@ castStrToVarCharA(RegisterRef<char*>* result,
 //!
 //! May throw "22001" string data, right truncation
 void
-castStrToCharA(RegisterRef<char*>* result,
-               RegisterRef<char*>* src);
+castStrToCharA(
+    RegisterRef<char*>* result,
+    RegisterRef<char*>* src);
 
 
 class ExtendedInstructionTable;

@@ -73,7 +73,8 @@ int TimestampToIsoString(char *dest, boost::posix_time::ptime t)
     int y   = t.date().year();
     int mon = t.date().month();
     int dy  = t.date().day();
-    return snprintf(dest,20, "%4d-%02d-%02d %02d:%02d:%02d", y,mon, dy, h, min, s);
+    return snprintf(
+        dest, 20, "%4d-%02d-%02d %02d:%02d:%02d", y,mon, dy, h, min, s);
 }
 
 int64_t milliseconds_per_day = 24 * 60 * 60 * 1000LL;
@@ -149,7 +150,6 @@ int64_t IsoStringToTime(const char * const src, int len)
 
 int64_t IsoStringToTimestamp(const char * const src, int len)
 {
-
     std::string s(src, len);
     trimSpaces(s);
 

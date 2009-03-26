@@ -107,11 +107,12 @@ FENNEL_BEGIN_NAMESPACE
 //
 //  TODO: Does not implement an implementation defined max length.
 int
-SqlStrCat(char* dest,
-          int destStorageBytes,
-          int destLenBytes,
-          char const * const str,
-          int strLenBytes);
+SqlStrCat(
+    char* dest,
+    int destStorageBytes,
+    int destLenBytes,
+    char const * const str,
+    int strLenBytes);
 
 //! StrCat. SQL VARCHAR & CHAR. Ascii & UCS2.
 //! dest = str1 || str2. Returns new length in bytes.
@@ -134,12 +135,13 @@ SqlStrCat(char* dest,
 //
 //  TODO: Does not implement an implementation defined max length.
 int
-SqlStrCat(char* dest,
-          int destStorageBytes,
-          char const * const str1,
-          int str1LenBytes,
-          char const * const str2,
-          int str2LenBytes);
+SqlStrCat(
+    char* dest,
+    int destStorageBytes,
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes);
 
 //! StrCmp. Binary.
 //! See SQL2003 Part 2 Section 4.3.2.
@@ -148,10 +150,11 @@ SqlStrCat(char* dest,
 //!
 //! Returns -1, 0, 1.
 int
-SqlStrCmp_Bin(char const * const str1,
-              int str1LenBytes,
-              char const * const str2,
-              int str2LenBytes);
+SqlStrCmp_Bin(
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes);
 
 //! StrCmp. SQL VARCHAR & CHAR. Ascii, no UCS2 yet.
 //!
@@ -182,11 +185,12 @@ SqlStrCmp_Bin(char const * const str1,
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrCmp(char const * const str1,
-              int str1LenBytes,
-              char const * const str2,
-              int str2LenBytes,
-              int trimchar = ' ')
+SqlStrCmp(
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes,
+    int trimchar = ' ')
 {
     assert(str1LenBytes >= 0);
     assert(str2LenBytes >= 0);
@@ -200,8 +204,12 @@ SqlStrCmp(char const * const str1,
 
             if (end != start) {
                 end--;
-                while (end != start && *end == trimchar) end--;
-                if (end != start || *end != trimchar) end++;
+                while (end != start && *end == trimchar) {
+                    end--;
+                }
+                if (end != start || *end != trimchar) {
+                    end++;
+                }
             }
             str1TrimLenBytes = end - start;
 
@@ -210,12 +218,17 @@ SqlStrCmp(char const * const str1,
 
             if (end != start) {
                 end--;
-                while (end != start && *end == trimchar) end--;
-                if (end != start || *end != trimchar) end++;
+                while (end != start && *end == trimchar) {
+                    end--;
+                }
+                if (end != start || *end != trimchar) {
+                    end++;
+                }
             }
             str2TrimLenBytes = end - start;
-            return SqlStrCmp_Bin(str1, str1TrimLenBytes,
-                                 str2, str2TrimLenBytes);
+            return SqlStrCmp_Bin(
+                str1, str1TrimLenBytes,
+                str2, str2TrimLenBytes);
 #if 0
             int minLenBytes = str1TrimLenBytes > str2TrimLenBytes ?
                 str2TrimLenBytes : str1TrimLenBytes;
@@ -262,11 +275,12 @@ SqlStrCmp(char const * const str1,
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrCpy_Fix(char* dest,
-              int destStorageBytes,
-              char const * const str,
-              int strLenBytes,
-              int padchar = ' ')
+SqlStrCpy_Fix(
+    char* dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    int padchar = ' ')
 {
     if (strLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
@@ -296,8 +310,8 @@ SqlStrCpy_Fix(char* dest,
             assert(!((end - ptr) & 1));
             while (ptr < end) {
                 *ptr = byte1;
-                *(ptr+1) = byte2;
-                ptr+=2;
+                *(ptr + 1) = byte2;
+                ptr += 2;
             }
         } else {
             throw std::logic_error("no UCS-4");
@@ -317,10 +331,11 @@ SqlStrCpy_Fix(char* dest,
 //! May be used for Fixed width strings if strLenBytes == destStorageBytes
 //! Otherwise use SqlStrCpy_Fix() to get appropriate padding.
 int
-SqlStrCpy_Var(char* dest,
-              int destStorageBytes,
-              char const * const str,
-              int strLenBytes);
+SqlStrCpy_Var(
+    char* dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes);
 
 
 //! StrLen in bits. CHAR/VARCHAR. Ascii & UCS2.
@@ -335,8 +350,9 @@ SqlStrLenBit(int strLenBytes);
 //! Parameter str is ignored for ascii strings.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrLenChar(char const * const str,
-              int strLenBytes)
+SqlStrLenChar(
+    char const * const str,
+    int strLenBytes)
 {
     if (CodeUnitBytes == 1 && MaxCodeUnitsPerCodePoint == 1) {
         // ASCII
@@ -366,20 +382,22 @@ SqlStrLenOct(int strLenBytes);
 //! startChar is 1-indexed, as per SQL standard.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrOverlay(char* dest,
-              int destStorageBytes,
-              char const * const str,
-              int strLenBytes,
-              char const * const over,
-              int overLenBytes,
-              int startChar,
-              int lenChar,
-              int lenSpecified)
+SqlStrOverlay(
+    char* dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    char const * const over,
+    int overLenBytes,
+    int startChar,
+    int lenChar,
+    int lenSpecified)
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
-            if (!lenSpecified) lenChar = overLenBytes;
-
+            if (!lenSpecified) {
+                lenChar = overLenBytes;
+            }
             if (lenChar < 0 || startChar < 1) {
                 // Overlay is defined in terms of substring. These conditions
                 // would, I believe, generate a substring error. Also
@@ -391,17 +409,21 @@ SqlStrOverlay(char* dest,
             }
 
             int leftLenBytes = startChar - 1;         // 1-index to 0-index
-            if (leftLenBytes > strLenBytes) leftLenBytes = strLenBytes;
-
+            if (leftLenBytes > strLenBytes) {
+                leftLenBytes = strLenBytes;
+            }
             char const *rightP = str + leftLenBytes + lenChar;
             int rightLenBytes = strLenBytes - (leftLenBytes + lenChar);
-            if (rightLenBytes < 0) rightLenBytes = 0;
-
+            if (rightLenBytes < 0) {
+                rightLenBytes = 0;
+            }
             assert(leftLenBytes >= 0);
             assert(rightLenBytes >= 0);
             assert(rightP >= str);
 
-            if (leftLenBytes + rightLenBytes + overLenBytes > destStorageBytes) {
+            if (leftLenBytes + rightLenBytes + overLenBytes
+                > destStorageBytes)
+            {
                 // SQL99 22.1 22-001 "String Data Right truncation"
                 throw "22001";
             }
@@ -434,18 +456,22 @@ SqlStrOverlay(char* dest,
 //! See SQL99 Part 2 Section 6.17 General Rule 2.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrPos(char const * const str,
-          int strLenBytes,
-          char const * const find,
-          int findLenBytes)
+SqlStrPos(
+    char const * const str,
+    int strLenBytes,
+    char const * const find,
+    int findLenBytes)
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
             // SQL99 Part 2 Section 6.17 General Rule 2.a.
-            if (!findLenBytes) return 1;
+            if (!findLenBytes) {
+                return 1;
+            }
             // SQL99 Part 2 Section 6.17 General Rule 2.c.
-            if (findLenBytes > strLenBytes) return 0;
-
+            if (findLenBytes > strLenBytes) {
+                return 0;
+            }
             assert(findLenBytes > 0);
             assert(strLenBytes > 0);
             assert(strLenBytes - findLenBytes >= 0);
@@ -486,20 +512,21 @@ SqlStrPos(char const * const str,
 //!
 //! Note that subStart is 1-indexed, as per SQL99 spec.
 //! All substring parameters are handled as signed, as spec implies that they
-//! could be negative. Some combinations of subStart and subLenBytes may throw an
-//! exception.
+//! could be negative. Some combinations of subStart and subLenBytes
+//! may throw an exception.
 //! Results in a VARCHAR.
 //! See SQL99 Part 2 Section 6.18 General Rule 3.
 //! subStartChar is 1-indexed.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrSubStr(char const ** dest,
-             int destStorageBytes,
-             char const * const str,
-             int strLenBytes,
-             int subStartChar,
-             int subLenChar,
-             int subLenCharSpecified)
+SqlStrSubStr(
+    char const ** dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    int subStartChar,
+    int subLenChar,
+    int subLenCharSpecified)
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
@@ -508,7 +535,9 @@ SqlStrSubStr(char const ** dest,
                 e = subStartChar + subLenChar;
             } else {
                 e = strLenBytes + 1;
-                if (subStartChar > e) e = subStartChar;
+                if (subStartChar > e) {
+                    e = subStartChar;
+                }
             }
 
             if (e < subStartChar) {
@@ -522,13 +551,14 @@ SqlStrSubStr(char const ** dest,
             }
 
             int s1 = 1;
-            if (subStartChar > s1) s1 = subStartChar;
-
+            if (subStartChar > s1) {
+                s1 = subStartChar;
+            }
             int e1 = strLenBytes + 1;
-            if (e < e1) e1 = e;
-
+            if (e < e1) {
+                e1 = e;
+            }
             int l1 = e1 - s1;
-
 
             if (l1 > destStorageBytes) {
                 // SQL99 22.1 22-001 "String Data Right truncation"
@@ -567,11 +597,12 @@ template <int CodeUnitBytes,
           int MaxCodeUnitsPerCodePoint,
           SqlStrAlterCaseAction Action>
 int
-SqlStrAlterCase(char* dest,
-                int destStorageBytes,
-                char const * const src,
-                int srcLenBytes,
-                char const * const locale = 0)
+SqlStrAlterCase(
+    char* dest,
+    int destStorageBytes,
+    char const * const src,
+    int srcLenBytes,
+    char const * const locale = 0)
 {
     int retVal;
 
@@ -586,7 +617,7 @@ SqlStrAlterCase(char* dest,
             register char* d = dest;
             char* e = dest + srcLenBytes;
             while (d < e) {
-                switch(Action) {
+                switch (Action) {
                 case AlterCaseUpper:
                     *(d++) = toupper(*(s++));
                     break;
@@ -599,8 +630,7 @@ SqlStrAlterCase(char* dest,
                 }
             }
             retVal = srcLenBytes;
-        }
-        else if (CodeUnitBytes == 2) {
+        } else if (CodeUnitBytes == 2) {
             // UCS2
 #ifdef HAVE_ICU
             assert(!(destStorageBytes & srcLenBytes & 1));
@@ -616,23 +646,24 @@ SqlStrAlterCase(char* dest,
             int32_t newLenUChar;
             UErrorCode errorCode = U_ZERO_ERROR;
 
-            switch(Action) {
+            switch (Action) {
             case AlterCaseUpper:
-                newLenUChar = u_strToUpper(reinterpret_cast<UChar*>(dest),
-                                           destStorageUChar,
-                                           reinterpret_cast<UChar const *>(src),
-                                           srcLenUChar,
-                                           locale,
-                                           &errorCode);
-
+                newLenUChar = u_strToUpper(
+                    reinterpret_cast<UChar*>(dest),
+                    destStorageUChar,
+                    reinterpret_cast<UChar const *>(src),
+                    srcLenUChar,
+                    locale,
+                    &errorCode);
                 break;
             case AlterCaseLower:
-                newLenUChar = u_strToLower(reinterpret_cast<UChar*>(dest),
-                                           destStorageUChar,
-                                           reinterpret_cast<UChar const *>(src),
-                                           srcLenUChar,
-                                           locale,
-                                           &errorCode);
+                newLenUChar = u_strToLower(
+                    reinterpret_cast<UChar*>(dest),
+                    destStorageUChar,
+                    reinterpret_cast<UChar const *>(src),
+                    srcLenUChar,
+                    locale,
+                    &errorCode);
                 break;
             default:
                 throw std::logic_error("AlterCase Action");
@@ -671,13 +702,14 @@ SqlStrAlterCase(char* dest,
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrTrim(char* dest,
-           int destStorageBytes,
-           char const * const str,
-           int strLenBytes,
-           int trimLeft,
-           int trimRight,
-           int trimchar = ' ')
+SqlStrTrim(
+    char* dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    int trimLeft,
+    int trimRight,
+    int trimchar = ' ')
 {
     char const * start = str;
     char const * end = str + strLenBytes;
@@ -689,12 +721,18 @@ SqlStrTrim(char* dest,
             // ASCII
             // If many pad characters are expected, consider using memrchr()
             if (trimLeft) {
-                while (start != end && *start == trimchar) start++;
+                while (start != end && *start == trimchar) {
+                    start++;
+                }
             }
             if (trimRight && end != start) {
                 end--;
-                while (end != start && *end == trimchar) end--;
-                if (end != start || *end != trimchar) end++;
+                while (end != start && *end == trimchar) {
+                    end--;
+                }
+                if (end != start || *end != trimchar) {
+                    end++;
+                }
             }
             newLenBytes = end - start;
         } else if (CodeUnitBytes == 2) {
@@ -716,9 +754,11 @@ SqlStrTrim(char* dest,
             if (trimRight && end != start) {
                 end -= 2;
                 while (end > start && *end == byte1 && *(end+1) == byte2) {
-                    end -=2;
+                    end -= 2;
                 }
-                if (end != start || *end != trimchar) end += 2;
+                if (end != start || *end != trimchar) {
+                    end += 2;
+                }
             }
             newLenBytes = end - start;
             assert(!(newLenBytes & 1));
@@ -751,12 +791,13 @@ SqlStrTrim(char* dest,
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrTrim(char const ** result,
-           char const * const str,
-           int strLenBytes,
-           int trimLeft,
-           int trimRight,
-           int trimchar = ' ')
+SqlStrTrim(
+    char const ** result,
+    char const * const str,
+    int strLenBytes,
+    int trimLeft,
+    int trimRight,
+    int trimchar = ' ')
 {
     char const * start = str;
     char const * end = str + strLenBytes;
@@ -767,12 +808,18 @@ SqlStrTrim(char const ** result,
             // ASCII
             // If many pad characters are expected, consider using memrchr()
             if (trimLeft) {
-                while (start != end && *start == trimchar) start++;
+                while (start != end && *start == trimchar) {
+                    start++;
+                }
             }
             if (trimRight && end != start) {
                 end--;
-                while (end != start && *end == trimchar) end--;
-                if (end != start || *end != trimchar) end++;
+                while (end != start && *end == trimchar) {
+                    end--;
+                }
+                if (end != start || *end != trimchar) {
+                    end++;
+                }
             }
         } else if (CodeUnitBytes == 2) {
             // UCS2
@@ -793,9 +840,11 @@ SqlStrTrim(char const ** result,
             if (trimRight && end != start) {
                 end -= 2;
                 while (end > start && *end == byte1 && *(end+1) == byte2) {
-                    end -=2;
+                    end -= 2;
                 }
-                if (end != start || *end != trimchar) end += 2;
+                if (end != start || *end != trimchar) {
+                    end += 2;
+                }
             }
             assert(!((end - start) & 1));
         } else {
@@ -815,9 +864,10 @@ SqlStrTrim(char const ** result,
 //! Cast a string to an exact numeric.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int64_t
-SqlStrCastToExact(char const * const str,
-                  int strLenBytes,
-                  int padChar = ' ')
+SqlStrCastToExact(
+    char const * const str,
+    int strLenBytes,
+    int padChar = ' ')
 {
     int64_t rv = 0;
     bool negative = false;
@@ -888,7 +938,9 @@ SqlStrCastToExact(char const * const str,
                         tmp = rv * 10 + (*(ptr++) - '0');
                         if (tmp < rv) {
                             if (negative) {
-                                if (-tmp == std::numeric_limits<int64_t>::min()) {
+                                if (-tmp
+                                    == std::numeric_limits<int64_t>::min())
+                                {
                                     // okay
                                 } else {
                                     overflow = true;
@@ -977,11 +1029,12 @@ inline int64_t SqlExactMax(int precision, bool negative)
 //! Cast a string to an exact numeric with precision and scale.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int64_t
-SqlStrCastToExact(char const * const str,
-                  int strLenBytes,
-                  int precision,
-                  int scale,
-                  int padChar = ' ')
+SqlStrCastToExact(
+    char const * const str,
+    int strLenBytes,
+    int precision,
+    int scale,
+    int padChar = ' ')
 {
     int64_t rv = 0;
     bool negative = false;
@@ -1059,14 +1112,18 @@ SqlStrCastToExact(char const * const str,
                             tmp = mantissa * 10 + digit;
                             if (tmp < mantissa) {
                                 if (negative) {
-                                    if (-tmp == std::numeric_limits<int64_t>::min()) {
+                                    if (-tmp
+                                        == std::numeric_limits<int64_t>::min())
+                                    {
                                         // okay
                                     } else {
-                                        // data exception -- numeric value out of range
+                                        // data exception -- numeric
+                                        // value out of range
                                         overflow = true;
                                     }
                                 } else {
-                                    // data exception -- numeric value out of range
+                                    // data exception -- numeric value
+                                    // out of range
                                     overflow = true;
                                 }
                             }
@@ -1181,7 +1238,7 @@ SqlStrCastToExact(char const * const str,
             } else if (scale < parsed_scale) {
                 int adjust_scale = parsed_scale - scale;
                 for (int i = 0; i < adjust_scale; i++) {
-                    rv = rv/10;
+                    rv = rv / 10;
                 }
 
                 // Do Rounding
@@ -1189,9 +1246,12 @@ SqlStrCastToExact(char const * const str,
                 for (int i = 0; i < adjust_scale; i++) {
                     factor *= 10;
                 }
-                if (mantissa % factor >= factor/2) {
+                if (mantissa % factor >= factor / 2) {
                     // Check if digit will increase/overflow
-                    if (rv == SqlExactMax(mantissa_digits - adjust_scale, negative)) {
+                    if (rv
+                        == SqlExactMax(
+                            mantissa_digits - adjust_scale, negative))
+                    {
                         mantissa_digits++;
                         if (mantissa_digits - parsed_scale
                             > precision - scale) {
@@ -1231,9 +1291,10 @@ SqlStrCastToExact(char const * const str,
 //! Basically nnn.mmm[Exxx].
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 double
-SqlStrCastToApprox(char const * const str,
-                   int strLenBytes,
-                   int padChar = ' ')
+SqlStrCastToApprox(
+    char const * const str,
+    int strLenBytes,
+    int padChar = ' ')
 {
     double rv;
     if (MaxCodeUnitsPerCodePoint == 1) {
@@ -1246,10 +1307,11 @@ SqlStrCastToApprox(char const * const str,
 
             // Skip past any leading whitespace. Allows string with
             // arbitrary amounts of leading whitespace.
-            while (ptr < end && *ptr == padChar) ptr++;
-
+            while (ptr < end && *ptr == padChar) {
+                ptr++;
+            }
             int max = end - ptr;
-            char tmp[max+1];
+            char tmp[max + 1];
             memcpy(tmp, ptr, max);
             tmp[max] = 0;
             rv = strtod(tmp, &endptr);
@@ -1301,11 +1363,12 @@ SqlStrCastToApprox(char const * const str,
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrCastFromExact(char* dest,
-                    int destStorageBytes,
-                    int64_t src,
-                    bool fixed,  // e.g. char, else variable (varchar)
-                    int padchar = ' ')
+SqlStrCastFromExact(
+    char* dest,
+    int destStorageBytes,
+    int64_t src,
+    bool fixed,  // e.g. char, else variable (varchar)
+    int padchar = ' ')
 {
     int rv;
 
@@ -1334,7 +1397,8 @@ SqlStrCastFromExact(char* dest,
 
             // TODO: Bug on mingw where int64_t is not handled correctly
             //       by snprintf %lld
-            // Windows (MS dll) uses %I64d but that causes warning with gcc -Wall
+            // Windows (MS dll) uses %I64d but that causes warning
+            //       with gcc -Wall
             rv = snprintf(buf, 35, "%" FMT_INT64, src);
 
             // snprintf does not return null termination in length
@@ -1454,13 +1518,14 @@ SqlStrCastFromExact(char* dest,
 //! currently unsupported.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrCastFromExact(char* dest,
-                    int destStorageBytes,
-                    int64_t src,
-                    int precision,
-                    int scale,
-                    bool fixed,  // e.g. char, else variable (varchar)
-                    int padchar = ' ')
+SqlStrCastFromExact(
+    char* dest,
+    int destStorageBytes,
+    int64_t src,
+    int precision,
+    int scale,
+    bool fixed,  // e.g. char, else variable (varchar)
+    int padchar = ' ')
 {
     int rv;
 
@@ -1534,7 +1599,7 @@ SqlStrCastFromExact(char* dest,
 
             } else {
                 // Negative Scale
-                int nzeros = (src != 0)? -scale: 0;
+                int nzeros = (src != 0) ? -scale : 0;
                 int len;
                 char buf[36];      // #%lld should always fit in 21 bytes.
                 rv = snprintf(buf, 35, "%" FMT_INT64, src);
@@ -1600,12 +1665,13 @@ SqlStrCastFromExact(char* dest,
 //! could be better/cheaper/faster.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrCastFromApprox(char* dest,
-                     int destStorageBytes,
-                     double src,
-                     bool isFloat,
-                     bool fixed,  // e.g. char, else variable (varchar)
-                     int padchar = ' ')
+SqlStrCastFromApprox(
+    char* dest,
+    int destStorageBytes,
+    double src,
+    bool isFloat,
+    bool fixed,  // e.g. char, else variable (varchar)
+    int padchar = ' ')
 {
     int rv;
 
@@ -1628,7 +1694,6 @@ SqlStrCastFromApprox(char* dest,
                     throw "22001";
                 }
             } else {
-
                 // Note: can't always snprintf directly into dest, due to
                 // null termination wasting a byte.
 
@@ -1637,7 +1702,7 @@ SqlStrCastFromApprox(char* dest,
                 //! a x86. This should be parameterized.
                 //! TODO: Parameterize precision and format of conversion.
 
-                int max_precision = (isFloat)? 7: 16;
+                int max_precision = (isFloat) ? 7 : 16;
                 char buf[36];      // #.16E should always fit in 22 bytes.
                 rv = snprintf(buf, 35, "%.*E", max_precision, src);
 
@@ -1655,7 +1720,7 @@ SqlStrCastFromApprox(char* dest,
                 // Trim trailing zeros from mantissa, and initial zeros
                 // from exponent
                 int buflen = rv;
-                int last_nonzero = (src < 0)? 1:0;
+                int last_nonzero = (src < 0) ? 1 : 0;
                 int eindex = last_nonzero + max_precision + 2;
                 int eneg = 0;
                 int explen = 1;
@@ -1664,9 +1729,9 @@ SqlStrCastFromApprox(char* dest,
                     // Normal number with exponent
 
                     // Round up if needed
-                    if ((buf[eindex-1] >= '5') && (buf[eindex-1] <= '9')) {
-                        buf[eindex-1] = '0';
-                        for (int i=eindex-2; i>=last_nonzero; i--) {
+                    if ((buf[eindex - 1] >= '5') && (buf[eindex - 1] <= '9')) {
+                        buf[eindex - 1] = '0';
+                        for (int i = eindex - 2; i >= last_nonzero; i--) {
                             if (buf[i] == '9') {
                                 buf[i] = '0';
                             } else if (buf[i] != '.') {
@@ -1678,10 +1743,13 @@ SqlStrCastFromApprox(char* dest,
                         // See if initial digit overflowed (very unlikely)
                         if (buf[last_nonzero] == '0') {
                             buf[last_nonzero] = '1';
-                            for (int i=eindex-1; i>last_nonzero+2; i--) {
-                                buf[i] = buf[i-1];
+                            for (int i = eindex - 1;
+                                 i > last_nonzero + 2;
+                                 i--)
+                            {
+                                buf[i] = buf[i - 1];
                             }
-                            buf[last_nonzero+2] = '0';
+                            buf[last_nonzero + 2] = '0';
 
                             // increment exponent
                             int exp;
@@ -1693,13 +1761,13 @@ SqlStrCastFromApprox(char* dest,
 
                     // Ignore last digit
                     // only need 16 digits in total, 15 digits after '.'
-                    for (int i=eindex-2; i>=0; i--) {
+                    for (int i = eindex - 2; i >= 0; i--) {
                         if ((buf[i] >= '1') && (buf[i] <= '9')) {
                             last_nonzero = i;
                             break;
                         }
                     }
-                    eneg = (buf[eindex+1] == '-')? 1:0;
+                    eneg = (buf[eindex + 1] == '-') ? 1 : 0;
                     for (int i = eindex + 1; i < buflen; i++) {
                         if ((buf[i] >= '1') && (buf[i] <= '9')) {
                             explen = buflen - i;
@@ -1708,7 +1776,7 @@ SqlStrCastFromApprox(char* dest,
                     }
 
                     // final length = mantissa + 'E' + optional '-' + explen
-                    rv = last_nonzero+1 + 1 + eneg + explen;
+                    rv = last_nonzero + 1 + 1 + eneg + explen;
                 } else {
                     // Special number (INF, -INF, NaN)
                     rv = buflen;
@@ -1720,8 +1788,8 @@ SqlStrCastFromApprox(char* dest,
                         memcpy(dest, buf, rv);
                     } else {
                         // Don't copy trailing zeros of mantissa
-                        memcpy(dest, buf, last_nonzero+1);
-                        rv = last_nonzero+1;
+                        memcpy(dest, buf, last_nonzero + 1);
+                        rv = last_nonzero + 1;
                         dest[rv++] = 'E';
                         if (eneg) {
                             dest[rv++] = '-';
@@ -1769,12 +1837,13 @@ SqlStrCastFromApprox(char* dest,
 //! See SQL99 Part 2 Section 6.22 General Rule 8.c for rules on this cast.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrCastToVarChar(char *dest,
-                    int destStorageBytes,
-                    char *src,
-                    int srcLenBytes,
-                    int *rightTruncWarning = NULL,
-                    int padchar = ' ')
+SqlStrCastToVarChar(
+    char *dest,
+    int destStorageBytes,
+    char *src,
+    int srcLenBytes,
+    int *rightTruncWarning = NULL,
+    int padchar = ' ')
 {
     int rv;
 
@@ -1786,9 +1855,10 @@ SqlStrCastToVarChar(char *dest,
                 rv = srcLenBytes;
 
                 if (srcLenBytes < destStorageBytes) {
-                    memset(dest + srcLenBytes,
-                           padchar,
-                           destStorageBytes - srcLenBytes);
+                    memset(
+                        dest + srcLenBytes,
+                        padchar,
+                        destStorageBytes - srcLenBytes);
 
                     // Do not alter rv.
                 }
@@ -1796,10 +1866,11 @@ SqlStrCastToVarChar(char *dest,
                 memcpy(dest, src, destStorageBytes);
                 rv = destStorageBytes;
 
-                for(char *trunc = src + destStorageBytes,
-                        *end = src + srcLenBytes;
-                    trunc != end;
-                    trunc++) {
+                for (char *trunc = src + destStorageBytes,
+                         *end = src + srcLenBytes;
+                     trunc != end;
+                     trunc++)
+                {
                     if (*trunc != padchar) {
                         // Spec says this is just a warning (see SQL99 Part 2
                         // Section 6.22 General Rule 8.c.ii).  Let the caller
@@ -1833,12 +1904,13 @@ SqlStrCastToVarChar(char *dest,
 //! See SQL99 Part 2 Section 6.22 General Rule 9.c for rules on this cast.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrCastToChar(char *dest,
-                 int destStorageBytes,
-                 char *src,
-                 int srcLenBytes,
-                 int *rightTruncWarning = NULL,
-                 int padchar = ' ')
+SqlStrCastToChar(
+    char *dest,
+    int destStorageBytes,
+    char *src,
+    int srcLenBytes,
+    int *rightTruncWarning = NULL,
+    int padchar = ' ')
 {
     int rv;
 
@@ -1850,19 +1922,21 @@ SqlStrCastToChar(char *dest,
                 rv = srcLenBytes;
 
                 if (srcLenBytes < destStorageBytes) {
-                    memset(dest + srcLenBytes,
-                           padchar,
-                           destStorageBytes - srcLenBytes);
+                    memset(
+                        dest + srcLenBytes,
+                        padchar,
+                        destStorageBytes - srcLenBytes);
                     rv = destStorageBytes;
                 }
             } else {
                 memcpy(dest, src, destStorageBytes);
                 rv = destStorageBytes;
 
-                for(char *trunc = src + destStorageBytes,
-                        *end = src + srcLenBytes;
-                    trunc != end;
-                    trunc++) {
+                for (char *trunc = src + destStorageBytes,
+                         *end = src + srcLenBytes;
+                     trunc != end;
+                     trunc++)
+                {
                     if (*trunc != padchar) {
                         // Spec says this is just a warning (see SQL99 Part 2
                         // Section 6.22 General Rule 9.c.ii).  Let the caller
@@ -1897,9 +1971,10 @@ SqlStrCastToChar(char *dest,
 //! This method only casts from 'true' and 'false'.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 bool
-SqlStrCastToBoolean(char const * const str,
-                    int strLenBytes,
-                    int padChar = ' ')
+SqlStrCastToBoolean(
+    char const * const str,
+    int strLenBytes,
+    int padChar = ' ')
 {
     bool rv;
     if (MaxCodeUnitsPerCodePoint == 1) {
@@ -1909,8 +1984,9 @@ SqlStrCastToBoolean(char const * const str,
             char const *end = str + strLenBytes;
 
             // Skip past any leading whitespace.
-            while (ptr < end && *ptr == padChar) ptr++;
-
+            while (ptr < end && *ptr == padChar) {
+                ptr++;
+            }
             // Check if true, false, or unknown
             if ((end - ptr) >= 4 && strncasecmp(ptr, "TRUE", 4) == 0) {
                 rv = true;
@@ -1954,11 +2030,12 @@ SqlStrCastToBoolean(char const * const str,
 //! that false should be cast to 'false' and true to 'true'.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
-SqlStrCastFromBoolean(char* dest,
-                      int destStorageBytes,
-                      bool src,
-                      bool fixed,  // e.g. char, else variable (varchar)
-                      int padchar = ' ')
+SqlStrCastFromBoolean(
+    char* dest,
+    int destStorageBytes,
+    bool src,
+    bool fixed,  // e.g. char, else variable (varchar)
+    int padchar = ' ')
 {
     int rv;
 

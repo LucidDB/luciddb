@@ -74,9 +74,10 @@ public:
     //! @param localSize size of literal RegisterReference vector
     //! @param statusSize size of literal RegisterReference vector
     explicit
-    Calculator(DynamicParamManager* dynamicParamManager,
-               int codeSize, int literalSize, int inputSize,
-               int outputSize, int localSize, int statusSize);
+    Calculator(
+        DynamicParamManager* dynamicParamManager,
+        int codeSize, int literalSize, int inputSize,
+        int outputSize, int localSize, int statusSize);
 
     ~Calculator();
 
@@ -152,9 +153,10 @@ public:
     //! Allows for the initial bind of externally allocated register
     //! memory tuples. Used only when tuples are allocated by XO, not
     //! by Assembler
-    void bind(RegisterReference::ERegisterSet regset,
-              TupleData* data,
-              const TupleDescriptor& desc);
+    void bind(
+        RegisterReference::ERegisterSet regset,
+        TupleData* data,
+        const TupleDescriptor& desc);
 
     //! Determines Output Tuple format
     //!
@@ -205,14 +207,17 @@ public:
     //!
     //! @param input  bind the input registers to this tuple
     //! @param output bind the output registers to this tuple
-    //! @param outputWrite (optional, use when \c output contains null values).
-    //!   Equivalent to \c output, except it has the allocated target address of each datum
-    //!   which is null in \c output.
-    //! @param takeOwnership When true, the Calculator owns these TupleData, and will
-    //!   delete them in its destructor.
-    void bind(TupleData* input, TupleData* output, bool takeOwnership = false,
-              const TupleData* outputWrite = 0);
 
+    //! @param outputWrite (optional, use when \c output contains null values).
+    //!  Equivalent to \c output, except it has the allocated target
+    //!  address of each datum which is null in \c output.
+    //! @param takeOwnership When true, the Calculator owns these TupleData, and
+    //!   will delete them in its destructor.
+    void bind(
+        TupleData* input,
+        TupleData* output,
+        bool takeOwnership = false,
+        const TupleData* outputWrite = 0);
 
     //! Configures Calculator to either exit immediately upon
     //! exceptions or to continue execution.
@@ -242,7 +247,8 @@ public:
     deque<CalcMessage> mWarnings;
 
 protected:
-    // Note the exact syntax to declare all versions of templated class as friends
+    // Note the exact syntax to declare all versions of templated
+    // class as friends
     template <typename TMPLT> friend class RegisterRef;
     friend class RegisterReference;
     friend class CalcAssembler;
@@ -292,11 +298,18 @@ protected:
 
 private:
     //! Helper function for constructors.
-    void init(int codeSize, int literalSize, int inputSize,
-              int outputSize, int localSize, int statusSize);
+    void init(
+        int codeSize,
+        int literalSize,
+        int inputSize,
+        int outputSize,
+        int localSize,
+        int statusSize);
 
     //! Free up memory from bind.
-    void unbind(RegisterReference::ERegisterSet regset, bool unbindDescriptor = true);
+    void unbind(
+        RegisterReference::ERegisterSet regset,
+        bool unbindDescriptor = true);
 };
 
 FENNEL_END_NAMESPACE

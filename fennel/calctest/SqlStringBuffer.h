@@ -43,28 +43,32 @@ public:
     static const int mBumperLen;
 
     explicit
-    SqlStringBuffer(int storage,      // maximum size of string in characters
-                    int size,         // size of text, in characters, excluding padding
-                    int leftpad = 0,  // pad left with this many characters
-                    int rightpad = 0, // pad right with this many chararacters
-                    uint text = 'x',  // fill text w/this
-                    uint pad = ' ',   // pad w/this
-                    // Try to use something unaligned below:
-                    int leftBumper = mBumperLen,  // In characters
-                    int rightBumper = mBumperLen);
+    SqlStringBuffer(
+        int storage,      // maximum size of string in characters
+        int size,         // size of text, in characters, excluding padding
+        int leftpad = 0,  // pad left with this many characters
+        int rightpad = 0, // pad right with this many chararacters
+        uint text = 'x',  // fill text w/this
+        uint pad = ' ',   // pad w/this
+        // Try to use something unaligned below:
+        int leftBumper = mBumperLen,  // In characters
+        int rightBumper = mBumperLen);
 
     bool verify();
-    void randomize(uint start = 'A',
-                   uint lower = ' ',
-                   uint upper = '~');
-    void
-    patternfill(uint start = 'A',
-                uint lower = ' ',
-                uint upper = '~');
+
+    void randomize(
+        uint start = 'A',
+        uint lower = ' ',
+        uint upper = '~');
+
+    void patternfill(
+        uint start = 'A',
+        uint lower = ' ',
+        uint upper = '~');
 
 
     char * mStr;           // valid string start. (includes left padding)
-    char * mRightP;        // right bumper start. valid string ends 1 before here
+    char * mRightP;       // right bumper start. valid string ends 1 before here
     char * mLeftP;         // left bumper start.
     const int mStorage;    // maximum size (column width) of string
     const int mSize;       // size of string
@@ -88,24 +92,29 @@ public:
     SqlStringBufferUCS2(SqlStringBuffer const &src);
 
     explicit
-    SqlStringBufferUCS2(SqlStringBuffer const &src,
-                        int leftBumper,
-                        int rightBumper);
+    SqlStringBufferUCS2(
+        SqlStringBuffer const &src,
+        int leftBumper,
+        int rightBumper);
 
     void init();
     bool verify();
-    void randomize(uint start = 'A',
-                   uint lower = ' ',
-                   uint upper = '~');
-    void patternfill(uint start = 'A',
-                     uint lower = ' ',
-                     uint upper = '~');
+    void randomize(
+        uint start = 'A',
+        uint lower = ' ',
+        uint upper = '~');
+
+    void patternfill(
+        uint start = 'A',
+        uint lower = ' ',
+        uint upper = '~');
+
     string dump();
     bool equal(SqlStringBufferUCS2 const &other);
 
     char * mStr;           // valid string start. (includes left padding)
     char * mStrPostPad;    // valid string start, skipping left padding
-    char * mRightP;        // right bumper start. valid string ends 1 before here
+    char * mRightP;       // right bumper start. valid string ends 1 before here
     char * mLeftP;         // left bumper start.
     const int mStorage;    // maximum size (column width) of string
     const int mSize;       // size of string
@@ -120,3 +129,5 @@ private:
 };
 
 #endif
+
+// End SqlStringBuffer.h

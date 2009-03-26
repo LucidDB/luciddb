@@ -42,10 +42,11 @@
 
 #include <assert.h>
 #ifndef DTBUG1490
-#pragma STDC FENV_ACCESS ON         /* notify compiler we expect to use fp exceptions,
-                                    this is the standard way of stopping compiler
-                                    from introducing optimizations which don't play well
-                                    with fp status registers */
+#pragma STDC FENV_ACCESS ON   /* notify compiler we expect to use fp
+                                 exceptions, this is the standard way of
+                                 stopping compiler from introducing
+                                 optimizations which don't play well with fp
+                                 status registers */
 #endif
 #include <fenv.h>
 #include <string>
@@ -68,13 +69,16 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 #define S_DIV0    "22012"        /* DIVISION_BY_ZERO */
 
 /* --- */
-static void Raise(TExceptionCBData *pData,
-        TProgramCounter pc, const char *pMsg) throw( CalcMessage )
+static void Raise(
+    TExceptionCBData *pData,
+    TProgramCounter pc,
+    const char *pMsg)
+    throw(CalcMessage)
 {
     if (pData) {
         assert(pData->fnCB);
         (pData->fnCB)(pMsg, pData->pData);
-        }
+    }
     throw CalcMessage(pMsg, pc);
 }
 
@@ -83,29 +87,44 @@ static void Raise(TExceptionCBData *pData,
 ** Disabled all tests (to be compatible with current implementation
 ** in order to allow current tests to succeed
 */
-#define DO(type)                                                            \
-    template <> type Noisy<type>::add( TProgramCounter,                     \
-        const type left, const type right,                                  \
-        TExceptionCBData *pExData ) throw( CalcMessage )                    \
-    { return left+right; }                                                  \
-    template <> type Noisy<type>::sub( TProgramCounter,                     \
-        const type left, const type right,                                  \
-        TExceptionCBData *pExData ) throw( CalcMessage )                    \
-    { return left-right; }                                                  \
-    template <> type Noisy<type>::mul( TProgramCounter,                     \
-        const type left, const type right,                                  \
-        TExceptionCBData *pExData ) throw( CalcMessage )                    \
-    { return left*right; }                                                  \
-    template <> type Noisy<type>::div( TProgramCounter pc,                  \
-        const type left, const type right,                                  \
-        TExceptionCBData *pExData ) throw( CalcMessage ) {                  \
-        if ( right==0 ) Raise(pExData, pc, S_DIV0);                         \
-        return left/right;                                                  \
-        }                                                                   \
-    template <> type Noisy<type>::neg( TProgramCounter,                     \
-        const type right,                                                   \
-        TExceptionCBData *pExData ) throw( CalcMessage )                    \
-    { return right * -1; }
+#define DO(type)                                                        \
+    template <> type Noisy<type>::add(                                  \
+        TProgramCounter,                                                \
+        const type left, const type right,                              \
+        TExceptionCBData *pExData) throw(CalcMessage)                   \
+    {                                                                   \
+        return left + right;                                            \
+    }                                                                   \
+    template <> type Noisy<type>::sub(                                  \
+        TProgramCounter,                                                \
+        const type left, const type right,                              \
+        TExceptionCBData *pExData) throw(CalcMessage)                   \
+    {                                                                   \
+        return left - right;                                            \
+    }                                                                   \
+    template <> type Noisy<type>::mul(                                  \
+        TProgramCounter,                                                \
+        const type left, const type right,                              \
+        TExceptionCBData *pExData) throw(CalcMessage)                   \
+    {                                                                   \
+        return left * right;                                            \
+    }                                                                   \
+    template <> type Noisy<type>::div(                                  \
+        TProgramCounter pc,                                             \
+        const type left, const type right,                              \
+        TExceptionCBData *pExData) throw(CalcMessage) {                 \
+        if (right == 0) {                                               \
+            Raise(pExData, pc, S_DIV0);                                 \
+        }                                                               \
+        return left / right;                                            \
+    }                                                                   \
+    template <> type Noisy<type>::neg(                                  \
+        TProgramCounter,                                                \
+        const type right,                                               \
+        TExceptionCBData *pExData) throw(CalcMessage)                   \
+    {                                                                   \
+        return right * -1;                                              \
+    }
 DO(char)
 DO(signed char)
 DO(unsigned char)
@@ -124,197 +143,237 @@ DO(float)
 DO(double)
 DO(long double)
 
-#else    /* not disabled */
-#define UNSIGNED_ADD(type)                                                  \
-    template <> type Noisy<type>::add( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    register type result;                                                   \
-    if ( left > (std::numeric_limits<type>::max() - right) )                \
-        Raise(pExData, pc, S_OVER );                                        \
-    result = left+right;                                                    \
-    assert( result == (left+right) );                                       \
-    return result;                                                          \
+#else
+#define UNSIGNED_ADD(type)                                              \
+    template <> type Noisy<type>::add(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        register type result;                                           \
+        if (left > (std::numeric_limits<type>::max() - right)) {        \
+            Raise(pExData, pc, S_OVER);                                 \
+        }                                                               \
+        result = left + right;                                          \
+        assert(result == (left + right));                               \
+        return result;                                                  \
     }
 
-#define SIGNED_ADD(type)                                                    \
-    template <> type Noisy<type>::add( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    register type result = left+right;                                      \
-    if ( left<0 && right<0 && result>=0 )                                   \
-        Raise(pExData, pc, S_OVER );                                        \
-    if ( left>0 && right>0 && result<=0 )                                   \
-        Raise(pExData, pc, S_OVER );                                        \
-    assert( result == (left+right) );                                       \
-    return result;                                                          \
+#define SIGNED_ADD(type)                                                \
+    template <> type Noisy<type>::add(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        register type result = left + right;                            \
+        if (left < 0 && right < 0 && result >=0) {                      \
+            Raise(pExData, pc, S_OVER);                                 \
+        }                                                               \
+        if (left > 0 && right > 0 && result <= 0) {                     \
+            Raise(pExData, pc, S_OVER);                                 \
+        }                                                               \
+        assert(result == (left + right));                               \
+        return result;                                                  \
     }
 
-#define UNSIGNED_SUB(type)                                                  \
-    template <> type Noisy<type>::sub( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    register type result;                                                   \
-    if ( right > left ) Raise( pExData, pc, S_OVER );                       \
-    return left-right;                                                      \
-    result = left-right;                                                    \
-    assert( result == (left-right) );                                       \
-    return result;                                                          \
+#define UNSIGNED_SUB(type)                                              \
+    template <> type Noisy<type>::sub(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        register type result;                                           \
+        if (right > left) {                                             \
+            Raise(pExData, pc, S_OVER);                                 \
+        }                                                               \
+        return left - right;                                            \
+        result = left - right;                                          \
+        assert(result == (left - right));                               \
+        return result;                                                  \
     }
 
-#define SIGNED_SUB(type)                                                    \
-    template <> type Noisy<type>::sub( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    register type r = right;                                                \
-    register type l = left;                                                 \
-    register type result;                                                   \
-    if ( r==std::numeric_limits<type>::min() ) {                            \
-        if ( l==std::numeric_limits<type>::max() )                          \
-            Raise( pExData, pc, S_OVER );                                   \
-        r++;                                                                \
-        l++;                                                                \
-        }                                                                   \
-    result = Noisy<type>::add( pc, l, -r, pExData );                        \
-    assert( result == (left-right) );                                       \
-    return result;                                                          \
+#define SIGNED_SUB(type)                                                \
+    template <> type Noisy<type>::sub(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        register type r = right;                                        \
+        register type l = left;                                         \
+        register type result;                                           \
+        if (r == std::numeric_limits<type>::min()) {                    \
+            if (l == std::numeric_limits<type>::max()) {                \
+                Raise(pExData, pc, S_OVER);                             \
+            }                                                           \
+            r++;                                                        \
+            l++;                                                        \
+        }                                                               \
+        result = Noisy<type>::add(pc, l, -r, pExData);                  \
+        assert(result == (left - right));                               \
+        return result;                                                  \
     }
 
 #define UNSIGNED_MUL(type)                                                  \
-    template <> type Noisy<type>::mul( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    register type result;                                                   \
-    if ( left==0 || right==0 ) return 0;                                    \
-    if ( left>right ) return Noisy<type>::mul( pc, right, left, pExData );  \
-    register type r = right;                                                \
-    register type l = left;                                                 \
-    assert( l<=r );                                                         \
-    const type msb = ~( std::numeric_limits<type>::max() >> 1 );            \
-    result = 0;                                                             \
-    while(1) {                                                              \
-        if ( l & 0x1 ) { result=Noisy<type>::add(pc, result, r, pExData );} \
-        l >>= 1;                                                            \
-        if ( !l ) break;                                                    \
-        if ( msb & r ) Raise( pExData, pc, S_OVER );                        \
-        r <<= 1;                                                            \
-        }                                                                   \
-    assert( result == (left*right) );                                       \
-    return result;                                                          \
+    template <> type Noisy<type>::mul(                                      \
+        TProgramCounter pc, const type left,                                \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage)     \
+    {                                                                   \
+        register type result;                                           \
+        if (left == 0 || right == 0) {                                  \
+            return 0;                                                   \
+        }                                                               \
+        if (left > right) {                                             \
+            return Noisy<type>::mul(pc, right, left, pExData);          \
+        }                                                               \
+        register type r = right;                                        \
+        register type l = left;                                         \
+        assert(l <= r);                                                 \
+        const type msb = ~(std::numeric_limits<type>::max() >> 1);      \
+        result = 0;                                                     \
+        while (1) {                                                     \
+            if (l & 0x1) {                                              \
+                result = Noisy<type>::add(pc, result, r, pExData);      \
+            }                                                           \
+            l >>= 1;                                                    \
+            if (!l) {                                                   \
+                break;                                                  \
+            }                                                           \
+            if (msb & r) {                                              \
+                Raise(pExData, pc, S_OVER);                             \
+            }                                                           \
+            r <<= 1;                                                    \
+        }                                                               \
+        assert(result == (left * right));                               \
+        return result;                                                  \
     }
 
-#define SIGNED_MUL(type)                                                    \
-    template <> type Noisy<type>::mul( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    register type result;                                                   \
-    if ( left==0 || right==0 ) return 0;                                    \
-    if ( right>left ) return Noisy<type>::mul( pc, right, left, pExData );  \
-    register type r = right;                                                \
-    register type l = left;                                                 \
-    assert( r<=l );                                                         \
-    if ( l<0 /* infers r<0, both negative */ ) {                            \
-        if ( r==std::numeric_limits<type>::min() )                          \
-            Raise( pExData, pc, S_OVER );                                   \
-        assert( l!=std::numeric_limits<type>::min() );                      \
-        l = -l;                                                             \
-        r = -r;                                                             \
-        }                                                                   \
-    assert( l>0 );                                                          \
-    const type n_max = std::numeric_limits<type>::min() >> 1;               \
-    const type p_max = (-n_max) - 1;                                        \
-    result = 0;                                                             \
-    while(1) {                                                              \
-        if ( l & 0x1 ) { result=Noisy<type>::add(pc, result, r, pExData); } \
-        l >>= 1;                                                            \
-        if ( !l ) break;                                                    \
-        if ( r<n_max || r>p_max )                                           \
-            Raise( pExData, pc, S_OVER );                                   \
-        r *= 2;                                                             \
-        }                                                                   \
-    assert( result == (left*right) );                                       \
-    return result;                                                          \
+#define SIGNED_MUL(type)                                                \
+    template <> type Noisy<type>::mul(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        register type result;                                           \
+        if (left == 0 || right == 0) {                                  \
+            return 0;                                                   \
+        }                                                               \
+        if (right > left) {                                             \
+            return Noisy<type>::mul(pc, right, left, pExData);          \
+        }                                                               \
+        register type r = right;                                        \
+        register type l = left;                                         \
+        assert(r <= l);                                                 \
+        if (l < 0 /* infers r<0, both negative */) {                    \
+            if (r == std::numeric_limits<type>::min()) {                \
+                Raise(pExData, pc, S_OVER);                             \
+            }                                                           \
+            assert(l != std::numeric_limits<type>::min());              \
+            l = -l;                                                     \
+            r = -r;                                                     \
+        }                                                               \
+        assert(l > 0);                                                  \
+        const type n_max = std::numeric_limits<type>::min() >> 1;       \
+        const type p_max = (-n_max) - 1;                                \
+        result = 0;                                                     \
+        while (1) {                                                     \
+            if (l & 0x1) {                                              \
+                result=Noisy<type>::add(pc, result, r, pExData);        \
+            }                                                           \
+            l >>= 1;                                                    \
+            if (!l) {                                                   \
+                break;                                                  \
+            }                                                           \
+            if (r < n_max || r > p_max) {                               \
+                Raise(pExData, pc, S_OVER);                             \
+            }                                                           \
+            r *= 2;                                                     \
+        }                                                               \
+        assert(result == (left * right));                               \
+        return result;                                                  \
     }
 
-#define UNSIGNED_DIV(type)                                                  \
-    template <> type Noisy<type>::div( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    if ( right==0 ) Raise( pExData, pc, S_DIV0 );                           \
-    register type result = left / right;                                    \
-    assert( result == (left/right) );                                       \
-    return result;                                                          \
+#define UNSIGNED_DIV(type)                                              \
+    template <> type Noisy<type>::div(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        if (right == 0) {                                               \
+            Raise(pExData, pc, S_DIV0);                                 \
+        }                                                               \
+        register type result = left / right;                            \
+        assert(result == (left / right));                               \
+        return result;                                                  \
     }
 
-#define SIGNED_DIV(type)                                                    \
-    template <> type Noisy<type>::div( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    /* this only holds for 2's complement representations */                \
-    if ( left==std::numeric_limits<type>::min() && right==-1 )              \
-        Raise( pExData, pc, S_OVER );                                       \
-                                                                            \
-    if ( right==0 ) Raise( pExData, pc, S_DIV0 );                           \
-    register type result = left / right;                                    \
-    assert( result == (left/right) );                                       \
-    return result;                                                          \
+#define SIGNED_DIV(type)                                                \
+    template <> type Noisy<type>::div(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        /* this only holds for 2's complement representations */        \
+        if (left == std::numeric_limits<type>::min() && right == -1) {  \
+            Raise(pExData, pc, S_OVER);                                 \
+        }                                                               \
+        if (right == 0) {                                               \
+            Raise(pExData, pc, S_DIV0);                                 \
+        }                                                               \
+        register type result = left / right;                            \
+        assert(result == (left / right));                               \
+        return result;                                                  \
     }
 
-#define UNSIGNED_NEG(type)                                                  \
-    template <> type Noisy<type>::neg( TProgramCounter pc,                  \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    if ( right!=0 ) Raise( pExData, pc, S_OVER );                           \
-    return 0;                                                               \
+#define UNSIGNED_NEG(type)                                              \
+    template <> type Noisy<type>::neg(                                  \
+        TProgramCounter pc,                                             \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        if (right != 0) {                                               \
+            Raise(pExData, pc, S_OVER);                                 \
+        }                                                               \
+        return 0;                                                       \
     }
 
-#define SIGNED_NEG(type)                                                    \
-    template <> type Noisy<type>::neg( TProgramCounter pc,                  \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    /* this only holds for 2's complement representations */                \
-    if ( right==std::numeric_limits<type>::min() )                          \
-        Raise( pExData, pc, S_OVER );                                       \
-                                                                            \
-    return -(right);                                                        \
+#define SIGNED_NEG(type)                                                \
+    template <> type Noisy<type>::neg(                                  \
+        TProgramCounter pc,                                             \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        /* this only holds for 2's complement representations */        \
+        if (right == std::numeric_limits<type>::min()) {                \
+            Raise(pExData, pc, S_OVER);                                 \
+        }                                                               \
+        return -(right);                                                \
     }
 
 /* --- */
-inline void maybe_raise_fe_exception( TExceptionCBData *pExData,
-        TProgramCounter pc ) throw( CalcMessage )
+inline void maybe_raise_fe_exception(
+    TExceptionCBData *pExData,
+    TProgramCounter pc)
+    throw(CalcMessage)
 {
-    int fe = ::fetestexcept( FE_ALL_EXCEPT );
-    if ( 0 ) ;
-    else if ( fe & FE_DIVBYZERO ) {
-        Raise( pExData, pc, S_DIV0 );
-        }
-    else if ( fe & FE_UNDERFLOW ) {
-        Raise( pExData, pc, S_UNDR );
-        }
-    else if ( fe & FE_OVERFLOW ) {
-        Raise( pExData, pc, S_OVER );
-        }
-    else if ( fe & FE_INVALID ) {
-        Raise( pExData, pc, S_INVL );
-        }
+    int fe = ::fetestexcept(FE_ALL_EXCEPT);
+    if (0) {
+    } else if (fe & FE_DIVBYZERO) {
+        Raise(pExData, pc, S_DIV0);
+    } else if (fe & FE_UNDERFLOW) {
+        Raise(pExData, pc, S_UNDR);
+    } else if (fe & FE_OVERFLOW) {
+        Raise(pExData, pc, S_OVER);
+    } else if (fe & FE_INVALID) {
+        Raise(pExData, pc, S_INVL);
 
     /* leave this last because it occurs in conjunction with other
         flags */
-    else if ( fe & FE_INEXACT ) {
+    } else if (fe & FE_INEXACT) {
 /* disabling inexact. for <float> 200.0 + 0.3 == 200.300003 and S_INEX
  gets set., so is too pedestrian a case to raise an error for
-        Raise( pExData, pc, S_INEX ); */
+        Raise(pExData, pc, S_INEX); */
         }
 }
 
 /* ---
 Removing the following dev. time sanity checks here b/c they may fail
 because of an ignored S_INEX, see above comment.
-    assert( result == (left+right) );                                       \
-    assert( result == (left-right) );                                       \
-    assert( result == (left*right) );                                       \
-    assert( result == (left/right) );                                       \
-    assert( result == (-right) );                                           \
+    assert(result == (left+right));                                       \
+    assert(result == (left-right));                                       \
+    assert(result == (left*right));                                       \
+    assert(result == (left/right));                                       \
+    assert(result == (-right));                                           \
 --- */
 
 
@@ -327,66 +386,94 @@ because of an ignored S_INEX, see above comment.
     /* optimize to inplace operations, even at -O1 */
 #   define inline void
 #endif
-template <typename TYPE> OP_FN_PROLOG na_add(TYPE &res, const TYPE &r, const TYPE &l) { res=(r + l); }
-template <typename TYPE> OP_FN_PROLOG na_sub(TYPE &res, const TYPE &r, const TYPE &l) { res=(r - l); }
-template <typename TYPE> OP_FN_PROLOG na_mul(TYPE &res, const TYPE &r, const TYPE &l) { res=(r * l); }
-template <typename TYPE> OP_FN_PROLOG na_div(TYPE &res, const TYPE &r, const TYPE &l) { res=(r / l); }
-template <typename TYPE> OP_FN_PROLOG na_neg(TYPE &res, const TYPE &r) { res=(-r); }
+template <typename TYPE> OP_FN_PROLOG na_add(
+    TYPE &res, const TYPE &r, const TYPE &l)
+{
+    res = r + l;
+}
 
-#define FLOATING_ADD(type)                                                  \
-    template <> type Noisy<type>::add( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    type result;                                                            \
-    ::feclearexcept( FE_ALL_EXCEPT );                                       \
-    na_add<type>(result, left, right );                                     \
-    maybe_raise_fe_exception( pExData, pc );                                \
-    return result;                                                          \
+template <typename TYPE> OP_FN_PROLOG na_sub(
+    TYPE &res, const TYPE &r, const TYPE &l)
+{
+    res = r - l;
+}
+
+template <typename TYPE> OP_FN_PROLOG na_mul(
+    TYPE &res, const TYPE &r, const TYPE &l)
+{
+    res = r * l;
+}
+
+template <typename TYPE> OP_FN_PROLOG na_div(
+    TYPE &res, const TYPE &r, const TYPE &l)
+{
+    res = r / l;
+}
+
+template <typename TYPE> OP_FN_PROLOG na_neg(TYPE &res, const TYPE &r)
+{
+    res = -r;
+}
+
+#define FLOATING_ADD(type)                                              \
+    template <> type Noisy<type>::add(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        type result;                                                    \
+        ::feclearexcept(FE_ALL_EXCEPT);                                 \
+        na_add<type>(result, left, right);                              \
+        maybe_raise_fe_exception(pExData, pc);                          \
+        return result;                                                  \
     }
 
-#define FLOATING_SUB(type)                                                  \
-    template <> type Noisy<type>::sub( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
+#define FLOATING_SUB(type)                                              \
+    template <> type Noisy<type>::sub(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
     {                                                                       \
-    type result;                                                            \
-    ::feclearexcept( FE_ALL_EXCEPT );                                       \
-    na_sub<type>(result, left, right );                                     \
-    maybe_raise_fe_exception( pExData, pc );                                \
-    return result;                                                          \
+        type result;                                                    \
+        ::feclearexcept(FE_ALL_EXCEPT);                                 \
+        na_sub<type>(result, left, right);                              \
+        maybe_raise_fe_exception(pExData, pc);                          \
+        return result;                                                  \
     }
 
-#define FLOATING_MUL(type)                                                  \
-    template <> type Noisy<type>::mul( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    type result;                                                            \
-    ::feclearexcept( FE_ALL_EXCEPT );                                       \
-    na_mul<type>(result, left, right );                                     \
-    maybe_raise_fe_exception( pExData, pc );                                \
-    return result;                                                          \
+#define FLOATING_MUL(type)                                              \
+    template <> type Noisy<type>::mul(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        type result;                                                    \
+        ::feclearexcept(FE_ALL_EXCEPT);                                 \
+        na_mul<type>(result, left, right);                              \
+        maybe_raise_fe_exception(pExData, pc);                          \
+        return result;                                                  \
     }
 
-#define FLOATING_DIV(type)                                                  \
-    template <> type Noisy<type>::div( TProgramCounter pc, const type left, \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    type result;                                                            \
-    ::feclearexcept( FE_ALL_EXCEPT );                                       \
-    na_div<type>(result, left, right );                                     \
-    maybe_raise_fe_exception( pExData, pc );                                \
-    return result;                                                          \
+#define FLOATING_DIV(type)                                              \
+    template <> type Noisy<type>::div(                                  \
+        TProgramCounter pc, const type left,                            \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        type result;                                                    \
+        ::feclearexcept(FE_ALL_EXCEPT);                                 \
+        na_div<type>(result, left, right);                              \
+        maybe_raise_fe_exception(pExData, pc);                          \
+        return result;                                                  \
     }
 
-#define FLOATING_NEG(type)                                                  \
-    template <> type Noisy<type>::neg( TProgramCounter pc,                  \
-        const type right, TExceptionCBData *pExData ) throw( CalcMessage )  \
-    {                                                                       \
-    type result;                                                            \
-    ::feclearexcept( FE_ALL_EXCEPT );                                       \
-    result = (-right);                                                      \
-    na_neg<type>(result, right );                                           \
-    maybe_raise_fe_exception( pExData, pc );                                \
-    return result;                                                          \
+#define FLOATING_NEG(type)                                              \
+    template <> type Noisy<type>::neg(                                  \
+        TProgramCounter pc,                                             \
+        const type right, TExceptionCBData *pExData) throw(CalcMessage) \
+    {                                                                   \
+        type result;                                                    \
+        ::feclearexcept(FE_ALL_EXCEPT);                                 \
+        result = (-right);                                              \
+        na_neg<type>(result, right);                                    \
+        maybe_raise_fe_exception(pExData, pc);                          \
+        return result;                                                  \
     }
 
 SIGNED_ADD(char)

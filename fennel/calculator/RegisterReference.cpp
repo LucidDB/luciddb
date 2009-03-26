@@ -33,13 +33,14 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 RegisterSetBinding::~RegisterSetBinding()
 {
-    if (ownTheBase)
+    if (ownTheBase) {
         delete base;
+    }
     delete[] datumAddr;
 }
 
 RegisterSetBinding::RegisterSetBinding(TupleData* base, bool ownIt)
-    :ownTheBase(ownIt), base(base)
+    : ownTheBase(ownIt), base(base)
 {
     assert(base);
     ncols = base->size();
@@ -50,8 +51,12 @@ RegisterSetBinding::RegisterSetBinding(TupleData* base, bool ownIt)
     }
 }
 
-RegisterSetBinding::RegisterSetBinding(TupleData* base, const TupleData* shadow, bool ownIt)
-    :ownTheBase(ownIt), base(base)
+RegisterSetBinding::RegisterSetBinding(
+    TupleData* base,
+    const TupleData* shadow,
+    bool ownIt)
+    : ownTheBase(ownIt),
+      base(base)
 {
     assert(base);
     ncols = base->size();
@@ -62,12 +67,12 @@ RegisterSetBinding::RegisterSetBinding(TupleData* base, const TupleData* shadow,
         const TupleDatum& shadowCol = (*shadow)[i];
         datumAddr[i] = shadowCol.pData;
         // check that SHADOW coincides with BASE
-        if (baseCol.pData)
+        if (baseCol.pData) {
             assert(baseCol.pData == shadowCol.pData);
-        else
+        } else {
             assert(shadowCol.pData);
+        }
     }
-
 }
 
 void
@@ -84,7 +89,7 @@ RegisterReference::setCalc(Calculator* calcP) {
 
 void
 RegisterReference::cachePointer() {
-    if (mProp & (EPropCachePointer|EPropPtrReset)) {
+    if (mProp & (EPropCachePointer | EPropPtrReset)) {
         TupleDatum *bind = getBinding();
         mPData = const_cast<PBuffer>(bind->pData);
         mCbData = bind->cbData;
@@ -101,7 +106,7 @@ RegisterReference::cachePointer() {
 void
 RegisterReference::setDefaultProperties()
 {
-    switch(mSetIndex) {
+    switch (mSetIndex) {
     case ELiteral:
         mProp = KLiteralSetDefault;
         break;
@@ -127,11 +132,9 @@ RegisterReference::setDefaultProperties()
 string
 RegisterReference::toString() const
 {
-    return boost::io::str( format("[S%d I%lu]") % mSetIndex % mIndex);
+    return boost::io::str(format("[S%d I%lu]") % mSetIndex % mIndex);
 }
 
-
-
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/calculator/RegisterReference.cpp#1 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End RegisterReference.cpp

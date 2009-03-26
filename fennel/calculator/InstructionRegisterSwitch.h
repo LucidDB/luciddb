@@ -45,71 +45,71 @@
 #endif
 
 #if 0
-{ // Feed/fool emacs auto-indent
+switch (foo) { // Feed/fool emacs auto-indent
 #endif
 
 #ifdef Fennel_InstructionRegisterSwitch_Integral
- case STANDARD_TYPE_INT_8:
-     InstructionRegister::registerInstance<int8_t, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_UINT_8:
-     InstructionRegister::registerInstance<uint8_t, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_INT_16:
-     InstructionRegister::registerInstance<int16_t, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_UINT_16:
-     InstructionRegister::registerInstance<uint16_t, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_INT_32:
-     InstructionRegister::registerInstance<int32_t, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_UINT_32:
-     InstructionRegister::registerInstance<uint32_t, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_INT_64:
-     InstructionRegister::registerInstance<int64_t, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_UINT_64:
-     InstructionRegister::registerInstance<uint64_t, INSTCLASS2>(type);
-     break;
+case STANDARD_TYPE_INT_8:
+    InstructionRegister::registerInstance<int8_t, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_UINT_8:
+    InstructionRegister::registerInstance<uint8_t, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_INT_16:
+    InstructionRegister::registerInstance<int16_t, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_UINT_16:
+    InstructionRegister::registerInstance<uint16_t, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_INT_32:
+    InstructionRegister::registerInstance<int32_t, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_UINT_32:
+    InstructionRegister::registerInstance<uint32_t, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_INT_64:
+    InstructionRegister::registerInstance<int64_t, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_UINT_64:
+    InstructionRegister::registerInstance<uint64_t, INSTCLASS2>(type);
+    break;
 #endif
 
 
 #ifdef Fennel_InstructionRegisterSwitch_Bool
- case STANDARD_TYPE_BOOL:
-     InstructionRegister::registerInstance<bool, INSTCLASS2>(type);
-     break;
+case STANDARD_TYPE_BOOL:
+    InstructionRegister::registerInstance<bool, INSTCLASS2>(type);
+    break;
 #endif
 
 
 #ifdef Fennel_InstructionRegisterSwitch_Approx
- case STANDARD_TYPE_REAL:
-     InstructionRegister::registerInstance<float, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_DOUBLE:
-     InstructionRegister::registerInstance<double, INSTCLASS2>(type);
-     break;
+case STANDARD_TYPE_REAL:
+    InstructionRegister::registerInstance<float, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_DOUBLE:
+    InstructionRegister::registerInstance<double, INSTCLASS2>(type);
+    break;
 #endif
 
 
 #ifdef Fennel_InstructionRegisterSwitch_Array_Text
- case STANDARD_TYPE_CHAR:
-     InstructionRegister::registerInstance<char*, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_VARCHAR:
-     InstructionRegister::registerInstance<char*, INSTCLASS2>(type);
-     break;
+case STANDARD_TYPE_CHAR:
+    InstructionRegister::registerInstance<char*, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_VARCHAR:
+    InstructionRegister::registerInstance<char*, INSTCLASS2>(type);
+    break;
 #endif
 
 
 #ifdef Fennel_InstructionRegisterSwitch_Array_Binary
- case STANDARD_TYPE_BINARY:
-     InstructionRegister::registerInstance<char*, INSTCLASS2>(type);
-     break;
- case STANDARD_TYPE_VARBINARY:
-     InstructionRegister::registerInstance<char*, INSTCLASS2>(type);
-     break;
+case STANDARD_TYPE_BINARY:
+    InstructionRegister::registerInstance<char*, INSTCLASS2>(type);
+    break;
+case STANDARD_TYPE_VARBINARY:
+    InstructionRegister::registerInstance<char*, INSTCLASS2>(type);
+    break;
 #endif
 
 

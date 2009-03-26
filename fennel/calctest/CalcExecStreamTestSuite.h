@@ -94,3 +94,5 @@ public:
 };
 
 #endif
+
+// End CalcExecStreamTestSuite.h

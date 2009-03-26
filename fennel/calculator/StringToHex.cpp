@@ -52,7 +52,7 @@ stringToHex(char const * const buf, uint buflen)
 {
     assert(buf != NULL);
     ostringstream ostr;
-    for (uint i=0; i<buflen; i++) {
+    for (uint i = 0; i < buflen; i++) {
         unsigned char ch = (unsigned char) buf[i];
         ostr << hex << setw(2) << setfill('0') << (uint) ch;
     }

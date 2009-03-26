@@ -31,10 +31,12 @@ using boost::lexical_cast;
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void
-JumpInstruction::describeHelper(string &out,
-                                bool values,
-                                const char* longName,
-                                const char* shortName) const {
+JumpInstruction::describeHelper(
+    string &out,
+    bool values,
+    const char* longName,
+    const char* shortName) const
+{
     out = longName;
     out += " To Addr: ";
     out += boost::lexical_cast<std::string>(mJumpTo);

@@ -45,8 +45,9 @@ class CalcExtDateTimeTest : virtual public TestBase, public TraceSource
     void testCalcExtLocalTimestamp();
 
     void checkWarnings(Calculator& calc, string expected);
-    void printOutput(TupleData const & tup,
-                     Calculator const & calc);
+    void printOutput(
+        TupleData const & tup,
+        Calculator const & calc);
 
 public:
     explicit CalcExtDateTimeTest()
@@ -54,7 +55,8 @@ public:
     {
         srand(time(NULL));
         CalcInit::instance();
-        FENNEL_UNIT_TEST_CASE(CalcExtDateTimeTest, testCalcExtConvertDateToString);
+        FENNEL_UNIT_TEST_CASE(
+            CalcExtDateTimeTest, testCalcExtConvertDateToString);
         FENNEL_UNIT_TEST_CASE(CalcExtDateTimeTest, testCalcExtLocalTime);
         FENNEL_UNIT_TEST_CASE(CalcExtDateTimeTest, testCalcExtLocalTimestamp);
     }
@@ -73,8 +75,9 @@ public:
 
 // for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
 void
-CalcExtDateTimeTest::printOutput(TupleData const & tup,
-                                 Calculator const & calc)
+CalcExtDateTimeTest::printOutput(
+    TupleData const & tup,
+    Calculator const & calc)
 {
 #if 1
     TuplePrinter tuplePrinter;
@@ -101,8 +104,7 @@ CalcExtDateTimeTest::testCalcExtConvertDateToString()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
 
@@ -125,7 +127,8 @@ CalcExtDateTimeTest::testCalcExtLocalTime()
     pg << "I s4;" << endl;
     pg << "L s8;" << endl;
     pg << "C bo, bo, c,23;" << endl;
-    pg << "V 1, 0, 0x5053542D385044542C4D332E322E302C4D31312E312E30 /* PST-8PDT,M3.2.0,M11.1.0 */;" << endl;
+    pg << "V 1, 0, 0x5053542D385044542C4D332E322E302C4D31312E312E30"
+        " /* PST-8PDT,M3.2.0,M11.1.0 */;" << endl;
     pg << "T;" << endl;
     pg << "CALL 'LocalTime2(L0, C2) /* 0: LOCALTIME($t1) */;" << endl;
     pg << "REF O0, L0 /* 1: */;" << endl;
@@ -135,8 +138,7 @@ CalcExtDateTimeTest::testCalcExtLocalTime()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
 
@@ -158,7 +160,8 @@ CalcExtDateTimeTest::testCalcExtLocalTimestamp()
     pg << "I s4;" << endl;
     pg << "L s8;" << endl;
     pg << "C bo, bo, c,23;" << endl;
-    pg << "V 1, 0, 0x5053542D385044542C4D332E322E302C4D31312E312E30 /* PST-8PDT,M3.2.0,M11.1.0 */;" << endl;
+    pg << "V 1, 0, 0x5053542D385044542C4D332E322E302C4D31312E312E30"
+        " /* PST-8PDT,M3.2.0,M11.1.0 */;" << endl;
     pg << "T;" << endl;
     pg << "CALL 'LocalTimestamp2(L0, C2) /* 0: LOCALTIMESTAMP($t1) */;" << endl;
     pg << "REF O0, L0 /* 1: */;" << endl;
@@ -168,8 +171,7 @@ CalcExtDateTimeTest::testCalcExtLocalTimestamp()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
 

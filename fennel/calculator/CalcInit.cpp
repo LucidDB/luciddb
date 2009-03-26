@@ -35,7 +35,9 @@ CalcInit*
 CalcInit::instance()
 {
     // Warning: Not thread safe
-    if (_instance) return _instance;
+    if (_instance) {
+        return _instance;
+    }
 
     _instance = new CalcInit;
 
@@ -46,7 +48,8 @@ CalcInit::instance()
     ExtDateTimeRegister(InstructionFactory::getExtendedInstructionTable());
     ExtRegExpRegister(InstructionFactory::getExtendedInstructionTable());
     ExtCastRegister(InstructionFactory::getExtendedInstructionTable());
-    ExtDynamicVariableRegister(InstructionFactory::getExtendedInstructionTable());
+    ExtDynamicVariableRegister(
+        InstructionFactory::getExtendedInstructionTable());
     ExtWinAggFuncRegister(InstructionFactory::getExtendedInstructionTable());
 
     // Add new init calls here

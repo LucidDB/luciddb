@@ -25,56 +25,58 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-InstructionSignature::
-InstructionSignature(string const & name) :
-    name(name),
-    hasRegisters(false),
-    hasPc(false)
+InstructionSignature::InstructionSignature(
+    string const & name)
+    : name(name),
+      hasRegisters(false),
+      hasPc(false)
 {
 }
 
-InstructionSignature::
-InstructionSignature(string const & name,
-                     vector<StandardTypeDescriptorOrdinal>
-                     const &operands) :
-    name(name),
-    types(operands),
-    hasRegisters(false),
-    hasPc(false)
+InstructionSignature::InstructionSignature(
+    string const & name,
+    vector<StandardTypeDescriptorOrdinal>
+    const &operands)
+    : name(name),
+      types(operands),
+      hasRegisters(false),
+      hasPc(false)
 {
 }
-InstructionSignature::
-InstructionSignature(string const & name,
-                     vector<RegisterReference*> const & operands) :
-    name(name),
-    registers(operands),
-    hasRegisters(true),
-    hasPc(false)
+
+InstructionSignature::InstructionSignature(
+    string const & name,
+    vector<RegisterReference*> const & operands)
+    : name(name),
+      registers(operands),
+      hasRegisters(true),
+      hasPc(false)
 {
     registersToTypes();
 }
-InstructionSignature::
-InstructionSignature(string const & name,
-                     TProgramCounter pc,
-                     vector<StandardTypeDescriptorOrdinal>
-                     const &operands):
-    name(name),
-    types(operands),
-    hasRegisters(false),
-    pc(pc),
-    hasPc(true)
+
+InstructionSignature::InstructionSignature(
+    string const & name,
+    TProgramCounter pc,
+    vector<StandardTypeDescriptorOrdinal>
+    const &operands)
+    : name(name),
+      types(operands),
+      hasRegisters(false),
+      pc(pc),
+      hasPc(true)
 {
 }
-InstructionSignature::
-InstructionSignature(string const & name,
-                     TProgramCounter pc,
-                     vector<RegisterReference*> const & operands) :
-    name(name),
-    registers(operands),
-    hasRegisters(true),
-    pc(pc),
-    hasPc(true)
 
+InstructionSignature::InstructionSignature(
+    string const & name,
+    TProgramCounter pc,
+    vector<RegisterReference*> const & operands)
+    : name(name),
+      registers(operands),
+      hasRegisters(true),
+      pc(pc),
+      hasPc(true)
 {
     registersToTypes();
 }
@@ -129,7 +131,8 @@ InstructionSignature::getPc() const
 }
 
 vector<StandardTypeDescriptorOrdinal>
-InstructionSignature::typeVector(bool(*typeFunction)(StandardTypeDescriptorOrdinal))
+InstructionSignature::typeVector(
+    bool(*typeFunction)(StandardTypeDescriptorOrdinal))
 {
     vector<StandardTypeDescriptorOrdinal>v;
     int iter;
@@ -160,6 +163,6 @@ InstructionSignature::registersToTypes()
 
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/calculator/InstructionSignature.cpp#1 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End InstructionSignature.cpp

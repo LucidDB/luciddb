@@ -34,16 +34,19 @@ using namespace boost;
 
 CalcAssembler::~CalcAssembler()
 {
-    for (uint i = RegisterReference::EFirstSet; i < RegisterReference::ELastSet; i++) {
-        if (mCalc->mRegisterSetBinding[i] == NULL)
-        {
+    for (uint i = RegisterReference::EFirstSet;
+         i < RegisterReference::ELastSet;
+         i++)
+    {
+        if (mCalc->mRegisterSetBinding[i] == NULL) {
             // We did NOT successfully bind this register set to the calculator
             // Will need to delete it on our own
-            if (mBuffers[i])
+            if (mBuffers[i]) {
                 delete[] mBuffers[i];
-
-            if (mRegisterTupleData[i])
+            }
+            if (mRegisterTupleData[i]) {
                 delete mRegisterTupleData[i];
+            }
         }
     }
 }
@@ -55,7 +58,9 @@ void CalcAssembler::init()
     mMaxPC         = 0;
 
     /* Initialize tuple descriptors and tuple data */
-    for (uint i=RegisterReference::EFirstSet; i<RegisterReference::ELastSet; i++)
+    for (uint i = RegisterReference::EFirstSet;
+         i < RegisterReference::ELastSet;
+         i++)
     {
         mRegisterSetDescriptor[i].clear();
         mRegisterTupleData[i] = NULL;
@@ -70,9 +75,7 @@ int CalcAssembler::assemble(const char* program)
     mLexer.switch_streams(&istr, 0);
     try {
         assemble();
-    }
-    catch (CalcAssemblerException& ex)
-    {
+    } catch (CalcAssemblerException& ex) {
         ex.setCode(program);
         throw ex;
     }
@@ -86,43 +89,44 @@ int CalcAssembler::assemble()
     try {
         mCalc->mIsAssembling = true;
         res = CalcYYparse((void*) this);
-        if (res != 0)
-            throw CalcAssemblerException("Error assembling program", getLexer().getLocation());
+        if (res != 0) {
+            throw CalcAssemblerException(
+                "Error assembling program", getLexer().getLocation());
+        }
 
-        // Done assembling - let's check the maximum PC (used in Jump instruction)
+        // Done assembling - let's check the maximum PC (used in Jump
+        // instruction)
         checkPC(mMaxPC, mMaxPCLoc);
-    }
-    catch (CalcAssemblerException& ex)
-    {
-        if (!ex.mLocValid)
+    } catch (CalcAssemblerException& ex) {
+        if (!ex.mLocValid) {
             ex.setLocation(getLexer().getLocation());
+        }
         throw ex;
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         throw CalcAssemblerException(ex.getMessage(), getLexer().getLocation());
-    }
-    catch (std::exception& ex) {
+    } catch (std::exception& ex) {
         throw CalcAssemblerException(ex.what(), getLexer().getLocation());
     }
 
     return res;
 }
 
-void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                  TupleDatum& tupleDatum,
-                                  TupleAttributeDescriptor& desc /* Unused */,
-                                  PConstBuffer buffer)
+void CalcAssembler::setTupleDatum(
+    StandardTypeDescriptorOrdinal type,
+    TupleDatum& tupleDatum,
+    TupleAttributeDescriptor& desc /* Unused */,
+    PConstBuffer buffer)
 {
     tupleDatum.pData = buffer;
 }
 
-void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                  TupleDatum& tupleDatum,
-                                  TupleAttributeDescriptor& desc, /* Unused */
-                                  double value)
+void CalcAssembler::setTupleDatum(
+    StandardTypeDescriptorOrdinal type,
+    TupleDatum& tupleDatum,
+    TupleAttributeDescriptor& desc, /* Unused */
+    double value)
 {
-    switch (type)
-    {
+    switch (type) {
     case STANDARD_TYPE_REAL:
 
         *(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) =
@@ -132,8 +136,12 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
         // NOTE: Underflows that causes precision loss but does not become 0
         //       are ignored for now.
         if ((value != 0) &&
-            (*(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) == 0))
-            throw InvalidValueException<double>("bad numeric cast: underflow", type, value);
+            (*(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData)))
+             == 0))
+        {
+            throw InvalidValueException<double>(
+                "bad numeric cast: underflow", type, value);
+        }
         break;
     case STANDARD_TYPE_DOUBLE:
         *(reinterpret_cast<double *>(const_cast<PBuffer>(tupleDatum.pData))) =
@@ -141,17 +149,18 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
         break;
     default:
         // Invalid real type - horrible, horrible
-        throw InvalidValueException<double>("Cannot assign double", type, value);
+        throw InvalidValueException<double>(
+            "Cannot assign double", type, value);
     }
 }
 
-void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                  TupleDatum& tupleDatum,
-                                  TupleAttributeDescriptor& desc, /* Unused */
-                                  uint64_t value)
+void CalcAssembler::setTupleDatum(
+    StandardTypeDescriptorOrdinal type,
+    TupleDatum& tupleDatum,
+    TupleAttributeDescriptor& desc, /* Unused */
+    uint64_t value)
 {
-    switch (type)
-    {
+    switch (type) {
     case STANDARD_TYPE_INT_8:
         *(reinterpret_cast<int8_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<int8_t>(value);
@@ -177,10 +186,12 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
             numeric_cast<uint32_t>(value);
         break;
     case STANDARD_TYPE_INT_64:
-        // Explicitly check for overflow of int64_t because the boost numeric_cast
-        // does not throw an exception in this case
-        if (value > std::numeric_limits<int64_t>::max())
-            throw InvalidValueException<uint64_t>("bad numeric cast: overflow", type, value);
+        // Explicitly check for overflow of int64_t because the boost
+        // numeric_cast does not throw an exception in this case
+        if (value > std::numeric_limits<int64_t>::max()) {
+            throw InvalidValueException<uint64_t>(
+                "bad numeric cast: overflow", type, value);
+        }
         *(reinterpret_cast<int64_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<int64_t>(value);
         break;
@@ -191,29 +202,31 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
     case STANDARD_TYPE_BOOL:
         // Booleans are specifed as 0 or 1
         if (value == 1) {
-            *(reinterpret_cast<bool *>(const_cast<PBuffer>(tupleDatum.pData))) = true;
-        }
-        else if (value == 0) {
-            *(reinterpret_cast<bool *>(const_cast<PBuffer>(tupleDatum.pData))) = false;
-        }
-        else {
+            *(reinterpret_cast<bool *>(const_cast<PBuffer>(tupleDatum.pData))) =
+                true;
+        } else if (value == 0) {
+            *(reinterpret_cast<bool *>(const_cast<PBuffer>(tupleDatum.pData))) =
+                false;
+        } else {
             // Invalid boolean value
-            throw InvalidValueException<uint64_t>("Boolean value should be 0 or 1", type, value);
+            throw InvalidValueException<uint64_t>(
+                "Boolean value should be 0 or 1", type, value);
         }
         break;
     default:
         // Invalid unsigned integer type - horrible, horrible
-        throw InvalidValueException<uint64_t>("Cannot assign unsigned integer", type, value);
+        throw InvalidValueException<uint64_t>(
+            "Cannot assign unsigned integer", type, value);
     }
 }
 
-void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                  TupleDatum& tupleDatum,
-                                  TupleAttributeDescriptor& desc, /* Unused */
-                                  int64_t value)
+void CalcAssembler::setTupleDatum(
+    StandardTypeDescriptorOrdinal type,
+    TupleDatum& tupleDatum,
+    TupleAttributeDescriptor& desc, /* Unused */
+    int64_t value)
 {
-    switch (type)
-    {
+    switch (type) {
     case STANDARD_TYPE_INT_8:
         *(reinterpret_cast<int8_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<int8_t>(value);
@@ -231,19 +244,20 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
             numeric_cast<int64_t>(value);
         break;
     default:
-        throw InvalidValueException<int64_t>("Cannot assign signed integer", type, value);
+        throw InvalidValueException<int64_t>(
+            "Cannot assign signed integer", type, value);
     }
 }
 
-void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
-                                  TupleDatum& tupleDatum,
-                                  TupleAttributeDescriptor& desc,
-                                  string str)
+void CalcAssembler::setTupleDatum(
+    StandardTypeDescriptorOrdinal type,
+    TupleDatum& tupleDatum,
+    TupleAttributeDescriptor& desc,
+    string str)
 {
     ostringstream errorStr;
     char* ptr = reinterpret_cast<char*>(const_cast<PBuffer>(tupleDatum.pData));
-    switch (type)
-    {
+    switch (type) {
     case STANDARD_TYPE_CHAR:
     case STANDARD_TYPE_BINARY:
         // Fixed length storage
@@ -252,8 +266,7 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
 
         // Fixed width arrays should be padded to be the specifed width
         // Verify that the number of bytes matches the specified width
-        if (str.length() != tupleDatum.cbData)
-        {
+        if (str.length() != tupleDatum.cbData) {
             ostringstream ostr("");
             ostr << "String length " << str.length()
                  << " not equal to fixed size array of length "
@@ -271,8 +284,7 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
 
         // Verify that there the length of the string is not larger than the
         // maximum length
-        if (str.length() > desc.cbStorage)
-        {
+        if (str.length() > desc.cbStorage) {
             ostringstream ostr("");
             ostr << "String length " << str.length()
                  << " too long for variabled sized array of maximum length "
@@ -295,11 +307,11 @@ void CalcAssembler::bindLiteralDone()
     // We are done with binding literals
     // Check that all literals have been a value
     TRegisterIndex regSize = getRegisterSize(RegisterReference::ELiteral);
-    if (mLiteralIndex != regSize)
-    {
+    if (mLiteralIndex != regSize) {
         ostringstream errorStr("");
-        errorStr << "Error binding literals: " << regSize << " literal registers, only "
-                 << mLiteralIndex << " registers bound";
+        errorStr << "Error binding literals: " << regSize
+                 << " literal registers, only " << mLiteralIndex
+                 << " registers bound";
         throw CalcAssemblerException(errorStr.str(), getLexer().getLocation());
     }
 }
@@ -309,21 +321,22 @@ void CalcAssembler::selectRegisterSet(RegisterReference::ERegisterSet setIndex)
     mCurrentRegSet = setIndex;
 }
 
-StandardTypeDescriptorOrdinal CalcAssembler::getRegisterType(RegisterReference::ERegisterSet setIndex,
-                                                             TRegisterIndex regIndex)
+StandardTypeDescriptorOrdinal CalcAssembler::getRegisterType(
+    RegisterReference::ERegisterSet setIndex,
+    TRegisterIndex regIndex)
 {
     RegisterReference* regRef = getRegister(setIndex, regIndex);
     assert(regRef != NULL);
     return regRef->type();
 }
 
-RegisterReference* CalcAssembler::getRegister(RegisterReference::ERegisterSet setIndex,
-                                              TRegisterIndex regIndex)
+RegisterReference* CalcAssembler::getRegister(
+    RegisterReference::ERegisterSet setIndex,
+    TRegisterIndex regIndex)
 {
     assert(setIndex < RegisterReference::ELastSet);
     TRegisterIndex size = getRegisterSize(setIndex);
-    if (regIndex >= size)
-    {
+    if (regIndex >= size) {
         ostringstream errorStr("");
         errorStr << "Register index " << regIndex << " out of bounds.";
         errorStr << " Register set " << RegisterReference::getSetName(setIndex)
@@ -333,7 +346,8 @@ RegisterReference* CalcAssembler::getRegister(RegisterReference::ERegisterSet se
     return mCalc->mRegisterRef[setIndex][regIndex];
 }
 
-TRegisterIndex CalcAssembler::getRegisterSize(RegisterReference::ERegisterSet setIndex)
+TRegisterIndex CalcAssembler::getRegisterSize(
+    RegisterReference::ERegisterSet setIndex)
 {
     assert(setIndex < RegisterReference::ELastSet);
     return mCalc->mRegisterRef[setIndex].size();
@@ -345,21 +359,22 @@ TupleData* CalcAssembler::getTupleData(RegisterReference::ERegisterSet setIndex)
     return mRegisterTupleData[setIndex];
 }
 
-TupleDescriptor& CalcAssembler::getTupleDescriptor(RegisterReference::ERegisterSet setIndex)
+TupleDescriptor& CalcAssembler::getTupleDescriptor(
+    RegisterReference::ERegisterSet setIndex)
 {
     assert(setIndex < RegisterReference::ELastSet);
     return mRegisterSetDescriptor[setIndex];
 }
 
 /* Need factory? */
-RegisterReference* CalcAssembler::createRegisterReference(RegisterReference::ERegisterSet setIndex,
-                                                          TRegisterIndex                  regIndex,
-                                                          StandardTypeDescriptorOrdinal   regType)
+RegisterReference* CalcAssembler::createRegisterReference(
+    RegisterReference::ERegisterSet setIndex,
+    TRegisterIndex                  regIndex,
+    StandardTypeDescriptorOrdinal   regType)
 {
     // TODO: check setIndex and regIndex
     RegisterReference* regRef = NULL;
-    switch (regType)
-    {
+    switch (regType) {
     case STANDARD_TYPE_INT_8:
         regRef = new RegisterRef<int8_t>(setIndex, regIndex, regType);
         break;
@@ -412,29 +427,36 @@ RegisterReference* CalcAssembler::createRegisterReference(RegisterReference::ERe
     return regRef;
 }
 
-void CalcAssembler::addRegister(RegisterReference::ERegisterSet setIndex,
-                                StandardTypeDescriptorOrdinal   regType,
-                                TupleStorageByteLength          cbStorage)
+void CalcAssembler::addRegister(
+    RegisterReference::ERegisterSet setIndex,
+    StandardTypeDescriptorOrdinal   regType,
+    TupleStorageByteLength          cbStorage)
 {
     assert(mCurrentRegSet < RegisterReference::ELastSet);
     bool isNullable = true;
 
     /* Add to tuple descriptor */
     StoredTypeDescriptor const &typeDesc = mTypeFactory.newDataType(regType);
-    getTupleDescriptor(mCurrentRegSet).push_back(TupleAttributeDescriptor(typeDesc, isNullable, cbStorage));
+    getTupleDescriptor(mCurrentRegSet).push_back(
+        TupleAttributeDescriptor(typeDesc, isNullable, cbStorage));
 
     /* Add register to calculator */
     TRegisterIndex regIndex = mCalc->mRegisterRef[setIndex].size();
-    RegisterReference* regRef = createRegisterReference(setIndex, regIndex, regType);
+    RegisterReference* regRef =
+        createRegisterReference(setIndex, regIndex, regType);
     mCalc->appendRegRef(regRef);
 }
 
-void CalcAssembler::addRegister(StandardTypeDescriptorOrdinal const regType, TupleStorageByteLength cbStorage)
+void CalcAssembler::addRegister(
+    StandardTypeDescriptorOrdinal const regType,
+    TupleStorageByteLength cbStorage)
 {
     addRegister(mCurrentRegSet, regType, cbStorage);
 }
 
-TupleData* CalcAssembler::createTupleData(TupleDescriptor const& tupleDesc, FixedBuffer** buf)
+TupleData* CalcAssembler::createTupleData(
+    TupleDescriptor const& tupleDesc,
+    FixedBuffer** buf)
 {
     assert(buf != NULL);
 
@@ -466,7 +488,9 @@ TupleData* CalcAssembler::createTupleData(TupleDescriptor const& tupleDesc, Fixe
 void CalcAssembler::allocateTuples()
 {
     /* Allocate memory for the tuples */
-    for (uint reg = RegisterReference::EFirstSet; reg < RegisterReference::ELastSet; reg++)
+    for (uint reg = RegisterReference::EFirstSet;
+         reg < RegisterReference::ELastSet;
+         reg++)
     {
         /* Verify that tuples have not already been allocated */
         assert(mRegisterTupleData[reg] == NULL);
@@ -477,8 +501,9 @@ void CalcAssembler::allocateTuples()
             reg == RegisterReference::ELocal)
         {
             /* Allocate tuple for literal/status/local registers */
-            mRegisterTupleData[reg] = createTupleData(mRegisterSetDescriptor[reg],
-                                                      &mBuffers[reg]);
+            mRegisterTupleData[reg] = createTupleData(
+                mRegisterSetDescriptor[reg],
+                &mBuffers[reg]);
         }
 
         /* Do not need to create input/output tuple data */
@@ -505,12 +530,15 @@ void CalcAssembler::bindRegisters()
     mCalc->mBuffers.push_back(mBuffers[reg]);
     mCalc->bind(reg, getTupleData(reg), getTupleDescriptor(reg));
 
-    /* Do not create input/output tuple data - we still need to bind the tuple descriptor */
+    /* Do not create input/output tuple data - we still need to bind
+       the tuple descriptor */
     reg = RegisterReference::EInput;
-    mCalc->mRegisterSetDescriptor[reg] = new TupleDescriptor(getTupleDescriptor(reg));
+    mCalc->mRegisterSetDescriptor[reg] =
+        new TupleDescriptor(getTupleDescriptor(reg));
 
     reg = RegisterReference::EOutput;
-    mCalc->mRegisterSetDescriptor[reg] = new TupleDescriptor(getTupleDescriptor(reg));
+    mCalc->mRegisterSetDescriptor[reg] =
+        new TupleDescriptor(getTupleDescriptor(reg));
 }
 
 void CalcAssembler::addInstruction(Instruction* inst)

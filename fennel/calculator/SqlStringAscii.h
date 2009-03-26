@@ -28,7 +28,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-//! Strcat. Ascii. SQL VARCHAR & CHAR. dest = dest || str. Returns new length in bytes.
+//! Strcat. Ascii. SQL VARCHAR & CHAR. dest = dest || str. Returns new
+//! length in bytes.
 //!
 //! If either string is variable width, the result is variable
 //! width: per SQL99 Part 2 Section 6.27 Syntax Rule 3.a.i.
@@ -50,11 +51,12 @@ FENNEL_BEGIN_NAMESPACE
 //
 //  TODO: Does not implement an implementation defined max length.
 int
-SqlStrCat_Ascii(char* dest,
-                int destStorageBytes,
-                int destLenBytes,
-                char const * const str,
-                int strLenBytes);
+SqlStrCat_Ascii(
+    char* dest,
+    int destStorageBytes,
+    int destLenBytes,
+    char const * const str,
+    int strLenBytes);
 
 //! StrCat. Ascii. SQL VARCHAR & CHAR. dest = str1 || str2.
 //! dest = str1 || str2
@@ -79,52 +81,58 @@ SqlStrCat_Ascii(char* dest,
 //
 //  TODO: Does not implement an implementation defined max length.
 int
-SqlStrCat_Ascii(char* dest,
-                int destStorageBytes,
-                char const * const str1,
-                int str1LenBytes,
-                char const * const str2,
-                int str2LenBytes);
+SqlStrCat_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes);
 
 //! StrCmp. Ascii. Fixed Width / SQL CHAR.
 //!
 //! Returns -1, 0, 1.
 int
-SqlStrCmp_Ascii_Fix(char const * const str1,
-                    int str1LenBytes,
-                    char const * const str2,
-                    int str2LenBytes,
-                    char trimchar = ' ');
+SqlStrCmp_Ascii_Fix(
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes,
+    char trimchar = ' ');
 
 //! StrCmp. Ascii. Variable Width / VARCHAR.
 //!
 //! Returns -1, 0, 1
 int
-SqlStrCmp_Ascii_Var(char const * const str1,
-                    int str1LenBytes,
-                    char const * const str2,
-                    int str2LenBytes);
+SqlStrCmp_Ascii_Var(
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes);
 
 //! StrLen in bits. Ascii. CHAR/VARCHAR.
 //!
 //! Parameter str is ignored for ascii strings.
 int
-SqlStrLenBit_Ascii(char const * const str,
-                   int strLenBytes);
+SqlStrLenBit_Ascii(
+    char const * const str,
+    int strLenBytes);
 
 //! StrLen in characters. Ascii. CHAR/VARCHAR.
 //!
 //! Parameter str is ignored for ascii strings.
 int
-SqlStrLenChar_Ascii(char const * const str,
-                    int strLenBytes);
+SqlStrLenChar_Ascii(
+    char const * const str,
+    int strLenBytes);
 
 //! StrLen in octets. Ascii. CHAR/VARCHAR.
 //!
 //! Parameter str is ignored for ascii strings.
 int
-SqlStrLenOct_Ascii(char const * const str,
-                   int strLenBytes);
+SqlStrLenOct_Ascii(
+    char const * const str,
+    int strLenBytes);
 
 //! Overlay. Ascii. CHAR/VARCHAR. Returns new length in bytes
 //!
@@ -135,71 +143,77 @@ SqlStrLenOct_Ascii(char const * const str,
 //! and concatenation results in VARCHAR if any of its operands are VARCHAR.
 //! startChar is 1-indexed, as per SQL standard.
 int
-SqlStrOverlay_Ascii(char* dest,
-                    int destStorageBytes,
-                    char const * const str,
-                    int strLenBytes,
-                    char const * const over,
-                    int overLenBytes,
-                    int startChar,
-                    int lengthChar,
-                    int lenSpecified);
+SqlStrOverlay_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    char const * const over,
+    int overLenBytes,
+    int startChar,
+    int lengthChar,
+    int lenSpecified);
 
 //! Position. Ascii. CHAR/VARHCAR. Returns 1-index string position.
 //!
 //! Returns 0 if not found. Returns 1 if find is zero length. See
 //! SQL99 Part 2 Section 6.17 General Rule 2.
 int
-SqlStrPos_Ascii(char const * const str,
-                int strLenBytes,
-                char const * const find,
-                int findLenBytes);
+SqlStrPos_Ascii(
+    char const * const str,
+    int strLenBytes,
+    char const * const find,
+    int findLenBytes);
 
 //! Substring by reference. Ascii. Returns VARCHAR. Accepts CHAR/VARCHAR.
 //! Sets dest to start of of substring. Returns length of substring.
 //!
 //! Note that subStart is 1-indexed, as per SQL99 spec.
 //! All substring parameters are handled as signed, as spec implies that they
-//! could be negative. Some combinations of subStart and subLenBytes may throw an
-//! exception.
+//! could be negative. Some combinations of subStart and subLenBytes
+//! may throw an exception.
 //! Results in a VARCHAR.
 //! See SQL99 Part 2 Section 6.18 General Rule 3.
 //! subStartChar is 1-indexed.
 int
-SqlStrSubStr_Ascii(char const ** dest,
-                   int destStorageBytes,
-                   char const * const str,
-                   int strLenBytes,
-                   int subStartChar,
-                   int subLenChar,
-                   int subLenBytesSpecified);
+SqlStrSubStr_Ascii(
+    char const ** dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    int subStartChar,
+    int subLenChar,
+    int subLenBytesSpecified);
 
 //! toLower. Ascii. CHAR/VARCHAR. Returns length.
 int
-SqlStrToLower_Ascii(char* dest,
-                    int destStorageBytes,
-                    char const * const src,
-                    int srcLenBytes);
+SqlStrToLower_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * const src,
+    int srcLenBytes);
 
 //! toUpper. Ascii. CHAR/VARCHAR. Returns length.
 int
-SqlStrToUpper_Ascii(char* dest,
-                    int destStorageBytes,
-                    char const * const src,
-                    int srcLenBytes);
+SqlStrToUpper_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * const src,
+    int srcLenBytes);
 
 //! Trim padding. Ascii. CHAR/VARCHAR. Returns new length.
 //!
 //! See SQL99 Part 2 Section 6.18 General Rule 8.
 //! Results in a VARCHAR.
 int
-SqlStrTrim_Ascii(char* dest,
-                 int destStorageBytes,
-                 char const * const str,
-                 int strLenBytes,
-                 int trimLeft,
-                 int trimRight,
-                 char trimchar = ' ');
+SqlStrTrim_Ascii(
+    char* dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes,
+    int trimLeft,
+    int trimRight,
+    char trimchar = ' ');
 
 //! Trim padding by reference. Ascii. CHAR/VARCHAR. Returns new length.
 //!
@@ -210,12 +224,13 @@ SqlStrTrim_Ascii(char* dest,
 //! of result not changing, and this instruction enforcing that
 //! invariant -- probably a bad practice anyway -- trouble could result.
 int
-SqlStrTrim_Ascii(char const ** result,
-                 char const * const str,
-                 int strLenBytes,
-                 int trimLeft,
-                 int trimRight,
-                 char trimchar = ' ');
+SqlStrTrim_Ascii(
+    char const ** result,
+    char const * const str,
+    int strLenBytes,
+    int trimLeft,
+    int trimRight,
+    char trimchar = ' ');
 
 
 FENNEL_END_NAMESPACE

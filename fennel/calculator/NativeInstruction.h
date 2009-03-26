@@ -49,19 +49,19 @@ template<typename T> class RegisterRef;
 // long long.
 //
 template <class T> class NativeInstruction_NotANativeType;
-template<> class NativeInstruction_NotANativeType<char> {} ;
-template<> class NativeInstruction_NotANativeType<short> {} ;
-template<> class NativeInstruction_NotANativeType<int> {} ;
-template<> class NativeInstruction_NotANativeType<long> {} ;
-template<> class NativeInstruction_NotANativeType<long long> {} ;
-template<> class NativeInstruction_NotANativeType<unsigned char> {} ;
-template<> class NativeInstruction_NotANativeType<unsigned short> {} ;
-template<> class NativeInstruction_NotANativeType<unsigned int> {} ;
-template<> class NativeInstruction_NotANativeType<unsigned long> {} ;
-template<> class NativeInstruction_NotANativeType<unsigned long long> {} ;
-template<> class NativeInstruction_NotANativeType<signed char> {} ;
-template<> class NativeInstruction_NotANativeType<float> {} ;
-template<> class NativeInstruction_NotANativeType<double> {} ;
+template<> class NativeInstruction_NotANativeType<char> {};
+template<> class NativeInstruction_NotANativeType<short> {};
+template<> class NativeInstruction_NotANativeType<int> {};
+template<> class NativeInstruction_NotANativeType<long> {};
+template<> class NativeInstruction_NotANativeType<long long> {};
+template<> class NativeInstruction_NotANativeType<unsigned char> {};
+template<> class NativeInstruction_NotANativeType<unsigned short> {};
+template<> class NativeInstruction_NotANativeType<unsigned int> {};
+template<> class NativeInstruction_NotANativeType<unsigned long> {};
+template<> class NativeInstruction_NotANativeType<unsigned long long> {};
+template<> class NativeInstruction_NotANativeType<signed char> {};
+template<> class NativeInstruction_NotANativeType<float> {};
+template<> class NativeInstruction_NotANativeType<double> {};
 
 
 template<typename TMPLT>
@@ -77,8 +77,9 @@ public:
         assert(StandardTypeDescriptor::isNative(nativeType));
     }
     explicit
-    NativeInstruction(RegisterRef<TMPLT>* op1,
-                      StandardTypeDescriptorOrdinal nativeType)
+    NativeInstruction(
+        RegisterRef<TMPLT>* op1,
+        StandardTypeDescriptorOrdinal nativeType)
         : mOp1(op1),
           mOp2(),
           mNativeType(nativeType)
@@ -86,18 +87,22 @@ public:
         assert(StandardTypeDescriptor::isNative(nativeType));
     }
     explicit
-    NativeInstruction(RegisterRef<TMPLT>* op1,
-                      RegisterRef<TMPLT>* op2,
-                      StandardTypeDescriptorOrdinal nativeType)
+    NativeInstruction(
+        RegisterRef<TMPLT>* op1,
+        RegisterRef<TMPLT>* op2,
+        StandardTypeDescriptorOrdinal nativeType)
         : mOp1(op1),
           mOp2(op2),
           mNativeType(nativeType)
     {
         assert(StandardTypeDescriptor::isNative(nativeType));
     }
+
     ~NativeInstruction() {
         // If (0) to reduce performance impact of template type checking
-        if (0) NativeInstruction_NotANativeType<TMPLT>();
+        if (0) {
+            NativeInstruction_NotANativeType<TMPLT>();
+        }
     }
 
 protected:
