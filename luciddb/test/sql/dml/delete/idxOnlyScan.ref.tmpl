@@ -983,7 +983,7 @@
 . . . . . . . . >     select count(distinct "kseq") from bench1m;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '    LcsIndexAggRel(groupCount=[1])'
 '      LcsIndexOnlyScanRel(table=[[LOCALDB, IDXONLYSCAN, BENCH1M]], index=[SYS$CONSTRAINT_INDEX$SYS$PRIMARY_KEY$BENCH1M], projection=[[0, 1, 2, 3]])'
 0: jdbc:luciddb:> explain plan for
@@ -1014,7 +1014,7 @@
 . . . . . . . . >     select count(distinct "k25") from bench1m;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '    LcsIndexAggRel(groupCount=[1])'
 '      LcsIndexOnlyScanRel(table=[[LOCALDB, IDXONLYSCAN, BENCH1M]], index=[IK25], projection=[[0, 1, 2, 3]])'
 0: jdbc:luciddb:> explain plan for
@@ -1028,7 +1028,7 @@
 . . . . . . . . >     select count(distinct "k100") from bench1m;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '    LcsIndexAggRel(groupCount=[1])'
 '      LcsIndexOnlyScanRel(table=[[LOCALDB, IDXONLYSCAN, BENCH1M]], index=[IK100], projection=[[0, 1, 2, 3]])'
 0: jdbc:luciddb:> explain plan for
@@ -1043,7 +1043,7 @@
 . . . . . . . . >     select count(distinct "k1k") from bench1m;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '    LcsIndexAggRel(groupCount=[1])'
 '      LcsIndexOnlyScanRel(table=[[LOCALDB, IDXONLYSCAN, BENCH1M]], index=[IK1K], projection=[[0, 1, 2, 3]])'
 0: jdbc:luciddb:> explain plan for
@@ -1057,7 +1057,7 @@
 . . . . . . . . >     select count(distinct "k10k") from bench1m;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '    LcsIndexAggRel(groupCount=[1])'
 '      LcsIndexOnlyScanRel(table=[[LOCALDB, IDXONLYSCAN, BENCH1M]], index=[IK10K], projection=[[0, 1, 2, 3]])'
 0: jdbc:luciddb:> explain plan for
@@ -1071,7 +1071,7 @@
 . . . . . . . . >     select count(distinct "k40k") from bench1m;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '    LcsIndexAggRel(groupCount=[1])'
 '      LcsIndexOnlyScanRel(table=[[LOCALDB, IDXONLYSCAN, BENCH1M]], index=[IK40K], projection=[[0, 1, 2, 3]])'
 0: jdbc:luciddb:> explain plan for
@@ -1085,7 +1085,7 @@
 . . . . . . . . >     select count(distinct "k100k") from bench1m;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '    LcsIndexAggRel(groupCount=[1])'
 '      LcsIndexOnlyScanRel(table=[[LOCALDB, IDXONLYSCAN, BENCH1M]], index=[IK100K], projection=[[0, 1, 2, 3]])'
 0: jdbc:luciddb:> explain plan for
@@ -1099,7 +1099,7 @@
 . . . . . . . . >     select count(distinct "k250k") from bench1m;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '    LcsIndexAggRel(groupCount=[1])'
 '      LcsIndexOnlyScanRel(table=[[LOCALDB, IDXONLYSCAN, BENCH1M]], index=[IK250K], projection=[[0, 1, 2, 3]])'
 0: jdbc:luciddb:> explain plan for
@@ -1113,7 +1113,7 @@
 . . . . . . . . >     select count(distinct "k500k") from bench1m;
 'column0'
 'FennelToIteratorConverter'
-'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT(0)])'
+'  FennelAggRel(groupCount=[0], EXPR$0=[COUNT($0)])'
 '    LcsIndexAggRel(groupCount=[1])'
 '      LcsIndexOnlyScanRel(table=[[LOCALDB, IDXONLYSCAN, BENCH1M]], index=[IK500K], projection=[[0, 1, 2, 3]])'
 0: jdbc:luciddb:> explain plan for
