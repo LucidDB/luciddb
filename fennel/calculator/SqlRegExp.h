@@ -63,11 +63,12 @@ FENNEL_BEGIN_NAMESPACE
 //!
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 void
-SqlLikePrep(char const * const pattern,
-            int patternLenBytes,
-            char const * const escape,  // may be null
-            int escapeLenBytes,
-            std::string& expPat)
+SqlLikePrep(
+    char const * const pattern,
+    int patternLenBytes,
+    char const * const escape,  // may be null
+    int escapeLenBytes,
+    std::string& expPat)
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
@@ -122,22 +123,26 @@ SqlLikePrep(char const * const pattern,
                    std::string::npos) {
                 if (expPat[pos] == escapeChar) {
                     if (pos + 1 >= expPat.size() ||
-                        (expPat[pos+1] != '_' && expPat[pos+1] != '%' &&
-                         expPat[pos+1] != escapeChar)) {
-                        // SQL99 Part 2 Section 8.5 General Rule 3.d.ii, I think.
+                        (expPat[pos + 1] != '_'
+                         && expPat[pos + 1] != '%'
+                         && expPat[pos + 1] != escapeChar))
+                    {
+                        // SQL99 Part 2 Section 8.5 General Rule
+                        // 3.d.ii, I think.
                         // Invalid Escape Sequence
                         throw "22025";
                     }
-                    if (escapeIsRegexpSpecial &&
-                        expPat[pos+1] == escapeChar) {
+                    if (escapeIsRegexpSpecial
+                        && expPat[pos + 1] == escapeChar)
+                    {
                         expPat[pos] = '\\'; // replace escape char
-                        pos+=2;             // move past subsequent escape char
+                        pos += 2;           // move past subsequent escape char
                     } else {
                         expPat.erase(pos, 1); // remove escape char
                         pos++;               // move past subsequent '_' or '%'
                     }
                 } else {
-                    switch(expPat[pos]) {
+                    switch (expPat[pos]) {
                     case '_':   // SQL '_' -> regex '.'
                         expPat.replace(pos, 1, ".");
                         pos++;
@@ -182,11 +187,12 @@ SqlLikePrep(char const * const pattern,
 //! helper to StrSimilarPrep
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 void
-SqlSimilarPrepEscapeProcessing(char const * const escape,
-                               int escapeLenBytes,
-                               char& escapeChar,
-                               std::string const & expPat,
-                               std::string& sqlSpecial)
+SqlSimilarPrepEscapeProcessing(
+    char const * const escape,
+    int escapeLenBytes,
+    char& escapeChar,
+    std::string const & expPat,
+    std::string& sqlSpecial)
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
         CodeUnitBytes == 1) {
@@ -211,8 +217,10 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
                 while ((pos = expPat.find(escapeChar, pos)) !=
                        std::string::npos) {
                     if (pos + 1 >= expPat.size() ||
-                        !strchr(SqlSimilarPrepGeneralRule3b,
-                                expPat[pos + 1])) {
+                        !strchr(
+                            SqlSimilarPrepGeneralRule3b,
+                            expPat[pos + 1]))
+                    {
                         // SQL2003 Part 2 Section 8.6 General Rule 3.b
                         // Data Exception - Invalid Use of Escape Character
                         throw "2200C";
@@ -247,10 +255,11 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
 // into corresponding regex strings.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 void
-SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
-                                     size_t& pos,
-                                     char const * const SqlSimilarPrepSyntaxRule6,
-                                     char escapeChar)
+SqlSimilarPrepRewriteCharEnumeration(
+    std::string& expPat,
+    size_t& pos,
+    char const * const SqlSimilarPrepSyntaxRule6,
+    char escapeChar)
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
         CodeUnitBytes == 1) {
@@ -344,7 +353,7 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
             { "[:whitespace:]", "\x20\xa0\x09\x0a\x0b\x0c\x0d\x85" },
             { "[:ALNUM:]", "[:alnum:]" },
             { "[:alnum:]", "[:alnum:]" },
-            { "", "" }
+            { "", "" },
         };
         int i, len;
         for (i = 0; *regCharSetIdent[i][0]; i++) {
@@ -366,9 +375,10 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
 // helper to StrSimilarPrep - changes SQL SIMILAR format to Boost::RegEx format
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 void
-SqlSimilarPrepReWrite(char escapeChar,
-                      std::string& expPat,
-                      std::string& sqlSpecial)
+SqlSimilarPrepReWrite(
+    char escapeChar,
+    std::string& expPat,
+    std::string& sqlSpecial)
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
         CodeUnitBytes == 1) {
@@ -393,8 +403,8 @@ SqlSimilarPrepReWrite(char escapeChar,
         size_t pos = 0;
         bool characterEnumeration = false; // e.g. [A-Z]
         while ((pos = expPat.find_first_of(sqlSpecial, pos)) !=
-               std::string::npos) {
-
+               std::string::npos)
+        {
             if (expPat[pos] == escapeChar) {
                 if (pos + 1 >= expPat.size()) {
                     // Escape char at end of string. See large note above
@@ -511,8 +521,9 @@ SqlSimilarPrepReWrite(char escapeChar,
 //!
 //! May throw "2200B" "22019", "2201B", or "2200C"
 //!
-//! See SQL99 Part 2 Section 8.6 and SQL2003 Part 2 Section 8.6. This routine adheres to SQL2003
-//! as published in the working draft, except as noted below:
+//! See SQL99 Part 2 Section 8.6 and SQL2003 Part 2 Section 8.6. This
+//! routine adheres to SQL2003 as published in the working draft,
+//! except as noted below:
 //!
 //! Does not support  General Rule 7L which
 //! allows the definition of both included and excluded characters
@@ -524,11 +535,12 @@ SqlSimilarPrepReWrite(char escapeChar,
 //!
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 void
-SqlSimilarPrep(char const * const pattern,
-               int patternLenBytes,
-               char const * const escape,  // may be null
-               int escapeLenBytes,
-               std::string& expPat)
+SqlSimilarPrep(
+    char const * const pattern,
+    int patternLenBytes,
+    char const * const escape,  // may be null
+    int escapeLenBytes,
+    std::string& expPat)
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
         CodeUnitBytes == 1) {
@@ -550,19 +562,17 @@ SqlSimilarPrep(char const * const pattern,
         std::string sqlSpecial("\\.$_%[]");
         char escapeChar;
 
-        SqlSimilarPrepEscapeProcessing
-            <CodeUnitBytes, MaxCodeUnitsPerCodePoint>
-            (escape,
-             escapeLenBytes,
-             escapeChar,
-             expPat,
-             sqlSpecial);
+        SqlSimilarPrepEscapeProcessing<CodeUnitBytes, MaxCodeUnitsPerCodePoint>(
+                escape,
+                escapeLenBytes,
+                escapeChar,
+                expPat,
+                sqlSpecial);
 
-        SqlSimilarPrepReWrite
-            <CodeUnitBytes, MaxCodeUnitsPerCodePoint>
-            (escapeChar,
-             expPat,
-             sqlSpecial);
+        SqlSimilarPrepReWrite<CodeUnitBytes, MaxCodeUnitsPerCodePoint>(
+            escapeChar,
+            expPat,
+            sqlSpecial);
 
     } else if (CodeUnitBytes == MaxCodeUnitsPerCodePoint &&
                CodeUnitBytes == 2) {
@@ -590,10 +600,11 @@ SqlSimilarPrep(char const * const pattern,
 //! TODO: to allow either/or regex and ICU regex to be passed in.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 bool
-SqlRegExp(char const * const matchValue,
-          int matchValueLenBytes,
-          int patternLenBytes,
-          const boost::regex& exp)
+SqlRegExp(
+    char const * const matchValue,
+    int matchValueLenBytes,
+    int patternLenBytes,
+    const boost::regex& exp)
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
@@ -614,13 +625,13 @@ SqlRegExp(char const * const matchValue,
 
             bool result;
             try {
-                result = boost::regex_match(matchValue,
-                                            matchValue + matchValueLenBytes,
-                                            exp);
-            }
-            // TODO: Make this a catch bad_expression or similar
-            // TODO: and rethrow a SQL error code.
-            catch (...) {
+                result = boost::regex_match(
+                    matchValue,
+                    matchValue + matchValueLenBytes,
+                    exp);
+            } catch (...) {
+                // TODO: Make this a catch bad_expression or similar
+                // TODO: and rethrow a SQL error code.
                 throw std::logic_error("boost::regex error in SqlLike");
             }
             return result;

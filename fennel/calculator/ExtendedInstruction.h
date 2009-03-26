@@ -69,7 +69,11 @@ public:
     /**
      * Returns the name of this instruction.
      */
-    string getName() { return _name; }
+    string getName()
+    {
+        return _name;
+    }
+
     /**
      * Returns the parameter types of this instruction.
      */
@@ -84,7 +88,11 @@ public:
      * instructions in an ExtendedInstructionTable, and in assembly language
      * instructions such as "CALL 'substr(ptr,ptr,int,ptr) &0, &1, &2, &3".
      */
-    string getSignature() const { return _signature; }
+    string getSignature() const
+    {
+        return _signature;
+    }
+
     /**
      * Creates an instruction of this type which references a particular set of
      * registers. The registers supplied must be the same number and type as
@@ -171,12 +179,14 @@ protected:
 public:
     explicit
     ExtendedInstruction()
-    { }
+    {}
+
     // implement Instruction
     const char *longName() const
     {
         return const_cast<ExtendedInstructionDef &>(getDef()).getName().c_str();
     }
+
     const char *shortName() const
     {
         return const_cast<ExtendedInstructionDef &>(getDef()).getName().c_str();
@@ -216,7 +226,7 @@ public:
     ExtendedInstruction0(DefT &def)
         : ExtendedInstruction(),
           _def(def)
-    { }
+    {}
 
     static ExtendedInstruction0 *create(
         DefT &def,
@@ -279,7 +289,7 @@ public:
         : ExtendedInstruction(),
           _def(def),
           _ctx(0)
-    { }
+    {}
 
     static ExtendedInstruction0Context *create(
         DefT &def,
@@ -303,8 +313,8 @@ public:
             // TODO: Remove this const cast. Ugly, but exec is defined as const
             // TODO: in virtual above.
             (*_def._functor)(
-                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(_ctx));
-
+                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
+                    _ctx));
         } catch (char const * str) {
             throw CalcMessage(str, pc - 1);
         }
@@ -349,7 +359,7 @@ public:
         RegisterRef<T0>* const reg0)
         : _def(def),
           _reg0(reg0)
-    { }
+    {}
 
     static ExtendedInstruction1<T0> *create(
         DefT &def,
@@ -398,10 +408,12 @@ public:
     typedef void (*Functor)(
         boost::scoped_ptr<ExtendedInstructionContext>& ctx,
         RegisterRef<T0>* reg0);
+
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction1Context<T0> > DefT;
+    typedef FunctorExtendedInstructionDef<ExtendedInstruction1Context<T0> >
+        DefT;
 
 private:
     DefT _def;
@@ -423,7 +435,7 @@ public:
         : _def(def),
           _ctx(0),
           _reg0(reg0)
-    { }
+    {}
 
     static ExtendedInstruction1Context<T0> *create(
         DefT &def,
@@ -451,7 +463,8 @@ public:
             // TODO: Remove this const cast. Ugly, but exec is defined as const
             // TODO: in virtual above.
             (*_def._functor)(
-                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(_ctx),
+                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
+                    _ctx),
                 _reg0);
         } catch (char const * str) {
             throw CalcMessage(str, pc - 1);
@@ -472,8 +485,9 @@ public:
      * example, if T0 is 'int' and T1 is 'double',
      * then we will require a function such as
      *
-     * <pre>void execute(RegisterRef<int>* reg0,
-     *                   RegisterRef<double>* reg1)
+     * <pre>void execute(
+     *     RegisterRef<int>* reg0,
+     *     RegisterRef<double>* reg1)
      * </pre>
      */
     typedef void (*Functor)(
@@ -505,7 +519,7 @@ public:
         : _def(def),
           _reg0(reg0),
           _reg1(reg1)
-    { }
+    {}
 
     static ExtendedInstruction2<T0,T1> *create(
         DefT &def,
@@ -552,18 +566,21 @@ public:
      * example, if T0 is 'int' and T1 is 'double',
      * then we will require a function such as
      *
-     * <pre>void execute(RegisterRef<int>* reg0,
-     *                   RegisterRef<double>* reg1)
+     * <pre>void execute(
+     *     RegisterRef<int>* reg0,
+     *     RegisterRef<double>* reg1)
      * </pre>
      */
     typedef void (*Functor)(
         boost::scoped_ptr<ExtendedInstructionContext>& ctx,
         RegisterRef<T0>* const reg0,
         RegisterRef<T1>* const reg1);
+
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction2Context<T0,T1> > DefT;
+    typedef FunctorExtendedInstructionDef<ExtendedInstruction2Context<T0,T1> >
+        DefT;
 
 private:
     DefT _def;
@@ -588,7 +605,7 @@ public:
           _ctx(0),
           _reg0(reg0),
           _reg1(reg1)
-    { }
+    {}
 
     static ExtendedInstruction2Context<T0,T1> *create(
         DefT &def,
@@ -618,7 +635,8 @@ public:
             // TODO: Remove this const cast. Ugly, but exec is defined as const
             // TODO: in virtual above.
             (*_def._functor)(
-                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(_ctx),
+                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
+                    _ctx),
                 _reg0,
                 _reg1);
         } catch (char const * str) {
@@ -678,7 +696,7 @@ public:
           _reg0(reg0),
           _reg1(reg1),
           _reg2(reg2)
-    { }
+    {}
 
     static ExtendedInstruction3<T0,T1,T2> *create(
         DefT &def,
@@ -742,7 +760,8 @@ public:
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction3Context<T0,T1,T2> > DefT;
+    typedef FunctorExtendedInstructionDef<ExtendedInstruction3Context<T0,T1,T2> >
+        DefT;
 
 private:
     DefT _def;
@@ -770,7 +789,7 @@ public:
           _reg0(reg0),
           _reg1(reg1),
           _reg2(reg2)
-    { }
+    {}
 
     static ExtendedInstruction3Context<T0,T1,T2> *create(
         DefT &def,
@@ -803,7 +822,8 @@ public:
             // TODO: Remove this const cast. Ugly, but exec is defined as const
             // TODO: in virtual above.
             (*_def._functor)(
-                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(_ctx),
+                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
+                    _ctx),
                 _reg0, _reg1, _reg2);
         } catch (char const * str) {
             throw CalcMessage(str, pc - 1);
@@ -838,7 +858,8 @@ public:
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction4<T0,T1,T2,T3> > DefT;
+    typedef FunctorExtendedInstructionDef<
+        ExtendedInstruction4<T0,T1,T2,T3> > DefT;
 
 private:
     DefT _def;
@@ -867,7 +888,7 @@ public:
           _reg1(reg1),
           _reg2(reg2),
           _reg3(reg3)
-    { }
+    {}
 
     static ExtendedInstruction4<T0,T1,T2,T3> *create(
         DefT &def,
@@ -931,10 +952,12 @@ public:
         RegisterRef<T1>* const reg1,
         RegisterRef<T2>* const reg2,
         RegisterRef<T3>* const reg3);
+
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction4Context<T0,T1,T2,T3> > DefT;
+    typedef FunctorExtendedInstructionDef<
+        ExtendedInstruction4Context<T0,T1,T2,T3> > DefT;
 
 private:
     DefT _def;
@@ -965,7 +988,7 @@ public:
           _reg1(reg1),
           _reg2(reg2),
           _reg3(reg3)
-    { }
+    {}
 
     static ExtendedInstruction4Context<T0,T1,T2,T3> *create(
         DefT &def,
@@ -1001,7 +1024,8 @@ public:
             // TODO: Remove this const cast. Ugly, but exec is defined as const
             // TODO: in virtual above.
             (*_def._functor)(
-                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(_ctx),
+                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
+                    _ctx),
                 _reg0, _reg1, _reg2, _reg3);
         } catch (char const * str) {
             throw CalcMessage(str, pc - 1);
@@ -1028,15 +1052,18 @@ public:
      *     RegisterRef<int> &reg2)</pre>
      *
      */
-    typedef void (*Functor)(RegisterRef<T0>* const reg0,
-                            RegisterRef<T1>* const reg1,
-                            RegisterRef<T2>* const reg2,
-                            RegisterRef<T3>* const reg3,
-                            RegisterRef<T4>* const reg4);
+    typedef void (*Functor)(
+        RegisterRef<T0>* const reg0,
+        RegisterRef<T1>* const reg1,
+        RegisterRef<T2>* const reg2,
+        RegisterRef<T3>* const reg3,
+        RegisterRef<T4>* const reg4);
+
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction5<T0,T1,T2,T3,T4> > DefT;
+    typedef FunctorExtendedInstructionDef<
+        ExtendedInstruction5<T0,T1,T2,T3,T4> > DefT;
 
 private:
     DefT _def;
@@ -1068,7 +1095,7 @@ public:
           _reg2(reg2),
           _reg3(reg3),
           _reg4(reg4)
-    { }
+    {}
 
     static ExtendedInstruction5<T0,T1,T2,T3,T4> *create(
         DefT &def,
@@ -1130,16 +1157,19 @@ public:
      *     RegisterRef<int> &reg2)</pre>
      *
      */
-    typedef void (*Functor)(boost::scoped_ptr<ExtendedInstructionContext>& ctx,
-                            RegisterRef<T0>* const reg0,
-                            RegisterRef<T1>* const reg1,
-                            RegisterRef<T2>* const reg2,
-                            RegisterRef<T3>* const reg3,
-                            RegisterRef<T4>* const reg4);
+    typedef void (*Functor)(
+        boost::scoped_ptr<ExtendedInstructionContext>& ctx,
+        RegisterRef<T0>* const reg0,
+        RegisterRef<T1>* const reg1,
+        RegisterRef<T2>* const reg2,
+        RegisterRef<T3>* const reg3,
+        RegisterRef<T4>* const reg4);
+
     /**
      * The specific type of the definition of this instruction.
      */
-    typedef FunctorExtendedInstructionDef<ExtendedInstruction5Context<T0,T1,T2,T3,T4> > DefT;
+    typedef FunctorExtendedInstructionDef<
+        ExtendedInstruction5Context<T0,T1,T2,T3,T4> > DefT;
 
 private:
     DefT _def;
@@ -1173,7 +1203,7 @@ public:
           _reg2(reg2),
           _reg3(reg3),
           _reg4(reg4)
-    { }
+    {}
 
     static ExtendedInstruction5Context<T0,T1,T2,T3,T4> *create(
         DefT &def,
@@ -1212,7 +1242,8 @@ public:
             // TODO: Remove this const cast. Ugly, but exec is defined as const
             // TODO: in virtual above.
             (*_def._functor)(
-                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(_ctx),
+                const_cast<boost::scoped_ptr<ExtendedInstructionContext>& >(
+                    _ctx),
                 _reg0, _reg1, _reg2, _reg3, _reg4);
         } catch (char const * str) {
             throw CalcMessage(str, pc - 1);

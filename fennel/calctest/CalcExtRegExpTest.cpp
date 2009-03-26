@@ -47,41 +47,55 @@ class CalcExtRegExpTest : virtual public TestBase, public TraceSource
     void testCalcExtRegExpSimilarAVarChar();
     void testCalcExtRegExpSimilarAChar();
 
-    void likeHelper(TupleDataWithBuffer const & outTuple,
-                    bool const * exp,
-                    int validoutputs,
-                    int nulloutputs,
-                    deque<CalcMessage> dq);
+    void likeHelper(
+        TupleDataWithBuffer const & outTuple,
+        bool const * exp,
+        int validoutputs,
+        int nulloutputs,
+        deque<CalcMessage> dq);
 
-    void similarHelper(TupleDataWithBuffer const & outTuple,
-                       bool const * exp,
-                       int validoutputs,
-                       int nulloutputs,
-                       deque<CalcMessage> dq);
+    void similarHelper(
+        TupleDataWithBuffer const & outTuple,
+        bool const * exp,
+        int validoutputs,
+        int nulloutputs,
+        deque<CalcMessage> dq);
 
-    int cmpTupStr(TupleDatum const & tup,
-                  char const * const str);
-    int cmpTupInt(TupleDatum const & tup,
-                  int val);
-    int cmpTupBool(TupleDatum const & tup,
-                   bool val);
+    int cmpTupStr(
+        TupleDatum const & tup,
+        char const * const str);
+
+    int cmpTupInt(
+        TupleDatum const & tup,
+        int val);
+
+    int cmpTupBool(
+        TupleDatum const & tup,
+        bool val);
+
     int cmpTupNull(TupleDatum const & tup);
-    void printOutput(TupleData const & tup,
-                     Calculator const & calc);
-    void refLocalOutput(ostringstream& pg,
-                        int count);
+
+    void printOutput(
+        TupleData const & tup,
+        Calculator const & calc);
+
+    void refLocalOutput(
+        ostringstream& pg,
+        int count);
+
     static const char* truncErr;
     static const char* substrErr;
 
 public:
     explicit CalcExtRegExpTest()
-        : TraceSource(shared_from_this(),"CalcExtRegExpTest")
+        : TraceSource(shared_from_this(), "CalcExtRegExpTest")
     {
         srand(time(NULL));
         CalcInit::instance();
         FENNEL_UNIT_TEST_CASE(CalcExtRegExpTest, testCalcExtRegExpLikeAVarChar);
         FENNEL_UNIT_TEST_CASE(CalcExtRegExpTest, testCalcExtRegExpLikeAChar);
-        FENNEL_UNIT_TEST_CASE(CalcExtRegExpTest, testCalcExtRegExpSimilarAVarChar);
+        FENNEL_UNIT_TEST_CASE(
+            CalcExtRegExpTest, testCalcExtRegExpSimilarAVarChar);
         FENNEL_UNIT_TEST_CASE(CalcExtRegExpTest, testCalcExtRegExpSimilarAChar);
     }
 
@@ -97,28 +111,31 @@ const char *
 CalcExtRegExpTest::substrErr = "22011";
 
 int
-CalcExtRegExpTest::cmpTupStr(TupleDatum const & tup,
-                             char const * const str)
+CalcExtRegExpTest::cmpTupStr(
+    TupleDatum const & tup,
+    char const * const str)
 {
     int len = strlen(str);
     BOOST_CHECK_EQUAL(len, tup.cbData);
-    return strncmp(reinterpret_cast<char *>
-                   (const_cast<PBuffer>(tup.pData)),
-                   str,
-                   len);
+    return strncmp(
+        reinterpret_cast<char *>(const_cast<PBuffer>(tup.pData)),
+        str,
+        len);
 }
 
 int
-CalcExtRegExpTest::cmpTupInt(TupleDatum const & tup,
-                             int val)
+CalcExtRegExpTest::cmpTupInt(
+    TupleDatum const & tup,
+    int val)
 {
     return *(reinterpret_cast<int*>
              (const_cast<PBuffer>(tup.pData))) - val;
 }
 
 int
-CalcExtRegExpTest::cmpTupBool(TupleDatum const & tup,
-                              bool val)
+CalcExtRegExpTest::cmpTupBool(
+    TupleDatum const & tup,
+    bool val)
 {
     return *(reinterpret_cast<bool*>
              (const_cast<PBuffer>(tup.pData))) != val;
@@ -127,14 +144,17 @@ CalcExtRegExpTest::cmpTupBool(TupleDatum const & tup,
 int
 CalcExtRegExpTest::cmpTupNull(TupleDatum const & tup)
 {
-    if ((const_cast<PBuffer>(tup.pData)) == NULL) return 1;
+    if ((const_cast<PBuffer>(tup.pData)) == NULL) {
+        return 1;
+    }
     return 0;
 }
 
 // for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
 void
-CalcExtRegExpTest::printOutput(TupleData const & tup,
-                               Calculator const & calc)
+CalcExtRegExpTest::printOutput(
+    TupleData const & tup,
+    Calculator const & calc)
 {
 #if 0
     TuplePrinter tuplePrinter;
@@ -145,8 +165,9 @@ CalcExtRegExpTest::printOutput(TupleData const & tup,
 
 // copy-by-reference locals into identical output register
 void
-CalcExtRegExpTest::refLocalOutput(ostringstream& pg,
-                                  int count)
+CalcExtRegExpTest::refLocalOutput(
+    ostringstream& pg,
+    int count)
 {
     int i;
 
@@ -156,11 +177,12 @@ CalcExtRegExpTest::refLocalOutput(ostringstream& pg,
 }
 
 void
-CalcExtRegExpTest::likeHelper(TupleDataWithBuffer const & outTuple,
-                              bool const * exp,
-                              int validoutputs,
-                              int nulloutputs,
-                              deque<CalcMessage> dq)
+CalcExtRegExpTest::likeHelper(
+    TupleDataWithBuffer const & outTuple,
+    bool const * exp,
+    int validoutputs,
+    int nulloutputs,
+    deque<CalcMessage> dq)
 {
     int i;
     deque<CalcMessage>::iterator iter = dq.begin();
@@ -286,8 +308,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAVarChar()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_FAIL("assembler error");
@@ -300,15 +321,17 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAVarChar()
     calc.exec();
     printOutput(outTuple, calc);
 
-    likeHelper(outTuple, exp, validoutputs, nulloutputs,
-               calc.mWarnings);
+    likeHelper(
+        outTuple, exp, validoutputs, nulloutputs,
+        calc.mWarnings);
 
 
     // run twice to check that cached regex is, at least at first
     // glance, working correctly.
     calc.exec();
-    likeHelper(outTuple, exp, validoutputs, nulloutputs,
-               calc.mWarnings);
+    likeHelper(
+        outTuple, exp, validoutputs, nulloutputs,
+        calc.mWarnings);
 }
 
 void
@@ -350,8 +373,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAChar()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_FAIL("assembler error");
@@ -388,11 +410,12 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAChar()
 }
 
 void
-CalcExtRegExpTest::similarHelper(TupleDataWithBuffer const & outTuple,
-                                 bool const * exp,
-                                 int validoutputs,
-                                 int nulloutputs,
-                                 deque<CalcMessage> dq)
+CalcExtRegExpTest::similarHelper(
+    TupleDataWithBuffer const & outTuple,
+    bool const * exp,
+    int validoutputs,
+    int nulloutputs,
+    deque<CalcMessage> dq)
 {
     int i;
     deque<CalcMessage>::iterator iter = dq.begin();
@@ -541,8 +564,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAVarChar()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_FAIL("assembler error");
@@ -555,15 +577,17 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAVarChar()
     calc.exec();
     printOutput(outTuple, calc);
 
-    similarHelper(outTuple, exp, validoutputs, nulloutputs,
-                  calc.mWarnings);
+    similarHelper(
+        outTuple, exp, validoutputs, nulloutputs,
+        calc.mWarnings);
 
 
     // run twice to check that cached regex is, at least at first
     // glance, working correctly.
     calc.exec();
-    similarHelper(outTuple, exp, validoutputs, nulloutputs,
-                  calc.mWarnings);
+    similarHelper(
+        outTuple, exp, validoutputs, nulloutputs,
+        calc.mWarnings);
 }
 
 void
@@ -605,8 +629,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAChar()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_FAIL("assembler error");

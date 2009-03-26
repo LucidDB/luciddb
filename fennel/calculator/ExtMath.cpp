@@ -32,8 +32,9 @@ FENNEL_BEGIN_NAMESPACE
 
 
 void
-mathLn(RegisterRef<double>* result,
-       RegisterRef<double>* x)
+mathLn(
+    RegisterRef<double>* result,
+    RegisterRef<double>* x)
 {
     assert(StandardTypeDescriptor::isApprox(x->type()));
 
@@ -43,14 +44,15 @@ mathLn(RegisterRef<double>* result,
         result->toNull();
         // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
         throw "22023";
-    }else {
+    } else {
         result->value(log(x->value())); //using the c math library log
     }
 }
 
 void
-mathLn(RegisterRef<double>* result,
-       RegisterRef<long long>* x)
+mathLn(
+    RegisterRef<double>* result,
+    RegisterRef<long long>* x)
 {
     assert(StandardTypeDescriptor::isExact(x->type()));
 
@@ -60,14 +62,15 @@ mathLn(RegisterRef<double>* result,
         result->toNull();
         // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
         throw "22023";
-    }else {
+    } else {
         result->value(log(double(x->value()))); //using the c math library log
     }
 }
 
 void
-mathLog10(RegisterRef<double>* result,
-      RegisterRef<double>* x)
+mathLog10(
+    RegisterRef<double>* result,
+    RegisterRef<double>* x)
 {
     assert(StandardTypeDescriptor::isApprox(x->type()));
 
@@ -83,8 +86,9 @@ mathLog10(RegisterRef<double>* result,
 }
 
 void
-mathLog10(RegisterRef<double>* result,
-      RegisterRef<long long>* x)
+mathLog10(
+    RegisterRef<double>* result,
+    RegisterRef<long long>* x)
 {
     assert(StandardTypeDescriptor::isExact(x->type()));
 
@@ -100,7 +104,8 @@ mathLog10(RegisterRef<double>* result,
 }
 
 void
-mathAbs(RegisterRef<double>* result,
+mathAbs(
+    RegisterRef<double>* result,
     RegisterRef<double>* x)
 {
     assert(StandardTypeDescriptor::isApprox(x->type()));
@@ -113,8 +118,9 @@ mathAbs(RegisterRef<double>* result,
 }
 
 void
-mathAbs(RegisterRef<long long>* result,
-        RegisterRef<long long>* x)
+mathAbs(
+    RegisterRef<long long>* result,
+    RegisterRef<long long>* x)
 {
     assert(x->type() == STANDARD_TYPE_INT_64);
 
@@ -129,7 +135,8 @@ mathAbs(RegisterRef<long long>* result,
 }
 
 void
-mathPow(RegisterRef<double>* result,
+mathPow(
+    RegisterRef<double>* result,
     RegisterRef<double>* x,
     RegisterRef<double>* y)
 {
@@ -140,12 +147,13 @@ mathPow(RegisterRef<double>* result,
         result->toNull();
     } else {
         double r = pow(x->value(), y->value());
-        if ( (x->value() == 0.0 && y->value() < 0.0) ||
-            (x->value() <  0.0 && isnan(r))
-            ) {
-            //we should get here when x^y have
-            //x=0 AND y < 0 OR
-            //x<0 AND y is an non integer. If this is the case then the result is NaN
+        if ((x->value() == 0.0 && y->value() < 0.0) ||
+            (x->value() <  0.0 && isnan(r)))
+        {
+            // we should get here when x^y have
+            // x=0 AND y < 0 OR
+            // x<0 AND y is an non integer.
+            // If this is the case then the result is NaN
 
             result->toNull();
             // SQL99 Part 2 Section 22.1 22-023 "invalid parameter value"
@@ -196,33 +204,40 @@ ExtMathRegister(ExtendedInstructionTable* eit)
     vector<StandardTypeDescriptorOrdinal> params_3I(params_2I);
     params_3I.push_back(STANDARD_TYPE_INT_64);
 
-    eit->add("LN", params_2D,
-             (ExtendedInstruction2<double, double>*) NULL,
-             &mathLn);
+    eit->add(
+        "LN", params_2D,
+        (ExtendedInstruction2<double, double>*) NULL,
+        &mathLn);
 
-    eit->add("LN", params_DI,
-             (ExtendedInstruction2<double, long long>*) NULL,
-             &mathLn);
+    eit->add(
+        "LN", params_DI,
+        (ExtendedInstruction2<double, long long>*) NULL,
+        &mathLn);
 
-    eit->add("LOG10", params_2D,
-             (ExtendedInstruction2<double, double>*) NULL,
-             &mathLog10);
+    eit->add(
+        "LOG10", params_2D,
+        (ExtendedInstruction2<double, double>*) NULL,
+        &mathLog10);
 
-    eit->add("LOG10", params_DI,
-             (ExtendedInstruction2<double, long long>*) NULL,
-             &mathLog10);
+    eit->add(
+        "LOG10", params_DI,
+        (ExtendedInstruction2<double, long long>*) NULL,
+        &mathLog10);
 
-    eit->add("ABS", params_2D,
-             (ExtendedInstruction2<double, double>*) NULL,
-             &mathAbs);
+    eit->add(
+        "ABS", params_2D,
+        (ExtendedInstruction2<double, double>*) NULL,
+        &mathAbs);
 
-    eit->add("ABS", params_2I,
-             (ExtendedInstruction2<long long, long long>*) NULL,
-             &mathAbs);
+    eit->add(
+        "ABS", params_2I,
+        (ExtendedInstruction2<long long, long long>*) NULL,
+        &mathAbs);
 
-    eit->add("POW", params_3D,
-             (ExtendedInstruction3<double, double, double>*) NULL,
-             &mathPow);
+    eit->add(
+        "POW", params_3D,
+        (ExtendedInstruction3<double, double, double>*) NULL,
+        &mathPow);
 
 }
 

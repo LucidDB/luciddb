@@ -32,16 +32,20 @@ class PointerIntegralInstruction : public PointerInstruction
 {
 public:
     explicit
-    PointerIntegralInstruction(RegisterRef<PTR_TYPE>* result,
-                               RegisterRef<PointerSizeT>* op1,
-                               StandardTypeDescriptorOrdinal pointerType)
+    PointerIntegralInstruction(
+        RegisterRef<PTR_TYPE>* result,
+        RegisterRef<PointerSizeT>* op1,
+        StandardTypeDescriptorOrdinal pointerType)
         : mResult(result),
           mOp1(op1),
           mPointerType(pointerType)
-    { }
+    {}
+
     ~PointerIntegralInstruction() {
         // If (0) to reduce performance impact of template type checking
-        if (0) PointerInstruction_NotAPointerType<PTR_TYPE>();
+        if (0) {
+            PointerInstruction_NotAPointerType<PTR_TYPE>();
+        }
     }
 
 protected:
@@ -57,13 +61,15 @@ class PointerPutSize : public PointerIntegralInstruction<PTR_TYPE>
 {
 public:
     explicit
-    PointerPutSize(RegisterRef<PTR_TYPE>* result,
-                   RegisterRef<PointerSizeT>* op1,
-                   StandardTypeDescriptorOrdinal pointerType)
+    PointerPutSize(
+        RegisterRef<PTR_TYPE>* result,
+        RegisterRef<PointerSizeT>* op1,
+        StandardTypeDescriptorOrdinal pointerType)
         : PointerIntegralInstruction<PTR_TYPE>(result, op1, pointerType)
-    { }
+    {}
+
     virtual
-    ~PointerPutSize() { }
+    ~PointerPutSize() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -78,14 +84,27 @@ public:
         }
     }
 
-    static const char * longName() { return "PointerPutSize"; }
-    static const char * shortName() { return "PUTS"; }
-    static int numArgs() { return 2; }
+    static const char * longName()
+    {
+        return "PointerPutSize";
+    }
+
+    static const char * shortName()
+    {
+        return "PUTS";
+    }
+
+    static int numArgs()
+    {
+        return 2;
+    }
+
     void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
-        describeHelper(out, values, longName(), shortName(),
-                       PointerIntegralInstruction<PTR_TYPE>::mResult,
-                       PointerIntegralInstruction<PTR_TYPE>::mOp1, &mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            PointerIntegralInstruction<PTR_TYPE>::mResult,
+            PointerIntegralInstruction<PTR_TYPE>::mOp1, &mOp2);
     }
 
     static InstructionSignature
@@ -102,9 +121,10 @@ public:
         assert(sig.size() == numArgs());
         assert((sig[1])->type() == POINTERSIZET_STANDARD_TYPE);
         return new
-            PointerPutSize(static_cast<RegisterRef<PTR_TYPE>*> (sig[0]),
-                           static_cast<RegisterRef<PointerSizeT>*> (sig[1]),
-                           (sig[0])->type());
+            PointerPutSize(
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[0]),
+                static_cast<RegisterRef<PointerSizeT>*> (sig[1]),
+                (sig[0])->type());
     }
 };
 
@@ -122,7 +142,7 @@ class PointerIntegralInstructionRegister : InstructionRegister {
             StandardTypeDescriptorOrdinal type = t[i];
             // Type <char> below is a placeholder and is ignored.
             InstructionSignature sig = INSTCLASS2<char>::signature(type);
-            switch(type) {
+            switch (type) {
                 // Array_Text, below, does not allow assembly programs
                 // of to have say, pointer to int16s, but the language
                 // does not have pointers defined other than
@@ -138,7 +158,6 @@ class PointerIntegralInstructionRegister : InstructionRegister {
 public:
     static void
     registerInstructions() {
-
         vector<StandardTypeDescriptorOrdinal> t;
         // isArray, below, does not allow assembly programs of to
         // have say, pointer to int16s, but the language does not have

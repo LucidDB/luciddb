@@ -39,21 +39,28 @@ public:
     explicit
     InstructionSignature(string const & name);
     explicit
-    InstructionSignature(string const & name,
-                         vector<StandardTypeDescriptorOrdinal>
-                         const &operands);
+    InstructionSignature(
+        string const & name,
+        vector<StandardTypeDescriptorOrdinal>
+        const &operands);
+
     explicit
-    InstructionSignature(string const & name,
-                         vector<RegisterReference*> const & operands);
+    InstructionSignature(
+        string const & name,
+        vector<RegisterReference*> const & operands);
+
     explicit
-    InstructionSignature(string const & name,
-                         TProgramCounter pc,
-                         vector<StandardTypeDescriptorOrdinal>
-                         const &operands);
+    InstructionSignature(
+        string const & name,
+        TProgramCounter pc,
+        vector<StandardTypeDescriptorOrdinal>
+        const &operands);
+
     explicit
-    InstructionSignature(string const & name,
-                         TProgramCounter pc,
-                         vector<RegisterReference*> const & operands);
+    InstructionSignature(
+        string const & name,
+        TProgramCounter pc,
+        vector<RegisterReference*> const & operands);
 
     // TODO: convert this to an explicit conversion
     string compute() const;

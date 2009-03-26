@@ -40,7 +40,8 @@ struct CalcExecStreamParams : public ConduitExecStreamParams
     std::string program;
     bool isFilter;
     bool stopOnCalcError;
-    CalcExecStreamParams() :program(), isFilter(false), stopOnCalcError(true) {}
+    CalcExecStreamParams()
+        : program(), isFilter(false), stopOnCalcError(true) {}
 };
 
 /**

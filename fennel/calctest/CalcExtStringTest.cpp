@@ -59,15 +59,19 @@ class CalcExtStringTest : virtual public TestBase, public TraceSource
     void testCalcExtStringToUpper();
     void testCalcExtStringTrim();
 
-    int cmpTupStr(TupleDatum const & tup,
-                  char const * const str);
-    int cmpTupInt(TupleDatum const & tup,
-                  int val);
+    int cmpTupStr(
+        TupleDatum const & tup,
+        char const * const str);
+    int cmpTupInt(
+        TupleDatum const & tup,
+        int val);
     int cmpTupNull(TupleDatum const & tup);
-    void printOutput(TupleData const & tup,
-                     Calculator const & calc);
-    void refLocalOutput(ostringstream& pg,
-                        int count);
+    void printOutput(
+        TupleData const & tup,
+        Calculator const & calc);
+    void refLocalOutput(
+        ostringstream& pg,
+        int count);
     static const char* truncErr;
     static const char* substrErr;
 
@@ -93,7 +97,6 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringToLower);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringToUpper);
         FENNEL_UNIT_TEST_CASE(CalcExtStringTest, testCalcExtStringTrim);
-
     }
 
     virtual ~CalcExtStringTest()
@@ -108,36 +111,42 @@ const char *
 CalcExtStringTest::substrErr = "22011";
 
 int
-CalcExtStringTest::cmpTupStr(TupleDatum const & tup,
-                             char const * const str)
+CalcExtStringTest::cmpTupStr(
+    TupleDatum const & tup,
+    char const * const str)
 {
     int len = strlen(str);
     BOOST_CHECK_EQUAL(len, tup.cbData);
-    return strncmp(reinterpret_cast<char *>
-                   (const_cast<PBuffer>(tup.pData)),
-                   str,
-                   len);
+    return strncmp(
+        reinterpret_cast<char *>(const_cast<PBuffer>(tup.pData)),
+        str,
+        len);
 }
 
 int
-CalcExtStringTest::cmpTupInt(TupleDatum const & tup,
-                             int val)
+CalcExtStringTest::cmpTupInt(
+    TupleDatum const & tup,
+    int val)
 {
-    return *(reinterpret_cast<int*>
-             (const_cast<PBuffer>(tup.pData))) - val;
+    return *(reinterpret_cast<int*>(
+        const_cast<PBuffer>(tup.pData)))
+        - val;
 }
 
 int
 CalcExtStringTest::cmpTupNull(TupleDatum const & tup)
 {
-    if ((const_cast<PBuffer>(tup.pData)) == NULL) return 1;
+    if ((const_cast<PBuffer>(tup.pData)) == NULL) {
+        return 1;
+    }
     return 0;
 }
 
 // for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
 void
-CalcExtStringTest::printOutput(TupleData const & tup,
-                               Calculator const & calc)
+CalcExtStringTest::printOutput(
+    TupleData const & tup,
+    Calculator const & calc)
 {
 #if 0
     TuplePrinter tuplePrinter;
@@ -148,8 +157,9 @@ CalcExtStringTest::printOutput(TupleData const & tup,
 
 // copy-by-reference locals into identical output register
 void
-CalcExtStringTest::refLocalOutput(ostringstream& pg,
-                                  int count)
+CalcExtStringTest::refLocalOutput(
+    ostringstream& pg,
+    int count)
 {
     int i;
 
@@ -211,8 +221,7 @@ CalcExtStringTest::testCalcExtStringCatA2()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -294,8 +303,7 @@ CalcExtStringTest::testCalcExtStringCatA3()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -382,8 +390,7 @@ CalcExtStringTest::testCalcExtStringCmpA()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -467,8 +474,7 @@ CalcExtStringTest::testCalcExtStringCmpOct()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -540,8 +546,7 @@ CalcExtStringTest::testCalcExtStringLenBitA()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -605,8 +610,7 @@ CalcExtStringTest::testCalcExtStringLenCharA()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -670,8 +674,7 @@ CalcExtStringTest::testCalcExtStringLenOctA()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -746,8 +749,7 @@ CalcExtStringTest::testCalcExtStringOverlayA4()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -846,8 +848,7 @@ CalcExtStringTest::testCalcExtStringOverlayA5()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -942,8 +943,7 @@ CalcExtStringTest::testCalcExtStringPosA()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1009,8 +1009,7 @@ CalcExtStringTest::testCalcExtStringSubStringA3()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1094,8 +1093,7 @@ CalcExtStringTest::testCalcExtStringSubStringA4()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1197,8 +1195,7 @@ CalcExtStringTest::testCalcExtStringToANull()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1263,8 +1260,7 @@ CalcExtStringTest::testCalcExtStringToLower()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1334,8 +1330,7 @@ CalcExtStringTest::testCalcExtStringToUpper()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1430,8 +1425,10 @@ CalcExtStringTest::testCalcExtStringTrim()
     // the string library unit test>)
 
     // invalid trim characters
-    pg << "CALL 'strTrimA(L24, C0, C9, C2, C2);" << endl; // zero char length trimchar
-    pg << "CALL 'strTrimA(L25, C0, C10, C2, C2);" << endl; // two char length trimchar
+    pg << "CALL 'strTrimA(L24, C0, C9, C2, C2);"
+       << endl; // zero char length trimchar
+    pg << "CALL 'strTrimA(L25, C0, C10, C2, C2);"
+       << endl; // two char length trimchar
 
     // all varchar common cases with other trim char
     pg << "CALL 'strTrimA(L26, C12, C11, C2, C2);" << endl; // trim both
@@ -1446,8 +1443,7 @@ CalcExtStringTest::testCalcExtStringTrim()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);

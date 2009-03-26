@@ -68,7 +68,8 @@ public:
 
         FENNEL_UNIT_TEST_CASE(SqlRegExpTest, testSqlRegExpSimilarAscii);
         FENNEL_UNIT_TEST_CASE(SqlRegExpTest, testSqlRegExpSimilarAsciiEscape);
-        FENNEL_UNIT_TEST_CASE(SqlRegExpTest, testSqlRegExpSimilarAsciiException);
+        FENNEL_UNIT_TEST_CASE(
+            SqlRegExpTest, testSqlRegExpSimilarAsciiException);
     }
 
     virtual ~SqlRegExpTest()
@@ -124,42 +125,38 @@ SqlRegExpTest::testSqlRegExpLikeAsciiTrue()
         { ".|*%",             ".|*?+(){}[]^$" },
 
         { "\\",      "\\" },
-        { "a\\c",    "a\\c"},
-        { "a\\%de",  "a\\cde"},
-        { "a\\_de",  "a\\cde"},
-        { "a\\.de",  "a\\.de"},
+        { "a\\c",    "a\\c" },
+        { "a\\%de",  "a\\cde" },
+        { "a\\_de",  "a\\cde" },
+        { "a\\.de",  "a\\.de" },
 
-        { "X", "X" }  // end sentinal
-
+        { "X", "X" }  // end sentinel
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
         BOOST_MESSAGE("      true " << i << " " <<test[i][0]);
         try {
-            SqlLikePrep<1,1>(test[i][0],
-                             strlen(test[i][0]),
-                             0, 0,    // no escape
-                             expPat);
+            SqlLikePrep<1, 1>(
+                test[i][0],
+                strlen(test[i][0]),
+                0, 0,    // no escape
+                expPat);
             boost::regex exp(expPat);
-            result = SqlRegExp<1,1>(test[i][1],
-                                    strlen(test[i][1]),
-                                    strlen(test[i][0]),
-                                    exp);
-
-        }
-        catch (char const * const ptr) {
+            result = SqlRegExp<1, 1>(
+                test[i][1],
+                strlen(test[i][1]),
+                strlen(test[i][0]),
+                exp);
+        } catch (char const * const ptr) {
             // unexpected exception
             BOOST_MESSAGE("unexpected SQL exception: " << ptr);
             BOOST_CHECK(0);
-        }
-        catch (boost::bad_expression badexp) {
+        } catch (boost::bad_expression badexp) {
             // regex format problem
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-
-        }
-        catch (...) {
+        } catch (...) {
             // unexpected exception
             BOOST_MESSAGE("unexpected unknown exception");
             BOOST_CHECK(0);
@@ -215,41 +212,38 @@ SqlRegExpTest::testSqlRegExpLikeAsciiFalse()
 
         { "\\",      "a" },
         { "a",       "\\" },
-        { "a\\c",    "a\\"},
-        { "a\\c",    "\\c"},
-        { "\\c",    "a\\"},
-        { "a\\",    "\\c"},
+        { "a\\c",    "a\\" },
+        { "a\\c",    "\\c" },
+        { "\\c",    "a\\" },
+        { "a\\",    "\\c" },
 
-        { "X",    "X" }  // end sentinal
-
+        { "X",    "X" }  // end sentinel
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
         BOOST_MESSAGE("      false " << i << " " <<test[i][0]);
         try {
-            SqlLikePrep<1,1>(test[i][0],
-                             strlen(test[i][0]),
-                             0, 0,   // no escape
-                             expPat);
+            SqlLikePrep<1,1>(
+                test[i][0],
+                strlen(test[i][0]),
+                0, 0,   // no escape
+                expPat);
             boost::regex exp(expPat);
-            result = SqlRegExp<1,1>(test[i][1],
-                                    strlen(test[i][1]),
-                                    strlen(test[i][0]),
-                                    exp);
-        }
-        catch (char const * const ptr) {
+            result = SqlRegExp<1,1>(
+                test[i][1],
+                strlen(test[i][1]),
+                strlen(test[i][0]),
+                exp);
+        } catch (char const * const ptr) {
             // unexpected exception
             BOOST_MESSAGE("unexpected SQL exception: " << ptr);
             BOOST_CHECK(0);
-        }
-        catch (boost::bad_expression badexp) {
+        } catch (boost::bad_expression badexp) {
             // regex format problem
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-
-        }
-        catch (...) {
+        } catch (...) {
             // unexpected exception
             BOOST_MESSAGE("unexpected unknown exception");
             BOOST_CHECK(0);
@@ -319,37 +313,34 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeTrue()
         { "%",     "a",   ")" },
         { ")%",    "%",   ")" },
 
-        { "X",     "X",   "X" }  // end sentinal
-
+        { "X",     "X",   "X" }  // end sentinel
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
         BOOST_MESSAGE("      escape true " << i << " " <<test[i][0]);
         try {
-            SqlLikePrep<1,1>(test[i][0],
-                             strlen(test[i][0]),
-                             test[i][2],
-                             strlen(test[i][2]),
-                             expPat);
+            SqlLikePrep<1, 1>(
+                test[i][0],
+                strlen(test[i][0]),
+                test[i][2],
+                strlen(test[i][2]),
+                expPat);
             boost::regex exp(expPat);
-            result = SqlRegExp<1,1>(test[i][1],
-                                    strlen(test[i][1]),
-                                    strlen(test[i][0]),
-                                    exp);
-        }
-        catch (char const * const ptr) {
+            result = SqlRegExp<1, 1>(
+                test[i][1],
+                strlen(test[i][1]),
+                strlen(test[i][0]),
+                exp);
+        } catch (char const * const ptr) {
             // unexpected exception
             BOOST_MESSAGE("unexpected SQL exception: " << ptr);
             BOOST_CHECK(0);
-        }
-        catch (boost::bad_expression badexp) {
+        } catch (boost::bad_expression badexp) {
             // regex format problem
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-
-        }
-        catch (...) {
+        } catch (...) {
             // unexpected exception
             BOOST_MESSAGE("unexpected unknown exception");
             BOOST_CHECK(0);
@@ -414,37 +405,34 @@ SqlRegExpTest::testSqlRegExpLikeAsciiEscapeFalse()
         { ")%",   "ab",  ")" },
 
 
-        { "X",    "X",   "X" }  // end sentinal
-
+        { "X",    "X",   "X" }  // end sentinel
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
         BOOST_MESSAGE("      escapefalse " << i << " " <<test[i][0]);
         try {
-            SqlLikePrep<1,1>(test[i][0],
-                             strlen(test[i][0]),
-                             test[i][2],
-                             strlen(test[i][2]),
-                             expPat);
+            SqlLikePrep<1, 1>(
+                test[i][0],
+                strlen(test[i][0]),
+                test[i][2],
+                strlen(test[i][2]),
+                expPat);
             boost::regex exp(expPat);
-            result = SqlRegExp<1,1>(test[i][1],
-                                    strlen(test[i][1]),
-                                    strlen(test[i][0]),
-                                    exp);
-        }
-        catch (char const * const ptr) {
+            result = SqlRegExp<1, 1>(
+                test[i][1],
+                strlen(test[i][1]),
+                strlen(test[i][0]),
+                exp);
+        } catch (char const * const ptr) {
             // unexpected exception
             BOOST_MESSAGE("unexpected SQL exception: " << ptr);
             BOOST_CHECK(0);
-        }
-        catch (boost::bad_expression badexp) {
+        } catch (boost::bad_expression badexp) {
             // regex format problem
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-
-        }
-        catch (...) {
+        } catch (...) {
             // unexpected exception
             BOOST_MESSAGE("unexpected unknown exception");
             BOOST_CHECK(0);
@@ -474,26 +462,26 @@ SqlRegExpTest::testSqlRegExpLikeAsciiException()
         { "a",       "a",       "ab",      "22019" },
         { "a",       "a",       "\\\\",    "22019" },
 
-        { "X",       "X",       "X",       "X" }  // end sentinal
-
+        { "X",       "X",       "X",       "X" }  // end sentinel
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
         BOOST_MESSAGE("      exception " << i << " " <<test[i][0]);
         caught = false;
         try {
-            SqlLikePrep<1,1>(test[i][0],
-                             strlen(test[i][0]),
-                             test[i][2],
-                             strlen(test[i][2]),
-                             expPat);
+            SqlLikePrep<1,1>(
+                test[i][0],
+                strlen(test[i][0]),
+                test[i][2],
+                strlen(test[i][2]),
+                expPat);
             boost::regex exp(expPat);
-            result = SqlRegExp<1,1>(test[i][1],
-                                    strlen(test[i][1]),
-                                    strlen(test[i][0]),
-                                    exp);
-        }
-        catch (char const * const ex) {
+            result = SqlRegExp<1,1>(
+                test[i][1],
+                strlen(test[i][1]),
+                strlen(test[i][0]),
+                exp);
+        } catch (char const * const ex) {
             caught = true;
             BOOST_CHECK(!strcmp(ex,       test[i][3]));
         }
@@ -1033,8 +1021,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { ".",        ".",      "t" },
         { ".",        "a",      "f" },
 
-        { "X",  "X",  "X" }  // end sentinal
-
+        { "X",  "X",  "X" }  // end sentinel
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
@@ -1042,31 +1029,28 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
                       " " << test[i][0] << " " <<
                       test[i][1] << " " << test[i][2]);
         try {
-            SqlSimilarPrep<1,1>(test[i][0],
-                                strlen(test[i][0]),
-                                0, 0,   // no escape
-                                expPat);
+            SqlSimilarPrep<1, 1>(
+                test[i][0],
+                strlen(test[i][0]),
+                0, 0,   // no escape
+                expPat);
 
             boost::regex exp(expPat);
-            result = SqlRegExp<1,1>(test[i][1],
-                                    strlen(test[i][1]),
-                                    strlen(test[i][0]),
-                                    exp);
-
-        }
-        catch (char const * const ptr) {
+            result = SqlRegExp<1, 1>(
+                test[i][1],
+                strlen(test[i][1]),
+                strlen(test[i][0]),
+                exp);
+        } catch (char const * const ptr) {
             // unexpected exception
             BOOST_MESSAGE("unexpected SQL exception: " << ptr);
             BOOST_CHECK(0);
-        }
-        catch (boost::bad_expression badexp) {
+        } catch (boost::bad_expression badexp) {
             // regex format problem
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-
-        }
-        catch (...) {
+        } catch (...) {
             // unexpected exception
             BOOST_MESSAGE("unexpected unknown exception");
             BOOST_CHECK(0);
@@ -1113,10 +1097,14 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
         { "#%",      "%",       "#", "t" },
         { "##",      "#",       "#", "t" },
         // try all special chars (both to SIMILAR & regex)
-        { "#[#]#(#)#|#^#-#+#*#_#%#?#{#}$.\\",
-          "[]()|^-+*_%?{}$.\\",  "#", "t" },
-        { "#[#{#(#|#?#^#*#%#+#-#_#)#}#]$.\\",
-          "[{(|?^*%+-_)}]$.\\",  "#", "t" },
+        {
+            "#[#]#(#)#|#^#-#+#*#_#%#?#{#}$.\\",
+            "[]()|^-+*_%?{}$.\\",  "#", "t"
+        },
+        {
+            "#[#{#(#|#?#^#*#%#+#-#_#)#}#]$.\\",
+            "[{(|?^*%+-_)}]$.\\",  "#", "t"
+        },
 
 
         { "#%",      "a",       "#", "f" },
@@ -1158,20 +1146,34 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
         { "|%",      "%",       "|", "t" },
 
         // try a other special chars as escape
-        { "[[[][([)[|[^[-[+[*[_[%[?[{[}$.\\",
-          "[]()|^-+*_%?{}$.\\",  "[", "t" },
-        { "[[[{[([|[?[^[*[%[+[-[_[)[}[]$.\\",
-          "[{(|?^*%+-_)}]$.\\",  "[", "t" },
-        { "][]]](])]|]^]-]+]*]_]%]?]{]}$.\\",
-          "[]()|^-+*_%?{}$.\\",  "]", "t" },
-        { ".[.].(.).|.^.-.+.*._.%.?.{.}$\\",
-          "[]()|^-+*_%?{}$\\",  ".", "t" },
-        { "*[*]*(*)*|*^*-*+***_*%*?*{*}$.\\",
-          "[]()|^-+*_%?{}$.\\",  "*", "t" },
-        { "_[_]_(_)_|_^_-_+_*___%_?_{_}$.\\",
-          "[]()|^-+*_%?{}$.\\",  "_", "t" },
-        { "%[%]%(%)%|%^%-%+%*%_%%%?%{%}$.\\",
-          "[]()|^-+*_%?{}$.\\",  "%", "t" },
+        {
+            "[[[][([)[|[^[-[+[*[_[%[?[{[}$.\\",
+            "[]()|^-+*_%?{}$.\\", "[", "t"
+        },
+        {
+            "[[[{[([|[?[^[*[%[+[-[_[)[}[]$.\\",
+            "[{(|?^*%+-_)}]$.\\", "[", "t"
+        },
+        {
+            "][]]](])]|]^]-]+]*]_]%]?]{]}$.\\",
+            "[]()|^-+*_%?{}$.\\", "]", "t"
+        },
+        {
+            ".[.].(.).|.^.-.+.*._.%.?.{.}$\\",
+            "[]()|^-+*_%?{}$\\", ".", "t"
+        },
+        {
+            "*[*]*(*)*|*^*-*+***_*%*?*{*}$.\\",
+          "[]()|^-+*_%?{}$.\\", "*", "t"
+        },
+        {
+            "_[_]_(_)_|_^_-_+_*___%_?_{_}$.\\",
+            "[]()|^-+*_%?{}$.\\", "_", "t"
+        },
+        {
+            "%[%]%(%)%|%^%-%+%*%_%%%?%{%}$.\\",
+            "[]()|^-+*_%?{}$.\\", "%", "t"
+        },
 
         { "_",       "ab",      "|", "f" },
         { "|_",      "_a",      "|", "f" },
@@ -1182,8 +1184,7 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
         { "||",      "a",       "|", "f" },
         { "((",      "a",       "(", "f" },
 
-        { "X",       "X",       "X", "X" }  // end sentinal
-
+        { "X",       "X",       "X", "X" }  // end sentinel
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
@@ -1191,30 +1192,28 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiEscape()
                       test[i][1] << " " << test[i][2] << " "
                       << test[i][3]);
         try {
-            SqlSimilarPrep<1,1>(test[i][0],
-                                strlen(test[i][0]),
-                                test[i][2],
-                                strlen(test[i][2]),
-                                expPat);
+            SqlSimilarPrep<1,1>(
+                test[i][0],
+                strlen(test[i][0]),
+                test[i][2],
+                strlen(test[i][2]),
+                expPat);
             boost::regex exp(expPat);
-            result = SqlRegExp<1,1>(test[i][1],
-                                    strlen(test[i][1]),
-                                    strlen(test[i][0]),
-                                    exp);
-        }
-        catch (char const * const ptr) {
+            result = SqlRegExp<1,1>(
+                test[i][1],
+                strlen(test[i][1]),
+                strlen(test[i][0]),
+                exp);
+        } catch (char const * const ptr) {
             // unexpected exception
             BOOST_MESSAGE("unexpected SQL exception: " << ptr);
             BOOST_CHECK(0);
-        }
-        catch (boost::bad_expression badexp) {
+        } catch (boost::bad_expression badexp) {
             // regex format problem
             BOOST_MESSAGE("unexpected regex exception: "
                           <<badexp.what());
             BOOST_CHECK(0);
-
-        }
-        catch (...) {
+        } catch (...) {
             // unexpected exception
             BOOST_MESSAGE("unexpected unknown exception");
             BOOST_CHECK(0);
@@ -1248,10 +1247,8 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiException()
 
     const char* test[][4] = {
         // pattern, matchValue, escape, exception
-        { "[[:ALPHA:]]",
-                  "a",   ":",     "2200B" },
-        { "[[:alpha:]]",
-                  "a",   ":",     "2200B" },
+        { "[[:ALPHA:]]", "a",   ":",     "2200B" },
+        { "[[:alpha:]]", "a",   ":",     "2200B" },
 
         { "a",    "a",   "ab",    "22019" },
         { "a",    "a",   "\\\\",  "22019" },
@@ -1261,12 +1258,10 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiException()
         // escaping a non-special char
         { "=a",   "a",   "=",     "2201B" },
         // invalid regular character set name
-        { "[[:foo:]]",
-                  "a",   "=",     "2201B" },
+        { "[[:foo:]]", "a",   "=",     "2201B" },
         // mixed case regular character set name
         // (code allows lower case, outside of standard)
-        { "[[:Alnum:]]",
-                  "a",   "=",     "2201B" },
+        { "[[:Alnum:]]", "a",   "=",     "2201B" },
         // sql-only special character in character set
         { "[_]",  "a",   "=",     "2201B" },
         { "[a_]", "a",   "=",     "2201B" },
@@ -1302,34 +1297,35 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiException()
         { "a_",   "a",   "_",    "2200C" },
         { "a%",   "a",   "%",    "2200C" },
 
-        { "X",    "X",   "X",     "X" }  // end sentinal
+        { "X",    "X",   "X",     "X" }  // end sentinel
     };
     string expPat;
     for (i = 0; *test[i][0] != 'X'; i++) {
         BOOST_MESSAGE(" ===== exception " << i << " " <<test[i][0]);
         caught = false;
         try {
-            SqlSimilarPrep<1,1>(test[i][0],
-                                strlen(test[i][0]),
-                                test[i][2],
-                                strlen(test[i][2]),
-                                expPat);
+            SqlSimilarPrep<1,1>(
+                test[i][0],
+                strlen(test[i][0]),
+                test[i][2],
+                strlen(test[i][2]),
+                expPat);
             boost::regex exp(expPat);
-            result = SqlRegExp<1,1>(test[i][1],
-                                    strlen(test[i][1]),
-                                    strlen(test[i][0]),
-                                    exp);
-        }
-        catch (char const * const ex) {
+            result = SqlRegExp<1, 1>(
+                test[i][1],
+                strlen(test[i][1]),
+                strlen(test[i][0]),
+                exp);
+        } catch (char const * const ex) {
             caught = true;
             if (strcmp(ex, test[i][3])) {
-                BOOST_MESSAGE(test[i][0] << " " << test[i][1] <<
-                              " " << test[i][2] << " expected: |"
-                              << test[i][3] << "| got: |" << ex << "|");
+                BOOST_MESSAGE(
+                    test[i][0] << " " << test[i][1]
+                    << " " << test[i][2] << " expected: |"
+                    << test[i][3] << "| got: |" << ex << "|");
                 BOOST_CHECK(0);
             }
-        }
-        catch (boost::bad_expression badexp) {
+        } catch (boost::bad_expression badexp) {
             // regex format problem
             BOOST_MESSAGE("got boost exception " << test[i][3]);
             if (!strcmp("regex", test[i][3])) {
@@ -1340,8 +1336,7 @@ SqlRegExpTest::testSqlRegExpSimilarAsciiException()
                               << badexp.what());
                 BOOST_CHECK(0);
             }
-        }
-        catch (...) {
+        } catch (...) {
             // unexpected exception
             BOOST_MESSAGE("unexpected unknown exception");
             BOOST_CHECK(0);

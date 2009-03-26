@@ -104,9 +104,10 @@ void CalcExecStream::prepare(CalcExecStreamParams const &params)
         // that throws an exception from causing non-deterministic
         // behavior later in program execution.
         pCalc->continueOnException(false);
-
     } catch (FennelExcn e) {
-        FENNEL_TRACE(TRACE_SEVERE, "error preparing calculator: " << e.getMessage());
+        FENNEL_TRACE(
+            TRACE_SEVERE,
+            "error preparing calculator: " << e.getMessage());
         throw e;
     }
 }
@@ -128,7 +129,8 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
         return rc;
     }
 
-#define TRACE_RETURN FENNEL_TRACE(TRACE_FINE, "read " << nRead << " rows, wrote " << nWritten)
+#define TRACE_RETURN \
+    FENNEL_TRACE(TRACE_FINE, "read " << nRead << " rows, wrote " << nWritten)
 
     FENNEL_TRACE(TRACE_FINER, "start execute loop");
     uint nRead = 0;
@@ -144,8 +146,10 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
             pInAccessor->unmarshalTuple(inputData);
             try {
                 pCalc->exec();
-            }  catch (FennelExcn e) {
-                FENNEL_TRACE(TRACE_SEVERE, "error executing calculator: " << e.getMessage());
+            } catch (FennelExcn e) {
+                FENNEL_TRACE(
+                    TRACE_SEVERE,
+                    "error executing calculator: " << e.getMessage());
                 throw e;
             }
             bool skip = false;
@@ -154,7 +158,8 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
                 // REVIEW: Do we need to distinguish errors from warnings here?
                 // TODO: notify scheduler (interface TBD)
                 //  which can warn user or produce other side effects.
-                FENNEL_TRACE(TRACE_WARNING, "calculator error " << pCalc->warnings());
+                FENNEL_TRACE(
+                    TRACE_WARNING, "calculator error " << pCalc->warnings());
                 if (stopOnCalcError) {
                     throw CalcExcn(pCalc->warnings(), inputDesc, inputData);
                 }

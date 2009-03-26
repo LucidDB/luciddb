@@ -56,8 +56,8 @@ struct StringDesc : public TupleDatum
     TupleStorageByteLength cbStorage;
     StandardTypeDescriptorOrdinal mType;
 
-    StringDesc(){};
-    ~StringDesc(){};
+    StringDesc() {}
+    ~StringDesc() {}
 
     StringDesc(StringDesc const &other)
     {
@@ -73,7 +73,7 @@ struct StringDesc : public TupleDatum
 
     void copyFrom(StringDesc const &other)
     {
-        TupleDatum::copyFrom( other);
+        TupleDatum::copyFrom(other);
         cbStorage = other.cbStorage;
         mType = other.mType;
     }
@@ -164,4 +164,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End WinAggAccum.h
+// End WinAggHistogramStrA.h

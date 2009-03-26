@@ -100,7 +100,10 @@ CastStrAToDate(
     if (dateStr->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrToDate<1,1,SQLDATE>(dateStr->pointer(), dateStr->stringLength()));
+        result->value(
+            SqlStrToDate<1,1,SQLDATE>(
+                dateStr->pointer(),
+                dateStr->stringLength()));
     }
 }
 
@@ -115,7 +118,10 @@ CastStrAToTime(
     if (timeStr->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrToDate<1,1,SQLTIME>(timeStr->pointer(), timeStr->stringLength()));
+        result->value(
+            SqlStrToDate<1,1,SQLTIME>(
+                timeStr->pointer(),
+                timeStr->stringLength()));
     }
 }
 
@@ -130,7 +136,10 @@ CastStrAToTimestamp(
     if (timestampStr->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrToDate<1,1,SQLTIMESTAMP>(timestampStr->pointer(), timestampStr->stringLength()));
+        result->value(
+            SqlStrToDate<1,1,SQLTIMESTAMP>(
+                timestampStr->pointer(),
+                timestampStr->stringLength()));
     }
 }
 
@@ -284,91 +293,112 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
     params_I64_I32.push_back(STANDARD_TYPE_INT_32);
 
     // date -> str
-    eit->add("CastDateToStrA", params_V_I64,
-             (ExtendedInstruction2<char*, int64_t>*) NULL,
-             &CastDateToStrA);
+    eit->add(
+        "CastDateToStrA", params_V_I64,
+        (ExtendedInstruction2<char*, int64_t>*) NULL,
+        &CastDateToStrA);
 
-    eit->add("CastDateToStrA", params_C_I64,
-             (ExtendedInstruction2<char*, int64_t>*) NULL,
-             &CastDateToStrA);
+    eit->add(
+        "CastDateToStrA", params_C_I64,
+        (ExtendedInstruction2<char*, int64_t>*) NULL,
+        &CastDateToStrA);
 
-    eit->add("CastTimeToStrA", params_V_I64,
-             (ExtendedInstruction2<char*, int64_t>*) NULL,
-             &CastTimeToStrA);
+    eit->add(
+        "CastTimeToStrA", params_V_I64,
+        (ExtendedInstruction2<char*, int64_t>*) NULL,
+        &CastTimeToStrA);
 
-    eit->add("CastTimeToStrA", params_C_I64,
-             (ExtendedInstruction2<char*, int64_t>*) NULL,
-             &CastTimeToStrA);
+    eit->add(
+        "CastTimeToStrA", params_C_I64,
+        (ExtendedInstruction2<char*, int64_t>*) NULL,
+        &CastTimeToStrA);
 
-    eit->add("CastTimestampToStrA", params_V_I64,
-             (ExtendedInstruction2<char*, int64_t>*) NULL,
-             &CastTimestampToStrA);
+    eit->add(
+        "CastTimestampToStrA", params_V_I64,
+        (ExtendedInstruction2<char*, int64_t>*) NULL,
+        &CastTimestampToStrA);
 
-    eit->add("CastTimestampToStrA", params_C_I64,
-             (ExtendedInstruction2<char*, int64_t>*) NULL,
-             &CastTimestampToStrA);
+    eit->add(
+        "CastTimestampToStrA", params_C_I64,
+        (ExtendedInstruction2<char*, int64_t>*) NULL,
+        &CastTimestampToStrA);
 
     // str -> date
-    eit->add("CastStrAToDate", params_I64_V,
-             (ExtendedInstruction2<int64_t, char*>*) NULL,
-             &CastStrAToDate);
+    eit->add(
+        "CastStrAToDate", params_I64_V,
+        (ExtendedInstruction2<int64_t, char*>*) NULL,
+        &CastStrAToDate);
 
-    eit->add("CastStrAToDate", params_I64_C,
-             (ExtendedInstruction2<int64_t, char*>*) NULL,
-             &CastStrAToDate);
+    eit->add(
+        "CastStrAToDate", params_I64_C,
+        (ExtendedInstruction2<int64_t, char*>*) NULL,
+        &CastStrAToDate);
 
-    eit->add("CastStrAToTime", params_I64_V,
-             (ExtendedInstruction2<int64_t, char*>*) NULL,
-             &CastStrAToTime);
+    eit->add(
+        "CastStrAToTime", params_I64_V,
+        (ExtendedInstruction2<int64_t, char*>*) NULL,
+        &CastStrAToTime);
 
-    eit->add("CastStrAToTime", params_I64_C,
-             (ExtendedInstruction2<int64_t, char*>*) NULL,
-             &CastStrAToTime);
+    eit->add(
+        "CastStrAToTime", params_I64_C,
+        (ExtendedInstruction2<int64_t, char*>*) NULL,
+        &CastStrAToTime);
 
-    eit->add("CastStrAToTimestamp", params_I64_V,
-             (ExtendedInstruction2<int64_t, char*>*) NULL,
-             &CastStrAToTimestamp);
+    eit->add(
+        "CastStrAToTimestamp", params_I64_V,
+        (ExtendedInstruction2<int64_t, char*>*) NULL,
+        &CastStrAToTimestamp);
 
-    eit->add("CastStrAToTimestamp", params_I64_C,
-             (ExtendedInstruction2<int64_t, char*>*) NULL,
-             &CastStrAToTimestamp);
+    eit->add(
+        "CastStrAToTimestamp", params_I64_C,
+        (ExtendedInstruction2<int64_t, char*>*) NULL,
+        &CastStrAToTimestamp);
 
     // others
-    eit->add("CastDateTimeToInt64", params_I64_I64,
-             (ExtendedInstruction2<int64_t, int64_t>*) NULL,
-             &CastDateTimeToInt64);
+    eit->add(
+        "CastDateTimeToInt64", params_I64_I64,
+        (ExtendedInstruction2<int64_t, int64_t>*) NULL,
+        &CastDateTimeToInt64);
 
-    eit->add("LocalTime2", params_I64_C,
-             (ExtendedInstruction2<int64_t, char *>*) NULL,
-             &LocalTime);
+    eit->add(
+        "LocalTime2", params_I64_C,
+        (ExtendedInstruction2<int64_t, char *>*) NULL,
+        &LocalTime);
 
-    eit->add("LocalTimestamp2", params_I64_C,
-             (ExtendedInstruction2<int64_t, char *>*) NULL,
-             &LocalTimestamp);
+    eit->add(
+        "LocalTimestamp2", params_I64_C,
+        (ExtendedInstruction2<int64_t, char *>*) NULL,
+        &LocalTimestamp);
 
-    eit->add("LocalTime3", params_I64_C_I32,
-             (ExtendedInstruction3<int64_t, char *, int32_t>*) NULL,
-             &LocalTime);
+    eit->add(
+        "LocalTime3", params_I64_C_I32,
+        (ExtendedInstruction3<int64_t, char *, int32_t>*) NULL,
+        &LocalTime);
 
-    eit->add("LocalTimestamp3", params_I64_C_I32,
-             (ExtendedInstruction3<int64_t, char *, int32_t>*) NULL,
-             &LocalTimestamp);
+    eit->add(
+        "LocalTimestamp3", params_I64_C_I32,
+        (ExtendedInstruction3<int64_t, char *, int32_t>*) NULL,
+        &LocalTimestamp);
 
-    eit->add("CurrentTime1", params_I64,
-             (ExtendedInstruction1<int64_t>*) NULL,
-             &CurrentTime);
+    eit->add(
+        "CurrentTime1", params_I64,
+        (ExtendedInstruction1<int64_t>*) NULL,
+        &CurrentTime);
 
-    eit->add("CurrentTimestamp1", params_I64,
-             (ExtendedInstruction1<int64_t>*) NULL,
-             &CurrentTimestamp);
+    eit->add(
+        "CurrentTimestamp1", params_I64,
+        (ExtendedInstruction1<int64_t>*) NULL,
+        &CurrentTimestamp);
 
-    eit->add("CurrentTime2", params_I64_I32,
-             (ExtendedInstruction2<int64_t, int32_t>*) NULL,
-             &CurrentTime);
+    eit->add(
+        "CurrentTime2", params_I64_I32,
+        (ExtendedInstruction2<int64_t, int32_t>*) NULL,
+        &CurrentTime);
 
-    eit->add("CurrentTimestamp2", params_I64_I32,
-             (ExtendedInstruction2<int64_t, int32_t>*) NULL,
-             &CurrentTimestamp);
+    eit->add(
+        "CurrentTimestamp2", params_I64_I32,
+        (ExtendedInstruction2<int64_t, int32_t>*) NULL,
+        &CurrentTimestamp);
 
 }
 

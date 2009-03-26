@@ -30,11 +30,12 @@
 FENNEL_BEGIN_NAMESPACE
 
 int
-SqlStrCat(char* dest,
-          int destStorageBytes,
-          int destLenBytes,
-          char const * const str,
-          int strLenBytes)
+SqlStrCat(
+    char* dest,
+    int destStorageBytes,
+    int destLenBytes,
+    char const * const str,
+    int strLenBytes)
 {
     if (destLenBytes + strLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001 "String Data Right truncation"
@@ -47,12 +48,13 @@ SqlStrCat(char* dest,
 
 
 int
-SqlStrCat(char* dest,
-          int destStorageBytes,
-          char const * const str1,
-          int str1LenBytes,
-          char const * const str2,
-          int str2LenBytes)
+SqlStrCat(
+    char* dest,
+    int destStorageBytes,
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes)
 {
     if (str1LenBytes + str2LenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001
@@ -61,15 +63,16 @@ SqlStrCat(char* dest,
     }
 
     memcpy(dest, str1, str1LenBytes);
-    memcpy(dest+str1LenBytes, str2, str2LenBytes);
+    memcpy(dest + str1LenBytes, str2, str2LenBytes);
     return str1LenBytes + str2LenBytes;
 }
 
 int
-SqlStrCmp_Bin(char const * const str1,
-              int str1LenBytes,
-              char const * const str2,
-              int str2LenBytes)
+SqlStrCmp_Bin(
+    char const * const str1,
+    int str1LenBytes,
+    char const * const str2,
+    int str2LenBytes)
 {
     // First, check for differences in "common" length. If common length
     // are contains same values, declare the longer string "larger".
@@ -96,10 +99,11 @@ SqlStrCmp_Bin(char const * const str1,
 }
 
 int
-SqlStrCpy_Var(char* dest,
-              int destStorageBytes,
-              char const * const str,
-              int strLenBytes)
+SqlStrCpy_Var(
+    char* dest,
+    int destStorageBytes,
+    char const * const str,
+    int strLenBytes)
 {
     if (strLenBytes > destStorageBytes) {
         // SQL99 Part 2 Section 22.1 22-001

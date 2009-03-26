@@ -52,30 +52,37 @@ tupleFiddle()
 
   // Build up a description of what we'd like the tuple to look like
   StandardTypeDescriptorFactory typeFactory;
-  for (i=0;i < num; i++) {
-    StoredTypeDescriptor const &typeDesc = typeFactory.newDataType(STANDARD_TYPE_VARCHAR);
-    tupleDesc.push_back(TupleAttributeDescriptor(typeDesc,
-                                                 isNullable,
-                                                 bufferlen));
+  for (i = 0; i < num; i++) {
+    StoredTypeDescriptor const &typeDesc =
+        typeFactory.newDataType(STANDARD_TYPE_VARCHAR);
+    tupleDesc.push_back(
+        TupleAttributeDescriptor(
+            typeDesc,
+            isNullable,
+            bufferlen));
   }
-  for (i=0;i < num; i++) {
-    StoredTypeDescriptor const &typeDesc = typeFactory.newDataType(STANDARD_TYPE_INT_32);
+  for (i = 0; i < num; i++) {
+    StoredTypeDescriptor const &typeDesc =
+        typeFactory.newDataType(STANDARD_TYPE_INT_32);
     tupleDesc.push_back(TupleAttributeDescriptor(typeDesc, isNullable));
   }
-  for (i=0;i < num; i++) {
-    StoredTypeDescriptor const &typeDesc = typeFactory.newDataType(STANDARD_TYPE_UINT_8);
+  for (i = 0; i < num; i++) {
+    StoredTypeDescriptor const &typeDesc =
+        typeFactory.newDataType(STANDARD_TYPE_UINT_8);
     tupleDesc.push_back(TupleAttributeDescriptor(typeDesc, isNullable));
   }
-  for (i=0;i < num; i++) {
-    StoredTypeDescriptor const &typeDesc = typeFactory.newDataType(STANDARD_TYPE_REAL);
+  for (i = 0; i < num; i++) {
+    StoredTypeDescriptor const &typeDesc =
+        typeFactory.newDataType(STANDARD_TYPE_REAL);
     tupleDesc.push_back(TupleAttributeDescriptor(typeDesc, isNullable));
   }
 
   // Create a tuple accessor from the description
   //
-  // Note: Must use an ALL_FIXED accessor when creating a tuple out of the
-  // air like this, otherwise unmarshal() does not know what to do. If you need a
-  // STANDARD type tuple with variable-lengty fields, it has to be built as a copy.
+  // Note: Must use an ALL_FIXED accessor when creating a tuple out of
+  // the air like this, otherwise unmarshal() does not know what to
+  // do. If you need a STANDARD type tuple with variable-lengty
+  // fields, it has to be built as a copy.
   TupleAccessor tupleAccessorFixed;
   tupleAccessorFixed.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
@@ -98,23 +105,24 @@ tupleFiddle()
   TupleDatum pDatum;
   PBuffer pData;
 
-  for(i=0; i < num; i++, itr++) {
+  for (i = 0; i < num; i++, itr++) {
       char buf[bufferlen * 10];
       sprintf(buf,"%d-A-%d-B-%d-C-", i, i, i); // longer than buflen
-      strncpy((reinterpret_cast<char *>(const_cast<PBuffer>(itr->pData))),
-              buf, bufferlen);
+      strncpy(
+          (reinterpret_cast<char *>(const_cast<PBuffer>(itr->pData))),
+          buf, bufferlen);
   }
-  for(i=0; i < num; i++, itr++) {
+  for (i = 0; i < num; i++, itr++) {
     // exploded form
     pDatum = *itr;
     pData = const_cast<PBuffer>(pDatum.pData);
     *(reinterpret_cast<int32_t *>(pData)) = i;
   }
-  for(i=0; i < num; i++, itr++) {
+  for (i = 0; i < num; i++, itr++) {
     // condensed form
     *(reinterpret_cast<uint8_t *>(const_cast<PBuffer>(itr->pData))) = i;
   }
-  for(i=0; i < num; i++, itr++) {
+  for (i = 0; i < num; i++, itr++) {
     *(reinterpret_cast<float *>(const_cast<PBuffer>(itr->pData))) = i * 0.5;
   }
 
@@ -139,7 +147,7 @@ tupleFiddle()
   tupleDataNullable[1].pData = tupleDataNullable[0].pData;
 
   // Re-point third string to part way into first string
-  tupleDataNullable[2].pData = (tupleDataNullable[0].pData+1);
+  tupleDataNullable[2].pData = (tupleDataNullable[0].pData + 1);
 
   // Print out the modified nullable tuple
   tuplePrinter.print(cout, tupleDesc, tupleDataNullable);

@@ -32,33 +32,37 @@ FENNEL_BEGIN_NAMESPACE
 //! Pass a zero length string into escape if not defined
 //! Passing a null into escape will result in null, per SQL99.
 void
-strLikeEscapeA(RegisterRef<bool>* result,
-               RegisterRef<char*>* matchValue,
-               RegisterRef<char*>* pattern,
-               RegisterRef<char*>* escape);
+strLikeEscapeA(
+    RegisterRef<bool>* result,
+    RegisterRef<char*>* matchValue,
+    RegisterRef<char*>* pattern,
+    RegisterRef<char*>* escape);
 
 //! StrLike. Ascii. Reuses pattern.
 //! ESCAPE clause not defined.
 void
-strLikeA(RegisterRef<bool>* result,
-         RegisterRef<char*>* matchValue,
-         RegisterRef<char*>* pattern);
+strLikeA(
+    RegisterRef<bool>* result,
+    RegisterRef<char*>* matchValue,
+    RegisterRef<char*>* pattern);
 
 //! StrSimilar. Ascii. Reuses pattern.
 //! Pass a zero length string into escape if not defined
 //! Passing a null into escape will result in null, per SQL99 & SQL2003
 void
-strSimilarEscapeA(RegisterRef<bool>* result,
-                  RegisterRef<char*>* matchValue,
-                  RegisterRef<char*>* pattern,
-                  RegisterRef<char*>* escape);
+strSimilarEscapeA(
+    RegisterRef<bool>* result,
+    RegisterRef<char*>* matchValue,
+    RegisterRef<char*>* pattern,
+    RegisterRef<char*>* escape);
 
 //! StrSimilar. Ascii. Reuses pattern.
 //! ESCAPE clause not defined.
 void
-strSimilarA(RegisterRef<bool>* result,
-            RegisterRef<char*>* matchValue,
-            RegisterRef<char*>* pattern);
+strSimilarA(
+    RegisterRef<bool>* result,
+    RegisterRef<char*>* matchValue,
+    RegisterRef<char*>* pattern);
 
 class ExtendedInstructionTable;
 

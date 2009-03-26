@@ -42,68 +42,87 @@ using namespace std;
 class CalcCastTest : virtual public TestBase, public TraceSource
 {
     typedef void (*SetFunction)(TupleDataWithBuffer& inTuple);
-    typedef void (*CheckFunction)(TupleDataWithBuffer const & inTuple,
-                                  int numSrcTypes,
-                                  deque<CalcMessage>& warnings,
-                                  vector<int> const & expectedWarnings);
+    typedef void (*CheckFunction)(
+        TupleDataWithBuffer const & inTuple,
+        int numSrcTypes,
+        deque<CalcMessage>& warnings,
+        vector<int> const & expectedWarnings);
 
-    static void testExe(SetFunction setF,
-                        CheckFunction checkF,
-                        char const * const srcTypeStr,
-                        int numSrcTypes,
-                        char const * const destTypeStr,
-                        int numDestTypes,
-                        int warningCombos[][2],
-                        bool roundValues);
+    static void testExe(
+        SetFunction setF,
+        CheckFunction checkF,
+        char const * const srcTypeStr,
+        int numSrcTypes,
+        char const * const destTypeStr,
+        int numDestTypes,
+        int warningCombos[][2],
+        bool roundValues);
 
-    static bool shouldWarn(int warningCombos[][2],
-                           int srcIdx,
-                           int destIdx);
+    static bool shouldWarn(
+        int warningCombos[][2],
+        int srcIdx,
+        int destIdx);
 
-    static void checkWarnings(deque<CalcMessage>& warnings,
-                              vector<int> const & expectedWarnings);
+    static void checkWarnings(
+        deque<CalcMessage>& warnings,
+        vector<int> const & expectedWarnings);
 
     void PassAll();
+
     static void PassAllSet(TupleDataWithBuffer& inTuple);
-    static void PassAllCheck(TupleDataWithBuffer const & outTuple,
-                             int numSrcTypes,
-                             deque<CalcMessage>& warnings,
-                             vector<int> const & expectedWarnings);
+
+    static void PassAllCheck(
+        TupleDataWithBuffer const & outTuple,
+        int numSrcTypes,
+        deque<CalcMessage>& warnings,
+        vector<int> const & expectedWarnings);
 
     void NegValues();
+
     static void NegValuesSet(TupleDataWithBuffer& inTuple);
-    static void NegValuesCheck(TupleDataWithBuffer const & outTuple,
-                               int numSrcTypes,
-                               deque<CalcMessage>& warnings,
-                               vector<int> const & expectedWarnings);
+
+    static void NegValuesCheck(
+        TupleDataWithBuffer const & outTuple,
+        int numSrcTypes,
+        deque<CalcMessage>& warnings,
+        vector<int> const & expectedWarnings);
 
     void Round();
+
     static void RoundSet(TupleDataWithBuffer& inTuple);
-    static void RoundCheck(TupleDataWithBuffer const & outTuple,
-                           int numSrcTypes,
-                           deque<CalcMessage>& warnings,
-                           vector<int> const & expectedWarnings);
+
+    static void RoundCheck(
+        TupleDataWithBuffer const & outTuple,
+        int numSrcTypes,
+        deque<CalcMessage>& warnings,
+        vector<int> const & expectedWarnings);
 
 
     void Overflow();
+
     static void OverflowSet(TupleDataWithBuffer& inTuple);
-    static void OverflowCheck(TupleDataWithBuffer const & outTuple,
-                              int numSrcTypes,
-                              deque<CalcMessage>& warnings,
-                              vector<int> const & expectedWarnings);
+
+    static void OverflowCheck(
+        TupleDataWithBuffer const & outTuple,
+        int numSrcTypes,
+        deque<CalcMessage>& warnings,
+        vector<int> const & expectedWarnings);
 
     void Underflow();
+
     static void UnderflowSet(TupleDataWithBuffer& inTuple);
-    static void UnderflowCheck(TupleDataWithBuffer const & outTuple,
-                               int numSrcTypes,
-                               deque<CalcMessage>& warnings,
-                               vector<int> const & expectedWarnings);
+
+    static void UnderflowCheck(
+        TupleDataWithBuffer const & outTuple,
+        int numSrcTypes,
+        deque<CalcMessage>& warnings,
+        vector<int> const & expectedWarnings);
 
     void testRoundInstruction();
 
 public:
     explicit CalcCastTest()
-        : TraceSource(shared_from_this(),"CalcCastTest")
+        : TraceSource(shared_from_this(), "CalcCastTest")
     {
         srand(time(NULL));
         CalcInit::instance();
@@ -150,8 +169,7 @@ CalcCastTest::testRoundInstruction()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -165,89 +183,107 @@ CalcCastTest::testRoundInstruction()
     int64_t exact = 2;
     idx = 0;
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<int8_t *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      exact);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<int8_t *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        exact);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint8_t *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      exact);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint8_t *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        exact);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<int16_t *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      exact);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<int16_t *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        exact);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      exact);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint16_t *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        exact);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<int32_t *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      exact);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<int32_t *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        exact);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint32_t *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      exact);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint32_t *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        exact);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<int64_t *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      exact);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<int64_t *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        exact);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      exact);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint64_t *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        exact);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<float *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      -1.0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<float *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        -1.0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<float *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      0.0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<float *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        0.0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<float *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      0.0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<float *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        0.0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<float *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      0.0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<float *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        0.0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<float *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      1.0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<float *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        1.0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<double *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      -1.0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<double *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        -1.0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<double *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      0.0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<double *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        0.0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<double *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      0.0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<double *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        0.0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<double *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      0.0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<double *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        0.0);
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<double *>
-                        (const_cast<PBuffer>(outTuple[idx++].pData))),
-                      1.0);
-
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<double *>(
+            const_cast<PBuffer>(outTuple[idx++].pData))),
+        1.0);
 }
 
 void
-CalcCastTest::testExe(SetFunction setF,
-                      CheckFunction checkF,
-                      char const * const srcTypeStr,
-                      int numSrcTypes,
-                      char const * const destTypeStr,
-                      int numDestTypes,
-                      int warningCombos[][2],
-                      bool roundValues)
+CalcCastTest::testExe(
+    SetFunction setF,
+    CheckFunction checkF,
+    char const * const srcTypeStr,
+    int numSrcTypes,
+    char const * const destTypeStr,
+    int numDestTypes,
+    int warningCombos[][2],
+    bool roundValues)
 {
     ostringstream pg(""), typeProduct("");
 
@@ -256,7 +292,7 @@ CalcCastTest::testExe(SetFunction setF,
     vector<int> expectedWarnings;
 
     // create a dest array with one row for each src type
-    for (idx = 0; idx < numSrcTypes; idx++ ) {
+    for (idx = 0; idx < numSrcTypes; idx++) {
         if (idx != 0) {
             typeProduct << "," << endl << "  ";
         }
@@ -284,7 +320,9 @@ CalcCastTest::testExe(SetFunction setF,
             warn = shouldWarn(warningCombos, srcIdx, idx);
             if (warn) {
                 expectedWarnings.push_back(pc);
-                BOOST_MESSAGE("ShouldWarn PC=" << pc << " size=" << expectedWarnings.size());
+                BOOST_MESSAGE(
+                    "ShouldWarn PC=" << pc << " size="
+                    << expectedWarnings.size());
             }
             pg << "CAST L" << destIdx;
             if (roundValues) {
@@ -307,8 +345,7 @@ CalcCastTest::testExe(SetFunction setF,
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_REQUIRE(0);
     }
@@ -326,9 +363,10 @@ CalcCastTest::testExe(SetFunction setF,
 }
 
 bool
-CalcCastTest::shouldWarn(int warningCombos[][2],
-                         int srcIdx,
-                         int destIdx)
+CalcCastTest::shouldWarn(
+    int warningCombos[][2],
+    int srcIdx,
+    int destIdx)
 {
     int idx = 0;
     // Yeah, so this is O(n^2). It's good enough for now, and probably forever.
@@ -344,8 +382,9 @@ CalcCastTest::shouldWarn(int warningCombos[][2],
 }
 
 void
-CalcCastTest::checkWarnings(deque<CalcMessage>& warnings,
-                            vector<int> const & expectedWarnings)
+CalcCastTest::checkWarnings(
+    deque<CalcMessage>& warnings,
+    vector<int> const & expectedWarnings)
 {
     deque<CalcMessage>::iterator iter = warnings.begin();
     deque<CalcMessage>::iterator end = warnings.end();
@@ -353,14 +392,14 @@ CalcCastTest::checkWarnings(deque<CalcMessage>& warnings,
     int idx = 0;
     ostringstream ew("");
     ew << "Expected Warnings: (PC=) |";
-    while(idx < expectedWarnings.size()) {
+    while (idx < expectedWarnings.size()) {
         ew << expectedWarnings[idx++] << ", ";
     }
     ew << "|" << endl;
     BOOST_MESSAGE(ew.str());
 
     idx = 0;
-    while(idx < expectedWarnings.size()) {
+    while (idx < expectedWarnings.size()) {
         BOOST_CHECK(iter != end);
         BOOST_CHECK_EQUAL(iter->pc, expectedWarnings[idx]);
         BOOST_CHECK_EQUAL(0, strcmp(iter->str, "22003"));
@@ -402,10 +441,11 @@ CalcCastTest::PassAllSet(TupleDataWithBuffer& inTuple)
 }
 
 void
-CalcCastTest::PassAllCheck(TupleDataWithBuffer const & outTuple,
-                           int numSrcTypes,
-                           deque<CalcMessage>& warnings,
-                           vector<int> const & expectedWarnings)
+CalcCastTest::PassAllCheck(
+    TupleDataWithBuffer const & outTuple,
+    int numSrcTypes,
+    deque<CalcMessage>& warnings,
+    vector<int> const & expectedWarnings)
 {
     checkWarnings(warnings, expectedWarnings);
 
@@ -421,45 +461,55 @@ CalcCastTest::PassAllCheck(TupleDataWithBuffer const & outTuple,
             exact = 20;
             approx = 20;
         }
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<int8_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<int8_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<uint8_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<uint8_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<int16_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<int16_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<uint16_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<int32_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<int32_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<uint32_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<uint32_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<int64_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<int64_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<uint64_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<float *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          approx);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<float *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            approx);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<double *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          approx);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<double *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            approx);
     }
 }
 
@@ -473,15 +523,16 @@ CalcCastTest::PassAll()
 
     int warningCombos[][2] = {
         // src index from just above, then dest index from just above
-        {  -1, -1 }   // sentinal
+        { -1, -1 }   // sentinel
     };
 
-    testExe(CalcCastTest::PassAllSet,
-            CalcCastTest::PassAllCheck,
-            all, 10,
-            all, 10,
-            warningCombos,
-            false);
+    testExe(
+        CalcCastTest::PassAllSet,
+        CalcCastTest::PassAllCheck,
+        all, 10,
+        all, 10,
+        warningCombos,
+        false);
 }
 
 
@@ -508,10 +559,11 @@ CalcCastTest::NegValuesSet(TupleDataWithBuffer& inTuple)
 }
 
 void
-CalcCastTest::NegValuesCheck(TupleDataWithBuffer const & outTuple,
-                             int numSrcTypes,
-                             deque<CalcMessage>& warnings,
-                             vector<int> const & expectedWarnings)
+CalcCastTest::NegValuesCheck(
+    TupleDataWithBuffer const & outTuple,
+    int numSrcTypes,
+    deque<CalcMessage>& warnings,
+    vector<int> const & expectedWarnings)
 {
     checkWarnings(warnings, expectedWarnings);
 
@@ -527,41 +579,47 @@ CalcCastTest::NegValuesCheck(TupleDataWithBuffer const & outTuple,
             exact = -20;
             approx = -20;
         }
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<int8_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<int8_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
         // uint8_t always generates a warning
         idx++;
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<int16_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<int16_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
         // uint16_t always generates a warning
         idx++;
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<int32_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<int32_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
         // uint32_t always generates a warning
         idx++;
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<int64_t *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          exact);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<int64_t *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            exact);
 
         // uint64_t always generates a warning
         idx++;
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<float *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          approx);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<float *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            approx);
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<double *>
-                            (const_cast<PBuffer>(outTuple[idx++].pData))),
-                          approx);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<double *>(
+                const_cast<PBuffer>(outTuple[idx++].pData))),
+            approx);
     }
 }
 
@@ -580,7 +638,7 @@ CalcCastTest::NegValues()
     // combinations of types above that should generate warnings
     int warningCombos[][2] = {
         // src index from just above, then dest index from just above
-        {  0,  1  },  // s1 -> u1
+        {0,  1  },  // s1 -> u1
         {  0,  3  },  // s1 -> u2
         {  0,  5  },
         {  0,  7  },
@@ -604,15 +662,16 @@ CalcCastTest::NegValues()
         {  5,  3  },  // d -> u2
         {  5,  5  },
         {  5,  7  },
-        {  -1, -1 }   // sentinal
+        {  -1, -1 }   // sentinel
     };
 
-    testExe(CalcCastTest::NegValuesSet,
-            CalcCastTest::NegValuesCheck,
-            src, 6,
-            dest, 10,
-            warningCombos,
-            false);
+    testExe(
+        CalcCastTest::NegValuesSet,
+        CalcCastTest::NegValuesCheck,
+        src, 6,
+        dest, 10,
+        warningCombos,
+        false);
 }
 
 
@@ -633,10 +692,11 @@ CalcCastTest::RoundSet(TupleDataWithBuffer& inTuple)
 }
 
 void
-CalcCastTest::RoundCheck(TupleDataWithBuffer const & outTuple,
-                         int numSrcTypes,
-                         deque<CalcMessage>& warnings,
-                         vector<int> const & expectedWarnings)
+CalcCastTest::RoundCheck(
+    TupleDataWithBuffer const & outTuple,
+    int numSrcTypes,
+    deque<CalcMessage>& warnings,
+    vector<int> const & expectedWarnings)
 {
     checkWarnings(warnings, expectedWarnings);
 
@@ -646,38 +706,45 @@ CalcCastTest::RoundCheck(TupleDataWithBuffer const & outTuple,
     for (group = 0; group < 3; group++) {
         exact = valE[group];
         for (srcI = 0; srcI < 2; srcI++) {
-            BOOST_CHECK_EQUAL(*(reinterpret_cast<int8_t *>
-                                (const_cast<PBuffer>(outTuple[idx++].pData))),
-                              exact);
+            BOOST_CHECK_EQUAL(
+                *(reinterpret_cast<int8_t *>(
+                    const_cast<PBuffer>(outTuple[idx++].pData))),
+                exact);
 
-            BOOST_CHECK_EQUAL(*(reinterpret_cast<uint8_t *>
-                                (const_cast<PBuffer>(outTuple[idx++].pData))),
-                              exact);
+            BOOST_CHECK_EQUAL(
+                *(reinterpret_cast<uint8_t *>(
+                    const_cast<PBuffer>(outTuple[idx++].pData))),
+                exact);
 
-            BOOST_CHECK_EQUAL(*(reinterpret_cast<int16_t *>
-                                (const_cast<PBuffer>(outTuple[idx++].pData))),
-                              exact);
+            BOOST_CHECK_EQUAL(
+                *(reinterpret_cast<int16_t *>(
+                    const_cast<PBuffer>(outTuple[idx++].pData))),
+                exact);
 
-            BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                                (const_cast<PBuffer>(outTuple[idx++].pData))),
-                              exact);
+            BOOST_CHECK_EQUAL(
+                *(reinterpret_cast<uint16_t *>(
+                    const_cast<PBuffer>(outTuple[idx++].pData))),
+                exact);
 
-            BOOST_CHECK_EQUAL(*(reinterpret_cast<int32_t *>
-                                (const_cast<PBuffer>(outTuple[idx++].pData))),
-                              exact);
+            BOOST_CHECK_EQUAL(
+                *(reinterpret_cast<int32_t *>(
+                    const_cast<PBuffer>(outTuple[idx++].pData))),
+                exact);
 
-            BOOST_CHECK_EQUAL(*(reinterpret_cast<uint32_t *>
-                                (const_cast<PBuffer>(outTuple[idx++].pData))),
-                              exact);
+            BOOST_CHECK_EQUAL(
+                *(reinterpret_cast<uint32_t *>(
+                    const_cast<PBuffer>(outTuple[idx++].pData))),
+                exact);
 
-            BOOST_CHECK_EQUAL(*(reinterpret_cast<int64_t *>
-                                (const_cast<PBuffer>(outTuple[idx++].pData))),
-                              exact);
+            BOOST_CHECK_EQUAL(
+                *(reinterpret_cast<int64_t *>(
+                    const_cast<PBuffer>(outTuple[idx++].pData))),
+                exact);
 
-            BOOST_CHECK_EQUAL(*(reinterpret_cast<uint64_t *>
-                                (const_cast<PBuffer>(outTuple[idx++].pData))),
-                              exact);
-
+            BOOST_CHECK_EQUAL(
+                *(reinterpret_cast<uint64_t *>(
+                    const_cast<PBuffer>(outTuple[idx++].pData))),
+                exact);
         }
     }
 }
@@ -697,15 +764,16 @@ CalcCastTest::Round()
     // combinations of types above that should generate warnings
     int warningCombos[][2] = {
         // src index from just above, then dest index from just above
-        {  -1, -1 }   // sentinal
+        {  -1, -1 }   // sentinel
     };
 
-    testExe(CalcCastTest::RoundSet,
-            CalcCastTest::RoundCheck,
-            src, 6,
-            dest, 8,
-            warningCombos,
-            true);
+    testExe(
+        CalcCastTest::RoundSet,
+        CalcCastTest::RoundCheck,
+        src, 6,
+        dest, 8,
+        warningCombos,
+        true);
 }
 
 
@@ -747,10 +815,11 @@ CalcCastTest::OverflowSet(TupleDataWithBuffer& inTuple)
 }
 
 void
-CalcCastTest::OverflowCheck(TupleDataWithBuffer const & outTuple,
-                            int numSrcTypes,
-                            deque<CalcMessage>& warnings,
-                            vector<int> const & expectedWarnings)
+CalcCastTest::OverflowCheck(
+    TupleDataWithBuffer const & outTuple,
+    int numSrcTypes,
+    deque<CalcMessage>& warnings,
+    vector<int> const & expectedWarnings)
 {
     checkWarnings(warnings, expectedWarnings);
 
@@ -827,10 +896,11 @@ CalcCastTest::Overflow()
         {  9,  7  },
         {  9,  8  },  // d -> r
 
-        { -1, -1  }   // sentinal
+        { -1, -1  }   // sentinel
     };
 
-    testExe(CalcCastTest::OverflowSet,
+    testExe(
+        CalcCastTest::OverflowSet,
             CalcCastTest::OverflowCheck,
             src, 10,
             dest, 10,
@@ -843,7 +913,6 @@ CalcCastTest::Overflow()
 void
 CalcCastTest::UnderflowSet(TupleDataWithBuffer& inTuple)
 {
-
     int idx = 0;
 
     *(reinterpret_cast<int8_t *>
@@ -883,10 +952,11 @@ CalcCastTest::UnderflowSet(TupleDataWithBuffer& inTuple)
 }
 
 void
-CalcCastTest::UnderflowCheck(TupleDataWithBuffer const & outTuple,
-                             int numSrcTypes,
-                             deque<CalcMessage>& warnings,
-                             vector<int> const & expectedWarnings)
+CalcCastTest::UnderflowCheck(
+    TupleDataWithBuffer const & outTuple,
+    int numSrcTypes,
+    deque<CalcMessage>& warnings,
+    vector<int> const & expectedWarnings)
 {
     checkWarnings(warnings, expectedWarnings);
 
@@ -954,15 +1024,16 @@ CalcCastTest::Underflow()
         {  9,  7  },  // d -> u8
         {  9,  8  },  // d -> r
 
-        { -1, -1  }   // sentinal
+        { -1, -1  }   // sentinel
     };
 
-    testExe(CalcCastTest::UnderflowSet,
-            CalcCastTest::UnderflowCheck,
-            src, 10,
-            dest, 10,
-            warningCombos,
-            false);
+    testExe(
+        CalcCastTest::UnderflowSet,
+        CalcCastTest::UnderflowCheck,
+        src, 10,
+        dest, 10,
+        warningCombos,
+        false);
 }
 
 

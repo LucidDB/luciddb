@@ -36,18 +36,31 @@ class ReturnInstruction : public Instruction
 {
 public:
     explicit
-    ReturnInstruction() { }
+    ReturnInstruction() {}
+
     virtual
-    ~ReturnInstruction() { }
+    ~ReturnInstruction() {}
 
     virtual void exec(TProgramCounter& pc) const {
         // Force pc past end of program
         pc = TPROGRAMCOUNTERMAX;
     }
 
-    static const char * longName() { return "Return"; }
-    static const char * shortName() { return "RETURN"; }
-    static int numArgs() { return 0; }
+    static const char * longName()
+    {
+        return "Return";
+    }
+
+    static const char * shortName()
+    {
+        return "RETURN";
+    }
+
+    static int numArgs()
+    {
+        return 0;
+    }
+
     void describe(string& out, bool values) const {
         out = longName();
     }
@@ -77,9 +90,10 @@ public:
     explicit
     RaiseInstruction(RegisterRef<char*>* code) :
         mCode(code)
-    { }
+    {}
+
     virtual
-    ~RaiseInstruction() { }
+    ~RaiseInstruction() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -88,9 +102,21 @@ public:
         }
     }
 
-    static const char * longName() { return "Raise"; }
-    static const char * shortName() { return "RAISE"; }
-    static int numArgs() { return 1; }
+    static const char * longName()
+    {
+        return "Raise";
+    }
+
+    static const char * shortName()
+    {
+        return "RAISE";
+    }
+
+    static int numArgs()
+    {
+        return 1;
+    }
+
     void describe(string& out, bool values) const {
         out = longName();
     }
