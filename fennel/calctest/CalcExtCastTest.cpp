@@ -103,8 +103,10 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastDecimalToChar);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastDecimalToVarChar);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastBigExactToString);
-        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastExactToStringTruncates); // errors
-        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastDecimalToStringTruncates); // errors
+        FENNEL_UNIT_TEST_CASE(
+            CalcExtCastTest, testCalcExtCastExactToStringTruncates); // errors
+        FENNEL_UNIT_TEST_CASE(
+            CalcExtCastTest, testCalcExtCastDecimalToStringTruncates); // errors
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastCharToBoolean);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastVarCharToBoolean);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastCharToExact);
@@ -112,9 +114,12 @@ public:
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastCharToDecimal);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastVarCharToDecimal);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToExactFails);
-        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToDecimalFails);
-        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToDecimalMinMax);
-        FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToDecimalRange);
+        FENNEL_UNIT_TEST_CASE(
+            CalcExtCastTest, testCalcExtCastStringToDecimalFails);
+        FENNEL_UNIT_TEST_CASE(
+            CalcExtCastTest, testCalcExtCastStringToDecimalMinMax);
+        FENNEL_UNIT_TEST_CASE(
+            CalcExtCastTest, testCalcExtCastStringToDecimalRange);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastStringToApprox);
         FENNEL_UNIT_TEST_CASE(CalcExtCastTest, testCalcExtCastApproxToString);
     }
@@ -149,15 +154,18 @@ string
 CalcExtCastTest::rpad(string s, int size, char pad)
 {
     int n = size - s.size();
-    if (n > 0)
+    if (n > 0) {
         s.append(n, pad);
+    }
     return s;
 }
 
 int
 CalcExtCastTest::cmpTupInt(TupleDatum const & tup, int val)
 {
-    if (cmpTupNull(tup)) return 1;
+    if (cmpTupNull(tup)) {
+        return 1;
+    }
     return *(reinterpret_cast<int*>
              (const_cast<PBuffer>(tup.pData))) - val;
 }
@@ -165,46 +173,59 @@ CalcExtCastTest::cmpTupInt(TupleDatum const & tup, int val)
 int
 CalcExtCastTest::cmpTupDouble(TupleDatum const & tup, double val)
 {
-    if (cmpTupNull(tup)) return 1;
+    if (cmpTupNull(tup)) {
+        return 1;
+    }
     double tval = * reinterpret_cast<double*>
         (const_cast<PBuffer>(tup.pData));
-    if (fabs(tval - val) < 0.00001) return 0;
-    return (tval > val)? 1 : -1;
+    if (fabs(tval - val) < 0.00001) {
+        return 0;
+    }
+    return (tval > val) ? 1 : -1;
 }
 
 int
-CalcExtCastTest::cmpTupInt64(TupleDatum const & tup,
-                             int64_t val)
+CalcExtCastTest::cmpTupInt64(
+    TupleDatum const & tup,
+    int64_t val)
 {
-    if (cmpTupNull(tup)) return 1;
+    if (cmpTupNull(tup)) {
+        return 1;
+    }
     return *(reinterpret_cast<int64_t*>
              (const_cast<PBuffer>(tup.pData))) - val;
 }
 
 int
-CalcExtCastTest::cmpTupStr(TupleDatum const & tup,
-                           const string& s)
+CalcExtCastTest::cmpTupStr(
+    TupleDatum const & tup,
+    const string& s)
 {
     return cmpTupStr(tup, s.c_str());
 }
 
 int
-CalcExtCastTest::cmpTupStr(TupleDatum const & tup,
-                           char const * const str)
+CalcExtCastTest::cmpTupStr(
+    TupleDatum const & tup,
+    char const * const str)
 {
-    if (cmpTupNull(tup)) return 1;
+    if (cmpTupNull(tup)) {
+        return 1;
+    }
     int len = strlen(str);
     BOOST_CHECK_EQUAL(len, tup.cbData);
-    return strncmp(reinterpret_cast<char *>
-                   (const_cast<PBuffer>(tup.pData)),
-                   str,
-                   len);
+    return strncmp(
+        reinterpret_cast<char *>(const_cast<PBuffer>(tup.pData)),
+        str,
+        len);
 }
 
 int
 CalcExtCastTest::cmpTupBool(TupleDatum const & tup, bool val)
 {
-    if (cmpTupNull(tup)) return 0;
+    if (cmpTupNull(tup)) {
+        return 0;
+    }
     return *(reinterpret_cast<bool*>
              (const_cast<PBuffer>(tup.pData))) == val;
 }
@@ -217,8 +238,9 @@ CalcExtCastTest::cmpTupNull(TupleDatum const & tup)
 
 // for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
 void
-CalcExtCastTest::printOutput(TupleData const & tup,
-                               Calculator const & calc)
+CalcExtCastTest::printOutput(
+    TupleData const & tup,
+    Calculator const & calc)
 {
     if (verbose) {
         TuplePrinter tuplePrinter;
@@ -230,8 +252,9 @@ CalcExtCastTest::printOutput(TupleData const & tup,
 
 // copy-by-reference locals into identical output register
 void
-CalcExtCastTest::refLocalOutput(ostringstream& pg,
-                                  int count)
+CalcExtCastTest::refLocalOutput(
+    ostringstream& pg,
+    int count)
 {
     int i;
 
@@ -291,8 +314,7 @@ CalcExtCastTest::testCalcExtCastStringToChar()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -392,8 +414,7 @@ CalcExtCastTest::testCalcExtCastStringToVarChar()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -456,21 +477,23 @@ CalcExtCastTest::testCalcExtCastBooleanToChar()
     pg << "V , 1, 0;" << endl;
     pg << "T;" << endl;
     // cast all to CHAR(3)
-    for (int i=0; i < 3; i++)
+    for (int i = 0; i < 3; i++) {
         pg << "CALL 'castA(L" << i << ", C" << i << ");" << endl;
+    }
     // cast all to CHAR(4)
-    for (int i=0; i < 3; i++)
-        pg << "CALL 'castA(L" << (i+3) << ", C" << i << ");" << endl;
+    for (int i = 0; i < 3; i++) {
+        pg << "CALL 'castA(L" << (i + 3) << ", C" << i << ");" << endl;
+    }
     // cast all to CHAR(5)
-    for (int i=0; i < 3; i++)
-        pg << "CALL 'castA(L" << (i+6) << ", C" << i << ");" << endl;
+    for (int i = 0; i < 3; i++) {
+        pg << "CALL 'castA(L" << (i + 6) << ", C" << i << ");" << endl;
+    }
     refLocalOutput(pg, 9);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -524,21 +547,23 @@ CalcExtCastTest::testCalcExtCastBooleanToVarChar()
     pg << "V , 1, 0;" << endl;
     pg << "T;" << endl;
     // cast all to VARCHAR(3)
-    for (int i=0; i < 3; i++)
+    for (int i = 0; i < 3; i++) {
         pg << "CALL 'castA(L" << i << ", C" << i << ");" << endl;
+    }
     // cast all to VARCHAR(4)
-    for (int i=0; i < 3; i++)
-        pg << "CALL 'castA(L" << (i+3) << ", C" << i << ");" << endl;
+    for (int i = 0; i < 3; i++) {
+        pg << "CALL 'castA(L" << (i + 3) << ", C" << i << ");" << endl;
+    }
     // cast all to VARCHAR(5)
-    for (int i=0; i < 3; i++)
-        pg << "CALL 'castA(L" << (i+6) << ", C" << i << ");" << endl;
+    for (int i = 0; i < 3; i++) {
+        pg << "CALL 'castA(L" << (i + 6) << ", C" << i << ");" << endl;
+    }
     refLocalOutput(pg, 9);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -591,18 +616,19 @@ CalcExtCastTest::testCalcExtCastExactToChar()
     pg << "V , 0, 10, -10;" << endl;
     pg << "T;" << endl;
     // cast all to CHAR(3)
-    for (int i=0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         pg << "CALL 'castA(L" << i << ", C" << i << ");" << endl;
+    }
     // cast all to CHAR(16)
-    for (int i=0; i < 4; i++)
-        pg << "CALL 'castA(L" << (i+4) << ", C" << i << ");" << endl;
+    for (int i = 0; i < 4; i++) {
+        pg << "CALL 'castA(L" << (i + 4) << ", C" << i << ");" << endl;
+    }
     refLocalOutput(pg, 8);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -640,18 +666,19 @@ CalcExtCastTest::testCalcExtCastExactToVarChar()
     pg << "V , 0, 10, -10;" << endl;
     pg << "T;" << endl;
     // cast all to VARCHAR(3)
-    for (int i=0; i < 4; i++)
+    for (int i = 0; i < 4; i++) {
         pg << "CALL 'castA(L" << i << ", C" << i << ");" << endl;
+    }
     // cast all to VARCHAR(16)
-    for (int i=0; i < 4; i++)
-        pg << "CALL 'castA(L" << (i+4) << ", C" << i << ");" << endl;
+    for (int i = 0; i < 4; i++) {
+        pg << "CALL 'castA(L" << (i + 4) << ", C" << i << ");" << endl;
+    }
     refLocalOutput(pg, 8);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -702,33 +729,42 @@ CalcExtCastTest::testCalcExtCastDecimalToChar()
     pg << "V , 0, 1000, -1090, 430, -9, 30, 5, 2, 0, -2;" << endl;
     pg << "T;" << endl;
     // cast decimal(5,2) to CHAR(6)
-    for (int i=0; i < 7; i++)
+    for (int i = 0; i < 7; i++) {
         pg << "CALL 'castA(L" << i << ", C" << i << ", C7, C8 );" << endl;
+    }
     // cast decimal(5,2) to CHAR(16)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+7) << ", C" << i << ", C7, C8 );" << endl;
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 7) << ", C" << i << ", C7, C8 );" << endl;
+    }
 
     // cast decimal(5,0) to CHAR(5)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+14) << ", C" << i << ", C7, C9 );" << endl;
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 14) << ", C" << i << ", C7, C9 );"
+           << endl;
+    }
     // cast decimal(5,0) to CHAR(16)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+21) << ", C" << i << ", C7, C9 );" << endl;
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 21) << ", C" << i << ", C7, C9 );"
+           << endl;
+    }
 
     // cast decimal(5,-2) to CHAR(7)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+28) << ", C" << i << ", C7, C10 );" << endl;
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 28) << ", C" << i << ", C7, C10 );"
+           << endl;
+    }
     // cast decimal(5,-2) to CHAR(16)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+35) << ", C" << i << ", C7, C10 );" << endl;
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 35) << ", C" << i << ", C7, C10 );"
+           << endl;
+    }
 
     refLocalOutput(pg, 7*6);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -817,33 +853,39 @@ CalcExtCastTest::testCalcExtCastDecimalToVarChar()
     pg << "V , 0, 1000, -1090, 430, -9, 30, 5, 2, 0, -2;" << endl;
     pg << "T;" << endl;
     // cast decimal(5,2) to VARCHAR(6)
-    for (int i=0; i < 7; i++)
+    for (int i = 0; i < 7; i++) {
         pg << "CALL 'castA(L" << i << ", C" << i << ", C7, C8 );" << endl;
+    }
     // cast decimal(5,2) to VARCHAR(16)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+7) << ", C" << i << ", C7, C8 );" << endl;
-
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 7) << ", C" << i << ", C7, C8 );" << endl;
+    }
     // cast decimal(5,0) to VARCHAR(5)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+14) << ", C" << i << ", C7, C9 );" << endl;
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 14) << ", C" << i << ", C7, C9 );"
+           << endl;
+    }
     // cast decimal(5,0) to VARCHAR(16)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+21) << ", C" << i << ", C7, C9 );" << endl;
-
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 21) << ", C" << i << ", C7, C9 );"
+           << endl;
+    }
     // cast decimal(5,-2) to VARCHAR(7)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+28) << ", C" << i << ", C7, C10 );" << endl;
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 28) << ", C" << i << ", C7, C10 );"
+           << endl;
+    }
     // cast decimal(5,-2) to VARCHAR(16)
-    for (int i=0; i < 7; i++)
-        pg << "CALL 'castA(L" << (i+35) << ", C" << i << ", C7, C10 );" << endl;
-
-    refLocalOutput(pg, 7*6);      // make output available
+    for (int i = 0; i < 7; i++) {
+        pg << "CALL 'castA(L" << (i + 35) << ", C" << i << ", C7, C10 );"
+           << endl;
+    }
+    refLocalOutput(pg, 7 * 6);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -927,8 +969,7 @@ CalcExtCastTest::testCalcExtCastBigExactToString()
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -970,8 +1011,7 @@ CalcExtCastTest::testCalcExtCastExactToStringTruncates()
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1057,8 +1097,7 @@ CalcExtCastTest::testCalcExtCastDecimalToStringTruncates()
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1174,15 +1213,15 @@ void CalcExtCastTest::testCalcExtCastCharToBoolean()
        << ", 0x" << stringToHex("  Invalid    ")
        << ";" << endl;
     pg << "T;" << endl;
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8; i++) {
         pg << "CALL 'castA(L"<<i<<",C"<<i<<");"<< endl;
+    }
     refLocalOutput(pg, 8);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1237,15 +1276,15 @@ void CalcExtCastTest::testCalcExtCastVarCharToBoolean()
        << ", 0x" << stringToHex("  Invalid    ")
        << ";" << endl;
     pg << "T;" << endl;
-    for (int i = 0; i < 8; i++)
-        pg << "CALL 'castA(L"<<i<<",C"<<i<<");"<< endl;
+    for (int i = 0; i < 8; i++) {
+        pg << "CALL 'castA(L" << i << ",C" << i << ");" << endl;
+    }
     refLocalOutput(pg, 8);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1300,15 +1339,15 @@ void CalcExtCastTest::testCalcExtCastVarCharToExact()
        << ", 0x" << stringToHex(rpad(minInt64String(), 32))
        << ";" << endl;
     pg << "T;" << endl;
-    for (int i = 0; i < 9; i++)
-        pg << "CALL 'castA(L"<<i<<",C"<<i<<");"<< endl;
+    for (int i = 0; i < 9; i++) {
+        pg << "CALL 'castA(L" << i << ",C" << i << ");" << endl;
+    }
     refLocalOutput(pg, 9);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1324,12 +1363,16 @@ void CalcExtCastTest::testCalcExtCastVarCharToExact()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[0]));
     BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[1],  123));
     BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[2], -123));
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[3], numeric_limits<int64_t>::max()));
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[4], numeric_limits<int64_t>::min()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[3], numeric_limits<int64_t>::max()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[4], numeric_limits<int64_t>::min()));
     BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[5],  123));
     BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[6], -123));
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[7], numeric_limits<int64_t>::max()));
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[8], numeric_limits<int64_t>::min()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[7], numeric_limits<int64_t>::max()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[8], numeric_limits<int64_t>::min()));
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
 
@@ -1350,15 +1393,15 @@ void CalcExtCastTest::testCalcExtCastCharToExact()
        << ", 0x" << stringToHex(rpad(minInt64String(), 32))
        << ";" << endl;
     pg << "T;" << endl;
-    for (int i = 0; i < 9; i++)
-        pg << "CALL 'castA(L"<<i<<",C"<<i<<");"<< endl;
+    for (int i = 0; i < 9; i++) {
+        pg << "CALL 'castA(L" << i << ",C" << i << ");" << endl;
+    }
     refLocalOutput(pg, 9);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1374,12 +1417,16 @@ void CalcExtCastTest::testCalcExtCastCharToExact()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[0]));
     BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[1],  123));
     BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[2], -123));
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[3], numeric_limits<int64_t>::max()));
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[4], numeric_limits<int64_t>::min()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[3], numeric_limits<int64_t>::max()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[4], numeric_limits<int64_t>::min()));
     BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[5],  123));
     BOOST_CHECK_EQUAL(0, cmpTupInt(outTuple[6], -123));
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[7], numeric_limits<int64_t>::max()));
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[8], numeric_limits<int64_t>::min()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[7], numeric_limits<int64_t>::max()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[8], numeric_limits<int64_t>::min()));
     BOOST_CHECK(iter == calc.mWarnings.end());
 }
 
@@ -1411,20 +1458,21 @@ void CalcExtCastTest::testCalcExtCastVarCharToDecimal()
        << ", 5, 2, 0, -2;" << endl;
     pg << "T;" << endl;
 
-    for (int i = 0; i < 9; i++)
-        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C9, C10);"<< endl;
-    for (int i = 0; i < 9; i++)
-        pg << "CALL 'castA(L"<<(i+9)<<",C"<<i<<",C9, C11);"<< endl;
-    for (int i = 0; i < 9; i++)
-        pg << "CALL 'castA(L"<<(i+18)<<",C"<<i<<",C9, C12);"<< endl;
-
+    for (int i = 0; i < 9; i++) {
+        pg << "CALL 'castA(L" << i << ",C" << i << ",C9, C10);" << endl;
+    }
+    for (int i = 0; i < 9; i++) {
+        pg << "CALL 'castA(L" << (i + 9) << ",C" << i << ",C9, C11);" << endl;
+    }
+    for (int i = 0; i < 9; i++) {
+        pg << "CALL 'castA(L" << (i + 18) << ",C" << i << ",C9, C12);" << endl;
+    }
     refLocalOutput(pg, 9*3);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1501,20 +1549,21 @@ void CalcExtCastTest::testCalcExtCastCharToDecimal()
        << ", 5, 2, 0, -2;" << endl;
     pg << "T;" << endl;
 
-    for (int i = 0; i < 9; i++)
-        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C9, C10);"<< endl;
-    for (int i = 0; i < 9; i++)
-        pg << "CALL 'castA(L"<<(i+9)<<",C"<<i<<",C9, C11);"<< endl;
-    for (int i = 0; i < 9; i++)
-        pg << "CALL 'castA(L"<<(i+18)<<",C"<<i<<",C9, C12);"<< endl;
-
+    for (int i = 0; i < 9; i++) {
+        pg << "CALL 'castA(L" << i << ",C" << i << ",C9, C10);" <<  endl;
+    }
+    for (int i = 0; i < 9; i++) {
+        pg << "CALL 'castA(L" << (i + 9) << ",C" << i << ",C9, C11);" << endl;
+    }
+    for (int i = 0; i < 9; i++) {
+        pg << "CALL 'castA(L" << (i + 18) << ",C" << i << ",C9, C12);" << endl;
+    }
     refLocalOutput(pg, 9*3);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1572,7 +1621,8 @@ void CalcExtCastTest::testCalcExtCastStringToExactFails()
     pg << "L " << outloc.str();
     pg << "C vc,3, vc,3, c,3, c,3;" << endl;
     pg << "V 0x" << stringToHex("abc") << ", 0x" << stringToHex("12z")
-       << ", 0x" << stringToHex("abc") << ", 0x" << stringToHex("12z") << ";" << endl;
+       << ", 0x" << stringToHex("abc") << ", 0x" << stringToHex("12z")
+       << ";" << endl;
     pg << "T;" << endl;
     pg << "CALL 'castA(L0, C0);" << endl;
     pg << "CALL 'castA(L1, C1);" << endl;
@@ -1583,8 +1633,7 @@ void CalcExtCastTest::testCalcExtCastStringToExactFails()
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1626,16 +1675,15 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalFails()
        << ", 5, 2;" << endl;
     pg << "T;" << endl;
 
-    for (int i = 0; i < 8; i++)
-        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C8, C9);"<< endl;
-
+    for (int i = 0; i < 8; i++) {
+        pg << "CALL 'castA(L" << i << ",C" << i << ",C8, C9);" << endl;
+    }
     refLocalOutput(pg, 8);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1692,19 +1740,18 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalMinMax()
        << ", 19, 0, 9, -10;" << endl;
     pg << "T;" << endl;
 
-    for (int i = 0; i < 11; i++)
-        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C11, C12);"<< endl;
-
-    for (int i = 0; i < 11; i++)
-        pg << "CALL 'castA(L"<<(i+11)<<",C"<<i<<",C13, C14);"<< endl;
-
+    for (int i = 0; i < 11; i++) {
+        pg << "CALL 'castA(L" << i << ",C" << i << ",C11, C12);" << endl;
+    }
+    for (int i = 0; i < 11; i++) {
+        pg << "CALL 'castA(L" << (i + 11) << ",C" << i << ",C13, C14);" << endl;
+    }
     refLocalOutput(pg, 22);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         cout << ex.getMessage();
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
@@ -1722,10 +1769,12 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalMinMax()
 
     // decimal(19,0)
     // MIN -> decimal(19,0) = ok
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[0], std::numeric_limits<int64_t>::min()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[0], std::numeric_limits<int64_t>::min()));
 
     // MAX -> decimal(19,0) = ok
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[1], std::numeric_limits<int64_t>::max()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[1], std::numeric_limits<int64_t>::max()));
 
     // MAX + 1 -> decimal(19,0) = out of range
     BOOST_CHECK_EQUAL(iter->pc, 2);
@@ -1733,7 +1782,8 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalMinMax()
     iter++;
 
     // MAX.12345 -> decimal(19, 0) = ok
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[3], std::numeric_limits<int64_t>::max()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[3], std::numeric_limits<int64_t>::max()));
 
     // MAX.9 -> decimal(19, 0) = out of range
     BOOST_CHECK_EQUAL(iter->pc, 4);
@@ -1746,7 +1796,8 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalMinMax()
     iter++;
 
     // (MIN+1).9 -> decimal(19,0) = ok
-    BOOST_CHECK_EQUAL(0, cmpTupInt64(outTuple[6], std::numeric_limits<int64_t>::min()));
+    BOOST_CHECK_EQUAL(
+        0, cmpTupInt64(outTuple[6], std::numeric_limits<int64_t>::min()));
 
     // MIN.9 -> decimal(19,0) = out of range
     BOOST_CHECK_EQUAL(iter->pc, 7);
@@ -1817,8 +1868,8 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalMinMax()
 
 void CalcExtCastTest::testCalcExtCastStringToDecimalRange()
 {
-    // test values: 1000 999.999, 999.991 9.99999e2 9.9999e2, 99999999990000000000e-20
-    // cast to decimal(5, 2)
+    // test values: 1000 999.999, 999.991 9.99999e2 9.9999e2,
+    // 99999999990000000000e-20, cast to decimal(5, 2)
     ostringstream pg(""), outloc("");
     outloc << "s8, s8, s8, s8, s8, s8;" << endl;
     pg << "O " << outloc.str();
@@ -1834,16 +1885,15 @@ void CalcExtCastTest::testCalcExtCastStringToDecimalRange()
        << ", 5, 2;" << endl;
     pg << "T;" << endl;
 
-    for (int i = 0; i < 6; i++)
-        pg << "CALL 'castA(L"<<i<<",C"<<i<<",C6, C7);"<< endl;
-
+    for (int i = 0; i < 6; i++) {
+        pg << "CALL 'castA(L" << i << ",C" << i << ",C6, C7);" << endl;
+    }
     refLocalOutput(pg, 6);      // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         cout << ex.getMessage();
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
@@ -1922,19 +1972,21 @@ void CalcExtCastTest::testCalcExtCastStringToApprox()
        << "0x" << stringToHex("0.001           ") << ","
        << "0x" << stringToHex("0.00100         ") << ";" << endl;
     pg << "T;" << endl;
-    for (int i=0; i<8; i++)
+    for (int i = 0; i < 8; i++) {
         pg << "CALL 'castA(L" << i << ", C" << i << ");" << endl;
-    for (int i=0; i<8; i++)
-        pg << "CALL 'castA(L" << (i+8) << ", C" << i << ");" << endl;
-    for (int i=0; i<8; i++)
-        pg << "CALL 'castA(L" << (i+16) << ", C" << i << ");" << endl;
+    }
+    for (int i = 0; i < 8; i++) {
+        pg << "CALL 'castA(L" << (i + 8) << ", C" << i << ");" << endl;
+    }
+    for (int i = 0; i < 8; i++) {
+        pg << "CALL 'castA(L" << (i + 16) << ", C" << i << ");" << endl;
+    }
     refLocalOutput(pg, 24);     // make output available
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -1973,18 +2025,19 @@ void CalcExtCastTest::testCalcExtCastApproxToString()
     pg << "C d,d,d,d,d,d;" << endl;
     pg << "V , 0.0, 1.98, -1.98, 0.001, -0.001;" << endl;
     pg << "T;" << endl;
-    for (int i=0; i<6; i++)
-        pg << "CALL 'castA(L"<<i<<", C"<<i<<");" << endl;
-    for (int i=0; i<6; i++)
-        pg << "CALL 'castA(L"<<(i+6)<<", C"<<i<<");" << endl;
+    for (int i = 0; i < 6; i++) {
+        pg << "CALL 'castA(L" << i << ", C" << i << ");" << endl;
+    }
+    for (int i = 0; i < 6; i++) {
+        pg << "CALL 'castA(L" << (i + 6) << ", C" << i << ");" << endl;
+    }
     refLocalOutput(pg, 12);     // make output available
     // cerr << "testCalcExtCastApproxToString Program:\n" << pg.str() << endl;
 
     Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);

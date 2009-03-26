@@ -38,25 +38,26 @@ public:
         : mResult(result),
           mOp1(),
           mOp2()
-    { }
+    {}
     explicit
     BoolInstruction(RegisterRef<bool>* result, RegisterRef<bool>* op1)
         : mResult(result),
           mOp1(op1),
           mOp2()
-    { }
+    {}
     explicit
-    BoolInstruction(RegisterRef<bool>* &result,
-                    RegisterRef<bool>* &op1,
-                    RegisterRef<bool>* &op2)
+    BoolInstruction(
+        RegisterRef<bool>* &result,
+        RegisterRef<bool>* &op1,
+        RegisterRef<bool>* &op2)
         : mResult(result),
           mOp1(op1),
           mOp2(op2)
-    { }
+    {}
 
     virtual
     ~BoolInstruction()
-    { }
+    {}
 
 protected:
     RegisterRef<bool>* mResult;
@@ -78,14 +79,15 @@ class BoolOr : public BoolInstruction
 {
 public:
     explicit
-    BoolOr(RegisterRef<bool>* result,
-           RegisterRef<bool>* op1,
-           RegisterRef<bool>* op2)
+    BoolOr(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
     virtual
-    ~BoolOr() { }
+    ~BoolOr() {}
 
     static const char* longName();
     static const char* shortName();
@@ -132,9 +134,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolOr(static_cast<RegisterRef<bool>*> (sig[0]),
-                          static_cast<RegisterRef<bool>*> (sig[1]),
-                          static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolOr(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -146,9 +149,9 @@ public:
             RegisterRef<bool>* op1,
             RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
-    ~BoolAnd() { }
+    ~BoolAnd() {}
 
     static const char* longName();
     static const char* shortName();
@@ -192,9 +195,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolAnd(static_cast<RegisterRef<bool>*> (sig[0]),
-                           static_cast<RegisterRef<bool>*> (sig[1]),
-                           static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolAnd(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -202,12 +206,13 @@ class BoolNot : public BoolInstruction
 {
 public:
     explicit
-    BoolNot(RegisterRef<bool>* result,
-            RegisterRef<bool>* op1)
+    BoolNot(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1)
         : BoolInstruction(result, op1)
-    { }
+    {}
 
-    ~BoolNot() { }
+    ~BoolNot() {}
 
     static const char* longName();
     static const char* shortName();
@@ -238,8 +243,9 @@ public:
         assert(sig.size() == numArgs());
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
-        return new BoolNot(static_cast<RegisterRef<bool>*> (sig[0]),
-                           static_cast<RegisterRef<bool>*> (sig[1]));
+        return new BoolNot(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]));
     }
 };
 
@@ -247,12 +253,13 @@ class BoolMove : public BoolInstruction
 {
 public:
     explicit
-    BoolMove(RegisterRef<bool>* result,
-             RegisterRef<bool>* op1)
+    BoolMove(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1)
         : BoolInstruction(result, op1)
-    { }
+    {}
 
-    ~BoolMove() { }
+    ~BoolMove() {}
 
     static const char* longName();
     static const char* shortName();
@@ -280,8 +287,9 @@ public:
         assert(sig.size() == numArgs());
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
-        return new BoolMove(static_cast<RegisterRef<bool>*> (sig[0]),
-                            static_cast<RegisterRef<bool>*> (sig[1]));
+        return new BoolMove(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]));
     }
 };
 
@@ -289,12 +297,13 @@ class BoolRef : public BoolInstruction
 {
 public:
     explicit
-    BoolRef(RegisterRef<bool>* result,
-            RegisterRef<bool>* op1)
+    BoolRef(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1)
         : BoolInstruction(result, op1)
-    { }
+    {}
 
-    ~BoolRef() { }
+    ~BoolRef() {}
 
     static const char* longName();
     static const char* shortName();
@@ -318,8 +327,9 @@ public:
         assert(sig.size() == numArgs());
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
-        return new BoolRef(static_cast<RegisterRef<bool>*> (sig[0]),
-                           static_cast<RegisterRef<bool>*> (sig[1]));
+        return new BoolRef(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]));
     }
 };
 
@@ -327,13 +337,14 @@ class BoolIs : public BoolInstruction
 {
 public:
     explicit
-    BoolIs(RegisterRef<bool>* result,
-           RegisterRef<bool>* op1,
-           RegisterRef<bool>* op2)
+    BoolIs(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
-    ~BoolIs() { }
+    ~BoolIs() {}
 
     static const char* longName();
     static const char* shortName();
@@ -371,9 +382,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolIs(static_cast<RegisterRef<bool>*> (sig[0]),
-                          static_cast<RegisterRef<bool>*> (sig[1]),
-                          static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolIs(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -381,13 +393,14 @@ class BoolIsNot : public BoolInstruction
 {
 public:
     explicit
-    BoolIsNot(RegisterRef<bool>* result,
-              RegisterRef<bool>* op1,
-              RegisterRef<bool>* op2)
+    BoolIsNot(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
-    ~BoolIsNot() { }
+    ~BoolIsNot() {}
 
     static const char* longName();
     static const char* shortName();
@@ -425,9 +438,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolIsNot(static_cast<RegisterRef<bool>*> (sig[0]),
-                             static_cast<RegisterRef<bool>*> (sig[1]),
-                             static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolIsNot(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -437,13 +451,14 @@ class BoolEqual : public BoolInstruction
 {
 public:
     explicit
-    BoolEqual(RegisterRef<bool>* result,
-              RegisterRef<bool>* op1,
-              RegisterRef<bool>* op2)
+    BoolEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
-    ~BoolEqual() { }
+    ~BoolEqual() {}
 
     static const char* longName();
     static const char* shortName();
@@ -477,9 +492,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                             static_cast<RegisterRef<bool>*> (sig[1]),
-                             static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolEqual(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -487,13 +503,14 @@ class BoolNotEqual : public BoolInstruction
 {
 public:
     explicit
-    BoolNotEqual(RegisterRef<bool>* result,
-                 RegisterRef<bool>* op1,
-                 RegisterRef<bool>* op2)
+    BoolNotEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
-    ~BoolNotEqual() { }
+    ~BoolNotEqual() {}
 
     static const char* longName();
     static const char* shortName();
@@ -527,9 +544,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolNotEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                                static_cast<RegisterRef<bool>*> (sig[1]),
-                                static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolNotEqual(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -537,13 +555,14 @@ class BoolGreater : public BoolInstruction
 {
 public:
     explicit
-    BoolGreater(RegisterRef<bool>* result,
-                RegisterRef<bool>* op1,
-                RegisterRef<bool>* op2)
+    BoolGreater(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
-    ~BoolGreater() { }
+    ~BoolGreater() {}
 
     static const char* longName();
     static const char* shortName();
@@ -577,9 +596,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolGreater(static_cast<RegisterRef<bool>*> (sig[0]),
-                               static_cast<RegisterRef<bool>*> (sig[1]),
-                               static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolGreater(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -587,13 +607,14 @@ class BoolGreaterEqual : public BoolInstruction
 {
 public:
     explicit
-    BoolGreaterEqual(RegisterRef<bool>* result,
-                     RegisterRef<bool>* op1,
-                     RegisterRef<bool>* op2)
+    BoolGreaterEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
-    ~BoolGreaterEqual() { }
+    ~BoolGreaterEqual() {}
 
     static const char* longName();
     static const char* shortName();
@@ -630,9 +651,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolGreaterEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                                    static_cast<RegisterRef<bool>*> (sig[1]),
-                                    static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolGreaterEqual(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -640,13 +662,14 @@ class BoolLess : public BoolInstruction
 {
 public:
     explicit
-    BoolLess(RegisterRef<bool>* result,
-             RegisterRef<bool>* op1,
-             RegisterRef<bool>* op2)
+    BoolLess(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
-    ~BoolLess() { }
+    ~BoolLess() {}
 
     static const char* longName();
     static const char* shortName();
@@ -680,9 +703,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolLess(static_cast<RegisterRef<bool>*> (sig[0]),
-                            static_cast<RegisterRef<bool>*> (sig[1]),
-                            static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolLess(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -690,13 +714,14 @@ class BoolLessEqual : public BoolInstruction
 {
 public:
     explicit
-    BoolLessEqual(RegisterRef<bool>* result,
-                  RegisterRef<bool>* op1,
-                  RegisterRef<bool>* op2)
+    BoolLessEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1,
+        RegisterRef<bool>* op2)
         : BoolInstruction(result, op1, op2)
-    { }
+    {}
 
-    ~BoolLessEqual() { }
+    ~BoolLessEqual() {}
 
     static const char* longName();
     static const char* shortName();
@@ -733,9 +758,10 @@ public:
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
         assert((sig[2])->type() == STANDARD_TYPE_BOOL);
-        return new BoolLessEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                                 static_cast<RegisterRef<bool>*> (sig[1]),
-                                 static_cast<RegisterRef<bool>*> (sig[2]));
+        return new BoolLessEqual(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]),
+            static_cast<RegisterRef<bool>*> (sig[2]));
     }
 };
 
@@ -743,12 +769,13 @@ class BoolIsNull : public BoolInstruction
 {
 public:
     explicit
-    BoolIsNull(RegisterRef<bool>* result,
-               RegisterRef<bool>* op1)
+    BoolIsNull(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1)
         : BoolInstruction(result, op1)
-    { }
+    {}
 
-    ~BoolIsNull() { }
+    ~BoolIsNull() {}
 
     static const char* longName();
     static const char* shortName();
@@ -776,8 +803,9 @@ public:
         assert(sig.size() == numArgs());
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
-        return new BoolIsNull(static_cast<RegisterRef<bool>*> (sig[0]),
-                              static_cast<RegisterRef<bool>*> (sig[1]));
+        return new BoolIsNull(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]));
     }
 };
 
@@ -785,12 +813,13 @@ class BoolIsNotNull : public BoolInstruction
 {
 public:
     explicit
-    BoolIsNotNull(RegisterRef<bool>* result,
-                  RegisterRef<bool>* op1)
+    BoolIsNotNull(
+        RegisterRef<bool>* result,
+        RegisterRef<bool>* op1)
         : BoolInstruction(result, op1)
-    { }
+    {}
 
-    ~BoolIsNotNull() { }
+    ~BoolIsNotNull() {}
 
     static const char* longName();
     static const char* shortName();
@@ -819,8 +848,9 @@ public:
         assert(sig.size() == numArgs());
         assert((sig[0])->type() == STANDARD_TYPE_BOOL);
         assert((sig[1])->type() == STANDARD_TYPE_BOOL);
-        return new BoolIsNotNull(static_cast<RegisterRef<bool>*> (sig[0]),
-                                 static_cast<RegisterRef<bool>*> (sig[1]));
+        return new BoolIsNotNull(
+            static_cast<RegisterRef<bool>*> (sig[0]),
+            static_cast<RegisterRef<bool>*> (sig[1]));
     }
 };
 
@@ -830,9 +860,9 @@ public:
     explicit
     BoolToNull(RegisterRef<bool>* result)
         : BoolInstruction(result)
-    { }
+    {}
 
-    ~BoolToNull() { }
+    ~BoolToNull() {}
 
     static const char* longName();
     static const char* shortName();
@@ -870,7 +900,7 @@ class BoolInstructionRegister : InstructionRegister {
         for (uint i = 0; i < t.size(); i++) {
             StandardTypeDescriptorOrdinal type = t[i];
             InstructionSignature sig = INSTCLASS2::signature(type);
-            switch(type) {
+            switch (type) {
 #define Fennel_InstructionRegisterSwitch_Bool 1
 #include "fennel/calculator/InstructionRegisterSwitch.h"
             default:

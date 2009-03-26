@@ -46,7 +46,8 @@ static const int MAXRANDOM = 5;
 static const int MAXCMPLEN = 8;  // Must not be less than 3.
 
 
-static int64_t const ticks_per_day = boost::posix_time::ptime::time_rep_type::frac_sec_per_day();
+static int64_t const ticks_per_day =
+    boost::posix_time::ptime::time_rep_type::frac_sec_per_day();
 static int64_t const ticks_per_year = ticks_per_day * 365LL;
 static int64_t const ticks_per_month = ticks_per_day * 31LL;
 static int64_t const ticks_per_hour = ticks_per_day / 24;
@@ -64,15 +65,17 @@ class SqlDateTest : virtual public TestBase, public TraceSource
 
     void testSqlDateToStr_Ascii();
     void testSqlTimeToStr_Ascii();
-    void appendCharsToUCS2LikeString(string& str,
-                                     int number,
-                                     char character);
+    void appendCharsToUCS2LikeString(
+        string& str,
+        int number,
+        char character);
 
-    void testSqlStrToDate_Ascii_Helper(SqlStrToDateConvAction action,
-                                       uint64_t value,
-                                       char const * const src,
-                                       int len,
-                                       bool errorExpected);
+    void testSqlStrToDate_Ascii_Helper(
+        SqlStrToDateConvAction action,
+        uint64_t value,
+        char const * const src,
+        int len,
+        bool errorExpected);
     void testSqlStrToDate_Ascii();
 
     void testLocalTime();
@@ -90,10 +93,10 @@ public:
         srand(time(NULL));
         FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlDateToStr_Ascii);
         FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlTimeToStr_Ascii);
-        //        FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlTimeStampToStr_Ascii);
+        // FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlTimeStampToStr_Ascii);
         FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlStrToDate_Ascii);
-        //        FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlStrToTime_Ascii);
-        //        FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlStrToTimestamp_Ascii);
+        // FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlStrToTime_Ascii);
+        // FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlStrToTimestamp_Ascii);
         FENNEL_UNIT_TEST_CASE(SqlDateTest, testLocalTime);
     }
 
@@ -123,9 +126,10 @@ SqlDateTest::UnicodeToPrintable(const UnicodeString &s) {
 // build these strings by hand, not using ICU, so we're also
 // testing that ICU is integrated and working correctly.
 void
-SqlDateTest::appendCharsToUCS2LikeString(string& str,
-                                           int number,
-                                           char character)
+SqlDateTest::appendCharsToUCS2LikeString(
+    string& str,
+    int number,
+    char character)
 {
     int i;
     for (i = 0; i < number; i++) {
@@ -174,7 +178,12 @@ SqlDateTest::testSqlDateToStr_Ascii()
 
                 bool caught = false;
                 try {
-                    SqlDateToStr<1,1,SQLDATE>(t.mStr, storage, ticks_per_year + size*ticks_per_month + storage*ticks_per_day);
+                    SqlDateToStr<1,1,SQLDATE>(
+                        t.mStr,
+                        storage,
+                        ticks_per_year
+                        + size * ticks_per_month
+                        + storage * ticks_per_day);
                 } catch (const char *str) {
                     caught = true;
                     BOOST_CHECK_EQUAL(strcmp(str,"22001"),0);
@@ -230,7 +239,12 @@ SqlDateTest::testSqlTimeToStr_Ascii()
 
                 bool caught = false;
                 try {
-                    SqlDateToStr<1,1,SQLTIME>(t.mStr, storage, ticks_per_hour + size*ticks_per_minute + storage*ticks_per_sec);
+                    SqlDateToStr<1,1,SQLTIME>(
+                        t.mStr,
+                        storage,
+                        ticks_per_hour
+                        + size * ticks_per_minute
+                        + storage * ticks_per_sec);
                 } catch (const char *str) {
                     caught = true;
                     BOOST_CHECK_EQUAL(strcmp(str,"22001"),0);
@@ -251,11 +265,12 @@ SqlDateTest::testSqlTimeToStr_Ascii()
 
 // Helper to testSqlStrToDate_Ascii
 void
-SqlDateTest::testSqlStrToDate_Ascii_Helper(SqlStrToDateConvAction action,
-                                           uint64_t value,
-                                           char const * const src,
-                                           int len,
-                                           bool errorExpected)
+SqlDateTest::testSqlStrToDate_Ascii_Helper(
+    SqlStrToDateConvAction action,
+    uint64_t value,
+    char const * const src,
+    int len,
+    bool errorExpected)
 
 {
     int64_t t = 0;

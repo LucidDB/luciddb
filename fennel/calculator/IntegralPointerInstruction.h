@@ -26,7 +26,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-//! PointerSizeT is the only valid result type defined for IntegralPointerInstruction.
+//! PointerSizeT is the only valid result type defined for
+//! IntegralPointerInstruction.
 
 
 template<typename PTR_TYPE>
@@ -34,16 +35,20 @@ class IntegralPointerInstruction : public PointerInstruction
 {
 public:
     explicit
-    IntegralPointerInstruction(RegisterRef<PointerSizeT>* result,
-                               RegisterRef<PTR_TYPE>* op1,
-                               StandardTypeDescriptorOrdinal pointerType)
+    IntegralPointerInstruction(
+        RegisterRef<PointerSizeT>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        StandardTypeDescriptorOrdinal pointerType)
         : mResult(result),
           mOp1(op1),
           mPointerType(pointerType)
-    { }
+    {}
+
     ~IntegralPointerInstruction() {
         // If (0) to reduce performance impact of template type checking
-        if (0) PointerInstruction_NotAPointerType<PTR_TYPE>();
+        if (0) {
+            PointerInstruction_NotAPointerType<PTR_TYPE>();
+        }
     }
 
 protected:
@@ -57,13 +62,15 @@ class PointerGetSize : public IntegralPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    PointerGetSize(RegisterRef<PointerSizeT>* result,
-                   RegisterRef<PTR_TYPE>* op1,
-                   StandardTypeDescriptorOrdinal pointerType)
+    PointerGetSize(
+        RegisterRef<PointerSizeT>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        StandardTypeDescriptorOrdinal pointerType)
         : IntegralPointerInstruction<PTR_TYPE>(result, op1, pointerType)
-    { }
+    {}
+
     virtual
-    ~PointerGetSize() { }
+    ~PointerGetSize() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -72,25 +79,39 @@ public:
             IntegralPointerInstruction<PTR_TYPE>::mResult->toNull();
         } else {
             // get size, put value
-            IntegralPointerInstruction<PTR_TYPE>::mResult->
-               value(IntegralPointerInstruction<PTR_TYPE>::mOp1->length());
+            IntegralPointerInstruction<PTR_TYPE>::mResult->value(
+                IntegralPointerInstruction<PTR_TYPE>::mOp1->length());
         }
     }
 
-    static const char * longName() { return "PointerGetSize"; }
-    static const char * shortName() { return "GETS"; }
-    static int numArgs() { return 2; }
+    static const char * longName()
+    {
+        return "PointerGetSize";
+    }
+
+    static const char * shortName()
+    {
+        return "GETS";
+    }
+
+    static int numArgs()
+    {
+        return 2;
+    }
+
     void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
-        describeHelper(out, values, longName(), shortName(),
-                       IntegralPointerInstruction<PTR_TYPE>::mResult,
-                       IntegralPointerInstruction<PTR_TYPE>::mOp1, &mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            IntegralPointerInstruction<PTR_TYPE>::mResult,
+            IntegralPointerInstruction<PTR_TYPE>::mOp1, &mOp2);
     }
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        return InstructionSignature(shortName(),
-                                    regDesc(1, numArgs() - 1, type, 0));
+        return InstructionSignature(
+            shortName(),
+            regDesc(1, numArgs() - 1, type, 0));
     }
 
     static Instruction*
@@ -99,9 +120,10 @@ public:
         assert(sig.size() == numArgs());
         assert((sig[0])->type() == POINTERSIZET_STANDARD_TYPE);
         return new
-            PointerGetSize(static_cast<RegisterRef<PointerSizeT>*> (sig[0]),
-                           static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                           (sig[1])->type());
+            PointerGetSize(
+                static_cast<RegisterRef<PointerSizeT>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                (sig[1])->type());
     }
 };
 
@@ -110,13 +132,15 @@ class PointerGetMaxSize : public IntegralPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    PointerGetMaxSize(RegisterRef<PointerSizeT>* result,
-                      RegisterRef<PTR_TYPE>* op1,
-                      StandardTypeDescriptorOrdinal pointerType)
+    PointerGetMaxSize(
+        RegisterRef<PointerSizeT>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        StandardTypeDescriptorOrdinal pointerType)
         : IntegralPointerInstruction<PTR_TYPE>(result, op1, pointerType)
-    { }
+    {}
+
     virtual
-    ~PointerGetMaxSize() { }
+    ~PointerGetMaxSize() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -125,25 +149,39 @@ public:
             IntegralPointerInstruction<PTR_TYPE>::mResult->toNull();
         } else {
             // get size, put value
-            IntegralPointerInstruction<PTR_TYPE>::mResult->value
-               (IntegralPointerInstruction<PTR_TYPE>::mOp1->storage());
+            IntegralPointerInstruction<PTR_TYPE>::mResult->value(
+                IntegralPointerInstruction<PTR_TYPE>::mOp1->storage());
         }
     }
 
-    static const char * longName() { return "PointerGetMaxSize"; }
-    static const char * shortName() { return "GETMS"; }
-    static int numArgs() { return 2; }
+    static const char * longName()
+    {
+        return "PointerGetMaxSize";
+    }
+
+    static const char * shortName()
+    {
+        return "GETMS";
+    }
+
+    static int numArgs()
+    {
+        return 2;
+    }
+
     void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
-        describeHelper(out, values, longName(), shortName(),
-                       IntegralPointerInstruction<PTR_TYPE>::mResult,
-                       IntegralPointerInstruction<PTR_TYPE>::mOp1, &mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            IntegralPointerInstruction<PTR_TYPE>::mResult,
+            IntegralPointerInstruction<PTR_TYPE>::mOp1, &mOp2);
     }
 
     static InstructionSignature
     signature(StandardTypeDescriptorOrdinal type) {
-        return InstructionSignature(shortName(),
-                                    regDesc(1, numArgs() - 1, type, 0));
+        return InstructionSignature(
+            shortName(),
+            regDesc(1, numArgs() - 1, type, 0));
     }
 
     static Instruction*
@@ -152,9 +190,10 @@ public:
         assert(sig.size() == numArgs());
         assert((sig[0])->type() == POINTERSIZET_STANDARD_TYPE);
         return new
-            PointerGetMaxSize(static_cast<RegisterRef<PointerSizeT>*> (sig[0]),
-                              static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                              (sig[1])->type());
+            PointerGetMaxSize(
+                static_cast<RegisterRef<PointerSizeT>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                (sig[1])->type());
     }
 };
 
@@ -170,7 +209,7 @@ class IntegralPointerInstructionRegister : InstructionRegister {
             StandardTypeDescriptorOrdinal type = t[i];
             // Type <char> below is a placeholder and is ignored.
             InstructionSignature sig = INSTCLASS2<char>::signature(type);
-            switch(type) {
+            switch (type) {
                 // Array_Text, below, does not allow assembly programs
                 // of to have say, pointer to int16s, but the language
                 // does not have pointers defined other than
@@ -186,7 +225,6 @@ class IntegralPointerInstructionRegister : InstructionRegister {
 public:
     static void
     registerInstructions() {
-
         vector<StandardTypeDescriptorOrdinal> t;
         // isArray, below, does not allow assembly programs of to
         // have say, pointer to int16s, but the language does not have

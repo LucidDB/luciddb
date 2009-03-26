@@ -110,16 +110,18 @@ CalcMiscTest::testCalcStatusReg()
     cout << endl;
 #endif
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
-                      4);
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                        (const_cast<PBuffer>((*statusTuple)[1].pData))),
-                      5);
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                        (const_cast<PBuffer>((*statusTuple)[2].pData))),
-                      6);
-
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint16_t *>(
+            const_cast<PBuffer>((*statusTuple)[0].pData))),
+        4);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint16_t *>(
+            const_cast<PBuffer>((*statusTuple)[1].pData))),
+        5);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint16_t *>(
+            const_cast<PBuffer>((*statusTuple)[2].pData))),
+        6);
 }
 
 void
@@ -159,31 +161,37 @@ CalcMiscTest::testCalcStatusRegZero()
     for (int i = 1; i <= 3; i++) {
         calc.exec();
 
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                            (const_cast<PBuffer>((*statusTuple)[0].pData))),
-                          i);
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                            (const_cast<PBuffer>((*statusTuple)[1].pData))),
-                          i * 2);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<uint16_t *>(
+                const_cast<PBuffer>((*statusTuple)[0].pData))),
+            i);
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<uint16_t *>(
+                const_cast<PBuffer>((*statusTuple)[1].pData))),
+            i * 2);
     }
 
     calc.zeroStatusRegister();
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
-                      0);
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                        (const_cast<PBuffer>((*statusTuple)[1].pData))),
-                      0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint16_t *>(
+            const_cast<PBuffer>((*statusTuple)[0].pData))),
+        0);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint16_t *>(
+            const_cast<PBuffer>((*statusTuple)[1].pData))),
+        0);
 
     calc.exec();
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
-                      1);
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint16_t *>
-                        (const_cast<PBuffer>((*statusTuple)[1].pData))),
-                      2);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint16_t *>(
+            const_cast<PBuffer>((*statusTuple)[0].pData))),
+        1);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint16_t *>(
+            const_cast<PBuffer>((*statusTuple)[1].pData))),
+        2);
 }
 
 void
@@ -246,8 +254,9 @@ CalcMiscTest::testCalcRefInst()
             switch (regs[regSet]) {
             case 'I':
                 // verify that pointers are identical
-                BOOST_CHECK_EQUAL(outTuple[outReg].pData,
-                                  inTuple[regFrom].pData);
+                BOOST_CHECK_EQUAL(
+                    outTuple[outReg].pData,
+                    inTuple[regFrom].pData);
                 break;
             case 'L':
             case 'C':
@@ -258,33 +267,39 @@ CalcMiscTest::testCalcRefInst()
                 if (regFrom <= 8) {
                     // integer natives cast correctly w/o help
                     // (at least on x86!)
-                    BOOST_CHECK_EQUAL(*(outTuple[outReg].pData),
-                                      regFrom);
+                    BOOST_CHECK_EQUAL(
+                        *(outTuple[outReg].pData),
+                        regFrom);
                 } else if (regFrom == 9) {
                     // real (float)
-                    BOOST_CHECK_EQUAL(*(reinterpret_cast<float const *>
-                                        (outTuple[outReg].pData)),
-                                      static_cast<float>(regFrom));
+                    BOOST_CHECK_EQUAL(
+                        *(reinterpret_cast<float const *>(
+                            outTuple[outReg].pData)),
+                        static_cast<float>(regFrom));
                 } else if (regFrom == 10) {
                     // double
-                    BOOST_CHECK_EQUAL(*(reinterpret_cast<double const*>
-                                        (outTuple[outReg].pData)),
-                                      static_cast<double>(regFrom));
+                    BOOST_CHECK_EQUAL(
+                        *(reinterpret_cast<double const*>(
+                            outTuple[outReg].pData)),
+                        static_cast<double>(regFrom));
                 } else if (regFrom == 11) {
                     // varchar string
-                    BOOST_CHECK_EQUAL(0,
-                                      strncmp(reinterpret_cast<char const *>
-                                              (outTuple[outReg].pData),
-                                              "11",
-                                              2));
-
+                    BOOST_CHECK_EQUAL(
+                        0,
+                        strncmp(
+                            reinterpret_cast<char const *>(
+                                outTuple[outReg].pData),
+                            "11",
+                            2));
                 } else if (regFrom == 12) {
                     // char string
-                    BOOST_CHECK_EQUAL(0,
-                                      strncmp(reinterpret_cast<char const *>
-                                              (outTuple[outReg].pData),
-                                              "12",
-                                              2));
+                    BOOST_CHECK_EQUAL(
+                        0,
+                        strncmp(
+                            reinterpret_cast<char const *>(
+                                outTuple[outReg].pData),
+                            "12",
+                            2));
                 } else {
                     BOOST_FAIL("logic error");
                 }
@@ -333,9 +348,10 @@ CalcMiscTest::testCalcReturn()
     cout << endl;
 #endif
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint32_t *>
-                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
-                      4);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint32_t *>(
+            const_cast<PBuffer>((*statusTuple)[0].pData))),
+        4);
 }
 
 
@@ -380,9 +396,10 @@ CalcMiscTest::testCalcRaise()
     cout << endl;
 #endif
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint32_t *>
-                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
-                      5);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint32_t *>(
+            const_cast<PBuffer>((*statusTuple)[0].pData))),
+        5);
 
     deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
     deque<CalcMessage>::iterator end = calc.mWarnings.end();
@@ -437,9 +454,10 @@ CalcMiscTest::testCalcContinueOnException()
     cout << endl;
 #endif
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint32_t *>
-                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
-                      5);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint32_t *>(
+            const_cast<PBuffer>((*statusTuple)[0].pData))),
+        5);
 
     deque<CalcMessage>::iterator iter = calc.mWarnings.begin();
     deque<CalcMessage>::iterator end = calc.mWarnings.end();
@@ -447,8 +465,10 @@ CalcMiscTest::testCalcContinueOnException()
     BOOST_MESSAGE("warnings: |" << calc.warnings() << "|");
 
     BOOST_CHECK(iter != end);
-    BOOST_CHECK_EQUAL(iter->pc, 1);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "12345"));
+    BOOST_CHECK_EQUAL(
+            iter->pc, 1);
+    BOOST_CHECK_EQUAL(
+            0, strcmp(iter->str, "12345"));
     iter++;
     BOOST_CHECK(iter == end);
 
@@ -456,9 +476,10 @@ CalcMiscTest::testCalcContinueOnException()
     calc.continueOnException(false);
     calc.exec();
 
-    BOOST_CHECK_EQUAL(*(reinterpret_cast<uint32_t *>
-                        (const_cast<PBuffer>((*statusTuple)[0].pData))),
-                      4);
+    BOOST_CHECK_EQUAL(
+        *(reinterpret_cast<uint32_t *>(
+            const_cast<PBuffer>((*statusTuple)[0].pData))),
+        4);
 
     iter = calc.mWarnings.begin();
     end = calc.mWarnings.end();
@@ -466,8 +487,10 @@ CalcMiscTest::testCalcContinueOnException()
     BOOST_MESSAGE("warnings: |" << calc.warnings() << "|");
 
     BOOST_CHECK(iter != end);
-    BOOST_CHECK_EQUAL(iter->pc, 1);
-    BOOST_CHECK_EQUAL(0, strcmp(iter->str, "12345"));
+    BOOST_CHECK_EQUAL(
+            iter->pc, 1);
+    BOOST_CHECK_EQUAL(
+            0, strcmp(iter->str, "12345"));
     iter++;
     BOOST_CHECK(iter == end);
 

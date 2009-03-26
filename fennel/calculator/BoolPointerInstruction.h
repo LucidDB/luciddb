@@ -36,27 +36,31 @@ class BoolPointerInstruction : public PointerInstruction
 {
 public:
     explicit
-    BoolPointerInstruction(RegisterRef<bool>* result,
-                           RegisterRef<PTR_TYPE>* op1,
-                           StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerInstruction(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        StandardTypeDescriptorOrdinal pointerType)
         : mResult(result),
           mOp1(op1),
           mOp2(),            // unused
           mPointerType(pointerType)
-    { }
+    {}
     explicit
-    BoolPointerInstruction(RegisterRef<bool>* result,
-                           RegisterRef<PTR_TYPE>* op1,
-                           RegisterRef<PTR_TYPE>* op2,
-                           StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerInstruction(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        RegisterRef<PTR_TYPE>* op2,
+        StandardTypeDescriptorOrdinal pointerType)
         : mResult(result),
           mOp1(op1),
           mOp2(op2),
           mPointerType(pointerType)
-    { }
+    {}
     ~BoolPointerInstruction() {
         // If (0) to reduce performance impact of template type checking
-        if (0) PointerInstruction_NotAPointerType<PTR_TYPE>();
+        if (0) {
+            PointerInstruction_NotAPointerType<PTR_TYPE>();
+        }
     }
 
 protected:
@@ -72,14 +76,15 @@ class BoolPointerEqual : public BoolPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    BoolPointerEqual(RegisterRef<bool>* result,
-                     RegisterRef<PTR_TYPE>* op1,
-                     RegisterRef<PTR_TYPE>* op2,
-                     StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        RegisterRef<PTR_TYPE>* op2,
+        StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
-    { }
+    {}
     virtual
-    ~BoolPointerEqual() { }
+    ~BoolPointerEqual() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -95,14 +100,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolPointerEqual"; }
-    static const char * shortName() { return "EQ"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolPointerEqual";
+    }
+
+    static const char * shortName()
+    {
+        return "EQ";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult,
-                       BoolPointerInstruction<PTR_TYPE>::mOp1,
-                       BoolPointerInstruction<PTR_TYPE>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolPointerInstruction<PTR_TYPE>::mResult,
+            BoolPointerInstruction<PTR_TYPE>::mOp1,
+            BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -117,10 +135,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolPointerEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                             static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                             static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
-                             (sig[1])->type());
+            BoolPointerEqual(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -129,21 +148,21 @@ class BoolPointerNotEqual : public BoolPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    BoolPointerNotEqual(RegisterRef<bool>* result,
-                        RegisterRef<PTR_TYPE>* op1,
-                        RegisterRef<PTR_TYPE>* op2,
-                        StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerNotEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        RegisterRef<PTR_TYPE>* op2,
+        StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
-    { }
+    {}
     virtual
-    ~BoolPointerNotEqual() { }
+    ~BoolPointerNotEqual() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() ||
             BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
-            BoolPointerInstruction<PTR_TYPE>::mResult->toNull
-                ();
+            BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
         } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() ==
                    BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
@@ -152,14 +171,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolPointerNotEqual"; }
-    static const char * shortName() { return "NE"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolPointerNotEqual";
+    }
+
+    static const char * shortName()
+    {
+        return "NE";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult,
-                       BoolPointerInstruction<PTR_TYPE>::mOp1,
-                       BoolPointerInstruction<PTR_TYPE>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolPointerInstruction<PTR_TYPE>::mResult,
+            BoolPointerInstruction<PTR_TYPE>::mOp1,
+            BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -174,10 +206,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolPointerNotEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                                static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
-                                (sig[1])->type());
+            BoolPointerNotEqual(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -186,14 +219,15 @@ class BoolPointerGreater : public BoolPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    BoolPointerGreater(RegisterRef<bool>* result,
-                       RegisterRef<PTR_TYPE>* op1,
-                       RegisterRef<PTR_TYPE>* op2,
-                       StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerGreater(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        RegisterRef<PTR_TYPE>* op2,
+        StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
-    { }
+    {}
     virtual
-    ~BoolPointerGreater() { }
+    ~BoolPointerGreater() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -208,14 +242,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolPointerGreater"; }
-    static const char * shortName() { return "GT"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolPointerGreater";
+    }
+
+    static const char * shortName()
+    {
+        return "GT";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult,
-                       BoolPointerInstruction<PTR_TYPE>::mOp1,
-                       BoolPointerInstruction<PTR_TYPE>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolPointerInstruction<PTR_TYPE>::mResult,
+            BoolPointerInstruction<PTR_TYPE>::mOp1,
+            BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -230,10 +277,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolPointerGreater(static_cast<RegisterRef<bool>*> (sig[0]),
-                               static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                               static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
-                               (sig[1])->type());
+            BoolPointerGreater(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -242,14 +290,15 @@ class BoolPointerGreaterEqual : public BoolPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    BoolPointerGreaterEqual(RegisterRef<bool>* result,
-                            RegisterRef<PTR_TYPE>* op1,
-                            RegisterRef<PTR_TYPE>* op2,
-                            StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerGreaterEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        RegisterRef<PTR_TYPE>* op2,
+        StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
-    { }
+    {}
     virtual
-    ~BoolPointerGreaterEqual() { }
+    ~BoolPointerGreaterEqual() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -264,14 +313,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolPointerGreaterEqual"; }
-    static const char * shortName() { return "GE"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolPointerGreaterEqual";
+    }
+
+    static const char * shortName()
+    {
+        return "GE";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult,
-                       BoolPointerInstruction<PTR_TYPE>::mOp1,
-                       BoolPointerInstruction<PTR_TYPE>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolPointerInstruction<PTR_TYPE>::mResult,
+            BoolPointerInstruction<PTR_TYPE>::mOp1,
+            BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -286,10 +348,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolPointerGreaterEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                                    static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                                    static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
-                                    (sig[1])->type());
+            BoolPointerGreaterEqual(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -298,14 +361,15 @@ class BoolPointerLess : public BoolPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    BoolPointerLess(RegisterRef<bool>* result,
-                    RegisterRef<PTR_TYPE>* op1,
-                    RegisterRef<PTR_TYPE>* op2,
-                    StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerLess(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        RegisterRef<PTR_TYPE>* op2,
+        StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
-    { }
+    {}
     virtual
-    ~BoolPointerLess() { }
+    ~BoolPointerLess() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -319,14 +383,28 @@ public:
             BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         }
     }
-    static const char * longName() { return "BoolPointerLess"; }
-    static const char * shortName() { return "LT"; }
-    static int numArgs() { return 3; }
+
+    static const char * longName()
+    {
+        return "BoolPointerLess";
+    }
+
+    static const char * shortName()
+    {
+        return "LT";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult,
-                       BoolPointerInstruction<PTR_TYPE>::mOp1,
-                       BoolPointerInstruction<PTR_TYPE>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolPointerInstruction<PTR_TYPE>::mResult,
+            BoolPointerInstruction<PTR_TYPE>::mOp1,
+            BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -341,10 +419,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolPointerLess(static_cast<RegisterRef<bool>*> (sig[0]),
-                            static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                            static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
-                            (sig[1])->type());
+            BoolPointerLess(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -353,14 +432,15 @@ class BoolPointerLessEqual : public BoolPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    BoolPointerLessEqual(RegisterRef<bool>* result,
-                         RegisterRef<PTR_TYPE>* op1,
-                         RegisterRef<PTR_TYPE>* op2,
-                         StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerLessEqual(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        RegisterRef<PTR_TYPE>* op2,
+        StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, op2, pointerType)
-    { }
+    {}
     virtual
-    ~BoolPointerLessEqual() { }
+    ~BoolPointerLessEqual() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -375,14 +455,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolPointerLessEqual"; }
-    static const char * shortName() { return "LE"; }
-    static int numArgs() { return 3; }
+    static const char * longName()
+    {
+        return "BoolPointerLessEqual";
+    }
+
+    static const char * shortName()
+    {
+        return "LE";
+    }
+
+    static int numArgs()
+    {
+        return 3;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult,
-                       BoolPointerInstruction<PTR_TYPE>::mOp1,
-                       BoolPointerInstruction<PTR_TYPE>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolPointerInstruction<PTR_TYPE>::mResult,
+            BoolPointerInstruction<PTR_TYPE>::mOp1,
+            BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -397,10 +490,11 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolPointerLessEqual(static_cast<RegisterRef<bool>*> (sig[0]),
-                                 static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                                 static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
-                                 (sig[1])->type());
+            BoolPointerLessEqual(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[2]),
+                (sig[1])->type());
     }
 };
 
@@ -409,13 +503,14 @@ class BoolPointerIsNull : public BoolPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    BoolPointerIsNull(RegisterRef<bool>* result,
-                      RegisterRef<PTR_TYPE>* op1,
-                      StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerIsNull(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, pointerType)
-    { }
+    {}
     virtual
-    ~BoolPointerIsNull() { }
+    ~BoolPointerIsNull() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -426,14 +521,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolPointerIsNull"; }
-    static const char * shortName() { return "ISNULL"; }
-    static int numArgs() { return 2; }
+    static const char * longName()
+    {
+        return "BoolPointerIsNull";
+    }
+
+    static const char * shortName()
+    {
+        return "ISNULL";
+    }
+
+    static int numArgs()
+    {
+        return 2;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult,
-                       BoolPointerInstruction<PTR_TYPE>::mOp1,
-                       BoolPointerInstruction<PTR_TYPE>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolPointerInstruction<PTR_TYPE>::mResult,
+            BoolPointerInstruction<PTR_TYPE>::mOp1,
+            BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -448,9 +556,10 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolPointerIsNull(static_cast<RegisterRef<bool>*> (sig[0]),
-                              static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                              (sig[1])->type());
+            BoolPointerIsNull(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                (sig[1])->type());
     }
 };
 
@@ -459,13 +568,14 @@ class BoolPointerIsNotNull : public BoolPointerInstruction<PTR_TYPE>
 {
 public:
     explicit
-    BoolPointerIsNotNull(RegisterRef<bool>* result,
-                         RegisterRef<PTR_TYPE>* op1,
-                         StandardTypeDescriptorOrdinal pointerType)
+    BoolPointerIsNotNull(
+        RegisterRef<bool>* result,
+        RegisterRef<PTR_TYPE>* op1,
+        StandardTypeDescriptorOrdinal pointerType)
         : BoolPointerInstruction<PTR_TYPE>(result, op1, pointerType)
-    { }
+    {}
     virtual
-    ~BoolPointerIsNotNull() { }
+    ~BoolPointerIsNotNull() {}
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
@@ -476,14 +586,27 @@ public:
         }
     }
 
-    static const char * longName() { return "BoolPointerIsNotNull"; }
-    static const char * shortName() { return "ISNOTNULL"; }
-    static int numArgs() { return 2; }
+    static const char * longName()
+    {
+        return "BoolPointerIsNotNull";
+    }
+
+    static const char * shortName()
+    {
+        return "ISNOTNULL";
+    }
+
+    static int numArgs()
+    {
+        return 2;
+    }
+
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(),
-                       BoolPointerInstruction<PTR_TYPE>::mResult,
-                       BoolPointerInstruction<PTR_TYPE>::mOp1,
-                       BoolPointerInstruction<PTR_TYPE>::mOp2);
+        describeHelper(
+            out, values, longName(), shortName(),
+            BoolPointerInstruction<PTR_TYPE>::mResult,
+            BoolPointerInstruction<PTR_TYPE>::mOp1,
+            BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -498,9 +621,10 @@ public:
     {
         assert(sig.size() == numArgs());
         return new
-            BoolPointerIsNotNull(static_cast<RegisterRef<bool>*> (sig[0]),
-                                 static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
-                                 (sig[1])->type());
+            BoolPointerIsNotNull(
+                static_cast<RegisterRef<bool>*> (sig[0]),
+                static_cast<RegisterRef<PTR_TYPE>*> (sig[1]),
+                (sig[1])->type());
     }
 };
 
@@ -515,7 +639,7 @@ class BoolPointerInstructionRegister : InstructionRegister {
             StandardTypeDescriptorOrdinal type = t[i];
             // Type <char> below is a placeholder and is ignored.
             InstructionSignature sig = INSTCLASS2<char>::signature(type);
-            switch(type) {
+            switch (type) {
                 // Array_Text, below, does not allow assembly programs
                 // of to have say, pointer to int16s, but the language
                 // does not have pointers defined other than
@@ -531,7 +655,6 @@ class BoolPointerInstructionRegister : InstructionRegister {
 public:
     static void
     registerInstructions() {
-
         vector<StandardTypeDescriptorOrdinal> t;
         // isArray, below, does not allow assembly programs of to
         // have say, pointer to int16s, but the language does not have

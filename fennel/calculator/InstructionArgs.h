@@ -41,15 +41,16 @@ class InstructionArgs
 {
 public:
     explicit
-    InstructionArgs (const vector<RegisterReference*>o)
+    InstructionArgs(const vector<RegisterReference*>o)
         : operands(o),
           pcSet(false)
     {
     }
 
     explicit
-    InstructionArgs (const vector<RegisterReference*>o,
-                    TProgramCounter p)
+    InstructionArgs(
+        const vector<RegisterReference*>o,
+        TProgramCounter p)
         : operands(o),
           pc(p),
           pcSet(true)

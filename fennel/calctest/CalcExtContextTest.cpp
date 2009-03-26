@@ -49,8 +49,9 @@ class CalcExtContextTest : virtual public TestBase, public TraceSource
     void testCalcExtContext();
     void testCalcExtContextPost();
 
-    void printOutput(TupleData const & tup,
-                     Calculator const & calc);
+    void printOutput(
+        TupleData const & tup,
+        Calculator const & calc);
 
 public:
     explicit CalcExtContextTest()
@@ -68,8 +69,9 @@ public:
 
 // for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
 void
-CalcExtContextTest::printOutput(TupleData const & tup,
-                                Calculator const & calc)
+CalcExtContextTest::printOutput(
+    TupleData const & tup,
+    Calculator const & calc)
 {
 #if 0
     TuplePrinter tuplePrinter;
@@ -98,8 +100,9 @@ public:
 int EICtx::mCount = 0;
 
 void
-ctxInst1(boost::scoped_ptr<ExtendedInstructionContext>& context,
-         RegisterRef<bool>* op)
+ctxInst1(
+    boost::scoped_ptr<ExtendedInstructionContext>& context,
+    RegisterRef<bool>* op)
 {
     if (context.get()) {
         op->value(false);
@@ -110,9 +113,10 @@ ctxInst1(boost::scoped_ptr<ExtendedInstructionContext>& context,
 }
 
 void
-ctxInst2(boost::scoped_ptr<ExtendedInstructionContext>& context,
-         RegisterRef<bool>* op,
-         RegisterRef<bool>* dummy2)
+ctxInst2(
+    boost::scoped_ptr<ExtendedInstructionContext>& context,
+    RegisterRef<bool>* op,
+    RegisterRef<bool>* dummy2)
 {
     if (context.get()) {
         op->value(false);
@@ -123,10 +127,11 @@ ctxInst2(boost::scoped_ptr<ExtendedInstructionContext>& context,
 }
 
 void
-ctxInst3(boost::scoped_ptr<ExtendedInstructionContext>& context,
-         RegisterRef<bool>* op,
-         RegisterRef<bool>* dummy2,
-         RegisterRef<bool>* dummy3)
+ctxInst3(
+    boost::scoped_ptr<ExtendedInstructionContext>& context,
+    RegisterRef<bool>* op,
+    RegisterRef<bool>* dummy2,
+    RegisterRef<bool>* dummy3)
 {
     if (context.get()) {
         op->value(false);
@@ -137,11 +142,12 @@ ctxInst3(boost::scoped_ptr<ExtendedInstructionContext>& context,
 }
 
 void
-ctxInst4(boost::scoped_ptr<ExtendedInstructionContext>& context,
-         RegisterRef<bool>* op,
-         RegisterRef<bool>* dummy2,
-         RegisterRef<bool>* dummy3,
-         RegisterRef<bool>* dummy4)
+ctxInst4(
+    boost::scoped_ptr<ExtendedInstructionContext>& context,
+    RegisterRef<bool>* op,
+    RegisterRef<bool>* dummy2,
+    RegisterRef<bool>* dummy3,
+    RegisterRef<bool>* dummy4)
 {
     if (context.get()) {
         op->value(false);
@@ -152,12 +158,13 @@ ctxInst4(boost::scoped_ptr<ExtendedInstructionContext>& context,
 }
 
 void
-ctxInst5(boost::scoped_ptr<ExtendedInstructionContext>& context,
-         RegisterRef<bool>* op,
-         RegisterRef<bool>* dummy2,
-         RegisterRef<bool>* dummy3,
-         RegisterRef<bool>* dummy4,
-         RegisterRef<bool>* dummy5)
+ctxInst5(
+    boost::scoped_ptr<ExtendedInstructionContext>& context,
+    RegisterRef<bool>* op,
+    RegisterRef<bool>* dummy2,
+    RegisterRef<bool>* dummy3,
+    RegisterRef<bool>* dummy4,
+    RegisterRef<bool>* dummy5)
 {
     if (context.get()) {
         op->value(false);
@@ -170,15 +177,17 @@ ctxInst5(boost::scoped_ptr<ExtendedInstructionContext>& context,
 void
 CalcExtContextTest::setupExtendedTestInstructions()
 {
-    ExtendedInstructionTable* eit = InstructionFactory::getExtendedInstructionTable();
+    ExtendedInstructionTable* eit =
+        InstructionFactory::getExtendedInstructionTable();
     ExtendedInstructionDef* inst;
 
     vector<StandardTypeDescriptorOrdinal>params;
     params.push_back(STANDARD_TYPE_BOOL);
 
-    eit->add("ctxInst1", params,
-             (ExtendedInstruction1Context<bool>*) NULL,
-             ctxInst1);
+    eit->add(
+        "ctxInst1", params,
+        (ExtendedInstruction1Context<bool>*) NULL,
+        ctxInst1);
     inst = (*eit)["ctxInst1(bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst1"));
@@ -187,9 +196,10 @@ CalcExtContextTest::setupExtendedTestInstructions()
 
     params.push_back(STANDARD_TYPE_BOOL);
 
-    eit->add("ctxInst2", params,
-             (ExtendedInstruction2Context<bool,bool>*) NULL,
-             ctxInst2);
+    eit->add(
+        "ctxInst2", params,
+        (ExtendedInstruction2Context<bool,bool>*) NULL,
+        ctxInst2);
     inst = (*eit)["ctxInst2(bo,bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst2"));
@@ -198,9 +208,10 @@ CalcExtContextTest::setupExtendedTestInstructions()
 
     params.push_back(STANDARD_TYPE_BOOL);
 
-    eit->add("ctxInst3", params,
-             (ExtendedInstruction3Context<bool,bool,bool>*) NULL,
-             ctxInst3);
+    eit->add(
+        "ctxInst3", params,
+        (ExtendedInstruction3Context<bool,bool,bool>*) NULL,
+        ctxInst3);
     inst = (*eit)["ctxInst3(bo,bo,bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst3"));
@@ -209,9 +220,10 @@ CalcExtContextTest::setupExtendedTestInstructions()
 
     params.push_back(STANDARD_TYPE_BOOL);
 
-    eit->add("ctxInst4", params,
-             (ExtendedInstruction4Context<bool,bool,bool,bool>*) NULL,
-             ctxInst4);
+    eit->add(
+        "ctxInst4", params,
+        (ExtendedInstruction4Context<bool,bool,bool,bool>*) NULL,
+        ctxInst4);
     inst = (*eit)["ctxInst4(bo,bo,bo,bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst4"));
@@ -220,9 +232,10 @@ CalcExtContextTest::setupExtendedTestInstructions()
 
     params.push_back(STANDARD_TYPE_BOOL);
 
-    eit->add("ctxInst5", params,
-             (ExtendedInstruction5Context<bool,bool,bool,bool,bool>*) NULL,
-             ctxInst5);
+    eit->add(
+        "ctxInst5", params,
+        (ExtendedInstruction5Context<bool,bool,bool,bool,bool>*) NULL,
+        ctxInst5);
     inst = (*eit)["ctxInst5(bo,bo,bo,bo,bo)"];
     BOOST_REQUIRE(inst);
     BOOST_CHECK_EQUAL(inst->getName(),string("ctxInst5"));
@@ -267,8 +280,7 @@ CalcExtContextTest::testCalcExtContext()
 
     try {
         calc.assemble(pg.str().c_str());
-    }
-    catch (FennelExcn& ex) {
+    } catch (FennelExcn& ex) {
         BOOST_MESSAGE("Assemble exception " << ex.getMessage());
         BOOST_MESSAGE(pg.str());
         BOOST_REQUIRE(0);
@@ -282,31 +294,32 @@ CalcExtContextTest::testCalcExtContext()
     printOutput(outTuple, calc);
 
     int i;
-    for (i=1; i <=5; i++) {
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<bool *>
-                            (const_cast<PBuffer>((outTuple[i]).pData))),
-                          true);
+    for (i = 1; i <= 5; i++) {
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<bool *>(
+                const_cast<PBuffer>((outTuple[i]).pData))),
+            true);
     }
-
 
     // call program again, should get different output
     calc.exec();
 
-    for (i=1; i <=5; i++) {
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<bool *>
-                            (const_cast<PBuffer>((outTuple[i]).pData))),
-                          false);
+    for (i = 1; i <= 5; i++) {
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<bool *>(
+                const_cast<PBuffer>((outTuple[i]).pData))),
+            false);
     }
 
     // call program again, should get same output
     calc.exec();
 
-    for (i=1; i <=5; i++) {
-        BOOST_CHECK_EQUAL(*(reinterpret_cast<bool *>
-                            (const_cast<PBuffer>((outTuple[i]).pData))),
-                          false);
+    for (i = 1; i <= 5; i++) {
+        BOOST_CHECK_EQUAL(
+            *(reinterpret_cast<bool *>(
+                const_cast<PBuffer>((outTuple[i]).pData))),
+            false);
     }
-
 
 #if 0
     tuplePrinter.print(cout, calc.getOutputRegisterDescriptor(), outTuple);

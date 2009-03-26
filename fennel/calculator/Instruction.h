@@ -45,10 +45,10 @@ class Instruction
 {
 public:
     explicit
-    Instruction () { }
+    Instruction () {}
 
     virtual
-    ~Instruction() { }
+    ~Instruction() {}
 
     virtual void describe(string& out, bool values) const = 0;
 
@@ -65,13 +65,14 @@ protected:
 
     virtual void exec(long &pc) const = 0;
 
-    void describeHelper(string &out,
-                        bool values,
-                        const char* longName,
-                        const char* shortName,
-                        RegisterReference* result,
-                        RegisterReference* op1,
-                        RegisterReference* op2) const
+    void describeHelper(
+        string &out,
+        bool values,
+        const char* longName,
+        const char* shortName,
+        RegisterReference* result,
+        RegisterReference* op1,
+        RegisterReference* op2) const
     {
         out = longName;
         out += ": ";
@@ -145,8 +146,9 @@ protected:
                typename TYPE2,
                template <typename, typename> class INSTCLASS >
     static void
-    registerInstance2(StandardTypeDescriptorOrdinal type1,
-                      StandardTypeDescriptorOrdinal type2)
+    registerInstance2(
+        StandardTypeDescriptorOrdinal type1,
+        StandardTypeDescriptorOrdinal type2)
     {
         StringToCreateFn* instMap = InstructionFactory::getInstructionTable();
         (*instMap)[INSTCLASS<TYPE1,TYPE2>::signature(type1, type2).compute()] =

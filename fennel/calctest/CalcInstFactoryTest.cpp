@@ -136,7 +136,8 @@ CalcInstFactoryTest::testBool()
         { "ISNULL", "2" },
         { "ISNOTNULL", "2" },
         { "TONULL", "1" },
-        { "", "" }};
+        { "", "" },
+    };
 
     pg << "O bo;" << endl;
     pg << "C bo,bo;" << endl;
@@ -184,7 +185,8 @@ CalcInstFactoryTest::testBoolNative()
        { "LE", "3" },
        { "ISNULL", "2" },
        { "ISNOTNULL", "2" },
-       { "", "" }};
+       { "", "" },
+    };
 
     pg << "O " << nativeNotBool << ", bo;" << endl;
     pg << "C " << nativeNotBool << ";" << endl;
@@ -231,7 +233,8 @@ CalcInstFactoryTest::testIntegralNative()
         { "OR", "3" },
         { "SHFL", "3" },
         { "SHFR", "3" },
-        { "", "" }};
+        { "", "" },
+    };
 
     pg << "O " << nativeIntegral << ";" << endl;
     pg << "C " << nativeIntegral << ";" << endl;
@@ -275,7 +278,8 @@ CalcInstFactoryTest::testIntegralPointer()
     const char* integralpointer[][2] = {
        { "GETS", "2", },
        { "GETMS" , "2", },
-       { "", "" }};
+       { "", "" },
+    };
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
@@ -319,7 +323,8 @@ CalcInstFactoryTest::testPointerIntegral()
 
     const char* pointerintegral[][2] = {
        { "PUTS", "2", },
-       { "", "" }};
+       { "", "" },
+    };
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
@@ -364,7 +369,8 @@ CalcInstFactoryTest::testBoolPointer()
        { "LE", "3", },
        { "ISNULL", "2", },
        { "ISNOTNULL", "2", },
-       { "", "" }};
+       { "", "" },
+    };
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;
@@ -412,7 +418,8 @@ CalcInstFactoryTest::testJump()
         { "JMPF", "1" },
         { "JMPN", "1" },
         { "JMPNN", "1" },
-        { "", "" }};
+        { "", "" },
+    };
 
     pg << "O bo;" << endl;
     pg << "C bo,bo;" << endl;
@@ -456,7 +463,8 @@ CalcInstFactoryTest::testNativeNative()
        { "MOVE", "2" },
        { "REF", "2" },
        { "TONULL", "1" },
-       { "", "" }};
+       { "", "" },
+    };
 
     pg << "O " << nativeNotBool << ";" << endl;
     pg << "C " << nativeNotBool << ";" << endl;
@@ -503,7 +511,8 @@ CalcInstFactoryTest::testPointerPointer()
        { "MOVE", "2", "0" },
        { "REF", "2", "0" },
        { "TONULL", "1", "0" },
-       { "", "" }};
+       { "", "" },
+    };
 
     pg << "O " << pointerArray << ";" << endl;
     pg << "C " << pointerArray << ";" << endl;

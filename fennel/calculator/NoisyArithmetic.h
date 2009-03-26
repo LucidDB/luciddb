@@ -46,30 +46,41 @@ struct TExceptionCBData
 {
     void (* fnCB)(const char *, void *);
     void *pData;
-    TExceptionCBData( void (* fnTheCB)(const char *, void *), void *pTheData )
-    :   fnCB( fnTheCB ),
-        pData( pTheData ) {
-        }
+    TExceptionCBData(
+        void (* fnTheCB)(const char *, void *),
+        void *pTheData)
+    :   fnCB(fnTheCB),
+        pData(pTheData)
+    {}
 };
 
 /* --- */
 template <typename TMPL>
     struct Noisy {
-        static TMPL add( TProgramCounter pc, const TMPL left, const TMPL right,
-            TExceptionCBData *pExData ) throw( CalcMessage );
-        static TMPL sub( TProgramCounter pc, const TMPL left, const TMPL right,
-            TExceptionCBData *pExData ) throw( CalcMessage );
-        static TMPL mul( TProgramCounter pc, const TMPL left, const TMPL right,
-            TExceptionCBData *pExData ) throw( CalcMessage );
-        static TMPL div( TProgramCounter pc, const TMPL left, const TMPL right,
-            TExceptionCBData *pExData ) throw( CalcMessage );
-        static TMPL neg( TProgramCounter pc, const TMPL right,
-            TExceptionCBData *pExData ) throw( CalcMessage );
+        static TMPL add(
+            TProgramCounter pc, const TMPL left, const TMPL right,
+            TExceptionCBData *pExData)
+            throw(CalcMessage);
+        static TMPL sub(
+            TProgramCounter pc, const TMPL left, const TMPL right,
+            TExceptionCBData *pExData)
+            throw(CalcMessage);
+        static TMPL mul(
+            TProgramCounter pc, const TMPL left, const TMPL right,
+            TExceptionCBData *pExData) throw(CalcMessage);
+        static TMPL div(
+            TProgramCounter pc, const TMPL left, const TMPL right,
+            TExceptionCBData *pExData)
+            throw(CalcMessage);
+        static TMPL neg(
+            TProgramCounter pc, const TMPL right,
+            TExceptionCBData *pExData)
+            throw(CalcMessage);
     };
 
 FENNEL_END_NAMESPACE
 
 #endif
 
-// End NoisyAritchmetic.h
+// End NoisyArithmetic.h
 

@@ -37,13 +37,17 @@ class ExtendedInstructionTable
 public:
     //! Registers an extended instruction and the functor which implements it.
     template <typename T>
-    void add(const string &name,
-             const vector<StandardTypeDescriptorOrdinal> &parameterTypes,
-             T *dummy,
-             typename T::Functor functor) {
+    void add(
+        const string &name,
+        const vector<StandardTypeDescriptorOrdinal> &parameterTypes,
+        T *dummy,
+        typename T::Functor functor)
+    {
         FunctorExtendedInstructionDef<T> *pDef =
-            new FunctorExtendedInstructionDef<T>(name, parameterTypes,
-                                                 functor);
+            new FunctorExtendedInstructionDef<T>(
+                name,
+                parameterTypes,
+                functor);
         _defsByName[pDef->getSignature()] = pDef;
     }
 

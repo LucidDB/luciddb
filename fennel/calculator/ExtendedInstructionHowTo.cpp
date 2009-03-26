@@ -275,9 +275,10 @@ This vector, plus a corresponding type, and a pointer to the function
 that implements the instruction must be sent to
 ExtendedInstructionTable::add.  For example:
 </p>
-<pre>eit->add("strCatA2", params_2F,
-        (ExtendedInstruction2<char*, char*>*) NULL,
-         &strCatA2);</pre>
+<pre>eit->add(
+    "strCatA2", params_2F,
+    (ExtendedInstruction2<char*, char*>*) NULL,
+    &strCatA2);</pre>
 <p>
 An assembly program that calls this ExtendedInstruction might look
 like:

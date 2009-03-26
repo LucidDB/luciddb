@@ -55,9 +55,10 @@ class RegisterSetBinding
     // In this set, the nth register is bound to TupleDatum d = (*base)[n].
     // Its length is d.cbLen, its location is d.pDatum.
     // However, d.pDatum = 0 indicates a null value.
-    // At bind time, the datum location for the nth register is copied to datumAddr[n];
-    // saving this address lets the calculator overwrite a null value.
-    // Changing the register value via the TupleDatum directly changes base.
+    // At bind time, the datum location for the nth register is copied to
+    // datumAddr[n]; saving this address lets the calculator overwrite a null
+    // value. Changing the register value via the TupleDatum directly changes
+    // base.
 
 public:
     ~RegisterSetBinding();
@@ -67,11 +68,16 @@ public:
     //! @param ownIt the RegisterSetBinding takes ownership of the TupleData
     RegisterSetBinding(TupleData* base, bool ownIt = false);
 
-    //! bind an output register set bound to a tuple, with supplementary target address info.
+    //! bind an output register set bound to a tuple, with supplementary target
+    //! address info.
     //! @param base the underlying tuple (some columns may be null)
-    //! @param shadow Equivalent to base, but all TupleDatum elements have a non-null address.
+    //! @param shadow Equivalent to base, but all TupleDatum elements
+    //! have a non-null address.
     //! @param ownIt the RegisterSetBinding takes ownership of the TupleData
-    RegisterSetBinding(TupleData* base, const TupleData* shadow, bool ownIt = false);
+    RegisterSetBinding(
+        TupleData* base,
+        const TupleData* shadow,
+        bool ownIt = false);
 
     //! view the register set as a tuple (read-only)
     const TupleData& asTupleData() const {
@@ -139,9 +145,10 @@ public:
     //! @param index Register with a given set
     //! @param datatype The type of the underlying data.
     explicit
-    RegisterReference(ERegisterSet set,
-                      unsigned long index,
-                      StandardTypeDescriptorOrdinal datatype)
+    RegisterReference(
+        ERegisterSet set,
+        unsigned long index,
+        StandardTypeDescriptorOrdinal datatype)
         : mSetIndex(set),
           mIndex(index),
           mType(datatype),
@@ -156,7 +163,7 @@ public:
     }
 
     virtual
-    ~RegisterReference() { }
+    ~RegisterReference() {}
 
 
     //! Properties control behavior of RegisterReference
@@ -176,14 +183,20 @@ public:
 
     // TODO: Replace with array indexed by ERegisterSet
     //! Literal set can be cached, and really should be read only.
-    static const uint32_t KLiteralSetDefault = EPropReadOnly | EPropCachePointer;
+    static const uint32_t KLiteralSetDefault =
+        EPropReadOnly | EPropCachePointer;
+
     //! Input must be read only. Caching doesn't make sense for input.
     static const uint32_t KInputSetDefault   = EPropReadOnly;
+
     //! Caching doesn't make sense for output.
     static const uint32_t KOutputSetDefault  = EPropNone;
+
     //! Local set can be cached, and must reset pointers if Calculator::exec()
     //! is to be called again and NULLs are written or pointers are moved.
-    static const uint32_t KLocalSetDefault   = EPropCachePointer | EPropPtrReset;
+    static const uint32_t KLocalSetDefault   =
+        EPropCachePointer | EPropPtrReset;
+
     //! Status register can be cached if it is never re-bound.
     static const uint32_t KStatusSetDefault  = EPropNone;
 
@@ -274,8 +287,9 @@ public:
         RegisterSetBinding* rsb = mRegisterSetP[mSetIndex];
         TupleDatum& bind = (*rsb)[mIndex];
         if (resetFromNull) {
-            if (!bind.pData)
+            if (!bind.pData) {
                 bind.pData = mRegisterSetP[mSetIndex]->getTargetAddr(mIndex);
+            }
         }
         return &bind;
     }
@@ -342,7 +356,7 @@ public:
     explicit
     //! Creates an invalid object.
     RegisterRef () : RegisterReference()
-    { }
+    {}
 
     //! Creates a valid register reference
     //!
@@ -350,23 +364,25 @@ public:
     //! @param index Register with a given set
     //! @param datatype The type of the underlying data.
     explicit
-    RegisterRef(ERegisterSet set,
-                unsigned long index,
-                StandardTypeDescriptorOrdinal datatype)
+    RegisterRef(
+        ERegisterSet set,
+        unsigned long index,
+        StandardTypeDescriptorOrdinal datatype)
         : RegisterReference(set, index, datatype)
-    { }
+    {}
 
     //! gets/peeks/reads a value from a register
     //!
     //! Assumes register is not null.
     TMPLT value() const {
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
             assert(mPData);
             return *(reinterpret_cast<TMPLT*>(mPData));
         } else {
             TupleDatum *bind = getBinding();
             assert(bind->pData); // Cannot read from a NULL value.
-            return *(reinterpret_cast<TMPLT*>(const_cast<PBuffer>(bind->pData)));
+            return *(reinterpret_cast<TMPLT*>(
+                const_cast<PBuffer>(bind->pData)));
         }
     }
 
@@ -381,13 +397,14 @@ public:
             assert(!(mProp & EPropReadOnly));
         }
 
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
             assert(mPData);
             *(reinterpret_cast<TMPLT*>(mPData)) = newV;
         } else {
             TupleDatum *bind = getBinding(true); // reset when null
             assert(bind->pData);
-            *(reinterpret_cast<TMPLT*>(const_cast<PBuffer>(bind->pData))) = newV;
+            *(reinterpret_cast<TMPLT*>(
+                const_cast<PBuffer>(bind->pData))) = newV;
         }
     }
 
@@ -402,7 +419,7 @@ public:
     //! Will append to mResetP to allow register to be reset.
     void toNull() {
         assert(!(mProp & EPropReadOnly));
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
             if ((mProp & EPropPtrReset) && !mCachePtrModified) {
                 mCachePtrModified = true;
                 mResetP->push_back(this);
@@ -413,18 +430,18 @@ public:
             TupleDatum *bind = getBinding();
             bind->pData = NULL;
         }
-
     }
+
     //! Checks if register is null.
     bool isNull() const {
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
-            return (mPData ? false : true );
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
+            return (mPData ? false : true);
         } else {
             TupleDatum *bind = getBinding();
-            return (bind->pData ? false : true );
+            return (bind->pData ? false : true);
         }
-
     }
+
     //! Gets pointer value, rather than what pointer references.
     //!
     //! Used by PointerInstruction, where TMPLT is a pointer
@@ -433,7 +450,7 @@ public:
     TMPLT
     pointer() const {
         assert(StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType));
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
             assert(mPData);  // useful or harmful?
             return reinterpret_cast<TMPLT>(mPData);
         } else {
@@ -454,7 +471,7 @@ public:
         assert(!(mProp & EPropReadOnly));
         assert(newP);  // use toNull()
         assert(StandardTypeDescriptor::StandardTypeDescriptor::isArray(mType));
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
             if ((mProp & EPropPtrReset) && !mCachePtrModified) {
                 mCachePtrModified = true;
                 mResetP->push_back(this);
@@ -470,7 +487,7 @@ public:
     //! Gets reference by pointer for non-pointer types
     TMPLT*
     refer() const {
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
             return reinterpret_cast<TMPLT*>(const_cast<PBuffer>(mPData));
         } else {
             TupleDatum *bind = getBinding();
@@ -488,7 +505,8 @@ public:
     {
         assert(!(mProp & (EPropCachePointer | EPropPtrReset)));
         TupleDatum *bind = getBinding();
-        bind->pData = reinterpret_cast<PConstBuffer>(const_cast<TMPLT*>(from->refer()));
+        bind->pData = reinterpret_cast<PConstBuffer>(
+            const_cast<TMPLT*>(from->refer()));
         bind->cbData = from->length();
     }
 
@@ -500,7 +518,7 @@ public:
     TupleStorageByteLength
     length() const
     {
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
             return mCbData;
         } else {
             TupleDatum *bind = getBinding();
@@ -516,7 +534,7 @@ public:
     TupleStorageByteLength
     storage() const
     {
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
             return mCbStorage;
         } else {
             assert(mRegisterSetP);
@@ -551,12 +569,16 @@ public:
     void
     length(TupleStorageByteLength newLen)
     {
-        if (mProp & (EPropCachePointer|EPropPtrReset)) {
-            assert(newLen == 0 ? true : (mPData == 0 ? false : true)); // useful or harmful?
-            assert(newLen <= mCbStorage);         // useful or harmful?
+        if (mProp & (EPropCachePointer | EPropPtrReset)) {
+            // useful or harmful?
+            assert(newLen == 0 ? true : (mPData == 0 ? false : true));
+            // useful or harmful?
+            assert(newLen <= mCbStorage);
             mCbData = newLen;
         } else {
-            assert(newLen <= ((*(mRegisterSetDescP[mSetIndex]))[mIndex]).cbStorage);
+            assert(
+                newLen
+                <= ((*(mRegisterSetDescP[mSetIndex]))[mIndex]).cbStorage);
             TupleDatum *bind = getBinding();
             bind->cbData = newLen;
         }
@@ -592,8 +614,7 @@ public:
             return ret;
 #endif
             return "Unimpl";
-        }
-        else {
+        } else {
             // TODO: Remove boost call, use stream instead
             return boost::lexical_cast<std::string>(this->value());
         }

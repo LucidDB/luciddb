@@ -63,10 +63,16 @@ class CalcAssembler
 {
 public:
     explicit
-    CalcAssembler(Calculator* calc) { assert(calc != NULL); mCalc = calc; }
+    CalcAssembler(Calculator* calc) {
+        assert(calc != NULL);
+        mCalc = calc;
+    }
+
     ~CalcAssembler();
 
-    CalcLexer&  getLexer() { return mLexer; }
+    CalcLexer&  getLexer() {
+        return mLexer;
+    }
 
     int   assemble(const char* program);
     int   assemble();
@@ -92,11 +98,9 @@ public:
         Instruction* inst = NULL;
         try {
             inst = InstructionFactory::createInstruction(name, operands);
-        }
-        catch (FennelExcn& ex) {
+        } catch (FennelExcn& ex) {
             throw CalcAssemblerException(ex.getMessage(), location);
-        }
-        catch (std::exception& ex) {
+        } catch (std::exception& ex) {
             throw CalcAssemblerException(ex.what(), location);
         }
         if (inst == NULL) {
@@ -181,11 +185,9 @@ public:
 
         try {
             inst = InstructionFactory::createInstruction(name, pc, operand);
-        }
-        catch (FennelExcn& ex) {
+        } catch (FennelExcn& ex) {
             throw CalcAssemblerException(ex.getMessage(), location);
-        }
-        catch (std::exception& ex) {
+        } catch (std::exception& ex) {
             throw CalcAssemblerException(ex.what(), location);
         }
 
@@ -209,12 +211,11 @@ public:
         Instruction* inst = NULL;
 
         try {
-            inst = InstructionFactory::createInstruction(name, function, operands);
-        }
-        catch (FennelExcn& ex) {
+            inst = InstructionFactory::createInstruction(
+                name, function, operands);
+        } catch (FennelExcn& ex) {
             throw CalcAssemblerException(ex.getMessage(), location);
-        }
-        catch (std::exception& ex) {
+        } catch (std::exception& ex) {
             throw CalcAssemblerException(ex.what(), location);
         }
 
@@ -230,26 +231,31 @@ public:
         return inst;
     }
 
-    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,
-			      TupleAttributeDescriptor& desc,
-			      double value);
-    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,
-			      TupleAttributeDescriptor& desc,
-			      uint64_t value);
-    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,
-			      TupleAttributeDescriptor& desc,
-			      int64_t value);
-    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,
-			      TupleAttributeDescriptor& desc,
-			      string value);
-    static void setTupleDatum(StandardTypeDescriptorOrdinal type,
-			      TupleDatum& tupleDatum,
-			      TupleAttributeDescriptor& desc,
-			      PConstBuffer buffer);
+    static void setTupleDatum(
+        StandardTypeDescriptorOrdinal type,
+        TupleDatum& tupleDatum,
+        TupleAttributeDescriptor& desc,
+        double value);
+    static void setTupleDatum(
+        StandardTypeDescriptorOrdinal type,
+        TupleDatum& tupleDatum,
+        TupleAttributeDescriptor& desc,
+        uint64_t value);
+    static void setTupleDatum(
+        StandardTypeDescriptorOrdinal type,
+        TupleDatum& tupleDatum,
+        TupleAttributeDescriptor& desc,
+        int64_t value);
+    static void setTupleDatum(
+        StandardTypeDescriptorOrdinal type,
+        TupleDatum& tupleDatum,
+        TupleAttributeDescriptor& desc,
+        string value);
+    static void setTupleDatum(
+        StandardTypeDescriptorOrdinal type,
+        TupleDatum& tupleDatum,
+        TupleAttributeDescriptor& desc,
+        PConstBuffer buffer);
 
 protected:
     friend int CalcYYparse (void *);
@@ -287,42 +293,45 @@ protected:
      * @param regIndex Register index
      * @param value Value to bind to the register
      * @throw CalcAssemblerException
-     * @note The assembler is only responsible for binding literal values.
-     *       This function is used by bindNextLiteral for binding literal values.
-     *       There should be no reason to use this function directly.
+     * @note The assembler is only responsible for binding literal
+     *       values.  This function is used by bindNextLiteral for
+     *       binding literal values.  There should be no reason to use
+     *       this function directly.
      * @see  bindNextLiteral
      */
     template <typename T>
-    void bindRegisterValue(RegisterReference::ERegisterSet setIndex,
-                           TRegisterIndex regIndex, T value)
+    void bindRegisterValue(
+        RegisterReference::ERegisterSet setIndex,
+        TRegisterIndex regIndex,
+        T value)
     {
         try {
-            StandardTypeDescriptorOrdinal regType = getRegisterType(setIndex, regIndex);
+            StandardTypeDescriptorOrdinal regType = getRegisterType(
+                setIndex, regIndex);
             TupleData* tupleData = getTupleData(setIndex);
             assert(tupleData != NULL);
             TupleDatum& tupleDatum = (*tupleData)[regIndex];
             TupleDescriptor& tupleDesc = getTupleDescriptor(setIndex);
             setTupleDatum(regType, tupleDatum, tupleDesc[regIndex], value);
-        }
-        catch (CalcAssemblerException& ex) {
+        } catch (CalcAssemblerException& ex) {
             // Just pass this exception up
             throw ex;
-        }
-        catch (FennelExcn& ex) {
+        } catch (FennelExcn& ex) {
             // Other exception - let's make the error clearer
             ostringstream errorStr("");
             errorStr << "Error binding register "
                      << RegisterReference::toString(setIndex, regIndex)
                      << ": " << ex.getMessage();
-            throw CalcAssemblerException(errorStr.str(), getLexer().getLocation());
-        }
-        catch (exception& ex) {
+            throw CalcAssemblerException(
+                errorStr.str(), getLexer().getLocation());
+        } catch (exception& ex) {
             // Other exception - let's make the error clearer
             ostringstream errorStr("");
             errorStr << "Error binding register: "
                      << RegisterReference::toString(setIndex, regIndex)
                      << ": " << ex.what();
-            throw CalcAssemblerException(errorStr.str(), getLexer().getLocation());
+            throw CalcAssemblerException(
+                errorStr.str(), getLexer().getLocation());
         }
     }
 
@@ -369,15 +378,20 @@ protected:
      * @param cbStorage space to allocate for the register (used for arrays)
      * @note Use selectRegisterSet to set the current register set
      */
-    void addRegister(StandardTypeDescriptorOrdinal regType, uint cbStorage = 0);
+    void addRegister(
+        StandardTypeDescriptorOrdinal regType,
+        uint cbStorage = 0);
+
     /**
      * Adds a register to the specified register set
      * @param setIndex Register set index
      * @param regType type of the register to add
      * @param cbStorage space to allocate for the register (used for arrays)
      */
-    void addRegister(RegisterReference::ERegisterSet setIndex,
-                     StandardTypeDescriptorOrdinal regType, uint cbStorage = 0);
+    void addRegister(
+        RegisterReference::ERegisterSet setIndex,
+        StandardTypeDescriptorOrdinal regType,
+        uint cbStorage = 0);
 
 
     // CalcYYparse uses this function to add a instruction
@@ -402,20 +416,24 @@ protected:
      * @param  setIndex Register set index
      * @param  regIndex Register index
      * @return RegisterReference pointer
-     * @throw  FennelExcn Exception indicating the register index is out of bounds
+     * @throw FennelExcn Exception indicating the register index is
+     * out of bounds
      */
-    RegisterReference* getRegister(RegisterReference::ERegisterSet setIndex,
-                                   TRegisterIndex regIndex);
+    RegisterReference* getRegister(
+        RegisterReference::ERegisterSet setIndex,
+        TRegisterIndex regIndex);
 
     /**
      * Returns the type of register given the set index and the register index
      * @param  setIndex Register set index
      * @param  regIndex Register index
      * @return Type of the register
-     * @throw  FennelExcn Exception indicating the register index is out of bounds
+     * @throw FennelExcn Exception indicating the register index is
+     * out of bounds
      */
-    StandardTypeDescriptorOrdinal  getRegisterType(RegisterReference::ERegisterSet setIndex,
-                                                   TRegisterIndex regIndex);
+    StandardTypeDescriptorOrdinal  getRegisterType(
+        RegisterReference::ERegisterSet setIndex,
+        TRegisterIndex regIndex);
 
     /**
      * Returns a pointer to the TupleData for a register set.
@@ -429,7 +447,8 @@ protected:
      * @param  setIndex Register set index
      * @return TupleDescriptor
      */
-    TupleDescriptor& getTupleDescriptor(RegisterReference::ERegisterSet setIndex);
+    TupleDescriptor& getTupleDescriptor(
+        RegisterReference::ERegisterSet setIndex);
 
     /**
      * Verifies that the program counter is valid
@@ -439,8 +458,7 @@ protected:
      */
     void checkPC(TProgramCounter pc, CalcYYLocType& loc) {
         assert(mCalc->mCode.size() > 0);
-        if (pc >= static_cast<TProgramCounter>(mCalc->mCode.size()))
-        {
+        if (pc >= static_cast<TProgramCounter>(mCalc->mCode.size())) {
             ostringstream errorStr("");
             errorStr << "Invalid PC " << pc << ": PC should be between 0 and "
                      << (mCalc->mCode.size() - 1);
@@ -458,8 +476,7 @@ protected:
     void saveMaxPC(TProgramCounter pc)
     {
         assert(pc > 0);
-        if (pc > mMaxPC)
-        {
+        if (pc > mMaxPC) {
             mMaxPC = pc;
             mMaxPCLoc = getLexer().getLocation();
         }

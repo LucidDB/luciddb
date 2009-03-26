@@ -66,25 +66,30 @@ int64_t IsoStringToTime(char const * const src, int len);
 int64_t IsoStringToDate(char const * const src, int len);
 int64_t IsoStringToTimestamp(char const * const src, int len);
 
-template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint, SqlDateTimeType dateTimeType>
+template <
+    int CodeUnitBytes,
+    int MaxCodeUnitsPerCodePoint,
+    SqlDateTimeType dateTimeType>
 int
-SqlDateToStr(char *dest,
-             int destStorageBytes,
-             int64_t const d,
-             bool fixed = false,  // e.g. char, else variable (varchar)
-             int padchar = ' ')
+SqlDateToStr(
+    char *dest,
+    int destStorageBytes,
+    int64_t const d,
+    bool fixed = false,  // e.g. char, else variable (varchar)
+    int padchar = ' ')
 {
     using namespace boost::posix_time;
     using namespace boost::gregorian;
 
-    typedef boost::date_time::c_local_adjustor<boost::posix_time::ptime> local_adj;
+    typedef boost::date_time::c_local_adjustor<boost::posix_time::ptime>
+        local_adj;
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
             // ASCII
 
             // from_time_t isn't in the version of boost we're using. sigh.
             // FIXME: jhyde: No longer true. Let's use it.
-            //          boost::posix_time::ptime t = boost::posix_time::from_time_t(d);
+            //   boost::posix_time::ptime t = boost::posix_time::from_time_t(d);
 
             // we could use the millisecond() duration constructor,
             // instead of time_duration(...), but the time_duration was
@@ -100,7 +105,8 @@ SqlDateToStr(char *dest,
                 len = DateToIsoString(buf, t);
                 if (len > destStorageBytes) {
                     // SQL99 Part 2 Section 6.22 General Rule 9.a.iii =>
-                    // exception SQL99 22.1 22-001 "String Data Right truncation"
+                    // exception SQL99 22.1 22-001 "String Data Right
+                    // truncation"
                     throw "22001";
                 }
                 memcpy(dest,buf,len);
@@ -109,7 +115,8 @@ SqlDateToStr(char *dest,
                 len = TimeToIsoString(buf, t);
                 if (len > destStorageBytes) {
                     // SQL99 Part 2 Section 6.22 General Rule 9.a.iii =>
-                    // exception SQL99 22.1 22-001 "String Data Right truncation"
+                    // exception SQL99 22.1 22-001 "String Data Right
+                    // truncation"
                     throw "22001";
                 }
                 memcpy(dest,buf,len);
@@ -118,7 +125,8 @@ SqlDateToStr(char *dest,
                 len = TimestampToIsoString(buf, t);
                 if (len > destStorageBytes) {
                     // SQL99 Part 2 Section 6.22 General Rule 9.a.iii =>
-                    // exception SQL99 22.1 22-001 "String Data Right truncation"
+                    // exception SQL99 22.1 22-001 "String Data Right
+                    // truncation"
                     throw "22001";
                 }
                 memcpy(dest,buf,len);
@@ -145,7 +153,10 @@ SqlDateToStr(char *dest,
 
 }
 
-template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint, SqlDateTimeType dateTimeType>
+template <
+    int CodeUnitBytes,
+    int MaxCodeUnitsPerCodePoint,
+    SqlDateTimeType dateTimeType>
 int64_t
 SqlStrToDate(char *src, int len)
 {

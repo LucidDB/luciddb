@@ -36,22 +36,23 @@ const uint SqlStringBuffer::mBumperChar = '@';
 const int SqlStringBuffer::mBumperLen = 3;
 
 SqlStringBuffer::
-SqlStringBuffer(int storage,    // maximum size of string in characters
-                int size,       // size of text, in characters, excluding padding
-                int leftpad,    // pad left with this many characters
-                int rightpad,   // pad right with this many chararacters
-                uint text,      // fill text w/this
-                uint pad,       // pad w/this
-                int leftBumper, // In characters
-                int rightBumper) :
-    mStorage(storage),
-    mSize(size),
-    mLeftPad(leftpad),
-    mRightPad(rightpad),
-    mLeftBump(leftBumper),
-    mRightBump(rightBumper),
-    mTotal(storage + leftBumper + rightBumper),
-    mS(mTotal, mBumperChar)
+SqlStringBuffer(
+    int storage,    // maximum size of string in characters
+    int size,       // size of text, in characters, excluding padding
+    int leftpad,    // pad left with this many characters
+    int rightpad,   // pad right with this many chararacters
+    uint text,      // fill text w/this
+    uint pad,       // pad w/this
+    int leftBumper, // In characters
+    int rightBumper)
+    : mStorage(storage),
+      mSize(size),
+      mLeftPad(leftpad),
+      mRightPad(rightpad),
+      mLeftBump(leftBumper),
+      mRightBump(rightBumper),
+      mTotal(storage + leftBumper + rightBumper),
+      mS(mTotal, mBumperChar)
 {
     assert(leftBumper > 0);
     assert(rightBumper > 0);
@@ -76,17 +77,20 @@ SqlStringBuffer::verify()
     if (mS.compare(0, mLeftBump, verS, 0, mLeftBump)) {
         return false;
     }
-    if (mS.compare(mLeftBump + mLeftPad + mSize + mRightPad,
-                   mRightBump, verS, 0, mRightBump)) {
+    if (mS.compare(
+        mLeftBump + mLeftPad + mSize + mRightPad,
+        mRightBump, verS, 0, mRightBump))
+    {
         return false;
     }
     return true;
 }
 
 void
-SqlStringBuffer::randomize(uint start,
-                           uint lower,
-                           uint upper)
+SqlStringBuffer::randomize(
+    uint start,
+    uint lower,
+    uint upper)
 {
     patternfill(start, lower, upper);
     string r(mStr, mSize);
@@ -95,19 +99,22 @@ SqlStringBuffer::randomize(uint start,
 }
 
 void
-SqlStringBuffer::patternfill(uint start,
-                             uint lower,
-                             uint upper)
+SqlStringBuffer::patternfill(
+    uint start,
+    uint lower,
+    uint upper)
 {
     uint c = start; // deal with overflow easier than char
     int toGen = mSize;
 
     string r;
 
-    while(toGen) {
+    while (toGen) {
         r.push_back(static_cast<unsigned char>(c));
         toGen--;
-        if (++c > upper) c = lower;
+        if (++c > upper) {
+            c = lower;
+        }
     }
     mS.replace(mLeftBump + mLeftPad, mSize, r);
 }
@@ -118,15 +125,15 @@ const uint SqlStringBufferUCS2::mBumperChar = '@';
 // at least short-word (2-byte) alignment.
 const int SqlStringBufferUCS2::mBumperLen = 2;
 
-SqlStringBufferUCS2::SqlStringBufferUCS2(SqlStringBuffer const &src) :
-    mStorage(src.mStorage *2),
-    mSize(src.mSize * 2),
-    mLeftPad(src.mLeftPad * 2),
-    mRightPad(src.mRightPad * 2),
-    // force alignment when copying from potentially unaligned
-    mLeftBump(src.mLeftBump & 1 ? src.mLeftBump + 1 : src.mLeftBump),
-    mRightBump(src.mRightBump & 1 ? src.mRightBump + 1 : src.mRightBump),
-    mTotal(src.mStorage * 2 + mLeftBump + mRightBump)
+SqlStringBufferUCS2::SqlStringBufferUCS2(SqlStringBuffer const &src)
+    : mStorage(src.mStorage *2),
+      mSize(src.mSize * 2),
+      mLeftPad(src.mLeftPad * 2),
+      mRightPad(src.mRightPad * 2),
+      // force alignment when copying from potentially unaligned
+      mLeftBump(src.mLeftBump & 1 ? src.mLeftBump + 1 : src.mLeftBump),
+      mRightBump(src.mRightBump & 1 ? src.mRightBump + 1 : src.mRightBump),
+      mTotal(src.mStorage * 2 + mLeftBump + mRightBump)
 {
     mS.assign(mTotal, mBumperChar);
 
@@ -147,16 +154,17 @@ SqlStringBufferUCS2::SqlStringBufferUCS2(SqlStringBuffer const &src) :
     }
 }
 
-SqlStringBufferUCS2::SqlStringBufferUCS2(SqlStringBuffer const &src,
-                                         int leftBumper,
-                                         int rightBumper) :
-    mStorage(src.mStorage *2),
-    mSize(src.mSize * 2),
-    mLeftPad(src.mLeftPad * 2),
-    mRightPad(src.mRightPad * 2),
-    mLeftBump(leftBumper),
-    mRightBump(rightBumper),
-    mTotal(src.mStorage * 2 + leftBumper + rightBumper)
+SqlStringBufferUCS2::SqlStringBufferUCS2(
+    SqlStringBuffer const &src,
+    int leftBumper,
+    int rightBumper)
+    : mStorage(src.mStorage *2),
+      mSize(src.mSize * 2),
+      mLeftPad(src.mLeftPad * 2),
+      mRightPad(src.mRightPad * 2),
+      mLeftBump(leftBumper),
+      mRightBump(rightBumper),
+      mTotal(src.mStorage * 2 + leftBumper + rightBumper)
 {
     // force alignment
     assert(!(mLeftBump & 1));
@@ -203,17 +211,20 @@ SqlStringBufferUCS2::verify()
     if (mS.compare(0, mLeftBump, verS, 0, mLeftBump)) {
         return false;
     }
-    if (mS.compare(mLeftBump + mLeftPad + mSize + mRightPad,
-                   mRightBump, verS, 0, mRightBump)) {
+    if (mS.compare(
+        mLeftBump + mLeftPad + mSize + mRightPad,
+        mRightBump, verS, 0, mRightBump))
+    {
         return false;
     }
     return true;
 }
 
 void
-SqlStringBufferUCS2::randomize(uint start,
-                               uint lower,
-                               uint upper)
+SqlStringBufferUCS2::randomize(
+    uint start,
+    uint lower,
+    uint upper)
 {
     patternfill(start, lower, upper);
 
@@ -222,12 +233,12 @@ SqlStringBufferUCS2::randomize(uint start,
     int i = 0;
     while (i < mSize) {
 #ifdef LITTLEENDIAN
-        tmp = mStrPostPad[i+1] << 8 | mStrPostPad[i];
+        tmp = mStrPostPad[i + 1] << 8 | mStrPostPad[i];
 #else
-        tmp = mStrPostPad[i] << 8 | mStrPostPad[i+1];
+        tmp = mStrPostPad[i] << 8 | mStrPostPad[i + 1];
 #endif
         r.push_back(tmp);
-        i+=2;
+        i += 2;
     }
 
 
@@ -247,14 +258,15 @@ SqlStringBufferUCS2::randomize(uint start,
 }
 
 void
-SqlStringBufferUCS2::patternfill(uint start,
-                                 uint lower,
-                                 uint upper)
+SqlStringBufferUCS2::patternfill(
+    uint start,
+    uint lower,
+    uint upper)
 {
     uint c = start;
     int i = 0;
 
-    while(i < mSize) {
+    while (i < mSize) {
 #ifdef LITTLEENDIAN
         mStrPostPad[i++] = c & 0xff;
         mStrPostPad[i++] = (c >> 8) & 0xff;
@@ -262,7 +274,9 @@ SqlStringBufferUCS2::patternfill(uint start,
         mStrPostPad[i++] = (c >> 8) & 0xff;
         mStrPostPad[i++] = c & 0xff;
 #endif
-        if (++c > upper) c = lower;
+        if (++c > upper) {
+            c = lower;
+        }
     }
 }
 
@@ -273,14 +287,20 @@ SqlStringBufferUCS2::dump()
     string ret;
     char buf[100];
 
-    sprintf(buf, "DUMP: Storage=%d LeftBump=%d Size=%d RightBump=%d LP=%p Str=%p\n",
-            mStorage, mLeftBump, mSize, mRightBump,
-            mLeftP, mStr);
+    sprintf(
+        buf, "DUMP: Storage=%d LeftBump=%d Size=%d RightBump=%d LP=%p Str=%p\n",
+        mStorage, mLeftBump, mSize, mRightBump,
+        mLeftP, mStr);
     ret += buf;
 
     i = 0;
     while (i < mTotal) {
-        sprintf(buf, " %d:%x(%c)", i, mLeftP[i], (mLeftP[i] >= ' ' ? mLeftP[i] : '_'));
+        sprintf(
+            buf,
+            " %d:%x(%c)",
+            i,
+            mLeftP[i],
+            (mLeftP[i] >= ' ' ? mLeftP[i] : '_'));
         ret += buf;
         i++;
     }
@@ -295,18 +315,20 @@ SqlStringBufferUCS2::dump()
 
     ret += "\nText:\n";
     i = 0;
-    while(i < mStorage) {
-        sprintf(buf, "%d: 0x%x (%c) 0x%x (%c)\n", i,
-                mStr[i], (mStr[i] >= ' ' ? mStr[i] : '_'),
-                mStr[i+1], (mStr[i+1] >= ' ' ? mStr[i+1] : '_'));
+    while (i < mStorage) {
+        sprintf(
+            buf, "%d: 0x%x (%c) 0x%x (%c)\n", i,
+            mStr[i], (mStr[i] >= ' ' ? mStr[i] : '_'),
+            mStr[i + 1], (mStr[i + 1] >= ' ' ? mStr[i + 1] : '_'));
         ret += buf;
-        i+=2;
+        i += 2;
     }
 
     ret += "\nRight Bumper:\n";
     i = 0;
     while (i < mRightBump) {
-        sprintf(buf, "%d: 0x%x (%c)\n", i, mStr[i + mStorage], mStr[i + mStorage]);
+        sprintf(
+            buf, "%d: 0x%x (%c)\n", i, mStr[i + mStorage], mStr[i + mStorage]);
         ret += buf;
         i++;
     }
@@ -317,8 +339,12 @@ SqlStringBufferUCS2::dump()
 bool
 SqlStringBufferUCS2::equal(SqlStringBufferUCS2 const &other)
 {
-    if (other.mTotal != mTotal) return false;
-    if (memcmp(other.mLeftP, mLeftP, mTotal)) return false;
+    if (other.mTotal != mTotal) {
+        return false;
+    }
+    if (memcmp(other.mLeftP, mLeftP, mTotal)) {
+        return false;
+    }
     return true;
 }
 
