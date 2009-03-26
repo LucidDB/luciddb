@@ -22,8 +22,6 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamFactory.h"
-#include "fennel/lucidera/sorter/ExternalSortExecStream.h"
-#include "fennel/lucidera/flatfile/FlatFileExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterAppendExecStream.h"
 #include "fennel/lucidera/colstore/LcsClusterReplaceExecStream.h"
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
@@ -37,8 +35,6 @@
 #include "fennel/lucidera/bitmap/LbmBitOpExecStream.h"
 #include "fennel/lucidera/bitmap/LbmNormalizerExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSortedAggExecStream.h"
-#include "fennel/lucidera/hashexe/LhxJoinExecStream.h"
-#include "fennel/lucidera/hashexe/LhxAggExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -59,15 +55,6 @@ class ExecStreamSubFactory_lu
 
     bool created;
 
-    char readCharParam(const std::string &val)
-    {
-        assert(val.size() <= 1);
-        if (val.size() == 0) {
-            return 0;
-        }
-        return val.at(0);
-    }
-
     void readClusterScan(
         ProxyLcsRowScanStreamDef &streamDef,
         LcsRowScanBaseExecStreamParams &params)
@@ -83,89 +70,6 @@ class ExecStreamSubFactory_lu
                 pClusterScan->getClusterTupleDesc());
             params.lcsClusterScanDefs.push_back(clusterScanParam);
         }
-    }
-
-    void readColumnList(
-        ProxyFlatFileTupleStreamDef &streamDef,
-        std::vector<std::string> &names)
-    {
-        SharedProxyColumnName pColumnName = streamDef.getColumn();
-
-        for (; pColumnName; ++pColumnName) {
-            names.push_back(pColumnName->getName());
-        }
-    }
-
-    // implement FemVisitor
-    virtual void visit(ProxySortingStreamDef &streamDef)
-    {
-        if (streamDef.getDistinctness() != DUP_ALLOW) {
-            // can't handle it
-            created = false;
-            return;
-        }
-
-        SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
-
-        ExternalSortExecStreamParams params;
-
-        pExecStreamFactory->readTupleStreamParams(params, streamDef);
-
-        // ExternalSortStream requires a private ScratchSegment.
-        pExecStreamFactory->createPrivateScratchSegment(params);
-
-        params.distinctness = streamDef.getDistinctness();
-        params.pTempSegment = pDatabase->getTempSegment();
-        params.storeFinalRun = false;
-        params.estimatedNumRows = streamDef.getEstimatedNumRows();
-        params.earlyClose = streamDef.isEarlyClose();
-        CmdInterpreter::readTupleProjection(
-            params.keyProj,
-            streamDef.getKeyProj());
-        params.descendingKeyColumns.resize(params.keyProj.size(), false);
-        if (streamDef.getDescendingProj()) {
-            TupleProjection descendingProj;
-            CmdInterpreter::readTupleProjection(
-                descendingProj,
-                streamDef.getDescendingProj());
-            for (uint i = 0; i < descendingProj.size(); ++i) {
-                params.descendingKeyColumns[descendingProj[i]] = true;
-            }
-        }
-        pEmbryo->init(
-            ExternalSortExecStream::newExternalSortExecStream(),
-            params);
-    }
-
-    // implement FemVisitor
-    virtual void visit(ProxyFlatFileTupleStreamDef &streamDef)
-    {
-        FlatFileExecStreamParams params;
-        pExecStreamFactory->readTupleStreamParams(params, streamDef);
-
-        assert(streamDef.getDataFilePath().size() > 0);
-        params.dataFilePath = streamDef.getDataFilePath();
-        params.errorFilePath = streamDef.getErrorFilePath();
-        params.fieldDelim = readCharParam(streamDef.getFieldDelimiter());
-        params.rowDelim = readCharParam(streamDef.getRowDelimiter());
-        params.quoteChar = readCharParam(streamDef.getQuoteCharacter());
-        params.escapeChar = readCharParam(streamDef.getEscapeCharacter());
-        params.header = streamDef.isHasHeader();
-        params.lenient = streamDef.isLenient();
-        params.trim = streamDef.isTrim();
-        params.mapped = streamDef.isMapped();
-        readColumnList(streamDef, params.columnNames);
-
-        params.numRowsScan = streamDef.getNumRowsScan();
-        params.calcProgram = streamDef.getCalcProgram();
-        if (params.numRowsScan > 0 && params.calcProgram.size() > 0) {
-            params.mode = FLATFILE_MODE_SAMPLE;
-        } else if (params.numRowsScan > 0) {
-            params.mode = FLATFILE_MODE_DESCRIBE;
-        } else if (params.numRowsScan == 0 && params.calcProgram.size() == 0) {
-            params.mode = FLATFILE_MODE_QUERY_TEXT;
-        }
-        pEmbryo->init(FlatFileExecStream::newFlatFileExecStream(), params);
     }
 
     // implement FemVisitor
@@ -362,101 +266,6 @@ class ExecStreamSubFactory_lu
         params.startRidParamId =
             pExecStreamFactory->readDynamicParamId(
                 streamDef.getStartRidParamId());
-    }
-
-    // implement FemVisitor
-    virtual void visit(ProxyLhxJoinStreamDef &streamDef)
-    {
-        TupleProjection tmpProj;
-
-        LhxJoinExecStreamParams params;
-        pExecStreamFactory->readTupleStreamParams(params, streamDef);
-
-        /*
-         * LhxJoinExecStream requires a private ScratchSegment.
-         */
-        pExecStreamFactory->createPrivateScratchSegment(params);
-
-        /*
-         * External segment to store partitions.
-         */
-        SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
-        params.pTempSegment = pDatabase->getTempSegment();
-
-        /*
-         * These fields are currently not used by the optimizer. We know that
-         * optimizer only supports inner equi hash join.
-         */
-        params.leftInner     = streamDef.isLeftInner();
-        params.leftOuter     = streamDef.isLeftOuter();
-        params.rightInner    = streamDef.isRightInner();
-        params.rightOuter    = streamDef.isRightOuter();
-        params.setopDistinct = streamDef.isSetopDistinct();
-        params.setopAll      = streamDef.isSetopAll();
-
-        /*
-         * Set forcePartitionLevel to 0 to turn off force partitioning.
-         */
-        params.forcePartitionLevel = 0;
-        params.enableJoinFilter    = true;
-        params.enableSubPartStat   = true;
-        params.enableSwing         = true;
-
-        CmdInterpreter::readTupleProjection(
-            params.leftKeyProj, streamDef.getLeftKeyProj());
-
-        CmdInterpreter::readTupleProjection(
-            params.rightKeyProj, streamDef.getRightKeyProj());
-
-        CmdInterpreter::readTupleProjection(
-            params.filterNullKeyProj, streamDef.getFilterNullProj());
-
-        /*
-         * The optimizer currently estimates these two values.
-         */
-        params.cndKeys = streamDef.getCndBuildKeys();
-        params.numRows = streamDef.getNumBuildRows();
-
-        pEmbryo->init(new LhxJoinExecStream(), params);
-    }
-
-    virtual void visit(ProxyLhxAggStreamDef &streamDef)
-    {
-        LhxAggExecStreamParams params;
-        pExecStreamFactory->readAggStreamParams(params, streamDef);
-
-        /*
-         * LhxAggExecStream requires a private ScratchSegment.
-         */
-        pExecStreamFactory->createPrivateScratchSegment(params);
-
-        /*
-         * External segment to store partitions.
-         */
-        SharedDatabase pDatabase = pExecStreamFactory->getDatabase();
-        params.pTempSegment = pDatabase->getTempSegment();
-
-        /*
-         * The optimizer currently estimates these two values.
-         */
-        params.cndGroupByKeys = streamDef.getCndGroupByKeys();
-        params.numRows = streamDef.getNumRows();
-
-        /*
-         * Set forcePartitionLevel to 0 to turn off force partitioning.
-         */
-        params.forcePartitionLevel = 0;
-
-        /*
-         * NOTE:
-         * Hash aggregation partitions partially aggregated results to disk.
-         * The stat currently keeps track of the tuple count before
-         * aggregation, so it is not very accurate. Disable sub partition stats
-         * for now.
-         */
-        params.enableSubPartStat = false;
-
-        pEmbryo->init(new LhxAggExecStream(), params);
     }
 
     virtual void visit(ProxyLbmNormalizerStreamDef &streamDef)

@@ -33,7 +33,7 @@ import org.eigenbase.sql.type.*;
  * <p>Rules:
  *
  * <ul>
- * <li>{@link com.disruptivetech.farrago.rel.FarragoMultisetSplitterRule}
+ * <li>{@link net.sf.farrago.fennel.rel.FarragoMultisetSplitterRule}
  * creates a CollectRel from a call to {@link
  * org.eigenbase.sql.fun.SqlMultisetValueConstructor} or to {@link
  * org.eigenbase.sql.fun.SqlMultisetQueryConstructor}.</li>

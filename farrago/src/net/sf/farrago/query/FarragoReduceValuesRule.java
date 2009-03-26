@@ -59,7 +59,7 @@ public abstract class FarragoReduceValuesRule
      * Singleton instance of this rule which applies to the pattern
      * Filter(Values).
      */
-    public static final FarragoReduceValuesRule FILTER_INSTANCE =
+    public static final FarragoReduceValuesRule filterInstance =
         new FarragoReduceValuesRule(
             new RelOptRuleOperand(
                 FilterRel.class,
@@ -77,10 +77,16 @@ public abstract class FarragoReduceValuesRule
         };
 
     /**
+     * @deprecated use {@link #filterInstance} instead
+     */
+    public static final FarragoReduceValuesRule FILTER_INSTANCE =
+        filterInstance;
+
+    /**
      * Singleton instance of this rule which applies to the pattern
      * Project(Values).
      */
-    public static final FarragoReduceValuesRule PROJECT_INSTANCE =
+    public static final FarragoReduceValuesRule projectInstance =
         new FarragoReduceValuesRule(
             new RelOptRuleOperand(
                 ProjectRel.class,
@@ -98,10 +104,16 @@ public abstract class FarragoReduceValuesRule
         };
 
     /**
+     * @deprecated use {@link #projectInstance} instead
+     */
+    public static final FarragoReduceValuesRule PROJECT_INSTANCE =
+        projectInstance;
+
+    /**
      * Singleton instance of this rule which applies to the pattern
      * Project(Filter(Values)).
      */
-    public static final FarragoReduceValuesRule PROJECT_FILTER_INSTANCE =
+    public static final FarragoReduceValuesRule projectFilterInstance =
         new FarragoReduceValuesRule(
             new RelOptRuleOperand(
                 ProjectRel.class,
@@ -119,6 +131,12 @@ public abstract class FarragoReduceValuesRule
                     (ValuesRel) call.rels[2]);
             }
         };
+
+    /**
+     * @deprecated use {@link #projectFilterInstance} instead
+     */
+    public static final FarragoReduceValuesRule PROJECT_FILTER_INSTANCE =
+        projectFilterInstance;
 
     //~ Constructors -----------------------------------------------------------
 

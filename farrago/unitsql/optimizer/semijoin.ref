@@ -869,7 +869,7 @@
 '    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER PRODUCT_ID) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
 '        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER PRODUCT_ID) NOT NULL])'
-'          LhxAggRel(groupCount=[1], EXPR$0=[SUM(1)])'
+'          LhxAggRel(groupCount=[1], EXPR$0=[SUM($1)])'
 '            LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SALES$QUANTITY]])'
 '        FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL ID, INTEGER CAST($0):INTEGER) NOT NULL])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, PRODUCT]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PRODUCT$ID]])'

@@ -30,6 +30,7 @@ import java.util.*;
 import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fennel.rel.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
@@ -603,8 +604,8 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from sales.emps e1, sales.emps e2"
@@ -859,8 +860,8 @@ public class LoptMetadataTest
         // these test also test the SemiJoinRel case, as it's easier to test
         // the as part of regular joins
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             sql);
@@ -978,9 +979,9 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new LhxJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(LhxJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from emps e, depts d "
@@ -998,10 +999,10 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new LhxJoinRule());
-        programBuilder.addRuleInstance(new LhxIntersectRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(LhxJoinRule.instance);
+        programBuilder.addRuleInstance(LhxIntersectRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from emps intersect select * from emps");
@@ -1015,10 +1016,10 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new LhxJoinRule());
-        programBuilder.addRuleInstance(new LhxMinusRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(LhxJoinRule.instance);
+        programBuilder.addRuleInstance(LhxMinusRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from emps except select * from emps");
@@ -1032,7 +1033,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new UnionToDistinctRule());
+        programBuilder.addRuleInstance(UnionToDistinctRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from "
@@ -1050,7 +1051,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from "
@@ -1204,7 +1205,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new LcsTableProjectionRule());
+        programBuilder.addRuleInstance(LcsTableProjectionRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select name from emps");
@@ -1227,9 +1228,9 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new LhxJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(LhxJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from emps e, depts d where e.deptno = d.deptno");
@@ -1264,7 +1265,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new LcsTableProjectionRule());
+        programBuilder.addRuleInstance(LcsTableProjectionRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             sql);
@@ -1372,9 +1373,9 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        programBuilder.addRuleInstance(new LhxJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
+        programBuilder.addRuleInstance(LhxJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from emps e, depts d where e.deptno = d.deptno");
@@ -1416,7 +1417,7 @@ public class LoptMetadataTest
             + "constraint uniquekey2 unique(c0, c1))");
 
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new LcsTableProjectionRule());
+        programBuilder.addRuleInstance(LcsTableProjectionRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select c4, c2, c1, c0 from tab");
@@ -1568,7 +1569,7 @@ public class LoptMetadataTest
         // Make sure that if the row scan is projected, the column
         // origin takes the projection into account
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new LcsTableProjectionRule());
+        programBuilder.addRuleInstance(LcsTableProjectionRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select age from emps");

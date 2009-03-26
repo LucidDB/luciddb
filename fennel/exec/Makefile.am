@@ -34,7 +34,10 @@ SplitterExecStream.cpp \
 BarrierExecStream.cpp \
 ValuesExecStream.cpp \
 ReshapeExecStream.cpp \
-BernoulliSamplingExecStream.cpp
+BernoulliSamplingExecStream.cpp \
+CollectExecStream.cpp \
+CorrelationJoinExecStream.cpp \
+UncollectExecStream.cpp
 
 DESIGN_DOCS=\
 ExecStreamDesign.cpp \

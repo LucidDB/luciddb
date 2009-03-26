@@ -74,8 +74,14 @@ import org.eigenbase.rex.*;
 public class ConvertMultiJoinRule
     extends RelOptRule
 {
+    public static final ConvertMultiJoinRule instance =
+        new ConvertMultiJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public ConvertMultiJoinRule()
     {
         super(

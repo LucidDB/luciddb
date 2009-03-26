@@ -42,8 +42,14 @@ import org.eigenbase.sql.type.*;
 public class LcsRemoveRidExprRule
     extends RelOptRule
 {
+    public static final LcsRemoveRidExprRule instance =
+        new LcsRemoveRidExprRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public LcsRemoveRidExprRule()
     {
         super(

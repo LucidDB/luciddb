@@ -37,10 +37,14 @@ import org.eigenbase.relopt.*;
 public class PushSemiJoinPastFilterRule
     extends RelOptRule
 {
-    //  ~ Constructors --------------------------------------------------------
+    public static final PushSemiJoinPastFilterRule instance =
+        new PushSemiJoinPastFilterRule();
 
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public PushSemiJoinPastFilterRule()
     {
         super(

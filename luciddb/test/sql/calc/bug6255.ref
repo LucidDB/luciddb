@@ -19,11 +19,11 @@
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                          column0                                                                          |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-| AggregateRel(groupCount=[0], EXPR$0=[SUM(0)])                                                                                                             |
+| AggregateRel(groupCount=[0], EXPR$0=[SUM($0)])                                                                                                            |
 |   ProjectRel($f0=[$1])                                                                                                                                    |
 |     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])                                                                       |
 |       TableAccessRel(table=[[LOCALDB, BUG6255, F]])                                                                                                       |
-|       AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])                                                                                               |
+|       AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE($0)])                                                                                              |
 |         ProjectRel(EXPR$0=[CAST(CAST(CASE(IS NULL(CURRENT_DATE), CAST(null):INTEGER, DAY_FROM_JULIAN_START(CAST(CURRENT_DATE):DATE))):INTEGER):INTEGER])  |
 |           FilterRel(condition=[=($0, $cor0.B)])                                                                                                           |
 |             TableAccessRel(table=[[LOCALDB, BUG6255, T]])                                                                                                 |
@@ -46,11 +46,11 @@
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                          column0                                                                          |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------+
-| AggregateRel(groupCount=[0], EXPR$0=[SUM(0)])                                                                                                             |
+| AggregateRel(groupCount=[0], EXPR$0=[SUM($0)])                                                                                                            |
 |   ProjectRel($f0=[$1])                                                                                                                                    |
 |     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])                                                                       |
 |       TableAccessRel(table=[[LOCALDB, BUG6255, F]])                                                                                                       |
-|       AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])                                                                                               |
+|       AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE($0)])                                                                                              |
 |         ProjectRel(EXPR$0=[CAST(CAST(CASE(IS NULL(CURRENT_DATE), CAST(null):INTEGER, DAY_FROM_JULIAN_START(CAST(CURRENT_DATE):DATE))):INTEGER):INTEGER])  |
 |           FilterRel(condition=[=($0, $cor0.B)])                                                                                                           |
 |             TableAccessRel(table=[[LOCALDB, BUG6255, T]])                                                                                                 |

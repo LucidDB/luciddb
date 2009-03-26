@@ -14,7 +14,11 @@ libfennel_tuple.la \
 libfennel_exec.la \
 libfennel_btree.la \
 libfennel_db.la \
-libfennel_ftrs.la
+libfennel_ftrs.la \
+libfennel_calculator.la \
+libfennel_flatfile.la \
+libfennel_sorter.la \
+libfennel_hashexe.la
 
 DEVICE_DEPS = libfennel_common.la
 
@@ -34,9 +38,15 @@ BTREE_DEPS = libfennel_txn.la $(TXN_DEPS) libfennel_tuple.la $(TUPLE_DEPS)
 
 DB_DEPS = libfennel_btree.la $(BTREE_DEPS)
 
-XO_DEPS = libfennel_btree.la $(BTREE_DEPS)
-
 FTRS_DEPS = libfennel_btree.la libfennel_exec.la $(BTREE_DEPS)
+
+CALCULATOR_DEPS = libfennel_exec.la $(EXEC_DEPS)
+
+FLATFILE_DEPS = $(CALCULATOR_DEPS)
+
+SORTER_DEPS = $(CALCULATOR_DEPS)
+
+HASHEXE_DEPS = $(CALCULATOR_DEPS)
 
 TEST_DEPS = libfennel_btree.la libfennel_exec.la $(BTREE_DEPS)
 
@@ -94,6 +104,22 @@ endif
 libfennel_ftrs_la_SOURCES=
 libfennel_ftrs_la_LIBADD=\
 	$(top_builddir)/ftrs/libftrs.la $(FTRS_DEPS)
+
+libfennel_calculator_la_SOURCES=
+libfennel_calculator_la_LIBADD=\
+	$(top_builddir)/calculator/libcalculator.la $(CALCULATOR_DEPS)
+
+libfennel_flatfile_la_SOURCES=
+libfennel_flatfile_la_LIBADD=\
+	$(top_builddir)/flatfile/libflatfile.la $(FLATFILE_DEPS)
+
+libfennel_sorter_la_SOURCES=
+libfennel_sorter_la_LIBADD=\
+	$(top_builddir)/sorter/libsorter.la $(SORTER_DEPS)
+
+libfennel_hashexe_la_SOURCES=
+libfennel_hashexe_la_LIBADD=\
+	$(top_builddir)/hashexe/libhashexe.la $(HASHEXE_DEPS)
 
 # Make sure that dependencies are strictly satisfied by failing on
 # undefined references.

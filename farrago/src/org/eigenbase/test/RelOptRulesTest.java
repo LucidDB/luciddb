@@ -71,7 +71,7 @@ public class RelOptRulesTest
     public void testUnionToDistinctRule()
     {
         checkPlanning(
-            new UnionToDistinctRule(),
+            UnionToDistinctRule.instance,
             "select * from dept union select * from dept");
     }
 
@@ -85,14 +85,14 @@ public class RelOptRulesTest
     public void testAddRedundantSemiJoinRule()
     {
         checkPlanning(
-            new AddRedundantSemiJoinRule(),
+            AddRedundantSemiJoinRule.instance,
             "select 1 from emp inner join dept on emp.deptno = dept.deptno");
     }
 
     public void testPushFilterThroughOuterJoin()
     {
         checkPlanning(
-            new PushFilterPastJoinRule(),
+            PushFilterPastJoinRule.instance,
             "select 1 from sales.dept d left outer join sales.emp e"
             + " on d.deptno = e.deptno"
             + " where d.name = 'Charlie'");
@@ -109,7 +109,7 @@ public class RelOptRulesTest
     public void testPushProjectPastFilter()
     {
         checkPlanning(
-            new PushProjectPastFilterRule(),
+            PushProjectPastFilterRule.instance,
             "select empno + deptno from emp where sal = 10 * comm "
             + "and upper(ename) = 'FOO'");
     }
@@ -117,7 +117,7 @@ public class RelOptRulesTest
     public void testPushProjectPastJoin()
     {
         checkPlanning(
-            new PushProjectPastJoinRule(),
+            PushProjectPastJoinRule.instance,
             "select e.sal + b.comm from emp e inner join bonus b "
             + "on e.ename = b.ename and e.deptno = 10");
     }
@@ -125,7 +125,7 @@ public class RelOptRulesTest
     public void testPushProjectPastSetOp()
     {
         checkPlanning(
-            new PushProjectPastSetOpRule(),
+            PushProjectPastSetOpRule.instance,
             "select sal from "
             + "(select * from emp e1 union all select * from emp e2)");
     }

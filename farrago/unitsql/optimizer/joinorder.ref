@@ -876,7 +876,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 3, 4, 5, 6, 2]], outputRowType=[RecordType(DECIMAL(10, 0) CU_ID, DECIMAL(6, 0) REVN_YR_MO, DOUBLE EXPR$2, DOUBLE EXPR$3, DOUBLE EXPR$4, DOUBLE EXPR$5, DECIMAL(5, 0) RSD_CU_CNT) NOT NULL])'
-'    LhxAggRel(groupCount=[3], EXPR$2=[SUM(3)], EXPR$3=[SUM(4)], EXPR$4=[SUM(5)], EXPR$5=[SUM(6)])'
+'    LhxAggRel(groupCount=[3], EXPR$2=[SUM($3)], EXPR$3=[SUM($4)], EXPR$4=[SUM($5)], EXPR$5=[SUM($6)])'
 '      FennelReshapeRel(projection=[[8, 6, 5, 1, 2, 3, 4]], outputRowType=[RecordType(DECIMAL(10, 0) CU_ID, DECIMAL(6, 0) REVN_YR_MO, DECIMAL(5, 0) RSD_CU_CNT, DOUBLE USG_VAL, DOUBLE USG_BILL_THERM, DOUBLE USGC_BILL_KW_VAL, DOUBLE RSD_SVC_BILG_AMT) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          FennelReshapeRel(projection=[[0, 2, 3, 4, 5, 6, 7]], outputRowType=[RecordType(DECIMAL(10, 0) CUST_SERV_ACCT_KEY, DOUBLE USG_VAL, DOUBLE USG_BILL_THERM, DOUBLE USGC_BILL_KW_VAL, DOUBLE RSD_SVC_BILG_AMT, DECIMAL(5, 0) RSD_CU_CNT, DECIMAL(6, 0) REVN_YR_MO0) NOT NULL])'

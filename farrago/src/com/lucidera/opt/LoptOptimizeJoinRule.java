@@ -41,8 +41,14 @@ import org.eigenbase.sql.fun.*;
 public class LoptOptimizeJoinRule
     extends RelOptRule
 {
+    public static final LoptOptimizeJoinRule instance =
+        new LoptOptimizeJoinRule();
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * @deprecated use {@link #instance} instead
+     */
     public LoptOptimizeJoinRule()
     {
         super(new RelOptRuleOperand(MultiJoinRel.class, ANY));

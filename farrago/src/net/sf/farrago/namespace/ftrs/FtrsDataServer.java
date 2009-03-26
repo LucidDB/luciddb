@@ -88,12 +88,12 @@ class FtrsDataServer
     public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
-        planner.addRule(new FtrsTableProjectionRule());
-        planner.addRule(new FtrsTableModificationRule());
-        planner.addRule(new FtrsScanToSearchRule());
-        planner.addRule(new FtrsIndexJoinRule());
-        planner.addRule(new FtrsRemoveRedundantSortRule());
-        planner.addRule(new FtrsIndexBuilderRule());
+        planner.addRule(FtrsTableProjectionRule.instance);
+        planner.addRule(FtrsTableModificationRule.instance);
+        planner.addRule(FtrsScanToSearchRule.instance);
+        planner.addRule(FtrsIndexJoinRule.instance);
+        planner.addRule(FtrsRemoveRedundantSortRule.instance);
+        planner.addRule(FtrsIndexBuilderRule.instance);
     }
 
     // implement FarragoMedLocalDataServer

@@ -21,7 +21,7 @@
 */
 package net.sf.farrago.test.regression;
 
-import com.disruptivetech.farrago.calc.*;
+import net.sf.farrago.fennel.calc.*;
 
 import java.util.*;
 

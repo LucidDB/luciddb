@@ -39,10 +39,13 @@ import org.eigenbase.util.*;
 class FtrsTableModificationRule
     extends RelOptRule
 {
+    public static final FtrsTableModificationRule instance =
+        new FtrsTableModificationRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new FtrsTableModificationRule object.
+     * @deprecated use {@link #instance} instead
      */
     public FtrsTableModificationRule()
     {

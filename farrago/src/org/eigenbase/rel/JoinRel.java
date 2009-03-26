@@ -34,12 +34,11 @@ import org.eigenbase.rex.*;
  *
  * <p>Some rules:
  *
- * <ul>
- * <li>{@link ExtractJoinFilterRule} converts an {@link JoinRel inner join} to a
- * {@link FilterRel filter} on top of a {@link JoinRel cartesian inner join}.
- * <li>{@link net.sf.farrago.query.FennelCartesianJoinRule} implements a JoinRel
- * as a cartesian product.
- * </ul>
+ * <ul> <li>{@link org.eigenbase.rel.rules.ExtractJoinFilterRule} converts an
+ * {@link JoinRel inner join} to a {@link FilterRel filter} on top of a {@link
+ * JoinRel cartesian inner join}.  <li>{@link
+ * net.sf.farrago.fennel.rel.FennelCartesianJoinRule} implements a JoinRel as a
+ * cartesian product.  </ul>
  *
  * @author jhyde
  * @version $Id$

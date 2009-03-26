@@ -21,7 +21,7 @@
 */
 package net.sf.farrago.test;
 
-import com.lucidera.lurql.*;
+import org.eigenbase.lurql.*;
 
 import java.io.*;
 

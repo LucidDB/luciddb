@@ -67,7 +67,7 @@ public abstract class FarragoReduceExpressionsRule
      * condition is a constant, the filter is removed (if TRUE) or replaced with
      * {@link EmptyRel} (if FALSE or NULL).
      */
-    public static final FarragoReduceExpressionsRule FILTER_INSTANCE =
+    public static final FarragoReduceExpressionsRule filterInstance =
         new FarragoReduceExpressionsRule(FilterRel.class) {
             public void onMatch(RelOptRuleCall call)
             {
@@ -114,7 +114,13 @@ public abstract class FarragoReduceExpressionsRule
             }
         };
 
-    public static final FarragoReduceExpressionsRule PROJECT_INSTANCE =
+    /**
+     * @deprecated use {@link #filterInstance} instead
+     */
+    public static final FarragoReduceExpressionsRule FILTER_INSTANCE =
+        filterInstance;
+
+    public static final FarragoReduceExpressionsRule projectInstance =
         new FarragoReduceExpressionsRule(ProjectRel.class) {
             public void onMatch(RelOptRuleCall call)
             {
@@ -138,7 +144,13 @@ public abstract class FarragoReduceExpressionsRule
             }
         };
 
-    public static final FarragoReduceExpressionsRule JOIN_INSTANCE =
+    /**
+     * @deprecated use {@link #projectInstance} instead
+     */
+    public static final FarragoReduceExpressionsRule PROJECT_INSTANCE =
+        projectInstance;
+
+    public static final FarragoReduceExpressionsRule joinInstance =
         new FarragoReduceExpressionsRule(JoinRel.class) {
             public void onMatch(RelOptRuleCall call)
             {
@@ -162,7 +174,13 @@ public abstract class FarragoReduceExpressionsRule
             }
         };
 
-    public static final FarragoReduceExpressionsRule CALC_INSTANCE =
+    /**
+     * @deprecated use {@link #joinInstance} instead
+     */
+    public static final FarragoReduceExpressionsRule JOIN_INSTANCE =
+        joinInstance;
+
+    public static final FarragoReduceExpressionsRule calcInstance =
         new FarragoReduceExpressionsRule(CalcRel.class) {
             public void onMatch(RelOptRuleCall call)
             {
@@ -245,6 +263,12 @@ public abstract class FarragoReduceExpressionsRule
                 }
             }
         };
+
+    /**
+     * @deprecated use {@link #calcInstance} instead
+     */
+    public static final FarragoReduceExpressionsRule CALC_INSTANCE =
+        calcInstance;
 
     //~ Constructors -----------------------------------------------------------
 

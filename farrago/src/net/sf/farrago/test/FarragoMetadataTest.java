@@ -298,8 +298,8 @@ public class FarragoMetadataTest
     {
         // this test will test both joins and semijoins
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from tab t1, tab t2 where t1.c4 = t2.c4");
@@ -533,8 +533,8 @@ public class FarragoMetadataTest
     {
         // tests that call this method will test both joins and semijoins
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             sql);
@@ -876,8 +876,8 @@ public class FarragoMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
-        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(PushFilterPastJoinRule.instance);
+        programBuilder.addRuleInstance(AddRedundantSemiJoinRule.instance);
         transformQuery(
             programBuilder.createProgram(),
             "select * from tab t1, tab t2 where t1.c0 = t2.c0 and t2.c0 = 1");

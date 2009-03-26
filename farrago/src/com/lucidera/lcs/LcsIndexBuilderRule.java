@@ -42,10 +42,13 @@ import org.eigenbase.util.*;
 class LcsIndexBuilderRule
     extends RelOptRule
 {
+    public static final LcsIndexBuilderRule instance =
+        new LcsIndexBuilderRule();
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LcsIndexBuilderRule object.
+     * @deprecated use {@link #instance} instead
      */
     public LcsIndexBuilderRule()
     {

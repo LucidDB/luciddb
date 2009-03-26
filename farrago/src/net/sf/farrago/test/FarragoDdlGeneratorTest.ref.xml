@@ -5,7 +5,7 @@
             <![CDATA[CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_COLUMN_STORE" LIBRARY 'class com.lucidera.lcs.LcsDataWrapper'
 LANGUAGE JAVA;
 
-CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
 LANGUAGE JAVA;
 
 CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FTRS" LIBRARY 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
@@ -137,7 +137,7 @@ select empno, name from temps;
             <![CDATA[CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_COLUMN_STORE" LIBRARY 'class com.lucidera.lcs.LcsDataWrapper'
 LANGUAGE JAVA;
 
-CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
 LANGUAGE JAVA;
 
 CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FTRS" LIBRARY 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
@@ -299,7 +299,7 @@ DROP FOREIGN DATA WRAPPER "TESTWRAPPER"
             <![CDATA[CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_COLUMN_STORE" LIBRARY 'class com.lucidera.lcs.LcsDataWrapper'
 LANGUAGE JAVA;
 
-CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FILE_WRAPPER" LIBRARY 'class net.sf.farrago.namespace.flatfile.FlatFileDataWrapper'
 LANGUAGE JAVA;
 
 CREATE OR REPLACE FOREIGN DATA WRAPPER "SYS_FTRS" LIBRARY 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
